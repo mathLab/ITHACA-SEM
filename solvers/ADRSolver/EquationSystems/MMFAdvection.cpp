@@ -239,7 +239,7 @@ void MMFAdvection::v_DoSolve()
     }
 
     // Initialise time integration scheme
-    m_intSoln = m_intScheme->InitializeIntegrator( m_timestep, fields, m_time, m_ode );
+    m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields, m_time, m_ode );
 
     // Check uniqueness of checkpoint output
     ASSERTL0((m_checktime == 0.0 && m_checksteps == 0) ||
@@ -1338,5 +1338,4 @@ void MMFAdvection::v_GenerateSummary(SolverUtils::SummaryList &s)
     SolverUtils::AddSummaryItem(s, "TestType", TestTypeMap[m_TestType]);
     SolverUtils::AddSummaryItem(s, "Rotation Angle", m_RotAngle);
 }
-
-} // end namespace Nektar
+}

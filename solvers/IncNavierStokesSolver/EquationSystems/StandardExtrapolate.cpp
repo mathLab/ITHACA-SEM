@@ -99,9 +99,8 @@ namespace Nektar
     /** 
      * 
      */
-    void StandardExtrapolate::v_SubSteppingTimeIntegration(
-        int intMethod,
-        const LibUtilities::TimeIntegratorSharedPtr &IntegrationScheme )
+    void StandardExtrapolate::v_SubSteppingTimeIntegration(       int                                            intMethod,
+                                                            const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme )
     {
         switch(intMethod)
         {
@@ -137,10 +136,9 @@ namespace Nektar
     /** 
      * 
      */
-    void StandardExtrapolate::v_SubStepAdvance(
-        const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-        int nstep, 
-        NekDouble time)
+    void StandardExtrapolate::v_SubStepAdvance( const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr & integrationSoln, 
+                                                      int                                                                     nstep, 
+                                                      NekDouble                                                               time )
     {
     }
 

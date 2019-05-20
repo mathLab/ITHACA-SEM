@@ -37,13 +37,16 @@
 
 #include <ADRSolver/EquationSystems/UnsteadyAdvectionDiffusion.h>
 
+#include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
+
 using namespace std;
 
 namespace Nektar
 {
-    string UnsteadyAdvectionDiffusion::className = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-                                                                                                                    "UnsteadyAdvectionDiffusion",
-                                                                                                                    UnsteadyAdvectionDiffusion::create );
+    string UnsteadyAdvectionDiffusion::className
+        = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
+                "UnsteadyAdvectionDiffusion",
+                UnsteadyAdvectionDiffusion::create);
     
     UnsteadyAdvectionDiffusion::UnsteadyAdvectionDiffusion(
         const LibUtilities::SessionReaderSharedPtr& pSession,
@@ -460,10 +463,9 @@ namespace Nektar
     /** 
      * 
      */
-    void UnsteadyAdvectionDiffusion::SubStepAdvance(
-                       const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-                       int nstep, 
-                       NekDouble time)
+    void UnsteadyAdvectionDiffusion::SubStepAdvance( const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr & integrationSoln, 
+                                                           int                                                                     nstep, 
+                                                           NekDouble                                                               time )
     {
         int n;
         int nsubsteps;
@@ -503,13 +505,12 @@ namespace Nektar
             // Initialise NS solver which is set up to use a GLM method
             // with calls to EvaluateAdvection_SetPressureBCs and
             // SolveUnsteadyStokesSystem
-            LibUtilities::TimeIntegrationSolutionSharedPtr 
-                SubIntegrationSoln = m_subStepIntegrationScheme->InitializeIntegrator( dt, fields, time, m_subStepIntegrationOps );
+            LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr 
+                SubIntegrationSoln = m_subStepIntegrationScheme->InitializeScheme( dt, fields, time, m_subStepIntegrationOps );
             
             for(n = 0; n < nsubsteps; ++n)
             {
-                fields = m_subStepIntegrationScheme->TimeIntegrate(n, dt, SubIntegrationSoln,
-                                                                   m_subStepIntegrationOps);
+                fields = m_subStepIntegrationScheme->TimeIntegrate( n, dt, SubIntegrationSoln, m_subStepIntegrationOps );
             }
             
             // Reset time integrated solution in m_integrationSoln 
@@ -550,7 +551,7 @@ namespace Nektar
 
     void UnsteadyAdvectionDiffusion::SetUpSubSteppingTimeIntegration(
                                                                      int intMethod,
-                                                                     const LibUtilities::TimeIntegratorSharedPtr &IntegrationScheme)
+                                                                     const LibUtilities::TimeIntegrationSchemeSharedPtr &IntegrationScheme)
     {
         // Set to 1 for first step and it will then be increased in
         // time advance routines
@@ -559,20 +560,20 @@ namespace Nektar
         case LibUtilities::eBackwardEuler:
         case LibUtilities::eBDFImplicitOrder1: 
             {
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegratorFactory().CreateInstance("ForwardEuler");
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance("ForwardEuler");
                 
             }
             break;
         case LibUtilities::eBDFImplicitOrder2:
             {
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegratorFactory().CreateInstance("RungeKutta2_ImprovedEuler");
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance("RungeKutta2_ImprovedEuler");
             }
             break;
         default:
             ASSERTL0(0,"Integration method not suitable: Options include BackwardEuler or BDFImplicitOrder1");
             break;
         }
-        m_intSteps = IntegrationScheme->GetIntegrationSteps();
+        m_intSteps = IntegrationScheme->GetNumIntegrationPhases();
 	
         // set explicit time-integration class operators
         m_subStepIntegrationOps.DefineOdeRhs(&UnsteadyAdvectionDiffusion::SubStepAdvection, this);
@@ -858,5 +859,4 @@ namespace Nektar
 		
         return maxV;
     }
-
-} // end namespace Nektar
+}

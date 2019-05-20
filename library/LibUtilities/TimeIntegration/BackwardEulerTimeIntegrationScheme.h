@@ -2,7 +2,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: BackwardEulerTimeIntegrator.h
+// File: BackwardEulerTimeIntegrationScheme.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -39,76 +39,74 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/TimeIntegration/TimeIntegratorBase.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar {
   namespace LibUtilities {
 
-    class BackwardEulerTimeIntegrator : public TimeIntegratorBase
+    class BackwardEulerTimeIntegrationScheme : public TimeIntegrationScheme
     {
     public:
   
-      virtual ~BackwardEulerTimeIntegrator()
+      BackwardEulerTimeIntegrationScheme() : TimeIntegrationScheme() 
+      {
+          m_integration_phases = TimeIntegrationSchemeDataVector( 1 );
+          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+
+          BackwardEulerTimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] );
+      }
+
+      virtual ~BackwardEulerTimeIntegrationScheme()
       {
       }
 
       /////////////
 
-      static TimeIntegratorSharedPtr create()
+      static TimeIntegrationSchemeSharedPtr create()
       {
-        TimeIntegratorSharedPtr p = MemoryManager<BackwardEulerTimeIntegrator>::AllocateSharedPtr();
-        p->InitObject();
+        std::cout << "BackwardEulerTimeIntegrationScheme::create()\n";
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<BackwardEulerTimeIntegrationScheme>::AllocateSharedPtr();
         return p;
       }
 
-      static std::string className; // Will be set to "BackwardEuler" in TimeIntegratorBase.cpp during program start up.
-
-      virtual void v_InitObject()
-      {
-        TimeIntegrationSchemeKey IntKey0( eBackwardEuler );
-        int steps   = 1;
-        m_intScheme = vector<TimeIntegrationSchemeSharedPtr>( steps );
-
-        m_intScheme[0] = GetTimeIntegrationSchemeManager()[ IntKey0 ]; // SetupScheme( m_intScheme[0] ); 
-      }
+      static std::string className;
 
       //////////////
 
-
-      // Replaces (from TimeIntegrationScheme.h): return m_schemeKey.GetIntegrationMethod();
       LUE virtual
           TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eBackwardEuler; }
-      // LUE unsigned int          GetIntegrationSteps() const  { return m_intSteps; }
 
       //////////////
 
       LUE
       static
-      void SetupScheme( TimeIntegrationScheme * scheme )
+      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
       {
-        scheme->m_numsteps  = 1;
-        scheme->m_numstages = 1;
+        phase->m_method = TimeIntegrationMethod::eBackwardEuler;
+        phase->m_schemeType = eDiagonallyImplicit;
 
-        scheme->m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-        scheme->m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+        phase->m_numsteps  = 1;
+        phase->m_numstages = 1;
 
-        scheme->m_A[0] = Array<TwoD,NekDouble>( scheme->m_numstages, scheme->m_numstages, 1.0 );
-        scheme->m_B[0] = Array<TwoD,NekDouble>( scheme->m_numsteps,  scheme->m_numstages, 1.0 );
-        scheme->m_U    = Array<TwoD,NekDouble>( scheme->m_numstages, scheme->m_numsteps,  1.0 );
-        scheme->m_V    = Array<TwoD,NekDouble>( scheme->m_numsteps,  scheme->m_numsteps,  1.0 );
+        phase->m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
+        phase->m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+
+        phase->m_A[0] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 1.0 );
+        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 1.0 );
+        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  1.0 );
+        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  1.0 );
                     
-        scheme->m_schemeType = eDiagonallyImplicit;
-        scheme->m_numMultiStepValues = 1;
-        scheme->m_numMultiStepDerivs = 0;
-        scheme->m_timeLevelOffset = Array<OneD,unsigned int>( scheme->m_numsteps );
-        scheme->m_timeLevelOffset[0] = 0;
+        phase->m_numMultiStepValues = 1;
+        phase->m_numMultiStepDerivs = 0;
+        phase->m_timeLevelOffset = Array<OneD,unsigned int>( phase->m_numsteps );
+        phase->m_timeLevelOffset[0] = 0;
 
-        scheme->m_firstStageEqualsOldSolution = scheme->CheckIfFirstStageEqualsOldSolution( scheme->m_A, scheme->m_B, scheme->m_U, scheme->m_V );
-        scheme->m_lastStageEqualsNewSolution  = scheme->CheckIfLastStageEqualsNewSolution(  scheme->m_A, scheme->m_B, scheme->m_U, scheme->m_V );
+        phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
+        phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );
 
-        ASSERTL1( scheme->VerifyIntegrationSchemeType( scheme->m_schemeType, scheme->m_A, scheme->m_B, scheme->m_U, scheme->m_V ),
+        ASSERTL1( phase->VerifyIntegrationSchemeType( phase->m_schemeType, phase->m_A, phase->m_B, phase->m_U, phase->m_V ),
                   "Time integration scheme coefficients do not match its type" );
       }
 

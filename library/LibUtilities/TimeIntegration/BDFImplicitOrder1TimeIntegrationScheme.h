@@ -2,7 +2,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: RungeKutta2_SSPTimeIntegrator.h
+// File: BDFImplicitOrder1TimeIntegrationScheme.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -39,64 +39,57 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/TimeIntegration/TimeIntegratorBase.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
-#include <LibUtilities/TimeIntegration/RungeKutta2_ImprovedEulerTimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/BackwardEulerTimeIntegrationScheme.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar {
   namespace LibUtilities {
 
-// Maybe: ???_TimeIntegrators have various schemes, the are NOT the schemes themselves...
-
-    class RungeKutta2_SSPTimeIntegrator : public TimeIntegratorBase
+    class BDFImplicitOrder1TimeIntegrationScheme : public TimeIntegrationScheme
     {
     public:
   
-      virtual ~RungeKutta2_SSPTimeIntegrator()
+      BDFImplicitOrder1TimeIntegrationScheme() : TimeIntegrationScheme() 
+      {
+          m_integration_phases = TimeIntegrationSchemeDataVector( 1 );
+          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+
+          BDFImplicitOrder1TimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] );
+      }
+
+      virtual ~BDFImplicitOrder1TimeIntegrationScheme()
       {
       }
 
       /////////////
 
-      static TimeIntegratorSharedPtr create()
+      static TimeIntegrationSchemeSharedPtr create()
       {
-        TimeIntegratorSharedPtr p = MemoryManager<RungeKutta2_SSPTimeIntegrator>::AllocateSharedPtr();
-        p->InitObject();
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<BDFImplicitOrder1TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
       }
 
-      static std::string className; // Will be set to "RungeKutta2_SSP" in TimeIntegratorBase.cpp during program start up.
-
-      virtual void v_InitObject()
-      {
-        int steps   = 1;
-        m_intScheme = vector<TimeIntegrationSchemeSharedPtr>( steps );
-
-        TimeIntegrationSchemeKey IntKey0( eRungeKutta2_SSP );
-        m_intScheme[0] = GetTimeIntegrationSchemeManager()[ IntKey0 ];
-      }
+      static std::string className;
 
       //////////////
 
-
-      // Replaces (from TimeIntegrationScheme.h): return m_schemeKey.GetIntegrationMethod();
       LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eRungeKutta2_SSP; }
-      // LUE unsigned int          GetIntegrationSteps() const  { return m_intSteps; }
+          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eBDFImplicitOrder1; }
 
       //////////////
 
       LUE
       static
-      void SetupScheme( TimeIntegrationScheme * scheme )
+      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
       {
-        // Dd: Do it like this?  Note, this is never (currently) called anyway because of the switch statement in TimeIntegrationScheme::TimeIntegrationScheme()...
-        RungeKutta2_ImprovedEulerTimeIntegrator::SetupScheme( scheme );
+        // FIXME: Dd? Correct way to do this?
+        BackwardEulerTimeIntegrationScheme::SetupSchemeData( phase );
       }
 
-    }; // end class RungeKutta2_SSPTimeIntegrator
+    }; // end class BDFImplicitOrder1TimeIntegrationScheme
 
   } // end namespace LibUtilities
 } // end namespace Nektar

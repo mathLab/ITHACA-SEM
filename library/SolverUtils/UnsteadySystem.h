@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_UNSTEADYSYSTEM_H
 #define NEKTAR_SOLVERUTILS_UNSTEADYSYSTEM_H
 
-#include <LibUtilities/TimeIntegration/TimeIntegratorBase.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <SolverUtils/EquationSystem.h>
 #include <SolverUtils/Filters/Filter.h>
 
@@ -63,12 +63,14 @@ namespace Nektar
             int                                             m_infosteps;
 
             int                                             m_nanSteps;
+
             /// Wrapper to the time integration scheme
-            LibUtilities::TimeIntegratorSharedPtr           m_intScheme;
+            LibUtilities::TimeIntegrationSchemeSharedPtr    m_intScheme;
             /// The time integration scheme operators to use.
             LibUtilities::TimeIntegrationSchemeOperators    m_ode;
             ///
-            LibUtilities::TimeIntegrationSolutionSharedPtr  m_intSoln;
+            LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr  m_intSoln;
+
             ///
             NekDouble                                       m_epsilon;
             /// Indicates if explicit or implicit treatment of diffusion is used.

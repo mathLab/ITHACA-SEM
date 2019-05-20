@@ -36,14 +36,14 @@
 #ifndef NEKTAR_SOLVERS_STANDARDEXTRAPOLATE_H
 #define NEKTAR_SOLVERS_STANDARDEXTRAPOLATE_H
 
-#include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/TimeIntegration/TimeIntegratorBase.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ExpList.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <SolverUtils/AdvectionSystem.h>
+#include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 
 namespace Nektar
 {
@@ -85,26 +85,22 @@ namespace Nektar
         virtual ~StandardExtrapolate();
         
     protected:
-        virtual void v_EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields,
-                                           const Array<OneD, const Array<OneD, NekDouble> >  &N,
-                                           NekDouble kinvis);
+        virtual void v_EvaluatePressureBCs( const Array<OneD, const Array<OneD, NekDouble> > & fields,
+                                            const Array<OneD, const Array<OneD, NekDouble> > & N,
+                                                  NekDouble                                    kinvis );
         
-        virtual void v_SubSteppingTimeIntegration(
-            int intMethod,
-            const LibUtilities::TimeIntegratorSharedPtr &IntegrationScheme );
+        virtual void v_SubSteppingTimeIntegration( int intMethod,
+                                                   const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme );
 
-        virtual void v_SubStepSaveFields(
-            int nstep);
+        virtual void v_SubStepSaveFields( int nstep );
 
-        virtual void v_SubStepSetPressureBCs(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-            NekDouble Aii_DT,
-            NekDouble kinvis);
+        virtual void v_SubStepSetPressureBCs( const Array<OneD, const Array<OneD, NekDouble> > & inarray, 
+                                                    NekDouble                                    Aii_DT,
+                                                    NekDouble                                    kinvis );
 
-        virtual void v_SubStepAdvance(
-            const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-            int nstep, 
-            NekDouble time);
+        virtual void v_SubStepAdvance( const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr & integrationSoln, 
+                                             int                                                                     nstep, 
+                                             NekDouble                                                               time );
 
         virtual void v_MountHOPBCs(
             int HBCdata, 

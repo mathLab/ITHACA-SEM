@@ -41,7 +41,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/TimeIntegration/TimeIntegratorBase.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/AdvectionSystem.h>
 
@@ -89,9 +89,8 @@ namespace Nektar
                                            const Array<OneD, const Array<OneD, NekDouble> >  &N,
                                            NekDouble kinvis);
 
-        virtual void v_SubSteppingTimeIntegration(
-            int intMethod,
-            const LibUtilities::TimeIntegratorSharedPtr & IntegrationScheme );
+        virtual void v_SubSteppingTimeIntegration(       int                                            intMethod,
+                                                   const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme );
  
         virtual void v_SubStepSaveFields(
             int nstep);
@@ -102,7 +101,7 @@ namespace Nektar
             NekDouble kinvis);
 
         virtual void v_SubStepAdvance(
-            const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
+            const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln, 
             int nstep, 
             NekDouble time);
 
@@ -135,7 +134,7 @@ namespace Nektar
 
         NekDouble GetSubstepTimeStep();
 
-        LibUtilities::TimeIntegratorSharedPtr        m_subStepIntegrationScheme;
+        LibUtilities::TimeIntegrationSchemeSharedPtr m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
 
         Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;

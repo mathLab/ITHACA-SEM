@@ -475,7 +475,7 @@ namespace Nektar
             m_fields[i]->SetPhysState(false);
         }
         
-        m_intSoln = m_intScheme->InitializeIntegrator( m_timestep, fields, m_time, m_ode );
+        m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields, m_time, m_ode );
 
         // Time loop
         for(n = 0; n < m_steps; ++n)

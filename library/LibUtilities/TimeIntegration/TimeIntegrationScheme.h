@@ -36,7 +36,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicUtils/NekManager.hpp>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+//#include <LibUtilities/BasicUtils/NekManager.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -53,15 +54,32 @@ namespace Nektar
     {
         // Forward declaration of some of the classes in this file...
         class TimeIntegrationScheme;
+        class TimeIntegrationSchemeData;
         class TimeIntegrationSolution;
 
         // typedefs
-        typedef std::shared_ptr<TimeIntegrationScheme>                  TimeIntegrationSchemeSharedPtr;
-        typedef std::vector<TimeIntegrationSchemeSharedPtr>             TimeIntegrationSchemeVector; 
-        typedef std::vector<TimeIntegrationSchemeSharedPtr>::iterator   TimeIntegrationSchemeVectorIter; 
-        typedef std::shared_ptr<TimeIntegrationSolution>                TimeIntegrationSolutionSharedPtr;
-        typedef std::vector<TimeIntegrationSolutionSharedPtr>           TimeIntegrationSolutionVector; 
-        typedef std::vector<TimeIntegrationSolutionSharedPtr>::iterator TimeIntegrationSolutionVectorIter; 
+
+
+      // FIXME: Why a shared pointer?  when does the scheme go out of scope... who should delete it?
+
+
+        typedef std::shared_ptr<TimeIntegrationScheme> TimeIntegrationSchemeSharedPtr;
+
+
+      ///////////////////////////////////////////////////////////////////////////////////
+      // Provide using code the ability to get the TimeIntegrator Factory so that it can
+      // create TimeIntegrators.
+
+      /// Datatype of the NekFactory used to instantiate classes derived from the EquationSystem class.
+      typedef NekFactory < std::string, TimeIntegrationScheme > TimeIntegrationSchemeFactory;
+
+      // Allows a code to create a TimeIntegrator. Usually used like this:
+      //
+      //    LibUtilities::TimeIntegrationSchemeSharedPtr timeIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( "IMEXOrder1" );
+      //
+      LUE TimeIntegrationSchemeFactory & GetTimeIntegrationSchemeFactory();
+
+      //////////////////////////////////////////////////////////////////////////////////////
 
         // =========================================================================
         // ==== ENUM LIST OF ALL SUPPORTED INTEGRATION SCHEMES
@@ -90,17 +108,17 @@ namespace Nektar
             eRungeKutta2,                     //!< Classical RungeKutta2 method (new name for eMidpoint)
             eDIRKOrder2,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
             eDIRKOrder3,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
-            eCNAB,		                      //!< Crank-Nicolson/Adams-Bashforth Order 2 (CNAB)
-            eIMEXGear,		                  //!< IMEX Gear Order 2
-            eMCNAB,		                      //!< Modified Crank-Nicolson/Adams-Bashforth Order 2 (MCNAB)
-            eIMEXdirk_1_1_1,		      	  //!< Forward-Backward Euler IMEX DIRK(1,1,1)
-            eIMEXdirk_1_2_1,		      	  //!< Forward-Backward Euler IMEX DIRK(1,2,1)
-            eIMEXdirk_1_2_2,		      	  //!< Implicit-Explicit Midpoint IMEX DIRK(1,2,2)
-            eIMEXdirk_2_2_2,		          //!< L-stable, two stage, second order IMEX DIRK(2,2,2)
+            eCNAB,		              //!< Crank-Nicolson/Adams-Bashforth Order 2 (CNAB)
+            eIMEXGear,		              //!< IMEX Gear Order 2
+            eMCNAB,		              //!< Modified Crank-Nicolson/Adams-Bashforth Order 2 (MCNAB)
+            eIMEXdirk_1_1_1,		      //!< Forward-Backward Euler IMEX DIRK(1,1,1)
+            eIMEXdirk_1_2_1,		      //!< Forward-Backward Euler IMEX DIRK(1,2,1)
+            eIMEXdirk_1_2_2,		      //!< Implicit-Explicit Midpoint IMEX DIRK(1,2,2)
+            eIMEXdirk_2_2_2,		      //!< L-stable, two stage, second order IMEX DIRK(2,2,2)
             eIMEXdirk_2_3_2,                  //!< L-stable, three stage, third order IMEX DIRK(3,4,3)
-            eIMEXdirk_2_3_3,		      	  //!< L-stable, two stage, third order IMEX DIRK(2,3,3)
+            eIMEXdirk_2_3_3,		      //!< L-stable, two stage, third order IMEX DIRK(2,3,3)
             eIMEXdirk_3_4_3,                  //!< L-stable, three stage, third order IMEX DIRK(3,4,3)
-            eIMEXdirk_4_4_3,		      	  //!< L-stable, four stage, third order IMEX DIRK(4,4,3)
+            eIMEXdirk_4_4_3,		      //!< L-stable, four stage, third order IMEX DIRK(4,4,3)
             SIZE_TimeIntegrationMethod        //!< Length of enum list
         };
 
@@ -258,13 +276,13 @@ namespace Nektar
                 m_functors1[3](inarray,outarray,time);
             }
             
-            inline void DoImplicitSolve(InArrayType     &inarray, 
-                                        OutArrayType    &outarray, 
-                                        const NekDouble time, 
-                                        const NekDouble lambda) const
+            inline void DoImplicitSolve(       InArrayType  & inarray, 
+                                               OutArrayType & outarray, 
+                                         const NekDouble      time, 
+                                         const NekDouble      lambda ) const
             {
                 ASSERTL1(m_functors2[0],"ImplicitSolve should be defined for this time integration scheme");
-                m_functors2[0](inarray,outarray,time,lambda);
+                m_functors2[0]( inarray, outarray, time, lambda );
             }
 
 
@@ -276,83 +294,78 @@ namespace Nektar
 
         }; // end class TimeIntegrationSchemeOperators()
 
-        // =========================================================================
-        // ==== DEFINITION OF THE CLASS TimeIntegrationSchemeKey
-        // =========================================================================
-        class TimeIntegrationSchemeKey
-        {
-        public:
+        // // =========================================================================
+        // // ==== DEFINITION OF THE CLASS TimeIntegrationSchemeKey
+        // // =========================================================================
+        // class TimeIntegrationSchemeKey
+        // {
+        // public:
             
-            struct opLess
-            {
-                LUE bool operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
-            };
+        //     struct opLess
+        //     {
+        //         LUE bool operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
+        //     };
             
-            TimeIntegrationSchemeKey(const TimeIntegrationMethod &method) :
-              m_method( method )
-            {
-            }
+        //     TimeIntegrationSchemeKey(const TimeIntegrationMethod &method) :
+        //       m_method( method )
+        //     {
+        //     }
             
-            virtual ~TimeIntegrationSchemeKey()
-            {
-            }
+        //     virtual ~TimeIntegrationSchemeKey()
+        //     {
+        //     }
 
-            TimeIntegrationSchemeKey( const TimeIntegrationSchemeKey &key )
-            {
-                *this = key; // defer to assignment operator
-            }
+        //     TimeIntegrationSchemeKey( const TimeIntegrationSchemeKey &key )
+        //     {
+        //         *this = key; // defer to assignment operator
+        //     }
 
-            TimeIntegrationSchemeKey& operator=( const TimeIntegrationSchemeKey &key )
-            {
-                m_method  = key.m_method;
+        //     TimeIntegrationSchemeKey& operator=( const TimeIntegrationSchemeKey &key )
+        //     {
+        //         m_method  = key.m_method;
                 
-                return *this;
-            }
+        //         return *this;
+        //     }
 
-            inline TimeIntegrationMethod GetIntegrationMethod() const
-            {
-                return m_method;
-            }
+        //     inline bool operator==( const TimeIntegrationSchemeKey &key )
+        //     {
+        //         return (m_method == key.m_method);
+        //     }
 
-            inline bool operator==( const TimeIntegrationSchemeKey &key )
-            {
-                return (m_method == key.m_method);
-            }
+        //     inline bool operator== (const TimeIntegrationSchemeKey *y)
+        //     {
+        //         return (*this == *y);
+        //     }
 
-            inline bool operator== (const TimeIntegrationSchemeKey *y)
-            {
-                return (*this == *y);
-            }
+        //     inline bool operator != (const TimeIntegrationSchemeKey& y)
+        //     {
+        //         return (!(*this == y));
+        //     }
 
-            inline bool operator != (const TimeIntegrationSchemeKey& y)
-            {
-                return (!(*this == y));
-            }
+        //     inline bool operator != (const TimeIntegrationSchemeKey *y)
+        //     {
+        //         return (!(*this == *y));
+        //     }
 
-            inline bool operator != (const TimeIntegrationSchemeKey *y)
-            {
-                return (!(*this == *y));
-            }
+        //     LUE friend bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
+        //     LUE friend bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
+        //     LUE friend bool opLess::operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
 
-            LUE friend bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
-            LUE friend bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
-            LUE friend bool opLess::operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
+        // protected:
+        //     TimeIntegrationMethod m_method;  //!< integration method
 
-        protected:
-            TimeIntegrationMethod m_method;  //!< integration method
+        // private:
+        //     // This should never be called
+        //     TimeIntegrationSchemeKey()
+        //     {
+        //         NEKERROR( ErrorUtil::efatal, "Default Constructor for the TimeIntegrationSchemeKey class should not be called!" );
+        //     }
+        // }; // end class TimeIntegrationSchemeKey
 
-        private:
-            // This should never be called
-            TimeIntegrationSchemeKey()
-            {
-                NEKERROR( ErrorUtil::efatal, "Default Constructor for the TimeIntegrationSchemeKey class should not be called!" );
-            }
-        }; // end class TimeIntegrationSchemeKey
-
-        static const TimeIntegrationSchemeKey NullTimeIntegrationSchemeKey(eNoTimeIntegrationMethod);
-        LUE bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
-        LUE bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
-        LUE std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeKey& rhs);
+        // static const TimeIntegrationSchemeKey NullTimeIntegrationSchemeKey(eNoTimeIntegrationMethod);
+        // LUE bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
+        // LUE bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
+        // LUE std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeKey& rhs);
 
         // =====================================================================
 
@@ -364,18 +377,29 @@ namespace Nektar
         // time integration schemes. It returns you the NekManager 
         // singleton which manages all the time integration schemes...
         //
-        typedef NekManager<TimeIntegrationSchemeKey, TimeIntegrationScheme, TimeIntegrationSchemeKey::opLess> TimeIntegrationSchemeManagerT;
+      // typedef NekManager<TimeIntegrationSchemeKey, TimeIntegrationSchemeData, TimeIntegrationSchemeKey::opLess> TimeIntegrationSchemeManagerT;
 
-        LUE
-        TimeIntegrationSchemeManagerT & GetTimeIntegrationSchemeManager();
+      // LUE
+      // TimeIntegrationSchemeManagerT & GetTimeIntegrationSchemeManager();
         // =====================================================================
 
         // =====================================================================
         // ==== DEFINITION OF THE CLASS TimeIntegrationScheme
         // =====================================================================
+// FIXME: Dd: rename to TimeIntegrationSchemeBase (<- Add BASE)
         class TimeIntegrationScheme
         {
         public:
+
+          // typedefs
+          typedef std::shared_ptr<TimeIntegrationSchemeData>                  TimeIntegrationSchemeDataSharedPtr;
+          typedef std::vector<TimeIntegrationSchemeDataSharedPtr>             TimeIntegrationSchemeDataVector;
+          typedef std::vector<TimeIntegrationSchemeDataSharedPtr>::iterator   TimeIntegrationSchemeDataVectorIter; 
+
+          typedef std::shared_ptr<TimeIntegrationSolution>                TimeIntegrationSolutionSharedPtr;
+          typedef std::vector<TimeIntegrationSolutionSharedPtr>           TimeIntegrationSolutionVector; 
+          typedef std::vector<TimeIntegrationSolutionSharedPtr>::iterator TimeIntegrationSolutionVectorIter; 
+
 
                 typedef const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > > ConstTripleArray;
                 typedef       Array<OneD,       Array<OneD, Array<OneD, NekDouble> > > TripleArray;
@@ -386,115 +410,91 @@ namespace Nektar
                 typedef std::function< void (ConstDoubleArray&, DoubleArray&, const NekDouble) >                  FunctorType1;
                 typedef std::function< void (ConstDoubleArray&, DoubleArray&, const NekDouble, const NekDouble) > FunctorType2;
 
-        public:
 
-            virtual ~TimeIntegrationScheme()
-            {
-            }
+          unsigned int GetNumIntegrationPhases() const { return m_integration_phases.size(); }
 
-            inline const TimeIntegrationSchemeKey& GetIntegrationSchemeKey() const
-            {
-                return m_schemeKey;
-            }
+          LUE
+          TimeIntegrationSolutionSharedPtr InitializeScheme( const NekDouble                                 deltaT,
+                                                                   TimeIntegrationScheme::ConstDoubleArray & y_0,
+                                                             const NekDouble                                 time,
+                                                             const TimeIntegrationSchemeOperators          & op );
+          LUE
+          TimeIntegrationScheme::ConstDoubleArray &
+          TimeIntegrate( const int                                timestep,
+                         const NekDouble                          delta_t,
+                               TimeIntegrationSolutionSharedPtr & solvector,
+                         const TimeIntegrationSchemeOperators   & op);
 
-            inline TimeIntegrationMethod GetIntegrationMethod() const
-            {
-                return m_schemeKey.GetIntegrationMethod();
-            }
+          // The "Method" of the "master scheme" is actually the method of the last phase (sub-scheme)...
+          // See child classes for implementation.
+          virtual TimeIntegrationMethod GetIntegrationMethod() const = 0;
 
-            inline TimeIntegrationSchemeType GetIntegrationSchemeType() const
-            {
-                return m_schemeType;
-            }
+          // FIXME: Dd: this should be protected...
+          // NOTE: It seems to me that it doesn't make sense to ask a (multi-phase) Scheme what its type is... as
+          //       each phase can have a different type... Ask Chris/Mike about this.
+          //       For now, returning type of last phase... 
+          TimeIntegrationSchemeType GetIntegrationSchemeType() const;
 
-            inline NekDouble A(const unsigned int i, const unsigned int j) const
-            {
-                return m_A[0][i][j];
-            }
+        private:
 
-            inline NekDouble B(const unsigned int i, const unsigned int j) const
-            {
-                return m_B[0][i][j];
-            }
+            // inline const TimeIntegrationSchemeKey& GetIntegrationSchemeKey() const
+            // {
+            //     return m_schemeKey;
+            // }
 
-            inline NekDouble U(const unsigned int i, const unsigned int j) const
-            {
-                return m_U[i][j];
-            }
+          //            inline NekDouble A(const unsigned int i, const unsigned int j) const
+          //            {
+          //                return m_A[0][i][j];
+          //            }
 
-            inline NekDouble V(const unsigned int i, const unsigned int j) const
-            {
-                return m_V[i][j];
-            }
+          //            inline NekDouble B(const unsigned int i, const unsigned int j) const
+          //            {
+          //                return m_B[0][i][j];
+          //            }
 
-            inline NekDouble A_IMEX(const unsigned int i, const unsigned int j) const
-            {
-                return m_A[1][i][j];
-            }
+            // inline NekDouble U(const unsigned int i, const unsigned int j) const
+            // {
+            //     return m_U[i][j];
+            // }
 
-            inline NekDouble B_IMEX(const unsigned int i, const unsigned int j) const
-            {
-                return m_B[1][i][j];
-            }
+            // inline NekDouble V(const unsigned int i, const unsigned int j) const
+            // {
+            //     return m_V[i][j];
+            // }
 
-            inline unsigned int GetNsteps(void) const
-            {
-                return m_numsteps;
-            }
+            // inline NekDouble A_IMEX(const unsigned int i, const unsigned int j) const
+            // {
+            //     return m_A[1][i][j];
+            // }
 
-            inline unsigned int GetNstages(void) const
-            {
-                return m_numstages;
-            }
+            // inline NekDouble B_IMEX(const unsigned int i, const unsigned int j) const
+            // {
+            //     return m_B[1][i][j];
+            // }
 
-            inline unsigned int GetNmultiStepValues(void) const
-            {
-                return m_numMultiStepValues;
-            }
+          // inline unsigned int GetNsteps() const { return m_numsteps; }
 
-            inline unsigned int GetNmultiStepDerivs(void) const
-            {
-                return m_numMultiStepDerivs;
-            }
+          //inline unsigned int GetNstages(void) const
+          //  {
+          //      return m_numstages;
+          //  }
 
-            /**
-             * \brief This function initialises the time integration
-             * scheme
-             *
-             * Given the solution at the initial time level
-             * \f$\boldsymbol{y}(t_0)\f$, this function generates the
-             * vectors \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$
-             * needed to evaluate the time integration scheme
-             * formulated as a General Linear Method. These vectors
-             * are embedded in an object of the class
-             * TimeIntegrationSolution. This class is the abstraction
-             * of the input and output vectors of the General Linear
-             * Method.
-             *
-             * For single-step methods, this function is trivial as it
-             * just wraps a TimeIntegrationSolution object around the
-             * given initial values and initial time.  However, for
-             * multistep methods, actual time stepping is being done
-             * to evaluate the necessary parameters at multiple time
-             * levels needed to start the actual integration.
-             *
-             * \param timestep The size of the timestep, i.e. \f$\Delta t\f$.
-             * \param time on input: the initial time, i.e. \f$t_0\f$.
-             * \param time on output: the new time-level after initialisation, in general this yields
-             *       \f$t = t_0 + (r-1)\Delta t\f$ where \f$r\f$ is the number of steps of the multi-step method.
-             * \param nsteps on output: he number of initialisation steps required. In general this corresponds to \f$r-1\f$
-             *       where \f$r\f$ is the number of steps of the multi-step method.
-             * \param f an object of the class FuncType, where FuncType should have a method FuncType::ODEforcing
-             *       to evaluate the right hand side \f$f(t,\boldsymbol{y})\f$ of the ODE.
-             * \param y_0 the initial value \f$\boldsymbol{y}(t_0)\f$
-             * \return An object of the class TimeIntegrationSolution which represents the vectors \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$
-             *  that can be used to start the actual integration.
-             */
-            LUE TimeIntegrationSolutionSharedPtr InitializeScheme( const NekDouble                        timestep,
-                                                                         ConstDoubleArray               & y_0,
-                                                                   const NekDouble                        time,
-                                                                   const TimeIntegrationSchemeOperators & op     );
+        protected:// <- Dd: Now going to use as a base class, so igore -> Dd: don't think anything is inheriting from this, so don't need protected...
+          // private:
 
+          friend class TimeIntegrationSolution;
+          friend class TimeIntegrationSchemeData;
+
+            virtual ~TimeIntegrationScheme() {}
+ 
+          friend std::ostream& operator<<( std::ostream& os, const TimeIntegrationScheme& rhs );
+          friend std::ostream& operator<<( std::ostream& os, const TimeIntegrationSchemeSharedPtr& rhs );
+
+          friend std::ostream& operator<<( std::ostream& os, const TimeIntegrationSchemeData & rhs );
+
+          //friend std::ostream& operator<<( std::ostream& os, const TimeIntegrationScheme& rhs );
+          //          friend std::ostream& operator<<( std::ostream& os, const TimeIntegrationSchemeSharedPtr& rhs );
+          
             /**
              * \brief Explicit integration of an ODE.
              *
@@ -503,7 +503,7 @@ namespace Nektar
              * \frac{d\boldsymbol{y}}{dt}=\boldsymbol{f}(t,\boldsymbol{y})
              * \f]
              *
-             * \param delta_t The size of the timestep, i.e. \f$\Delta t\f$.
+             * \param timestep The size of the timestep, i.e. \f$\Delta t\f$.
              * \param f an object of the class FuncType, where FuncType should have a method FuncType::ODEforcing
              *       to evaluate the right hand side \f$f(t,\boldsymbol{y})\f$ of the ODE.
              * \param y on input: the vectors \f$\boldsymbol{y}^{[n-1]}\f$ and \f$t^{[n-1]}\f$ (which corresponds to the 
@@ -513,114 +513,63 @@ namespace Nektar
              * \return The actual solution \f$\boldsymbol{y}^{n}\f$ at the new time level 
              *    (which in fact is also embedded in the argument y).
              */
-            LUE ConstDoubleArray& TimeIntegrate( const NekDouble                          delta_t,
-                                                       TimeIntegrationSolutionSharedPtr & y,
-                                                 const TimeIntegrationSchemeOperators   & op     );
+            LUE ConstDoubleArray& TimeIntegrate( const NekDouble                          timestep,          
+                                                       TimeIntegrationSolutionSharedPtr & y      ,
+                                                 const TimeIntegrationSchemeOperators   & op );
 
-            inline const Array<OneD, const unsigned int>& GetTimeLevelOffset()
-            {
-                return m_timeLevelOffset;
-            }
+          // TimeIntegrationSchemeKey  m_schemeKey; 
+          //TimeIntegrationSchemeType m_schemeType;
+          //unsigned int              m_numsteps;   //< Number of steps in multi-step component. 
+          // unsigned int              m_numstages;  //< Number of stages in multi-stage component.
 
-
-      //protected: <- Dd: don't think anything is inheriting from this, so don't need protected...
-        private:
-
-            friend class AdamsBashforthOrder2TimeIntegrator;
-            friend class AdamsBashforthOrder3TimeIntegrator;
-            friend class AdamsMoultonOrder2TimeIntegrator;
-            friend class BackwardEulerTimeIntegrator;
-            friend class BDFImplicitOrder2TimeIntegrator;
-            friend class ClassicalRungeKutta4TimeIntegrator;
-            friend class CNABTimeIntegrator;
-            friend class DirkOrder2TimeIntegrator;
-            friend class DirkOrder3TimeIntegrator;
-            friend class ForwardEulerTimeIntegrator;
-            friend class IMEXDirk_1_2_2TimeIntegrator;
-            friend class IMEXDirk_2_2_2TimeIntegrator;
-            friend class IMEXDirk_2_3_2TimeIntegrator;
-            friend class IMEXDirk_3_4_3TimeIntegrator;
-            friend class IMEXGearTimeIntegrator;
-            friend class IMEXOrder1TimeIntegrator;
-            friend class IMEXOrder2TimeIntegrator;
-            friend class IMEXOrder3TimeIntegrator;
-            friend class MCNABTimeIntegrator;
-            friend class RungeKutta2TimeIntegrator;
-            friend class RungeKutta2_ImprovedEulerTimeIntegrator;
-            friend class RungeKutta2_SSPTimeIntegrator;
-            friend class RungeKutta3_SSPTimeIntegrator;
-
-            TimeIntegrationSchemeKey  m_schemeKey; 
-            TimeIntegrationSchemeType m_schemeType;
-            unsigned int              m_numsteps;   //< Number of steps in multi-step component. 
-            unsigned int              m_numstages;  //< Number of stages in multi-stage component. 
+        public: // FIXME m_integration_phases should not be public...
+            TimeIntegrationSchemeDataVector m_integration_phases; // Was called m_intSchemes
+        protected: // FIXME
 
             bool m_firstStageEqualsOldSolution; //< Optimisation-flag 
             bool m_lastStageEqualsNewSolution;  //< Optimisation-flag
 
-            unsigned int m_numMultiStepValues; // number of entries in input and output vector that correspond
-                                               // to VALUES at previous time levels
-            unsigned int m_numMultiStepDerivs; // number of entries in input and output vector that correspond
-                                               // to DERIVATIVES at previous time levels
-            Array<OneD,unsigned int> m_timeLevelOffset; // denotes to which time-level the entries in both 
-                                                        // input and output vector correspond, e.g.
-                                                        //     INPUT VECTOR --------> m_inputTimeLevelOffset
-                                                        //    _            _               _ _
-                                                        //   | u^n          |             | 0 | 
-                                                        //   | u^{n-1}      |             | 1 | 
-                                                        //   | u^{n-2}      |  ----->     | 2 | 
-                                                        //   | dt f(u^{n-1})|             | 1 | 
-                                                        //   | dt f(u^{n-2})|             | 2 | 
-                                                        //    -            -               - -
+            // Array<OneD, Array<TwoD,NekDouble> > m_A;
+            // Array<OneD, Array<TwoD,NekDouble> > m_B;
+            // Array<TwoD,NekDouble>               m_U;
+            // Array<TwoD,NekDouble>               m_V;
 
-            Array<OneD, Array<TwoD,NekDouble> > m_A;
-            Array<OneD, Array<TwoD,NekDouble> > m_B;
-            Array<TwoD,NekDouble>               m_U;
-            Array<TwoD,NekDouble>               m_V;
+          // bool m_initialised;   /// bool to identify if array has been initialised 
+            // int  m_nvar;          /// The number of variables in integration scheme. 
+            // int  m_npoints;       /// The size of inner data which is stored for reuse. 
+            // DoubleArray m_Y;      /// Array containing the stage values 
+            // DoubleArray m_tmp;    /// explicit right hand side of each stage equation
 
-            bool m_initialised;   /// bool to identify if array has been initialised 
-            int  m_nvar;          /// The number of variables in integration scheme. 
-            int  m_npoints;       /// The size of inner data which is stored for reuse. 
-            DoubleArray m_Y;      /// Array containing the stage values 
-            DoubleArray m_tmp;    /// explicit right hand side of each stage equation
+            // TripleArray m_F;      /// Array corresponding to the stage Derivatives 
+            // TripleArray m_F_IMEX; /// Used to store the Explicit stage derivative of IMEX schemes
 
-            TripleArray m_F;      /// Array corresponding to the stage Derivatives 
-            TripleArray m_F_IMEX; /// Used to store the Explicit stage derivative of IMEX schemes
+            // NekDouble   m_T;     ///  Time at the different stages
 
-            NekDouble   m_T;     ///  Time at the different stages
+          //            template <typename> friend class Nektar::MemoryManager;
 
-            template <typename> friend class Nektar::MemoryManager;
+          //            friend TimeIntegrationSchemeManagerT & GetTimeIntegrationSchemeManager();
 
-            LUE friend TimeIntegrationSchemeManagerT & GetTimeIntegrationSchemeManager();
+          // LUE static TimeIntegrationSchemeSharedPtr Create( const TimeIntegrationSchemeKey & key );
 
-            LUE static TimeIntegrationSchemeSharedPtr Create( const TimeIntegrationSchemeKey & key );
-
-            TimeIntegrationScheme(const TimeIntegrationSchemeKey &key);
+            // This should never be used directly... only used by child classes...
+          TimeIntegrationScheme() {}
             
             // These should never be called
-            TimeIntegrationScheme():m_schemeKey(NullTimeIntegrationSchemeKey)
-            {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor for the TimeIntegrationScheme class should not be called");
-            }
-            
-            TimeIntegrationScheme(const TimeIntegrationScheme &in):m_schemeKey(NullTimeIntegrationSchemeKey)
-            {
-                NEKERROR(ErrorUtil::efatal,"Copy Constructor for the TimeIntegrationScheme class should not be called");
-            }
+          // TimeIntegrationScheme() : m_method( eNoTimeIntegrationMethod ) { NEKERROR(ErrorUtil::efatal,"Default Constructor for the TimeIntegrationScheme class should not be called"); }
+          TimeIntegrationScheme( const TimeIntegrationScheme & in ) { NEKERROR(ErrorUtil::efatal,"Copy Constructor for the TimeIntegrationScheme class should not be called"); }
 
-            LUE bool VerifyIntegrationSchemeType(TimeIntegrationSchemeType type,
-                                             const Array<OneD, const Array<TwoD, NekDouble> >& A,
-                                             const Array<OneD, const Array<TwoD, NekDouble> >& B,
-                                             const Array<TwoD, const NekDouble>& U,
-                                             const Array<TwoD, const NekDouble>& V) const;
+            // LUE bool VerifyIntegrationSchemeType(TimeIntegrationSchemeType type,
+            //                                  const Array<OneD, const Array<TwoD, NekDouble> >& A,
+            //                                  const Array<OneD, const Array<TwoD, NekDouble> >& B,
+            //                                  const Array<TwoD, const NekDouble>& U,
+            //                                  const Array<TwoD, const NekDouble>& V) const;
 
-            // Internal implementation of TimeIntegrate - does the actual work... Called by the public TimeIntegrate() above.
-            LUE void TimeIntegrate( const NekDouble                        timestep,
-                                          ConstTripleArray               & y_old,
-                                          ConstSingleArray               & t_old,
-                                          TripleArray                    & y_new,
-                                          SingleArray                    & t_new,
-                                    const TimeIntegrationSchemeOperators & op     );
+          // LUE void TimeIntegrate(const NekDouble timestep,
+          //                            ConstTripleArray               &y_old  ,
+          //                            ConstSingleArray               &t_old  ,
+          //                            TripleArray                    &y_new  ,
+          //                            SingleArray                    &t_new  ,
+          //                      const TimeIntegrationSchemeOperators &op     );
 
 
             inline int GetFirstDim(ConstTripleArray &y) const
@@ -640,6 +589,7 @@ namespace Nektar
                                                    SingleArray                    &t_new  ,
                                              const TimeIntegrationSchemeOperators &op) const;
 
+#if 0
             LUE bool CheckIfFirstStageEqualsOldSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
                                                     const Array<OneD, const Array<TwoD, NekDouble> >& B,
                                                     const Array<TwoD, const NekDouble>& U,
@@ -649,250 +599,15 @@ namespace Nektar
                                                    const Array<OneD, const Array<TwoD, NekDouble> >& B,
                                                    const Array<TwoD, const NekDouble>& U,
                                                    const Array<TwoD, const NekDouble>& V) const;
+#endif
 
 
 
         }; // end class TimeIntegrationScheme
 
 
-        // =========================================================================
-        // ==== DEFINITION OF THE CLASS TimeIntegrationSolution
-        // =========================================================================
-        class TimeIntegrationSolution
-        {
-        public:
-            typedef Array<OneD, Array<OneD, Array<OneD, NekDouble> > > TripleArray;
-            typedef Array<OneD, Array<OneD, NekDouble> >               DoubleArray;
-            
-            // Constructor for single step methods
-            LUE TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
-                                    const DoubleArray& y, 
-                                    const NekDouble time, 
-                                    const NekDouble timestep);
-            // Constructor for multi-step methods
-            LUE TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
-                                    const TripleArray& y, 
-                                    const Array<OneD, NekDouble>& t);
-            LUE TimeIntegrationSolution(const TimeIntegrationSchemeKey &key,
-                                    unsigned int nvar,
-                                    unsigned int npoints);
-            LUE TimeIntegrationSolution(const TimeIntegrationSchemeKey &key);
-
-            inline const TimeIntegrationSchemeSharedPtr& GetIntegrationScheme() const
-            {
-                return m_scheme;
-            }
-
-            inline const TimeIntegrationSchemeKey& GetIntegrationSchemeKey() const
-            {
-                return m_scheme->GetIntegrationSchemeKey();
-            }
-            
-            inline TimeIntegrationMethod GetIntegrationMethod() const
-            {
-                return m_scheme->GetIntegrationMethod();
-            }
-
-            inline const TripleArray& GetSolutionVector() const
-            {
-                return m_solVector;
-            }
-
-            inline TripleArray& UpdateSolutionVector()
-            {
-                return m_solVector;
-            }
-
-            inline const DoubleArray& GetSolution() const
-            {
-                return m_solVector[0];
-            }
-
-            inline DoubleArray& UpdateSolution()
-            {
-                return m_solVector[0];
-            }
-
-            inline const Array<OneD, const NekDouble>& GetTimeVector() const
-            {
-                return m_t;
-            }
-
-            inline Array<OneD, NekDouble>& UpdateTimeVector()
-            {
-                return m_t;
-            }
-
-            inline NekDouble GetTime() const
-            {
-                return m_t[0];
-            }
-
-            inline int GetNsteps()
-            {
-                return m_scheme->GetNsteps();
-            }
-
-            inline int GetFirstDim() const
-            {
-                return m_solVector[0].num_elements();
-            }
-
-            inline int GetSecondDim() const
-            {
-                return m_solVector[0][0].num_elements();
-            }
-
-            // Return the number of entries in the solution vector that correspond
-            // to (multi-step) values
-            inline unsigned int GetNvalues(void) const
-            {
-                return m_scheme->GetNmultiStepValues();
-            }
-
-            // Return the number of entries in the solution vector that correspond
-            // to (multi-step) derivatives
-            inline unsigned int GetNderivs(void) const
-            {
-                return m_scheme->GetNmultiStepDerivs();
-            }
-
-            // Returns an array which indicates to which time-level the entries in the
-            // solution vector correspond
-            inline const Array<OneD, const unsigned int>& GetTimeLevelOffset()
-            {
-                return m_scheme->GetTimeLevelOffset();
-            }
-
-            // returns the entry in the solution vector which corresponds to 
-            // the (multi-step) value at the time-level with specified offset
-            inline DoubleArray& GetValue(const unsigned int timeLevelOffset)
-            {
-                int nMultiStepVals = m_scheme->GetNmultiStepValues();
-                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
-
-                for(int i = 0; i < nMultiStepVals; i++)
-                {
-                    if( timeLevelOffset == offsetvec[i] )
-                    {
-                        return m_solVector[i];
-                    }
-                }
-                ASSERTL1(false,"The solution vector of this scheme does not contain a value at the requested time-level");
-                return m_solVector[0];
-            }
-
-            // returns the entry in the solution vector which corresponds to 
-            // the (multi-step) derivative at the time-level with specified offset
-            inline DoubleArray& GetDerivative(const unsigned int timeLevelOffset)
-            {
-                int nMultiStepVals = m_scheme->GetNmultiStepValues();
-                int size           = m_scheme->GetNsteps();
-                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
-
-                for(int i = nMultiStepVals; i < size; i++)
-                {
-                    if( timeLevelOffset == offsetvec[i] )
-                    {
-                        return m_solVector[i];
-                    }
-                }
-                ASSERTL1(false,"The solution vector of this scheme does not contain a derivative at the requested time-level");
-                return m_solVector[0];
-            }
-
-            // returns the time associated with the (multi-step) value at the time-level with the 
-            // given offset
-            inline NekDouble GetValueTime(const unsigned int timeLevelOffset)
-            {
-                int nMultiStepVals = m_scheme->GetNmultiStepValues();
-                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
-
-                for(int i = 0; i < nMultiStepVals; i++)
-                {
-                    if( timeLevelOffset == offsetvec[i] )
-                    {
-                        return m_t[i];
-                    }
-                }
-                ASSERTL1(false,"The solution vector of this scheme does not contain a value at the requested time-level");
-                return m_t[0];
-            }
-
-            // sets the (multi-step) value and time in the solution
-            // vector which corresponds to
-            // the value at the time-level with specified offset
-            inline void SetValue(const unsigned int timeLevelOffset, const DoubleArray& y, const NekDouble t)
-            {
-                int nMultiStepVals = m_scheme->GetNmultiStepValues();
-                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
-
-                for(int i = 0; i < nMultiStepVals; i++)
-                {
-                    if( timeLevelOffset == offsetvec[i] )
-                    {
-                        m_solVector[i] = y;
-                        m_t[i] = t;
-                        return;
-                    }
-                }
-            }
-
-            // sets the (multi-step) derivative and time in the
-            // solution vector which corresponds to
-            // the derivative at the time-level with specified offset
-            inline void SetDerivative(const unsigned int timeLevelOffset, const DoubleArray& y, const NekDouble timestep)
-            {
-                int nMultiStepVals = m_scheme->GetNmultiStepValues();
-                int size           = m_scheme->GetNsteps();
-                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
-
-                for(int i = nMultiStepVals; i < size; i++)
-                {
-                    if( timeLevelOffset == offsetvec[i] )
-                    {
-                        m_solVector[i] = y;
-                        m_t[i] = timestep;
-                        return;
-                    }
-                }
-            }
-
-            // sets the soln Vector 
-            inline void SetSolVector(const  int Offset, const DoubleArray& y)
-            {
-                m_solVector[Offset] = y;
-            }
-
-            // Rotate the solution vector 
-            // (i.e. updating without calculating/inserting new values)
-            inline void RotateSolutionVector()
-            {
-                int i;
-                int nMultiStepVals = m_scheme->GetNmultiStepValues();
-                int size           = m_scheme->GetNsteps();
-                for(i = (nMultiStepVals-1); i > 0; i--)
-                {
-                    m_solVector[i] = m_solVector[i-1];
-                }
-
-                for(i = (size-1); i > nMultiStepVals; i--)
-                {
-                    m_solVector[i] = m_solVector[i-1];
-                }
-            }
-
-
-        private:
-            TimeIntegrationSchemeSharedPtr m_scheme;
-            TripleArray m_solVector;
-            Array<OneD,NekDouble> m_t;
-        };
-        // =========================================================================
-
-
-        LUE std::ostream& operator<<(std::ostream& os, const TimeIntegrationScheme& rhs);
-        LUE std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeSharedPtr& rhs);
+      LUE std::ostream& operator<<( std::ostream& os, const TimeIntegrationScheme& rhs );
+      LUE std::ostream& operator<<( std::ostream& os, const TimeIntegrationSchemeSharedPtr& rhs );
         
         // =========================================================================
 

@@ -82,8 +82,10 @@
 
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
+
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/TimeIntegration/TimeIntegratorBase.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 
 using namespace std;
 using namespace Nektar;
@@ -181,22 +183,23 @@ int main(int argc, char *argv[])
 {
     po::options_description desc("Usage:");
     desc.add_options()
-        ("help, h",      "Display this help message.")
+        ("help, h",        "Display this help message.")
         ("Npoints, np",    po::value<int>(),
-                          "Specify the number of grid points to be used.")
+                           "Specify the number of grid points to be used.")
         ("Ntimesteps, nt", po::value<int>(),
-                          "Specify the number of timesteps to be used.")
+                           "Specify the number of timesteps to be used.")
         ("TimeIntegrationMethod, m", po::value<int>(),
-                    "TimeIntegrationMethod is a number in the range [1,8]\n"
-                    "and defines the time-integration method to be used:\n"
-                    "- 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)\n"
-                    "- 2: 2nd order multi-step IMEX scheme\n"
-                    "- 3: 3rd order multi-step IMEX scheme\n"
-                    "- 4: 2nd order multi-stage DIRK IMEX scheme\n"
-                    "- 5: 3nd order multi-stage DIRK IMEX scheme\n"
-                    "- 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
-                    "- 7: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
-                    "- 8: 2nd order Modified Crank-Nicolson/Adams-Bashforth (MCNAB)" );
+                           "TimeIntegrationMethod is a number in the range [1,8]\n"
+                           "and defines the time-integration method to be used:\n"
+                           "- 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)\n"
+                           "- 2: 2nd order multi-step IMEX scheme\n"
+                           "- 3: 3rd order multi-step IMEX scheme\n"
+                           "- 4: 2nd order multi-stage DIRK IMEX scheme\n"
+                           "- 5: 3nd order multi-stage DIRK IMEX scheme\n"
+                           "- 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
+                           "- 7: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
+                           "- 8: 2nd order Modified Crank-Nicolson/Adams-Bashforth (MCNAB)" );
+
     po::variables_map vm;
     try
     {
@@ -213,7 +216,7 @@ int main(int argc, char *argv[])
 
     if( !vm.count("Npoints") || !vm.count("Ntimesteps") || !vm.count("TimeIntegrationMethod") || vm.count("help") )
     {
-        cout << "Please specify points, timesteps and method." << endl << endl;
+        cout << "Please specify points, timesteps and method.\n\n";
         cout << desc;
         return 1;
     }
@@ -254,18 +257,20 @@ int main(int argc, char *argv[])
     // 2. THE TEMPORAL DISCRETISATION
     // 2.1 Read in which method should be used.  Create time integrator
     //
-    LibUtilities::TimeIntegratorSharedPtr timeIntegrator;
+    LibUtilities::TimeIntegrationSchemeSharedPtr tiScheme;
+
+    TimeIntegrationSchemeFactory & factory = LibUtilities::GetTimeIntegrationSchemeFactory();
 
     switch( nMethod )
     {
-    case 1 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "IMEXOrder1" );     break;
-    case 2 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "IMEXOrder2" );     break;
-    case 3 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "IMEXOrder3" );     break;
-    case 4 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "IMEXdirk_2_3_2" ); break;
-    case 5 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "IMEXdirk_3_4_3" ); break;
-    case 6 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "IMEXGear" );       break;
-    case 7 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "CNAB" );           break;
-    case 8 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "MCNAB" );          break;
+    case 1 : tiScheme = factory.CreateInstance( "IMEXOrder1" );     break;
+    case 2 : tiScheme = factory.CreateInstance( "IMEXOrder2" );     break;
+    case 3 : tiScheme = factory.CreateInstance( "IMEXOrder3" );     break;
+    case 4 : tiScheme = factory.CreateInstance( "IMEXdirk_2_3_2" ); break;
+    case 5 : tiScheme = factory.CreateInstance( "IMEXdirk_3_4_3" ); break;
+    case 6 : tiScheme = factory.CreateInstance( "IMEXGear" );       break;
+    case 7 : tiScheme = factory.CreateInstance( "CNAB" );           break;
+    case 8 : tiScheme = factory.CreateInstance( "MCNAB" );          break;
     default :
       {
         cerr << "The third argument defines the time-integration method to be used:\n\n";
@@ -289,7 +294,7 @@ int main(int argc, char *argv[])
     solver->EvaluateExactSolution( fidifsol, t0 );  // Set the initial condition
 
     // I've commented out the following two lines as they duplicate what is done in the
-    // first iteration of the below for loop (part 2.5).  
+    // first iteration of the below for loop (part 2.4).
     // 
     //    solver->EvaluateExactSolution(exactsol,t0);  // Set the initial condition
     //    solver->AppendOutput(outfile,fidifsol,exactsol); // Write the initial condition to a file
@@ -298,8 +303,8 @@ int main(int argc, char *argv[])
     //
     double dt = solver->GetTimeStep();
 
-    LibUtilities::TimeIntegrationSolutionSharedPtr sol;
-    sol = timeIntegrator->InitializeIntegrator( dt, fidifsol, t0, ode );
+    LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr sol;
+    sol = tiScheme->InitializeScheme( dt, fidifsol, t0, ode );
 
     // 2.4 Do the time-integration:
     //
@@ -307,7 +312,7 @@ int main(int argc, char *argv[])
     {
         double t = t0 + i*dt;
 
-        fidifsol = timeIntegrator->TimeIntegrate( i, dt, sol, ode ); // Time-integration for 1 time-step
+        fidifsol = tiScheme->TimeIntegrate( i, dt, sol, ode ); // Time-integration for 1 time-step
 
         solver->EvaluateExactSolution( exactsol, t );        // Calculate the exact solution
         solver->AppendOutput( outfile, fidifsol, exactsol ); // Dump the output to a file

@@ -133,11 +133,11 @@ namespace Nektar
         virtual bool v_PreIntegrate(int step);
 
         // SubsStepping methods -> Probably could be set up in separate class
-        void SubStepAdvance(const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-                            int nstep,  NekDouble time);
+        void SubStepAdvance( const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln, 
+                             int nstep,  NekDouble time );
         NekDouble GetSubstepTimeStep();
-        void SetUpSubSteppingTimeIntegration(       int                                     intMethod,
-                                              const LibUtilities::TimeIntegratorSharedPtr & IntegrationScheme );
+        void SetUpSubSteppingTimeIntegration(int intMethod,
+                         const LibUtilities::TimeIntegrationSchemeSharedPtr &IntegrationScheme);
 
         void SubStepAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
                               Array<OneD, Array<OneD, NekDouble> > &outarray,
@@ -154,7 +154,7 @@ namespace Nektar
 
         Array<OneD, NekDouble> GetMaxStdVelocity(const Array<OneD, Array<OneD,NekDouble> > inarray);
 
-        LibUtilities::TimeIntegratorSharedPtr         m_subStepIntegrationScheme;
+        LibUtilities::TimeIntegrationSchemeSharedPtr  m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators  m_subStepIntegrationOps;
 
         int m_intSteps;

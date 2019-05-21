@@ -128,6 +128,8 @@ namespace Nektar
 
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);
+            
+            virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray);
 
         private:
         };

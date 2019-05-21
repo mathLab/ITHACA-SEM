@@ -268,10 +268,7 @@ namespace Nektar
 
             if (m_shockCaptureType == "Physical")
             {
-                if ( m_muav == NullNekDouble1DArray )
-                {
-                    GetPhysicalAV(tmp);
-                }
+                GetPhysicalAV(tmp);
                 Array<OneD, NekDouble> muavFwd(nCoeffs);
                 m_fields[0]->FwdTrans_IterPerExp(m_muav,   muavFwd);
                 variables.push_back  ("ArtificialVisc");
@@ -400,6 +397,12 @@ namespace Nektar
         for (i = 0; i < nvariables; ++i)
         {
             outarrayDiff[i] = Array<OneD, NekDouble>(ncoeffs,0.0);
+        }
+
+        // get artificial viscosity
+        if (m_shockCaptureType == "Physical")
+        {
+            GetPhysicalAV(inarray);
         }
 
         string diffName;

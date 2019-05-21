@@ -225,10 +225,10 @@ void VelocityCorrectionScheme::SetupFlowrate(NekDouble aii_dt)
 
     // Define flag for case with homogeneous expansion and forcing not in the
     // z-direction
-    m_Hom1DNoImplicit = false;
+    m_Hom1DExplicit = false;
     if (defined && m_HomogeneousType == eHomogeneous1D)
     {
-        m_Hom1DNoImplicit = true;
+        m_Hom1DExplicit = true;
     }
 
     // For 3DH1D simulations, if force isn't defined then assume in
@@ -260,7 +260,7 @@ void VelocityCorrectionScheme::SetupFlowrate(NekDouble aii_dt)
         // For a boundary, extract the boundary itself.
         m_flowrateBnd = m_fields[0]->GetBndCondExpansions()[m_flowrateBndID];
     }
-    else if (m_HomogeneousType == eHomogeneous1D)
+    else if (m_HomogeneousType == eHomogeneous1D && !m_Hom1DExplicit)
     {
         // For 3DH1D simulations with no force specified, find the mean
         // (0th) plane.
@@ -293,19 +293,7 @@ void VelocityCorrectionScheme::SetupFlowrate(NekDouble aii_dt)
     if (m_flowrateBnd)
     {
         Array<OneD, NekDouble> inArea(m_flowrateBnd->GetNpoints(), 1.0);
-        // This works correctly in serial, but when multiple processes are used
-        // the wrong value is retrieved.
-        if (m_Hom1DNoImplicit)
-        {
-            NekDouble Lz, HomModesZ;
-            m_session->LoadParameter("Lz", Lz);
-            m_session->LoadParameter("HomModesZ", HomModesZ);
-            m_flowrateArea = m_flowrateBnd->Integral(inArea) / HomModesZ * Lz;
-        }
-        else
-        {
-            m_flowrateArea = m_flowrateBnd->Integral(inArea);
-        }
+        m_flowrateArea = m_flowrateBnd->Integral(inArea);
     }
     m_comm->AllReduce(m_flowrateArea, LibUtilities::ReduceMax);
 
@@ -377,6 +365,7 @@ void VelocityCorrectionScheme::SetupFlowrate(NekDouble aii_dt)
 NekDouble VelocityCorrectionScheme::MeasureFlowrate(
     const Array<OneD, Array<OneD, NekDouble>> &inarray)
 {
+    int rank = m_comm->GetRank();
     NekDouble flowrate = 0.0;
 
     if (m_flowrateBnd && m_flowrateBndID >= 0)
@@ -394,7 +383,7 @@ NekDouble VelocityCorrectionScheme::MeasureFlowrate(
         flowrate = m_flowrateBnd->VectorFlux(boundary);
         // m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
     }
-    else if (m_flowrateBnd && !m_Hom1DNoImplicit)
+    else if (m_flowrateBnd)
     {
         // 3DH1D case: compute flux through the zero-th (mean) plane.
         flowrate = m_flowrateBnd->Integral(inarray[2]);
@@ -418,7 +407,9 @@ NekDouble VelocityCorrectionScheme::MeasureFlowrate(
     // Would this possibly work or do we need to use column communicators? In
     // the previous implementation parallel execution deadlocks because the
     // processes not on the boundary try and compute the integral on line 400.
+    cout << "Process " << rank << " before AllReduce: " << flowrate/m_flowrateArea << endl;
     m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
+    cout << "Process " << rank << " after AllReduce: " << flowrate/m_flowrateArea << endl;
     return flowrate / m_flowrateArea;
 }
 

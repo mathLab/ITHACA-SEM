@@ -132,6 +132,8 @@ protected:
     NekDouble m_flowrate;
     /// Area of the boundary through which we are measuring the flowrate
     NekDouble m_flowrateArea;
+    // Bool to identify 3D1HD with forcing explicitly defined
+    bool m_Hom1DExplicit;    
     /// Flux of the Stokes function solution
     NekDouble m_greenFlux;
     /// Current flowrate correction
@@ -148,10 +150,6 @@ protected:
     int m_flowrateSteps;
     /// Value of aii_dt used to compute Stokes flowrate solution.
     NekDouble m_flowrateAiidt;
-
-    // Bool to identify case in which the flowrate is defined in a 3D1HD
-    // expansion
-    bool m_Hom1DNoImplicit;
 
     void SetupFlowrate(NekDouble aii_dt);
     NekDouble MeasureFlowrate(

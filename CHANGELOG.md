@@ -109,6 +109,7 @@ v5.0.0
 - Add support for Gmsh 4.0 mesh file format (!964)
 - Fix issue with extracting 1D curved surface from 2D file (!984)
 - Fix surface extraction, added regression test (!994)
+- Fix 2D meshing running out of memory due to missing else (!1012)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -150,6 +151,7 @@ v5.0.0
 - Made Sutherland's law non-dimensional (!972)
 - Modified pressure outlet BCs to allow for the reference static pressure to be
   set from the VALUE fields (!981)
+- hp scaling for Laplacian AV (!1013)
 
 **AcousticSolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC

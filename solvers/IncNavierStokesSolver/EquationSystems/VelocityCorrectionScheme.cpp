@@ -644,7 +644,7 @@ void VelocityCorrectionScheme::SolveUnsteadyStokesSystem(
     {
         NekDouble currentFlux = MeasureFlowrate(outarray);
         m_alpha               = (m_flowrate - currentFlux) / m_greenFlux;
-        cout << "Current flux is " << currentFlux << ". Alpha is " << m_alpha << endl;
+        
         for (int i = 0; i < m_spacedim; ++i)
         {
             Vmath::Svtvp(physTot, m_alpha, m_flowrateStokes[i], 1, outarray[i],

@@ -268,7 +268,7 @@ namespace Nektar
 
             if (m_shockCaptureType == "Physical")
             {
-                GetPhysicalAV(tmp);
+                // GetPhysicalAV(tmp);
                 Array<OneD, NekDouble> muavFwd(nCoeffs);
                 m_fields[0]->FwdTrans_IterPerExp(m_muav,   muavFwd);
                 variables.push_back  ("ArtificialVisc");
@@ -400,9 +400,10 @@ namespace Nektar
         }
 
         // get artificial viscosity
-        if (m_shockCaptureType == "Physical")
+        if (m_shockCaptureType == "Physical" && m_CalcuPhysicalAV)
         {
             GetPhysicalAV(inarray);
+            m_CalcuPhysicalAV = false;
         }
 
         string diffName;
@@ -1922,26 +1923,26 @@ namespace Nektar
             m_varConv->GetDynamicViscosity(temperature, mu);
             m_varConv->GetDmuDT(temperature,mu,DmuDT);
         }
-        // Add artificial viscosity if wanted
-        if (m_shockCaptureType == "Physical")
-        {
-            // // Apply Ducros sensor
-            // if (m_physicalSensorType == "Ducros")
-            // {
-            //     ducros(m_muav);
-            // }
-            // // Make approximate C0 projection
-            // if (m_smoothing == "C0")
-            // {
-            //     C0Smooth(m_muav);
-            //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
-            //     {
-            //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
-            //     }
-            // }
-            Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
-            // Get numerical DmuDT
-        }
+        // // Add artificial viscosity if wanted
+        // if (m_shockCaptureType == "Physical")
+        // {
+        //     // // Apply Ducros sensor
+        //     // if (m_physicalSensorType == "Ducros")
+        //     // {
+        //     //     ducros(m_muav);
+        //     // }
+        //     // // Make approximate C0 projection
+        //     // if (m_smoothing == "C0")
+        //     // {
+        //     //     C0Smooth(m_muav);
+        //     //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
+        //     //     {
+        //     //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
+        //     //     }
+        //     // }
+        //     Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
+        //     // Get numerical DmuDT
+        // }
 
         // What about thermal conductivity?
 

@@ -73,8 +73,9 @@ namespace Nektar
     NekDouble                           m_Cp;
     NekDouble                           m_Cv;
     NekDouble                           m_Prandtl;
-
     NekDouble                           m_Twall;
+    NekDouble                           m_mu0;
+
     /// Equation of system for computing temperature
     EquationOfStateSharedPtr            m_eos;
 

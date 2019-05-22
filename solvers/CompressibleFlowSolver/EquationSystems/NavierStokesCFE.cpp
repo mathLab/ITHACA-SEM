@@ -100,6 +100,9 @@ namespace Nektar
             m_thermalConductivity = m_Cp * m_mu / m_Prandtl;
         }
 
+        // Artificial viscosity parameter
+        m_session->LoadParameter("mu0", m_mu0, 1.0);
+
         string diffName, advName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
 
@@ -1410,8 +1413,8 @@ namespace Nektar
             int nElmtPoints     = m_fields[0]->GetExp(e)->GetTotPoints();
 
             // Scale viscosity by the maximum wave speed
-            NekDouble LambdaElmt = 0.0;
-            LambdaElmt = Vmath::Vmax(nElmtPoints, tmp = Lambdas + physOffset, 1);
+            NekDouble LambdaElmt = m_mu0;
+            LambdaElmt *= Vmath::Vmax(nElmtPoints, tmp = Lambdas + physOffset, 1);
             Vmath::Smul(nElmtPoints, LambdaElmt, tmp = m_muav + physOffset, 1,
                 tmp = m_muav + physOffset, 1);
 

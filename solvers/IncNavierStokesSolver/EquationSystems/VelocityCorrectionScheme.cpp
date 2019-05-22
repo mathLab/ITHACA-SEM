@@ -365,7 +365,6 @@ void VelocityCorrectionScheme::SetupFlowrate(NekDouble aii_dt)
 NekDouble VelocityCorrectionScheme::MeasureFlowrate(
     const Array<OneD, Array<OneD, NekDouble>> &inarray)
 {
-    int rank = m_comm->GetRank();
     NekDouble flowrate = 0.0;
 
     if (m_flowrateBnd && m_flowrateBndID >= 0)
@@ -381,35 +380,23 @@ NekDouble VelocityCorrectionScheme::MeasureFlowrate(
         }
 
         flowrate = m_flowrateBnd->VectorFlux(boundary);
-        // m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
     }
-    else if (m_flowrateBnd)
+    else if (m_flowrateBnd && !m_Hom1DExplicit)
     {
-        // 3DH1D case: compute flux through the zero-th (mean) plane.
+        // 3DH1D case with no Flowrate boundary defined: compute flux through the zero-th (mean) plane.
         flowrate = m_flowrateBnd->Integral(inarray[2]);
-
-        // Now communicate this with other planes
-        // m_comm->GetColumnComm()->AllReduce(flowrate,
-        // LibUtilities::ReduceSum);
     }
-    // else if (m_HomogeneousType == eHomogeneous1D)
-    // {
-    //     // Remaining homogeneous processors that do not contain boundary.
-    //     m_comm->GetColumnComm()->AllReduce(flowrate,
-    //     LibUtilities::ReduceSum);
-    // }
-    // else
-    // {
-    //     // Remaining processors that do not contain boundary.
-    //     m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
-    // }
 
-    // Would this possibly work or do we need to use column communicators? In
-    // the previous implementation parallel execution deadlocks because the
-    // processes not on the boundary try and compute the integral on line 400.
-    cout << "Process " << rank << " before AllReduce: " << flowrate/m_flowrateArea << endl;
-    m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
-    cout << "Process " << rank << " after AllReduce: " << flowrate/m_flowrateArea << endl;
+    // Communication to obtain the total flowrate
+    if(!m_Hom1DExplicit)
+    {
+        m_comm->GetColumnComm()->AllReduce(flowrate, LibUtilities::ReduceSum);
+    }
+    else
+    {
+        m_comm->AllReduce(flowrate, LibUtilities::ReduceSum); 
+    }
+
     return flowrate / m_flowrateArea;
 }
 
@@ -657,7 +644,7 @@ void VelocityCorrectionScheme::SolveUnsteadyStokesSystem(
     {
         NekDouble currentFlux = MeasureFlowrate(outarray);
         m_alpha               = (m_flowrate - currentFlux) / m_greenFlux;
-
+        cout << "Current flux is " << currentFlux << ". Alpha is " << m_alpha << endl;
         for (int i = 0; i < m_spacedim; ++i)
         {
             Vmath::Svtvp(physTot, m_alpha, m_flowrateStokes[i], 1, outarray[i],

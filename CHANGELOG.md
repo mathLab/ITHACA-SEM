@@ -73,6 +73,8 @@ v5.0.0
 - Fixed bug in ReOrientQuadFacePhysMap (!1003)
 - Add NekPy Python interface (!962, !990, !989, !1004)
 - Fix edge case for ThirdPartyScotch and FindScoth (!1009)
+- Added flag to skip periodic BCs while filling Direchlet BCs in
+  ContField3D.cpp (!1018)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

@@ -100,6 +100,9 @@ namespace Nektar
             m_thermalConductivity = m_Cp * m_mu / m_Prandtl;
         }
 
+        // Artificial viscosity parameter
+        m_session->LoadParameter("mu0", m_mu0, 1.0);
+
         string diffName, advName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
 
@@ -159,7 +162,7 @@ namespace Nektar
 
         //Only NavierStokes equation and using weakDG,LDGNS can temparary use the codes
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
-	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
+        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
         if(m_useUnifiedWeakIntegration)
         {
             if(advName=="WeakDG" && ((diffName=="LDGNS")||(diffName=="InteriorPenalty")))
@@ -268,10 +271,7 @@ namespace Nektar
 
             if (m_shockCaptureType == "Physical")
             {
-                if ( m_muav == NullNekDouble1DArray )
-                {
-                    GetPhysicalAV(tmp);
-                }
+                // GetPhysicalAV(tmp);
                 Array<OneD, NekDouble> muavFwd(nCoeffs);
                 m_fields[0]->FwdTrans_IterPerExp(m_muav,   muavFwd);
                 variables.push_back  ("ArtificialVisc");
@@ -400,6 +400,13 @@ namespace Nektar
         for (i = 0; i < nvariables; ++i)
         {
             outarrayDiff[i] = Array<OneD, NekDouble>(ncoeffs,0.0);
+        }
+
+        // get artificial viscosity
+        if (m_shockCaptureType == "Physical" && m_CalcuPhysicalAV)
+        {
+            GetPhysicalAV(inarray);
+            m_CalcuPhysicalAV = false;
         }
 
         string diffName;
@@ -999,6 +1006,7 @@ namespace Nektar
                     Vmath::Vvtvp(nPts,&normal[nd][0],1,&fluxVec[nd][j][0],1,&outarray[0][j][0],1,&outarray[0][j][0],1);
                 }
             }
+            ApplyFluxBndConds(nConvectiveFields,outarray[0]);
         }
         else
         {
@@ -1122,12 +1130,69 @@ namespace Nektar
                         Vmath::Vvtvp(nBndEdgePts,&consvar[k][id2],1,&consvar[k][id2],1,&wallTotEngy[0],1,&wallTotEngy[0],1);
                     }
                     Vmath::Vdiv(nBndEdgePts,&wallTotEngy[0],1,&consvar[ndens][id2],1,&wallTotEngy[0],1);
+                    Vmath::Smul(nBndEdgePts,0.5,&wallTotEngy[0],1,&wallTotEngy[0],1);
                     Vmath::Svtvp(nBndEdgePts,InternalEnergy,&consvar[ndens][id2],1,&wallTotEngy[0],1,&wallTotEngy[0],1);
 
 
                     Vmath::Vcopy(nBndEdgePts,
                                 &wallTotEngy[0], 1,
                                 &consvar[nengy][id2], 1);
+                }
+            }
+        }
+    }
+
+    /**
+     * @brief aplly Neuman boundary conditions on flux
+     *        Currently only consider WallAdiabatic
+     *
+     */
+    void NavierStokesCFE::ApplyFluxBndConds(
+        const int                                           nConvectiveFields,
+              Array<OneD,       Array<OneD, NekDouble> >    &flux)
+    {
+        int ndens       = 0;
+        int nengy       = nConvectiveFields-1;
+        int nvelst      = ndens + 1;
+        int nveled      = nengy;
+
+        int cnt;
+        int j, e;
+        int id2;
+
+        int nBndEdgePts, nBndEdges, nBndRegions;
+
+        int nLengthArray    =0;
+
+        // Compute boundary conditions  for Energy
+        cnt = 0;
+        nBndRegions = m_fields[nengy]->
+        GetBndCondExpansions().num_elements();
+        for (j = 0; j < nBndRegions; ++j)
+        {
+            if (m_fields[nengy]->GetBndConditions()[j]->
+                GetBoundaryConditionType() ==
+                SpatialDomains::ePeriodic)
+            {
+                continue;
+            }
+
+            nBndEdges = m_fields[nengy]->
+            GetBndCondExpansions()[j]->GetExpSize();
+            for (e = 0; e < nBndEdges; ++e)
+            {
+                nBndEdgePts = m_fields[nengy]->
+                GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
+
+                id2 = m_fields[0]->GetTrace()->
+                GetPhys_Offset(m_fields[0]->GetTraceMap()->
+                            GetBndCondTraceToGlobalTraceMap(cnt++));
+
+                // Imposing Temperature Twall at the wall
+                if (boost::iequals(m_fields[nengy]->GetBndConditions()[j]->
+                    GetUserDefined(),"WallAdiabatic"))
+                {
+                    Vmath::Zero(nBndEdgePts, &flux[nengy][id2], 1);
                 }
             }
         }
@@ -1348,8 +1413,8 @@ namespace Nektar
             int nElmtPoints     = m_fields[0]->GetExp(e)->GetTotPoints();
 
             // Scale viscosity by the maximum wave speed
-            NekDouble LambdaElmt = 0.0;
-            LambdaElmt = Vmath::Vmax(nElmtPoints, tmp = Lambdas + physOffset, 1);
+            NekDouble LambdaElmt = m_mu0;
+            LambdaElmt *= Vmath::Vmax(nElmtPoints, tmp = Lambdas + physOffset, 1);
             Vmath::Smul(nElmtPoints, LambdaElmt, tmp = m_muav + physOffset, 1,
                 tmp = m_muav + physOffset, 1);
 
@@ -1861,26 +1926,26 @@ namespace Nektar
             m_varConv->GetDynamicViscosity(temperature, mu);
             m_varConv->GetDmuDT(temperature,mu,DmuDT);
         }
-        // Add artificial viscosity if wanted
-        if (m_shockCaptureType == "Physical")
-        {
-            // // Apply Ducros sensor
-            // if (m_physicalSensorType == "Ducros")
-            // {
-            //     ducros(m_muav);
-            // }
-            // // Make approximate C0 projection
-            // if (m_smoothing == "C0")
-            // {
-            //     C0Smooth(m_muav);
-            //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
-            //     {
-            //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
-            //     }
-            // }
-            Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
-            // Get numerical DmuDT
-        }
+        // // Add artificial viscosity if wanted
+        // if (m_shockCaptureType == "Physical")
+        // {
+        //     // // Apply Ducros sensor
+        //     // if (m_physicalSensorType == "Ducros")
+        //     // {
+        //     //     ducros(m_muav);
+        //     // }
+        //     // // Make approximate C0 projection
+        //     // if (m_smoothing == "C0")
+        //     // {
+        //     //     C0Smooth(m_muav);
+        //     //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
+        //     //     {
+        //     //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
+        //     //     }
+        //     // }
+        //     Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
+        //     // Get numerical DmuDT
+        // }
 
         // What about thermal conductivity?
 

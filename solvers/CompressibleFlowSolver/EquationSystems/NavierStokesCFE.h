@@ -73,8 +73,9 @@ namespace Nektar
     NekDouble                           m_Cp;
     NekDouble                           m_Cv;
     NekDouble                           m_Prandtl;
-
     NekDouble                           m_Twall;
+    NekDouble                           m_mu0;
+
     /// Equation of system for computing temperature
     EquationOfStateSharedPtr            m_eos;
 
@@ -99,6 +100,9 @@ namespace Nektar
     void SpecialBndTreat(
         const int                                           nConvectiveFields,
               Array<OneD,       Array<OneD, NekDouble> >    &consvar);
+    void ApplyFluxBndConds(
+        const int                                           nConvectiveFields,
+              Array<OneD,       Array<OneD, NekDouble> >    &flux);
 
     void GetArtificialViscosity(
         const Array<OneD, Array<OneD, NekDouble> >  &inarray,

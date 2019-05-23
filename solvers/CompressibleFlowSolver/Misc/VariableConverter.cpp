@@ -200,8 +200,8 @@ void VariableConverter::GetDynamicViscosity(
  * @param mu           The resulting dynamic viscosity.
  */
 void VariableConverter::GetDmuDT(
-    const Array<OneD, const NekDouble>  &temperature, 
-    const Array<OneD, const NekDouble>  &mu, 
+    const Array<OneD, const NekDouble>  &temperature,
+    const Array<OneD, const NekDouble>  &mu,
           Array<OneD, NekDouble>        &DmuDT)
 {
     const int nPts      = temperature.num_elements();
@@ -209,7 +209,7 @@ void VariableConverter::GetDmuDT(
 
     for (int i = 0; i < nPts; ++i)
     {
-        tmp         = 0.5*((temperature[i]+3.0*110.0)/(temperature[i]*(temperature[i]+110.0));
+        tmp         = 0.5* (temperature[i]+3.0*110.0)/(temperature[i]*(temperature[i]+110.0));
         DmuDT[i]    = mu[i]*tmp;
     }
 }

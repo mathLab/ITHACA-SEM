@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Geometry2D.cpp
+//  File: MatrixKey.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,22 +29,45 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Python wrapper for Geometry2D.
+//  Description: Python wrapper for MatrixKey.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <vector>
+#include <LocalRegions/MatrixKey.h>
 
-#include <SpatialDomains/Geometry2D.h>
 #include <LibUtilities/Python/NekPyConfig.hpp>
+#include <boost/python/suite/indexing/map_indexing_suite.hpp>
 
 using namespace Nektar;
-using namespace Nektar::SpatialDomains;
+using namespace Nektar::LocalRegions;
 
-void export_Geometry2D()
+MatrixKey *MatrixKey_Init(const StdRegions::MatrixType matType,
+                          const LibUtilities::ShapeType shapeType,
+                          const StdRegions::StdExpansionSharedPtr exp,
+                          const py::object &constFactorMap)
 {
-    py::class_<Geometry2D, py::bases<Geometry>, std::shared_ptr<Geometry2D>,
-               boost::noncopyable>(
-                   "Geometry2D", py::no_init);
+    StdRegions::ConstFactorMap tmp = StdRegions::NullConstFactorMap;
 
-    NEKPY_SHPTR_FIX(Geometry2D, Geometry);
+    if (!constFactorMap.is_none())
+    {
+        tmp = py::extract<StdRegions::ConstFactorMap>(constFactorMap);
+    }
+
+    return new MatrixKey(matType, shapeType, *exp, tmp);
+}
+
+/**
+ * @brief Export for MatrixKey enumeration.
+ */
+void export_MatrixKey()
+{
+    py::class_<MatrixKey, py::bases<StdRegions::StdMatrixKey>>(
+        "MatrixKey", py::no_init)
+        .def("__init__",
+             py::make_constructor(
+                 &MatrixKey_Init, py::default_call_policies(),
+                 (py::arg("matType"), py::arg("shapeType"), py::arg("exp"),
+                  py::arg("constFactorMap") = py::object())))
+        ;
 }

@@ -70,8 +70,6 @@ namespace Nektar
             virtual ~PreconditionerLinearWithLowEnergy() {}
 
 	protected:
-            //const std::weak_ptr<GlobalLinSys>         m_linsys;
-
             PreconditionerSharedPtr m_linSpacePrecon;
             PreconditionerSharedPtr m_lowEnergyPrecon;
 

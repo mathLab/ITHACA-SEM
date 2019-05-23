@@ -37,9 +37,7 @@
 
 void export_StdExpansion();
 void export_StdMatrixKey();
-void export_StdSegExp();
-void export_StdTriExp();
-void export_StdQuadExp();
+void export_StdElements();
 
 BOOST_PYTHON_MODULE(_StdRegions)
 {
@@ -47,7 +45,5 @@ BOOST_PYTHON_MODULE(_StdRegions)
 
     export_StdExpansion();
     export_StdMatrixKey();
-    export_StdSegExp();
-    export_StdTriExp();
-    export_StdQuadExp();
+    export_StdElements();
 }

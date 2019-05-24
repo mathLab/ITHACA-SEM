@@ -1412,31 +1412,21 @@ namespace Nektar
             int physOffset      = m_fields[0]->GetPhys_Offset(e);
             int nElmtPoints     = m_fields[0]->GetExp(e)->GetTotPoints();
 
-            // Scale viscosity by the maximum wave speed
-            NekDouble LambdaElmt = m_mu0;
-            LambdaElmt *= Vmath::Vmax(nElmtPoints, tmp = Lambdas + physOffset, 1);
-            Vmath::Smul(nElmtPoints, LambdaElmt, tmp = m_muav + physOffset, 1,
-                tmp = m_muav + physOffset, 1);
+            // Compute the maximum wave speed
+            NekDouble LambdaElmt = Vmath::Vmax(nElmtPoints, tmp = Lambdas
+                + physOffset, 1);
 
-            // Scale viscosity by average bounded density
+            // Compute average bounded density
             NekDouble rhoAve = Vmath::Vsum(nElmtPoints, tmp = physfield[0]
                 + physOffset, 1);
             rhoAve = rhoAve / nElmtPoints;
             rhoAve = Smath::Smax(rhoAve , 1.0e-4, 1.0e+4);
-            Vmath::Smul(nElmtPoints, rhoAve, tmp = m_muav + physOffset, 1,
-                tmp = m_muav + physOffset, 1);
 
-            // Scale viscosity by h/p
-            Vmath::Smul(nElmtPoints, hOverP[e], tmp = m_muav + physOffset, 1,
+            // Scale sensor by coeff, h/p, and density
+            LambdaElmt *= m_mu0 * hOverP[e] * rhoAve;
+            Vmath::Smul(nElmtPoints, LambdaElmt, tmp = m_muav + physOffset, 1,
                 tmp = m_muav + physOffset, 1);
         }
-        // // Scale viscosity by bounded density
-        // Array <OneD, NekDouble > rho(nPts, physfield[0]);
-        // for (int i = 0; i < nPts; i++)
-        // {
-        //     rho[i] = Smath::Smax(rho[i] , 1.0e-4, 1.0e+4);
-        // }
-        // Vmath::Vmul(nPts, rho, 1, m_muav, 1, m_muav, 1);
     }
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF

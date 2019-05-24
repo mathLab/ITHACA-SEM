@@ -115,17 +115,29 @@ SET(NEKTAR_SHARE_DIR share/nektar++)
 SET(NEKTAR_DOC_DIR share/doc/nektar++)
 SET(NEKTAR_CMAKE_DIR ${LIB_DIR}/nektar++/cmake)
 
+# Set ThirdParty locations.
+SET(TPSRC   ${CMAKE_SOURCE_DIR}/ThirdParty)
+SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
+SET(TPDIST  ${CMAKE_BINARY_DIR}/ThirdParty/dist)
+SET(TPINC   ${CMAKE_INSTALL_PREFIX}/include/ThirdParty)
+SET(TPLIB   ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}/nektar++/thirdparty)
+
+# Create ThirdParty source directory if it doesn't exist already.
+IF (NOT EXISTS ${TPSRC})
+    FILE(MAKE_DIRECTORY ${TPSRC})
+ENDIF ()
+
 # Build shared libraries.
 SET(NEKTAR_LIBRARY_TYPE "SHARED")
 
 # Set up RPATH
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-SET(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${LIB_DIR};${TPLIB}")
+SET(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}" "${TPLIB}")
 LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES
      "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}" isSystemDir)
 IF("${isSystemDir}" STREQUAL "-1")
-    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIB_DIR};${TPLIB}")
+    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}" "${TPLIB}/")
 ELSE()
     SET(CMAKE_INSTALL_RPATH "${TPLIB}")
 ENDIF()
@@ -205,17 +217,6 @@ IF (THIRDPARTY_USE_SSL)
 ELSE()
     SET(TPURL http://www.nektar.info/thirdparty)
 ENDIF()
-
-SET(TPSRC   ${CMAKE_SOURCE_DIR}/ThirdParty)
-SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
-SET(TPDIST  ${CMAKE_BINARY_DIR}/ThirdParty/dist)
-SET(TPINC   ${CMAKE_INSTALL_PREFIX}/include/ThirdParty)
-SET(TPLIB   ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}/nektar++/thirdparty)
-
-# Create ThirdParty source directory if it doesn't exist already.
-IF (NOT EXISTS ${TPSRC})
-    FILE(MAKE_DIRECTORY ${TPSRC})
-ENDIF ()
 
 # Find ThirdParty libraries and headers.
 # --------------------------------------
@@ -320,6 +321,10 @@ CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/Nektar++Config.cmake.in
 INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
     DESTINATION ${NEKTAR_CMAKE_DIR}
     COMPONENT dev)
+
+INSTALL(CODE "FILE(GLOB tplibs ${TPDIST}/lib/*${CMAKE_SHARED_LIBRARY_SUFFIX}*)
+    FILE(INSTALL \${tplibs} DESTINATION ${TPLIB}) 
+")
 
 # Install ThirdParty headers to subdirectory of ${NEKTAR_INCLUDE_DIR}
 INSTALL(DIRECTORY ${TPDIST}/include/

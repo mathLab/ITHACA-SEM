@@ -398,7 +398,7 @@ namespace Nektar
         }
 
         // Communication to obtain the total flowrate
-        if(!m_Hom1DExplicit)
+        if(!m_Hom1DExplicit && m_HomogeneousType == eHomogeneous1D)
         {
             m_comm->GetColumnComm()->AllReduce(flowrate, LibUtilities::ReduceSum);
         }

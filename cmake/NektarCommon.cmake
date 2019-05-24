@@ -32,11 +32,18 @@ MACRO(THIRDPARTY_LIBRARY varname)
     ENDIF()
 
     FOREACH (lib ${TPLIBS})
-        LIST(APPEND tmplist "${TPDIST}/lib/${CMAKE_${LIBTYPE}_LIBRARY_PREFIX}${lib}${CMAKE_${LIBTYPE}_LIBRARY_SUFFIX}")
+        SET(tmplib "${TPDIST}/lib/${CMAKE_${LIBTYPE}_LIBRARY_PREFIX}${lib}${CMAKE_${LIBTYPE}_LIBRARY_SUFFIX}")
+        LIST(APPEND tmplist ${tmplib})
+
+        # Install shared libraries to Nektar++ library directory.
+        IF (TPLIB_SHARED)
+            INSTALL(FILES ${tmplib} DESTINATION ${TPLIB})
+        ENDIF()
     ENDFOREACH()
 
     SET(${varname} ${tmplist} CACHE FILEPATH ${TPLIB_DESCRIPTION} FORCE)
     UNSET(tmplist)
+    UNSET(tmplib)
     UNSET(LIBTYPE)
     UNSET(TPLIBS)
     UNSET(TPLIB_SHARED)

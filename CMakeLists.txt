@@ -102,9 +102,9 @@ INCLUDE(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
 # Set library, binary, include, share and doc paths.
-SET(LIB_DIR "lib/nektar++")
+SET(LIB_DIR "lib")
 IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE )
-    SET(LIB_DIR "lib64/nektar++")
+    SET(LIB_DIR "lib64")
 ENDIF()
 SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 
@@ -113,7 +113,7 @@ SET(NEKTAR_LIB_DIR ${LIB_DIR})
 SET(NEKTAR_INCLUDE_DIR include/nektar++)
 SET(NEKTAR_SHARE_DIR share/nektar++)
 SET(NEKTAR_DOC_DIR share/doc/nektar++)
-SET(NEKTAR_CMAKE_DIR ${LIB_DIR}/cmake)
+SET(NEKTAR_CMAKE_DIR ${LIB_DIR}/nektar++/cmake)
 
 # Build shared libraries.
 SET(NEKTAR_LIBRARY_TYPE "SHARED")
@@ -121,12 +121,14 @@ SET(NEKTAR_LIBRARY_TYPE "SHARED")
 # Set up RPATH
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-SET(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}")
+SET(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${LIB_DIR};${TPLIB}")
 LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES
-	"${CMAKE_INSTALL_PREFIX}/${LIB_DIR}" isSystemDir)
+     "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}" isSystemDir)
 IF("${isSystemDir}" STREQUAL "-1")
-	SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}")
-ENDIF("${isSystemDir}" STREQUAL "-1")
+    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIB_DIR};${TPLIB}")
+ELSE()
+    SET(CMAKE_INSTALL_RPATH "${TPLIB}")
+ENDIF()
 
 # Get rid of OS X RPATH warnings -- we should set this to 1 once we reach
 # required minimum cmake version of 3.0.0 and configure it in a more sane
@@ -208,7 +210,7 @@ SET(TPSRC   ${CMAKE_SOURCE_DIR}/ThirdParty)
 SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
 SET(TPDIST  ${CMAKE_BINARY_DIR}/ThirdParty/dist)
 SET(TPINC   ${CMAKE_INSTALL_PREFIX}/include/ThirdParty)
-SET(TPLIB   ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR})
+SET(TPLIB   ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}/nektar++/thirdparty)
 
 # Create ThirdParty source directory if it doesn't exist already.
 IF (NOT EXISTS ${TPSRC})
@@ -323,14 +325,6 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
 INSTALL(DIRECTORY ${TPDIST}/include/
     DESTINATION ${NEKTAR_INCLUDE_DIR}/ThirdParty
     COMPONENT dev
-    OPTIONAL
-    )
-
-# Install ThirdParty libraries into ${NEKTAR_LIB_DIR}. These are shipped with
-# the LibUtilities library.
-INSTALL(DIRECTORY ${TPDIST}/lib/
-    DESTINATION ${NEKTAR_LIB_DIR}
-    COMPONENT libutilities
     OPTIONAL
     )
 

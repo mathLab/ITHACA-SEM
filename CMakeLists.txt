@@ -323,7 +323,9 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
     COMPONENT dev)
 
 INSTALL(CODE "FILE(GLOB tplibs ${TPDIST}/lib/*${CMAKE_SHARED_LIBRARY_SUFFIX}*)
-    FILE(INSTALL \${tplibs} DESTINATION ${TPLIB}) 
+    IF (NOT tplibs STREQUAL \"\")
+        FILE(INSTALL \${tplibs} DESTINATION ${TPLIB})
+    ENDIF()
 ")
 
 # Install ThirdParty headers to subdirectory of ${NEKTAR_INCLUDE_DIR}

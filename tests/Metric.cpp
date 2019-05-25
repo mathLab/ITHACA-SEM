@@ -50,7 +50,7 @@ namespace Nektar
      * @brief Constructor.
      */
     Metric::Metric(TiXmlElement *metric, bool generate) :
-        m_metric(metric), m_generate(generate)
+        m_generate(generate), m_metric(metric)
     {
         if (!metric->Attribute("id"))
         {

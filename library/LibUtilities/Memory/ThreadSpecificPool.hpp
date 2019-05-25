@@ -201,7 +201,7 @@ namespace Nektar
                 {
                     PoolMapType::iterator iter = m_pools.lower_bound(bytes);
                     ASSERTL1(iter != m_pools.end(), "The memory manager is mishandling a memory request for " +
-                        boost::lexical_cast<std::string>(bytes) + " bytes of memory.");
+                             std::to_string(bytes) + " bytes of memory.");
                     
                     return (*iter).second->Allocate();
                 }
@@ -225,7 +225,7 @@ namespace Nektar
                 {
                     PoolMapType::iterator iter = m_pools.lower_bound(bytes);
                     ASSERTL1(iter != m_pools.end(), "The memory manager is mishandling a memory request for " +
-                        boost::lexical_cast<std::string>(bytes) + " bytes of memory.");
+                             std::to_string(bytes) + " bytes of memory.");
                     
                     (*iter).second->Deallocate(p);
                 }

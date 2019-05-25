@@ -1,7 +1,6 @@
-ADD_NEKPY_LIBRARY(LocalRegions SOURCES
+ADD_NEKPY_LIBRARY(LocalRegions DEPENDS SpatialDomains SOURCES
+    LocalElements.cpp
     LocalRegions.cpp
     Expansion.cpp
-    QuadExp.cpp
-    SegExp.cpp
-    TriExp.cpp
+    MatrixKey.cpp
     )

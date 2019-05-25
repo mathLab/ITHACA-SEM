@@ -73,7 +73,7 @@ namespace Nektar
 
         private:
             // Local to global map.
-            std::shared_ptr<AssemblyMap>     m_locToGloMap;
+            std::weak_ptr<AssemblyMap> m_locToGloMap;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.

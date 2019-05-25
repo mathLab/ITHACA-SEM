@@ -23,7 +23,7 @@ IF (NEKTAR_USE_SCOTCH)
     ELSE()
         SET(BUILD_SCOTCH ON)
     ENDIF ()
-    
+
     CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_SCOTCH
         "Build Scotch library from ThirdParty" ${BUILD_SCOTCH}
         "NEKTAR_USE_SCOTCH" OFF)
@@ -59,12 +59,19 @@ IF (NEKTAR_USE_SCOTCH)
             ENDIF ()
             SET(SCOTCH_LDFLAGS "-lz -lm -lrt -lpthread")
         ENDIF ()
-        
-        SET(SCOTCH_BUILD_TARGET "scotch")
-        SET(SCOTCH_C_COMPILER ${CMAKE_C_COMPILER})
+
+        # Determine the build target and compiler to use for scotch.
+        # We use the normal C compiler by default. If MPI is being used and is
+        # not built into the normal compiler, we use the MPI-specified compiler.
         IF (NEKTAR_USE_MPI)
             SET(SCOTCH_BUILD_TARGET "ptscotch")
+        ELSE ()
+            SET(SCOTCH_BUILD_TARGET "scotch")
+        ENDIF ()
+        IF (NEKTAR_USE_MPI AND NOT MPI_BUILTIN)
             SET(SCOTCH_C_COMPILER ${MPI_C_COMPILER})
+        ELSE ()
+            SET(SCOTCH_C_COMPILER ${CMAKE_C_COMPILER})
         ENDIF ()
 
         INCLUDE(ExternalProject)

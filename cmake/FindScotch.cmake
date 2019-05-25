@@ -23,7 +23,6 @@
 #   FIND_PACKAGE(Scotch 5 COMPONENTS ptscotch)
 #                           - find at least version 5 of PT-scotch
 
-
 # Determine if we are looking for PT-scotch, or just scotch
 SET(PARALLEL OFF)
 LIST(FIND Scotch_FIND_COMPONENTS "ptscotch" FIND_PARALLEL)
@@ -33,22 +32,25 @@ ENDIF()
 
 MESSAGE(STATUS "Searching for Scotch:")
 SET(TEST_SCOTCH_DIR $ENV{SCOTCH_DIR})
+SET(TEST_SCOTCH_HOME $ENV{SCOTCH_HOME})
 SET(TEST_SCOTCH_INCLUDE_DIR $ENV{SCOTCH_INCDIR})
 
-SET(SCOTCH_HEADER_DIRS "SCOTCH_HEADERS_DIR-NOTFOUND")
+SET(SCOTCH_HEADERS_DIRS "SCOTCH_HEADERS_DIR-NOTFOUND")
 IF(TEST_SCOTCH_INCLUDE_DIR)
-    FIND_PATH(SCOTCH_HEADER_DIRS NAMES scotch.h 
+    FIND_PATH(SCOTCH_HEADERS_DIRS NAMES scotch.h
                 HINTS ${TEST_SCOTCH_INCLUDE_DIR})
+ELSEIF(TEST_SCOTCH_DIR)
+    FIND_PATH(SCOTCH_HEADERS_DIRS NAMES scotch.h
+                HINTS ${TEST_SCOTCH_DIR}
+                PATH_SUFFIXES "include" "include/scotch")
+ELSEIF(TEST_SCOTCH_HOME)
+    FIND_PATH(SCOTCH_HEADERS_DIRS NAMES scotch.h
+                HINTS ${TEST_SCOTCH_HOME}
+                PATH_SUFFIXES "include" "include/scotch")
 ELSE()
-    IF(TEST_SCOTCH_DIR)
-        FIND_PATH(SCOTCH_HEADERS_DIRS NAMES scotch.h
-                    HINTS ${TEST_SCOTCH_DIR}
-                    PATH_SUFFIXES "include" "include/scotch")
-    ELSE()
-        FIND_PATH(SCOTCH_HEADERS_DIRS NAMES scotch.h
-                    HINTS ${MACPORTS_PREFIX}/include
-                    PATH_SUFFIXES "scotch")
-    ENDIF()
+    FIND_PATH(SCOTCH_HEADERS_DIRS NAMES scotch.h
+                HINTS ${MACPORTS_PREFIX}/include
+                PATH_SUFFIXES "scotch")
 ENDIF()
 MARK_AS_ADVANCED(SCOTCH_HEADERS_DIRS)
 
@@ -78,14 +80,21 @@ ELSE ()
 ENDIF ()
 LIST(REMOVE_DUPLICATES SCOTCH_INCLUDE_DIR)
 
-FIND_LIBRARY(SCOTCH_LIBRARY    NAMES scotch PATHS ${MACPORTS_PREFIX}/lib)
-FIND_LIBRARY(SCOTCHERR_LIBRARY NAMES scotcherr PATHS ${MACPORTS_PREFIX}/lib)
+# Search for the library also in the ../lib directory of scotch.h
+GET_FILENAME_COMPONENT(SEARCH_PATHS ${SCOTCH_INCLUDE_DIR} DIRECTORY)
+FIND_LIBRARY(SCOTCH_LIBRARY    NAMES scotch PATHS ${SEARCH_PATHS}
+    PATH_SUFFIXES lib)
+FIND_LIBRARY(SCOTCHERR_LIBRARY NAMES scotcherr PATHS ${SEARCH_PATHS}
+    PATH_SUFFIXES lib)
 GET_FILENAME_COMPONENT(SCOTCH_LIBRARY_DIR ${SCOTCH_LIBRARY} PATH)
 
 IF (SCOTCH_LIBRARY AND SCOTCHERR_LIBRARY AND SCOTCH_INCLUDE_DIR)
     SET(Scotch_scotch_FOUND TRUE)
 
     IF (PARALLEL)
+        # Start from clean slate
+        UNSET(PTSCOTCH_LIBRARY CACHE)
+
         IF (DEFINED ENV{LD_LIBRARY_PATH})
             STRING(REPLACE ":" ";" SEARCH_LIB_PATH $ENV{LD_LIBRARY_PATH})
         ENDIF()
@@ -98,15 +107,31 @@ IF (SCOTCH_LIBRARY AND SCOTCHERR_LIBRARY AND SCOTCH_INCLUDE_DIR)
         IF (PTSCOTCH_LIBRARY AND PTSCOTCHERR_LIBRARY)
             SET(Scotch_ptscotch_FOUND TRUE)
 
-            # Finally, re-search for Scotch library because on Fedora/CentOS, for
-            # some reason, libptscotch is missing
-            # a bunch of symbols.
-            GET_FILENAME_COMPONENT(SCOTCH_BASE_DIR ${SCOTCH_LIBRARY} DIRECTORY)
-            GET_FILENAME_COMPONENT(PTSCOTCH_BASE_DIR ${PTSCOTCH_LIBRARY} DIRECTORY)
-            IF (NOT ${SCOTCH_BASE_DIR} STREQUAL ${PTSCOTCH_BASE_DIR})
-                FIND_LIBRARY(SCOTCH_LIBRARY2 NAMES scotch PATHS ${PTSCOTCH_BASE_DIR} SCOTCH_LIBRARY2 NO_DEFAULT_PATH)
-                IF (SCOTCH_LIBRARY2)
-                    SET(PTSCOTCH_LIBRARY ${PTSCOTCH_LIBRARY} ${SCOTCH_LIBRARY2} CACHE FILEPATH "PtScotch library" FORCE)
+            # Finally, test if serial library needs to be linked as well.
+            TRY_COMPILE( COMPILE_RESULT
+                ${CMAKE_CURRENT_BINARY_DIR}/
+                ${CMAKE_CURRENT_SOURCE_DIR}/cmake/scripts/get-scotch-version.c
+                CMAKE_FLAGS -DINCLUDE_DIRECTORIES=${SCOTCH_INCLUDE_DIR}
+                    -DLINK_DIRECTORIES=${SCOTCH_LIBRARY_DIR}
+                LINK_LIBRARIES "ptscotch" "ptscotcherr"
+                OUTPUT_VARIABLE COMPILER_OUTPUT)
+
+            IF (COMPILE_RESULT)
+                MESSAGE(STATUS "Guessing that serial Scotch does not need to be linked")
+                SET(IS_SERIAL_NEEDED FALSE)
+            ELSE()
+                MESSAGE(STATUS "Guessing that serial Scotch needs to be linked as well")
+                SET(IS_SERIAL_NEEDED TRUE)
+            ENDIF()
+
+            IF (IS_SERIAL_NEEDED)
+                GET_FILENAME_COMPONENT(PTSCOTCH_BASE_DIR ${PTSCOTCH_LIBRARY} DIRECTORY)
+                FIND_LIBRARY(PTSCOTCH_LIBRARY_SERIAL NAMES scotch
+                    PATHS ${PTSCOTCH_BASE_DIR} PTSCOTCH_LIBRARY_SERIAL NO_DEFAULT_PATH)
+                MARK_AS_ADVANCED(PTSCOTCH_LIBRARY_SERIAL)
+                IF (PTSCOTCH_LIBRARY_SERIAL)
+                    SET(PTSCOTCH_LIBRARY ${PTSCOTCH_LIBRARY} ${PTSCOTCH_LIBRARY_SERIAL}
+                        CACHE FILEPATH "PtScotch library" FORCE)
                 ENDIF()
             ENDIF()
         ENDIF()

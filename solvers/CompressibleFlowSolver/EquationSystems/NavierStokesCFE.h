@@ -39,6 +39,9 @@
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 #include <CompressibleFlowSolver/Misc/EquationOfState.h>
 #include <LibUtilities/BasicUtils/Smath.h>
+#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField1D.h>
 
 namespace Nektar
 {
@@ -75,6 +78,10 @@ namespace Nektar
     NekDouble                           m_Prandtl;
     NekDouble                           m_Twall;
     NekDouble                           m_mu0;
+    std::string                         m_physicalSensorType;
+    std::string                         m_smoothing;
+    MultiRegions::ContField2DSharedPtr  m_C0Project2DExp;
+    MultiRegions::ContField3DSharedPtr  m_C0Project3DExp;
 
     /// Equation of system for computing temperature
     EquationOfStateSharedPtr            m_eos;
@@ -162,6 +169,10 @@ namespace Nektar
 
     void GetPhysicalAV(
         const Array<OneD, const Array<OneD, NekDouble>> &physfield);
+
+    void GetTracePhysicalAV();
+
+    void C0Smooth(Array<OneD, NekDouble> &field);
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
   virtual void v_MinusDiffusionFluxJacDirctn(

@@ -108,5 +108,12 @@ void export_SessionReader()
 
         .def("Finalise", &SessionReader::Finalise)
 
+        .def("DefinesParameter", &SessionReader::DefinesParameter)
+        .def("GetParameter", &SessionReader::GetParameter,
+             py::return_value_policy<py::return_by_value>())
+
+        .def("GetVariable", &SessionReader::GetVariable,
+             py::return_value_policy<py::copy_const_reference>())
+
         ;
 }

@@ -1047,10 +1047,8 @@ void LocTraceToTraceMap::AddLocTracesToField(
 {
     int nfield  =   field.num_elements();
     Array<OneD, NekDouble> tmp(nfield,0.0);
-    Vmath::Scatr(m_fieldToLocTraceMap.num_elements(),
-                 faces,
-                 m_fieldToLocTraceMap,
-                 tmp);
+    int nloc = m_fieldToLocTraceMap.num_elements();
+    Vmath::Assmb(nloc,&faces[0],&m_fieldToLocTraceMap[0],&tmp[0]);
     Vmath::Vadd(nfield,tmp,1,field,1,field,1);
 }
 
@@ -1190,11 +1188,21 @@ void LocTraceToTraceMap::RightIPTWLocEdgesToTraceInterpMat(
     int cnt1 = 0;
 
     // tmp space assuming forward map is of size of trace
-    Array<OneD, NekDouble> tmp(m_nTracePts);
+    Array<OneD, NekDouble> tmp(m_nTracePts,0.0);
     Vmath::Gathr(m_LocTraceToTraceMap[dir].num_elements(),
                  edges.get(),
                  m_LocTraceToTraceMap[dir].get(),
                  tmp.get());
+
+    // for(int i=0;i<edges.num_elements();i++)
+    // {
+    //     cout <<" i= "<<i<<" edges= "<<edges[i]<<endl;
+    // }
+
+    // for(int i=0;i<tmp.num_elements();i++)
+    // {
+    //     cout <<" i= "<<i<<" tmp= "<<tmp[i]<<endl;
+    // }
 
     for (int i = 0; i < m_interpTrace[dir].num_elements(); ++i)
     {

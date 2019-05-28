@@ -367,6 +367,9 @@ namespace Nektar
                     PntJac = TracePntJacCons;
                     CalcJacobTraceInteg(pFields,m,n,PntJac, TraceJacConsSign,TraceJacFwd,TraceJacBwd);
                     pFields[0]->AddTraceJacToElmtJac(TraceJacFwd, TraceJacBwd,ElmtJacQuad);
+
+            // Cout1DArrayStdMat(ElmtJacQuad);
+            // ASSERTL0(false, "debug stop");
                     pFields[0]->AddRightIPTBaseMatrix(ElmtJacQuad,ElmtJacCoef);
 
                     if(TracePntJacGradflag)
@@ -385,6 +388,7 @@ namespace Nektar
                             
                             CalcJacobTraceInteg(pFields,m,ngrad,PntJac,TracePntJacGradSign,TraceJacFwd,TraceJacBwd);
                             pFields[0]->AddTraceJacToElmtJac(TraceJacFwd,TraceJacBwd,ElmtJacQuad);
+                            //TODO:: 3 directions together to lower down cost
                             pFields[0]->AddRightIPTPhysDerivBase(ndir,ElmtJacQuad,ElmtJacCoef);
                         }
                     }

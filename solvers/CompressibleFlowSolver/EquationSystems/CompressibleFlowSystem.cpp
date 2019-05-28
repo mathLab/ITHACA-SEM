@@ -1727,10 +1727,10 @@ namespace Nektar
         AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray);
 
         AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv,TraceJacDerivSign);
-
-        MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
 // Cout2DArrayBlkMat(gmtxarray);
 // ASSERTL0(false, "debug stop");
+        MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
+
         ElmtVarInvMtrx(gmtxarray);
     }
 

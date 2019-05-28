@@ -344,6 +344,13 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fwd,
                 const Array<OneD, const NekDouble> &Bwd,
                     Array<OneD,       NekDouble> &field);
+            
+
+            virtual void v_AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &fieldFwd,
+                Array<OneD,       NekDouble>        &fieldBwd);
 
             virtual void v_PeriodicBwdCopy(
                 const Array<OneD, const NekDouble> &Fwd,

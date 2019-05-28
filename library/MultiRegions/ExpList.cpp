@@ -2683,6 +2683,15 @@ namespace Nektar
                      "v_AddTraceQuadPhysToField is not defined or valid for this class type");
         }
 
+        void ExpList::v_AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &fieldFwd,
+                Array<OneD,       NekDouble>        &fieldBwd)
+        {
+            v_AddTraceQuadPhysToField(Fwd,Bwd,fieldFwd,fieldBwd);
+        }
+
         const Array<OneD,const NekDouble>
                 &ExpList::v_GetBndCondBwdWeight()
         {
@@ -3546,13 +3555,13 @@ namespace Nektar
 
                 for(int ntrace=0;    ntrace<ntotTrace; ntrace++)
                 {
-                    int nTracPnt            = (*ptraceExp)[ntrace]->GetTotPoints();
+                    int nTracePnt            = (*ptraceExp)[ntrace]->GetTotPoints();
                     int noffset             = traceExplist->GetPhys_Offset(ntrace);
 
-                    T2Emap[nlr][ntrace]      =   Array<OneD, int >(nTracPnt,0);
+                    T2Emap[nlr][ntrace]      =   Array<OneD, int >(nTracePnt,0);
                     if(LRAdjflag[nlr][ntrace])
                     {
-                        for(int npnt=0; npnt<nTracPnt;  npnt++)
+                        for(int npnt=0; npnt<nTracePnt;  npnt++)
                         {
                             dtmp            =     mapFwdBwd[nlr][noffset+npnt];
                             ntmp            =     round(dtmp);
@@ -3774,37 +3783,37 @@ namespace Nektar
                 const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
                 Array<OneD, DNekMatSharedPtr>  &fieldMat)
         {
-
             MultiRegions::ExpListSharedPtr tracelist = GetTrace();
             std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
-            int ntotTrac            = (*traceExp).size();
-            int nTracPnt,nTracCoef,noffset;
+            int ntotTrace            = (*traceExp).size();
+            int nTracePnt,nTraceCoef,noffset;
 
             std::shared_ptr<LocalRegions::ExpansionVector> fieldExp= GetExp();
-            int ntotElmt            = (*fieldExp).size();
-
-            NekDouble tmp;
-            DNekMatSharedPtr                    ElmtMat;
-            Array<OneD, DNekMatSharedPtr>       TracFBMat(2);
-            int nclAdjExp,nrwAdjExp;
+            int ntotElmt           = (*fieldExp).size();
+            int nElmtPnts        =  GetTotPoints();
+            int nElmtCoef        =  GetNcoeffs();
 
             const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap = GetlocTraceToTraceMap();
-            
             const Array<OneD, const Array<OneD, int >> LRAdjExpid  =   locTraceToTraceMap->GetLeftRightAdjacentExpId();
             const Array<OneD, const Array<OneD, bool>> LRAdjflag   =   locTraceToTraceMap->GetLeftRightAdjacentExpFlag();
             const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRMap   =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffMap();
             const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRSign  =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffSign();
+            DNekMatSharedPtr                    ElmtMat;
+            int nclAdjExp,nrwAdjExp;
+            NekDouble tmp;
+            NekDouble sign = 1.0;
 
-            if(locTraceToTraceMap->GetflagTracephysToLeftRightExpphysMap())
+            bool Debugflag = true;
+            if(locTraceToTraceMap->GetflagTracephysToLeftRightExpphysMap()&&Debugflag)
             {
+                Array<OneD, DNekMatSharedPtr>       TracFBMat(2);
                 const Array<OneD, const Array<OneD, Array<OneD, int > > > Trac2ElmtphysMap  =   locTraceToTraceMap->GetTracephysToLeftRightExpphysMap();
 
                 int nlr = 0;
-                NekDouble sign = 1.0;
-                for(int  ntrace = 0; ntrace < ntotTrac; ntrace++)
+                for(int  ntrace = 0; ntrace < ntotTrace; ntrace++)
                 {
-                    nTracCoef       = (*traceExp)[ntrace]->GetNcoeffs();
-                    nTracPnt        = (*traceExp)[ntrace]->GetTotPoints();
+                    nTraceCoef       = (*traceExp)[ntrace]->GetNcoeffs();
+                    nTracePnt        = (*traceExp)[ntrace]->GetTotPoints();
 
                     TracFBMat[0]    = FwdMat[ntrace]; 
                     TracFBMat[1]    = BwdMat[ntrace]; 
@@ -3815,11 +3824,11 @@ namespace Nektar
                         {
                             ElmtMat        = fieldMat[LRAdjExpid[nlr][ntrace]];
 
-                            for(int ncl = 0; ncl < nTracPnt; ncl++)
+                            for(int ncl = 0; ncl < nTracePnt; ncl++)
                             {
                                 nclAdjExp = Trac2ElmtphysMap[nlr][ntrace][ncl];
 
-                                for(int nrw = 0; nrw < nTracCoef; nrw++)
+                                for(int nrw = 0; nrw < nTraceCoef; nrw++)
                                 {
                                     sign=-elmtLRSign[nlr][ntrace][nrw];                                    
                                     nrwAdjExp = elmtLRMap[nlr][ntrace][nrw];
@@ -3834,8 +3843,95 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(false,"GetFwdBwdTracePhys may have interpolations, not coded");
-                // AddTraceQuadPhysToField(tracflux[nd][nv],tracflux[nd][nv],tmpfield[nd]);
+                int nTracePntsTtl     = tracelist->GetTotPoints();
+                Array<OneD, NekDouble>  TraceFwdPhy(nTracePntsTtl);
+                Array<OneD, NekDouble>  TraceBwdPhy(nTracePntsTtl);
+                Array<OneD, Array<OneD, NekDouble> > tmpfield(2);
+                tmpfield[0]    =   Array<OneD, NekDouble> (nElmtPnts);
+                tmpfield[1]    =   Array<OneD, NekDouble> (nElmtPnts);
+
+                int nTraceCoefMax = 0;
+                int nTraceCoefMin = std::numeric_limits<int>::max();
+                for(int  nt = 0; nt < ntotTrace; nt++)
+                {
+                    nTraceCoef           = (*traceExp)[nt]->GetNcoeffs();
+                    if(nTraceCoef>nTraceCoefMax)
+                    {
+                        nTraceCoefMax = nTraceCoef;
+                    }
+                    if(nTraceCoef<nTraceCoefMin)
+                    {
+                        nTraceCoefMin = nTraceCoef;
+                    }
+                }
+                WARNINGL0(nTraceCoefMax==nTraceCoefMin,"nTraceCoefMax!=nTraceCoefMin: Effeciency may be low , if nTraceCoefMax>>nTraceCoefMin");
+
+                for(int nc=0;nc<nTraceCoefMax;nc++)
+                {
+                    for(int  nt = 0; nt < ntotTrace; nt++)
+                    {
+                        nTraceCoef          = tracelist->GetNcoeffs(nt);
+                        nTracePnt           = tracelist->GetTotPoints(nt);
+
+                        int noffset         =  tracelist->GetPhys_Offset(nt);
+                        if(nc<nTraceCoef)
+                        {
+                            for(int i=0;i<nTracePnt;i++)
+                            {
+                                TraceFwdPhy[noffset+i] =    (*FwdMat[nt])(nc,i);
+                                TraceBwdPhy[noffset+i] =    (*BwdMat[nt])(nc,i);
+                            }
+                        }
+                        else
+                        {
+                            Vmath::Zero(nTracePnt,&TraceFwdPhy[noffset],1);
+                            Vmath::Zero(nTracePnt,&TraceBwdPhy[noffset],1);
+                        }
+                    }
+
+                    Vmath::Zero(nElmtPnts,tmpfield[0],1);
+                    Vmath::Zero(nElmtPnts,tmpfield[1],1);
+                    AddTraceQuadPhysToField(TraceFwdPhy,TraceBwdPhy,tmpfield[0],tmpfield[1]);
+
+                    // can  be replaced by AddTraceCoeffsToFieldCoeffs but needs more storage and cost
+                    // Array<OneD, bool> CoeffUpdateFlag(nElmtCoef);
+                    for(int nlr = 0; nlr<2;nlr++)
+                    {
+                        // Vmath::Fill(nElmtCoef,true,CoeffUpdateFlag,1);
+                        for(int  nt = 0; nt < ntotTrace; nt++)
+                        {
+                            nTraceCoef           = tracelist->GetNcoeffs(nt);
+                            if(nc<nTraceCoef)
+                            {
+                                nTracePnt            = tracelist->GetTotPoints(nt);
+                                if(LRAdjflag[nlr][nt])
+                                {
+                                    int ElmtId      = LRAdjExpid[nlr][nt];
+                                    int nElmtPnt  = GetTotPoints(ElmtId);
+                                    int noffset    = GetPhys_Offset(ElmtId);
+                                    ElmtMat        = fieldMat[LRAdjExpid[nlr][nt]];
+                                    nrwAdjExp   = elmtLRMap[nlr][nt][nc];
+                                    // if(CoeffUpdateFlag[CoeffUpdateFlag])
+                                    // {
+
+                                    // }
+                                    sign=-elmtLRSign[nlr][nt][nc];        
+
+                                    for(int npnt = 0; npnt < nElmtPnt; npnt++)
+                                    {
+                                        tmp   =   (*ElmtMat)(nrwAdjExp,npnt);
+                                        // if(abs(tmp)<1.0E-12)
+                                        // {
+                                            tmp   +=  sign*tmpfield[nlr][noffset+npnt];
+                                            cout << " nt= "<<nt<< " npnt= "<<npnt<< " tmp= "<<tmp<<endl;
+                                            ElmtMat->SetValue(nrwAdjExp,npnt,tmp);
+                                        // }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 

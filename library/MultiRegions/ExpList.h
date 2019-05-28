@@ -822,6 +822,12 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &field);
+            
+            inline void AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &fieldFwd,
+                Array<OneD,       NekDouble>        &fieldBwd);
 
             inline void FillBwdWITHBound(
                 const Array<OneD, const NekDouble> &Fwd,
@@ -1367,6 +1373,12 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &field);
+            
+            virtual void v_AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &fieldFwd,
+                Array<OneD,       NekDouble>        &fieldBwd);
                       
             virtual void v_FillBwdWITHBound(
                 const Array<OneD, const NekDouble> &Fwd,
@@ -2504,6 +2516,16 @@ namespace Nektar
                 Array<OneD,       NekDouble>        &field)
         {
             v_AddTraceQuadPhysToField(Fwd,Bwd,field);
+        }
+
+
+        inline void ExpList::AddTraceQuadPhysToField(
+            const Array<OneD, const NekDouble>  &Fwd,
+            const Array<OneD, const NekDouble>  &Bwd,
+            Array<OneD,       NekDouble>        &fieldFwd,
+            Array<OneD,       NekDouble>        &fieldBwd)
+        {
+            v_AddTraceQuadPhysToField(Fwd,Bwd,fieldFwd,fieldBwd);
         }
 
         inline void ExpList::FillBwdWITHBound(

@@ -1455,6 +1455,42 @@ namespace Nektar
         }
 
         /**
+         */
+        void DisContField2D::v_AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &fieldFwd,
+                Array<OneD,       NekDouble>        &fieldBwd)
+        {
+            int cnt, n, e, npts, phys_offset;
+
+            // Basis definition on each element
+            LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+            if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
+            {
+                Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
+                                               GetNLocTracePts(),0.0);
+                // cout << "m_locTraceToTraceMap->GetNLocTracePts()= "<<m_locTraceToTraceMap->GetNLocTracePts()<<endl;
+                // cout << "m_locTraceToTraceMap->GetNFwdLocTracePts()= "<<m_locTraceToTraceMap->GetNFwdLocTracePts()<<endl;
+
+                Array<OneD, NekDouble> invals = edgevals + m_locTraceToTraceMap->
+                                                        GetNFwdLocTracePts();
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(1, Bwd, invals);
+                m_locTraceToTraceMap->AddLocTracesToField(edgevals,fieldBwd);
+
+                Vmath::Zero(edgevals.num_elements(),edgevals,1);
+                
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(0, Fwd, edgevals);
+
+                m_locTraceToTraceMap->AddLocTracesToField(edgevals,fieldFwd);
+            }
+            else
+            {
+                ASSERTL0(false, "v_AddTraceQuadPhysToField not coded for eGauss_Lagrange");                
+            }
+        }
+
+        /**
          * @brief Fill the Bwd based on corresponding boundary conditions.
          * NOTE: periodic boundary is considered interior traces and is not treated here.
          */

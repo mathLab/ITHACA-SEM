@@ -118,7 +118,7 @@ namespace Nektar
 
           TimeIntegrationSolutionSharedPtr y_out = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr( this, y_0, time, deltaT );
 
-            if( m_parent->GetIntegrationSchemeType() == eExplicit)
+            if( m_schemeType == eExplicit )
             {
                 // ensure initial solution is in correct space
                 op.DoProjection( y_0, y_out->UpdateSolution(), time );
@@ -392,7 +392,7 @@ namespace Nektar
         {
             ASSERTL1( CheckTimeIntegrateArguments( /*deltaT,*/ y_old, t_old, y_new, t_new, op ), "Arguments not well defined" );
             
-            TimeIntegrationSchemeType type = m_parent->GetIntegrationSchemeType();
+            TimeIntegrationSchemeType type = m_schemeType;
 
             int numsteps = m_numsteps;
 
@@ -801,16 +801,15 @@ namespace Nektar
         {
             int r = rhs.m_numsteps;
             int s = rhs.GetNstages();
-            TimeIntegrationSchemeType type = rhs.m_parent->GetIntegrationSchemeType();
+            TimeIntegrationSchemeType type = rhs.m_schemeType;
 
             int oswidth = 9;
             int osprecision = 6;
 
-            os << "Time Integration Scheme (Master): " << TimeIntegrationMethodMap[rhs.m_parent->GetIntegrationMethod()] << "\n";
-            os << "- number of steps:  " << r << endl;
-            os << "- number of stages: " << s << endl;
-            os << "- type of scheme:   " << TimeIntegrationSchemeTypeMap[rhs.m_parent->GetIntegrationSchemeType()] << "\n";
-            os << "General linear method tableau: " << endl;
+            os << "Time Integration Scheme (Master): " << rhs.m_parent->TimeIntegrationMethodMap[rhs.m_parent->GetIntegrationMethod()] << "\n";
+            os << "- number of steps:  " << r << "\n";
+            os << "- number of stages: " << s << "\n";
+            os << "General linear method tableau:\n";
 
             for( int i = 0; i < s; i++ )
             {

@@ -560,13 +560,12 @@ namespace Nektar
         case LibUtilities::eBackwardEuler:
         case LibUtilities::eBDFImplicitOrder1: 
             {
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance("ForwardEuler");
-                
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( LibUtilities::eForwardEuler );
             }
             break;
         case LibUtilities::eBDFImplicitOrder2:
             {
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance("RungeKutta2_ImprovedEuler");
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( LibUtilities::eRungeKutta2_ImprovedEuler );
             }
             break;
         default:

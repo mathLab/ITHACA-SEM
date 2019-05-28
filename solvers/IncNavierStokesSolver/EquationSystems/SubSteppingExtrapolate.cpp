@@ -97,12 +97,13 @@ namespace Nektar
             {
                 std::string vSubStepIntScheme = "ForwardEuler";
 
-                if(m_session->DefinesSolverInfo("SubStepIntScheme"))
+                if( m_session->DefinesSolverInfo( "SubStepIntScheme" ) )
                 {
-                    vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
+                    vSubStepIntScheme = m_session->GetSolverInfo( "SubStepIntScheme" );
                 }
 
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( vSubStepIntScheme );
+                LibUtilities::TimeIntegrationMethod method = LibUtilities::TimeIntegrationScheme::methodFromName( vSubStepIntScheme );
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( method );
 
                 int nvel = m_velocity.num_elements();
 
@@ -126,7 +127,8 @@ namespace Nektar
                     vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
                 }
 
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( vSubStepIntScheme );
+                LibUtilities::TimeIntegrationMethod method = LibUtilities::TimeIntegrationScheme::methodFromName( vSubStepIntScheme );
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( method );
 
                 int nvel = m_velocity.num_elements();
 

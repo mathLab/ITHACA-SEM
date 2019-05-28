@@ -102,7 +102,8 @@ namespace Nektar
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
             {
-                m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( m_session->GetSolverInfo( "TIMEINTEGRATIONMETHOD" ) );
+                LibUtilities::TimeIntegrationMethod method = LibUtilities::TimeIntegrationScheme::methodFromName( m_session->GetSolverInfo( "TIMEINTEGRATIONMETHOD" ) );
+                m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( method );
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
@@ -505,12 +506,10 @@ namespace Nektar
                                m_explicitReaction  ? "explicit" : "implicit");
             }
 
-            AddSummaryItem(s, "Time Step", m_timestep);
-            AddSummaryItem(s, "No. of Steps", m_steps);
-            AddSummaryItem(s, "Checkpoints (steps)", m_checksteps);
-            AddSummaryItem(s, "Integration Type",
-                           LibUtilities::TimeIntegrationMethodMap[
-                               m_intScheme->GetIntegrationMethod()]);
+            AddSummaryItem( s, "Time Step", m_timestep );
+            AddSummaryItem( s, "No. of Steps", m_steps );
+            AddSummaryItem( s, "Checkpoints (steps)", m_checksteps );
+            AddSummaryItem( s, "Integration Type", LibUtilities::TimeIntegrationScheme::nameFromMethod( m_intScheme->GetIntegrationMethod() ) );
         }
         
         /**

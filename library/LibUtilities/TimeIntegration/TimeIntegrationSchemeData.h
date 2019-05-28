@@ -203,6 +203,7 @@ namespace Nektar
 
             friend class AdamsBashforthOrder2TimeIntegrationScheme;
             friend class AdamsBashforthOrder3TimeIntegrationScheme;
+            friend class AdamsMoultonOrder1TimeIntegrationScheme;
             friend class AdamsMoultonOrder2TimeIntegrationScheme;
             friend class BackwardEulerTimeIntegrationScheme;
             friend class BDFImplicitOrder2TimeIntegrationScheme;
@@ -211,10 +212,13 @@ namespace Nektar
             friend class DIRKOrder2TimeIntegrationScheme;
             friend class DIRKOrder3TimeIntegrationScheme;
             friend class ForwardEulerTimeIntegrationScheme;
+            friend class IMEXdirk_1_2_1TimeIntegrationScheme;
             friend class IMEXdirk_1_2_2TimeIntegrationScheme;
             friend class IMEXdirk_2_2_2TimeIntegrationScheme;
             friend class IMEXdirk_2_3_2TimeIntegrationScheme;
+            friend class IMEXdirk_2_3_3TimeIntegrationScheme;
             friend class IMEXdirk_3_4_3TimeIntegrationScheme;
+            friend class IMEXdirk_4_4_3TimeIntegrationScheme;
             friend class IMEXGearTimeIntegrationScheme;
             friend class IMEXOrder1TimeIntegrationScheme;
             friend class IMEXOrder2TimeIntegrationScheme;

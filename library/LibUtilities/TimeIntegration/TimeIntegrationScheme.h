@@ -42,6 +42,8 @@
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
+#include <string>
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #define LUE LIB_UTILITIES_EXPORT
@@ -65,21 +67,6 @@ namespace Nektar
 
         typedef std::shared_ptr<TimeIntegrationScheme> TimeIntegrationSchemeSharedPtr;
 
-
-      ///////////////////////////////////////////////////////////////////////////////////
-      // Provide using code the ability to get the TimeIntegrator Factory so that it can
-      // create TimeIntegrators.
-
-      /// Datatype of the NekFactory used to instantiate classes derived from the EquationSystem class.
-      typedef NekFactory < std::string, TimeIntegrationScheme > TimeIntegrationSchemeFactory;
-
-      // Allows a code to create a TimeIntegrator. Usually used like this:
-      //
-      //    LibUtilities::TimeIntegrationSchemeSharedPtr timeIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( "IMEXOrder1" );
-      //
-      LUE TimeIntegrationSchemeFactory & GetTimeIntegrationSchemeFactory();
-
-      //////////////////////////////////////////////////////////////////////////////////////
 
         // =========================================================================
         // ==== ENUM LIST OF ALL SUPPORTED INTEGRATION SCHEMES
@@ -122,42 +109,20 @@ namespace Nektar
             SIZE_TimeIntegrationMethod        //!< Length of enum list
         };
 
-        const char* const TimeIntegrationMethodMap[] = 
-        {
-            "NoTimeIntegrationMethod",
-            "AdamsBashforthOrder1",
-            "AdamsBashforthOrder2",
-            "AdamsBashforthOrder3",
-            "AdamsMoultonOrder1",
-            "AdamsMoultonOrder2",
-            "BDFImplicitOrder1",
-            "BDFImplicitOrder2",
-            "ClassicalRungeKutta4",
-            "RungeKutta4",
-            "RungeKutta3_SSP",
-            "RungeKutta2_ImprovedEuler",
-            "RungeKutta2_SSP",
-            "ForwardEuler",
-            "BackwardEuler",
-            "IMEXOrder1",
-            "IMEXOrder2",
-            "IMEXOrder3",
-            "Midpoint",
-            "RungeKutta2",
-            "DIRKOrder2",
-            "DIRKOrder3",
-            "CNAB",
-            "IMEXGear",
-            "MCNAB",
-            "IMEXdirk_1_1_1",
-            "IMEXdirk_1_2_1",
-            "IMEXdirk_1_2_2",
-            "IMEXdirk_2_2_2",
-            "IMEXdirk_2_3_2",
-            "IMEXdirk_2_3_3",
-            "IMEXdirk_3_4_3",
-            "IMEXdirk_4_4_3",
-        };
+      ///////////////////////////////////////////////////////////////////////////////////
+      // Provide using code the ability to get the TimeIntegrator Factory so that it can
+      // create TimeIntegrators.
+
+      /// Datatype of the NekFactory used to instantiate classes derived from the EquationSystem class.
+      typedef NekFactory < TimeIntegrationMethod, TimeIntegrationScheme > TimeIntegrationSchemeFactory;
+
+      // Allows a code to create a TimeIntegrator. Usually used like this:
+      //
+      //    LibUtilities::TimeIntegrationSchemeSharedPtr timeIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( "IMEXOrder1" );
+      //
+      LUE TimeIntegrationSchemeFactory & GetTimeIntegrationSchemeFactory();
+
+      //////////////////////////////////////////////////////////////////////////////////////
 
         enum TimeIntegrationSchemeType
         {
@@ -294,99 +259,12 @@ namespace Nektar
 
         }; // end class TimeIntegrationSchemeOperators()
 
-        // // =========================================================================
-        // // ==== DEFINITION OF THE CLASS TimeIntegrationSchemeKey
-        // // =========================================================================
-        // class TimeIntegrationSchemeKey
-        // {
-        // public:
-            
-        //     struct opLess
-        //     {
-        //         LUE bool operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
-        //     };
-            
-        //     TimeIntegrationSchemeKey(const TimeIntegrationMethod &method) :
-        //       m_method( method )
-        //     {
-        //     }
-            
-        //     virtual ~TimeIntegrationSchemeKey()
-        //     {
-        //     }
-
-        //     TimeIntegrationSchemeKey( const TimeIntegrationSchemeKey &key )
-        //     {
-        //         *this = key; // defer to assignment operator
-        //     }
-
-        //     TimeIntegrationSchemeKey& operator=( const TimeIntegrationSchemeKey &key )
-        //     {
-        //         m_method  = key.m_method;
-                
-        //         return *this;
-        //     }
-
-        //     inline bool operator==( const TimeIntegrationSchemeKey &key )
-        //     {
-        //         return (m_method == key.m_method);
-        //     }
-
-        //     inline bool operator== (const TimeIntegrationSchemeKey *y)
-        //     {
-        //         return (*this == *y);
-        //     }
-
-        //     inline bool operator != (const TimeIntegrationSchemeKey& y)
-        //     {
-        //         return (!(*this == y));
-        //     }
-
-        //     inline bool operator != (const TimeIntegrationSchemeKey *y)
-        //     {
-        //         return (!(*this == *y));
-        //     }
-
-        //     LUE friend bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
-        //     LUE friend bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
-        //     LUE friend bool opLess::operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
-
-        // protected:
-        //     TimeIntegrationMethod m_method;  //!< integration method
-
-        // private:
-        //     // This should never be called
-        //     TimeIntegrationSchemeKey()
-        //     {
-        //         NEKERROR( ErrorUtil::efatal, "Default Constructor for the TimeIntegrationSchemeKey class should not be called!" );
-        //     }
-        // }; // end class TimeIntegrationSchemeKey
-
-        // static const TimeIntegrationSchemeKey NullTimeIntegrationSchemeKey(eNoTimeIntegrationMethod);
-        // LUE bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
-        // LUE bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
-        // LUE std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeKey& rhs);
-
-        // =====================================================================
-
-
-        // =====================================================================
-        // ==== DEFINITION OF THE FUNCTION TimeIntegrationSolution
-        // =====================================================================
-        // This is the interface the user can use to get hold of the different
-        // time integration schemes. It returns you the NekManager 
-        // singleton which manages all the time integration schemes...
-        //
-      // typedef NekManager<TimeIntegrationSchemeKey, TimeIntegrationSchemeData, TimeIntegrationSchemeKey::opLess> TimeIntegrationSchemeManagerT;
-
-      // LUE
-      // TimeIntegrationSchemeManagerT & GetTimeIntegrationSchemeManager();
-        // =====================================================================
-
         // =====================================================================
         // ==== DEFINITION OF THE CLASS TimeIntegrationScheme
         // =====================================================================
-// FIXME: Dd: rename to TimeIntegrationSchemeBase (<- Add BASE)
+
+        // FIXME: Dd: rename to TimeIntegrationSchemeBase (<- Add BASE)????
+
         class TimeIntegrationScheme
         {
         public:
@@ -411,6 +289,9 @@ namespace Nektar
                 typedef std::function< void (ConstDoubleArray&, DoubleArray&, const NekDouble, const NekDouble) > FunctorType2;
 
 
+          static TimeIntegrationMethod methodFromName( const std::string & name );
+          static std::string           nameFromMethod( const TimeIntegrationMethod method );
+
           unsigned int GetNumIntegrationPhases() const { return m_integration_phases.size(); }
 
           LUE
@@ -430,54 +311,10 @@ namespace Nektar
           virtual TimeIntegrationMethod GetIntegrationMethod() const = 0;
 
           // FIXME: Dd: this should be protected...
-          // NOTE: It seems to me that it doesn't make sense to ask a (multi-phase) Scheme what its type is... as
-          //       each phase can have a different type... Ask Chris/Mike about this.
-          //       For now, returning type of last phase... 
-          TimeIntegrationSchemeType GetIntegrationSchemeType() const;
-
-        private:
-
-            // inline const TimeIntegrationSchemeKey& GetIntegrationSchemeKey() const
-            // {
-            //     return m_schemeKey;
-            // }
-
-          //            inline NekDouble A(const unsigned int i, const unsigned int j) const
-          //            {
-          //                return m_A[0][i][j];
-          //            }
-
-          //            inline NekDouble B(const unsigned int i, const unsigned int j) const
-          //            {
-          //                return m_B[0][i][j];
-          //            }
-
-            // inline NekDouble U(const unsigned int i, const unsigned int j) const
-            // {
-            //     return m_U[i][j];
-            // }
-
-            // inline NekDouble V(const unsigned int i, const unsigned int j) const
-            // {
-            //     return m_V[i][j];
-            // }
-
-            // inline NekDouble A_IMEX(const unsigned int i, const unsigned int j) const
-            // {
-            //     return m_A[1][i][j];
-            // }
-
-            // inline NekDouble B_IMEX(const unsigned int i, const unsigned int j) const
-            // {
-            //     return m_B[1][i][j];
-            // }
-
-          // inline unsigned int GetNsteps() const { return m_numsteps; }
-
-          //inline unsigned int GetNstages(void) const
-          //  {
-          //      return m_numstages;
-          //  }
+          // NOTE: FIXME: It seems to me that it doesn't make sense to ask a (multi-phase) Scheme what its type is... as
+          //              each phase can have a different type... Ask Chris/Mike about this.
+          //              For now, returning type of last phase... 
+          // TimeIntegrationSchemeType GetIntegrationSchemeType() const { ???? }
 
         protected:// <- Dd: Now going to use as a base class, so igore -> Dd: don't think anything is inheriting from this, so don't need protected...
           // private:
@@ -558,20 +395,6 @@ namespace Nektar
           // TimeIntegrationScheme() : m_method( eNoTimeIntegrationMethod ) { NEKERROR(ErrorUtil::efatal,"Default Constructor for the TimeIntegrationScheme class should not be called"); }
           TimeIntegrationScheme( const TimeIntegrationScheme & in ) { NEKERROR(ErrorUtil::efatal,"Copy Constructor for the TimeIntegrationScheme class should not be called"); }
 
-            // LUE bool VerifyIntegrationSchemeType(TimeIntegrationSchemeType type,
-            //                                  const Array<OneD, const Array<TwoD, NekDouble> >& A,
-            //                                  const Array<OneD, const Array<TwoD, NekDouble> >& B,
-            //                                  const Array<TwoD, const NekDouble>& U,
-            //                                  const Array<TwoD, const NekDouble>& V) const;
-
-          // LUE void TimeIntegrate(const NekDouble timestep,
-          //                            ConstTripleArray               &y_old  ,
-          //                            ConstSingleArray               &t_old  ,
-          //                            TripleArray                    &y_new  ,
-          //                            SingleArray                    &t_new  ,
-          //                      const TimeIntegrationSchemeOperators &op     );
-
-
             inline int GetFirstDim(ConstTripleArray &y) const
             {
                 return y[0].num_elements();
@@ -589,18 +412,9 @@ namespace Nektar
                                                    SingleArray                    &t_new  ,
                                              const TimeIntegrationSchemeOperators &op) const;
 
-#if 0
-            LUE bool CheckIfFirstStageEqualsOldSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
-                                                    const Array<OneD, const Array<TwoD, NekDouble> >& B,
-                                                    const Array<TwoD, const NekDouble>& U,
-                                                    const Array<TwoD, const NekDouble>& V) const;
-            
-            LUE bool CheckIfLastStageEqualsNewSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
-                                                   const Array<OneD, const Array<TwoD, NekDouble> >& B,
-                                                   const Array<TwoD, const NekDouble>& U,
-                                                   const Array<TwoD, const NekDouble>& V) const;
-#endif
-
+          // !!! Always make sure that this matches TimeIntegrationMethod enum... !!!
+          //
+          static const char* const TimeIntegrationMethodMap[ 33 ];
 
 
         }; // end class TimeIntegrationScheme

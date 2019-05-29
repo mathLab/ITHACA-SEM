@@ -133,7 +133,6 @@ SET(NEKTAR_LIBRARY_TYPE "SHARED")
 # Set up RPATH
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-SET(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}" "${TPLIB}")
 LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES
      "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}" isSystemDir)
 IF("${isSystemDir}" STREQUAL "-1")
@@ -142,11 +141,10 @@ ELSE()
     SET(CMAKE_INSTALL_RPATH "${TPLIB}")
 ENDIF()
 
-# Get rid of OS X RPATH warnings -- we should set this to 1 once we reach
-# required minimum cmake version of 3.0.0 and configure it in a more sane
-# fashion.
+# Enable the use of @rpath in macOS install names so that we can use multiple
+# third-party directories.
 IF(NOT DEFINED CMAKE_MACOSX_RPATH)
-    SET(CMAKE_MACOSX_RPATH 0)
+    SET(CMAKE_MACOSX_RPATH 1)
 ENDIF()
 
 # Components of the Nektar++ package to build

@@ -4,10 +4,8 @@
 .gitmodules export-ignore
 /docs/tutorial export-ignore
 /library/Demos/MultiRegions/ExtraDemos/ export-ignore
-/library/Demos/MultiRegions/XmlFiles/ export-ignore
-/library/Demos/LocalRegions/XmlFiles/ export-ignore
 /solvers/ImageWarpingSolver/ export-ignore
-/solvers/VortexWaveInteraction/"
+/solvers/VortexWaveInteraction/ export-ignore
 /solvers/CardiacEPSolver/Utilities/CellMLToNektar/ export-ignore
 /solvers/IncNavierStokesSolver/Utilities/HybridPerformanceModel/ export-ignore
 /utilities/Extras/ export-ignore

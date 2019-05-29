@@ -1,5 +1,6 @@
 # Files to ignore for export
 .gitignore export-ignore
+.gitattributes export-ignore
 .gitmodules export-ignore
 /docs/tutorial export-ignore
 /library/Demos/MultiRegions/ExtraDemos/ export-ignore

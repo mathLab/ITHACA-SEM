@@ -1744,11 +1744,12 @@ namespace Nektar
         AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray);
 
         AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv,TraceJacDerivSign);
-// Cout2DArrayBlkMat(gmtxarray);
-// ASSERTL0(false, "debug stop");
+
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
 
         ElmtVarInvMtrx(gmtxarray);
+// Cout2DArrayBlkMat(gmtxarray,20);
+// ASSERTL0(false, "debug stop");
     }
 
     void CompressibleFlowSystem::MultiplyElmtInvMass_PlusSource(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda)

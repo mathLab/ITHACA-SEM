@@ -1733,26 +1733,14 @@ using namespace std;
             m_locTraceToTraceMap->AddLocTracesToField(facevals,field);
         }
 
-        void DisContField3D::v_AddTraceQuadPhysToField(
-            const Array<OneD, const NekDouble>  &Fwd,
-            const Array<OneD, const NekDouble>  &Bwd,
-            Array<OneD,       NekDouble>        &fieldFwd,
-            Array<OneD,       NekDouble>        &fieldBwd)
+        void DisContField3D::v_GetLocTraceFromTracePts(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &locTraceFwd,
+                Array<OneD,       NekDouble>        &locTraceBwd)
         {
-            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->
-                                            GetNLocTracePts(),0.0);
-
-            Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->
-                                                    GetNFwdLocTracePts();
-            m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(1, Bwd, invals);
-
-            m_locTraceToTraceMap->AddLocTracesToField(facevals,fieldBwd);
-            Vmath::Zero(facevals.num_elements(),facevals,1);
-                
-            
-            m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(0, Fwd, facevals);
-
-            m_locTraceToTraceMap->AddLocTracesToField(facevals,fieldFwd);
+            m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(1, Bwd, locTraceBwd);
+            m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(0, Fwd, locTraceFwd);
         }
 
         /**

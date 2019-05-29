@@ -1414,8 +1414,7 @@ namespace Nektar
             }
             DisContField2D::v_PeriodicBwdCopy(Fwd,Bwd);
         }
-
-
+        
         /**
          */
         void DisContField2D::v_AddTraceQuadPhysToField(
@@ -1446,39 +1445,22 @@ namespace Nektar
             }
         }
 
-        /**
-         */
-        void DisContField2D::v_AddTraceQuadPhysToField(
+        void DisContField2D::v_GetLocTraceFromTracePts(
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,
-                Array<OneD,       NekDouble>        &fieldFwd,
-                Array<OneD,       NekDouble>        &fieldBwd)
+                Array<OneD,       NekDouble>        &locTraceFwd,
+                Array<OneD,       NekDouble>        &locTraceBwd)
         {
-            int cnt, n, e, npts, phys_offset;
-
-            // Basis definition on each element
             LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
             if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
             {
-                Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
-                                               GetNLocTracePts(),0.0);
-                // cout << "m_locTraceToTraceMap->GetNLocTracePts()= "<<m_locTraceToTraceMap->GetNLocTracePts()<<endl;
-                // cout << "m_locTraceToTraceMap->GetNFwdLocTracePts()= "<<m_locTraceToTraceMap->GetNFwdLocTracePts()<<endl;
-
-                Array<OneD, NekDouble> invals = edgevals + m_locTraceToTraceMap->
-                                                        GetNFwdLocTracePts();
-                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(1, Bwd, invals);
-                m_locTraceToTraceMap->AddLocTracesToField(edgevals,fieldBwd);
-
-                Vmath::Zero(edgevals.num_elements(),edgevals,1);
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(1, Bwd, locTraceBwd);
                 
-                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(0, Fwd, edgevals);
-
-                m_locTraceToTraceMap->AddLocTracesToField(edgevals,fieldFwd);
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(0, Fwd, locTraceFwd);
             }
             else
             {
-                ASSERTL0(false, "v_AddTraceQuadPhysToField not coded for eGauss_Lagrange");                
+                ASSERTL0(false, "v_GetLocTraceFromTracePts not coded for eGauss_Lagrange");                
             }
         }
 

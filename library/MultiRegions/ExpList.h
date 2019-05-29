@@ -823,11 +823,11 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &field);
             
-            inline void AddTraceQuadPhysToField(
+            inline void GetLocTraceFromTracePts(
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,
-                Array<OneD,       NekDouble>        &fieldFwd,
-                Array<OneD,       NekDouble>        &fieldBwd);
+                Array<OneD,       NekDouble>        &locTraceFwd,
+                Array<OneD,       NekDouble>        &locTraceBwd);
 
             inline void FillBwdWITHBound(
                 const Array<OneD, const NekDouble> &Fwd,
@@ -1374,11 +1374,11 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &field);
             
-            virtual void v_AddTraceQuadPhysToField(
+            virtual void v_GetLocTraceFromTracePts(
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,
-                Array<OneD,       NekDouble>        &fieldFwd,
-                Array<OneD,       NekDouble>        &fieldBwd);
+                Array<OneD,       NekDouble>        &locTraceFwd,
+                Array<OneD,       NekDouble>        &locTraceBwd);
                       
             virtual void v_FillBwdWITHBound(
                 const Array<OneD, const NekDouble> &Fwd,
@@ -2518,14 +2518,13 @@ namespace Nektar
             v_AddTraceQuadPhysToField(Fwd,Bwd,field);
         }
 
-
-        inline void ExpList::AddTraceQuadPhysToField(
+        inline void ExpList::GetLocTraceFromTracePts(
             const Array<OneD, const NekDouble>  &Fwd,
             const Array<OneD, const NekDouble>  &Bwd,
-            Array<OneD,       NekDouble>        &fieldFwd,
-            Array<OneD,       NekDouble>        &fieldBwd)
+            Array<OneD,       NekDouble>        &locTraceFwd,
+            Array<OneD,       NekDouble>        &locTraceBwd)
         {
-            v_AddTraceQuadPhysToField(Fwd,Bwd,fieldFwd,fieldBwd);
+            v_GetLocTraceFromTracePts(Fwd,Bwd,locTraceFwd,locTraceBwd);
         }
 
         inline void ExpList::FillBwdWITHBound(

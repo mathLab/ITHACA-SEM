@@ -302,6 +302,11 @@ public:
         m_LocTracephysToTraceIDMap = inarray;
     }
 
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const int > &GetfieldToLocTraceMap() const
+    {
+        return m_fieldToLocTraceMap;
+    }
+
 private:
     /// The number of forward trace points. A local trace element is `forward'
     /// if it is the side selected for the global trace.

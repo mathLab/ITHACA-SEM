@@ -2683,13 +2683,14 @@ namespace Nektar
                      "v_AddTraceQuadPhysToField is not defined or valid for this class type");
         }
 
-        void ExpList::v_AddTraceQuadPhysToField(
-                const Array<OneD, const NekDouble>  &Fwd,
-                const Array<OneD, const NekDouble>  &Bwd,
-                Array<OneD,       NekDouble>        &fieldFwd,
-                Array<OneD,       NekDouble>        &fieldBwd)
+        void ExpList::v_GetLocTraceFromTracePts(
+            const Array<OneD, const NekDouble>  &Fwd,
+            const Array<OneD, const NekDouble>  &Bwd,
+            Array<OneD,       NekDouble>        &locTraceFwd,
+            Array<OneD,       NekDouble>        &locTraceBwd)
         {
-            v_AddTraceQuadPhysToField(Fwd,Bwd,fieldFwd,fieldBwd);
+            ASSERTL0(false,
+                     "v_GetLocTraceFromTracePts is not defined or valid for this class type");
         }
 
         const Array<OneD,const NekDouble>
@@ -3803,7 +3804,7 @@ namespace Nektar
             NekDouble tmp;
             NekDouble sign = 1.0;
 
-            bool Debugflag = true;
+            bool Debugflag = false;
             if(locTraceToTraceMap->GetflagTracephysToLeftRightExpphysMap()&&Debugflag)
             {
                 Array<OneD, DNekMatSharedPtr>       TracFBMat(2);
@@ -3832,8 +3833,8 @@ namespace Nektar
                                 {
                                     sign=-elmtLRSign[nlr][ntrace][nrw];                                    
                                     nrwAdjExp = elmtLRMap[nlr][ntrace][nrw];
-                                    tmp   =   (*ElmtMat)(nrwAdjExp,nclAdjExp);
-                                    tmp   +=  sign*(*TracFBMat[nlr])(nrw,ncl);
+                                    tmp   =  sign*(*TracFBMat[nlr])(nrw,ncl);
+                                    tmp   +=   (*ElmtMat)(nrwAdjExp,nclAdjExp);
                                     ElmtMat->SetValue(nrwAdjExp,nclAdjExp,tmp);
                                 }
                             }
@@ -3844,11 +3845,20 @@ namespace Nektar
             else
             {
                 int nTracePntsTtl     = tracelist->GetTotPoints();
+                int nlocTracePts      = locTraceToTraceMap->GetNLocTracePts();
+                int nlocTracePtsFwd   = locTraceToTraceMap->GetNFwdLocTracePts();
+                int nlocTracePtsBwd   = nlocTracePts-nlocTracePtsFwd;
+                Array<OneD, int >  nlocTracePtsLR(2);
+                nlocTracePtsLR[0]     = nlocTracePtsFwd;
+                nlocTracePtsLR[1]     = nlocTracePtsBwd;
+                
                 Array<OneD, NekDouble>  TraceFwdPhy(nTracePntsTtl);
                 Array<OneD, NekDouble>  TraceBwdPhy(nTracePntsTtl);
-                Array<OneD, Array<OneD, NekDouble> > tmpfield(2);
-                tmpfield[0]    =   Array<OneD, NekDouble> (nElmtPnts);
-                tmpfield[1]    =   Array<OneD, NekDouble> (nElmtPnts);
+                Array<OneD, Array<OneD, NekDouble> > tmplocTrace(2);
+                for(int i=0;i<2;i++)
+                {
+                    tmplocTrace[i]    =   Array<OneD, NekDouble> (nlocTracePtsLR[i]);
+                }
 
                 int nTraceCoefMax = 0;
                 int nTraceCoefMin = std::numeric_limits<int>::max();
@@ -3865,6 +3875,18 @@ namespace Nektar
                     }
                 }
                 WARNINGL0(nTraceCoefMax==nTraceCoefMin,"nTraceCoefMax!=nTraceCoefMin: Effeciency may be low , if nTraceCoefMax>>nTraceCoefMin");
+
+                int traceID, nfieldPnts, ElmtId, noffset, nElmtPnts;
+                const Array<OneD, const Array<OneD, int > > LocTracephysToTraceIDMap = locTraceToTraceMap->GetLocTracephysToTraceIDMap();
+                const Array<OneD, const int >               fieldToLocTraceMap       = locTraceToTraceMap->GetfieldToLocTraceMap();
+                Array<OneD, Array<OneD, int > > fieldToLocTraceMapLR(2);
+                noffset = 0;
+                for(int i=0;i<2;i++)
+                {
+                    fieldToLocTraceMapLR[i]    =   Array<OneD, int> (nlocTracePtsLR[i]);
+                    Vmath::Vcopy(nlocTracePtsLR[i], &fieldToLocTraceMap[0]+noffset,1,&fieldToLocTraceMapLR[i][0],1);
+                    noffset += nlocTracePtsLR[i];
+                }
 
                 for(int nc=0;nc<nTraceCoefMax;nc++)
                 {
@@ -3888,46 +3910,34 @@ namespace Nektar
                             Vmath::Zero(nTracePnt,&TraceBwdPhy[noffset],1);
                         }
                     }
+                    
+                    for(int i=0;i<2;i++)
+                    {
+                        Vmath::Zero(nlocTracePtsLR[i],tmplocTrace[i],1);
+                    }
+                    // AddTraceQuadPhysToField(TraceFwdPhy,TraceBwdPhy,tmpfield[0],tmpfield[1]);
+                    GetLocTraceFromTracePts(TraceFwdPhy,TraceBwdPhy,tmplocTrace[0],tmplocTrace[1]);
 
-                    Vmath::Zero(nElmtPnts,tmpfield[0],1);
-                    Vmath::Zero(nElmtPnts,tmpfield[1],1);
-                    AddTraceQuadPhysToField(TraceFwdPhy,TraceBwdPhy,tmpfield[0],tmpfield[1]);
-
-                    // can  be replaced by AddTraceCoeffsToFieldCoeffs but needs more storage and cost
-                    // Array<OneD, bool> CoeffUpdateFlag(nElmtCoef);
                     for(int nlr = 0; nlr<2;nlr++)
                     {
-                        // Vmath::Fill(nElmtCoef,true,CoeffUpdateFlag,1);
-                        for(int  nt = 0; nt < ntotTrace; nt++)
+                        for(int  nloc = 0; nloc < nlocTracePtsLR[nlr]; nloc++)
                         {
-                            nTraceCoef           = tracelist->GetNcoeffs(nt);
+                            traceID             = LocTracephysToTraceIDMap[nlr][nloc];
+                            nTraceCoef          = tracelist->GetNcoeffs(traceID);
                             if(nc<nTraceCoef)
                             {
-                                nTracePnt            = tracelist->GetTotPoints(nt);
-                                if(LRAdjflag[nlr][nt])
-                                {
-                                    int ElmtId      = LRAdjExpid[nlr][nt];
-                                    int nElmtPnt  = GetTotPoints(ElmtId);
-                                    int noffset    = GetPhys_Offset(ElmtId);
-                                    ElmtMat        = fieldMat[LRAdjExpid[nlr][nt]];
-                                    nrwAdjExp   = elmtLRMap[nlr][nt][nc];
-                                    // if(CoeffUpdateFlag[CoeffUpdateFlag])
-                                    // {
+                                nfieldPnts  = fieldToLocTraceMapLR[nlr][nloc];      
+                                ElmtId      = LRAdjExpid[nlr][traceID];
+                                noffset     = GetPhys_Offset(ElmtId);
+                                nElmtPnts   = nfieldPnts - noffset;  
 
-                                    // }
-                                    sign=-elmtLRSign[nlr][nt][nc];        
+                                ElmtMat     = fieldMat[ElmtId];
+                                nrwAdjExp   = elmtLRMap[nlr][traceID][nc];
+                                sign        =-elmtLRSign[nlr][traceID][nc];        
 
-                                    for(int npnt = 0; npnt < nElmtPnt; npnt++)
-                                    {
-                                        tmp   =   (*ElmtMat)(nrwAdjExp,npnt);
-                                        // if(abs(tmp)<1.0E-12)
-                                        // {
-                                            tmp   +=  sign*tmpfield[nlr][noffset+npnt];
-                                            cout << " nt= "<<nt<< " npnt= "<<npnt<< " tmp= "<<tmp<<endl;
-                                            ElmtMat->SetValue(nrwAdjExp,npnt,tmp);
-                                        // }
-                                    }
-                                }
+                                tmp   =  sign*tmplocTrace[nlr][nloc];
+                                tmp   +=   (*ElmtMat)(nrwAdjExp,nElmtPnts);
+                                ElmtMat->SetValue(nrwAdjExp,nElmtPnts,tmp);
                             }
                         }
                     }

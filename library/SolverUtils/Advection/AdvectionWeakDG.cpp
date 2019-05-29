@@ -367,9 +367,6 @@ namespace Nektar
                     PntJac = TracePntJacCons;
                     CalcJacobTraceInteg(pFields,m,n,PntJac, TraceJacConsSign,TraceJacFwd,TraceJacBwd);
                     pFields[0]->AddTraceJacToElmtJac(TraceJacFwd, TraceJacBwd,ElmtJacQuad);
-
-            // Cout1DArrayStdMat(ElmtJacQuad);
-            // ASSERTL0(false, "debug stop");
                     pFields[0]->AddRightIPTBaseMatrix(ElmtJacQuad,ElmtJacCoef);
 
                     if(TracePntJacGradflag)

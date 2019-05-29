@@ -845,7 +845,45 @@ void LocTraceToTraceMap::Setup3D(
     FindElemNeighbs(locExp,trace);
 }
 
+void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap(
+    const ExpListSharedPtr &tracelist)
+{
+    std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
+    int ntotTrace            = (*traceExp).size();
+    int ntPnts,noffset;
 
+    Array<OneD, NekDouble> tracePnts(m_nTracePts,0.0);
+    for(int nt=0; nt<ntotTrace;nt++)
+    {
+        ntPnts  =   tracelist->GetTotPoints(nt);
+        noffset =   tracelist->GetPhys_Offset(nt);
+        for(int i=0;i<ntPnts;i++)
+        {
+            tracePnts[noffset+i]    =   NekDouble(nt);
+        }
+    }
+    
+    Array<OneD, Array<OneD, NekDouble> > loctracePntsLR(2);
+    loctracePntsLR[0]   =   Array<OneD, NekDouble> (m_nFwdLocTracePts,0.0);
+    loctracePntsLR[1]   =   Array<OneD, NekDouble> (m_nLocTracePts-m_nFwdLocTracePts,0.0);
+
+    m_LocTracephysToTraceIDMap      = Array<OneD, Array<OneD, int> > (2);
+    m_LocTracephysToTraceIDMap[0]   = Array<OneD, int> (m_nFwdLocTracePts,-1);
+    m_LocTracephysToTraceIDMap[1]   = Array<OneD, int> (m_nLocTracePts-m_nFwdLocTracePts,-1);
+
+    NekDouble error = 0.0;
+    for(int nlr = 0; nlr<2;nlr++)
+    {
+        RightIPTWLocEdgesToTraceInterpMat(nlr, tracePnts, loctracePntsLR[nlr]);
+        for(int i=0;i<loctracePntsLR[nlr].num_elements();i++)
+        {
+            m_LocTracephysToTraceIDMap[nlr][i] =   std::round(loctracePntsLR[nlr][i]);
+            error   +=   abs(loctracePntsLR[nlr][i] - NekDouble(m_LocTracephysToTraceIDMap[nlr][i]));
+        }
+    }
+    error = error/NekDouble(m_nLocTracePts);
+    ASSERTL0(error<NekConstants::kNekZeroTol,"m_LocTracephysToTraceIDMap may not be integer !!");
+}
 
 /**
  * @brief Set up member variables for a two-dimensional problem.

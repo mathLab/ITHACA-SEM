@@ -218,6 +218,9 @@ public:
         const Array<OneD, const NekDouble> &race,
         Array<OneD, NekDouble> &field);
 
+    MULTI_REGIONS_EXPORT void CalcuLocTracephysToTraceIDMap(
+        const ExpListSharedPtr &tracelist);
+
     /**
      * @brief Return the number of `forward' local trace points.
      */
@@ -287,6 +290,16 @@ public:
     MULTI_REGIONS_EXPORT inline bool GetflagTracephysToLeftRightExpphysMap()
     {
         return m_flagTracephysToLeftRightExpphysMap;
+    }
+
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int > > &GetLocTracephysToTraceIDMap() const
+    {
+        return m_LocTracephysToTraceIDMap;
+    }
+
+    MULTI_REGIONS_EXPORT inline void SetLocTracephysToTraceIDMap(const Array<OneD, Array<OneD, int > > & inarray)
+    {
+        m_LocTracephysToTraceIDMap = inarray;
     }
 
 private:
@@ -360,6 +373,8 @@ private:
     Array<OneD, int >                               m_ElemNeighbsNumb;
     // store the id of neighbor elements for each element
     Array<OneD, Array<OneD, int > >                 m_ElemNeighbsId;
+
+    Array<OneD, Array<OneD, int> >                  m_LocTracephysToTraceIDMap;
 
     void TracelocToElmtlocCoeffMap(
         const ExpList &locExp,

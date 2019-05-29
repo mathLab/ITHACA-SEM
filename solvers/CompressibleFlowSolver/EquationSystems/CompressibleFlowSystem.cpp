@@ -183,6 +183,23 @@ namespace Nektar
                 }
                 AllocatePrecondBlkDiag_coeff(m_PrecMatVars);
             }
+
+            int nvariables  =   m_fields.num_elements();
+            Array<OneD, Array<OneD, Array<OneD, int > > >   map;
+            bool flag;
+            const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap = m_fields[0]->GetlocTraceToTraceMap();
+            m_fields[0]->CalcuTracephysToLeftRightExpphysMap(flag,map);
+            locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(map);
+            locTraceToTraceMap->SetflagTracephysToLeftRightExpphysMap(flag);
+
+            locTraceToTraceMap->CalcuLocTracephysToTraceIDMap(m_fields[0]->GetTrace());
+            for(int i=1;i<nvariables;i++)
+            {
+                m_fields[i]->GetlocTraceToTraceMap()->SetTracephysToLeftRightExpphysMap(map);
+                m_fields[i]->GetlocTraceToTraceMap()->SetflagTracephysToLeftRightExpphysMap(flag);
+                m_fields[i]->GetlocTraceToTraceMap()->SetLocTracephysToTraceIDMap(
+                    locTraceToTraceMap->GetLocTracephysToTraceIDMap()    );
+            }
             
 #else
             ASSERTL0(false, "Implicit CFS not set up.");

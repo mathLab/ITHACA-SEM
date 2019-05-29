@@ -131,12 +131,7 @@ using namespace std;
                      cnt += m_bndCondExpansions[i]->GetExpSize();
                  }
              }
-            Array<OneD, Array<OneD, Array<OneD, int > > >   map;
-            bool flag;
-            CalcuTracephysToLeftRightExpphysMap(flag,map);
-            m_locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(map);
-            m_locTraceToTraceMap->SetflagTracephysToLeftRightExpphysMap(flag);
-         }
+        }
 
          /*
           * @brief Copy type constructor which declares new boundary conditions

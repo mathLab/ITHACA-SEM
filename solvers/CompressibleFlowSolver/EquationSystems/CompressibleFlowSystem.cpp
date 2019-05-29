@@ -84,6 +84,9 @@ namespace Nektar
             {
                 int nPts = m_fields[0]->GetTotPoints();
                 m_muav = Array<OneD, NekDouble>(nPts, 0.0);
+
+                int nTracePts = m_fields[0]->GetTrace()->GetTotPoints();
+                m_muavTrace = Array<OneD, NekDouble> (nTracePts,0.0);
             }
             else
             {

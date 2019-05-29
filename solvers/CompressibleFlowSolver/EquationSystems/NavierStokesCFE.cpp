@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/EquationSystems/NavierStokesCFE.h>
-#include <LibUtilities/BasicUtils/Smath.h>
 
 using namespace std;
 
@@ -102,6 +101,28 @@ namespace Nektar
 
         // Artificial viscosity parameter
         m_session->LoadParameter("mu0", m_mu0, 1.0);
+
+        // load smoothing tipe
+        m_session->LoadSolverInfo("Smoothing", m_smoothing, "Off");
+        if (m_smoothing == "C0")
+        {
+            int nDim = m_fields[0]->GetCoordim(0);
+            if (nDim == 2)
+            {
+                m_C0Project2DExp = MemoryManager<MultiRegions::ContField2D>::
+                AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(0));
+            }
+            else if(nDim == 3)
+            {
+                m_C0Project3DExp = MemoryManager<MultiRegions::ContField3D>::
+                AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(0));
+            }
+            else
+            {
+                ASSERTL0(false, "AV C0 smoothing not implemented in 1D.")
+            }
+        }
+
 
         string diffName, advName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
@@ -405,8 +426,20 @@ namespace Nektar
         // get artificial viscosity
         if (m_shockCaptureType == "Physical" && m_CalcuPhysicalAV)
         {
-            GetPhysicalAV(inarray);
             m_CalcuPhysicalAV = false;
+            GetPhysicalAV(inarray);
+            // Apply Ducros sensor
+            if (m_physicalSensorType == "Ducros")
+            {
+                Ducros(m_muav);
+            }
+            // Apply approximate c0 smoothing
+            if (m_smoothing == "C0")
+            {
+                C0Smooth(m_muav);
+            }
+            // Get trace
+            GetTracePhysicalAV();
         }
 
         string diffName;
@@ -625,20 +658,16 @@ namespace Nektar
         // Add artificial viscosity if wanted
         if (m_shockCaptureType == "Physical")
         {
-            // // Apply Ducros sensor
-            // if (m_physicalSensorType == "Ducros")
-            // {
-            //     ducros(m_muav);
-            // }
-            // // Make approximate C0 projection
-            // if (m_smoothing == "C0")
-            // {
-            //     C0Smooth(m_muav);
-            //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
-            //     {
-            //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
-            //     }
-            // }
+            // Apply Ducros sensor
+            if (m_physicalSensorType == "Ducros")
+            {
+                Ducros(m_muav);
+            }
+            // Apply approximate c0 smoothing
+            if (m_smoothing == "C0")
+            {
+                C0Smooth(m_muav);
+            }
             Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
         }
 
@@ -746,20 +775,16 @@ namespace Nektar
         // Add artificial viscosity if wanted
         if (m_shockCaptureType == "Physical")
         {
-            // // Apply Ducros sensor
-            // if (m_physicalSensorType == "Ducros")
-            // {
-            //     ducros(m_muav);
-            // }
-            // // Make approximate C0 projection
-            // if (m_smoothing == "C0")
-            // {
-            //     C0Smooth(m_muav);
-            //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
-            //     {
-            //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
-            //     }
-            // }
+            // Apply Ducros sensor
+            if (m_physicalSensorType == "Ducros")
+            {
+                Ducros(m_muav);
+            }
+            // Apply approximate c0 smoothing
+            if (m_smoothing == "C0")
+            {
+                C0Smooth(m_muav);
+            }
             Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
         }
 
@@ -961,6 +986,23 @@ namespace Nektar
         int n_nonZero   =   nConvectiveFields-1;
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxVec;
         Array<OneD,Array<OneD,NekDouble>> outtmp(nConvectiveFields);
+
+        // Add artificial viscosity if wanted
+        if (m_shockCaptureType == "Physical")
+        {
+            // Apply Ducros sensor
+            if (m_physicalSensorType == "Ducros")
+            {
+                Ducros(m_muav);
+            }
+            // Apply approximate c0 smoothing
+            if (m_smoothing == "C0")
+            {
+                C0Smooth(m_muav);
+            }
+            // Update trace
+            GetTracePhysicalAV();
+        }
 
         for(int i=0; i<nConvectiveFields;i++)
         {
@@ -1263,21 +1305,16 @@ namespace Nektar
         // Add artificial viscosity if wanted
         if (m_shockCaptureType == "Physical")
         {
-            // // Apply Ducros sensor
-            // if (m_physicalSensorType == "Ducros")
-            // {
-            //     ducros(m_muav);
-            // }
-            // // Make approximate C0 projection
-            // if (m_smoothing == "C0")
-            // {
-            //     C0Smooth(m_muav);
-            //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
-            //     {
-            //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
-            //     }
-            // }
-            Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
+            Array<OneD, NekDouble> muav;
+            if (m_fields[0]->GetTrace()->GetTotPoints()==nPts)
+            {
+                muav = m_muavTrace;
+            }
+            else
+            {
+                muav = m_muav;
+            }
+            Vmath::Vadd(nPts, mu, 1, muav, 1, mu, 1);
         }
 
         // What about thermal conductivity?
@@ -1412,31 +1449,133 @@ namespace Nektar
             int physOffset      = m_fields[0]->GetPhys_Offset(e);
             int nElmtPoints     = m_fields[0]->GetExp(e)->GetTotPoints();
 
-            // Scale viscosity by the maximum wave speed
-            NekDouble LambdaElmt = m_mu0;
-            LambdaElmt *= Vmath::Vmax(nElmtPoints, tmp = Lambdas + physOffset, 1);
-            Vmath::Smul(nElmtPoints, LambdaElmt, tmp = m_muav + physOffset, 1,
-                tmp = m_muav + physOffset, 1);
+            // Compute the maximum wave speed
+            NekDouble LambdaElmt = Vmath::Vmax(nElmtPoints, tmp = Lambdas
+                + physOffset, 1);
 
-            // Scale viscosity by average bounded density
+            // Compute average bounded density
             NekDouble rhoAve = Vmath::Vsum(nElmtPoints, tmp = physfield[0]
                 + physOffset, 1);
             rhoAve = rhoAve / nElmtPoints;
             rhoAve = Smath::Smax(rhoAve , 1.0e-4, 1.0e+4);
-            Vmath::Smul(nElmtPoints, rhoAve, tmp = m_muav + physOffset, 1,
-                tmp = m_muav + physOffset, 1);
 
-            // Scale viscosity by h/p
-            Vmath::Smul(nElmtPoints, hOverP[e], tmp = m_muav + physOffset, 1,
+            // Scale sensor by coeff, h/p, and density
+            LambdaElmt *= m_mu0 * hOverP[e] * rhoAve;
+            Vmath::Smul(nElmtPoints, LambdaElmt, tmp = m_muav + physOffset, 1,
                 tmp = m_muav + physOffset, 1);
         }
-        // // Scale viscosity by bounded density
-        // Array <OneD, NekDouble > rho(nPts, physfield[0]);
-        // for (int i = 0; i < nPts; i++)
-        // {
-        //     rho[i] = Smath::Smax(rho[i] , 1.0e-4, 1.0e+4);
-        // }
-        // Vmath::Vmul(nPts, rho, 1, m_muav, 1, m_muav, 1);
+    }
+
+    /**
+    * @brief Get trace of the physical artificial viscosity
+    *
+    */
+    void NavierStokesCFE::GetTracePhysicalAV()
+    {
+        int nTracePts = m_fields[0]->GetTrace()->GetTotPoints();
+        Array<OneD, NekDouble> Fwd(nTracePts,0.0);
+        Array<OneD, NekDouble> Bwd(nTracePts,0.0);
+        // BwdMuvar is left to be 0.0 according to DiffusionLDG.cpp
+        m_fields[0]->GetFwdBwdTracePhysNoBndFill(m_muav,Fwd,Bwd);
+
+        for(int k = 0; k < nTracePts; ++k)
+        {
+            m_muavTrace[k] = 0.5 * (Fwd[k] + Bwd[k]) ;
+        }
+    }
+
+
+    /**
+     * @brief Make field C0.
+     *
+     * @param field Input Field
+     */
+    void NavierStokesCFE::C0Smooth( Array<OneD, NekDouble> &field )
+    {
+        int nDim = m_fields[0]->GetCoordim(0);
+        if (nDim == 2)
+        {
+            int nCoeffs = m_C0Project2DExp->GetNcoeffs();
+            Array<OneD, NekDouble> muFwd(nCoeffs);
+            Array<OneD, NekDouble> weights(nCoeffs, 1.0);
+            // Assemble global expansion coefficients for viscosity
+            m_C0Project2DExp->FwdTrans_IterPerExp(field,
+                m_C0Project2DExp->UpdateCoeffs());
+            m_C0Project2DExp->Assemble();
+            Vmath::Vcopy(nCoeffs, m_C0Project2DExp->GetCoeffs(), 1, muFwd, 1);
+            // Global coefficients
+            Vmath::Vcopy(nCoeffs, weights, 1,
+                m_C0Project2DExp->UpdateCoeffs(), 1);
+            // This is the sign vector
+            m_C0Project2DExp->GlobalToLocal();
+            // Get weights
+            m_C0Project2DExp->Assemble();
+            // Divide
+            Vmath::Vdiv(nCoeffs, muFwd, 1, m_C0Project2DExp->GetCoeffs(), 1,
+                m_C0Project2DExp->UpdateCoeffs(), 1);
+            // Get local coefficients
+            m_C0Project2DExp->GlobalToLocal();
+            // Get C0 field
+            m_C0Project2DExp->BwdTrans_IterPerExp(
+            m_C0Project2DExp->GetCoeffs(), field);
+        }
+        else if(nDim == 3)
+        {
+            int nCoeffs = m_C0Project3DExp->GetNcoeffs();
+            Array<OneD, NekDouble> muFwd(nCoeffs);
+            Array<OneD, NekDouble> weights(nCoeffs, 1.0);
+            // Assemble global expansion coefficients for viscosity
+            m_C0Project3DExp->FwdTrans_IterPerExp(field,
+                m_C0Project3DExp->UpdateCoeffs());
+            m_C0Project3DExp->Assemble();
+            Vmath::Vcopy(nCoeffs, m_C0Project3DExp->GetCoeffs(), 1, muFwd, 1);
+            // Global coefficients
+            Vmath::Vcopy(nCoeffs, weights, 1,
+                m_C0Project3DExp->UpdateCoeffs(), 1);
+            // This is the sign vector
+            m_C0Project3DExp->GlobalToLocal();
+            // Get weights
+            m_C0Project3DExp->Assemble();
+            // Divide
+            Vmath::Vdiv(nCoeffs, muFwd, 1, m_C0Project3DExp->GetCoeffs(), 1,
+                m_C0Project3DExp->UpdateCoeffs(), 1);
+            // Get local coefficients
+            m_C0Project3DExp->GlobalToLocal();
+            // Get C0 field
+            m_C0Project3DExp->BwdTrans_IterPerExp(
+            m_C0Project3DExp->GetCoeffs(), field);
+        }
+
+    }
+
+    /**
+    * @brief Applied Ducros (anti-vorticity) sensor.
+    *
+    * @param field Input Field
+    */
+    void NavierStokesCFE::Ducros( Array<OneD, NekDouble> &field )
+    {
+        int nPts = m_fields[0]->GetTotPoints();
+        Array<OneD, NekDouble> denDuc(nPts, NekConstants::kNekZeroTol);
+        Array<OneD, NekDouble> ducros(nPts, 0.0);
+        Vmath::Vadd(nPts, denDuc, 1, m_diffusion->m_divVelSquare, 1,
+            denDuc, 1);
+        Vmath::Vadd(nPts, denDuc, 1, m_diffusion->m_curlVelSquare, 1,
+            denDuc, 1);
+        Vmath::Vdiv(nPts, m_diffusion->m_divVelSquare, 1, denDuc, 1,
+            ducros, 1);
+        // Average in cell
+        Array<OneD, NekDouble> tmp;
+        for (int e = 0; e < m_fields[0]->GetExpSize(); e++)
+        {
+            int nElmtPoints     = m_fields[0]->GetExp(e)->GetTotPoints();
+            int physOffset      = m_fields[0]->GetPhys_Offset(e);
+
+            NekDouble eAve = Vmath::Vsum(nElmtPoints, tmp = ducros + physOffset, 1);
+            eAve = eAve / nElmtPoints;
+            Vmath::Fill(nElmtPoints, eAve, tmp = ducros + physOffset, 1);
+        }
+        Vmath::Vmul(nPts, ducros, 1, field, 1, field, 1);
     }
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
@@ -1926,26 +2065,12 @@ namespace Nektar
             m_varConv->GetDynamicViscosity(temperature, mu);
             m_varConv->GetDmuDT(temperature,mu,DmuDT);
         }
-        // // Add artificial viscosity if wanted
-        // if (m_shockCaptureType == "Physical")
-        // {
-        //     // // Apply Ducros sensor
-        //     // if (m_physicalSensorType == "Ducros")
-        //     // {
-        //     //     ducros(m_muav);
-        //     // }
-        //     // // Make approximate C0 projection
-        //     // if (m_smoothing == "C0")
-        //     // {
-        //     //     C0Smooth(m_muav);
-        //     //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
-        //     //     {
-        //     //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
-        //     //     }
-        //     // }
-        //     Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
-        //     // Get numerical DmuDT
-        // }
+        // Add artificial viscosity if wanted
+        if (m_shockCaptureType == "Physical")
+        {
+            Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
+            // Get numerical DmuDT
+        }
 
         // What about thermal conductivity?
 
@@ -2070,22 +2195,16 @@ namespace Nektar
         // Add artificial viscosity if wanted
         if (m_shockCaptureType == "Physical")
         {
-            // // Apply Ducros sensor
-            // if (m_physicalSensorType == "Ducros")
-            // {
-            //     ducros(m_muav);
-            // }
-            // // Make approximate C0 projection
-            // if (m_smoothing == "C0")
-            // {
-            //     C0Smooth(m_muav);
-            //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
-            //     {
-            //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
-            //     }
-            // }
-            Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
-            // Get numerical DmuDT
+            Array<OneD, NekDouble> muav;
+            if (m_fields[0]->GetTrace()->GetTotPoints()==nPts)
+            {
+                muav = m_muavTrace;
+            }
+            else
+            {
+                muav = m_muav;
+            }
+            Vmath::Vadd(nPts, mu, 1, muav, 1, mu, 1);
         }
 
         // What about thermal conductivity?

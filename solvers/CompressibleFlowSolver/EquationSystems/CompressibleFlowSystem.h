@@ -88,6 +88,9 @@ namespace Nektar
         /// Store physical artificial viscosity
         Array<OneD, NekDouble>              m_muav;
 
+        /// Store physical artificial viscosity
+        Array<OneD, NekDouble>              m_muavTrace;
+
         // Parameters for local time-stepping
         bool                                m_useLocalTimeStep;
 

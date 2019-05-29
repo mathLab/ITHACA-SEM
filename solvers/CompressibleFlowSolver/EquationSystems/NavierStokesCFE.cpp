@@ -1544,6 +1544,36 @@ namespace Nektar
 
     }
 
+    /**
+    * @brief Applied Ducros (anti-vorticity) sensor.
+    *
+    * @param field Input Field
+    */
+    void NavierStokesCFE::Ducros( Array<OneD, NekDouble> &field )
+    {
+        int nPts = m_fields[0]->GetTotPoints();
+        Array<OneD, NekDouble> denDuc(nPts, NekConstants::kNekZeroTol);
+        Array<OneD, NekDouble> ducros(nPts, 0.0);
+        Vmath::Vadd(nPts, denDuc, 1, m_diffusion->m_divVelSquare, 1,
+            denDuc, 1);
+        Vmath::Vadd(nPts, denDuc, 1, m_diffusion->m_curlVelSquare, 1,
+            denDuc, 1);
+        Vmath::Vdiv(nPts, m_diffusion->m_divVelSquare, 1, denDuc, 1,
+            ducros, 1);
+        // Average in cell
+        Array<OneD, NekDouble> tmp;
+        for (int e = 0; e < m_fields[0]->GetExpSize(); e++)
+        {
+            int nElmtPoints     = m_fields[0]->GetExp(e)->GetTotPoints();
+            int physOffset      = m_fields[0]->GetPhys_Offset(e);
+
+            NekDouble eAve = Vmath::Vsum(nElmtPoints, tmp = ducros + physOffset, 1);
+            eAve = eAve / nElmtPoints;
+            Vmath::Fill(nElmtPoints, eAve, tmp = ducros + physOffset, 1);
+        }
+        Vmath::Vmul(nPts, ducros, 1, field, 1, field, 1);
+    }
+
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
 
     /**

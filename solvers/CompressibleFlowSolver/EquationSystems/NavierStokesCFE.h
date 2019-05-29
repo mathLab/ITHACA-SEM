@@ -171,7 +171,7 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble>> &physfield);
 
     void GetTracePhysicalAV();
-
+    void Ducros( Array<OneD, NekDouble> &field );
     void C0Smooth(Array<OneD, NekDouble> &field);
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF

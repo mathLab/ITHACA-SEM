@@ -1467,6 +1467,17 @@ namespace Nektar
                 return -1;
             }
 
+            if (m_elmtToExpId.size() == 0)
+            {
+                // Loop in reverse order so that in case where using a
+                // Homogeneous expansion it sets geometry ids to first part of
+                // m_exp list. Otherwise will set to second (complex) expansion
+                for(int i = (*m_exp).size()-1; i >= 0; --i)
+                {
+                    m_elmtToExpId[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+                }
+            }
+
             NekDouble x = (gloCoords.num_elements() > 0 ? gloCoords[0] : 0.0);
             NekDouble y = (gloCoords.num_elements() > 1 ? gloCoords[1] : 0.0);
             NekDouble z = (gloCoords.num_elements() > 2 ? gloCoords[2] : 0.0);

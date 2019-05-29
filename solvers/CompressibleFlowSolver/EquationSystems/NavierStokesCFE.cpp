@@ -322,22 +322,6 @@ namespace Nektar
         if (m_shockCaptureType == "Physical")
         {
             GetPhysicalAV(inarray);
-            // // Apply Ducros sensor
-            // if (m_physicalSensorType == "Ducros")
-            // {
-            //     ducros(m_muav);
-            // }
-            // Apply approximate c0 projection
-            if (m_smoothing == "C0")
-            {
-                C0Smooth(m_muav);
-                if (Vmath::Vmin(npoints, m_muav, 1) < 0.0)
-                {
-                    WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
-                }
-            }
-            // Get trace
-            GetTracePhysicalAV();
         }
 
         string diffName;
@@ -444,14 +428,15 @@ namespace Nektar
         {
             m_CalcuPhysicalAV = false;
             GetPhysicalAV(inarray);
-            // Apply approximate C0 projection
+            // Apply Ducros sensor
+            if (m_physicalSensorType == "Ducros")
+            {
+                Ducros(m_muav);
+            }
+            // Apply approximate c0 smoothing
             if (m_smoothing == "C0")
             {
                 C0Smooth(m_muav);
-                if (Vmath::Vmin(npoints, m_muav, 1) < 0.0)
-                {
-                    WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
-                }
             }
             // Get trace
             GetTracePhysicalAV();
@@ -673,11 +658,16 @@ namespace Nektar
         // Add artificial viscosity if wanted
         if (m_shockCaptureType == "Physical")
         {
-            // // Apply Ducros sensor
-            // if (m_physicalSensorType == "Ducros")
-            // {
-            //     ducros(m_muav);
-            // }
+            // Apply Ducros sensor
+            if (m_physicalSensorType == "Ducros")
+            {
+                Ducros(m_muav);
+            }
+            // Apply approximate c0 smoothing
+            if (m_smoothing == "C0")
+            {
+                C0Smooth(m_muav);
+            }
             Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
         }
 
@@ -785,11 +775,16 @@ namespace Nektar
         // Add artificial viscosity if wanted
         if (m_shockCaptureType == "Physical")
         {
-            // // Apply Ducros sensor
-            // if (m_physicalSensorType == "Ducros")
-            // {
-            //     ducros(m_muav);
-            // }
+            // Apply Ducros sensor
+            if (m_physicalSensorType == "Ducros")
+            {
+                Ducros(m_muav);
+            }
+            // Apply approximate c0 smoothing
+            if (m_smoothing == "C0")
+            {
+                C0Smooth(m_muav);
+            }
             Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
         }
 
@@ -991,6 +986,23 @@ namespace Nektar
         int n_nonZero   =   nConvectiveFields-1;
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxVec;
         Array<OneD,Array<OneD,NekDouble>> outtmp(nConvectiveFields);
+
+        // Add artificial viscosity if wanted
+        if (m_shockCaptureType == "Physical")
+        {
+            // Apply Ducros sensor
+            if (m_physicalSensorType == "Ducros")
+            {
+                Ducros(m_muav);
+            }
+            // Apply approximate c0 smoothing
+            if (m_smoothing == "C0")
+            {
+                C0Smooth(m_muav);
+            }
+            // Update trace
+            GetTracePhysicalAV();
+        }
 
         for(int i=0; i<nConvectiveFields;i++)
         {
@@ -1302,14 +1314,6 @@ namespace Nektar
             {
                 muav = m_muav;
             }
-
-            // // Apply Ducros sensor
-            // if (m_physicalSensorType == "Ducros")
-            // {
-            //     ducros(m_muav);
-            // }
-
-
             Vmath::Vadd(nPts, mu, 1, muav, 1, mu, 1);
         }
 
@@ -2064,13 +2068,6 @@ namespace Nektar
         // Add artificial viscosity if wanted
         if (m_shockCaptureType == "Physical")
         {
-            // // Apply Ducros sensor
-            // if (m_physicalSensorType == "Ducros")
-            // {
-            //     ducros(m_muav);
-            // }
-            // Make approximate C0 projection
-
             Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
             // Get numerical DmuDT
         }

@@ -2090,7 +2090,7 @@ namespace Nektar
             int P1,
             int P2)
         {
-            int n,m,j;
+            int n,j;
             int nFaceCoeffs;
 
             int nBndCoeffs = NumBndryCoeffs();
@@ -2188,6 +2188,9 @@ namespace Nektar
                         }
                     }
                 }
+                break;
+            default:
+                ASSERTL0(false, "Invalid shape type.");
                 break;
             }
 

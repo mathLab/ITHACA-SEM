@@ -6,6 +6,12 @@ RelWithDebInfo MinSizeRel.")
 PROJECT(Nektar++ C CXX)
 
 CMAKE_POLICY(SET CMP0022 NEW)
+
+# Defer to use _ROOT variables to avoid Zlib warning
+IF (POLICY CMP0074)
+    CMAKE_POLICY(SET CMP0074 OLD)
+ENDIF()
+
 # Nektar++ requires C++11. Try to infer this for older CMake versions (less than
 # 3.1.0)
 IF ("${CMAKE_VERSION}" VERSION_LESS "3.1")

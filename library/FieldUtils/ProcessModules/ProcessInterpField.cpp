@@ -87,9 +87,10 @@ void ProcessInterpField::Process(po::variables_map &vm)
     std::vector<std::string> files;
 
     // set up session file for from field
+    char *dummyPrgName = const_cast<char *>("FieldConvert");
     ParseUtils::GenerateVector(m_config["fromxml"].as<string>(), files);
     fromField->m_session =
-        LibUtilities::SessionReader::CreateInstance(0, 0, files);
+        LibUtilities::SessionReader::CreateInstance(1, &dummyPrgName, files);
 
     // Set up range based on min and max of local parallel partition
     SpatialDomains::DomainRangeShPtr rng =

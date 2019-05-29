@@ -64,6 +64,8 @@ namespace Nektar
     class MetricRegex : public Metric
     {
     public:
+        virtual ~MetricRegex() {}
+
         static MetricSharedPtr create(TiXmlElement *metric, bool generate)
         {
             return MetricSharedPtr(new MetricRegex(metric, generate));

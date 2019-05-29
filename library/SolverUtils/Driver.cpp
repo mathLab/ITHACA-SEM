@@ -164,8 +164,10 @@ void Driver::v_InitObject(ostream &out)
                 LinNSCondFile += "_LinNS.xml";
                 LinNSFilename.push_back(meshfile);
                 LinNSFilename.push_back(LinNSCondFile);
+
+                char *dummyPrgName = const_cast<char*>("IncNavierStokesSolver");
                 session_LinNS = LibUtilities::SessionReader::CreateInstance(
-                                0, NULL, LinNSFilename, m_session->GetComm());
+                    1, &dummyPrgName, LinNSFilename, m_session->GetComm());
 
                 SpatialDomains::MeshGraphSharedPtr graph_linns =
                     SpatialDomains::MeshGraph::Read(session_LinNS);

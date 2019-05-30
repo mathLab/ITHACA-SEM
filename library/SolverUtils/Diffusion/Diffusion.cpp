@@ -144,8 +144,8 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble>>         &inarray,
                 Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
-                const Array<OneD, Array<OneD, NekDouble>>         &pFwd =NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble>>         &pBwd =NullNekDoubleArrayofArray)
+                const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
+                const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
             {
                 v_DiffuseCalculateDerivative(nConvectiveFields, fields, inarray,inarrayderivative,pFwd, pBwd);
 

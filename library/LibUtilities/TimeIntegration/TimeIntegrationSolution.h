@@ -126,7 +126,7 @@ namespace Nektar
             }
 
             // returns the entry in the solution vector which corresponds to the (multi-step) derivative at the time-level with specified offset
-            inline DoubleArray& GetDerivative(const unsigned int timeLevelOffset)
+            inline DoubleArray& GetDerivative( const unsigned int timeLevelOffset )
             {
                 int nMultiStepVals = m_schemeData->GetNmultiStepValues();
                 int size           = m_schemeData->m_numsteps;
@@ -144,7 +144,7 @@ namespace Nektar
             }
 
             // returns the time associated with the (multi-step) value at the time-level with the given offset
-            inline NekDouble GetValueTime(const unsigned int timeLevelOffset)
+            inline NekDouble GetValueTime( const unsigned int timeLevelOffset )
             {
                 int nMultiStepVals = m_schemeData->GetNmultiStepValues();
                 const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
@@ -163,7 +163,7 @@ namespace Nektar
             // sets the (multi-step) value and time in the solution
             // vector which corresponds to
             // the value at the time-level with specified offset
-            inline void SetValue(const unsigned int timeLevelOffset, const DoubleArray& y, const NekDouble t)
+            inline void SetValue( const unsigned int timeLevelOffset, const DoubleArray& y, const NekDouble t )
             {
                 int nMultiStepVals = m_schemeData->GetNmultiStepValues();
                 const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
@@ -226,8 +226,8 @@ namespace Nektar
         private:
 
             const TimeIntegrationSchemeData * m_schemeData;
-            TripleArray m_solVector;
-            Array<OneD,NekDouble> m_t;
+            TripleArray                       m_solVector;
+            Array<OneD,NekDouble>             m_t;
 
         }; // end class TimeIntegrationSolution
 

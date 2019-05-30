@@ -38,11 +38,10 @@
 //
 // For more information, please consult the following reference:
 //
-// Vos, P.E.J., Eskilsson, C., Bolis, A., Chun, S., Kirby, R.M. and Sherwin, S.J.
-// "A Generic Framework for Time-Stepping PDEs: general linear methods,
-//  object-oriented implementation and application to fluid problems"
-// International Journal of Computational Fluid Dynamics, to appear
-
+//    Peter E.J. Vos, Sehun Chun, Alessandro Bolis, Claes Eskilsson, Robert M. Kirby and Spencer J. Sherwin,
+//    "A Generic Framework for Time-Stepping PDEs: General Linear Methods, Object-Oriented Implementations and Applications to Fluid Problems",
+//    International Journal of Computational Fluid Dynamics, Vol. 25, Issue 3, pages 107-125, 2011.
+//
 // It solves the one-dimensional advection-diffusion problem, defined as
 //
 //  |    du     du     d^2 u
@@ -87,11 +86,15 @@
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+
 using namespace std;
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
 
 namespace po = boost::program_options;
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 // We first implement a class that represents
 // the 1D finite difference solver
@@ -99,18 +102,18 @@ class OneDfinDiffAdvDiffSolver
 {
 public:
     // constructor based upon the discretisation details
-    OneDfinDiffAdvDiffSolver(int nPoints, int nTimeSteps):
-        m_x0(0.0),
-        m_xend(1.0),
-        m_nPoints(nPoints),
-        m_dx((m_xend-m_x0)/((double) m_nPoints-1.0)),
-        m_t0(0.0),
-        m_tend(1.0),
-        m_nTimeSteps(nTimeSteps),
-        m_dt((m_tend-m_t0)/(double) m_nTimeSteps),
-        m_wavenumber(1.0),
-        m_U(1.0),
-        m_D(0.05)
+    OneDfinDiffAdvDiffSolver( int nPoints, int nTimeSteps ):
+        m_x0( 0.0 ),
+        m_xend( 1.0 ),
+        m_nPoints( nPoints ),
+        m_dx( (m_xend-m_x0)/((double) m_nPoints-1.0) ),
+        m_t0( 0.0 ),
+        m_tend( 1.0 ),
+        m_nTimeSteps( nTimeSteps ),
+        m_dt( (m_tend-m_t0)/(double) m_nTimeSteps ),
+        m_wavenumber( 1.0 ),
+        m_U( 1.0 ),
+        m_D( 0.05 )
     {
     }
 
@@ -143,43 +146,48 @@ public:
     double EvaluateL2Error(const Array<OneD, const  Array<OneD, double> >& approx,
                            const Array<OneD, const  Array<OneD, double> >& exact) const;
 
-    void AppendOutput(ofstream& outfile,
-                      const Array<OneD, const  Array<OneD, double> >& approx,
-                      const Array<OneD, const  Array<OneD, double> >& exact) const;
+    void AppendOutput(       ofstream                                 & outfile,
+                       const int                                        timeStepNumber,
+                       const NekDouble                                  time,
+                       const Array<OneD, const  Array<OneD, double> > & approx,
+                       const Array<OneD, const  Array<OneD, double> > & exact) const;
 
-    void GenerateGnuplotScript() const;
+    void GenerateGnuplotScript( const string & method ) const;
 
     double GetInitialTime() const;
 
-    double GetTimeStep() const;
+    double GetDeltaT() const;
     // -----------------------------------------------------------------
 
 private:
-    // spatial discretisation
+    // Spatial discretisation:
     double m_x0;         // the left boundary of the domain
     double m_xend;       // the right boundary of the domain
     int    m_nPoints;    // the number of grid-points used in the finite difference method
     double m_dx;         // the distance between 2 grid points
 
-    // temporal discretisation
+    // Temporal discretisation:
     double m_t0;         // the initial time
     double m_tend;       // the end time
     int    m_nTimeSteps; // the number of time-steps
     double m_dt;         // the size of a time-step
 
-    // value of the coefficients
+    // Value of the coefficients:
     double m_wavenumber; // wave number
     double m_U;          // advection speed
     double m_D;          // diffusion coefficient
 
+    void solveTriDiagMatrix(       int                         n,
+                                   double                      alpha,
+                                   double                      beta,
+                             const Array<OneD, const double> & inarray,
+                                   Array<OneD,       double> & outarray ) const;
 
-    void solveTriDiagMatrix (int n, double alpha, double beta,
-                             const Array<OneD, const double>& inarray,
-                             Array<OneD,       double>& outarray) const;
-};
+}; // end class OneDfinDiffAdvDiffSolver
 
+///////////////////////////////////////////////////////////////////////////////////////////////
 
-int main(int argc, char *argv[])
+int main( int argc, char *argv[] )
 {
     po::options_description desc("Usage:");
     desc.add_options()
@@ -221,15 +229,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    int nPoints = vm["Npoints"].as<int>();
+    int nPoints    = vm["Npoints"].as<int>();
     int nTimesteps = vm["Ntimesteps"].as<int>();
-    int nMethod = vm["TimeIntegrationMethod"].as<int>();
+    int nMethod    = vm["TimeIntegrationMethod"].as<int>();
 
     // Open a file for writing the solution
     ofstream outfile;
-    outfile.open("OneDfinDiffAdvDiffSolverOutput.dat");
-
-
+    outfile.open( "OneDfinDiffAdvDiffSolverOutput.dat" );
 
     // -----------------------------------------------------------------------------
     // THE IMPLEMENTATION BELOW SHOWS HOW THE TIME-STEPPING FRAMEWORK CAN BE
@@ -239,7 +245,9 @@ int main(int argc, char *argv[])
     //    Create an object of the OneDfinDiffAdvDiffSolver class.
     //    This class can be thought of as representing the
     //    spatial (finite difference) discretisation.
+
     OneDfinDiffAdvDiffSolver* solver = new OneDfinDiffAdvDiffSolver( nPoints, nTimesteps );
+
     //    After this spatial discretisation, the PDE has actually been
     //    reduced (through the method-of-lines) to an ODE.
     //    In order to use the time-stepping framework, we need to give it the necessary
@@ -289,40 +297,53 @@ int main(int argc, char *argv[])
 
     Array<OneD, Array<OneD, double> > fidifsol(1); // Array containing the numerical solution
     Array<OneD, Array<OneD, double> > exactsol(1); // Array containing the exact solution
+
     fidifsol[0] = Array<OneD, double>( nPoints );
     exactsol[0] = Array<OneD, double>( nPoints );
-    solver->EvaluateExactSolution( fidifsol, t0 );  // Set the initial condition
 
-    // I've commented out the following two lines as they duplicate what is done in the
-    // first iteration of the below for loop (part 2.4).
-    // 
-    //    solver->EvaluateExactSolution(exactsol,t0);  // Set the initial condition
-    //    solver->AppendOutput(outfile,fidifsol,exactsol); // Write the initial condition to a file
+    solver->EvaluateExactSolution( fidifsol, t0 );  // Set the initial condition
+    solver->EvaluateExactSolution( exactsol, t0 );  // Set the initial condition
 
     // 2.3 Initialize the time-integration scheme:
     //
-    double dt = solver->GetTimeStep();
+    double dt = solver->GetDeltaT();
 
     LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr sol;
     sol = tiScheme->InitializeScheme( dt, fidifsol, t0, ode );
 
+    ///////////////
+    // Save some data provenance and other useful info in output file...
+    outfile << "# Data in this file consists of " << nTimesteps << " time steps (there\n";
+    outfile << "# will be a blank line between each set of data for each time step).\n";
+    outfile << "#\n";
+    outfile << "# Delta T: " << dt << "\n";
+    outfile << "# Method:  " << TimeIntegrationScheme::nameFromMethod( tiScheme->GetIntegrationMethod() )  << "\n";
+    outfile << "#\n";
+    outfile << "# There are 3 columns with the following headers:\n";
+    outfile << "#\n";
+    outfile << "#     Time    |   Approximate Solution   |   Exact Solution\n";
+    outfile << "#\n\n";
+
+    solver->AppendOutput( outfile, 0, 0, fidifsol, exactsol ); // Write the initial condition to the output file
+    ///////////////
+
     // 2.4 Do the time-integration:
     //
-    for( int i = 0; i < nTimesteps; i++ )
+    for( int timeStepNum = 1; timeStepNum <= nTimesteps; timeStepNum++ )
     {
-        double t = t0 + i*dt;
+        double time = t0 + ( timeStepNum * dt );
 
-        fidifsol = tiScheme->TimeIntegrate( i, dt, sol, ode ); // Time-integration for 1 time-step
+        fidifsol = tiScheme->TimeIntegrate( timeStepNum, dt, sol, ode ); // Time-integration for 1 time-step
 
-        solver->EvaluateExactSolution( exactsol, t );        // Calculate the exact solution
-        solver->AppendOutput( outfile, fidifsol, exactsol ); // Dump the output to a file
+        solver->EvaluateExactSolution( exactsol, time );        // Calculate the exact solution
+        solver->AppendOutput( outfile, timeStepNum, time, fidifsol, exactsol ); // Save output to file
     }
 
     // Calculate the error and dump to screen
-    cout << "L 2 error :" <<  solver->EvaluateL2Error(fidifsol,exactsol) << endl;
+    cout << "L 2 error :" <<  solver->EvaluateL2Error(fidifsol,exactsol) << "\n";
 
     // Some more writing out the results
-    solver->GenerateGnuplotScript();
+    solver->GenerateGnuplotScript( TimeIntegrationScheme::nameFromMethod( tiScheme->GetIntegrationMethod() ) );
     outfile.close();
 
     delete solver;
@@ -330,10 +351,10 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void OneDfinDiffAdvDiffSolver::HelmSolve(const Array<OneD, const Array<OneD, double> >& inarray,
-                                               Array<OneD,       Array<OneD, double> >& outarray,
-                                         const NekDouble time,
-                                         const NekDouble lambda) const
+void OneDfinDiffAdvDiffSolver::HelmSolve( const Array<OneD, const Array<OneD, double> > & inarray,
+                                                Array<OneD,       Array<OneD, double> > & outarray,
+                                          const NekDouble                                 time,
+                                          const NekDouble                                 lambda ) const
 {
     // This function implements a 1D finite difference helmholtz solver.
     // The 1D Helmholtz equation leads to a cyclic triadiagonal matrix to be
@@ -349,7 +370,7 @@ void OneDfinDiffAdvDiffSolver::HelmSolve(const Array<OneD, const Array<OneD, dou
     int nIntPoints = m_nPoints-2;
 
     Array<OneD, double> invD_f(nIntPoints);
-    solveTriDiagMatrix(nIntPoints,a,b,inarray[0]+1,invD_f);
+    solveTriDiagMatrix( nIntPoints, a, b, inarray[0]+1, invD_f );
 
     Array<OneD, double> C(nIntPoints,0.0);
     Array<OneD, double> invD_C(nIntPoints,0.0);
@@ -372,9 +393,9 @@ void OneDfinDiffAdvDiffSolver::HelmSolve(const Array<OneD, const Array<OneD, dou
     solveTriDiagMatrix(nIntPoints,a,b,f,tmp = outarray[0]+1); // Calls the Thomas algorithm
 }
 
-void OneDfinDiffAdvDiffSolver::EvaluateAdvectionTerm(const Array<OneD, const  Array<OneD, double> >& inarray,
-                                                           Array<OneD,        Array<OneD, double> >& outarray,
-                                                     const NekDouble time) const
+void OneDfinDiffAdvDiffSolver::EvaluateAdvectionTerm( const Array<OneD, const  Array<OneD, double> > & inarray,
+                                                            Array<OneD,        Array<OneD, double> > & outarray,
+                                                      const NekDouble                                  time ) const
 {
     // The advection term can be evaluated using central or upwind differences
     if( true )
@@ -385,7 +406,7 @@ void OneDfinDiffAdvDiffSolver::EvaluateAdvectionTerm(const Array<OneD, const  Ar
         // are used.
       
         // Central differences:
-        outarray[0][0]           = - m_U * (inarray[0][1]-inarray[0][m_nPoints-2]) / (2.0 * m_dx);
+        outarray[0][0]           = -m_U * (inarray[0][1]-inarray[0][m_nPoints-2]) / (2.0 * m_dx);
         outarray[0][m_nPoints-1] = outarray[0][0];
 
         for(int i = 1; i < m_nPoints-1; i++)
@@ -476,10 +497,19 @@ double OneDfinDiffAdvDiffSolver::EvaluateL2Error(const Array<OneD, const  Array<
     return sqrt( a / b );
 }
 
-void OneDfinDiffAdvDiffSolver::AppendOutput(ofstream& outfile,
-                                            const Array<OneD, const  Array<OneD, double> >& approx,
-                                            const Array<OneD, const  Array<OneD, double> >& exact) const
+void OneDfinDiffAdvDiffSolver::AppendOutput(      ofstream                                 & outfile,
+                                                  int                                        timeStepNumber,
+                                            const NekDouble                                  time,
+                                            const Array<OneD, const  Array<OneD, double> > & approx,
+                                            const Array<OneD, const  Array<OneD, double> > & exact ) const
 {
+    if( timeStepNumber == 0 ) {
+        outfile << "# Initial condition (at time " << time << "):\n";
+    }
+    else {
+        outfile << "# Time step: " << timeStepNumber << ", time: " << time << "\n";
+    }
+
     for(int i = 0; i < m_nPoints; i++)
     {
         outfile << scientific
@@ -490,40 +520,43 @@ void OneDfinDiffAdvDiffSolver::AppendOutput(ofstream& outfile,
                 << approx[0][i]
                 << "  "
                 << exact[0][i]
-                << endl;
+                << "\n";
     }
-    outfile << endl << endl;
+    outfile << "\n\n"; // Gnuplot uses two blank lines between each set of data...
 }
 
-void OneDfinDiffAdvDiffSolver::GenerateGnuplotScript() const
+void OneDfinDiffAdvDiffSolver::GenerateGnuplotScript( const string & method ) const
 {
     ofstream outfile;
     outfile.open("OneDfinDiffAdvDiffSolverOutput.p");
 
-    outfile << "# Gnuplot script file" << endl;
-    outfile << "set   autoscale" << endl;
-    outfile << "unset log" << endl;
-    outfile << "unset label" << endl;
-    outfile << "set xtic auto" << endl;
-    outfile << "set ytic auto" << endl;
-    outfile << "set title \"Finite Difference Solution to the 1D advection-diffusion equation\"" << endl;
-    outfile << "set xlabel \"x\"" << endl;
-    outfile << "set ylabel \"u\"" << endl;
-    outfile << "set xr [" << m_x0 << ":" << m_xend << "]" << endl;
-    outfile << "set yr [-1.0:1.0]" << endl;
+    outfile << "# Gnuplot script file\n";
+    outfile << "set   autoscale\n";
+    outfile << "unset log\n";
+    outfile << "unset label\n";
+    outfile << "set xtic auto\n";
+    outfile << "set ytic auto\n";
+    outfile << "set title 'Finite Difference Solution to the 1D advection-diffusion equation (method " << method << ")'\n";
+    outfile << "set xlabel 'x'\n";
+    outfile << "set ylabel 'u'\n";
+    outfile << "set xr [" << m_x0 << ":" << m_xend << "]\n";
+    outfile << "set yr [-1.0:1.0]\n";
 
     double t;
-    for(int i=0; i <= m_nTimeSteps; i++)
+    for( int i = 0; i <= m_nTimeSteps; i++ )
     {
-        t = m_t0+i*m_dt;
-        outfile << "plot    \"OneDfinDiffAdvDiffSolverOutput.dat\" ";
-        outfile << "using 1:2 index ";
+        t = m_t0 + ( i * m_dt );
+
+        outfile << "plot 'OneDfinDiffAdvDiffSolverOutput.dat' using 1:2 index ";
         outfile << i << " title 'Finite Difference Solution (t=" << t << ")' with linespoints , ";
-        outfile << "\"OneDfinDiffAdvDiffSolverOutput.dat\" ";
-        outfile << "using 1:3 index ";
-        outfile << i << " title 'Exact Solution (t=" << t << ")' with linespoints" << endl;
-        outfile << "pause " << 4.0/m_nTimeSteps << endl;
+
+        outfile << "'OneDfinDiffAdvDiffSolverOutput.dat' using 1:3 index ";
+        outfile << i << " title 'Exact Solution (t=" << t << ")' with linespoints\n";
+
+        outfile << "pause " << 4.0/m_nTimeSteps << "\n";
     }
+
+    outfile << "pause mouse any\n"; // Keep window open until the user clicks
 
     outfile.close();
 }
@@ -533,7 +566,7 @@ double OneDfinDiffAdvDiffSolver::GetInitialTime() const
     return m_t0;
 }
 
-double OneDfinDiffAdvDiffSolver::GetTimeStep() const
+double OneDfinDiffAdvDiffSolver::GetDeltaT() const
 {
     return m_dt;
 }

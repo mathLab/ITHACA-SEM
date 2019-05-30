@@ -169,52 +169,41 @@ namespace Nektar
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
-                void DefineOdeRhs(FuncPointerT func, ObjectPointerT obj)
+            void DefineOdeRhs( FuncPointerT func, ObjectPointerT obj )
             {
-                m_functors1[0] =  std::bind(
-                    func, obj, std::placeholders::_1, std::placeholders::_2,
-                    std::placeholders::_3);
+                m_functors1[0] = std::bind( func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3 );
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
-                void DefineOdeExplicitRhs(FuncPointerT func, ObjectPointerT obj)
+            void DefineOdeExplicitRhs( FuncPointerT func, ObjectPointerT obj )
             {
-                m_functors1[1] =  std::bind(
-                    func, obj, std::placeholders::_1, std::placeholders::_2,
-                    std::placeholders::_3);
+                m_functors1[1] = std::bind( func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3 );
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
-                void DefineOdeImplicitRhs(FuncPointerT func, ObjectPointerT obj)
+            void DefineOdeImplicitRhs( FuncPointerT func, ObjectPointerT obj )
             {
-                m_functors1[2] =  std::bind(
-                    func, obj, std::placeholders::_1, std::placeholders::_2,
-                    std::placeholders::_3);
+                m_functors1[2] = std::bind( func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3 );
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
-                void DefineProjection(FuncPointerT func, ObjectPointerT obj)
+            void DefineProjection( FuncPointerT func, ObjectPointerT obj )
             {
-                m_functors1[3] =  std::bind(
-                    func, obj, std::placeholders::_1, std::placeholders::_2,
-                    std::placeholders::_3);
+                m_functors1[3] = std::bind( func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3 );
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
-                void DefineImplicitSolve(FuncPointerT func, ObjectPointerT obj)
+            void DefineImplicitSolve(FuncPointerT func, ObjectPointerT obj)
             {
-                m_functors2[0] =  std::bind(
-                    func, obj, std::placeholders::_1, std::placeholders::_2,
-                    std::placeholders::_3, std::placeholders::_4);
+                m_functors2[0] = std::bind( func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4 );
             }
 
-            
-            inline void DoOdeRhs(InArrayType     &inarray, 
-                                 OutArrayType    &outarray, 
-                                 const NekDouble time) const
+            inline void DoOdeRhs(       InArrayType  & inarray, 
+                                        OutArrayType & outarray, 
+                                  const NekDouble      time ) const
             {
                 ASSERTL1(m_functors1[0],"OdeRhs should be defined for this time integration scheme");
-                m_functors1[0](inarray,outarray,time);
+                m_functors1[0]( inarray, outarray, time );
             }
             
             inline void DoOdeExplicitRhs(InArrayType     &inarray, 

@@ -49,13 +49,8 @@ namespace Nektar
             m_solVector[0] = y;
             m_t[0] = time;
 
-            // FIXME: in baseline, nsteps is 2.  In this version it is one... 
-
-
             int nsteps         = m_schemeData->m_numsteps;
 
-            std::cout << "solution nsteps: " << nsteps << "\n";
-            
             int nvar           = y.num_elements();
             int npoints        = y[0].num_elements();
             int nMultiStepVals = m_schemeData->GetNmultiStepValues();
@@ -113,7 +108,9 @@ namespace Nektar
           // FIXME: Dd: does this constructor really have no code?
         }
         
+        // FIMXE: is this right, should it be the parent's method, or the data's method?
         TimeIntegrationMethod TimeIntegrationSolution::GetIntegrationMethod() const { return m_schemeData->m_parent->GetIntegrationMethod(); }
+
         int                   TimeIntegrationSolution::GetNsteps() { return m_schemeData->m_numsteps; } // FIXME should this be in .h file?  ...  GetNumIntegrationSteps(); }
 
 

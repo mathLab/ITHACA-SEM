@@ -408,8 +408,8 @@ namespace Nektar
             }
             else
             {
-                m_nvar = GetFirstDim(y_old);
-                m_npoints = GetSecondDim(y_old);
+                m_nvar    = GetFirstDim(  y_old );
+                m_npoints = GetSecondDim( y_old );
        
                 // First, we are going to calculate the various stage
                 // values and stage derivatives (this is the multi-stage
@@ -430,8 +430,7 @@ namespace Nektar
                     m_tmp[j] = Array<OneD, NekDouble>( m_npoints, 0.0 );
                 }
 
-                // The same storage will be used for every stage -> m_tmp is
-                // a DoubleArray
+                // The same storage will be used for every stage -> m_tmp is a DoubleArray
                 if( type == eExplicit )
                 {
                     m_Y = m_tmp;
@@ -475,9 +474,9 @@ namespace Nektar
             } // end else
                         
             // The loop below calculates the stage values and derivatives
-            for( int i = 0; i < m_numstages; i++ )
+            for( int stage = 0; stage < m_numstages; stage++ )
             {
-                if( (i==0) && m_firstStageEqualsOldSolution )
+                if( ( stage == 0 ) && m_firstStageEqualsOldSolution )
                 {
                     for( int k = 0; k < m_nvar; k++ )
                     {
@@ -488,31 +487,31 @@ namespace Nektar
                 else
                 {
                     // The stage values m_Y are a linear combination of:
-                    // 1: the stage derivatives
+                    // 1: The stage derivatives:
                                         
-                    if( i != 0 )
+                    if( stage != 0 )
                     {
                         for( int k = 0; k < m_nvar; k++ )
                         {
-                            Vmath::Smul( m_npoints, deltaT * A(i,0), m_F[0][k], 1, m_tmp[k], 1 );
+                            Vmath::Smul( m_npoints, deltaT * A(stage,0), m_F[0][k], 1, m_tmp[k], 1 );
                             
                             if(type == eIMEX)       
                             {
-                                Vmath::Svtvp( m_npoints, deltaT * A_IMEX(i,0), m_F_IMEX[0][k], 1, m_tmp[k], 1, m_tmp[k], 1 );
+                                Vmath::Svtvp( m_npoints, deltaT * A_IMEX(stage,0), m_F_IMEX[0][k], 1, m_tmp[k], 1, m_tmp[k], 1 );
                             }
                         }
                     }          
-                    m_T = A(i,0) * deltaT;
+                    m_T = A(stage,0) * deltaT;
                         
-                    for( int j = 1; j < i; j++ )
+                    for( int j = 1; j < stage; j++ )
                     {
                         for( int k = 0; k < m_nvar; k++ )
                         {
-                            Vmath::Svtvp( m_npoints, deltaT * A(i,j), m_F[j][k], 1, m_tmp[k], 1, m_tmp[k], 1 );
+                            Vmath::Svtvp( m_npoints, deltaT * A(stage,j), m_F[j][k], 1, m_tmp[k], 1, m_tmp[k], 1 );
                             if( type == eIMEX )
                             {
                                 Vmath::Svtvp( m_npoints,
-                                              deltaT * A_IMEX(i,j),
+                                              deltaT * A_IMEX(stage,j),
                                               m_F_IMEX[j][k],
                                               1,
                                               m_tmp[k],
@@ -522,18 +521,17 @@ namespace Nektar
                             }
                         }          
                         
-                        m_T += A(i,j) * deltaT;
+                        m_T += A(stage,j) * deltaT;
                     }
                     
-                    // 2: the imported multi-step solution of the
-                    // previous time level
+                    // 2: The imported multi-step solution of the previous time level:
                     for( int j = 0; j < numsteps; j++ )
                     {
                         for( int k = 0; k < m_nvar; k++ )
                         {
-                            Vmath::Svtvp( m_npoints, U(i,j), y_old[j][k], 1, m_tmp[k], 1, m_tmp[k], 1 );
+                            Vmath::Svtvp( m_npoints, U(stage,j), y_old[j][k], 1, m_tmp[k], 1, m_tmp[k], 1 );
                         }
-                        m_T += U(i,j) * t_old[j];
+                        m_T += U(stage,j) * t_old[j];
                     } 
                 } // end else
       
@@ -547,18 +545,18 @@ namespace Nektar
                     else 
                     {
                         m_T= t_old[0];
-                        for(int j=0; j<=i; ++j)
+                        for( int j = 0; j <= stage; ++j )
                         {
-                            m_T += A(i,j) * deltaT;
+                            m_T += A(stage,j) * deltaT;
                         }
                     }
                     
-                    op.DoImplicitSolve( m_tmp, m_Y, m_T, A(i,i) * deltaT );
+                    op.DoImplicitSolve( m_tmp, m_Y, m_T, A(stage,stage) * deltaT );
                     
                     for( int k = 0; k < m_nvar; k++ )
                     {
-                        Vmath::Vsub( m_npoints, m_Y[k], 1, m_tmp[k], 1, m_F[i][k], 1 );
-                        Vmath::Smul( m_npoints, 1.0 / ( A(i,i) * deltaT ), m_F[i][k], 1, m_F[i][k], 1 );
+                        Vmath::Vsub( m_npoints, m_Y[k], 1, m_tmp[k], 1, m_F[stage][k], 1 );
+                        Vmath::Smul( m_npoints, 1.0 / ( A(stage,stage) * deltaT ), m_F[stage][k], 1, m_F[stage][k], 1 );
                     }
                 }
                 else if( type == eIMEX )
@@ -570,33 +568,33 @@ namespace Nektar
                     else 
                     {
                         m_T = t_old[0];
-                        for( int j = 0; j <=i; ++j )
+                        for( int j = 0; j <= stage; ++j )
                         {
-                            m_T += A(i,j) * deltaT;
+                            m_T += A(stage,j) * deltaT;
                         }
                     }   
                     
-                    if( fabs(A(i,i)) > NekConstants::kNekZeroTol )
+                    if( fabs(A(stage,stage)) > NekConstants::kNekZeroTol )
                     {
-                        op.DoImplicitSolve( m_tmp, m_Y, m_T, A(i,i) * deltaT );
+                        op.DoImplicitSolve( m_tmp, m_Y, m_T, A(stage,stage) * deltaT );
                         
                         for(int k = 0; k < m_nvar; k++ )
                         {
-                            Vmath::Vsub( m_npoints, m_Y[k], 1, m_tmp[k], 1, m_F[i][k], 1 );
-                            Vmath::Smul( m_npoints, 1.0 / ( A(i,i) * deltaT ), m_F[i][k], 1, m_F[i][k], 1 );
+                            Vmath::Vsub( m_npoints, m_Y[k], 1, m_tmp[k], 1, m_F[stage][k], 1 );
+                            Vmath::Smul( m_npoints, 1.0 / ( A(stage,stage) * deltaT ), m_F[stage][k], 1, m_F[stage][k], 1 );
                         }
                     }
-                    op.DoOdeRhs( m_Y, m_F_IMEX[i], m_T );
+                    op.DoOdeRhs( m_Y, m_F_IMEX[stage], m_T );
                 }
                 else if( type == eExplicit)
                 {
                     // Avoid projecting the same solution twice
-                    if( ! ((i==0) && m_firstStageEqualsOldSolution) )
+                    if( ! ((stage==0) && m_firstStageEqualsOldSolution) )
                     {
                         // ensure solution is in correct space
                         op.DoProjection(m_Y,m_Y,m_T);
                     }
-                    op.DoOdeRhs(m_Y, m_F[i], m_T);        
+                    op.DoOdeRhs( m_Y, m_F[stage], m_T );
                 }
             }
             

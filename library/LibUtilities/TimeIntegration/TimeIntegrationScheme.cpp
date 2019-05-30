@@ -233,7 +233,6 @@ namespace Nektar
                         const NekDouble                                 time,
                         const TimeIntegrationSchemeOperators          & op )
       {
-        std::cout << "here: " << m_integration_phases.size() << "\n";
         return m_integration_phases.back()->InitializeData( deltaT, y_0, time, op );
       }
 

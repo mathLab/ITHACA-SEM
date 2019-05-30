@@ -52,8 +52,6 @@ namespace Nektar {
   
       IMEXOrder1TimeIntegrationScheme() : TimeIntegrationScheme() 
       {
-          std::cout << "IMEXOrder1TimeIntegrationScheme Construtor: this is " << this << "\n";
-
           m_integration_phases = TimeIntegrationSchemeDataVector( 1 );
           m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
 
@@ -69,7 +67,6 @@ namespace Nektar {
       // The create() function is called by the Factory.
       static TimeIntegrationSchemeSharedPtr create()
       {
-        std::cout << "IMEXOrder1TimeIntegrationScheme create()\n";
         TimeIntegrationSchemeSharedPtr p = MemoryManager< IMEXOrder1TimeIntegrationScheme >::AllocateSharedPtr();
         return p;
       }
@@ -87,8 +84,6 @@ namespace Nektar {
       static
       void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
       {
-        std::cout << "IMEXOrder1TimeIntegrationScheme SetupSchemeData()\n";
-
         phase->m_method = TimeIntegrationMethod::eIMEXOrder1;
         phase->m_schemeType = eIMEX;
 
@@ -122,9 +117,6 @@ namespace Nektar {
 
         ASSERTL1( phase->VerifyIntegrationSchemeType( phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B, phase->m_U, phase->m_V ),
                   "Time integration scheme coefficients do not match its type" );
-
-        std::cout << "END: IMEXOrder1TimeIntegrationScheme SetupSchemeData()\n";
-
       }
 
     }; // end class IMEXOrder1TimeIntegrator

@@ -140,17 +140,38 @@ namespace Nektar
 
         // Diffusion Calculate the physical derivatives
         void Diffusion::DiffuseCalculateDerivative(
-                const int                                         nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble>>         &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
-                const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
-                const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
-            {
-                v_DiffuseCalculateDerivative(nConvectiveFields, fields, inarray,inarrayderivative,pFwd, pBwd);
+            const int                                         nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble>>>   &inarrayderivative,
+            const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
+        {
+            v_DiffuseCalculateDerivative(nConvectiveFields, fields, inarray,
+                inarrayderivative,pFwd, pBwd);
 
-                GetDivCurl(fields, inarrayderivative);
+            int nDim = fields[0]->GetCoordim(0);
+            int nPts = fields[0]->GetTotPoints();
+            // Get primary variables
+            Array<OneD, Array<OneD, NekDouble>>  primVar(nDim);
+            v_GetPrimVar(fields, inarray, primVar);
+            // Get primary variables derivatives
+            Array<OneD,Array<OneD, Array<OneD, NekDouble>>> primVarDer(nDim);
+            for (int j = 0; j < nDim; ++j)
+            {
+                primVarDer[j] =
+                    Array<OneD, Array<OneD, NekDouble>> (nConvectiveFields-2);
+                for (int i = 0; i < nConvectiveFields-2; ++i)
+                {
+                    primVarDer[j][i] = Array<OneD, NekDouble>(nPts, 0.0);
+                }
             }
+            v_DiffuseCalculateDerivative(nDim, fields, primVar, primVarDer,
+                pFwd, pBwd);
+            // Get div curl squared
+            GetDivCurl(fields, primVarDer);
+
+        }
 
         const Array<OneD, const Array<OneD, NekDouble> > &Diffusion::v_GetTraceNormal()
         {
@@ -237,16 +258,36 @@ namespace Nektar
 #endif
 
         /**
-         * @brief Compute and store scalars needed for shock sensor
+         * @brief Compute primary variables
+         *
+         */
+        void Diffusion::v_GetPrimVar(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+                  Array<OneD, Array<OneD, NekDouble>>         &primVar)
+        {
+
+            int nDim = fields[0]->GetCoordim(0);
+            int nPts = fields[0]->GetTotPoints();
+            for(int i = 0; i < nDim; ++i)
+            {
+                primVar[i] = Array<OneD, NekDouble>(nPts, 0.0);
+                Vmath::Vdiv(nPts, inarray[i+1], 1, inarray[0], 1, primVar[i], 1);
+            }
+        }
+
+        /**
+         * @brief Compute and store scalars needed for shock sensor, i.e.
+         * divergence and curl squared
+         * @param dimensions, points, primary variables derivative
          *
          */
         void Diffusion::GetDivCurl(
-            const Array<OneD, MultiRegions::ExpListSharedPtr>               &fields,
-            const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1)
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &pVarDer)
         {
-            int nDim      = fields[0]->GetCoordim(0);
-            int nPts      = fields[0]->GetTotPoints();
-
+            int nDim = fields[0]->GetCoordim(0);
+            int nPts = fields[0]->GetTotPoints();
             // Compute and store scalars needed for shock sensor
             Array<OneD, NekDouble>              tmp3(nPts, 0.0);
             Array<OneD, NekDouble>              tmp4(nPts, 0.0);
@@ -254,7 +295,7 @@ namespace Nektar
             // div vel
             for (int j = 0; j < nDim; ++j)
             {
-                Vmath::Vadd(nPts, m_divVel, 1, derivativesO1[j][j], 1, m_divVel, 1);
+                Vmath::Vadd(nPts, m_divVel, 1, pVarDer[j][j], 1, m_divVel, 1);
             }
             // (div vel)**2
             Vmath::Vmul(nPts, m_divVel, 1, m_divVel, 1, m_divVelSquare, 1);
@@ -263,9 +304,9 @@ namespace Nektar
             if ( nDim > 2 )
             {
                 // curl[0] 3/2
-                Vmath::Vadd(nPts, tmp4, 1, derivativesO1[2][1], 1, tmp4, 1);
+                Vmath::Vadd(nPts, tmp4, 1, pVarDer[2][1], 1, tmp4, 1);
                 // curl[0]-2/3
-                Vmath::Vcopy(nPts, derivativesO1[1][2], 1, tmp3, 1);
+                Vmath::Vcopy(nPts, pVarDer[1][2], 1, tmp3, 1);
                 Vmath::Neg(nPts, tmp3, 1);
                 Vmath::Vadd(nPts, tmp4, 1, tmp3, 1, tmp4, 1);
                 // square curl[0]
@@ -274,9 +315,9 @@ namespace Nektar
 
                 tmp4 = Array<OneD, NekDouble>(nPts, 0.0);
                 // curl[1] 3/1
-                Vmath::Vadd(nPts, tmp4, 1, derivativesO1[2][0], 1, tmp4, 1);
+                Vmath::Vadd(nPts, tmp4, 1, pVarDer[2][0], 1, tmp4, 1);
                 // curl[1]-1/3
-                Vmath::Vcopy(nPts, derivativesO1[0][2], 1, tmp3, 1);
+                Vmath::Vcopy(nPts, pVarDer[0][2], 1, tmp3, 1);
                 Vmath::Neg(nPts, tmp3, 1);
                 Vmath::Vadd(nPts, tmp4, 1, tmp3, 1, tmp4, 1);
                 // square curl[1]
@@ -285,9 +326,9 @@ namespace Nektar
 
                 tmp4 = Array<OneD, NekDouble>(nPts, 0.0);
                 // curl[2] 1/2
-                Vmath::Vadd(nPts, tmp4, 1, derivativesO1[0][1], 1, tmp4, 1);
+                Vmath::Vadd(nPts, tmp4, 1, pVarDer[0][1], 1, tmp4, 1);
                 // curl[2]-2/1
-                Vmath::Vcopy(nPts, derivativesO1[1][0], 1, tmp3, 1);
+                Vmath::Vcopy(nPts, pVarDer[1][0], 1, tmp3, 1);
                 Vmath::Neg(nPts, tmp3, 1);
                 Vmath::Vadd(nPts, tmp4, 1, tmp3, 1, tmp4, 1);
                 // square curl[2]
@@ -298,9 +339,9 @@ namespace Nektar
             else if ( nDim > 1 )
             {
                 // curl[2] 1/2
-                Vmath::Vadd(nPts, tmp4, 1, derivativesO1[0][1], 1, tmp4, 1);
+                Vmath::Vadd(nPts, tmp4, 1, pVarDer[0][1], 1, tmp4, 1);
                 // curl[2]-2/1
-                Vmath::Vcopy(nPts, derivativesO1[1][0], 1, tmp3, 1);
+                Vmath::Vcopy(nPts, pVarDer[1][0], 1, tmp3, 1);
                 Vmath::Neg(nPts, tmp3, 1);
                 Vmath::Vadd(nPts, tmp4, 1, tmp3, 1, tmp4, 1);
                 // square curl[2]

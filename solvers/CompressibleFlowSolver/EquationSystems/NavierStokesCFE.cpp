@@ -300,6 +300,28 @@ namespace Nektar
                 m_fields[0]->FwdTrans_IterPerExp(m_muav,   muavFwd);
                 variables.push_back  ("ArtificialVisc");
                 fieldcoeffs.push_back(muavFwd);
+
+                // Debug Ducros
+                // div square
+                Array<OneD, NekDouble> dv2Fwd(nCoeffs);
+                m_fields[0]->FwdTrans_IterPerExp(m_diffusion->m_divVelSquare,
+                    dv2Fwd);
+                variables.push_back  ("divVelSquare");
+                fieldcoeffs.push_back(dv2Fwd);
+                // curl square
+                Array<OneD, NekDouble> cv2Fwd(nCoeffs);
+                m_fields[0]->FwdTrans_IterPerExp(m_diffusion->m_curlVelSquare,
+                    cv2Fwd);
+                variables.push_back  ("curlVelSquare");
+                fieldcoeffs.push_back(cv2Fwd);
+                // Ducros
+                Array<OneD, NekDouble> duc(nPhys,1.0);
+                Ducros(duc);
+                Array<OneD, NekDouble> ducFwd(nCoeffs);
+                m_fields[0]->FwdTrans_IterPerExp(duc, ducFwd);
+                variables.push_back  ("Ducros");
+                fieldcoeffs.push_back(ducFwd);
+
             }
         }
     }
@@ -781,6 +803,11 @@ namespace Nektar
                 C0Smooth(m_muav);
             }
             Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
+            // Freeze AV for Implicit time stepping
+            if (m_explicitDiffusion == false)
+            {
+                m_calcuPhysicalAV = false;
+            }
         }
 
         // Set thermal conductivity

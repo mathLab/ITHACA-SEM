@@ -122,6 +122,9 @@ namespace Nektar
                 ASSERTL0(false, "AV C0 smoothing not implemented in 1D.")
             }
         }
+        // load physical sensor type
+        m_session->LoadSolverInfo("PhysicalSensorType", m_physicalSensorType,
+            "Off");
 
 
         string diffName, advName;
@@ -2068,6 +2071,9 @@ namespace Nektar
         // Add artificial viscosity if wanted
         if (m_shockCaptureType == "Physical")
         {
+
+
+
             Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
             // Get numerical DmuDT
         }

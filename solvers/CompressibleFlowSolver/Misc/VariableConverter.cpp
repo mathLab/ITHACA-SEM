@@ -306,7 +306,7 @@ void VariableConverter::GetSensor(
         order = max(numModesElement-1, 1);
         if (order > 0 )
         {
-            Skappa = m_Skappa - 4.25 * log10(static_cast<NekDouble>(order));
+            Skappa = m_Skappa - 4.0 * log10(static_cast<NekDouble>(order));
         }
         else
         {

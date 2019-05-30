@@ -1,0 +1,14 @@
+# Files to ignore for export
+.gitignore export-ignore
+.gitattributes export-ignore
+.gitmodules export-ignore
+/docs/tutorial export-ignore
+/library/Demos/MultiRegions/ExtraDemos/ export-ignore
+/solvers/ImageWarpingSolver/ export-ignore
+/solvers/VortexWaveInteraction/ export-ignore
+/solvers/CardiacEPSolver/Utilities/CellMLToNektar/ export-ignore
+/solvers/IncNavierStokesSolver/Utilities/HybridPerformanceModel/ export-ignore
+/utilities/Extras/ export-ignore
+
+# Attempt union merges with CHANGELOG to avoid conflicts.
+CHANGELOG.md merge=union

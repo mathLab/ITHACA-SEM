@@ -40,6 +40,12 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/Timer.h>
 
+// Define variable to avoid deprecated warning in Boost 1.69.
+#include <boost/version.hpp>
+#if BOOST_VERSION >= 106900 && BOOST_VERSION < 107000
+#define BOOST_ALLOW_DEPRECATED_HEADERS
+#endif
+
 #include <boost/random/mersenne_twister.hpp>  // for mt19937
 #include <boost/random/variate_generator.hpp>  // for variate_generator
 #include <boost/random/normal_distribution.hpp>

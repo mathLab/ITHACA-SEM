@@ -44,6 +44,8 @@ namespace Nektar
     class MetricFile : public Metric
     {
     public:
+        virtual ~MetricFile() {}
+
         static MetricSharedPtr create(TiXmlElement *metric, bool generate)
         {
             return MetricSharedPtr(new MetricFile(metric, generate));

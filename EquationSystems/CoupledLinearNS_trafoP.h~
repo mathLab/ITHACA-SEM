@@ -154,17 +154,20 @@ namespace Nektar
 	// write output on a file
 	void FarrelOutput(std::vector<int> &flipperMap, std::ofstream &outfile, int sign);
 	int FarrelOutputSign(std::vector<double> &x, std::vector<double> &y);
+    std::vector<int> getFlipperMap() { return flipperMap; };
 	
 	bool converged, deflate;
 	int number_of_deflations, use_deflation, total_solutions_found;
 	Array<OneD, Array<OneD, NekDouble> > sol_x_cont_defl, sol_y_cont_defl;
 	std::vector<double> param_vector;
-	double arclength_step, step_multiplier, max_step, start_with_Oseen;
+	double arclength_step, step_multiplier, max_step, start_with_Oseen, second_param; //second_param is the multiplicative scaling of the inlet velocity
+	Array<OneD, NekDouble> param_vector2;
 	std::vector<int> local_indices_to_be_continued;
 	
 	int use_Newton;
 	int snapshot_computation_plot_rel_errors;
 	int debug_mode;
+	int write_SEM_field;
 	Array<OneD, Array<OneD, NekDouble> > myAdvField;
 	std::vector<int> flipperMap;
 

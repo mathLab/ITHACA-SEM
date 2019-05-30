@@ -2822,7 +2822,9 @@ namespace Nektar
 	no_not_dbc_in_loc = 0;
 	for ( int index_c_f_bnd = 0; index_c_f_bnd < curr_f_bnd.size(); index_c_f_bnd++ )
 	{
-		if (collect_f_all(index_c_f_bnd,0) == collect_f_all(index_c_f_bnd,1))
+		//cout<<"val: "<<index_c_f_bnd<<" "<<collect_f_all(index_c_f_bnd,0) * param_vector2[1]<<" "<<collect_f_all(index_c_f_bnd,0)<<" "<<collect_f_all(index_c_f_bnd,1)<<endl;
+		if (collect_f_all(index_c_f_bnd,0) * param_vector2[1] == collect_f_all(index_c_f_bnd,1))
+		//if (collect_f_all(index_c_f_bnd,0) == collect_f_all(index_c_f_bnd,1))
 		{
 			no_dbc_in_loc++;
 			elem_loc_dbc.insert(index_c_f_bnd);
@@ -2832,7 +2834,10 @@ namespace Nektar
 			no_not_dbc_in_loc++;
 			elem_not_loc_dbc.insert(index_c_f_bnd);
 		}
+		if (fabs(collect_f_all(index_c_f_bnd,0)-125)<1e-2)
+			cout<<"125 "<<collect_f_all(index_c_f_bnd,1)<<endl;
 	}
+	cout<<"no_dbc_in_loc "<<no_dbc_in_loc<<endl;
     }
 
     void CoupledLinearNS_TT::setDBC_M(Eigen::MatrixXd collect_f_all)
@@ -3244,7 +3249,7 @@ namespace Nektar
     void CoupledLinearNS_TT::gen_proj_adv_terms()
     {
 	RBsize = RB.cols();
-	cout<<"number rows and columns of RB "<<RB.rows()<<" "<<RB.cols()<<endl;
+	cout<<"\nnumber of rows and columns of RB "<<RB.rows()<<" "<<RB.cols()<<endl;
 	adv_mats_proj_x = Array<OneD, Eigen::MatrixXd > (RBsize);
 	adv_mats_proj_y = Array<OneD, Eigen::MatrixXd > (RBsize);
 	adv_vec_proj_x = Array<OneD, Eigen::VectorXd > (RBsize);
@@ -3475,13 +3480,13 @@ namespace Nektar
     void CoupledLinearNS_TT::online_phase()
     {
 		Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
-		bool continuation = true;
-		use_Newton = true;
+		bool continuation = false;
 		if(!continuation)
 		{
 			// start sweeping 
-			for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+			for (int iter_index = 0; iter_index < param_vector.num_elements(); ++iter_index)
 			{
+				cout<<"params: "<<param_vector[iter_index]<<" "<<param_vector2[iter_index]<<endl;
 				int current_index = iter_index;
 				double current_nu = param_vector[current_index];
 				Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
@@ -3490,7 +3495,11 @@ namespace Nektar
 				Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
 				cout << "solve_affine " << solve_affine << endl;
 				Eigen::VectorXd repro_solve_affine = RB * solve_affine;
-				Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+				
+				Eigen::VectorXd reconstruct_solution;
+				//reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+				reconstruct_solution = reconstruct_solution_w_different_dbc(repro_solve_affine, param_vector2[current_index]);
+					
 				if (globally_connected == 1)
 				{
 					mat_compare.col(0) = M_collect_f_all.col(current_index);
@@ -3519,21 +3528,25 @@ namespace Nektar
 		}
 		else
 		{
+			std::stringstream sstm;
+			sstm << "bif_diagr_online" << RBsize<<".txt";
+			std::string bif_diagr_name = sstm.str();
+			const char * bif_diagr_name_char = bif_diagr_name.c_str();
+	
 			std::ofstream outfile_online;
-			outfile_online.open("bif_diagr_online.txt", std::ios::out);
-			for(int starting_guess = 0; starting_guess < Nmax; starting_guess++)
-			{
+			outfile_online.open(bif_diagr_name_char, std::ios::out);
+			
 			unsigned int iterations, curr_j;
-			double first_param = param_vector[starting_guess], last_param = param_vector[param_vector.num_elements()-1], rel_err, M, total_steps = 200.0, tol = 1e-13;
-			unsigned int total_solutions = 0;
+			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], rel_err, M, total_steps = 20.0, tol = 1e-13;
+			unsigned int total_solutions = 0, last_first_param_index = 0, number_of_solutions;
 			std::vector<int> indices_to_be_continued, local_indices_to_be_continued;
 			Array<OneD, double> old_reprojection_x(GetNpoints(), 0.0), old_reprojection_y(GetNpoints(), 0.0);
 			
 			Eigen::VectorXd reconstruct_solution, temp_solve_affine, repro_solve_affine;
 			std::vector<Eigen::VectorXd> solve_affine;
 			Eigen::VectorXd last_sol = Eigen::VectorXd::Zero(RBsize); 
-			Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[starting_guess], snapshot_y_collection[starting_guess]);
-			Eigen::VectorXd affine_vec_proj = gen_affine_vec_proj(first_param, starting_guess);
+			Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[0], snapshot_y_collection[0]);
+			Eigen::VectorXd affine_vec_proj = gen_affine_vec_proj(first_param, 0);
 			
 			//I compute the first solution						////////////////////////////////////////////////////////////////////////////////////////////////////
 			cout<<"First solution with viscosity = "<<first_param<<endl;
@@ -3549,7 +3562,8 @@ namespace Nektar
 				
 				
 				repro_solve_affine = RB * temp_solve_affine;
-				reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);	
+				//reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+				reconstruct_solution = reconstruct_solution_w_different_dbc(repro_solve_affine, param_vector2[0]);
 				std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
 				curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
 				
@@ -3559,7 +3573,7 @@ namespace Nektar
 					cout<<"Converged!!!"<<endl;
 					solve_affine.push_back(temp_solve_affine);
 					//outfile_online<<first_param<<" "<<reconstruct_solution[1196]<<endl; 
-					outfile_online<<first_param<<" "<<FarrelOutput(reconstruct_solution)<<endl; 
+					outfile_online<<first_param<<" "<<param_vector2[0]<<" "<<FarrelOutput(reconstruct_solution)<<endl; 
 					cout<<endl;
 					
 					if (write_ROM_field)
@@ -3567,7 +3581,7 @@ namespace Nektar
 						recover_snapshot_data(reconstruct_solution, 0);
 					}
 				}
-				affine_vec_proj = gen_affine_vec(first_param, reconstruct_solution);
+				affine_vec_proj = gen_affine_vec(first_param, param_vector2[0], reconstruct_solution);
 			}
 			indices_to_be_continued.push_back(0);
 			total_solutions = 1;
@@ -3576,199 +3590,302 @@ namespace Nektar
 				cout<<"The first step didn't converge"<<endl;
 			else
 			{
-			for(double current_nu = first_param - (param_vector[0] - param_vector[param_vector.num_elements()-1])/total_steps; current_nu > param_vector[param_vector.num_elements()-1]; current_nu -= (param_vector[0] - param_vector[param_vector.num_elements()-1])/total_steps)
+			//for(double current_nu = first_param - (param_vector[0] - param_vector[param_vector.num_elements()-1])/total_steps; current_nu > param_vector[param_vector.num_elements()-1]; current_nu -= (param_vector[0] - param_vector[param_vector.num_elements()-1])/total_steps)
+			for(int current_index = 0; current_index < param_vector.num_elements()-1; current_index++)			
 			{
-				local_indices_to_be_continued.resize(0);
-				
-				//continuation						////////////////////////////////////////////////////////////////////////////////////////////////////
-				cout<<"Continuation"<<endl;
-				for(int j = 0; j < indices_to_be_continued.size(); j++)
+				if(param_vector[current_index] > param_vector[current_index + 1])
 				{
-					curr_j = indices_to_be_continued[j];
-					cout<<"curr_j = "<<curr_j<<endl;
-					rel_err = 1;
-					iterations = 0;
-					last_sol = solve_affine[curr_j];
-					
-					repro_solve_affine = RB * last_sol;
-					reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);	
-					std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
-					curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
-					affine_vec_proj = gen_affine_vec(current_nu, reconstruct_solution);
-					
-					while(rel_err > tol && ++iterations<100)
+					number_of_solutions = 1;
+					double current_scaling = param_vector2[current_index];
+					while(param_vector[current_index] == param_vector[current_index+number_of_solutions] && current_index+number_of_solutions < param_vector.num_elements()-1)
 					{
-						Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
-						//Eigen::VectorXd affine_vec_proj = gen_affine_vec(current_nu, last_sol);
-						temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
-						for(int i = 0; i < temp_solve_affine.size(); i++)
-						{
-							if(i < temp_solve_affine.size()/2)
-								curr_xy_projected(i,0) = temp_solve_affine(i);
-							else
-								curr_xy_projected(i,1) = temp_solve_affine(i);
-						}
+						number_of_solutions++;
+					}
+					//double current_nu = param_vector[current_index];
+					double local_step = (param_vector[current_index] - param_vector[current_index+number_of_solutions])/total_steps;
+					if(param_vector[current_index] == param_vector[0]) // start again with the second parameter
+					{
+						indices_to_be_continued.clear();
+						indices_to_be_continued = std::vector<int>(1);
+						indices_to_be_continued[0] = last_first_param_index;
+						last_first_param_index = total_solutions;
+					}
+					//for(double current_nu = param_vector[current_index]; current_nu > param_vector[current_index+number_of_solutions] + local_step/2 * (2 * (current_nu > param_vector[param_vector.num_elements()-1] + local_step/2) - 1); current_nu -=  local_step)
+					for(double current_nu = param_vector[current_index] - local_step * (param_vector[current_index] != param_vector[0] || current_index == 0); current_nu > param_vector[current_index+number_of_solutions] - local_step/2; current_nu -=  local_step)
+									
+					{
+						local_indices_to_be_continued.resize(0);
+					
+					//continuation						////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+					cout<<"Continuation"<<endl;
+					for(int j = 0; j < indices_to_be_continued.size(); j++)
+					{
+						curr_j = indices_to_be_continued[j];
+						cout<<"curr_j = "<<curr_j<<endl;
+						rel_err = 1;
+						iterations = 0;
+						last_sol = solve_affine[curr_j];
 						
-						rel_err = (temp_solve_affine-last_sol).norm()/last_sol.norm();
-						last_sol = temp_solve_affine;
-						
-						cout<<"rel_err = "<<rel_err<<endl;
-						
-						repro_solve_affine = RB * temp_solve_affine;
-						reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);	
+						repro_solve_affine = RB * last_sol;
+						//reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+						reconstruct_solution = reconstruct_solution_w_different_dbc(repro_solve_affine, current_scaling);
 						std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
 						curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
-				
-						if(rel_err <= tol)
+						affine_vec_proj = gen_affine_vec(current_nu, current_scaling, reconstruct_solution);
+						
+						while(rel_err > tol && ++iterations<100)
 						{
-							cout<<"Converged!!!"<<endl;
-							solve_affine.push_back(temp_solve_affine);
-							local_indices_to_be_continued.push_back(total_solutions);
-							total_solutions++;
-							
-							//outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
-							outfile_online<<current_nu<<" "<<FarrelOutput(reconstruct_solution)<<endl; 
-							cout<<endl;
-							
-							if (write_ROM_field)
+							Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
+							temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+							for(int i = 0; i < temp_solve_affine.size(); i++)
 							{
-								recover_snapshot_data(reconstruct_solution, 0);
+								if(i < temp_solve_affine.size()/2)
+									curr_xy_projected(i,0) = temp_solve_affine(i);
+								else
+									curr_xy_projected(i,1) = temp_solve_affine(i);
+							}
+							
+							if(j > 0) //if the step is too large some continuation could find a solution on a different branch, so I use deflation also in the continuation step
+							{
+								//computation of tau
+								double norm_min = 1e20, norm_i;
+								int closest_sol;
+								for(int k = 0; k < local_indices_to_be_continued.size(); k++)
+								{
+									/*std::vector< Array<OneD, double> > reprojection_other_sol = reproject_back(reconstruct_solution_w_dbc(RB*solve_affine[local_indices_to_be_continued[k]]));
+									for(int i = 0; i < GetNpoints(); i++)
+									{
+										m_fields[0]->UpdatePhys()[i] = reprojection[0][i] - reprojection_other_sol[0][i];;
+										m_fields[1]->UpdatePhys()[i] = reprojection[1][i] - reprojection_other_sol[1][i];
+									}
+									double norm_ix = m_fields[0]->L2(m_fields[0]->UpdatePhys());
+									double norm_iy = m_fields[1]->L2(m_fields[1]->UpdatePhys());
+									double norm_i = sqrt(norm_ix*norm_ix + norm_iy*norm_iy);
+									
+									if(norm_i < norm_min)
+									{
+										norm_min = norm_i;
+										closest_sol = k;
+									}*/
+									if((temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).norm() < norm_min)
+									//if((temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).transpose() * massMatrix * (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]) < norm_min)
+									{
+										norm_min = (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).norm();
+										//norm_min = (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).transpose() * massMatrix * (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]);
+										closest_sol = local_indices_to_be_continued[k];
+									}
+								}
+								
+								/*std::vector< Array<OneD, double> > reprojection_other_sol = reproject_back(reconstruct_solution_w_dbc(RB*solve_affine[local_indices_to_be_continued[closest_sol]]));
+								for(int i = 0; i < GetNpoints(); i++)
+								{
+									m_fields[0]->UpdatePhys()[i] = (reprojection[0][i] - reprojection_other_sol[0][i]) * (reprojection[0][i] - old_reprojection_x[i]);
+									m_fields[1]->UpdatePhys()[i] = (reprojection[1][i] - reprojection_other_sol[1][i]) * (reprojection[0][i] - old_reprojection_y[i]);
+								}						
+								double scalar_product = -(m_fields[0]->Integral(m_fields[0]->GetPhys()) + m_fields[1]->Integral(m_fields[1]->GetPhys()));*/
+								
+								
+								
+								//norm_min /= solve_affine[closest_sol].transpose() * massMatrix * solve_affine[closest_sol];
+								double scalar_product = -(temp_solve_affine - solve_affine[closest_sol]).dot(temp_solve_affine - last_sol);
+								//double scalar_product = -(temp_solve_affine - solve_affine[closest_sol]).transpose() * massMatrix * (temp_solve_affine - last_sol);
+								double tau;
+								int power = 2;
+								if(power == 1)
+									tau = 1 / (1 - 1/(1+1/norm_min) * scalar_product / (norm_min * norm_min * norm_min));	
+								if(power == 2)
+									tau = 2 / (1 - 1/(1+1/norm_min/norm_min) * scalar_product / (norm_min * norm_min * norm_min * norm_min));	
+								if(norm_min < 1e-2)
+									tau = -5;							
+									
+								if(tau < 0 && tau > -0.1)
+									tau = -0.1;
+								if(tau > 0 && tau < 0.5)
+									tau = 0.5;		
+								if(tau > 1)
+									tau = 1;		
+								temp_solve_affine = tau * temp_solve_affine + (1-tau) * last_sol;
+							}
+							
+							rel_err = (temp_solve_affine-last_sol).norm()/last_sol.norm();
+							last_sol = temp_solve_affine;
+							
+							cout<<"rel_err = "<<rel_err<<endl;
+							
+							repro_solve_affine = RB * temp_solve_affine;
+							//reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+							reconstruct_solution = reconstruct_solution_w_different_dbc(repro_solve_affine, current_scaling);
+							std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
+							curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
+					
+							if(rel_err <= tol)
+							{
+								cout<<"Converged in "<<iterations<<" steps"<<endl;
+								solve_affine.push_back(temp_solve_affine);
+								local_indices_to_be_continued.push_back(total_solutions);
+								total_solutions++;
+								
+								//outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
+								outfile_online<<current_nu<<" "<<current_scaling<<" "<<FarrelOutput(reconstruct_solution)<<endl; 
+								cout<<endl;
+								
+								if (write_ROM_field)
+								{
+									recover_snapshot_data(reconstruct_solution, 0);
+								}
+							}
+							else
+							{
+								affine_vec_proj = gen_affine_vec(current_nu, current_scaling, reconstruct_solution);
 							}
 						}
-						else
-						{
-							affine_vec_proj = gen_affine_vec(current_nu, reconstruct_solution);
-						}
 					}
-				}
-				
-				//deflation						////////////////////////////////////////////////////////////////////////////////////////////////////
-				cout<<"Deflation over "<<local_indices_to_be_continued.size()<<" solutions"<<endl;
-				Eigen::MatrixXd massMatrix = the_ABCD_one_proj; //Get_no_advection_matrix_ABCD();
-				//cout<<massMatrix.rows()<<" "<<massMatrix.cols()<<" "<<temp_solve_affine.rows()<<endl;
-				//cout << "The eigenvalues of the_const_one_proj are:" << endl << massMatrix.eigenvalues() << endl; //the smallest eigenvalues are small but negative!!
-				//cout << "The eigenvalues of the_ABCD_one_proj are:" << endl << the_ABCD_one_proj.eigenvalues() << endl;
-				for(int j = 0; j < local_indices_to_be_continued.size()*0; j++)
-				{
-					curr_j = local_indices_to_be_continued[j];
-					cout<<"curr_j = "<<curr_j<<endl;
-					rel_err = 1;
-					iterations = 0;
-					last_sol = solve_affine[curr_j];
 					
-					for(int i = 0; i < last_sol.size(); i++)
-						last_sol[i] = last_sol[i] * (1+(((double)rand())/RAND_MAX-0.5)/2/1e2);
-					
-					repro_solve_affine = RB * last_sol;
-					reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);	
-					std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
-					curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
-					affine_vec_proj = gen_affine_vec(current_nu, reconstruct_solution);
-					
-					while(rel_err > tol && ++iterations<200)
-					{	
-						Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
-						//Eigen::VectorXd affine_vec_proj = gen_affine_vec(current_nu, last_sol);
-						temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+					//deflation						////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+					cout<<"Deflation over "<<local_indices_to_be_continued.size()<<" solutions"<<endl;
+					Eigen::MatrixXd massMatrix = the_ABCD_one_proj; //Get_no_advection_matrix_ABCD();
+					//cout<<massMatrix.rows()<<" "<<massMatrix.cols()<<" "<<temp_solve_affine.rows()<<endl;
+					//cout << "The eigenvalues of the_const_one_proj are:" << endl << massMatrix.eigenvalues() << endl; //the smallest eigenvalues are small but negative!!
+					//cout << "The eigenvalues of the_ABCD_one_proj are:" << endl << the_ABCD_one_proj.eigenvalues() << endl;
+					for(int j = 0; j < local_indices_to_be_continued.size(); j++)
+					{
+						curr_j = local_indices_to_be_continued[j];
+						cout<<"curr_j = "<<curr_j<<endl;
+						rel_err = 1;
+						iterations = 0;
+						last_sol = solve_affine[curr_j];
 						
-						repro_solve_affine = RB * temp_solve_affine;
-						reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);	
+						for(int i = 0; i < last_sol.size(); i++)
+						{
+							double random = ((double)rand())/RAND_MAX/2+0.5;
+							int random_sign = ((double)rand())/RAND_MAX-0.5;
+							if(random_sign < 0)
+								random *= -1;
+							last_sol[i] = last_sol[i] * (1+random/1e2) *0; // at the moment the initial guess is 0
+						}
+						
+						repro_solve_affine = RB * last_sol;
+						//reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+						reconstruct_solution = reconstruct_solution_w_different_dbc(repro_solve_affine, current_scaling);
 						std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
 						curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
+						affine_vec_proj = gen_affine_vec(current_nu, current_scaling, reconstruct_solution);
 						
-						//computation of tau
-						double norm_min = 1e20, norm_i;
-						int closest_sol;
-						for(int k = 0; k < indices_to_be_continued.size(); k++)
-						{
-							/*std::vector< Array<OneD, double> > reprojection_other_sol = reproject_back(reconstruct_solution_w_dbc(RB*solve_affine[local_indices_to_be_continued[k]]));
+						while(rel_err > tol && ++iterations<50)
+						{	
+							Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
+							//Eigen::VectorXd affine_vec_proj = gen_affine_vec(current_nu, last_sol);
+							temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+							
+							//computation of tau
+							double norm_min = 1e20, norm_i;
+							int closest_sol;
+							for(int k = 0; k < local_indices_to_be_continued.size(); k++)
+							{
+								/*std::vector< Array<OneD, double> > reprojection_other_sol = reproject_back(reconstruct_solution_w_dbc(RB*solve_affine[local_indices_to_be_continued[k]]));
+								for(int i = 0; i < GetNpoints(); i++)
+								{
+									m_fields[0]->UpdatePhys()[i] = reprojection[0][i] - reprojection_other_sol[0][i];;
+									m_fields[1]->UpdatePhys()[i] = reprojection[1][i] - reprojection_other_sol[1][i];
+								}
+								double norm_ix = m_fields[0]->L2(m_fields[0]->UpdatePhys());
+								double norm_iy = m_fields[1]->L2(m_fields[1]->UpdatePhys());
+								double norm_i = sqrt(norm_ix*norm_ix + norm_iy*norm_iy);
+								
+								if(norm_i < norm_min)
+								{
+									norm_min = norm_i;
+									closest_sol = k;
+								}*/
+								if((temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).norm() < norm_min)
+								//if((temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).transpose() * massMatrix * (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]) < norm_min)
+								{
+									norm_min = (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).norm();
+									//norm_min = (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).transpose() * massMatrix * (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]);
+									closest_sol = local_indices_to_be_continued[k];
+								}
+							}
+							
+							/*std::vector< Array<OneD, double> > reprojection_other_sol = reproject_back(reconstruct_solution_w_dbc(RB*solve_affine[local_indices_to_be_continued[closest_sol]]));
 							for(int i = 0; i < GetNpoints(); i++)
 							{
-								m_fields[0]->UpdatePhys()[i] = reprojection[0][i] - reprojection_other_sol[0][i];;
-								m_fields[1]->UpdatePhys()[i] = reprojection[1][i] - reprojection_other_sol[1][i];
-							}
-							double norm_ix = m_fields[0]->L2(m_fields[0]->UpdatePhys());
-							double norm_iy = m_fields[1]->L2(m_fields[1]->UpdatePhys());
-							double norm_i = sqrt(norm_ix*norm_ix + norm_iy*norm_iy);
+								m_fields[0]->UpdatePhys()[i] = (reprojection[0][i] - reprojection_other_sol[0][i]) * (reprojection[0][i] - old_reprojection_x[i]);
+								m_fields[1]->UpdatePhys()[i] = (reprojection[1][i] - reprojection_other_sol[1][i]) * (reprojection[0][i] - old_reprojection_y[i]);
+							}						
+							double scalar_product = -(m_fields[0]->Integral(m_fields[0]->GetPhys()) + m_fields[1]->Integral(m_fields[1]->GetPhys()));*/
 							
-							if(norm_i < norm_min)
+							
+							
+							//norm_min /= solve_affine[closest_sol].transpose() * massMatrix * solve_affine[closest_sol];
+							double scalar_product = -(temp_solve_affine - solve_affine[closest_sol]).dot(temp_solve_affine - last_sol);
+							//double scalar_product = -(temp_solve_affine - solve_affine[closest_sol]).transpose() * massMatrix * (temp_solve_affine - last_sol);
+							double tau;
+							int power = 2;
+							if(power == 1)
+								tau = 1 / (1 - 1/(1+1/norm_min) * scalar_product / (norm_min * norm_min * norm_min));	
+							if(power == 2)
+								tau = 2 / (1 - 1/(1+1/norm_min/norm_min) * scalar_product / (norm_min * norm_min * norm_min * norm_min));	
+							if(norm_min < 5e-2)
+								tau = -2;							
+								
+							//cout<<"real tau "<<tau; 
+							//tau = tau/fabs(tau);
+							if(tau < 0 && tau > -0.1)
+								tau = -0.1;
+							if(tau > 0 && tau < 0.5)
+								tau = 0.5;		
+							if(tau > 1)
+								tau = 1;		
+							temp_solve_affine = tau * temp_solve_affine + (1-tau) * last_sol;
+							
+							rel_err = (temp_solve_affine-last_sol).norm()/last_sol.norm();
+							last_sol = temp_solve_affine;
+							//cout<<", tau "<<tau<<", scal_prod "<<scalar_product<<", norm "<<norm_min<<", M_inv "<<1/(1+1/norm_min); 
+							//cout<<", rel_err = "<<rel_err<<endl;
+							
+							repro_solve_affine = RB * temp_solve_affine;
+							//reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+							reconstruct_solution = reconstruct_solution_w_different_dbc(repro_solve_affine, current_scaling);
+							std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
+							curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
+							
+							
+							if(rel_err <= tol)
 							{
-								norm_min = norm_i;
-								closest_sol = k;
-							}*/
-							//if((temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).norm() < norm_min)
-							if((temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).transpose() * massMatrix * (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]) < norm_min)
-							{
-								//norm_min = (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).norm();
-								norm_min = (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).transpose() * massMatrix * (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]);
-								closest_sol = local_indices_to_be_continued[k];
-							}
+								cout<<"Converged in "<<iterations<<" steps"<<endl;
+								solve_affine.push_back(temp_solve_affine);
+								local_indices_to_be_continued.push_back(total_solutions);
+								total_solutions++;
+								
+								//outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
+								outfile_online<<current_nu<<" "<<current_scaling<<" "<<FarrelOutput(reconstruct_solution)<<endl; 
+								cout<<endl;
+								
+								if (write_ROM_field)
+								{
+									recover_snapshot_data(reconstruct_solution, 0);
+								}
+							}						
+							affine_vec_proj = gen_affine_vec(current_nu, current_scaling, reconstruct_solution);
+							old_reprojection_x = reprojection[0];
+							old_reprojection_y = reprojection[1];
 						}
-						
-						/*std::vector< Array<OneD, double> > reprojection_other_sol = reproject_back(reconstruct_solution_w_dbc(RB*solve_affine[local_indices_to_be_continued[closest_sol]]));
-						for(int i = 0; i < GetNpoints(); i++)
-						{
-							m_fields[0]->UpdatePhys()[i] = (reprojection[0][i] - reprojection_other_sol[0][i]) * (reprojection[0][i] - old_reprojection_x[i]);
-							m_fields[1]->UpdatePhys()[i] = (reprojection[1][i] - reprojection_other_sol[1][i]) * (reprojection[0][i] - old_reprojection_y[i]);
-						}						
-						double scalar_product = -(m_fields[0]->Integral(m_fields[0]->GetPhys()) + m_fields[1]->Integral(m_fields[1]->GetPhys()));*/
-						
-						
-						
-						norm_min /= solve_affine[closest_sol].transpose() * massMatrix * solve_affine[closest_sol];
-						//double scalar_product = -(temp_solve_affine - solve_affine[closest_sol]).dot(temp_solve_affine - last_sol);
-						double scalar_product = -(temp_solve_affine - solve_affine[closest_sol]).transpose() * massMatrix * (temp_solve_affine - last_sol);
-						double tau;
-						int power = 2;
-						if(power == 1)
-							tau = 1 / (1 - 1/(1+1/norm_min) * scalar_product / (norm_min * norm_min * norm_min));	
-						if(power == 2)
-							tau = 2 / (1 - 1/(1+1/norm_min/norm_min) * scalar_product / (norm_min * norm_min * norm_min * norm_min));								
-							
-						cout<<"real tau "<<tau; 
-						//tau = tau/fabs(tau);
-						if(tau < 0 && tau > -0.1)
-							tau = -0.1;
-						if(tau > 0 && tau < 0.5)
-							tau = 0.5;				
-						temp_solve_affine = tau * temp_solve_affine + (1-tau) * last_sol;
-						
-						rel_err = (temp_solve_affine-last_sol).norm()/last_sol.norm();
-						last_sol = temp_solve_affine;
-						cout<<", tau "<<tau<<", scal_prod "<<scalar_product<<", norm "<<norm_min<<", M_inv "<<1/(1+1/norm_min); 
-						cout<<", rel_err = "<<rel_err<<endl;
-						
-												
-						
-						
-						if(rel_err <= tol)
-						{
-							cout<<"Converged!!!"<<endl;
-							solve_affine.push_back(temp_solve_affine);
-							local_indices_to_be_continued.push_back(total_solutions);
-							total_solutions++;
-							
-							//outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
-							outfile_online<<current_nu<<" "<<FarrelOutput(reconstruct_solution)<<endl; 
-							cout<<endl;
-							
-							if (write_ROM_field)
-							{
-								recover_snapshot_data(reconstruct_solution, 0);
-							}
-						}						
-						affine_vec_proj = gen_affine_vec(current_nu, reconstruct_solution);
-						old_reprojection_x = reprojection[0];
-						old_reprojection_y = reprojection[1];
+					} 
+					cout<<endl; 
+					
+					indices_to_be_continued.clear();
+					indices_to_be_continued = std::vector<int>(local_indices_to_be_continued);
+					//cout<<"flag = "<<(2 * (current_nu > param_vector[param_vector.num_elements()-1] + local_step/2) - 1)<<" "<<current_nu<<" "<<param_vector[param_vector.num_elements()-1]<<" "<<local_step<<endl;
 					}
-				} 
-				cout<<endl; 
-				
-				indices_to_be_continued.clear();
-				indices_to_be_continued = std::vector<int>(local_indices_to_be_continued);
+					
+					while(param_vector[current_index] == param_vector[current_index+1] && current_index < param_vector.num_elements())
+					{
+						current_index++;
+					}
+				}
 			}
 		}
-		}
+		outfile_online.close();
 		}
 	}
 
@@ -3915,6 +4032,7 @@ namespace Nektar
 	double POD_tolerance = m_session->GetParameter("POD_tolerance");
 	ref_param_index = m_session->GetParameter("ref_param_index");
 	ref_param_nu = m_session->GetParameter("ref_param_nu");
+	
 	Array<OneD, Array<OneD, Array<OneD, NekDouble> > > snapshots_from_continuation = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (2);
 	
 	m_session->SetSolverInfo("SolverType", "CoupledLinearisedNS_trafoP");
@@ -3937,6 +4055,27 @@ namespace Nektar
 	{
 		use_Newton = 0;
 	}
+	if (m_session->DefinesParameter("compare_accuracy_mode")) 
+	{
+		compare_accuracy_mode = m_session->GetParameter("compare_accuracy_mode");
+	}
+	else
+	{
+		compare_accuracy_mode = 0;
+	}
+	
+	Array<OneD, NekDouble> param_vector2_tmp;
+	if (m_session->DefinesParameter("two_params") && m_session->GetParameter("two_params") == 1) 
+	{
+		param_vector2_tmp = Array<OneD, NekDouble> (2);
+		for(int i = 0; i<param_vector2_tmp.num_elements(); i++)
+			param_vector2_tmp[i] = 1-0.01*i;
+	}
+	else
+	{
+		param_vector2_tmp = Array<OneD, NekDouble> (1);
+		param_vector2_tmp[0] = 1;
+	}
 	babyCLNS_trafo.use_Newton = use_Newton;
 	if (m_session->DefinesParameter("debug_mode")) // debug_mode with many extra information but very slow
 	{
@@ -3954,6 +4093,15 @@ namespace Nektar
 	{
 		write_ROM_field = 0;
 	} 
+	if (m_session->DefinesParameter("write_SEM_field")) 
+	{
+		write_SEM_field = m_session->GetParameter("write_SEM_field");
+	}
+	else
+	{
+		write_SEM_field = 0;
+	} 
+	babyCLNS_trafo.write_SEM_field = write_SEM_field;
 	if (m_session->DefinesParameter("snapshot_computation_plot_rel_errors")) 
 	{
 		snapshot_computation_plot_rel_errors = m_session->GetParameter("snapshot_computation_plot_rel_errors");
@@ -4002,8 +4150,8 @@ namespace Nektar
 			
 			number_of_snapshots = params.size() -1; 
 			Nmax = number_of_snapshots;
-			snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
-			snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+			snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots * param_vector2_tmp.num_elements());
+			snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots * param_vector2_tmp.num_elements());
 			
 			for(int i = 0; i < Nmax; i++)
 			{
@@ -4019,15 +4167,46 @@ namespace Nektar
 			//snapshot_x_collection = snapshots_from_continuation[0];
 			//snapshot_y_collection = snapshots_from_continuation[1];
 			
-			param_vector = Array<OneD, NekDouble> (Nmax);
+			param_vector = Array<OneD, NekDouble> (Nmax * param_vector2_tmp.num_elements());
+			param_vector2 = Array<OneD, NekDouble> (Nmax * param_vector2_tmp.num_elements());
 			for(int i = 0; i < Nmax; i++)
 			{
 				param_vector[i] = params[i+1];  
-				//cout<<"param_vector["<<i<<"] = "<<param_vector[i]<<endl;
+				//for(int j = 0; j < param_vector2_tmp.num_elements(); j++)
+					param_vector2[i] = param_vector2_tmp[0];
 			}
-			
+				
 			ref_param_index = 0;
 			ref_param_nu = 1;
+				
+			for(int k = 0; k < param_vector2_tmp.num_elements()-1; k++)
+			{
+				params.resize(1);
+				params[0] = param_vector[0];
+				babyCLNS_trafo.second_param = param_vector2_tmp[k+1];
+				snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
+				for(int i = 0; i < Nmax; i++)
+				{
+					snapshot_x_collection[i+Nmax*(k+1)] = Array<OneD, NekDouble> (snapshots_from_continuation[0][i+1].num_elements());   
+					snapshot_y_collection[i+Nmax*(k+1)] = Array<OneD, NekDouble> (snapshots_from_continuation[1][i+1].num_elements());
+					
+					for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
+						snapshot_x_collection[i+Nmax*(k+1)][j] = snapshots_from_continuation[0][i+1][j];
+					for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
+						snapshot_y_collection[i+Nmax*(k+1)][j] = snapshots_from_continuation[1][i+1][j];
+					for(int i = 0; i < Nmax; i++)
+						param_vector[i+Nmax*(k+1)] = params[i+1];  
+					for(int i = 0; i < Nmax; i++)
+						param_vector2[i+Nmax*(k+1)] = param_vector2_tmp[k+1];
+				}
+			}
+			babyCLNS_trafo.param_vector2 = param_vector2;
+			
+			cout<<endl<<endl;
+			for(int k = 0; k < max(param_vector2.num_elements(),param_vector.num_elements()); k++)
+				cout<<"params: \t"<<param_vector[k]<<" \t"<<param_vector2[k]<<endl;	
+			
+			use_Newton = 0; //the second param only works with Oseen
 		}
 		else
 		{
@@ -4035,7 +4214,6 @@ namespace Nektar
 		}		
 	}
 		DoInitialise(); 
-		cout<<"Initialised"<<endl;
 	DoSolve(); // get internal dimensions right
 	babyCLNS_trafo.InitObject();
 	//Eigen::MatrixXd collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
@@ -4050,6 +4228,11 @@ namespace Nektar
 		cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
 	}
 	Eigen::VectorXd singular_values = svd_collect_f_all.singularValues();
+	
+	std::ofstream outfile_svd;
+	outfile_svd.open("singular_values.txt", std::ios::out);
+	outfile_svd<<singular_values<<endl;
+	
 	if (debug_mode)
 	{
 		cout << "sum singular values " << singular_values.sum() << endl << endl;
@@ -4076,8 +4259,14 @@ namespace Nektar
 		cout << "RBsize: " << RBsize << endl;
 	}
 	
-
-
+	int final_RBsize;
+	if(compare_accuracy_mode) 
+		final_RBsize = Nmax;
+	else
+		final_RBsize = RBsize;
+	while(RBsize <= final_RBsize) 
+{
+	//cout<<"cum_rel_singular_values[RBsize-1] "<<cum_rel_singular_values[RBsize-1]<<endl;
 	Eigen::MatrixXd collect_f_all_PODmodes = svd_collect_f_all.matrixU(); // this is a local variable...
 	// here probably limit to something like 99.99 percent of PODenergy, this will set RBsize
 	setDBC(collect_f_all); // agnostic to RBsize
@@ -4121,6 +4310,14 @@ namespace Nektar
 	{
 		cout << "finished gen_reference_matrices " << endl;
 	}
+	if(compare_accuracy_mode && RBsize < final_RBsize) 
+	{
+		online_phase();
+	}
+	RBsize+= 1;
+}
+RBsize--;
+
    }
    
     Eigen::MatrixXd CoupledLinearNS_TT::gen_affine_mat_proj(double current_nu)
@@ -4205,10 +4402,16 @@ namespace Nektar
 
 	}
 //	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*recovered_affine_adv_rhs_proj_xy_newton ;
-	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*add_rhs_Newton ;  
+
+		/*cout<<"\nconst "<<the_const_one_rhs_proj<<endl;
+		cout<<"\nabcd "<<the_ABCD_one_rhs_proj<<endl;
+		cout<<"\nrecovered "<<recovered_affine_adv_rhs_proj_xy<<endl;*/
+		double scaling = param_vector2[current_index];
+		cout<<"current scaling "<<scaling<<endl;
+		return scaling * (- the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*scaling*add_rhs_Newton) ;   
     }
     
-    Eigen::VectorXd CoupledLinearNS_TT::gen_affine_vec(double current_nu, Eigen::VectorXd solution)
+    Eigen::VectorXd CoupledLinearNS_TT::gen_affine_vec(double current_nu, double current_scaling, Eigen::VectorXd solution)
     {
 	Eigen::VectorXd recovered_affine_adv_rhs_proj_xy = Eigen::VectorXd::Zero(RBsize); 
 	for (int i = 0; i < RBsize; ++i)
@@ -4251,10 +4454,31 @@ namespace Nektar
 		}	
 
 	}
-//	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*recovered_affine_adv_rhs_proj_xy_newton ;
-	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*add_rhs_Newton ;  
+
+	return current_scaling * (- the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*current_scaling*add_rhs_Newton) ; 
     }
 
+    Eigen::VectorXd CoupledLinearNS_TT::reconstruct_solution_w_different_dbc(Eigen::VectorXd reprojected_solve, double scaling)
+    {
+	Eigen::VectorXd reconstruct_solution = Eigen::VectorXd::Zero(f_bnd_dbc_full_size.rows());  // is of size M_truth_size
+	int counter_wo_dbc = 0;
+	for (int row_index=0; row_index < f_bnd_dbc_full_size.rows(); ++row_index)
+	{
+		if (!elem_loc_dbc.count(row_index))
+		{
+			reconstruct_solution(row_index) = reprojected_solve(counter_wo_dbc);
+			counter_wo_dbc++;
+		}
+		else
+		{
+			reconstruct_solution(row_index) = f_bnd_dbc_full_size(row_index) * scaling;
+			if(f_bnd_dbc_full_size(row_index) > 100)
+				cout<<"val: "<<f_bnd_dbc_full_size(row_index)<<" "<<reconstruct_solution(row_index)<<" "<<scaling<<endl;
+		}
+	}
+	return reconstruct_solution;
+    }
+    
     Eigen::VectorXd CoupledLinearNS_TT::reconstruct_solution_w_dbc(Eigen::VectorXd reprojected_solve)
     {
 	Eigen::VectorXd reconstruct_solution = Eigen::VectorXd::Zero(f_bnd_dbc_full_size.rows());  // is of size M_truth_size
@@ -4292,7 +4516,6 @@ namespace Nektar
 	the_const_one_rhs_simplified = remove_rows(the_const_one_rhs, elem_loc_dbc);
 	the_ABCD_one_rhs_proj = RB.transpose() * the_ABCD_one_rhs_simplified;
 	the_const_one_rhs_proj = RB.transpose() * the_const_one_rhs_simplified;
-//	cout << "the_const_one_rhs_proj " << the_const_one_rhs_proj << endl;
     }
 
 

@@ -137,6 +137,7 @@ namespace Nektar
 	int use_Newton;
 	int debug_mode;
 	int write_ROM_field;
+	int write_SEM_field;
 	int snapshot_computation_plot_rel_errors;
 
         Eigen::MatrixXd MtM;
@@ -215,13 +216,17 @@ namespace Nektar
 	void Set_m_kinvis(NekDouble);
 	
 	
-	Eigen::VectorXd gen_affine_vec(double, Eigen::VectorXd);
+	Eigen::VectorXd gen_affine_vec(unsigned int, Eigen::VectorXd);
 	
 	
 	std::vector< Array<OneD, double> > reproject_back(Eigen::VectorXd);
 	double FarrelOutput(Eigen::VectorXd);
+	Eigen::VectorXd reconstruct_solution_w_different_dbc(Eigen::VectorXd, double);
 	
 	std::vector<int> flipperMap;
+	int max_dimension;
+	int compare_accuracy_mode;
+	Array<OneD, NekDouble> param_vector2;
 	
 
     protected:

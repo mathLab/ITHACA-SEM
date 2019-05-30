@@ -68,6 +68,7 @@ namespace Nektar
 
     void CoupledLinearNS_trafoP::v_InitObject()
     {
+    	second_param = 1;
         IncNavierStokes::v_InitObject();
 
         int  i;
@@ -1589,10 +1590,9 @@ namespace Nektar
 //		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
 //		cout << "csy0.norm() " << csy0.norm() << endl;
 //		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
-		//rel_err = std::abs(csx0_trafo.norm() - csx0.norm()) / csx0.norm() + std::abs(csy0_trafo.norm() - csy0.norm()) / csy0.norm();
-		rel_err = (csx0_trafo - csx0).norm() / csx0.norm() + (csy0_trafo - csy0).norm() / csy0.norm();
+		
 
-		// to use a better error estimate
+		// to use a better error estimate use the first rel_err, I need it to obtain converge with higher order polynomials
 		Vmath::Vsub(out_field_trafo_x.num_elements(), out_field_trafo_x, 1, init_snapshot_x, 1, diff_x, 1);
 		Vmath::Vsub(out_field_trafo_y.num_elements(), out_field_trafo_y, 1, init_snapshot_y, 1, diff_y, 1);
 		norm_ix = m_fields[0]->L2(diff_x);
@@ -1601,7 +1601,8 @@ namespace Nektar
 		norm_0x = m_fields[0]->L2(init_snapshot_x);
 		norm_0y = m_fields[1]->L2(init_snapshot_y);
 		norm_0 = sqrt(norm_0x*norm_0x + norm_0y*norm_0y);
-		rel_err = norm_i / (norm_0+1e-30);
+		rel_err = norm_i / (norm_0+1e-16);
+		//rel_err = (csx0_trafo - csx0).norm() / csx0.norm() + (csy0_trafo - csy0).norm() / csy0.norm();
 		
 		iterations++;
 		if (snapshot_computation_plot_rel_errors)
@@ -1628,13 +1629,13 @@ namespace Nektar
 						
 				if(norm_i < 1e2)   
 					far_from_everything = false;
-				if(norm_i < 5*1e-5) 
+				if(norm_i < 1e-2) 
 					danger = true;
 				
 				if(norm_i > 1e15) // to avoid the useless remaining iterations
 					iterations = 99999;
 					
-				if(change_method && norm_i > 1e4) // try to avoid divergence using some Oseen steps
+				if(change_method && norm_i > 1e3) // try to avoid divergence using some Oseen steps
 				{
 					if(last_tau < -9.9)
 					{
@@ -1710,7 +1711,7 @@ namespace Nektar
 							
 						if(tau > 0)
 						{
-							strength *= 1.5;
+							strength *= 1.75;
 						}
 						else
 						{
@@ -1720,18 +1721,18 @@ namespace Nektar
 					}
 					//else
 					//{
-						if(tau < 0.5)
+						if(tau < 0.6 && tau > 0)
 						{
-							tau = 0.5;
+							tau = 0.6;
 							last_tau = tau;
 						}
 						if(tau > 1) // to avoid overshooting
 							tau = 1;
 						if(danger) //I want to change a lot my solution because I'm in the region of attraction of a previous solution
 						{						
-							tau = -1e2*strength;
+							tau = -50*strength;
 							last_tau = -9.9999;
-							strength *= 1.5;
+							strength *= 1.75;
 							cout<<"tau manually set to "<<tau<<endl;
 						}
 					//}
@@ -1742,8 +1743,8 @@ namespace Nektar
 						tau = -strength*fabs(tau);
 					if(norm_max * tau < -200)
 						tau = max(tau / min(norm_max, strength), -100/norm_max);
-					if(tau > -0.25)
-						tau = -0.2;
+					if(tau > -0.4)
+						tau = -0.4;
 					if(tau < -9.9)
 					{
 						Vmath::Vcopy(out_field_trafo_x.num_elements(), out_field_trafo_x, 1, last_out_field_trafo_x, 1 );
@@ -1811,45 +1812,48 @@ namespace Nektar
 	converged_solution[0] = init_snapshot_x;
 	converged_solution[1] = init_snapshot_y;
 	
-	std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
-    std::vector<std::string> variables(m_fields.num_elements()+1);
-    int i;
-        
-    for(i = 0; i < m_fields.num_elements(); ++i)
-    {
-        fieldcoeffs[i] = m_fields_t[i]->UpdateCoeffs();
-        variables[i]   = m_boundaryConditions->GetVariable(i);
-    }
-    
-        
-    fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs()); 
-        // project pressure field to velocity space   
-        if(m_singleMode==true)
-        {
-            Array<OneD, NekDouble > tmpfieldcoeffs (m_fields[0]->GetNcoeffs()/2);
-            m_pressure->GetPlane(0)->BwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetCoeffs(), m_pressure->GetPlane(0)->UpdatePhys());
-            m_pressure->GetPlane(1)->BwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetCoeffs(), m_pressure->GetPlane(1)->UpdatePhys()); 
-            m_fields[0]->GetPlane(0)->FwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetPhys(),fieldcoeffs[i]);
-            m_fields[0]->GetPlane(1)->FwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetPhys(),tmpfieldcoeffs);
-            for(int e=0; e<m_fields[0]->GetNcoeffs()/2; e++)
-            {
-                fieldcoeffs[i][e+m_fields[0]->GetNcoeffs()/2] = tmpfieldcoeffs[e];
-            }          
-        }
-        else
-        {
-        	//2D simulations
-            m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
-            m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
-        }
-        variables[i] = "p";   
-    
-    std::stringstream sstm;
-	//sstm << "_" << m_sessionName <<"_snapshot_" << parameter<<"_of_"<<total_solutions_found<<".fld";
-	sstm << "TestSnap"<<(total_solutions_found + 1)<<".fld";
-	std::string outname = sstm.str();
-        
-    //WriteFld(outname,m_fields_t[0],fieldcoeffs,variables); 
+	if( write_SEM_field )
+	{
+		std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
+	    std::vector<std::string> variables(m_fields.num_elements()+1);
+	    int i;
+	        
+	    for(i = 0; i < m_fields.num_elements(); ++i)
+	    {
+	        fieldcoeffs[i] = m_fields_t[i]->UpdateCoeffs();
+	        variables[i]   = m_boundaryConditions->GetVariable(i);
+	    }
+	    
+	        
+	    fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs()); 
+	        // project pressure field to velocity space   
+	        if(m_singleMode==true)
+	        {
+	            Array<OneD, NekDouble > tmpfieldcoeffs (m_fields[0]->GetNcoeffs()/2);
+	            m_pressure->GetPlane(0)->BwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetCoeffs(), m_pressure->GetPlane(0)->UpdatePhys());
+	            m_pressure->GetPlane(1)->BwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetCoeffs(), m_pressure->GetPlane(1)->UpdatePhys()); 
+	            m_fields[0]->GetPlane(0)->FwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetPhys(),fieldcoeffs[i]);
+	            m_fields[0]->GetPlane(1)->FwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetPhys(),tmpfieldcoeffs);
+	            for(int e=0; e<m_fields[0]->GetNcoeffs()/2; e++)
+	            {
+	                fieldcoeffs[i][e+m_fields[0]->GetNcoeffs()/2] = tmpfieldcoeffs[e];
+	            }          
+	        }
+	        else
+	        {
+	        	//2D simulations
+	            m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
+	            m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
+	        }
+	        variables[i] = "p";   
+	    
+	    std::stringstream sstm;
+		//sstm << "_" << m_sessionName <<"_snapshot_" << parameter<<"_of_"<<total_solutions_found<<".fld";
+		sstm << "Offline_"<<second_param<<"_"<<(total_solutions_found + 1)<<".fld";
+		std::string outname = sstm.str();
+	        
+	    WriteFld(outname,m_fields_t[0],fieldcoeffs,variables); 
+	}
 
 	return converged_solution;
     }
@@ -1868,7 +1872,10 @@ namespace Nektar
 	for (int i=0; i<Nmax; i++)
 	{
 		Set_m_kinvis( param_vector[i] );
-		cout<<"\nparam_vector["<<i<<"] = "<<param_vector[i]<<endl;	
+		second_param = param_vector2[i];
+			
+		//cout<<"\nparam_vector["<<i<<"] = "<<param_vector[i]<<endl;
+		cout<<"\nparams: "<<param_vector[i]<<" "<<param_vector2[i]<<endl;	
 	//	CLNS_trafo.DoInitialise();
 		DoInitialiseAdv(snapshot_x_collection[i], snapshot_y_collection[i]); // replaces .DoInitialise();
 		DoSolve();
@@ -1895,7 +1902,7 @@ namespace Nektar
 			csy0(index_conv) = snapshot_y_collection[i][index_conv];
 		}
 
-		if (debug_mode)
+		//if (debug_mode)
 		{
 			cout << "csx0.norm() " << csx0.norm() << endl;
 			cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
@@ -2632,44 +2639,7 @@ namespace Nektar
                     cnt1 += nint;
                 }
             }
-        }
-        
-		/*double norm = 1,norm_i, scale_factor = 1;
-        if(deflate)
-        {
-			for(int j = 0; j < local_indices_to_be_continued.size(); j++)
-			{
-				norm_i=0;
-				int curr_j = local_indices_to_be_continued[j];
-				for(int i = 0; i < sol_x_cont_defl[curr_j].num_elements(); i++)
-				{
-					norm_i += (sol_x_cont_defl[curr_j][i] - sol_x_cont_defl[total_solutions_found][i]) 
-								* (sol_x_cont_defl[curr_j][i] - sol_x_cont_defl[total_solutions_found][i]);
-					norm_i += (sol_y_cont_defl[curr_j][i] - sol_y_cont_defl[total_solutions_found][i]) 
-								* (sol_y_cont_defl[curr_j][i] - sol_y_cont_defl[total_solutions_found][i]);
-				}   
-				
-				norm_i = sqrt(norm_i);///sol_x_cont_defl[curr_j].num_elements();
-				norm_i = 1+1/norm_i;
-				
-				cout<<norm_i<<" --> "<<1+1/norm_i<<" --> "<<norm*(1+1/norm_i)<<" with 400-th node "<<sol_x_cont_defl[curr_j][400]<<" and "<<sol_x_cont_defl[total_solutions_found][400]<<endl;
-				
-				//norm_i += 1e-13;
-				//if(norm_i < norm)
-				//	norm = norm_i;
-				scale_factor *= 1/norm_i;
-				
-			}
-			cout<<endl;
-			//scale_factor = norm;
-			//cout<<"scale factor = "<<scale_factor<<", local indices to be continued.size()="<<local_indices_to_be_continued.size()<<" num elementss()="<<sol_x_cont_defl[local_indices_to_be_continued.size()-1].num_elements()<<endl;
-			
-       		Vmath::Smul(f_bnd.num_elements(), scale_factor, f_bnd,1,f_bnd,1);  
-       		Vmath::Smul(f_int.num_elements(), scale_factor, f_int,1,f_int,1); 
-       		//cout<<endl<<endl;     
-       	}    */
-       	
-       	//cout<<"Solution number "<<number_of_deflations<<endl;        
+        }      
         
         Array<OneD, NekDouble > f_p(m_mat[mode].m_D_int->GetRows());
         NekVector<  NekDouble > F_p(f_p.num_elements(),f_p,eWrapper);
@@ -2768,7 +2738,7 @@ namespace Nektar
                             }
                             else
                             {
-                                bnd[bndmap[bndcnt++]] = bndCondCoeffs[cnt++];
+                                bnd[bndmap[bndcnt++]] = bndCondCoeffs[cnt++] * second_param;
                             }
                         }
                     }
@@ -3006,7 +2976,7 @@ namespace Nektar
         	{
             	myfile1 << std::setprecision(17) << coords0[counter] << " ";
             	myfile1 << std::setprecision(17) << coords1[counter] << " ";
-            	myfile1 << std::setprecision(17) << coords2[counter] << " ";
+            	myfile1 << std::setprecision(17) << 0 /*coords2[counter]*/ << " "; //sometimes with low order polyn. and 2D domain it returns NaN and the file reader would have problems
             	myfile1 << "\n";
         	}
             myfile1.close();
@@ -3055,13 +3025,13 @@ namespace Nektar
 		int deflated_solutions_found = 0, curr_i, indexFlip;
 		int previous_step_solutions = 1, previous_previous_step_solutions = 0, last_bif_point_solutions_found = 0;  //number of solutions found in the step k-1 and k-2 when the current step is the k-th
 		bool lost_solution = true, use_arclength, used_deflation;
-		double last_param, delta_param, csi, use_deflation_now = false, use_guessGivenNi = true;
+		double last_param, last_real_delta_param = 0, real_delta_param, delta_param, csi, use_deflation_now = false, use_guessGivenNi = true;
 		Array<OneD, NekDouble> guess_x, guess_y, guess_tmp;
 		//Eigen::MatrixXd complete_matrix;
-		number_of_deflations = 0;
 		total_solutions_found = 0;
+		param_vector.resize(0);
 		
-		Set_m_kinvis((*params)[0] + step);
+		Set_m_kinvis((*params)[0]);// + step);
 		std::vector<int> indices_to_be_continued; //for the next value of the parameter
 		//std::vector<int> local_indices_to_be_continued(0); //for the current value of the parameter
 		Array<OneD, Array<OneD, NekDouble> > converged_solution(2), possible_solutions;
@@ -3073,21 +3043,15 @@ namespace Nektar
 			infile.open("mf1.txt", std::ios::in);
 			
 			double x1,y1,z1;
-			bool finito = false;
-			int index=0;
+			bool finished = false;
 			//std::vector<int> flipperMap;
 			std::vector<double> x, y;
 			while(infile >> x1 >>y1 >> z1)
 			{
-				if((x1==5 && y1==4.5) || finito)
-					finito =true;
-				else
-					index++;
-					x.push_back(x1);
-					y.push_back(y1);
+				x.push_back(x1);
+				y.push_back(y1);
 			}
 			flipperMap = GetFlipperMap(x,y); 
-			index = 300;
 			
 			deflate = false;
 			//compute first solution
@@ -3103,7 +3067,13 @@ namespace Nektar
 			last_param = m_kinvis;
 			
 			std::ofstream outfile;
-			outfile.open("bif_diagr.txt", std::ios::out);
+			std::stringstream sstm;
+			//sstm << "bif_diagr"<<second_param*1000<<".txt";
+			sstm << "bif_diagr.txt";
+			std::string outname0 = sstm.str();
+			const char * outname1 = outname0.c_str();
+			
+			outfile.open(outname1, std::ios::out);
 			
 			std::ofstream outfile2;
 			outfile2.open("arclength.txt", std::ios::out);
@@ -3127,8 +3097,8 @@ namespace Nektar
 					use_arclength = true;
 					if(use_guessGivenNi)
 					{
-						delta_param = findMinParam(indices_to_be_continued);
-						delta_param = max(m_kinvis/2000.0, min(step * m_kinvis, delta_param));
+						real_delta_param = findMinParam(indices_to_be_continued);
+						delta_param = max(m_kinvis/2000.0, min(step * m_kinvis, real_delta_param));
 						cout<<"delta_param = "<<delta_param<<endl;
 					}
 				}
@@ -3226,12 +3196,12 @@ namespace Nektar
 				
 				//deflation
 				cout<<"\nBegin deflation"<<endl;
-				deflate = true;
+				deflate = use_deflation;
 				int prev_solutions = local_indices_to_be_continued.size();
 				
 				//use_deflation_now = true;
-				use_deflation_now = (local_indices_to_be_continued.size()<3);
-				for(int i = 0; i < prev_solutions && use_deflation_now && total_solutions_found < m_maxIt; i++)// && ((m_kinvis>9.28 && m_kinvis<9.7 && local_indices_to_be_continued.size()<3) || (m_kinvis>3 && m_kinvis<4.3 && local_indices_to_be_continued.size()<4)); i++)
+				use_deflation_now = /*(last_real_delta_param > real_delta_param);*/(local_indices_to_be_continued.size()<3 || (m_kinvis<0.5 && local_indices_to_be_continued.size()<5));
+				for(int i = 0; i < prev_solutions && use_deflation && use_deflation_now && total_solutions_found < m_maxIt; i++)// && ((m_kinvis>9.28 && m_kinvis<9.7 && local_indices_to_be_continued.size()<3) || (m_kinvis>3 && m_kinvis<4.3 && local_indices_to_be_continued.size()<4)); i++)
 				{
 					curr_i = local_indices_to_be_continued[i];
 					converged = true;
@@ -3297,9 +3267,9 @@ namespace Nektar
 							}
 							local_indices_to_be_continued.push_back(total_solutions_found);
 							param_vector.push_back(m_kinvis);
-							outfile<<m_kinvis<<" "<<sol_y_cont_defl[total_solutions_found][index]<<endl; 
+							//outfile<<m_kinvis<<" "<<sol_y_cont_defl[total_solutions_found][index]<<endl; 
 							outfile2<<arclength_step<<endl; 
-							//FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
+							FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
 							total_solutions_found++;
 							previous_step_solutions++;
 							last_bif_point_solutions_found++;
@@ -3311,6 +3281,7 @@ namespace Nektar
 				
 				indices_to_be_continued.clear();
 				indices_to_be_continued = std::vector<int>(local_indices_to_be_continued);
+				//last_real_delta_param = delta_param;
 			}
 			outfile.close();
 			outfile2.close();
@@ -3339,19 +3310,18 @@ namespace Nektar
 	{
 		std::vector<int> flipperMap;
 		bool found;
-		double tol = 1e-5, center = 3.75;
+		double tol = 1e-7, center = 3.75;
 		
 		for(int i = 0; i < x.size(); i++)
 		{
 			found = false;
 			for(int j = 0; j < x.size() && !found; j++)
 			{
-				if(fabs(x[i]-x[j]) < tol && fabs((y[i]+y[j])/2-center) < tol)
+				if(fabs(x[i]-x[j]) < tol && fabs((y[i]+y[j])/2.-center) < tol)
 				{
 					flipperMap.push_back(j);
 					found = true;
 				}
-				//cout<<x[i]<<" "<<x[j]<<" "<<y[i]<<" "<<y[j]<<endl;
 			}
 		}
 		return flipperMap;

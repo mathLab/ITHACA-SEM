@@ -322,7 +322,7 @@ namespace Nektar
         }
 
         // get artificial viscosity
-        if (m_shockCaptureType == "Physical")
+        if (m_shockCaptureType == "Physical" && m_calcuPhysicalAV)
         {
             GetPhysicalAV(inarray);
         }
@@ -427,22 +427,9 @@ namespace Nektar
         }
 
         // get artificial viscosity
-        if (m_shockCaptureType == "Physical" && m_CalcuPhysicalAV)
+        if (m_shockCaptureType == "Physical" && m_calcuPhysicalAV)
         {
-            m_CalcuPhysicalAV = false;
             GetPhysicalAV(inarray);
-            // Apply Ducros sensor
-            if (m_physicalSensorType == "Ducros")
-            {
-                Ducros(m_muav);
-            }
-            // Apply approximate c0 smoothing
-            if (m_smoothing == "C0")
-            {
-                C0Smooth(m_muav);
-            }
-            // Get trace
-            GetTracePhysicalAV();
         }
 
         string diffName;
@@ -662,16 +649,21 @@ namespace Nektar
         if (m_shockCaptureType == "Physical")
         {
             // Apply Ducros sensor
-            if (m_physicalSensorType == "Ducros")
+            if (m_physicalSensorType == "Ducros" && m_calcuPhysicalAV)
             {
                 Ducros(m_muav);
             }
             // Apply approximate c0 smoothing
-            if (m_smoothing == "C0")
+            if (m_smoothing == "C0" && m_calcuPhysicalAV)
             {
                 C0Smooth(m_muav);
             }
             Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
+            // Freeze AV for Implicit time stepping
+            if (m_explicitDiffusion == false)
+            {
+                m_calcuPhysicalAV = false;
+            }
         }
 
         // Set thermal conductivity
@@ -779,12 +771,12 @@ namespace Nektar
         if (m_shockCaptureType == "Physical")
         {
             // Apply Ducros sensor
-            if (m_physicalSensorType == "Ducros")
+            if (m_physicalSensorType == "Ducros" && m_calcuPhysicalAV)
             {
                 Ducros(m_muav);
             }
             // Apply approximate c0 smoothing
-            if (m_smoothing == "C0")
+            if (m_smoothing == "C0" && m_calcuPhysicalAV)
             {
                 C0Smooth(m_muav);
             }
@@ -991,7 +983,7 @@ namespace Nektar
         Array<OneD,Array<OneD,NekDouble>> outtmp(nConvectiveFields);
 
         // Add artificial viscosity if wanted
-        if (m_shockCaptureType == "Physical")
+        if (m_shockCaptureType == "Physical" && m_calcuPhysicalAV)
         {
             // Apply Ducros sensor
             if (m_physicalSensorType == "Ducros")
@@ -1005,6 +997,11 @@ namespace Nektar
             }
             // Update trace
             GetTracePhysicalAV();
+            // Freeze AV for Implicit time stepping
+            if (m_explicitDiffusion == false)
+            {
+                m_calcuPhysicalAV = false;
+            }
         }
 
         for(int i=0; i<nConvectiveFields;i++)
@@ -2071,9 +2068,6 @@ namespace Nektar
         // Add artificial viscosity if wanted
         if (m_shockCaptureType == "Physical")
         {
-
-
-
             Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
             // Get numerical DmuDT
         }

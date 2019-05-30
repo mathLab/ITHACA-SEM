@@ -284,6 +284,8 @@ namespace Nektar
             while (step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol)
             {
+                // Flag to update AV
+                m_calcuPhysicalAV = true;
 
                 // Frozen preconditioner checks
                 if(    (m_CalcuPrecMatCounter>=m_PrcdMatFreezNumb)
@@ -293,7 +295,6 @@ namespace Nektar
                 {
                     m_CalcuPrecMatCounter = 0;
                     m_CalcuPrecMatFlag    = true;
-                    m_CalcuPhysicalAV     = true;
 
                     // Grow CFL number
                     if(m_CFLGrowth > 1.0 && m_cflSafetyFactor < m_CFLEnd &&

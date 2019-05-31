@@ -852,6 +852,10 @@ void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap(
     int ntotTrace            = (*traceExp).size();
     int ntPnts,noffset;
 
+    m_LocTracephysToTraceIDMap      = Array<OneD, Array<OneD, int> > (2);
+    m_LocTracephysToTraceIDMap[0]   = Array<OneD, int> (m_nFwdLocTracePts,-1);
+    m_LocTracephysToTraceIDMap[1]   = Array<OneD, int> (m_nLocTracePts-m_nFwdLocTracePts,-1);
+
     Array<OneD, NekDouble> tracePnts(m_nTracePts,0.0);
     for(int nt=0; nt<ntotTrace;nt++)
     {
@@ -862,19 +866,48 @@ void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap(
             tracePnts[noffset+i]    =   NekDouble(nt);
         }
     }
-    
+       
     Array<OneD, Array<OneD, NekDouble> > loctracePntsLR(2);
     loctracePntsLR[0]   =   Array<OneD, NekDouble> (m_nFwdLocTracePts,0.0);
     loctracePntsLR[1]   =   Array<OneD, NekDouble> (m_nLocTracePts-m_nFwdLocTracePts,0.0);
 
-    m_LocTracephysToTraceIDMap      = Array<OneD, Array<OneD, int> > (2);
-    m_LocTracephysToTraceIDMap[0]   = Array<OneD, int> (m_nFwdLocTracePts,-1);
-    m_LocTracephysToTraceIDMap[1]   = Array<OneD, int> (m_nLocTracePts-m_nFwdLocTracePts,-1);
+    for(int dir = 0; dir<2;dir++)
+    {
+        int cnt  = 0;
+        int cnt1 = 0;
 
+        Array<OneD, NekDouble> tmp(m_nTracePts,0.0);
+        Vmath::Gathr(m_LocTraceToTraceMap[dir].num_elements(),
+                    tracePnts.get(),
+                    m_LocTraceToTraceMap[dir].get(),
+                    tmp.get());
+
+        for (int i = 0; i < m_interpTrace[dir].num_elements(); ++i)
+        {
+            if (m_interpNfaces[dir][i])
+            {
+                LibUtilities::PointsKey fromPointsKey0 =
+                    std::get<0>(m_interpPoints[dir][i]);
+                LibUtilities::PointsKey toPointsKey0 =
+                    std::get<2>(m_interpPoints[dir][i]);
+
+                int fnp    = fromPointsKey0.GetNumPoints();
+                int tnp    = toPointsKey0.GetNumPoints();
+                int nedges = m_interpNfaces[dir][i];
+
+                for(int ne=0;ne<nedges;ne++)
+                {
+                    Vmath::Fill(fnp,tmp[cnt1],&loctracePntsLR[dir][cnt],1);
+                    cnt += fnp;
+                    cnt1 += tnp;
+                }
+            }
+        }    
+    }
+    
     NekDouble error = 0.0;
     for(int nlr = 0; nlr<2;nlr++)
     {
-        RightIPTWLocEdgesToTraceInterpMat(nlr, tracePnts, loctracePntsLR[nlr]);
         for(int i=0;i<loctracePntsLR[nlr].num_elements();i++)
         {
             m_LocTracephysToTraceIDMap[nlr][i] =   std::round(loctracePntsLR[nlr][i]);

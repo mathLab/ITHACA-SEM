@@ -2823,7 +2823,7 @@ namespace Nektar
 	for ( int index_c_f_bnd = 0; index_c_f_bnd < curr_f_bnd.size(); index_c_f_bnd++ )
 	{
 		//cout<<"val: "<<index_c_f_bnd<<" "<<collect_f_all(index_c_f_bnd,0) * param_vector2[1]<<" "<<collect_f_all(index_c_f_bnd,0)<<" "<<collect_f_all(index_c_f_bnd,1)<<endl;
-		if (collect_f_all(index_c_f_bnd,0) * param_vector2[1] == collect_f_all(index_c_f_bnd,1))
+		if (collect_f_all(index_c_f_bnd,0) * param_vector2[1] == collect_f_all(index_c_f_bnd,1) && collect_f_all(index_c_f_bnd,0) * param_vector2[2] == collect_f_all(index_c_f_bnd,2))
 		//if (collect_f_all(index_c_f_bnd,0) == collect_f_all(index_c_f_bnd,1))
 		{
 			no_dbc_in_loc++;
@@ -2834,8 +2834,8 @@ namespace Nektar
 			no_not_dbc_in_loc++;
 			elem_not_loc_dbc.insert(index_c_f_bnd);
 		}
-		if (fabs(collect_f_all(index_c_f_bnd,0)-125)<1e-2)
-			cout<<"125 "<<collect_f_all(index_c_f_bnd,1)<<endl;
+		//if (fabs(collect_f_all(index_c_f_bnd,0)-125)<1e-2)
+			//cout<<"125 "<<collect_f_all(index_c_f_bnd,1)<<endl;
 	}
 	cout<<"no_dbc_in_loc "<<no_dbc_in_loc<<endl;
     }
@@ -3274,7 +3274,7 @@ namespace Nektar
 		Eigen::MatrixXd adv_matrix;
 		adv_matrix = Get_advection_matrix();
 		Eigen::VectorXd add_to_rhs_adv(M_truth_size); // probably need this for adv and non-adv
-		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;
+		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;// / param_vector2[trafo_iter];
 		Eigen::MatrixXd adv_matrix_simplified = remove_cols_and_rows(adv_matrix, elem_loc_dbc);
 
 		adv_vec_proj_x_newton_RB[trafo_iter] = Eigen::MatrixXd::Zero(RBsize,RBsize);
@@ -3312,7 +3312,7 @@ namespace Nektar
 
 		DoInitialiseAdv(PhysBase_zero , curr_PhysBaseVec_y ); // call with parameter in phys state
 		adv_matrix = Get_advection_matrix();
-		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;   
+		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;// / param_vector2[trafo_iter];   
 		adv_matrix_simplified = remove_cols_and_rows(adv_matrix, elem_loc_dbc);
 		adv_rhs_add = remove_rows(add_to_rhs_adv, elem_loc_dbc);
 		adv_mat_proj = RB.transpose() * adv_matrix_simplified * RB;
@@ -3480,7 +3480,7 @@ namespace Nektar
     void CoupledLinearNS_TT::online_phase()
     {
 		Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
-		bool continuation = false;
+		bool continuation = true;
 		if(!continuation)
 		{
 			// start sweeping 
@@ -3537,7 +3537,7 @@ namespace Nektar
 			outfile_online.open(bif_diagr_name_char, std::ios::out);
 			
 			unsigned int iterations, curr_j;
-			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], rel_err, M, total_steps = 20.0, tol = 1e-13;
+			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], rel_err, M, total_steps = 20.0, tol = 1e-7;
 			unsigned int total_solutions = 0, last_first_param_index = 0, number_of_solutions;
 			std::vector<int> indices_to_be_continued, local_indices_to_be_continued;
 			Array<OneD, double> old_reprojection_x(GetNpoints(), 0.0), old_reprojection_y(GetNpoints(), 0.0);
@@ -3612,7 +3612,6 @@ namespace Nektar
 					}
 					//for(double current_nu = param_vector[current_index]; current_nu > param_vector[current_index+number_of_solutions] + local_step/2 * (2 * (current_nu > param_vector[param_vector.num_elements()-1] + local_step/2) - 1); current_nu -=  local_step)
 					for(double current_nu = param_vector[current_index] - local_step * (param_vector[current_index] != param_vector[0] || current_index == 0); current_nu > param_vector[current_index+number_of_solutions] - local_step/2; current_nu -=  local_step)
-									
 					{
 						local_indices_to_be_continued.resize(0);
 					
@@ -3740,6 +3739,7 @@ namespace Nektar
 							}
 						}
 					}
+					
 					
 					//deflation						////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					cout<<"Deflation over "<<local_indices_to_be_continued.size()<<" solutions"<<endl;
@@ -3874,8 +3874,7 @@ namespace Nektar
 					cout<<endl; 
 					
 					indices_to_be_continued.clear();
-					indices_to_be_continued = std::vector<int>(local_indices_to_be_continued);
-					//cout<<"flag = "<<(2 * (current_nu > param_vector[param_vector.num_elements()-1] + local_step/2) - 1)<<" "<<current_nu<<" "<<param_vector[param_vector.num_elements()-1]<<" "<<local_step<<endl;
+					indices_to_be_continued = std::vector<int>(local_indices_to_be_continued);					
 					}
 					
 					while(param_vector[current_index] == param_vector[current_index+1] && current_index < param_vector.num_elements())
@@ -4069,7 +4068,12 @@ namespace Nektar
 	{
 		param_vector2_tmp = Array<OneD, NekDouble> (2);
 		for(int i = 0; i<param_vector2_tmp.num_elements(); i++)
-			param_vector2_tmp[i] = 1-0.01*i;
+			param_vector2_tmp[i] = 1-0.01*i;  //se solo 2 sono giusti con tanta differenza, che sia che quello snapshot diventa piú importante?
+			
+		//param_vector2_tmp[0] = 1;
+		//param_vector2_tmp[1] = 0.99;
+		//param_vector2_tmp[2] = 0.98;
+		//param_vector2_tmp[9] = 0.01;
 	}
 	else
 	{
@@ -4206,7 +4210,7 @@ namespace Nektar
 			for(int k = 0; k < max(param_vector2.num_elements(),param_vector.num_elements()); k++)
 				cout<<"params: \t"<<param_vector[k]<<" \t"<<param_vector2[k]<<endl;	
 			
-			use_Newton = 0; //the second param only works with Oseen
+			use_Newton = 1; //the second param only works with Oseen
 		}
 		else
 		{
@@ -4472,8 +4476,8 @@ RBsize--;
 		else
 		{
 			reconstruct_solution(row_index) = f_bnd_dbc_full_size(row_index) * scaling;
-			if(f_bnd_dbc_full_size(row_index) > 100)
-				cout<<"val: "<<f_bnd_dbc_full_size(row_index)<<" "<<reconstruct_solution(row_index)<<" "<<scaling<<endl;
+			//if(f_bnd_dbc_full_size(row_index) > 100)
+				//cout<<"val: "<<f_bnd_dbc_full_size(row_index)<<" "<<reconstruct_solution(row_index)<<" "<<scaling<<endl;
 		}
 	}
 	return reconstruct_solution;

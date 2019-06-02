@@ -219,6 +219,13 @@ public:
         Array<OneD, NekDouble> &field);
 
     MULTI_REGIONS_EXPORT void CalcuLocTracephysToTraceIDMap(
+        const ExpListSharedPtr &tracelist,
+        const int               ndim);
+    
+    MULTI_REGIONS_EXPORT void CalcuLocTracephysToTraceIDMap_2D(
+        const ExpListSharedPtr &tracelist);
+
+    MULTI_REGIONS_EXPORT void CalcuLocTracephysToTraceIDMap_3D(
         const ExpListSharedPtr &tracelist);
 
     /**

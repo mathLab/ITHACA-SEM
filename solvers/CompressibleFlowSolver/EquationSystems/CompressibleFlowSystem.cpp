@@ -192,7 +192,7 @@ namespace Nektar
             locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(map);
             locTraceToTraceMap->SetflagTracephysToLeftRightExpphysMap(flag);
 
-            locTraceToTraceMap->CalcuLocTracephysToTraceIDMap(m_fields[0]->GetTrace());
+            locTraceToTraceMap->CalcuLocTracephysToTraceIDMap(m_fields[0]->GetTrace(),m_spacedim);
             for(int i=1;i<nvariables;i++)
             {
                 m_fields[i]->GetlocTraceToTraceMap()->SetTracephysToLeftRightExpphysMap(map);

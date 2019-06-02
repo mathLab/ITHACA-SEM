@@ -3874,7 +3874,7 @@ namespace Nektar
                         nTraceCoefMin = nTraceCoef;
                     }
                 }
-                WARNINGL0(nTraceCoefMax==nTraceCoefMin,"nTraceCoefMax!=nTraceCoefMin: Effeciency may be low , if nTraceCoefMax>>nTraceCoefMin");
+                WARNINGL1(nTraceCoefMax==nTraceCoefMin,"nTraceCoefMax!=nTraceCoefMin: Effeciency may be low , if nTraceCoefMax>>nTraceCoefMin");
 
                 int traceID, nfieldPnts, ElmtId, noffset, nElmtPnts;
                 const Array<OneD, const Array<OneD, int > > LocTracephysToTraceIDMap = locTraceToTraceMap->GetLocTracephysToTraceIDMap();

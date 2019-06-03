@@ -278,28 +278,33 @@ namespace Nektar
             NekDouble cpuTime       = 0.0;
             NekDouble elapsed       = 0.0;
 
-            NekDouble tmp_cflSafetyFactor = m_cflSafetyFactor;
             m_CalcuPrecMatCounter = m_PrcdMatFreezNumb;
 
             m_timestepMax = m_timestep;
             while (step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol)
             {
-                if(m_CFLGrowth > 1.0&&m_cflSafetyFactor<m_CFLEnd)
-                {
-                    tmp_cflSafetyFactor = min(m_CFLEnd,m_CFLGrowth*tmp_cflSafetyFactor);
-                }
+                // Flag to update AV
+                m_calcuPhysicalAV = true;
 
-                if(   (m_CalcuPrecMatCounter>=m_PrcdMatFreezNumb)
-                    ||(m_time + m_timestep > m_fintime && m_fintime > 0.0)
-                    ||(m_checktime && m_time + m_timestep - lastCheckTime >= m_checktime))
+                // Frozen preconditioner checks
+                if(    (m_CalcuPrecMatCounter>=m_PrcdMatFreezNumb)
+                    || (m_time + m_timestep > m_fintime && m_fintime > 0.0)
+                    || (m_checktime && m_time + m_timestep - lastCheckTime >=
+                        m_checktime))
                 {
-
-                    m_CalcuPrecMatFlag    = true;
                     m_CalcuPrecMatCounter = 0;
-                    m_cflSafetyFactor     = tmp_cflSafetyFactor;
-                    m_CalcuPhysicalAV     = true;
+                    m_CalcuPrecMatFlag    = true;
 
+                    // Grow CFL number
+                    if(m_CFLGrowth > 1.0 && m_cflSafetyFactor < m_CFLEnd &&
+                        step != m_initialStep)
+                    {
+                        m_cflSafetyFactor =
+                            min(m_CFLEnd, m_CFLGrowth * m_cflSafetyFactor);
+                    }
+
+                    // Update time step
                     if (m_cflSafetyFactor)
                     {
                         m_timestep = GetTimeStep(fields);
@@ -318,6 +323,7 @@ namespace Nektar
                         m_timestep     = lastCheckTime - m_time;
                         doCheckTime    = true;
                     }
+
                 }
 
                 m_CalcuPrecMatCounter++;

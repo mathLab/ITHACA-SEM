@@ -522,11 +522,18 @@ namespace Nektar
                 const int                                               nfluxDir,
                 const int                                               nDervDir,
                       Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray);
-#endif
+#endif,
 
+            /// Compute primary derivatives
+            virtual void v_GetPrimVar(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+                  Array<OneD, Array<OneD, NekDouble>>         &primVar);
+
+            /// Compute divergence and curl squared
             void GetDivCurl(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1);
+                const Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &pVarDer);
 
         };
 

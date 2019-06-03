@@ -141,7 +141,7 @@ namespace Nektar
             int m_TotLinItePerStep=600;
 
             /// flag to update artificial viscosity
-            bool m_CalcuPhysicalAV = true;
+            bool m_calcuPhysicalAV = true;
 
 #endif
             /// Initialises UnsteadySystem class members.

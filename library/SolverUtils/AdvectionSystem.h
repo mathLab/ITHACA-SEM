@@ -80,6 +80,10 @@ protected:
 private:
     /// dump cfl estimate
     int         m_cflsteps;
+    /// Dump field if cfl is higher than CFLSafetyOutput treshold
+    NekDouble   m_cflSafetyOutput;
+    /// Number of timesteps after which CFLSafetyOutput is activated
+    int   m_cflSafetyOutputDelay;    
 
 };
 

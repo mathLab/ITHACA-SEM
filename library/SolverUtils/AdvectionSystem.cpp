@@ -65,6 +65,8 @@ void AdvectionSystem::v_InitObject()
 {
     UnsteadySystem::v_InitObject();
     m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
+    m_session->LoadParameter("CFLSafetyOutput", m_cflSafetyOutput, 0);
+    m_session->LoadParameter("CFLSafetyOutputDelay", m_cflSafetyOutputDelay, 0);    
 }
 
 /**
@@ -74,22 +76,32 @@ bool AdvectionSystem::v_PostIntegrate(int step)
 {
     bool result = UnsteadySystem::v_PostIntegrate(step);
 
-    if(m_cflsteps && !((step+1)%m_cflsteps))
+    if(m_cflsteps || m_cflSafetyOutput)
     {
         int elmtid;
         NekDouble cfl = GetCFLEstimate(elmtid);
 
-        if(m_comm->GetRank() == 0)
+        if(!((step+1)%m_cflsteps))
         {
-            if( m_HomogeneousType == eNotHomogeneous)
+            if(m_comm->GetRank() == 0)
             {
-                cout << "CFL: ";
+                if( m_HomogeneousType == eNotHomogeneous)
+                {
+                    cout << "CFL: ";
+                }
+                else
+                {
+                    cout << "CFL (zero plane): ";
+                }
+                cout << cfl << " (in elmt " << elmtid << ")" << endl;
             }
-            else
-            {
-                cout << "CFL (zero plane): ";
-            }
-            cout << cfl << " (in elmt " << elmtid << ")" << endl;
+        }
+        
+        // At each timestep, if cflSafetyOutput is set check if cfl is above treshold
+        if(m_cflSafetyOutput && cfl > m_cflSafetyOutput && step > m_cflSafetyOutputDelay)
+        {
+            Checkpoint_Output(-1);
+            m_cflSafetyOutput = 0;            
         }
     }
 

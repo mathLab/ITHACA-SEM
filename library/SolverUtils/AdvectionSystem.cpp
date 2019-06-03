@@ -98,7 +98,7 @@ bool AdvectionSystem::v_PostIntegrate(int step)
         }
         
         // At each timestep, if cflSafetyOutput is set check if cfl is above treshold
-        if(m_cflSafetyOutput && cfl > m_cflSafetyOutput && step > m_cflSafetyOutputDelay)
+        if(m_cflSafetyOutput && cfl >= m_cflSafetyOutput && step >= m_cflSafetyOutputDelay)
         {
             Checkpoint_Output(-1);
             m_cflSafetyOutput = 0;            

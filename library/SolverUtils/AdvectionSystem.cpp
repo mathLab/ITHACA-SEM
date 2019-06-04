@@ -65,8 +65,8 @@ void AdvectionSystem::v_InitObject()
 {
     UnsteadySystem::v_InitObject();
     m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
-    m_session->LoadParameter("CFLSafetyOutput", m_cflSafetyOutput, 0);
-    m_session->LoadParameter("CFLSafetyOutputDelay", m_cflSafetyOutputDelay, 0);    
+    m_session->LoadParameter("IO_CFLWriteFld", m_cflWriteFld, 0);
+    m_session->LoadParameter("IO_CFLWriteFldNumSteps", m_cflWriteFldNumSteps, 0);
 }
 
 /**
@@ -76,7 +76,7 @@ bool AdvectionSystem::v_PostIntegrate(int step)
 {
     bool result = UnsteadySystem::v_PostIntegrate(step);
 
-    if(m_cflsteps || m_cflSafetyOutput)
+    if(m_cflsteps || m_cflWriteFld)
     {
         int elmtid;
         NekDouble cfl = GetCFLEstimate(elmtid);
@@ -97,11 +97,12 @@ bool AdvectionSystem::v_PostIntegrate(int step)
             }
         }
         
-        // At each timestep, if cflSafetyOutput is set check if cfl is above treshold
-        if(m_cflSafetyOutput && cfl >= m_cflSafetyOutput && step >= m_cflSafetyOutputDelay)
+        // At each timestep, if cflWriteFld is set check if cfl is above treshold
+        if(m_cflWriteFld && cfl >= m_cflWriteFld && step >= m_cflWriteFldNumSteps)
         {
-            Checkpoint_Output(-1);
-            m_cflSafetyOutput = 0;            
+            std::string outname =  m_sessionName +  "_CFL";
+            WriteFld(outname + ".fld");
+            m_cflWriteFld = 0;            
         }
     }
 

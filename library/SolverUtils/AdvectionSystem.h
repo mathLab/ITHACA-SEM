@@ -79,11 +79,11 @@ protected:
 
 private:
     /// dump cfl estimate
-    int         m_cflsteps;
-    /// Dump field if cfl is higher than CFLSafetyOutput treshold
-    NekDouble   m_cflSafetyOutput;
-    /// Number of timesteps after which CFLSafetyOutput is activated
-    int   m_cflSafetyOutputDelay;    
+    int m_cflsteps;
+    /// Write field if cfl is higher than IO_CFLWriteFld treshold
+    NekDouble m_cflWriteFld;
+    /// Number of timesteps after which IO_CFLWriteFld is activated
+    int m_cflWriteFldNumSteps;    
 
 };
 

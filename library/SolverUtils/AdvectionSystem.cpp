@@ -76,12 +76,12 @@ bool AdvectionSystem::v_PostIntegrate(int step)
 {
     bool result = UnsteadySystem::v_PostIntegrate(step);
 
-    if(m_cflsteps || m_cflWriteFld)
+    if((m_cflsteps && !((step+1)%m_cflsteps)) || m_cflWriteFld>0)
     {
         int elmtid;
         NekDouble cfl = GetCFLEstimate(elmtid);
 
-        if(!((step+1)%m_cflsteps))
+        if(m_cflsteps && !((step+1)%m_cflsteps))
         {
             if(m_comm->GetRank() == 0)
             {
@@ -98,7 +98,7 @@ bool AdvectionSystem::v_PostIntegrate(int step)
         }
         
         // At each timestep, if cflWriteFld is set check if cfl is above treshold
-        if(m_cflWriteFld && cfl >= m_cflWriteFld && step >= m_cflWriteFldNumSteps)
+        if(m_cflWriteFld>0 && cfl >= m_cflWriteFld && step >= m_cflWriteFldNumSteps)
         {
             std::string outname =  m_sessionName +  "_CFL";
             WriteFld(outname + ".fld");

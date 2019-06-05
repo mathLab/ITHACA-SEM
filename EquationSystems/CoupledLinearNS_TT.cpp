@@ -3537,10 +3537,11 @@ namespace Nektar
 			outfile_online.open(bif_diagr_name_char, std::ios::out);
 			
 			unsigned int iterations, curr_j;
-			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], rel_err, M, total_steps = 20.0, tol = 1e-7;
-			unsigned int total_solutions = 0, last_first_param_index = 0, number_of_solutions;
+			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], rel_err, M, total_steps = 20.0, tol = 5e-5, scaling_steps = 10, current_scaling = 1, norm_min;
+			unsigned int total_solutions = 0, last_first_param_index = 0, number_of_solutions, restart_for_scaling = 0, no_restarts_for_scaling = 0;
 			std::vector<int> indices_to_be_continued, local_indices_to_be_continued;
 			Array<OneD, double> old_reprojection_x(GetNpoints(), 0.0), old_reprojection_y(GetNpoints(), 0.0);
+			bool first_step = true;
 			
 			Eigen::VectorXd reconstruct_solution, temp_solve_affine, repro_solve_affine;
 			std::vector<Eigen::VectorXd> solve_affine;
@@ -3590,33 +3591,62 @@ namespace Nektar
 				cout<<"The first step didn't converge"<<endl;
 			else
 			{
-			//for(double current_nu = first_param - (param_vector[0] - param_vector[param_vector.num_elements()-1])/total_steps; current_nu > param_vector[param_vector.num_elements()-1]; current_nu -= (param_vector[0] - param_vector[param_vector.num_elements()-1])/total_steps)
+			
 			for(int current_index = 0; current_index < param_vector.num_elements()-1; current_index++)			
 			{
-				if(param_vector[current_index] > param_vector[current_index + 1])
+				if(current_index>0) cout<<"AAAAAAAAAAAAAAAA "<<param_vector2[current_index]<<" "<< param_vector2[current_index-1]<<" "<< no_restarts_for_scaling<<endl;
+				if(current_index>0 && param_vector2[current_index] < param_vector2[current_index-1] && no_restarts_for_scaling < scaling_steps) // to use little steps for the scaling
+				{
+					cout<<"info: "<<current_scaling - (param_vector2[current_index-1] - param_vector2[current_index])/scaling_steps<<" "<<param_vector2[current_index-1]<<" "<<param_vector2[current_index]<<" "<<current_index<<endl;
+					current_scaling -= (param_vector2[current_index-1] - param_vector2[current_index])/scaling_steps;
+					if(fabs(current_scaling - param_vector2[current_index]) < 1e-10)
+					{
+						restart_for_scaling = current_index;//-1;
+					}
+					if((current_scaling < param_vector2[param_vector2.num_elements()-1]-1e-9 && param_vector2[param_vector2.num_elements()-1]<param_vector2[0]) ||
+					   (current_scaling > param_vector2[param_vector2.num_elements()-1]+1e+9 && param_vector2[param_vector2.num_elements()-1]>param_vector2[0])) // to stop the loop
+						current_index = param_vector.num_elements();
+					else
+					{
+						no_restarts_for_scaling++;
+						current_index = restart_for_scaling;
+						
+						indices_to_be_continued.clear();
+						indices_to_be_continued = std::vector<int>(1);
+						indices_to_be_continued[0] = last_first_param_index;
+						last_first_param_index = total_solutions-1;
+					}
+				}
+				if(current_index>0 && param_vector2[current_index] < param_vector2[current_index-1] && no_restarts_for_scaling >= scaling_steps)
+				{
+					cout<<"AZZERATOOOOOOOOOOOOOOOOOOO"<<endl;
+					no_restarts_for_scaling = 0;
+				}
+				cout<<"info2 "<<param_vector[current_index] <<" "<< param_vector[current_index + 1] <<" "<<(current_index < param_vector.num_elements()-1)<<endl;
+				if(param_vector[current_index] > param_vector[current_index + 1] && current_index < param_vector.num_elements()-1)
 				{
 					number_of_solutions = 1;
-					double current_scaling = param_vector2[current_index];
 					while(param_vector[current_index] == param_vector[current_index+number_of_solutions] && current_index+number_of_solutions < param_vector.num_elements()-1)
 					{
 						number_of_solutions++;
 					}
-					//double current_nu = param_vector[current_index];
 					double local_step = (param_vector[current_index] - param_vector[current_index+number_of_solutions])/total_steps;
-					if(param_vector[current_index] == param_vector[0]) // start again with the second parameter
+					/*if(param_vector[current_index] == param_vector[0]) // start again with the second parameter
 					{
 						indices_to_be_continued.clear();
 						indices_to_be_continued = std::vector<int>(1);
 						indices_to_be_continued[0] = last_first_param_index;
 						last_first_param_index = total_solutions;
-					}
-					//for(double current_nu = param_vector[current_index]; current_nu > param_vector[current_index+number_of_solutions] + local_step/2 * (2 * (current_nu > param_vector[param_vector.num_elements()-1] + local_step/2) - 1); current_nu -=  local_step)
-					for(double current_nu = param_vector[current_index] - local_step * (param_vector[current_index] != param_vector[0] || current_index == 0); current_nu > param_vector[current_index+number_of_solutions] - local_step/2; current_nu -=  local_step)
+					}*/
+					
+				cout<<"info3: "<<param_vector[current_index] - local_step * (param_vector[current_index] != param_vector[0] || first_step)<<" "<<param_vector[current_index+number_of_solutions] - local_step/2 <<" "<<current_index<<" "<< param_vector.num_elements()-1<<endl;
+					for(double current_nu = param_vector[current_index] - local_step * (param_vector[current_index] != param_vector[0] || first_step); current_nu > param_vector[current_index+number_of_solutions] - local_step/2; current_nu -=  local_step)
 					{
 						local_indices_to_be_continued.resize(0);
 					
 					//continuation						////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					cout<<"Continuation"<<endl;
+					cout<<"params: "<<current_nu<<" "<<current_scaling<<endl;
 					for(int j = 0; j < indices_to_be_continued.size(); j++)
 					{
 						curr_j = indices_to_be_continued[j];
@@ -3643,11 +3673,12 @@ namespace Nektar
 								else
 									curr_xy_projected(i,1) = temp_solve_affine(i);
 							}
+							norm_min = 1e20;
 							
 							if(j > 0) //if the step is too large some continuation could find a solution on a different branch, so I use deflation also in the continuation step
 							{
 								//computation of tau
-								double norm_min = 1e20, norm_i;
+								double norm_i;
 								int closest_sol;
 								for(int k = 0; k < local_indices_to_be_continued.size(); k++)
 								{
@@ -3694,7 +3725,7 @@ namespace Nektar
 									tau = 1 / (1 - 1/(1+1/norm_min) * scalar_product / (norm_min * norm_min * norm_min));	
 								if(power == 2)
 									tau = 2 / (1 - 1/(1+1/norm_min/norm_min) * scalar_product / (norm_min * norm_min * norm_min * norm_min));	
-								if(norm_min < 1e-2)
+								if(norm_min < 5e-2)
 									tau = -5;							
 									
 								if(tau < 0 && tau > -0.1)
@@ -3717,7 +3748,7 @@ namespace Nektar
 							std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
 							curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
 					
-							if(rel_err <= tol)
+							if(rel_err <= tol && norm_min > 1e-2)
 							{
 								cout<<"Converged in "<<iterations<<" steps"<<endl;
 								solve_affine.push_back(temp_solve_affine);
@@ -3761,7 +3792,7 @@ namespace Nektar
 							int random_sign = ((double)rand())/RAND_MAX-0.5;
 							if(random_sign < 0)
 								random *= -1;
-							last_sol[i] = last_sol[i] * (1+random/1e2) *0; // at the moment the initial guess is 0
+							last_sol[i] = last_sol[i] * (1+random/1e2); // at the moment the initial guess is 0
 						}
 						
 						repro_solve_affine = RB * last_sol;
@@ -3771,14 +3802,15 @@ namespace Nektar
 						curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
 						affine_vec_proj = gen_affine_vec(current_nu, current_scaling, reconstruct_solution);
 						
-						while(rel_err > tol && ++iterations<50)
+						while(rel_err > tol && ++iterations<100)
 						{	
 							Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
 							//Eigen::VectorXd affine_vec_proj = gen_affine_vec(current_nu, last_sol);
 							temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
 							
 							//computation of tau
-							double norm_min = 1e20, norm_i;
+							double norm_i;
+							norm_min = 1e20;
 							int closest_sol;
 							for(int k = 0; k < local_indices_to_be_continued.size(); k++)
 							{
@@ -3826,7 +3858,7 @@ namespace Nektar
 							if(power == 2)
 								tau = 2 / (1 - 1/(1+1/norm_min/norm_min) * scalar_product / (norm_min * norm_min * norm_min * norm_min));	
 							if(norm_min < 5e-2)
-								tau = -2;							
+								tau = -3;							
 								
 							//cout<<"real tau "<<tau; 
 							//tau = tau/fabs(tau);
@@ -3837,7 +3869,7 @@ namespace Nektar
 							if(tau > 1)
 								tau = 1;		
 							temp_solve_affine = tau * temp_solve_affine + (1-tau) * last_sol;
-							
+							//cout<<"tau "<<tau<<endl;
 							rel_err = (temp_solve_affine-last_sol).norm()/last_sol.norm();
 							last_sol = temp_solve_affine;
 							//cout<<", tau "<<tau<<", scal_prod "<<scalar_product<<", norm "<<norm_min<<", M_inv "<<1/(1+1/norm_min); 
@@ -3850,9 +3882,9 @@ namespace Nektar
 							curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
 							
 							
-							if(rel_err <= tol)
+							if(rel_err <= tol && norm_min > 1)
 							{
-								cout<<"Converged in "<<iterations<<" steps"<<endl;
+								cout<<"Converged in "<<iterations<<" steps with norm_min = "<<norm_min<<endl;
 								solve_affine.push_back(temp_solve_affine);
 								local_indices_to_be_continued.push_back(total_solutions);
 								total_solutions++;
@@ -3882,6 +3914,7 @@ namespace Nektar
 						current_index++;
 					}
 				}
+				first_step = false;
 			}
 		}
 		outfile_online.close();
@@ -4066,9 +4099,10 @@ namespace Nektar
 	Array<OneD, NekDouble> param_vector2_tmp;
 	if (m_session->DefinesParameter("two_params") && m_session->GetParameter("two_params") == 1) 
 	{
-		param_vector2_tmp = Array<OneD, NekDouble> (2);
+		param_vector2_tmp = Array<OneD, NekDouble> (4);
+		param_vector2_tmp = Array<OneD, NekDouble> (4);
 		for(int i = 0; i<param_vector2_tmp.num_elements(); i++)
-			param_vector2_tmp[i] = 1-0.01*i;  //se solo 2 sono giusti con tanta differenza, che sia che quello snapshot diventa piú importante?
+			param_vector2_tmp[i] = 1-0.05*i;  
 			
 		//param_vector2_tmp[0] = 1;
 		//param_vector2_tmp[1] = 0.99;
@@ -4145,7 +4179,25 @@ namespace Nektar
 	{
 		if(use_continuation)
 		{
-			Eigen::VectorXd params;
+			/*Array<OneD, Array<OneD, NekDouble> > test1 = Array<OneD, Array<OneD, NekDouble> >(2);
+			test1[0] = Array<OneD, NekDouble>(1);
+			test1[1] = Array<OneD, NekDouble>(1);
+			test1[0][0] = 10;
+			test1[1][0] = 11;
+			
+			Array<OneD, Array<OneD, NekDouble> > test = Array<OneD, Array<OneD, NekDouble> >(3);
+			test[0] = Array<OneD, NekDouble>(1);
+			test[0][0] = test1[0][0];
+			//test[1] = test1[1];
+			
+			test1[0][0] = 0;
+			test1[1][0] = 0;
+			
+			for(int a = 0; a < 3; a++)
+				cout<<"test... "<<test[a][0]<<endl;*/
+				
+				
+			Eigen::VectorXd params;  // this part works but can't manage a different number of snapshots for different scaling values
 			params.resize(1);
 			params[0] = param_vector[0];
 			babyCLNS_trafo.snapshot_computation_plot_rel_errors = snapshot_computation_plot_rel_errors;
@@ -4211,6 +4263,130 @@ namespace Nektar
 				cout<<"params: \t"<<param_vector[k]<<" \t"<<param_vector2[k]<<endl;	
 			
 			use_Newton = 1; //the second param only works with Oseen
+			
+			/*Eigen::VectorXd params;
+			params.resize(1);
+			params[0] = param_vector[0];
+			babyCLNS_trafo.snapshot_computation_plot_rel_errors = snapshot_computation_plot_rel_errors;
+			snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
+			flipperMap = babyCLNS_trafo.getFlipperMap();
+			
+			number_of_snapshots = params.size() -1; 
+			Nmax = number_of_snapshots;
+			snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+			snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+			
+			
+			Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection_temp = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+			Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection_temp = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+			
+			for(int i = 0; i < Nmax; i++)
+			{
+				snapshot_x_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[0][i+1].num_elements());   
+				snapshot_y_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[1][i+1].num_elements());
+				
+				snapshot_x_collection_temp[i] = Array<OneD, NekDouble> (snapshots_from_continuation[0][i+1].num_elements());   
+				snapshot_y_collection_temp[i] = Array<OneD, NekDouble> (snapshots_from_continuation[1][i+1].num_elements());
+				
+				for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
+				{
+					snapshot_x_collection[i][j] = snapshots_from_continuation[0][i+1][j];
+					snapshot_x_collection_temp[i][j] = snapshots_from_continuation[0][i+1][j];
+				}
+				for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
+				{
+					snapshot_y_collection[i][j] = snapshots_from_continuation[1][i+1][j];
+					snapshot_y_collection_temp[i][j] = snapshots_from_continuation[0][i+1][j];
+				}
+			}
+			
+			param_vector = Array<OneD, NekDouble> (Nmax);
+			param_vector2 = Array<OneD, NekDouble> (Nmax);
+			Array<OneD, NekDouble> param_vector_temp = Array<OneD, NekDouble> (Nmax);
+			Array<OneD, NekDouble> param_vector2_temp = Array<OneD, NekDouble> (Nmax);
+			for(int i = 0; i < Nmax; i++)
+			{
+				param_vector[i] = params[i+1];  
+				param_vector2[i] = param_vector2_tmp[0];
+				
+				param_vector_temp[i] = params[i+1];  
+				param_vector2_temp[i] = param_vector2_tmp[0];
+			}
+				
+			ref_param_index = 0;
+			ref_param_nu = 1;
+				
+			for(int k = 0; k < param_vector2_tmp.num_elements()-1; k++)
+			{
+				params.resize(1);
+				params[0] = param_vector[0];
+				babyCLNS_trafo.second_param = param_vector2_tmp[k+1];
+				snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
+				Nmax = params.size()-1;
+
+			cout<<"check1"<<endl;
+				snapshot_x_collection_temp = Array<OneD, Array<OneD, NekDouble> > (snapshot_x_collection.num_elements());
+				snapshot_y_collection_temp = Array<OneD, Array<OneD, NekDouble> > (snapshot_x_collection.num_elements());
+				param_vector_temp = Array<OneD, NekDouble> (snapshot_x_collection.num_elements());
+				param_vector2_temp = Array<OneD, NekDouble> (snapshot_x_collection.num_elements());
+				for(int i = 0; i < snapshot_x_collection.num_elements(); i++) // copy of the previous vectors
+				{
+			cout<<"check2"<<endl;
+					for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
+						snapshot_x_collection_temp[i][j] = snapshot_x_collection[i][j];
+					for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
+						snapshot_y_collection_temp[i][j] = snapshot_y_collection[i][j];
+			cout<<"check3"<<endl;
+					param_vector_temp[i] = param_vector[i];
+					param_vector2_temp[i] = param_vector2[i];
+				}	
+			cout<<"check4"<<endl;
+				
+				int new_size = snapshot_x_collection.num_elements()+Nmax;
+				cout<<"old and new size: "<<snapshot_x_collection.num_elements()<<" "<<new_size<<endl;
+				param_vector_temp = Array<OneD, NekDouble> (new_size);
+				param_vector2_temp = Array<OneD, NekDouble> (new_size);
+			cout<<"check4.5"<<endl;	
+				delete [] &snapshot_x_collection;
+				delete [] &snapshot_y_collection;
+				snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (new_size);
+				snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (new_size);	
+				
+				for(int i = 0; i < snapshot_x_collection.num_elements() - Nmax; i++) // copying back the previous vectors
+				{
+			cout<<"check5"<<endl;
+					for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
+						snapshot_x_collection[i][j] = snapshot_x_collection_temp[i][j];
+					for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
+						snapshot_y_collection[i][j] = snapshot_y_collection_temp[i][j];
+			cout<<"check6"<<endl;
+					param_vector[i] = param_vector_temp[i];
+					param_vector2[i] = param_vector2_temp[i];
+				}			
+				
+				for(int i = snapshot_x_collection.num_elements() - Nmax; i < snapshot_x_collection.num_elements(); i++)
+				{
+			cout<<"check7"<<endl;
+					snapshot_x_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[0][i+1-snapshot_x_collection.num_elements()+Nmax].num_elements());   
+					snapshot_y_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[1][i+1-snapshot_x_collection.num_elements()+Nmax].num_elements());
+					
+			cout<<"check8"<<endl;
+					for(int j = 0; j < snapshots_from_continuation[0][i+1-snapshot_x_collection.num_elements()+Nmax].num_elements(); j++)
+						snapshot_x_collection[i][j] = snapshots_from_continuation[0][i+1-snapshot_x_collection.num_elements()+Nmax][j];
+					for(int j = 0; j < snapshots_from_continuation[1][i+1-snapshot_x_collection.num_elements()+Nmax].num_elements(); j++)
+						snapshot_y_collection[i][j] = snapshots_from_continuation[1][i+1-snapshot_x_collection.num_elements()+Nmax][j];
+			cout<<"check9"<<endl;
+					param_vector[i] = params[i+1-snapshot_x_collection.num_elements()+Nmax];
+					param_vector2[i] = param_vector2_tmp[i+1-snapshot_x_collection.num_elements()+Nmax];
+				}
+			}
+			babyCLNS_trafo.param_vector2 = param_vector2;
+			
+			cout<<endl<<endl;
+			for(int k = 0; k < max(param_vector2.num_elements(),param_vector.num_elements()); k++)
+				cout<<"params: \t"<<param_vector[k]<<" \t"<<param_vector2[k]<<endl;	
+			
+			use_Newton = 1; //the second param only works with Oseen  */
 		}
 		else
 		{
@@ -4459,7 +4635,7 @@ RBsize--;
 
 	}
 
-	return current_scaling * (- the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*current_scaling*add_rhs_Newton) ; 
+	return current_scaling * (- the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5/current_scaling*add_rhs_Newton) ; 
     }
 
     Eigen::VectorXd CoupledLinearNS_TT::reconstruct_solution_w_different_dbc(Eigen::VectorXd reprojected_solve, double scaling)

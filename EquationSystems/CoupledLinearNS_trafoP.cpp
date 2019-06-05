@@ -1811,7 +1811,7 @@ namespace Nektar
 	
 	converged_solution[0] = init_snapshot_x;
 	converged_solution[1] = init_snapshot_y;
-	
+	cout<<"DoSolve finished"<<endl;
 	if( write_SEM_field )
 	{
 		std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
@@ -3201,7 +3201,7 @@ namespace Nektar
 				
 				//use_deflation_now = true;
 				use_deflation_now = /*(last_real_delta_param > real_delta_param);*/(local_indices_to_be_continued.size()<3 || (m_kinvis<0.5 && local_indices_to_be_continued.size()<5));
-				for(int i = 0; i < prev_solutions && use_deflation && use_deflation_now && total_solutions_found < m_maxIt; i++)// && ((m_kinvis>9.28 && m_kinvis<9.7 && local_indices_to_be_continued.size()<3) || (m_kinvis>3 && m_kinvis<4.3 && local_indices_to_be_continued.size()<4)); i++)
+				for(int i = 0; i < prev_solutions && use_deflation && use_deflation_now && total_solutions_found+1 < m_maxIt; i++)// && ((m_kinvis>9.28 && m_kinvis<9.7 && local_indices_to_be_continued.size()<3) || (m_kinvis>3 && m_kinvis<4.3 && local_indices_to_be_continued.size()<4)); i++)
 				{
 					curr_i = local_indices_to_be_continued[i];
 					converged = true;

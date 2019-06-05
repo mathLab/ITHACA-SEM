@@ -1848,8 +1848,8 @@ namespace Nektar
 	        variables[i] = "p";   
 	    
 	    std::stringstream sstm;
-		//sstm << "_" << m_sessionName <<"_snapshot_" << parameter<<"_of_"<<total_solutions_found<<".fld";
-		sstm << "Offline_"<<second_param<<"_"<<(total_solutions_found + 1)<<".fld";
+		//sstm << "Offline_"<<second_param<<"_"<<(total_solutions_found + 1)<<".fld";
+		sstm << "Offline_"<<(total_solutions_found + 1)<<".fld";
 		std::string outname = sstm.str();
 	        
 	    WriteFld(outname,m_fields_t[0],fieldcoeffs,variables); 

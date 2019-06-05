@@ -262,7 +262,7 @@ namespace Nektar
                 return m_session->GetVariable(indx);
             }
 
-            const std::map<int, LibUtilities::CommSharedPtr> &GetBoundaryCommunicators() const
+            std::map<int, LibUtilities::CommSharedPtr> GetBoundaryCommunicators() const
             {
                 return m_boundaryCommunicators;
             }

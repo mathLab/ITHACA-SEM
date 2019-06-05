@@ -66,7 +66,7 @@ void AdvectionSystem::v_InitObject()
     UnsteadySystem::v_InitObject();
     m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
     m_session->LoadParameter("IO_CFLWriteFld", m_cflWriteFld, 0);
-    m_session->LoadParameter("IO_CFLWriteFldWaitSteps", m_cflWriteWaitSteps, 0);
+    m_session->LoadParameter("IO_CFLWriteFldWaitSteps", m_cflWriteFldWaitSteps, 0);
 }
 
 /**
@@ -98,7 +98,7 @@ bool AdvectionSystem::v_PostIntegrate(int step)
         }
         
         // At each timestep, if cflWriteFld is set check if cfl is above treshold
-        if(m_cflWriteFld>0 && cfl >= m_cflWriteFld && step >= m_cflWriteFldNumSteps)
+        if(m_cflWriteFld>0 && cfl >= m_cflWriteFld && step >= m_cflWriteFldWaitSteps)
         {
             std::string outname =  m_sessionName +  "_CFLWriteFld";
             WriteFld(outname + ".fld");

@@ -168,21 +168,22 @@ namespace Nektar
         const int                                                       nDirctn,
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
         const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
-              Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray);
 
     virtual void v_GetFluxDerivJacDirctn(
         const MultiRegions::ExpListSharedPtr                            &explist,
         const Array<OneD, const Array<OneD, NekDouble> >                &normals,
         const int                                                       nDervDir,
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-              Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray,
+        const int                                                       nfluxDir);
     
-    // virtual void v_GetFluxDerivJacDirctn(
-    //     const MultiRegions::ExpListSharedPtr                            &explist,
-    //     const int                                                       nFluxDir,
-    //     const int                                                       nDervDir,
-    //     const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-    //           Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
+    virtual void v_GetFluxDerivJacDirctn(
+        const MultiRegions::ExpListSharedPtr                            &explist,
+        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
+        const int                                                       nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+              Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
     
     virtual void v_GetDiffusionFluxJacPoint(
             const int                                           nelmt,

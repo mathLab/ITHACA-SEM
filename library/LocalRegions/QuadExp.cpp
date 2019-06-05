@@ -536,6 +536,57 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);
         }
 
+        void QuadExp::v_ProjectVectorintoStandardExp(
+            const int dir,
+            const Array<OneD, const NekDouble>      &inarray,
+            Array<OneD, Array<OneD, NekDouble> >    &outarray)
+        {
+            ASSERTL1((dir==0) || (dir==1) || (dir==2),
+                     "Invalid direction.");
+            ASSERTL1((dir==2) ? (m_geom->GetCoordim() ==3):true,
+                     "Invalid direction.");
+
+            int    nquad0  = m_base[0]->GetNumPoints();
+            int    nquad1  = m_base[1]->GetNumPoints();
+            int    nqtot   = nquad0*nquad1;
+            int    nmodes0 = m_base[0]->GetNumModes();
+
+            const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors(GetPointsKeys());
+
+            Array<OneD, NekDouble> tmp1 =  outarray[0];
+            Array<OneD, NekDouble> tmp2 =  outarray[1];
+            Array<OneD, NekDouble> tmp3(m_ncoeffs);
+            Array<OneD, NekDouble> tmp4(nmodes0*nquad1);
+
+            if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vmul(nqtot,
+                            &df[2*dir][0], 1,
+                            inarray.get(), 1,
+                            tmp1.get(), 1);
+                Vmath::Vmul(nqtot,
+                            &df[2*dir+1][0], 1,
+                            inarray.get(), 1,
+                            tmp2.get(),1);
+            }
+            else
+            {
+                Vmath::Smul(nqtot,
+                            df[2*dir][0], inarray.get(), 1,
+                            tmp1.get(), 1);
+                Vmath::Smul(nqtot,
+                            df[2*dir+1][0], inarray.get(), 1,
+                            tmp2.get(), 1);
+            }
+
+            // MultiplyByQuadratureMetric(tmp1,tmp1);
+            // MultiplyByQuadratureMetric(tmp2,tmp2);
+
+            // outarray    =   Array<OneD, Array<OneD, NekDouble> > (2); 
+            // outarray[0] =   tmp1;  
+            // outarray[1] =   tmp2;  
+        }
+
         void QuadExp::v_IProductWRTDerivBase_MatOp(
             const int dir,
             const Array<OneD, const NekDouble>& inarray,

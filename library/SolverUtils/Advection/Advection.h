@@ -193,13 +193,13 @@ public:
     }
 
     SOLVER_UTILS_EXPORT void AddVolumJacToMat( 
-        const int                                                           nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr>                   &pFields,
-        const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >          &ElmtJac,
-        const int                                                           nDirctn,
-              Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                &gmtxarray)
+        const Array<OneD, MultiRegions::ExpListSharedPtr>                       &pFields,
+        const int                                                               &nConvectiveFields,
+        const Array<OneD, const Array<OneD,  Array<OneD, 
+            Array<OneD,  Array<OneD,  NekDouble> > > > >                        &ElmtJacArray,
+        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                          &gmtxarray)
     {
-        v_AddVolumJacToMat(nConvectiveFields,pFields,ElmtJac,nDirctn,gmtxarray);
+        v_AddVolumJacToMat(pFields,nConvectiveFields,ElmtJacArray,gmtxarray);
     }
 
     SOLVER_UTILS_EXPORT void NumCalRiemFluxJac( 
@@ -305,12 +305,12 @@ protected:
     
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
     SOLVER_UTILS_EXPORT virtual void v_AddVolumJacToMat( 
-        const int nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
-        const int nDirctn, 
-        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
-    
+        const Array<OneD, MultiRegions::ExpListSharedPtr>                       &pFields,
+        const int                                                               &nConvectiveFields,
+        const Array<OneD, const Array<OneD,  Array<OneD, 
+            Array<OneD,  Array<OneD,  NekDouble> > > > >                        &ElmtJacArray,
+        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                          &gmtxarray);
+
     SOLVER_UTILS_EXPORT virtual void v_AddTraceJacToMat(
         const int                                           nConvectiveFields,
         const int                                           nSpaceDim,

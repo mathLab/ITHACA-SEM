@@ -1444,7 +1444,10 @@ namespace Nektar
             int m_ncoeffs;                                   /**< Total number of coefficients used in the expansion */
             LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
             LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess> m_stdStaticCondMatrixManager;
-	    LibUtilities::NekManager<IndexMapKey, IndexMapValues, IndexMapKey::opLess> m_IndexMapManager;
+            LibUtilities::NekManager<IndexMapKey, IndexMapValues, IndexMapKey::opLess> m_IndexMapManager;
+
+            Array<OneD, NekDouble > m_QuadratureWeights;
+            Array<OneD, NekDouble > m_oQuadratureWeights;
 
             DNekMatSharedPtr CreateStdMatrix(const StdMatrixKey &mkey)
             {
@@ -1668,7 +1671,7 @@ namespace Nektar
                                         Array<OneD, NekDouble> &out_d2,
                                         Array<OneD, NekDouble> &out_d3);
 
-	    STD_REGIONS_EXPORT virtual void v_PhysDeriv_s (const Array<OneD, const NekDouble>& inarray,
+            STD_REGIONS_EXPORT virtual void v_PhysDeriv_s (const Array<OneD, const NekDouble>& inarray,
 	    	    			Array<OneD, NekDouble> &out_ds);
 
             STD_REGIONS_EXPORT virtual void v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,

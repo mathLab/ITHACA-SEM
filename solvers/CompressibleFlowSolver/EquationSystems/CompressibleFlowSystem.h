@@ -276,7 +276,8 @@ namespace Nektar
         void GetFluxVectorJacDirctn(
             const int                                           nDirctn,
             const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
-                  Array<OneD, Array<OneD, DNekMatSharedPtr> >   &ElmtJac);
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray);
+
         void GetFluxVectorJacPoint(
             const Array<OneD, NekDouble>                &conservVar, 
             const Array<OneD, NekDouble>                &normals, 
@@ -310,11 +311,21 @@ namespace Nektar
             const int                                                       nDirctn,
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
-                  Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray)
         {
-            v_MinusDiffusionFluxJacDirctn(nDirctn,inarray, qfields,ElmtJac);
+            v_MinusDiffusionFluxJacDirctn(nDirctn,inarray, qfields,ElmtJacArray);
         }
 
+        void GetFluxDerivJacDirctn(
+            const MultiRegions::ExpListSharedPtr                            &explist,
+            const Array<OneD, const Array<OneD, NekDouble> >                &normals,
+            const int                                                       nDervDir,
+            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray,
+            const int                                                       nfluxDir)
+        {
+            v_GetFluxDerivJacDirctn(explist,normals,nDervDir,inarray,ElmtJacArray,nfluxDir);
+        }
         void GetFluxDerivJacDirctn(
             const MultiRegions::ExpListSharedPtr                            &explist,
             const Array<OneD, const Array<OneD, NekDouble> >                &normals,
@@ -500,7 +511,15 @@ namespace Nektar
             const int                                                       nDirctn,
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
-                  Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray);
+        virtual void v_GetFluxDerivJacDirctn(
+            const MultiRegions::ExpListSharedPtr                            &explist,
+            const Array<OneD, const Array<OneD, NekDouble> >                &normals,
+            const int                                                       nDervDir,
+            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray,
+            const int                                                       nfluxDir);
+
         virtual void v_GetFluxDerivJacDirctn(
             const MultiRegions::ExpListSharedPtr                            &explist,
             const Array<OneD, const Array<OneD, NekDouble> >                &normals,

@@ -1817,25 +1817,6 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                                                     ,&loctraces[cnt + j * fnp0 * fnp1 +k*fnp0],1
                                                     ,&loctraces[cnt + j * fnp0 * fnp1 +k*fnp0],1);
                         }
-
-                        // Array<OneD, NekDouble> tmpdebug(tnp0*tnp1,0.0);
-                        // Array<OneD, NekDouble> loctracedebug(fnp0*fnp1,0.0);
-                        // for(int ntmp=0;ntmp<tnp0*tnp1;ntmp++)
-                        // {
-                        //     tmpdebug[ntmp]  =   1.0;
-                        //     Vmath::Vcopy(fnp0 * fnp1,
-                        //              tmpdebug.get(),
-                        //              1,
-                        //              loctracedebug.get(),
-                        //              1);
-
-                        //     for(int k = 0; k< fnp1; k++)
-                        //     {
-                        //         Vmath::Svtvp(fnp0,I1[k],&tmpdebug[tnp0 * tnp1 - tnp0],1,&loctracedebug[k*fnp0],1,&loctraces[cnt+k*fnp0],1);
-                        //     }
-                        //     tmpdebug[ntmp]  =   0.0;
-                        // }
-                        // int Debugtmp = 0;
                     }
 
                 }

@@ -1522,7 +1522,15 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
             {
-                v_DividByStdQuadratureMetric(inarray,outarray);
+                int npnts = GetTotPoints();
+                if(0==m_oQuadratureWeights.num_elements())
+                {
+                    m_QuadratureWeights = Array<OneD, NekDouble> (npnts,1.0);
+                    m_oQuadratureWeights = Array<OneD, NekDouble> (npnts);
+                    MultiplyByStdQuadratureMetric(m_QuadratureWeights,m_QuadratureWeights);
+                    Vmath::Sdiv(npnts,1.0,m_QuadratureWeights,1,m_oQuadratureWeights,1);
+                }
+                Vmath::Vmul(npnts,m_oQuadratureWeights,1,inarray,1,outarray,1);
             }
         
             void StdExpansion::v_MultiplyByStdQuadratureMetric(

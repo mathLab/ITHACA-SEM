@@ -813,12 +813,12 @@ namespace Nektar
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
         void DiffusionIP::v_MinusVolumDerivJacToMat( 
-            const int                                               nConvectiveFields,
-            const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
-            const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
-            const int                                               nfluxDir, 
-            const int                                               nDervDir, 
-                  Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray)
+            const int                                                   nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>           &pFields,
+            const Array<OneD, const Array<OneD,  Array<OneD, 
+                Array<OneD,  Array<OneD,  NekDouble> > > > >            &ElmtJacArray,
+            const int                                                   nDervDir, 
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >              &gmtxarray)
         {
             MultiRegions::ExpListSharedPtr explist = pFields[0];
                 std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
@@ -845,28 +845,19 @@ namespace Nektar
                 mtxPerVarCoeff[nelmt]    =MemoryManager<DNekMat>
                                     ::AllocateSharedPtr(nElmtCoef, nElmtCoef);
                 (*mtxPerVarCoeff[nelmt])   =   0.0;
-                JacArray[nelmt]    =Array<OneD, NekDouble>(nElmtPnt,0.0);
             }
 
             for(int m = 0; m < nConvectiveFields; m++)
             {
                 for(int n = 0; n < nConvectiveFields; n++)
                 {
-                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-                    {
-                        nElmtPnt            = elmtpnts[nelmt];
-                        for(int npnt = 0; npnt < nElmtPnt; npnt++)
-                        {
-                            JacArray[nelmt][npnt]   =   (*(ElmtJac[nelmt][npnt]))(m,n);
-                        }
-                    }
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
                         (*mtxPerVarCoeff[nelmt])   =   0.0;
                     }
                     // explist->GetMatIpwrtdbWeightBwd(JacArray,nDirctn,mtxPerVar);
-                    explist->GetMatIpwrtDeriveBase(JacArray,nfluxDir,mtxPerVar);
+                    explist->GetMatIpwrtDeriveBase(ElmtJacArray[m][n],mtxPerVar);
                     explist->AddRightIPTPhysDerivBase(nDervDir,mtxPerVar,mtxPerVarCoeff);
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)

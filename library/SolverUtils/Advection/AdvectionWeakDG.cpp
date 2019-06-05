@@ -208,11 +208,12 @@ namespace Nektar
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
 
-        void AdvectionWeakDG::v_AddVolumJacToMat( const int nConvectiveFields,
-                                        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                                        const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
-                                        const int nDirctn, 
-                                        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
+        void AdvectionWeakDG::v_AddVolumJacToMat( 
+            const Array<OneD, MultiRegions::ExpListSharedPtr>                       &pFields,
+            const int                                                               &nConvectiveFields,
+            const Array<OneD, const Array<OneD,  Array<OneD, 
+                Array<OneD,  Array<OneD,  NekDouble> > > > >                        &ElmtJacArray,
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                          &gmtxarray)
         {
             MultiRegions::ExpListSharedPtr explist = pFields[0];
                 std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
@@ -222,8 +223,9 @@ namespace Nektar
             NekDouble tmp;
             DNekMatSharedPtr        tmpGmtx,ElmtMat;
 
+    
+
             Array<OneD, DNekMatSharedPtr>  mtxPerVar(ntotElmt);
-            Array<OneD, Array<OneD, NekDouble> > JacArray(ntotElmt);
             Array<OneD, int > elmtpnts(ntotElmt);
             Array<OneD, int > elmtcoef(ntotElmt);
             for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
@@ -234,7 +236,6 @@ namespace Nektar
                 elmtcoef[nelmt]     =   nElmtCoef;
                 mtxPerVar[nelmt]    =MemoryManager<DNekMat>
                                     ::AllocateSharedPtr(nElmtCoef, nElmtPnt);
-                JacArray[nelmt]    =Array<OneD, NekDouble>(nElmtPnt,0.0);
             }
 
             Array<OneD, DNekMatSharedPtr>  mtxPerVarCoeff(ntotElmt);
@@ -244,25 +245,45 @@ namespace Nektar
                                     ::AllocateSharedPtr(nElmtCoef, nElmtCoef);
             }
 
+    int nspacedim = ElmtJacArray[0][0].num_elements();
+    Array<OneD, Array<OneD,  Array<OneD,  NekDouble> > > debugarray(nspacedim);
+    for(int ndddd=0;ndddd<nspacedim;ndddd++)
+    {
+        debugarray[ndddd]   =   Array<OneD,  Array<OneD,  NekDouble> >(ntotElmt);
+        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        {
+            nElmtPnt    = elmtpnts[nelmt];
+            debugarray[ndddd][nelmt]   =   Array<OneD,  NekDouble> (nElmtPnt,0.0);
+        }
+    }
+
             for(int m = 0; m < nConvectiveFields; m++)
             {
                 for(int n = 0; n < nConvectiveFields; n++)
                 {
-                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-                    {
-                        nElmtPnt            = elmtpnts[nelmt];
-                        for(int npnt = 0; npnt < nElmtPnt; npnt++)
-                        {
-                            JacArray[nelmt][npnt]   =   (*(ElmtJac[nelmt][npnt]))(m,n);
-                        }
-                    }
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
                         (*mtxPerVarCoeff[nelmt])   =   0.0;
                     }
+    // for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+    // {
+    //     nElmtPnt    = elmtpnts[nelmt];
+    //     Vmath::Vcopy(nElmtPnt,ElmtJacArray[m][n][0][nelmt],1,debugarray[0][nelmt],1);
+    //     Vmath::Fill(nElmtPnt,0.0,debugarray[0][nelmt],1);
+    //     debugarray[0][nelmt][0] =   1.0;
+    //     for(int kk=0;kk<nElmtPnt;kk++)
+    //     {
+    //         cout <<"debugarray[0]["<<nelmt<<"]["<<kk<<"]= "<<debugarray[0][nelmt][kk]<<endl;
+    //     }
+    // }
                     // explist->GetMatIpwrtdbWeightBwd(JacArray,nDirctn,mtxPerVar);
-                    explist->GetMatIpwrtDeriveBase(JacArray,nDirctn,mtxPerVar);
+                    // explist->GetMatIpwrtDeriveBase(debugarray,mtxPerVar);
+                    explist->GetMatIpwrtDeriveBase(ElmtJacArray[m][n],mtxPerVar);
+
+    // Cout1DArrayStdMat(mtxPerVar,20);
+    // ASSERTL0(false, "debug stop");
+
                     explist->AddRightIPTBaseMatrix(mtxPerVar,mtxPerVarCoeff);
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
@@ -448,9 +469,9 @@ namespace Nektar
                 }
             }
             // tracelist->GetMatIpwrtbWeightBwd(JacFwd,mtxPerVar);
-            tracelist->GetMatIpwrtBase(JacFwd,TraceJacFwd);
+            tracelist->GetDiagMatIpwrtBase(JacFwd,TraceJacFwd);
             // tracelist->GetMatIpwrtbWeightBwd(JacBwd,mtxPerVar);
-            tracelist->GetMatIpwrtBase(JacBwd,TraceJacBwd);
+            tracelist->GetDiagMatIpwrtBase(JacBwd,TraceJacBwd);
         }
 
         void AdvectionWeakDG::v_NumCalRiemFluxJac(

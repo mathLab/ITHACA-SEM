@@ -205,12 +205,12 @@ namespace Nektar
         
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
         void Diffusion::v_MinusVolumDerivJacToMat( 
-            const int                                               nConvectiveFields,
-            const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
-            const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
-            const int                                               nfluxDir, 
-            const int                                               nDervDir, 
-                  Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray)
+            const int                                                   nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>           &pFields,
+            const Array<OneD, const Array<OneD,  Array<OneD, 
+                Array<OneD,  Array<OneD,  NekDouble> > > > >            &ElmtJacArray,
+            const int                                                   nDervDir, 
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >              &gmtxarray)
         {
             ASSERTL0(false," not defined");
         }

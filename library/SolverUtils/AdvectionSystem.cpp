@@ -66,7 +66,7 @@ void AdvectionSystem::v_InitObject()
     UnsteadySystem::v_InitObject();
     m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
     m_session->LoadParameter("IO_CFLWriteFld", m_cflWriteFld, 0);
-    m_session->LoadParameter("IO_CFLWriteFldNumSteps", m_cflWriteFldNumSteps, 0);
+    m_session->LoadParameter("IO_CFLWriteFldWaitSteps", m_cflWriteWaitSteps, 0);
 }
 
 /**

@@ -83,7 +83,7 @@ private:
     /// Write field if cfl is higher than IO_CFLWriteFld treshold
     NekDouble m_cflWriteFld;
     /// Number of timesteps after which IO_CFLWriteFld is activated
-    int m_cflWriteFldNumSteps;    
+    int m_cflWriteFldWaitSteps;    
 
 };
 

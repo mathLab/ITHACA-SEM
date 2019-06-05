@@ -345,7 +345,8 @@ namespace Nektar
         m_greenFlux = MeasureFlowrate(m_flowrateStokes);
 
         // If the user specified IO_FlowSteps, open a handle to store output.
-        if (m_comm->GetRank() == 0 && m_flowrateSteps)
+        if (m_comm->GetRank() == 0 && m_flowrateSteps &&
+            !m_flowrateStream.is_open())
         {
             std::string filename = m_session->GetSessionName();
             filename += ".prs";

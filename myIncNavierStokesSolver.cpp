@@ -53,12 +53,12 @@ int main(int argc, char *argv[])
     string vDriverModule;
     DriverSharedPtr drv;
 
-    cout << "argc " << argc << endl;
+    /*cout << "argc " << argc << endl;
     cout << "*argv " << *argv << endl;
     cout << "*(argv[1]) " << *(argv[1]) << endl;
     cout << "(*argv)[1] " << (*argv)[1] << endl;
     std::string s(argv[1]);
-    cout << "s " << s << endl;
+    cout << "s " << s << endl;*/
 
     try
     {

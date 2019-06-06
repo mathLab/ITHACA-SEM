@@ -40,12 +40,14 @@
             <P> parameter_space_dimension = 2      </P>
             <P> parameter_space_tensor_grid = 1    </P>   <!--  like a bool: 0 is no, else is yes  -->
             <P> load_snapshot_data_from_files = 1       </P>
+            <P> load_cO_snapshot_data_from_files = 1       </P>  <!--  converged_Oseen snapshots   -->
+	    <P> do_trafo_check = 0       </P>  
             <P> number_of_snapshots = 20       </P>
             <P> ref_param_index = 19       </P>
             <P> ref_param_nu = 1       </P>
             <P> number_of_snapshots_dir0 = 4       </P>
             <P> number_of_snapshots_dir1 = 5       </P>
-            <P> POD_tolerance = .96       </P>
+            <P> POD_tolerance = .9       </P>
             <P> param0_dir0 = 0.7       </P>
             <P> param1_dir0 = 0.8       </P>
             <P> param2_dir0 = 0.9       </P>
@@ -58,6 +60,8 @@
 	    <P> type_para1 = 1        </P> <!-- 0=kin_visc, 1=geo   -->
 	    <P> type_para2 = 0   	</P>
 	    <P> number_elem_trafo = 5   </P>
+	    <P> debug_mode = 1   </P>
+	    <P> globally_connected = 2      </P>
 <!--	    <P> elem_1 = {32,30,11,10,9,8,17,16,15,14,25,24,23,22}   	</P>   -->  <!-- find a nice solution for the element numberings and also the matrices   -->
 <!--        <P> elem_2 = {12, 28, 34, 13,21,20,18,19,26,27}   		</P>   -->  <!-- for development purposes, just hard-code the example, as it is convenient to have available in the code later   -->
 <!--	    <P> elem_3 = {29, 31}   	</P>   -->
@@ -118,6 +122,86 @@
             <E VAR="u" VALUE="y*(1-y)" />
             <E VAR="v" VALUE="0" />
         </FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_1">
+	      <F FILE="Conv_Oseen_param0.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_2">
+	      <F FILE="Conv_Oseen_param1.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_3">
+	      <F FILE="Conv_Oseen_param2.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_4">
+	      <F FILE="Conv_Oseen_param3.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_5">
+	      <F FILE="Conv_Oseen_param4.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_6">
+	      <F FILE="Conv_Oseen_param5.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_7">
+	      <F FILE="Conv_Oseen_param6.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_8">
+	      <F FILE="Conv_Oseen_param7.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_9">
+	      <F FILE="Conv_Oseen_param8.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_10">
+	      <F FILE="Conv_Oseen_param9.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_11">
+	      <F FILE="Conv_Oseen_param10.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_12">
+	      <F FILE="Conv_Oseen_param11.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_13">
+	      <F FILE="Conv_Oseen_param12.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_14">
+	      <F FILE="Conv_Oseen_param13.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_15">
+	      <F FILE="Conv_Oseen_param14.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_16">
+	      <F FILE="Conv_Oseen_param15.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_17">
+	      <F FILE="Conv_Oseen_param16.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_18">
+	      <F FILE="Conv_Oseen_param17.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_19">
+	      <F FILE="Conv_Oseen_param18.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_20">
+	      <F FILE="Conv_Oseen_param19.fld" />
+	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap1">
 	      <F FILE="xml_channel_narrow_0.fld" />

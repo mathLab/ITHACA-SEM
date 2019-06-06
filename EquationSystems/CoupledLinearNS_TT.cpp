@@ -42,6 +42,7 @@
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 #include "../Eigen/Dense"
+#include <time.h> 
 
 using namespace std;
 
@@ -2693,6 +2694,10 @@ namespace Nektar
 
     Eigen::MatrixXd CoupledLinearNS_TT::remove_cols_and_rows(Eigen::MatrixXd the_matrix, std::set<int> elements_to_be_removed)
     {
+
+/*	Eigen::MatrixXd sm1;
+	if (1)
+	{
 	Eigen::MatrixXd simplified_matrix = Eigen::MatrixXd::Zero(the_matrix.rows() - elements_to_be_removed.size(), the_matrix.cols() - elements_to_be_removed.size());
 	int counter_row_simplified = 0;
 	int counter_col_simplified = 0;
@@ -2712,7 +2717,52 @@ namespace Nektar
 			counter_row_simplified++;
 		}		
 	}
-	return simplified_matrix;
+	//return simplified_matrix;
+	//	cout << "simplified_matrix.rows() " << simplified_matrix.rows() << " simplified_matrix.cols() " << simplified_matrix.cols() << endl;
+	sm1 = simplified_matrix;
+	} 
+	
+	cout << "simplified_matrix computation slow norm " << sm1.norm() << endl;
+*/
+	// or move whole blocks in-place ??
+	// need to use iterators
+/*	std::set<int>::iterator set_iterator; 
+	if (1)
+	{
+		for (set_iterator = elements_to_be_removed.begin(); set_iterator != elements_to_be_removed.end(); set_iterator++)
+		{
+			cout << " output set_iterator " << *set_iterator << endl; // might contain many consecutive elements
+		}
+	}
+*/
+
+	Eigen::MatrixXd simplified_matrix = Eigen::MatrixXd::Zero(the_matrix.rows() - elements_to_be_removed.size(), the_matrix.cols() - elements_to_be_removed.size());
+	Eigen::MatrixXd intermediate_simplified_matrix = Eigen::MatrixXd::Zero(the_matrix.rows(), the_matrix.cols() - elements_to_be_removed.size());
+	int counter_col_simplified = 0;
+	for (int col_index = 0; col_index < the_matrix.cols(); ++col_index)
+	{
+		if (!elements_to_be_removed.count(col_index))
+		{
+			intermediate_simplified_matrix.col(counter_col_simplified) = the_matrix.col(col_index);
+			counter_col_simplified++;
+		}
+	}
+	int counter_row_simplified = 0;
+	for (int row_index = 0; row_index < the_matrix.cols(); ++row_index)
+	{
+		if (!elements_to_be_removed.count(row_index))
+		{
+			simplified_matrix.row(counter_row_simplified) = intermediate_simplified_matrix.row(row_index);
+			counter_row_simplified++;
+		}
+	}
+//	cout << "simplified_matrix.rows() " << simplified_matrix.rows() << " simplified_matrix.cols() " << simplified_matrix.cols() << endl;
+//	cout << "simplified_matrix computation better norm " << simplified_matrix.norm() << endl;
+//	cout << "simplified_matrix computation difference norm " << (simplified_matrix - sm1).norm() << endl;
+	return simplified_matrix; 
+
+
+
     }
 
     Eigen::VectorXd CoupledLinearNS_TT::remove_rows(Eigen::VectorXd the_vector, std::set<int> elements_to_be_removed)
@@ -3246,8 +3296,8 @@ namespace Nektar
 	adv_mats_proj_y = Array<OneD, Eigen::MatrixXd > (RBsize);
 	adv_vec_proj_x = Array<OneD, Eigen::VectorXd > (RBsize);
 	adv_vec_proj_y = Array<OneD, Eigen::VectorXd > (RBsize);
-	adv_vec_proj_x_newton = Array<OneD, Eigen::VectorXd > (RBsize);
-	adv_vec_proj_y_newton = Array<OneD, Eigen::VectorXd > (RBsize);
+//	adv_vec_proj_x_newton = Array<OneD, Eigen::VectorXd > (RBsize);
+//	adv_vec_proj_y_newton = Array<OneD, Eigen::VectorXd > (RBsize);
 	adv_vec_proj_x_newton_RB = Array<OneD, Eigen::MatrixXd > (RBsize);
 	adv_vec_proj_y_newton_RB = Array<OneD, Eigen::MatrixXd > (RBsize);
 
@@ -3334,6 +3384,637 @@ namespace Nektar
 			}
 		}
 	}
+    }
+
+    Array<OneD, Array<OneD, Eigen::MatrixXd > > CoupledLinearNS_TT::gen_adv_mats_proj_y_2d(Array<OneD, double> curr_PhysBaseVec_y, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_y_2d)
+    {
+	Array<OneD, Array<OneD, Eigen::MatrixXd > >  curr_adv_mats_proj_y_2d(number_elem_trafo);
+	adv_vec_proj_y_2d = Array<OneD, Array<OneD, Eigen::VectorXd > >(number_elem_trafo);
+	for (int i = 0; i < number_elem_trafo; ++i)
+	{
+		curr_adv_mats_proj_y_2d[i] = Array<OneD, Eigen::MatrixXd > (2);
+		curr_adv_mats_proj_y_2d[i][0] = Eigen::MatrixXd::Zero(RBsize, RBsize);
+		curr_adv_mats_proj_y_2d[i][1] = Eigen::MatrixXd::Zero(RBsize, RBsize);
+		adv_vec_proj_y_2d[i] = Array<OneD, Eigen::VectorXd > (2);
+		adv_vec_proj_y_2d[i][0] = Eigen::VectorXd::Zero(RBsize);
+		adv_vec_proj_y_2d[i][1] = Eigen::VectorXd::Zero(RBsize);
+	}
+	// not what I wanted:   cout << "sizeof curr_adv_mats_proj_x_2d " << sizeof(curr_adv_mats_proj_x_2d) << endl;
+	
+	StdRegions::StdExpansionSharedPtr locExp;
+        Array<OneD, unsigned int> bmap,imap;
+        int nz_loc;
+        nz_loc = 1;
+        int nel  = m_fields[m_velocity[0]]->GetNumElmts();
+        int nvel   = m_velocity.num_elements();
+        int nsize_bndry = nvel*m_fields[m_velocity[0]]->GetExp(0)->NumBndryCoeffs()*nz_loc;
+        int nsize_bndry_p1 = nsize_bndry+nz_loc;
+        int nsize_int = (nvel*m_fields[m_velocity[0]]->GetExp(0)->GetNcoeffs()*nz_loc - nsize_bndry);
+        int nsize_p = m_pressure->GetExp(0)->GetNcoeffs()*nz_loc;
+        int nsize_p_m1 = nsize_p-nz_loc;
+        int Ahrows = nsize_bndry_p1; 
+
+	Array<OneD, Array<OneD, Eigen::MatrixXd > > Ah_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry_p1, nsize_bndry_p1
+//	Array<OneD, Eigen::MatrixXd > Bh_elem(m_fields[0]->GetNumElmts()); // 
+	Array<OneD, Array<OneD, Eigen::MatrixXd > > B_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry, nsize_int
+	Array<OneD, Array<OneD, Eigen::MatrixXd > > C_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry, nsize_int
+	Array<OneD, Array<OneD, Eigen::MatrixXd > > D_elem(m_fields[0]->GetNumElmts()); // , nsize_int, nsize_int
+//	Array<OneD, Eigen::MatrixXd > Dbnd_elem(m_fields[0]->GetNumElmts()); // , nsize_p, nsize_bndry
+//	Array<OneD, Eigen::MatrixXd > Dint_elem(m_fields[0]->GetNumElmts()); // , nsize_p, nsize_int
+//	Array<OneD, Eigen::MatrixXd > Ch_elem(m_fields[0]->GetNumElmts()); // nsize_p_m1, nsize_bndry_p1
+//	Array<OneD, Eigen::MatrixXd > Dh_elem(m_fields[0]->GetNumElmts()); // nsize_p_m1, nsize_p_m1
+
+	for (int curr_elem = 0; curr_elem < m_fields[0]->GetNumElmts(); curr_elem++)
+	{
+		int curr_elem_pos = get_curr_elem_pos(curr_elem);
+                locExp = m_fields[m_velocity[0]]->GetExp(curr_elem);
+                locExp->GetBoundaryMap(bmap);
+                locExp->GetInteriorMap(imap);
+                int ncoeffs = m_fields[m_velocity[0]]->GetExp(curr_elem)->GetNcoeffs();
+                int nphys   = m_fields[m_velocity[0]]->GetExp(curr_elem)->GetTotPoints();
+		int pqsize  = m_pressure->GetExp(curr_elem)->GetTotPoints();
+                int nbmap = bmap.num_elements();
+                int nimap = imap.num_elements();
+		Array<OneD, double> curr_snap_y_part(nphys, 0.0);
+		for (int i = 0; i < nphys; ++i)
+		{
+			curr_snap_y_part[i] = curr_PhysBaseVec_y[curr_elem*nphys + i];
+		}
+		Array<OneD, Array<OneD, double> > Ah_ele_vec(2);
+		Ah_ele_vec[0] = Array<OneD, double> (Ahrows*Ahrows, 0.0);
+		Ah_ele_vec[1] = Array<OneD, double> (Ahrows*Ahrows, 0.0);
+		Array<OneD, Array<OneD, double> > B_ele_vec(2);
+		B_ele_vec[0] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		B_ele_vec[1] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		Array<OneD, Array<OneD, double> > C_ele_vec(2); 
+		C_ele_vec[0] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		C_ele_vec[1] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		Array<OneD, Array<OneD, double> > D_ele_vec(2);
+		D_ele_vec[0] = Array<OneD, double> (nsize_int*nsize_int, 0.0);
+		D_ele_vec[1] = Array<OneD, double> (nsize_int*nsize_int, 0.0);
+		for (int i = 0; i < nbmap; ++i)
+		{
+			Array<OneD, double> coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_x_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_y_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> phys(nphys, 0.0);
+			Array<OneD, double> deriv_0(pqsize, 0.0);
+			Array<OneD, double> deriv_1(pqsize, 0.0);
+
+			coeffs[bmap[i]] = 1.0;
+			m_fields[m_velocity[0]]->GetExp(curr_elem)->BwdTrans(coeffs,phys);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[0], phys, deriv_0);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[1], phys, deriv_1);
+
+			for (int k = 0; k < 2; ++k)
+			{
+				if (k == 1)
+				{
+					Array<OneD, double> tmpphys_x(nphys, 0.0);
+					std::transform( curr_snap_y_part.begin(), curr_snap_y_part.end(), deriv_0.begin(), tmpphys_x.begin(),  std::multiplies<double>() ); 
+					Array<OneD, double> tmpphys_y(nphys, 0.0);
+					std::transform( curr_snap_y_part.begin(), curr_snap_y_part.end(), deriv_1.begin(), tmpphys_y.begin(),  std::multiplies<double>() ); 
+					locExp->IProductWRTBase(tmpphys_x, adv_x_coeffs);
+					locExp->IProductWRTBase(tmpphys_y, adv_y_coeffs);
+					for (int nv = 0; nv < 2; ++nv)
+					{
+						for (int j = 0; j < nbmap; ++j)
+						{
+							Ah_ele_vec[0][j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += adv_x_coeffs[int(bmap[j])];
+							Ah_ele_vec[1][j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += adv_y_coeffs[int(bmap[j])];
+						}
+						for (int j = 0; j < nimap; ++j)
+						{
+							C_ele_vec[0][ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += adv_x_coeffs[int(imap[j])];
+							C_ele_vec[1][ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += adv_y_coeffs[int(imap[j])];
+						}
+					}
+
+				}
+			} // for (int k = 0; k < 2; ++k)
+		} // for (int i = 0; i < nbmap; ++i)
+
+		for (int i = 0; i < nimap; ++i)
+		{
+
+			Array<OneD, double> coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_x_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_y_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> phys(nphys, 0.0);
+			Array<OneD, double> deriv_0(pqsize, 0.0);
+			Array<OneD, double> deriv_1(pqsize, 0.0);
+			coeffs[imap[i]] = 1.0;
+			m_fields[m_velocity[0]]->GetExp(curr_elem)->BwdTrans(coeffs,phys);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[0], phys, deriv_0);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[1], phys, deriv_1);
+			
+			for (int k = 0; k < 2; ++k)
+			{
+				if (k == 1)
+				{
+					Array<OneD, double> tmpphys_x(nphys, 0.0);
+					std::transform( curr_snap_y_part.begin(), curr_snap_y_part.end(), deriv_0.begin(), tmpphys_x.begin(),  std::multiplies<double>() ); 
+					Array<OneD, double> tmpphys_y(nphys, 0.0);
+					std::transform( curr_snap_y_part.begin(), curr_snap_y_part.end(), deriv_1.begin(), tmpphys_y.begin(),  std::multiplies<double>() ); 
+					locExp->IProductWRTBase(tmpphys_x, adv_x_coeffs);
+					locExp->IProductWRTBase(tmpphys_y, adv_y_coeffs);
+					for (int nv = 0; nv < 2; ++nv)
+					{
+						for (int j = 0; j < nbmap; ++j)
+						{
+							B_ele_vec[0][ j+nv*nbmap + (i+nv*nimap)*nsize_bndry ] += adv_x_coeffs[int(bmap[j])];
+							B_ele_vec[1][ j+nv*nbmap + (i+nv*nimap)*nsize_bndry ] += adv_y_coeffs[int(bmap[j])];
+						}
+						for (int j = 0; j < nimap; ++j)
+						{
+							D_ele_vec[0][ j+nv*nimap + (i+nv*nimap)*nsize_int ]  += adv_x_coeffs[int(imap[j])];
+							D_ele_vec[1][ j+nv*nimap + (i+nv*nimap)*nsize_int ]  += adv_y_coeffs[int(imap[j])];
+						}
+					}
+				}
+			}
+
+		} // for (int i = 0; i < nimap; ++i)
+
+		Ah_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (2);
+		Ah_elem[curr_elem][0] = Eigen::MatrixXd::Zero(nsize_bndry_p1, nsize_bndry_p1);
+		Ah_elem[curr_elem][1] = Eigen::MatrixXd::Zero(nsize_bndry_p1, nsize_bndry_p1);
+		for (int i = 0; i < nsize_bndry_p1; ++i)
+		{
+			for (int j = 0; j < nsize_bndry_p1; ++j)
+			{
+				Ah_elem[curr_elem][0](i,j) = Ah_ele_vec[0][ i + j*Ahrows ];
+				Ah_elem[curr_elem][1](i,j) = Ah_ele_vec[1][ i + j*Ahrows ];
+			}
+		} 
+		B_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (2);
+		B_elem[curr_elem][0] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+		B_elem[curr_elem][1] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+		for (int i = 0; i < nsize_bndry; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				B_elem[curr_elem][0](i,j) = B_ele_vec[0][ i + j*nsize_bndry ];
+				B_elem[curr_elem][1](i,j) = B_ele_vec[1][ i + j*nsize_bndry ];
+			}
+		} 
+		C_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (2);
+		C_elem[curr_elem][0] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+		C_elem[curr_elem][1] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+		for (int i = 0; i < nsize_bndry; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				C_elem[curr_elem][0](i,j) = C_ele_vec[0][ i + j*nsize_bndry ];
+				C_elem[curr_elem][1](i,j) = C_ele_vec[1][ i + j*nsize_bndry ];
+			}
+		} 
+		D_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (2);
+		D_elem[curr_elem][0] = Eigen::MatrixXd::Zero(nsize_int, nsize_int);
+		D_elem[curr_elem][1] = Eigen::MatrixXd::Zero(nsize_int, nsize_int);
+		for (int i = 0; i < nsize_int; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				D_elem[curr_elem][0](i,j) = D_ele_vec[0][ i + j*nsize_int];
+				D_elem[curr_elem][1](i,j) = D_ele_vec[1][ i + j*nsize_int];
+			}
+		} 
+
+	} // for (int curr_elem = 0; curr_elem < m_fields[0]->GetNumElmts(); curr_elem++)
+
+	// would need a function which (i) expands to full size, (ii) removes dbc cols and rows, (iii) projects
+	for (int i = 0; i < number_elem_trafo; ++i)
+	{
+		curr_adv_mats_proj_y_2d[i][0] = adv_geo_mat_projector(Ah_elem, B_elem, C_elem, D_elem, i, 0, adv_vec_proj_y_2d[i][0]);
+		curr_adv_mats_proj_y_2d[i][1] = adv_geo_mat_projector(Ah_elem, B_elem, C_elem, D_elem, i, 1, adv_vec_proj_y_2d[i][1]);
+	}
+
+
+	return curr_adv_mats_proj_y_2d;
+
+    }
+
+    Array<OneD, Array<OneD, Eigen::MatrixXd > > CoupledLinearNS_TT::gen_adv_mats_proj_x_2d(Array<OneD, double> curr_PhysBaseVec_x, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_x_2d)
+    {
+	Array<OneD, Array<OneD, Eigen::MatrixXd > >  curr_adv_mats_proj_x_2d(number_elem_trafo);
+	adv_vec_proj_x_2d = Array<OneD, Array<OneD, Eigen::VectorXd > >(number_elem_trafo);
+	for (int i = 0; i < number_elem_trafo; ++i)
+	{
+		curr_adv_mats_proj_x_2d[i] = Array<OneD, Eigen::MatrixXd > (2);
+		curr_adv_mats_proj_x_2d[i][0] = Eigen::MatrixXd::Zero(RBsize, RBsize);
+		curr_adv_mats_proj_x_2d[i][1] = Eigen::MatrixXd::Zero(RBsize, RBsize);
+		adv_vec_proj_x_2d[i] = Array<OneD, Eigen::VectorXd > (2);
+		adv_vec_proj_x_2d[i][0] = Eigen::VectorXd::Zero(RBsize);
+		adv_vec_proj_x_2d[i][1] = Eigen::VectorXd::Zero(RBsize);
+	}
+	// not what I wanted:   cout << "sizeof curr_adv_mats_proj_x_2d " << sizeof(curr_adv_mats_proj_x_2d) << endl;
+	
+	StdRegions::StdExpansionSharedPtr locExp;
+        Array<OneD, unsigned int> bmap,imap;
+        int nz_loc;
+        nz_loc = 1;
+        int nel  = m_fields[m_velocity[0]]->GetNumElmts();
+        int nvel   = m_velocity.num_elements();
+        int nsize_bndry = nvel*m_fields[m_velocity[0]]->GetExp(0)->NumBndryCoeffs()*nz_loc;
+        int nsize_bndry_p1 = nsize_bndry+nz_loc;
+        int nsize_int = (nvel*m_fields[m_velocity[0]]->GetExp(0)->GetNcoeffs()*nz_loc - nsize_bndry);
+        int nsize_p = m_pressure->GetExp(0)->GetNcoeffs()*nz_loc;
+        int nsize_p_m1 = nsize_p-nz_loc;
+        int Ahrows = nsize_bndry_p1; 
+
+	Array<OneD, Array<OneD, Eigen::MatrixXd > > Ah_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry_p1, nsize_bndry_p1
+//	Array<OneD, Eigen::MatrixXd > Bh_elem(m_fields[0]->GetNumElmts()); // 
+	Array<OneD, Array<OneD, Eigen::MatrixXd > > B_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry, nsize_int
+	Array<OneD, Array<OneD, Eigen::MatrixXd > > C_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry, nsize_int
+	Array<OneD, Array<OneD, Eigen::MatrixXd > > D_elem(m_fields[0]->GetNumElmts()); // , nsize_int, nsize_int
+//	Array<OneD, Eigen::MatrixXd > Dbnd_elem(m_fields[0]->GetNumElmts()); // , nsize_p, nsize_bndry
+//	Array<OneD, Eigen::MatrixXd > Dint_elem(m_fields[0]->GetNumElmts()); // , nsize_p, nsize_int
+//	Array<OneD, Eigen::MatrixXd > Ch_elem(m_fields[0]->GetNumElmts()); // nsize_p_m1, nsize_bndry_p1
+//	Array<OneD, Eigen::MatrixXd > Dh_elem(m_fields[0]->GetNumElmts()); // nsize_p_m1, nsize_p_m1
+
+	for (int curr_elem = 0; curr_elem < m_fields[0]->GetNumElmts(); curr_elem++)
+	{
+		int curr_elem_pos = get_curr_elem_pos(curr_elem);
+                locExp = m_fields[m_velocity[0]]->GetExp(curr_elem);
+                locExp->GetBoundaryMap(bmap);
+                locExp->GetInteriorMap(imap);
+                int ncoeffs = m_fields[m_velocity[0]]->GetExp(curr_elem)->GetNcoeffs();
+                int nphys   = m_fields[m_velocity[0]]->GetExp(curr_elem)->GetTotPoints();
+		int pqsize  = m_pressure->GetExp(curr_elem)->GetTotPoints();
+                int nbmap = bmap.num_elements();
+                int nimap = imap.num_elements();
+		Array<OneD, double> curr_snap_x_part(nphys, 0.0);
+		for (int i = 0; i < nphys; ++i)
+		{
+			curr_snap_x_part[i] = curr_PhysBaseVec_x[curr_elem*nphys + i];
+		}
+		Array<OneD, Array<OneD, double> > Ah_ele_vec(2);
+		Ah_ele_vec[0] = Array<OneD, double> (Ahrows*Ahrows, 0.0);
+		Ah_ele_vec[1] = Array<OneD, double> (Ahrows*Ahrows, 0.0);
+		Array<OneD, Array<OneD, double> > B_ele_vec(2);
+		B_ele_vec[0] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		B_ele_vec[1] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		Array<OneD, Array<OneD, double> > C_ele_vec(2); 
+		C_ele_vec[0] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		C_ele_vec[1] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		Array<OneD, Array<OneD, double> > D_ele_vec(2);
+		D_ele_vec[0] = Array<OneD, double> (nsize_int*nsize_int, 0.0);
+		D_ele_vec[1] = Array<OneD, double> (nsize_int*nsize_int, 0.0);
+		for (int i = 0; i < nbmap; ++i)
+		{
+			Array<OneD, double> coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_x_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_y_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> phys(nphys, 0.0);
+			Array<OneD, double> deriv_0(pqsize, 0.0);
+			Array<OneD, double> deriv_1(pqsize, 0.0);
+
+			coeffs[bmap[i]] = 1.0;
+			m_fields[m_velocity[0]]->GetExp(curr_elem)->BwdTrans(coeffs,phys);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[0], phys, deriv_0);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[1], phys, deriv_1);
+
+			for (int k = 0; k < 2; ++k)
+			{
+				if (k == 0)
+				{
+					Array<OneD, double> tmpphys_x(nphys, 0.0);
+					std::transform( curr_snap_x_part.begin(), curr_snap_x_part.end(), deriv_0.begin(), tmpphys_x.begin(),  std::multiplies<double>() ); 
+					Array<OneD, double> tmpphys_y(nphys, 0.0);
+					std::transform( curr_snap_x_part.begin(), curr_snap_x_part.end(), deriv_1.begin(), tmpphys_y.begin(),  std::multiplies<double>() ); 
+					locExp->IProductWRTBase(tmpphys_x, adv_x_coeffs);
+					locExp->IProductWRTBase(tmpphys_y, adv_y_coeffs);
+					for (int nv = 0; nv < 2; ++nv)
+					{
+						for (int j = 0; j < nbmap; ++j)
+						{
+							Ah_ele_vec[0][j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += adv_x_coeffs[int(bmap[j])];
+							Ah_ele_vec[1][j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += adv_y_coeffs[int(bmap[j])];
+						}
+						for (int j = 0; j < nimap; ++j)
+						{
+							C_ele_vec[0][ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += adv_x_coeffs[int(imap[j])];
+							C_ele_vec[1][ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += adv_y_coeffs[int(imap[j])];
+						}
+					}
+
+				}
+			} // for (int k = 0; k < 2; ++k)
+		} // for (int i = 0; i < nbmap; ++i)
+
+		for (int i = 0; i < nimap; ++i)
+		{
+
+			Array<OneD, double> coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_x_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_y_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> phys(nphys, 0.0);
+			Array<OneD, double> deriv_0(pqsize, 0.0);
+			Array<OneD, double> deriv_1(pqsize, 0.0);
+			coeffs[imap[i]] = 1.0;
+			m_fields[m_velocity[0]]->GetExp(curr_elem)->BwdTrans(coeffs,phys);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[0], phys, deriv_0);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[1], phys, deriv_1);
+			
+			for (int k = 0; k < 2; ++k)
+			{
+				if (k == 0)
+				{
+					Array<OneD, double> tmpphys_x(nphys, 0.0);
+					std::transform( curr_snap_x_part.begin(), curr_snap_x_part.end(), deriv_0.begin(), tmpphys_x.begin(),  std::multiplies<double>() ); 
+					Array<OneD, double> tmpphys_y(nphys, 0.0);
+					std::transform( curr_snap_x_part.begin(), curr_snap_x_part.end(), deriv_1.begin(), tmpphys_y.begin(),  std::multiplies<double>() ); 
+					locExp->IProductWRTBase(tmpphys_x, adv_x_coeffs);
+					locExp->IProductWRTBase(tmpphys_y, adv_y_coeffs);
+					for (int nv = 0; nv < 2; ++nv)
+					{
+						for (int j = 0; j < nbmap; ++j)
+						{
+							B_ele_vec[0][ j+nv*nbmap + (i+nv*nimap)*nsize_bndry ] += adv_x_coeffs[int(bmap[j])];
+							B_ele_vec[1][ j+nv*nbmap + (i+nv*nimap)*nsize_bndry ] += adv_y_coeffs[int(bmap[j])];
+						}
+						for (int j = 0; j < nimap; ++j)
+						{
+							D_ele_vec[0][ j+nv*nimap + (i+nv*nimap)*nsize_int ]  += adv_x_coeffs[int(imap[j])];
+							D_ele_vec[1][ j+nv*nimap + (i+nv*nimap)*nsize_int ]  += adv_y_coeffs[int(imap[j])];
+						}
+					}
+				}
+			}
+
+		} // for (int i = 0; i < nimap; ++i)
+
+		Ah_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (2);
+		Ah_elem[curr_elem][0] = Eigen::MatrixXd::Zero(nsize_bndry_p1, nsize_bndry_p1);
+		Ah_elem[curr_elem][1] = Eigen::MatrixXd::Zero(nsize_bndry_p1, nsize_bndry_p1);
+		for (int i = 0; i < nsize_bndry_p1; ++i)
+		{
+			for (int j = 0; j < nsize_bndry_p1; ++j)
+			{
+				Ah_elem[curr_elem][0](i,j) = Ah_ele_vec[0][ i + j*Ahrows ];
+				Ah_elem[curr_elem][1](i,j) = Ah_ele_vec[1][ i + j*Ahrows ];
+			}
+		} 
+		B_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (2);
+		B_elem[curr_elem][0] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+		B_elem[curr_elem][1] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+		for (int i = 0; i < nsize_bndry; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				B_elem[curr_elem][0](i,j) = B_ele_vec[0][ i + j*nsize_bndry ];
+				B_elem[curr_elem][1](i,j) = B_ele_vec[1][ i + j*nsize_bndry ];
+			}
+		} 
+		C_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (2);
+		C_elem[curr_elem][0] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+		C_elem[curr_elem][1] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+		for (int i = 0; i < nsize_bndry; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				C_elem[curr_elem][0](i,j) = C_ele_vec[0][ i + j*nsize_bndry ];
+				C_elem[curr_elem][1](i,j) = C_ele_vec[1][ i + j*nsize_bndry ];
+			}
+		} 
+		D_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (2);
+		D_elem[curr_elem][0] = Eigen::MatrixXd::Zero(nsize_int, nsize_int);
+		D_elem[curr_elem][1] = Eigen::MatrixXd::Zero(nsize_int, nsize_int);
+		for (int i = 0; i < nsize_int; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				D_elem[curr_elem][0](i,j) = D_ele_vec[0][ i + j*nsize_int];
+				D_elem[curr_elem][1](i,j) = D_ele_vec[1][ i + j*nsize_int];
+			}
+		} 
+
+	} // for (int curr_elem = 0; curr_elem < m_fields[0]->GetNumElmts(); curr_elem++)
+
+	// would need a function which (i) expands to full size, (ii) removes dbc cols and rows, (iii) projects
+	for (int i = 0; i < number_elem_trafo; ++i)
+	{
+
+		time_t timer_1;
+		time_t timer_2;
+		time(&timer_1);  /* get current time; same as: timer = time(NULL)  */
+
+		curr_adv_mats_proj_x_2d[i][0] = adv_geo_mat_projector(Ah_elem, B_elem, C_elem, D_elem, i, 0, adv_vec_proj_x_2d[i][0]);
+
+		time(&timer_2);  /* get current time; same as: timer = time(NULL)  */
+		double seconds = difftime(timer_1, timer_2);
+		cout << "time for a single adv_geo_mat_projector in seconds " << seconds << endl;
+
+
+		curr_adv_mats_proj_x_2d[i][1] = adv_geo_mat_projector(Ah_elem, B_elem, C_elem, D_elem, i, 1, adv_vec_proj_x_2d[i][1]);
+	}
+
+
+	return curr_adv_mats_proj_x_2d;
+
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::adv_geo_mat_projector(Array<OneD, Array<OneD, Eigen::MatrixXd > > Ah_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > B_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > C_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > D_elem, int curr_elem_trafo, int deriv_index, Eigen::VectorXd &adv_vec_proj)
+    {
+	// this function (i) expands to full size, (ii) removes dbc cols and rows, (iii) projects
+	Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
+        int nz_loc;
+        nz_loc = 1;
+        int nel  = m_fields[m_velocity[0]]->GetNumElmts();
+        int nvel   = m_velocity.num_elements();
+        int nsize_bndry = nvel*m_fields[m_velocity[0]]->GetExp(0)->NumBndryCoeffs()*nz_loc;
+        int nsize_bndry_p1 = nsize_bndry+nz_loc;
+        int nsize_int = (nvel*m_fields[m_velocity[0]]->GetExp(0)->GetNcoeffs()*nz_loc - nsize_bndry);
+	Eigen::MatrixXd D_adv_all = Eigen::MatrixXd::Zero( nsize_int*nel , nsize_int*nel );
+	Eigen::MatrixXd B_adv_all = Eigen::MatrixXd::Zero( nsize_bndry*nel , nsize_int*nel );
+	Eigen::MatrixXd C_adv_all = Eigen::MatrixXd::Zero( nsize_bndry*nel , nsize_int*nel );
+	Eigen::MatrixXd A_adv_all = Eigen::MatrixXd::Zero( nsize_bndry*nel , nsize_bndry*nel );
+
+	time_t timer_1;
+	time_t timer_2;
+	time_t timer_3;
+	time_t timer_4;
+
+	time(&timer_1);  /* get current time; same as: timer = time(NULL)  */
+	for (int i = 0; i < m_fields[0]->GetNumElmts(); ++i)
+	{
+//		cout << " i " << i << endl;
+		int curr_elem_pos = get_curr_elem_pos(i);
+		if (curr_elem_pos == curr_elem_trafo)
+		{
+			Eigen::MatrixXd curr_A_elem = Ah_elem[i][deriv_index].block(0, 0, Ah_elem[i][deriv_index].rows() - 1, Ah_elem[i][deriv_index].cols() - 1);
+			Eigen::MatrixXd curr_B_elem = B_elem[i][deriv_index];
+			Eigen::MatrixXd curr_C_elem = C_elem[i][deriv_index];
+			Eigen::MatrixXd curr_D_elem = D_elem[i][deriv_index];
+
+			A_adv_all.block(i*nsize_bndry, i*nsize_bndry, nsize_bndry, nsize_bndry) = curr_A_elem;
+			B_adv_all.block(i*nsize_bndry, i*nsize_int, nsize_bndry, nsize_int) = curr_B_elem;
+			C_adv_all.block(i*nsize_bndry, i*nsize_int, nsize_bndry, nsize_int) = curr_C_elem;
+			D_adv_all.block(i*nsize_int, i*nsize_int, nsize_int, nsize_int) = curr_D_elem;
+	
+		}
+	}
+
+	time(&timer_2);  /* get current time; same as: timer = time(NULL)  */
+	double seconds = difftime(timer_2, timer_1);
+//	cout << "time within adv_geo_mat_projector for block write in seconds " << seconds << endl;
+
+	time(&timer_1);  /* get current time; same as: timer = time(NULL)  */
+
+	switch(globally_connected) {
+		case 0:
+			adv_matrix.block(0, 0, A_adv_all.rows(), A_adv_all.cols()) = MtM * A_adv_all;
+			adv_matrix.block(0, A_adv_all.cols() + RB_Dbnd.rows(), B_adv_all.rows(), B_adv_all.cols()) = MtM * B_adv_all;
+			adv_matrix.block(A_adv_all.rows() + RB_Dbnd.rows(), 0, C_adv_all.cols(), C_adv_all.rows()) = C_adv_all.transpose();
+			adv_matrix.block(A_adv_all.rows() + RB_Dbnd.rows(), A_adv_all.cols() + RB_Dbnd.rows(), D_adv_all.rows(), D_adv_all.cols()) = D_adv_all;
+			break;
+		case 1:
+			adv_matrix.block(0, 0, nBndDofs, nBndDofs) = Mtrafo.transpose() * A_adv_all * Mtrafo;
+			adv_matrix.block(0, nBndDofs + RB_Dbnd.rows(), nBndDofs, B_adv_all.cols()) = Mtrafo.transpose() * B_adv_all;
+			adv_matrix.block(nBndDofs + RB_Dbnd.rows(), 0, C_adv_all.cols(), nBndDofs) = C_adv_all.transpose() * Mtrafo;
+			adv_matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs + RB_Dbnd.rows(), D_adv_all.rows(), D_adv_all.cols()) = D_adv_all;
+			break;
+		case 2:
+			adv_matrix.block(0, 0, A_adv_all.rows(), A_adv_all.cols()) = A_adv_all;
+			adv_matrix.block(0, A_adv_all.cols() + RB_Dbnd.rows(), B_adv_all.rows(), B_adv_all.cols()) = B_adv_all;
+			adv_matrix.block(A_adv_all.rows() + RB_Dbnd.rows(), 0, C_adv_all.cols(), C_adv_all.rows()) = C_adv_all.transpose();
+			adv_matrix.block(A_adv_all.rows() + RB_Dbnd.rows(), A_adv_all.cols() + RB_Dbnd.rows(), D_adv_all.rows(), D_adv_all.cols()) = D_adv_all;
+			break;
+	}
+
+	time(&timer_2);  /* get current time; same as: timer = time(NULL)  */
+	seconds = difftime(timer_2, timer_1);
+//	cout << "time within adv_geo_mat_projector for adv_matrix write in seconds " << seconds << endl;
+
+	time(&timer_1);  /* get current time; same as: timer = time(NULL)  */
+
+	// also need to create appropriate vector right-hand-side contribution
+	Eigen::VectorXd add_to_rhs_adv(M_truth_size); // probably need this for adv and non-adv
+	add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;
+	Eigen::VectorXd adv_rhs_add = remove_rows(add_to_rhs_adv, elem_loc_dbc);
+	adv_vec_proj = RB.transpose() * adv_rhs_add;
+
+	time(&timer_3);  /* get current time; same as: timer = time(NULL)  */
+	Eigen::MatrixXd adv_matrix_simplified = remove_cols_and_rows(adv_matrix, elem_loc_dbc);
+	time(&timer_4);  /* get current time; same as: timer = time(NULL)  */
+	seconds = difftime(timer_4, timer_3);
+//	cout << "time within adv_geo_mat_projector just for remove_cols_and_rows in seconds " << seconds << endl;
+
+
+	Eigen::MatrixXd adv_mat_proj = RB.transpose() * adv_matrix_simplified * RB;
+
+	time(&timer_2);  /* get current time; same as: timer = time(NULL)  */
+	seconds = difftime(timer_2, timer_1);
+//	cout << "time within adv_geo_mat_projector for some MatVecs in seconds " << seconds << endl;
+
+//	cout << " finished " << endl;
+
+	return adv_mat_proj;
+
+    }
+
+    void CoupledLinearNS_TT::gen_proj_adv_terms_2d()
+    {
+	RBsize = RB.cols();
+
+	adv_mats_proj_x = Array<OneD, Eigen::MatrixXd > (RBsize);
+	adv_mats_proj_y = Array<OneD, Eigen::MatrixXd > (RBsize);
+	adv_vec_proj_x = Array<OneD, Eigen::VectorXd > (RBsize);
+	adv_vec_proj_y = Array<OneD, Eigen::VectorXd > (RBsize);
+	adv_vec_proj_x_newton_RB = Array<OneD, Eigen::MatrixXd > (RBsize);
+	adv_vec_proj_y_newton_RB = Array<OneD, Eigen::MatrixXd > (RBsize);
+
+	// to be superseded by:
+	adv_mats_proj_x_2d = Array<OneD, Array<OneD, Array<OneD, Eigen::MatrixXd > > > (RBsize); // should be RBsize x number_elem_trafo x 2 x RBsize x RBsize
+	adv_mats_proj_y_2d = Array<OneD, Array<OneD, Array<OneD, Eigen::MatrixXd > > > (RBsize);
+	adv_vec_proj_x_2d = Array<OneD, Array<OneD, Array<OneD, Eigen::VectorXd > > > (RBsize);
+	adv_vec_proj_y_2d = Array<OneD, Array<OneD, Array<OneD, Eigen::VectorXd > > > (RBsize);
+
+	Array<OneD, double> PhysBase_zero(GetNpoints(), 0.0);
+	for(int trafo_iter = 0; trafo_iter < RBsize; trafo_iter++)
+	{
+		time_t timer_1;
+		time_t timer_2;
+		time(&timer_1);  /* get current time; same as: timer = time(NULL)  */
+
+		Array<OneD, double> curr_PhysBaseVec_x = orth_PhysBaseVec_x[trafo_iter];
+		Array<OneD, double> curr_PhysBaseVec_y = orth_PhysBaseVec_y[trafo_iter];
+
+		adv_mats_proj_x_2d[trafo_iter] = gen_adv_mats_proj_x_2d(curr_PhysBaseVec_x, adv_vec_proj_x_2d[trafo_iter]);
+
+		time(&timer_2);  /* get current time; same as: timer = time(NULL)  */
+		double seconds = difftime(timer_1, timer_2);
+		cout << "time for a single gen_adv_mats_proj_x_2d in seconds " << seconds << endl;
+		cout << "have 2 times RBsize of that " << endl;
+
+		adv_mats_proj_y_2d[trafo_iter] = gen_adv_mats_proj_y_2d(curr_PhysBaseVec_y, adv_vec_proj_y_2d[trafo_iter]);
+	
+	}
+	
+
+//	Array<OneD, double> PhysBase_zero(GetNpoints(), 0.0);
+/*
+	for(int trafo_iter = 0; trafo_iter < RBsize; trafo_iter++)
+	{
+		Array<OneD, double> curr_PhysBaseVec_x = orth_PhysBaseVec_x[trafo_iter];
+		Array<OneD, double> curr_PhysBaseVec_y = orth_PhysBaseVec_y[trafo_iter];
+
+		InitObject();
+
+		DoInitialiseAdv(curr_PhysBaseVec_x, PhysBase_zero); // call with parameter in phys state
+		// needs to be replaced with a more gen. term		Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
+		Eigen::MatrixXd adv_matrix;
+		adv_matrix = Get_advection_matrix();
+		Eigen::VectorXd add_to_rhs_adv(M_truth_size); // probably need this for adv and non-adv
+		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;
+		Eigen::MatrixXd adv_matrix_simplified = remove_cols_and_rows(adv_matrix, elem_loc_dbc);
+
+		adv_vec_proj_x_newton_RB[trafo_iter] = Eigen::MatrixXd::Zero(RBsize,RBsize);
+
+		if (use_Newton)
+		{
+			for(int RB_counter = 0; RB_counter < RBsize; RB_counter++)
+			{			
+				Eigen::VectorXd add_to_rhs_adv_newton_RB(M_truth_size); 
+				add_to_rhs_adv_newton_RB = adv_matrix * PODmodes.col(RB_counter);      
+				Eigen::VectorXd adv_rhs_add_newton = remove_rows(add_to_rhs_adv_newton_RB, elem_loc_dbc);
+				Eigen::VectorXd adv_rhs_proj_newton = RB.transpose() * adv_rhs_add_newton;
+				adv_vec_proj_x_newton_RB[trafo_iter].col(RB_counter) = adv_rhs_proj_newton;
+			}
+		}
+
+
+		Eigen::VectorXd adv_rhs_add = remove_rows(add_to_rhs_adv, elem_loc_dbc);
+		Eigen::MatrixXd adv_mat_proj = RB.transpose() * adv_matrix_simplified * RB;
+		Eigen::VectorXd adv_rhs_proj = RB.transpose() * adv_rhs_add;
+
+		adv_mats_proj_x[trafo_iter] = adv_mat_proj;
+		adv_vec_proj_x[trafo_iter] = adv_rhs_proj;
+
+		adv_vec_proj_y_newton_RB[trafo_iter] = Eigen::MatrixXd::Zero(RBsize,RBsize);
+		DoInitialiseAdv(PhysBase_zero , curr_PhysBaseVec_y ); // call with parameter in phys state
+		adv_matrix = Get_advection_matrix();
+		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;   
+		adv_matrix_simplified = remove_cols_and_rows(adv_matrix, elem_loc_dbc);
+		adv_rhs_add = remove_rows(add_to_rhs_adv, elem_loc_dbc);
+		adv_mat_proj = RB.transpose() * adv_matrix_simplified * RB;
+		adv_rhs_proj = RB.transpose() * adv_rhs_add;
+		adv_mats_proj_y[trafo_iter] = adv_mat_proj;
+		adv_vec_proj_y[trafo_iter] = adv_rhs_proj;
+
+		if (use_Newton)
+		{
+			for(int RB_counter = 0; RB_counter < RBsize; RB_counter++)
+			{			
+				Eigen::VectorXd add_to_rhs_adv_newton_RB(M_truth_size); 
+				add_to_rhs_adv_newton_RB = adv_matrix * PODmodes.col(RB_counter);      
+				Eigen::VectorXd adv_rhs_add_newton = remove_rows(add_to_rhs_adv_newton_RB, elem_loc_dbc);
+				Eigen::VectorXd adv_rhs_proj_newton = RB.transpose() * adv_rhs_add_newton;
+				adv_vec_proj_y_newton_RB[trafo_iter].col(RB_counter) = adv_rhs_proj_newton;
+			}
+		}
+	} */
     }
 
 
@@ -3507,7 +4188,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	}
     }
 
-    void CoupledLinearNS_TT::trafo_current_para(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y, Array<OneD, NekDouble> parameter_of_interest)
+    Array<OneD, Array<OneD, NekDouble> > CoupledLinearNS_TT::trafo_current_para(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y, Array<OneD, NekDouble> parameter_of_interest)
     {
 
 	double w = parameter_of_interest[0];	
@@ -3520,8 +4201,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
         int nz_loc;
         nz_loc = 1;
 
-        int  nel  = m_fields[m_velocity[0]]->GetNumElmts();
-        int  nvel   = m_velocity.num_elements();
+        int nel  = m_fields[m_velocity[0]]->GetNumElmts();
+        int nvel   = m_velocity.num_elements();
         int nsize_bndry = nvel*m_fields[m_velocity[0]]->GetExp(0)->NumBndryCoeffs()*nz_loc;
         int nsize_bndry_p1 = nsize_bndry+nz_loc;
         int nsize_int = (nvel*m_fields[m_velocity[0]]->GetExp(0)->GetNcoeffs()*nz_loc - nsize_bndry);
@@ -3530,6 +4211,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
         int Ahrows = nsize_bndry_p1;
 
 	Array<OneD, Eigen::MatrixXd > Ah_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry_p1, nsize_bndry_p1
+	Array<OneD, Eigen::MatrixXd > Bh_elem(m_fields[0]->GetNumElmts()); // 
 	Array<OneD, Eigen::MatrixXd > B_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry, nsize_int
 	Array<OneD, Eigen::MatrixXd > C_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry, nsize_int
 	Array<OneD, Eigen::MatrixXd > D_elem(m_fields[0]->GetNumElmts()); // , nsize_int, nsize_int
@@ -3783,7 +4465,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 		}
 
- 
+ 		// chosen choice: redo the nektar++ approach
 		// possible alternatives:
 		// build instead the sing_* matrices directly
 		// or copy for test purposes from setupcoupledmats??
@@ -3842,16 +4524,442 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		B_elem[curr_elem] = B_elem[curr_elem] * D_elem[curr_elem];
 		Ah_elem[curr_elem].block(0,0,nsize_bndry,nsize_bndry) = Ah_elem[curr_elem].block(0,0,nsize_bndry,nsize_bndry) - B_elem[curr_elem] * C_elem[curr_elem].transpose();
 		Eigen::MatrixXd Elem_Cinv = D_elem[curr_elem];
+		Eigen::MatrixXd Elem_BCinv = B_elem[curr_elem];
+		Eigen::MatrixXd Elem_Btilde = C_elem[curr_elem];
+		Eigen::MatrixXd Elem_DintCinvDTint = Dint_elem[curr_elem] * Elem_Cinv * Dint_elem[curr_elem].transpose();
+		Eigen::MatrixXd Elem_BCinvDTint_m_DTbnd = Elem_BCinv * Dint_elem[curr_elem].transpose() - Dbnd_elem[curr_elem].transpose();
+		Eigen::MatrixXd Elem_DintCinvBTtilde_m_Dbnd = Dint_elem[curr_elem] * Elem_Cinv * Elem_Btilde.transpose() - Dbnd_elem[curr_elem];
+
+		Eigen::MatrixXd Bh_curr_ele = Eigen::MatrixXd::Zero( nsize_bndry_p1, nsize_p_m1 );
+		Eigen::MatrixXd Ch_curr_ele = Eigen::MatrixXd::Zero( nsize_p_m1, nsize_bndry_p1 );
+		Eigen::MatrixXd Dh_curr_ele = Eigen::MatrixXd::Zero( nsize_p_m1, nsize_p_m1 );
+		
+		for (int i = 0; i < nsize_p_m1; ++i)
+		{
+			for (int j = 0; j < nsize_p_m1; ++j)
+			{
+				Dh_curr_ele(i,j) = -Elem_DintCinvDTint(i+1,j+1);
+			}
+		}
+
+		for (int i = 0; i < nsize_bndry; ++i)
+		{
+			Ah_elem[curr_elem](i,nsize_bndry) = Elem_BCinvDTint_m_DTbnd(i,0);
+			Ah_elem[curr_elem](nsize_bndry,i) = Elem_DintCinvBTtilde_m_Dbnd(0,i);
+		}		
+		Ah_elem[curr_elem](nsize_bndry,nsize_bndry) = -Elem_DintCinvDTint(0,0);
+
+		for (int j = 0; j < nsize_p_m1; ++j)
+		{
+			for (int i = 0; i < nsize_bndry; ++i)
+			{
+				Bh_curr_ele(i,j) = Elem_BCinvDTint_m_DTbnd(i,j+1);
+				Ch_curr_ele(j,i) = Elem_DintCinvBTtilde_m_Dbnd(j+1,i);
+			}
+		}
+
+		for (int j = 0; j < nsize_p_m1; ++j)
+		{
+			Bh_curr_ele(nsize_bndry, j) = - Elem_DintCinvDTint(0, j+1);
+			Ch_curr_ele(j, nsize_bndry) = - Elem_DintCinvDTint(j+1, 0);
+		}
+
+		Dh_curr_ele = Dh_curr_ele.inverse();
+		Bh_curr_ele = Bh_curr_ele * Dh_curr_ele;
+		Ah_elem[curr_elem] = Ah_elem[curr_elem] - Bh_curr_ele * Ch_curr_ele;
+		Bh_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_bndry_p1, nsize_bndry_p1 );
+		Bh_elem[curr_elem] = Bh_curr_ele;
+		Ch_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_p_m1, nsize_bndry_p1 );
+		Ch_elem[curr_elem] = Ch_curr_ele;
+		Dh_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_p_m1, nsize_p_m1 );
+		Dh_elem[curr_elem] = Dh_curr_ele;
+
+
+		
 
 
 //		sing_A[]
 
 
 
-		cout << "finished curr_elem " << curr_elem << endl;
+//		cout << "finished curr_elem " << curr_elem << endl;
 
 
 	} // loop over curr_elem
+
+	// nBndDofs already defined
+	// NumDirBCs from GetNumGlobalDirBndCoeffs ??
+
+	int NumDirBCs = m_locToGloMap[0]->GetNumGlobalDirBndCoeffs();
+	nBndDofs = m_locToGloMap[0]->GetNumGlobalBndCoeffs();  // number of global bnd dofs, also in the .h
+	int nGlobHomBndDofs = nBndDofs - NumDirBCs;
+	int rows = nGlobHomBndDofs;
+	if (debug_mode)
+	{
+	//	cout << "rows " << rows << endl;
+	//	cout << "nBndDofs " << nBndDofs << endl;
+	//	cout << "NumDirBCs " << NumDirBCs << endl;
+	}
+	Eigen::MatrixXd my_Gmat = Eigen::MatrixXd::Zero(rows, rows);
+	int num_elem = m_fields[0]->GetNumElmts();
+	Eigen::MatrixXd M_trafo = Eigen::MatrixXd::Zero(num_elem*nsize_bndry + num_elem, nGlobHomBndDofs);
+	Eigen::MatrixXd M_trafo_no_pp = Eigen::MatrixXd::Zero(num_elem*nsize_bndry, nGlobHomBndDofs);
+
+        const Array<OneD,const int>& loctoglobndmap = m_locToGloMap[0]->GetLocalToGlobalBndMap();
+        const Array<OneD,const NekDouble>& loctoglobndsign = m_locToGloMap[0]->GetLocalToGlobalBndSign();
+
+	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
+	{
+		int cnt = curr_elem*nsize_bndry_p1;
+		int cnt_no_pp = curr_elem*nsize_bndry;
+		Eigen::MatrixXd loc_Ah = Ah_elem[curr_elem];
+		for (int i = 0; i < nsize_bndry_p1; ++i)
+		{
+			int gid1 = loctoglobndmap[cnt + i] - NumDirBCs;
+			int sign1 = loctoglobndsign[cnt + i];
+			if (gid1 >= 0)
+			{
+				M_trafo(cnt+i, gid1) = sign1;
+				if (i < nsize_bndry)
+				{
+					M_trafo_no_pp(cnt_no_pp + i, gid1) = sign1;
+				}
+				for (int j = 0; j < nsize_bndry_p1; ++j)
+				{
+					int gid2 = loctoglobndmap[cnt + j] - NumDirBCs;
+					int sign2 = loctoglobndsign[cnt + j];
+					if (gid2 >= 0)
+					{
+						my_Gmat(gid1,gid2) += sign1*sign2*loc_Ah(i,j);
+					}
+				}
+			}
+		}
+	}
+
+	int nGlobBndDofs = nBndDofs;
+
+        Array<OneD, NekDouble > f_bnd(num_elem*nsize_bndry);
+        NekVector< NekDouble  > F_bnd(f_bnd.num_elements(), f_bnd, eWrapper);
+        Array<OneD, NekDouble > f_int(num_elem*nsize_int);
+        NekVector< NekDouble  > F_int(f_int.num_elements(),f_int, eWrapper);
+
+        Array<OneD, NekDouble > bnd   (m_locToGloMap[0]->GetNumGlobalCoeffs(),0.0);
+        Array<OneD, NekDouble > fh_bnd(m_locToGloMap[0]->GetNumGlobalCoeffs(),0.0);
+
+        //  Set Weak BC into f_bnd and Dirichlet Dofs in bnd
+        const Array<OneD,const int>& bndmap = m_locToGloMap[0]->GetBndCondCoeffsToGlobalCoeffsMap();
+	// Forcing function with weak boundary conditions and Dirichlet conditions
+        int bndcnt=0;
+        for(int k = 0; k < nvel; ++k)
+        {
+	    const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConds = m_fields[k]->GetBndConditions();
+            Array<OneD, const MultiRegions::ExpListSharedPtr> bndCondExp;
+            bndCondExp = m_fields[k]->GetBndCondExpansions();
+            for(int i = 0; i < bndCondExp.num_elements(); ++i)
+            {
+                const Array<OneD, const NekDouble > bndCondCoeffs = bndCondExp[i]->GetCoeffs();
+		int cnt = 0;
+                for(int n = 0; n < nz_loc; ++n)
+                {
+		    if (debug_mode)
+		    {
+//			    cout << "bndConds[i]->GetBoundaryConditionType() " << bndConds[i]->GetBoundaryConditionType() << endl;
+//			    cout << "SpatialDomains::eDirichlet " << SpatialDomains::eDirichlet << endl;
+		    }
+                    if(bndConds[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                    {
+                        for(int j = 0; j < (bndCondExp[i])->GetNcoeffs(); j++)
+                        {
+                            if (m_equationType == eSteadyNavierStokes && m_initialStep == false)
+                            {
+                                //This condition set all the Dirichlet BC at 0 after
+                                //the initial step of the Newton method
+                                bnd[bndmap[bndcnt++]] = 0;
+//				cout << "setting bnd[bndmap[bndcnt++]] = 0; " << endl;
+                            }
+                            else
+                            {
+//				cout << "setting bnd[bndmap[bndcnt++]] = bndCondCoeffs[cnt++] with " << bndCondCoeffs[cnt] << endl;
+                                bnd[bndmap[bndcnt++]] = bndCondCoeffs[cnt++];
+
+                            }
+                        }
+                    }
+                    else
+                    {                    
+                        for(int j = 0; j < (bndCondExp[i])->GetNcoeffs(); j++)
+                        {
+ //                           cout << "setting fh_bnd[bndmap[bndcnt++]] += bndCondCoeffs[cnt++] with " << bndCondCoeffs[cnt] << endl;
+                            fh_bnd[bndmap[bndcnt++]] += bndCondCoeffs[cnt++];
+
+                        }
+                    }
+                }
+            }
+        }
+
+	int nLocBndDofs = num_elem * nsize_bndry_p1;
+	// ??	nGlobDofs = ??
+	// nGlobBndDofs defined??, si, si, si come nBndDofs
+	int nDirBndDofs = NumDirBCs;
+	Eigen::VectorXd loc_dbc = Eigen::VectorXd::Zero(nLocBndDofs);
+	Eigen::VectorXd V_GlobBnd = Eigen::VectorXd::Zero(nGlobBndDofs);
+
+//	cout << "bnd.num_elements() is the same as m_locToGloMap[0]->GetNumGlobalCoeffs() " << bnd.num_elements() << endl;
+//	cout << "nGlobBndDofs " << nGlobBndDofs << endl;
+
+	for (int i = 0; i < nGlobBndDofs; ++i)
+	{
+		V_GlobBnd(i) = bnd[i];
+	}
+	
+	for (int i = 0; i < nLocBndDofs; ++i)
+	{
+		loc_dbc(i) = loctoglobndsign[i] * V_GlobBnd(loctoglobndmap[i]);
+	}
+
+	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
+	{
+		int cnt = curr_elem*nsize_bndry_p1;
+		Eigen::MatrixXd loc_Ah = Ah_elem[curr_elem];
+		Eigen::VectorXd lds = loc_dbc.segment(cnt,nsize_bndry_p1);
+//		cout << "lds sizes " << lds.rows() << " " << lds.cols() << endl;
+//		cout << "loc_Ah sizes " << loc_Ah.rows() << " " << loc_Ah.cols() << endl;	
+		loc_dbc.segment(cnt,nsize_bndry_p1) = loc_Ah * lds; // should not interfere with aliasing
+	}
+
+	Eigen::VectorXd V_GlobHomBndTmp = Eigen::VectorXd::Zero(nGlobHomBndDofs);
+	Eigen::VectorXd tmp = Eigen::VectorXd::Zero(nGlobBndDofs);
+	
+	for (int i = 0; i < nLocBndDofs; ++i)
+	{
+		tmp(loctoglobndmap[i]) += loctoglobndsign[i] * loc_dbc(i);
+	}
+
+	int offset = nDirBndDofs;
+	V_GlobHomBndTmp = tmp.segment(offset, nGlobBndDofs-offset);
+	// actually this, but is mixing Nektar and Eigen data structures V_GlobHomBndTmp = -V_GlobHomBndTmp + fh_bnd[NumDirBCs : nGlobHomBndDofs + NumDirBCs]
+	V_GlobHomBndTmp = -V_GlobHomBndTmp;
+	Eigen::VectorXd my_sys_in = V_GlobHomBndTmp;
+
+	Eigen::VectorXd my_Asolution = my_Gmat.colPivHouseholderQr().solve(my_sys_in);
+
+	Eigen::VectorXd my_bnd_after = Eigen::VectorXd::Zero(m_locToGloMap[0]->GetNumGlobalCoeffs());
+	for (int i = 0; i < m_locToGloMap[0]->GetNumGlobalCoeffs(); ++i)
+	{
+		my_bnd_after(i) = bnd[i];
+	}
+	my_bnd_after.segment(offset, nGlobBndDofs-offset) += my_Asolution;
+	V_GlobBnd = my_bnd_after.segment(0, nGlobBndDofs);
+	for (int i = 0; i < nLocBndDofs; ++i)
+	{
+		loc_dbc(i) = loctoglobndsign[i] * V_GlobBnd(loctoglobndmap[i]);
+	}
+	Eigen::VectorXd Fint = Eigen::VectorXd::Zero(num_elem*nsize_p - num_elem);
+	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
+	{
+		int cnt = curr_elem*nsize_bndry_p1;
+		Eigen::MatrixXd loc_Ch = Ch_elem[curr_elem];
+		Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1) = - loc_Ch * loc_dbc.segment(cnt, nsize_bndry_p1);  // actually an fh_bnd in case of body forcing as well
+		Eigen::MatrixXd loc_Dh = Dh_elem[curr_elem];
+		Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1) = loc_Dh * Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1);
+	}
+	my_bnd_after.segment(nGlobBndDofs, m_locToGloMap[0]->GetNumGlobalCoeffs() - nGlobBndDofs) = Fint;
+
+	for (int i = 0; i < m_locToGloMap[0]->GetNumGlobalCoeffs(); ++i)
+	{
+		 bnd[i] = my_bnd_after(i);
+	}
+
+	// can I now copy-paste from Nektar ?? -- try to do so:
+
+        const Array<OneD,const int>& loctoglomap = m_locToGloMap[0]->GetLocalToGlobalMap();
+        const Array<OneD,const NekDouble>& loctoglosign = m_locToGloMap[0]->GetLocalToGlobalSign();
+
+        // unpack pressure and velocity boundary systems. 
+        offset = 0;
+	int cnt = 0; 
+        int totpcoeffs = m_pressure->GetNcoeffs();
+        Array<OneD, NekDouble> p_coeffs = m_pressure->UpdateCoeffs();
+        for(int i = 0; i <  nel; ++i)
+        {
+            int eid  = i;
+            int nbnd = nz_loc*m_fields[0]->GetExp(eid)->NumBndryCoeffs(); 
+            int nint = m_pressure->GetExp(eid)->GetNcoeffs(); 
+            
+            for(int j = 0; j < nvel; ++j)
+            {
+                for(int k = 0; k < nbnd; ++k)
+                {
+                    f_bnd[cnt+k] = loctoglosign[offset+j*nbnd+k]*bnd[loctoglomap[offset + j*nbnd + k]];
+                }
+                cnt += nbnd;
+            }
+            offset += nvel*nbnd + nint*nz_loc;
+        }
+
+        m_pressure->SetPhysState(false);
+        
+        Array<OneD, NekDouble > f_p(num_elem*nsize_p);
+        NekVector<  NekDouble > F_p(f_p.num_elements(),f_p,eWrapper);
+
+        offset = 0; 
+	cnt = 0; 
+	int cnt1 = 0;
+        for(int i = 0; i < nel; ++i)
+        {
+            int eid  = i;
+            int nint = m_pressure->GetExp(eid)->GetNcoeffs(); 
+            int nbnd = m_fields[0]->GetExp(eid)->NumBndryCoeffs(); 
+            cnt1 = m_pressure->GetCoeff_Offset(eid);
+            
+            for(int n = 0; n < nz_loc; ++n)
+            {
+                for(int j = 0; j < nint; ++j)
+                {
+                    p_coeffs[n*totpcoeffs + cnt1+j] = f_p[cnt+j] = bnd[loctoglomap[offset + (nvel*nz_loc)*nbnd + n*nint + j]];
+                }
+                cnt += nint;
+            }
+            offset += (nvel*nbnd + nint)*nz_loc;
+        }
+
+        // Back solve first level of static condensation for interior
+        // velocity space and store in F_int
+	// F_int should initially be empty without body forcing
+
+//        F_int = F_int + Transpose(*m_mat[mode].m_D_int)*F_p - Transpose(*m_mat[mode].m_Btilde)*F_bnd;
+//        F_int = (*m_mat[mode].m_Cinv)*F_int;
+		// like to do the MatVec in Eigen and the transform into Nektar?? for f_p and bnd
+
+	Eigen::VectorXd f_bnd_eigen = Eigen::VectorXd::Zero(f_bnd.num_elements());
+	for (int i = 0; i < f_bnd.num_elements(); ++i)
+	{
+		f_bnd_eigen(i) = f_bnd[i];
+	}
+	Eigen::VectorXd f_p_eigen = Eigen::VectorXd::Zero(f_p.num_elements());
+	for (int i = 0; i < f_p.num_elements(); ++i)
+	{
+		f_p_eigen(i) = f_p[i];
+	}
+	Eigen::VectorXd f_int_eigen = Eigen::VectorXd::Zero(f_int.num_elements()); // num_elem*nsize_int
+
+	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
+	{
+		int cnt_Dint = curr_elem*nsize_p;
+		int cnt_C = curr_elem*nsize_bndry;
+		int cnt_D = curr_elem*nsize_int;
+		Eigen::MatrixXd loc_Dint = Dint_elem[curr_elem];
+		Eigen::MatrixXd loc_C = C_elem[curr_elem];
+		Eigen::MatrixXd loc_D = D_elem[curr_elem];
+		// f_int_rhs should come in as well...
+//		cout << "f_p_eigen.rows, f_p_eigen.cols " << f_p_eigen.rows() << " " << f_p_eigen.cols() << endl;
+//		cout << "f_bnd_eigen.rows, f_bnd_eigen.cols " << f_bnd_eigen.rows() << " " << f_bnd_eigen.cols() << endl;
+//		Eigen::VectorXd nn =  f_p_eigen.segment(cnt_Dint, nsize_p);
+//		cout << "nn.rows, nn.cols " << nn.rows() << " " << nn.cols() << endl;
+		f_int_eigen.segment(curr_elem*nsize_int, nsize_int) = loc_Dint.transpose() * f_p_eigen.segment(cnt_Dint, nsize_p) - loc_C.transpose() * f_bnd_eigen.segment(cnt_C, nsize_bndry);
+		f_int_eigen.segment(curr_elem*nsize_int, nsize_int) = loc_D * f_int_eigen.segment(curr_elem*nsize_int, nsize_int);
+	}
+
+	for (int i = 0; i < f_int.num_elements(); ++i)
+	{
+		f_int[i] = f_int_eigen(i);
+	}
+
+	int nlc = m_locToGloMap[0]->GetNumLocalCoeffs();
+	int nplanecoeffs = nlc;
+
+        // Unpack solution from Bnd and F_int to v_coeffs 
+        cnt = 0; 
+	cnt1 = 0;
+        for(int i = 0; i < nel; ++i) // loop over elements
+        {
+            int eid  = i;
+            m_fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
+            m_fields[0]->GetExp(eid)->GetInteriorMap(imap);
+            int nbnd   = bmap.num_elements();
+            int nint   = imap.num_elements();
+            int offset = m_fields[0]->GetCoeff_Offset(eid);
+            
+            for(int j = 0; j < nvel; ++j) // loop over velocity fields 
+            {
+                for(int n = 0; n < nz_loc; ++n)
+                {
+                    for(int k = 0; k < nbnd; ++k)
+                    {
+                        m_fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k], f_bnd[cnt+k]);
+                    }
+                    
+                    for(int k = 0; k < nint; ++k)
+                    {
+                        m_fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k], f_int[cnt1+k]);
+                    }
+                    cnt  += nbnd;
+                    cnt1 += nint;
+                }
+            }
+        }
+        
+        for(int j = 0; j < nvel; ++j) 
+        {
+            m_fields[j]->SetPhysState(false);
+        }
+
+	// the fields should be the same as the input:  Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y
+	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = UpdateFields();
+	m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys());
+	m_fields_t[1]->BwdTrans(m_fields_t[1]->GetCoeffs(), m_fields_t[1]->UpdatePhys());
+	Array<OneD, NekDouble> out_field_trafo_x(GetNpoints(), 0.0);
+	Array<OneD, NekDouble> out_field_trafo_y(GetNpoints(), 0.0);
+
+	Eigen::VectorXd csx0_trafo(GetNpoints());
+	Eigen::VectorXd csy0_trafo(GetNpoints());
+	Eigen::VectorXd csx0(GetNpoints());
+	Eigen::VectorXd csy0(GetNpoints());
+
+	CopyFromPhysField(0, out_field_trafo_x); 
+	CopyFromPhysField(1, out_field_trafo_y);
+	for( int index_conv = 0; index_conv < GetNpoints(); ++index_conv)
+	{
+		csx0_trafo(index_conv) = out_field_trafo_x[index_conv];
+		csy0_trafo(index_conv) = out_field_trafo_y[index_conv];
+		csx0(index_conv) = snapshot_x[index_conv];
+		csy0(index_conv) = snapshot_y[index_conv];
+	}
+
+	if (debug_mode)
+	{
+		cout << "csx0.norm() " << csx0.norm() << endl;
+		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+		cout << "csy0.norm() " << csy0.norm() << endl;
+		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+	}
+
+	Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y(2);
+	snapshot_result_phys_velocity_x_y[0] = Array<OneD, NekDouble>(GetNpoints());
+	snapshot_result_phys_velocity_x_y[1] = Array<OneD, NekDouble>(GetNpoints());
+	snapshot_result_phys_velocity_x_y[0] = out_field_trafo_x;
+	snapshot_result_phys_velocity_x_y[1] = out_field_trafo_y;
+
+	curr_f_bnd = Eigen::VectorXd::Zero(f_bnd.num_elements());
+	for (int i_phys_dof = 0; i_phys_dof < f_bnd.num_elements(); i_phys_dof++)
+	{
+		curr_f_bnd(i_phys_dof) = f_bnd[i_phys_dof]; 
+	}
+	curr_f_p = Eigen::VectorXd::Zero(f_p.num_elements()); 
+	for (int i_phys_dof = 0; i_phys_dof < f_p.num_elements(); i_phys_dof++)
+	{
+		curr_f_p(i_phys_dof) = f_p[i_phys_dof]; 
+	}
+	curr_f_int = Eigen::VectorXd::Zero(f_int.num_elements()); 
+	for (int i_phys_dof = 0; i_phys_dof < f_int.num_elements(); i_phys_dof++)
+	{
+		curr_f_int(i_phys_dof) = f_int[i_phys_dof]; 
+	}
+
+
+	return snapshot_result_phys_velocity_x_y;
 
 
 
@@ -3988,6 +5096,12 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	// setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
 	cout << "entering CoupledLinearNS_TT::do_geo_trafo() " << endl;
 
+//	cout << "checking if all quantities set: " << endl;
+//	cout << "Nmax " << Nmax << endl;
+//	cout << "curr_f_bnd.size() " << curr_f_bnd.size() << endl;
+//	cout << "curr_f_p.size() " << curr_f_p.size() << endl;
+//	cout << "curr_f_int.size() " << curr_f_int.size() << endl;
+
 	Eigen::MatrixXd collect_f_bnd( curr_f_bnd.size() , Nmax );
 	Eigen::MatrixXd collect_f_p( curr_f_p.size() , Nmax );
 	Eigen::MatrixXd collect_f_int( curr_f_int.size() , Nmax );
@@ -4000,10 +5114,88 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //		cout << "curr_f_int.size() " << curr_f_int.size() << endl;
 		// identify the geometry one - introduce in the .h some vars keeping the para_type
 		// here now [0] is geometry 'w' and [1] is k_invis
-		trafo_current_para(snapshot_x_collection[i], snapshot_y_collection[i], general_param_vector[i]); // setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
+
+		//for (int repeat_i = 0; repeat_i < 10; ++repeat_i)
+
+		// setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
+		Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection[i], snapshot_y_collection[i], general_param_vector[i]); 
+
+
+		if (do_trafo_check)
+		{
+			double L2error = 1;
+			do
+			{
+				Array<OneD, Array<OneD, NekDouble> > prev_snapshot_result_phys_velocity_x_y = snapshot_result_phys_velocity_x_y;
+				snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_result_phys_velocity_x_y[0], snapshot_result_phys_velocity_x_y[1], general_param_vector[i]); // setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
+				double L2error_x = L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]);
+				double L2error_y = L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]);
+				double L2error_x_ref = L2Error(0);
+				double L2error_y_ref = L2Error(1);
+				L2error = sqrt(L2error_x*L2error_x + L2error_y*L2error_y) / sqrt(L2error_x_ref*L2error_x_ref + L2error_y_ref*L2error_y_ref);
+				cout << "relative L2error w.r.t. current iterate " << L2error << endl;
+//				cout << " L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]) " << L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]) << endl;
+//				cout << " L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]) " << L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]) << endl;
+			}
+			while ((L2error > 1e-11) && (!load_cO_snapshot_data_from_files));
+		}
+
+		Eigen::VectorXd trafo_f_bnd = curr_f_bnd;
+		Eigen::VectorXd trafo_f_p = curr_f_p;
+		Eigen::VectorXd trafo_f_int = curr_f_int;
+
+		collect_f_bnd.col(i) = trafo_f_bnd;
+		collect_f_p.col(i) = trafo_f_p;
+		collect_f_int.col(i) = trafo_f_int;
+
+		// generate the correct string
+		std::stringstream sstm;
+		sstm << "Conv_Oseen_param" << i << ".fld";
+		std::string filename = sstm.str();
+		if (!load_cO_snapshot_data_from_files)
+		{
+			write_curr_field(filename);
+		}
+
 	}
+
+	collect_f_all = Eigen::MatrixXd::Zero( curr_f_bnd.size()+curr_f_p.size()+curr_f_int.size() , Nmax );
+	collect_f_all.block(0,0,collect_f_bnd.rows(),collect_f_bnd.cols()) = collect_f_bnd;
+	collect_f_all.block(collect_f_bnd.rows(),0,collect_f_p.rows(),collect_f_p.cols()) = collect_f_p;
+	collect_f_all.block(collect_f_bnd.rows()+collect_f_p.rows(),0,collect_f_int.rows(),collect_f_int.cols()) = collect_f_int;
+
 	cout << "finished CoupledLinearNS_TT::do_geo_trafo() " << endl;
     }
+
+    void CoupledLinearNS_TT::write_curr_field(std::string filename)
+    {
+
+        std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
+        std::vector<std::string> variables(m_fields.num_elements()+1);
+        int i;
+        
+        for(i = 0; i < m_fields.num_elements(); ++i)
+        {
+            fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+            variables[i]   = m_boundaryConditions->GetVariable(i);
+	    if (debug_mode)
+	    {
+		    cout << "variables[i] " << variables[i] << endl;
+	    }
+        }
+
+	if (debug_mode)
+	{
+		cout << "m_singleMode " << m_singleMode << endl;	
+	}
+
+	fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs(), 0.0);  
+        variables[i] = "p"; 
+
+	WriteFld(filename,m_fields[0],fieldcoeffs,variables);
+
+    }
+
 
     void CoupledLinearNS_TT::compute_snapshots_geometry_params()
     {
@@ -4034,15 +5226,43 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
 	{
 		int current_index = iter_index;
-		double current_nu = param_vector[current_index];
+		double current_nu;
+		double w;
+		if (parameter_space_dimension == 1)
+		{
+			current_nu = param_vector[current_index];
+		}
+		else if (parameter_space_dimension == 2)
+		{
+			Array<OneD, NekDouble> current_param = general_param_vector[current_index];
+			w = current_param[0];	
+			current_nu = current_param[1];
+		}
+		if (debug_mode)
+		{
+			cout << " online phase current nu " << current_nu << endl;
+		}
 		Set_m_kinvis( current_nu );
 		if (use_Newton)
 		{
 			DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
 		}
+
 		Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
-		Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
-		Eigen::VectorXd affine_vec_proj = gen_affine_vec_proj(current_nu, current_index);
+		Eigen::MatrixXd affine_mat_proj;
+		Eigen::VectorXd affine_vec_proj;
+
+		if (parameter_space_dimension == 1)
+		{
+			affine_mat_proj = gen_affine_mat_proj(current_nu);
+			affine_vec_proj = gen_affine_vec_proj(current_nu, current_index);
+		}
+		else if (parameter_space_dimension == 2)
+		{
+			affine_mat_proj = gen_affine_mat_proj_2d(current_nu, w);
+			affine_vec_proj = gen_affine_vec_proj_2d(current_nu, w, current_index);
+		}
+
 		Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
 		cout << "solve_affine " << solve_affine << endl;
 		Eigen::VectorXd repro_solve_affine = RB * solve_affine;
@@ -4220,6 +5440,16 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	
     void CoupledLinearNS_TT::offline_phase()
     {
+	time_t timer_1;
+	time_t timer_2;
+//	  struct tm y2k = {0};
+//	  double seconds;
+//	  y2k.tm_hour = 0;   y2k.tm_min = 0; y2k.tm_sec = 0;
+//	  y2k.tm_year = 100; y2k.tm_mon = 0; y2k.tm_mday = 1;
+//	  time(&timer);  /* get current time; same as: timer = time(NULL)  */
+//	  seconds = difftime(timer,mktime(&y2k));
+//	  printf ("%.f seconds since January 1, 2000 in the current timezone", seconds);
+
 	int load_snapshot_data_from_files = m_session->GetParameter("load_snapshot_data_from_files");
 	int number_of_snapshots = m_session->GetParameter("number_of_snapshots");
 	if (m_session->DefinesParameter("parameter_space_dimension")) 
@@ -4229,6 +5459,22 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	else
 	{
 		parameter_space_dimension = 1;
+	}
+	if (m_session->DefinesParameter("load_cO_snapshot_data_from_files")) 
+	{
+		load_cO_snapshot_data_from_files = m_session->GetParameter("load_cO_snapshot_data_from_files");	
+	}
+	else
+	{
+		load_cO_snapshot_data_from_files = 0;
+	}
+	if (m_session->DefinesParameter("do_trafo_check")) 
+	{
+		do_trafo_check = m_session->GetParameter("do_trafo_check");	
+	}
+	else
+	{
+		do_trafo_check = 1;
 	}
 	double POD_tolerance = m_session->GetParameter("POD_tolerance");
 	ref_param_index = m_session->GetParameter("ref_param_index");
@@ -4330,7 +5576,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //		cout << "type para1 " << type_para1 << endl;
 		int type_para2 = m_session->GetParameter("type_para2");
 		//cout << "type para2 " << type_para2 << endl;
-		int number_elem_trafo = m_session->GetParameter("number_elem_trafo");
+		number_elem_trafo = m_session->GetParameter("number_elem_trafo");
 
 		elements_trafo = Array<OneD, std::set<int> > (number_elem_trafo);
 //	    <P> elem_1 = {32,30,11,10,9,8,17,16,15,14,25,24,23,22}   	</P>   
@@ -4431,7 +5677,15 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		}
 		else if (parameter_space_dimension == 2)
 		{
-			load_snapshots_geometry_params(number_of_snapshots); 
+			if (!load_cO_snapshot_data_from_files)
+			{
+				load_snapshots_geometry_params(number_of_snapshots); 
+			}
+			else 
+			{
+				load_snapshots_geometry_params_conv_Oseen(number_of_snapshots); 
+			}
+
 		}
 	}
 	else
@@ -4449,7 +5703,10 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	cout << "snapshots available" << endl;
 
 	DoInitialise(); 
-	DoSolve();
+	DoSolve();  // for setting dimensions
+	f_bnd_size = curr_f_bnd.size();
+	f_p_size = curr_f_p.size();
+	f_int_size = curr_f_int.size();
 
 	cout << "DoInitialise and DoSolve done" << endl;
 	cout << "parameter_space_dimension " << parameter_space_dimension << endl;
@@ -4477,7 +5734,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	Eigen::VectorXd rel_singular_values = singular_values / singular_values.sum();
 	cout << "relative singular value percents: " << rel_singular_values << endl;
 	// determine RBsize corresponding to the chosen POD_tolerance
-	RBsize = 1; // the case of using all POD modes
+	RBsize = 1; 
 	Eigen::VectorXd cum_rel_singular_values = Eigen::VectorXd::Zero(singular_values.rows());
 	for (int i = 0; i < singular_values.rows(); ++i)
 	{
@@ -4524,17 +5781,33 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		cout << "c_f_all_PODmodes_wo_dbc.rows() " << c_f_all_PODmodes_wo_dbc.rows() << endl;
 		cout << "c_f_all_PODmodes_wo_dbc.cols() " << c_f_all_PODmodes_wo_dbc.cols() << endl;
 	}
+	time(&timer_1);
 	gen_phys_base_vecs();
+	time(&timer_2);
 	if (debug_mode)	
 	{
-		cout << "finished gen_phys_base_vecs " << endl;
+		cout << "finished gen_phys_base_vecs in " << difftime(timer_2, timer_1) << " seconds" << endl;
 	}
-	gen_proj_adv_terms();
+	if (parameter_space_dimension == 1)
+	{
+		gen_proj_adv_terms();
+	}
+	else if (parameter_space_dimension == 2)
+	{
+		gen_proj_adv_terms_2d();
+	}
 	if (debug_mode)	
 	{
 		cout << "finished gen_proj_adv_terms " << endl;
 	}
-	gen_reference_matrices();
+	if (parameter_space_dimension == 1)
+	{
+		gen_reference_matrices();
+	}
+	else if (parameter_space_dimension == 2)
+	{
+		gen_reference_matrices_2d();
+	}
 	if (debug_mode)	
 	{
 		cout << "finished gen_reference_matrices " << endl;
@@ -4547,6 +5820,52 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	for (int i = 0; i < RBsize; ++i)
 	{
 		recovered_affine_adv_mat_proj_xy += adv_mats_proj_x[i] * curr_xy_projected(i,0) + adv_mats_proj_y[i] * curr_xy_projected(i,1);
+	}
+	Eigen::MatrixXd affine_mat_proj = the_const_one_proj + current_nu * the_ABCD_one_proj + recovered_affine_adv_mat_proj_xy;
+
+	if (debug_mode)
+	{
+		Eigen::MatrixXd affine_mat = Get_complete_matrix();
+		cout << "affine_mat.rows() " << affine_mat.rows() << " affine_mat.cols() " << affine_mat.cols() << endl;
+		cout << "affine_mat_proj.rows() " << affine_mat_proj.rows() << " affine_mat_proj.cols() " << affine_mat_proj.cols() << endl;
+		cout << "RB.rows() " << RB.rows() << " RB.cols() " << RB.cols() << endl;
+		cout << "PODmodes.rows() " << PODmodes.rows() << " PODmodes.cols() " << PODmodes.cols() << endl;
+		cout << "affine_mat.norm() "  << affine_mat.norm() << endl;
+		cout << "affine_mat_proj.norm() " << affine_mat_proj.norm() << endl;
+		Eigen::MatrixXd reproj_affine_mat = Eigen::MatrixXd::Zero(RB.rows(), RB.rows());
+		reproj_affine_mat = RB * affine_mat_proj * RB.transpose();
+		cout << "reproj_affine_mat.norm() " << reproj_affine_mat.norm() << endl;
+		Eigen::MatrixXd affine_matrix_simplified = remove_cols_and_rows(affine_mat, elem_loc_dbc);
+		cout << "affine_matrix_simplified.norm() "  << affine_matrix_simplified.norm() << endl;
+		Eigen::MatrixXd reduced_affine_mat = Eigen::MatrixXd::Zero(RB.cols(), RB.cols());
+		reduced_affine_mat = RB.transpose() * affine_matrix_simplified * RB;
+		cout << "reduced_affine_mat.norm() "  << reduced_affine_mat.norm() << endl;
+
+	}
+
+	return affine_mat_proj;
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::gen_affine_mat_proj_2d(double current_nu, double w)
+    {
+	// avail datastructure	Array<OneD, Array<OneD, Array<OneD, Eigen::MatrixXd > > > adv_mats_proj_x_2d;
+	Eigen::MatrixXd recovered_affine_adv_mat_proj_xy = Eigen::MatrixXd::Zero(RBsize, RBsize);
+	for (int index_elem = 0; index_elem < number_elem_trafo; ++index_elem)
+	{
+		double detT = Geo_T(w, index_elem, 0);
+		double Ta = Geo_T(w, index_elem, 1);
+		double Tb = Geo_T(w, index_elem, 2);
+		double Tc = Geo_T(w, index_elem, 3);
+		double Td = Geo_T(w, index_elem, 4);
+		double c00 = Ta*Ta + Tb*Tb;
+		double c01 = Ta*Tc + Tb*Td;
+		double c11 = Tc*Tc + Td*Td;
+		for (int i = 0; i < RBsize; ++i)
+		{
+//			recovered_affine_adv_mat_proj_xy += adv_mats_proj_x[i] * curr_xy_projected(i,0) + adv_mats_proj_y[i] * curr_xy_projected(i,1);
+			recovered_affine_adv_mat_proj_xy += detT * curr_xy_projected(i,0) * (Ta * adv_mats_proj_x_2d[i][index_elem][0] + Tc * adv_mats_proj_x_2d[i][index_elem][1]) + detT * curr_xy_projected(i,1) * (Tb * adv_mats_proj_y_2d[i][index_elem][0] + Td * adv_mats_proj_y_2d[i][index_elem][1]);
+
+		}
 	}
 	Eigen::MatrixXd affine_mat_proj = the_const_one_proj + current_nu * the_ABCD_one_proj + recovered_affine_adv_mat_proj_xy;
 
@@ -4627,6 +5946,18 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*add_rhs_Newton ;  
     }
 
+    Eigen::VectorXd CoupledLinearNS_TT::gen_affine_vec_proj_2d(double current_nu, double w, int current_index)
+    {
+	Eigen::VectorXd recovered_affine_adv_rhs_proj_xy = Eigen::VectorXd::Zero(RBsize); 
+	for (int i = 0; i < RBsize; ++i)
+	{
+		recovered_affine_adv_rhs_proj_xy -= adv_vec_proj_x[i] * curr_xy_projected(i,0) + adv_vec_proj_y[i] * curr_xy_projected(i,1);
+	}	
+	Eigen::VectorXd add_rhs_Newton = Eigen::VectorXd::Zero(RBsize); 
+	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*add_rhs_Newton ;  
+    }
+
+
     Eigen::VectorXd CoupledLinearNS_TT::reconstruct_solution_w_dbc(Eigen::VectorXd reprojected_solve)
     {
 	Eigen::VectorXd reconstruct_solution = Eigen::VectorXd::Zero(f_bnd_dbc_full_size.rows());  // is of size M_truth_size
@@ -4651,7 +5982,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	double current_nu = ref_param_nu;
 	int current_index = ref_param_index;
 	Set_m_kinvis( current_nu );
-	DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+	DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]); // why is this necessary? -- it is however
 	the_const_one = Get_no_advection_matrix_pressure();
 	the_ABCD_one = Get_no_advection_matrix_ABCD();
 	the_const_one_simplified = remove_cols_and_rows(the_const_one, elem_loc_dbc);
@@ -4667,6 +5998,506 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //	cout << "the_const_one_rhs_proj " << the_const_one_rhs_proj << endl;
     }
 
+    void CoupledLinearNS_TT::gen_reference_matrices_2d()
+    {
+	// should also loop through the structures, doing an elementwise assembly
+	// in principle similar to the advection business		adv_mats_proj_x_2d = Array<OneD, Array<OneD, Array<OneD, Eigen::MatrixXd > > > (RBsize); // should be RBsize x number_elem_trafo x 2 x RBsize x RBsize
+	the_const_one_proj_2d = Array<OneD, Array<OneD, Eigen::MatrixXd > > (number_elem_trafo); // should be number_elem_trafo x 4 x RBsize x RBsize
+	the_ABCD_one_proj_2d = Array<OneD, Array<OneD, Eigen::MatrixXd > > (number_elem_trafo);
+	the_ABCD_one_rhs_proj_2d = Array<OneD, Array<OneD, Eigen::VectorXd > > (number_elem_trafo);	
+	the_const_one_rhs_proj_2d = Array<OneD, Array<OneD, Eigen::VectorXd > > (number_elem_trafo);
+	for (int i = 0; i < number_elem_trafo; ++i)
+	{
+		the_const_one_proj_2d[i] = Array<OneD, Eigen::MatrixXd > (4);
+		the_const_one_rhs_proj_2d[i] = Array<OneD, Eigen::VectorXd > (4);
+		the_ABCD_one_proj_2d[i] = Array<OneD, Eigen::MatrixXd > (4);
+		the_ABCD_one_rhs_proj_2d[i] = Array<OneD, Eigen::VectorXd > (4);
+		for (int j = 0; j < 4; ++j)
+		{
+			the_const_one_proj_2d[i][j] = Eigen::MatrixXd::Zero(RBsize, RBsize);
+			the_const_one_rhs_proj_2d[i][j] = Eigen::VectorXd::Zero(RBsize);
+			the_ABCD_one_proj_2d[i][j] = Eigen::MatrixXd::Zero(RBsize, RBsize);
+			the_ABCD_one_rhs_proj_2d[i][j] = Eigen::VectorXd::Zero(RBsize);
+		}
+	}	
+
+	StdRegions::StdExpansionSharedPtr locExp;
+        Array<OneD, unsigned int> bmap,imap; 
+        int nz_loc = 1;
+        int nel  = m_fields[m_velocity[0]]->GetNumElmts();
+        int nvel   = m_velocity.num_elements();
+        int nsize_bndry = nvel*m_fields[m_velocity[0]]->GetExp(0)->NumBndryCoeffs()*nz_loc;
+        int nsize_bndry_p1 = nsize_bndry+nz_loc;
+        int nsize_int = (nvel*m_fields[m_velocity[0]]->GetExp(0)->GetNcoeffs()*nz_loc - nsize_bndry);
+        int nsize_p = m_pressure->GetExp(0)->GetNcoeffs()*nz_loc;
+        int nsize_p_m1 = nsize_p-nz_loc;
+        int Ahrows = nsize_bndry_p1;
+	
+	Array<OneD, Array<OneD, Eigen::MatrixXd > >  A_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry, nsize_bndry
+//	Array<OneD, Eigen::MatrixXd > Bh_elem(m_fields[0]->GetNumElmts()); // 
+	Array<OneD, Array<OneD, Eigen::MatrixXd > >  B_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry, nsize_int
+	Array<OneD, Array<OneD, Eigen::MatrixXd > >  C_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry, nsize_int
+	Array<OneD, Array<OneD, Eigen::MatrixXd > >  D_elem(m_fields[0]->GetNumElmts()); // , nsize_int, nsize_int
+	Array<OneD, Array<OneD, Eigen::MatrixXd > >  Dbnd_elem(m_fields[0]->GetNumElmts()); // , nsize_p, nsize_bndry
+	Array<OneD, Array<OneD, Eigen::MatrixXd > >  Dint_elem(m_fields[0]->GetNumElmts()); // , nsize_p, nsize_int
+//	Array<OneD, Eigen::MatrixXd > Ch_elem(m_fields[0]->GetNumElmts()); // nsize_p_m1, nsize_bndry_p1
+//	Array<OneD, Eigen::MatrixXd > Dh_elem(m_fields[0]->GetNumElmts()); // nsize_p_m1, nsize_p_m1
+
+	for (int curr_elem = 0; curr_elem < m_fields[0]->GetNumElmts(); ++curr_elem)
+	{
+
+//		cout << "curr_elem d " << curr_elem << endl;
+
+		A_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (4);
+		B_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (4);
+		C_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (4);
+		D_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (4);
+		Dbnd_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (4);
+		Dint_elem[curr_elem] = Array<OneD, Eigen::MatrixXd > (4);
+		for (int i = 0; i < 4; i++)
+		{
+			A_elem[curr_elem][i] = Eigen::MatrixXd::Zero(Ahrows-1, Ahrows-1);
+			B_elem[curr_elem][i] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+			C_elem[curr_elem][i] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+			D_elem[curr_elem][i] = Eigen::MatrixXd::Zero(nsize_int, nsize_int);
+			Dbnd_elem[curr_elem][i] = Eigen::MatrixXd::Zero(nsize_p, nsize_bndry);
+			Dint_elem[curr_elem][i] = Eigen::MatrixXd::Zero(nsize_p, nsize_int);
+		}
+	}
+
+	for (int curr_elem = 0; curr_elem < m_fields[0]->GetNumElmts(); ++curr_elem)
+	{
+
+//		cout << "curr_elem " << curr_elem << endl;
+
+/*		int curr_elem_pos = get_curr_elem_pos(curr_elem);
+		double detT = Geo_T(w, curr_elem_pos, 0);
+		double Ta = Geo_T(w, curr_elem_pos, 1);
+		double Tb = Geo_T(w, curr_elem_pos, 2);
+		double Tc = Geo_T(w, curr_elem_pos, 3);
+		double Td = Geo_T(w, curr_elem_pos, 4);
+		double c00 = Ta*Ta + Tb*Tb;
+		double c01 = Ta*Tc + Tb*Td;
+		double c11 = Tc*Tc + Td*Td; */
+                locExp = m_fields[m_velocity[0]]->GetExp(curr_elem);
+                locExp->GetBoundaryMap(bmap);
+                locExp->GetInteriorMap(imap);
+                int ncoeffs = m_fields[m_velocity[0]]->GetExp(curr_elem)->GetNcoeffs();
+                int nphys   = m_fields[m_velocity[0]]->GetExp(curr_elem)->GetTotPoints();
+		int pqsize  = m_pressure->GetExp(curr_elem)->GetTotPoints();
+                int nbmap = bmap.num_elements();
+                int nimap = imap.num_elements();
+/*		Array<OneD, double> curr_snap_x_part(nphys, 0.0);
+		Array<OneD, double> curr_snap_y_part(nphys, 0.0);
+		for (int i = 0; i < nphys; ++i)
+		{
+			curr_snap_x_part[i] = snapshot_x[curr_elem*nphys + i];
+			curr_snap_y_part[i] = snapshot_y[curr_elem*nphys + i];
+		} */
+
+		Array<OneD, Array<OneD, double> > Ah_ele_vec(4);
+		Ah_ele_vec[0] = Array<OneD, double> (Ahrows*Ahrows, 0.0);
+		Ah_ele_vec[1] = Array<OneD, double> (Ahrows*Ahrows, 0.0);
+		Ah_ele_vec[2] = Array<OneD, double> (Ahrows*Ahrows, 0.0);
+		Ah_ele_vec[3] = Array<OneD, double> (Ahrows*Ahrows, 0.0);
+		Array<OneD, Array<OneD, double> > B_ele_vec(4);
+		B_ele_vec[0] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		B_ele_vec[1] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		B_ele_vec[2] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		B_ele_vec[3] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		Array<OneD, Array<OneD, double> > C_ele_vec(4);
+		C_ele_vec[0] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		C_ele_vec[1] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		C_ele_vec[2] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		C_ele_vec[3] = Array<OneD, double> (nsize_bndry*nsize_int, 0.0);
+		Array<OneD, Array<OneD, double> > D_ele_vec(4);
+		D_ele_vec[0] = Array<OneD, double>(nsize_int*nsize_int, 0.0);
+		D_ele_vec[1] = Array<OneD, double>(nsize_int*nsize_int, 0.0);
+		D_ele_vec[2] = Array<OneD, double>(nsize_int*nsize_int, 0.0);
+		D_ele_vec[3] = Array<OneD, double>(nsize_int*nsize_int, 0.0);
+		Array<OneD, Array<OneD, double> > Dbnd_ele_vec(4);
+		Dbnd_ele_vec[0] = Array<OneD, double>(nsize_p*nsize_bndry, 0.0);
+		Dbnd_ele_vec[1] = Array<OneD, double>(nsize_p*nsize_bndry, 0.0);
+		Dbnd_ele_vec[2] = Array<OneD, double>(nsize_p*nsize_bndry, 0.0);
+		Dbnd_ele_vec[3] = Array<OneD, double>(nsize_p*nsize_bndry, 0.0);
+		Array<OneD, Array<OneD, double> > Dint_ele_vec(4);
+		Dint_ele_vec[0] = Array<OneD, double> (nsize_p*nsize_int, 0.0);
+		Dint_ele_vec[1] = Array<OneD, double> (nsize_p*nsize_int, 0.0);
+		Dint_ele_vec[2] = Array<OneD, double> (nsize_p*nsize_int, 0.0);
+		Dint_ele_vec[3] = Array<OneD, double> (nsize_p*nsize_int, 0.0);
+
+		for (int i = 0; i < nbmap; ++i)
+		{
+			Array<OneD, double> coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_x_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_y_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_0_0(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_0_1(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_1_0(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_1_1(ncoeffs, 0.0);
+			Array<OneD, double> phys(nphys, 0.0);
+			Array<OneD, double> deriv_0(pqsize, 0.0);
+			Array<OneD, double> deriv_1(pqsize, 0.0);
+
+			coeffs[bmap[i]] = 1.0;
+			m_fields[m_velocity[0]]->GetExp(curr_elem)->BwdTrans(coeffs,phys);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[0], phys, deriv_0);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[1], phys, deriv_1);
+
+			locExp->IProductWRTDerivBase(0, deriv_0, coeffs_0_0);
+			locExp->IProductWRTDerivBase(1, deriv_0, coeffs_0_1);
+			locExp->IProductWRTDerivBase(0, deriv_1, coeffs_1_0);
+			locExp->IProductWRTDerivBase(1, deriv_1, coeffs_1_1);
+
+			for (int k = 0; k < 2; ++k)
+			{
+				for (int j = 0; j < nbmap; ++j)
+				{
+					Ah_ele_vec[0][ i+k*nbmap + (j+k*nbmap)*Ahrows ] += coeffs_0_0[int(bmap[j])];
+					Ah_ele_vec[1][ i+k*nbmap + (j+k*nbmap)*Ahrows ] += coeffs_0_1[int(bmap[j])];
+					Ah_ele_vec[2][ i+k*nbmap + (j+k*nbmap)*Ahrows ] += coeffs_1_0[int(bmap[j])];
+					Ah_ele_vec[3][ i+k*nbmap + (j+k*nbmap)*Ahrows ] += coeffs_1_1[int(bmap[j])];
+				}
+				for (int j = 0; j < nimap; ++j)
+				{
+					B_ele_vec[0][ i+k*nbmap + (j+k*nimap)*nsize_bndry] += coeffs_0_0[int(imap[j])];
+					B_ele_vec[1][ i+k*nbmap + (j+k*nimap)*nsize_bndry] += coeffs_0_1[int(imap[j])];
+					B_ele_vec[2][ i+k*nbmap + (j+k*nimap)*nsize_bndry] += coeffs_1_0[int(imap[j])];
+					B_ele_vec[3][ i+k*nbmap + (j+k*nimap)*nsize_bndry] += coeffs_1_1[int(imap[j])];
+				}
+				if (k == 0)
+				{
+			            	int psize   = m_pressure->GetExp(curr_elem)->GetNcoeffs();
+			               	Array<OneD, NekDouble> pcoeffs_x(psize);
+			               	Array<OneD, NekDouble> pcoeffs_y(psize);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_0,pcoeffs_x);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_1,pcoeffs_y);
+					for (int il = 0; il < nsize_p; ++il)
+					{
+						Dbnd_ele_vec[0][ (k*nbmap + i)*nsize_p + il ] = pcoeffs_x[il];
+						Dbnd_ele_vec[1][ (k*nbmap + i)*nsize_p + il ] = pcoeffs_y[il];
+					}
+				}
+				if (k == 1)
+				{
+			            	int psize   = m_pressure->GetExp(curr_elem)->GetNcoeffs();
+			               	Array<OneD, NekDouble> pcoeffs_x(psize);
+			               	Array<OneD, NekDouble> pcoeffs_y(psize);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_0,pcoeffs_x);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_1,pcoeffs_y);
+					for (int il = 0; il < nsize_p; ++il)
+					{
+						Dbnd_ele_vec[2][ (k*nbmap + i)*nsize_p + il ] = pcoeffs_x[il];
+						Dbnd_ele_vec[3][ (k*nbmap + i)*nsize_p + il ] = pcoeffs_y[il];
+					}
+				}
+			} //for (int k = 0; k < 2; ++k)
+		} // for (int i = 0; i < nbmap; ++i)
+		for (int i = 0; i < nimap; ++i)
+		{
+			Array<OneD, double> coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_x_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_y_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_0_0(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_0_1(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_1_0(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_1_1(ncoeffs, 0.0);
+			Array<OneD, double> phys(nphys, 0.0);
+			Array<OneD, double> deriv_0(pqsize, 0.0);
+			Array<OneD, double> deriv_1(pqsize, 0.0);
+			coeffs[imap[i]] = 1.0;
+			m_fields[m_velocity[0]]->GetExp(curr_elem)->BwdTrans(coeffs,phys);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[0], phys, deriv_0);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[1], phys, deriv_1);
+			locExp->IProductWRTDerivBase(0, deriv_0, coeffs_0_0);
+			locExp->IProductWRTDerivBase(1, deriv_0, coeffs_0_1);
+			locExp->IProductWRTDerivBase(0, deriv_1, coeffs_1_0);
+			locExp->IProductWRTDerivBase(1, deriv_1, coeffs_1_1);
+			for (int k = 0; k < 2; ++k)
+			{
+				for (int j = 0; j < nbmap; ++j)
+				{
+					C_ele_vec[0][ j+k*nbmap + (i+k*nimap)*nsize_bndry ] += coeffs_0_0[int(bmap[j])];
+					C_ele_vec[1][ j+k*nbmap + (i+k*nimap)*nsize_bndry ] += coeffs_0_1[int(bmap[j])];
+					C_ele_vec[2][ j+k*nbmap + (i+k*nimap)*nsize_bndry ] += coeffs_1_0[int(bmap[j])];
+					C_ele_vec[3][ j+k*nbmap + (i+k*nimap)*nsize_bndry ] += coeffs_1_1[int(bmap[j])];
+				}
+				for (int j = 0; j < nimap; ++j)
+				{
+					D_ele_vec[0][i+k*nimap + (j+k*nimap)*nsize_int] += coeffs_0_0[int(imap[j])];
+					D_ele_vec[1][i+k*nimap + (j+k*nimap)*nsize_int] += coeffs_0_1[int(imap[j])];
+					D_ele_vec[2][i+k*nimap + (j+k*nimap)*nsize_int] += coeffs_1_0[int(imap[j])];
+					D_ele_vec[3][i+k*nimap + (j+k*nimap)*nsize_int] += coeffs_1_1[int(imap[j])];
+				}
+				if (k == 0)
+				{
+			            	int psize   = m_pressure->GetExp(curr_elem)->GetNcoeffs();
+			               	Array<OneD, NekDouble> pcoeffs_x(psize);
+			               	Array<OneD, NekDouble> pcoeffs_y(psize);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_0,pcoeffs_x);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_1,pcoeffs_y);
+					for (int il = 0; il < nsize_p; ++il)
+					{
+						Dint_ele_vec[0][ (k*nimap + i)*nsize_p + il ] = pcoeffs_x[il];
+						Dint_ele_vec[1][ (k*nimap + i)*nsize_p + il ] = pcoeffs_y[il];
+					}
+				}
+				if (k == 1)
+				{
+			            	int psize   = m_pressure->GetExp(curr_elem)->GetNcoeffs();
+			               	Array<OneD, NekDouble> pcoeffs_x(psize);
+			               	Array<OneD, NekDouble> pcoeffs_y(psize);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_0,pcoeffs_x);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_1,pcoeffs_y);
+					for (int il = 0; il < nsize_p; ++il)
+					{
+						Dint_ele_vec[2][ (k*nimap + i)*nsize_p + il ] = pcoeffs_x[il];
+						Dint_ele_vec[3][ (k*nimap + i)*nsize_p + il ] = pcoeffs_y[il];
+					}
+				}
+			} //for (int k = 0; k < 2; ++k)
+		}
+
+//		cout << "starting writing vec -> mat" << endl;
+
+		for (int i = 0; i < nsize_bndry; ++i)
+		{
+			for (int j = 0; j < nsize_bndry; ++j)
+			{
+				A_elem[curr_elem][0](i,j) = Ah_ele_vec[0][ i + j*Ahrows ];
+				A_elem[curr_elem][1](i,j) = Ah_ele_vec[1][ i + j*Ahrows ];
+				A_elem[curr_elem][2](i,j) = Ah_ele_vec[2][ i + j*Ahrows ];
+				A_elem[curr_elem][3](i,j) = Ah_ele_vec[3][ i + j*Ahrows ];
+			}
+		} 
+		for (int i = 0; i < nsize_bndry; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				B_elem[curr_elem][0](i,j) = B_ele_vec[0][ i + j*nsize_bndry ];
+				B_elem[curr_elem][1](i,j) = B_ele_vec[1][ i + j*nsize_bndry ];
+				B_elem[curr_elem][2](i,j) = B_ele_vec[2][ i + j*nsize_bndry ];
+				B_elem[curr_elem][3](i,j) = B_ele_vec[3][ i + j*nsize_bndry ];
+			}
+		} 
+		for (int i = 0; i < nsize_bndry; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				C_elem[curr_elem][0](i,j) = C_ele_vec[0][ i + j*nsize_bndry ];
+				C_elem[curr_elem][1](i,j) = C_ele_vec[1][ i + j*nsize_bndry ];
+				C_elem[curr_elem][2](i,j) = C_ele_vec[2][ i + j*nsize_bndry ];
+				C_elem[curr_elem][3](i,j) = C_ele_vec[3][ i + j*nsize_bndry ];
+			}
+		} 
+		for (int i = 0; i < nsize_int; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				D_elem[curr_elem][0](i,j) = D_ele_vec[0][ i + j*nsize_int];
+				D_elem[curr_elem][1](i,j) = D_ele_vec[1][ i + j*nsize_int];
+				D_elem[curr_elem][2](i,j) = D_ele_vec[2][ i + j*nsize_int];
+				D_elem[curr_elem][3](i,j) = D_ele_vec[3][ i + j*nsize_int];
+			}
+		} 
+		for (int i = 0; i < nsize_p; ++i)
+		{
+			for (int j = 0; j < nsize_bndry; ++j)
+			{
+				Dbnd_elem[curr_elem][0](i,j) = Dbnd_ele_vec[0][ i + j*nsize_p];
+				Dbnd_elem[curr_elem][1](i,j) = Dbnd_ele_vec[1][ i + j*nsize_p];
+				Dbnd_elem[curr_elem][2](i,j) = Dbnd_ele_vec[2][ i + j*nsize_p];
+				Dbnd_elem[curr_elem][3](i,j) = Dbnd_ele_vec[3][ i + j*nsize_p];
+			}
+		} 
+		for (int i = 0; i < nsize_p; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				Dint_elem[curr_elem][0](i,j) = Dint_ele_vec[0][ i + j*nsize_p];
+				Dint_elem[curr_elem][1](i,j) = Dint_ele_vec[1][ i + j*nsize_p];
+				Dint_elem[curr_elem][2](i,j) = Dint_ele_vec[2][ i + j*nsize_p];
+				Dint_elem[curr_elem][3](i,j) = Dint_ele_vec[3][ i + j*nsize_p];
+			}
+		}
+
+	} // loop over curr_elem
+
+//	to be build in a seperate projector function:
+//	the_const_one_proj_2d = Array<OneD, Array<OneD, Eigen::MatrixXd > > (number_elem_trafo); // should be number_elem_trafo x 4 x RBsize x RBsize
+//	the_ABCD_one_proj_2d = Array<OneD, Array<OneD, Eigen::MatrixXd > > (number_elem_trafo);
+//	the_ABCD_one_rhs_proj_2d = Array<OneD, Array<OneD, Eigen::VectorXd > > (number_elem_trafo);	
+//	the_const_one_rhs_proj_2d = Array<OneD, Array<OneD, Eigen::VectorXd > > (number_elem_trafo);
+	
+	for (int i = 0; i < number_elem_trafo; ++i)
+	{
+		for (int j = 0; j < 4; ++j)
+		{
+			the_const_one_proj_2d[i][j] = press_geo_mat_projector(Dbnd_elem, Dint_elem, i, j, the_const_one_rhs_proj_2d[i][j]);
+//			cout << "finished the_const_one_proj_2d " << endl;
+			the_ABCD_one_proj_2d[i][j] = ABCD_geo_mat_projector(A_elem, B_elem, C_elem, D_elem, i, j, the_ABCD_one_rhs_proj_2d[i][j]);
+		}
+	}
+	
+
+
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::ABCD_geo_mat_projector(Array<OneD, Array<OneD, Eigen::MatrixXd > > A_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > B_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > C_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > D_elem, int curr_elem_trafo, int deriv_index, Eigen::VectorXd &ABCD_vec_proj)
+    {
+	Eigen::MatrixXd ABCD_matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
+        int nz_loc = 1;
+        int nel = m_fields[m_velocity[0]]->GetNumElmts();
+        int nvel = m_velocity.num_elements();
+        int nsize_bndry = nvel*m_fields[m_velocity[0]]->GetExp(0)->NumBndryCoeffs()*nz_loc;
+        int nsize_bndry_p1 = nsize_bndry+nz_loc;
+        int nsize_int = (nvel*m_fields[m_velocity[0]]->GetExp(0)->GetNcoeffs()*nz_loc - nsize_bndry);
+        int nsize_p = m_pressure->GetExp(0)->GetNcoeffs()*nz_loc;
+        int nsize_p_m1 = nsize_p-nz_loc;
+	Eigen::MatrixXd A_all = Eigen::MatrixXd::Zero( nsize_bndry*nel , nsize_bndry*nel );
+	Eigen::MatrixXd B_all = Eigen::MatrixXd::Zero( nsize_bndry*nel , nsize_int*nel );
+	Eigen::MatrixXd C_all = Eigen::MatrixXd::Zero( nsize_bndry*nel , nsize_int*nel );
+	Eigen::MatrixXd D_all = Eigen::MatrixXd::Zero( nsize_int*nel , nsize_int*nel );
+	for (int i = 0; i < m_fields[0]->GetNumElmts(); ++i)
+	{
+		int curr_elem_pos = get_curr_elem_pos(i);
+		if (curr_elem_pos == curr_elem_trafo)
+		{
+			Eigen::MatrixXd curr_A_elem = A_elem[i][deriv_index];
+			Eigen::MatrixXd curr_B_elem = B_elem[i][deriv_index];
+			Eigen::MatrixXd curr_C_elem = C_elem[i][deriv_index];
+			Eigen::MatrixXd curr_D_elem = D_elem[i][deriv_index];
+			A_all.block(i*nsize_bndry, i*nsize_bndry, nsize_bndry, nsize_bndry) = curr_A_elem;
+			B_all.block(i*nsize_bndry, i*nsize_int, nsize_bndry, nsize_int) = curr_B_elem;
+			C_all.block(i*nsize_bndry, i*nsize_int, nsize_bndry, nsize_int) = curr_C_elem;
+			D_all.block(i*nsize_int, i*nsize_int, nsize_int, nsize_int) = curr_D_elem;
+		}
+	}
+/*	switch(globally_connected) {
+		case 0:
+			press_matrix.block(0, f_bnd_size, f_bnd_size, f_p_size) = -MtM * Dbnd_all.transpose();
+			press_matrix.block(f_bnd_size, 0, f_p_size, f_bnd_size) = -Dbnd_all;
+			press_matrix.block(f_bnd_size, f_bnd_size + f_p_size, f_p_size, f_int_size) = -Dint_all;	
+			press_matrix.block(f_bnd_size + f_p_size, f_bnd_size, f_int_size, f_p_size) = -Dint_all.transpose();
+			break;
+		case 1:
+			press_matrix.block(0, nBndDofs, nBndDofs, f_p_size) = -Mtrafo.transpose() * Dbnd_all.transpose();
+			press_matrix.block(nBndDofs, 0, f_p_size, nBndDofs) = -Dbnd_all * Mtrafo;
+			press_matrix.block(nBndDofs, nBndDofs + f_p_size, f_p_size, f_int_size) = -Dint_all;	
+			press_matrix.block(nBndDofs + f_p_size, nBndDofs, f_int_size, f_p_size) = -Dint_all.transpose();
+			break;
+		case 2:
+			press_matrix.block(0, f_bnd_size, f_bnd_size, f_p_size) = -Dbnd_all.transpose();
+			press_matrix.block(f_bnd_size, 0, f_p_size, f_bnd_size) = -Dbnd_all;
+			press_matrix.block(f_bnd_size, f_bnd_size + f_p_size, f_p_size, f_int_size) = -Dint_all;	
+			press_matrix.block(f_bnd_size + f_p_size, f_bnd_size, f_int_size, f_p_size) = -Dint_all.transpose();
+			break;
+	}	*/
+	switch(globally_connected) {
+		case 0:
+			ABCD_matrix.block(0, 0, f_bnd_size, f_bnd_size) = MtM * A_all;
+			ABCD_matrix.block(0, f_bnd_size + f_p_size, f_bnd_size, f_int_size) = MtM * B_all;
+			ABCD_matrix.block(f_bnd_size + f_p_size, 0, f_int_size, f_bnd_size) = C_all.transpose();
+			ABCD_matrix.block(f_bnd_size + f_p_size, f_bnd_size + f_p_size, f_int_size, f_int_size) = D_all;
+			break;
+		case 1:
+			ABCD_matrix.block(0, 0, nBndDofs, nBndDofs) = Mtrafo.transpose() * A_all * Mtrafo;
+			ABCD_matrix.block(0, nBndDofs + f_p_size, nBndDofs, f_int_size) = Mtrafo.transpose() * B_all;
+			ABCD_matrix.block(nBndDofs + f_p_size, 0, f_int_size, nBndDofs) = C_all.transpose() * Mtrafo;
+			ABCD_matrix.block(nBndDofs + f_p_size, nBndDofs + f_p_size, f_int_size, f_int_size) = D_all;
+			break;
+		case 2:
+			ABCD_matrix.block(0, 0, f_bnd_size, f_bnd_size) = A_all;
+			ABCD_matrix.block(0, f_bnd_size + f_p_size, f_bnd_size, f_int_size) = B_all;
+			ABCD_matrix.block(f_bnd_size + f_p_size, 0, f_int_size, f_bnd_size) = C_all.transpose();
+			ABCD_matrix.block(f_bnd_size + f_p_size, f_bnd_size + f_p_size, f_int_size, f_int_size) = D_all;
+			break;
+	}
+	Eigen::VectorXd add_to_rhs_ABCD(M_truth_size);
+	add_to_rhs_ABCD = ABCD_matrix * f_bnd_dbc_full_size;
+	Eigen::VectorXd ABCD_rhs_add = remove_rows(add_to_rhs_ABCD, elem_loc_dbc);
+	ABCD_vec_proj = RB.transpose() * ABCD_rhs_add;
+	Eigen::MatrixXd ABCD_matrix_simplified = remove_cols_and_rows(ABCD_matrix, elem_loc_dbc);
+	Eigen::MatrixXd ABCD_mat_proj = RB.transpose() * ABCD_matrix_simplified * RB;
+	return ABCD_mat_proj;
+    }
+    
+    Eigen::MatrixXd CoupledLinearNS_TT::press_geo_mat_projector(Array<OneD, Array<OneD, Eigen::MatrixXd > > Dbnd_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > Dint_elem, int curr_elem_trafo, int deriv_index, Eigen::VectorXd &press_vec_proj)
+    {
+
+	// this function (i) expands to full size, (ii) removes dbc cols and rows, (iii) projects
+
+//	cout << "entering press_geo_mat_projector" << endl;
+
+	Eigen::MatrixXd press_matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
+        int nz_loc = 1;
+        int nel = m_fields[m_velocity[0]]->GetNumElmts();
+        int nvel = m_velocity.num_elements();
+        int nsize_bndry = nvel*m_fields[m_velocity[0]]->GetExp(0)->NumBndryCoeffs()*nz_loc;
+        int nsize_bndry_p1 = nsize_bndry+nz_loc;
+        int nsize_int = (nvel*m_fields[m_velocity[0]]->GetExp(0)->GetNcoeffs()*nz_loc - nsize_bndry);
+        int nsize_p = m_pressure->GetExp(0)->GetNcoeffs()*nz_loc;
+        int nsize_p_m1 = nsize_p-nz_loc;
+	Eigen::MatrixXd Dbnd_all = Eigen::MatrixXd::Zero( nsize_p*nel , nsize_bndry*nel );
+	Eigen::MatrixXd Dint_all = Eigen::MatrixXd::Zero( nsize_p*nel , nsize_int*nel );
+
+	time_t timer_1;
+	time_t timer_2;
+	time_t timer_3;
+	time_t timer_4;
+
+	time(&timer_1);  /* get current time; same as: timer = time(NULL)  */
+	for (int i = 0; i < m_fields[0]->GetNumElmts(); ++i)
+	{
+		int curr_elem_pos = get_curr_elem_pos(i);
+		if (curr_elem_pos == curr_elem_trafo)
+		{
+			Eigen::MatrixXd curr_Dbnd_elem = Dbnd_elem[i][deriv_index];
+			Eigen::MatrixXd curr_Dint_elem = Dint_elem[i][deriv_index];
+
+			Dbnd_all.block(i*nsize_p, i*nsize_bndry, nsize_p, nsize_bndry) = curr_Dbnd_elem;
+			Dint_all.block(i*nsize_p, i*nsize_int, nsize_p, nsize_int) = curr_Dint_elem;
+	
+		}
+	}
+
+	// better to use:
+//	int f_bnd_size;
+//	int f_p_size;
+//	int f_int_size;
+
+	switch(globally_connected) {
+		case 0:
+			press_matrix.block(0, f_bnd_size, f_bnd_size, f_p_size) = -MtM * Dbnd_all.transpose();
+			press_matrix.block(f_bnd_size, 0, f_p_size, f_bnd_size) = -Dbnd_all;
+			press_matrix.block(f_bnd_size, f_bnd_size + f_p_size, f_p_size, f_int_size) = -Dint_all;	
+			press_matrix.block(f_bnd_size + f_p_size, f_bnd_size, f_int_size, f_p_size) = -Dint_all.transpose();
+			break;
+		case 1:
+			press_matrix.block(0, nBndDofs, nBndDofs, f_p_size) = -Mtrafo.transpose() * Dbnd_all.transpose();
+			press_matrix.block(nBndDofs, 0, f_p_size, nBndDofs) = -Dbnd_all * Mtrafo;
+			press_matrix.block(nBndDofs, nBndDofs + f_p_size, f_p_size, f_int_size) = -Dint_all;	
+			press_matrix.block(nBndDofs + f_p_size, nBndDofs, f_int_size, f_p_size) = -Dint_all.transpose();
+			break;
+		case 2:
+			press_matrix.block(0, f_bnd_size, f_bnd_size, f_p_size) = -Dbnd_all.transpose();
+			press_matrix.block(f_bnd_size, 0, f_p_size, f_bnd_size) = -Dbnd_all;
+			press_matrix.block(f_bnd_size, f_bnd_size + f_p_size, f_p_size, f_int_size) = -Dint_all;	
+			press_matrix.block(f_bnd_size + f_p_size, f_bnd_size, f_int_size, f_p_size) = -Dint_all.transpose();
+			break;
+	}	
+
+	// also need to create appropriate vector right-hand-side contribution
+
+	Eigen::VectorXd add_to_rhs_press(M_truth_size); // probably need this for adv and non-adv
+	add_to_rhs_press = press_matrix * f_bnd_dbc_full_size;
+	Eigen::VectorXd press_rhs_add = remove_rows(add_to_rhs_press, elem_loc_dbc);
+	press_vec_proj = RB.transpose() * press_rhs_add;
+	Eigen::MatrixXd press_matrix_simplified = remove_cols_and_rows(press_matrix, elem_loc_dbc);
+	Eigen::MatrixXd press_mat_proj = RB.transpose() * press_matrix_simplified * RB;
+
+	return press_mat_proj;
+    }
 
     void CoupledLinearNS_TT::compute_snapshots(int number_of_snapshots)
     {
@@ -4719,6 +6550,47 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		// generate the correct string
 		std::stringstream sstm;
 		sstm << "TestSnap" << i+1;
+		std::string result = sstm.str();
+		const char* rr = result.c_str();
+
+	        EvaluateFunction(fieldStr, test_load_snapshot, result);
+		snapshot_x_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		snapshot_y_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		for (int j=0; j < GetNpoints(); ++j)
+		{
+			snapshot_x_collection[i][j] = test_load_snapshot[0][j];
+			snapshot_y_collection[i][j] = test_load_snapshot[1][j];
+		}
+        }
+
+    }
+
+    void CoupledLinearNS_TT::load_snapshots_geometry_params_conv_Oseen(int number_of_snapshots)
+    {
+
+	// assuming it is prepared in the correct ordering - i.e. - outer loop dir0, inner loop dir1
+
+	int nvelo = 2;
+        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvelo); // for a 2D problem
+
+        for(int i = 0; i < nvelo; ++i)
+        {
+            test_load_snapshot[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);  // number of phys points
+        }
+
+        std::vector<std::string> fieldStr;
+        for(int i = 0; i < nvelo; ++i)
+        {
+           fieldStr.push_back(m_session->GetVariable(i));
+        }
+
+	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+        for(int i = 0; i < number_of_snapshots; ++i)
+        {
+		// generate the correct string
+		std::stringstream sstm;
+		sstm << "TestSnap_cO_" << i+1;
 		std::string result = sstm.str();
 		const char* rr = result.c_str();
 

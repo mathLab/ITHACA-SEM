@@ -81,20 +81,17 @@ bool AdvectionSystem::v_PostIntegrate(int step)
         int elmtid;
         NekDouble cfl = GetCFLEstimate(elmtid);
 
-        if(m_cflsteps && !((step+1)%m_cflsteps))
+        if(m_cflsteps && !((step+1)%m_cflsteps) && m_comm->GetRank() == 0)
         {
-            if(m_comm->GetRank() == 0)
+            if( m_HomogeneousType == eNotHomogeneous)
             {
-                if( m_HomogeneousType == eNotHomogeneous)
-                {
-                    cout << "CFL: ";
-                }
-                else
-                {
-                    cout << "CFL (zero plane): ";
-                }
-                cout << cfl << " (in elmt " << elmtid << ")" << endl;
+                cout << "CFL: ";
             }
+            else
+            {
+                cout << "CFL (zero plane): ";
+            }
+            cout << cfl << " (in elmt " << elmtid << ")" << endl;
         }
         
         // At each timestep, if cflWriteFld is set check if cfl is above treshold

@@ -512,7 +512,9 @@ namespace Nektar
 
             Array<OneD, NekDouble> tmp2 = outarray[0];        // Dir1 metric
             Array<OneD, NekDouble> tmp3 = outarray[1];        // Dir2 metric
-            Array<OneD, NekDouble> tmp4 = outarray[2];        // Dir3 metric
+            Array<OneD, NekDouble> tmp4 = outarray[2];   
+            
+            Vmath::Vcopy(nq,inarray,1,tmp1,1);     // Dir3 metric
 
             // MultiplyByQuadratureMetric(inarray, tmp1);
 

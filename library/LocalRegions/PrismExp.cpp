@@ -474,6 +474,8 @@ namespace Nektar
 
             const Array<TwoD, const NekDouble>& df =
                             m_metricinfo->GetDerivFactors(GetPointsKeys());
+                            
+            Vmath::Vcopy(nqtot,inarray,1,tmp1,1);     // Dir3 metric
 
             // MultiplyByQuadratureMetric(inarray, tmp1);
 

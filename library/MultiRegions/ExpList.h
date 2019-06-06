@@ -1064,7 +1064,6 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void CoutStandardMat(DNekMatSharedPtr &loc_matNvar,const unsigned int nwidthcolm);
 
-
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             void CalcuTracephysToLeftRightExpphysMap(
                     bool                                            &flag,

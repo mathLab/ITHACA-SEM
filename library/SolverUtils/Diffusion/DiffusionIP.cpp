@@ -855,8 +855,8 @@ namespace Nektar
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
                         (*mtxPerVarCoeff[nelmt])   =   0.0;
+                        (*mtxPerVar[nelmt])   =   0.0;
                     }
-                    // explist->GetMatIpwrtdbWeightBwd(JacArray,nDirctn,mtxPerVar);
                     explist->GetMatIpwrtDeriveBase(ElmtJacArray[m][n],mtxPerVar);
                     explist->AddRightIPTPhysDerivBase(nDervDir,mtxPerVar,mtxPerVarCoeff);
 

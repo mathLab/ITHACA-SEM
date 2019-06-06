@@ -575,7 +575,6 @@ namespace Nektar
             // outarray[1] = tmp2;
         }
 
-
         void TriExp::v_IProductWRTDerivBase_MatOp(const int dir,
                                                 const Array<OneD, const NekDouble>& inarray,
                                                 Array<OneD, NekDouble> &outarray)

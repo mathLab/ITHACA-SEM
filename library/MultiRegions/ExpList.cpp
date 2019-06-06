@@ -3697,7 +3697,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >    projectedpnts(nspacedim);
             Array<OneD, Array<OneD, NekDouble> >    tmppnts(nspacedim);
             Array<OneD, DNekMatSharedPtr>           ArrayStdMat(nspacedim);
-
+            
             std::shared_ptr<StdRegions::StdExpansion> stdExp;
             LibUtilities::ShapeType ElmtTypePrevious;
             int nElmtPntPrevious    = 0;
@@ -3714,31 +3714,30 @@ namespace Nektar
                 {
                     if(nElmtPntPrevious!=nElmtPnt)
                     {
-                        // tmpPhys     =   Array<OneD, NekDouble>(nElmtPnt,0.0);
                         for(int ndir =0;ndir<nspacedim;ndir++)
                         {
                             projectedpnts[ndir] =   Array<OneD, NekDouble>(nElmtPnt,0.0);
                             tmppnts[ndir]       =   Array<OneD, NekDouble>(nElmtPnt,0.0);
                         }
                     }
+                    for(int ndir=0;ndir<nspacedim;ndir++)
+                    {
+                        ArrayStdMat[ndir] = MemoryManager<DNekMat>::AllocateSharedPtr(nElmtCoef,nElmtPnt);
+                    }
                     
-                    stdExp = (*m_exp)[nelmt]->GetStdExp();
-
-                    StdRegions::StdMatrixKey  key(StdRegions::eIProductWRTDerivBase0,
-                                        stdExp->DetShapeType(), *stdExp);
-                    ArrayStdMat[0]   =   stdExp->GenMatrix(key);
+                    // stdExp = (*m_exp)[nelmt]->GetStdExp();
+                    // StdRegions::StdMatrixKey  key(StdRegions::eIProductWRTDerivBase0,
+                    //                     stdExp->DetShapeType(), *stdExp);
+                    // ArrayStdMat[0]   =   stdExp->GenMatrix(key);
+                    (*m_exp)[nelmt]->GenStdMatBwdDeriv(0,ArrayStdMat[0]);
 
                     if(nspacedim>1)
                     {
-                        StdRegions::StdMatrixKey  key(StdRegions::eIProductWRTDerivBase1,
-                                        stdExp->DetShapeType(), *stdExp);
-                        ArrayStdMat[1]   =   stdExp->GenMatrix(key);
+                        (*m_exp)[nelmt]->GenStdMatBwdDeriv(1,ArrayStdMat[1]);
                         
                         if(nspacedim>2)
                         {
-                            StdRegions::StdMatrixKey  key(StdRegions::eIProductWRTDerivBase2,
-                                            stdExp->DetShapeType(), *stdExp);
-                            ArrayStdMat[2]   =   stdExp->GenMatrix(key);
+                            (*m_exp)[nelmt]->GenStdMatBwdDeriv(2,ArrayStdMat[2]);
                         }
                     }
 
@@ -3766,42 +3765,16 @@ namespace Nektar
                 for(int ndir =0;ndir<nspacedim;ndir++)
                 {
                     (*m_exp)[nelmt]->MultiplyByQuadratureMetric(projectedpnts[ndir],projectedpnts[ndir]); // weight with metric
-                    stdExp->DividByQuadratureMetric(projectedpnts[ndir],projectedpnts[ndir]);             // divid weights only
+                    // stdExp->DividByQuadratureMetric(projectedpnts[ndir],projectedpnts[ndir]);             // divid weights only
                     for(int np=0;np<nElmtPnt;np++)
                     {
                         NekDouble factor    =   projectedpnts[ndir][np];
                         for(int nc=0;nc<nElmtCoef;nc++)
                         {
-                            (*mtxPerVar[nelmt])(nc,np)   +=  factor*(*ArrayStdMat[ndir])(np,nc);
-
-                            cout <<" (*ArrayStdMat["<<ndir<<"])("<<np<<","<<nc<<")= "<<(*ArrayStdMat[ndir])(np,nc)<<"factor"<<factor<<endl;
+                            (*mtxPerVar[nelmt])(nc,np)   +=  factor*(*ArrayStdMat[ndir])(nc,np);
                         }
                     }
                 }
-            }
-        }
-
-        void ExpList::CoutStandardMat(DNekMatSharedPtr &loc_matNvar,const unsigned int nwidthcolm)
-        {
-            int nrows = loc_matNvar->GetRows();
-            int ncols = loc_matNvar->GetColumns();
-            NekDouble tmp=0.0;
-            std::cout   <<"ROW="<<std::setw(3)<<-1<<" ";
-            for(int k = 0; k < ncols; k++)
-            {
-                std::cout   <<"   COL="<<std::setw(nwidthcolm-7)<<k;
-            }
-            std::cout   << endl;
-
-            for(int j = 0; j < nrows; j++)
-            {
-                std::cout   <<"ROW="<<std::setw(3)<<j<<" ";
-                for(int k = 0; k < ncols; k++)
-                {
-                    tmp =   (*loc_matNvar)(j,k);
-                    std::cout   <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<<tmp;
-                }
-                std::cout   << endl;
             }
         }
 
@@ -3814,8 +3787,7 @@ namespace Nektar
             int nElmtPnt            = (*m_exp)[0]->GetTotPoints();
             int nElmtCoef           = (*m_exp)[0]->GetNcoeffs();
 
-            // Array<OneD, NekDouble>  tmpCoef(nElmtCoef,0.0);
-            // Array<OneD, NekDouble>  tmpPhys(nElmtPnt,0.0);
+            Array<OneD, NekDouble>  tmpPhys;
 
             for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
             {
@@ -3827,28 +3799,20 @@ namespace Nektar
                                              *((*m_exp)[nelmt]));
                 DNekMatSharedPtr BwdTransMat =  (*m_exp)[nelmt]->GetStdMatrix(matkey);
 
-                // if (tmpPhys.num_elements()!=nElmtPnt) 
-                // {
-                //     tmpPhys     =   Array<OneD, NekDouble>(nElmtPnt,0.0);
-                // }
-                // if (tmpCoef.num_elements()!=nElmtCoef) 
-                // {
-                //     tmpCoef     =   Array<OneD, NekDouble>(nElmtCoef,0.0);
-                // }
+                if (tmpPhys.num_elements()!=nElmtPnt) 
+                {
+                    tmpPhys     =   Array<OneD, NekDouble>(nElmtPnt,0.0);
+                }
                 
+                (*m_exp)[nelmt]->MultiplyByQuadratureMetric(inarray[nelmt],tmpPhys); // weight with metric
                 for(int ncl = 0; ncl < nElmtPnt; ncl++)
                 {
-                    // tmpPhys[ncl]   =   inarray[nelmt][ncl];
-
-                    // (*m_exp)[nelmt]->IProductWRTBase(tmpPhys,tmpCoef);
-
-                    NekDouble factor = inarray[nelmt][ncl];
+                    NekDouble factor = tmpPhys[ncl];
 
                     for(int nrw = 0; nrw < nElmtCoef; nrw++)
                     {
                         (*mtxPerVar[nelmt])(nrw,ncl)   =   factor*(*BwdTransMat)(ncl,nrw);
                     }
-                    // tmpPhys[ncl]   =   0.0; // to maintain all the other columes are zero.
                 }
             }
         }

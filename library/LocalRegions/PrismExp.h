@@ -111,7 +111,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble>      &inarray, 
                 Array<OneD, Array<OneD, NekDouble> >    &outarray);
 
-
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------

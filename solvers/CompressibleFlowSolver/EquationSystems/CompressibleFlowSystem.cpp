@@ -924,7 +924,7 @@ namespace Nektar
 
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =    m_fields[0]->GetExp();
         int ntotElmt            = (*expvect).size();
-        // Array<OneD, Array<OneD, DNekMatSharedPtr> > ElmtJac;
+        
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > ElmtJacArray(nvariable); // Nvar*Nvar*Ndir*Nelmt*Npnt
         for(int m=0; m<nvariable;m++)
         {
@@ -947,26 +947,11 @@ namespace Nektar
         for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
         {
             GetFluxVectorJacDirctn(nfluxDir,inarray, ElmtJacArray);
-// std::shared_ptr<LocalRegions::ExpansionVector> expvect =    m_fields[0]->GetExp();
-// int ntotElmt            = (*expvect).size();
-// for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-// {
-//     int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
-//     for(int npnt = 0; npnt < nElmtPnt; npnt++)
-//     {
-//         (*ElmtJac[nelmt][npnt]) = 0.0;
-//     }
-// }
-            //TODO:
 #ifdef DEBUG_VISCOUS_JAC_MAT
             MinusDiffusionFluxJacDirctn(nfluxDir,inarray,qfield, ElmtJacArray);
 #endif
         }
         m_advObject->AddVolumJacToMat(m_fields,nvariable,ElmtJacArray,gmtxarray);
-        // m_advObject->AddVolumJacToMat(m_fields,nvariable,gmtxarray);
-// Cout2DArrayBlkMat(gmtxarray,20);
-// ASSERTL0(false, "debug stop");
-//         Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
 
 #ifdef DEBUG_VISCOUS_JAC_MAT
         for(int nDervDir = 0; nDervDir < nSpaceDim; nDervDir++)
@@ -980,9 +965,6 @@ namespace Nektar
             m_diffusion->MinusVolumDerivJacToMat(nvariable,m_fields,ElmtJacArray,nDervDir,gmtxarray);
         }
 #endif
-
-// Cout2DArrayBlkMat(gmtxarray,20);
-// ASSERTL0(false, "debug stop");
     }
 
 
@@ -1770,6 +1752,9 @@ namespace Nektar
         AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray);
 
         AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv,TraceJacDerivSign);
+
+// Cout2DArrayBlkMat(gmtxarray,20);
+// ASSERTL0(false, "debug stop");
 
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
 

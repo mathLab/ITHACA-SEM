@@ -1438,6 +1438,13 @@ namespace Nektar
                 v_IProductWRTBase_SumFac(inarray,outarray,multiplybyweights);
             }
 
+            STD_REGIONS_EXPORT void GenStdMatBwdDeriv(
+                const int dir,
+                DNekMatSharedPtr &mat)
+            {
+                v_GenStdMatBwdDeriv(dir,mat);
+            }
+
         protected:
             Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
             int m_elmt_id;
@@ -1573,6 +1580,13 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
                                                    const Array<OneD, const NekDouble> &Lcoord,
                                                    const Array<OneD, const NekDouble> &physvals);
+
+            STD_REGIONS_EXPORT virtual void v_GenStdMatBwdDeriv(
+                  const int dir,
+                  DNekMatSharedPtr &mat)
+            {
+                ASSERTL0(false,"not defined");
+            }
 
         private:
             // Virtual functions

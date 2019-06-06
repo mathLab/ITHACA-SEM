@@ -2068,7 +2068,7 @@ namespace Nektar
                 {
                     for (int j =0; j < nConvectiveFields; j++)
                     {
-                        ElmtJacArray[i][j][nDirctn][nelmt][npnt] -= (*PointFJac)(i,j);
+                        ElmtJacArray[i+1][j][nDirctn][nelmt][npnt] -= (*PointFJac)(i,j);
                     }
                 }
             }

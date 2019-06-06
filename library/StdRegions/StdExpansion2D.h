@@ -181,6 +181,9 @@ namespace StdRegions
                 return GetEdgeNcoeffs(i);
             }
 
+            STD_REGIONS_EXPORT virtual void v_GenStdMatBwdDeriv(
+                  const int dir,
+                  DNekMatSharedPtr &mat);
         private:
 
             // Virtual Functions ----------------------------------------

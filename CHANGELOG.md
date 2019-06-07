@@ -164,6 +164,9 @@ v5.0.0
 - The APE system now uses u_i, c^2 and rho as base flow fields (!918)
 - Added the Linearized Euler Equations (LEE) (!918)
 
+**ADRSolver:**
+- Fix forcing from file for Poisson solver (!855)
+
 **APESolver:**
 - APESolver was replaced with AcousticSolver (!918)
 

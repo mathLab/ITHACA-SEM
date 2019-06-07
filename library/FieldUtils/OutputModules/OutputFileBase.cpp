@@ -101,9 +101,7 @@ void OutputFileBase::Process(po::variables_map &vm)
                 }
                 cout << endl;
             }
-        }
-        if (m_f->m_writeBndFld)
-        {
+
             int nfields = m_f->m_variables.size();
             int normdim = m_f->m_graph->GetMeshDimension();
 
@@ -141,16 +139,21 @@ void OutputFileBase::Process(po::variables_map &vm)
             const SpatialDomains::BoundaryRegionCollection bregions =
                 bcs.GetBoundaryRegions();
             map<int, int> BndRegionMap;
+            map<int, LibUtilities::CommSharedPtr> BndRegionComm;
             int cnt = 0;
             for (auto &breg_it : bregions)
             {
                 BndRegionMap[breg_it.first] = cnt++;
+                BndRegionComm[breg_it.first] = bcs.GetBoundaryCommunicators()[breg_it.first];
             }
 
             // find ending of output file and insert _b1, _b2
             int dot     = filename.find_last_of('.') + 1;
             string ext  = filename.substr(dot, filename.length() - dot);
             string name = filename.substr(0, dot - 1);
+
+            // Store temporary communicator
+            LibUtilities::CommSharedPtr tmpComm = m_f->m_comm;
 
             for (int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
             {
@@ -167,6 +170,8 @@ void OutputFileBase::Process(po::variables_map &vm)
 
                 if (BndRegionMap.count(m_f->m_bndRegionsToWrite[i]) == 1)
                 {
+                    m_f->m_comm = BndRegionComm[m_f->m_bndRegionsToWrite[i]];
+
                     int Border = BndRegionMap[m_f->m_bndRegionsToWrite[i]];
 
                     for (int j = 0; j < exp.size(); ++j)
@@ -201,22 +206,9 @@ void OutputFileBase::Process(po::variables_map &vm)
                     {
                         PrintErrorFromExp();
                     }
-                }
-                else
-                {
-                    // Empty expansion for parallel communication
-                    for (int j = 0; j < exp.size(); ++j)
-                    {
-                        m_f->m_exp[j] =
-                            MemoryManager<MultiRegions::ExpList>::
-                                AllocateSharedPtr();
-                    }
-                    OutputFromExp(vm);
-                    // output error for regression checking.
-                    if (vm.count("error"))
-                    {
-                        PrintErrorFromExp();
-                    }
+
+                    // Reset communicator
+                    m_f->m_comm = tmpComm;
                 }
 
                 // put outfile back to filename in case of nparts option

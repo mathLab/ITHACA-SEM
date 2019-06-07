@@ -165,7 +165,7 @@ v5.0.0
 - Added the Linearized Euler Equations (LEE) (!918)
 
 **ADRSolver:**
-- Fix forcing from file for Poisson solver (!855)
+- Fix forcing from file for Poisson solver (!1029)
 
 **APESolver:**
 - APESolver was replaced with AcousticSolver (!918)

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SegGeom.cpp
+//  File: Curve.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,40 +29,44 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Python wrapper for SegGeom.
+//  Description: Python wrapper for Curve.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/Curve.hpp>
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
 using namespace Nektar;
 using namespace Nektar::SpatialDomains;
 
-SegGeomSharedPtr SegGeom_Init(int id, int coordim, py::list &segments)
+py::list Curve_GetPoints(CurveSharedPtr curve)
 {
-    std::vector<PointGeomSharedPtr> segVec;
-
-    for (int i = 0; i < py::len(segments); ++i)
+    py::list ret;
+    for (auto &pt : curve->m_points)
     {
-        segVec.push_back(py::extract<PointGeomSharedPtr>(segments[i]));
+        ret.append(pt);
     }
-
-    SegGeomSharedPtr seg = std::make_shared<SegGeom>(id, coordim, &segVec[0]);
-
-    return seg;
+    return ret;
 }
 
-void export_SegGeom()
+void Curve_SetPoints(CurveSharedPtr curve, py::list &pts)
 {
-    py::class_<SegGeom, py::bases<Geometry1D>, std::shared_ptr<SegGeom> >(
-        "SegGeom", py::init<>())
-        .def("__init__", py::make_constructor(
-                 &SegGeom_Init, py::default_call_policies(), (
-                     py::arg("id"), py::arg("coordim"),
-                     py::arg("segments")=py::list())));
-        //.def(py::init<int, int, py::optional<CurveSharedPtr>)
+    py::ssize_t n = py::len(pts);
 
-    NEKPY_SHPTR_FIX(SegGeom, Geometry1D);
-    NEKPY_SHPTR_FIX(SegGeom, Geometry);
+    for (py::ssize_t i = 0; i < n; ++i)
+    {
+        curve->m_points.push_back(py::extract<PointGeomSharedPtr>(pts[i]));
+    }
 }
+
+void export_Curve()
+{
+    py::class_<Curve, std::shared_ptr<Curve>>(
+        "Curve", py::init<int, LibUtilities::PointsType>())
+
+        .def_readwrite("curveID", &Curve::m_curveID)
+        .def_readwrite("ptype", &Curve::m_ptype)
+        .add_property("points", &Curve_GetPoints, &Curve_SetPoints)
+        ;
+}
+

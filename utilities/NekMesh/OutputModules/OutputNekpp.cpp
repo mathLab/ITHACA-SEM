@@ -219,7 +219,7 @@ void OutputNekpp::Process()
             filenames[0] = filename;
         }
 
-        char *prgname = "NekMesh";
+        char *prgname = const_cast<char *>("NekMesh");
         LibUtilities::SessionReaderSharedPtr vSession =
             LibUtilities::SessionReader::CreateInstance(1, &prgname, filenames,
                                                         m_mesh->m_comm);

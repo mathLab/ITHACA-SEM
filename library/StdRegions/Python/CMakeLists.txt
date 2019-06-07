@@ -1,8 +1,6 @@
-ADD_NEKPY_LIBRARY(StdRegions SOURCES
+ADD_NEKPY_LIBRARY(StdRegions DEPENDS LibUtilities SOURCES
     StdRegions.cpp
     StdExpansion.cpp
     StdMatrixKey.cpp
-    StdSegExp.cpp
-    StdTriExp.cpp
-    StdQuadExp.cpp
+    StdElements.cpp
     )

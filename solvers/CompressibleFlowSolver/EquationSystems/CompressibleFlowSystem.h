@@ -93,6 +93,8 @@ namespace Nektar
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
 
+        int m_stepcount=0;
+
         enum PreconditionerType
         {
             eNull,    ///< No Solution type specified

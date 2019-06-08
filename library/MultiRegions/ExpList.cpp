@@ -3722,7 +3722,7 @@ namespace Nektar
                     }
                     for(int ndir=0;ndir<nspacedim;ndir++)
                     {
-                        ArrayStdMat[ndir] = MemoryManager<DNekMat>::AllocateSharedPtr(nElmtCoef,nElmtPnt);
+                        ArrayStdMat[ndir] = MemoryManager<DNekMat>::AllocateSharedPtr(nElmtCoef,nElmtPnt,0.0);
                     }
                     
                     // stdExp = (*m_exp)[nelmt]->GetStdExp();

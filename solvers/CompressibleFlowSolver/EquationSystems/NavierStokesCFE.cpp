@@ -2025,7 +2025,7 @@ namespace Nektar
         }
 
         DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
+                                ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields,0.0);
 
         for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
         {

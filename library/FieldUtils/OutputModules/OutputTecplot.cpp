@@ -322,34 +322,27 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
     if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D)
     {
         int points_on_plane = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
-        // update last extra plane points with the first plane values
+        NekDouble z = m_fields[m_coordim-1][totpoints-2*points_on_plane] +
+                      (m_fields[m_coordim-1][points_on_plane] - m_fields[m_coordim-1][0]);
+        // x and y
+        for (int i = 0; i < m_coordim-1; ++i)
+        {
+            for(int j=0; j<points_on_plane; ++j)
+            {
+                m_fields[i][totpoints-points_on_plane+j] = m_fields[i][j];
+            }
+        }
+        // z coordinate
+        for(int j=0; j<points_on_plane; ++j)
+        {
+            m_fields[m_coordim-1][totpoints-points_on_plane+j] = m_fields[m_coordim-1][j]+z;
+        }
+        //variables
         for (int i = 0; i < m_f->m_variables.size(); ++i)
         {
             for(int j=0; j<points_on_plane; ++j)
             {
-                m_fields[i + m_coordim][totpoints-1-points_on_plane+j] =
-                        m_fields[i + m_coordim][j];
-            }
-        }
-
-        //traverse elements, and get last plane coordinates using m_conn
-        for (int i = 0; i < m_f->m_exp[0]->GetNumElmts();++i)
-        {
-            int nq0 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
-            int nq1 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(1);
-
-            auto conn = m_conn[i];
-            NekDouble z = m_fields[2][conn[nq0*nq1*(nPlanes-1)]] +
-                          (m_fields[2][conn[nq0*nq1]] - m_fields[2][conn[0]]);
-
-            for(int j=0; j<nq0*nq1; ++j)
-            {
-                m_fields[0][conn[conn.num_elements()-nq0*nq1+j]] =
-                        m_fields[0][conn[j]];
-                m_fields[1][conn[conn.num_elements()-nq0*nq1+j]] =
-                        m_fields[1][conn[j]];
-                m_fields[2][conn[conn.num_elements()-nq0*nq1+j]] =
-                        m_fields[2][conn[j]]+z;
+                m_fields[i + m_coordim][totpoints-points_on_plane+j] = m_fields[i + m_coordim][j];
             }
         }
     }

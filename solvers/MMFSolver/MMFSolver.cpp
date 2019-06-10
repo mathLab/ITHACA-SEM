@@ -42,7 +42,10 @@ using namespace Nektar::SolverUtils;
 int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr session;
+<<<<<<< HEAD
     SpatialDomains::MeshGraphSharedPtr graph;
+=======
+>>>>>>> Add
     Gs::string vDriverModule;
     DriverSharedPtr drv;
 

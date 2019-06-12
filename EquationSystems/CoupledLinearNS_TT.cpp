@@ -3804,7 +3804,7 @@ namespace Nektar
 
 		time(&timer_2);  /* get current time; same as: timer = time(NULL)  */
 		double seconds = difftime(timer_1, timer_2);
-		cout << "time for a single adv_geo_mat_projector in seconds " << seconds << endl;
+//		cout << "time for a single adv_geo_mat_projector in seconds " << seconds << endl;
 
 
 		curr_adv_mats_proj_x_2d[i][1] = adv_geo_mat_projector(Ah_elem, B_elem, C_elem, D_elem, i, 1, adv_vec_proj_x_2d[i][1]);
@@ -4132,7 +4132,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	if (index == 0) 
 	{
-		return (T(0,0)*T(1,1) - T(0,1)*T(1,0)); // det
+		return 1/(T(0,0)*T(1,1) - T(0,1)*T(1,0)); // 1/det
 	}
 	else if (index == 1) 
 	{
@@ -5094,7 +5094,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
     {
  
 	// setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
-	cout << "entering CoupledLinearNS_TT::do_geo_trafo() " << endl;
+//	cout << "entering CoupledLinearNS_TT::do_geo_trafo() " << endl;
 
 //	cout << "checking if all quantities set: " << endl;
 //	cout << "Nmax " << Nmax << endl;
@@ -5164,7 +5164,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	collect_f_all.block(collect_f_bnd.rows(),0,collect_f_p.rows(),collect_f_p.cols()) = collect_f_p;
 	collect_f_all.block(collect_f_bnd.rows()+collect_f_p.rows(),0,collect_f_int.rows(),collect_f_int.cols()) = collect_f_int;
 
-	cout << "finished CoupledLinearNS_TT::do_geo_trafo() " << endl;
+//	cout << "finished CoupledLinearNS_TT::do_geo_trafo() " << endl;
     }
 
     void CoupledLinearNS_TT::write_curr_field(std::string filename)
@@ -5241,6 +5241,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		if (debug_mode)
 		{
 			cout << " online phase current nu " << current_nu << endl;
+			cout << " online phase current w " << w << endl;
 		}
 		Set_m_kinvis( current_nu );
 		if (use_Newton)
@@ -5256,15 +5257,21 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		{
 			affine_mat_proj = gen_affine_mat_proj(current_nu);
 			affine_vec_proj = gen_affine_vec_proj(current_nu, current_index);
+//			cout << "aff mat 1d " << affine_mat_proj << endl;
+//			cout << "aff vec 1d " << affine_vec_proj << endl;
 		}
 		else if (parameter_space_dimension == 2)
 		{
 			affine_mat_proj = gen_affine_mat_proj_2d(current_nu, w);
+//			cout << "aff mat 2d " << affine_mat_proj << endl;
 			affine_vec_proj = gen_affine_vec_proj_2d(current_nu, w, current_index);
+//			cout << "aff vec 2d " << affine_vec_proj << endl;
+//			Eigen::MatrixXd affine_mat_proj_1d = gen_affine_mat_proj(current_nu);
+//			Eigen::VectorXd affine_vec_proj_1d = gen_affine_vec_proj(current_nu, current_index);
 		}
 
 		Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
-		cout << "solve_affine " << solve_affine << endl;
+//		cout << "solve_affine " << solve_affine << endl;
 		Eigen::VectorXd repro_solve_affine = RB * solve_affine;
 		Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
 		if (globally_connected == 1)
@@ -5280,11 +5287,11 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				current_f_all = collect_f_all.col(current_index);
 				Eigen::VectorXd current_f_all_wo_dbc = remove_rows(current_f_all, elem_loc_dbc);
 				Eigen::VectorXd proj_current_f_all_wo_dbc = RB.transpose() * current_f_all_wo_dbc;
-				cout << "proj_current_f_all_wo_dbc " << proj_current_f_all_wo_dbc << endl;
+//				cout << "proj_current_f_all_wo_dbc " << proj_current_f_all_wo_dbc << endl;
 				Eigen::VectorXd correctRHS = affine_mat_proj * proj_current_f_all_wo_dbc;
 				Eigen::VectorXd correction_RHS = correctRHS - affine_vec_proj;
-				cout << "correctRHS " << correctRHS << endl;
-				cout << "correction_RHS " << correction_RHS << endl;
+//				cout << "correctRHS " << correctRHS << endl;
+//				cout << "correction_RHS " << correction_RHS << endl;
 			}
 		}
 		mat_compare.col(1) = reconstruct_solution; // sembra abbastanza bene
@@ -5725,14 +5732,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		do_geo_trafo(); // setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
 	}
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
-	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
+//	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
 	Eigen::VectorXd singular_values = svd_collect_f_all.singularValues();
 	if (debug_mode)
 	{
 		cout << "sum singular values " << singular_values.sum() << endl << endl;
 	}
 	Eigen::VectorXd rel_singular_values = singular_values / singular_values.sum();
-	cout << "relative singular value percents: " << rel_singular_values << endl;
+//	cout << "relative singular value percents: " << rel_singular_values << endl;
 	// determine RBsize corresponding to the chosen POD_tolerance
 	RBsize = 1; 
 	Eigen::VectorXd cum_rel_singular_values = Eigen::VectorXd::Zero(singular_values.rows());
@@ -5823,6 +5830,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	}
 	Eigen::MatrixXd affine_mat_proj = the_const_one_proj + current_nu * the_ABCD_one_proj + recovered_affine_adv_mat_proj_xy;
 
+
+
 	if (debug_mode)
 	{
 		Eigen::MatrixXd affine_mat = Get_complete_matrix();
@@ -5849,7 +5858,11 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
     Eigen::MatrixXd CoupledLinearNS_TT::gen_affine_mat_proj_2d(double current_nu, double w)
     {
 	// avail datastructure	Array<OneD, Array<OneD, Array<OneD, Eigen::MatrixXd > > > adv_mats_proj_x_2d;
+//	Array<OneD, Array<OneD, Eigen::MatrixXd > > the_const_one_proj_2d;
+//	Array<OneD, Array<OneD, Eigen::MatrixXd > > the_ABCD_one_proj_2d;
 	Eigen::MatrixXd recovered_affine_adv_mat_proj_xy = Eigen::MatrixXd::Zero(RBsize, RBsize);
+	Eigen::MatrixXd recovered_press_proj = Eigen::MatrixXd::Zero(RBsize, RBsize);
+	Eigen::MatrixXd recovered_ABCD_proj = Eigen::MatrixXd::Zero(RBsize, RBsize);
 	for (int index_elem = 0; index_elem < number_elem_trafo; ++index_elem)
 	{
 		double detT = Geo_T(w, index_elem, 0);
@@ -5866,8 +5879,13 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			recovered_affine_adv_mat_proj_xy += detT * curr_xy_projected(i,0) * (Ta * adv_mats_proj_x_2d[i][index_elem][0] + Tc * adv_mats_proj_x_2d[i][index_elem][1]) + detT * curr_xy_projected(i,1) * (Tb * adv_mats_proj_y_2d[i][index_elem][0] + Td * adv_mats_proj_y_2d[i][index_elem][1]);
 
 		}
+		recovered_ABCD_proj += detT * (c00 * the_ABCD_one_proj_2d[index_elem][0] + c01*(the_ABCD_one_proj_2d[index_elem][1] + the_ABCD_one_proj_2d[index_elem][2]) + c11*the_ABCD_one_proj_2d[index_elem][3]);
+		recovered_press_proj += detT * (Ta * the_const_one_proj_2d[index_elem][0] + Tc * the_const_one_proj_2d[index_elem][1] + Tb * the_const_one_proj_2d[index_elem][2] + Td * the_const_one_proj_2d[index_elem][3]);
+
 	}
-	Eigen::MatrixXd affine_mat_proj = the_const_one_proj + current_nu * the_ABCD_one_proj + recovered_affine_adv_mat_proj_xy;
+
+	Eigen::MatrixXd affine_mat_proj = recovered_press_proj + current_nu * recovered_ABCD_proj + recovered_affine_adv_mat_proj_xy;
+//	Eigen::MatrixXd affine_mat_proj = the_const_one_proj + current_nu * the_ABCD_one_proj + recovered_affine_adv_mat_proj_xy;
 
 	if (debug_mode)
 	{
@@ -5899,6 +5917,9 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		recovered_affine_adv_rhs_proj_xy -= adv_vec_proj_x[i] * curr_xy_projected(i,0) + adv_vec_proj_y[i] * curr_xy_projected(i,1);
 	}	
+
+
+
 	Eigen::VectorXd add_rhs_Newton = Eigen::VectorXd::Zero(RBsize); 
 	Eigen::VectorXd recovered_affine_adv_rhs_proj_xy_newton = Eigen::VectorXd::Zero(RBsize);
 	Eigen::MatrixXd recovered_affine_adv_rhs_proj_xy_newton_RB = Eigen::MatrixXd::Zero(RBsize,RBsize);  
@@ -5943,18 +5964,49 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	}
 //	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*recovered_affine_adv_rhs_proj_xy_newton ;
+
+	cout << " the_const_one_rhs_proj " <<  the_const_one_rhs_proj  << endl;
+	cout << " the_ABCD_one_rhs_proj " <<  the_ABCD_one_rhs_proj  << endl;
+	cout << " recovered_affine_adv_rhs_proj_xy " <<  recovered_affine_adv_rhs_proj_xy  << endl;
+
 	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*add_rhs_Newton ;  
     }
 
     Eigen::VectorXd CoupledLinearNS_TT::gen_affine_vec_proj_2d(double current_nu, double w, int current_index)
     {
 	Eigen::VectorXd recovered_affine_adv_rhs_proj_xy = Eigen::VectorXd::Zero(RBsize); 
-	for (int i = 0; i < RBsize; ++i)
+	Eigen::VectorXd recovered_press_proj = Eigen::VectorXd::Zero(RBsize);
+	Eigen::VectorXd recovered_ABCD_proj = Eigen::VectorXd::Zero(RBsize);
+	for (int index_elem = 0; index_elem < number_elem_trafo; ++index_elem)
 	{
-		recovered_affine_adv_rhs_proj_xy -= adv_vec_proj_x[i] * curr_xy_projected(i,0) + adv_vec_proj_y[i] * curr_xy_projected(i,1);
-	}	
+		double detT = Geo_T(w, index_elem, 0);
+		double Ta = Geo_T(w, index_elem, 1);
+		double Tb = Geo_T(w, index_elem, 2);
+		double Tc = Geo_T(w, index_elem, 3);
+		double Td = Geo_T(w, index_elem, 4);
+		double c00 = Ta*Ta + Tb*Tb;
+		double c01 = Ta*Tc + Tb*Td;
+		double c11 = Tc*Tc + Td*Td;
+		for (int i = 0; i < RBsize; ++i)
+		{
+	//		recovered_affine_adv_rhs_proj_xy -= adv_vec_proj_x[i] * curr_xy_projected(i,0) + adv_vec_proj_y[i] * curr_xy_projected(i,1);
+			recovered_affine_adv_rhs_proj_xy -= detT * curr_xy_projected(i,0) * (Ta * adv_vec_proj_x_2d[i][index_elem][0] + Tc * adv_vec_proj_x_2d[i][index_elem][1]) + detT * curr_xy_projected(i,1) * (Tb * adv_vec_proj_y_2d[i][index_elem][0] + Td * adv_vec_proj_y_2d[i][index_elem][1]);
+		}	
+		recovered_ABCD_proj += detT * (c00 * the_ABCD_one_rhs_proj_2d[index_elem][0] + c01*(the_ABCD_one_rhs_proj_2d[index_elem][1] + the_ABCD_one_rhs_proj_2d[index_elem][2]) + c11*the_ABCD_one_rhs_proj_2d[index_elem][3]);
+		recovered_press_proj += detT * (Ta * the_const_one_rhs_proj_2d[index_elem][0] + Tc * the_const_one_rhs_proj_2d[index_elem][1] + Tb * the_const_one_rhs_proj_2d[index_elem][2] + Td * the_const_one_rhs_proj_2d[index_elem][3]);
+
+	}
+
+
 	Eigen::VectorXd add_rhs_Newton = Eigen::VectorXd::Zero(RBsize); 
-	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*add_rhs_Newton ;  
+
+	cout << " recovered_press_proj " <<  recovered_press_proj  << endl;
+	cout << " recovered_ABCD_proj " <<  recovered_ABCD_proj  << endl;
+	cout << " recovered_affine_adv_rhs_proj_xy " <<  recovered_affine_adv_rhs_proj_xy  << endl;
+
+
+	return -recovered_press_proj - current_nu * recovered_ABCD_proj + recovered_affine_adv_rhs_proj_xy  -0.5*add_rhs_Newton ;  
+//	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*add_rhs_Newton ;  
     }
 
 

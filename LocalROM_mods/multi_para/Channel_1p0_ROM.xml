@@ -47,7 +47,7 @@
             <P> ref_param_nu = 1       </P>
             <P> number_of_snapshots_dir0 = 4       </P>
             <P> number_of_snapshots_dir1 = 5       </P>
-            <P> POD_tolerance = .9       </P>
+            <P> POD_tolerance = .99       </P>
             <P> param0_dir0 = 0.7       </P>
             <P> param1_dir0 = 0.8       </P>
             <P> param2_dir0 = 0.9       </P>
@@ -60,7 +60,7 @@
 	    <P> type_para1 = 1        </P> <!-- 0=kin_visc, 1=geo   -->
 	    <P> type_para2 = 0   	</P>
 	    <P> number_elem_trafo = 5   </P>
-	    <P> debug_mode = 1   </P>
+	    <P> debug_mode = 0   </P>
 	    <P> globally_connected = 2      </P>
 <!--	    <P> elem_1 = {32,30,11,10,9,8,17,16,15,14,25,24,23,22}   	</P>   -->  <!-- find a nice solution for the element numberings and also the matrices   -->
 <!--        <P> elem_2 = {12, 28, 34, 13,21,20,18,19,26,27}   		</P>   -->  <!-- for development purposes, just hard-code the example, as it is convenient to have available in the code later   -->

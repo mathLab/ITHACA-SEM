@@ -887,14 +887,18 @@ The following parameters can be specified in the \inltt{PARAMETERS} section of
 the session file:
 
 \begin{itemize}
-\item \inltt{TimeStep}: sets the time-step for the integration in time formula
-\item \inltt{NumSteps}: sets the number of time-steps
-\item \inltt{Kinvis}: sets the cinematic viscosity coefficient formula
-\item \inltt{SubStepCFL}: sets the CFL safety limit for the sub-stepping algorithm (default value = 0.5)
-\item \inltt{MinSubSteps}: perform a minimum number of substeps in sub-stepping algorithm (default is 1)
-\item \inltt{MaxSubSteps}: perform a maxmimum  number of substeps in sub-stepping algorithm otherwise exit (default is 100)
-\item \inltt{SVVCutoffRatio}: sets the ratio of Fourier frequency not affected by the SVV technique (default value = 0.75, i.e. the first 75\% of frequency are not damped)
-\item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1 (Exponential and Power kernel), 1 (DG-Kernel))
+\item \inltt{TimeStep}: sets the time-step for the integration in time formula.
+\item \inltt{NumSteps}: sets the number of time-steps.
+\item \inltt{IO\_CheckSteps}: sets the number of steps between successive checkpoint files.
+\item \inltt{IO\_InfoSteps}: sets the number of steps between successive info stats are printed to screen.
+\item \inltt{Kinvis}: sets the cinematic viscosity coefficient formula.
+\item \inltt{SubStepCFL}: sets the CFL safety limit for the sub-stepping algorithm (default value = 0.5).
+\item \inltt{MinSubSteps}: perform a minimum number of substeps in sub-stepping algorithm (default is 1).
+\item \inltt{MaxSubSteps}: perform a maxmimum  number of substeps in sub-stepping algorithm otherwise exit (default is 100).
+\item \inltt{SVVCutoffRatio}: sets the ratio of Fourier frequency not affected by the SVV technique (default value = 0.75, i.e. the first 75\% of frequency are not damped).
+\item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1 (Exponential and Power kernel), 1 (DG-Kernel)).
+\item \inltt{IO\_CFLWriteFld}: sets a treshold value for the CFL number. If CFL exceeds this value, the flow field is written to file (only once). This is useful for debugging purposes, allowing to visually inspect a flow field that is becoming unstable.
+\item \inltt{IO\_CFLWriteFldNumSteps}: sets the number of timesteps after which \inltt{IO\_CFLWriteFld} becomes operational. This avoids writing the flow field at the beginning of a simulation when initialising a new geometry.
 \end{itemize}
 
 \subsection{Womersley Boundary Condition}

@@ -394,7 +394,8 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocal = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
+            AssemblyMapSharedPtr asmMap = m_locToGloMap.lock();
 
             if (m_sparseSchurCompl)
             {
@@ -444,15 +445,15 @@ namespace Nektar
                 
 #if 1 // to be consistent with original 
 
-                int nGloBndDofs = m_locToGloMap->GetNumGlobalBndCoeffs();
+                int nGloBndDofs = m_locToGloMap.lock()->GetNumGlobalBndCoeffs();
                 Array<OneD, NekDouble> F_gloBnd(nGloBndDofs);
                 NekVector<NekDouble> F_GloBnd(nGloBndDofs,F_gloBnd,eWrapper);
                 
-                m_locToGloMap->AssembleBnd(F_bnd,F_gloBnd);
+                m_locToGloMap.lock()->AssembleBnd(F_bnd,F_gloBnd);
                 Set_Rhs_Magnitude(F_GloBnd);
                 
 #else
-                int nLocBndDofs   = m_locToGloMap->GetNumLocalBndCoeffs();
+                int nLocBndDofs   = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
                 //Set_Rhs_Magnitude - version using local array
 

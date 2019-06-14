@@ -141,7 +141,7 @@ namespace Nektar
 
             if(nIntDofs)
             {
-                m_locToGloMap->LocalToLocalInt(pLocInput,F_int);
+                m_locToGloMap.lock()->LocalToLocalInt(pLocInput,F_int);
             }
 
             // Boundary system solution
@@ -200,7 +200,7 @@ namespace Nektar
                     v_CoeffsBwdTransform(V_bnd);
 
                     // put final bnd solution back in output array
-                    m_locToGloMap->LocalBndToLocal(V_bnd,pLocOutput);
+                    m_locToGloMap.lock()->LocalBndToLocal(V_bnd,pLocOutput);
                 }
                 else // Process next level of recursion for multi level SC
                 {
@@ -218,7 +218,7 @@ namespace Nektar
                     nextLevLocToGloMap->PatchGlobalToLocal(V_bnd,V_bnd);
                     
                     // place V_bnd in output array
-                    m_locToGloMap->LocalBndToLocal(V_bnd, pLocOutput);
+                    m_locToGloMap.lock()->LocalBndToLocal(V_bnd, pLocOutput);
                 }
             }
 
@@ -236,7 +236,7 @@ namespace Nektar
                 
                 Multiply(V_Int, invD, F_Int);
                 
-                m_locToGloMap->LocalIntToLocal(V_int, pLocOutput);
+                m_locToGloMap.lock()->LocalIntToLocal(V_int, pLocOutput);
             }
         }
 
@@ -250,8 +250,9 @@ namespace Nektar
         void GlobalLinSysStaticCond::v_Initialise(
                 const std::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
-            int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
-            int nIntDofs = m_locToGloMap->GetNumLocalCoeffs() - nLocalBnd; 
+            int nLocalBnd = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
+            int nIntDofs = m_locToGloMap.lock()->
+                GetNumLocalCoeffs() - nLocalBnd; 
             m_wsp = Array<OneD, NekDouble>
                     (3*nLocalBnd+nIntDofs, 0.0);
 

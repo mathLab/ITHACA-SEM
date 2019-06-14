@@ -75,22 +75,22 @@ namespace Nektar
          */ 
         void PreconditionerLinearWithLowEnergy::v_InitObject()
         {
-            m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap);
-            m_lowEnergyPrecon = GetPreconFactory().CreateInstance("LowEnergyBlock",m_linsys.lock(),m_locToGloMap);
+            m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap.lock());
+            m_lowEnergyPrecon = GetPreconFactory().CreateInstance("LowEnergyBlock",m_linsys.lock(),m_locToGloMap.lock());
 
             //Set up multiplicity array for inverse transposed transformation matrix
-            int nDirBnd     = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nGlobHomBnd = m_locToGloMap->GetNumGlobalBndCoeffs() - nDirBnd;
-            int nLocBnd     = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nDirBnd     = m_locToGloMap.lock()->GetNumGlobalDirBndCoeffs();
+            int nGlobHomBnd = m_locToGloMap.lock()->GetNumGlobalBndCoeffs() - nDirBnd;
+            int nLocBnd     = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
             m_invMultiplicity = Array<OneD,NekDouble>(nGlobHomBnd,1.0);
             Array<OneD,NekDouble> loc(nLocBnd);
 
             // need to scatter from global array to handle sign changes
-            m_locToGloMap->GlobalToLocalBnd(m_invMultiplicity, loc, nDirBnd);
+            m_locToGloMap.lock()->GlobalToLocalBnd(m_invMultiplicity, loc, nDirBnd);
 
             // Now assemble values back together to get multiplicity
-            m_locToGloMap->AssembleBnd(loc,m_invMultiplicity, nDirBnd);
+            m_locToGloMap.lock()->AssembleBnd(loc,m_invMultiplicity, nDirBnd);
             Vmath::Sdiv(nGlobHomBnd,1.0,m_invMultiplicity,1,m_invMultiplicity,1);
         }
 
@@ -159,9 +159,9 @@ namespace Nektar
             const Array<OneD, NekDouble>& pInput,
             Array<OneD, NekDouble>& pOutput)
         {
-            int nDirBndDofs     = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nGlobHomBndDofs = m_locToGloMap->GetNumGlobalBndCoeffs() - nDirBndDofs;
-            int nLocBndDofs     = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nDirBndDofs     = m_locToGloMap.lock()->GetNumGlobalDirBndCoeffs();
+            int nGlobHomBndDofs = m_locToGloMap.lock()->GetNumGlobalBndCoeffs() - nDirBndDofs;
+            int nLocBndDofs     = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
             Array<OneD, NekDouble> tmp(nGlobHomBndDofs, 0.0);
 
@@ -174,18 +174,18 @@ namespace Nektar
             //Transform input from low energy to original basis
             Vmath::Vmul(nGlobHomBndDofs,m_invMultiplicity,1,
                         pInput,1,OutputLinear,1);
-            m_locToGloMap->GlobalToLocalBnd(OutputLinear,local,nDirBndDofs);
+            m_locToGloMap.lock()->GlobalToLocalBnd(OutputLinear,local,nDirBndDofs);
             m_lowEnergyPrecon->DoTransformBasisFromLowEnergy(local,local);
-            m_locToGloMap->AssembleBnd(local,InputLinear,nDirBndDofs);
+            m_locToGloMap.lock()->AssembleBnd(local,InputLinear,nDirBndDofs);
 
             //Apply linear space preconditioner
             m_linSpacePrecon->DoPreconditionerWithNonVertOutput
                 (InputLinear, OutputLinear, tmp);
 
             // transform coefficients back to low energy space
-            m_locToGloMap->GlobalToLocalBnd(OutputLinear,local,nDirBndDofs);
+            m_locToGloMap.lock()->GlobalToLocalBnd(OutputLinear,local,nDirBndDofs);
             m_lowEnergyPrecon->DoTransformCoeffsToLowEnergy(local,local);
-            m_locToGloMap->LocalBndToGlobal(local,pOutput,nDirBndDofs,false);
+            m_locToGloMap.lock()->LocalBndToGlobal(local,pOutput,nDirBndDofs,false);
 
             //Apply Low Energy preconditioner
             m_lowEnergyPrecon->DoPreconditioner(pInput, OutputLowEnergy);

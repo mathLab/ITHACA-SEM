@@ -220,17 +220,18 @@ namespace Nektar
         {
             std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
 
+            AssemblyMapSharedPtr asmMap = m_locToGloMap.lock();
+            
             int ncoeffs = expList->GetNcoeffs();
             
             Array<OneD,NekDouble> InputLoc(ncoeffs);
             Array<OneD,NekDouble> OutputLoc(ncoeffs);
-            m_locToGloMap->GlobalToLocal(pInput, InputLoc);
+            asmMap->GlobalToLocal(pInput, InputLoc);
 
             // Perform matrix-vector operation A*d_i
             expList->GeneralMatrixOp(m_linSysKey,
                                      InputLoc, OutputLoc);
 
-            AssemblyMapSharedPtr asmMap = m_locToGloMap.lock();
 
             // Apply robin boundary conditions to the solution.
             for(auto &r : m_robinBCInfo) // add robin mass matrix
@@ -254,7 +255,7 @@ namespace Nektar
             }
 
             // put back in global coeffs 
-            m_locToGloMap->Assemble(OutputLoc, pOutput);
+            asmMap->Assemble(OutputLoc, pOutput);
         }
 
         /**

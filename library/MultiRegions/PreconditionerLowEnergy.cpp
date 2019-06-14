@@ -1066,14 +1066,16 @@ namespace Nektar
          * energy basis i.e. \f$\overline{\mathbf{x}}=\mathbf{R}\mathbf{x}\f$.
          */
         void PreconditionerLowEnergy::v_DoTransformBasisToLowEnergy
-                 (Array<OneD, NekDouble>& pInOut)
+        (Array<OneD, NekDouble>& pInOut)
         {
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBndDofs  = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
             //Block transformation matrix
             DNekBlkMat &R = *m_RBlk;
 
             Array<OneD, NekDouble> pLocalIn(nLocBndDofs,pInOut.get());
+            ASSERTL0(false,"Somethig is missing here needs sorting");
+            
         }
         
         /**
@@ -1088,7 +1090,7 @@ namespace Nektar
         void PreconditionerLowEnergy::v_DoTransformCoeffsFromLowEnergy(
                               Array<OneD, NekDouble>& pInOut)
         {
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBndDofs   = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
             ASSERTL1(pInOut.num_elements() >= nLocBndDofs,
                      "Output array is not greater than the nLocBndDofs");
@@ -1129,7 +1131,7 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                 Array<OneD, NekDouble>& pOutput)
         {
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBndDofs    = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
             ASSERTL1(pInput.num_elements() >= nLocBndDofs,
                      "Input array is smaller than nLocBndDofs");
@@ -1168,7 +1170,7 @@ namespace Nektar
                         const Array<OneD, NekDouble>& pInput,
                         Array<OneD, NekDouble>& pOutput)
         {
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBndDofs     = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
             ASSERTL1(pInput.num_elements() >= nLocBndDofs,
                      "Input array is less than nLocBndDofs");
@@ -1257,8 +1259,10 @@ namespace Nektar
          */
         void PreconditionerLowEnergy::CreateVariablePMask(void)
         {
-            unsigned int nLocBnd   = m_locToGloMap->GetNumLocalBndCoeffs();
+            unsigned int nLocBnd  = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
             unsigned int i;
+
+            auto asmMap = m_locToGloMap.lock();
             
             const Array< OneD, const NekDouble > &sign 
                 = asmMap->GetLocalToGlobalBndSign();

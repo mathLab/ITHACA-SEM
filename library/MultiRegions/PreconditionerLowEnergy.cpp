@@ -1074,8 +1074,25 @@ namespace Nektar
             DNekBlkMat &R = *m_RBlk;
 
             Array<OneD, NekDouble> pLocalIn(nLocBndDofs,pInOut.get());
-            ASSERTL0(false,"Somethig is missing here needs sorting");
-            
+
+            //Apply mask in case of variable P
+	    Vmath::Vmul(nLocBndDofs,pLocalIn, 1, m_variablePmask,1,
+			pLocalIn,1);
+
+	    //Multiply by the block transformation matrix
+	    int cnt = 0;
+	    int cnt1 = 0;
+	    for(int i = 0; i < m_sameBlock.size(); ++i)
+	    {
+		int nexp    = m_sameBlock[i].first;
+		int nbndcoeffs = m_sameBlock[i].second;
+		Blas::Dgemm('N','N', nbndcoeffs, nexp, nbndcoeffs,
+			    1.0, &(R.GetBlock(cnt1,cnt1)->GetPtr()[0]),
+			    nbndcoeffs,pLocalIn.get() + cnt,  nbndcoeffs,
+			    0.0, pInOut.get() + cnt, nbndcoeffs);
+		cnt  += nbndcoeffs*nexp;
+		cnt1 += nexp;
+	    }
         }
         
         /**

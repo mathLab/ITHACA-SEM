@@ -5965,9 +5965,9 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	}
 //	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*recovered_affine_adv_rhs_proj_xy_newton ;
 
-	cout << " the_const_one_rhs_proj " <<  the_const_one_rhs_proj  << endl;
-	cout << " the_ABCD_one_rhs_proj " <<  the_ABCD_one_rhs_proj  << endl;
-	cout << " recovered_affine_adv_rhs_proj_xy " <<  recovered_affine_adv_rhs_proj_xy  << endl;
+//	cout << " the_const_one_rhs_proj " <<  the_const_one_rhs_proj  << endl;
+//	cout << " the_ABCD_one_rhs_proj " <<  the_ABCD_one_rhs_proj  << endl;
+//	cout << " recovered_affine_adv_rhs_proj_xy " <<  recovered_affine_adv_rhs_proj_xy  << endl;
 
 	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*add_rhs_Newton ;  
     }
@@ -6000,9 +6000,9 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	Eigen::VectorXd add_rhs_Newton = Eigen::VectorXd::Zero(RBsize); 
 
-	cout << " recovered_press_proj " <<  recovered_press_proj  << endl;
-	cout << " recovered_ABCD_proj " <<  recovered_ABCD_proj  << endl;
-	cout << " recovered_affine_adv_rhs_proj_xy " <<  recovered_affine_adv_rhs_proj_xy  << endl;
+//	cout << " recovered_press_proj " <<  recovered_press_proj  << endl;
+//	cout << " recovered_ABCD_proj " <<  recovered_ABCD_proj  << endl;
+//	cout << " recovered_affine_adv_rhs_proj_xy " <<  recovered_affine_adv_rhs_proj_xy  << endl;
 
 
 	return -recovered_press_proj - current_nu * recovered_ABCD_proj + recovered_affine_adv_rhs_proj_xy  -0.5*add_rhs_Newton ;  

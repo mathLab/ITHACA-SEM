@@ -47,7 +47,7 @@
             <P> ref_param_nu = 1       </P>
             <P> number_of_snapshots_dir0 = 4       </P>
             <P> number_of_snapshots_dir1 = 5       </P>
-            <P> POD_tolerance = .99       </P>
+            <P> POD_tolerance = .99999       </P>
             <P> param0_dir0 = 0.7       </P>
             <P> param1_dir0 = 0.8       </P>
             <P> param2_dir0 = 0.9       </P>

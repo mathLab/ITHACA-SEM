@@ -151,7 +151,7 @@ namespace Nektar
             const int nm0 = m_base[0]->GetNumModes();
             const int nm1 = m_base[1]->GetNumModes();
  
-            Array<OneD, NekDouble> alloc(4*nq + m_ncoeffs + nm0*nq2*(nq1+nm1));
+            Array<OneD, NekDouble> alloc(4*nq + m_ncoeffs + nm0*nq2*(nq1+nm1),0.0);
             Array<OneD, NekDouble> tmp1 (alloc);               // Quad metric
             Array<OneD, NekDouble> tmp2 (alloc +   nq);        // Dir1 metric
             Array<OneD, NekDouble> tmp3 (alloc + 2*nq);        // Dir2 metric

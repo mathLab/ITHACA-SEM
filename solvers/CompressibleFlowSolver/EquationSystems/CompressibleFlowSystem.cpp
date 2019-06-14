@@ -947,89 +947,11 @@ namespace Nektar
         for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
         {
             GetFluxVectorJacDirctn(nfluxDir,inarray, ElmtJacArray);
-
-// if(3==m_stepcount)
-// {
-//     for(int m=0; m<nvariable;m++)
-//     {
-//         for(int n=0; n<nvariable;n++)
-//         {
-//                 for(int ne=0; ne<ntotElmt;ne++)
-//                 {
-//                     int nElmtPnt            = (*expvect)[ne]->GetTotPoints();
-//                     cout <<"GetFluxVectorJacDirctn: ElmtJacArray["<<m<<"]["<<n<<"]["<<nfluxDir<<"]["<<ne<<"]: ";
-//                     for(int i=0;i<nElmtPnt;i++)
-//                     {
-//                         cout <<" npnts: "<<ElmtJacArray[m][n][nfluxDir][ne][i];
-//                     }
-//                     cout <<endl;
-//                 }
-//         }
-//     }
-
-// // cout<< "After AddMatNSBlkDiag_volume"<<endl;
-// // Cout2DArrayBlkMat(gmtxarray,20);
-// // ASSERTL0(false,"debug stop");
-// }
 #ifdef DEBUG_VISCOUS_JAC_MAT
-// if(3!=m_stepcount)
-// {
             MinusDiffusionFluxJacDirctn(nfluxDir,inarray,qfield, ElmtJacArray);
-// }
 #endif
-
-// if(3==m_stepcount)
-// {
-//     for(int m=0; m<nvariable;m++)
-//     {
-//         for(int n=0; n<nvariable;n++)
-//         {
-//                 for(int ne=0; ne<ntotElmt;ne++)
-//                 {
-//                     int nElmtPnt            = (*expvect)[ne]->GetTotPoints();
-//                     cout <<"MinusDiffusionFluxJacDirctn: ElmtJacArray["<<m<<"]["<<n<<"]["<<nfluxDir<<"]["<<ne<<"]: ";
-//                     for(int i=0;i<nElmtPnt;i++)
-//                     {
-//                         cout <<" npnts: "<<ElmtJacArray[m][n][nfluxDir][ne][i];
-//                     }
-//                     cout <<endl;
-//                 }
-//         }
-//     }
-
-// // cout<< "After AddMatNSBlkDiag_volume"<<endl;
-// // Cout2DArrayBlkMat(gmtxarray,20);
-// // ASSERTL0(false,"debug stop");
-// }
         }
         m_advObject->AddVolumJacToMat(m_fields,nvariable,ElmtJacArray,gmtxarray);
-// if(3==m_stepcount)
-// {
-//     // for(int m=0; m<nvariable;m++)
-//     // {
-//     //     for(int n=0; n<nvariable;n++)
-//     //     {
-//     //         for(int ndir=0; ndir<m_spacedim;ndir++)
-//     //         {
-//     //             for(int ne=0; ne<ntotElmt;ne++)
-//     //             {
-//     //                 int nElmtPnt            = (*expvect)[ne]->GetTotPoints();
-//     //                 cout <<"ElmtJacArray["<<m<<"]["<<n<<"]["<<ndir<<"]["<<ne<<"]: ";
-//     //                 for(int i=0;i<nElmtPnt;i++)
-//     //                 {
-//     //                     cout <<" npnts: "<<ElmtJacArray[m][n][ndir][ne][i];
-//     //                 }
-//     //                 cout <<endl;
-//     //             }
-//     //         }
-//     //     }
-//     // }
-
-// cout<< "After AddMatNSBlkDiag_volume"<<endl;
-// Cout2DArrayBlkMat(gmtxarray,20);
-// ASSERTL0(false,"debug stop");
-// }
-
 #ifdef DEBUG_VISCOUS_JAC_MAT
         for(int nDervDir = 0; nDervDir < nSpaceDim; nDervDir++)
         {
@@ -1821,24 +1743,14 @@ namespace Nektar
             Array<OneD, DNekBlkMatSharedPtr >                   &TraceJacDeriv,
             Array<OneD, Array<OneD, NekDouble> >                &TraceJacDerivSign)
     {
-m_stepcount++;
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield;
 #ifdef DEBUG_VISCOUS_JAC_MAT
         CalphysDeriv(inarray,qfield);
 #endif
         Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
-// if(3!=m_stepcount)
-// {
         AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray);
-// }
 
         AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv,TraceJacDerivSign);
-// if(3==m_stepcount)
-// {
-// cout<< "After AddMatNSBlkDiag_boundary"<<endl;
-// Cout2DArrayBlkMat(gmtxarray,20);
-// ASSERTL0(false, "debug stop");
-// }
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
 
         ElmtVarInvMtrx(gmtxarray);

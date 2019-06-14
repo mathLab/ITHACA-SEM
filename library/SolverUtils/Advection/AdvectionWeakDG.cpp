@@ -252,7 +252,7 @@ namespace Nektar
                         (*mtxPerVarCoeff[nelmt])   =    0.0;
                         (*mtxPerVar[nelmt])        =    0.0;
                     }
-
+                    
                     explist->GetMatIpwrtDeriveBase(ElmtJacArray[m][n],mtxPerVar);
                     explist->AddRightIPTBaseMatrix(mtxPerVar,mtxPerVarCoeff);
 

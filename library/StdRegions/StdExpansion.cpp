@@ -443,6 +443,27 @@ namespace Nektar
                     }
                 }
                 break;
+            case eDerivBase0:
+                {
+                    int nq = GetTotPoints();
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nq);
+                    GenStdMatBwdDeriv(0,returnval);
+                }
+                break;
+            case eDerivBase1:
+                {
+                    int nq = GetTotPoints();
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nq);
+                    GenStdMatBwdDeriv(1,returnval);
+                }
+                break;
+            case eDerivBase2:
+                {
+                    int nq = GetTotPoints();
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nq);
+                    GenStdMatBwdDeriv(2,returnval);
+                }
+                break;
             case eEquiSpacedToCoeffs:
                 {
                     // check to see if equispaced basis

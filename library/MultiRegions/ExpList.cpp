@@ -3612,13 +3612,12 @@ namespace Nektar
                     tmpCoef     =   Array<OneD, NekDouble>(nElmtCoef,0.0);
                 }
 
-                // ElmtMat = mtxPerVar[nelmt];
-                
-
-                StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
-                                            (*m_exp)[nelmt]->DetShapeType(),
-                                             *((*m_exp)[nelmt]));
-                DNekMatSharedPtr BwdTransMat =  (*m_exp)[nelmt]->GetStdMatrix(matkey);
+                StdRegions::StdExpansionSharedPtr stdExp;
+                stdExp = (*m_exp)[nelmt]->GetStdExp();
+                    StdRegions::StdMatrixKey  matkey(StdRegions::eBwdTrans,
+                                        stdExp->DetShapeType(), *stdExp);
+                    
+                DNekMatSharedPtr BwdTransMat =  stdExp->GetStdMatrix(matkey);
 
                 
                 for(int ncl = 0; ncl < nElmtCoef; ncl++)
@@ -3664,10 +3663,12 @@ namespace Nektar
                     tmpCoef     =   Array<OneD, NekDouble>(nElmtCoef,0.0);
                 }
 
-                StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
-                                            (*m_exp)[nelmt]->DetShapeType(),
-                                             *((*m_exp)[nelmt]));
-                DNekMatSharedPtr BwdTransMat =  (*m_exp)[nelmt]->GetStdMatrix(matkey);
+                StdRegions::StdExpansionSharedPtr stdExp;
+                stdExp = (*m_exp)[nelmt]->GetStdExp();
+                    StdRegions::StdMatrixKey  matkey(StdRegions::eBwdTrans,
+                                        stdExp->DetShapeType(), *stdExp);
+                    
+                DNekMatSharedPtr BwdTransMat =  stdExp->GetStdMatrix(matkey);
 
                 for(int ncl = 0; ncl < nElmtCoef; ncl++)
                 {
@@ -3758,24 +3759,26 @@ namespace Nektar
                             tmppnts[ndir]       =   Array<OneD, NekDouble>(nElmtPnt,0.0);
                         }
                     }
-                    for(int ndir=0;ndir<nspacedim;ndir++)
-                    {
-                        ArrayStdMat[ndir] = MemoryManager<DNekMat>::AllocateSharedPtr(nElmtCoef,nElmtPnt,0.0);
-                    }
+                    StdRegions::StdExpansionSharedPtr stdExp;
+                    stdExp = (*m_exp)[nelmt]->GetStdExp();
+                    StdRegions::StdMatrixKey  matkey(StdRegions::eDerivBase0,
+                                        stdExp->DetShapeType(), *stdExp);
                     
-                    // stdExp = (*m_exp)[nelmt]->GetStdExp();
-                    // StdRegions::StdMatrixKey  key(StdRegions::eIProductWRTDerivBase0,
-                    //                     stdExp->DetShapeType(), *stdExp);
-                    // ArrayStdMat[0]   =   stdExp->GenMatrix(key);
-                    (*m_exp)[nelmt]->GenStdMatBwdDeriv(0,ArrayStdMat[0]);
-
+                    ArrayStdMat[0]  =   stdExp->GetStdMatrix(matkey);
+                    
                     if(nspacedim>1)
                     {
-                        (*m_exp)[nelmt]->GenStdMatBwdDeriv(1,ArrayStdMat[1]);
+                    StdRegions::StdMatrixKey  matkey(StdRegions::eDerivBase1,
+                                        stdExp->DetShapeType(), *stdExp);
+                    
+                        ArrayStdMat[1]  =   stdExp->GetStdMatrix(matkey);
                         
                         if(nspacedim>2)
                         {
-                            (*m_exp)[nelmt]->GenStdMatBwdDeriv(2,ArrayStdMat[2]);
+                            StdRegions::StdMatrixKey  matkey(StdRegions::eDerivBase2,
+                                                stdExp->DetShapeType(), *stdExp);
+                        
+                            ArrayStdMat[2]  =   stdExp->GetStdMatrix(matkey);
                         }
                     }
 
@@ -3832,10 +3835,12 @@ namespace Nektar
                 nElmtCoef           = (*m_exp)[nelmt]->GetNcoeffs();
                 nElmtPnt            = (*m_exp)[nelmt]->GetTotPoints();
 
-                StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
-                                            (*m_exp)[nelmt]->DetShapeType(),
-                                             *((*m_exp)[nelmt]));
-                DNekMatSharedPtr BwdTransMat =  (*m_exp)[nelmt]->GetStdMatrix(matkey);
+                StdRegions::StdExpansionSharedPtr stdExp;
+                stdExp = (*m_exp)[nelmt]->GetStdExp();
+                    StdRegions::StdMatrixKey  matkey(StdRegions::eBwdTrans,
+                                        stdExp->DetShapeType(), *stdExp);
+                    
+                DNekMatSharedPtr BwdTransMat =  stdExp->GetStdMatrix(matkey);
 
                 if (tmpPhys.num_elements()!=nElmtPnt) 
                 {
@@ -4110,10 +4115,14 @@ namespace Nektar
                 tmpMatQ     = ElmtJacQuad[nelmt];
                 tmpMatC     = ElmtJacCoef[nelmt];
 
-                StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
-                                            (*m_exp)[nelmt]->DetShapeType(),
-                                             *((*m_exp)[nelmt]));
-                DNekMatSharedPtr BwdTransMat =  (*m_exp)[nelmt]->GetStdMatrix(matkey);
+
+                StdRegions::StdExpansionSharedPtr stdExp;
+                stdExp = (*m_exp)[nelmt]->GetStdExp();
+                    StdRegions::StdMatrixKey  matkey(StdRegions::eBwdTrans,
+                                        stdExp->DetShapeType(), *stdExp);
+                    
+                DNekMatSharedPtr BwdTransMat =  stdExp->GetStdMatrix(matkey);
+
 
                 (*tmpMatC)  =  (*tmpMatC) + (*tmpMatQ)*(*BwdTransMat);  
             }

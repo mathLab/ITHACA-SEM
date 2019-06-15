@@ -343,6 +343,29 @@ namespace Nektar
                     returnval->Invert();
                 }
                 break;
+            case eBwdMat:
+                {
+                    int nq = GetTotPoints();
+                    Array<OneD, NekDouble> tmpin(m_ncoeffs);
+                    Array<OneD, NekDouble> tmpout(nq);
+
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nq);
+                    Array<OneD, NekDouble > Bwd_data = returnval->GetPtr();
+
+                    StdRegions::StdMatrixKey  matkey(StdRegions::eBwdTrans,
+                                        this->DetShapeType(), *this);
+                    DNekMatSharedPtr MatBwdTrans    =   GetStdMatrix(matkey);
+                    Array<OneD, NekDouble > BwdTrans_data = MatBwdTrans->GetPtr();
+
+                    for(int i=0; i<m_ncoeffs; ++i)
+                    {
+                        Array<OneD, NekDouble> tmpinn = BwdTrans_data + nq*i;
+                        Array<OneD, NekDouble> tmpout = Bwd_data + i;
+
+                        Vmath::Vcopy(nq,tmpinn,1,tmpout,m_ncoeffs);
+                    }
+                }
+                break;
             case eBwdTrans:
                 {
                     int nq = GetTotPoints();

@@ -3737,6 +3737,9 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >    projectedpnts(nspacedim);
             Array<OneD, Array<OneD, NekDouble> >    tmppnts(nspacedim);
             Array<OneD, DNekMatSharedPtr>           ArrayStdMat(nspacedim);
+            Array<OneD, Array<OneD, NekDouble> >    ArrayStdMat_data(nspacedim);
+
+            Array<OneD, NekDouble > clmnArray,clmnStdMatArray;
             
             LibUtilities::ShapeType ElmtTypePrevious = LibUtilities::eNoShapeType;
             int nElmtPntPrevious    = 0;
@@ -3764,7 +3767,8 @@ namespace Nektar
                     StdRegions::StdMatrixKey  matkey(StdRegions::eDerivBase0,
                                         stdExp->DetShapeType(), *stdExp);
                     
-                    ArrayStdMat[0]  =   stdExp->GetStdMatrix(matkey);
+                    ArrayStdMat[0]      =   stdExp->GetStdMatrix(matkey);
+                    ArrayStdMat_data[0] =  ArrayStdMat[0]->GetPtr();
                     
                     if(nspacedim>1)
                     {
@@ -3772,6 +3776,7 @@ namespace Nektar
                                         stdExp->DetShapeType(), *stdExp);
                     
                         ArrayStdMat[1]  =   stdExp->GetStdMatrix(matkey);
+                        ArrayStdMat_data[1] =  ArrayStdMat[1]->GetPtr();
                         
                         if(nspacedim>2)
                         {
@@ -3779,6 +3784,7 @@ namespace Nektar
                                                 stdExp->DetShapeType(), *stdExp);
                         
                             ArrayStdMat[2]  =   stdExp->GetStdMatrix(matkey);
+                            ArrayStdMat_data[2] =  ArrayStdMat[2]->GetPtr();
                         }
                     }
 
@@ -3806,14 +3812,14 @@ namespace Nektar
                 for(int ndir =0;ndir<nspacedim;ndir++)
                 {
                     (*m_exp)[nelmt]->MultiplyByQuadratureMetric(projectedpnts[ndir],projectedpnts[ndir]); // weight with metric
-                    // stdExp->DividByQuadratureMetric(projectedpnts[ndir],projectedpnts[ndir]);             // divid weights only
+                    Array<OneD, NekDouble> MatDataArray   =   mtxPerVar[nelmt]->GetPtr();
+
                     for(int np=0;np<nElmtPnt;np++)
                     {
                         NekDouble factor    =   projectedpnts[ndir][np];
-                        for(int nc=0;nc<nElmtCoef;nc++)
-                        {
-                            (*mtxPerVar[nelmt])(nc,np)   +=  factor*(*ArrayStdMat[ndir])(nc,np);
-                        }
+                        clmnArray       =   MatDataArray + np*nElmtCoef;
+                        clmnStdMatArray =   ArrayStdMat_data[ndir] + np*nElmtCoef;
+                        Vmath::Svtvp(nElmtCoef,factor,clmnStdMatArray,1,clmnArray,1,clmnArray,1);
                     }
                 }
             }
@@ -3824,38 +3830,53 @@ namespace Nektar
             const   Array<OneD, const  Array<OneD, NekDouble> >     &inarray,
             Array<OneD, DNekMatSharedPtr>                           &mtxPerVar)
         {
+            LibUtilities::ShapeType ElmtTypePrevious = LibUtilities::eNoShapeType;
+            int nElmtPntPrevious    = 0;
+            int nElmtCoefPrevious   = 0;
             int ntotElmt            = (*m_exp).size();
             int nElmtPnt            = (*m_exp)[0]->GetTotPoints();
             int nElmtCoef           = (*m_exp)[0]->GetNcoeffs();
 
             Array<OneD, NekDouble>  tmpPhys;
+            Array<OneD, NekDouble > clmnArray,clmnStdMatArray;
+            Array<OneD, NekDouble > stdMat_data;
 
             for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
             {
                 nElmtCoef           = (*m_exp)[nelmt]->GetNcoeffs();
                 nElmtPnt            = (*m_exp)[nelmt]->GetTotPoints();
+                LibUtilities::ShapeType ElmtTypeNow =   (*m_exp)[nelmt]->DetShapeType();
 
-                StdRegions::StdExpansionSharedPtr stdExp;
-                stdExp = (*m_exp)[nelmt]->GetStdExp();
-                    StdRegions::StdMatrixKey  matkey(StdRegions::eBwdTrans,
-                                        stdExp->DetShapeType(), *stdExp);
-                    
-                DNekMatSharedPtr BwdTransMat =  stdExp->GetStdMatrix(matkey);
-
-                if (tmpPhys.num_elements()!=nElmtPnt) 
+                if (nElmtPntPrevious!=nElmtPnt||nElmtCoefPrevious!=nElmtCoef||(ElmtTypeNow!=ElmtTypePrevious)) 
                 {
-                    tmpPhys     =   Array<OneD, NekDouble>(nElmtPnt,0.0);
+                    StdRegions::StdExpansionSharedPtr stdExp;
+                    stdExp = (*m_exp)[nelmt]->GetStdExp();
+                    StdRegions::StdMatrixKey  matkey(StdRegions::eBwdMat,
+                                        stdExp->DetShapeType(), *stdExp);
+                        
+                    DNekMatSharedPtr BwdMat =  stdExp->GetStdMatrix(matkey);
+                    stdMat_data = BwdMat->GetPtr();
+
+                    if (nElmtPntPrevious!=nElmtPnt) 
+                    {
+                        tmpPhys     =   Array<OneD, NekDouble>(nElmtPnt,0.0);
+                    }
+                    
+                    ElmtTypePrevious    = ElmtTypeNow;
+                    nElmtPntPrevious    = nElmtPnt;
+                    nElmtCoefPrevious   = nElmtCoef;
                 }
                 
                 (*m_exp)[nelmt]->MultiplyByQuadratureMetric(inarray[nelmt],tmpPhys); // weight with metric
-                for(int ncl = 0; ncl < nElmtPnt; ncl++)
-                {
-                    NekDouble factor = tmpPhys[ncl];
 
-                    for(int nrw = 0; nrw < nElmtCoef; nrw++)
-                    {
-                        (*mtxPerVar[nelmt])(nrw,ncl)   =   factor*(*BwdTransMat)(ncl,nrw);
-                    }
+                Array<OneD, NekDouble> MatDataArray   =   mtxPerVar[nelmt]->GetPtr();
+
+                for(int np=0;np<nElmtPnt;np++)
+                {
+                    NekDouble factor    =   tmpPhys[np];
+                    clmnArray       =   MatDataArray + np*nElmtCoef;
+                    clmnStdMatArray =   stdMat_data  + np*nElmtCoef;
+                    Vmath::Smul(nElmtCoef,factor,clmnStdMatArray,1,clmnArray,1);
                 }
             }
         }
@@ -4011,6 +4032,7 @@ namespace Nektar
                     // AddTraceQuadPhysToField(TraceFwdPhy,TraceBwdPhy,tmpfield[0],tmpfield[1]);
                     GetLocTraceFromTracePts(TraceFwdPhy,TraceBwdPhy,tmplocTrace[0],tmplocTrace[1]);
 
+                    //TODO:: to optimize matrix operations
                     for(int nlr = 0; nlr<2;nlr++)
                     {
                         for(int  nloc = 0; nloc < nlocTracePtsLR[nlr]; nloc++)
@@ -4019,14 +4041,14 @@ namespace Nektar
                             nTraceCoef          = tracelist->GetNcoeffs(traceID);
                             if(nc<nTraceCoef)
                             {
-                                nfieldPnts  = fieldToLocTraceMapLR[nlr][nloc];      
                                 ElmtId      = LRAdjExpid[nlr][traceID];
-                                noffset     = GetPhys_Offset(ElmtId);
-                                nElmtPnts   = nfieldPnts - noffset;  
-
-                                ElmtMat     = fieldMat[ElmtId];
                                 nrwAdjExp   = elmtLRMap[nlr][traceID][nc];
                                 sign        =-elmtLRSign[nlr][traceID][nc];        
+                                noffset     = GetPhys_Offset(ElmtId);
+                                ElmtMat     = fieldMat[ElmtId];
+
+                                nfieldPnts  = fieldToLocTraceMapLR[nlr][nloc]; 
+                                nElmtPnts   = nfieldPnts - noffset;  
 
                                 tmp   =  sign*tmplocTrace[nlr][nloc];
                                 tmp   +=   (*ElmtMat)(nrwAdjExp,nElmtPnts);

@@ -117,12 +117,19 @@ namespace Nektar
 
     void GetViscousFluxBilinearForm(
         const int                                                       nConvectiveFields,
-        const int                                                       nSpaceDim,
         const int                                                       FluxDirection,
         const int                                                       DerivDirection,
         const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
         const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
+        const Array<OneD, NekDouble>                                    &mu,
+        const Array<OneD, const Array<OneD, NekDouble> >                &auxVars,
               Array<OneD, Array<OneD, NekDouble> >                      &outarray);
+    
+    void CalcAuxiVarForBilinearFom(
+        const int                                                       nConvectiveFields,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
+        Array<OneD, NekDouble>                                          &mu,
+        Array<OneD, Array<OneD, NekDouble> >                            &auxVars);
     
     virtual void v_InitObject();
 

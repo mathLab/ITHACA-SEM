@@ -3906,7 +3906,7 @@ namespace Nektar
             std::shared_ptr<LocalRegions::ExpansionVector> fieldExp= GetExp();
             int ntotElmt           = (*fieldExp).size();
             int nElmtPnts        =  GetTotPoints();
-            int nElmtCoef        =  GetNcoeffs();
+            int nElmtCoef  ;
 
             const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap = GetlocTraceToTraceMap();
             const Array<OneD, const Array<OneD, int >> LRAdjExpid  =   locTraceToTraceMap->GetLeftRightAdjacentExpId();
@@ -3914,7 +3914,9 @@ namespace Nektar
             const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRMap   =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffMap();
             const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRSign  =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffSign();
             DNekMatSharedPtr                    ElmtMat;
+            Array<OneD, NekDouble >             ElmtMat_data;
             int nclAdjExp,nrwAdjExp;
+            int MatIndex,nPnts;
             NekDouble tmp;
             NekDouble sign = 1.0;
 
@@ -4045,14 +4047,16 @@ namespace Nektar
                                 nrwAdjExp   = elmtLRMap[nlr][traceID][nc];
                                 sign        =-elmtLRSign[nlr][traceID][nc];        
                                 noffset     = GetPhys_Offset(ElmtId);
+                                nElmtCoef  = GetNcoeffs(ElmtId);
                                 ElmtMat     = fieldMat[ElmtId];
+                                ElmtMat_data= ElmtMat->GetPtr();
 
                                 nfieldPnts  = fieldToLocTraceMapLR[nlr][nloc]; 
-                                nElmtPnts   = nfieldPnts - noffset;  
+                                nPnts   = nfieldPnts - noffset;  
 
-                                tmp   =  sign*tmplocTrace[nlr][nloc];
-                                tmp   +=   (*ElmtMat)(nrwAdjExp,nElmtPnts);
-                                ElmtMat->SetValue(nrwAdjExp,nElmtPnts,tmp);
+                                MatIndex = nPnts*nElmtCoef + nrwAdjExp;
+
+                                ElmtMat_data[MatIndex] +=   sign*tmplocTrace[nlr][nloc];
                             }
                         }
                     }
@@ -4082,6 +4086,9 @@ namespace Nektar
             Array<OneD,NekDouble> innarray(nelmtpnts,0.0);
             Array<OneD,NekDouble> outarray(nelmtcoef,0.0);
 
+            Array<OneD,NekDouble> MatQ_data;
+            Array<OneD,NekDouble> MatC_data;
+
             DNekMatSharedPtr tmpMatQ,tmpMatC;
 
             nelmtcoef0 = nelmtcoef;
@@ -4094,6 +4101,9 @@ namespace Nektar
 
                 tmpMatQ     = ElmtJacQuad[nelmt];
                 tmpMatC     = ElmtJacCoef[nelmt];
+
+                MatQ_data   = tmpMatQ->GetPtr();
+                MatC_data   = tmpMatC->GetPtr();
                 
                 if(nelmtcoef!=nelmtcoef0)
                 {
@@ -4109,19 +4119,11 @@ namespace Nektar
 
                 for(int np=0; np<nelmtcoef;np++)
                 {
-                    for(int nq=0; nq<nelmtpnts;nq++)
-                    {
-                        innarray[nq]    =   (*tmpMatQ)(np,nq);
-                    }
-                    // (*m_exp)[nelmt]->IProductWRTDerivBase(dir,inarray+m_phys_offset[i],
-                    // (*m_exp)[nelmt]->RightIPTPhysDerivBase(dir,innarray,outarray);
+                    Vmath::Vcopy(nelmtpnts,&MatQ_data[0]+np,nelmtcoef,&innarray[0],1);
                     (*m_exp)[nelmt]->DividByQuadratureMetric(innarray,innarray);
                     (*m_exp)[nelmt]->IProductWRTDerivBase(dir,innarray,outarray);
 
-                    for(int np1=0; np1<nelmtcoef;np1++)
-                    {
-                        (*tmpMatC)(np,np1)   +=   outarray[np1];
-                    }
+                    Vmath::Vadd(nelmtcoef,&outarray[0],1,&MatC_data[0]+np,nelmtcoef,&MatC_data[0]+np,nelmtcoef);
                 }
             }
         }

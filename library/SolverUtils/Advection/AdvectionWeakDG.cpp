@@ -223,6 +223,9 @@ namespace Nektar
             NekDouble tmp;
             DNekMatSharedPtr        tmpGmtx,ElmtMat;
 
+            Array<OneD,NekDouble> GMat_data;
+            Array<OneD,NekDouble> Elmt_data;
+
             Array<OneD, DNekMatSharedPtr>  mtxPerVar(ntotElmt);
             Array<OneD, int > elmtpnts(ntotElmt);
             Array<OneD, int > elmtcoef(ntotElmt);
@@ -264,14 +267,10 @@ namespace Nektar
                         tmpGmtx         = gmtxarray[m][n]->GetBlock(nelmt,nelmt);
                         ElmtMat         = mtxPerVarCoeff[nelmt];
 
-                        for(int ncl = 0; ncl < nElmtCoef; ncl++)
-                        {
-                            for(int nrw = 0; nrw < nElmtCoef; nrw++)
-                            {
-                                tmp   =   (*tmpGmtx)(nrw,ncl) + (*ElmtMat)(nrw,ncl);
-                                tmpGmtx->SetValue(nrw,ncl,tmp);
-                            }
-                        }
+                        GMat_data       = tmpGmtx->GetPtr();
+                        Elmt_data       = ElmtMat->GetPtr();
+
+                        Vmath::Vadd(nElmtCoef*nElmtCoef,GMat_data,1,Elmt_data,1,GMat_data,1);
                     }
                 }
             }

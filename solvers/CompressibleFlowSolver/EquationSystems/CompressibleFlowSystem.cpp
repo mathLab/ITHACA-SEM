@@ -629,7 +629,11 @@ namespace Nektar
                 FwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts,0.0);
                 BwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts,0.0);
             }
+#ifdef DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT
+            bool flagUpdateDervFlux = true;
+#else
             bool flagUpdateDervFlux = false;
+#endif
 
             Array<OneD, NekVector<NekDouble> > tmparray(nvariables);
             for(int nsor = 0; nsor < nSORTot-1; nsor++)
@@ -651,7 +655,9 @@ namespace Nektar
                     }
                 }
                 Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
-                flagUpdateDervFlux = false;
+#ifdef DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT
+                flagUpdateDervFlux = true;
+#endif
             }
         }
     }
@@ -1050,6 +1056,7 @@ namespace Nektar
         TraceJac[1] = BJac;
 #ifdef DEBUG_VISCOUS_JAC_MAT
 
+#ifdef DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT
         int nDeriv = m_spacedim *nvariables; 
         Array<OneD, unsigned int> n_blks2(nTracePts);
         for(int i=0;i<nTracePts;i++)
@@ -1091,6 +1098,7 @@ namespace Nektar
             TraceJacDerivSign[0]    =  Array<OneD, NekDouble> (nTracePts,1.0); 
             TraceJacDerivSign[1]    =  Array<OneD, NekDouble> (nTracePts,1.0); 
         }
+#endif
 #endif
     }
 

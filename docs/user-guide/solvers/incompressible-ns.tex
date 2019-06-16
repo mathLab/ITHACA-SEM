@@ -1151,10 +1151,14 @@ table above.
 \end{itemize}
 \item \inltt{ModeType}: this specifies the type of the quasi-3D problem to be solved.
 \begin{itemize}
-\item \inltt{MultipleMode} (stability analysis with multiple modes).
-\item \inltt{SingleMode} (BiGlobal Stability Analysis: full-complex mode).
+\item \inltt{MultipleMode} (stability analysis with multiple modes, \inltt{HomModesZ} sets number of modes).
+\item \inltt{SingleMode} (BiGlobal Stability Analysis: full-complex mode. Overrides \inltt{HomModesZ} to 1.).
 \item \inltt{HalfMode} (BiGlobal Stability Analysis: half-complex mode u.Re v.Re w.Im p.Re).
 \end{itemize}
+\begin{notebox}
+  For visualization of \inltt{Homogeneous} results with \inltt{FieldConvert} you can use \inltt{-{}-output-points-hom-z} to set output number of modes to a desired value.
+  To process results obtained with \inltt{HalfMode} you can convert to \inltt{SingleMode} using \inltt{FieldConvert} module \inltt{halfmodetofourier}.
+\end{notebox}
 \end{itemize}
 
 
@@ -1167,7 +1171,7 @@ The following parameters can be specified in the \texttt{PARAMETERS} section of 
 \item \inltt{kdim}: sets the dimension of the Krylov subspace $\kappa$. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 16.
 \item \inltt{evtol}: sets the tolerance of the eigenvalues. Can be used in: \item \inltt{imagShift}:
 provide an imaginary shift to the direct solver eigenvalue problem by the specified value.
-\inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $0.0$. Works only with \inltt{Homogeneous} set to \inltt{1D} and inltt{ModeType} set to \inltt{SingleMode}.
+\inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $0.0$. Works only with \inltt{Homogeneous} set to \inltt{1D} and \inltt{ModeType} set to \inltt{SingleMode}.
 \item \inltt{nits}: sets the maximum number of iterations. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 500.
 \item \inltt{LZ}:  sets the length in the spanswise direction $L_z$. Can be used in \inltt{Homogeneous} set to \inltt{1D}. Default value: 1.
 \item \inltt{HomModesZ}: sets the number of planes in the homogeneous directions. Can be used in \inltt{Homogeneous} set to \inltt{1D} and \inltt{ModeType} set to \inltt{MultipleModes}.

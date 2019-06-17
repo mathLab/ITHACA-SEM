@@ -76,6 +76,7 @@ v5.0.0
 - Fix to populate m_elmtToExpId map if not already set up in GetExpIndex (!1019)
 - Added flag to skip periodic BCs while filling Dirichlet BCs in
   ContField3D.cpp (!1018)
+- Fix bounding box for interpolation (!1033)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

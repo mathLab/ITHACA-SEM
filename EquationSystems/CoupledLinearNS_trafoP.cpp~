@@ -1730,7 +1730,7 @@ namespace Nektar
 							tau = 1;
 						if(danger) //I want to change a lot my solution because I'm in the region of attraction of a previous solution
 						{						
-							tau = -50*strength;
+							tau = -2*strength;
 							last_tau = -9.9999;
 							strength *= 1.75;
 							cout<<"tau manually set to "<<tau<<endl;
@@ -3200,16 +3200,16 @@ namespace Nektar
 				int prev_solutions = local_indices_to_be_continued.size();
 				
 				//use_deflation_now = true;
-				use_deflation_now = /*(last_real_delta_param > real_delta_param);*/(local_indices_to_be_continued.size()<3 || (m_kinvis<0.5 && local_indices_to_be_continued.size()<5));
-				for(int i = 0; i < prev_solutions && use_deflation && use_deflation_now && total_solutions_found < m_maxIt; i++)// && ((m_kinvis>9.28 && m_kinvis<9.7 && local_indices_to_be_continued.size()<3) || (m_kinvis>3 && m_kinvis<4.3 && local_indices_to_be_continued.size()<4)); i++)
+				use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<second_param)|| (m_kinvis<0.41*second_param && local_indices_to_be_continued.size()<5));
+				for(int i = 0; i < prev_solutions && use_deflation && use_deflation_now && total_solutions_found < m_maxIt; i++)
 				{
 					curr_i = local_indices_to_be_continued[i];
 					converged = true;
 					
 					for (int j=0; j < GetNpoints(); ++j) 
 					{
-						guess_x[j] = sol_x_cont_defl[curr_i][j]*(1+(((double)rand())/RAND_MAX-0.5)/2/1e2);
-						guess_y[j] = sol_y_cont_defl[curr_i][j]*(1+(((double)rand())/RAND_MAX-0.5)/2/1e2);
+						guess_x[j] = sol_x_cont_defl[curr_i][j]*(1+(((double)rand())/RAND_MAX-0.5)/2/1e3);
+						guess_y[j] = sol_y_cont_defl[curr_i][j]*(1+(((double)rand())/RAND_MAX-0.5)/2/1e3);
 					}				
 					
 					while(converged)

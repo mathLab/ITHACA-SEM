@@ -3200,7 +3200,7 @@ namespace Nektar
 				int prev_solutions = local_indices_to_be_continued.size();
 				
 				//use_deflation_now = true;
-				use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<second_param+0.2)|| (m_kinvis<0.41*second_param && local_indices_to_be_continued.size()<5));
+				use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<second_param)|| (m_kinvis<0.41*second_param && local_indices_to_be_continued.size()<5));
 				for(int i = 0; i < prev_solutions && use_deflation && use_deflation_now && total_solutions_found < m_maxIt; i++)
 				{
 					curr_i = local_indices_to_be_continued[i];

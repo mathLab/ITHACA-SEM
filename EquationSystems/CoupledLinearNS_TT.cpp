@@ -4067,9 +4067,10 @@ namespace Nektar
 	Array<OneD, NekDouble> param_vector2_tmp;
 	if (m_session->DefinesParameter("two_params") && m_session->GetParameter("two_params") == 1) 
 	{
-		param_vector2_tmp = Array<OneD, NekDouble> (5);
+		param_vector2_tmp = Array<OneD, NekDouble> (3);
 		for(int i = 0; i<param_vector2_tmp.num_elements(); i++)
-			param_vector2_tmp[i] = 1-0.12*i;  
+			//param_vector2_tmp[i] = 1-0.125*i;
+			param_vector2_tmp[i] = 1-0.01*i;  
 	}
 	else
 	{
@@ -4224,7 +4225,7 @@ namespace Nektar
 			for(int k = 0; k < max(param_vector2.num_elements(),param_vector.num_elements()); k++)
 				cout<<"params: \t"<<param_vector[k]<<" \t"<<param_vector2[k]<<endl;	
 			
-			use_Newton = 1; //the second param only works with Oseen  */
+			use_Newton = 1;  */
 			
 			Eigen::VectorXd params;
 			std::vector<std::vector<double> > snapshots_x, snapshots_y;
@@ -4236,37 +4237,22 @@ namespace Nektar
 			
 			number_of_snapshots = params.size() -1; 
 			Nmax = number_of_snapshots;
-			//snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
-			//snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
 			snapshots_x.reserve(Nmax*3*param_vector2_tmp.num_elements());
 			snapshots_y.reserve(Nmax*3*param_vector2_tmp.num_elements());
 			snapshots_x.resize(Nmax);
 			snapshots_y.resize(Nmax);
 			
-			
-			//Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection_temp = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
-			//Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection_temp = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
-			
 			for(int i = 0; i < Nmax; i++)
 			{
-				//snapshot_x_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[0][i+1].num_elements());   
-				//snapshot_y_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[1][i+1].num_elements());
 				snapshots_x[i].resize(snapshots_from_continuation[0][i+1].num_elements());
 				snapshots_y[i].resize(snapshots_from_continuation[1][i+1].num_elements());
 				
-				//snapshot_x_collection_temp[i] = Array<OneD, NekDouble> (snapshots_from_continuation[0][i+1].num_elements());   
-				//snapshot_y_collection_temp[i] = Array<OneD, NekDouble> (snapshots_from_continuation[1][i+1].num_elements());
-				
 				for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
 				{
-					//snapshot_x_collection[i][j] = snapshots_from_continuation[0][i+1][j];
-					//snapshot_x_collection_temp[i][j] = snapshots_from_continuation[0][i+1][j];
 					snapshots_x[i][j] = snapshots_from_continuation[0][i+1][j];
 				}
 				for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
 				{
-					//snapshot_y_collection[i][j] = snapshots_from_continuation[1][i+1][j];
-					//snapshot_y_collection_temp[i][j] = snapshots_from_continuation[1][i+1][j];
 					snapshots_y[i][j] = snapshots_from_continuation[1][i+1][j];
 				}
 			}
@@ -4296,100 +4282,55 @@ namespace Nektar
 				Nmax = params.size()-1;
 				
 				int new_size = snapshots_x.size()+Nmax;
-
-			cout<<"check1"<<endl;
-				//snapshot_x_collection_temp = Array<OneD, Array<OneD, NekDouble> > (snapshot_x_collection.num_elements());
-				//snapshot_y_collection_temp = Array<OneD, Array<OneD, NekDouble> > (snapshot_x_collection.num_elements());
 				
 				param_vector_temp = Array<OneD, NekDouble> (snapshots_x.size());
 				param_vector2_temp = Array<OneD, NekDouble> (snapshots_x.size());
-				//for(int i = 0; i < snapshot_x_collection.num_elements(); i++) // copy of the previous vectors
 				for(int i = 0; i < snapshots_x.size(); i++) // copy of the previous vectors
 				{
-			cout<<"check2"<<endl;
-					//for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
-					//{
-						//snapshot_x_collection_temp[i][j] = snapshot_x_collection[i][j];
-					//}
-					//for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
-					//{
-						//snapshot_y_collection_temp[i][j] = snapshot_y_collection[i][j];
-					//}
-			cout<<"check3: position "<<i<<" initialized"<<endl;
 					param_vector_temp[i] = param_vector[i];
 					param_vector2_temp[i] = param_vector2[i];
 				}	
-			cout<<"check4"<<endl;
 				
-				cout<<"old and new size: "<<snapshots_x.size()<<" "<<new_size<<endl;
 				param_vector = Array<OneD, NekDouble> (new_size);
 				param_vector2 = Array<OneD, NekDouble> (new_size);
-			cout<<"check4.5"<<endl;	
-				//snapshot_x_collection.~Array();
-				//snapshot_y_collection.~Array();
-			cout<<"check4.75 "<<endl;
-			//cout<<snapshot_x_collection.num_elements()<<endl;	
-				//snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (new_size);
-				//snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (new_size);	
 				snapshots_x.resize(new_size);
 				snapshots_y.resize(new_size);
-			cout<<"check4.8 "<<endl;
-			cout<<snapshots_x.size()<<" "<<Nmax<<endl;
 				
-				//for(int i = 0; i < snapshot_x_collection.num_elements() - Nmax; i++) // copying back the previous vectors
 				for(int i = 0; i < snapshots_x.size() - Nmax; i++) // copying back the previous vectors
 				{
-			cout<<"check5"<<endl;
-					//for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
-						//snapshot_x_collection[i][j] = snapshot_x_collection_temp[i][j];
-					//for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
-						//snapshot_y_collection[i][j] = snapshot_y_collection_temp[i][j];
-			cout<<"check6 "<<param_vector_temp.num_elements()<<" "<<param_vector.num_elements()<<" "<<i<<endl;
 					param_vector[i] = param_vector_temp[i];
 					param_vector2[i] = param_vector2_temp[i];
 				}			
 				
 				for(int i = snapshots_x.size() - Nmax; i < snapshots_x.size(); i++)
 				{
-			cout<<"check7"<<endl;
-					//snapshot_x_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[0][i+1-snapshot_x_collection.num_elements()+Nmax].num_elements());   
-					//snapshot_y_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[1][i+1-snapshot_x_collection.num_elements()+Nmax].num_elements());
 					snapshots_x[i].resize(snapshots_from_continuation[0][0].num_elements());
 					snapshots_y[i].resize(snapshots_from_continuation[1][0].num_elements());
 					
-			cout<<"check8"<<endl;
 					for(int j = 0; j < snapshots_from_continuation[0][i+1-snapshots_x.size()+Nmax].num_elements(); j++)
 					{
-						//snapshot_x_collection[i][j] = snapshots_from_continuation[0][i+1-snapshot_x_collection.num_elements()+Nmax][j];
 						snapshots_x[i][j] = snapshots_from_continuation[0][i+1-snapshots_x.size()+Nmax][j];
 					}
 					for(int j = 0; j < snapshots_from_continuation[1][i+1-snapshots_x.size()+Nmax].num_elements(); j++)
 					{
-						//snapshot_y_collection[i][j] = snapshots_from_continuation[1][i+1-snapshot_x_collection.num_elements()+Nmax][j];
 						snapshots_y[i][j] = snapshots_from_continuation[1][i+1-snapshots_x.size()+Nmax][j];
 					}
-			cout<<"check9"<<endl;
 					param_vector[i] = params[i+1-snapshots_x.size()+Nmax];
-					param_vector2[i] = param_vector2_tmp[i+1-snapshots_x.size()+Nmax];
+					param_vector2[i] = param_vector2_tmp[k+1];
 				}
 			}
 			babyCLNS_trafo.param_vector2 = param_vector2;
 			
-			
-			cout<<"check10"<<endl;
 			snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (snapshots_x.size());
 			snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (snapshots_x.size());
 			for(int i = 0; i < snapshots_x.size(); i++) // copy of the previous vectors
 			{
-			cout<<"check11"<<endl;
 				snapshot_x_collection[i] = Array<OneD, NekDouble> (snapshots_x[i].size());
 				snapshot_y_collection[i] = Array<OneD, NekDouble> (snapshots_y[i].size());
-			cout<<"check12"<<endl;
 				for(int j = 0; j < snapshots_x[i].size(); j++)
 				{
 					snapshot_x_collection[i][j] = snapshots_x[i][j];
 				}
-			cout<<"check13"<<endl;
 				for(int j = 0; j < snapshots_y[i].size(); j++)
 				{
 					snapshot_y_collection[i][j] = snapshots_y[i][j];
@@ -4400,72 +4341,7 @@ namespace Nektar
 			for(int k = 0; k < max(param_vector2.num_elements(),param_vector.num_elements()); k++)
 				cout<<"params: \t"<<param_vector[k]<<" \t"<<param_vector2[k]<<endl;	
 			
-			use_Newton = 1; //the second param only works with Oseen  Eigen::VectorXd params;
-			params.resize(1);
-			params[0] = param_vector[0];
-			babyCLNS_trafo.snapshot_computation_plot_rel_errors = snapshot_computation_plot_rel_errors;
-			snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
-			flipperMap = babyCLNS_trafo.getFlipperMap();
-			
-			number_of_snapshots = params.size() -1; 
-			Nmax = number_of_snapshots;
-			snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots * param_vector2_tmp.num_elements());
-			snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots * param_vector2_tmp.num_elements());
-			
-			for(int i = 0; i < Nmax; i++)
-			{
-				snapshot_x_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[0][i+1].num_elements());   
-				snapshot_y_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[1][i+1].num_elements());
-				
-				for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
-					snapshot_x_collection[i][j] = snapshots_from_continuation[0][i+1][j];
-				for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
-					snapshot_y_collection[i][j] = snapshots_from_continuation[1][i+1][j];
-			}
-			
-			//snapshot_x_collection = snapshots_from_continuation[0];
-			//snapshot_y_collection = snapshots_from_continuation[1];
-			
-			param_vector = Array<OneD, NekDouble> (Nmax * param_vector2_tmp.num_elements());
-			param_vector2 = Array<OneD, NekDouble> (Nmax * param_vector2_tmp.num_elements());
-			for(int i = 0; i < Nmax; i++)
-			{
-				param_vector[i] = params[i+1];  
-				//for(int j = 0; j < param_vector2_tmp.num_elements(); j++)
-					param_vector2[i] = param_vector2_tmp[0];
-			}
-				
-			ref_param_index = 0;
-			ref_param_nu = 1;
-				
-			for(int k = 0; k < param_vector2_tmp.num_elements()-1; k++)
-			{
-				params.resize(1);
-				params[0] = param_vector[0];
-				babyCLNS_trafo.second_param = param_vector2_tmp[k+1];
-				snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
-				for(int i = 0; i < Nmax; i++)
-				{
-					snapshot_x_collection[i+Nmax*(k+1)] = Array<OneD, NekDouble> (snapshots_from_continuation[0][i+1].num_elements());   
-					snapshot_y_collection[i+Nmax*(k+1)] = Array<OneD, NekDouble> (snapshots_from_continuation[1][i+1].num_elements());
-					
-					for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
-						snapshot_x_collection[i+Nmax*(k+1)][j] = snapshots_from_continuation[0][i+1][j];
-					for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
-						snapshot_y_collection[i+Nmax*(k+1)][j] = snapshots_from_continuation[1][i+1][j];
-					for(int i = 0; i < Nmax; i++)
-						param_vector[i+Nmax*(k+1)] = params[i+1];  
-					for(int i = 0; i < Nmax; i++)
-						param_vector2[i+Nmax*(k+1)] = param_vector2_tmp[k+1];
-				}
-			}
-			babyCLNS_trafo.param_vector2 = param_vector2;
-			
-			cout<<endl<<endl;
-			for(int k = 0; k < max(param_vector2.num_elements(),param_vector.num_elements()); k++)
-				cout<<"params: \t"<<param_vector[k]<<" \t"<<param_vector2[k]<<endl;	
-			
-			use_Newton = 1; //the second param only works with Oseen
+			use_Newton = 1; 
 		}
 		else
 		{

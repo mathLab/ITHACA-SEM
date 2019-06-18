@@ -47,12 +47,15 @@ namespace Nektar
 namespace FieldUtils
 {
 
-ModuleKey ProcessHalfModeToFourier::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "halfmodetofourier"),
-    ProcessHalfModeToFourier::create,
-    "modify a FourierHalfMode into a Fourier expansion so it can be processed as a 3D field.");
+ModuleKey ProcessHalfModeToFourier::className =
+    GetModuleFactory().RegisterCreatorFunction(
+            ModuleKey(eProcessModule, "halfmodetofourier"),
+            ProcessHalfModeToFourier::create,
+            "modify a FourierHalfMode into a Fourier expansion so it can be "
+            "processed as a 3D field.");
 
-ProcessHalfModeToFourier::ProcessHalfModeToFourier(FieldSharedPtr f) : ProcessModule(f)
+ProcessHalfModeToFourier::ProcessHalfModeToFourier(FieldSharedPtr f)
+    : ProcessModule(f)
 {
     m_priority = eModifyFieldData;
 }
@@ -64,25 +67,25 @@ ProcessHalfModeToFourier::~ProcessHalfModeToFourier()
 void ProcessHalfModeToFourier::Process(po::variables_map &vm)
 {
 
-    // modify field definition 
+    // modify field definition
     for (int i = 0; i < m_f->m_data.size(); ++i)
     {
         ASSERTL0((m_f->m_fielddef[i]->m_basis[2] ==
                   LibUtilities::eFourierHalfModeRe ||
                   m_f->m_fielddef[i]->m_basis[2] ==
                   LibUtilities::eFourierHalfModeIm),
-                 "This module is only for fourier Half modes"); 
-        
-        // change HomoteneousID
-        m_f->m_fielddef[i]->m_homogeneousZIDs[0] += 2; 
+                 "This module is only for fourier Half modes");
+
+        // change HomogeneousID
+        m_f->m_fielddef[i]->m_homogeneousZIDs[0] += 2;
 
         // change expansion
-        m_f->m_fielddef[i]->m_numModes[2] = 4; 
+        m_f->m_fielddef[i]->m_numModes[2] = 4;
 
-        // Set thrid expansion to Fourier 
-        m_f->m_fielddef[i]->m_basis[2] = LibUtilities::eFourier; 
+        // Set third expansion to Fourier
+        m_f->m_fielddef[i]->m_basis[2] = LibUtilities::eFourier;
     }
-    
+
 }
 }
 }

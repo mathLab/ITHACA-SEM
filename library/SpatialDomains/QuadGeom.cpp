@@ -156,7 +156,7 @@ StdRegions::Orientation QuadGeom::GetFaceOrientation(
     if(doRot)
     {
         PointGeom rotPt;
-
+        
         for (i = 0; i < 4; ++i)
         {
             rotPt.Rotate((*face1[i]), dir, angle);
@@ -172,9 +172,9 @@ StdRegions::Orientation QuadGeom::GetFaceOrientation(
     }
     else
     {
-
+        
         NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
-
+        
         // For periodic faces, we calculate the vector between the centre
         // points of the two faces. (For connected faces this will be
         // zero). We can then use this to determine alignment later in the
@@ -480,17 +480,15 @@ NekDouble QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
 
 bool QuadGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                Array<OneD, NekDouble> &stdCoord,
-                               const NekDouble tol,
+                               NekDouble tol,
                                NekDouble &resid)
 {
     ASSERTL1(gloCoord.num_elements() >= 2,
              "Two dimensional geometry expects at least two coordinates.");
 
     resid = GetLocCoords(gloCoord, stdCoord);
-    // Make 1D/2D/3D tolerances 'equivalent'
-    NekDouble twoDtol = sqrt(tol);
-    if (stdCoord[0] >= -(1 + twoDtol) && stdCoord[1] >= -(1 + twoDtol) &&
-        stdCoord[0] <= (1 + twoDtol) && stdCoord[1] <= (1 + twoDtol))
+    if (stdCoord[0] >= -(1 + tol) && stdCoord[1] >= -(1 + tol) &&
+        stdCoord[0] <= (1 + tol) && stdCoord[1] <= (1 + tol))
     {
         return true;
     }

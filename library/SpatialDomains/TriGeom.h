@@ -77,7 +77,7 @@ public:
     SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation GetFaceOrientation(
                            const TriGeom &face1, const TriGeom &face2,
                            bool doRot, int dir, NekDouble angle, NekDouble tol);
-
+    
     SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation GetFaceOrientation(
               const PointGeomVector &face1, const PointGeomVector &face2,
               bool doRot, int dir, NekDouble angle, NekDouble tol);
@@ -94,7 +94,7 @@ protected:
     SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
         const Array<OneD, const NekDouble> &gloCoord,
         Array<OneD, NekDouble> &locCoord,
-        const NekDouble tol,
+        NekDouble tol,
         NekDouble &resid);
     SPATIAL_DOMAINS_EXPORT virtual void v_Reset(CurveMap &curvedEdges,
                                                 CurveMap &curvedFaces);

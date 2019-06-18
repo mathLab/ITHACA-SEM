@@ -90,7 +90,7 @@ protected:
     SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
         const Array<OneD, const NekDouble> &gloCoord,
         Array<OneD, NekDouble> &locCoord,
-        NekDouble tol,
+        const NekDouble tol,
         NekDouble &resid);
     SPATIAL_DOMAINS_EXPORT virtual void v_Reset(CurveMap &curvedEdges,
                                                 CurveMap &curvedFaces);

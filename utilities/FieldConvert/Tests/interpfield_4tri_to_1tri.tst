@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description> Convert a .pts file to .fld </description>
+    <description>  Interpolate field from 4 triangles to 1 triangle </description>
     <executable>FieldConvert</executable>
-    <parameters> -f -e -m interpfield:fromxml=interpfield_4el.xml:fromfld=interpfield_4el.fld interpfield_1el.xml interpfield_1el.fld
+    <parameters> -f -e -m interpfield:fromxml=interpfield_4tri.xml:fromfld=interpfield_4tri.fld interpfield_1tri.xml interpfield_1tri.fld
     </parameters>
     <files>
-        <file description="Mesh File 4 ele">interpfield_4el.xml</file>
-        <file description="Mesh File 1 ele">interpfield_1el.xml</file>
-        <file description="Field File 4 ele">interpfield_4el.fld</file>
+        <file description="Mesh File 4 ele">interpfield_4tri.xml</file>
+        <file description="Mesh File 1 ele">interpfield_1tri.xml</file>
+        <file description="Field File 4 ele">interpfield_4tri.fld</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

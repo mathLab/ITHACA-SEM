@@ -387,7 +387,7 @@ void Geometry::GenBoundingBox()
 
             // Add 10% margin to bounding box in case elements have
             // convex boundaries.
-            const int len = max[j] - min[j];
+            const NekDouble len = max[j] - min[j];
             max[j] += 0.1*len;
             min[j] -= 0.1*len;
         }
@@ -395,7 +395,7 @@ void Geometry::GenBoundingBox()
     // Add geometric tolerance
     for (int j = 0; j < 3; ++j)
     {
-        const int len = max[j] - min[j];
+        const NekDouble len = max[j] - min[j];
         min[j] -= NekConstants::kGeomFactorsTol*len;
         max[j] += NekConstants::kGeomFactorsTol*len;
     }

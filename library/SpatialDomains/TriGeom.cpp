@@ -132,7 +132,7 @@ StdRegions::Orientation TriGeom::GetFaceOrientation(
     if(doRot)
     {
         PointGeom rotPt;
-        
+
         for (i = 0; i < 3; ++i)
         {
             rotPt.Rotate((*face1[i]), dir, angle);
@@ -148,7 +148,7 @@ StdRegions::Orientation TriGeom::GetFaceOrientation(
     }
     else
     {
-        
+
         NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
 
         // For periodic faces, we calculate the vector between the centre
@@ -164,7 +164,7 @@ StdRegions::Orientation TriGeom::GetFaceOrientation(
         cx /= 3;
         cy /= 3;
         cz /= 3;
-        
+
         // Now construct a mapping which takes us from the vertices of one
         // face to the other. That is, vertex j of face2 corresponds to
         // vertex vmap[j] of face1.
@@ -187,7 +187,7 @@ StdRegions::Orientation TriGeom::GetFaceOrientation(
             }
         }
     }
-    
+
     if (vmap[1] == (vmap[0] + 1) % 3)
     {
         switch (vmap[0])
@@ -218,7 +218,7 @@ StdRegions::Orientation TriGeom::GetFaceOrientation(
             break;
         }
     }
-    
+
     ASSERTL0(false, "Unable to determine triangle orientation");
     return StdRegions::eNoOrientation;
 }
@@ -545,15 +545,17 @@ NekDouble TriGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
 
 bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                               Array<OneD, NekDouble> &stdCoord,
-                              NekDouble tol,
+                              const NekDouble tol,
                               NekDouble &resid)
 {
     ASSERTL1(gloCoord.num_elements() >= 2,
              "Two dimensional geometry expects at least two coordinates.");
 
     resid = GetLocCoords(gloCoord, stdCoord);
-    if (stdCoord[0] >= -(1 + tol) && stdCoord[1] >= -(1 + tol) &&
-        stdCoord[0] + stdCoord[1] <= tol)
+    // Make 1D/2D/3D tolerances 'equivalent'
+    NekDouble twoDtol = sqrt(tol);
+    if (stdCoord[0] >= -(1 + twoDtol) && stdCoord[1] >= -(1 + twoDtol) &&
+        stdCoord[0] + stdCoord[1] <= twoDtol)
     {
         return true;
     }

@@ -170,6 +170,9 @@ namespace Nektar
 	int write_SEM_field;
 	Array<OneD, Array<OneD, NekDouble> > myAdvField;
 	std::vector<int> flipperMap;
+	
+	NekDouble total_solve_time;
+	unsigned int no_total_solve;
 
     protected:
 

@@ -216,7 +216,7 @@ namespace Nektar
 	void Set_m_kinvis(NekDouble);
 	
 	
-	Eigen::VectorXd gen_affine_vec(unsigned int, Eigen::VectorXd);
+	Eigen::VectorXd gen_affine_vec(double, double, Eigen::VectorXd);
 	
 	
 	std::vector< Array<OneD, double> > reproject_back(Eigen::VectorXd);
@@ -227,6 +227,9 @@ namespace Nektar
 	int max_dimension;
 	int compare_accuracy_mode;
 	Array<OneD, NekDouble> param_vector2;
+	NekDouble offline_average_time, online_average_time;
+	unsigned int online_no_solves;
+	
 	
 
     protected:

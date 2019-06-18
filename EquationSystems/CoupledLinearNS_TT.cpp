@@ -189,10 +189,8 @@ namespace Nektar
 	                int nphys   = m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints();
         		Array<OneD, NekDouble> coeffs(ncoeffs);
 		        Array<OneD, NekDouble> phys  (nphys);
-
 			for(int counter_ncoeffs = 0; counter_ncoeffs < ncoeffs; ++counter_ncoeffs)
 			{
-
 				Vmath::Zero(ncoeffs,coeffs,1);
 		                coeffs[ counter_ncoeffs ] = 1.0;
 		                m_fields[m_velocity[0]]->GetExp(eid)->BwdTrans(coeffs,phys);
@@ -205,8 +203,6 @@ namespace Nektar
 	
 			}
 			myfile_bwdtrans << endl;
-
-
         
 		}
 	        myfile_bwdtrans.close();
@@ -231,10 +227,8 @@ namespace Nektar
                         Array<OneD, NekDouble> deriv  (pqsize);
         		Array<OneD, NekDouble> coeffs(ncoeffs);
 		        Array<OneD, NekDouble> phys  (nphys);
-
 			for(int counter_phys = 0; counter_phys < nphys; ++counter_phys)
 			{
-
 				Vmath::Zero(nphys,phys,1);
 		                phys[ counter_phys ] = 1.0;
 		                locExp->PhysDeriv(MultiRegions::DirCartesianMap[0],phys, deriv);
@@ -247,14 +241,11 @@ namespace Nektar
 	
 			}
 			myfile_cartmap0 << endl;
-
-
         
 		}
 	        myfile_cartmap0.close();
 	}
 	else std::cout << "Unable to open file";
-
 	std::stringstream sstm_cartmap1;
 	sstm_cartmap1 << "cartmap1.txt";
 	std::string result_cartmap1 = sstm_cartmap1.str();
@@ -272,10 +263,8 @@ namespace Nektar
                         Array<OneD, NekDouble> deriv  (pqsize);
         		Array<OneD, NekDouble> coeffs(ncoeffs);
 		        Array<OneD, NekDouble> phys  (nphys);
-
 			for(int counter_phys = 0; counter_phys < nphys; ++counter_phys)
 			{
-
 				Vmath::Zero(nphys,phys,1);
 		                phys[ counter_phys ] = 1.0;
 		                locExp->PhysDeriv(MultiRegions::DirCartesianMap[1],phys, deriv);
@@ -288,8 +277,6 @@ namespace Nektar
 	
 			}
 			myfile_cartmap1 << endl;
-
-
         
 		}
 	        myfile_cartmap1.close();
@@ -315,10 +302,8 @@ namespace Nektar
                         Array<OneD, NekDouble> deriv  (pqsize);
         		Array<OneD, NekDouble> coeffs(ncoeffs);
 		        Array<OneD, NekDouble> phys  (nphys);
-
 			for(int counter_phys = 0; counter_phys < nphys; ++counter_phys)
 			{
-
 				Vmath::Zero(nphys,phys,1);
 		                phys[ counter_phys ] = 1.0;
 		                locExp->IProductWRTBase(phys,coeffs);
@@ -331,8 +316,6 @@ namespace Nektar
 	
 			}
 			myfile_IP << endl;
-
-
         
 		}
 	        myfile_IP.close();
@@ -356,10 +339,8 @@ namespace Nektar
                         Array<OneD, NekDouble> deriv  (pqsize);
         		Array<OneD, NekDouble> coeffs(ncoeffs);
 		        Array<OneD, NekDouble> phys  (nphys);
-
 			for(int counter_phys = 0; counter_phys < nphys; ++counter_phys)
 			{
-
 				Vmath::Zero(nphys,phys,1);
 		                phys[ counter_phys ] = 1.0;
 		                locExp->IProductWRTDerivBase(0, phys,coeffs);
@@ -372,15 +353,11 @@ namespace Nektar
 	
 			}
 			myfile_IP_d0 << endl;
-
-
         
 		}
 	        myfile_IP_d0.close();
 	}
 	else std::cout << "Unable to open file";
-
-
 	std::stringstream sstm_IP_d1;
 	sstm_IP_d1 << "IP_d1.txt";
 	std::string result_IP_d1 = sstm_IP_d1.str();
@@ -398,10 +375,8 @@ namespace Nektar
                         Array<OneD, NekDouble> deriv  (pqsize);
         		Array<OneD, NekDouble> coeffs(ncoeffs);
 		        Array<OneD, NekDouble> phys  (nphys);
-
 			for(int counter_phys = 0; counter_phys < nphys; ++counter_phys)
 			{
-
 				Vmath::Zero(nphys,phys,1);
 		                phys[ counter_phys ] = 1.0;
 		                locExp->IProductWRTDerivBase(1, phys,coeffs);
@@ -414,8 +389,6 @@ namespace Nektar
 	
 			}
 			myfile_IP_d1 << endl;
-
-
         
 		}
 	        myfile_IP_d1.close();
@@ -444,10 +417,8 @@ namespace Nektar
                         Array<OneD, NekDouble> deriv  (pqsize);
         		Array<OneD, NekDouble> coeffs(ncoeffs);
 		        Array<OneD, NekDouble> phys  (nphys);
-
 			for(int counter_phys = 0; counter_phys < pqsize; ++counter_phys)
 			{
-
 				Vmath::Zero(pqsize,deriv,1);
 		                deriv[ counter_phys ] = 1.0;
 		                m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
@@ -460,12 +431,9 @@ namespace Nektar
 	
 			}
 			myfile_IPp << endl;
-
 		        Array<OneD, unsigned int> bmap,imap;
-
 		        locExp->GetBoundaryMap(bmap);
 		        locExp->GetInteriorMap(imap);
-
 	        	int nbmap = bmap.num_elements();
 		        int nimap = imap.num_elements(); 
         */
@@ -482,16 +450,13 @@ namespace Nektar
 	  {
 	    for (int i = 0; i < nbmap; i++)
 	    {
-
 		    {
 			myfile_bmap << std::setprecision(17) << bmap[i] << " ";
 		    }
-
 	    }
                 myfile_bmap.close();
 	  }
 	  else std::cout << "Unable to open file";
-
 		std::stringstream sstmi;
 		sstmi << "imap_" << n << ".txt";
 		std::string resulti = sstmi.str();
@@ -504,11 +469,9 @@ namespace Nektar
 	  {
 	    for (int i = 0; i < nimap; i++)
 	    {
-
 		    {
 			myfile_imap << std::setprecision(17) << imap[i] << " ";
 		    }
-
 	    }
                 myfile_imap.close();
 	  }
@@ -775,7 +738,6 @@ namespace Nektar
                                             locExp->DetShapeType(),
                                             *locExp,
                                             factors);
-
   */          
             
             int ncoeffs = m_fields[m_velocity[0]]->GetExp(eid)->GetNcoeffs();
@@ -964,22 +926,18 @@ namespace Nektar
 		sstm_l00 << "Lapl00_" << n << ".txt";
 		std::string result_l00 = sstm_l00.str();
 		const char* rr_l00 = result_l00.c_str();
-
         	  std::ofstream myfileHM_l00 (rr_l00);
 		  if (myfileHM_l00.is_open())
 		  {
 		    for (int i = 0; i < HelmMat_data.num_elements(); i++)
 		    {
-
 			    {
 				myfileHM_l00 << std::setprecision(17) << HelmMat_data[i] << " ";
 			    }
-
 		    }
         	        myfileHM_l00.close();
 		  }
 		  else std::cout << "Unable to open file";
-
 */
 
 
@@ -991,30 +949,23 @@ namespace Nektar
                                             locExp->DetShapeType(),
                                             *locExp,
                                             factors);
-
-
 		HelmMat = *(locExp->as<LocalRegions::Expansion>()
                                                ->GetLocMatrix(helmkey_l11));
-
               
                 HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
                 
-
 		std::stringstream sstm_l11;
 		sstm_l11 << "Lapl11_" << n << ".txt";
 		std::string result_l11 = sstm_l11.str();
 		const char* rr_l11 = result_l11.c_str();
-
         	  std::ofstream myfileHM_l11 (rr_l11);
 		  if (myfileHM_l11.is_open())
 		  {
 		    for (int i = 0; i < HelmMat_data.num_elements(); i++)
 		    {
-
 			    {
 				myfileHM_l11 << std::setprecision(17) << HelmMat_data[i] << " ";
 			    }
-
 		    }
         	        myfileHM_l11.close();
 		  }
@@ -1027,30 +978,23 @@ namespace Nektar
                                             locExp->DetShapeType(),
                                             *locExp,
                                             factors);
-
-
 		HelmMat = *(locExp->as<LocalRegions::Expansion>()
                                                ->GetLocMatrix(helmkey_l01));
-
               
                 HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
                 
-
 		std::stringstream sstm_l01;
 		sstm_l01 << "Lapl01_" << n << ".txt";
 		std::string result_l01 = sstm_l01.str();
 		const char* rr_l01 = result_l01.c_str();
-
         	  std::ofstream myfileHM_l01 (rr_l01);
 		  if (myfileHM_l01.is_open())
 		  {
 		    for (int i = 0; i < HelmMat_data.num_elements(); i++)
 		    {
-
 			    {
 				myfileHM_l01 << std::setprecision(17) << HelmMat_data[i] << " ";
 			    }
-
 		    }
         	        myfileHM_l01.close();
 		  }
@@ -1063,30 +1007,23 @@ namespace Nektar
                                             locExp->DetShapeType(),
                                             *locExp,
                                             factors);
-
-
 		HelmMat = *(locExp->as<LocalRegions::Expansion>()
                                                ->GetLocMatrix(helmkey_w0));
-
               
                 HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
                 
-
 		std::stringstream sstm_w0;
 		sstm_w0 << "w0_" << n << ".txt";
 		std::string result_w0 = sstm_w0.str();
 		const char* rr_w0 = result_w0.c_str();
-
         	  std::ofstream myfileHM_w0 (rr_w0);
 		  if (myfileHM_w0.is_open())
 		  {
 		    for (int i = 0; i < HelmMat_data.num_elements(); i++)
 		    {
-
 			    {
 				myfileHM_w0 << std::setprecision(17) << HelmMat_data[i] << " ";
 			    }
-
 		    }
         	        myfileHM_w0.close();
 		  }
@@ -1101,30 +1038,23 @@ namespace Nektar
                                             locExp->DetShapeType(),
                                             *locExp,
                                             factors);
-
-
 		HelmMat = *(locExp->as<LocalRegions::Expansion>()
                                                ->GetLocMatrix(helmkey_w1));
-
               
                 HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
                 
-
 		std::stringstream sstm_w1;
 		sstm_w1 << "w1_" << n << ".txt";
 		std::string result_w1 = sstm_w1.str();
 		const char* rr_w1 = result_w1.c_str();
-
         	  std::ofstream myfileHM_w1 (rr_w1);
 		  if (myfileHM_w1.is_open())
 		  {
 		    for (int i = 0; i < HelmMat_data.num_elements(); i++)
 		    {
-
 			    {
 				myfileHM_w1 << std::setprecision(17) << HelmMat_data[i] << " ";
 			    }
-
 		    }
         	        myfileHM_w1.close();
 		  }
@@ -1167,17 +1097,14 @@ namespace Nektar
 		sstm << "HelmMat_" << n << ".txt";
 		std::string result = sstm.str();
 		const char* rr = result.c_str();
-
         	  std::ofstream myfileHM (rr);
 		  if (myfileHM.is_open())
 		  {
 		    for (int i = 0; i < HelmMat_data.num_elements(); i++)
 		    {
-
 			    {
 				myfileHM << std::setprecision(17) << HelmMat_data[i] << " ";
 			    }
-
 		    }
         	        myfileHM.close();
 		  }
@@ -2058,7 +1985,6 @@ namespace Nektar
                 myfilef0.close();
 	  }
 	  else cout << "Unable to open file";
-
           ofstream myfilef1 ("forcing1.txt");
 	  if (myfilef1.is_open())
 	  {
@@ -2133,7 +2059,6 @@ namespace Nektar
                 myfile1LocGloMap.close();
 	  }
 	  else cout << "Unable to open file";
-
           ofstream myfile2LocGloSign ("LocGloSign.txt");
 	  if (myfile2LocGloSign.is_open())
 	  {
@@ -2145,12 +2070,10 @@ namespace Nektar
                 myfile2LocGloSign.close();
 	  }
 	  else cout << "Unable to open file";
-
         const Array<OneD,const int>& loctoglobndmap
         = m_locToGloMap[mode]->GetLocalToGlobalBndMap();
         const Array<OneD,const NekDouble>& loctoglobndsign
         = m_locToGloMap[mode]->GetLocalToGlobalBndSign();
-
           ofstream myfile1LocGloBndMap ("LocGloBndMap.txt");
 	  if (myfile1LocGloBndMap.is_open())
 	  {
@@ -2162,7 +2085,6 @@ namespace Nektar
                 myfile1LocGloBndMap.close();
 	  }
 	  else cout << "Unable to open file";
-
           ofstream myfile2LocGloBndSign ("LocGloBndSign.txt");
 	  if (myfile2LocGloBndSign.is_open())
 	  {
@@ -2179,7 +2101,6 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > phys_to_glo_dof_collector(m_fields[0]->GetNpoints());
             Array<OneD, Array<OneD, NekDouble> > glo_dof_to_phys_collector_p(number_of_global_dofs);
             Array<OneD, Array<OneD, NekDouble> > phys_to_glo_dof_collector_p(pressure_field->GetNpoints());
-
 	    // get a global_dof <-> phys map
 	    for (int i_global_dofs = 0; i_global_dofs < number_of_global_dofs; i_global_dofs++)
 	    {
@@ -2445,7 +2366,6 @@ namespace Nektar
 /*	cout << "f_bnd.num_elements() " << f_bnd.num_elements() << endl;
 	cout << "f_p.num_elements() " << f_p.num_elements() << endl;
 	cout << "f_int.num_elements() " << f_int.num_elements() << endl;
-
 	cout << "RB_A.cols() " << RB_A.cols() << endl;
 	cout << "RB_A.rows() " << RB_A.rows() << endl;
 	cout << "RB_B.cols() " << RB_B.cols() << endl;
@@ -3537,10 +3457,12 @@ namespace Nektar
 			outfile_online.open(bif_diagr_name_char, std::ios::out);
 			
 			unsigned int iterations, curr_j;
-			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], rel_err, M, total_steps = 20.0, tol = 1e-7;
-			unsigned int total_solutions = 0, last_first_param_index = 0, number_of_solutions;
+			Timer timer;
+			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], rel_err, M, total_steps = 20.0, tol = 1e-4, scaling_steps = 10, current_scaling = 1, norm_min;
+			unsigned int total_solutions = 0, last_first_param_index = 0, number_of_solutions, restart_for_scaling = 0, no_restarts_for_scaling = 0;
 			std::vector<int> indices_to_be_continued, local_indices_to_be_continued;
 			Array<OneD, double> old_reprojection_x(GetNpoints(), 0.0), old_reprojection_y(GetNpoints(), 0.0);
+			bool first_step = true;
 			
 			Eigen::VectorXd reconstruct_solution, temp_solve_affine, repro_solve_affine;
 			std::vector<Eigen::VectorXd> solve_affine;
@@ -3554,6 +3476,7 @@ namespace Nektar
 			iterations = 0;
 			while(rel_err > tol && ++iterations<100)
 			{
+				timer.Start();
 				Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(first_param);
 				temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
 				rel_err = (temp_solve_affine-last_sol).norm()/last_sol.norm();
@@ -3582,6 +3505,10 @@ namespace Nektar
 					}
 				}
 				affine_vec_proj = gen_affine_vec(first_param, param_vector2[0], reconstruct_solution);
+				
+				timer.Stop();
+				online_average_time += timer.TimePerTest(1);
+				online_no_solves++;
 			}
 			indices_to_be_continued.push_back(0);
 			total_solutions = 1;
@@ -3590,33 +3517,57 @@ namespace Nektar
 				cout<<"The first step didn't converge"<<endl;
 			else
 			{
-			//for(double current_nu = first_param - (param_vector[0] - param_vector[param_vector.num_elements()-1])/total_steps; current_nu > param_vector[param_vector.num_elements()-1]; current_nu -= (param_vector[0] - param_vector[param_vector.num_elements()-1])/total_steps)
+			
 			for(int current_index = 0; current_index < param_vector.num_elements()-1; current_index++)			
 			{
-				if(param_vector[current_index] > param_vector[current_index + 1])
+				if(current_index>0 && param_vector2[current_index] < param_vector2[current_index-1] && no_restarts_for_scaling < scaling_steps) // to use little steps for the scaling
+				{
+					current_scaling -= (param_vector2[current_index-1] - param_vector2[current_index])/scaling_steps;
+					if(fabs(current_scaling - param_vector2[current_index]) < 1e-10)
+					{
+						restart_for_scaling = current_index;//-1;
+					}
+					if((current_scaling < param_vector2[param_vector2.num_elements()-1]-1e-9 && param_vector2[param_vector2.num_elements()-1]<param_vector2[0]) ||
+					   (current_scaling > param_vector2[param_vector2.num_elements()-1]+1e+9 && param_vector2[param_vector2.num_elements()-1]>param_vector2[0])) // to stop the loop
+						current_index = param_vector.num_elements();
+					else
+					{
+						no_restarts_for_scaling++;
+						current_index = restart_for_scaling;
+						
+						indices_to_be_continued.clear();
+						indices_to_be_continued = std::vector<int>(1);
+						indices_to_be_continued[0] = last_first_param_index;
+						last_first_param_index = total_solutions-1;
+					}
+				}
+				if(current_index>0 && param_vector2[current_index] < param_vector2[current_index-1] && no_restarts_for_scaling >= scaling_steps)
+				{
+					no_restarts_for_scaling = 0;
+				}
+				if(param_vector[current_index] > param_vector[current_index + 1] && current_index < param_vector.num_elements()-1)
 				{
 					number_of_solutions = 1;
-					double current_scaling = param_vector2[current_index];
 					while(param_vector[current_index] == param_vector[current_index+number_of_solutions] && current_index+number_of_solutions < param_vector.num_elements()-1)
 					{
 						number_of_solutions++;
 					}
-					//double current_nu = param_vector[current_index];
 					double local_step = (param_vector[current_index] - param_vector[current_index+number_of_solutions])/total_steps;
-					if(param_vector[current_index] == param_vector[0]) // start again with the second parameter
+					/*if(param_vector[current_index] == param_vector[0]) // start again with the second parameter
 					{
 						indices_to_be_continued.clear();
 						indices_to_be_continued = std::vector<int>(1);
 						indices_to_be_continued[0] = last_first_param_index;
 						last_first_param_index = total_solutions;
-					}
-					//for(double current_nu = param_vector[current_index]; current_nu > param_vector[current_index+number_of_solutions] + local_step/2 * (2 * (current_nu > param_vector[param_vector.num_elements()-1] + local_step/2) - 1); current_nu -=  local_step)
-					for(double current_nu = param_vector[current_index] - local_step * (param_vector[current_index] != param_vector[0] || current_index == 0); current_nu > param_vector[current_index+number_of_solutions] - local_step/2; current_nu -=  local_step)
+					}*/
+					
+					for(double current_nu = param_vector[current_index] - local_step * (param_vector[current_index] != param_vector[0] || first_step); current_nu > param_vector[current_index+number_of_solutions] - local_step/2; current_nu -=  local_step)
 					{
 						local_indices_to_be_continued.resize(0);
 					
 					//continuation						////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					cout<<"Continuation"<<endl;
+					cout<<"params: "<<current_nu<<" "<<current_scaling<<endl;
 					for(int j = 0; j < indices_to_be_continued.size(); j++)
 					{
 						curr_j = indices_to_be_continued[j];
@@ -3634,6 +3585,7 @@ namespace Nektar
 						
 						while(rel_err > tol && ++iterations<100)
 						{
+							timer.Start();
 							Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
 							temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
 							for(int i = 0; i < temp_solve_affine.size(); i++)
@@ -3643,11 +3595,12 @@ namespace Nektar
 								else
 									curr_xy_projected(i,1) = temp_solve_affine(i);
 							}
+							norm_min = 1e20;
 							
 							if(j > 0) //if the step is too large some continuation could find a solution on a different branch, so I use deflation also in the continuation step
 							{
 								//computation of tau
-								double norm_min = 1e20, norm_i;
+								double norm_i;
 								int closest_sol;
 								for(int k = 0; k < local_indices_to_be_continued.size(); k++)
 								{
@@ -3694,7 +3647,7 @@ namespace Nektar
 									tau = 1 / (1 - 1/(1+1/norm_min) * scalar_product / (norm_min * norm_min * norm_min));	
 								if(power == 2)
 									tau = 2 / (1 - 1/(1+1/norm_min/norm_min) * scalar_product / (norm_min * norm_min * norm_min * norm_min));	
-								if(norm_min < 1e-2)
+								if(norm_min < 5e-2)
 									tau = -5;							
 									
 								if(tau < 0 && tau > -0.1)
@@ -3717,7 +3670,7 @@ namespace Nektar
 							std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
 							curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
 					
-							if(rel_err <= tol)
+							if(rel_err <= tol && norm_min > 1e-2)
 							{
 								cout<<"Converged in "<<iterations<<" steps"<<endl;
 								solve_affine.push_back(temp_solve_affine);
@@ -3737,17 +3690,17 @@ namespace Nektar
 							{
 								affine_vec_proj = gen_affine_vec(current_nu, current_scaling, reconstruct_solution);
 							}
+							
+							timer.Stop();
+							online_average_time += timer.TimePerTest(1);
+							online_no_solves++;
 						}
 					}
 					
 					
 					//deflation						////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					cout<<"Deflation over "<<local_indices_to_be_continued.size()<<" solutions"<<endl;
-					Eigen::MatrixXd massMatrix = the_ABCD_one_proj; //Get_no_advection_matrix_ABCD();
-					//cout<<massMatrix.rows()<<" "<<massMatrix.cols()<<" "<<temp_solve_affine.rows()<<endl;
-					//cout << "The eigenvalues of the_const_one_proj are:" << endl << massMatrix.eigenvalues() << endl; //the smallest eigenvalues are small but negative!!
-					//cout << "The eigenvalues of the_ABCD_one_proj are:" << endl << the_ABCD_one_proj.eigenvalues() << endl;
-					bool use_deflation_now = (local_indices_to_be_continued.size()<3 || (current_nu<0.41*current_scaling && local_indices_to_be_continued.size()<5));
+					bool use_deflation_now = ((local_indices_to_be_continued.size()<3 && current_nu<0.98*current_scaling)|| (current_nu<0.41*current_scaling && local_indices_to_be_continued.size()<5));
 					for(int j = 0; j < local_indices_to_be_continued.size() && use_deflation_now; j++)
 					{
 						curr_j = local_indices_to_be_continued[j];
@@ -3762,7 +3715,7 @@ namespace Nektar
 							int random_sign = ((double)rand())/RAND_MAX-0.5;
 							if(random_sign < 0)
 								random *= -1;
-							last_sol[i] = last_sol[i] * (1+random/1e2) *0; // at the moment the initial guess is 0
+							last_sol[i] = last_sol[i] * (1+random/1e2); // at the moment the initial guess is 0
 						}
 						
 						repro_solve_affine = RB * last_sol;
@@ -3772,14 +3725,16 @@ namespace Nektar
 						curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
 						affine_vec_proj = gen_affine_vec(current_nu, current_scaling, reconstruct_solution);
 						
-						while(rel_err > tol && ++iterations<50)
+						while(rel_err > tol && ++iterations<100)
 						{	
+							timer.Start();
 							Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
 							//Eigen::VectorXd affine_vec_proj = gen_affine_vec(current_nu, last_sol);
 							temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
 							
 							//computation of tau
-							double norm_min = 1e20, norm_i;
+							double norm_i;
+							norm_min = 1e20;
 							int closest_sol;
 							for(int k = 0; k < local_indices_to_be_continued.size(); k++)
 							{
@@ -3827,7 +3782,7 @@ namespace Nektar
 							if(power == 2)
 								tau = 2 / (1 - 1/(1+1/norm_min/norm_min) * scalar_product / (norm_min * norm_min * norm_min * norm_min));	
 							if(norm_min < 5e-2)
-								tau = -2;							
+								tau = -3;							
 								
 							//cout<<"real tau "<<tau; 
 							//tau = tau/fabs(tau);
@@ -3838,7 +3793,7 @@ namespace Nektar
 							if(tau > 1)
 								tau = 1;		
 							temp_solve_affine = tau * temp_solve_affine + (1-tau) * last_sol;
-							
+							//cout<<"tau "<<tau<<endl;
 							rel_err = (temp_solve_affine-last_sol).norm()/last_sol.norm();
 							last_sol = temp_solve_affine;
 							//cout<<", tau "<<tau<<", scal_prod "<<scalar_product<<", norm "<<norm_min<<", M_inv "<<1/(1+1/norm_min); 
@@ -3851,9 +3806,9 @@ namespace Nektar
 							curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
 							
 							
-							if(rel_err <= tol)
+							if(rel_err <= tol && norm_min > 1)
 							{
-								cout<<"Converged in "<<iterations<<" steps"<<endl;
+								cout<<"Converged in "<<iterations<<" steps with norm_min = "<<norm_min<<endl;
 								solve_affine.push_back(temp_solve_affine);
 								local_indices_to_be_continued.push_back(total_solutions);
 								total_solutions++;
@@ -3870,6 +3825,10 @@ namespace Nektar
 							affine_vec_proj = gen_affine_vec(current_nu, current_scaling, reconstruct_solution);
 							old_reprojection_x = reprojection[0];
 							old_reprojection_y = reprojection[1];
+							
+							timer.Stop();
+							online_average_time += timer.TimePerTest(1);
+							online_no_solves++;
 						}
 					} 
 					cout<<endl; 
@@ -3883,10 +3842,12 @@ namespace Nektar
 						current_index++;
 					}
 				}
+				first_step = false;
 			}
 		}
 		outfile_online.close();
 		}
+		cout<<"Offline and online average solve times: "<<offline_average_time<<" "<<online_average_time/online_no_solves<<endl;
 	}
 
     void CoupledLinearNS_TT::recover_snapshot_data(Eigen::VectorXd reconstruct_solution, int current_index)
@@ -4067,10 +4028,23 @@ namespace Nektar
 	Array<OneD, NekDouble> param_vector2_tmp;
 	if (m_session->DefinesParameter("two_params") && m_session->GetParameter("two_params") == 1) 
 	{
-		param_vector2_tmp = Array<OneD, NekDouble> (3);
-		for(int i = 0; i<param_vector2_tmp.num_elements(); i++)
-			//param_vector2_tmp[i] = 1-0.125*i;
-			param_vector2_tmp[i] = 1-0.01*i;  
+		unsigned int n = 3;
+		param_vector2_tmp = Array<OneD, NekDouble> (n);
+		
+		//for(int i = 0; i<n; i++)
+			//param_vector2_tmp[i] = 1-0.5/(n-1)*i;
+			
+		for(int i = 0; i<n; i++)	
+			param_vector2_tmp[i]=cos((2*i+1)*M_PI/2/n);
+			
+		double first = param_vector2_tmp[0];
+		double last = param_vector2_tmp[n-1];
+		
+		for(int i = 0; i<n; i++)	
+		{
+			param_vector2_tmp[i] = (param_vector2_tmp[i]-last) / (2*(first-last)) + 0.5;
+			cout<<"second param: "<<param_vector2_tmp[i]<<endl;
+		}
 	}
 	else
 	{
@@ -4231,14 +4205,16 @@ namespace Nektar
 			std::vector<std::vector<double> > snapshots_x, snapshots_y;
 			params.resize(1);
 			params[0] = param_vector[0];
+			babyCLNS_trafo.total_solve_time = 0.0;
+			babyCLNS_trafo.no_total_solve = 0;
 			babyCLNS_trafo.snapshot_computation_plot_rel_errors = snapshot_computation_plot_rel_errors;
 			snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
 			flipperMap = babyCLNS_trafo.getFlipperMap();
 			
 			number_of_snapshots = params.size() -1; 
 			Nmax = number_of_snapshots;
-			snapshots_x.reserve(Nmax*3*param_vector2_tmp.num_elements());
-			snapshots_y.reserve(Nmax*3*param_vector2_tmp.num_elements());
+			snapshots_x.reserve(Nmax*6*param_vector2_tmp.num_elements());
+			snapshots_y.reserve(Nmax*6*param_vector2_tmp.num_elements());
 			snapshots_x.resize(Nmax);
 			snapshots_y.resize(Nmax);
 			
@@ -4342,6 +4318,7 @@ namespace Nektar
 				cout<<"params: \t"<<param_vector[k]<<" \t"<<param_vector2[k]<<endl;	
 			
 			use_Newton = 1; 
+			offline_average_time = babyCLNS_trafo.total_solve_time/babyCLNS_trafo.no_total_solve;
 		}
 		else
 		{
@@ -4408,7 +4385,7 @@ namespace Nektar
 	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields = UpdateFields();
         int  nel  = m_fields[0]->GetNumElmts(); // number of spectral elements
 //	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), collect_f_all_PODmodes.cols());
-	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize);  
+	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize); 
 	PODmodes = collect_f_all_PODmodes.leftCols(RBsize);
 	set_MtM();
 	if (globally_connected == 1)
@@ -4590,7 +4567,7 @@ RBsize--;
 
 	}
 
-	return current_scaling * (- the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*current_scaling*add_rhs_Newton) ; 
+	return current_scaling * (- the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5/current_scaling*add_rhs_Newton) ; 
     }
 
     Eigen::VectorXd CoupledLinearNS_TT::reconstruct_solution_w_different_dbc(Eigen::VectorXd reprojected_solve, double scaling)
@@ -4782,7 +4759,6 @@ RBsize--;
 		cout << "cgi: " << counter_global_num << endl;
 		m_fields[0]->LocalToGlobal(fieldcoeffs[0], glo_fieldcoeffs);
 		cout << "cgi: " << counter_global_num << endl;
-
 		try
 		{
 			cout << "cgi: " << counter_global_num << " value " << glo_fieldcoeffs[counter_global_num-2] << " ";
@@ -4823,17 +4799,12 @@ RBsize--;
         Array<OneD, NekDouble> glo_fieldcoeffs(fieldcoeffs[2].num_elements(), 1234.5678);
 	m_fields[0]->LocalToGlobal(fieldcoeffs[2], glo_fieldcoeffs);
 //	m_pressure->LocalToGlobal(fieldcoeffs[2], glo_fieldcoeffs); This method is not defined or valid for this class type
-
-
 	int first_ngc_index = 0;
-
 	while(glo_fieldcoeffs[first_ngc_index] > 1234.5679 || glo_fieldcoeffs[first_ngc_index] < 1234.5677)
 	{
 		first_ngc_index++;
 	}
-
 	// can construct a glodofphys here by going with FwdTrans_IterPerExp and LocalToGlobal
-
         Array<OneD, Array<OneD, NekDouble> > glo_coll_fieldcoeffs(m_fields[0]->GetNpoints());
 	for(int counter_phys_index = 0; counter_phys_index < m_fields[0]->GetNpoints(); counter_phys_index++)
 	{
@@ -4845,7 +4816,6 @@ RBsize--;
 		m_fields[0]->LocalToGlobal(loc_fieldcoeffs, glo_fieldcoeffs);
 //		cout << "cgi: " << counter_global_index << " value " << glo_fieldcoeffs[counter_global_index] << endl;
 	}
-
           ofstream myfilegdp ("phys_glo_dof.txt");
 	  if (myfilegdp.is_open())
 	  {
@@ -4860,7 +4830,6 @@ RBsize--;
                 myfilegdp.close();
 	  }
 	  else cout << "Unable to open file"; 
-
         Array<OneD, Array<OneD, NekDouble> > glo_coll_fieldcoeffs_gdp(m_fields[0]->GetNpoints());
 	for(int counter_glo_index = 0; counter_glo_index < first_ngc_index; counter_glo_index++)
 	{
@@ -4874,7 +4843,6 @@ RBsize--;
 		glo_coll_fieldcoeffs_gdp[counter_glo_index] = phys_fieldcoeffs;
 //		cout << "cgi: " << counter_global_index << " value " << glo_fieldcoeffs[counter_global_index] << endl;
 	}
-
           ofstream myfilegdpr ("glo_dof_phys.txt");
 	  if (myfilegdpr.is_open())
 	  {
@@ -4889,9 +4857,7 @@ RBsize--;
                 myfilegdpr.close();
 	  }
 	  else cout << "Unable to open file"; 
-
 	// compute the dof correction
-
         Array<OneD, Array<OneD, NekDouble> > glo_coll_fieldcoeffs_dof_corr(m_fields[0]->GetNpoints());
 	for(int counter_glo_index = 0; counter_glo_index < first_ngc_index; counter_glo_index++)
 	{
@@ -4906,7 +4872,6 @@ RBsize--;
 		glo_coll_fieldcoeffs_dof_corr[counter_glo_index] = glo_fieldcoeffs;
 //		cout << "cgi: " << counter_global_index << " value " << glo_fieldcoeffs[counter_global_index] << endl;
 	}
-
           ofstream myfilegdprdc ("glo_dof_corr.txt");
 	  if (myfilegdprdc.is_open())
 	  {
@@ -4921,13 +4886,7 @@ RBsize--;
                 myfilegdprdc.close();
 	  }
 	  else cout << "Unable to open file"; 
-
-
-
-
-
 	// construct a LocalGloMapA 
-
         Array<OneD, Array<OneD, NekDouble> > glo_coll_fieldcoeffsA(m_fields[0]->GetNcoeffs());
 	for(int counter_loc_index = 0; counter_loc_index < m_fields[0]->GetNcoeffs(); counter_loc_index++)
 	{
@@ -4938,7 +4897,6 @@ RBsize--;
 		glo_coll_fieldcoeffsA[counter_loc_index] = glo_fieldcoeffs;
 //		cout << "cgi: " << counter_global_index << " value " << glo_fieldcoeffs[counter_global_index] << endl;
 	}
-
           ofstream myfilegdpA ("LocGloMapMatA.txt");
 	  if (myfilegdpA.is_open())
 	  {
@@ -4953,16 +4911,12 @@ RBsize--;
                 myfilegdpA.close();
 	  }
 	  else cout << "Unable to open file"; 
-
         std::string outname_txt = m_sessionName + ".txt";
 	const char* outname_t = outname_txt.c_str();
-
         Array<OneD, NekDouble> glo_fieldcoeffs_x(first_ngc_index, 0.0);
         Array<OneD, NekDouble> glo_fieldcoeffs_y(first_ngc_index, 0.0);
 	m_fields[0]->LocalToGlobal(m_fields[0]->GetCoeffs(), glo_fieldcoeffs_x);
 	m_fields[1]->LocalToGlobal(m_fields[1]->GetCoeffs(), glo_fieldcoeffs_y);
-
-
           ofstream myfile_t (outname_t);
 	  if (myfile_t.is_open())
 	  {
@@ -5112,7 +5066,3 @@ RBsize--;
     }
     
 }
-
-/**
- * $Log: CoupledLinearNS.cpp,v $
- **/

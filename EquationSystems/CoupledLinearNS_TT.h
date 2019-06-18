@@ -227,6 +227,9 @@ namespace Nektar
 	int max_dimension;
 	int compare_accuracy_mode;
 	Array<OneD, NekDouble> param_vector2;
+	NekDouble offline_average_time, online_average_time;
+	unsigned int online_no_solves;
+	
 	
 
     protected:

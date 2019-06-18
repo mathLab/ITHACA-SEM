@@ -1551,9 +1551,11 @@ namespace Nektar
 	}
 	
 	double last_tau = 0, strength = 1, norm_i, norm_ix, norm_iy, norm_0, norm_0x, norm_0y;
+	Timer timer;
 	
-	while (rel_err > 1e-10 && (iterations < max_iterations || !use_deflation))
+	while (rel_err > 1e-8 && (iterations < max_iterations || !use_deflation))
 	{
+        timer.Start();
 		Set_m_kinvis( parameter );
 		DoInitialiseAdv(init_snapshot_x, init_snapshot_y); // replaces .DoInitialise();
 		DoSolve();
@@ -1785,6 +1787,9 @@ namespace Nektar
 		sol_x_cont_defl[total_solutions_found] = out_field_trafo_x;
 		sol_y_cont_defl[total_solutions_found] = out_field_trafo_y;
 		
+		timer.Stop();
+		total_solve_time += timer.TimePerTest(1);
+		no_total_solve++;
 	}
 	
 	if(change_method)
@@ -3200,7 +3205,7 @@ namespace Nektar
 				int prev_solutions = local_indices_to_be_continued.size();
 				
 				//use_deflation_now = true;
-				use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<second_param)|| (m_kinvis<0.41*second_param && local_indices_to_be_continued.size()<5));
+				use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<0.98*second_param)|| (m_kinvis<0.41*second_param && local_indices_to_be_continued.size()<5));
 				for(int i = 0; i < prev_solutions && use_deflation && use_deflation_now && total_solutions_found < m_maxIt; i++)
 				{
 					curr_i = local_indices_to_be_continued[i];

@@ -157,7 +157,7 @@ namespace Nektar
     std::vector<int> getFlipperMap() { return flipperMap; };
 	
 	bool converged, deflate;
-	int number_of_deflations, use_deflation, total_solutions_found;
+	int use_deflation, total_solutions_found;
 	Array<OneD, Array<OneD, NekDouble> > sol_x_cont_defl, sol_y_cont_defl;
 	std::vector<double> param_vector;
 	double arclength_step, step_multiplier, max_step, start_with_Oseen, second_param; //second_param is the multiplicative scaling of the inlet velocity
@@ -170,6 +170,9 @@ namespace Nektar
 	int write_SEM_field;
 	Array<OneD, Array<OneD, NekDouble> > myAdvField;
 	std::vector<int> flipperMap;
+	
+	NekDouble total_solve_time;
+	unsigned int no_total_solve;
 
     protected:
 

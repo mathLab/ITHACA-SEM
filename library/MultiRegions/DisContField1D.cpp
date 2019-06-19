@@ -991,7 +991,8 @@ namespace Nektar
         }
 
         void DisContField1D::v_FillBwdWITHBwdWeight(
-                  Array<OneD,       NekDouble> &weight)
+                  Array<OneD,       NekDouble> &weightave,
+                  Array<OneD,       NekDouble> &weightjmp)
         {
             int cnt, n, e, npts;
             // Fill boundary conditions into missing elements.
@@ -1004,7 +1005,8 @@ namespace Nektar
                 {
                     id  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
                     // Bwd[id] = m_bndCondExpansions[n]->GetPhys()[0]; //this is not getting the correct value?
-                    weight[id] = m_BndCondBwdWeight[n];
+                    weightave[id] = m_BndCondBwdWeight[n];
+                    weightjmp[id] = 0.0;
                     cnt++;
                 }
                 else if (m_bndConditions[n]->GetBoundaryConditionType() == 
@@ -1017,7 +1019,8 @@ namespace Nektar
                              "boundary condition");
                     id  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
                     // Bwd[id] = Fwd[id];
-                    weight[id] = m_BndCondBwdWeight[n];
+                    weightave[id] = m_BndCondBwdWeight[n];
+                    weightjmp[id] = 0.0;
                     cnt++;
                 }
                 else if (m_bndConditions[n]->GetBoundaryConditionType() ==

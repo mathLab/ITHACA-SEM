@@ -1884,7 +1884,8 @@ using namespace std;
          * NOTE: periodic boundary is considered interior traces and is not treated here.
          */
         void DisContField3D::v_FillBwdWITHBwdWeight(
-                  Array<OneD,       NekDouble> &weight)
+                  Array<OneD,       NekDouble> &weightave,
+                  Array<OneD,       NekDouble> &weightjmp)
         {
             int cnt, n, e, npts, phys_offset;
             // Fill boundary conditions into missing elements
@@ -1906,7 +1907,8 @@ using namespace std;
                         //     &(m_bndCondExpansions[n]->GetPhys())[id1], 1,
                         //     &Bwd[id2],                                 1);
                         // Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
-                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weight[id2],1);
+                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weightave[id2],1);
+                        Vmath::Fill(npts,0.0, &weightjmp[id2],1);
                     }
 
                     cnt += e;
@@ -1930,7 +1932,8 @@ using namespace std;
                         //Neumann " "boundary condition");
                         
                         // Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
-                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weight[id2],1);
+                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weightave[id2],1);
+                        Vmath::Fill(npts,0.0, &weightjmp[id2],1);
                     }
 
                     cnt += e;

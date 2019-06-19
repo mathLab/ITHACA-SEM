@@ -70,7 +70,8 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
             Array<OneD, Array<OneD, NekDouble> >              m_traceAver;
             Array<OneD, Array<OneD, NekDouble> >              m_traceJump;
-            Array<OneD, NekDouble>                            m_tracBwdWeight;
+            Array<OneD, NekDouble>                            m_tracBwdWeightAver;
+            Array<OneD, NekDouble>                            m_tracBwdWeightJump;
             Array<OneD, NekDouble>                            m_traceNormDirctnElmtLength;
             Array<OneD, NekDouble>                            m_traceNormDirctnElmtLengthRecip;
             LibUtilities::SessionReaderSharedPtr              m_session;
@@ -209,7 +210,7 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
                       Array<OneD,       Array<OneD, NekDouble> >    &aver,
                       Array<OneD,       Array<OneD, NekDouble> >    &jump);
-
+            
             virtual const Array<OneD, const Array<OneD, NekDouble> > &v_GetTraceNormal()
             {
                 return m_traceNormals;

@@ -1590,7 +1590,8 @@ namespace Nektar
          * NOTE: periodic boundary is considered interior traces and is not treated here.
          */
         void DisContField2D::v_FillBwdWITHBwdWeight(
-                  Array<OneD,       NekDouble> &weight)
+                  Array<OneD,       NekDouble> &weightave,
+                  Array<OneD,       NekDouble> &weightjmp)
         {
             int cnt, n, e, npts;
 
@@ -1609,7 +1610,8 @@ namespace Nektar
                         id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weight[id2],1);
+                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weightave[id2],1);
+                        Vmath::Fill(npts,0.0, &weightjmp[id2],1);
 
                     }
                     
@@ -1626,7 +1628,8 @@ namespace Nektar
                         id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weight[id2],1);
+                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weightave[id2],1);
+                        Vmath::Fill(npts,0.0, &weightjmp[id2],1);
                     }
                     
                     cnt += e;

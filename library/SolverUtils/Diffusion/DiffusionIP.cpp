@@ -100,13 +100,15 @@ namespace Nektar
                 Vmath::Sdiv(nTracePts,1.0,m_traceNormDirctnElmtLength,1,m_traceNormDirctnElmtLengthRecip,1);
             // }
 
-            m_tracBwdWeight  =   Array<OneD, NekDouble> (nTracePts,0.0);
-            pFields[0]->GetBwdWeight(m_tracBwdWeight);
+            m_tracBwdWeightAver  =   Array<OneD, NekDouble> (nTracePts,0.0);
+            m_tracBwdWeightJump  =   Array<OneD, NekDouble> (nTracePts,0.0);
+            pFields[0]->GetBwdWeight(m_tracBwdWeightAver,m_tracBwdWeightJump);
             Array<OneD, NekDouble> tmpBwdWeight(nTracePts,0.0);
+            Array<OneD, NekDouble> tmpBwdWeightJump(nTracePts,0.0);
             for(int i =1; i<nVariable;i++)
             {
-                pFields[i]->GetBwdWeight(tmpBwdWeight);
-                Vmath::Vsub(nTracePts,tmpBwdWeight,1,m_tracBwdWeight,1,tmpBwdWeight,1);
+                pFields[i]->GetBwdWeight(tmpBwdWeight,tmpBwdWeightJump);
+                Vmath::Vsub(nTracePts,tmpBwdWeight,1,m_tracBwdWeightAver,1,tmpBwdWeight,1);
                 Vmath::Vabs(nTracePts,tmpBwdWeight,1,tmpBwdWeight,1);
                 NekDouble norm = 0.0;
                 for(int j = 0; j<nTracePts; j++)
@@ -565,10 +567,22 @@ namespace Nektar
 
             // note: here the jump is 2.0*(aver-vFwd) 
             //       because Viscous wall use a symmetry value as the Bwd, not the target one   
+            Array<OneD, NekDouble> tmpF (npnts,0.0);
+            Array<OneD, NekDouble> tmpB (npnts,0.0);
+
+            Array<OneD, NekDouble> Fweight (npnts,2.0);
+            Array<OneD, NekDouble> Bweight;
+            Bweight = m_tracBwdWeightJump;
+            Vmath::Vsub(npnts,Fweight,1,Bweight,1,Fweight,1);
+
             for (int i = 0; i < nConvectiveFields; ++i)
             {
-                Vmath::Vsub(npnts,aver[i],1,vFwd[i],1,jump[i],1);
-                Vmath::Smul(npnts,2.0,jump[i],1,jump[i],1);
+                Vmath::Vsub(npnts,aver[i],1,vFwd[i],1,tmpF,1);
+                Vmath::Vsub(npnts,vBwd[i],1,aver[i],1,tmpB,1);
+
+                Vmath::Vmul(npnts,tmpF,1,Fweight,1,tmpF,1);
+                Vmath::Vmul(npnts,tmpB,1,Bweight,1,tmpB,1);
+                Vmath::Vadd(npnts,tmpF,1,tmpB,1,jump[i],1);
             }
         }
         
@@ -586,7 +600,7 @@ namespace Nektar
             Array<OneD, NekDouble> Fweight (npnts,1.0);
             Array<OneD, NekDouble> Bweight;
 
-            Bweight = m_tracBwdWeight;
+            Bweight = m_tracBwdWeightAver;
 
             Vmath::Vsub(npnts,Fweight,1,Bweight,1,Fweight,1);
 

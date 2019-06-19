@@ -276,7 +276,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
             virtual void v_FillBwdWITHBwdWeight(
-                      Array<OneD,       NekDouble> &weight);
+                    Array<OneD,       NekDouble> &weightave,
+                    Array<OneD,       NekDouble> &weightjmp);
             
             virtual void v_GetFwdBwdTracePhys(
                 Array<OneD, NekDouble> &Fwd,

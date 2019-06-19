@@ -769,7 +769,9 @@ namespace Nektar
 
             inline void GetElmtNormalLength(Array<OneD, NekDouble>  &lengths);
 
-            void GetBwdWeight(Array<OneD, NekDouble>  &weight);
+            void GetBwdWeight(
+                Array<OneD, NekDouble>  &weightAver,
+                Array<OneD, NekDouble>  &weightJump);
 
             inline void AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fx,
@@ -831,7 +833,8 @@ namespace Nektar
                       Array<OneD,       NekDouble> &Bwd);
 
             inline void FillBwdWITHBwdWeight(
-                      Array<OneD,       NekDouble> &weight);
+                    Array<OneD,       NekDouble> &weightave,
+                    Array<OneD,       NekDouble> &weightjmp);
 
             inline void PeriodicBwdCopy(
                 const Array<OneD, const NekDouble> &Fwd,
@@ -1320,7 +1323,8 @@ namespace Nektar
                       Array<OneD,       NekDouble> &Bwd);
             
             virtual void v_FillBwdWITHBwdWeight(
-                      Array<OneD,       NekDouble> &weight);
+                Array<OneD,       NekDouble> &weightave,
+                Array<OneD,       NekDouble> &weightjmp);
 
             virtual void v_PeriodicBwdCopy(
                 const Array<OneD, const NekDouble> &Fwd,
@@ -2453,9 +2457,10 @@ namespace Nektar
         }
 
         inline void ExpList::FillBwdWITHBwdWeight(
-                  Array<OneD,       NekDouble> &Bwd)
+            Array<OneD,       NekDouble> &weightave,
+            Array<OneD,       NekDouble> &weightjmp)
         {
-            v_FillBwdWITHBwdWeight(Bwd);
+            v_FillBwdWITHBwdWeight(weightave,weightjmp);
         }
 
         inline void ExpList::PeriodicBwdCopy(

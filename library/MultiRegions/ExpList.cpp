@@ -2502,15 +2502,18 @@ namespace Nektar
             }
         }
 
-        void ExpList::GetBwdWeight(Array<OneD, NekDouble>  &weight)
+        void ExpList::GetBwdWeight(
+            Array<OneD, NekDouble>  &weightAver,
+            Array<OneD, NekDouble>  &weightJump)
         {
-            int nTracePts = weight.num_elements();
+            int nTracePts = weightAver.num_elements();
             // average for interior traces
             for(int i = 0; i < nTracePts; ++i)
             {
-                weight[i]       =   0.5;
+                weightAver[i]       =   0.5;
+                weightJump[i]       =   1.0;
             }
-            FillBwdWITHBwdWeight(weight);
+            FillBwdWITHBwdWeight(weightAver,weightJump);
         }
 
         const Array<OneD,const std::shared_ptr<ExpList> >
@@ -3242,7 +3245,8 @@ namespace Nektar
         }
 
         void ExpList::v_FillBwdWITHBwdWeight(
-                  Array<OneD,       NekDouble> &weight)
+            Array<OneD,       NekDouble> &weightave,
+            Array<OneD,       NekDouble> &weightjmp)
         {
             ASSERTL0(false,"v_FillBwdWITHBwdWeight not defined");
         }

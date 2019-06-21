@@ -1536,7 +1536,7 @@ namespace Nektar
     Array<OneD, Array<OneD, NekDouble> > CoupledLinearNS_trafoP::DoSolve_at_param_continuation(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter)
     {
 	double rel_err = 1.0, use_heuristic = true;
-	int iterations = 0, max_iterations = 100;
+	int iterations = 0, max_iterations = 150;
 	bool change_method = use_Newton;
 	
 	if(start_with_Oseen)
@@ -1553,7 +1553,7 @@ namespace Nektar
 	double last_tau = 0, strength = 1, norm_i, norm_ix, norm_iy, norm_0, norm_0x, norm_0y;
 	Timer timer;
 	
-	while (rel_err > 1e-9 && (iterations < max_iterations || !use_deflation))
+	while (rel_err > 1e-10 && (iterations < max_iterations || !use_deflation))
 	{
         timer.Start();
 		Set_m_kinvis( parameter );
@@ -1766,8 +1766,7 @@ namespace Nektar
 				cout<<"tau "<<tau<<", scal_product "<<scal_product<<", M_inv "<<M_inv<<", strength "<<strength<<endl;
 			//}
 			//m_mat[0].m_CoupledBndSys->my_tau_defl = tau;
-			cout<<"Deflated, computed and old values at iterations number "<<iterations<<": "<<tau * out_field_trafo_x[23] + (1 - tau) * init_snapshot_x[23]
-																			<<", "<<out_field_trafo_x[23]<<", "<<init_snapshot_x[23]<<"\n"<<endl;  
+			cout<<"Viscosity and scaling at iterations number "<<iterations<<": "<<m_kinvis<<", "<<second_param<<"\n"<<endl;  
 			
 			//I update the solution
 			for(int i = 0; i < nvel; i++)
@@ -3205,7 +3204,7 @@ namespace Nektar
 				int prev_solutions = local_indices_to_be_continued.size();
 				
 				//use_deflation_now = true;
-				use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<0.98*second_param)|| (m_kinvis<0.41*second_param && local_indices_to_be_continued.size()<5));
+				use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<0.97*second_param)|| (m_kinvis<0.405*second_param && local_indices_to_be_continued.size()<5));
 				for(int i = 0; i < prev_solutions && use_deflation && use_deflation_now && total_solutions_found < m_maxIt; i++)
 				{
 					curr_i = local_indices_to_be_continued[i];
@@ -3217,7 +3216,7 @@ namespace Nektar
 						guess_y[j] = sol_y_cont_defl[curr_i][j]*(1+(((double)rand())/RAND_MAX-0.5)/2/1e3);
 					}				
 					
-					while(converged)
+					while(converged && use_deflation_now)
 					{
 						converged_solution = DoSolve_at_param_continuation(guess_x, guess_y, m_kinvis);
 						if(converged)
@@ -3237,8 +3236,18 @@ namespace Nektar
 							total_solutions_found++;
 							previous_step_solutions++;
 							last_bif_point_solutions_found++;
+							
+							indexFlip = 0;				
+							possible_solutions = FlipAndCheck(flipperMap, &indexFlip);	
+							if(indexFlip > 0) //I expect to flip at most 1 solution, so the first one in possible_solutions
+							{
+								guess_x = possible_solutions[0];
+								guess_y = possible_solutions[1];
+							}
 						}
+						use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<0.97*second_param)|| (m_kinvis<0.405*second_param && local_indices_to_be_continued.size()<5));
 					}
+					use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<0.97*second_param)|| (m_kinvis<0.405*second_param && local_indices_to_be_continued.size()<5));
 				}
 				
 				//here I want to flip the solutions and check if they are different from the previous ones, if so I use them as initial guess trying to converge to new solutions

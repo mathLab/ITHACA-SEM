@@ -3458,11 +3458,12 @@ namespace Nektar
 			
 			unsigned int iterations, curr_j;
 			Timer timer;
-			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], rel_err, M, total_steps = 20.0, tol = 1e-4, scaling_steps = 10, current_scaling = 1, norm_min;
+			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], total_steps = 20.0, tol = 5e-4, scaling_steps = 5, current_scaling = 1;
+			double rel_err, M, strength, norm_min, tau, last_tau;
 			unsigned int total_solutions = 0, last_first_param_index = 0, number_of_solutions, restart_for_scaling = 0, no_restarts_for_scaling = 0;
 			std::vector<int> indices_to_be_continued, local_indices_to_be_continued;
 			Array<OneD, double> old_reprojection_x(GetNpoints(), 0.0), old_reprojection_y(GetNpoints(), 0.0);
-			bool first_step = true;
+			bool first_step = true, danger = false;
 			
 			Eigen::VectorXd reconstruct_solution, temp_solve_affine, repro_solve_affine;
 			std::vector<Eigen::VectorXd> solve_affine;
@@ -3566,8 +3567,7 @@ namespace Nektar
 						local_indices_to_be_continued.resize(0);
 					
 					//continuation						////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-					cout<<"Continuation"<<endl;
-					cout<<"params: "<<current_nu<<" "<<current_scaling<<endl;
+					cout<<"Continuation with params: "<<current_nu<<" "<<current_scaling<<endl;
 					for(int j = 0; j < indices_to_be_continued.size(); j++)
 					{
 						curr_j = indices_to_be_continued[j];
@@ -3700,13 +3700,15 @@ namespace Nektar
 					
 					//deflation						////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					cout<<"Deflation over "<<local_indices_to_be_continued.size()<<" solutions"<<endl;
-					bool use_deflation_now = ((local_indices_to_be_continued.size()<3 && current_nu<0.98*current_scaling)|| (current_nu<0.41*current_scaling && local_indices_to_be_continued.size()<5));
+					bool use_deflation_now = ((local_indices_to_be_continued.size()<3 && current_nu<0.97*current_scaling)|| (current_nu<0.41*current_scaling && local_indices_to_be_continued.size()<5));
 					for(int j = 0; j < local_indices_to_be_continued.size() && use_deflation_now; j++)
 					{
 						curr_j = local_indices_to_be_continued[j];
 						cout<<"curr_j = "<<curr_j<<endl;
 						rel_err = 1;
 						iterations = 0;
+						strength = 1;
+						last_tau = 0;
 						last_sol = solve_affine[curr_j];
 						
 						for(int i = 0; i < last_sol.size(); i++)
@@ -3725,7 +3727,7 @@ namespace Nektar
 						curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
 						affine_vec_proj = gen_affine_vec(current_nu, current_scaling, reconstruct_solution);
 						
-						while(rel_err > tol && ++iterations<100)
+						while(rel_err > tol && ++iterations<300)
 						{	
 							timer.Start();
 							Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
@@ -3775,23 +3777,65 @@ namespace Nektar
 							//norm_min /= solve_affine[closest_sol].transpose() * massMatrix * solve_affine[closest_sol];
 							double scalar_product = -(temp_solve_affine - solve_affine[closest_sol]).dot(temp_solve_affine - last_sol);
 							//double scalar_product = -(temp_solve_affine - solve_affine[closest_sol]).transpose() * massMatrix * (temp_solve_affine - last_sol);
-							double tau;
 							int power = 2;
 							if(power == 1)
 								tau = 1 / (1 - 1/(1+1/norm_min) * scalar_product / (norm_min * norm_min * norm_min));	
 							if(power == 2)
 								tau = 2 / (1 - 1/(1+1/norm_min/norm_min) * scalar_product / (norm_min * norm_min * norm_min * norm_min));	
-							if(norm_min < 5e-2)
-								tau = -3;							
-								
-							//cout<<"real tau "<<tau; 
-							//tau = tau/fabs(tau);
-							if(tau < 0 && tau > -0.1)
+														
+							/*if(norm_min < 5e-2)   //simple heuristic
+								tau = -3;
+							if(tau < 0 && tau > -0.1)  
 								tau = -0.1;
 							if(tau > 0 && tau < 0.5)
 								tau = 0.5;		
 							if(tau > 1)
-								tau = 1;		
+								tau = 1;*/	
+								
+							if(norm_i < 5e-2) 
+								danger = true;
+								
+							if(tau>0)   // complex heuristic
+							{
+								if(last_tau < 0)
+								{
+									if(last_tau > -10)
+										tau = 0.9 * tau + 0.1 * last_tau; // momentum for tau for maintaining small values of tau, if they were too big I don't want to explode
+										
+									if(tau > 0)
+									{
+										strength *= 1.75;
+									}
+									else
+									{
+										tau *= strength;
+									}
+									last_tau = tau;
+								}
+								if(tau < 0.6 && tau > 0)
+								{
+									tau = 0.6;
+									last_tau = tau;
+								}
+								if(tau > 1) // to avoid overshooting
+									tau = 1;
+								if(danger) //I want to change a lot my solution because I'm in the region of attraction of a previous solution
+								{						
+									tau = -2*strength;
+									last_tau = -9.9999;
+									strength *= 1.75;
+								}
+							}
+							else
+							{
+								if(strength*tau>-20)  //I don't want to use the strength factor if tau is already negative enough
+									tau = strength*tau;
+								if(tau > -0.4)
+									tau = -0.4;
+								last_tau = tau;
+							}
+							
+								
 							temp_solve_affine = tau * temp_solve_affine + (1-tau) * last_sol;
 							//cout<<"tau "<<tau<<endl;
 							rel_err = (temp_solve_affine-last_sol).norm()/last_sol.norm();
@@ -3830,6 +3874,7 @@ namespace Nektar
 							online_average_time += timer.TimePerTest(1);
 							online_no_solves++;
 						}
+						use_deflation_now = ((local_indices_to_be_continued.size()<3 && current_nu<0.97*current_scaling)|| (current_nu<0.41*current_scaling && local_indices_to_be_continued.size()<5));
 					} 
 					cout<<endl; 
 					
@@ -4028,7 +4073,8 @@ namespace Nektar
 	Array<OneD, NekDouble> param_vector2_tmp;
 	if (m_session->DefinesParameter("two_params") && m_session->GetParameter("two_params") == 1) 
 	{
-		unsigned int n = 3;
+		unsigned int n = 20;
+		double end2 = 0.8; // the scaling will be between end2 and 1
 		param_vector2_tmp = Array<OneD, NekDouble> (n);
 		
 		//for(int i = 0; i<n; i++)
@@ -4042,7 +4088,7 @@ namespace Nektar
 		
 		for(int i = 0; i<n; i++)	
 		{
-			param_vector2_tmp[i] = (param_vector2_tmp[i]-last) / (2*(first-last)) + 0.5;
+			param_vector2_tmp[i] = (1-end2) * (param_vector2_tmp[i]-last) / (first-last) + end2;
 			cout<<"second param: "<<param_vector2_tmp[i]<<endl;
 		}
 	}

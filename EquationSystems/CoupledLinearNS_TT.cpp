@@ -4073,7 +4073,7 @@ namespace Nektar
 	Array<OneD, NekDouble> param_vector2_tmp;
 	if (m_session->DefinesParameter("two_params") && m_session->GetParameter("two_params") == 1) 
 	{
-		unsigned int n = 20;
+		unsigned int n = 3;
 		double end2 = 0.8; // the scaling will be between end2 and 1
 		param_vector2_tmp = Array<OneD, NekDouble> (n);
 		

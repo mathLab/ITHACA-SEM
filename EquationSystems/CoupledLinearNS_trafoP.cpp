@@ -1553,7 +1553,7 @@ namespace Nektar
 	double last_tau = 0, strength = 1, norm_i, norm_ix, norm_iy, norm_0, norm_0x, norm_0y;
 	Timer timer;
 	
-	while (rel_err > 1e-10 && (iterations < max_iterations || !use_deflation))
+	while (rel_err > 1e-9 && (iterations < max_iterations || !use_deflation))
 	{
         timer.Start();
 		Set_m_kinvis( parameter );
@@ -1634,7 +1634,7 @@ namespace Nektar
 				if(norm_i < 1e-2) 
 					danger = true;
 				
-				if(norm_i > 1e15 || scal_product > 1e5) // to avoid the useless remaining iterations
+				if(norm_i > 1e15) // to avoid the useless remaining iterations
 					iterations = 99999;
 					
 				if(change_method && norm_i > 1e2) // try to avoid divergence using some Oseen steps

@@ -135,15 +135,15 @@ namespace Nektar
         {
 
             int nCoeffs   = fields[0]->GetNcoeffs();
-            Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
+            // Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
+            // for (int i = 0; i < nConvectiveFields; ++i)
+            // {
+            //     tmp[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
+            // }
+            DiffusionIP::v_Diffuse_coeff(nConvectiveFields,fields,inarray,outarray,pFwd,pBwd);
             for (int i = 0; i < nConvectiveFields; ++i)
             {
-                tmp[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
-            }
-            DiffusionIP::v_Diffuse_coeff(nConvectiveFields,fields,inarray,tmp,pFwd,pBwd);
-            for (int i = 0; i < nConvectiveFields; ++i)
-            {
-                fields[i]->BwdTrans             (tmp[i], outarray[i]);
+                fields[i]->BwdTrans             (outarray[i], outarray[i]);
             }
         }
 
@@ -212,6 +212,8 @@ namespace Nektar
             Array<OneD, int > nonZeroIndex;
             DiffuseVolumeFlux(nConvectiveFields,fields,inarray,qfield,elmtFlux,nonZeroIndex);
 
+            //TODO: TO GET TRACE QFIELD FIRST AND RELEASE qfield. AddDiffusionSymmFluxToCoeff DON'T NEED qfield
+
             Array<OneD, Array<OneD, NekDouble> > tmpFluxIprdct(nDim);
             // volume intergration: the nonZeroIndex indicates which flux is nonzero
             for(i = 0; i < nonZeroIndex.num_elements(); ++i)
@@ -244,10 +246,17 @@ namespace Nektar
 
                 fields[j]->AddTraceIntegral     (Traceflux[j], outarray[j]);
                 fields[j]->SetPhysState         (false);
-                fields[j]->MultiplyByElmtInvMass(outarray[j], outarray[j]);
+                // fields[j]->MultiplyByElmtInvMass(outarray[j], outarray[j]);
             }
 
             AddDiffusionSymmFluxToCoeff(nConvectiveFields, fields, inarray,qfield,elmtFlux, outarray, vFwd, vBwd);
+
+            for(i = 0; i < nonZeroIndex.num_elements(); ++i)
+            {
+                int j = nonZeroIndex[i];
+
+                fields[j]->MultiplyByElmtInvMass(outarray[j], outarray[j]);
+            }
         }
 
         void DiffusionIP::v_DiffuseCalculateDerivative(
@@ -699,6 +708,14 @@ namespace Nektar
                     Vmath::Vadd(nTracePts,numDerivFwd[nd][i],1,numDerivBwd[nd][i],1,numDerivFwd[nd][i],1);
                 }
             }
+
+            for (int nd = 0; nd < nDim; ++nd)
+            {
+                for (int i = 0; i < nConvectiveFields; ++i)
+                {
+                    numDerivBwd[nd][i]    = NullNekDouble1DArray;
+                }
+            }
         
             ConsVarAveJump(nConvectiveFields,nTracePts,vFwd,vBwd,solution_Aver,solution_jump);
 
@@ -781,6 +798,5 @@ namespace Nektar
                 }
             }
         }
-
     }
 }

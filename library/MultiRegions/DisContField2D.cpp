@@ -64,7 +64,6 @@ namespace Nektar
         : ExpList2D          (),
           m_bndCondExpansions(),
           m_BndCondBwdWeight(),
-          m_DerivBndCondExpansions(),
           m_bndConditions    (),
           m_trace            (NullExpListSharedPtr)
         {
@@ -76,7 +75,6 @@ namespace Nektar
             : ExpList2D                 (In,DeclareCoeffPhysArrays),
               m_bndCondExpansions       (In.m_bndCondExpansions),
               m_BndCondBwdWeight        (In.m_BndCondBwdWeight),
-              m_DerivBndCondExpansions  (In.m_DerivBndCondExpansions),
               m_bndConditions           (In.m_bndConditions),
               m_globalBndMat            (In.m_globalBndMat),
               m_traceMap                (In.m_traceMap),
@@ -111,7 +109,6 @@ namespace Nektar
                         ImpType),
               m_bndCondExpansions(),
               m_BndCondBwdWeight(),
-              m_DerivBndCondExpansions(),
               m_bndConditions(),
               m_trace(NullExpListSharedPtr),
               m_periodicVerts(),
@@ -666,8 +663,6 @@ namespace Nektar
             m_BndCondBwdWeight  =   Array<OneD, NekDouble>(bregions.size(),0.0);
 
             int spaceDim = graph2D->GetSpaceDimension();
-            m_DerivBndCondExpansions =
-                Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >(bregions.size());
 
             for (auto &it : bregions)
             {
@@ -680,16 +675,6 @@ namespace Nektar
 
                 m_bndCondExpansions[cnt]  = locExpList;
                 m_bndConditions[cnt]      = bc;
-
-                m_DerivBndCondExpansions[cnt] = Array<OneD, MultiRegions::ExpListSharedPtr> (spaceDim);
-                for(int i = 0; i<spaceDim;i++)
-                {
-                    locExpList = MemoryManager<MultiRegions::ExpList1D>
-                        ::AllocateSharedPtr(m_session, *(it.second), graph2D,
-                                            DeclareCoeffPhysArrays, variable,
-                                            bc->GetComm());
-                    m_DerivBndCondExpansions[cnt][i]  = locExpList;
-                }
 
                 std::string type = m_bndConditions[cnt]->GetUserDefined();
 
@@ -1538,9 +1523,6 @@ namespace Nektar
                         id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        // Vmath::Vcopy(npts,
-                        //     &(m_DerivBndCondExpansions[n][Dir]->GetPhys())[id1], 1,
-                        //     &Bwd[id2],                                 1);
                         Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
                     }
                     
@@ -1557,9 +1539,6 @@ namespace Nektar
                         id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        // Vmath::Vcopy(npts,
-                        //     &(m_DerivBndCondExpansions[n][Dir]->GetPhys())[id1], 1,
-                        //     &Bwd[id2],                                 1);
                         Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
                     }
                     
@@ -1952,10 +1931,6 @@ namespace Nektar
             {
                 m_bndCondExpansions[n]->Reset();
                 m_BndCondBwdWeight[n]   =   0.0;
-                for(int i= 0; i< m_DerivBndCondExpansions[n].num_elements();i++)
-                {
-                    m_DerivBndCondExpansions[n][i]->Reset();
-                }
             }
         }
 

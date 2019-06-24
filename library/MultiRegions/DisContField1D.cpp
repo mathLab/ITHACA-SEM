@@ -59,7 +59,6 @@ namespace Nektar
             ExpList1D(),
             m_bndCondExpansions(),
             m_BndCondBwdWeight(),
-            m_DerivBndCondExpansions(),
             m_bndConditions()
         {
         }
@@ -86,7 +85,6 @@ namespace Nektar
             : ExpList1D(pSession,graph1D,true, ImpType),
               m_bndCondExpansions(),
               m_BndCondBwdWeight(),
-              m_DerivBndCondExpansions(),
               m_bndConditions()
         {
             if (variable.compare("DefaultVar") != 0)

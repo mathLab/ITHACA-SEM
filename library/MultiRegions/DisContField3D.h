@@ -108,8 +108,6 @@ namespace Nektar
 
             Array<OneD,NekDouble> m_BndCondBwdWeight;
 
-            Array<OneD, Array<OneD,MultiRegions::ExpListSharedPtr> > m_DerivBndCondExpansions;
-
             /**
              * @brief An array which contains the information about
              * the boundary condition on the different boundary regions.
@@ -365,12 +363,6 @@ namespace Nektar
             virtual void v_SetBndCondBwdWeight(const int index, const NekDouble value)
             {
                 m_BndCondBwdWeight[index]   =   value;
-            }
-
-            virtual const Array<OneD, const Array<OneD, MultiRegions::ExpListSharedPtr> >
-                &v_GetDerivBndCondExpansions()
-            {
-                return m_DerivBndCondExpansions;
             }
 
             virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap() const

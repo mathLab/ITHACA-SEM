@@ -257,6 +257,7 @@ namespace Nektar
                     }
 
                     explist->GetMatIpwrtDeriveBase(ElmtJacArray[m][n],mtxPerVar);
+                    //TODO:: To reuse mtxPerVar
                     explist->AddRightIPTBaseMatrix(mtxPerVar,mtxPerVarCoeff);
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
@@ -356,7 +357,9 @@ namespace Nektar
 
                     PntJac = TracePntJacCons;
                     CalcJacobTraceInteg(pFields,m,n,PntJac, TraceJacConsSign,TraceJacFwd,TraceJacBwd);
+                    //TODO: To modify CalcJacobTraceInteg&AddTraceJacToElmtJac to Bwd after Fwd not at the same time
                     pFields[0]->AddTraceJacToElmtJac(TraceJacFwd, TraceJacBwd,ElmtJacQuad);
+                    //TODO: To check whether it is ok to reuse ElmtJacQuad as output
                     pFields[0]->AddRightIPTBaseMatrix(ElmtJacQuad,ElmtJacCoef);
 
                     if(TracePntJacGradflag)

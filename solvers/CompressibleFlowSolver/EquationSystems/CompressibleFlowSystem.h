@@ -151,7 +151,7 @@ namespace Nektar
 
         void AddMatNSBlkDiag_boundary(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &qfield,
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                  &gmtxarray,
             Array<OneD, DNekBlkMatSharedPtr >                               &TraceJac,
             Array<OneD, DNekBlkMatSharedPtr >                               &TraceJacDeriv,

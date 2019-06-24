@@ -1055,10 +1055,10 @@ namespace Nektar
                 return m_coeffsToElmt;
             }
 
-            MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetPointsToElmt() const
-            {
-                return m_pointsToElmt;
-            }
+            // MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetPointsToElmt() const
+            // {
+            //     return m_pointsToElmt;
+            // }
 
             MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr &GetlocTraceToTraceMap() const
             {
@@ -1226,7 +1226,7 @@ namespace Nektar
             Array<OneD,pair<int,int> >  m_coeffsToElmt;
 
             /// m_phys to elemental value map
-            Array<OneD,pair<int,int> >  m_pointsToElmt;
+            // Array<OneD,pair<int,int> >  m_pointsToElmt;
 
             NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
 

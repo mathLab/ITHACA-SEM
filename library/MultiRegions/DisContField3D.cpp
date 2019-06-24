@@ -65,7 +65,6 @@ using namespace std;
              ExpList3D             (),
              m_bndCondExpansions   (),
              m_BndCondBwdWeight    (),
-             m_DerivBndCondExpansions(),
              m_bndConditions       (),
              m_trace(NullExpListSharedPtr)
          {
@@ -84,7 +83,6 @@ using namespace std;
              ExpList3D          (pSession, graph3D, variable, ImpType),
                m_bndCondExpansions(),
                m_BndCondBwdWeight(),
-               m_DerivBndCondExpansions(),
                m_bndConditions    (),
                m_trace(NullExpListSharedPtr)
          {
@@ -623,8 +621,6 @@ using namespace std;
             m_BndCondBwdWeight  =   Array<OneD, NekDouble>(bregions.size(),0.0);
             
             int spaceDim = graph3D->GetSpaceDimension();
-            m_DerivBndCondExpansions =
-                Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >(bregions.size());
 
             // list Dirichlet boundaries first
             for (auto &it : bregions)
@@ -643,15 +639,6 @@ using namespace std;
                 }
 
                 m_bndCondExpansions[cnt]  = locExpList;
-
-                m_DerivBndCondExpansions[cnt] = Array<OneD, MultiRegions::ExpListSharedPtr> (spaceDim);
-                for(int i = 0; i<spaceDim;i++)
-                {
-                    locExpList = MemoryManager<MultiRegions::ExpList2D>
-                        ::AllocateSharedPtr(m_session, *(it.second),
-                                            graph3D, variable, locBCond->GetComm());
-                    m_DerivBndCondExpansions[cnt][i]  = locExpList;
-                }
 
                 m_bndConditions[cnt++]    = locBCond;
             }

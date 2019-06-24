@@ -975,7 +975,7 @@ namespace Nektar
 
     void CompressibleFlowSystem::AddMatNSBlkDiag_boundary(
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &qfield,
         Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                  &gmtxarray,
         Array<OneD, DNekBlkMatSharedPtr >                               &TraceJac,
         Array<OneD, DNekBlkMatSharedPtr >                               &TraceJacDeriv,
@@ -983,9 +983,12 @@ namespace Nektar
     {
         int nvariables = inarray.num_elements();
         GetTraceJac(inarray,qfield,TraceJac,TraceJacDeriv,TraceJacDerivSign);
-        int nSpaceDim = m_graph->GetSpaceDimension();
-
-        m_advObject->AddTraceJacToMat(nvariables,nSpaceDim,m_fields, TraceJac,gmtxarray,TraceJacDeriv,TraceJacDerivSign);
+        for(int i = 0; i< m_spacedim; i++)
+        {
+            qfield[i]   =   NullNekDoubleArrayofArray;
+        }
+        
+        m_advObject->AddTraceJacToMat(nvariables,m_spacedim,m_fields, TraceJac,gmtxarray,TraceJacDeriv,TraceJacDerivSign);
         // m_advObject->AddTraceJacToMat(nvariables,nSpaceDim,m_fields, TraceJac,gmtxarray);
     }
 
@@ -1168,7 +1171,13 @@ namespace Nektar
         }
     }
 
-
+    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
+    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
+    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
+    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
+    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
+    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
+    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
     void CompressibleFlowSystem::NumCalRiemFluxJac(
         const int                                                       nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr>               &fields,
@@ -1581,7 +1590,7 @@ namespace Nektar
                 // to free the storage
                 for(int i = 0; i < nvariables; i++)
                 {
-                    intmp[i]    =   Array<OneD, NekDouble>(1,0.0);
+                    intmp[i]    =   NullNekDouble1DArray;
                 }
             }
         }

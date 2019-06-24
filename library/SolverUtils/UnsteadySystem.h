@@ -121,9 +121,9 @@ namespace Nektar
 
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >  m_PrecMatVars;
 
-            Array<OneD, DNekBlkMatSharedPtr > m_TraceJac;
+            Array<OneD, DNekBlkMatSharedPtr >               m_TraceJac;
 
-            Array<OneD, DNekBlkMatSharedPtr > m_TraceJacDeriv;
+            Array<OneD, DNekBlkMatSharedPtr >               m_TraceJacDeriv;
 
             Array<OneD,       Array<OneD, NekDouble> >      m_TraceJacDerivSign;
 

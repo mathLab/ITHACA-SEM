@@ -319,28 +319,24 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
     if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D)
     {
         int points_on_plane = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
+        const int offset = totpoints-points_on_plane;
         NekDouble z = m_fields[m_coordim-1][totpoints-2*points_on_plane] +
                       (m_fields[m_coordim-1][points_on_plane] - m_fields[m_coordim-1][0]);
         // x and y
-        for (int i = 0; i < m_coordim-1; ++i)
-        {
-            for(int j=0; j<points_on_plane; ++j)
-            {
-                m_fields[i][totpoints-points_on_plane+j] = m_fields[i][j];
-            }
-        }
+        Array<OneD, NekDouble> tmp = m_fields[0] + offset;
+        Vmath::Vcopy(points_on_plane, m_fields[0], 1, tmp, 1 );
+        tmp = m_fields[1] + offset;
+        Vmath::Vcopy(points_on_plane, m_fields[1], 1, tmp, 1 );
         // z coordinate
-        for(int j=0; j<points_on_plane; ++j)
-        {
-            m_fields[m_coordim-1][totpoints-points_on_plane+j] = m_fields[m_coordim-1][j]+z;
-        }
+        tmp = m_fields[2] + offset;
+        Vmath::Vcopy(points_on_plane, m_fields[2], 1, tmp, 1 );
+        Vmath::Sadd(points_on_plane, z, m_fields[2], 1, tmp, 1 );
+
         //variables
         for (int i = 0; i < m_f->m_variables.size(); ++i)
         {
-            for(int j=0; j<points_on_plane; ++j)
-            {
-                m_fields[i + m_coordim][totpoints-points_on_plane+j] = m_fields[i + m_coordim][j];
-            }
+            tmp = m_fields[i + m_coordim] + offset;
+            Vmath::Vcopy(points_on_plane, m_fields[i + m_coordim], 1, tmp, 1 );
         }
     }
 

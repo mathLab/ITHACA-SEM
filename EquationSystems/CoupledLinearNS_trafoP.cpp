@@ -1553,7 +1553,7 @@ namespace Nektar
 	double last_tau = 0, strength = 1, norm_i, norm_ix, norm_iy, norm_0, norm_0x, norm_0y;
 	Timer timer;
 	
-	while (rel_err > 1e-9 && (iterations < max_iterations || !use_deflation))
+	while (rel_err > 1e-8 && (iterations < max_iterations || !use_deflation))
 	{
         timer.Start();
 		Set_m_kinvis( parameter );
@@ -1641,9 +1641,9 @@ namespace Nektar
 				{
 					if(last_tau < -9.9)
 					{
-						Vmath::Vcopy(out_field_trafo_x.num_elements(), last_out_field_trafo_x, 1, out_field_trafo_x, 1 );
+						/*Vmath::Vcopy(out_field_trafo_x.num_elements(), last_out_field_trafo_x, 1, out_field_trafo_x, 1 );
 						Vmath::Vcopy(out_field_trafo_y.num_elements(), last_out_field_trafo_y, 1, out_field_trafo_y, 1 );
-						use_heuristic = false;
+						use_heuristic = false;*/
 					}
 					else
 					{
@@ -1747,11 +1747,11 @@ namespace Nektar
 						tau = max(tau / min(norm_max, strength), -100/norm_max);
 					if(tau > -0.4)
 						tau = -0.4;
-					if(tau < -9.9)
+					/*if(tau < -9.9)
 					{
 						Vmath::Vcopy(out_field_trafo_x.num_elements(), out_field_trafo_x, 1, last_out_field_trafo_x, 1 );
 						Vmath::Vcopy(out_field_trafo_y.num_elements(), out_field_trafo_y, 1, last_out_field_trafo_y, 1 );
-					}
+					}*/
 					last_tau = tau;
 				}
 			}

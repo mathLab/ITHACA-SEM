@@ -3458,7 +3458,7 @@ namespace Nektar
 			
 			unsigned int iterations, curr_j;
 			Timer timer;
-			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], total_steps = 20.0, tol = 5e-4, scaling_steps = 5, current_scaling = 1;
+			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], total_steps = 15.0, tol = 1e-4, scaling_steps = 10, current_scaling = 1;
 			double rel_err, M, strength, norm_min, tau, last_tau;
 			unsigned int total_solutions = 0, last_first_param_index = 0, number_of_solutions, restart_for_scaling = 0, no_restarts_for_scaling = 0;
 			std::vector<int> indices_to_be_continued, local_indices_to_be_continued;
@@ -3539,7 +3539,7 @@ namespace Nektar
 						indices_to_be_continued.clear();
 						indices_to_be_continued = std::vector<int>(1);
 						indices_to_be_continued[0] = last_first_param_index;
-						last_first_param_index = total_solutions-1;
+						last_first_param_index = total_solutions;
 					}
 				}
 				if(current_index>0 && param_vector2[current_index] < param_vector2[current_index-1] && no_restarts_for_scaling >= scaling_steps)
@@ -3700,7 +3700,7 @@ namespace Nektar
 					
 					//deflation						////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					cout<<"Deflation over "<<local_indices_to_be_continued.size()<<" solutions"<<endl;
-					bool use_deflation_now = ((local_indices_to_be_continued.size()<3 && current_nu<0.97*current_scaling)|| (current_nu<0.41*current_scaling && local_indices_to_be_continued.size()<5));
+					bool use_deflation_now = ((local_indices_to_be_continued.size()<3 && current_nu<0.97*current_scaling)|| (current_nu<0.405*current_scaling && local_indices_to_be_continued.size()<5));
 					for(int j = 0; j < local_indices_to_be_continued.size() && use_deflation_now; j++)
 					{
 						curr_j = local_indices_to_be_continued[j];
@@ -3783,16 +3783,16 @@ namespace Nektar
 							if(power == 2)
 								tau = 2 / (1 - 1/(1+1/norm_min/norm_min) * scalar_product / (norm_min * norm_min * norm_min * norm_min));	
 														
-							/*if(norm_min < 5e-2)   //simple heuristic
+							if(norm_min < 5e-2)   //simple heuristic
 								tau = -3;
-							if(tau < 0 && tau > -0.1)  
-								tau = -0.1;
+							if(tau < 0 && tau > -0.2)  
+								tau = -0.2;
 							if(tau > 0 && tau < 0.5)
 								tau = 0.5;		
 							if(tau > 1)
-								tau = 1;*/	
+								tau = 1;	
 								
-							if(norm_i < 5e-2) 
+							/*if(norm_i < 5e-2) 
 								danger = true;
 								
 							if(tau>0)   // complex heuristic
@@ -3833,7 +3833,7 @@ namespace Nektar
 								if(tau > -0.4)
 									tau = -0.4;
 								last_tau = tau;
-							}
+							}*/
 							
 								
 							temp_solve_affine = tau * temp_solve_affine + (1-tau) * last_sol;
@@ -3850,7 +3850,7 @@ namespace Nektar
 							curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
 							
 							
-							if(rel_err <= tol && norm_min > 1)
+							if(rel_err <= tol && norm_min > 1 && norm_min < 5e5)
 							{
 								cout<<"Converged in "<<iterations<<" steps with norm_min = "<<norm_min<<endl;
 								solve_affine.push_back(temp_solve_affine);
@@ -3874,9 +3874,123 @@ namespace Nektar
 							online_average_time += timer.TimePerTest(1);
 							online_no_solves++;
 						}
-						use_deflation_now = ((local_indices_to_be_continued.size()<3 && current_nu<0.97*current_scaling)|| (current_nu<0.41*current_scaling && local_indices_to_be_continued.size()<5));
+						use_deflation_now = ((local_indices_to_be_continued.size()<3 && current_nu<0.97*current_scaling)|| (current_nu<0.405*current_scaling && local_indices_to_be_continued.size()<5));
 					} 
 					cout<<endl; 
+
+					//here I want to flip the solutions and check if they are different from the previous ones, if so I use them as initial guess trying to converge to new solutions
+					cout<<"Do I want to flip? --> local_indices_to_be_continued.size() = "<<local_indices_to_be_continued.size() <<endl;
+					if(local_indices_to_be_continued.size() % 2 == 0)
+					{ 
+						for(int j = 0; j < local_indices_to_be_continued.size() && local_indices_to_be_continued.size() % 2 == 0; j++)
+						{
+							curr_j = local_indices_to_be_continued[j];
+							rel_err = 1;
+							iterations = 0;
+							last_sol = solve_affine[curr_j];
+							
+							repro_solve_affine = RB * last_sol;
+							//reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+							reconstruct_solution = reconstruct_solution_w_different_dbc(repro_solve_affine, current_scaling);
+							std::vector< Array<OneD, double> > reprojection, temp_reprojection = reproject_back(reconstruct_solution);
+							
+							reprojection.resize(2);
+							reprojection[0] = Array<OneD, double> (GetNpoints(), 0.0);
+							reprojection[1] = Array<OneD, double> (GetNpoints(), 0.0);
+							
+							for(int i = 0; i < temp_reprojection[0].num_elements(); i++) //I flip the initial guess
+							{
+								reprojection[0][i] += temp_reprojection[0][flipperMap[i]];
+								reprojection[1][i] -= temp_reprojection[1][flipperMap[i]];
+							}  
+							
+							curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
+							bool real_Newton = use_Newton;
+							use_Newton = false;
+							affine_vec_proj = gen_affine_vec(current_nu, current_scaling, reconstruct_solution);
+							use_Newton = real_Newton;
+							
+							while(rel_err > tol && ++iterations<100)
+							{
+								timer.Start();
+								Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
+								temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+								for(int i = 0; i < temp_solve_affine.size(); i++)
+								{
+									if(i < temp_solve_affine.size()/2)
+										curr_xy_projected(i,0) = temp_solve_affine(i);
+									else
+										curr_xy_projected(i,1) = temp_solve_affine(i);
+								}
+								norm_min = 1e20;
+								
+								//computation of tau
+								double norm_i;
+								int closest_sol;
+								for(int k = 0; k < local_indices_to_be_continued.size(); k++)
+								{
+									if((temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).norm() < norm_min)
+									{
+										norm_min = (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).norm();
+										//norm_min = (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).transpose() * massMatrix * (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]);
+										closest_sol = local_indices_to_be_continued[k];
+									}
+								}
+								double scalar_product = -(temp_solve_affine - solve_affine[closest_sol]).dot(temp_solve_affine - last_sol);
+								double tau;
+								int power = 2;
+								if(power == 1)
+									tau = 1 / (1 - 1/(1+1/norm_min) * scalar_product / (norm_min * norm_min * norm_min));	
+								if(power == 2)
+									tau = 2 / (1 - 1/(1+1/norm_min/norm_min) * scalar_product / (norm_min * norm_min * norm_min * norm_min));	
+								if(norm_min < 0.1)
+								{
+									tau = -3;
+								}						
+									
+								if(tau < 0 && tau > -0.1)
+									tau = -0.1;
+								if(tau > 0 && tau < 0.5)
+									tau = 0.5;		
+								if(tau > 1)
+									tau = 1;		
+								temp_solve_affine = tau * temp_solve_affine + (1-tau) * last_sol;
+								
+								rel_err = (temp_solve_affine-last_sol).norm()/last_sol.norm();
+								last_sol = temp_solve_affine;
+								
+								repro_solve_affine = RB * temp_solve_affine;
+								//reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+								reconstruct_solution = reconstruct_solution_w_different_dbc(repro_solve_affine, current_scaling);
+								std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
+								curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
+						
+								if(rel_err <= tol && norm_min > 1 && iterations < 9999)
+								{
+									cout<<"Converged in "<<iterations<<" steps with norm_min = "<<norm_min<<endl;
+									solve_affine.push_back(temp_solve_affine);
+									local_indices_to_be_continued.push_back(total_solutions);
+									total_solutions++;
+									
+									outfile_online<<current_nu<<" "<<current_scaling<<" "<<FarrelOutput(reconstruct_solution)<<endl; 
+									cout<<endl;
+									
+									if (write_ROM_field)
+									{
+										recover_snapshot_data(reconstruct_solution, 0);
+									}
+								}
+								else
+								{
+									affine_vec_proj = gen_affine_vec(current_nu, current_scaling, reconstruct_solution);
+								}
+								
+								timer.Stop();
+								online_average_time += timer.TimePerTest(1);
+								online_no_solves++;
+							}
+						}  
+					}
 					
 					indices_to_be_continued.clear();
 					indices_to_be_continued = std::vector<int>(local_indices_to_be_continued);					
@@ -3894,6 +4008,7 @@ namespace Nektar
 		}
 		cout<<"Offline and online average solve times: "<<offline_average_time<<" "<<online_average_time/online_no_solves<<endl;
 	}
+	
 
     void CoupledLinearNS_TT::recover_snapshot_data(Eigen::VectorXd reconstruct_solution, int current_index)
     {
@@ -4073,7 +4188,7 @@ namespace Nektar
 	Array<OneD, NekDouble> param_vector2_tmp;
 	if (m_session->DefinesParameter("two_params") && m_session->GetParameter("two_params") == 1) 
 	{
-		unsigned int n = 3;
+		unsigned int n = 2;
 		double end2 = 0.8; // the scaling will be between end2 and 1
 		param_vector2_tmp = Array<OneD, NekDouble> (n);
 		
@@ -4419,7 +4534,7 @@ namespace Nektar
 	
 	int final_RBsize;
 	if(compare_accuracy_mode) 
-		final_RBsize = Nmax;
+		final_RBsize = 60;//Nmax;
 	else
 		final_RBsize = RBsize;
 	while(RBsize <= final_RBsize) 

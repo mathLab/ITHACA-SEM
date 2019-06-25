@@ -356,7 +356,8 @@ void Geometry::GenBoundingBox()
     PointGeomSharedPtr p = GetVertex(0);
     Array<OneD, NekDouble> x(3, 0.0);
     p->GetCoords(x[0], x[1], x[2]);
-    for (int j = 0; j < 3; ++j) {
+    for (int j = 0; j < 3; ++j)
+    {
         min[j] = x[j];
         max[j] = x[j];
     }
@@ -364,23 +365,29 @@ void Geometry::GenBoundingBox()
     {
         p = GetVertex(i);
         p->GetCoords(x[0], x[1], x[2]);
-        for (int j = 0; j < 3; ++j) {
+        for (int j = 0; j < 3; ++j)
+        {
             min[j] = (x[j] < min[j] ? x[j] : min[j]);
             max[j] = (x[j] > max[j] ? x[j] : max[j]);
         }
     }
     // If element is deformed loop over quadrature points
-    if (GetGeomFactors()->GetGtype() != eRegular) {
+    if (GetGeomFactors()->GetGtype() != eRegular)
+    {
         const int nq = GetXmap()->GetTotPoints();
         Array<OneD, Array<OneD, NekDouble>> x(3);
-        for (int j = 0; j < 3; ++j) {
+        for (int j = 0; j < 3; ++j)
+        {
             x[j] = Array<OneD, NekDouble>(nq, 0.0);
         }
-        for (int j = 0; j < GetCoordim(); ++j) {
+        for (int j = 0; j < GetCoordim(); ++j)
+        {
             GetXmap()->BwdTrans(m_coeffs[j], x[j]);
         }
-        for (int j = 0; j < 3; ++j) {
-            for (int i = 0; i < nq; ++i) {
+        for (int j = 0; j < 3; ++j)
+        {
+            for (int i = 0; i < nq; ++i)
+            {
                 min[j] = (x[j][i] < min[j] ? x[j][i] : min[j]);
                 max[j] = (x[j][i] > max[j] ? x[j][i] : max[j]);
             }
@@ -404,8 +411,6 @@ void Geometry::GenBoundingBox()
     BgPoint pmax(max[0], max[1], max[2]);
     m_boundingBox = BgBox(pmin, pmax);
 }
-
-
 
 }
 }

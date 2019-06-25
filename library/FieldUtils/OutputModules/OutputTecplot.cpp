@@ -251,11 +251,8 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
     if (m_f->m_numHomogeneousDir > 0)
     {
         nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
-        if (nPlanes == 1) // halfMode case
-        {
-            // do nothing
-        }
-        else
+        //nPlanes == 1 - halfMode case, do nothing
+        if ( nPlanes > 1 )
         {
             // If Fourier points, output extra plane to fill domain
             if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D)

@@ -101,6 +101,7 @@ Array<OneD, NekDouble> ExpList_HelmSolve(
     const py::object constFactorMap)
 {
     Array<OneD, NekDouble> out(exp->GetNcoeffs());
+    Vmath::Zero(exp->GetNcoeffs(),out,1);
 
     StdRegions::ConstFactorMap facMap = StdRegions::NullConstFactorMap;
     if (!constFactorMap.is_none())

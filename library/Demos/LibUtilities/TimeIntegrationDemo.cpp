@@ -193,11 +193,12 @@ int main(int argc, char *argv[])
                     "     (Euler Backwards/Euler Forwards)\n"
                     "- 2: 2nd order multi-step IMEX scheme\n"
                     "- 3: 3rd order multi-step IMEX scheme\n"
-                    "- 4: 2nd order multi-stage DIRK IMEX scheme\n"
-                    "- 5: 3nd order multi-stage DIRK IMEX scheme\n"
-                    "- 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
-                    "- 7: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
-                    "- 8: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
+                    "- 4: 4th order multi-step IMEX scheme\n"
+                    "- 5: 2nd order multi-stage DIRK IMEX scheme\n"
+                    "- 6: 3nd order multi-stage DIRK IMEX scheme\n"
+                    "- 7: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
+                    "- 8: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
+                    "- 9: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
                     "     (MCNAB)"
         );
     po::variables_map vm;
@@ -290,19 +291,29 @@ int main(int argc, char *argv[])
         break;
     case 4 :
         {
-            nSteps = 1;
+            nSteps = 4;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXdirk_2_3_2;
+            method[0] = eIMEXdirk_3_4_3; // the start-up method for step 1
+            method[1] = eIMEXdirk_3_4_3; // the start-up method for step 2
+            method[2] = eIMEXOrder3;     // the start-up method for step 3
+            method[3] = eIMEXOrder4;
         }
         break;
     case 5 :
         {
             nSteps = 1;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXdirk_3_4_3;
+            method[0] = eIMEXdirk_2_3_2;
         }
         break;
     case 6 :
+        {
+            nSteps = 1;
+            method = Array<OneD, TimeIntegrationMethod>(nSteps);
+            method[0] = eIMEXdirk_3_4_3;
+        }
+        break;
+    case 7 :
         {
             nSteps = 2;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);
@@ -311,7 +322,7 @@ int main(int argc, char *argv[])
 
         }
         break;
-    case 7 :
+    case 8 :
         {
             nSteps = 3;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);
@@ -321,7 +332,7 @@ int main(int argc, char *argv[])
 
         }
         break;
-    case 8 :
+    case 9 :
         {
             nSteps = 3;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);

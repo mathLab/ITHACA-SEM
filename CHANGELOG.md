@@ -1,6 +1,14 @@
 Changelog
 =========
 
+v5.1.0
+------
+**Library**
+- Added IMEXOrder4, RK5 and AB4 time integration schemes (!1037)
+
+**FieldConvert**
+- Add field conversion from Halfmode to SingleMode (!1032)
+
 v5.0.0
 ------
 **Library**
@@ -135,7 +143,6 @@ v5.0.0
 - Fixed nparts option in FieldConvert and automated Info.xml generation (!995)
 - Added if statement to fix case of 1D/2D manifold interpolation in 1D/2D space,
   added check on dimensions for interpolation, fixed seg interp (!999)
-- Add field conversion from Halfmode to SingleMode (!1032)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on

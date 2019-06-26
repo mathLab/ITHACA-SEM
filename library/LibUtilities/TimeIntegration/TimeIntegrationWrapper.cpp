@@ -107,6 +107,27 @@ namespace LibUtilities {
     }
 
     // --------------
+    // IMEXOrder4
+    // --------------
+    string TimeIntegrationIMEXOrder4::className =
+        GetTimeIntegrationWrapperFactory().RegisterCreatorFunction(
+            "IMEXOrder4", TimeIntegrationIMEXOrder4::create);
+    void TimeIntegrationIMEXOrder4::v_InitObject()
+    {
+        TimeIntegrationSchemeKey IntKey0(eIMEXdirk_2_3_3);
+        TimeIntegrationSchemeKey IntKey1(eIMEXdirk_2_3_3);
+        TimeIntegrationSchemeKey IntKey2(eIMEXOrder3);
+        TimeIntegrationSchemeKey IntKey3(eIMEXOrder4);
+        m_method       = eIMEXOrder4;
+        m_intSteps     = 4;
+        m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
+        m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+        m_intScheme[1] = TimeIntegrationSchemeManager()[IntKey1];
+        m_intScheme[2] = TimeIntegrationSchemeManager()[IntKey2];
+	    m_intScheme[3] = TimeIntegrationSchemeManager()[IntKey3];
+    }
+
+    // --------------
     // ForwardEuler
     // --------------
     string TimeIntegrationForwardEuler::className =
@@ -428,6 +449,22 @@ namespace LibUtilities {
     }
 
     // --------------
+    // RungeKutta5
+    // --------------
+    string TimeIntegrationRungeKutta5::className =
+        GetTimeIntegrationWrapperFactory().RegisterCreatorFunction(
+            "RungeKutta5",
+            TimeIntegrationRungeKutta5::create);
+    void TimeIntegrationRungeKutta5::v_InitObject()
+    {
+        TimeIntegrationSchemeKey IntKey0(eRungeKutta5);
+        m_method       = eRungeKutta5;
+        m_intSteps     = 1;
+        m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
+        m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+    // --------------
     // AdamsBashforthOrder2
     // --------------
     string TimeIntegrationAdamsBashforthOrder2::className =
@@ -454,13 +491,37 @@ namespace LibUtilities {
             TimeIntegrationAdamsBashforthOrder3::create);
     void TimeIntegrationAdamsBashforthOrder3::v_InitObject()
     {
-        TimeIntegrationSchemeKey IntKey0(eForwardEuler);
-        TimeIntegrationSchemeKey IntKey1(eAdamsBashforthOrder3);
+        TimeIntegrationSchemeKey IntKey0(eRungeKutta2);
+        TimeIntegrationSchemeKey IntKey1(eAdamsBashforthOrder2);
+        TimeIntegrationSchemeKey IntKey2(eAdamsBashforthOrder3);
         m_method       = eAdamsBashforthOrder3;
-        m_intSteps     = 2;
+        m_intSteps     = 3;
         m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
         m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
         m_intScheme[1] = TimeIntegrationSchemeManager()[IntKey1];
+        m_intScheme[2] = TimeIntegrationSchemeManager()[IntKey2];
+    }
+
+    // --------------
+    // AdamsBashforthOrder4
+    // --------------
+    string TimeIntegrationAdamsBashforthOrder4::className =
+        GetTimeIntegrationWrapperFactory().RegisterCreatorFunction(
+            "AdamsBashforthOrder4",
+            TimeIntegrationAdamsBashforthOrder4::create);
+    void TimeIntegrationAdamsBashforthOrder4::v_InitObject()
+    {
+        TimeIntegrationSchemeKey IntKey0(eRungeKutta3_SSP);
+        TimeIntegrationSchemeKey IntKey1(eRungeKutta3_SSP);
+        TimeIntegrationSchemeKey IntKey2(eAdamsBashforthOrder3);
+        TimeIntegrationSchemeKey IntKey3(eAdamsBashforthOrder4);
+        m_method       = eAdamsBashforthOrder4;
+        m_intSteps     = 4;
+        m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
+        m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+        m_intScheme[1] = TimeIntegrationSchemeManager()[IntKey1];
+        m_intScheme[2] = TimeIntegrationSchemeManager()[IntKey2];
+        m_intScheme[3] = TimeIntegrationSchemeManager()[IntKey3];
     }
 
     // --------------
@@ -489,7 +550,7 @@ namespace LibUtilities {
             "IMEXGear", TimeIntegrationIMEXGear::create);
     void TimeIntegrationIMEXGear::v_InitObject()
     {
-        TimeIntegrationSchemeKey IntKey0(eIMEXdirk_2_2_2);
+        TimeIntegrationSchemeKey IntKey0(eIMEXOrder1);
         TimeIntegrationSchemeKey IntKey1(eIMEXGear);
         m_method       = eIMEXGear;
         m_intSteps     = 2;
@@ -497,7 +558,7 @@ namespace LibUtilities {
         m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
         m_intScheme[1] = TimeIntegrationSchemeManager()[IntKey1];
     }
-
+      
     // --------------
     // CNAB
     // --------------
@@ -506,16 +567,14 @@ namespace LibUtilities {
             "CNAB", TimeIntegrationCNAB::create);
     void TimeIntegrationCNAB::v_InitObject()
     {
-        TimeIntegrationSchemeKey IntKey0(eIMEXdirk_3_4_3);
-        TimeIntegrationSchemeKey IntKey1(eIMEXdirk_3_4_3);
-        TimeIntegrationSchemeKey IntKey2(eCNAB);
-        m_method       = eCNAB;
-        m_intSteps     = 3;
-        m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
-        m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
-        m_intScheme[1] = TimeIntegrationSchemeManager()[IntKey1];
-        m_intScheme[2] = TimeIntegrationSchemeManager()[IntKey2];
-    }
+         TimeIntegrationSchemeKey IntKey0(eIMEXOrder1);        
+         TimeIntegrationSchemeKey IntKey1(eCNAB);
+         m_method       = eCNAB;
+         m_intSteps     = 2;
+         m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
+         m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+         m_intScheme[1] = TimeIntegrationSchemeManager()[IntKey1];        
+    }  
 
     // --------------
     // MCNAB

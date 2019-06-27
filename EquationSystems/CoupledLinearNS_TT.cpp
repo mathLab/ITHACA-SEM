@@ -3452,13 +3452,22 @@ namespace Nektar
 			sstm << "bif_diagr_online" << RBsize<<".txt";
 			std::string bif_diagr_name = sstm.str();
 			const char * bif_diagr_name_char = bif_diagr_name.c_str();
-	
 			std::ofstream outfile_online;
 			outfile_online.open(bif_diagr_name_char, std::ios::out);
 			
+			std::ofstream error_outfile;
+			if(create_error_file)
+			{
+				std::stringstream sstm2;
+				sstm2 << "errors_" << RBsize<<".txt";
+				std::string error_file_name = sstm2.str();
+				const char * error_file_name_char = error_file_name.c_str();
+				error_outfile.open(error_file_name_char, std::ios::out);
+			}
+			
 			unsigned int iterations, curr_j;
 			Timer timer;
-			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], total_steps = 15.0, tol = 1e-4, scaling_steps = 10, current_scaling = 1;
+			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], total_steps = 20.0, tol = 1e-4, scaling_steps = 4, current_scaling = 1;
 			double rel_err, M, strength, norm_min, tau, last_tau;
 			unsigned int total_solutions = 0, last_first_param_index = 0, number_of_solutions, restart_for_scaling = 0, no_restarts_for_scaling = 0;
 			std::vector<int> indices_to_be_continued, local_indices_to_be_continued;
@@ -3466,11 +3475,12 @@ namespace Nektar
 			bool first_step = true, danger = false;
 			
 			Eigen::VectorXd reconstruct_solution, temp_solve_affine, repro_solve_affine;
-			std::vector<Eigen::VectorXd> solve_affine;
 			Eigen::VectorXd last_sol = Eigen::VectorXd::Zero(RBsize); 
 			Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[0], snapshot_y_collection[0]);
 			Eigen::VectorXd affine_vec_proj = gen_affine_vec_proj(first_param, 0);
 			
+			solve_affine.clear(); //useful in compare_accuracy_mode
+			solve_affine.resize(0);
 			//I compute the first solution						////////////////////////////////////////////////////////////////////////////////////////////////////
 			cout<<"First solution with viscosity = "<<first_param<<endl;
 			rel_err = 1;
@@ -3499,6 +3509,9 @@ namespace Nektar
 					//outfile_online<<first_param<<" "<<reconstruct_solution[1196]<<endl; 
 					outfile_online<<first_param<<" "<<param_vector2[0]<<" "<<FarrelOutput(reconstruct_solution)<<endl; 
 					cout<<endl;
+					
+					if(create_error_file)	
+						error_analysis(0, param_vector[0], param_vector2[0], error_outfile);
 					
 					if (write_ROM_field)
 					{
@@ -3675,6 +3688,8 @@ namespace Nektar
 								cout<<"Converged in "<<iterations<<" steps"<<endl;
 								solve_affine.push_back(temp_solve_affine);
 								local_indices_to_be_continued.push_back(total_solutions);
+								if(create_error_file)	
+									error_analysis(total_solutions, current_nu, current_scaling, error_outfile);
 								total_solutions++;
 								
 								//outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
@@ -3700,7 +3715,7 @@ namespace Nektar
 					
 					//deflation						////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					cout<<"Deflation over "<<local_indices_to_be_continued.size()<<" solutions"<<endl;
-					bool use_deflation_now = ((local_indices_to_be_continued.size()<3 && current_nu<0.97*current_scaling)|| (current_nu<0.405*current_scaling && local_indices_to_be_continued.size()<5));
+					bool use_deflation_now = ((local_indices_to_be_continued.size()<3 && current_nu<0.973*current_scaling)|| (current_nu<0.4055*current_scaling && local_indices_to_be_continued.size()<5));
 					for(int j = 0; j < local_indices_to_be_continued.size() && use_deflation_now; j++)
 					{
 						curr_j = local_indices_to_be_continued[j];
@@ -3855,6 +3870,8 @@ namespace Nektar
 								cout<<"Converged in "<<iterations<<" steps with norm_min = "<<norm_min<<endl;
 								solve_affine.push_back(temp_solve_affine);
 								local_indices_to_be_continued.push_back(total_solutions);
+								if(create_error_file)	
+									error_analysis(total_solutions, current_nu, current_scaling, error_outfile);
 								total_solutions++;
 								
 								//outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
@@ -3905,10 +3922,10 @@ namespace Nektar
 							}  
 							
 							curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
-							bool real_Newton = use_Newton;
-							use_Newton = false;
+							//bool real_Newton = use_Newton;
+							//use_Newton = false;
 							affine_vec_proj = gen_affine_vec(current_nu, current_scaling, reconstruct_solution);
-							use_Newton = real_Newton;
+							//use_Newton = real_Newton;
 							
 							while(rel_err > tol && ++iterations<100)
 							{
@@ -3970,6 +3987,8 @@ namespace Nektar
 									cout<<"Converged in "<<iterations<<" steps with norm_min = "<<norm_min<<endl;
 									solve_affine.push_back(temp_solve_affine);
 									local_indices_to_be_continued.push_back(total_solutions);
+									if(create_error_file)	
+										error_analysis(total_solutions, current_nu, current_scaling, error_outfile);
 									total_solutions++;
 									
 									outfile_online<<current_nu<<" "<<current_scaling<<" "<<FarrelOutput(reconstruct_solution)<<endl; 
@@ -4175,6 +4194,14 @@ namespace Nektar
 	else
 	{
 		use_Newton = 0;
+	}
+	if (m_session->DefinesParameter("create_error_file")) 
+	{
+		create_error_file = m_session->GetParameter("create_error_file");
+	}
+	else
+	{
+		create_error_file = 0;
 	}
 	if (m_session->DefinesParameter("compare_accuracy_mode")) 
 	{
@@ -4480,6 +4507,7 @@ namespace Nektar
 			
 			use_Newton = 1; 
 			offline_average_time = babyCLNS_trafo.total_solve_time/babyCLNS_trafo.no_total_solve;
+			//second_CLNStrafo = babyCLNS_trafo;
 		}
 		else
 		{
@@ -4533,8 +4561,9 @@ namespace Nektar
 	}
 	
 	int final_RBsize;
+	//RBsize = 46;
 	if(compare_accuracy_mode) 
-		final_RBsize = 60;//Nmax;
+		final_RBsize = 80;//Nmax;
 	else
 		final_RBsize = RBsize;
 	while(RBsize <= final_RBsize) 
@@ -4587,7 +4616,7 @@ namespace Nektar
 	{
 		online_phase();
 	}
-	RBsize+= 1;
+	RBsize+= 3;
 }
 RBsize--;
 
@@ -5224,6 +5253,46 @@ RBsize--;
 		sign = round(sign/fabs(sign));	
 		
 		return sign * m_fields[0]->L2(farr_x);
+    }
+    
+    void CoupledLinearNS_TT::error_analysis(int index_sol, double nu, double scaling, std::ofstream &outfile)
+    {
+    	m_session->SetSolverInfo("SolverType", "CoupledLinearisedNS_trafoP");
+		CoupledLinearNS_trafoP second_CLNStrafo(m_session);
+		second_CLNStrafo.InitObject();
+	
+    	Eigen::VectorXd sol = solve_affine[index_sol];
+		Eigen::VectorXd repro_solve_affine = RB * sol;
+		Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_different_dbc(repro_solve_affine, scaling);
+		std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
+		
+		second_CLNStrafo.Set_m_kinvis(nu);
+		second_CLNStrafo.second_param = scaling;
+		second_CLNStrafo.deflate = false;
+		second_CLNStrafo.use_Newton = true;
+		second_CLNStrafo.write_SEM_field = false;
+		second_CLNStrafo.start_with_Oseen = false;
+		second_CLNStrafo.snapshot_computation_plot_rel_errors = false;
+		
+		second_CLNStrafo.sol_x_cont_defl = Array<OneD, Array<OneD, NekDouble> > (1);
+		second_CLNStrafo.sol_y_cont_defl = Array<OneD, Array<OneD, NekDouble> > (1);
+		
+		second_CLNStrafo.sol_x_cont_defl[0] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		second_CLNStrafo.sol_y_cont_defl[0] = Array<OneD, NekDouble> (GetNpoints(), 0.0);  
+		
+		second_CLNStrafo.total_solutions_found = 0;
+		
+		
+		Array<OneD, Array<OneD, NekDouble> > truth_sol = second_CLNStrafo.DoSolve_at_param_continuation(reprojection[0], reprojection[1], nu);
+		
+		for(unsigned int i = 0; i < reprojection[0].num_elements(); i++)
+		{
+			reprojection[0][i] = reprojection[0][i] - truth_sol[0][i];
+			reprojection[1][i] = reprojection[1][i] - truth_sol[1][i];
+		}  
+		
+		
+		outfile<<nu<<" "<<scaling<<" "<<second_CLNStrafo.L2_norm(reprojection[0],reprojection[1]) / second_CLNStrafo.L2_norm(truth_sol[0],truth_sol[1])<<endl;
     }
     
 }

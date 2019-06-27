@@ -53,6 +53,7 @@ namespace Nektar
     {
     public:
         friend class MemoryManager<CoupledLinearNS_TT>;
+        friend class Nektar::SolverUtils::EquationSystem;
         //friend class CoupledLinearNS_trafoP;
         
         /// Creates an instance of this class
@@ -222,6 +223,7 @@ namespace Nektar
 	std::vector< Array<OneD, double> > reproject_back(Eigen::VectorXd);
 	double FarrelOutput(Eigen::VectorXd);
 	Eigen::VectorXd reconstruct_solution_w_different_dbc(Eigen::VectorXd, double);
+	void error_analysis(int, double, double, std::ofstream &);
 	
 	std::vector<int> flipperMap;
 	int max_dimension;
@@ -229,6 +231,8 @@ namespace Nektar
 	Array<OneD, NekDouble> param_vector2;
 	NekDouble offline_average_time, online_average_time;
 	unsigned int online_no_solves;
+	std::vector<Eigen::VectorXd> solve_affine;
+	bool create_error_file;
 	
 	
 

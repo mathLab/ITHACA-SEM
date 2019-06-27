@@ -3041,7 +3041,7 @@ namespace Nektar
 		Array<OneD, Array<OneD, NekDouble> > converged_solution(2), possible_solutions;
 		
 		
-		//int index = 43; // random number
+		int index = 43; // random number
 		WritePhysCoordIndicesMapping();
 			std::ifstream infile;
 			infile.open("mf1.txt", std::ios::in);
@@ -3052,6 +3052,10 @@ namespace Nektar
 			std::vector<double> x, y;
 			while(infile >> x1 >>y1 >> z1)
 			{
+				if((x1 == 2 && y1 == 0.5) || finished)
+					finished = true;
+				else
+					index++;
 				x.push_back(x1);
 				y.push_back(y1);
 			}
@@ -3707,6 +3711,14 @@ namespace Nektar
         cout<<"end of ComputeContinuationGuessGivenNi with m_kinvis = "<<m_kinvis<<endl;
 	}
 
+	
+	double CoupledLinearNS_trafoP::L2_norm(Array<OneD, NekDouble> u, Array<OneD, NekDouble> v)
+	{
+		double normx = m_fields[0]->L2(u);
+		double normy = m_fields[1]->L2(v);
+		
+		return sqrt(normx*normx + normy*normy);
+	}
 }
 
 /**

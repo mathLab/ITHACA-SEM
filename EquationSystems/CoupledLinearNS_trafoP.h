@@ -173,6 +173,8 @@ namespace Nektar
 	
 	NekDouble total_solve_time;
 	unsigned int no_total_solve;
+	
+	double L2_norm(Array<OneD, NekDouble> u, Array<OneD, NekDouble> v);
 
     protected:
 

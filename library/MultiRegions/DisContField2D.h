@@ -390,6 +390,12 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fwd,
                 const Array<OneD, const NekDouble> &Bwd,
                     Array<OneD,       NekDouble> &field);
+                    
+            virtual void v_GetLocTraceFromTracePts(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &locTraceFwd,
+                Array<OneD,       NekDouble>        &locTraceBwd);
 
             virtual void v_PeriodicBwdCopy(
                 const Array<OneD, const NekDouble> &Fwd,

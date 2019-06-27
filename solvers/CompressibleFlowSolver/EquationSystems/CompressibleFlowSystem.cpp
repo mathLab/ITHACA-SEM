@@ -188,6 +188,23 @@ namespace Nektar
                 AllocatePrecondBlkDiag_coeff(m_PrecMatVars);
             }
 
+            int nvariables  =   m_fields.num_elements();
+            Array<OneD, Array<OneD, Array<OneD, int > > >   map;
+            bool flag;
+            const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap = m_fields[0]->GetlocTraceToTraceMap();
+            m_fields[0]->CalcuTracephysToLeftRightExpphysMap(flag,map);
+            locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(map);
+            locTraceToTraceMap->SetflagTracephysToLeftRightExpphysMap(flag);
+
+            locTraceToTraceMap->CalcuLocTracephysToTraceIDMap(m_fields[0]->GetTrace(),m_spacedim);
+            for(int i=1;i<nvariables;i++)
+            {
+                m_fields[i]->GetlocTraceToTraceMap()->SetTracephysToLeftRightExpphysMap(map);
+                m_fields[i]->GetlocTraceToTraceMap()->SetflagTracephysToLeftRightExpphysMap(flag);
+                m_fields[i]->GetlocTraceToTraceMap()->SetLocTracephysToTraceIDMap(
+                    locTraceToTraceMap->GetLocTracephysToTraceIDMap()    );
+            }
+
 #else
             ASSERTL0(false, "Implicit CFS not set up.");
 #endif
@@ -616,7 +633,11 @@ namespace Nektar
                 FwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts,0.0);
                 BwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts,0.0);
             }
+#ifdef DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT
+            bool flagUpdateDervFlux = true;
+#else
             bool flagUpdateDervFlux = false;
+#endif
 
             Array<OneD, NekVector<NekDouble> > tmparray(nvariables);
             for(int nsor = 0; nsor < nSORTot-1; nsor++)
@@ -638,7 +659,9 @@ namespace Nektar
                     }
                 }
                 Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
-                flagUpdateDervFlux = false;
+#ifdef DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT
+                flagUpdateDervFlux = true;
+#endif
             }
         }
     }
@@ -909,39 +932,46 @@ namespace Nektar
             normal3D[i] = Array<OneD, NekDouble>(npoints,0.0);
         }
 
-        Array<OneD, Array<OneD, DNekMatSharedPtr> > ElmtJac;
+        std::shared_ptr<LocalRegions::ExpansionVector> expvect =    m_fields[0]->GetExp();
+        int ntotElmt            = (*expvect).size();
 
-        for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > ElmtJacArray(nvariable); // Nvar*Nvar*Ndir*Nelmt*Npnt
+        for(int m=0; m<nvariable;m++)
         {
-            GetFluxVectorJacDirctn(nfluxDir,inarray, ElmtJac);
-// std::shared_ptr<LocalRegions::ExpansionVector> expvect =    m_fields[0]->GetExp();
-// int ntotElmt            = (*expvect).size();
-// for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-// {
-//     int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
-//     for(int npnt = 0; npnt < nElmtPnt; npnt++)
-//     {
-//         (*ElmtJac[nelmt][npnt]) = 0.0;
-//     }
-// }
-            //TODO:
-#ifdef DEBUG_VISCOUS_JAC_MAT
-            MinusDiffusionFluxJacDirctn(nfluxDir,inarray,qfield, ElmtJac);
-#endif
-            m_advObject->AddVolumJacToMat(nvariable,m_fields,ElmtJac,nfluxDir,gmtxarray);
+            ElmtJacArray[m] =   Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >(nvariable);
+            for(int n=0; n<nvariable;n++)
+            {
+                ElmtJacArray[m][n] =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_spacedim);
+                for(int ndir=0; ndir<m_spacedim;ndir++)
+                {
+                    ElmtJacArray[m][n][ndir] =   Array<OneD, Array<OneD, NekDouble> > (ntotElmt);
+                    for(int ne=0; ne<ntotElmt;ne++)
+                    {
+                        int nElmtPnt            = (*expvect)[ne]->GetTotPoints();
+                        ElmtJacArray[m][n][ndir][ne] =   Array<OneD, NekDouble> (nElmtPnt,0.0);
+                    }
+                }
+            }
         }
 
-#ifdef DEBUG_VISCOUS_JAC_MAT
         for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
         {
-            Vmath::Fill(npoints,1.0,normal3D[nfluxDir],1);
-             for(int nDervDir = 0; nDervDir < nSpaceDim; nDervDir++)
+            GetFluxVectorJacDirctn(nfluxDir,inarray, ElmtJacArray);
+#ifdef DEBUG_VISCOUS_JAC_MAT
+            MinusDiffusionFluxJacDirctn(nfluxDir,inarray,qfield, ElmtJacArray);
+#endif
+        }
+        m_advObject->AddVolumJacToMat(m_fields,nvariable,ElmtJacArray,gmtxarray);
+#ifdef DEBUG_VISCOUS_JAC_MAT
+        for(int nDervDir = 0; nDervDir < nSpaceDim; nDervDir++)
+        {
+            for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
             {
-                GetFluxDerivJacDirctn(m_fields[0],normal3D,nDervDir,inarray,ElmtJac);
-
-                m_diffusion->MinusVolumDerivJacToMat(nvariable,m_fields,ElmtJac,nfluxDir,nDervDir,gmtxarray);
+                Vmath::Fill(npoints,1.0,normal3D[nfluxDir],1);
+                GetFluxDerivJacDirctn(m_fields[0],normal3D,nDervDir,inarray,ElmtJacArray,nfluxDir);
+                Vmath::Fill(npoints,0.0,normal3D[nfluxDir],1);
             }
-            Vmath::Fill(npoints,0.0,normal3D[nfluxDir],1);
+            m_diffusion->MinusVolumDerivJacToMat(nvariable,m_fields,ElmtJacArray,nDervDir,gmtxarray);
         }
 #endif
     }
@@ -1030,6 +1060,7 @@ namespace Nektar
         TraceJac[1] = BJac;
 #ifdef DEBUG_VISCOUS_JAC_MAT
 
+#ifdef DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT
         int nDeriv = m_spacedim *nvariables;
         Array<OneD, unsigned int> n_blks2(nTracePts);
         for(int i=0;i<nTracePts;i++)
@@ -1071,6 +1102,7 @@ namespace Nektar
             TraceJacDerivSign[0]    =  Array<OneD, NekDouble> (nTracePts,1.0);
             TraceJacDerivSign[1]    =  Array<OneD, NekDouble> (nTracePts,1.0);
         }
+#endif
 #endif
     }
 
@@ -1619,8 +1651,16 @@ namespace Nektar
                     resmaxm = max(resmaxm,abs(NonlinSysRes_1D[i]));
                 }
                 v_Comm->AllReduce(resmaxm, Nektar::LibUtilities::ReduceMax);
-                if(resmaxm<tol2Max)
+                if((resmaxm<tol2Max)&&k>0)
                 {
+
+                    // if(l_verbose)
+                    // {
+                    //     cout    << " resratio= "<<resratio<< " tol2Ratio= "<<tol2Ratio
+                    //             << " resnorm= "<<resnorm<< " tol2= "<<tol2
+                    //             << " resmaxm= "<<resmaxm<< " tol2Max= "<<tol2Max<< endl;
+                    // }
+
                 // at least one Newton Iteration
                 // or else the flow field will not update
                 // if(k>0)
@@ -1724,10 +1764,8 @@ namespace Nektar
         AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray);
 
         AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv,TraceJacDerivSign);
-
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
-// Cout2DArrayBlkMat(gmtxarray);
-// ASSERTL0(false, "debug stop");
+
         ElmtVarInvMtrx(gmtxarray);
     }
 
@@ -2276,7 +2314,7 @@ namespace Nektar
     void CompressibleFlowSystem::GetFluxVectorJacDirctn(
         const int                                           nDirctn,
         const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
-              Array<OneD, Array<OneD, DNekMatSharedPtr> >   &ElmtJac)
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray)
     {
         int nConvectiveFields   = inarray.num_elements();
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =    m_fields[0]->GetExp();
@@ -2295,25 +2333,9 @@ namespace Nektar
         normal3D[2][2] = 1.0;
         normals =   normal3D[nDirctn];
 
-        if(!ElmtJac.num_elements())
-        {
-            ElmtJac =   Array<OneD, Array<OneD, DNekMatSharedPtr> > (ntotElmt);
-            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-            {
-                int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
-                ElmtJac[nelmt] =   Array<OneD, DNekMatSharedPtr>(nElmtPnt);
-                for(int npnt = 0; npnt < nElmtPnt; npnt++)
-                {
-                    ElmtJac[nelmt][npnt] = MemoryManager<DNekMat>
-                        ::AllocateSharedPtr(nConvectiveFields, nConvectiveFields);
-                }
-            }
-        }
-
         Array<OneD, NekDouble> pointVar(nConvectiveFields,0.0);
-
         Array<OneD, Array<OneD, NekDouble> > locVars(nConvectiveFields);
-
+        DNekMatSharedPtr pointJac = MemoryManager<DNekMat>::AllocateSharedPtr(nConvectiveFields,nConvectiveFields,0.0);
 
         for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
         {
@@ -2332,7 +2354,15 @@ namespace Nektar
                     pointVar[j] = locVars[j][npnt];
                 }
 
-                GetFluxVectorJacPoint(pointVar,normals,ElmtJac[nelmt][npnt]);
+                GetFluxVectorJacPoint(pointVar,normals,pointJac);
+
+                for(int m=0;m<nConvectiveFields;m++)
+                {
+                    for(int n=0;n<nConvectiveFields;n++)
+                    {
+                        ElmtJacArray[m][n][nDirctn][nelmt][npnt] = (*pointJac)(m,n);
+                    }
+                }
             }
         }
         return ;
@@ -2355,7 +2385,7 @@ namespace Nektar
 
         // TODO:: AVOID frequent allocating and releasing
         DNekMatSharedPtr PointFJac3D = MemoryManager<DNekMat>
-            ::AllocateSharedPtr(nvariables3D, nvariables3D);
+            ::AllocateSharedPtr(nvariables3D, nvariables3D,0.0);
 
         Array<OneD, NekDouble> PointFwd(nvariables3D,0.0);
 
@@ -3153,6 +3183,16 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >                &normals,
             const int                                                       nDervDir,
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray,
+            const int                                                       nfluxDir)
+    {
+        ASSERTL0(false, "v_GetFluxDerivJacDirctn not coded");
+    }
+    void CompressibleFlowSystem::v_GetFluxDerivJacDirctn(
+            const MultiRegions::ExpListSharedPtr                            &explist,
+            const Array<OneD, const Array<OneD, NekDouble> >                &normals,
+            const int                                                       nDervDir,
+            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
                   Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
     {
         ASSERTL0(false, "v_GetFluxDerivJacDirctn not coded");
@@ -3184,10 +3224,11 @@ namespace Nektar
             const int                                                       nDirctn,
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
-                  Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray)
     {
         ASSERTL0(false, "not coded");
     }
+
 #endif
 
 /**

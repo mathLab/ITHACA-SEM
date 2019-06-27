@@ -136,7 +136,8 @@ namespace Nektar
             NekDouble   m_inArrayNorm=-1.0;
 
             bool m_CalcuPrecMatFlag     = true;
-            int  m_CalcuPrecMatCounter  = NekConstants::kNekLargeInt;
+
+            int m_CalcuPrecMatCounter  = std::numeric_limits<int>::max();
 
             int m_TotLinItePerStep=600;
 

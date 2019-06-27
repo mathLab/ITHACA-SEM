@@ -1037,6 +1037,7 @@ namespace Nektar
 
         /**
          */
+        //TODO: Call the version with 4 parameters to remove duplication
         void DisContField1D::v_AddTraceQuadPhysToField(
             const Array<OneD, const NekDouble> &Fwd,
             const Array<OneD, const NekDouble> &Bwd,
@@ -1083,7 +1084,6 @@ namespace Nektar
                 }
             }
         }
-        
 	
         void DisContField1D::v_ExtractTracePhys(
             Array<OneD, NekDouble> &outarray)

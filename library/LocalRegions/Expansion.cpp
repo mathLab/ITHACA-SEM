@@ -398,6 +398,14 @@ namespace Nektar
                       "m_ElmtBndNormalDirctnElmtLength normal not computed.");
             return x->second;
         }
+
+        void Expansion::v_ProjectVectorintoStandardExp(
+                    const int dir, 
+                    const Array<OneD, const NekDouble>      &inarray, 
+                    Array<OneD, Array<OneD, NekDouble> >    &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "v_ProjectVectorintoStandardExp is not defined");
+        }
     } //end of namespace
 } //end of namespace
 

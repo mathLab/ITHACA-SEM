@@ -204,6 +204,10 @@ namespace Nektar
             std::map<int, NormalVector> m_faceNormals;
             std::map<int, bool> m_negatedNormals;
 
+            STD_REGIONS_EXPORT virtual void v_GenStdMatBwdDeriv(
+                  const int dir,
+                  DNekMatSharedPtr &mat);
+
         private:
 
             virtual int v_GetShapeDimension() const

@@ -126,6 +126,14 @@ namespace Nektar
 
                 LOCAL_REGIONS_EXPORT const Array<OneD, const NekDouble > &GetElmtBndNormalDirctnElmtLength(const int nbnd) const;
 
+                LOCAL_REGIONS_EXPORT void ProjectVectorintoStandardExp(
+                    const int dir, 
+                    const Array<OneD, const NekDouble>      &inarray, 
+                    Array<OneD, Array<OneD, NekDouble> >    &outarray)
+                {
+                    v_ProjectVectorintoStandardExp(dir,inarray,outarray);
+                }
+
             protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;
                 SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
@@ -190,6 +198,11 @@ namespace Nektar
                 virtual NekDouble v_VectorFlux(
                     const Array<OneD, Array<OneD, NekDouble > > &vec);
 
+                virtual void v_ProjectVectorintoStandardExp(
+                    const int dir, 
+                    const Array<OneD, const NekDouble>      &inarray, 
+                    Array<OneD, Array<OneD, NekDouble> >    &outarray);
+                    
             private:
 
         };

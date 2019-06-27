@@ -582,13 +582,6 @@ namespace Nektar
             m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::
                 AllocateSharedPtr(*this, m_trace, elmtToTrace,
                                   m_leftAdjacentEdges);
-
-            Array<OneD, Array<OneD, Array<OneD, int > > >   map;
-            bool flag;
-            CalcuTracephysToLeftRightExpphysMap(flag,map);
-            m_locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(map);
-            m_locTraceToTraceMap->SetflagTracephysToLeftRightExpphysMap(flag);
-
             // set up the trace normal direction element length.
             // SetupElmtLengthTraceNormal();
         }
@@ -1421,8 +1414,7 @@ namespace Nektar
             }
             DisContField2D::v_PeriodicBwdCopy(Fwd,Bwd);
         }
-
-
+        
         /**
          */
         void DisContField2D::v_AddTraceQuadPhysToField(
@@ -1450,6 +1442,25 @@ namespace Nektar
             else
             {
                 ASSERTL0(false, "v_AddTraceQuadPhysToField not coded for eGauss_Lagrange");                
+            }
+        }
+
+        void DisContField2D::v_GetLocTraceFromTracePts(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &locTraceFwd,
+                Array<OneD,       NekDouble>        &locTraceBwd)
+        {
+            LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+            if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
+            {
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(1, Bwd, locTraceBwd);
+                
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(0, Fwd, locTraceFwd);
+            }
+            else
+            {
+                ASSERTL0(false, "v_GetLocTraceFromTracePts not coded for eGauss_Lagrange");                
             }
         }
 

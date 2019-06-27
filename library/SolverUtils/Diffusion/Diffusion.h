@@ -377,6 +377,7 @@ namespace Nektar
                 return v_GetTraceNormal();
             }
 
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             void MinusVolumDerivJacToMat(
                 const int                                                   nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>           &pFields,
@@ -514,15 +515,15 @@ namespace Nektar
             virtual const Array<OneD, const Array<OneD, NekDouble> > &v_GetTraceNormal();
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-<<<<<<< HEAD
             virtual void v_MinusVolumDerivJacToMat(
-                const int                                               nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
-                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
-                const int                                               nfluxDir,
-                const int                                               nDervDir,
-                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray);
-#endif,
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &pFields,
+                const Array<OneD, const Array<OneD,  Array<OneD,
+                    Array<OneD,  Array<OneD,  NekDouble> > > > >            &ElmtJacArray,
+                const int                                                   nDervDir,
+                Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >              &gmtxarray);
+#endif
+
 
             /// Compute primary derivatives
             virtual void v_GetPrimVar(
@@ -537,18 +538,7 @@ namespace Nektar
 
         };
 
-=======
-            virtual void v_MinusVolumDerivJacToMat(
-                const int                                                   nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>           &pFields,
-                const Array<OneD, const Array<OneD,  Array<OneD,
-                    Array<OneD,  Array<OneD,  NekDouble> > > > >            &ElmtJacArray,
-                const int                                                   nDervDir,
-                Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >              &gmtxarray);
-#endif
-        };
 
->>>>>>> feature_ImplicitSolver_UWI_VisJac
         /// A shared pointer to an EquationSystem object
         typedef std::shared_ptr<Diffusion> DiffusionSharedPtr;
 

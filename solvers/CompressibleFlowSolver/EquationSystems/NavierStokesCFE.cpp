@@ -1321,62 +1321,6 @@ namespace Nektar
         }
     }
 
-    /*1*
-     * @brief aplly Neuman boundary conditions on flux
-     *        Currently only consider WallAdiabatic
-     *
-     */
-    void NavierStokesCFE::ApplyFluxBndConds(
-        const int                                           nConvectiveFields,
-              Array<OneD,       Array<OneD, NekDouble> >    &flux)
-    {
-        int ndens       = 0;
-        int nengy       = nConvectiveFields-1;
-        int nvelst      = ndens + 1;
-        int nveled      = nengy;
-
-        int cnt;
-        int j, e;
-        int id2;
-
-        int nBndEdgePts, nBndEdges, nBndRegions;
-
-        int nLengthArray    =0;
-
-        // Compute boundary conditions  for Energy
-        cnt = 0;
-        nBndRegions = m_fields[nengy]->
-        GetBndCondExpansions().num_elements();
-        for (j = 0; j < nBndRegions; ++j)
-        {
-            if (m_fields[nengy]->GetBndConditions()[j]->
-                GetBoundaryConditionType() ==
-                SpatialDomains::ePeriodic)
-            {
-                continue;
-            }
-
-            nBndEdges = m_fields[nengy]->
-            GetBndCondExpansions()[j]->GetExpSize();
-            for (e = 0; e < nBndEdges; ++e)
-            {
-                nBndEdgePts = m_fields[nengy]->
-                GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
-
-                id2 = m_fields[0]->GetTrace()->
-                GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                            GetBndCondTraceToGlobalTraceMap(cnt++));
-
-                // Imposing Temperature Twall at the wall
-                if (boost::iequals(m_fields[nengy]->GetBndConditions()[j]->
-                    GetUserDefined(),"WallAdiabatic"))
-                {
-                    Vmath::Zero(nBndEdgePts, &flux[nengy][id2], 1);
-                }
-            }
-        }
-    }
-
     void NavierStokesCFE::GetArtificialViscosity(
         const Array<OneD, Array<OneD, NekDouble> >  &inarray,
               Array<OneD,             NekDouble  >  &muav)
@@ -1437,9 +1381,6 @@ namespace Nektar
     {
         int nPts                = inaverg[nConvectiveFields-1].num_elements();
         int nDim=m_spacedim;
-
-        // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, m_mu);
 
         if (m_ViscosityType == "Variable")
         {

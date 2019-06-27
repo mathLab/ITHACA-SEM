@@ -360,8 +360,11 @@ void Module::ProcessFaces(bool ReprocessFaces)
         }
 
         // Update 3D element boundary map.
-        pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
-        eMap.first->SetBoundaryLink(eMap.second, i);
+        for (int j = 0; j < (*it)->m_elLink.size(); ++j)
+        {
+            pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(j);
+            eMap.first->SetBoundaryLink(eMap.second, i);
+        }
 
         // Copy face curvature
         if ((*it)->m_faceNodes.size() > 0)

@@ -35,7 +35,7 @@
 
 #include <string>
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/BLPoints.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -180,7 +180,22 @@ void ProcessBL::BoundaryLayer3D()
 
     //m_mesh->MakeOrder(nq-1, LibUtilities::eGaussLobattoLegendre);
 
-    NekDouble r = m_config["r"].as<NekDouble>();
+    // determine if geometric ratio is string or a constant.
+    LibUtilities::AnalyticExpressionEvaluator rEval;
+    NekDouble r             =  1;
+    int       rExprId       = -1;
+    bool      ratioIsString = false;
+
+    if (m_config["r"].isType<NekDouble>())
+    {
+        r = m_config["r"].as<NekDouble>();
+    }
+    else
+    {
+        std::string rstr = m_config["r"].as<string>();
+        rExprId = rEval.DefineFunction("x y z", rstr);
+        ratioIsString = true;
+    }
 
     // Prismatic node -> face map.
     int prismFaceNodes[5][4] = {
@@ -196,19 +211,10 @@ void ProcessBL::BoundaryLayer3D()
     Array<OneD, NekDouble> gll;
     LibUtilities::PointsManager()[ekey]->GetPoints(gll);
 
-    LibUtilities::PointsKey bkey(nl + 1, LibUtilities::eBoundaryLayerPoints, r);
-    Array<OneD, NekDouble> blp;
-    LibUtilities::PointsManager()[bkey]->GetPoints(blp);
-
-    LibUtilities::PointsKey brkey(nl + 1, LibUtilities::eBoundaryLayerPointsRev,
-                                  r);
-    Array<OneD, NekDouble> blpr;
-    LibUtilities::PointsManager()[brkey]->GetPoints(blpr);
-
     // Map which takes element ID to face on surface. This enables
     // splitting to occur in either y-direction of the prism.
-    boost::unordered_map<int, int> splitEls;
-    boost::unordered_map<int, int>::iterator sIt;
+    unordered_map<int, int> splitEls;
+    unordered_map<int, int>::iterator sIt;
 
     // Set up maps which takes an edge (in nektar++ ordering) and return
     // their offset and stride in the 3d array of collapsed quadrature
@@ -402,8 +408,8 @@ void ProcessBL::BoundaryLayer3D()
     // are generated along that edge when a prism is split, and is used
     // to avoid generation of duplicate vertices. It is stored as an
     // unordered map for speed.
-    boost::unordered_map<int, vector<NodeSharedPtr> > edgeMap;
-    boost::unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
+    unordered_map<int, vector<NodeSharedPtr> > edgeMap;
+    unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
 
     string surf = m_config["surf"].as<string>();
     if (surf.size() == 0)
@@ -513,7 +519,7 @@ void ProcessBL::BoundaryLayer3D()
         }
 
         // Get elemental geometry object and put into map.
-        geomMap[elId] = boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
+        geomMap[elId] = dynamic_pointer_cast<SpatialDomains::Geometry3D>(
             el[i]->GetGeom(m_mesh->m_spaceDim));
 
         //get all edge geometry too...
@@ -577,6 +583,58 @@ void ProcessBL::BoundaryLayer3D()
             EdgeSharedPtr edg = el[i]->GetEdge(locEdge);
             int edgeId        = edg->m_id;
 
+            vector<CADCurveSharedPtr> c1 = edg->m_n1->GetCADCurves();
+            sort(c1.begin(), c1.end());
+            vector<CADCurveSharedPtr> c2 = edg->m_n2->GetCADCurves();
+            sort(c2.begin(), c2.end());
+            vector<CADCurveSharedPtr> curves(max(c1.size(), c2.size()));
+            vector<CADCurveSharedPtr>::iterator itc;
+            itc = set_intersection(c1.begin(), c1.end(), c2.begin(), c2.end(), curves.begin());
+            curves.resize(itc - curves.begin());
+
+            vector<CADSurfSharedPtr> s1 = edg->m_n1->GetCADSurfs();
+            sort(s1.begin(), s1.end());
+            vector<CADSurfSharedPtr> s2 = edg->m_n2->GetCADSurfs();
+            sort(s2.begin(), s2.end());
+            vector<CADSurfSharedPtr> surfs(max(s1.size(), s2.size()));
+            vector<CADSurfSharedPtr>::iterator its;
+            its = set_intersection(s1.begin(), s1.end(), s2.begin(), s2.end(), surfs.begin());
+            surfs.resize(its - surfs.begin());
+            
+            SpatialDomains::GeometrySharedPtr geom = edgeGeomMap[edg->m_id];
+            geom->FillGeom();
+
+            // Determine value of r based on geometry.
+            if (ratioIsString)
+            {
+                NekDouble x, y, z;
+                NekDouble x1, y1, z1;
+                int nverts = geom->GetNumVerts();
+
+                x = y = z = 0.0;
+
+                for (int i = 0; i < nverts; ++i)
+                {
+                    geom->GetVertex(i)->GetCoords(x1, y1, z1);
+                    x += x1;
+                    y += y1;
+                    z += z1;
+                }
+                x /= (NekDouble)nverts;
+                y /= (NekDouble)nverts;
+                z /= (NekDouble)nverts;
+                r = rEval.Evaluate(rExprId, x, y, z, 0.0);
+            }
+
+            LibUtilities::PointsKey bkey(nl + 1, LibUtilities::eBoundaryLayerPoints, r);
+            Array<OneD, NekDouble> blp;
+            LibUtilities::PointsManager()[bkey]->GetPoints(blp);
+
+            LibUtilities::PointsKey brkey(nl + 1, LibUtilities::eBoundaryLayerPointsRev,
+                                        r);
+            Array<OneD, NekDouble> blpr;
+            LibUtilities::PointsManager()[brkey]->GetPoints(blpr);
+
             // Determine whether we have already generated vertices
             // along this edge.
             eIt = edgeMap.find(edgeId);
@@ -591,8 +649,6 @@ void ProcessBL::BoundaryLayer3D()
                 edgeNodes[j][0]  = el[i]->GetVertex(sMap.edgeVert[j][0]);
                 edgeNodes[j][nl] = el[i]->GetVertex(sMap.edgeVert[j][1]);
 
-                SpatialDomains::GeometrySharedPtr geom = edgeGeomMap[edg->m_id];
-                geom->FillGeom();
                 StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
                 Array<OneD, NekDouble> coeffs0 = geom->GetCoeffs(0);
                 Array<OneD, NekDouble> coeffs1 = geom->GetCoeffs(1);
@@ -651,6 +707,17 @@ void ProcessBL::BoundaryLayer3D()
                     loc[2]          = xmap->PhysEvaluate(xp, zc);
                     edgeNodes[j][k] = NodeSharedPtr(
                         new Node(nodeId++, loc[0], loc[1], loc[2]));
+                    
+                    for (auto &curve : curves)
+                    {
+                        NekDouble t;
+                        curve->loct(loc, t);
+                        edgeNodes[j][k]->SetCADCurve(curve, t);
+                    }
+                    for (auto &surf : surfs)
+                    {
+                        edgeNodes[j][k]->SetCADSurf(surf, surf->locuv(loc));
+                    }
 
                 }
 
@@ -688,6 +755,7 @@ void ProcessBL::BoundaryLayer3D()
             ElmtConfig conf(elType, 1, false, false, false);
             ElementSharedPtr elmt = GetElementFactory().CreateInstance(
                 elType, conf, nodeList, el[i]->GetTagList());
+            elmt->m_cfiParent = el[i]->m_cfiParent;
 
             //if edge already exists (i.e top of layer) grab it
             for (int k = 0; k < elmt->GetEdgeCount(); ++k)
@@ -800,6 +868,11 @@ void ProcessBL::BoundaryLayer3D()
                 //it but so we will add done edge to the set.
                 auto f = oldEdgeSet.find(nwEdg);
                 if (f != oldEdgeSet.end())
+                {
+                    continue;
+                }
+
+                if (edgeGeomMap.find(edg->m_id) == edgeGeomMap.end())
                 {
                     continue;
                 }

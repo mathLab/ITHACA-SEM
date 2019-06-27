@@ -74,6 +74,11 @@ void CFIMesh::Process()
     m_model         = m_cad->GetCFIModel();
     NekDouble scal  = m_cad->GetScaling();
 
+    for (auto &it : m_nameToFaceId)
+    {
+        cout << it.first << "\t" << it.second << endl;
+    }
+
     map<int, NodeSharedPtr> nodes;
     vector<cfi::NodeDefinition> *cfinodes = m_model->getFenodes();
 
@@ -236,6 +241,8 @@ void CFIMesh::Process()
 
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::ePrism, conf, n, tags);
+        
+        E->m_cfiParent = it.parent;
 
         m_mesh->m_element[3].push_back(E);
     }
@@ -260,6 +267,8 @@ void CFIMesh::Process()
         ElmtConfig conf(LibUtilities::eTetrahedron, 1, false, false);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eTetrahedron, conf, n, tags);
+        
+        E->m_cfiParent = it.parent;
 
         m_mesh->m_element[3].push_back(E);
     }
@@ -284,6 +293,8 @@ void CFIMesh::Process()
         ElmtConfig conf(LibUtilities::eHexahedron, 1, false, false);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eHexahedron, conf, n, tags);
+        
+        E->m_cfiParent = it.parent;
 
         m_mesh->m_element[3].push_back(E);
     }
@@ -330,9 +341,11 @@ void CFIMesh::Process()
             ASSERTL0(fnd != m_mesh->m_faceSet.end(),
                      "surface element not found in mesh");
 
+            // if (fnd == m_mesh->m_faceSet.end()) continue;
+
             FaceSharedPtr mf = *fnd;
 
-            if (mf->m_elLink.size() == 1)
+            if (true) //(mf->m_elLink.size() == 1)
             {
                 E->m_parentCAD = m_mesh->m_cad->GetSurf(f->second);
                 m_mesh->m_element[2].push_back(E);
@@ -377,9 +390,11 @@ void CFIMesh::Process()
             ASSERTL0(fnd != m_mesh->m_faceSet.end(),
                      "surface element not found in mesh");
 
+            // if (fnd == m_mesh->m_faceSet.end()) continue;
+
             FaceSharedPtr mf = *fnd;
 
-            if (mf->m_elLink.size() == 1)
+            if (true) //(mf->m_elLink.size() == 1)
             {
                 E->m_parentCAD = m_mesh->m_cad->GetSurf(f->second);
                 m_mesh->m_element[2].push_back(E);

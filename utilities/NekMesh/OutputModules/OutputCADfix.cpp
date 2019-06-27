@@ -61,6 +61,7 @@ OutputCADfix::~OutputCADfix()
 
 void OutputCADfix::Process()
 {
+    /*
     if (!m_mesh->m_cad)
     {
         ModuleSharedPtr module = GetModuleFactory().CreateInstance(
@@ -80,6 +81,9 @@ void OutputCADfix::Process()
         module->SetDefaults();
         module->Process();
     }
+    */
+
+    ASSERTL0(m_mesh->m_cad, "CFI system must be kept in memory")
 
     if (m_mesh->m_verbose)
     {
@@ -163,14 +167,35 @@ void OutputCADfix::Process()
         }
     }
 
+    // Delete old nodes
+    vector<cfi::NodeDefinition> *oldNodes = m_model->getFenodes();
+    vector<cfi::Node *> nodesToDel;
+    for (int i = 0; i < oldNodes->size(); ++i)
+    {
+        nodesToDel.push_back((*oldNodes)[i].node);
+    }
+    m_model->deleteNodes(nodesToDel);
+
+    // Delete old elements
+    vector<cfi::ElementDefinition> *oldEls = m_model->getElements(cfi::SUBTYPE_ALL, 8);
+    vector<cfi::Element *> elsToDel;
+    for (int i = 0; i < oldEls->size(); ++i)
+    {
+        elsToDel.push_back((*oldEls)[i].element);
+    }
+    m_model->deleteElements(elsToDel);
+
     // map of new nodes
     map<NodeSharedPtr, cfi::Node *> newMap;
 
+/*
     // Write out nodes
     for (auto &it : m_mesh->m_vertexSet)
     {
-        newMap[it] = m_model->createOrphanFenode(
-            0, it->m_x / scal, it->m_y / scal, it->m_z / scal);
+        // newMap[it] = m_model->createOrphanFenode(
+        //     0, it->m_x / scal, it->m_y / scal, it->m_z / scal);
+
+        cfi::MeshableEntity *parent = nullptr;
 
         // Point parent
         if (it->GetNumCadCurve() > 1)
@@ -208,7 +233,8 @@ void OutputCADfix::Process()
                 }
             }
 
-            newMap[it]->setParent(maxIt->first);
+            // newMap[it]->setParent(maxIt->first);
+            parent = maxIt->first;
         }
         // Line parent
         else if (it->GetNumCadCurve())
@@ -216,7 +242,8 @@ void OutputCADfix::Process()
             vector<CADCurveSharedPtr> curves = it->GetCADCurves();
             cfi::Line *c = std::dynamic_pointer_cast<CADCurveCFI>(curves[0])
                                ->GetCfiPointer();
-            newMap[it]->setParent(c);
+            // newMap[it]->setParent(c);
+            parent = c;
         }
         // Face parent
         else if (it->GetNumCADSurf())
@@ -224,12 +251,158 @@ void OutputCADfix::Process()
             vector<CADSurfSharedPtr> surfs = it->GetCADSurfs();
             cfi::Face *s = std::dynamic_pointer_cast<CADSurfCFI>(surfs[0])
                                ->GetCfiPointer();
-            newMap[it]->setParent(s);
+            // newMap[it]->setParent(s);
+            parent = s;
         }
-        // Body parent
         else
         {
-            newMap[it]->setParent(body);
+            for (auto &el : m_mesh->m_element[3])
+            {
+                vector<NodeSharedPtr> nodes = el->GetVertexList();
+                if (find(nodes.begin(), nodes.end(), it) != nodes.end())
+                {
+                    // newMap[it]->setParent(el->m_cfiParent);
+                    parent = el->m_cfiParent;
+                    break;
+                }
+
+                vector<EdgeSharedPtr> edges = el->GetEdgeList();
+                for (auto &edge : edges)
+                {
+                    nodes.clear();
+                    edge->GetCurvedNodes(nodes);
+                    if (find(nodes.begin(), nodes.end(), it) != nodes.end())
+                    {
+                        // newMap[it]->setParent(el->m_cfiParent);
+                        parent = el->m_cfiParent;
+                        break;
+                    }
+                }
+
+                if (parent)
+                {
+                    break;
+                }
+
+                vector<FaceSharedPtr> faces = el->GetFaceList();
+                for (auto &face : faces)
+                {
+                    nodes.clear();
+                    face->GetCurvedNodes(nodes);
+                    if (find(nodes.begin(), nodes.end(), it) != nodes.end())
+                    {
+                        // newMap[it]->setParent(el->m_cfiParent);
+                        parent = el->m_cfiParent;
+                        break;
+                    }
+                }
+
+                if (parent)
+                {
+                    break;
+                }
+
+                nodes = el->GetVolumeNodes();
+                if (find(nodes.begin(), nodes.end(), it) != nodes.end())
+                {
+                    // newMap[it]->setParent(el->m_cfiParent);
+                    parent = el->m_cfiParent;
+                    break;
+                }
+            }
+        }
+
+        ASSERTL0(parent, "Parent not found.");
+        
+        newMap[it] = parent->createFenode(
+            0, it->m_x / scal, it->m_y / scal, it->m_z / scal);
+    }
+*/
+
+    // Write out nodes
+    for (auto &el : m_mesh->m_element[3])
+    {
+        vector<NodeSharedPtr> nodes = el->GetVertexList();
+
+        for (auto &edge : el->GetEdgeList())
+        {
+            edge->GetCurvedNodes(nodes);
+        }
+
+        for (auto &face : el->GetFaceList())
+        {
+            vector<NodeSharedPtr> fnodes;
+            face->GetCurvedNodes(fnodes);
+            nodes.insert(nodes.end(), fnodes.begin(), fnodes.end());
+        }
+
+        vector<NodeSharedPtr> vnodes = el->GetVolumeNodes();
+        nodes.insert(nodes.end(), vnodes.begin(), vnodes.end());
+
+        for (auto &node : nodes)
+        {
+            if (newMap.count(node))
+            {
+                continue;
+            }
+
+            cfi::MeshableEntity *parent = el->m_cfiParent;
+
+            // Point parent
+            if (node->GetNumCadCurve() > 1)
+            {
+                map<cfi::Point *, int> allVerts;
+
+                for (auto &curve : node->GetCADCurves())
+                {
+                    vector<cfi::Oriented<cfi::TopoEntity *>> *vertList =
+                        std::dynamic_pointer_cast<CADCurveCFI>(curve)
+                            ->GetCfiPointer()
+                            ->getChildList();
+
+                    for (auto &vert : *vertList)
+                    {
+                        cfi::Point *v = static_cast<cfi::Point *>(vert.entity);
+                        if (allVerts.count(v))
+                        {
+                            allVerts[v]++;
+                        }
+                        else
+                        {
+                            allVerts[v] = 1;
+                        }
+                    }
+                }
+
+                // Search for most likely parent vertex
+                map<cfi::Point *, int>::iterator maxIt = allVerts.begin();
+                for (auto it = allVerts.begin(); it != allVerts.end(); ++it)
+                {
+                    if (it->second > maxIt->second)
+                    {
+                        maxIt = it;
+                    }
+                }
+
+                parent = maxIt->first;
+            }
+            // Line parent
+            else if (node->GetNumCadCurve())
+            {
+                vector<CADCurveSharedPtr> curves = node->GetCADCurves();
+                parent = std::dynamic_pointer_cast<CADCurveCFI>(curves[0])
+                                ->GetCfiPointer();
+            }
+            // Face parent
+            else if (node->GetNumCADSurf())
+            {
+                vector<CADSurfSharedPtr> surfs = node->GetCADSurfs();
+                parent = std::dynamic_pointer_cast<CADSurfCFI>(surfs[0])
+                                ->GetCfiPointer();
+            }
+            
+            newMap[node] = parent->createFenode(
+                0, node->m_x / scal, node->m_y / scal, node->m_z / scal);
         }
     }
 
@@ -306,14 +479,14 @@ void OutputCADfix::Process()
 
         for (auto &node : nekNodes)
         {
-            cfiNodes.push_back(newMap[node]);
+            cfiNodes.push_back(newMap.at(node));
         }
 
         if (!(order % 2))
         {
             for (auto &edge : nekEdges)
             {
-                cfiNodes.push_back(newMap[edge->m_edgeNodes[(order - 1) / 2]]);
+                cfiNodes.push_back(newMap.at(edge->m_edgeNodes[(order - 1) / 2]));
             }
             for (auto &face : nekFaces)
             {
@@ -321,17 +494,17 @@ void OutputCADfix::Process()
                 if (face->m_edgeList.size() == 4)
                 {
                     cfiNodes.push_back(
-                        newMap[face->m_faceNodes[pow(order - 1, 2) / 2]]);
+                        newMap.at(face->m_faceNodes[pow(order - 1, 2) / 2]));
                 }
             }
             // Could be an element without a volume node
             if (el->GetTag() == "H")
             {
-                cfiNodes.push_back(newMap[nekVNodes[pow(order - 1, 3) / 2]]);
+                cfiNodes.push_back(newMap.at(nekVNodes[pow(order - 1, 3) / 2]));
             }
         }
 
-        m_model->createOrphanElement(0, cfi::EntitySubtype(type), cfiNodes);
+        el->m_cfiParent->createElement(0, cfi::EntitySubtype(type), cfiNodes);
     }
 
     m_model->saveCopy(m_config["outfile"].as<string>());

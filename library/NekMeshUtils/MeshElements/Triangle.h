@@ -56,8 +56,7 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        return std::shared_ptr<Element>(
-            new Triangle(pConf, pNodeList, pTagList));
+        return std::make_shared<Triangle>(pConf, pNodeList, pTagList);
     }
     /// Element type
     static LibUtilities::ShapeType m_type;

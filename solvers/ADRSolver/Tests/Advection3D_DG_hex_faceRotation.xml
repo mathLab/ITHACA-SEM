@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <EXPANSIONS>
+       <E
+        COMPOSITE="C[1]"
+        BASISTYPE="Modified_A,Modified_A,Modified_A" NUMMODES="8,8,8"
+        POINTSTYPE="GaussLobattoLegendre,GaussLobattoLegendre,GaussLobattoLegendre"
+        NUMPOINTS="8,8,8"
+        FIELDS="u"
+      />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+        <PARAMETERS>
+          <P> NumSteps       = 20          </P>
+          <P> TimeStep       = 0.0015      </P>
+          <P> IO_CheckSteps  = 200         </P>
+          <P> IO_InfoSteps   = 1           </P>
+          <P> advx           = 0.1         </P>
+          <P> advy           = -1          </P>
+          <P> advz           = 10          </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+          <I PROPERTY="EQTYPE"                  VALUE="UnsteadyAdvection"   />
+          <I PROPERTY="Projection"              VALUE="DisContinuous"       />
+            <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+            <I PROPERTY="UpwindType"            VALUE="Upwind"              />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+          <B ID="0"> C[2-7] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+          <REGION REF="0">
+            <D VAR="u" USERDEFINEDTYPE="TimeDependent"
+               VALUE="sin(x-advx*t)*sin(y-advy*t)*sin(z-advz*t)" />
+          </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="AdvectionVelocity">
+          <E VAR="Vx" VALUE="advx" />
+          <E VAR="Vy" VALUE="advy" />
+          <E VAR="Vz" VALUE="advz" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+          <E VAR="u" VALUE="sin(x-advx*t)*sin(y-advy*t)*sin(z-advz*t)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="InitialConditions">
+          <E VAR="u" VALUE="sin(x)*sin(y)*sin(z)" />
+        </FUNCTION>
+
+</NEKTAR>

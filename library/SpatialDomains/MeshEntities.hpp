@@ -37,6 +37,7 @@
 #define NEKTAR_LIBUTILITIES_BASICUTILS_MESHENTITIES_HPP
 
 #include <LibUtilities/Foundations/PointsType.h>
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -134,7 +135,13 @@ namespace Nektar
             std::vector<MeshVertex> pts;
         };
 
-
+        struct MeshEntity
+        {
+            int id;
+            int origId;
+            std::vector<unsigned int> list;
+            bool ghost;
+        };
     }
 }
 #endif

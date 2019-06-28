@@ -191,23 +191,26 @@ int main( int argc, char *argv[] )
 {
     po::options_description desc("Usage:");
     desc.add_options()
-        ("help, h",        "Display this help message.")
-        ("Npoints, np",    po::value<int>(),
-                           "Specify the number of grid points to be used.")
-        ("Ntimesteps, nt", po::value<int>(),
-                           "Specify the number of timesteps to be used.")
-        ("TimeIntegrationMethod, m", po::value<int>(),
-                           "TimeIntegrationMethod is a number in the range [1,8]\n"
-                           "and defines the time-integration method to be used:\n"
-                           "- 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)\n"
-                           "- 2: 2nd order multi-step IMEX scheme\n"
-                           "- 3: 3rd order multi-step IMEX scheme\n"
-                           "- 4: 2nd order multi-stage DIRK IMEX scheme\n"
-                           "- 5: 3nd order multi-stage DIRK IMEX scheme\n"
-                           "- 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
-                           "- 7: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
-                           "- 8: 2nd order Modified Crank-Nicolson/Adams-Bashforth (MCNAB)" );
-
+        ("help,h",      "Produce this help message.")
+        ("Npoints,p",    po::value<int>(),
+                        "Number of grid points to be used.")
+        ("Ntimesteps,t", po::value<int>(),
+                        "Number of timesteps to be used.")
+        ("TimeIntegrationMethod,m",    po::value<int>(),
+                    "TimeIntegrationMethod is a number in the range [1,8].\n"
+                    "It defines the time-integration method to be used:\n"
+                    "- 1: 1st order multi-step IMEX scheme\n"
+                    "     (Euler Backwards/Euler Forwards)\n"
+                    "- 2: 2nd order multi-step IMEX scheme\n"
+                    "- 3: 3rd order multi-step IMEX scheme\n"
+                    "- 4: 4th order multi-step IMEX scheme\n"
+                    "- 5: 2nd order multi-stage DIRK IMEX scheme\n"
+                    "- 6: 3nd order multi-stage DIRK IMEX scheme\n"
+                    "- 7: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
+                    "- 8: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
+                    "- 9: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
+                    "     (MCNAB)"
+        );
     po::variables_map vm;
     try
     {
@@ -263,6 +266,7 @@ int main( int argc, char *argv[] )
     ode.DefineProjection   ( &OneDfinDiffAdvDiffSolver::Project,               solver );
 
     // 2. THE TEMPORAL DISCRETISATION
+
     // 2.1 Read in which method should be used.  Create time integrator
     //
     LibUtilities::TimeIntegrationSchemeSharedPtr tiScheme;
@@ -274,11 +278,12 @@ int main( int argc, char *argv[] )
     case 1 : tiScheme = factory.CreateInstance( eIMEXOrder1 );     break;
     case 2 : tiScheme = factory.CreateInstance( eIMEXOrder2 );     break;
     case 3 : tiScheme = factory.CreateInstance( eIMEXOrder3 );     break;
-    case 4 : tiScheme = factory.CreateInstance( eIMEXdirk_2_3_2 ); break;
-    case 5 : tiScheme = factory.CreateInstance( eIMEXdirk_3_4_3 ); break;
-    case 6 : tiScheme = factory.CreateInstance( eIMEXGear );       break;
-    case 7 : tiScheme = factory.CreateInstance( eCNAB );           break;
-    case 8 : tiScheme = factory.CreateInstance( eMCNAB );          break;
+    case 4 : tiScheme = factory.CreateInstance( eIMEXOrder4 );     break;
+    case 5 : tiScheme = factory.CreateInstance( eIMEXdirk_2_3_2 ); break;
+    case 6 : tiScheme = factory.CreateInstance( eIMEXdirk_3_4_3 ); break;
+    case 7 : tiScheme = factory.CreateInstance( eIMEXGear );       break;
+    case 8 : tiScheme = factory.CreateInstance( eCNAB );           break;
+    case 9 : tiScheme = factory.CreateInstance( eMCNAB );          break;
     default :
       {
         cerr << "The third argument defines the time-integration method to be used:\n\n";

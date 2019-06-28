@@ -54,8 +54,7 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        return std::shared_ptr<Element>(
-            new Pyramid(pConf, pNodeList, pTagList));
+        return std::make_shared<Pyramid>(pConf, pNodeList, pTagList);
     }
     /// Element type
     static LibUtilities::ShapeType type;

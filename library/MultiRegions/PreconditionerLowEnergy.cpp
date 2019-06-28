@@ -68,19 +68,19 @@ namespace Nektar
         PreconditionerLowEnergy::PreconditionerLowEnergy(
             const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
-            : Preconditioner(plinsys, pLocToGloMap),
-              m_linsys(plinsys),
-              m_locToGloMap(pLocToGloMap)
+            : Preconditioner(plinsys, pLocToGloMap)
         {
         }
         
         void PreconditionerLowEnergy::v_InitObject()
         {
-            GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
+            GlobalSysSolnType solvertype =
+                m_locToGloMap.lock()->GetGlobalSysSolnType();
+
             ASSERTL0(solvertype == eIterativeStaticCond ||
                      solvertype == ePETScStaticCond, "Solver type not valid");
 
-            std::shared_ptr<MultiRegions::ExpList> 
+            std::shared_ptr<MultiRegions::ExpList>
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             
             m_comm = expList->GetComm();
@@ -155,9 +155,11 @@ namespace Nektar
 
             DNekMat RS;
             DNekMat RSRT;
+
+            auto asmMap = m_locToGloMap.lock();
             
-            int nDirBnd      = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nNonDirVerts = m_locToGloMap->GetNumNonDirVertexModes();
+            int nDirBnd      = asmMap->GetNumGlobalDirBndCoeffs();
+            int nNonDirVerts = asmMap->GetNumNonDirVertexModes();
 
 	    //Vertex, edge and face preconditioner matrices
             DNekMatSharedPtr VertBlk = MemoryManager<DNekMat>::
@@ -168,8 +170,8 @@ namespace Nektar
 
             //maps for different element types
             int n_exp = expList->GetNumElmts();
-            int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
-            int nNonDirFaceIDs=m_locToGloMap->GetNumNonDirFaces();
+            int nNonDirEdgeIDs=asmMap->GetNumNonDirEdges();
+            int nNonDirFaceIDs=asmMap->GetNumNonDirFaces();
 
             set<int> edgeDirMap;  
             set<int> faceDirMap;  
@@ -190,7 +192,7 @@ namespace Nektar
             int meshFaceId;
 
             const Array<OneD, const int> &extradiredges
-                = m_locToGloMap->GetExtraDirEdges();
+                = asmMap->GetExtraDirEdges();
             for(i=0; i<extradiredges.num_elements(); ++i)
             {
                 meshEdgeId=extradiredges[i];
@@ -679,7 +681,7 @@ namespace Nektar
                     vMap1=locExpansion->GetVertexMap(v);
                     
                     //Get vertex map
-                    globalrow = m_locToGloMap->
+                    globalrow = asmMap->
                         GetLocalToGlobalBndMap(cnt+vMap1)-nDirBnd;
                     
                     if(globalrow >= 0)
@@ -690,16 +692,16 @@ namespace Nektar
                             
                             //global matrix location (without offset due to
                             //dirichlet values)
-                            globalcol = m_locToGloMap->
+                            globalcol = asmMap->
                                 GetLocalToGlobalBndMap(cnt+vMap2)-nDirBnd;
 
                             //offset for dirichlet conditions
                             if (globalcol == globalrow)
                             {
                                 //modal connectivity between elements
-                                sign1 = m_locToGloMap->
+                                sign1 = asmMap->
                                     GetLocalToGlobalBndSign(cnt + vMap1);
-                                sign2 = m_locToGloMap->
+                                sign2 = asmMap->
                                     GetLocalToGlobalBndSign(cnt + vMap2);
                                 
                                 vertArray[globalrow]
@@ -747,7 +749,7 @@ namespace Nektar
                             for (v=0; v<nedgemodesloc; ++v)
                             {
                                 eMap1=edgemodearray[v];
-                                sign1 = m_locToGloMap->
+                                sign1 = asmMap->
                                     GetLocalToGlobalBndSign(cnt + eMap1);
                                 
                                 if(sign1 == 0)
@@ -760,7 +762,7 @@ namespace Nektar
                                     eMap2=edgemodearray[m];
                                     
                                     //modal connectivity between elements
-                                    sign2 = m_locToGloMap->
+                                    sign2 = asmMap->
                                         GetLocalToGlobalBndSign(cnt + eMap2);
                                     
                                     NekDouble globalEdgeValue = sign1*sign2*RSRT(eMap1,eMap2);
@@ -815,7 +817,7 @@ namespace Nektar
                             {
                                 fMap1=facemodearray[v];
                                 
-                                sign1 = m_locToGloMap->
+                                sign1 = asmMap->
                                     GetLocalToGlobalBndSign(cnt + fMap1);
                                 
                                 ASSERTL1(sign1 != 0,"Something is wrong since we "
@@ -827,7 +829,7 @@ namespace Nektar
                                     fMap2=facemodearray[m];
                                     
                                     //modal connectivity between elements
-                                    sign2 = m_locToGloMap->
+                                    sign2 = asmMap->
                                         GetLocalToGlobalBndSign(cnt + fMap2);
                                     
                                     ASSERTL1(sign2 != 0,"Something is wrong since "
@@ -937,8 +939,8 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDir    = m_locToGloMap.lock()->GetNumGlobalDirBndCoeffs();
+            int nGlobal = m_locToGloMap.lock()->GetNumGlobalBndCoeffs();
             int nNonDir = nGlobal-nDir;
             DNekBlkMat &M = (*m_BlkMat);
                          
@@ -975,7 +977,7 @@ namespace Nektar
             SetUpReferenceElements(maxRmat,maxElmt,vertMapMaxR,edgeMapMaxR);
             
             const Array<OneD,const unsigned int>& nbdry_size
-                = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
+                = m_locToGloMap.lock()->GetNumLocalBndCoeffsPerPatch();
 
             int n_exp=expList->GetNumElmts();
 
@@ -1077,10 +1079,11 @@ namespace Nektar
                                                                Array<OneD, NekDouble>& pInOut,
                                                                int offset)
         {
-            int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            auto asmMap = m_locToGloMap.lock();
+            int nGlobBndDofs       = asmMap->GetNumGlobalBndCoeffs();
+            int nDirBndDofs        = asmMap->GetNumGlobalDirBndCoeffs();
             int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBndDofs        = asmMap->GetNumLocalBndCoeffs();
 
             //Non-dirichlet boundary dofs
             Array<OneD, NekDouble> tmpOffset = pInOut + offset;
@@ -1091,7 +1094,7 @@ namespace Nektar
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
-            m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+            m_map = asmMap->GetLocalToGlobalBndMap();
             Array<OneD, NekDouble> pLocalIn(nLocBndDofs, 0.0);
 
             //Not actually needed but we should only work with the
@@ -1120,7 +1123,7 @@ namespace Nektar
 	    }
 
             //Assemble local boundary to global non-dirichlet Dofs
-            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);
+            asmMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);
         }
 
         /**
@@ -1134,10 +1137,12 @@ namespace Nektar
                                                                const Array<OneD, NekDouble>& pInput,
                                                                Array<OneD, NekDouble>& pOutput)
         {
-            int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            auto asmMap = m_locToGloMap.lock();
+
+            int nGlobBndDofs       = asmMap->GetNumGlobalBndCoeffs();
+            int nDirBndDofs        = asmMap->GetNumGlobalDirBndCoeffs();
             int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBndDofs        = asmMap->GetNumLocalBndCoeffs();
 
             //Input/output vectors should be length nGlobHomBndDofs
             ASSERTL1(pInput.num_elements() >= nGlobHomBndDofs,
@@ -1153,7 +1158,7 @@ namespace Nektar
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
-            m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+            m_map = asmMap->GetLocalToGlobalBndMap();
             Array<OneD, NekDouble> pLocalIn(nLocBndDofs, 0.0);
 
             // Allocated array of size number of global boundary dofs and copy
@@ -1184,7 +1189,7 @@ namespace Nektar
 	    }
             
             //Assemble local boundary to global non-dirichlet boundary
-            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd,nDirBndDofs);
+            asmMap->AssembleBnd(F_LocBnd,F_HomBnd,nDirBndDofs);
         }
         
         /**
@@ -1199,10 +1204,12 @@ namespace Nektar
         void PreconditionerLowEnergy::v_DoTransformFromLowEnergy(
                                                                  Array<OneD, NekDouble>& pInOut)
         {
-            int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            auto asmMap = m_locToGloMap.lock();
+
+            int nGlobBndDofs       = asmMap->GetNumGlobalBndCoeffs();
+            int nDirBndDofs        = asmMap->GetNumGlobalDirBndCoeffs();
             int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBndDofs        = asmMap->GetNumLocalBndCoeffs();
 
             ASSERTL1(pInOut.num_elements() >= nGlobBndDofs,
                      "Output array is greater than the nGlobBndDofs");
@@ -1215,12 +1222,12 @@ namespace Nektar
 
             Array<OneD, NekDouble> pLocalIn(nLocBndDofs, 0.0);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,pLocalIn,eWrapper);
-            m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+            m_map = asmMap->GetLocalToGlobalBndMap();
             Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
 
             //Global boundary (less dirichlet) to local boundary
-            m_locToGloMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd, nDirBndDofs);
+            asmMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd, nDirBndDofs);
 
             //Multiply by the transpose of block transformation matrix
 	    int cnt = 0; 
@@ -1241,7 +1248,7 @@ namespace Nektar
             Vmath::Assmb(nLocBndDofs, m_locToGloSignMult.get(),pLocal.get(), m_map.get(), tmp.get());
 
             //Universal assemble across processors
-            m_locToGloMap->UniversalAssembleBnd(tmp);
+            asmMap->UniversalAssembleBnd(tmp);
             
             //copy non-dirichlet boundary values
             Vmath::Vcopy(nGlobBndDofs-nDirBndDofs, tmp.get() + nDirBndDofs, 1, pInOut.get() + nDirBndDofs, 1);
@@ -1254,10 +1261,12 @@ namespace Nektar
                                                                                 const Array<OneD, NekDouble>& pInput,
                                                                                 Array<OneD, NekDouble>& pOutput)
         {
-            int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            auto asmMap = m_locToGloMap.lock();
+
+            int nGlobBndDofs       = asmMap->GetNumGlobalBndCoeffs();
+            int nDirBndDofs        = asmMap->GetNumGlobalDirBndCoeffs();
             int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBndDofs        = asmMap->GetNumLocalBndCoeffs();
 
             ASSERTL1(pInput.num_elements() >= nGlobHomBndDofs,
                      "Input array is greater than the nGlobHomBndDofs");
@@ -1273,7 +1282,7 @@ namespace Nektar
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
-            m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+            m_map = asmMap->GetLocalToGlobalBndMap();
             Array<OneD, NekDouble> pLocalIn(nLocBndDofs, 0.0);
 
             // Allocated array of size number of global boundary dofs and copy
@@ -1304,7 +1313,7 @@ namespace Nektar
             
 
             //Assemble local boundary to global non-dirichlet boundary
-            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd,nDirBndDofs);
+            asmMap->AssembleBnd(F_LocBnd,F_HomBnd,nDirBndDofs);
 
 	}
 
@@ -1315,10 +1324,12 @@ namespace Nektar
                                                                                           const Array<OneD, NekDouble>& pInput,
                                                                                           Array<OneD, NekDouble>& pOutput)
         {
-            int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            auto asmMap = m_locToGloMap.lock();
+
+            int nGlobBndDofs       = asmMap->GetNumGlobalBndCoeffs();
+            int nDirBndDofs        = asmMap->GetNumGlobalDirBndCoeffs();
             int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBndDofs        = asmMap->GetNumLocalBndCoeffs();
 
             ASSERTL1(pInput.num_elements() >= nGlobHomBndDofs,
                      "Input array is greater than the nGlobHomBndDofs");
@@ -1334,10 +1345,10 @@ namespace Nektar
 
             Array<OneD, NekDouble> pLocalIn(nLocBndDofs, 0.0);
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocalIn,eWrapper);
-            m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+            m_map = asmMap->GetLocalToGlobalBndMap();
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
 
-            m_locToGloMap->GlobalToLocalBnd(pInput,pLocalIn, nDirBndDofs);
+            asmMap->GlobalToLocalBnd(pInput,pLocalIn, nDirBndDofs);
 
 
             //Multiply by the transpose of block transformation matrix
@@ -1356,7 +1367,7 @@ namespace Nektar
 	    }
 
             
-            m_locToGloMap->AssembleBnd(pLocal,pOutput, nDirBndDofs);
+            asmMap->AssembleBnd(pLocal,pOutput, nDirBndDofs);
 
             Vmath::Vmul(nGlobHomBndDofs,pOutput,1,m_multiplicity,1,pOutput,1);
 	}
@@ -1431,17 +1442,19 @@ namespace Nektar
          */
         void PreconditionerLowEnergy::CreateMultiplicityMap(void)
         {
-            unsigned int nGlobalBnd = m_locToGloMap->GetNumGlobalBndCoeffs();
-            unsigned int nEntries   = m_locToGloMap->GetNumLocalBndCoeffs();
+            auto asmMap = m_locToGloMap.lock();
+
+            unsigned int nGlobalBnd = asmMap->GetNumGlobalBndCoeffs();
+            unsigned int nEntries   = asmMap->GetNumLocalBndCoeffs();
             unsigned int i;
             
             const Array<OneD, const int> &vMap
-                = m_locToGloMap->GetLocalToGlobalBndMap();
+                = asmMap->GetLocalToGlobalBndMap();
 
             const Array< OneD, const NekDouble > &sign 
-                = m_locToGloMap->GetLocalToGlobalBndSign();
+                = asmMap->GetLocalToGlobalBndSign();
 
-            m_signChange=m_locToGloMap->GetSignChange();
+            m_signChange=asmMap->GetSignChange();
 
             // Count the multiplicity of each global DOF on this process
             Array<OneD, NekDouble> vCounts(nGlobalBnd, 0.0);
@@ -1468,7 +1481,7 @@ namespace Nektar
             }
                 
             // Get universal multiplicity by globally assembling counts
-            m_locToGloMap->UniversalAssembleBnd(vCounts);
+            asmMap->UniversalAssembleBnd(vCounts);
 
             // Construct a map of 1/multiplicity
             m_locToGloSignMult = Array<OneD, NekDouble>(nEntries);
@@ -1484,17 +1497,17 @@ namespace Nektar
                 }
             }
             
-            int nDirBnd     = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nDirBnd     = asmMap->GetNumGlobalDirBndCoeffs();
             int nGlobHomBnd = nGlobalBnd - nDirBnd;
-            int nLocBnd     = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBnd     = asmMap->GetNumLocalBndCoeffs();
 
             //Set up multiplicity array for inverse transposed transformation matrix
             Array<OneD,NekDouble> tmp(nGlobHomBnd,1.0);
             m_multiplicity = Array<OneD,NekDouble>(nGlobHomBnd,1.0);
             Array<OneD,NekDouble> loc(nLocBnd,1.0);
 
-            m_locToGloMap->GlobalToLocalBnd(tmp,loc, nDirBnd);
-            m_locToGloMap->AssembleBnd(loc,m_multiplicity, nDirBnd);
+            asmMap->GlobalToLocalBnd(tmp,loc, nDirBnd);
+            asmMap->AssembleBnd(loc,m_multiplicity, nDirBnd);
             Vmath::Sdiv(nGlobHomBnd,1.0,m_multiplicity,1,m_multiplicity,1);
 
         }

@@ -37,6 +37,12 @@
 #ifndef NEKTAR_SOLVERS_ACOUSTICSOLVER_EQUATIONSYSTEMS_ACOUSTICSYSTEM_H
 #define NEKTAR_SOLVERS_ACOUSTICSOLVER_EQUATIONSYSTEMS_ACOUSTICSYSTEM_H
 
+// Define variable to avoid deprecated warning in Boost 1.69.
+#include <boost/version.hpp>
+#if BOOST_VERSION >= 106900 && BOOST_VERSION < 107000
+#define BOOST_ALLOW_DEPRECATED_HEADERS
+#endif
+
 #include <boost/random/mersenne_twister.hpp>
 
 #include <SolverUtils/Advection/Advection.h>

@@ -160,7 +160,7 @@ namespace Nektar
                                                         TimeIntegrationSolutionSharedPtr & solvector,
                                                   const TimeIntegrationSchemeOperators   & op )
         {
-            ASSERTL1( !(m_parent->GetIntegrationSchemeType() == eImplicit), "Fully Implicit integration scheme cannot be handled by this routine." );
+            //ASSERTL1( !(m_parent->GetIntegrationSchemeType() == eImplicit), "Fully Implicit integration scheme cannot be handled by this routine." );
             
             int nvar    = solvector->GetFirstDim ();
             int npoints = solvector->GetSecondDim();

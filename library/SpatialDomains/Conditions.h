@@ -262,6 +262,11 @@ namespace Nektar
                 return m_session->GetVariable(indx);
             }
 
+            std::map<int, LibUtilities::CommSharedPtr> GetBoundaryCommunicators() const
+            {
+                return m_boundaryCommunicators;
+            }
+
         protected:
             /// The mesh graph to use for referencing geometry info.
             MeshGraphSharedPtr                      m_meshGraph;

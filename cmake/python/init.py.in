@@ -1,1 +1,0 @@
-from ._${NEKPY_NAME} import *

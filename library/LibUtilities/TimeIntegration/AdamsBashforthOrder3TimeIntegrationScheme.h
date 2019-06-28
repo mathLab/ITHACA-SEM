@@ -41,6 +41,8 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
+#include <LibUtilities/TimeIntegration/RungeKutta2TimeIntegrationScheme.h>
+
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar {
@@ -52,12 +54,14 @@ namespace Nektar {
   
       AdamsBashforthOrder3TimeIntegrationScheme() : TimeIntegrationScheme() 
       {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 2 );
+          m_integration_phases = TimeIntegrationSchemeDataVector( 3 );
           m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
           m_integration_phases[ 1 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+          m_integration_phases[ 2 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
 
-          ForwardEulerTimeIntegrationScheme::SetupSchemeData(         m_integration_phases[0] );
-          AdamsBashforthOrder3TimeIntegrationScheme::SetupSchemeData( m_integration_phases[1] );
+          RungeKutta2TimeIntegrationScheme::SetupSchemeData(          m_integration_phases[0] );
+          AdamsBashforthOrder2TimeIntegrationScheme::SetupSchemeData( m_integration_phases[1] );
+          AdamsBashforthOrder3TimeIntegrationScheme::SetupSchemeData( m_integration_phases[2] );
       }
 
       virtual ~AdamsBashforthOrder3TimeIntegrationScheme()

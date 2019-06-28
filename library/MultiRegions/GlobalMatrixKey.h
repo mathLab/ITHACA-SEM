@@ -100,7 +100,7 @@ namespace Nektar
             StdRegions::VarCoeffMap     m_varCoeffs;
 
             /// Pointer to the local to global mapping.
-            AssemblyMapSharedPtr m_locToGloMap;
+            std::weak_ptr<AssemblyMap>  m_locToGloMap;
 
         private:
 
@@ -126,7 +126,7 @@ namespace Nektar
 
         inline bool GlobalMatrixKey::LocToGloMapIsDefined(void) const
         {
-            if( m_locToGloMap.get() == 0) //NullAssemblyMapSharedPtr)
+            if( m_locToGloMap.lock().get() == 0) //NullAssemblyMapSharedPtr)
             {
                 return false;
             }

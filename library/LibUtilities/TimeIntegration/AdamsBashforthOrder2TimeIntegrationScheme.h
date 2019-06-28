@@ -114,9 +114,9 @@ namespace Nektar {
         phase->m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
 
         phase->m_A[0] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 0.0 );
-        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 ); // Dd: In original code, this 0.0 was not explicitly specified...
-        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,    0.0 );
-        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,    0.0 );
+        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
+        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  0.0 );
+        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  0.0 );
                     
         phase->m_B[0][0][0] = 3.0/2.0;
         phase->m_B[0][1][0] = 1.0;

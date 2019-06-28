@@ -41,12 +41,14 @@
 
 #include <LibUtilities/TimeIntegration/AdamsBashforthOrder2TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/AdamsBashforthOrder3TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/AdamsBashforthOrder4TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/AdamsMoultonOrder1TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/AdamsMoultonOrder2TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/BDFImplicitOrder1TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/BDFImplicitOrder2TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/BackwardEulerTimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/ClassicalRungeKutta4TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/RungeKutta5TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/CNABTimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/DIRKOrder2TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/DIRKOrder3TimeIntegrationScheme.h>
@@ -62,6 +64,7 @@
 #include <LibUtilities/TimeIntegration/IMEXOrder1TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/IMEXOrder2TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/IMEXOrder3TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/IMEXOrder4TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/MCNABTimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/RungeKutta2TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/RungeKutta2_ImprovedEulerTimeIntegrationScheme.h>
@@ -83,18 +86,20 @@ namespace Nektar
     {  
         // !!! Always make sure that this matches TimeIntegrationMethod enum... !!!
         //
-        const char* const TimeIntegrationScheme::TimeIntegrationMethodMap[ 33 ] =
+        const char* const TimeIntegrationScheme::TimeIntegrationMethodMap[ 36 ] =
           {
             "NoTimeIntegrationMethod",
             "AdamsBashforthOrder1",
             "AdamsBashforthOrder2",
             "AdamsBashforthOrder3",
+            "AdamsBashforthOrder4",
             "AdamsMoultonOrder1",
             "AdamsMoultonOrder2",
             "BDFImplicitOrder1",
             "BDFImplicitOrder2",
             "ClassicalRungeKutta4",
             "RungeKutta4",
+            "RungeKutta5",
             "RungeKutta3_SSP",
             "RungeKutta2_ImprovedEuler",
             "RungeKutta2_SSP",
@@ -103,6 +108,7 @@ namespace Nektar
             "IMEXOrder1",
             "IMEXOrder2",
             "IMEXOrder3",
+            "IMEXOrder4",
             "Midpoint",
             "RungeKutta2",
             "DIRKOrder2",
@@ -117,7 +123,7 @@ namespace Nektar
             "IMEXdirk_2_3_2",
             "IMEXdirk_2_3_3",
             "IMEXdirk_3_4_3",
-            "IMEXdirk_4_4_3",
+            "IMEXdirk_4_4_3"
           };
 
       TimeIntegrationMethod TimeIntegrationScheme::methodFromName( const string & name )
@@ -125,12 +131,14 @@ namespace Nektar
         if(      name == "AdamsBashforthOrder1" ) {      return eAdamsBashforthOrder1; }
         else if( name == "AdamsBashforthOrder2" ) {      return eAdamsBashforthOrder2; }
         else if( name == "AdamsBashforthOrder3" ) {      return eAdamsBashforthOrder3; }
+        else if( name == "AdamsBashforthOrder4" ) {      return eAdamsBashforthOrder4; }
         else if( name == "AdamsMoultonOrder1" ) {        return eAdamsMoultonOrder1; }
         else if( name == "AdamsMoultonOrder2" ) {        return eAdamsMoultonOrder2; }
         else if( name == "BDFImplicitOrder1" ) {         return eBDFImplicitOrder1; }
         else if( name == "BDFImplicitOrder2" ) {         return eBDFImplicitOrder2; }
         else if( name == "ClassicalRungeKutta4" ) {      return eClassicalRungeKutta4; }
         else if( name == "RungeKutta4" ) {               return eRungeKutta4; }
+        else if( name == "RungeKutta5" ) {               return eRungeKutta5; }
         else if( name == "RungeKutta3_SSP" ) {           return eRungeKutta3_SSP; }
         else if( name == "RungeKutta2_ImprovedEuler" ) { return eRungeKutta2_ImprovedEuler; }
         else if( name == "RungeKutta2_SSP" ) {           return eRungeKutta2_SSP; }
@@ -139,6 +147,7 @@ namespace Nektar
         else if( name == "IMEXOrder1" ) {                return eIMEXOrder1; }
         else if( name == "IMEXOrder2" ) {                return eIMEXOrder2; }
         else if( name == "IMEXOrder3" ) {                return eIMEXOrder3; }
+        else if( name == "IMEXOrder4" ) {                return eIMEXOrder4; }
         else if( name == "Midpoint" ) {                  return eMidpoint; }
         else if( name == "RungeKutta2" ) {               return eRungeKutta2; }
         else if( name == "DIRKOrder2" ) {                return eDIRKOrder2; }
@@ -245,12 +254,14 @@ namespace Nektar
 
       REGISTER( AdamsBashforthOrder2 );
       REGISTER( AdamsBashforthOrder3 );
+      REGISTER( AdamsBashforthOrder4 );
       REGISTER( AdamsMoultonOrder1 );
       REGISTER( AdamsMoultonOrder2 );
       REGISTER( BDFImplicitOrder1 );
       REGISTER( BDFImplicitOrder2 );
       REGISTER( BackwardEuler );
       REGISTER( ClassicalRungeKutta4 );
+      REGISTER( RungeKutta5 );
       REGISTER( CNAB );
       REGISTER( DIRKOrder2 );
       REGISTER( DIRKOrder3 );
@@ -266,6 +277,7 @@ namespace Nektar
       REGISTER( IMEXOrder1 );
       REGISTER( IMEXOrder2 );
       REGISTER( IMEXOrder3 );
+      REGISTER( IMEXOrder4 );
       REGISTER( MCNAB );
       REGISTER( RungeKutta2 );
       REGISTER( RungeKutta2_ImprovedEuler );

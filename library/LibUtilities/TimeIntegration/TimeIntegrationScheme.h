@@ -409,7 +409,7 @@ namespace Nektar
 
           // !!! Always make sure that this matches TimeIntegrationMethod enum... !!!
           //
-          static const char* const TimeIntegrationMethodMap[ 33 ];
+          static const char* const TimeIntegrationMethodMap[ 36 ];
 
 
         }; // end class TimeIntegrationScheme

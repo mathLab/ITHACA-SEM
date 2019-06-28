@@ -131,7 +131,7 @@ namespace Nektar {
         phase->m_B[1][4][0] = 1.0;
         phase->m_U[0][1] = -36*twentyfifth;
         phase->m_U[0][2] =  16*twentyfifth;
-        phase->m_U[0][3] = -3*twentyfifth
+        phase->m_U[0][3] = -3*twentyfifth;
         phase->m_U[0][5] = -72*twentyfifth;
         phase->m_U[0][7] = -12*twentyfifth;
 

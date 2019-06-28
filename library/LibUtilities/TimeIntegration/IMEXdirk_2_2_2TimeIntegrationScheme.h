@@ -105,8 +105,8 @@ namespace Nektar {
         phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  1.0 );
         phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  1.0 );
                     
-        NekDouble glambda = 0.788675134594813;
-        NekDouble gdelta  = 0.366025403784439;
+        NekDouble glambda = 0.2928932188134524756;
+        NekDouble gdelta  = -0.7071067811865475244;
 
         phase->m_A[0][1][1] = glambda;
         phase->m_A[0][2][1] = 1.0 - glambda;

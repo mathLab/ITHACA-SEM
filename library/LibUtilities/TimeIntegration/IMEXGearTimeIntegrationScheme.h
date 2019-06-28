@@ -90,7 +90,7 @@ namespace Nektar {
         phase->m_method = TimeIntegrationMethod::eIMEXGear;
         phase->m_schemeType = eIMEX;
 
-        phase->m_numsteps  = 2;
+        phase->m_numsteps  = 3;
         phase->m_numstages = 1;
 
         phase->m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
@@ -102,23 +102,26 @@ namespace Nektar {
         phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
         phase->m_A[1] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 0.0 );
         phase->m_B[1] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
-        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  twothirds );
+        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  0.0 );
         phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  0.0 );
                     
         phase->m_B[0][0][0] = twothirds;
-        phase->m_B[1][0][0] = twothirds;
+        phase->m_B[1][2][0] = 1.0;
         phase->m_U[0][0]    =  2.0 * twothirds;
         phase->m_U[0][1]    = -0.5 * twothirds;
+        phase->m_U[0][2]    = twothirds;
 
         phase->m_V[0][0] =  2.0 * twothirds;
         phase->m_V[0][1] = -0.5 * twothirds;
+        phase->m_V[0][2] =  twothirds;
         phase->m_V[1][0] =  1.0;
 
         phase->m_numMultiStepValues = 2;
-        phase->m_numMultiStepDerivs = 0;
+        phase->m_numMultiStepDerivs = 1;
         phase->m_timeLevelOffset = Array<OneD,unsigned int>( phase->m_numsteps );
         phase->m_timeLevelOffset[0] = 0;
         phase->m_timeLevelOffset[1] = 1;
+        phase->m_timeLevelOffset[2] = 0;
 
         phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
         phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );

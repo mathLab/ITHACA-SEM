@@ -334,7 +334,7 @@ int main( int argc, char *argv[] )
 
     // 2.4 Do the time-integration:
     //
-    for( int timeStepNum = 1; timeStepNum <= nTimesteps; timeStepNum++ )
+    for( int timeStepNum = 0; timeStepNum < nTimesteps; timeStepNum++ )
     {
         double time = t0 + ( timeStepNum * dt );
 

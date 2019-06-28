@@ -41,6 +41,8 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
+#include <LibUtilities/TimeIntegration/RungeKutta3_SSPTimeIntegrationScheme.h>
+
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar {
@@ -58,8 +60,8 @@ namespace Nektar {
           m_integration_phases[ 2 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
           m_integration_phases[ 3 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
 
-          RungeKutta3_SPPTimeIntegrationScheme::SetupSchemeData(      m_integration_phases[0] );
-          RungeKutta3_SPPTimeIntegrationScheme::SetupSchemeData(      m_integration_phases[1] );
+          RungeKutta3_SSPTimeIntegrationScheme::SetupSchemeData(      m_integration_phases[0] );
+          RungeKutta3_SSPTimeIntegrationScheme::SetupSchemeData(      m_integration_phases[1] );
           AdamsBashforthOrder3TimeIntegrationScheme::SetupSchemeData( m_integration_phases[2] );
           AdamsBashforthOrder4TimeIntegrationScheme::SetupSchemeData( m_integration_phases[3] );
       }
@@ -109,7 +111,7 @@ namespace Nektar {
         phase->m_U[0][1] =  55.0/24.0;
         phase->m_U[0][2] = -59.0/24.0;
         phase->m_U[0][3] =  37.0/24.0;
-        phase->m_U[0][4] = -9.0/24.0
+        phase->m_U[0][4] = -9.0/24.0;
 
         phase->m_V[0][0] =  1.0;
         phase->m_V[0][1] =  55.0/24.0;

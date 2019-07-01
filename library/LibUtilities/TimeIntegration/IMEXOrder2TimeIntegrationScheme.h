@@ -61,8 +61,8 @@ namespace Nektar {
           m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
           m_integration_phases[ 1 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
 
-          // IMEXdirk_2_3_2TimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] ); // Setup 1st part using ???? FIXME... should be dirk or imex order 1?
-          IMEXOrder1TimeIntegrationScheme::SetupSchemeData(     m_integration_phases[0] ); // Setup 1st part using ???? FIXME... should be dirk or imex order 1?
+          IMEXdirk_2_3_2TimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] ); // Setup 1st part using ???? FIXME... should be dirk or imex order 1?
+          //IMEXOrder1TimeIntegrationScheme::SetupSchemeData(     m_integration_phases[0] ); // Setup 1st part using ???? FIXME... should be dirk or imex order 1?
           IMEXOrder2TimeIntegrationScheme::SetupSchemeData(     m_integration_phases[1] ); // Setup 2nd part using IMEX Order 2
       }
 

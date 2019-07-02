@@ -40,14 +40,14 @@
             <P> parameter_space_dimension = 2      </P>
             <P> parameter_space_tensor_grid = 1    </P>   <!--  like a bool: 0 is no, else is yes  -->
             <P> load_snapshot_data_from_files = 1       </P>
-            <P> load_cO_snapshot_data_from_files = 1       </P>  <!--  converged_Oseen snapshots   -->
-	    <P> do_trafo_check = 0       </P>  
+            <P> load_cO_snapshot_data_from_files = 0       </P>  <!--  converged_Oseen snapshots   -->
+	    <P> do_trafo_check = 1       </P>  
             <P> number_of_snapshots = 20       </P>
             <P> ref_param_index = 19       </P>
             <P> ref_param_nu = 1       </P>
             <P> number_of_snapshots_dir0 = 4       </P>
             <P> number_of_snapshots_dir1 = 5       </P>
-            <P> POD_tolerance = .99999       </P>
+            <P> POD_tolerance = 1       </P>
             <P> param0_dir0 = 0.7       </P>
             <P> param1_dir0 = 0.8       </P>
             <P> param2_dir0 = 0.9       </P>
@@ -60,7 +60,7 @@
 	    <P> type_para1 = 1        </P> <!-- 0=kin_visc, 1=geo   -->
 	    <P> type_para2 = 0   	</P>
 	    <P> number_elem_trafo = 5   </P>
-	    <P> debug_mode = 0   </P>
+	    <P> debug_mode = 1   </P>
 	    <P> globally_connected = 2      </P>
 <!--	    <P> elem_1 = {32,30,11,10,9,8,17,16,15,14,25,24,23,22}   	</P>   -->  <!-- find a nice solution for the element numberings and also the matrices   -->
 <!--        <P> elem_2 = {12, 28, 34, 13,21,20,18,19,26,27}   		</P>   -->  <!-- for development purposes, just hard-code the example, as it is convenient to have available in the code later   -->

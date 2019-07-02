@@ -144,6 +144,11 @@ namespace Nektar
 
 	void gen_proj_adv_terms();
 	void gen_proj_adv_terms_2d();
+	Eigen::MatrixXd gen_no_advection_matrix_pressure();
+	Eigen::MatrixXd gen_no_advection_matrix_ABCD();
+
+	Eigen::MatrixXd gen_adv_mats_proj_x(Array<OneD, double>, int);
+	Eigen::MatrixXd gen_adv_mats_proj_y(Array<OneD, double>, int);
 	Array<OneD, Array<OneD, Eigen::MatrixXd > > gen_adv_mats_proj_x_2d(Array<OneD, double>, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_x_2d);
 	Array<OneD, Array<OneD, Eigen::MatrixXd > > gen_adv_mats_proj_y_2d(Array<OneD, double>, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_y_2d);
 
@@ -241,7 +246,7 @@ namespace Nektar
         void setDBC(Eigen::MatrixXd collect_f_all);
 	void setDBC_M(Eigen::MatrixXd collect_f_all);
 	Eigen::MatrixXd project_onto_basis(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y);
-	Array<OneD, Array<OneD, NekDouble> > trafo_current_para(Array<OneD, NekDouble>, Array<OneD, NekDouble>, Array<OneD, NekDouble>);
+	Array<OneD, Array<OneD, NekDouble> > trafo_current_para(Array<OneD, NekDouble>, Array<OneD, NekDouble>, Array<OneD, NekDouble>, Eigen::VectorXd &, Eigen::VectorXd &, Eigen::VectorXd &);
 	int get_curr_elem_pos(int);
 
         void set_MtM();

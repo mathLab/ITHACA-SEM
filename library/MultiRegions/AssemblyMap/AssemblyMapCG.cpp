@@ -2019,7 +2019,7 @@ namespace Nektar
 
             // Now that universal map is setup reset gloParaDirBnd to
             // 0 if no point communicated or universal value of not
-            // equatl to -1.0
+            // equal to -1.0
             for(i = 0; i < m_numGlobalBndCoeffs; ++i)
             {
                 int gloid = gloParaDirBnd[i];
@@ -2058,9 +2058,9 @@ namespace Nektar
                     // gather any sign changes due to edge modes
                     if(m_signChange)
                     {
-                        if(m_localToGlobalSign[i] < 0)
+                        if(m_localToGlobalSign[i] < 0) 
                         {
-                            m_parallelDirBndSign.insert(k);
+                            m_parallelDirBndSign.insert(i);
                         }
                     }
                 }

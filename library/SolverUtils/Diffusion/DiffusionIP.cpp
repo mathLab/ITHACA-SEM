@@ -87,7 +87,8 @@ namespace Nektar
 
             pFields[0]->GetTrace()->GetNormals(m_traceNormals);
             m_traceNormDirctnElmtLength =   Array<OneD, NekDouble> (nTracePts,0.0);
-            pFields[0]->GetTrace()->GetElmtNormalLength(m_traceNormDirctnElmtLength);
+            // pFields[0]->GetTrace()->GetElmtNormalLength(m_traceNormDirctnElmtLength);
+            pFields[0]->GetTrace()->GetElmtNormalLengthMin(m_traceNormDirctnElmtLength);
 
             // TODO:: to check parallel case
             Array<OneD, NekDouble> lengthstmp(nTracePts,0.0);

@@ -65,6 +65,7 @@ namespace Nektar
             std::string                             m_shockCaptureType;
             NekDouble                               m_IPSymmFtluxCoeff;
             NekDouble                               m_IP2ndDervCoeff;
+            NekDouble                               m_IPPenaltyCoeff;
 	         
             Array<OneD, NekDouble>                            m_MuVarTrace;
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;

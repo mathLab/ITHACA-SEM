@@ -63,6 +63,9 @@ namespace Nektar
             m_session->LoadParameter("IP2ndDervCoeff",
                                   m_IP2ndDervCoeff,   0.0); // 1.0/12.0	
 
+            m_session->LoadParameter("IPPenaltyCoeff",
+                                  m_IPPenaltyCoeff,   4.0); // 1.0/12.0	
+
             // Setting up the normals
             int i;
             int nDim = pFields[0]->GetCoordim(0);
@@ -545,7 +548,7 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                   Array<OneD, NekDouble >                       &factor)
         {
-            Vmath::Fill(factor.num_elements(),4.0,factor,1);
+            Vmath::Fill(factor.num_elements(),m_IPPenaltyCoeff,factor,1);
         }
 
         void DiffusionIP::v_ConsVarAveJump(

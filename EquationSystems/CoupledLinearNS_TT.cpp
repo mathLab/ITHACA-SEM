@@ -4379,7 +4379,7 @@ namespace Nektar
 
 		time(&timer_2);  /* get current time; same as: timer = time(NULL)  */
 		double seconds = difftime(timer_1, timer_2);
-//		cout << "time for a single adv_geo_mat_projector in seconds " << seconds << endl;
+		cout << "time for a single adv_geo_mat_projector in seconds " << seconds << endl;
 
 
 		curr_adv_mats_proj_x_2d[i][1] = adv_geo_mat_projector(Ah_elem, B_elem, C_elem, D_elem, i, 1, adv_vec_proj_x_2d[i][1]);
@@ -5736,7 +5736,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //				cout << " L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]) " << L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]) << endl;
 //				cout << " L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]) " << L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]) << endl;
 			}
-			while ((L2error > 1e-11) && (!load_cO_snapshot_data_from_files));
+			while ((L2error > 1e-9) && (!load_cO_snapshot_data_from_files));
 		}
 
 		snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_result_phys_velocity_x_y[0], snapshot_result_phys_velocity_x_y[1], general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);

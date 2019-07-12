@@ -147,10 +147,6 @@ namespace Nektar
             // Setup Block Matrix systems
             int n, n_exp = m_expList.lock()->GetNumElmts();
 
-            MatrixStorage blkmatStorage = eDIAGONAL;
-            const Array<OneD,const unsigned int>& nbdry_size
-                    = asmMap->GetNumLocalBndCoeffsPerPatch();
-
             // Build preconditioner
             m_precon->BuildPreconditioner();
 
@@ -262,7 +258,6 @@ namespace Nektar
             v_GetStaticCondBlock(unsigned int n)
         {
             DNekScalBlkMatSharedPtr schurComplBlock;
-            int  scLevel           = m_locToGloMap->GetStaticCondLevel();
             DNekScalMatSharedPtr    localMat = m_schurCompl->GetBlock(n,n);
             unsigned int nbdry    = localMat->GetRows();
             unsigned int nblks    = 1;

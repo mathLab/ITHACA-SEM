@@ -278,6 +278,10 @@ namespace Nektar
                  const Array<OneD,
                  const NekDouble> &inarray,
                  Array<OneD,       NekDouble> &outarray);
+            
+            MULTI_REGIONS_EXPORT void MultiplyByElmtInvMassOnDiag(
+                const DNekBlkMatSharedPtr   &inmat,
+                DNekBlkMatSharedPtr         &outmat);
 
             ///
             inline void MultiplyByInvMassMatrix(

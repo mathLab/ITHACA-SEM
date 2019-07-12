@@ -983,11 +983,12 @@ namespace Nektar
     {
         int nvariables = inarray.num_elements();
         GetTraceJac(inarray,qfield,TraceJac,TraceJacDeriv,TraceJacDerivSign);
+#ifdef DEBUG_VISCOUS_JAC_MAT
         for(int i = 0; i< m_spacedim; i++)
         {
             qfield[i]   =   NullNekDoubleArrayofArray;
         }
-        
+#endif
         m_advObject->AddTraceJacToMat(nvariables,m_spacedim,m_fields, TraceJac,gmtxarray,TraceJacDeriv,TraceJacDerivSign);
         // m_advObject->AddTraceJacToMat(nvariables,nSpaceDim,m_fields, TraceJac,gmtxarray);
     }
@@ -1784,17 +1785,6 @@ namespace Nektar
         NekDouble Negdtlamda    =   -dtlamda;
         DNekMatSharedPtr        tmpGmtx,ElmtMat;
 
-        Array<OneD, NekDouble> coefarray(explist->GetNcoeffs(),0.0);
-
-        Array<OneD, int > elmtcoef(ntotElmt);
-        int nElmtCoef0 =    (*pexp)[0]->GetNcoeffs();
-        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-        {
-            nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
-            ASSERTL0(nElmtCoef==nElmtCoef0,"nElmtCoef==nElmtCoef0");
-            elmtcoef[nelmt]     =   nElmtCoef;
-        }
-
         Array<OneD, NekDouble> pseudotimefactor(ntotElmt,0.0);
         if(m_cflLocTimestep>0.0)
         {
@@ -1810,33 +1800,12 @@ namespace Nektar
         {
             for(int n = 0; n < nConvectiveFields; n++)
             {
-                for(int ncl = 0; ncl < nElmtCoef0; ncl++)
+                explist->MultiplyByElmtInvMassOnDiag(gmtxarray[m][n], gmtxarray[m][n]);
+                for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                 {
-                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-                    {
-                        nElmtCoef           = elmtcoef[nelmt];
-                        tmpGmtx =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+                    tmpGmtx =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
 
-                        int n_offset    =   explist->GetCoeff_Offset(nelmt);
-                        
-                        for(int nrw = 0; nrw < nElmtCoef; nrw++)
-                        {
-                            coefarray[n_offset+nrw]   =   (*tmpGmtx)(nrw,ncl);
-                        }
-                    }
-                    explist->MultiplyByElmtInvMass(coefarray, coefarray);
-
-                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-                    {
-                        nElmtCoef            = elmtcoef[nelmt];
-                        tmpGmtx =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
-                        int n_offset    =   explist->GetCoeff_Offset(nelmt);
-                        for(int nrw = 0; nrw < nElmtCoef; nrw++)
-                        {
-                            (*tmpGmtx)(nrw,ncl)   = pseudotimefactor[nelmt]*coefarray[n_offset+nrw];
-                            // (*tmpGmtx)(nrw,ncl)   = Negdtlamda*coefarray[n_offset+nrw];
-                        }
-                    }
+                    (*tmpGmtx)  = pseudotimefactor[nelmt]*(*tmpGmtx);
                 }
             }
         }
@@ -1846,11 +1815,10 @@ namespace Nektar
             for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
             {
                 tmpGmtx =   gmtxarray[m][m]->GetBlock(nelmt,nelmt);
-                nElmtCoef            = elmtcoef[nelmt];
+                nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
                 for(int ncl = 0; ncl < nElmtCoef; ncl++)
                 {
-                    // (*tmpGmtx)(ncl,ncl)   += (1.0+pseudotimefactor[nelmt]);
-                    (*tmpGmtx)(ncl,ncl)   += 1.0;
+                    (*tmpGmtx)(ncl,ncl)   += 1.0 ;
                 }
             }
         }
@@ -2026,7 +1994,7 @@ namespace Nektar
         sol_n                  = m_TimeIntegtSol_n;
         //inforc = m_TimeIntegForce;
         unsigned int nvariable  = inarray.num_elements();
-        unsigned int ncoeffs    = inarray[0].num_elements();
+        unsigned int ncoeffs    = inarray[nvariable-1].num_elements();
         unsigned int npoints    = m_fields[0]->GetNpoints();
 
         Array<OneD, Array<OneD, NekDouble> > inpnts(nvariable);
@@ -2135,7 +2103,7 @@ namespace Nektar
         // Add diffusion t
         // DoDiffusion(inarray, outarray, Fwd, Bwd);
         DoDiffusion_coeff(inarray, outarray, Fwd, Bwd);
-      
+
         // Add forcing terms
         for (auto &x : m_forcing)
         {

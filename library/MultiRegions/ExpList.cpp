@@ -766,6 +766,36 @@ namespace Nektar
         }
 
         /**
+         * The coefficients of the function to be acted upon
+         * should be contained in the \param inarray. The
+         * resulting coefficients are stored in \param outarray
+         *
+         * @param   inarray         An array of size \f$N_{\mathrm{eof}}\f$
+         *                          containing the inner product.
+         */
+        void ExpList::MultiplyByElmtInvMassOnDiag(
+                                            const DNekBlkMatSharedPtr   &inmat,
+                                            DNekBlkMatSharedPtr         &outmat)
+        {
+            std::shared_ptr<LocalRegions::ExpansionVector> pexp = GetExp();
+            int ntotElmt            = (*pexp).size();
+            GlobalMatrixKey mkey(StdRegions::eInvMass);
+            const DNekScalBlkMatSharedPtr& InvMass = GetBlockMatrix(mkey);
+            DNekMatSharedPtr outtmp; 
+            DNekMatSharedPtr intmp; 
+            DNekScalMatSharedPtr Invtmp;
+
+            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            {
+                outtmp  =   outmat->GetBlock(nelmt,nelmt);
+                intmp   =   inmat->GetBlock(nelmt,nelmt);
+                Invtmp  =   InvMass->GetBlock(nelmt,nelmt);
+
+                (*outtmp) = (*Invtmp)*(*intmp);
+            }
+        }
+
+        /**
          * Given a function \f$u(\boldsymbol{x})\f$ defined at the
          * quadrature points, this function determines the
          * transformed elemental coefficients \f$\hat{u}_n^e\f$

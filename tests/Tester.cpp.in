@@ -230,14 +230,14 @@ int main(int argc, char *argv[])
 
             if (fs::is_directory(source))
             {
-                fs::copy(source, dest);
+                fs::copy_directory(source, dest);
                 // If source is a directory, then only directory name is
                 // created, so call copy again to copy files.
                 for (const auto& dirEnt :
                          fs::recursive_directory_iterator{source})
                 {
                     fs::path newdest = dest / dirEnt.path().filename();
-                    fs::copy(dirEnt.path(), newdest);
+                    fs::copy_file(dirEnt.path(), newdest);
                 }
             }
 	    else

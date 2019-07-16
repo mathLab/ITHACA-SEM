@@ -833,12 +833,13 @@ namespace Nektar
                     NekDouble radius, xc=0.0, yc=0.0, xdis, ydis;
                     NekDouble la, lb;
 
-                    if (factors.num_elements() > 0 ) {
-                        la = factors[0];
-                        lb = factors[1];
-                        xc = factors[2];
-                        yc = factors[3];
-                    }
+                    ASSERTL1(factors.num_elements() >= 4,
+                             "factors is too short.");
+
+                    la = factors[0];
+                    lb = factors[1];
+                    xc = factors[2];
+                    yc = factors[3];
 
                     for (int i = 0; i < nq; i++)
                     {

@@ -69,20 +69,24 @@ These equations are similar to the LEE, but account for acoustic perturbations e
 The AcousticSolver implements the APE-1/4 type operator:
 \begin{subequations}
     \begin{align}
-        \frac{\partial p^\mathrm{a}}{\partial t} 
-        + \overline{c^2} \nabla \cdot \left( \overline{\rho} \boldsymbol{u}^\mathrm{a} 
-        + \overline{\boldsymbol{u}} \frac{p^\mathrm{a}}{\overline{c^2}} \right) 
-        &= \dot{\omega}_\mathrm{c}
+        \frac{\partial p^{\mathrm{a}}}{\partial t} 
+        + \overline{c^2} \nabla \cdot \left( \overline{\rho}
+        \boldsymbol{u}^{\mathrm{a}} 
+        + \overline{\boldsymbol{u}} \frac{p^{\mathrm{a}}}{\overline{c^2}} \right) 
+        &= \dot{\omega}_{\mathrm{c}}
         \\
-        \frac{\partial \boldsymbol{u}^\mathrm{a}}{\partial t} 
-        + \nabla \left(\overline{\boldsymbol{u}} \cdot \boldsymbol{u}^\mathrm{a} \right) 
-        + \nabla \left(\frac{p^\mathrm{a}}{\overline{\rho}}\right) 
-        &= \dot{\boldsymbol{\omega}}_\mathrm{m}
+        \frac{\partial \boldsymbol{u}^{\mathrm{a}}}{\partial t} 
+        + \nabla \left(\overline{\boldsymbol{u}} \cdot
+        \boldsymbol{u}^{\mathrm{a}} \right) 
+        + \nabla \left(\frac{p^{\mathrm{a}}}{\overline{\rho}}\right) 
+        &= \dot{\boldsymbol{\omega}}_{\mathrm{m}}
         \;,
     \end{align}
 \end{subequations}
-where $(\overline{\boldsymbol{u}},\,\overline{c^2},\, \overline{\rho})$ represents the base flow and $(\boldsymbol{u}^\mathrm{a},p^\mathrm{a})$ the acoustic perturbations.
-Similar to the LEE, the acoustic source terms $\dot{\omega}_\mathrm{c}$ and $\dot{\boldsymbol{\omega}}_\mathrm{m}$ are by default zero and must be specified e.g. by an appropriate forcing.
+where $(\overline{\boldsymbol{u}},\,\overline{c^2},\, \overline{\rho})$
+represents the base flow and $(\boldsymbol{u}^{\mathrm{a}},p^{\mathrm{a}})$ the acoustic perturbations.
+Similar to the LEE, the acoustic source terms $\dot{\omega}_{\mathrm{c}}$ and
+$\dot{\boldsymbol{\omega}}_{\mathrm{m}}$ are by default zero and must be specified e.g. by an appropriate forcing.
 This way, e.g. the APE-1, APE-4 \cite{EwSc03} or revised APE equations \cite{Ge14} can be obtained.
 Expressed as hyperbolic conservation law, the APE-1/4 operator reads:
 \begin{equation}
@@ -96,34 +100,34 @@ with
 \begin{gather}
 \boldsymbol{U} = \left[
 \begin{matrix}
-p^\mathrm{a} \\
-u^\mathrm{a}_1 \\
-u^\mathrm{a}_2 \\
-u^\mathrm{a}_3
+    p^{\mathrm{a}} \\
+    u^{\mathrm{a}}_1 \\
+    u^{\mathrm{a}}_2 \\
+    u^{\mathrm{a}}_3
 \end{matrix}
 \right] , \\
 \boldsymbol{F_1} = \left[
 \begin{matrix}
-\overline{\rho} \overline{c^2} u^\mathrm{a}_1 + p^\mathrm{a} \overline{u}_1  \\
-\overline{u}_j u^\mathrm{a}_j + p^\mathrm{a} / \overline{\rho}  \\
+    \overline{\rho} \overline{c^2} u^{\mathrm{a}}_1 + p^{\mathrm{a}} \overline{u}_1  \\
+    \overline{u}_j u^{\mathrm{a}}_j + p^{\mathrm{a}} / \overline{\rho}  \\
 0 \\
 0
 \end{matrix}
 \right]     , \;
 \boldsymbol{F_2} = \left[
 \begin{matrix}
-\overline{\rho} \overline{c^2} u^\mathrm{a}_2 + p^\mathrm{a} \overline{u}_2  \\
+    \overline{\rho} \overline{c^2} u^{\mathrm{a}}_2 + p^{\mathrm{a}} \overline{u}_2  \\
 0 \\
-\overline{u}_j u^\mathrm{a}_j + p^\mathrm{a} / \overline{\rho}  \\
+    \overline{u}_j u^{\mathrm{a}}_j + p^{\mathrm{a}} / \overline{\rho}  \\
 0
 \end{matrix}
 \right]    , \;
 \boldsymbol{F_3} = \left[
 \begin{matrix}
-\overline{\rho} \overline{c^2} u^\mathrm{a}_3 + p^\mathrm{a} \overline{u}_3 \\
+    \overline{\rho} \overline{c^2} u^{\mathrm{a}}_3 + p^{\mathrm{a}} \overline{u}_3 \\
 0     \\
 0     \\
-\overline{u}_j u^\mathrm{a}_j + p^\mathrm{a} / \overline{\rho}  \\
+    \overline{u}_j u^{\mathrm{a}}_j + p^{\mathrm{a}} / \overline{\rho}  \\
 \end{matrix}
 \right]
 \,.
@@ -269,7 +273,9 @@ The standard deviation $\sigma$ of the pressure  is specified by the \inltt{VALU
 \section{Examples}
 \subsection{Wave Propagation in a Sheared Base Flow}
 In this section we explain how to set up a simple, 2D simulation of aeroacoustics in
-Nektar++. We will study the propagation of an acoustic wave in the simple case of a sheared base flow, i.e. $\overline{\boldsymbol{u}} = \left[300  \tanh(20 x_2),\, 0\right]^\mathrm{T}, \; \overline{c^2}=\left(341\, \mathrm{m}/\mathrm{s}\right)^2, \; \overline{\rho} = 1.204\, \mathrm{kg}/\mathrm{m}^3$. The geometry consists
+Nektar++. We will study the propagation of an acoustic wave in the simple case
+of a sheared base flow, i.e. $\overline{\boldsymbol{u}} = \left[300  \tanh(20
+x_2),\, 0\right]^{\mathrm{T}}, \; \overline{c^2}=\left(341\, \mathrm{m}/\mathrm{s}\right)^2, \; \overline{\rho} = 1.204\, \mathrm{kg}/\mathrm{m}^3$. The geometry consists
 of $64$ quadrilateral elements.
 
 \subsubsection{Input file}
@@ -319,7 +325,7 @@ At all four boundaries the \inltt{RiemannInvariantBC} condition is used:
 </BOUNDARYCONDITIONS>
 \end{lstlisting}
 
-The system is excited via an acoustic source term $\dot{\omega}_\mathrm{c}$, which is modeled by a field forcing as:
+The system is excited via an acoustic source term $\dot{\omega}_{\mathrm{c}}$, which is modeled by a field forcing as:
 \begin{lstlisting}[style=XMLStyle]
 <FORCING>
   <FORCE TYPE="Field">

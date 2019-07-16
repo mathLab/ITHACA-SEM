@@ -229,6 +229,14 @@ namespace Nektar
             flowrateForce[i] = ffunc->Evaluate();
         }
 
+        // Define flag for case with homogeneous expansion and forcing not in the
+        // z-direction
+        m_Hom1DExplicit = false;
+        if (defined && m_HomogeneousType == eHomogeneous1D)
+        {
+            m_Hom1DExplicit = true;
+        }
+
         // For 3DH1D simulations, if force isn't defined then assume in
         // z-direction.
         if (!defined)
@@ -258,7 +266,7 @@ namespace Nektar
             // For a boundary, extract the boundary itself.
             m_flowrateBnd = m_fields[0]->GetBndCondExpansions()[m_flowrateBndID];
         }
-        else if (m_HomogeneousType == eHomogeneous1D)
+        else if (m_HomogeneousType == eHomogeneous1D && !m_Hom1DExplicit)
         {
             // For 3DH1D simulations with no force specified, find the mean
             // (0th) plane.
@@ -337,7 +345,8 @@ namespace Nektar
         m_greenFlux = MeasureFlowrate(m_flowrateStokes);
 
         // If the user specified IO_FlowSteps, open a handle to store output.
-        if (m_comm->GetRank() == 0 && m_flowrateSteps)
+        if (m_comm->GetRank() == 0 && m_flowrateSteps &&
+            !m_flowrateStream.is_open())
         {
             std::string filename = m_session->GetSessionName();
             filename += ".prs";
@@ -381,27 +390,22 @@ namespace Nektar
             }
 
             flowrate = m_flowrateBnd->VectorFlux(boundary);
-            m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
         }
-        else if (m_flowrateBnd)
+        else if (m_flowrateBnd && !m_Hom1DExplicit)
         {
-            // 3DH1D case: compute flux through the zero-th (mean) plane.
+            // 3DH1D case with no Flowrate boundary defined: compute flux through 
+            // the zero-th (mean) plane.
             flowrate = m_flowrateBnd->Integral(inarray[2]);
-
-            // Now communicate this with other planes
-            m_comm->GetColumnComm()->AllReduce(
-                flowrate, LibUtilities::ReduceSum);
         }
-        else if (m_HomogeneousType == eHomogeneous1D)
+
+        // Communication to obtain the total flowrate
+        if(!m_Hom1DExplicit && m_HomogeneousType == eHomogeneous1D)
         {
-            // Remaining homogeneous processors that do not contain boundary.
-            m_comm->GetColumnComm()->AllReduce(
-                flowrate, LibUtilities::ReduceSum);
+            m_comm->GetColumnComm()->AllReduce(flowrate, LibUtilities::ReduceSum);
         }
         else
         {
-            // Remaining processors that do not contain boundary.
-            m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
+            m_comm->AllReduce(flowrate, LibUtilities::ReduceSum); 
         }
 
         return flowrate / m_flowrateArea;

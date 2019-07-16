@@ -68,19 +68,19 @@ namespace Nektar
         PreconditionerLowEnergy::PreconditionerLowEnergy(
             const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
-            : Preconditioner(plinsys, pLocToGloMap),
-              m_linsys(plinsys),
-              m_locToGloMap(pLocToGloMap)
+            : Preconditioner(plinsys, pLocToGloMap)
         {
         }
         
         void PreconditionerLowEnergy::v_InitObject()
         {
-            GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
+            GlobalSysSolnType solvertype =
+                m_locToGloMap.lock()->GetGlobalSysSolnType();
+
             ASSERTL0(solvertype == eIterativeStaticCond ||
                      solvertype == ePETScStaticCond, "Solver type not valid");
 
-            std::shared_ptr<MultiRegions::ExpList> 
+            std::shared_ptr<MultiRegions::ExpList>
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             
             m_comm = expList->GetComm();
@@ -155,9 +155,11 @@ namespace Nektar
 
             DNekMat RS;
             DNekMat RSRT;
+
+            auto asmMap = m_locToGloMap.lock();
             
-            int nDirBnd      = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nNonDirVerts = m_locToGloMap->GetNumNonDirVertexModes();
+            int nDirBnd      = asmMap->GetNumGlobalDirBndCoeffs();
+            int nNonDirVerts = asmMap->GetNumNonDirVertexModes();
 
 	    //Vertex, edge and face preconditioner matrices
             DNekMatSharedPtr VertBlk = MemoryManager<DNekMat>::
@@ -168,8 +170,8 @@ namespace Nektar
 
             //maps for different element types
             int n_exp = expList->GetNumElmts();
-            int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
-            int nNonDirFaceIDs=m_locToGloMap->GetNumNonDirFaces();
+            int nNonDirEdgeIDs=asmMap->GetNumNonDirEdges();
+            int nNonDirFaceIDs=asmMap->GetNumNonDirFaces();
 
             set<int> edgeDirMap;  
             set<int> faceDirMap;  
@@ -190,7 +192,7 @@ namespace Nektar
             int meshFaceId;
 
             const Array<OneD, const int> &extradiredges
-                = m_locToGloMap->GetExtraDirEdges();
+                = asmMap->GetExtraDirEdges();
             for(i=0; i<extradiredges.num_elements(); ++i)
             {
                 meshEdgeId=extradiredges[i];
@@ -669,7 +671,7 @@ namespace Nektar
                     vMap1=locExpansion->GetVertexMap(v);
                     
                     //Get vertex map
-                    globalrow = m_locToGloMap->
+                    globalrow = asmMap->
                         GetLocalToGlobalBndMap(cnt+vMap1)-nDirBnd;
                     
                     if(globalrow >= 0)
@@ -680,16 +682,16 @@ namespace Nektar
                             
                             //global matrix location (without offset due to
                             //dirichlet values)
-                            globalcol = m_locToGloMap->
+                            globalcol = asmMap->
                                 GetLocalToGlobalBndMap(cnt+vMap2)-nDirBnd;
 
                             //offset for dirichlet conditions
                             if (globalcol == globalrow)
                             {
                                 //modal connectivity between elements
-                                sign1 = m_locToGloMap->
+                                sign1 = asmMap->
                                     GetLocalToGlobalBndSign(cnt + vMap1);
-                                sign2 = m_locToGloMap->
+                                sign2 = asmMap->
                                     GetLocalToGlobalBndSign(cnt + vMap2);
                                 
                                 vertArray[globalrow]
@@ -737,7 +739,7 @@ namespace Nektar
                             for (v=0; v<nedgemodesloc; ++v)
                             {
                                 eMap1=edgemodearray[v];
-                                sign1 = m_locToGloMap->
+                                sign1 = asmMap->
                                     GetLocalToGlobalBndSign(cnt + eMap1);
                                 
                                 if(sign1 == 0)
@@ -750,7 +752,7 @@ namespace Nektar
                                     eMap2=edgemodearray[m];
                                     
                                     //modal connectivity between elements
-                                    sign2 = m_locToGloMap->
+                                    sign2 = asmMap->
                                         GetLocalToGlobalBndSign(cnt + eMap2);
                                     
                                     NekDouble globalEdgeValue = sign1*sign2*RSRT(eMap1,eMap2);
@@ -805,7 +807,7 @@ namespace Nektar
                             {
                                 fMap1=facemodearray[v];
                                 
-                                sign1 = m_locToGloMap->
+                                sign1 = asmMap->
                                     GetLocalToGlobalBndSign(cnt + fMap1);
                                 
                                 ASSERTL1(sign1 != 0,"Something is wrong since we "
@@ -817,7 +819,7 @@ namespace Nektar
                                     fMap2=facemodearray[m];
                                     
                                     //modal connectivity between elements
-                                    sign2 = m_locToGloMap->
+                                    sign2 = asmMap->
                                         GetLocalToGlobalBndSign(cnt + fMap2);
                                     
                                     ASSERTL1(sign2 != 0,"Something is wrong since "
@@ -927,8 +929,8 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDir    = m_locToGloMap.lock()->GetNumGlobalDirBndCoeffs();
+            int nGlobal = m_locToGloMap.lock()->GetNumGlobalBndCoeffs();
             int nNonDir = nGlobal-nDir;
             DNekBlkMat &M = (*m_BlkMat);
                          
@@ -965,7 +967,7 @@ namespace Nektar
             SetUpReferenceElements(maxRmat,maxElmt,vertMapMaxR,edgeMapMaxR);
             
             const Array<OneD,const unsigned int>& nbdry_size
-                = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
+                = m_locToGloMap.lock()->GetNumLocalBndCoeffsPerPatch();
 
             int n_exp=expList->GetNumElmts();
 
@@ -1064,9 +1066,9 @@ namespace Nektar
          * energy basis i.e. \f$\overline{\mathbf{x}}=\mathbf{R}\mathbf{x}\f$.
          */
         void PreconditionerLowEnergy::v_DoTransformBasisToLowEnergy
-                 (Array<OneD, NekDouble>& pInOut)
+        (Array<OneD, NekDouble>& pInOut)
         {
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBndDofs  = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
             //Block transformation matrix
             DNekBlkMat &R = *m_RBlk;
@@ -1074,19 +1076,19 @@ namespace Nektar
             Array<OneD, NekDouble> pLocalIn(nLocBndDofs,pInOut.get());
 
             //Apply mask in case of variable P
-            Vmath::Vmul(nLocBndDofs,pLocalIn, 1, m_variablePmask,1,
-                        pLocalIn,1);
+	    Vmath::Vmul(nLocBndDofs,pLocalIn, 1, m_variablePmask,1,
+			pLocalIn,1);
 
-            //Multiply by the block transformation matrix
-	    int cnt = 0; 
+	    //Multiply by the block transformation matrix
+	    int cnt = 0;
 	    int cnt1 = 0;
 	    for(int i = 0; i < m_sameBlock.size(); ++i)
-            {
-	        int nexp    = m_sameBlock[i].first;
-		int nbndcoeffs = m_sameBlock[i].second; 
+	    {
+		int nexp    = m_sameBlock[i].first;
+		int nbndcoeffs = m_sameBlock[i].second;
 		Blas::Dgemm('N','N', nbndcoeffs, nexp, nbndcoeffs,
 			    1.0, &(R.GetBlock(cnt1,cnt1)->GetPtr()[0]),
-                            nbndcoeffs,pLocalIn.get() + cnt,  nbndcoeffs, 
+			    nbndcoeffs,pLocalIn.get() + cnt,  nbndcoeffs,
 			    0.0, pInOut.get() + cnt, nbndcoeffs);
 		cnt  += nbndcoeffs*nexp;
 		cnt1 += nexp;
@@ -1105,7 +1107,7 @@ namespace Nektar
         void PreconditionerLowEnergy::v_DoTransformCoeffsFromLowEnergy(
                               Array<OneD, NekDouble>& pInOut)
         {
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBndDofs   = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
             ASSERTL1(pInOut.num_elements() >= nLocBndDofs,
                      "Output array is not greater than the nLocBndDofs");
@@ -1146,7 +1148,7 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                 Array<OneD, NekDouble>& pOutput)
         {
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBndDofs    = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
             ASSERTL1(pInput.num_elements() >= nLocBndDofs,
                      "Input array is smaller than nLocBndDofs");
@@ -1185,7 +1187,7 @@ namespace Nektar
                         const Array<OneD, NekDouble>& pInput,
                         Array<OneD, NekDouble>& pOutput)
         {
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocBndDofs     = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
             ASSERTL1(pInput.num_elements() >= nLocBndDofs,
                      "Input array is less than nLocBndDofs");
@@ -1274,13 +1276,15 @@ namespace Nektar
          */
         void PreconditionerLowEnergy::CreateVariablePMask(void)
         {
-            unsigned int nLocBnd   = m_locToGloMap->GetNumLocalBndCoeffs();
+            unsigned int nLocBnd  = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
             unsigned int i;
+
+            auto asmMap = m_locToGloMap.lock();
             
             const Array< OneD, const NekDouble > &sign 
-                = m_locToGloMap->GetLocalToGlobalBndSign();
+                = asmMap->GetLocalToGlobalBndSign();
 
-            m_signChange=m_locToGloMap->GetSignChange();
+            m_signChange=asmMap->GetSignChange();
 
             // Construct a map of 1/multiplicity
             m_variablePmask = Array<OneD, NekDouble>(nLocBnd);

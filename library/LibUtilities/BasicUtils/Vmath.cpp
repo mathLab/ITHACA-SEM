@@ -131,15 +131,19 @@ namespace Vmath
     #undef EPS
     #undef RNMX
 
+#ifdef NEKTAR_USE_THREAD_SAFETY
     static boost::mutex mutex;
+#endif
     template LIB_UTILITIES_EXPORT Nektar::NekDouble ran2 (long* idum);
 
     /// \brief Fills a vector with white noise.
     template<class T>  void FillWhiteNoise( int n, const T eps, T *x,
                                       const int incx, int outseed)
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
         // Protect the static vars here and in ran2
         boost::mutex::scoped_lock l(mutex);
+#endif
 
         // Define static variables for generating random numbers
         static int     iset = 0;

@@ -58,9 +58,9 @@ VariableConverter::VariableConverter(
     m_session->LoadParameter("mu", m_mu, 1.78e-05);
 
     // Parameters for sensor
-    m_session->LoadParameter("Skappa", m_Skappa, -2.048);
-    m_session->LoadParameter("Kappa", m_Kappa, 0.0);
-    m_session->LoadParameter("mu0", m_mu0, 1.0);
+    m_session->LoadParameter("Skappa", m_Skappa, -1.0);
+    m_session->LoadParameter("Kappa", m_Kappa, 0.25);
+
 }
 
 /**
@@ -72,7 +72,7 @@ VariableConverter::~VariableConverter()
 
 /**
  * @brief Compute the specific internal energy
- *        \f$ e = (E - rho*V^2/2)/rho \$.
+ *        \f$ e = (E - rho*V^2/2)/rho \f$.
  */
 void VariableConverter::GetInternalEnergy(
     const Array<OneD, const Array<OneD, NekDouble>> &physfield,
@@ -98,7 +98,7 @@ void VariableConverter::GetInternalEnergy(
 }
 
 /**
- * @brief Compute the specific enthalpy \f$ h = e + p/rho \$.
+ * @brief Compute the specific enthalpy \f$ h = e + p/rho \f$.
  */
 void VariableConverter::GetEnthalpy(
     const Array<OneD, const Array<OneD, NekDouble>> &physfield,
@@ -166,9 +166,13 @@ void VariableConverter::GetMach(Array<OneD, Array<OneD, NekDouble>> &physfield,
 
 /**
  * @brief Compute the dynamic viscosity using the Sutherland's law
- * \f$ \mu = \mu_star * (T / T_star)^3/2 * (T_star + 110) / (T + 110) \f$,
+ * \f$ \mu = \mu_star * (T / T_star)^3/2 * (1 + C) / (T / T_star + C) \f$,
  * where:   \mu_star = 1.7894 * 10^-5 Kg / (m * s)
  *          T_star   = 288.15 K
+ *          C        = 110. / 288.15
+ *
+ * WARNING, if this routine is modified the same must be done in the
+ * FieldConvert utility ProcessWSS.cpp (this class should be restructured).
  *
  * @param physfield    Input physical field.
  * @param mu           The resulting dynamic viscosity.
@@ -177,6 +181,7 @@ void VariableConverter::GetDynamicViscosity(
     const Array<OneD, const NekDouble> &temperature, Array<OneD, NekDouble> &mu)
 {
     const int nPts    = temperature.num_elements();
+    const NekDouble C = .38175;
     NekDouble mu_star = m_mu;
     NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
     NekDouble ratio;
@@ -184,8 +189,7 @@ void VariableConverter::GetDynamicViscosity(
     for (int i = 0; i < nPts; ++i)
     {
         ratio = temperature[i] / T_star;
-        mu[i] = mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /
-                (temperature[i] + 110.0);
+        mu[i] = mu_star * ratio * sqrt(ratio) * (1 + C) / (ratio + C);
     }
 }
 
@@ -221,11 +225,10 @@ void VariableConverter::GetSensor(
     Array<OneD, NekDouble> &Sensor, Array<OneD, NekDouble> &SensorKappa,
     int offset)
 {
+    NekDouble Skappa;
+    NekDouble order;
     Array<OneD, NekDouble> tmp;
-
     Array<OneD, int> expOrderElement = field->EvalBasisNumModesMaxPerExp();
-
-    Array<OneD, NekDouble> solution = physarray[0];
 
     for (int e = 0; e < field->GetExpSize(); e++)
     {
@@ -245,7 +248,8 @@ void VariableConverter::GetSensor(
         }
 
         // create vector to save the solution points per element at P = p;
-        Array<OneD, NekDouble> elmtPhys(nElmtPoints, solution + physOffset);
+        Array<OneD, NekDouble> elmtPhys(nElmtPoints,
+            tmp = physarray[0] + physOffset);
         // Compute coefficients
         Array<OneD, NekDouble> elmtCoeffs(nElmtCoeffs, 0.0);
         field->GetExp(e)->FwdTrans(elmtPhys, elmtCoeffs);
@@ -270,30 +274,41 @@ void VariableConverter::GetSensor(
                     1);
 
         numerator = Vmath::Dot(nElmtPoints, difference, difference);
-
         denominator = Vmath::Dot(nElmtPoints, elmtPhys, elmtPhys);
 
         NekDouble elmtSensor = sqrt(numerator / denominator);
-        elmtSensor           = log10(elmtSensor);
+        elmtSensor = log10(max(elmtSensor, NekConstants::kNekSqrtTol));
+
         Vmath::Fill(nElmtPoints, elmtSensor, tmp = Sensor + physOffset, 1);
 
-        NekDouble elmtSensorKappa;
-        if (elmtSensor < (m_Skappa-m_Kappa))
+        // Compute reference value for sensor
+        order = max(numModesElement-1, 1);
+        if (order > 0 )
         {
-            elmtSensorKappa = 0;
-        }
-        else if (elmtSensor > (m_Skappa + m_Kappa))
-        {
-            elmtSensorKappa = m_mu0;
+            Skappa = m_Skappa - 4.25 * log10(static_cast<NekDouble>(order));
         }
         else
         {
-            elmtSensorKappa =
-                0.5 * m_mu0 *
-                (1 + sin(M_PI * (elmtSensor - m_Skappa) / (2 * m_Kappa)));
+            Skappa = 0.0;
+        }
+
+        // Compute artificial viscosity
+        NekDouble elmtSensorKappa;
+        if (elmtSensor < (Skappa-m_Kappa))
+        {
+            elmtSensorKappa = 0;
+        }
+        else if (elmtSensor > (Skappa + m_Kappa))
+        {
+            elmtSensorKappa = 1.0;
+        }
+        else
+        {
+            elmtSensorKappa = 0.5 *
+                (1 + sin(M_PI * (elmtSensor - Skappa) / (2 * m_Kappa)));
         }
         Vmath::Fill(nElmtPoints, elmtSensorKappa,
-                    tmp = SensorKappa + physOffset, 1);
+                tmp = SensorKappa + physOffset, 1);
     }
 }
 
@@ -340,7 +355,7 @@ void VariableConverter::GetTemperature(
 }
 
 /**
- * @brief Compute the sound speed \f$ using the equation of state.
+ * @brief Compute the sound speed using the equation of state.
  *
  * @param physfield    Input physical field
  * @param soundspeed   The resulting sound speed \f$ c \f$.
@@ -361,7 +376,7 @@ void VariableConverter::GetSoundSpeed(
 }
 
 /**
- * @brief Compute the entropy \f$ using the equation of state.
+ * @brief Compute the entropy using the equation of state.
  *
  * @param physfield    Input physical field
  * @param soundspeed   The resulting sound speed \f$ c \f$.
@@ -382,7 +397,7 @@ void VariableConverter::GetEntropy(
 }
 
 /**
- * @brief Compute e(rho,p) \f$ using the equation of state.
+ * @brief Compute \f$ e(rho,p) \f$ using the equation of state.
  *
  * @param rho          Input density
  * @param pressure     Input pressure
@@ -401,7 +416,7 @@ void VariableConverter::GetEFromRhoP(const Array<OneD, NekDouble> &rho,
 }
 
 /**
- * @brief Compute rho(p,T) \f$ using the equation of state.
+ * @brief Compute \f$ rho(p,T) \f$ using the equation of state.
  *
  * @param pressure     Input pressure
  * @param temperature  Input temperature

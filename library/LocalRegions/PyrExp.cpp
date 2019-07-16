@@ -584,8 +584,20 @@ namespace Nektar
                 Vmath::Vcopy(m_ncoeffs,&data[0],1,coeffs,1);
             }
         }
-
             
+        /** 
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble PyrExp::v_StdPhysEvaluate(
+                const Array<OneD, const NekDouble> &Lcoord,
+                const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local coordinates.
+            return StdPyrExp::v_PhysEvaluate(Lcoord,physvals);
+        }
+
         NekDouble PyrExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord,
                                          const Array<OneD, const NekDouble>& physvals)
         {

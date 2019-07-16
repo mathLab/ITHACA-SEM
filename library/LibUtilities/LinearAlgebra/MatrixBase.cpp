@@ -249,7 +249,7 @@ namespace Nektar
         m_size[0] = rhs.m_size[0];
         m_size[1] = rhs.m_size[1];
         m_transpose = rhs.m_transpose;
-        m_storageType = m_storageType;
+        m_storageType = rhs.m_storageType;
         return *this;
     }
 

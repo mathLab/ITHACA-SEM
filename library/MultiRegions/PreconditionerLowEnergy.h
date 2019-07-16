@@ -76,9 +76,6 @@ namespace Nektar
 
 	protected:
 
-            const std::weak_ptr<GlobalLinSys> m_linsys;
-            std::shared_ptr<AssemblyMap> m_locToGloMap;
-
 	    DNekBlkMatSharedPtr m_BlkMat;
             DNekBlkMatSharedPtr m_RBlk;
             DNekBlkMatSharedPtr m_InvRBlk;

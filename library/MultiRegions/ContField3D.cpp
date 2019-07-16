@@ -127,6 +127,175 @@ namespace Nektar
 
       
       
+      
+      void ContField3D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
+      {
+            int i,j;
+            int bndcnt=0;
+
+            Array<OneD, NekDouble> sign = m_locToGloMap->
+                GetBndCondCoeffsToLocalCoeffsSign();
+            const Array<OneD, const int> map= m_locToGloMap->
+                GetBndCondCoeffsToLocalCoeffsMap();
+            
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
+                   SpatialDomains::eDirichlet)
+                {
+                    const Array<OneD, NekDouble> bndcoeff =
+                        (m_bndCondExpansions[i])->GetCoeffs(); 
+
+                    if(m_locToGloMap->GetSignChange())
+                    {
+                        for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                        {
+                            outarray[map[bndcnt + j]] = sign[bndcnt + j] * bndcoeff[j]; 
+                        }
+                    }
+                    else
+                    {
+                        for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                        {
+                            outarray[map[bndcnt+j]] = bndcoeff[j]; 
+                        }
+                    }                    
+                }
+                
+                bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
+            }
+
+            // communicate local Dirichlet coeffsthat are just
+            // touching a dirichlet boundary on another partition
+            set<int> &ParallelDirBndSign = m_locToGloMap->GetParallelDirBndSign();
+
+            for (auto &it : ParallelDirBndSign)
+            {
+                outarray[it] *= -1;
+            }
+                
+            Gs::Gather(outarray, Gs::gs_amax, m_locToGloMap->GetDirBndGsh());
+
+            for (auto &it : ParallelDirBndSign)
+            {
+                outarray[it] *= -1;
+            }
+
+            // sort local dirichlet coeffs that are just touching a
+            // dirichlet boundary
+            set<ExtraDirDof> &copyLocalDirDofs = m_locToGloMap->GetCopyLocalDirDofs();
+
+            for (auto &it : copyLocalDirDofs)
+            {
+                outarray[std::get<0>(it)] =
+                    outarray[std::get<1>(it)]*std::get<2>(it);
+            }
+      }          
+      
+      void ContField3D::v_FillBndCondFromField(void)
+      {
+            int bndcnt = 0;
+
+            Array<OneD, NekDouble> sign = m_locToGloMap->
+                GetBndCondCoeffsToLocalCoeffsSign();
+            const Array<OneD, const int> bndmap= m_locToGloMap->
+                GetBndCondCoeffsToLocalCoeffsMap();
+            
+            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[i]->UpdateCoeffs();
+                
+                if(m_locToGloMap->GetSignChange())
+                {
+                    for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                    {
+                        coeffs[j] = sign[bndcnt+j] * m_coeffs[bndmap[bndcnt+j]];
+                    }
+                }
+                else
+                {
+                    for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                    {
+                        coeffs[j] = m_coeffs[bndmap[bndcnt+j]];
+                    }
+                }
+
+                bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
+            }
+      }
+
+      void ContField3D::v_FillBndCondFromField(const int nreg)
+      {
+          int bndcnt = 0;
+          
+          ASSERTL1(nreg < m_bndCondExpansions.num_elements(),
+                   "nreg is out or range since this many boundary "
+                   "regions to not exist");
+          
+          Array<OneD, NekDouble> sign = m_locToGloMap->
+              GetBndCondCoeffsToLocalCoeffsSign();
+          const Array<OneD, const int> bndmap= m_locToGloMap->
+              GetBndCondCoeffsToLocalCoeffsMap();
+          
+            // Now fill in all other Dirichlet coefficients.
+          Array<OneD, NekDouble>& coeffs =
+              m_bndCondExpansions[nreg]->UpdateCoeffs();
+          
+          for(int j = 0; j < nreg; ++j)
+          {
+              if(m_bndConditions[j]->GetBoundaryConditionType()
+                 == SpatialDomains::ePeriodic)
+              {
+                  continue;
+              }
+              bndcnt += m_bndCondExpansions[j]->GetNcoeffs();
+          }
+          
+          if(m_locToGloMap->GetSignChange())
+          {
+              for(int j = 0; j < (m_bndCondExpansions[nreg])->GetNcoeffs(); ++j)
+              {
+                  coeffs[j] = sign[bndcnt + j] * m_coeffs[bndmap[bndcnt + j]];
+              }
+          }
+          else
+          {
+              for(int j = 0; j < (m_bndCondExpansions[nreg])->GetNcoeffs(); ++j)
+              {
+                  coeffs[j] = m_coeffs[bndmap[bndcnt + j]];
+              }
+          }
+      }
+      
+      void ContField3D::v_LocalToGlobal(bool useComm)
+      {
+          m_locToGloMap->LocalToGlobal(m_coeffs, m_coeffs,useComm);
+      }
+
+
+      void ContField3D::v_LocalToGlobal(
+          const Array<OneD, const NekDouble> &inarray,
+          Array<OneD,NekDouble> &outarray,
+          bool useComm)
+      {
+          m_locToGloMap->LocalToGlobal(inarray, outarray, useComm);
+      }
+
+
+      void ContField3D::v_GlobalToLocal(void)
+      {
+          m_locToGloMap->GlobalToLocal(m_coeffs, m_coeffs);
+      }
+
+
+      void ContField3D::v_GlobalToLocal(
+          const Array<OneD, const NekDouble> &inarray,
+          Array<OneD,NekDouble> &outarray)
+      {
+          m_locToGloMap->GlobalToLocal(inarray, outarray);
+      }
+
+
       void ContField3D::v_HelmSolve(
                                     const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD,       NekDouble> &outarray,

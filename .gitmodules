@@ -3,8 +3,3 @@
     path = docs/tutorial
     url = git@gitlab.nektar.info:nektar/tutorial
     ignore = all
-[submodule "docs/developer-guide"]
-    branch = master
-	path = docs/developer-guide
-	url = git@gitlab.nektar.info:nektar/developer-guide
-    ignore = all

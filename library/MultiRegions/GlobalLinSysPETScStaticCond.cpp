@@ -137,10 +137,12 @@ namespace Nektar
 
         void GlobalLinSysPETScStaticCond::v_InitObject()
         {
-            m_precon = CreatePrecon(m_locToGloMap);
+            auto asmMap = m_locToGloMap.lock();
+
+            m_precon = CreatePrecon(asmMap);
 
             // Allocate memory for top-level structure
-            SetupTopLevel(m_locToGloMap);
+            SetupTopLevel(asmMap);
 
             // Setup Block Matrix systems
             int n, n_exp = m_expList.lock()->GetNumElmts();
@@ -164,7 +166,7 @@ namespace Nektar
             }
 
             // Construct this level
-            Initialise(m_locToGloMap);
+            Initialise(asmMap);
         }
 
         /**
@@ -191,7 +193,7 @@ namespace Nektar
             if (m_linSysKey.GetGlobalSysSolnType() ==
                     ePETScMultiLevelStaticCond)
             {
-                m_precon = CreatePrecon(m_locToGloMap);
+                m_precon = CreatePrecon(m_locToGloMap.lock());
                 m_precon->BuildPreconditioner();
             }
 
@@ -278,7 +280,7 @@ namespace Nektar
                 // level, the preconditioner is never set up.
                 if (!m_precon)
                 {
-                    m_precon = CreatePrecon(m_locToGloMap);
+                    m_precon = CreatePrecon(m_locToGloMap.lock());
                     m_precon->BuildPreconditioner();
                 }
             }
@@ -320,13 +322,15 @@ namespace Nektar
             const Array<OneD, const NekDouble> &input,
                   Array<OneD,       NekDouble> &output)
         {
-            int nLocBndDofs = m_locToGloMap->GetNumLocalBndCoeffs();
-            int nDirDofs    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            auto asmMap = m_locToGloMap.lock();
+
+            int nLocBndDofs = asmMap->GetNumLocalBndCoeffs();
+            int nDirDofs    = asmMap->GetNumGlobalDirBndCoeffs();
 
             NekVector<NekDouble> in(nLocBndDofs), out(nLocBndDofs);
-            m_locToGloMap->GlobalToLocalBnd(input, in.GetPtr(), nDirDofs);
+            asmMap->GlobalToLocalBnd(input, in.GetPtr(), nDirDofs);
             out = (*m_schurCompl) * in;
-            m_locToGloMap->AssembleBnd(out.GetPtr(), output, nDirDofs);
+            asmMap->AssembleBnd(out.GetPtr(), output, nDirDofs);
         }
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysPETScStaticCond::v_Recurse(

@@ -152,10 +152,12 @@ namespace Nektar
 
         void GlobalLinSysIterativeStaticCond::v_InitObject()
         {
-            m_precon = CreatePrecon(m_locToGloMap);
+            auto asmMap = m_locToGloMap.lock();
+
+            m_precon = CreatePrecon(asmMap);
 
             // Allocate memory for top-level structure
-            SetupTopLevel(m_locToGloMap);
+            SetupTopLevel(asmMap);
 
             // Setup Block Matrix systems
             int n, n_exp = m_expList.lock()->GetNumElmts();
@@ -179,7 +181,7 @@ namespace Nektar
             }
 
             // Construct this level
-            Initialise(m_locToGloMap);
+            Initialise(asmMap);
         }
         
         /**
@@ -222,7 +224,7 @@ namespace Nektar
             if (m_linSysKey.GetGlobalSysSolnType() ==
                     eIterativeMultiLevelStaticCond)
             {
-                m_precon = CreatePrecon(m_locToGloMap);
+                m_precon = CreatePrecon(m_locToGloMap.lock());
                 m_precon->BuildPreconditioner();
             }
 
@@ -392,21 +394,22 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nLocal = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
+            AssemblyMapSharedPtr asmMap = m_locToGloMap.lock();
 
             if (m_sparseSchurCompl)
             {
                 // Do matrix multiply locally using block-diagonal sparse matrix
                 Array<OneD, NekDouble> tmp = m_wsp + nLocal;
 
-                m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
+                asmMap->GlobalToLocalBnd(pInput, m_wsp);
                 m_sparseSchurCompl->Multiply(m_wsp,tmp);
-                m_locToGloMap->AssembleBnd(tmp, pOutput);
+                asmMap->AssembleBnd(tmp, pOutput);
             }
             else
             {
                 // Do matrix multiply locally, using direct BLAS calls
-                m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
+                asmMap->GlobalToLocalBnd(pInput, m_wsp);
                 int i, cnt;
                 Array<OneD, NekDouble> tmpout = m_wsp + nLocal;
                 for (i = cnt = 0; i < m_denseBlocks.size(); cnt += m_rows[i], ++i)
@@ -417,13 +420,13 @@ namespace Nektar
                                 m_wsp.get()+cnt, 1,
                                 0.0, tmpout.get()+cnt, 1);
                 }
-                m_locToGloMap->AssembleBnd(tmpout, pOutput);
+                asmMap->AssembleBnd(tmpout, pOutput);
             }
         }
 
         void GlobalLinSysIterativeStaticCond::v_UniqueMap()
         {
-            m_map = m_locToGloMap->GetGlobalToUniversalBndMapUnique();
+            m_map = m_locToGloMap.lock()->GetGlobalToUniversalBndMapUnique();
         }
 
         void GlobalLinSysIterativeStaticCond::v_PreSolve(
@@ -436,21 +439,21 @@ namespace Nektar
                 // level, the preconditioner is never set up.
                 if (!m_precon)
                 {
-                    m_precon = CreatePrecon(m_locToGloMap);
+                    m_precon = CreatePrecon(m_locToGloMap.lock());
                     m_precon->BuildPreconditioner();
                 }
                 
 #if 1 // to be consistent with original 
 
-                int nGloBndDofs = m_locToGloMap->GetNumGlobalBndCoeffs();
+                int nGloBndDofs = m_locToGloMap.lock()->GetNumGlobalBndCoeffs();
                 Array<OneD, NekDouble> F_gloBnd(nGloBndDofs);
                 NekVector<NekDouble> F_GloBnd(nGloBndDofs,F_gloBnd,eWrapper);
                 
-                m_locToGloMap->AssembleBnd(F_bnd,F_gloBnd);
+                m_locToGloMap.lock()->AssembleBnd(F_bnd,F_gloBnd);
                 Set_Rhs_Magnitude(F_GloBnd);
                 
 #else
-                int nLocBndDofs   = m_locToGloMap->GetNumLocalBndCoeffs();
+                int nLocBndDofs   = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
                 //Set_Rhs_Magnitude - version using local array
 

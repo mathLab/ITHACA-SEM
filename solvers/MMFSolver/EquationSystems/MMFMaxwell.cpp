@@ -33,10 +33,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MMFSolver/EquationSystems/MMFMaxwell.h>
-#include <boost/algorithm/string.hpp>
-#include <iomanip>
 #include <iostream>
+#include <iomanip>
+#include <boost/algorithm/string.hpp>
+#include <MMFSolver/EquationSystems/MMFMaxwell.h>
 
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/MMFSystem.h>

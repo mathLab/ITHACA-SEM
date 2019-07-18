@@ -133,6 +133,14 @@ struct DomainRange
 typedef std::shared_ptr<DomainRange> DomainRangeShPtr;
 static DomainRangeShPtr NullDomainRangeShPtr;
 
+struct Composite
+{
+    std::vector<std::shared_ptr<Geometry>> m_geomVec;
+};
+
+typedef std::shared_ptr<Composite> CompositeSharedPtr;
+typedef std::map<int, CompositeSharedPtr> CompositeMap;
+
 struct ExpansionInfo;
 
 typedef std::shared_ptr<ExpansionInfo> ExpansionInfoShPtr;
@@ -447,6 +455,7 @@ protected:
 
     void PopulateFaceToElMap(Geometry3DSharedPtr element, int kNfaces);
     ExpansionInfoMapShPtr SetUpExpansionInfoMap();
+    std::string GetCompositeString(CompositeSharedPtr comp);
 
     LibUtilities::SessionReaderSharedPtr m_session;
     PointGeomMap m_vertSet;

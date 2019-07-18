@@ -2578,6 +2578,48 @@ ExpansionInfoMapShPtr MeshGraph::SetUpExpansionInfoMap(void)
     return returnval;
 }
 
+
+
+/**
+ * @brief Returns a string representation of a composite.
+ */
+std::string MeshGraph::GetCompositeString(CompositeSharedPtr comp)
+{
+    if (comp->m_geomVec.size() == 0)
+    {
+        return "";
+    }
+
+    // Create a map that gets around the issue of mapping faces -> F and edges
+    // -> E inside the tag.
+    map<LibUtilities::ShapeType, pair<string, string>> compMap;
+    compMap[LibUtilities::ePoint]         = make_pair("V", "V");
+    compMap[LibUtilities::eSegment]       = make_pair("S", "E");
+    compMap[LibUtilities::eQuadrilateral] = make_pair("Q", "F");
+    compMap[LibUtilities::eTriangle]      = make_pair("T", "F");
+    compMap[LibUtilities::eTetrahedron]   = make_pair("A", "A");
+    compMap[LibUtilities::ePyramid]       = make_pair("P", "P");
+    compMap[LibUtilities::ePrism]         = make_pair("R", "R");
+    compMap[LibUtilities::eHexahedron]    = make_pair("H", "H");
+
+    stringstream s;
+
+    GeometrySharedPtr firstGeom = comp->m_geomVec[0];
+    int shapeDim                = firstGeom->GetShapeDim();
+    string tag                  = (shapeDim < m_meshDimension)
+        ? compMap[firstGeom->GetShapeType()].second
+        : compMap[firstGeom->GetShapeType()].first;
+
+    std::vector<unsigned int> idxList;
+    std::transform(
+        comp->m_geomVec.begin(), comp->m_geomVec.end(),
+        std::back_inserter(idxList),
+        [] (GeometrySharedPtr geom) { return geom->GetGlobalID(); });
+
+    s << " " << tag << "[" << ParseUtils::GenerateSeqString(idxList) << "] ";
+    return s.str();
+}
+
 void MeshGraph::ReadExpansionInfos()
 {
     // Find the Expansions tag

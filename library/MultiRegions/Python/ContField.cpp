@@ -39,7 +39,7 @@
 using namespace Nektar;
 using namespace Nektar::MultiRegions;
 
-std::shared_ptr<ContField1D> CreateContField(
+std::shared_ptr<ContField> CreateContField(
     const LibUtilities::SessionReaderSharedPtr &session,
     const SpatialDomains::MeshGraphSharedPtr &graph,
     const std::string &var,

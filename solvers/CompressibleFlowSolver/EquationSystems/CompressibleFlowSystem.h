@@ -131,7 +131,8 @@ namespace Nektar
 
         void preconditioner_BlkSOR_coeff(
             const Array<OneD, NekDouble> &inarray,
-                  Array<OneD, NekDouble >&outarray);
+                  Array<OneD, NekDouble >&outarray,
+            const bool                   &flag);
 
         void MinusOffDiag2Rhs(
             const int nvariables,
@@ -233,10 +234,14 @@ namespace Nektar
         void MatrixMultiply_MatrixFree_coeff(
             const  Array<OneD, NekDouble> &inarray,
                    Array<OneD, NekDouble >&out);
+        void MatrixMultiply_MatrixFree_coeff_central(
+            const  Array<OneD, NekDouble> &inarray,
+                Array<OneD, NekDouble >&out);
 
         void MatrixMultiply_MatrixFree_coeff_dualtimestep(
             const  Array<OneD, NekDouble> &inarray,
-                   Array<OneD, NekDouble >&out);
+                Array<OneD, NekDouble >&out,
+            const  bool                   &controlFlag);
 
         void DebugNumCalJac_coeff(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);

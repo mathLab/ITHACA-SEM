@@ -138,6 +138,38 @@ namespace Nektar
                                     m_maxhesband,
                                     50000000000);
         }
+
+        int flaguseCentralDifference = 0;
+        // if(pSession->DefinesGlobalSysSolnInfo(variable,
+        //                                       "flaguseCentralDifference"))
+        // {
+        //     flaguseCentralDifference = boost::lexical_cast<int>(
+        //             pSession->GetGlobalSysSolnInfo(variable,
+        //                     "flaguseCentralDifference").c_str());
+            
+        // }
+        pSession->LoadParameter("flaguseCentralDifference",
+                                    flaguseCentralDifference,
+                                    0);
+        
+        cout << " flaguseCentralDifference= "<<flaguseCentralDifference<<endl;
+
+        switch (flaguseCentralDifference)
+        {
+        case 1:
+            m_DifferenceFlag0 = true;
+            m_DifferenceFlag1 = false;
+            break;
+        case 2:
+            m_DifferenceFlag0 = true;
+            m_DifferenceFlag1 = true;
+            break;
+        
+        default:
+            m_DifferenceFlag0 = false;
+            m_DifferenceFlag1 = false;
+            break;
+        }
         /* if(pSession->DefinesGlobalSysSolnInfo(variable,"SuccessiveRHS"))
         {
             m_successiveRHS = boost::lexical_cast<int>(
@@ -272,7 +304,7 @@ namespace Nektar
         if(m_verbose)
         {
             Array<OneD, NekDouble> r0(nGlobal, 0.0);
-            m_oprtor.DoMatrixMultiply(pOutput, r0);
+            m_oprtor.DoMatrixMultiply(pOutput, r0,m_DifferenceFlag0);
             Vmath::Svtvp(nNonDir, -1.0, &r0[0] + nDir, 1, &pInput[0] + nDir, 1, &r0[0] + nDir, 1);
             NekDouble vExchange    = Vmath::Dot2(nNonDir,
                                         &r0[0] + nDir,
@@ -371,7 +403,7 @@ namespace Nektar
         if(restarted)
         {
             // tmp2=Ax
-            m_oprtor.DoMatrixMultiply(pOutput, r0);
+            m_oprtor.DoMatrixMultiply(pOutput, r0, m_DifferenceFlag0);
 
             //The first search direction
             beta = -1.0;
@@ -484,6 +516,16 @@ namespace Nektar
             starttem = id_start[idtem];
             endtem = id_end[idtem];
 
+            if(0==nd)
+            {
+                m_CentralDifferenceFlag = m_DifferenceFlag0;
+            }
+            else
+            {
+                m_CentralDifferenceFlag = m_DifferenceFlag1;
+            }
+            
+
             DoArnoldi(starttem, endtem, nGlobal, nDir, V_total, Vsingle1, Vsingle2, hsingle1);
 
             if(starttem > 0)
@@ -567,7 +609,7 @@ namespace Nektar
         // w=AV(:,nd)
         Array<OneD, NekDouble> w(nGlobal, 0.0);
 
-        m_oprtor.DoMatrixMultiply(Vsingle1, w);
+        m_oprtor.DoMatrixMultiply(Vsingle1, w,m_CentralDifferenceFlag);
 
         tmp1 = w + nDir;
         tmp2 = w + nDir;

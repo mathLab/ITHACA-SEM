@@ -554,7 +554,9 @@ namespace Nektar
 
     void CompressibleFlowSystem::preconditioner_BlkSOR_coeff(
             const Array<OneD, NekDouble> &inarray,
-                  Array<OneD, NekDouble> &outarray)
+                  Array<OneD, NekDouble >&outarray,
+            const bool                   &flag)
+
     {
         int nSORTot   =   m_JFNKPrecondStep;
         if (0==nSORTot)
@@ -1950,11 +1952,68 @@ namespace Nektar
         return;
     }
 
-    void CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff_dualtimestep(
+    void CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff_central(
                                                  const  Array<OneD, NekDouble> &inarray,
                                                         Array<OneD, NekDouble >&out)
     {
-        MatrixMultiply_MatrixFree_coeff(inarray,out);
+        NekDouble eps = 1.0E-5;
+        NekDouble magnitdEstimatMax =0.0;
+        for(int i = 0; i < m_magnitdEstimat.num_elements(); i++)
+        {
+            magnitdEstimatMax = max(magnitdEstimatMax,m_magnitdEstimat[i]);
+        }
+        eps *= magnitdEstimatMax;
+        NekDouble oeps = 1.0/eps;
+        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
+        Array<OneD, NekDouble > tmp;
+        Array<OneD,       Array<OneD, NekDouble> > solplus(nvariables);
+        Array<OneD,       Array<OneD, NekDouble> > resplus(nvariables);
+        Array<OneD,       Array<OneD, NekDouble> > resminus(nvariables);
+        for(int i = 0; i < nvariables; i++)
+        {
+            solplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
+            resplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
+            resminus[i] =  Array<OneD, NekDouble>(npoints,0.0);
+        }
+
+        for (int i = 0; i < nvariables; i++)
+        {
+            tmp = inarray + i*npoints;
+            Vmath::Svtvp(npoints,eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
+        }
+        NonlinSysEvaluator_coeff(solplus,resplus);
+
+        for (int i = 0; i < nvariables; i++)
+        {
+            tmp = inarray + i*npoints;
+            Vmath::Svtvp(npoints,-eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
+        }
+        NonlinSysEvaluator_coeff(solplus,resminus);
+
+        for (int i = 0; i < nvariables; i++)
+        {
+            tmp = out + i*npoints;
+            Vmath::Vsub(npoints,&resplus[i][0],1,&resminus[i][0],1,&tmp[0],1);
+            Vmath::Smul(npoints, 2.0*oeps ,&tmp[0],1,&tmp[0],1);
+        }
+       
+        return;
+    }
+
+    void CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff_dualtimestep(
+                                                 const  Array<OneD, NekDouble> &inarray,
+                                                        Array<OneD, NekDouble >&out,
+                                                const  bool                   &controlFlag)
+    {
+        if(controlFlag)
+        {
+            MatrixMultiply_MatrixFree_coeff_central(inarray,out);
+        }
+        else
+        {
+            MatrixMultiply_MatrixFree_coeff(inarray,out);
+        }
 
         if(m_cflLocTimestep>0.0)
         {

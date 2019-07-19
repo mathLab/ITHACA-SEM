@@ -63,7 +63,7 @@ namespace Nektar
         typedef const Array<OneD, NekDouble> InArrayType;
         typedef       Array<OneD, NekDouble> OutArrayType;
         
-        typedef std::function< void (InArrayType&, OutArrayType&) >                                   FunctorType1;
+        typedef std::function< void (InArrayType&, OutArrayType&, const bool&) >                                   FunctorType1;
         typedef std::function< void (InArrayType&, OutArrayType&, const NekDouble) >                  FunctorType2;
         typedef std::function< void (InArrayType&, OutArrayType&, const NekDouble, const NekDouble) > FunctorType3;
         typedef const FunctorType1& ConstFunctorType1Ref;
@@ -89,40 +89,43 @@ namespace Nektar
             void DefineLinSysRhs(FuncPointerT func, ObjectPointerT obj)
         {
             m_functors1[0] =  std::bind(
-                func, obj, std::placeholders::_1, std::placeholders::_2);
+                func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
         }
         template<typename FuncPointerT, typename ObjectPointerT> 
             void DefineMatrixMultiply(FuncPointerT func, ObjectPointerT obj)
         {
             m_functors1[1] =  std::bind(
-                func, obj, std::placeholders::_1, std::placeholders::_2);
+                func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
         }
         template<typename FuncPointerT, typename ObjectPointerT> 
             void DefinePrecond(FuncPointerT func, ObjectPointerT obj)
         {
             m_functors1[2] =  std::bind(
-                func, obj, std::placeholders::_1, std::placeholders::_2);
+                func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
         }
         
         inline void DoLinSysRhs(InArrayType     &inarray, 
-                                OutArrayType    &outarray) const
+                                OutArrayType    &outarray,
+                                const  bool      &flag = false) const
         {
             ASSERTL1(m_functors1[0],"DoLinSysRhs should be defined for this time integration scheme");
-            m_functors1[0](inarray,outarray);
+            m_functors1[0](inarray,outarray,flag);
         }
         
         inline void DoMatrixMultiply(InArrayType     &inarray, 
-                                     OutArrayType    &outarray) const
+                                     OutArrayType    &outarray,
+                                    const  bool      &flag = false) const
         {
             ASSERTL1(m_functors1[1],"DoMatrixMultiply should be defined for this time integration scheme");
-            m_functors1[1](inarray,outarray);
+            m_functors1[1](inarray,outarray,flag);
         }
         
         inline void DoPrecond(  InArrayType     &inarray, 
-                                OutArrayType    &outarray) const
+                                OutArrayType    &outarray,
+                                const  bool      &flag = false) const
         {
             ASSERTL1(m_functors1[2],"DoPrecond should be defined for this time integration scheme");
-            m_functors1[2](inarray,outarray);
+            m_functors1[2](inarray,outarray,flag);
         }
     protected:
         FunctorType1Array m_functors1;
@@ -212,6 +215,10 @@ namespace Nektar
 
         bool                                        m_flag_LeftPrecond   = false;
         bool                                        m_flag_RightPrecond  = true;
+
+        bool                                        m_CentralDifferenceFlag  = false;
+        bool                                        m_DifferenceFlag0  = false;
+        bool                                        m_DifferenceFlag1  = false;
 
         /// Storage for solutions to previous linear problems
         boost::circular_buffer<Array<OneD, NekDouble> > m_prevLinSol;

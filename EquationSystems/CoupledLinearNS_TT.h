@@ -125,6 +125,8 @@ namespace Nektar
 	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_y;
 	Array<OneD, std::set<int> > elements_trafo;
 	int number_elem_trafo;
+	int qoi_dof;
+	int use_LocROM;
 //	Array<OneD, Eigen::Matrix2d > elements_trafo_matrix; // put this as a function or find a way with symbolic computation
         void gen_phys_base_vecs();
 

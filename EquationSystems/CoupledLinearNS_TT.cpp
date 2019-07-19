@@ -4379,7 +4379,7 @@ namespace Nektar
 
 		time(&timer_2);  /* get current time; same as: timer = time(NULL)  */
 		double seconds = difftime(timer_1, timer_2);
-		cout << "time for a single adv_geo_mat_projector in seconds " << seconds << endl;
+//		cout << "time for a single adv_geo_mat_projector in seconds " << seconds << endl;
 
 
 		curr_adv_mats_proj_x_2d[i][1] = adv_geo_mat_projector(Ah_elem, B_elem, C_elem, D_elem, i, 1, adv_vec_proj_x_2d[i][1]);
@@ -4392,6 +4392,9 @@ namespace Nektar
 
     Eigen::MatrixXd CoupledLinearNS_TT::adv_geo_mat_projector(Array<OneD, Array<OneD, Eigen::MatrixXd > > Ah_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > B_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > C_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > D_elem, int curr_elem_trafo, int deriv_index, Eigen::VectorXd &adv_vec_proj)
     {
+
+	// eats up all the compute time...
+
 	// this function (i) expands to full size, (ii) removes dbc cols and rows, (iii) projects
 	Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
         int nz_loc;
@@ -4401,10 +4404,10 @@ namespace Nektar
         int nsize_bndry = nvel*m_fields[m_velocity[0]]->GetExp(0)->NumBndryCoeffs()*nz_loc;
         int nsize_bndry_p1 = nsize_bndry+nz_loc;
         int nsize_int = (nvel*m_fields[m_velocity[0]]->GetExp(0)->GetNcoeffs()*nz_loc - nsize_bndry);
-	Eigen::MatrixXd D_adv_all = Eigen::MatrixXd::Zero( nsize_int*nel , nsize_int*nel );
-	Eigen::MatrixXd B_adv_all = Eigen::MatrixXd::Zero( nsize_bndry*nel , nsize_int*nel );
-	Eigen::MatrixXd C_adv_all = Eigen::MatrixXd::Zero( nsize_bndry*nel , nsize_int*nel );
-	Eigen::MatrixXd A_adv_all = Eigen::MatrixXd::Zero( nsize_bndry*nel , nsize_bndry*nel );
+	Eigen::MatrixXd D_adv_all = Eigen::MatrixXd::Zero( nsize_int*nel, nsize_int*nel );
+	Eigen::MatrixXd B_adv_all = Eigen::MatrixXd::Zero( nsize_bndry*nel, nsize_int*nel );
+	Eigen::MatrixXd C_adv_all = Eigen::MatrixXd::Zero( nsize_bndry*nel, nsize_int*nel );
+	Eigen::MatrixXd A_adv_all = Eigen::MatrixXd::Zero( nsize_bndry*nel, nsize_bndry*nel );
 
 	time_t timer_1;
 	time_t timer_2;
@@ -4467,7 +4470,13 @@ namespace Nektar
 	// also need to create appropriate vector right-hand-side contribution
 	Eigen::VectorXd add_to_rhs_adv(M_truth_size); // probably need this for adv and non-adv
 	add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;
-	Eigen::VectorXd adv_rhs_add = remove_rows(add_to_rhs_adv, elem_loc_dbc);
+
+	time(&timer_3);  /* get current time; same as: timer = time(NULL)  */
+	Eigen::VectorXd adv_rhs_add = remove_rows(add_to_rhs_adv, elem_loc_dbc); // or is this eating up the time?
+	time(&timer_4);  /* get current time; same as: timer = time(NULL)  */
+	seconds = difftime(timer_4, timer_3);
+//	cout << "time within adv_geo_mat_projector just for remove_rows(add_to_rhs_adv, elem_loc_dbc) in seconds " << seconds << endl;
+
 	adv_vec_proj = RB.transpose() * adv_rhs_add;
 
 	time(&timer_3);  /* get current time; same as: timer = time(NULL)  */
@@ -4476,8 +4485,31 @@ namespace Nektar
 	seconds = difftime(timer_4, timer_3);
 //	cout << "time within adv_geo_mat_projector just for remove_cols_and_rows in seconds " << seconds << endl;
 
+	// it is limiting the Eigen MatVec operation -- could compare to the Nektar++ MatVec operation -- I rather think one has to employ the sparsity structure of A
 
-	Eigen::MatrixXd adv_mat_proj = RB.transpose() * adv_matrix_simplified * RB;
+	time(&timer_3);  /* get current time; same as: timer = time(NULL)  */
+	Eigen::MatrixXd adv_mat_proj = RB.transpose() * adv_matrix_simplified * RB; // is this eating up the time?
+	time(&timer_4);  /* get current time; same as: timer = time(NULL)  */
+	seconds = difftime(timer_4, timer_3);
+//	cout << "time within adv_geo_mat_projector just for RB.transpose() * adv_matrix_simplified * RB in seconds " << seconds << endl;
+
+//	time(&timer_3);  /* get current time; same as: timer = time(NULL)  */
+//	Eigen::MatrixXd nn = (adv_matrix_simplified * RB.col(2)); // is this eating up the time?
+//	time(&timer_4);  /* get current time; same as: timer = time(NULL)  */
+//	seconds = difftime(timer_4, timer_3);
+//	cout << "time within adv_geo_mat_projector just for (adv_matrix_simplified * RB.col(2)) " << seconds << endl;
+
+//	time(&timer_3);  /* get current time; same as: timer = time(NULL)  */
+//	Eigen::MatrixXd nn2 = RB.transpose(); // is this eating up the time?
+//	time(&timer_4);  /* get current time; same as: timer = time(NULL)  */
+//	seconds = difftime(timer_4, timer_3);
+//	cout << "time within adv_geo_mat_projector just for RB.transpose() in seconds " << seconds << endl;
+
+//	time(&timer_3);  /* get current time; same as: timer = time(NULL)  */
+//	Eigen::MatrixXd nn3 = nn2 * nn; // is this eating up the time?
+//	time(&timer_4);  /* get current time; same as: timer = time(NULL)  */
+//	seconds = difftime(timer_4, timer_3);
+//	cout << "time within adv_geo_mat_projector just for nn2 * nn in seconds " << seconds << endl; 
 
 	time(&timer_2);  /* get current time; same as: timer = time(NULL)  */
 	seconds = difftime(timer_2, timer_1);
@@ -4520,8 +4552,11 @@ namespace Nektar
 
 		time(&timer_2);  /* get current time; same as: timer = time(NULL)  */
 		double seconds = difftime(timer_1, timer_2);
-		cout << "time for a single gen_adv_mats_proj_x_2d in seconds " << seconds << endl;
-		cout << "have 2 times RBsize of that " << endl;
+		if (debug_mode)
+		{
+			cout << "time for a single gen_adv_mats_proj_x_2d in seconds " << seconds << endl;
+			cout << "have 2 times RBsize of that " << endl;
+		}
 
 		adv_mats_proj_y_2d[trafo_iter] = gen_adv_mats_proj_y_2d(curr_PhysBaseVec_y, adv_vec_proj_y_2d[trafo_iter]);
 	
@@ -5744,6 +5779,10 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //		cout << "curr_f_bnd.norm() " << curr_f_bnd.norm() << endl;
 //		cout << "ref_f_bnd.norm() " << ref_f_bnd.norm() << endl;
 
+		if (qoi_dof >= 0)
+		{
+			cout << "converged qoi dof " << snapshot_result_phys_velocity_x_y[1][qoi_dof] << endl;
+		}
 
 		Eigen::VectorXd trafo_f_bnd = curr_f_bnd;
 		Eigen::VectorXd trafo_f_p = curr_f_p;
@@ -5911,13 +5950,12 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //		cout << mat_compare << endl;
 		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << " of snapshot number " << iter_index << endl;
 
-
 		if (debug_mode)
 		{
 			cout << "snapshot_x_collection.num_elements() " << snapshot_x_collection.num_elements() << " snapshot_x_collection[0].num_elements() " << snapshot_x_collection[0].num_elements() << endl;
 		}
 
-		if (write_ROM_field)
+		if (write_ROM_field || (qoi_dof >= 0))
 		{
 			recover_snapshot_data(reconstruct_solution, current_index);
 		}
@@ -6024,7 +6062,15 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs(), 0.0);  
         variables[i] = "p"; 
 
-	WriteFld("Test.fld",m_fields[0],fieldcoeffs,variables);
+	if (write_ROM_field)
+	{
+		WriteFld("Test.fld",m_fields[0],fieldcoeffs,variables);
+	}
+
+	if (qoi_dof >= 0)
+	{
+		cout << "converged qoi dof ROM " << curr_PhysBaseVec_y[qoi_dof] << endl;
+	}
 
 /*        fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs());  
         // project pressure field to velocity space        
@@ -6094,6 +6140,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	else
 	{
 		do_trafo_check = 1;
+	}
+	if (m_session->DefinesParameter("qoi_dof")) 
+	{
+		qoi_dof = m_session->GetParameter("qoi_dof");	
+	}
+	else
+	{
+		qoi_dof = -1;
 	}
 	double POD_tolerance = m_session->GetParameter("POD_tolerance");
 	ref_param_index = m_session->GetParameter("ref_param_index");
@@ -6349,6 +6403,18 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		do_geo_trafo(); // setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
 	}
+
+	// insert here the route to LocalROMs
+	if (m_session->DefinesParameter("use_LocROM")) // this sets how the truth system global coupling is enforced
+	{
+		use_LocROM = m_session->GetParameter("use_LocROM");
+	}
+	else
+	{
+		use_LocROM = 0;
+	}	
+
+
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
 //	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
 	Eigen::VectorXd singular_values = svd_collect_f_all.singularValues();

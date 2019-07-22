@@ -136,15 +136,15 @@ namespace Nektar
         {
 
             int nCoeffs   = fields[0]->GetNcoeffs();
-            // Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
-            // for (int i = 0; i < nConvectiveFields; ++i)
-            // {
-            //     tmp[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
-            // }
-            DiffusionIP::v_Diffuse_coeff(nConvectiveFields,fields,inarray,outarray,pFwd,pBwd);
+            Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
             for (int i = 0; i < nConvectiveFields; ++i)
             {
-                fields[i]->BwdTrans             (outarray[i], outarray[i]);
+                tmp[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
+            }
+            DiffusionIP::v_Diffuse_coeff(nConvectiveFields,fields,inarray,tmp,pFwd,pBwd);
+            for (int i = 0; i < nConvectiveFields; ++i)
+            {
+                fields[i]->BwdTrans             (tmp[i], outarray[i]);
             }
         }
 

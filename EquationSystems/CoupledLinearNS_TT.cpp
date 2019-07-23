@@ -4817,6 +4817,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
         int nsize_bndry_p1 = nsize_bndry+nz_loc;
         int nsize_int = (nvel*m_fields[m_velocity[0]]->GetExp(0)->GetNcoeffs()*nz_loc - nsize_bndry);
         int nsize_p = m_pressure->GetExp(0)->GetNcoeffs()*nz_loc;
+//	cout << "nsize_int " << nsize_int << endl;
+//	cout << "nsize_p " << nsize_p << endl;
         int nsize_p_m1 = nsize_p-nz_loc;
         int Ahrows = nsize_bndry_p1;
 
@@ -5707,7 +5709,6 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
     {
  
 	// setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
-//	cout << "entering CoupledLinearNS_TT::do_geo_trafo() " << endl;
 
 //	cout << "checking if all quantities set: " << endl;
 //	cout << "Nmax " << Nmax << endl;
@@ -5774,7 +5775,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			while ((L2error > 1e-9) && (!load_cO_snapshot_data_from_files));
 		}
 
-		snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_result_phys_velocity_x_y[0], snapshot_result_phys_velocity_x_y[1], general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);
+//		snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_result_phys_velocity_x_y[0], snapshot_result_phys_velocity_x_y[1], general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);
 
 //		cout << "curr_f_bnd.norm() " << curr_f_bnd.norm() << endl;
 //		cout << "ref_f_bnd.norm() " << ref_f_bnd.norm() << endl;
@@ -5815,7 +5816,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	collect_f_all.block(collect_f_bnd.rows(),0,collect_f_p.rows(),collect_f_p.cols()) = collect_f_p;
 	collect_f_all.block(collect_f_bnd.rows()+collect_f_p.rows(),0,collect_f_int.rows(),collect_f_int.cols()) = collect_f_int;
 
-//	cout << "finished CoupledLinearNS_TT::do_geo_trafo() " << endl;
+
     }
 
     void CoupledLinearNS_TT::write_curr_field(std::string filename)
@@ -6413,7 +6414,54 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		use_LocROM = 0;
 	}	
+	if (use_LocROM)
+	{
+		if (debug_mode)
+		{
+			cout << "testing a proper L2 norm availability for LocROM" << endl; // e.g. by calling L2norm_ITHACA
+			for (int i=0; i<Nmax; ++i)
+			{
+				cout << "L2norm of snapshot " << i << " "  << L2norm_ITHACA(snapshot_x_collection[i], snapshot_y_collection[i]) << endl;
+			}
+		}
+		// in principle set the number of LocalClusters to use or determine a range of Clusters to consider
+		// Open Q: normalize, and if so with which norm ?
+		// Open Q: use phys / loc / loc_bnd_p_int / glo ?
+		
+		// Test range:
+		int no_clusters = 3;
+		double optimal_CVT_energy = -1;
+		Array<OneD, std::set<int> > optimal_clusters(no_clusters);
+		std::srand ( unsigned ( std::time(0) ) );
+		for (int iter = 0; iter < 100; ++iter)
+		{
+			Array<OneD, std::set<int> > clusters(no_clusters);
+			double CVT_energy = 0;
+			k_means_ITHACA(no_clusters, clusters, CVT_energy);
+			if ((optimal_CVT_energy == -1) || (CVT_energy < optimal_CVT_energy))
+			{
+				optimal_CVT_energy = CVT_energy;
+				optimal_clusters = clusters;
+			}
+		}
+		if (debug_mode)
+		{
+			cout << "optimal final clustering" << endl;
+			for (int i = 0; i < no_clusters; ++i)
+			{
+				for (std::set<int>::iterator it=optimal_clusters[i].begin(); it!=optimal_clusters[i].end(); ++it)
+				{
+					std::cout << ' ' << *it;
+				}
+				cout << endl;
+			}
+			cout << "optimal CVT_energy " << optimal_CVT_energy << endl;
+		}
 
+		// keep collect_f_all for later to continue regular execution, while a LocROM verification and validation module runs from here first
+		
+
+	}
 
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
 //	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
@@ -6537,6 +6585,153 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	} */
 
 	return affine_mat_proj;
+    }
+
+    void CoupledLinearNS_TT::k_means_ITHACA(int no_clusters, Array<OneD, std::set<int> > &clusters, double &CVT_energy)
+    {
+	// should run many times with different (random) start values
+
+	std::vector<int> myvector;
+	for (int i=0; i<Nmax; ++i) myvector.push_back(i); 
+	std::random_shuffle ( myvector.begin(), myvector.end() );	
+	if (debug_mode)
+	{
+/*		std::cout << "myvector contains:";
+		for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+			std::cout << ' ' << *it;
+		std::cout << '\n'; */
+	}
+
+	// what to use as a cell equivalent - try the one by J. Burkardt, but it cannot change dynamically...
+	// can use an array of sets, since 'no_clusters' is fixed
+	//Array<OneD, std::set<int> > clusters(no_clusters); // the j-th myvector entry is the initial centroid of the j-th cluster
+	for (int i = 0; i < Nmax; ++i)
+	{
+		Array<OneD, double> distances(no_clusters);
+		for (int j = 0; j < no_clusters; ++j)
+		{
+			// compute distance of i-th snapshot to j-th centroid
+			distances[j] = L2norm_abs_error_ITHACA(snapshot_x_collection[i], snapshot_y_collection[i], snapshot_x_collection[myvector[j]], snapshot_y_collection[myvector[j]]) * L2norm_abs_error_ITHACA(snapshot_x_collection[i], snapshot_y_collection[i], snapshot_x_collection[myvector[j]], snapshot_y_collection[myvector[j]]); 
+		}
+		// find the minimum distance and assign i-th snapshot to appropriate cluster
+		int minElementIndex = std::min_element(distances.begin(),distances.end()) - distances.begin();
+		double minElement = *std::min_element(distances.begin(), distances.end());
+		if (debug_mode)
+		{
+		/*	std::cout << "minElementIndex:" << minElementIndex << ", minElement:" << minElement << '\n';
+			std::cout << "distances contains:";
+			for (Array<OneD, double>::iterator it=distances.begin(); it!=distances.end(); ++it)
+				std::cout << ' ' << *it;
+			std::cout << endl << "the correct initial cluster centroid index is thus: " << myvector[minElementIndex] << endl; */
+		}
+		clusters[minElementIndex].insert(i);
+	}
+	if (debug_mode)
+	{
+/*		for (int i = 0; i < no_clusters; ++i)
+		{
+			for (std::set<int>::iterator it=clusters[i].begin(); it!=clusters[i].end(); ++it)
+			{
+				std::cout << ' ' << *it;
+			}
+			cout << endl;
+		} */
+	}
+	Array<OneD, Array< OneD, NekDouble > > mean_kj_x(no_clusters);
+	Array<OneD, Array< OneD, NekDouble > > mean_kj_y(no_clusters);
+	for (int iter = 0; iter < 100; iter++)
+	{
+		// find new centroids as mean of vectors in the clusters
+		for (int i = 0; i < no_clusters; ++i)
+		{
+			mean_kj_x[i] = Array< OneD, NekDouble >(snapshot_x_collection[0].num_elements(),0.0);
+			mean_kj_y[i] = Array< OneD, NekDouble >(snapshot_y_collection[0].num_elements(),0.0);
+			int cluster_size = clusters[i].size();
+			for (std::set<int>::iterator it=clusters[i].begin(); it!=clusters[i].end(); ++it)
+			{
+				// std::cout << ' ' << *it;
+				for (int j = 0; j < snapshot_x_collection[0].num_elements(); ++j)
+				{
+					mean_kj_x[i][j] += (1.0/cluster_size) * snapshot_x_collection[*it][j];
+					mean_kj_y[i][j] += (1.0/cluster_size) * snapshot_y_collection[*it][j];
+				}		
+			}
+		}
+		// re-determine corresponding clusters
+		Array<OneD, std::set<int> > clusters(no_clusters); 
+		for (int i = 0; i < Nmax; ++i)
+		{
+			Array<OneD, double> distances(no_clusters);
+			for (int j = 0; j < no_clusters; ++j)
+			{
+				// compute distance of i-th snapshot to j-th centroid
+				distances[j] = L2norm_abs_error_ITHACA(snapshot_x_collection[i], snapshot_y_collection[i], mean_kj_x[j], mean_kj_y[j]) * L2norm_abs_error_ITHACA(snapshot_x_collection[i], snapshot_y_collection[i], mean_kj_x[j], mean_kj_y[j]); 
+			}
+			// find the minimum distance and assign i-th snapshot to appropriate cluster
+			int minElementIndex = std::min_element(distances.begin(),distances.end()) - distances.begin();
+			double minElement = *std::min_element(distances.begin(), distances.end());
+			if (debug_mode)
+			{
+		/*		std::cout << "minElementIndex:" << minElementIndex << ", minElement:" << minElement << '\n';
+				std::cout << "distances contains:";
+				for (Array<OneD, double>::iterator it=distances.begin(); it!=distances.end(); ++it)
+					std::cout << ' ' << *it;
+				std::cout << endl << "the correct cluster is thus: " << minElementIndex << endl; */
+			}
+			clusters[minElementIndex].insert(i);
+		}
+		if (debug_mode)
+		{
+/*			for (int i = 0; i < no_clusters; ++i)
+			{
+				for (std::set<int>::iterator it=clusters[i].begin(); it!=clusters[i].end(); ++it)
+				{
+					std::cout << ' ' << *it;
+				}
+				cout << endl;
+			} */
+		}
+	}
+	if (debug_mode)
+	{
+/*		cout << "final clustering" << endl;
+		for (int i = 0; i < no_clusters; ++i)
+		{
+			for (std::set<int>::iterator it=clusters[i].begin(); it!=clusters[i].end(); ++it)
+			{
+				std::cout << ' ' << *it;
+			}
+			cout << endl;
+		}*/
+	}
+
+	// CVT energy and silhouette score
+	// double CVT_energy = 0.0;
+	for (int i = 0; i < no_clusters; ++i)
+	{
+		for (std::set<int>::iterator it=clusters[i].begin(); it!=clusters[i].end(); ++it)
+		{
+			CVT_energy += L2norm_abs_error_ITHACA(snapshot_x_collection[*it], snapshot_y_collection[*it], mean_kj_x[i], mean_kj_y[i]) * L2norm_abs_error_ITHACA(snapshot_x_collection[*it], snapshot_y_collection[*it], mean_kj_x[i], mean_kj_y[i]); 
+		}
+	}
+	if (debug_mode)
+	{
+	//	cout << "CVT energy " << CVT_energy << endl;
+	}
+
+    }
+
+    double CoupledLinearNS_TT::L2norm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y )
+    {
+	Array< OneD, NekDouble > x_difference(component1_x.num_elements());
+	Array< OneD, NekDouble > y_difference(component1_y.num_elements());
+	for (int i = 0; i < component1_y.num_elements(); ++i)
+	{
+		x_difference[i] = component1_x[i] - component2_x[i];
+		y_difference[i] = component1_y[i] - component2_y[i];
+	}
+	double result = L2norm_ITHACA(x_difference, y_difference);
+	return result;
     }
 
     Eigen::MatrixXd CoupledLinearNS_TT::gen_affine_mat_proj_2d(double current_nu, double w)
@@ -7802,6 +7997,20 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	// moved to CoupledLinearNS_trafoP
     }
 
+    double CoupledLinearNS_TT::L2norm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y )
+    {
+	// the input comes in phys coords
+        NekDouble L2norm = -1.0;
+//	cout << "m_NumQuadPointsError " << m_NumQuadPointsError << endl; // should be 0
+//	cout << "component_x.num_elements() " << component_x.num_elements() << endl; // should be nphys
+        if (m_NumQuadPointsError == 0)
+        {
+		double L2norm_x = m_fields[0]->L2(component_x);
+		double L2norm_y = m_fields[1]->L2(component_y);
+		L2norm = sqrt( L2norm_x*L2norm_x + L2norm_y*L2norm_y );
+        }
+	return L2norm;
+    }
 
    void CoupledLinearNS_TT::DefineRBspace(Eigen::MatrixXd RB_in)
     {

@@ -127,6 +127,9 @@ namespace Nektar
 	int number_elem_trafo;
 	int qoi_dof;
 	int use_LocROM;
+	double L2norm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y );
+	double L2norm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
+	void k_means_ITHACA(int no_clusters, Array<OneD, std::set<int> > &clusters, double &CVT_energy);
 //	Array<OneD, Eigen::Matrix2d > elements_trafo_matrix; // put this as a function or find a way with symbolic computation
         void gen_phys_base_vecs();
 

@@ -488,7 +488,7 @@ namespace Nektar
             }
         }
 
-        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
+        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity(const NekDouble SpeedSoundFactor=1.0);
 
         virtual void v_GetViscousSymmtrFluxConservVar(
             const int                                                       nConvectiveFields,

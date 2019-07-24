@@ -57,6 +57,7 @@ namespace Nektar
 
             /// CFL safety factor (comprise between 0 to 1)(may be larger than 1 for implicit solvers).
             NekDouble m_cflSafetyFactor;
+            NekDouble m_cflNonAcoustic;
             /// CFL growth rate
             NekDouble m_CFLGrowth;
             /// maximun cfl in cfl growth

@@ -373,6 +373,7 @@ namespace Nektar
                     {
                         cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
                              << " CFL: " << m_cflSafetyFactor
+                             << " NonAcous-CFL : " << m_cflNonAcoustic
                              << " Time-step: " << m_timestep;
                     }
 

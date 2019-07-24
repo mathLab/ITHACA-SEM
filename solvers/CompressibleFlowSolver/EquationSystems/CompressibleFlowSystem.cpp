@@ -2908,6 +2908,20 @@ namespace Nektar
         // Get the minimum time-step limit and return the time-step
         NekDouble TimeStep = Vmath::Vmin(nElements, tstep, 1);
         m_comm->AllReduce(TimeStep, LibUtilities::ReduceMin);
+
+        NekDouble tmp = m_timestep;
+        m_timestep    = TimeStep;
+
+        Array<OneD, NekDouble> cflNonAcoustic(nElements,0.0);
+        cflNonAcoustic = GetElmtCFLVals(false);
+
+        // Get the minimum time-step limit and return the time-step
+        NekDouble MaxcflNonAcoustic = Vmath::Vmax(nElements, cflNonAcoustic, 1);
+        m_comm->AllReduce(MaxcflNonAcoustic, LibUtilities::ReduceMax);
+
+        m_cflNonAcoustic = MaxcflNonAcoustic;
+        m_timestep = tmp;
+
         return TimeStep;
     }
 
@@ -2955,7 +2969,7 @@ namespace Nektar
      * @brief Compute the advection velocity in the standard space
      * for each element of the expansion.
      */
-    Array<OneD, NekDouble> CompressibleFlowSystem::v_GetMaxStdVelocity()
+    Array<OneD, NekDouble> CompressibleFlowSystem::v_GetMaxStdVelocity(const NekDouble SpeedSoundFactor)
     {
         int nTotQuadPoints = GetTotPoints();
         int n_element      = m_fields[0]->GetExpSize();
@@ -3060,7 +3074,7 @@ namespace Nektar
                 {
                     // Add sound speed
                     vel = std::abs(stdVelocity[j][offset + i]) +
-                          std::abs(stdSoundSpeed[j][offset + i]);
+                          SpeedSoundFactor * std::abs(stdSoundSpeed[j][offset + i]);
                     pntVelocity += vel * vel;
                 }
                 pntVelocity = sqrt(pntVelocity);

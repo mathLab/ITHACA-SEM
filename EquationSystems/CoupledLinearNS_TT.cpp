@@ -5871,6 +5871,149 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	}
     }
 
+    void CoupledLinearNS_TT::run_local_ROM_online(std::set<int> current_cluster)
+    {
+	// Question: how to init?
+	// could use all-zero or the cluster-mean
+	Array<OneD, NekDouble> cluster_mean_x(snapshot_x_collection[0].num_elements(), 0.0);
+	Array<OneD, NekDouble> cluster_mean_y(snapshot_y_collection[0].num_elements(), 0.0);
+	for (std::set<int>::iterator it=current_cluster.begin(); it!=current_cluster.end(); ++it)
+	{
+		for (int i = 0; i < snapshot_x_collection[0].num_elements(); ++i)
+		{
+			cluster_mean_x[i] += (1.0 / current_cluster.size()) * snapshot_x_collection[*it][i];
+			cluster_mean_y[i] += (1.0 / current_cluster.size()) * snapshot_y_collection[*it][i];
+		}
+	}
+
+
+	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
+	// start sweeping 
+	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+	{
+		int current_index = iter_index;
+		double current_nu;
+		double w;
+		if (parameter_space_dimension == 1)
+		{
+			current_nu = param_vector[current_index];
+		}
+		else if (parameter_space_dimension == 2)
+		{
+			Array<OneD, NekDouble> current_param = general_param_vector[current_index];
+			w = current_param[0];	
+			current_nu = current_param[1];
+		}
+		if (debug_mode)
+		{
+			cout << " online phase current nu " << current_nu << endl;
+			cout << " online phase current w " << w << endl;
+		}
+		Set_m_kinvis( current_nu );
+		if (use_Newton)
+		{
+//			DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+			DoInitialiseAdv(cluster_mean_x, cluster_mean_y);
+		}
+
+		Eigen::MatrixXd curr_xy_proj = project_onto_basis(cluster_mean_x, cluster_mean_y);
+		Eigen::MatrixXd affine_mat_proj;
+		Eigen::VectorXd affine_vec_proj;
+
+		if (parameter_space_dimension == 1)
+		{
+			affine_mat_proj = gen_affine_mat_proj(current_nu);
+			affine_vec_proj = gen_affine_vec_proj(current_nu, current_index);
+//			cout << "aff mat 1d " << affine_mat_proj << endl;
+//			cout << "aff vec 1d " << affine_vec_proj << endl;
+		}
+		else if (parameter_space_dimension == 2)
+		{
+			affine_mat_proj = gen_affine_mat_proj_2d(current_nu, w);
+//			cout << "aff mat 2d " << affine_mat_proj << endl;
+			affine_vec_proj = gen_affine_vec_proj_2d(current_nu, w, current_index);
+//			cout << "aff vec 2d " << affine_vec_proj << endl;
+//			Eigen::MatrixXd affine_mat_proj_1d = gen_affine_mat_proj(current_nu);
+//			Eigen::VectorXd affine_vec_proj_1d = gen_affine_vec_proj(current_nu, current_index);
+		}
+
+		Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+		double relative_change_error;
+		int no_iter=0;
+		// now start looping
+		do
+		{
+			// for now only Oseen // otherwise need to do the DoInitialiseAdv(cluster_mean_x, cluster_mean_y);
+			Eigen::VectorXd prev_solve_affine = solve_affine;
+			Eigen::VectorXd repro_solve_affine = RB * solve_affine;
+			Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+			Array<OneD, double> field_x;
+			Array<OneD, double> field_y;
+			recover_snapshot_loop(reconstruct_solution, field_x, field_y);
+			if (use_Newton)
+			{
+				DoInitialiseAdv(field_x, field_y);
+			}
+			curr_xy_proj = project_onto_basis(field_x, field_y);
+			if (parameter_space_dimension == 1)
+			{
+				affine_mat_proj = gen_affine_mat_proj(current_nu);
+				affine_vec_proj = gen_affine_vec_proj(current_nu, current_index);
+			}
+			else if (parameter_space_dimension == 2)
+			{
+				affine_mat_proj = gen_affine_mat_proj_2d(current_nu, w);
+				affine_vec_proj = gen_affine_vec_proj_2d(current_nu, w, current_index);
+			}
+			solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+			relative_change_error = (solve_affine - prev_solve_affine).norm() / prev_solve_affine.norm();
+//			cout << "relative_change_error " << relative_change_error << endl;
+			no_iter++;
+		} 
+		while( ((relative_change_error > 1e-11) && (no_iter < 100)) );
+
+//		cout << "solve_affine " << solve_affine << endl;
+		Eigen::VectorXd repro_solve_affine = RB * solve_affine;
+		Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+		if (globally_connected == 1)
+		{
+			mat_compare.col(0) = M_collect_f_all.col(current_index);
+		}
+		else
+		{
+			mat_compare.col(0) = collect_f_all.col(current_index);
+			if (debug_mode)
+			{
+				Eigen::VectorXd current_f_all = Eigen::VectorXd::Zero(collect_f_all.rows());
+				current_f_all = collect_f_all.col(current_index);
+				Eigen::VectorXd current_f_all_wo_dbc = remove_rows(current_f_all, elem_loc_dbc);
+				Eigen::VectorXd proj_current_f_all_wo_dbc = RB.transpose() * current_f_all_wo_dbc;
+//				cout << "proj_current_f_all_wo_dbc " << proj_current_f_all_wo_dbc << endl;
+				Eigen::VectorXd correctRHS = affine_mat_proj * proj_current_f_all_wo_dbc;
+				Eigen::VectorXd correction_RHS = correctRHS - affine_vec_proj;
+//				cout << "correctRHS " << correctRHS << endl;
+//				cout << "correction_RHS " << correction_RHS << endl;
+			}
+		}
+		mat_compare.col(1) = reconstruct_solution; // sembra abbastanza bene
+		mat_compare.col(2) = mat_compare.col(1) - mat_compare.col(0);
+//		cout << mat_compare << endl;
+		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << " of snapshot number " << iter_index << endl;
+
+		if (debug_mode)
+		{
+			cout << "snapshot_x_collection.num_elements() " << snapshot_x_collection.num_elements() << " snapshot_x_collection[0].num_elements() " << snapshot_x_collection[0].num_elements() << endl;
+		}
+
+		if (write_ROM_field || (qoi_dof >= 0))
+		{
+			recover_snapshot_data(reconstruct_solution, current_index);
+		}
+
+
+	}
+    }
+
     void CoupledLinearNS_TT::online_phase()
     {
 	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
@@ -5963,6 +6106,56 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 
 	}
+    }
+
+    void CoupledLinearNS_TT::recover_snapshot_loop(Eigen::VectorXd reconstruct_solution, Array<OneD, double> & field_x, Array<OneD, double> & field_y)
+    {
+	Eigen::VectorXd f_bnd = reconstruct_solution.head(curr_f_bnd.size());
+	Eigen::VectorXd f_int = reconstruct_solution.tail(curr_f_int.size());
+	Array<OneD, MultiRegions::ExpListSharedPtr> fields = UpdateFields(); 
+	Array<OneD, unsigned int> bmap, imap; 
+	Array<OneD, double> field_0(GetNcoeffs());
+	Array<OneD, double> field_1(GetNcoeffs());
+	Array<OneD, double> curr_PhysBaseVec_x(GetNpoints(), 0.0);
+	Array<OneD, double> curr_PhysBaseVec_y(GetNpoints(), 0.0);
+	int cnt = 0;
+	int cnt1 = 0;
+	int nvel = 2;
+	int nz_loc = 1;
+	int  nplanecoeffs = fields[0]->GetNcoeffs();
+	int  nel  = m_fields[0]->GetNumElmts();
+	for(int i = 0; i < nel; ++i) 
+	{
+	      int eid  = i;
+	      fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
+	      fields[0]->GetExp(eid)->GetInteriorMap(imap);
+	      int nbnd   = bmap.num_elements();
+	      int nint   = imap.num_elements();
+	      int offset = fields[0]->GetCoeff_Offset(eid);
+	            
+	      for(int j = 0; j < nvel; ++j)
+	      {
+	           for(int n = 0; n < nz_loc; ++n)
+	           {
+	                    for(int k = 0; k < nbnd; ++k)
+	                    {
+	                        fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k], f_bnd(cnt+k));
+	                    }
+	                    
+	                    for(int k = 0; k < nint; ++k)
+	                    {
+	                        fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k], f_int(cnt1+k));
+	                    }
+	                    cnt  += nbnd;
+	                    cnt1 += nint;
+	           }
+	      }
+	}
+	Array<OneD, double> test_nn = fields[0]->GetCoeffs();
+	fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(), curr_PhysBaseVec_x);
+	fields[1]->BwdTrans_IterPerExp(fields[1]->GetCoeffs(), curr_PhysBaseVec_y);
+	field_x = curr_PhysBaseVec_x;
+	field_y = curr_PhysBaseVec_y;
     }
 
     void CoupledLinearNS_TT::recover_snapshot_data(Eigen::VectorXd reconstruct_solution, int current_index)
@@ -6150,7 +6343,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		qoi_dof = -1;
 	}
-	double POD_tolerance = m_session->GetParameter("POD_tolerance");
+	POD_tolerance = m_session->GetParameter("POD_tolerance");
 	ref_param_index = m_session->GetParameter("ref_param_index");
 	ref_param_nu = m_session->GetParameter("ref_param_nu");
 	if (m_session->DefinesParameter("globally_connected")) // this sets how the truth system global coupling is enforced
@@ -6212,6 +6405,22 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		general_param_vector = Array<OneD, Array<OneD, NekDouble> > (Nmax);
 		int number_of_snapshots_dir0 = m_session->GetParameter("number_of_snapshots_dir0");
 		int number_of_snapshots_dir1 = m_session->GetParameter("number_of_snapshots_dir1");
+		if (m_session->DefinesParameter("fine_grid_dim1")) 
+		{
+			fine_grid_dim1 = m_session->GetParameter("fine_grid_dim1");
+		}
+		else
+		{
+			fine_grid_dim1 = 0;
+		} 
+		if (m_session->DefinesParameter("fine_grid_dim2")) 
+		{
+			fine_grid_dim2 = m_session->GetParameter("fine_grid_dim2");
+		}
+		else
+		{
+			fine_grid_dim2 = 0;
+		} 
 		Array<OneD, NekDouble> index_vector(parameter_space_dimension, 0.0);
 
 //		for(int i = 0; i < parameter_space_dimension; ++i)
@@ -6459,7 +6668,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		}
 
 		// keep collect_f_all for later to continue regular execution, while a LocROM verification and validation module runs from here first
-		
+		evaluate_local_clusters(optimal_clusters);
 
 	}
 
@@ -6586,6 +6795,119 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	return affine_mat_proj;
     }
+
+    void CoupledLinearNS_TT::evaluate_local_clusters(Array<OneD, std::set<int> > optimal_clusters)
+    {
+
+	// determine the local cluster projection space and go through each offline phase
+	int no_clusters = optimal_clusters.num_elements();
+	cout << "no_clusters " << no_clusters << endl;
+	for (int i = 0; i < no_clusters; ++i)
+	{
+		Eigen::MatrixXd local_collect_f_all = Eigen::MatrixXd::Zero( collect_f_all.rows() , optimal_clusters[i].size() );
+		int j = 0;
+		for (std::set<int>::iterator it=optimal_clusters[i].begin(); it!=optimal_clusters[i].end(); ++it)
+		{
+			local_collect_f_all.col(j) = collect_f_all.col(*it);
+			j++;
+		}
+		for (int j = 0; j < optimal_clusters[i].size(); ++j)
+		{
+//			local_collect_f_all.col(j) = collect_f_all.col(optimal_clusters[i][j]);
+		}
+		run_local_ROM_offline(local_collect_f_all);
+		run_local_ROM_online(optimal_clusters[i]);
+	}
+
+    }
+
+    void CoupledLinearNS_TT::run_local_ROM_offline(Eigen::MatrixXd collect_f_all)
+   {
+	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
+	Eigen::VectorXd singular_values = svd_collect_f_all.singularValues();
+	if (debug_mode)
+	{
+		cout << "sum singular values " << singular_values.sum() << endl << endl;
+	}
+	Eigen::VectorXd rel_singular_values = singular_values / singular_values.sum();
+	RBsize = 1; 
+	Eigen::VectorXd cum_rel_singular_values = Eigen::VectorXd::Zero(singular_values.rows());
+	for (int i = 0; i < singular_values.rows(); ++i)
+	{
+		cum_rel_singular_values(i) = singular_values.head(i+1).sum() / singular_values.sum();
+		if (cum_rel_singular_values(i) < POD_tolerance)
+		{
+			RBsize = i+2;
+		}		
+	}
+	if (debug_mode)
+	{
+		cout << "cumulative relative singular value percentages: " << cum_rel_singular_values << endl;
+		cout << "RBsize: " << RBsize << endl;
+	}
+	
+
+
+	Eigen::MatrixXd collect_f_all_PODmodes = svd_collect_f_all.matrixU(); // this is a local variable...
+	// here probably limit to something like 99.99 percent of PODenergy, this will set RBsize
+	setDBC(collect_f_all); // agnostic to RBsize
+	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields = UpdateFields();
+        int  nel  = m_fields[0]->GetNumElmts(); // number of spectral elements
+//	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), collect_f_all_PODmodes.cols());
+	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize);  
+	PODmodes = collect_f_all_PODmodes.leftCols(RBsize);
+	set_MtM();
+	cout << "RBsize: " << RBsize << endl;
+	if (globally_connected == 1)
+	{
+		setDBC_M(collect_f_all);
+	}
+	if (debug_mode)
+	{
+		cout << "M_no_dbc_in_loc " << M_no_dbc_in_loc << endl;
+		cout << "no_dbc_in_loc " << no_dbc_in_loc << endl;
+		cout << "M_no_not_dbc_in_loc " << M_no_not_dbc_in_loc << endl;
+		cout << "no_not_dbc_in_loc " <<	no_not_dbc_in_loc << endl;
+	}
+	//Eigen::VectorXd f_bnd_dbc_full_size = CLNS.f_bnd_dbc_full_size;
+	// c_f_all_PODmodes_wo_dbc becomes CLNS.RB
+	Eigen::MatrixXd c_f_all_PODmodes_wo_dbc = RB;
+	if (debug_mode)
+	{
+		cout << "c_f_all_PODmodes_wo_dbc.rows() " << c_f_all_PODmodes_wo_dbc.rows() << endl;
+		cout << "c_f_all_PODmodes_wo_dbc.cols() " << c_f_all_PODmodes_wo_dbc.cols() << endl;
+	}
+	gen_phys_base_vecs();
+	if (debug_mode)	
+	{
+//		cout << "finished gen_phys_base_vecs in " << difftime(timer_2, timer_1) << " seconds" << endl;
+	}
+	if (parameter_space_dimension == 1)
+	{
+		gen_proj_adv_terms();
+	}
+	else if (parameter_space_dimension == 2)
+	{
+		gen_proj_adv_terms_2d();
+	}
+	if (debug_mode)	
+	{
+		cout << "finished gen_proj_adv_terms " << endl;
+	}
+	if (parameter_space_dimension == 1)
+	{
+		gen_reference_matrices();
+	}
+	else if (parameter_space_dimension == 2)
+	{
+		gen_reference_matrices_2d();
+	}
+	if (debug_mode)	
+	{
+		cout << "finished gen_reference_matrices " << endl;
+	}
+
+   }
 
     void CoupledLinearNS_TT::k_means_ITHACA(int no_clusters, Array<OneD, std::set<int> > &clusters, double &CVT_energy)
     {

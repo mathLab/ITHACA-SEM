@@ -101,6 +101,7 @@ namespace Nektar
 	int parameter_space_dimension;
 	int load_cO_snapshot_data_from_files;
 	int do_trafo_check;
+	double POD_tolerance;
 
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
@@ -127,9 +128,15 @@ namespace Nektar
 	int number_elem_trafo;
 	int qoi_dof;
 	int use_LocROM;
+	int fine_grid_dim1;
+	int fine_grid_dim2;
 	double L2norm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y );
 	double L2norm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
 	void k_means_ITHACA(int no_clusters, Array<OneD, std::set<int> > &clusters, double &CVT_energy);
+	void evaluate_local_clusters(Array<OneD, std::set<int> > optimal_clusters);
+        void run_local_ROM_offline(Eigen::MatrixXd collect_f_all);
+	void run_local_ROM_online(std::set<int> );
+
 //	Array<OneD, Eigen::Matrix2d > elements_trafo_matrix; // put this as a function or find a way with symbolic computation
         void gen_phys_base_vecs();
 
@@ -158,6 +165,7 @@ namespace Nektar
 	Array<OneD, Array<OneD, Eigen::MatrixXd > > gen_adv_mats_proj_y_2d(Array<OneD, double>, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_y_2d);
 
 	void recover_snapshot_data(Eigen::VectorXd, int);
+	void recover_snapshot_loop(Eigen::VectorXd, Array<OneD, double> &, Array<OneD, double> &);
 
 	void offline_phase();
 	void online_phase();

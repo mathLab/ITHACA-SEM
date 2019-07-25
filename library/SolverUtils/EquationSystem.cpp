@@ -690,7 +690,7 @@ namespace Nektar
                 m_NewtonRelativeIteTol = 0.1;
             }
 
-            cout <<m_JFNKTimeAccurate<<" "<<m_NewtonAbsoluteIteTol<<" "<<m_NewtonRelativeIteTol<<endl;
+            // cout <<m_JFNKTimeAccurate<<" "<<m_NewtonAbsoluteIteTol<<" "<<m_NewtonRelativeIteTol<<endl;
 #endif
 
             m_nchk = 0;

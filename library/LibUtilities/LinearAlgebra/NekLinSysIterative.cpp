@@ -136,7 +136,7 @@ namespace Nektar
         {
             pSession->LoadParameter("MaxHesband",
                                     m_maxhesband,
-                                    50000000000);
+                                    m_maxstorage+1);
         }
 
         int flaguseCentralDifference = 0;
@@ -152,8 +152,6 @@ namespace Nektar
                                     flaguseCentralDifference,
                                     0);
         
-        cout << " flaguseCentralDifference= "<<flaguseCentralDifference<<endl;
-
         switch (flaguseCentralDifference)
         {
         case 1:

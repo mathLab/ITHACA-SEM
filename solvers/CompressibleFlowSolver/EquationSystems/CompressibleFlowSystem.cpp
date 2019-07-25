@@ -269,6 +269,9 @@ namespace Nektar
             ASSERTL0(m_cflSafetyFactor != 0,
                     "Local time stepping requires CFL parameter.");
         }
+
+        m_session->LoadParameter ("JFEps", m_JFEps, 5.0E-8);
+
     }
 
     /**
@@ -1915,7 +1918,7 @@ namespace Nektar
                                                  const  Array<OneD, NekDouble> &inarray,
                                                         Array<OneD, NekDouble >&out)
     {
-        NekDouble eps = 5.0E-8;
+        NekDouble eps = m_JFEps;
         NekDouble magnitdEstimatMax =0.0;
         for(int i = 0; i < m_magnitdEstimat.num_elements(); i++)
         {
@@ -1956,7 +1959,7 @@ namespace Nektar
                                                  const  Array<OneD, NekDouble> &inarray,
                                                         Array<OneD, NekDouble >&out)
     {
-        NekDouble eps = 1.0E-5;
+        NekDouble eps = m_JFEps;
         NekDouble magnitdEstimatMax =0.0;
         for(int i = 0; i < m_magnitdEstimat.num_elements(); i++)
         {

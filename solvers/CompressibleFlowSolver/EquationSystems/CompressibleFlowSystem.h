@@ -79,6 +79,9 @@ namespace Nektar
         NekDouble                           m_filterAlpha;
         NekDouble                           m_filterExponent;
         NekDouble                           m_filterCutoff;
+
+        NekDouble                           m_JFEps;
+        
         bool                                m_useFiltering;
 
         // Parameters for local time-stepping

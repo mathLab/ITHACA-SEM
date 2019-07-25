@@ -1680,7 +1680,7 @@ namespace Nektar
                     // m_cflSafetyFactor *= pow(ratioSteps,0.35);
                     
                     converged = true;
-                    if(resratio>tol2Ratio)
+                    if(resratio>tol2Ratio&&l_root)
                     {
                         WARNINGL0(true,"     # resratio>tol2Ratio in CompressibleFlowSystem::DoImplicitSolve ");
                         cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)

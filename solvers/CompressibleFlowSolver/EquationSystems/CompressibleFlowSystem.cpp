@@ -1714,9 +1714,9 @@ namespace Nektar
         // m_TimeIntegtSol_n   =   nullptr;
         // m_SysEquatResid_k   =   nullptr;
         // ASSERTL0(converged,"Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
-        WARNINGL0(converged,"     # Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
         if((l_verbose||(!converged))&&l_root)
         {
+            WARNINGL0(converged,"     # Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
             cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
                 <<"     * Newton-Its converged (RES=" 
                 << sqrt(resnorm)<<" Res/Q="<< sqrt(resnorm/m_inArrayNorm)

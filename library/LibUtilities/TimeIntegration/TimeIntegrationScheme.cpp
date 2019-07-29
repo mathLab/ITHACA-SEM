@@ -607,6 +607,56 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
+            case eDIRKOrder3Stage5:
+                {
+                    // See Kennedey&Carpenter 2016, Table 16
+                    m_numsteps = 1;
+                    m_numstages = 5;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
+
+                    NekDouble lambda = 9.0/40.0;
+                    const NekDouble ConstSqrt2  = sqrt(2.0);
+
+                    m_A[0][0][0] = 0.0;
+                    m_A[0][1][0] = lambda;
+                    m_A[0][2][0] = 9.0*(1.0+ConstSqrt2)/80.0;
+                    m_A[0][3][0] = (22.0+15.0*ConstSqrt2)/(80.0*(1+ConstSqrt2));
+                    m_A[0][4][0] = (2398.0+1205.0*ConstSqrt2)/(2835.0*(4+3.0*ConstSqrt2));
+
+                    m_A[0][1][1] = m_A[0][1][0];
+                    m_A[0][2][1] = m_A[0][2][0];
+                    m_A[0][3][1] = m_A[0][3][0];
+                    m_A[0][4][1] = m_A[0][4][0];
+
+                    m_A[0][2][2] = lambda;
+                    m_A[0][3][2] = -7.0/(40.0*(1.0+ConstSqrt2));
+                    m_A[0][4][2] = -2374*(1.0+2.0*ConstSqrt2)/(2835.0*(5.0+3.0*ConstSqrt2));
+
+                    m_A[0][3][3] = lambda;
+                    m_A[0][4][3] = 5827.0/7560.0;
+
+                    m_A[0][4][4] = lambda;
+
+                    m_B[0][0][0] = m_A[0][4][0];
+                    m_B[0][0][1] = m_A[0][4][1];
+                    m_B[0][0][2] = m_A[0][4][2];
+                    m_B[0][0][3] = m_A[0][4][3];
+                    m_B[0][0][4] = m_A[0][4][4];
+
+                    m_schemeType = eDiagonallyImplicit;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                }
+                break;
             case eDIRKOrder4Stage6:
                 {
                     // See Kennedey&Carpenter 2016, Table 16

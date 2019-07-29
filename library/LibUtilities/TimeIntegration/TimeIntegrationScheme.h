@@ -85,6 +85,7 @@ namespace Nektar
             eRungeKutta2,                     //!< Classical RungeKutta2 method (new name for eMidpoint)
             eDIRKOrder2,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
             eDIRKOrder3,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
+            eDIRKOrder3Stage5,                 //!< Diagonally Implicit Runge Kutta scheme of order 3 stage 5
             eDIRKOrder4Stage6,                 //!< Diagonally Implicit Runge Kutta scheme of order 4 stage 6
             eCNAB,		                      //!< Crank-Nicolson/Adams-Bashforth Order 2 (CNAB)
             eIMEXGear,		                  //!< IMEX Gear Order 2
@@ -124,6 +125,7 @@ namespace Nektar
             "RungeKutta2",
             "DIRKOrder2",
             "DIRKOrder3",
+            "DIRKOrder3Stage5",
             "DIRKOrder4Stage6",
             "CNAB",
             "IMEXGear",

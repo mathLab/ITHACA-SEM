@@ -679,6 +679,28 @@ namespace LibUtilities {
         virtual void v_InitObject();
     };
 
+    class TimeIntegrationDIRKOrder3Stage5 : public TimeIntegrationWrapper
+    {
+    public:
+        friend class MemoryManager<TimeIntegrationDIRKOrder3Stage5>;
+
+        /// Creates an instance of this class
+        static TimeIntegrationWrapperSharedPtr create()
+        {
+            TimeIntegrationWrapperSharedPtr p =
+                MemoryManager<TimeIntegrationDIRKOrder3Stage5>::AllocateSharedPtr();
+            p->InitObject();
+            return p;
+        }
+        /// Name of class
+        static std::string className;
+
+        virtual ~TimeIntegrationDIRKOrder3Stage5() {}
+
+    protected:
+        virtual void v_InitObject();
+    };
+
     class TimeIntegrationDIRKOrder4Stage6 : public TimeIntegrationWrapper
     {
     public:

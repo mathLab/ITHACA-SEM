@@ -87,6 +87,9 @@ namespace Nektar
         // Parameters for local time-stepping
         bool                                m_useLocalTimeStep;
 
+        bool                                m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT;
+        bool                                m_DEBUG_VISCOUS_JAC_MAT;
+
         // Auxiliary object to convert variables
         VariableConverterSharedPtr          m_varConv;
 

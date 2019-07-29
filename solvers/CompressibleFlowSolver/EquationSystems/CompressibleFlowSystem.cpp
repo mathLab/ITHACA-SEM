@@ -272,6 +272,13 @@ namespace Nektar
 
         m_session->LoadParameter ("JFEps", m_JFEps, 5.0E-8);
 
+
+        m_session->MatchSolverInfo("DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT","True",
+                                   m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT, false);
+        
+        m_session->MatchSolverInfo("DEBUG_VISCOUS_JAC_MAT","True",
+                                   m_DEBUG_VISCOUS_JAC_MAT, false);
+
     }
 
     /**
@@ -634,12 +641,13 @@ namespace Nektar
                 FwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts,0.0);
                 BwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts,0.0);
             }
-#ifdef DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT
-            bool flagUpdateDervFlux = true;
-#else
-            bool flagUpdateDervFlux = false;
-#endif
 
+            bool flagUpdateDervFlux = false;
+            if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+            {
+                flagUpdateDervFlux = true;
+            }
+            
             Array<OneD, NekVector<NekDouble> > tmparray(nvariables);
             for(int nsor = 0; nsor < nSORTot-1; nsor++)
             {
@@ -660,14 +668,14 @@ namespace Nektar
                     }
                 }
                 Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
-#ifdef DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT
-                flagUpdateDervFlux = true;
-#endif
+                if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+                {
+                    flagUpdateDervFlux = true;
+                }
             }
         }
     }
     
-#define DEBUG_VISCOUS_JAC_MAT
     void CompressibleFlowSystem::MinusOffDiag2Rhs(
             const int nvariables,
             const int nCoeffs,
@@ -751,78 +759,79 @@ namespace Nektar
             }  
         }
 
-#ifdef DEBUG_VISCOUS_JAC_MAT
-        const MultiRegions::AssemblyMapDGSharedPtr      TraceMap=m_fields[0]->GetTraceMap();
-        
-        if(flagUpdateDervFlux)
+        if(m_DEBUG_VISCOUS_JAC_MAT)
         {
-            CalphysDeriv(outpnts,qfield);
-
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivBwd(nDim);
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivFwd(nDim);
-            for (int nd = 0; nd < nDim; ++nd)
+            const MultiRegions::AssemblyMapDGSharedPtr      TraceMap=m_fields[0]->GetTraceMap();
+            
+            if(flagUpdateDervFlux)
             {
-                numDerivBwd[nd] =   tmpTrace[indextmpTrace], indextmpTrace++;
-                numDerivFwd[nd] =   tmpTrace[indextmpTrace], indextmpTrace++;
-            }
+                CalphysDeriv(outpnts,qfield);
 
-            for (int nd = 0; nd < nDim; ++nd)
-            {
-                for (int i = 0; i < nConvectiveFields; ++i)
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivBwd(nDim);
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivFwd(nDim);
+                for (int nd = 0; nd < nDim; ++nd)
                 {
-                    Vmath::Zero(nTracePts, Bwd[i],1);
-                    Vmath::Zero(nTracePts, Fwd[i],1);
-                    m_fields[i]->GetFwdBwdTracePhysDeriv_serial(nd,qfield[nd][i], Fwd[i], Bwd[i]);
-                    Vmath::Svtvp(nTracePts,0.5,Bwd[i],1,numDerivBwd[nd][i],1,numDerivBwd[nd][i],1);
-                    Vmath::Svtvp(nTracePts,0.5,Fwd[i],1,numDerivFwd[nd][i],1,numDerivFwd[nd][i],1);
-                    TraceMap->UniversalTraceAssemble(numDerivBwd[nd][i]);
-                    TraceMap->UniversalTraceAssemble(numDerivFwd[nd][i]);
+                    numDerivBwd[nd] =   tmpTrace[indextmpTrace], indextmpTrace++;
+                    numDerivFwd[nd] =   tmpTrace[indextmpTrace], indextmpTrace++;
+                }
+
+                for (int nd = 0; nd < nDim; ++nd)
+                {
+                    for (int i = 0; i < nConvectiveFields; ++i)
+                    {
+                        Vmath::Zero(nTracePts, Bwd[i],1);
+                        Vmath::Zero(nTracePts, Fwd[i],1);
+                        m_fields[i]->GetFwdBwdTracePhysDeriv_serial(nd,qfield[nd][i], Fwd[i], Bwd[i]);
+                        Vmath::Svtvp(nTracePts,0.5,Bwd[i],1,numDerivBwd[nd][i],1,numDerivBwd[nd][i],1);
+                        Vmath::Svtvp(nTracePts,0.5,Fwd[i],1,numDerivFwd[nd][i],1,numDerivFwd[nd][i],1);
+                        TraceMap->UniversalTraceAssemble(numDerivBwd[nd][i]);
+                        TraceMap->UniversalTraceAssemble(numDerivFwd[nd][i]);
+                    }
+                }
+
+                NekVector<NekDouble> qFwd(nvariables*nDim),qBwd(nvariables*nDim);
+
+                for(int i = 0; i < nvariables; ++i)
+                {
+                    Vmath::Zero(nTracePts,FwdFluxDeriv[i],1);
+                    Vmath::Zero(nTracePts,BwdFluxDeriv[i],1);
+                }  
+
+                for(int n = 0; n < nTracePts; ++n)
+                {
+                    
+                    for (int nd = 0; nd < nDim; ++nd)
+                    {
+                        for(int j = 0; j< nvariables;j++)
+                        {
+                            qFwd[j*nDim+nd] =   numDerivFwd[nd][j][n];
+                            qBwd[j*nDim+nd] =   numDerivBwd[nd][j][n];
+                        }
+                    }
+                
+                    PJacFwd =  m_TraceJacDeriv[0]->GetBlock(n,n); 
+                    PJacBwd =  m_TraceJacDeriv[1]->GetBlock(n,n); 
+
+                    VFlux   =   (*PJacFwd)*qFwd;
+                    for(int i = 0; i < nvariables; ++i)
+                    {
+                        FwdFluxDeriv[i][n] +=   m_TraceJacDerivSign[0][n]*VFlux[i];
+                    }  
+
+                    VFlux   =   (*PJacBwd)*qBwd;
+                    for(int i = 0; i < nvariables; ++i)
+                    {
+                        BwdFluxDeriv[i][n] +=   m_TraceJacDerivSign[1][n]*VFlux[i];
+                    }  
                 }
             }
-
-            NekVector<NekDouble> qFwd(nvariables*nDim),qBwd(nvariables*nDim);
 
             for(int i = 0; i < nvariables; ++i)
             {
-                Vmath::Zero(nTracePts,FwdFluxDeriv[i],1);
-                Vmath::Zero(nTracePts,BwdFluxDeriv[i],1);
+                Vmath::Vadd(nTracePts,FwdFluxDeriv[i],1,FwdFlux[i],1,FwdFlux[i],1);
+                Vmath::Vadd(nTracePts,BwdFluxDeriv[i],1,BwdFlux[i],1,BwdFlux[i],1);
             }  
-
-            for(int n = 0; n < nTracePts; ++n)
-            {
-                
-                for (int nd = 0; nd < nDim; ++nd)
-                {
-                    for(int j = 0; j< nvariables;j++)
-                    {
-                        qFwd[j*nDim+nd] =   numDerivFwd[nd][j][n];
-                        qBwd[j*nDim+nd] =   numDerivBwd[nd][j][n];
-                    }
-                }
-            
-                PJacFwd =  m_TraceJacDeriv[0]->GetBlock(n,n); 
-                PJacBwd =  m_TraceJacDeriv[1]->GetBlock(n,n); 
-
-                VFlux   =   (*PJacFwd)*qFwd;
-                for(int i = 0; i < nvariables; ++i)
-                {
-                    FwdFluxDeriv[i][n] +=   m_TraceJacDerivSign[0][n]*VFlux[i];
-                }  
-
-                VFlux   =   (*PJacBwd)*qBwd;
-                for(int i = 0; i < nvariables; ++i)
-                {
-                    BwdFluxDeriv[i][n] +=   m_TraceJacDerivSign[1][n]*VFlux[i];
-                }  
-            }
         }
-
-        for(int i = 0; i < nvariables; ++i)
-        {
-            Vmath::Vadd(nTracePts,FwdFluxDeriv[i],1,FwdFlux[i],1,FwdFlux[i],1);
-            Vmath::Vadd(nTracePts,BwdFluxDeriv[i],1,BwdFlux[i],1,BwdFlux[i],1);
-        }  
-#endif
         // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
         for(int i = 0; i < nvariables; ++i)
         {
@@ -958,23 +967,27 @@ namespace Nektar
         for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
         {
             GetFluxVectorJacDirctn(nfluxDir,inarray, ElmtJacArray);
-#ifdef DEBUG_VISCOUS_JAC_MAT
-            MinusDiffusionFluxJacDirctn(nfluxDir,inarray,qfield, ElmtJacArray);
-#endif
+
+            if(m_DEBUG_VISCOUS_JAC_MAT)
+            {
+                MinusDiffusionFluxJacDirctn(nfluxDir,inarray,qfield, ElmtJacArray);
+            }
         }
         m_advObject->AddVolumJacToMat(m_fields,nvariable,ElmtJacArray,gmtxarray);
-#ifdef DEBUG_VISCOUS_JAC_MAT
-        for(int nDervDir = 0; nDervDir < nSpaceDim; nDervDir++)
+        
+        if(m_DEBUG_VISCOUS_JAC_MAT)
         {
-            for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
+            for(int nDervDir = 0; nDervDir < nSpaceDim; nDervDir++)
             {
-                Vmath::Fill(npoints,1.0,normal3D[nfluxDir],1);
-                GetFluxDerivJacDirctn(m_fields[0],normal3D,nDervDir,inarray,ElmtJacArray,nfluxDir);
-                Vmath::Fill(npoints,0.0,normal3D[nfluxDir],1);
+                for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
+                {
+                    Vmath::Fill(npoints,1.0,normal3D[nfluxDir],1);
+                    GetFluxDerivJacDirctn(m_fields[0],normal3D,nDervDir,inarray,ElmtJacArray,nfluxDir);
+                    Vmath::Fill(npoints,0.0,normal3D[nfluxDir],1);
+                }
+                m_diffusion->MinusVolumDerivJacToMat(nvariable,m_fields,ElmtJacArray,nDervDir,gmtxarray);
             }
-            m_diffusion->MinusVolumDerivJacToMat(nvariable,m_fields,ElmtJacArray,nDervDir,gmtxarray);
         }
-#endif
     }
 
 
@@ -988,14 +1001,19 @@ namespace Nektar
     {
         int nvariables = inarray.num_elements();
         GetTraceJac(inarray,qfield,TraceJac,TraceJacDeriv,TraceJacDerivSign);
-#ifdef DEBUG_VISCOUS_JAC_MAT
-        for(int i = 0; i< m_spacedim; i++)
+
+        if(m_DEBUG_VISCOUS_JAC_MAT)
         {
-            qfield[i]   =   NullNekDoubleArrayofArray;
+            for(int i = 0; i< m_spacedim; i++)
+            {
+                qfield[i]   =   NullNekDoubleArrayofArray;
+            }
+            m_advObject->AddTraceJacToMat(nvariables,m_spacedim,m_fields, TraceJac,gmtxarray,TraceJacDeriv,TraceJacDerivSign);
         }
-#endif
-        m_advObject->AddTraceJacToMat(nvariables,m_spacedim,m_fields, TraceJac,gmtxarray,TraceJacDeriv,TraceJacDerivSign);
-        // m_advObject->AddTraceJacToMat(nvariables,nSpaceDim,m_fields, TraceJac,gmtxarray);
+        else
+        {
+            m_advObject->AddTraceJacToMat(nvariables,m_spacedim,m_fields, TraceJac,gmtxarray);
+        }
     }
 
     void CompressibleFlowSystem::GetTraceJac(
@@ -1063,52 +1081,53 @@ namespace Nektar
         TraceJac    =   Array<OneD, DNekBlkMatSharedPtr>(2);
         TraceJac[0] = FJac;
         TraceJac[1] = BJac;
-#ifdef DEBUG_VISCOUS_JAC_MAT
-
-#ifdef DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT
-        int nDeriv = m_spacedim *nvariables; 
-        Array<OneD, unsigned int> n_blks2(nTracePts);
-        for(int i=0;i<nTracePts;i++)
+        if(m_DEBUG_VISCOUS_JAC_MAT)
         {
-            n_blks2[i]    = nDeriv;
+            if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+            {
+                int nDeriv = m_spacedim *nvariables; 
+                Array<OneD, unsigned int> n_blks2(nTracePts);
+                for(int i=0;i<nTracePts;i++)
+                {
+                    n_blks2[i]    = nDeriv;
+                }
+                DNekBlkMatSharedPtr DerivJac = MemoryManager<DNekBlkMat>
+                    ::AllocateSharedPtr(n_blks1, n_blks2, eDIAGONAL);
+                for(int i=0;i<nTracePts;i++)
+                {
+                    tmpMat = MemoryManager<DNekMat>
+                            ::AllocateSharedPtr(nvariables, nDeriv,0.0);
+                    DerivJac->SetBlock(i,i,tmpMat);
+                }
+
+                // Riemann flux Jacobian considering implicit boundary condition
+                CalVisFluxDerivJac(nvariables, inarray,Fwd, Bwd, DerivJac);
+
+                TraceJacDeriv    = Array<OneD, DNekBlkMatSharedPtr>(2);
+                TraceJacDeriv[0] = DerivJac;
+                TraceJacDeriv[1] = DerivJac;
+                // usaully FJac = -BJac for viscous Jacobian of auxilary variables. 
+                // to save memory they share the array element share the same matrix 
+                // using the following sign to give their sign.
+                // TODO: to check 
+                if(TraceJacDerivSign.num_elements())
+                {}
+                else
+                {
+                    // TraceJacDerivSign = Array<OneD, Array<OneD, NekDouble> >(2);
+                    // TraceJacDerivSign[0]    =  Array<OneD, NekDouble> (nTracePts,-1.0); 
+                    // TraceJacDerivSign[1]    =  Array<OneD, NekDouble> (nTracePts,0.0); 
+                    // m_fields[0]->FillBwdWITHBoundDeriv(0,TraceJacDerivSign[0],TraceJacDerivSign[1]);
+
+                    // Vmath::Vadd(nTracePts,TraceJacDerivSign[0],1,TraceJacDerivSign[1],1,TraceJacDerivSign[0],1);
+                    // Vmath::Ssub(nTracePts,-2.0,TraceJacDerivSign[0],1,TraceJacDerivSign[1],1);
+
+                    TraceJacDerivSign = Array<OneD, Array<OneD, NekDouble> >(2);
+                    TraceJacDerivSign[0]    =  Array<OneD, NekDouble> (nTracePts,1.0); 
+                    TraceJacDerivSign[1]    =  Array<OneD, NekDouble> (nTracePts,1.0); 
+                }
+            }
         }
-        DNekBlkMatSharedPtr DerivJac = MemoryManager<DNekBlkMat>
-            ::AllocateSharedPtr(n_blks1, n_blks2, eDIAGONAL);
-        for(int i=0;i<nTracePts;i++)
-        {
-            tmpMat = MemoryManager<DNekMat>
-                    ::AllocateSharedPtr(nvariables, nDeriv,0.0);
-            DerivJac->SetBlock(i,i,tmpMat);
-        }
-
-        // Riemann flux Jacobian considering implicit boundary condition
-        CalVisFluxDerivJac(nvariables, inarray,Fwd, Bwd, DerivJac);
-
-        TraceJacDeriv    = Array<OneD, DNekBlkMatSharedPtr>(2);
-        TraceJacDeriv[0] = DerivJac;
-        TraceJacDeriv[1] = DerivJac;
-        // usaully FJac = -BJac for viscous Jacobian of auxilary variables. 
-        // to save memory they share the array element share the same matrix 
-        // using the following sign to give their sign.
-        // TODO: to check 
-        if(TraceJacDerivSign.num_elements())
-        {}
-        else
-        {
-            // TraceJacDerivSign = Array<OneD, Array<OneD, NekDouble> >(2);
-            // TraceJacDerivSign[0]    =  Array<OneD, NekDouble> (nTracePts,-1.0); 
-            // TraceJacDerivSign[1]    =  Array<OneD, NekDouble> (nTracePts,0.0); 
-            // m_fields[0]->FillBwdWITHBoundDeriv(0,TraceJacDerivSign[0],TraceJacDerivSign[1]);
-
-            // Vmath::Vadd(nTracePts,TraceJacDerivSign[0],1,TraceJacDerivSign[1],1,TraceJacDerivSign[0],1);
-            // Vmath::Ssub(nTracePts,-2.0,TraceJacDerivSign[0],1,TraceJacDerivSign[1],1);
-
-            TraceJacDerivSign = Array<OneD, Array<OneD, NekDouble> >(2);
-            TraceJacDerivSign[0]    =  Array<OneD, NekDouble> (nTracePts,1.0); 
-            TraceJacDerivSign[1]    =  Array<OneD, NekDouble> (nTracePts,1.0); 
-        }
-#endif
-#endif
     }
 
 
@@ -1394,20 +1413,21 @@ namespace Nektar
     {
         m_advObject->AdvectTraceFlux(nConvectiveFields, m_fields, AdvVel, inarray, traceflux,
                         m_BndEvaluateTime,vFwd, vBwd);
-#ifdef DEBUG_VISCOUS_JAC_MAT
-        Array<OneD, Array<OneD, NekDouble > > visflux(nConvectiveFields);
-        for(int i = 0; i < nConvectiveFields; i++)
+        
+        if(m_DEBUG_VISCOUS_JAC_MAT)
         {
-            visflux[i]  =    Array<OneD, NekDouble>(nTracePts,0.0);
-        }
+            Array<OneD, Array<OneD, NekDouble > > visflux(nConvectiveFields);
+            for(int i = 0; i < nConvectiveFields; i++)
+            {
+                visflux[i]  =    Array<OneD, NekDouble>(nTracePts,0.0);
+            }
 
-        m_diffusion->DiffuseTraceFlux(nConvectiveFields, fields, inarray,qfield,visflux,vFwd, vBwd,MuVarTrace,nonZeroIndex);
-        for(int i = 0; i < nConvectiveFields; i++)
-        {
-            Vmath::Vsub(nTracePts,traceflux[i],1,visflux[i],1,traceflux[i],1);
+            m_diffusion->DiffuseTraceFlux(nConvectiveFields, fields, inarray,qfield,visflux,vFwd, vBwd,MuVarTrace,nonZeroIndex);
+            for(int i = 0; i < nConvectiveFields; i++)
+            {
+                Vmath::Vsub(nTracePts,traceflux[i],1,visflux[i],1,traceflux[i],1);
+            }
         }
-#endif
-
     }
 
 
@@ -1773,9 +1793,12 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >                &TraceJacDerivSign)
     {
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield;
-#ifdef DEBUG_VISCOUS_JAC_MAT
-        CalphysDeriv(inarray,qfield);
-#endif
+
+        if(m_DEBUG_VISCOUS_JAC_MAT)
+        {
+            CalphysDeriv(inarray,qfield);
+        }
+
         Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
         AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray);
 

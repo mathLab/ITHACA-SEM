@@ -936,7 +936,19 @@ namespace Nektar
             {
                 GetFunction("InitialConditions")->Evaluate(
                         m_session->GetVariables(), m_fields, m_time, domain);
-                
+                // Enforce C0 Continutiy of initial condiiton
+		if((m_projectionType == MultiRegions::eGalerkin)||
+		    (m_projectionType == MultiRegions::eMixed_CG_Discontinuous))
+		{
+		     for (int i = 0; i < m_fields.num_elements(); ++i)
+		     {
+                         m_fields[i]->LocalToGlobal();
+                         m_fields[i]->GlobalToLocal();
+		         m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+		                               m_fields[i]->UpdatePhys());
+		      }
+                } 
+
                 if (m_session->GetComm()->GetRank() == 0)
                 {
                     

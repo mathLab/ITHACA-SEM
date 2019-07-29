@@ -534,7 +534,7 @@ namespace Nektar
         // field below
         SetBoundaryConditions(m_time);
 
-	// Ensure the initial conditions have correct BCs and are also C0 continuous. 
+	// Ensure the initial conditions have correct BCs  
         for(int i = 0; i < m_fields.num_elements(); ++i)
         {
             m_fields[i]->ImposeDirichletConditions(m_fields[i]->UpdateCoeffs());

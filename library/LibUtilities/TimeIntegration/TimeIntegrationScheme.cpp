@@ -637,7 +637,7 @@ namespace Nektar
 
                     m_A[0][2][2] = lambda;
                     m_A[0][3][2] = -7.0/(40.0*(1.0+ConstSqrt2));
-                    m_A[0][4][2] = -2374*(1.0+2.0*ConstSqrt2)/(2835.0*(5.0+3.0*ConstSqrt2));
+                    m_A[0][4][2] = -2374*(2.0+ConstSqrt2)/(2835.0*(4.0+3.0*ConstSqrt2));
 
                     m_A[0][3][3] = lambda;
                     m_A[0][4][3] = 5827.0/7560.0;

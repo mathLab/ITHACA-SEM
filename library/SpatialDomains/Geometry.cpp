@@ -352,55 +352,65 @@ void Geometry::GenBoundingBox()
     //NekDouble minx, miny, minz, maxx, maxy, maxz;
     Array<OneD, NekDouble> min(3), max(3);
 
-    if (GetGeomFactors()->GetGtype() == eRegular) {
-        PointGeomSharedPtr p = GetVertex(0);
-        Array<OneD, NekDouble> x(3, 0.0);
+    // Always get vertexes min/max
+    PointGeomSharedPtr p = GetVertex(0);
+    Array<OneD, NekDouble> x(3, 0.0);
+    p->GetCoords(x[0], x[1], x[2]);
+    for (int j = 0; j < 3; ++j)
+    {
+        min[j] = x[j];
+        max[j] = x[j];
+    }
+    for (int i = 1; i < GetNumVerts(); ++i)
+    {
+        p = GetVertex(i);
         p->GetCoords(x[0], x[1], x[2]);
-        for (int j = 0; j < 3; ++j) {
-            min[j] = x[j] - NekConstants::kGeomFactorsTol;
-            max[j] = x[j] + NekConstants::kGeomFactorsTol;
-        }
-        for (int i = 1; i < GetNumVerts(); ++i)
+        for (int j = 0; j < 3; ++j)
         {
-            p = GetVertex(i);
-            p->GetCoords(x[0], x[1], x[2]);
-            for (int j = 0; j < 3; ++j) {
-                min[j] = (x[j] < min[j] ? x[j] : min[j]);
-                max[j] = (x[j] > max[j] ? x[j] : max[j]);
-            }
+            min[j] = (x[j] < min[j] ? x[j] : min[j]);
+            max[j] = (x[j] > max[j] ? x[j] : max[j]);
         }
     }
-    else {
+    // If element is deformed loop over quadrature points
+    if (GetGeomFactors()->GetGtype() != eRegular)
+    {
         const int nq = GetXmap()->GetTotPoints();
         Array<OneD, Array<OneD, NekDouble>> x(3);
-        for (int j = 0; j < 3; ++j) {
+        for (int j = 0; j < 3; ++j)
+        {
             x[j] = Array<OneD, NekDouble>(nq, 0.0);
         }
-        for (int j = 0; j < GetCoordim(); ++j) {
+        for (int j = 0; j < GetCoordim(); ++j)
+        {
             GetXmap()->BwdTrans(m_coeffs[j], x[j]);
         }
-        for (int j = 0; j < 3; ++j) {
-            min[j] = x[j][0] - NekConstants::kGeomFactorsTol;
-            max[j] = x[j][0] + NekConstants::kGeomFactorsTol;
-
-            for (int i = 1; i < nq; ++i) {
+        for (int j = 0; j < 3; ++j)
+        {
+            for (int i = 0; i < nq; ++i)
+            {
                 min[j] = (x[j][i] < min[j] ? x[j][i] : min[j]);
                 max[j] = (x[j][i] > max[j] ? x[j][i] : max[j]);
             }
 
             // Add 10% margin to bounding box in case elements have
             // convex boundaries.
-            const int len = max[j] - min[j];
+            const NekDouble len = max[j] - min[j];
             max[j] += 0.1*len;
             min[j] -= 0.1*len;
         }
     }
+    // Add geometric tolerance
+    for (int j = 0; j < 3; ++j)
+    {
+        const NekDouble len = max[j] - min[j];
+        min[j] -= NekConstants::kGeomFactorsTol*len;
+        max[j] += NekConstants::kGeomFactorsTol*len;
+    }
+    // Save bounding box
     BgPoint pmin(min[0], min[1], min[2]);
     BgPoint pmax(max[0], max[1], max[2]);
     m_boundingBox = BgBox(pmin, pmax);
 }
-
-
 
 }
 }

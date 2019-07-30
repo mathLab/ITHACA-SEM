@@ -1,6 +1,14 @@
 Changelog
 =========
 
+v5.1.0
+------
+**Library**
+- Added IMEXOrder4, RK5 and AB4 time integration schemes (!1037)
+
+**FieldConvert**
+- Add field conversion from Halfmode to SingleMode (!1032)
+
 v5.0.0
 ------
 **Library**
@@ -77,6 +85,7 @@ v5.0.0
 - Fix to populate m_elmtToExpId map if not already set up in GetExpIndex (!1019)
 - Added flag to skip periodic BCs while filling Dirichlet BCs in
   ContField3D.cpp (!1018)
+- Fix bounding box for interpolation (!1033)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -143,6 +152,7 @@ v5.0.0
 - Updated SVV to allow for the DGKernel extension (!851)
 - Pre-calculate Time invariant portion of Womersley Solution (!814)
 - Fix for independent setting of SVV in Homogeneous direction (!936)
+- Write flow field based on CFL treshold (!1025)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)

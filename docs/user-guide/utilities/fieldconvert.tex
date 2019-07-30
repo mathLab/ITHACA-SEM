@@ -166,6 +166,7 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
 \item \inltt{gradient}: Computes gradient of fields;
+\item \inltt{halfmodetofourier}: Convert \inltt{HalfMode} expansion to \inltt{SingleMode} for further processing;
 \item \inltt{homplane}: Extract a plane from 3DH1D expansions;
 \item \inltt{homstretch}: Stretch a 3DH1D expansion by an integer factor;
 \item \inltt{innerproduct}: take the inner product between one or a series of fields with another field (or series of fields).
@@ -440,6 +441,13 @@ to visualise the result either in Tecplot, Paraview or VisIt.
 %
 %
 
+\subsection{Convert HalfMode expansion to SingleMode for further processing: \textit{halfmodetofourier} module}
+
+To obtain full Fourier expansion form a \inltt{HalfMode} result, use the comand:
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m halfmodetofourier file.xml half_mode_file.fld single_mode_file.fld
+\end{lstlisting}
+
 \subsection{Extract a plane from 3DH1D expansion: \textit{homplane} module}
 
 To obtain a 2D expansion containing one of the planes of a
@@ -466,7 +474,7 @@ To stretch a 3DH1D expansion in the z-direction, use the command:
 FieldConvert -m homstretch:factor=value file.xml file.fld file-stretch.fld
 \end{lstlisting}
 The number of modes in the resulting field can be chosen using the command-line
-parameter \inltt{output-points-hom-z}.
+parameter \inltt{-{}-output-points-hom-z}.
 
 The output file \inltt{file-stretch.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}

@@ -1,6 +1,15 @@
 Changelog
 =========
 
+v5.1.0
+------
+**Library**
+- Added IMEXOrder4, RK5 and AB4 time integration schemes (!1037)
+- Restructure library to use local coefficient storage down to the GlobalLinSys level. Removed GlobalCeoffs functionality (!963)
+
+**FieldConvert**
+- Add field conversion from Halfmode to SingleMode (!1032)
+
 v5.0.0
 ------
 **Library**
@@ -58,7 +67,6 @@ v5.0.0
 - Fix compilation issue with newer Boost versions and clang (!940)
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
-- Restructure library to use local coefficient storage down to the GlobalLinSys level. Removed GlobalCeoffs functionality (!963)
 - Dont add doxygen documentation to the all target (!834)
 - Fix missing metadata import from Hdf5 files (!971)
 - Fix missing flags for periodic BC in DiffusionLDG (!985)
@@ -77,6 +85,7 @@ v5.0.0
 - Fix to populate m_elmtToExpId map if not already set up in GetExpIndex (!1019)
 - Added flag to skip periodic BCs while filling Dirichlet BCs in
   ContField3D.cpp (!1018)
+- Fix bounding box for interpolation (!1033)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -143,6 +152,7 @@ v5.0.0
 - Updated SVV to allow for the DGKernel extension (!851)
 - Pre-calculate Time invariant portion of Womersley Solution (!814)
 - Fix for independent setting of SVV in Homogeneous direction (!936)
+- Write flow field based on CFL treshold (!1025)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)

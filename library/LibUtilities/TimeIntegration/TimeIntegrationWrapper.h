@@ -182,6 +182,28 @@ namespace LibUtilities {
         virtual void v_InitObject();
     };
 
+    class TimeIntegrationIMEXOrder4 : public TimeIntegrationWrapper
+    {
+    public:
+        friend class MemoryManager<TimeIntegrationIMEXOrder4>;
+
+        /// Creates an instance of this class
+        static TimeIntegrationWrapperSharedPtr create()
+        {
+            TimeIntegrationWrapperSharedPtr p =
+                MemoryManager<TimeIntegrationIMEXOrder4>::AllocateSharedPtr();
+            p->InitObject();
+            return p;
+        }
+        /// Name of class
+        static std::string className;
+
+        virtual ~TimeIntegrationIMEXOrder4() {}
+
+    protected:
+        virtual void v_InitObject();
+    };
+
     class TimeIntegrationIMEXdirk_1_1_1 : public TimeIntegrationWrapper
     {
     public:
@@ -635,6 +657,30 @@ namespace LibUtilities {
     };
 
 
+    class TimeIntegrationRungeKutta5 : public TimeIntegrationWrapper
+    {
+    public:
+        friend class MemoryManager<TimeIntegrationRungeKutta5>;
+
+        /// Creates an instance of this class
+        static TimeIntegrationWrapperSharedPtr create()
+        {
+            TimeIntegrationWrapperSharedPtr p =
+                MemoryManager<TimeIntegrationRungeKutta5>
+                    ::AllocateSharedPtr();
+            p->InitObject();
+            return p;
+        }
+        /// Name of class
+        static std::string className;
+
+        virtual ~TimeIntegrationRungeKutta5() {}
+
+    protected:
+        virtual void v_InitObject();
+    };
+
+
     class TimeIntegrationDIRKOrder2 : public TimeIntegrationWrapper
     {
     public:
@@ -656,6 +702,7 @@ namespace LibUtilities {
     protected:
         virtual void v_InitObject();
     };
+
 
     class TimeIntegrationDIRKOrder3 : public TimeIntegrationWrapper
     {
@@ -722,6 +769,30 @@ namespace LibUtilities {
         static std::string className;
 
         virtual ~TimeIntegrationAdamsBashforthOrder3() {}
+
+    protected:
+        virtual void v_InitObject();
+    };
+
+
+    class TimeIntegrationAdamsBashforthOrder4 : public TimeIntegrationWrapper
+    {
+    public:
+        friend class MemoryManager<TimeIntegrationAdamsBashforthOrder4>;
+
+        /// Creates an instance of this class
+        static TimeIntegrationWrapperSharedPtr create()
+        {
+            TimeIntegrationWrapperSharedPtr p =
+                MemoryManager<TimeIntegrationAdamsBashforthOrder4>
+                    ::AllocateSharedPtr();
+            p->InitObject();
+            return p;
+        }
+        /// Name of class
+        static std::string className;
+
+        virtual ~TimeIntegrationAdamsBashforthOrder4() {}
 
     protected:
         virtual void v_InitObject();

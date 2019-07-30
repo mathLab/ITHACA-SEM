@@ -91,10 +91,11 @@ namespace Nektar
         {
             case LibUtilities::eIMEXOrder1:
             {
-                intSteps = 1; 
+                intSteps = 1;
             }
             break;
             case LibUtilities::eIMEXOrder2:
+            case LibUtilities::eIMEXGear:
             {
                 intSteps = 2;
             }
@@ -102,6 +103,11 @@ namespace Nektar
             case LibUtilities::eIMEXOrder3:
             {
                 intSteps = 3;
+            }
+            break;
+            case LibUtilities::eIMEXOrder4:
+            {
+                intSteps = 4;
             }
             break;
         }        

@@ -5,6 +5,7 @@ v5.1.0
 ------
 **Library**
 - Added IMEXOrder4, RK5 and AB4 time integration schemes (!1037)
+- Restructure library to use local coefficient storage down to the GlobalLinSys level. Removed GlobalCeoffs functionality (!963)
 
 **FieldConvert**
 - Add field conversion from Halfmode to SingleMode (!1032)
@@ -66,7 +67,6 @@ v5.0.0
 - Fix compilation issue with newer Boost versions and clang (!940)
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
-- Restructure library to use local coefficient storage down to the GlobalLinSys level. Removed GlobalCeoffs functionality (!963)
 - Dont add doxygen documentation to the all target (!834)
 - Fix missing metadata import from Hdf5 files (!971)
 - Fix missing flags for periodic BC in DiffusionLDG (!985)

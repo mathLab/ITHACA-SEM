@@ -534,9 +534,12 @@ namespace Nektar
         // field below
         SetBoundaryConditions(m_time);
 
-        for(int i = 0; i < m_nConvectiveFields; ++i)
+	// Ensure the initial conditions have correct BCs  
+        for(int i = 0; i < m_fields.num_elements(); ++i)
         {
             m_fields[i]->ImposeDirichletConditions(m_fields[i]->UpdateCoeffs());
+	    m_fields[i]->LocalToGlobal();
+	    m_fields[i]->GlobalToLocal();
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
                                   m_fields[i]->UpdatePhys());
         }

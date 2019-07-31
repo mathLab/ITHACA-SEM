@@ -112,7 +112,8 @@ void Interpolator::Interpolate(
 
         // Obtain Element and LocalCoordinate to interpolate
         int elmtid = m_expInField[0]->GetExpIndex(Scoords, Lcoords,
-                                                  NekConstants::kGeomFactorsTol);
+                                                  NekConstants::kGeomFactorsTol,
+                                                  true);
 
         // we use kGeomFactorsTol as tolerance, while StdPhysEvaluate has
         // kNekZeroTol hardcoded, so we need to limit Lcoords to not produce

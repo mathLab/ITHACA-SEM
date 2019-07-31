@@ -93,6 +93,8 @@ namespace Nektar
     {
         for(int i = 0; i < m_fields.num_elements(); ++i)
         {
+	    // Zero initial guess
+            Vmath::Zero(m_fields[i]->GetNcoeffs(),m_fields[i]->UpdateCoeffs(),1);
             m_fields[i]->LinearAdvectionDiffusionReactionSolve(m_velocity,
                                                                m_fields[i]->GetPhys(),
                                                                m_fields[i]->UpdateCoeffs(),

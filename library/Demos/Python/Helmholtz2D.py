@@ -1,7 +1,7 @@
 from NekPy.LibUtilities import SessionReader
 from NekPy.StdRegions import ConstFactorMap, ConstFactorType
 from NekPy.SpatialDomains import MeshGraph
-from NekPy.MultiRegions import ContField2D
+from NekPy.MultiRegions import ContField
 
 import numpy as np
 import sys
@@ -15,8 +15,8 @@ session = SessionReader.CreateInstance(sys.argv)
 graph = MeshGraph.Read(session)
 
 # Override polynomial order and create ContField2D.
-graph.SetExpansionsToPolyOrder(10)
-exp = ContField2D(session, graph, session.GetVariable(0))
+graph.SetExpansionInfosToPolyOrder(10)
+exp = ContField(session, graph, session.GetVariable(0))
 
 # Construct factor map, using lambda from session file.
 lamb = session.GetParameter("Lambda")

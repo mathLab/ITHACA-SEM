@@ -10,7 +10,7 @@ def main():
 
     session = SessionReader.CreateInstance(session_name)
     graph = MeshGraph.Read(session)
-    exp = ExpList2D(session, graph)
+    exp = ExpList(session, graph)
 
     coords = exp.GetCoords()
     coords = coords[0]

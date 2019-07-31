@@ -108,7 +108,9 @@ void export_MeshGraph()
 
         .def("SetExpansionInfosToEvenlySpacedPoints",
              &MeshGraph::SetExpansionInfosToEvenlySpacedPoints)
-        .def("SetExpansionInfosToPolyOrder", &MeshGraph::SetExpansionInfosToPolyOrder)
-        .def("SetExpansionInfosToPointOrder", &MeshGraph::SetExpansionInfosToPointOrder)
+        .def("SetExpansionInfosToPolyOrder",
+             &MeshGraph::SetExpansionInfosToPolyOrder)
+        .def("SetExpansionInfosToPointOrder",
+             &MeshGraph::SetExpansionInfosToPointOrder)
         ;
 }

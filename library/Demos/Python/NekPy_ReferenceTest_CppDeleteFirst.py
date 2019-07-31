@@ -17,7 +17,7 @@ def main():
 
     session = SessionReader.CreateInstance(session_name)
     graph = MeshGraph.Read(session)
-    exp = ExpList2D(session, graph)
+    exp = ExpList(session, graph)
 
     print("Loaded session: %s" % session.GetSessionName())
     print("Loaded MeshGraph of dimension: %d\n" % graph.GetMeshDimension())

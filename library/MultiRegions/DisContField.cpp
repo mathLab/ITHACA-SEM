@@ -4118,6 +4118,9 @@ namespace Nektar
             trace_lambda = loc_lambda;
 
             int dim  = (m_expType == e2D)? 2:3;
+
+            int num_points[3];
+            int num_modes [3];
             
             // Calculate Q using standard DG formulation.
             for(i = cnt = 0; i < GetExpSize(); ++i)
@@ -4129,9 +4132,6 @@ namespace Nektar
                 force  = Array<OneD, NekDouble>(2*nm_elmt);
                 out_tmp = force + nm_elmt;
                 LocalRegions::ExpansionSharedPtr ppExp;
-
-                int num_points[dim];
-                int num_modes [dim];
 
                 for(int j= 0; j < dim; ++j)
                 {

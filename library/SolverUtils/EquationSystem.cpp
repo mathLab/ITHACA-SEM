@@ -697,6 +697,9 @@ namespace Nektar
 
             // Zero all physical fields initially
             ZeroPhysFields();
+
+            m_FilterOperators.DefineExtraFldOutput (&EquationSystem::ExtraFldOutput, this);
+
         }
 
         /**
@@ -1144,11 +1147,13 @@ namespace Nektar
          * Writes the field data to a file with the given filename.
          * @param   outname     Filename to write to.
          */
-        void EquationSystem::WriteFld(const std::string &outname)
+        void EquationSystem::ExtraFldOutput(
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<std::string>             &variables,
+                const  bool                             &flag)
         {
-            std::vector<Array<OneD, NekDouble> > fieldcoeffs(
-                m_fields.num_elements());
-            std::vector<std::string> variables(m_fields.num_elements());
+            fieldcoeffs = std::vector<Array<OneD, NekDouble> > (m_fields.num_elements());
+            variables   = std::vector<std::string> (m_fields.num_elements());
 
             for (int i = 0; i < m_fields.num_elements(); ++i)
             {
@@ -1168,6 +1173,19 @@ namespace Nektar
             }
 
             v_ExtraFldOutput(fieldcoeffs, variables);
+        }
+
+        /**
+         * Writes the field data to a file with the given filename.
+         * @param   outname     Filename to write to.
+         */
+        void EquationSystem::WriteFld(const std::string &outname)
+        {
+            std::vector<Array<OneD, NekDouble> > fieldcoeffs(
+                m_fields.num_elements());
+            std::vector<std::string> variables(m_fields.num_elements());
+
+            ExtraFldOutput(fieldcoeffs, variables);            
 
             WriteFld(outname, m_fields[0], fieldcoeffs, variables);
         }

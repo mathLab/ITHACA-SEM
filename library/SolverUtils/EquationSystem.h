@@ -50,6 +50,7 @@
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
+#include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar
 {
@@ -324,6 +325,11 @@ class Interpolator;
             /// Virtual function to identify if operator is negated in DoSolve
             SOLVER_UTILS_EXPORT virtual bool v_NegatedOp();
 
+            SOLVER_UTILS_EXPORT void ExtraFldOutput(
+                std::vector<Array<OneD, NekDouble> >    &fieldcoeffs,
+                std::vector<std::string>                &variables,
+                const  bool                             &flag = false);
+
         protected:
             /// Temparary factor to determine whether strong/weak
             bool                                        m_useUnifiedWeakIntegration  =   false;
@@ -424,6 +430,8 @@ class Interpolator;
             LinSysOperators                             m_LinSysOprtors;
 
             NekLinSysIterativeSharedPtr                 m_linsol;
+
+            FilterOperators                             m_FilterOperators;
 
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;

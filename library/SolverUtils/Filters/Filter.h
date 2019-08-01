@@ -39,8 +39,7 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ExpList.h>
-#include <SolverUtils/EquationSystem.h>
-
+// #include <SolverUtils/EquationSystem.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
 namespace Nektar
@@ -61,6 +60,44 @@ typedef LibUtilities::NekFactory<
     > FilterFactory;
 SOLVER_UTILS_EXPORT FilterFactory& GetFilterFactory();
 
+    class FilterOperators
+    {
+    public:
+
+        typedef std::vector<Array<OneD, NekDouble> > fieldvectorType;
+        typedef std::vector<std::string>             varblvectorType;
+
+        
+        typedef std::function< void (fieldvectorType&, varblvectorType&, const bool&) >                                   FunctorType1;
+        typedef const FunctorType1& ConstFunctorType1Ref;
+        typedef Array<OneD, FunctorType1> FunctorType1Array;
+        
+        FilterOperators(void)
+        {
+        }
+        FilterOperators(FilterOperators &in)
+        {
+             m_functors = in.m_functors;
+        }
+        template<typename FuncPointerT, typename ObjectPointerT> 
+            void DefineExtraFldOutput(FuncPointerT func, ObjectPointerT obj)
+        {
+            m_functors =  std::bind(
+                func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        }
+        inline void ExtraFldOutput(fieldvectorType      &fields, 
+                                   varblvectorType      &variables,
+                                        const  bool      &flag = false) const
+        {
+            ASSERTL1(m_functors,"DoLinSysRhs should be defined for this time integration scheme");
+            m_functors(fields,variables,flag);
+        }
+
+    protected:
+        FunctorType1 m_functors;
+    private:
+    };
+
 class Filter
 {
 public:
@@ -80,8 +117,15 @@ public:
             const NekDouble &time);
     SOLVER_UTILS_EXPORT inline bool IsTimeDependent();
 
+    inline void setFilterOperators(FilterOperators &in)
+    {
+    	m_oprtor = FilterOperators(in);
+    }
+
 protected:
     LibUtilities::SessionReaderSharedPtr m_session;
+
+	FilterOperators                             m_oprtor;
 
     virtual void v_Initialise(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,

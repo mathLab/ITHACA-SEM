@@ -267,6 +267,7 @@ namespace Nektar
             // Initialise filters
             for (auto &x : m_filters)
             {
+                x->setFilterOperators(m_FilterOperators);
                 x->Initialise(m_fields, m_time);
             }
 

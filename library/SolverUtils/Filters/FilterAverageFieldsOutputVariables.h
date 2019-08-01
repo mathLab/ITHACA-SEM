@@ -33,26 +33,26 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDS_H
-#define NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDS_H
+#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDSOUTPUTVARIABLES_H
+#define NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDSOUTPUTVARIABLES_H
 
-#include <SolverUtils/Filters/FilterFieldConvert.h>
+#include <SolverUtils/Filters/FilterAverageFields.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterAverageFields : public FilterFieldConvert
+class FilterAverageFieldsOutputVariables : public FilterAverageFields
 {
 public:
-    friend class MemoryManager<FilterAverageFields>;
+    friend class MemoryManager<FilterAverageFieldsOutputVariables>;
 
     /// Creates an instance of this class
     static FilterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const std::map<std::string, std::string> &pParams)
     {
-        FilterSharedPtr p = MemoryManager<FilterAverageFields>
+        FilterSharedPtr p = MemoryManager<FilterAverageFieldsOutputVariables>
                                 ::AllocateSharedPtr(pSession, pParams);
         return p;
     }
@@ -60,28 +60,18 @@ public:
     ///Name of the class
     static std::string className;
 
-    SOLVER_UTILS_EXPORT FilterAverageFields(
+    SOLVER_UTILS_EXPORT FilterAverageFieldsOutputVariables(
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const ParamMap &pParams);
-    SOLVER_UTILS_EXPORT virtual ~FilterAverageFields();
+    SOLVER_UTILS_EXPORT virtual ~FilterAverageFieldsOutputVariables();
 
 protected:
     virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
-    virtual void v_PrepareOutput(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time);
-    virtual NekDouble v_GetScale();
-    virtual std::string v_GetFileSuffix()
-    {
-        return "_avg";
-    }
     virtual void v_FillVariablesName(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
-    {
-        FilterFieldConvert::v_FillVariablesName(pFields);
-    }
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
+
 };
 }
 }

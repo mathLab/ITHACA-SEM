@@ -92,7 +92,10 @@ namespace Nektar
 
             std::vector<int>                                m_intVariables;
 
-            std::vector<FilterSharedPtr>                    m_filters;
+            std::vector<std::pair<std::string, FilterSharedPtr>>  m_filters;
+
+            /// Number of time steps between outputting status information.
+            NekDouble                                       m_filterTimeWarning;
 
             /// Initialises UnsteadySystem class members.
             SOLVER_UTILS_EXPORT UnsteadySystem(

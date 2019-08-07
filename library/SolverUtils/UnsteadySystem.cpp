@@ -108,6 +108,8 @@ namespace Nektar
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+                m_session->LoadParameter("IO_FiltersInfoSteps",
+                    m_filtersInfosteps, 10.0 * m_infosteps);
                 m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
 
                 // Time tolerance between filter update time and time integration
@@ -260,7 +262,8 @@ namespace Nektar
             NekDouble cpuTime           = 0.0;
             NekDouble cpuPrevious       = 0.0;
             NekDouble elapsed           = 0.0;
-            NekDouble maxFilterElapsed  = 0.0;
+            NekDouble totFilterTime     = 0.0;
+            // Array<OneD, NekDouble> fields(nvariables);
 
             while (step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol)
@@ -379,21 +382,38 @@ namespace Nektar
                 for (auto &x : m_filters)
                 {
                     timer.Start();
-
                     x.second->Update(m_fields, m_time);
-
                     timer.Stop();
-                    elapsed  = timer.TimePerTest(1);
+                    elapsed = timer.TimePerTest(1);
+                    totFilterTime += elapsed;
 
-                    if(elapsed >= m_filterTimeWarning * cpuPrevious &&
-                        m_comm->GetRank() == 0 && elapsed > maxFilterElapsed)
+                    if(m_session->GetComm()->GetRank() == 0 && 
+                    !((step+1) % m_filtersInfosteps) && !m_filters.empty() && 
+                    m_session->DefinesCmdLineArgument("verbose"))
                     {
-                        maxFilterElapsed = elapsed;
-                        elapsed = elapsed / cpuPrevious * 100;
-                        cout << "Warning: CPU time for filter " << x.first << " is "
-                        << elapsed << "% of time integraton " << endl;
+                        stringstream s0;
+                        s0 << x.first << ":";
+                        stringstream s1;
+                        s1 << elapsed << "s";
+                        stringstream s2;
+                        s2 << elapsed / cpuPrevious * 100 << "%";
+                        cout << "CPU time for filter " << setw(25) << left 
+                            << s0.str() << setw(12) << left << s1.str() << 
+                            endl << "\t Percentage of time integration:     "
+                             << setw(10) << left << s2.str() << endl;
                     }
                 }
+                
+                // Write out filters status information
+                if (m_session->GetComm()->GetRank() == 0 && 
+                    !((step+1) % m_filtersInfosteps) && !m_filters.empty())
+                 {
+                    stringstream ss;
+                    ss << totFilterTime << "s";
+                    cout << "Total filters CPU Time:\t\t\t     " << setw(10)
+                        << left << ss.str() << endl;
+                 }
+                totFilterTime = 0.0;
 
                 // Write out checkpoint files
                 if ((m_checksteps && !((step + 1) % m_checksteps)) ||

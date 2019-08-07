@@ -49,27 +49,29 @@
     </GEOMETRY>
 
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="3" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="15" TYPE="MODIFIED" />
     </EXPANSIONS>
 
     <CONDITIONS>
-
+        
         <PARAMETERS>
-            <P> TimeStep       = 0.00001   </P>
-            <P> NumSteps       = 0       </P>
-            <P> FinTime        = 0.38      </P>
-            <P> IO_CheckSteps  = 10000     </P>
-            <P> IO_InfoSteps   = 100     </P>
-            <P> Gamma          = 1.4      </P>
-            <P> IO_CheckTime   = 100      </P>
+            <P> FinTime         = 1         </P>
+            <P> IO_CheckTime    = 0.1       </P>
+            <P> IO_InfoSteps    = 10        </P>
+            <P> Gamma           = 1.4       </P>
+            <P> pInf            = 101325    </P>
+            <P> rhoInf          = 1.225     </P>
+            <P> uInf            = 0.1       </P>
+            <P> vInf            = 0.0       </P>
+            <P> CFL             = 0.5       </P>
         </PARAMETERS>
 
         <SOLVERINFO>
-            <I PROPERTY="EQType" VALUE="EulerCFE" />
-            <I PROPERTY="Projection" VALUE="DisContinuous" />
-            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
-            <I PROPERTY="UpwindType" VALUE="ExactToro" />
-            <I PROPERTY="ProblemType" VALUE="IsentropicVortex" />
+            <I PROPERTY="EQType"                VALUE="IsentropicVortex"                    />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+            <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+            <I PROPERTY="UpwindType"            VALUE="ExactToro"               />
         </SOLVERINFO>
 
         <VARIABLES>
@@ -91,13 +93,6 @@
                 <D VAR="E" USERDEFINEDTYPE="IsentropicVortex" VALUE="0" />
             </REGION>
         </BOUNDARYCONDITIONS>
-
-        <FUNCTION NAME="InitialConditions">
-            <E VAR="rho" VALUE="0" />
-            <E VAR="rhou" VALUE="0" />
-            <E VAR="rhov" VALUE="0" />
-            <E VAR="E" VALUE="0" />
-        </FUNCTION>
 
     </CONDITIONS>
 

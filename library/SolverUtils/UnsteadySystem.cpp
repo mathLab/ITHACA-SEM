@@ -263,7 +263,6 @@ namespace Nektar
             NekDouble cpuPrevious       = 0.0;
             NekDouble elapsed           = 0.0;
             NekDouble totFilterTime     = 0.0;
-            // Array<OneD, NekDouble> fields(nvariables);
 
             while (step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol)
@@ -387,6 +386,7 @@ namespace Nektar
                     elapsed = timer.TimePerTest(1);
                     totFilterTime += elapsed;
 
+                    // Write out individual filter status information
                     if(m_session->GetComm()->GetRank() == 0 && 
                     !((step+1) % m_filtersInfosteps) && !m_filters.empty() && 
                     m_session->DefinesCmdLineArgument("verbose"))
@@ -403,8 +403,8 @@ namespace Nektar
                              << setw(10) << left << s2.str() << endl;
                     }
                 }
-                
-                // Write out filters status information
+
+                // Write out overall filter status information
                 if (m_session->GetComm()->GetRank() == 0 && 
                     !((step+1) % m_filtersInfosteps) && !m_filters.empty())
                  {

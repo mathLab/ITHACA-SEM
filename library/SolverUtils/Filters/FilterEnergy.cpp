@@ -105,9 +105,14 @@ void FilterEnergy::v_Initialise(
     m_index = -1;
     MultiRegions::ExpListSharedPtr areaField;
 
+    ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e1D,
+             "1D expansion not supported for energy filter");
+
+    ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e2D,
+             "2D expansion not supported for energy filter");
+
     ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e3DH2D,
-             "Homogeneous 2D expansion not supported"
-             "for energy filter");
+             "Homogeneous 2D expansion not supported for energy filter");
 
     if (pFields[0]->GetExpType() == MultiRegions::e3DH1D)
     {

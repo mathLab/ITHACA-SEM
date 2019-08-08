@@ -110,7 +110,7 @@ IF (SCOTCH_LIBRARY AND SCOTCHERR_LIBRARY AND SCOTCH_INCLUDE_DIR)
             # Finally, test if serial library needs to be linked as well.
             TRY_COMPILE( COMPILE_RESULT
                 ${CMAKE_CURRENT_BINARY_DIR}/
-                ${CMAKE_CURRENT_SOURCE_DIR}/cmake/scripts/get-scotch-version.c
+                ${CMAKE_CURRENT_SOURCE_DIR}/cmake/scripts/check-ptscotch-link.c
                 CMAKE_FLAGS -DINCLUDE_DIRECTORIES=${SCOTCH_INCLUDE_DIR}
                     -DLINK_DIRECTORIES=${SCOTCH_LIBRARY_DIR}
                 LINK_LIBRARIES "ptscotch" "ptscotcherr"

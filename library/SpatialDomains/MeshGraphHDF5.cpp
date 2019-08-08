@@ -404,7 +404,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     // Create partitioner. Default partitioner to use is PtScotch. Use ParMetis
     // as default if it is installed. Override default with command-line flags
     // if they are set.
-    string partitionerName = "PtScotch";
+    string partitionerName = nproc > 1 ? "PtScotch" : "Scotch";
     if (GetMeshPartitionFactory().ModuleExists("ParMetis"))
     {
         partitionerName = "ParMetis";

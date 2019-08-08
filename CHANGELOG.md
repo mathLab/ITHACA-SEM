@@ -85,6 +85,7 @@ v5.0.0
 - Added flag to skip periodic BCs while filling Dirichlet BCs in
   ContField3D.cpp (!1018)
 - Fix bounding box for interpolation (!1033)
+- Update CompressibleFlowSolver/Examples/Test_IsentropicVortex1.xml example (!1045)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

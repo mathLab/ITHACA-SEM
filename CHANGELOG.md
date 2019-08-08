@@ -79,6 +79,7 @@ v5.0.0
 - Fix bounding box for interpolation (!1033)
 - Added IMEXOrder4, RK5 and AB4 time integration schemes (!1037)
 - Fix TriExp.cpp orientation bug (!1048)
+- Fix XML attributes in conditions.cpp to be unordered (!1015)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

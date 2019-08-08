@@ -78,6 +78,7 @@ v5.0.0
   ContField3D.cpp (!1018)
 - Fix bounding box for interpolation (!1033)
 - Added IMEXOrder4, RK5 and AB4 time integration schemes (!1037)
+- Fix issue with HDF5 mesh input in serial (!1049)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

@@ -4,6 +4,7 @@
     <executable>FieldConvert</executable>
     <parameters> -f -e -m interpfield:fromxml=interptest_hdf5.xml:fromfld=interptest_hdf5.fld  interptest.xml out.fld </parameters>
     <files>
+        <file description="Session File">interptest.xml</file>
         <file description="Session File">interptest_hdf5.xml</file>
         <file description="Session File">interptest_hdf5.nekg</file>
         <file description="Session File">interptest_hdf5.fld</file>

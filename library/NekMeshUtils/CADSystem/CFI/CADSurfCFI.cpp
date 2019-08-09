@@ -57,10 +57,10 @@ Array<OneD, NekDouble> CADSurfCFI::GetBounds()
     Array<OneD, NekDouble> b(4);
 
     cfi::UVBox bx = m_cfiSurface->calcUVBox();
-    b[0]          = bx.uLower * m_scal;
-    b[1]          = bx.uUpper * m_scal;
-    b[2]          = bx.vLower * m_scal;
-    b[3]          = bx.vUpper * m_scal;
+    b[0]          = bx.uLower;
+    b[1]          = bx.uUpper;
+    b[2]          = bx.vLower;
+    b[3]          = bx.vUpper;
 
     return b;
 }

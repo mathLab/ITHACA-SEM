@@ -80,6 +80,7 @@ v5.0.0
 - Added IMEXOrder4, RK5 and AB4 time integration schemes (!1037)
 - Fix TriExp.cpp orientation bug (!1048)
 - Fix XML attributes in conditions.cpp to be unordered (!1015)
+- Fix issue with HDF5 mesh input in serial (!1049)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

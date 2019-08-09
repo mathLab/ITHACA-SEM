@@ -582,25 +582,6 @@ void ProcessBL::BoundaryLayer3D()
             int locEdge       = sMap.edgesToSplit[j];
             EdgeSharedPtr edg = el[i]->GetEdge(locEdge);
             int edgeId        = edg->m_id;
-
-            vector<CADCurveSharedPtr> c1 = edg->m_n1->GetCADCurves();
-            sort(c1.begin(), c1.end());
-            vector<CADCurveSharedPtr> c2 = edg->m_n2->GetCADCurves();
-            sort(c2.begin(), c2.end());
-            vector<CADCurveSharedPtr> curves(max(c1.size(), c2.size()));
-            vector<CADCurveSharedPtr>::iterator itc;
-            itc = set_intersection(c1.begin(), c1.end(), c2.begin(), c2.end(), curves.begin());
-            curves.resize(itc - curves.begin());
-
-            vector<CADSurfSharedPtr> s1 = edg->m_n1->GetCADSurfs();
-            sort(s1.begin(), s1.end());
-            vector<CADSurfSharedPtr> s2 = edg->m_n2->GetCADSurfs();
-            sort(s2.begin(), s2.end());
-            vector<CADSurfSharedPtr> surfs(max(s1.size(), s2.size()));
-            vector<CADSurfSharedPtr>::iterator its;
-            its = set_intersection(s1.begin(), s1.end(), s2.begin(), s2.end(), surfs.begin());
-            surfs.resize(its - surfs.begin());
-            
             SpatialDomains::GeometrySharedPtr geom = edgeGeomMap[edg->m_id];
             geom->FillGeom();
 
@@ -708,17 +689,24 @@ void ProcessBL::BoundaryLayer3D()
                     edgeNodes[j][k] = NodeSharedPtr(
                         new Node(nodeId++, loc[0], loc[1], loc[2]));
                     
-                    for (auto &curve : curves)
+                    if (edg->m_parentCAD)
                     {
-                        NekDouble t;
-                        curve->loct(loc, t);
-                        edgeNodes[j][k]->SetCADCurve(curve, t);
+                        if (edg->m_parentCAD->GetType() == CADType::eCurve)
+                        {
+                            CADCurveSharedPtr c =
+                                std::dynamic_pointer_cast<CADCurve>(edg->m_parentCAD);
+                            NekDouble t;
+                            c->loct(loc, t);
+                            edgeNodes[j][k]->SetCADCurve(c, t);
+                        }
+                        else if (edg->m_parentCAD->GetType() == CADType::eSurf)
+                        {
+                            CADSurfSharedPtr s =
+                                std::dynamic_pointer_cast<CADSurf>(edg->m_parentCAD);
+                            Array<OneD, NekDouble> uv = s->locuv(loc);
+                            edgeNodes[j][k]->SetCADSurf(s, uv);
+                        }
                     }
-                    for (auto &surf : surfs)
-                    {
-                        edgeNodes[j][k]->SetCADSurf(surf, surf->locuv(loc));
-                    }
-
                 }
 
                 // Store these edges in edgeMap.

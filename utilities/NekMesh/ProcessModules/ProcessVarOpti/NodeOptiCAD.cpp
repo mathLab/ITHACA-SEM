@@ -69,7 +69,7 @@ void NodeOpti1D3D::Optimise()
         NekDouble nt;
         Array<OneD, NekDouble> p;
 
-        Array<OneD, NekDouble> sk(1);
+        vector<NekDouble> sk(1);
 
         if (m_grad[1] < 1e-6)
         {
@@ -169,7 +169,7 @@ void NodeOpti2D3D::Optimise()
         Array<OneD, NekDouble> p;
         Array<OneD, NekDouble> bd = surf->GetBounds();
 
-        Array<OneD, NekDouble> sk(2);
+        vector<NekDouble> sk(2);
         NekDouble val;
 
         // Calculate minimum eigenvalue
@@ -263,8 +263,8 @@ void NodeOpti2D3D::Optimise()
 void NodeOpti1D3D::ProcessGradient()
 {
     NekDouble tc = m_node->GetCADCurveInfo(curve->GetId());
-    Array<OneD, NekDouble> grad = m_grad;
-    m_grad = Array<OneD, NekDouble>(2, 0.0);
+    vector<NekDouble> grad = m_grad;
+    m_grad = vector<NekDouble>(2, 0.0);
 
     // Grab first and second order CAD derivatives
     Array<OneD, NekDouble> d2 = curve->D2(tc);
@@ -284,8 +284,8 @@ void NodeOpti2D3D::ProcessGradient()
 {
     Array<OneD, NekDouble> uvc = m_node->GetCADSurfInfo(surf->GetId());
 
-    Array<OneD, NekDouble> grad = m_grad;
-    m_grad = Array<OneD, NekDouble>(5, 0.0);
+    vector<NekDouble> grad = m_grad;
+    m_grad = vector<NekDouble>(5, 0.0);
 
     Array<OneD, NekDouble> d2 = surf->D2(uvc);
     // r[0]   x

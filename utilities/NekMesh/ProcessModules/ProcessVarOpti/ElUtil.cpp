@@ -94,11 +94,11 @@ void ElUtil::MappingIdealToRef()
         LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
         LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2);
 
-        vector<Array<OneD, NekDouble> > xyz(4);
+        vector<vector<NekDouble> > xyz(4);
         vector<NodeSharedPtr> ns = m_el->GetVertexList();
         for (int i = 0; i < 4; i++)
         {
-            Array<OneD, NekDouble> x(3);
+            vector<NekDouble> x(3);
             x[0]   = ns[i]->m_x;
             x[1]   = ns[i]->m_y;
             x[2]   = ns[i]->m_z;
@@ -126,7 +126,7 @@ void ElUtil::MappingIdealToRef()
 
             J.Invert();
 
-            Array<OneD, NekDouble> r(10, 0.0); // store det in 10th entry
+            vector<NekDouble> r(10, 0.0); // store det in 10th entry
 
             r[9] = 1.0 / (J(0, 0) * J(1, 1) - J(0, 1) * J(1, 0));
 
@@ -163,7 +163,7 @@ void ElUtil::MappingIdealToRef()
 
             J.Invert();
 
-            Array<OneD, NekDouble> r(10, 0.0); // store det in 10th entry
+            vector<NekDouble> r(10, 0.0); // store det in 10th entry
 
             r[9] = 1.0 / (J(0, 0) * J(1, 1) - J(0, 1) * J(1, 0));
 
@@ -197,7 +197,7 @@ void ElUtil::MappingIdealToRef()
 
         for (int i = 0; i < m_derivUtil->pts; i++)
         {
-            Array<OneD, NekDouble> r(10, 0.0); // store det in 10th entry
+            vector<NekDouble> r(10, 0.0); // store det in 10th entry
 
             r[9] = 1.0 / (J(0, 0) * J(1, 1) - J(0, 1) * J(1, 0));
             r[0] = J(0, 0);
@@ -237,7 +237,7 @@ void ElUtil::MappingIdealToRef()
 
         for (int i = 0; i < m_derivUtil->pts; i++)
         {
-            Array<OneD, NekDouble> r(10, 0.0); // store det in 10th entry
+            vector<NekDouble> r(10, 0.0); // store det in 10th entry
 
             r[9] = 1.0 / (J(0, 0) * (J(1, 1) * J(2, 2) - J(2, 1) * J(1, 2)) -
                           J(0, 1) * (J(1, 0) * J(2, 2) - J(2, 0) * J(1, 2)) +
@@ -265,11 +265,11 @@ void ElUtil::MappingIdealToRef()
         LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
         LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
 
-        vector<Array<OneD, NekDouble> > xyz(6);
+        vector<vector<NekDouble> > xyz(6);
         vector<NodeSharedPtr> ns = m_el->GetVertexList();
         for (int i = 0; i < 6; i++)
         {
-            Array<OneD, NekDouble> x(3);
+            vector<NekDouble> x(3);
             x[0]   = ns[i]->m_x;
             x[1]   = ns[i]->m_y;
             x[2]   = ns[i]->m_z;
@@ -312,7 +312,7 @@ void ElUtil::MappingIdealToRef()
 
             J.Invert();
 
-            Array<OneD, NekDouble> r(10, 0.0); // store det in 10th entry
+            vector<NekDouble> r(10, 0.0); // store det in 10th entry
 
             r[9] = 1.0 / (J(0, 0) * (J(1, 1) * J(2, 2) - J(2, 1) * J(1, 2)) -
                           J(0, 1) * (J(1, 0) * J(2, 2) - J(2, 0) * J(1, 2)) +
@@ -365,7 +365,7 @@ void ElUtil::MappingIdealToRef()
 
             J.Invert();
 
-            Array<OneD, NekDouble> r(10, 0.0); // store det in 10th entry
+            vector<NekDouble> r(10, 0.0); // store det in 10th entry
 
             r[9] = 1.0 / (J(0, 0) * (J(1, 1) * J(2, 2) - J(2, 1) * J(1, 2)) -
                           J(0, 1) * (J(1, 0) * J(2, 2) - J(2, 0) * J(1, 2)) +
@@ -395,11 +395,11 @@ void ElUtil::MappingIdealToRef()
         LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
         LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
 
-        vector<Array<OneD, NekDouble> > xyz(8);
+        vector<vector<NekDouble> > xyz(8);
         vector<NodeSharedPtr> ns = m_el->GetVertexList();
         for (int i = 0; i < 8; i++)
         {
-            Array<OneD, NekDouble> x(3);
+            vector<NekDouble> x(3);
             x[0]   = ns[i]->m_x;
             x[1]   = ns[i]->m_y;
             x[2]   = ns[i]->m_z;
@@ -458,7 +458,7 @@ void ElUtil::MappingIdealToRef()
 
             J.Invert();
 
-            Array<OneD, NekDouble> r(10, 0.0); // store det in 10th entry
+            vector<NekDouble> r(10, 0.0); // store det in 10th entry
 
             r[9] = 1.0 / (J(0, 0) * (J(1, 1) * J(2, 2) - J(2, 1) * J(1, 2)) -
                           J(0, 1) * (J(1, 0) * J(2, 2) - J(2, 0) * J(1, 2)) +
@@ -528,7 +528,7 @@ void ElUtil::MappingIdealToRef()
 
             J.Invert();
 
-            Array<OneD, NekDouble> r(10, 0.0); // store det in 10th entry
+            vector<NekDouble> r(10, 0.0); // store det in 10th entry
 
             r[9] = 1.0 / (J(0, 0) * (J(1, 1) * J(2, 2) - J(2, 1) * J(1, 2)) -
                           J(0, 1) * (J(1, 0) * J(2, 2) - J(2, 0) * J(1, 2)) +

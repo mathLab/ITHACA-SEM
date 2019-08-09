@@ -1,14 +1,6 @@
 Changelog
 =========
 
-v5.1.0
-------
-**Library**
-- Added IMEXOrder4, RK5 and AB4 time integration schemes (!1037)
-
-**FieldConvert**
-- Add field conversion from Halfmode to SingleMode (!1032)
-
 v5.0.0
 ------
 **Library**
@@ -85,6 +77,10 @@ v5.0.0
 - Added flag to skip periodic BCs while filling Dirichlet BCs in
   ContField3D.cpp (!1018)
 - Fix bounding box for interpolation (!1033)
+- Added IMEXOrder4, RK5 and AB4 time integration schemes (!1037)
+- Fix TriExp.cpp orientation bug (!1048)
+- Fix XML attributes in conditions.cpp to be unordered (!1015)
+- Fix issue with HDF5 mesh input in serial (!1049)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -144,6 +140,8 @@ v5.0.0
 - Fixed nparts option in FieldConvert and automated Info.xml generation (!995)
 - Added if statement to fix case of 1D/2D manifold interpolation in 1D/2D space,
   added check on dimensions for interpolation, fixed seg interp (!999)
+- Fixed scaling for compressed xml, fixed error printout for mesh only (!1040)
+- Add field conversion from Halfmode to SingleMode (!1032)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
@@ -173,6 +171,9 @@ v5.0.0
 - Enabled 1D cases (!918)
 - The APE system now uses u_i, c^2 and rho as base flow fields (!918)
 - Added the Linearized Euler Equations (LEE) (!918)
+
+**ADRSolver:**
+- Fix forcing from file for Poisson solver (!1029)
 
 **APESolver:**
 - APESolver was replaced with AcousticSolver (!918)

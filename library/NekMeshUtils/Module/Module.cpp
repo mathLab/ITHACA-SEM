@@ -218,7 +218,10 @@ void Module::ProcessEdges(bool ReprocessEdges)
                         }
                     }
 
-                    e2->m_parentCAD = ed->m_parentCAD;
+                    if (ed->m_parentCAD)
+                    {
+                        e2->m_parentCAD = ed->m_parentCAD;
+                    }
 
                     // Update edge to element map.
                     e2->m_elLink.push_back(
@@ -355,7 +358,10 @@ void Module::ProcessFaces(bool ReprocessFaces)
             EdgeSet::iterator f = tmp.find(e);
             if(f != tmp.end())
             {
-                e->m_parentCAD = (*f)->m_parentCAD;
+                if ((*f)->m_parentCAD)
+                {
+                    e->m_parentCAD = (*f)->m_parentCAD;
+                }
             }
         }
 

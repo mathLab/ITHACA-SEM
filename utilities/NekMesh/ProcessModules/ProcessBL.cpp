@@ -101,6 +101,7 @@ struct SplitMapHelper
 {
     int size;
     int dir;
+    int oppositeFace;
     int bfacesSize;
     int *bfaces;
 
@@ -241,6 +242,7 @@ void ProcessBL::BoundaryLayer3D()
 
     splitHex0.size            = 8;
     splitHex0.dir             = 0;
+    splitHex0.oppositeFace    = 5;
     splitHex0.nEdgeToSplit    = 4;
     splitHex0.edgesToSplit    = splitedgehex0;
     splitHex0.edgeVert        = helper2d(4, splitHex0EdgeVert);
@@ -258,6 +260,7 @@ void ProcessBL::BoundaryLayer3D()
     SplitMapHelper splitHex5;
     splitHex5.size                         = 8;
     splitHex5.dir                          = 1;
+    splitHex5.oppositeFace                 = 0;
     splitHex5.nEdgeToSplit                 = 4;
     splitHex5.edgesToSplit                 = splitedgehex0;
     splitHex5.edgeVert                     = helper2d(4, splitHex0EdgeVert);
@@ -285,6 +288,7 @@ void ProcessBL::BoundaryLayer3D()
 
     splitHex1.size                         = 8;
     splitHex1.dir                          = 0;
+    splitHex1.oppositeFace                 = 3;
     splitHex1.nEdgeToSplit                 = 4;
     splitHex1.edgesToSplit                 = splitedgehex1;
     splitHex1.edgeVert                     = helper2d(4, splitHex1EdgeVert);
@@ -302,6 +306,7 @@ void ProcessBL::BoundaryLayer3D()
 
     splitHex3.size                         = 8;
     splitHex3.dir                          = 1;
+    splitHex3.oppositeFace                 = 1;
     splitHex3.nEdgeToSplit                 = 4;
     splitHex3.edgesToSplit                 = splitedgehex1;
     splitHex3.edgeVert                     = helper2d(4, splitHex1EdgeVert);
@@ -329,6 +334,7 @@ void ProcessBL::BoundaryLayer3D()
 
     splitHex4.size                         = 8;
     splitHex4.dir                          = 0;
+    splitHex4.oppositeFace                 = 2;
     splitHex4.nEdgeToSplit                 = 4;
     splitHex4.edgesToSplit                 = splitedgehex4;
     splitHex4.edgeVert                     = helper2d(4, splitHex4EdgeVert);
@@ -347,6 +353,7 @@ void ProcessBL::BoundaryLayer3D()
 
     splitHex2.size                         = 8;
     splitHex2.dir                          = 1;
+    splitHex2.oppositeFace                 = 4;
     splitHex2.nEdgeToSplit                 = 4;
     splitHex2.edgesToSplit                 = splitedgehex4;
     splitHex2.edgeVert                     = helper2d(4, splitHex4EdgeVert);
@@ -376,6 +383,7 @@ void ProcessBL::BoundaryLayer3D()
 
     splitprism1.size                  = 6;
     splitprism1.dir                   = 0;
+    splitprism1.oppositeFace          = 3;
     splitprism1.nEdgeToSplit          = 3;
     splitprism1.edgesToSplit          = splitedgeprism1;
     splitprism1.edgeVert              = helper2d(3, splitPrism1EdgeVert);
@@ -392,6 +400,7 @@ void ProcessBL::BoundaryLayer3D()
     int splitMapConnPrism1rev[6][2]  = {{0, 1}, {1, 1}, {1, 0}, {0, 0}, {2, 1}, {2, 0}};
     splitprism3.size                  = 6;
     splitprism3.dir                   = 1;
+    splitprism3.oppositeFace          = 1;
     splitprism3.nEdgeToSplit          = 3;
     splitprism3.edgesToSplit          = splitedgeprism1;
     splitprism3.edgeVert              = helper2d(3, splitPrism1EdgeVert);
@@ -744,6 +753,30 @@ void ProcessBL::BoundaryLayer3D()
             ElementSharedPtr elmt = GetElementFactory().CreateInstance(
                 elType, conf, nodeList, el[i]->GetTagList());
             elmt->m_cfiParent = el[i]->m_cfiParent;
+
+            // Always copy CAD parency from any side faces that are split.
+            for (int k = 0; k < sMap.bfacesSize; ++k)
+            {
+                elmt->GetFace(sMap.bfaces[k])->m_parentCAD = el[i]->GetFace(sMap.bfaces[k])->m_parentCAD;
+            }
+
+            // Copy face CAD from exterior surface.
+            if ((j == 0 && sMap.dir == 0) || (j == nl-1 && sMap.dir == 1))
+            {
+                elmt->GetFace(faceNum)->m_parentCAD = el[i]->GetFace(faceNum)->m_parentCAD;
+            }
+
+            // Copy face CAD from interior surface.
+            if ((j == 0 && sMap.dir == 1) || (j == nl-1 && sMap.dir == 0))
+            {
+                elmt->GetFace(sMap.oppositeFace)->m_parentCAD = el[i]->GetFace(sMap.oppositeFace)->m_parentCAD;
+            }
+
+            // Always copy CAD parency from any side edges that are split.
+            for (int k = 0; k < sMap.nEdgeToSplit; ++k)
+            {
+                elmt->GetEdge(sMap.edgesToSplit[k])->m_parentCAD = el[i]->GetEdge(sMap.edgesToSplit[k])->m_parentCAD;
+            }
 
             //if edge already exists (i.e top of layer) grab it
             for (int k = 0; k < elmt->GetEdgeCount(); ++k)

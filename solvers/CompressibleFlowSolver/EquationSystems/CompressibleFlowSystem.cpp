@@ -276,8 +276,8 @@ namespace Nektar
         m_session->MatchSolverInfo("DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT","True",
                                    m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT, false);
         
-        m_session->MatchSolverInfo("DEBUG_VISCOUS_JAC_MAT","True",
-                                   m_DEBUG_VISCOUS_JAC_MAT, false);
+        m_session->MatchSolverInfo("DEBUG_VISCOUS_JAC_MAT","False",
+                                   m_DEBUG_VISCOUS_JAC_MAT, true);
 
     }
 
@@ -2021,7 +2021,7 @@ namespace Nektar
         {
             tmp = out + i*npoints;
             Vmath::Vsub(npoints,&resplus[i][0],1,&resminus[i][0],1,&tmp[0],1);
-            Vmath::Smul(npoints, 2.0*oeps ,&tmp[0],1,&tmp[0],1);
+            Vmath::Smul(npoints, 0.5*oeps ,&tmp[0],1,&tmp[0],1);
         }
        
         return;

@@ -216,7 +216,6 @@ namespace Nektar
         bool                                        m_flag_LeftPrecond   = false;
         bool                                        m_flag_RightPrecond  = true;
 
-        bool                                        m_CentralDifferenceFlag  = false;
         bool                                        m_DifferenceFlag0  = false;
         bool                                        m_DifferenceFlag1  = false;
 

@@ -514,16 +514,6 @@ namespace Nektar
             starttem = id_start[idtem];
             endtem = id_end[idtem];
 
-            if(0==nd)
-            {
-                m_CentralDifferenceFlag = m_DifferenceFlag0;
-            }
-            else
-            {
-                m_CentralDifferenceFlag = m_DifferenceFlag1;
-            }
-            
-
             DoArnoldi(starttem, endtem, nGlobal, nDir, V_total, Vsingle1, Vsingle2, hsingle1);
 
             if(starttem > 0)
@@ -607,7 +597,7 @@ namespace Nektar
         // w=AV(:,nd)
         Array<OneD, NekDouble> w(nGlobal, 0.0);
 
-        m_oprtor.DoMatrixMultiply(Vsingle1, w,m_CentralDifferenceFlag);
+        m_oprtor.DoMatrixMultiply(Vsingle1, w,m_DifferenceFlag1);
 
         tmp1 = w + nDir;
         tmp2 = w + nDir;

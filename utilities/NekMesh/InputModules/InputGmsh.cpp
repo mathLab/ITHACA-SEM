@@ -1042,7 +1042,7 @@ void InputGmsh::SaveNode(int id, NekDouble x, NekDouble y, NekDouble z)
     {
         m_idMap[id] = m_mesh->m_node.size();
     }
-    cout << id << " " << x << " " << y << " " << z << endl;
+
     m_mesh->m_node.push_back(std::shared_ptr<Node>(new Node(id, x, y, z)));
 }
 

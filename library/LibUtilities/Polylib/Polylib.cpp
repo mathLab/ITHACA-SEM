@@ -5,6 +5,8 @@
 #include <float.h>
 #include <complex>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 /// Maximum number of iterations in polynomial defalation routine Jacobz
 #define STOP  30 
@@ -747,7 +749,7 @@ namespace Polylib {
     double hgj (const int i, const double z, const double *zgj, 
         const int np, const double alpha, const double beta)
     {
-
+        boost::ignore_unused(alpha, beta);
 	double zi, dz;
 
         zi  = *(zgj+i);
@@ -782,6 +784,7 @@ namespace Polylib {
     double hgrjm (const int i, const double z, const double *zgrj, const int np, 
         const double alpha, const double beta)
     {
+        boost::ignore_unused(alpha, beta);
 
 	double zi, dz;
 
@@ -817,7 +820,7 @@ namespace Polylib {
     double hgrjp (const int i, const double z, const double *zgrj, const int np, 
         const double alpha, const double beta)
     {
-
+        boost::ignore_unused(alpha, beta);
 	double zi, dz;
 
         zi  = *(zgrj+i);
@@ -852,6 +855,8 @@ namespace Polylib {
     double hglj (const int i, const double z, const double *zglj, const int np, 
         const double alpha, const double beta)
     {
+        boost::ignore_unused(alpha, beta);
+
         double zi, dz;
 
         zi  = *(zglj+i);

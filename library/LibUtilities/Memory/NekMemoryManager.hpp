@@ -40,6 +40,8 @@
 #include <memory>
 #include <type_traits>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Memory/ThreadSpecificPool.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
@@ -158,7 +160,9 @@ public:
     template<typename... Args>
     static std::shared_ptr<DataType> AllocateSharedPtr(const Args &...args)
     {
-        return AllocateSharedPtrD([](DataType *ptr){}, args...);
+        return AllocateSharedPtrD([](DataType * ptr){
+                    boost::ignore_unused(ptr);
+                }, args...);
     }
 
     template<typename DeallocatorType, typename... Args>

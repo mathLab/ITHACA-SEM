@@ -40,6 +40,7 @@
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/multi_array.hpp>
 
 namespace Nektar
@@ -57,6 +58,7 @@ namespace Nektar
         public:
             static void Initialize(ObjectType* data, unsigned int itemsToCreate)
             {
+                boost::ignore_unused(data, itemsToCreate);
             }
             
             static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType& initValue)
@@ -151,6 +153,7 @@ namespace Nektar
         public:
             static void Destroy(ObjectType* data, unsigned int itemsToDestroy)
             {
+                boost::ignore_unused(data, itemsToDestroy);
             }
     };
     
@@ -179,6 +182,7 @@ namespace Nektar
         DataType* storage = MemoryManager<DataType>::RawAllocate(size);
         return MemoryManager<ArrayType>::AllocateSharedPtrD(
             [=](boost::multi_array_ref<DataType, Dim::Value> *ptr) {
+                boost::ignore_unused(ptr);
                 ArrayDestructionPolicy<DataType>::Destroy(storage, size);
                 MemoryManager<DataType>::RawDeallocate(storage, size);
             },

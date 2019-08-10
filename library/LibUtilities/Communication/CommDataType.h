@@ -35,6 +35,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_COMMDATATYPE_H
 #define NEKTAR_LIB_UTILITIES_COMMDATATYPE_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <vector>
 
@@ -95,6 +97,7 @@ public:
     }
     static int GetCount(const T &val)
     {
+        boost::ignore_unused(val);
         return 1;
     }
 

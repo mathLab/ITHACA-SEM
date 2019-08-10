@@ -36,6 +36,8 @@
 #include <algorithm>
 #include <vector>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #ifdef min
@@ -102,6 +104,7 @@ namespace Nektar
 
             inline int getNumberOfBndCoefficients(int Na)
             {
+                boost::ignore_unused(Na);
                 return 2;
             }
         }

@@ -495,7 +495,7 @@ namespace Nektar
         Multiply(result.GetRawPtr(), lhs, rhs.GetRawPtr());
     }
 
-    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_STANDARD_AND_SCALED_MATRICES, (1, (void)), (1, (NekVector<NekDouble>&)), (1,(const NekVector<NekDouble>&)));
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_STANDARD_AND_SCALED_MATRICES, (1, (void)), (1, (NekVector<NekDouble>&)), (1,(const NekVector<NekDouble>&)))
 
     template<typename DataType, typename LhsInnerMatrixType>
     void Multiply(NekVector<DataType>& result,
@@ -512,7 +512,7 @@ namespace Nektar
         }
     }
 
-    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_BLOCK_MATRIX_TYPES, (1, (void)), (1, (NekVector<NekDouble>&)), (1,(const NekVector<NekDouble>&)));
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_BLOCK_MATRIX_TYPES, (1, (void)), (1, (NekVector<NekDouble>&)), (1,(const NekVector<NekDouble>&)))
 
     template<typename DataType, typename LhsDataType, typename MatrixType>
     NekVector<DataType> 
@@ -524,7 +524,7 @@ namespace Nektar
        return result;
     }
 
-    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES, (1, (NekVector<NekDouble>)), (0, ()), (1,(const NekVector<NekDouble>&)));
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES, (1, (NekVector<NekDouble>)), (0, ()), (1,(const NekVector<NekDouble>&)))
 
 
 }

@@ -1275,7 +1275,7 @@ void MeshGraphHDF5::WriteComposites(CompositeMap &composites)
     H5::DataTypeSharedPtr tp  = H5::DataType::String();
     H5::DataSpaceSharedPtr ds = H5::DataSpace::OneD(comps.size());
     H5::DataSetSharedPtr dst  = m_mesh->CreateDataSet("COMPOSITE", tp, ds);
-    dst->WriteVectorString(comps, tp);
+    dst->WriteVectorString(comps, ds, tp);
 
     tp  = H5::DataType::OfObject(c_map[0]);
     ds  = H5::DataSpace::OneD(c_map.size());
@@ -1297,7 +1297,7 @@ void MeshGraphHDF5::WriteDomain(vector<CompositeMap> &domain)
     H5::DataTypeSharedPtr tp  = H5::DataType::String();
     H5::DataSpaceSharedPtr ds = H5::DataSpace::OneD(doms.size());
     H5::DataSetSharedPtr dst  = m_mesh->CreateDataSet("DOMAIN", tp, ds);
-    dst->WriteVectorString(doms, tp);
+    dst->WriteVectorString(doms, ds, tp);
 }
 
 void MeshGraphHDF5::WriteGeometry(

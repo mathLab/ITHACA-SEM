@@ -910,7 +910,7 @@ namespace Nektar
                 auto iter = m_solverInfo.find(vName);
                 if(iter != m_solverInfo.end())
                 {
-                    return true;
+                    return boost::iequals(iter->second, pTrueVal);
                 }
             }
             return false;

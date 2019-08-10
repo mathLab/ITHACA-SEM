@@ -39,6 +39,8 @@
 #include <vector>
 #include <memory>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
@@ -85,10 +87,10 @@ public:
         const int dim,
         const std::vector<std::string> fieldnames,
         const Array<OneD, Array<OneD, NekDouble> > &pts,
-        const Array<OneD, Array<OneD, float> > &weights,
-        const Array<OneD, Array<OneD, unsigned int> > &neighInds)
+        const Array<OneD, Array<OneD, float> > & weights,
+        const Array<OneD, Array<OneD, unsigned int> > & neighInds)
         : m_ptsInfo(NullPtsInfoMap), m_dim(dim), m_fieldNames(fieldnames),
-          m_pts(pts), m_ptsType(ePtsFile) {};
+          m_pts(pts), m_ptsType(ePtsFile) { boost::ignore_unused(weights, neighInds); };
 
     LIB_UTILITIES_EXPORT void GetConnectivity(
         std::vector<Array<OneD, int> > &conn) const;

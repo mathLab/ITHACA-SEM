@@ -195,6 +195,8 @@ MACRO(ADD_NEKTAR_LIBRARY name)
 
     ADD_LIBRARY(${name} ${NEKTAR_LIBRARY_TYPE} ${NEKLIB_SOURCES} ${NEKLIB_HEADERS})
 
+    TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wpedantic -Wall -Wextra)
+
     # Infer component name from lower-case library name, variables should use
     # upper-case.
     STRING(TOLOWER ${name} NEKLIB_COMPONENT)

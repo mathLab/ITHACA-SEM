@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/NodalTriEvenlySpaced.h>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
@@ -59,6 +61,7 @@ namespace Nektar
             }
             
             bool isEdge_1(int i, int j, int npts){
+                boost::ignore_unused(j, npts);
                 return i==0;
             }
             

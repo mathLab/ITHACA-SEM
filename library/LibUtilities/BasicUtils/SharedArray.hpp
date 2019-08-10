@@ -41,6 +41,7 @@
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/multi_array.hpp>
 
@@ -666,6 +667,7 @@ namespace Nektar
             Array(const Array<OneD, const DataType>& rhs, AllowWrappingOfConstArrays a) :
                 BaseType(rhs)
             {
+                boost::ignore_unused(a);
             }
 
             void ChangeSize(unsigned int newSize)

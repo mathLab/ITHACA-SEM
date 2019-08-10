@@ -869,7 +869,7 @@ namespace Nektar
         
         // =========================================================================
 
-    }; // end of namespace
+    } // end of namespace
 } // end of namespace 
 
 #endif //NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H

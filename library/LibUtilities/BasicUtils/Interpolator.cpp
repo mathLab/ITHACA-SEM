@@ -425,7 +425,7 @@ void Interpolator::CalcW_Linear(const PtsPoint &searchPt, int m_coordId)
     ASSERTL0(i != npts - 1, "Failed to find coordinate " +
                                 boost::lexical_cast<string>(coord) +
                                 " within provided input points");
-};
+}
 
 /**
  * @brief Computes interpolation weights using nearest neighbour interpolation
@@ -578,7 +578,7 @@ void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int m_coordId)
     ASSERTL0(i != npts - 1, "Failed to find coordinate " +
                                 boost::lexical_cast<string>(coord) +
                                 " within provided input points");
-};
+}
 
 void Interpolator::SetupTree()
 {

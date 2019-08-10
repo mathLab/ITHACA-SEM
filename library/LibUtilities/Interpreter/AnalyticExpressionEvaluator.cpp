@@ -951,5 +951,5 @@ namespace Nektar
             return std::make_pair(false,0);
         }
 
-    };
-};
+    }
+}

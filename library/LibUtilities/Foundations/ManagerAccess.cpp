@@ -103,7 +103,7 @@ namespace Nektar
             const bool NodalHexInited1 = PointsManager().RegisterCreator(PointsKey(0, eNodalHexElec),         NodalHexElec::Create);
 
             const bool Basis_Inited = BasisManager().RegisterGlobalCreator(Basis::Create);
-        };
+        }
 
         PointsManagerT &PointsManager(void)
         {

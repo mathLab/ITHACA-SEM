@@ -32,6 +32,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/Foundations/NodalPrismEvenlySpaced.h>
 #include <LibUtilities/Foundations/Points.h>
@@ -57,26 +58,31 @@ namespace Nektar
 
             bool isEdge_01(int x, int y, int z, int npts)
             {
+                boost::ignore_unused(x, npts);
                 return y == 0 && z == 0;
             }
 
             bool isEdge_12(int x, int y, int z, int npts)
             {
+                boost::ignore_unused(y);
                 return x == (npts-1) && z == 0;
             }
 
             bool isEdge_23(int x, int y, int z, int npts)
             {
+                boost::ignore_unused(x);
                 return y == (npts-1) && z == 0;
             }
 
             bool isEdge_30(int x, int y, int z, int npts)
             {
+                boost::ignore_unused(y, npts);
                 return x == 0 && z == 0;
             }
 
             bool isEdge_04(int x, int y, int z, int npts)
             {
+                boost::ignore_unused(z, npts);
                 return x == 0 && y == 0;
             }
 
@@ -92,11 +98,13 @@ namespace Nektar
 
             bool isEdge_35(int x, int y, int z, int npts)
             {
+                boost::ignore_unused(z);
                 return x == 0 && y == (npts-1);
             }
 
             bool isEdge_45(int x, int y, int z, int npts)
             {
+                boost::ignore_unused(y);
                 return x == 0 && z == (npts-1);
             }
 
@@ -110,26 +118,31 @@ namespace Nektar
 
             bool isFace_0123(int x, int y, int z, int npts)
             {
+                boost::ignore_unused(x, y, npts);
                 return z == 0;
             }
 
             bool isFace_014(int x, int y, int z, int npts)
             {
+                boost::ignore_unused(x, z, npts);
                 return y == 0;
             }
 
             bool isFace_1254(int x, int y, int z, int npts)
             {
+                boost::ignore_unused(y);
                 return x + z == npts-1;
             }
 
             bool isFace_325(int x, int y, int z, int npts)
             {
+                boost::ignore_unused(x, z);
                 return y == (npts-1);
             }
 
             bool isFace_0354(int x, int y, int z, int npts)
             {
+                boost::ignore_unused(y, z, npts);
                 return x == 0;
             }
 

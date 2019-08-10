@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/NodalPrismElec.h>
@@ -58,6 +60,7 @@ bool isEdge_01(int t, int y, int npts)
 
 bool isEdge_12(int t, int y, int npts)
 {
+    boost::ignore_unused(y, npts);
     return t == 1;
 }
 
@@ -68,6 +71,7 @@ bool isEdge_23(int t, int y, int npts)
 
 bool isEdge_30(int t, int y, int npts)
 {
+    boost::ignore_unused(y, npts);
     return t == 0;
 }
 
@@ -93,6 +97,7 @@ bool isEdge_35(int t, int y, int npts)
 
 bool isEdge_45(int t, int y, int npts)
 {
+    boost::ignore_unused(y, npts);
     return t == 2;
 }
 
@@ -107,26 +112,31 @@ bool isEdge(int t, int y, int npts)
 
 bool isFace_0123(int t, int y, int npts)
 {
+    boost::ignore_unused(y);
     return t < 3 + (npts - 2);
 }
 
 bool isFace_014(int t, int y, int npts)
 {
+    boost::ignore_unused(t, npts);
     return y == 0;
 }
 
 bool isFace_1254(int t, int y, int npts)
 {
+    boost::ignore_unused(y);
     return t < 3 + 2 * (npts - 2) && t >= 3 + (npts - 2);
 }
 
 bool isFace_325(int t, int y, int npts)
 {
+    boost::ignore_unused(t);
     return y == (npts - 1);
 }
 
 bool isFace_0354(int t, int y, int npts)
 {
+    boost::ignore_unused(y);
     return t < 3 + 3 * (npts - 2) && t >= 3 + 2 * (npts - 2);
 }
 

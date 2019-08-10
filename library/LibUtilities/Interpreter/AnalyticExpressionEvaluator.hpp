@@ -750,7 +750,7 @@ namespace Nektar
             };
 
         };
-    };
-};
+    }
+}
 
 #endif // _ANALYTIC_EXPRESSION_EVALUATOR_HPP

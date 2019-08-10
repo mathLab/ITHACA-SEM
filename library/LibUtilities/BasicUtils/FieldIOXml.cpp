@@ -431,6 +431,8 @@ void FieldIOXml::ImportMultiFldFileIDs(
     std::vector<std::vector<unsigned int> > &elementList,
     FieldMetaDataMap                        &fieldmetadatamap)
 {
+    boost::ignore_unused(fieldmetadatamap);
+
     TiXmlDocument doc(inFile);
     bool loadOkay = doc.LoadFile();
 

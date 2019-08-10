@@ -113,7 +113,7 @@ namespace Nektar
             ASSERTL0(GetTotNumPoints()>0, "Cannot call Basis initialisation with zero or negative numbers of points");
 
             GenBasis();
-        };
+        }
 
         /** \brief Calculate the interpolation Matrix for coefficient from
         *  one base (m_basisKey) to another (tbasis0)

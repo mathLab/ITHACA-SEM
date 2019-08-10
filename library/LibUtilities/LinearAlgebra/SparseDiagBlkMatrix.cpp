@@ -231,10 +231,7 @@ namespace Nektar
                        sizeof(SparseStorageSharedPtr)*m_submatrix.capacity();
         for (int i = 0; i < m_submatrix.num_elements(); i++)
         {
-            bytes += m_submatrix[i]->GetMemoryUsage(
-                        m_submatrix[i]->GetNumNonZeroEntries(),
-                        m_submatrix[i]->GetRows()
-                     );
+            bytes += m_submatrix[i]->GetMemoryUsage();
         }
         return bytes;
     }
@@ -242,10 +239,7 @@ namespace Nektar
     template<typename SparseStorageType>
     size_t NekSparseDiagBlkMatrix<SparseStorageType>::GetMemoryFootprint(IndexType i) const
     {
-        return m_submatrix[i]->GetMemoryUsage(
-                        m_submatrix[i]->GetNumNonZeroEntries(),
-                        m_submatrix[i]->GetRows()
-               );
+        return m_submatrix[i]->GetMemoryUsage();
     }
 
     template<typename SparseStorageType>

@@ -105,7 +105,7 @@ namespace Nektar
                 m_tmpout = Array<OneD, NekDouble> (brows*block_size, 0.0);
             }
 
-            convertCooToBco(brows, bcols, block_size, cooMat, bcoMat);
+            convertCooToBco(block_size, cooMat, bcoMat);
 
             size_t matBytes;
             switch(storageType)

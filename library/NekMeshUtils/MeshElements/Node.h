@@ -428,7 +428,8 @@ NEKMESHUTILS_EXPORT bool operator<(NodeSharedPtr const &p1,
                                    NodeSharedPtr const &p2);
 NEKMESHUTILS_EXPORT bool operator!=(NodeSharedPtr const &p1,
                                     NodeSharedPtr const &p2);
-std::ostream &operator<<(std::ostream &os, const NodeSharedPtr &n);
+NEKMESHUTILS_EXPORT std::ostream &operator<<(std::ostream &os,
+                                             const NodeSharedPtr &n);
 
 /**
  * @brief Defines a hash function for nodes.

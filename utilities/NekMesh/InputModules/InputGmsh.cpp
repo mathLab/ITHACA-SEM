@@ -982,44 +982,7 @@ void InputGmsh::ReadNextNodeBlock(int nVertices)
         stringstream st(line);
         st >> x >> y >> z;
 
-        if ((x * x) > 0.000001 && m_mesh->m_spaceDim < 1)
-        {
-            m_mesh->m_spaceDim = 1;
-        }
-        if ((y * y) > 0.000001 && m_mesh->m_spaceDim < 2)
-        {
-            m_mesh->m_spaceDim = 2;
-        }
-        if ((z * z) > 0.000001 && m_mesh->m_spaceDim < 3)
-        {
-            m_mesh->m_spaceDim = 3;
-        }
-
-        id[i] -= 1; // counter starts at 0
-
-        if (!m_idMap.size())
-        {
-            if (id[i] - m_prevId == 1)
-            {
-                m_prevId = id[i];
-            }
-            else
-            {
-                // Build m_idMap so far
-                for (int j = 0; j < m_mesh->m_node.size(); ++j)
-                {
-                    m_idMap[j] = j;
-                }
-
-                m_idMap[id[i]] = m_mesh->m_node.size();
-            }
-        }
-        else
-        {
-            m_idMap[id[i]] = m_mesh->m_node.size();
-        }
-
-        m_mesh->m_node.push_back(std::shared_ptr<Node>(new Node(id[i], x, y, z)));
+        SaveNode(id[i], x, y, z);
     }
 }
 
@@ -1035,6 +998,14 @@ void InputGmsh::ReadNextNode()
     int id = 0;
     st >> id >> x >> y >> z;
 
+    SaveNode(id, x, y, z);
+}
+
+/**
+ * Save node into mesh
+ */
+void InputGmsh::SaveNode(int id, NekDouble x, NekDouble y, NekDouble z)
+{
     if ((x * x) > 0.000001 && m_mesh->m_spaceDim < 1)
     {
         m_mesh->m_spaceDim = 1;
@@ -1071,7 +1042,7 @@ void InputGmsh::ReadNextNode()
     {
         m_idMap[id] = m_mesh->m_node.size();
     }
-
+    cout << id << " " << x << " " << y << " " << z << endl;
     m_mesh->m_node.push_back(std::shared_ptr<Node>(new Node(id, x, y, z)));
 }
 

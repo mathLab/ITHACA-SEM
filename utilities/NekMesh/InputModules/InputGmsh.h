@@ -90,6 +90,7 @@ private:
     std::unordered_map<int, vector<int>> m_orderingMap;
 
     void ReadNextNode();
+    void ReadNextNodeBlock(int nVertices = 0);
     void ReadNextElement(int tag = 0, int elm_type = 0);
 };
 }

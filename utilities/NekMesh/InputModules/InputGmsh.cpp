@@ -819,10 +819,7 @@ void InputGmsh::Process()
                     stringstream si(line);
                     si >> tmp >> tmp >> tmp >> nVertices;
 
-                    for (int j = 0; j < nVertices; ++j)
-                    {
-                        ReadNextNode();
-                    }
+                    ReadNextNodeBlock(nVertices);
                 }
             }
             else
@@ -851,7 +848,7 @@ void InputGmsh::Process()
                     stringstream si(line);
 
                     int tagDim;
-                    si >> tag >> tagDim >> elm_type >> nElements;
+                    si >> tagDim >> tag >> elm_type >> nElements;
 
                     // Query tag in map & don't bother constructing non-physical
                     // surfaces.
@@ -961,6 +958,69 @@ void InputGmsh::Process()
     ProcessFaces();
     ProcessElements();
     ProcessComposites();
+}
+
+/**
+ * Read in next node block for v4 format
+ */
+void InputGmsh::ReadNextNodeBlock(int nVertices)
+{
+    string line;
+    double x = 0, y = 0, z = 0;
+    vector<int> id(nVertices);
+
+    for (int i = 0; i < nVertices; ++i)
+    {
+        getline(m_mshFile, line);
+        stringstream st(line);
+        st >> id[i];
+    }
+
+    for (int i = 0; i < nVertices; ++i)
+    {
+        getline(m_mshFile, line);
+        stringstream st(line);
+        st >> x >> y >> z;
+
+        if ((x * x) > 0.000001 && m_mesh->m_spaceDim < 1)
+        {
+            m_mesh->m_spaceDim = 1;
+        }
+        if ((y * y) > 0.000001 && m_mesh->m_spaceDim < 2)
+        {
+            m_mesh->m_spaceDim = 2;
+        }
+        if ((z * z) > 0.000001 && m_mesh->m_spaceDim < 3)
+        {
+            m_mesh->m_spaceDim = 3;
+        }
+
+        id[i] -= 1; // counter starts at 0
+
+        if (!m_idMap.size())
+        {
+            if (id[i] - m_prevId == 1)
+            {
+                m_prevId = id[i];
+            }
+            else
+            {
+                // Build m_idMap so far
+                for (int j = 0; j < m_mesh->m_node.size(); ++j)
+                {
+                    m_idMap[j] = j;
+                }
+
+                m_idMap[id[i]] = m_mesh->m_node.size();
+            }
+        }
+        else
+        {
+            m_idMap[id[i]] = m_mesh->m_node.size();
+        }
+
+        m_mesh->m_node.push_back(std::shared_ptr<Node>(new Node(id[i], x, y, z)));
+    }
 }
 
 /**

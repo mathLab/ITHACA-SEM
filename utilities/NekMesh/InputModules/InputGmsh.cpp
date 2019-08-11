@@ -764,6 +764,7 @@ void InputGmsh::Process()
             s >> m_version;
             s >> fileType;
             ASSERTL0(fileType == 0, "Cannot read binary Gmsh files.")
+            ASSERTL0(m_version <= 4.1, ".msh file format versions greater than 4.1 are not currently supported.")
         }
         // Process entities (v4+)
         else if (word == "$Entities")
@@ -819,7 +820,17 @@ void InputGmsh::Process()
                     stringstream si(line);
                     si >> tmp >> tmp >> tmp >> nVertices;
 
-                    ReadNextNodeBlock(nVertices);
+                    if (m_version == 4.0)
+                    {
+                        for (int i = 0; i < nVertices; ++i)
+                        {
+                            ReadNextNode();
+                        }
+                    }
+                    else if (m_version == 4.1)
+                    {
+                        ReadNextNodeBlock(nVertices);
+                    }
                 }
             }
             else
@@ -848,8 +859,14 @@ void InputGmsh::Process()
                     stringstream si(line);
 
                     int tagDim;
-                    si >> tagDim >> tag >> elm_type >> nElements;
-
+                    if (m_version == 4.0)
+                    {
+                        si >> tag >> tagDim >> elm_type >> nElements;
+                    }
+                    else
+                    {
+                        si >> tagDim >> tag >> elm_type >> nElements;
+                    }
                     // Query tag in map & don't bother constructing non-physical
                     // surfaces.
                     std::vector<int> physIds = entityMap[tagDim][tag].physicalTags;

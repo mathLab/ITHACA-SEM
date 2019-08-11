@@ -77,7 +77,7 @@ private:
     static std::vector<int> LineReordering (NekMeshUtils::ElmtConfig conf);
 
     // Gmsh file version
-    int m_version;
+    NekDouble m_version;
     // Previous id for contiguousness
     int m_prevId;
     // Id map if non-contiguous

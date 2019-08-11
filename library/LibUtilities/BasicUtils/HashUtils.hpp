@@ -36,6 +36,8 @@
 #ifndef LIBUTILITIES_BASICUTILS_HASHUTILS
 #define LIBUTILITIES_BASICUTILS_HASHUTILS
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <functional>
 
 namespace Nektar
@@ -43,6 +45,7 @@ namespace Nektar
 
 inline void hash_combine(std::size_t& seed)
 {
+    boost::ignore_unused(seed);
 }
 
 template <typename T, typename... Args>

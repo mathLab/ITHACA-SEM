@@ -40,6 +40,8 @@
 #include <vector>
 #include <memory>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdRegionsDeclspec.h>
 #include <StdRegions/SpatialDomainsDeclarations.hpp>
@@ -1649,6 +1651,7 @@ namespace Nektar
                                   Array<OneD,       NekDouble>& outarray,
                                   int coll_check)
             {
+                boost::ignore_unused(base, inarray, outarray, coll_check);
                 ASSERTL0(false, "StdExpansion::v_IProductWRTBase has no (and should have no) implementation");
             }
 

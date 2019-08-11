@@ -61,14 +61,14 @@ namespace Nektar
         }
 
 
-        StdHexExp::StdHexExp(const  LibUtilities::BasisKey &Ba,
+/*        StdHexExp::StdHexExp(const  LibUtilities::BasisKey &Ba,
                         const  LibUtilities::BasisKey &Bb,
                         const  LibUtilities::BasisKey &Bc,
                         NekDouble *coeffs,
                         NekDouble *phys)
         {
         }
-
+*/
 
         StdHexExp::StdHexExp(const StdHexExp &T):
             StdExpansion(T),
@@ -696,7 +696,7 @@ namespace Nektar
         LibUtilities::ShapeType StdHexExp::v_DetShapeType() const
         {
             return LibUtilities::eHexahedron;
-        };
+        }
 
 
         int StdHexExp::v_NumBndryCoeffs() const

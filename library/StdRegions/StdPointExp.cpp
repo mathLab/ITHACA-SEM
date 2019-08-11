@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdPointExp.h>
 
 using namespace std;
@@ -79,6 +81,7 @@ namespace Nektar
                                       Array<OneD, NekDouble> &coords_1,
                                       Array<OneD, NekDouble> &coords_2)
         {
+            boost::ignore_unused(coords_1, coords_2);
             Blas::Dcopy(GetNumPoints(0),(m_base[0]->GetZ()).get(),
                         1,&coords_0[0],1);
         }
@@ -234,6 +237,7 @@ namespace Nektar
                                                    Array<OneD, NekDouble> &outarray,
                                                    bool multiplybyweights)
         {
+            boost::ignore_unused(multiplybyweights);
             v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
         }
 		

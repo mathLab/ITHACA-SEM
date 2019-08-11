@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdSegExp.h>
 #include <LibUtilities/Foundations/InterpCoeff.h>
 
@@ -156,6 +158,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &out_d1,
                 Array<OneD, NekDouble> &out_d2)
         {
+            boost::ignore_unused(out_d1, out_d2);
             PhysTensorDeriv(inarray,out_d0);
         }
 
@@ -175,6 +178,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &out_d1,
                 Array<OneD, NekDouble> &out_d2)
         {
+            boost::ignore_unused(out_d1, out_d2);
             PhysTensorDeriv(inarray,out_d0);
             // PhysDeriv(inarray, out_d0);
         }
@@ -425,6 +429,8 @@ namespace Nektar
                   Array<OneD,       NekDouble> &outarray,
             int coll_check)
         {
+            boost::ignore_unused(coll_check);
+
             int    nquad = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble> tmp(nquad);
             Array<OneD, const NekDouble> w =  m_base[0]->GetW();
@@ -528,6 +534,8 @@ namespace Nektar
                   Array<OneD,       NekDouble> &outarray,
             const StdMatrixKey                 &mkey)
         {
+            boost::ignore_unused(mkey);
+
             int    nquad = m_base[0]->GetNumPoints();
 
             Array<OneD,NekDouble> physValues(nquad);
@@ -662,6 +670,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &coords_1,
                 Array<OneD, NekDouble> &coords_2)
         {
+            boost::ignore_unused(coords_1, coords_2);
             Blas::Dcopy(GetNumPoints(0),(m_base[0]->GetZ()).get(),
                         1,&coords_0[0],1);
         }
@@ -843,6 +852,7 @@ namespace Nektar
 
         int StdSegExp::v_GetVertexMap(int localVertexId,bool useCoeffPacking)
         {
+            boost::ignore_unused(useCoeffPacking);
             ASSERTL0((localVertexId==0)||(localVertexId==1),"local vertex id"
                      "must be between 0 or 1");
 
@@ -860,6 +870,7 @@ namespace Nektar
             Array<OneD, int> &conn,
             bool              standard)
         {
+            boost::ignore_unused(standard);
             int np = m_base[0]->GetNumPoints();
 
             conn     = Array<OneD, int>(2*(np-1));

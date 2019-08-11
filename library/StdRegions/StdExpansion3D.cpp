@@ -34,6 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdExpansion3D.h>
 
 #ifdef max
@@ -352,6 +354,7 @@ namespace Nektar
             const int                     numpoints,
             const int                     nummodes)
         {
+            boost::ignore_unused(facedir);
 
             switch(faceDirBasisType)
             {

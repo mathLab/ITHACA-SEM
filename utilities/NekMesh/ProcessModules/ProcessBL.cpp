@@ -994,6 +994,24 @@ void ProcessBL::BoundaryLayer3D()
                     nwEdg->m_edgeNodes.push_back(
                         NodeSharedPtr(new Node(0, loc[0], loc[1], loc[2])));
 
+                    if (nwEdg->m_parentCAD)
+                    {
+                        if (nwEdg->m_parentCAD->GetType() == CADType::eCurve)
+                        {
+                            CADCurveSharedPtr c =
+                                std::dynamic_pointer_cast<CADCurve>(nwEdg->m_parentCAD);
+                            NekDouble t;
+                            c->loct(loc, t);
+                            nwEdg->m_edgeNodes.back()->SetCADCurve(c, t);
+                        }
+                        else if (nwEdg->m_parentCAD->GetType() == CADType::eSurf)
+                        {
+                            CADSurfSharedPtr s =
+                                std::dynamic_pointer_cast<CADSurf>(nwEdg->m_parentCAD);
+                            Array<OneD, NekDouble> uv = s->locuv(loc);
+                            nwEdg->m_edgeNodes.back()->SetCADSurf(s, uv);
+                        }
+                    }
                 }
 
                 nwEdg->m_curveType = LibUtilities::eGaussLobattoLegendre;
@@ -1055,6 +1073,28 @@ void ProcessBL::BoundaryLayer3D()
                     nwEdg->m_edgeNodes.push_back(
                         NodeSharedPtr(new Node(0, loc[0], loc[1], loc[2])));
                     //file <<  loc[0] <<  " " <<  loc[1] <<  " " <<  loc[2] <<  " " <<  xp[1] <<  endl;
+
+                    if (nwEdg->m_parentCAD)
+                    {
+                        if (nwEdg->m_parentCAD->GetType() == CADType::eCurve)
+                        {
+                            CADCurveSharedPtr c =
+                                std::dynamic_pointer_cast<CADCurve>(
+                                    nwEdg->m_parentCAD);
+                            NekDouble t;
+                            c->loct(loc, t);
+                            nwEdg->m_edgeNodes.back()->SetCADCurve(c, t);
+                        }
+                        else if (nwEdg->m_parentCAD->GetType() ==
+                                 CADType::eSurf)
+                        {
+                            CADSurfSharedPtr s =
+                                std::dynamic_pointer_cast<CADSurf>(
+                                    nwEdg->m_parentCAD);
+                            Array<OneD, NekDouble> uv = s->locuv(loc);
+                            nwEdg->m_edgeNodes.back()->SetCADSurf(s, uv);
+                        }
+                    }
                 }
 
                 nwEdg->m_curveType = LibUtilities::eGaussLobattoLegendre;

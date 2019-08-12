@@ -77,7 +77,7 @@ private:
     static std::vector<int> LineReordering (NekMeshUtils::ElmtConfig conf);
 
     // Gmsh file version
-    int m_version;
+    NekDouble m_version;
     // Previous id for contiguousness
     int m_prevId;
     // Id map if non-contiguous
@@ -90,6 +90,8 @@ private:
     std::unordered_map<int, vector<int>> m_orderingMap;
 
     void ReadNextNode();
+    void ReadNextNodeBlock(int nVertices = 0);
+    void SaveNode(int id, NekDouble x = 0, NekDouble y = 0, NekDouble z = 0);
     void ReadNextElement(int tag = 0, int elm_type = 0);
 };
 }

@@ -186,6 +186,7 @@ v5.0.0
 
 **Tester**
 - Fix build with boost 1.67 (!947)
+- Various change to tests to decrease test time (!1053)
 
 v4.4.2
 ------

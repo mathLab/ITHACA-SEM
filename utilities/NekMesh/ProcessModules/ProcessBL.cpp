@@ -113,6 +113,8 @@ struct SplitMapHelper
 
     int nEdgeToCurve;
     int *edgesToCurve;
+    int **intEdgeFace;
+    int **extEdgeFace;
     int blpDir;
     int **gll;
 };
@@ -239,6 +241,8 @@ void ProcessBL::BoundaryLayer3D()
     int splithex0gll[8][3]       = {{-1, -1, -1}, {1, -1, -1}, {1, 1, -1},
                               {-1, 1, -1},  {-1, -1, 1}, {1, -1, 1},
                               {1, 1, 1},    {-1, 1, 1}};
+    int splitHex0IntEdgeFace[4][2] = {{0, 1}, {1, 2}, {2, 3}, {3, 4}};
+    int splitHex0ExtEdgeFace[4][2] = {{8, 1}, {9, 2}, {10, 3}, {11, 4}};
 
     splitHex0.size            = 8;
     splitHex0.dir             = 0;
@@ -251,6 +255,8 @@ void ProcessBL::BoundaryLayer3D()
     splitHex0.bfaces          = splitMapBFacesHex0;
     splitHex0.nEdgeToCurve    = 8;
     splitHex0.edgesToCurve    = splitedgestocurvehex0;
+    splitHex0.intEdgeFace     = helper2d(4, splitHex0IntEdgeFace);
+    splitHex0.extEdgeFace     = helper2d(4, splitHex0ExtEdgeFace);
     splitHex0.blpDir          = 2;
     splitHex0.gll             = helper2d(8, splithex0gll);
 
@@ -269,6 +275,8 @@ void ProcessBL::BoundaryLayer3D()
     splitHex5.bfaces                       = splitMapBFacesHex0;
     splitHex5.nEdgeToCurve                 = 8;
     splitHex5.edgesToCurve                 = splitedgestocurvehex0;
+    splitHex5.intEdgeFace                  = helper2d(4, splitHex0ExtEdgeFace);
+    splitHex5.extEdgeFace                  = helper2d(4, splitHex0IntEdgeFace);
     splitHex5.blpDir                       = 2;
     splitHex5.gll                          = helper2d(8, splithex0gll);
     splitMap[LibUtilities::eHexahedron][5] = splitHex5;
@@ -285,6 +293,8 @@ void ProcessBL::BoundaryLayer3D()
     int splitMapConnHex1[8][2]  = {{3, 0}, {2, 0}, {2, 1}, {3, 1},
                                   {0, 0}, {1, 0}, {1, 1}, {0, 1}};
     int splitedgestocurvehex1[8] = {4, 8, 5, 0, 7, 10, 6, 2};
+    int splitHex1IntEdgeFace[4][2] = {{0, 0}, {4, 4}, {5, 2}, {8, 5}};
+    int splitHex1ExtEdgeFace[4][2] = {{2, 0}, {6, 2}, {7, 4}, {10, 5}};
 
     splitHex1.size                         = 8;
     splitHex1.dir                          = 0;
@@ -297,6 +307,8 @@ void ProcessBL::BoundaryLayer3D()
     splitHex1.bfaces                       = splitMapBFacesHex1;
     splitHex1.nEdgeToCurve                 = 8;
     splitHex1.edgesToCurve                 = splitedgestocurvehex1;
+    splitHex1.intEdgeFace                  = helper2d(4, splitHex1IntEdgeFace);
+    splitHex1.extEdgeFace                  = helper2d(4, splitHex1ExtEdgeFace);
     splitHex1.blpDir                       = 1;
     splitHex1.gll                          = helper2d(8, splithex0gll);
     splitMap[LibUtilities::eHexahedron][1] = splitHex1;
@@ -315,6 +327,8 @@ void ProcessBL::BoundaryLayer3D()
     splitHex3.bfaces                       = splitMapBFacesHex1;
     splitHex3.nEdgeToCurve                 = 8;
     splitHex3.edgesToCurve                 = splitedgestocurvehex1;
+    splitHex3.intEdgeFace                  = helper2d(4, splitHex1ExtEdgeFace);
+    splitHex3.extEdgeFace                  = helper2d(4, splitHex1IntEdgeFace);
     splitHex3.blpDir                       = 1;
     splitHex3.gll                          = helper2d(8, splithex0gll);
     splitMap[LibUtilities::eHexahedron][3] = splitHex3;
@@ -331,6 +345,8 @@ void ProcessBL::BoundaryLayer3D()
     int splitMapConnHex4[8][2]  = {{1, 0}, {1, 1}, {2, 1}, {2, 0},
                                   {0, 0}, {0, 1}, {3, 1}, {3, 0}};
     int splitedgestocurvehex4[8] = {4, 11, 7, 3, 5, 9, 6, 1};
+    int splitHex4IntEdgeFace[4][2] = {{3, 0}, {4, 1}, {7, 3}, {11, 5}};
+    int splitHex4ExtEdgeFace[4][2] = {{1, 0}, {5, 1}, {6, 3}, {9, 5}};
 
     splitHex4.size                         = 8;
     splitHex4.dir                          = 0;
@@ -343,6 +359,8 @@ void ProcessBL::BoundaryLayer3D()
     splitHex4.bfaces                       = splitMapBFacesHex4;
     splitHex4.nEdgeToCurve                 = 8;
     splitHex4.edgesToCurve                 = splitedgestocurvehex4;
+    splitHex4.intEdgeFace                  = helper2d(4, splitHex4IntEdgeFace);
+    splitHex4.extEdgeFace                  = helper2d(4, splitHex4ExtEdgeFace);
     splitHex4.blpDir                       = 0;
     splitHex4.gll                          = helper2d(8, splithex0gll);
     splitMap[LibUtilities::eHexahedron][4] = splitHex4;
@@ -362,6 +380,8 @@ void ProcessBL::BoundaryLayer3D()
     splitHex2.bfaces                       = splitMapBFacesHex4;
     splitHex2.nEdgeToCurve                 = 8;
     splitHex2.edgesToCurve                 = splitedgestocurvehex4;
+    splitHex2.intEdgeFace                  = helper2d(4, splitHex4ExtEdgeFace);
+    splitHex2.extEdgeFace                  = helper2d(4, splitHex4IntEdgeFace);
     splitHex2.blpDir                       = 0;
     splitHex2.gll                          = helper2d(8, splithex0gll);
     splitMap[LibUtilities::eHexahedron][2] = splitHex2;
@@ -380,6 +400,8 @@ void ProcessBL::BoundaryLayer3D()
     int splitedgestocurveprism1[6] = {0, 4, 5, 2, 6, 7};
     int splitprism1gll[6][3]       = {{-1, -1, -1}, {1, -1, -1}, {1, 1, -1},
                               {-1, 1, -1},  {-1, -1, 1}, {-1, 1, 1}};
+    int splitPrism1IntEdgeFace[3][2] = {{0, 0}, {4, 4}, {5, 2}};
+    int splitPrism1ExtEdgeFace[3][2] = {{2, 0}, {6, 2}, {7, 4}};
 
     splitprism1.size                  = 6;
     splitprism1.dir                   = 0;
@@ -392,6 +414,8 @@ void ProcessBL::BoundaryLayer3D()
     splitprism1.bfaces                = splitMapBFacesPrism1;
     splitprism1.nEdgeToCurve          = 6;
     splitprism1.edgesToCurve          = splitedgestocurveprism1;
+    splitprism1.intEdgeFace           = helper2d(3, splitPrism1IntEdgeFace);
+    splitprism1.extEdgeFace           = helper2d(3, splitPrism1ExtEdgeFace);
     splitprism1.blpDir                = 1;
     splitprism1.gll                   = helper2d(8, splitprism1gll);
     splitMap[LibUtilities::ePrism][1] = splitprism1;
@@ -409,6 +433,8 @@ void ProcessBL::BoundaryLayer3D()
     splitprism3.bfaces                = splitMapBFacesPrism1;
     splitprism3.nEdgeToCurve          = 6;
     splitprism3.edgesToCurve          = splitedgestocurveprism1;
+    splitprism3.intEdgeFace           = helper2d(3, splitPrism1ExtEdgeFace);
+    splitprism3.extEdgeFace           = helper2d(3, splitPrism1IntEdgeFace);
     splitprism3.blpDir                = 1;
     splitprism3.gll                   = helper2d(8, splitprism1gll);
     splitMap[LibUtilities::ePrism][3] = splitprism3;
@@ -757,25 +783,67 @@ void ProcessBL::BoundaryLayer3D()
             // Always copy CAD parency from any side faces that are split.
             for (int k = 0; k < sMap.bfacesSize; ++k)
             {
-                elmt->GetFace(sMap.bfaces[k])->m_parentCAD = el[i]->GetFace(sMap.bfaces[k])->m_parentCAD;
-            }
-
-            // Copy face CAD from exterior surface.
-            if ((j == 0 && sMap.dir == 0) || (j == nl-1 && sMap.dir == 1))
-            {
-                elmt->GetFace(faceNum)->m_parentCAD = el[i]->GetFace(faceNum)->m_parentCAD;
+                elmt->GetFace(sMap.bfaces[k])->m_parentCAD =
+                    el[i]->GetFace(sMap.bfaces[k])->m_parentCAD;
             }
 
             // Copy face CAD from interior surface.
-            if ((j == 0 && sMap.dir == 1) || (j == nl-1 && sMap.dir == 0))
+            if ((j == 0 && sMap.dir == 0) || (j == nl - 1 && sMap.dir == 1))
             {
-                elmt->GetFace(sMap.oppositeFace)->m_parentCAD = el[i]->GetFace(sMap.oppositeFace)->m_parentCAD;
+                elmt->GetFace(faceNum)->m_parentCAD =
+                    el[i]->GetFace(faceNum)->m_parentCAD;
+            }
+
+            // Copy face CAD from exterior surface.
+            if ((j == 0 && sMap.dir == 1) || (j == nl - 1 && sMap.dir == 0))
+            {
+                elmt->GetFace(sMap.oppositeFace)->m_parentCAD =
+                    el[i]->GetFace(sMap.oppositeFace)->m_parentCAD;
             }
 
             // Always copy CAD parency from any side edges that are split.
             for (int k = 0; k < sMap.nEdgeToSplit; ++k)
             {
-                elmt->GetEdge(sMap.edgesToSplit[k])->m_parentCAD = el[i]->GetEdge(sMap.edgesToSplit[k])->m_parentCAD;
+                elmt->GetEdge(sMap.edgesToSplit[k])->m_parentCAD =
+                    el[i]->GetEdge(sMap.edgesToSplit[k])->m_parentCAD;
+            }
+
+            // For the first layer, copy CAD from interior curves.
+            if ((j == 0 && sMap.dir == 0) || (j == nl - 1 && sMap.dir == 1))
+            {
+                for (int k = 0; k < sMap.nEdgeToCurve / 2; ++k)
+                {
+                    elmt->GetEdge(sMap.intEdgeFace[k][0])->m_parentCAD =
+                        el[i]->GetEdge(sMap.intEdgeFace[k][0])->m_parentCAD;
+                }
+            }
+            // For the other layers, copy CAD of side surfaces.
+            else
+            {
+                for (int k = 0; k < sMap.nEdgeToCurve / 2; ++k)
+                {
+                    elmt->GetEdge(sMap.intEdgeFace[k][0])->m_parentCAD =
+                        el[i]->GetFace(sMap.intEdgeFace[k][1])->m_parentCAD;
+                }
+            }
+
+            // For the last layer, copy CAD from exterior curves.
+            if ((j == 0 && sMap.dir == 1) || (j == nl - 1 && sMap.dir == 0))
+            {
+                for (int k = 0; k < sMap.nEdgeToCurve / 2; ++k)
+                {
+                    elmt->GetEdge(sMap.extEdgeFace[k][0])->m_parentCAD =
+                        el[i]->GetEdge(sMap.extEdgeFace[k][0])->m_parentCAD;
+                }
+            }
+            // For the other layers, copy CAD of side surfaces.
+            else
+            {
+                for (int k = 0; k < sMap.nEdgeToCurve / 2; ++k)
+                {
+                    elmt->GetEdge(sMap.extEdgeFace[k][0])->m_parentCAD =
+                        el[i]->GetFace(sMap.extEdgeFace[k][1])->m_parentCAD;
+                }
             }
 
             //if edge already exists (i.e top of layer) grab it

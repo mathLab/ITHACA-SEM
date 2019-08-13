@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -100,13 +99,13 @@ public:
     template <class T> void AllReduce(T &pData, enum ReduceOperator pOp);
 
     template <class T> void AlltoAll(T &pSendData, T &pRecvData);
-    template <class T>
-    void AlltoAllv(Array<OneD, T> &pSendData,
-                   Array<OneD, int> &pSendDataSizeMap,
-                   Array<OneD, int> &pSendDataOffsetMap,
-                   Array<OneD, T> &pRecvData,
-                   Array<OneD, int> &pRecvDataSizeMap,
-                   Array<OneD, int> &pRecvDataOffsetMap);
+    template <class T1, class T2>
+    void AlltoAllv(T1 &pSendData,
+                   T2 &pSendDataSizeMap,
+                   T2 &pSendDataOffsetMap,
+                   T1 &pRecvData,
+                   T2 &pRecvDataSizeMap,
+                   T2 &pRecvDataOffsetMap);
 
     template <class T> void AllGather(T &pSendData, T &pRecvData);
     template <class T>
@@ -134,6 +133,7 @@ public:
     LIB_UTILITIES_EXPORT inline CommSharedPtr GetColumnComm();
 
     LIB_UTILITIES_EXPORT inline bool TreatAsRankZero(void);
+    LIB_UTILITIES_EXPORT inline bool IsSerial(void);
     LIB_UTILITIES_EXPORT inline bool RemoveExistingFiles(void);
 
 protected:
@@ -189,6 +189,7 @@ protected:
     virtual CommSharedPtr v_CommCreateIf(int flag) = 0;
     virtual void v_SplitComm(int pRows, int pColumns) = 0;
     virtual bool v_TreatAsRankZero(void) = 0;
+    virtual bool v_IsSerial(void) = 0;
     LIB_UTILITIES_EXPORT virtual bool v_RemoveExistingFiles(void);
 };
 
@@ -313,18 +314,30 @@ template <class T> void Comm::AlltoAll(T &pSendData, T &pRecvData)
 /**
  *
  */
-template <class T>
-void Comm::AlltoAllv(Array<OneD, T> &pSendData,
-                     Array<OneD, int> &pSendDataSizeMap,
-                     Array<OneD, int> &pSendDataOffsetMap,
-                     Array<OneD, T> &pRecvData,
-                     Array<OneD, int> &pRecvDataSizeMap,
-                     Array<OneD, int> &pRecvDataOffsetMap)
+template <class T1, class T2>
+void Comm::AlltoAllv(T1 &pSendData,
+                     T2 &pSendDataSizeMap,
+                     T2 &pSendDataOffsetMap,
+                     T1 &pRecvData,
+                     T2 &pRecvDataSizeMap,
+                     T2 &pRecvDataOffsetMap)
 {
-    v_AlltoAllv(pSendData.get(), pSendDataSizeMap.get(),
-                pSendDataOffsetMap.get(), CommDataTypeTraits<T>::GetDataType(),
-                pRecvData.get(), pRecvDataSizeMap.get(),
-                pRecvDataOffsetMap.get(), CommDataTypeTraits<T>::GetDataType());
+    static_assert(
+        CommDataTypeTraits<T1>::IsVector,
+        "AlltoAllv only valid with Array or vector arguments.");
+    static_assert(
+        std::is_same<T2, std::vector<int>>::value ||
+        std::is_same<T2, Array<OneD, int>>::value,
+        "Alltoallv size and offset maps should be integer vectors.");
+    v_AlltoAllv(
+        CommDataTypeTraits<T1>::GetPointer(pSendData),
+        (int *)CommDataTypeTraits<T2>::GetPointer(pSendDataSizeMap),
+        (int *)CommDataTypeTraits<T2>::GetPointer(pSendDataOffsetMap),
+        CommDataTypeTraits<T1>::GetDataType(),
+        CommDataTypeTraits<T1>::GetPointer(pRecvData),
+        (int *)CommDataTypeTraits<T2>::GetPointer(pRecvDataSizeMap),
+        (int *)CommDataTypeTraits<T2>::GetPointer(pRecvDataOffsetMap),
+        CommDataTypeTraits<T1>::GetDataType());
 }
 
 template <class T> void Comm::AllGather(T &pSendData, T &pRecvData)
@@ -503,10 +516,16 @@ inline bool Comm::TreatAsRankZero(void)
     return v_TreatAsRankZero();
 }
 
+inline bool Comm::IsSerial(void)
+{
+    return v_IsSerial();
+}
+
 inline bool Comm::RemoveExistingFiles(void)
 {
     return v_RemoveExistingFiles();
 }
+
 }
 }
 

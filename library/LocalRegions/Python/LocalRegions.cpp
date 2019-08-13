@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,16 +35,14 @@
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
 void export_Expansion();
-void export_SegExp();
-void export_TriExp();
-void export_QuadExp();
+void export_LocalElements();
+void export_MatrixKey();
 
 BOOST_PYTHON_MODULE(_LocalRegions)
 {
     np::initialize();
 
     export_Expansion();
-    export_SegExp();
-    export_TriExp();
-    export_QuadExp();
+    export_LocalElements();
+    export_MatrixKey();
 }

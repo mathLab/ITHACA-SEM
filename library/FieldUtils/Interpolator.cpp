@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -112,7 +111,8 @@ void Interpolator::Interpolate(
 
         // Obtain Element and LocalCoordinate to interpolate
         int elmtid = m_expInField[0]->GetExpIndex(Scoords, Lcoords,
-                                                  NekConstants::kGeomFactorsTol);
+                                                  NekConstants::kGeomFactorsTol,
+                                                  true);
 
         // we use kGeomFactorsTol as tolerance, while StdPhysEvaluate has
         // kNekZeroTol hardcoded, so we need to limit Lcoords to not produce
@@ -177,12 +177,15 @@ void Interpolator::Interpolate(
     NekDouble def_value)
 {
     ASSERTL0(expInField.size() == ptsOutField->GetNFields(),
-             "number of fields does not match");
+        "number of fields does not match");
     ASSERTL0(expInField[0]->GetCoordim(0) <= GetDim(),
-             "too many dimesions in inField");
-    ASSERTL0(ptsOutField->GetDim() <= GetDim(), "too many dimesions in outField");
+        "too many dimesions in inField");
+    ASSERTL0(ptsOutField->GetDim() <= GetDim(),
+        "too many dimesions in outField");
+    ASSERTL0(ptsOutField->GetDim() >= expInField[0]->GetCoordim(0),
+        "too few dimesions in outField");
     ASSERTL0(GetInterpMethod() == LibUtilities::eNoMethod,
-             "only direct evaluation supported for this interpolation");
+        "only direct evaluation supported for this interpolation");
 
     m_expInField  = expInField;
     m_ptsOutField = ptsOutField;

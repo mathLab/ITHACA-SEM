@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -2605,7 +2604,7 @@ void MMFSWE::RossbyWave(unsigned int field, Array<OneD, NekDouble> &outfield)
 
     // disturbancees of Rossby-Haurwitz Wave
     NekDouble x0d, y0d, z0d, phi0, theta0;
-    NekDouble rad_earth = 6.37122 * 1000000;
+    //NekDouble rad_earth = 6.37122 * 1000000;
 
     phi0   = 40.0 * m_pi / 180.0;
     theta0 = 50.0 * m_pi / 180.0;

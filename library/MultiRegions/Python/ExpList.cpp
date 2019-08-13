@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -91,7 +90,26 @@ Array<OneD, NekDouble> ExpList_IProductWRTBase(
     const Array<OneD, const NekDouble> &in)
 {
     Array<OneD, NekDouble> out(exp->GetNcoeffs());
-    exp->BwdTrans(in, out);
+    exp->IProductWRTBase(in, out);
+    return out;
+}
+
+Array<OneD, NekDouble> ExpList_HelmSolve(
+    ExpListSharedPtr exp,
+    const Array<OneD, const NekDouble> &in,
+    const py::object constFactorMap)
+{
+    Array<OneD, NekDouble> out(exp->GetNcoeffs());
+
+    StdRegions::ConstFactorMap facMap = StdRegions::NullConstFactorMap;
+    if (!constFactorMap.is_none())
+    {
+        facMap = py::extract<StdRegions::ConstFactorMap>(constFactorMap);
+    }
+
+    FlagList notUsed;
+
+    exp->HelmSolve(in, out, notUsed, facMap);
     return out;
 }
 
@@ -141,14 +159,14 @@ py::tuple ExpList_GetCoords(ExpListSharedPtr exp)
 }
 
 void ExpList_SetPhysArray(
-    ExpListSharedPtr exp, 
+    ExpListSharedPtr exp,
     Array<OneD, NekDouble> inarray)
 {
     exp->SetPhysArray(inarray);
 }
 
 void ExpList_SetPhys(
-    ExpListSharedPtr exp, 
+    ExpListSharedPtr exp,
     const Array<OneD, const NekDouble> &inarray)
 {
     exp->SetPhys(inarray);
@@ -187,6 +205,8 @@ void export_ExpList()
         .def("FwdTrans", &ExpList_FwdTrans)
         .def("BwdTrans", &ExpList_BwdTrans)
         .def("IProductWRTBase", &ExpList_IProductWRTBase)
+        .def("HelmSolve", &ExpList_HelmSolve, (
+                 py::arg("in"), py::arg("constFactorMap") = py::object()))
         .def("L2", &ExpList_L2)
         .def("L2", &ExpList_L2_Error)
         .def("SetPhysArray", &ExpList_SetPhysArray)

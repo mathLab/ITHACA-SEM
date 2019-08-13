@@ -88,6 +88,19 @@
             <E VAR="p" VALUE="-2*Kinvis*(z-1)" />
         </FUNCTION>
     </CONDITIONS>
+
+    
+    <FILTERS>
+      <FILTER TYPE="HistoryPoints">
+        <PARAM NAME="OutputFile">Pyr_channel_m3.his</PARAM>
+        <PARAM NAME="OutputFrequency">1</PARAM>
+        <PARAM NAME="Points">
+          0.5 0.5 0.5
+          0.5 0.5 0.0
+        </PARAM>
+      </FILTER>
+    </FILTERS>
+
     <GEOMETRY DIM="3" SPACE="3">
         <VERTEX>
             <V ID="0">0.00000000e+00 0.00000000e+00 0.00000000e+00</V>

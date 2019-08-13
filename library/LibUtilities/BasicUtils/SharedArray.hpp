@@ -10,7 +10,6 @@
 // University of Utah (USA) and Department of Aeronautics, Imperial
 // College London (UK).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -280,9 +279,10 @@ namespace Nektar
 
             const_reference operator[](unsigned int i) const
             {
-                ASSERTL1(static_cast<size_type>(i) < m_size, (std::string("Element ") +
-                    boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
-                    boost::lexical_cast<std::string>(m_size)));
+                ASSERTL1(static_cast<size_type>(i) < m_size,
+                         std::string("Element ") + std::to_string(i) +
+                         std::string(" requested in an array of size ") +
+                         std::to_string(m_size));
                 return *( m_data + i + m_offset );
             }
 
@@ -640,9 +640,10 @@ namespace Nektar
             using BaseType::operator[];
             reference operator[](unsigned int i)
             {
-                ASSERTL1(static_cast<size_type>(i) < this->num_elements(), (std::string("Element ") +
-                    boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
-                    boost::lexical_cast<std::string>(this->num_elements())));
+                ASSERTL1(static_cast<size_type>(i) < this->num_elements(),
+                         std::string("Element ") + std::to_string(i) +
+                         std::string(" requested in an array of size ") +
+                         std::to_string(this->num_elements()));
                 return (get())[i];
             }
 

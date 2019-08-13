@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,12 @@
 
 #ifndef NEKTAR_SOLVERS_ACOUSTICSOLVER_EQUATIONSYSTEMS_ACOUSTICSYSTEM_H
 #define NEKTAR_SOLVERS_ACOUSTICSOLVER_EQUATIONSYSTEMS_ACOUSTICSYSTEM_H
+
+// Define variable to avoid deprecated warning in Boost 1.69.
+#include <boost/version.hpp>
+#if BOOST_VERSION >= 106900 && BOOST_VERSION < 107000
+#define BOOST_ALLOW_DEPRECATED_HEADERS
+#endif
 
 #include <boost/random/mersenne_twister.hpp>
 

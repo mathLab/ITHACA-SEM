@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -52,7 +51,11 @@ using std::cout;
 using std::endl;
 
 #ifdef NEKTAR_USE_SCOTCH
+#ifdef NEKTAR_USE_MPI
+#include <ptscotch.h>
+#else
 #include <scotch.h>
+#endif
 
 #define SCOTCH_CALL(scotchFunc, args)                                   \
     {                                                                   \
@@ -833,7 +836,7 @@ namespace Nektar
                 boost::replace_all(strat_str, "<BBAL>", "0.1");
                 boost::replace_all(
                     strat_str, "<TSTS>",
-                    "vert>"+boost::lexical_cast<std::string>(mdswitch));
+                    "vert>"+std::to_string(mdswitch));
 
                 // Set up the re-ordering strategy.
                 SCOTCH_Strat strat;
@@ -926,7 +929,7 @@ namespace Nektar
                 for (i = 0; i < nGraphVerts; ++i)
                 {
                     ASSERTL1(perm[iperm[i]] == i, "Perm error "
-                             + boost::lexical_cast<std::string>(i));
+                             + std::to_string(i));
                 }
 
                 // If we were passed a graph with disconnected regions, we need

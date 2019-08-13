@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -38,9 +37,14 @@
 
 #include <unordered_map>
 
+#include <boost/geometry/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
+namespace bg = boost::geometry;
+
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 
+#include <SpatialDomains/MeshEntities.hpp>
 #include <SpatialDomains/HexGeom.h>
 #include <SpatialDomains/PrismGeom.h>
 #include <SpatialDomains/PyrGeom.h>
@@ -58,6 +62,9 @@ namespace Nektar
 {
 namespace SpatialDomains
 {
+typedef std::map<int, std::pair<LibUtilities::ShapeType, std::vector<int>>>
+CompositeDescriptor;
+
 enum ExpansionType
 {
     eNoExpansionType,
@@ -102,14 +109,6 @@ const std::string kExpansionTypeStr[] = {"NOTYPE",
                                          "CHEBYSHEV-FOURIER",
                                          "FOURIER-MODIFIED"};
 
-struct Composite
-{
-    std::vector<GeometrySharedPtr> m_geomVec;
-};
-
-typedef std::shared_ptr<Composite> CompositeSharedPtr;
-typedef std::map<int, CompositeSharedPtr> CompositeMap;
-
 typedef std::map<int, std::vector<unsigned int>> CompositeOrdering;
 typedef std::map<int, std::vector<unsigned int>> BndRegionOrdering;
 
@@ -132,6 +131,14 @@ struct DomainRange
 
 typedef std::shared_ptr<DomainRange> DomainRangeShPtr;
 static DomainRangeShPtr NullDomainRangeShPtr;
+
+struct Composite
+{
+    std::vector<std::shared_ptr<Geometry>> m_geomVec;
+};
+
+typedef std::shared_ptr<Composite> CompositeSharedPtr;
+typedef std::map<int, CompositeSharedPtr> CompositeMap;
 
 struct Expansion
 {
@@ -157,11 +164,14 @@ typedef std::shared_ptr<std::vector<std::pair<GeometrySharedPtr, int>>>
 
 typedef std::map<std::string, std::string> MeshMetaDataMap;
 
+typedef std::pair<BgBox, int> BgRtreeValue;
+typedef bg::index::rtree< BgRtreeValue, bg::index::rstar<16, 4> > BgRtree;
+
 class MeshGraph;
 typedef std::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 
 /// Base class for a spectral/hp element mesh.
-class MeshGraph : public std::enable_shared_from_this<MeshGraph>
+class MeshGraph
 {
 public:
     SPATIAL_DOMAINS_EXPORT MeshGraph()
@@ -179,11 +189,6 @@ public:
         const LibUtilities::FieldMetaDataMap &metadata
                                      = LibUtilities::NullFieldMetaDataMap) = 0;
 
-    SPATIAL_DOMAINS_EXPORT virtual void WriteGeometry(
-        std::string outname,
-        std::vector<std::set<unsigned int>> elements,
-        std::vector<unsigned int> partitions) = 0;
-
     void Empty(int dim, int space)
     {
         m_meshDimension  = dim;
@@ -192,6 +197,11 @@ public:
 
     /*transfers the minial data structure to full meshgraph*/
     SPATIAL_DOMAINS_EXPORT void FillGraph();
+
+    SPATIAL_DOMAINS_EXPORT void FillBoundingBoxTree();
+
+    SPATIAL_DOMAINS_EXPORT std::vector<BgRtreeValue> GetElementsContainingPoint(
+            PointGeomSharedPtr p);
 
     ////////////////////
     ////////////////////
@@ -236,8 +246,8 @@ public:
         return m_meshComposites.find(whichComposite)->second;
     }
 
-    SPATIAL_DOMAINS_EXPORT GeometrySharedPtr
-    GetCompositeItem(int whichComposite, int whichItem);
+    SPATIAL_DOMAINS_EXPORT GeometrySharedPtr GetCompositeItem(
+        int whichComposite, int whichItem);
 
     SPATIAL_DOMAINS_EXPORT void GetCompositeList(
         const std::string &compositeStr,
@@ -295,6 +305,8 @@ public:
 
     inline void SetExpansions(const std::string variable,
                               ExpansionMapShPtr &exp);
+
+    inline void SetSession(LibUtilities::SessionReaderSharedPtr pSession);
 
     /// Sets the basis key for all expansions of the given shape.
     SPATIAL_DOMAINS_EXPORT void SetBasisKey(LibUtilities::ShapeType shape,
@@ -420,10 +432,15 @@ public:
     SPATIAL_DOMAINS_EXPORT virtual void PartitionMesh(
         LibUtilities::SessionReaderSharedPtr session) = 0;
 
+    SPATIAL_DOMAINS_EXPORT std::map<int, MeshEntity>
+        CreateMeshEntities();
+    SPATIAL_DOMAINS_EXPORT CompositeDescriptor CreateCompositeDescriptor();
+
 protected:
 
     void PopulateFaceToElMap(Geometry3DSharedPtr element, int kNfaces);
     ExpansionMapShPtr SetUpExpansionMap();
+    std::string GetCompositeString(CompositeSharedPtr comp);
 
     LibUtilities::SessionReaderSharedPtr m_session;
     PointGeomMap m_vertSet;
@@ -460,6 +477,8 @@ protected:
 
     CompositeOrdering m_compOrder;
     BndRegionOrdering m_bndRegOrder;
+
+    BgRtree m_boundingBoxTree;
 };
 typedef std::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 typedef LibUtilities::NekFactory<std::string, MeshGraph> MeshGraphFactory;
@@ -483,6 +502,14 @@ void MeshGraph::SetExpansions(const std::string variable,
     {
         m_expansionMapShPtrMap[variable] = exp;
     }
+}
+
+/**
+ *
+ */
+void MeshGraph::SetSession(LibUtilities::SessionReaderSharedPtr pSession)
+{
+    m_session = pSession;
 }
 
 /**

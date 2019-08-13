@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -324,25 +323,25 @@ public:
         {
             NekDouble yrot = cos(angle)*m_y - sin(angle)*m_z;
             NekDouble zrot = sin(angle)*m_y + cos(angle)*m_z;
-            
+
             m_y = yrot;
-            m_z = zrot; 
+            m_z = zrot;
         }
         else if (dir == "y")
         {
             NekDouble zrot = cos(angle)*m_z - sin(angle)*m_x;
             NekDouble xrot = sin(angle)*m_z + cos(angle)*m_x;
-            
+
             m_z = zrot;
-            m_x = xrot; 
+            m_x = xrot;
         }
         else if (dir == "z")
         {
             NekDouble xrot = cos(angle)*m_x - sin(angle)*m_y;
             NekDouble yrot = sin(angle)*m_x + cos(angle)*m_y;
-            
+
             m_x = xrot;
-            m_y = yrot; 
+            m_y = yrot;
         }
         else
         {
@@ -410,7 +409,8 @@ NEKMESHUTILS_EXPORT bool operator<(NodeSharedPtr const &p1,
                                    NodeSharedPtr const &p2);
 NEKMESHUTILS_EXPORT bool operator!=(NodeSharedPtr const &p1,
                                     NodeSharedPtr const &p2);
-std::ostream &operator<<(std::ostream &os, const NodeSharedPtr &n);
+NEKMESHUTILS_EXPORT std::ostream &operator<<(std::ostream &os,
+                                             const NodeSharedPtr &n);
 
 /**
  * @brief Defines a hash function for nodes.

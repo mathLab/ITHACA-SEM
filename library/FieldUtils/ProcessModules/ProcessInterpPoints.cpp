@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -108,9 +107,13 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
     std::vector<std::string> files;
     ParseUtils::GenerateVector(m_config["fromxml"].as<string>(), files);
+
     // set up session file for from field
+    char *argv[] = { const_cast<char *>("FieldConvert"), nullptr };
     fromField->m_session =
-        LibUtilities::SessionReader::CreateInstance(0, 0, files);
+        LibUtilities::SessionReader::CreateInstance(
+            1, argv, files,
+            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0));
     // Set up range based on min and max of local parallel partition
     SpatialDomains::DomainRangeShPtr rng =
         MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();

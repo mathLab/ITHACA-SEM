@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -75,6 +74,10 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputFileBase(f),
                                                  m_oneOutputFile(false)
 {
     m_requireEquiSpaced = true;
+    m_config["double"] =
+        ConfigOption(true, "0", "Write double-precision (binary) or scientific "
+                                "format data: more accurate but more disk space"
+                                " required");
 }
 
 OutputTecplot::~OutputTecplot()
@@ -92,7 +95,7 @@ void OutputTecplot::Process(po::variables_map &vm)
     {
         m_oneOutputFile = (m_f->m_comm->GetSize()> 1);
     }
-    
+
     OutputFileBase::Process(vm);
 }
 
@@ -453,6 +456,13 @@ void OutputTecplotBinary::WriteTecplotHeader(std::ofstream &outfile,
  */
 void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
 {
+    bool useDoubles = m_config["double"].as<bool>();
+
+    if (useDoubles)
+    {
+        outfile << std::scientific;
+    }
+
     // Write either points or finite element block
     if (m_zoneType != eOrdered)
     {

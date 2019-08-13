@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,9 +36,7 @@
 
 void export_StdExpansion();
 void export_StdMatrixKey();
-void export_StdSegExp();
-void export_StdTriExp();
-void export_StdQuadExp();
+void export_StdElements();
 
 BOOST_PYTHON_MODULE(_StdRegions)
 {
@@ -47,7 +44,5 @@ BOOST_PYTHON_MODULE(_StdRegions)
 
     export_StdExpansion();
     export_StdMatrixKey();
-    export_StdSegExp();
-    export_StdTriExp();
-    export_StdQuadExp();
+    export_StdElements();
 }

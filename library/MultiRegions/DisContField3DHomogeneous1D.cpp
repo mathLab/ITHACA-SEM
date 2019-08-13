@@ -197,11 +197,20 @@ namespace Nektar
                         UpdateBndCondExpansion(cnt);
                 }
 
+                auto comm = boundaryCondition->GetComm();
+                int size = boundaryCondition->GetComm()->GetSize();
+
+                // It seems to work either way
+                // comm->SplitComm(1,size);
+                comm->SplitComm(m_StripZcomm->GetSize(),
+                    size/m_StripZcomm->GetSize());
+
+
                 m_bndCondExpansions[cnt++] =
-                    MemoryManager<ExpList2DHomogeneous1D>::
+                    MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::
                     AllocateSharedPtr(m_session, HomoBasis, lhom,
                                       m_useFFT, false,
-                                      PlanesBndCondExp);
+                                      PlanesBndCondExp, comm);
             }
             EvaluateBoundaryConditions(0.0, variable);
         }

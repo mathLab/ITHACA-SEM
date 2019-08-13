@@ -299,6 +299,11 @@ namespace Nektar
         {
             Array<OneD, NekDouble> inArea(m_flowrateBnd->GetNpoints(), 1.0);
             m_flowrateArea = m_flowrateBnd->Integral(inArea);
+
+            if(m_Hom1DExplicit)
+            {
+                m_flowrateArea /= m_session->GetParameter("LZ");
+            }
         }
         m_comm->AllReduce(m_flowrateArea, LibUtilities::ReduceMax);
 
@@ -392,8 +397,8 @@ namespace Nektar
         }
         else if (m_flowrateBnd && !m_Hom1DExplicit)
         {
-            // 3DH1D case with no Flowrate boundary defined: compute flux through 
-            // the zero-th (mean) plane.
+            // 3DH1D case with no Flowrate boundary defined: compute flux
+            // through the zero-th (mean) plane.
             flowrate = m_flowrateBnd->Integral(inarray[2]);
         }
 

@@ -80,7 +80,9 @@ namespace Nektar
                 const NekDouble                             lhom,
                 const bool                                  useFFT,
                 const bool                                  dealiasing,
-                const Array<OneD, ExpListSharedPtr>        &planes);
+                const Array<OneD, ExpListSharedPtr>        &planes,
+                const LibUtilities::CommSharedPtr comm =
+                                                LibUtilities::CommSharedPtr());
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(

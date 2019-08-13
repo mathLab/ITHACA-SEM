@@ -1,5 +1,5 @@
 from NekPy.LibUtilities import SessionReader
-from NekPy.StdRegions import ConstFactorMap, ConstFactorType
+from NekPy.StdRegions import ConstFactorMap, ConstFactorType, VarCoeffMap, VarCoeffType
 from NekPy.SpatialDomains import MeshGraph
 from NekPy.MultiRegions import ContField2D
 
@@ -23,13 +23,18 @@ lamb = session.GetParameter("Lambda")
 factors = ConstFactorMap()
 factors[ConstFactorType.FactorLambda] = lamb
 
+# Test use of variable coefficients.
+coeffs = VarCoeffMap()
+coeffs[VarCoeffType.VarCoeffD00] = np.ones(exp.GetNpoints())
+coeffs[VarCoeffType.VarCoeffD11] = np.ones(exp.GetNpoints())
+
 # Construct right hand side forcing term.
 x, y = exp.GetCoords()
 sol = np.sin(np.pi * x) * np.sin(np.pi * y)
 fx = -(lamb + 2*np.pi*np.pi) * sol
 
 # Solve Helmholtz equation.
-helm_sol = exp.BwdTrans(exp.HelmSolve(fx, factors))
+helm_sol = exp.BwdTrans(exp.HelmSolve(fx, factors, coeffs))
 print("L infinity error: %.6e" % np.max(np.abs(helm_sol - sol)))
 
 # Clean up!

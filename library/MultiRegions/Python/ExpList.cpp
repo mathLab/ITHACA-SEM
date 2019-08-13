@@ -97,19 +97,26 @@ Array<OneD, NekDouble> ExpList_IProductWRTBase(
 Array<OneD, NekDouble> ExpList_HelmSolve(
     ExpListSharedPtr exp,
     const Array<OneD, const NekDouble> &in,
-    const py::object constFactorMap)
+    const py::object constFactorMap,
+    const py::object varCoeffMap)
 {
     Array<OneD, NekDouble> out(exp->GetNcoeffs());
 
     StdRegions::ConstFactorMap facMap = StdRegions::NullConstFactorMap;
+    StdRegions::VarCoeffMap coeffMap = StdRegions::NullVarCoeffMap;
+
     if (!constFactorMap.is_none())
     {
         facMap = py::extract<StdRegions::ConstFactorMap>(constFactorMap);
     }
+    if (!varCoeffMap.is_none())
+    {
+        coeffMap = py::extract<StdRegions::VarCoeffMap>(varCoeffMap);
+    }
 
     FlagList notUsed;
 
-    exp->HelmSolve(in, out, notUsed, facMap);
+    exp->HelmSolve(in, out, notUsed, facMap, coeffMap);
     return out;
 }
 
@@ -206,7 +213,10 @@ void export_ExpList()
         .def("BwdTrans", &ExpList_BwdTrans)
         .def("IProductWRTBase", &ExpList_IProductWRTBase)
         .def("HelmSolve", &ExpList_HelmSolve, (
-                 py::arg("in"), py::arg("constFactorMap") = py::object()))
+                 py::arg("in"),
+                 py::arg("constFactorMap") = py::object(),
+                 py::arg("varCoeffMap") = py::object()
+                 ))
         .def("L2", &ExpList_L2)
         .def("L2", &ExpList_L2_Error)
         .def("SetPhysArray", &ExpList_SetPhysArray)

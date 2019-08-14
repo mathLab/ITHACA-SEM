@@ -20,6 +20,7 @@ IF( NEKTAR_SOLVER_ADR )
         ./EquationSystems/UnsteadyDiffusion.cpp
         ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
         ./EquationSystems/UnsteadyInviscidBurger.cpp
+        ./EquationSystems/UnsteadyReactionDiffusion.cpp
         ./EquationSystems/UnsteadyViscousBurgers.cpp
         ./EquationSystems/EigenValuesAdvection.cpp)
 
@@ -151,6 +152,9 @@ IF( NEKTAR_SOLVER_ADR )
 
     # C^0 projection
     ADD_NEKTAR_TEST(Projection2D)
+
+    # Reaction-diffusion
+    ADD_NEKTAR_TEST(ReactionDiffusion2D)
 
     ADD_NEKTAR_TEST(Helmholtz1D_8modes_DG)
     ADD_NEKTAR_TEST(Helmholtz1D_8modes)

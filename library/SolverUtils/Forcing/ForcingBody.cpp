@@ -115,13 +115,19 @@ namespace SolverUtils
             m_Forcing[i] = Array<OneD, NekDouble> (pFields[0]->GetTotPoints(), 0.0);
         }
 
+        Array<OneD, Array<OneD, NekDouble> > tmp(pFields.num_elements());
+        for (int i = 0; i < pFields.num_elements(); ++i)
+        {
+            tmp[i] = pFields[i]->GetPhys();
+        }
 
-        Update(pFields, 0.0);
+        Update(pFields, tmp, 0.0);
     }
 
 
     void ForcingBody::Update(
             const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields,
+            const Array<OneD, Array<OneD, NekDouble> > &inarray,
             const NekDouble &time)
     {
         LibUtilities::EquationSharedPtr eqn = m_session->GetFunction(
@@ -139,7 +145,7 @@ namespace SolverUtils
             for (int i = 0; i < pFields.num_elements(); ++i)
             {
                 varstr += " " + m_session->GetVariable(i);
-                fielddata.push_back(pFields[i]->GetPhys());
+                fielddata.push_back(inarray[i]);
             }
 
             // Evaluate function
@@ -196,7 +202,7 @@ namespace SolverUtils
         }
         else
         {
-            Update(fields, time);
+            Update(fields, inarray, time);
 
             for (int i = 0; i < m_NumVariable; i++)
             {

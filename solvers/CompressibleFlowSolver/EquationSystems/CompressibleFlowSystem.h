@@ -139,12 +139,6 @@ namespace Nektar
             const NekDouble                                   time);
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-
-        void NumJacElemental(
-            DNekMatSharedPtr    &NumericalJacobianMatrix,
-            int                 RowElementID,
-            int                 ColElementID);
-
         void preconditioner(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&out);
@@ -208,6 +202,32 @@ namespace Nektar
                   DNekMatSharedPtr       &FJac,
             const NekDouble efix,   const NekDouble fsw);
 
+#ifdef CFS_DEBUGMODE
+
+        void NumJacElemental(
+            DNekMatSharedPtr    &NumericalJacobianMatrix,
+            const int                 RowElementID,
+            const int                 ColElementID);
+        
+        void CalOffDiagJacByMinusOffDiagElemental(
+            DNekMatSharedPtr    &MinusoffJacobianMatrix,
+            const int                 RowElementID,
+            const int                 ColElementID);
+        void DebugCheckJac(
+            const int                 RowElementID,
+            const int                 ColElementID);
+        
+        void DebugNumCalJac_coeff(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+            
+        void DebugNumCalElmtJac_coeff(
+            Array<OneD, Array<OneD, DNekMatSharedPtr> > &ElmtPrecMatVars,
+            const int nelmt);
+
+        void NonlinSysEvaluator_coeff_out(
+                Array<OneD, Array<OneD, NekDouble> > &inarray,
+                Array<OneD, Array<OneD, NekDouble> > &out);
+
         void CoutBlkMat(
             DNekBlkMatSharedPtr &gmtx, 
             const unsigned int nwidthcolm=12);
@@ -227,6 +247,7 @@ namespace Nektar
         void Cout2DArrayStdMat(
             Array<OneD, Array<OneD, DNekMatSharedPtr> > &gmtxarray,
             const unsigned int nwidthcolm=12);
+#endif
 
         void Fill2DArrayOfBlkDiagonalMat(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
@@ -270,24 +291,9 @@ namespace Nektar
                 Array<OneD, NekDouble >&out,
             const  bool                   &controlFlag);
 
-        void DebugNumCalJac_coeff(
-            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
-            
-        void DebugNumCalElmtJac_coeff(
-            Array<OneD, Array<OneD, DNekMatSharedPtr> > &ElmtPrecMatVars,
-            const int nelmt);
-        
         void NonlinSysEvaluator_coeff(
                 Array<OneD, Array<OneD, NekDouble> > &inarray,
                 Array<OneD, Array<OneD, NekDouble> > &out);
-
-        void NonlinSysEvaluator_coeff_out(
-                Array<OneD, Array<OneD, NekDouble> > &inarray,
-                Array<OneD, Array<OneD, NekDouble> > &out);
-
-        // void NonlinSysEvaluator_coeff_bnd(
-        //         Array<OneD, Array<OneD, NekDouble> > &inarray,
-        //         Array<OneD, Array<OneD, NekDouble> > &out);
 
         void DoOdeRhs_coeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,

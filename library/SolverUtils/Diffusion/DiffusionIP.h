@@ -76,7 +76,6 @@ namespace Nektar
             Array<OneD, NekDouble>                            m_tracBwdWeightJump;
             Array<OneD, NekDouble>                            m_traceNormDirctnElmtLength;
             Array<OneD, NekDouble>                            m_traceNormDirctnElmtLengthRecip;
-
             LibUtilities::SessionReaderSharedPtr              m_session;
 
 #ifdef CFS_DEBUGMODE

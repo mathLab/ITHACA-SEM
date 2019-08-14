@@ -95,7 +95,6 @@ namespace SpatialDomains
                     const SCOTCH_Num * const    wgtflag,
                     const SCOTCH_Num * const    numflag,
                     const SCOTCH_Num * const    nparts,
-                    const SCOTCH_Num * const    options,
                     SCOTCH_Num * const          volume,
                     SCOTCH_Num * const          part);
 

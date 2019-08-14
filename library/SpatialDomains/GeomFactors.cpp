@@ -998,5 +998,5 @@ namespace Nektar
             Vmath::Vvtvm(nq, v1[0], 1, v2[1], 1, temp, 1, v3[2], 1);
         }
 
-    }; //end of namespace
-}; //end of namespace
+    } //end of namespace
+} //end of namespace

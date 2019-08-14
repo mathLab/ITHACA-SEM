@@ -63,7 +63,7 @@ protected:
     virtual int v_GetShapeDim() const;
 };
 
-}; // end of namespace
-}; // end of namespace
+} // end of namespace
+} // end of namespace
 
 #endif // NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H

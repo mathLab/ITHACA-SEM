@@ -59,7 +59,10 @@ PointGeom::PointGeom(
 }
 
 // copy constructor
-PointGeom::PointGeom(const PointGeom &T) : NekPoint<NekDouble>(T)
+PointGeom::PointGeom(const PointGeom &T)
+    : Geometry0D(T),
+      NekPoint<NekDouble>(T),
+      std::enable_shared_from_this<PointGeom>(T)
 {
     m_shapeType = T.m_shapeType;
     m_globalID = T.m_globalID;

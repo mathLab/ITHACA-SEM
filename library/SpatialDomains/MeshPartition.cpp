@@ -37,6 +37,8 @@
 #define TIXML_USE_STL
 #endif
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SpatialDomains/MeshPartition.h>
 #include <SpatialDomains/Geometry.h>
 
@@ -105,6 +107,8 @@ MeshPartition::~MeshPartition()
 void MeshPartition::PartitionMesh(
     int nParts, bool shared, bool overlapping, int nLocal)
 {
+    boost::ignore_unused(nLocal);
+
     ASSERTL0(m_parallel || m_elements.size() >= nParts,
              "Too few elements for this many processes.");
     m_shared = shared;

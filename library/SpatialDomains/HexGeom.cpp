@@ -256,6 +256,8 @@ bool HexGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                               NekDouble tol,
                               NekDouble &resid)
 {
+    boost::ignore_unused(resid);
+
     ASSERTL1(gloCoord.num_elements() == 3,
              "Three dimensional geometry expects three coordinates.");
 

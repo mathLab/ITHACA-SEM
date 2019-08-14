@@ -1678,7 +1678,7 @@ namespace Nektar
                 }
 
 #ifdef CFS_DEBUGMODE
-                DebugCheckJac(0,0);
+                // DebugCheckJac(0,0);
 #endif
             }
         }

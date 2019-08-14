@@ -31,6 +31,9 @@
 // Description: File for Expansion2D routines
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion3D.h>
@@ -1598,6 +1601,8 @@ namespace Nektar
             const int                                   nq0,
             Array<OneD, int>                            &idmap)
         {
+            boost::ignore_unused(nvert);
+
             if (idmap.num_elements() != nq0)
             {
                 idmap = Array<OneD, int>(nq0);

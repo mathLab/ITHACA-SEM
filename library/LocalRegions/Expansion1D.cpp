@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
 
@@ -278,7 +280,8 @@ namespace Nektar
                                           Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray) 
         {
-            
+            boost::ignore_unused(dir);
+
             int k;
             int nbndry = NumBndryCoeffs();
             int nquad  = GetNumPoints(0);

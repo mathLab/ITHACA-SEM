@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <SpatialDomains/Geometry3D.h>
 #include <LocalRegions/Expansion3D.h>
@@ -360,6 +362,8 @@ namespace Nektar
             Array<OneD, NekDouble>        &outarray,
             const StdRegions::VarCoeffMap &varcoeffs)
         {
+            boost::ignore_unused(varcoeffs);
+
             int i;
             int order_f = FaceExp->GetNcoeffs();
             Array<OneD, NekDouble> coeff(order_f);

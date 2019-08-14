@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/TetExp.h>
 #include <SpatialDomains/SegGeom.h>
 #include <LibUtilities/Foundations/InterpCoeff.h>
@@ -584,6 +586,8 @@ namespace Nektar
                                            NekDouble * coeffs,
                                            std::vector<LibUtilities::BasisType> &fromType)
         {
+            boost::ignore_unused(fromType);
+
             int data_order0 = nummodes[mode_offset];
             int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
             int data_order1 = nummodes[mode_offset+1];

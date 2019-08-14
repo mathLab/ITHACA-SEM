@@ -82,6 +82,8 @@ namespace Nektar
          * @param   T           HexExp to copy.
          */
         HexExp::HexExp(const HexExp &T):
+            StdExpansion(T),
+            StdExpansion3D(T),
             StdRegions::StdHexExp(T),
             Expansion(T),
             Expansion3D(T),

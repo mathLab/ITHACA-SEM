@@ -37,6 +37,7 @@
 #define NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
 
 #include <SolverUtils/Advection/Advection.h>
+#define CFS_DEBUGMODE
 
 namespace Nektar
 {
@@ -64,6 +65,10 @@ namespace Nektar
 #endif
 
         protected:
+#ifdef CFS_DEBUGMODE
+            // 1: Con; 2: Deriv; Default: all
+            int                                 m_DebugVolTraceSwitch; 
+#endif
             AdvectionWeakDG();
 
             virtual void v_InitObject(

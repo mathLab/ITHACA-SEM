@@ -132,6 +132,19 @@ namespace Nektar
             ASSERTL0(false,"v_Diffuse_coeff not defined");
         }
 
+        void Diffusion::v_Diffuse_coeff(
+            const int                                                   nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
+            const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
+            Array<OneD, Array<OneD, NekDouble> >                        &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >                  &vFwd,
+            const Array<OneD, Array<OneD, NekDouble> >                  &vBwd,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &qfield,
+            Array< OneD, int >                                          &nonZeroIndex)
+        {
+            ASSERTL0(false,"v_Diffuse_coeff not defined");
+        }
+
         const Array<OneD, const Array<OneD, NekDouble> > &Diffusion::v_GetTraceNormal()
         {
             ASSERTL0(false," not defined");

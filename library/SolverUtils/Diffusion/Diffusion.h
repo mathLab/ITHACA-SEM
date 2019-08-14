@@ -156,7 +156,7 @@ namespace Nektar
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                    Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray,
                 const Array<OneD, Array<OneD, NekDouble> >        &pFwd= NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> >        &pBwd= NullNekDoubleArrayofArray);
 
@@ -173,10 +173,23 @@ namespace Nektar
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                    Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray,
                 NekDouble                                           time,
                 const Array<OneD, Array<OneD, NekDouble> >        &pFwd= NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> >        &pBwd= NullNekDoubleArrayofArray);
+            
+            SOLVER_UTILS_EXPORT void Diffuse_coeff(
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
+                const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
+                Array<OneD, Array<OneD, NekDouble> >                        &outarray,
+                const Array<OneD, Array<OneD, NekDouble> >                  &vFwd,
+                const Array<OneD, Array<OneD, NekDouble> >                  &vBwd,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &qfield,
+                Array< OneD, int >                                          &nonZeroIndex)
+            {
+                v_Diffuse_coeff(nConvectiveFields, fields, inarray, outarray, vFwd, vBwd,qfield,nonZeroIndex);
+            }
             
             // Diffusion Calculate the physical derivatives
             SOLVER_UTILS_EXPORT void DiffuseCalculateDerivative(
@@ -421,6 +434,16 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+
+            virtual void v_Diffuse_coeff(
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
+                const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
+                Array<OneD, Array<OneD, NekDouble> >                        &outarray,
+                const Array<OneD, Array<OneD, NekDouble> >                  &vFwd,
+                const Array<OneD, Array<OneD, NekDouble> >                  &vBwd,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &qfield,
+                Array< OneD, int >                                          &nonZeroIndex);
         
             virtual void v_ConsVarAveJump(
                 const int                                           nConvectiveFields,

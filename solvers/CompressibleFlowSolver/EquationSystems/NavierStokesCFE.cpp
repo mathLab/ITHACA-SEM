@@ -340,8 +340,69 @@ namespace Nektar
             {
                 ASSERTL0(false, "m_BndEvaluateTime not setup");
             }
+#ifdef CFS_DEBUGMODE
+            if(1==m_DebugConsDerivSwitch)
+            {
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield;
+                Array<OneD, Array<OneD, NekDouble> > inpnts(nvariables);
+                for(int i = 0; i < nvariables; i++)
+                {
+                    inpnts[i]   =   Array<OneD, NekDouble>(npoints,0.0);
+                    m_fields[i]->BwdTrans(m_TimeIntegtSol_k[i], inpnts[i]);
+                }
+                v_CalphysDeriv(inpnts,qfield);
+
+                Array<OneD, int > nonZeroIndex;
+                m_diffusion->Diffuse_coeff(nvariables,m_fields, inarray, outarray, pFwd, pBwd,qfield,nonZeroIndex);
+
+                for(i = 0; i < nonZeroIndex.num_elements(); ++i)
+                {
+                    int j = nonZeroIndex[i];
+                    m_fields[j]->MultiplyByElmtInvMass(outarray[j], outarray[j]);
+                }
+            }
+            else if(2==m_DebugConsDerivSwitch)
+            {
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield;
+                v_CalphysDeriv(inarray,qfield);
+
+                Array<OneD, Array<OneD, NekDouble> > inpnts(nvariables);
+                for(int i = 0; i < nvariables; i++)
+                {
+                    inpnts[i]   =   Array<OneD, NekDouble>(npoints,0.0);
+                    m_fields[i]->BwdTrans(m_TimeIntegtSol_k[i], inpnts[i]);
+                }
+                DoOdeProjection(inpnts,inpnts,m_BndEvaluateTime);
+
+                Array<OneD, Array<OneD, NekDouble> > Fwd    (nvariables);
+                Array<OneD, Array<OneD, NekDouble> > Bwd    (nvariables);
+                for(int i = 0; i < nvariables; ++i)
+                {
+                    Fwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
+                    Bwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
+                    m_fields[i]->GetFwdBwdTracePhys(inpnts[i], Fwd[i], Bwd[i]);
+                }
+        
+
+                Array<OneD, int > nonZeroIndex;
+                m_diffusion->Diffuse_coeff(nvariables, m_fields, inpnts, outarray, Fwd, Bwd,qfield,nonZeroIndex);
+
+                for(i = 0; i < nonZeroIndex.num_elements(); ++i)
+                {
+                    int j = nonZeroIndex[i];
+                    m_fields[j]->MultiplyByElmtInvMass(outarray[j], outarray[j]);
+                }
+            }
+            else
+            {
+                m_diffusion->Diffuse_coeff(nvariables, m_fields, inarray, outarrayDiff,m_BndEvaluateTime,
+                                pFwd, pBwd);
+            }
+#else
             m_diffusion->Diffuse_coeff(nvariables, m_fields, inarray, outarrayDiff,m_BndEvaluateTime,
                                 pFwd, pBwd);
+#endif
+                
             for (i = 0; i < nvariables; ++i)
             {
                 Vmath::Vadd(ncoeffs,

@@ -60,6 +60,11 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
             Advection::v_InitObject(pSession, pFields);
+
+#ifdef CFS_DEBUGMODE
+        cout <<endl<<" WARNING: CFS_DEBUGMODE is on in DiffusionIP!!!!!!!!!!!"<<endl<<endl;
+        pSession->LoadParameter("DebugVolTraceSwitch",                 m_DebugVolTraceSwitch      ,    0);
+#endif
         }
 
         /**
@@ -122,11 +127,17 @@ namespace Nektar
                     Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
                 for (j = 0; j < m_spaceDim; ++j)
                 {
-                    fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot);
+                    fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot,0.0);
                 }
             }
-
+#ifdef CFS_DEBUGMODE
+        if(2!=m_DebugVolTraceSwitch)
+        {
+#endif
             v_AdvectVolumeFlux(nConvectiveFields,fields,advVel,inarray,fluxvector,time);
+#ifdef CFS_DEBUGMODE
+        }
+#endif
             
             // Get the advection part (without numerical flux)
             for(int i = 0; i < nConvectiveFields; ++i)
@@ -141,9 +152,14 @@ namespace Nektar
             {
                 numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
             }
-
+#ifdef CFS_DEBUGMODE
+        if(1!=m_DebugVolTraceSwitch)
+        {
+#endif
             v_AdvectTraceFlux(nConvectiveFields, fields, advVel, inarray, numflux,time,pFwd,pBwd);
-
+#ifdef CFS_DEBUGMODE
+        }
+#endif
             // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
             for(i = 0; i < nConvectiveFields; ++i)
             {

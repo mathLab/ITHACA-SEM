@@ -37,6 +37,7 @@
 #define NEKTAR_SOLVERUTILS_DIFFUSIONWEAKDG
 
 #include <SolverUtils/Diffusion/Diffusion.h>
+#define CFS_DEBUGMODE
 
 namespace Nektar
 {
@@ -57,8 +58,8 @@ namespace Nektar
                 const int                                           npnts,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
-                      Array<OneD,       Array<OneD, NekDouble> >    &aver); 
-
+                      Array<OneD,       Array<OneD, NekDouble> >    &aver);
+            
         protected:
             DiffusionIP();
    		
@@ -75,7 +76,12 @@ namespace Nektar
             Array<OneD, NekDouble>                            m_tracBwdWeightJump;
             Array<OneD, NekDouble>                            m_traceNormDirctnElmtLength;
             Array<OneD, NekDouble>                            m_traceNormDirctnElmtLengthRecip;
+
             LibUtilities::SessionReaderSharedPtr              m_session;
+
+#ifdef CFS_DEBUGMODE
+            int                                 m_DebugVolTraceSwitch; 
+#endif
 
             void GetPenaltyFactor(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
@@ -136,7 +142,7 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
-
+            
             virtual void v_Diffuse_coeff(
                 const int                                          nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -144,7 +150,17 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
-            
+
+            virtual void v_Diffuse_coeff(
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
+                const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
+                Array<OneD, Array<OneD, NekDouble> >                        &outarray,
+                const Array<OneD, Array<OneD, NekDouble> >                  &vFwd,
+                const Array<OneD, Array<OneD, NekDouble> >                  &vBwd,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &qfield,
+                Array< OneD, int >                                          &nonZeroIndex);
+
             virtual void v_DiffuseVolumeFlux(
                 const int                                           nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,

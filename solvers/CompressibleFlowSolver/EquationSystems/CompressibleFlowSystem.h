@@ -46,6 +46,7 @@
 #include <SolverUtils/Diffusion/Diffusion.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <MultiRegions/GlobalMatrixKey.h>
+#define CFS_DEBUGMODE
 
 namespace Nektar
 {
@@ -89,6 +90,16 @@ namespace Nektar
 
         bool                                m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT;
         bool                                m_DEBUG_VISCOUS_JAC_MAT;
+        bool                                m_DEBUG_ADVECTION_JAC_MAT;
+
+#ifdef CFS_DEBUGMODE
+       // 1: Adv; 2: Dif; Default: all
+        int                                 m_DebugAdvDiffSwitch; 
+       // 1: Vol; 2: Trace; Default: all
+        int                                 m_DebugVolTraceSwitch; 
+       // 1: Con; 2: Deriv; Default: all
+        int                                 m_DebugConsDerivSwitch; 
+#endif
 
         // Auxiliary object to convert variables
         VariableConverterSharedPtr          m_varConv;
@@ -128,6 +139,12 @@ namespace Nektar
             const NekDouble                                   time);
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+
+        void NumJacElemental(
+            DNekMatSharedPtr    &NumericalJacobianMatrix,
+            int                 RowElementID,
+            int                 ColElementID);
+
         void preconditioner(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&out);
@@ -213,6 +230,10 @@ namespace Nektar
 
         void Fill2DArrayOfBlkDiagonalMat(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
+            const NekDouble valu);
+
+        void Fill1DArrayOfBlkDiagonalMat(
+            Array<OneD, DNekBlkMatSharedPtr> &gmtxarray,
             const NekDouble valu);
 
         void DoImplicitSolve_phy2coeff(

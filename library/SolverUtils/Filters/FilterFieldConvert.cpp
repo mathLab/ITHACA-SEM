@@ -111,10 +111,44 @@ FilterFieldConvert::FilterFieldConvert(
     //    (Derived classes need to override this if needed)
     m_sampleFrequency = m_outputFrequency;
 
+    // If phase average is computed, m_sampleFrequency is the frequency 
+    // used to check for sampling. In general it would be best to set it to 1.
+    // Phase average option
+    it = pParams.find("PhaseAverage");
+    if (it == pParams.end())
+    {
+        m_phaseAverage = false;
+    }
+    else
+    {
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
+        m_phaseAverage = round(equ.Evaluate());
+    }
+
+    if(m_phaseAverage)
+    {
+        // In case of phase average, load period and phase (both required)
+        auto itPeriod = pParams.find("PhaseAveragePeriod");
+        auto itPhase = pParams.find("PhaseAveragePhase");
+        ASSERTL0((itPeriod != pParams.end() && itPhase != pParams.end()), 
+            "PhaseAverage requires both 'PhaseAveragePeriod' and " 
+            "'PhaseAveragePhase' to be set.");
+
+        LibUtilities::Equation equPeriod(
+            m_session->GetExpressionEvaluator(), itPeriod->second);
+        m_phaseAveragePeriod = equPeriod.Evaluate();
+
+        LibUtilities::Equation equPhase(
+            m_session->GetExpressionEvaluator(), itPhase->second);
+        m_phaseAveragePhase = equPhase.Evaluate();
+    }
+    
     m_numSamples  = 0;
     m_index       = 0;
     m_outputIndex = 0;
-
+    m_dt          = m_session->GetParameter("TimeStep");
+    
     //
     // FieldConvert modules
     //
@@ -285,9 +319,32 @@ void FilterFieldConvert::v_Update(
     ASSERTL0(equ, "Weak pointer expired");
     equ->ExtraFldOutput(coeffs, variables);
 
-    m_numSamples++;
-    v_ProcessSample(pFields, coeffs, time);
+    if(m_phaseAverage)
+    {
+        // The sample is added to the filter only if the current time 
+        // corresponds to the correct phase. Introducing M as number of 
+        // cycles and N nondimensional phase (between 0 and 1):
+        // t = M * m_phaseAveragePeriod + N * m_phaseAveragePeriod
+        int currentCycle       = floor(time / m_phaseAveragePeriod);
+        NekDouble currentPhase = time / m_phaseAveragePeriod - currentCycle;
 
+        // Evaluate if the current time is closest to correct phase.
+        NekDouble tolerance = m_dt * m_sampleFrequency / 
+            (m_phaseAveragePeriod * 2);
+        NekDouble relativePhase = abs(m_phaseAveragePhase - currentPhase);
+
+        if (relativePhase < tolerance)
+        {
+            m_numSamples++;
+            v_ProcessSample(pFields, coeffs, time);
+        }
+    }
+    else
+    {
+        m_numSamples++;
+        v_ProcessSample(pFields, coeffs, time);
+    }
+    
     if (m_index % m_outputFrequency == 0)
     {
         m_fieldMetaData["FinalTime"] = boost::lexical_cast<std::string>(time);

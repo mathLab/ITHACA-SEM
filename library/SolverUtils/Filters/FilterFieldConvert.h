@@ -121,6 +121,10 @@ protected:
     std::string  m_restartFile;
     unsigned int m_index;
     unsigned int m_outputIndex;
+    bool         m_phaseAverage;
+    NekDouble    m_phaseAveragePeriod;
+    NekDouble    m_phaseAveragePhase;
+    NekDouble    m_dt;
     vector<ModuleSharedPtr> m_modules;
     LibUtilities::FieldMetaDataMap m_fieldMetaData;
     std::vector<Array<OneD, NekDouble> > m_outFields;

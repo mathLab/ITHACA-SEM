@@ -33,6 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpList.h>
+#include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
 #include <fstream>
@@ -100,7 +101,7 @@ Array<OneD, NekDouble> ExpList_HelmSolve(
     const py::object constFactorMap,
     const py::object varCoeffMap)
 {
-    Array<OneD, NekDouble> out(exp->GetNcoeffs());
+    Array<OneD, NekDouble> out(exp->GetNcoeffs(), 0.0);
 
     StdRegions::ConstFactorMap facMap = StdRegions::NullConstFactorMap;
     StdRegions::VarCoeffMap coeffMap = StdRegions::NullVarCoeffMap;
@@ -196,6 +197,17 @@ std::string ExpList_GetPhysAddress(ExpListSharedPtr exp)
     return ss.str();
 }
 
+void ExpList_ResetManagers(ExpListSharedPtr exp)
+{
+    exp->ClearGlobalLinSysManager();
+    LibUtilities::NekManager<
+        LocalRegions::MatrixKey, DNekScalMat,
+        LocalRegions::MatrixKey::opLess>::ClearManager();
+    LibUtilities::NekManager<
+        LocalRegions::MatrixKey, DNekScalBlkMat,
+        LocalRegions::MatrixKey::opLess>::ClearManager();
+}
+
 void export_ExpList()
 {
     py::class_<ExpList,
@@ -226,5 +238,6 @@ void export_ExpList()
         .def("GetPhysState", &ExpList::GetPhysState)
         .def("PhysIntegral", &ExpList_PhysIntegral)
         .def("GetPhysAddress", &ExpList_GetPhysAddress)
+        .def("ResetManagers", &ExpList_ResetManagers)
         ;
 }

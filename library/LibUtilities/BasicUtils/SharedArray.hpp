@@ -232,11 +232,15 @@ namespace Nektar
                     {
                         (*m_pythonInfo)->m_callback((*m_pythonInfo)->m_pyObject);
                         delete *m_pythonInfo;
-                        delete m_pythonInfo;
                     }
+
+                    delete m_pythonInfo;
+
 #else
+
                     ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
                     MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
+
 #endif
 
                     delete m_count; // Clean up the memory used for the reference count.
@@ -259,9 +263,11 @@ namespace Nektar
                     {
                         (*m_pythonInfo)->m_callback((*m_pythonInfo)->m_pyObject);
                         delete *m_pythonInfo;
-                        delete m_pythonInfo;
                     }
+
+                    delete m_pythonInfo;
 #else
+
                     ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
                     MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
 #endif

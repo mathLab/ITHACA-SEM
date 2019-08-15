@@ -1878,7 +1878,7 @@ namespace Nektar
 #endif
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
 
-        // ElmtVarInvMtrx(gmtxarray);
+        ElmtVarInvMtrx(gmtxarray);
     }
 
     void CompressibleFlowSystem::MultiplyElmtInvMass_PlusSource(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda)

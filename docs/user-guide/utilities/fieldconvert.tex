@@ -92,7 +92,14 @@ FieldConvert test.xml test.fld test.plt
 where \inltt{FieldConvert} is the executable associated to the utility
 FieldConvert, \inltt{test.xml} is the session file and
 \inltt{test.vtu}, \inltt{test.dat},  \inltt{test.plt} are the desired
-format outputs, either Paraview, VisIt or Tecplot formats.
+format outputs, either Paraview, VisIt or Tecplot formats. \\
+When converting to \inltt{.dat} or \inltt{plt} format, it is possible to
+enable output with double precision, which is more accurate but requires larger
+disk space. For example, double precision output in plt. format can be produced
+with the command:
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert test.xml test.fld test.plt:plt:double
+\end{lstlisting}
 %
 \begin{tipbox}
 Note that the session file is also supported

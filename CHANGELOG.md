@@ -143,6 +143,7 @@ v5.0.0
   added check on dimensions for interpolation, fixed seg interp (!999)
 - Fixed scaling for compressed xml, fixed error printout for mesh only (!1040)
 - Add field conversion from Halfmode to SingleMode (!1032)
+- Fix double precision output in .dat format (!1059)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on

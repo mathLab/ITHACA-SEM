@@ -75,8 +75,8 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputFileBase(f),
 {
     m_requireEquiSpaced = true;
     m_config["double"] =
-        ConfigOption(true, "0", "Write double-precision (binary) or scientific "
-                                "format data: more accurate but more disk space"
+        ConfigOption(true, "0", "Write double-precision format data:"
+                                "more accurate but more disk space"
                                 " required");
 }
 
@@ -460,7 +460,9 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
 
     if (useDoubles)
     {
-        outfile << std::scientific;
+        int precision = std::numeric_limits<double>::max_digits10;
+        outfile << std::setprecision(precision);
+
     }
 
     // Write either points or finite element block

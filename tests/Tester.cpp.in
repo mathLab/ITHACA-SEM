@@ -248,6 +248,11 @@ int main(int argc, char *argv[])
         // Output from stdout and stderr are directed to the files output.out
         // and output.err, respectively.
 
+        if (file.IsPythonTest())
+        {
+            command += "PYTHONPATH=\"@CMAKE_BINARY_DIR@\" ";
+        }
+
 #ifdef NEKTAR_TEST_FORCEMPIEXEC
 #else
         if (file.GetNProcesses() > 1)
@@ -272,7 +277,6 @@ int main(int argc, char *argv[])
 
         if (file.IsPythonTest())
         {
-            command += "PYTHONPATH=\"@CMAKE_BINARY_DIR@\" ";
             command += "@PYTHON_EXECUTABLE@ ";
         }
 

@@ -136,6 +136,21 @@ NekDouble ExpList_L2_Error(
     return exp->L2(in, err);
 }
 
+NekDouble ExpList_Linf(
+    ExpListSharedPtr exp,
+    const Array<OneD, const NekDouble> &in)
+{
+    return exp->Linf(in);
+}
+
+NekDouble ExpList_Linf_Error(
+    ExpListSharedPtr exp,
+    const Array<OneD, const NekDouble> &in,
+    const Array<OneD, const NekDouble> &err)
+{
+    return exp->Linf(in, err);
+}
+
 py::tuple ExpList_GetCoords(ExpListSharedPtr exp)
 {
     int nPhys = exp->GetNpoints();
@@ -231,6 +246,8 @@ void export_ExpList()
                  ))
         .def("L2", &ExpList_L2)
         .def("L2", &ExpList_L2_Error)
+        .def("Linf", &ExpList_Linf)
+        .def("Linf", &ExpList_Linf_Error)
         .def("SetPhysArray", &ExpList_SetPhysArray)
         .def("SetPhys", &ExpList_SetPhys)
         .def("GetPhys", &ExpList_GetPhys)

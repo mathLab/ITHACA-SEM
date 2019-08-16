@@ -669,7 +669,7 @@ namespace Nektar
         /**
          *
          */
-        CommSharedPtr& SessionReader::GetComm()
+        CommSharedPtr SessionReader::GetComm()
         {
             return m_comm;
         }

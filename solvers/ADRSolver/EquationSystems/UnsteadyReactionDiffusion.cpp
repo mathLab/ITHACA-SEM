@@ -61,27 +61,12 @@ void UnsteadyReactionDiffusion::v_InitObject()
     ASSERTL0(m_intScheme->GetIntegrationSchemeType() == LibUtilities::eIMEX,
              "Reaction-diffusion requires an implicit-explicit timestepping"
              " (e.g. IMEXOrder2)");
+    ASSERTL0(m_projectionType == MultiRegions::eGalerkin,
+             "Reaction-diffusion requires use of continuous Galerkin"
+             "projection.");
 
+    // Load diffusion parameter
     m_session->LoadParameter("epsilon", m_epsilon,  0.0);
-
-    switch (m_projectionType)
-    {
-        case MultiRegions::eDiscontinuous:
-        case MultiRegions::eMixed_CG_Discontinuous:
-        {
-            ASSERTL0(false, "Discontinuous Galerkin not supported for unsteady "
-                            "reaction diffusion");
-            break;
-        }
-
-        case MultiRegions::eGalerkin:
-        {
-            if (m_explicitDiffusion)
-            {
-                ASSERTL0(false, "Explicit Galerkin diffusion not set up.");
-            }
-        }
-    }
 
     // Forcing terms
     m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
@@ -113,7 +98,7 @@ void UnsteadyReactionDiffusion::DoOdeRhs(
     const NekDouble time)
 {
     // RHS should be set to zero.
-    for (int i = 0; i < inarray.num_elements(); ++i)
+    for (int i = 0; i < outarray.num_elements(); ++i)
     {
         Vmath::Zero(outarray[i].num_elements(), &outarray[i][0], 1);
     }
@@ -142,35 +127,12 @@ void UnsteadyReactionDiffusion::DoOdeProjection(
     int nvariables = inarray.num_elements();
     SetBoundaryConditions(time);
 
-    switch(m_projectionType)
-    {
-        case MultiRegions::eDiscontinuous:
-        {
-            // Just copy over array
-            int npoints = GetNpoints();
-            for(i = 0; i < nvariables; ++i)
-            {
-                Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
-            }
-            break;
-        }
-        case MultiRegions::eGalerkin:
-        case MultiRegions::eMixed_CG_Discontinuous:
-        {
-            Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
+    Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
 
-            for(i = 0; i < nvariables; ++i)
-            {
-                m_fields[i]->FwdTrans(inarray[i], coeffs);
-                m_fields[i]->BwdTrans_IterPerExp(coeffs, outarray[i]);
-            }
-            break;
-        }
-        default:
-        {
-            ASSERTL0(false, "Unknown projection scheme");
-            break;
-        }
+    for(i = 0; i < nvariables; ++i)
+    {
+        m_fields[i]->FwdTrans(inarray[i], coeffs);
+        m_fields[i]->BwdTrans_IterPerExp(coeffs, outarray[i]);
     }
 }
 

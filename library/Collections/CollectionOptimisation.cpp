@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <Collections/CollectionOptimisation.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 
@@ -318,6 +320,8 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
         OperatorImpMap &impTypes,
         bool verbose )
 {
+    boost::ignore_unused(impTypes);
+
     OperatorImpMap ret;
 
     StdRegions::StdExpansionSharedPtr pExp = pCollExp[0];

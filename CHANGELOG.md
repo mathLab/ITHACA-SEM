@@ -190,6 +190,9 @@ v5.0.0
 **Tester**
 - Fix build with boost 1.67 (!947)
 
+**Packaging:**
+- Add Dockerfiles and gitlab CI configuration for automatic builds (!1021)
+
 v4.4.2
 ------
 **Library**

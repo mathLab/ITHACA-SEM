@@ -275,6 +275,7 @@ namespace Nektar
             bool      doCheckTime   = false;
             int       step          = m_initialStep;
             int       stepCounter   = 0;
+            int       restartStep   = -1;
             NekDouble intTime       = 0.0;
             NekDouble lastCheckTime = 0.0;
             NekDouble cpuTime       = 0.0;
@@ -282,14 +283,48 @@ namespace Nektar
 
             NekDouble tmp_cflSafetyFactor = m_cflSafetyFactor;
             m_CalcuPrecMatCounter = m_PrcdMatFreezNumb;
+            bool flagFreezeCFL = false;
 
             m_timestepMax = m_timestep;
             while (step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol)
             {
-                if(m_CFLGrowth > 1.0&&m_cflSafetyFactor<m_CFLEnd)
+                restartStep++;
+
+                // cout    <<" m_TotLinItePerStep= "<<m_TotLinItePerStep
+                //         <<" m_StagesPerStep= "<<m_StagesPerStep
+                //         <<" m_maxLinItePerNewton= "<<m_maxLinItePerNewton<<endl;
+                if(m_CFLEnd>tmp_cflSafetyFactor)
                 {
-                    tmp_cflSafetyFactor = min(m_CFLEnd,m_CFLGrowth*tmp_cflSafetyFactor);
+                    if(NekDouble(m_TotLinItePerStep)/NekDouble(m_StagesPerStep)>0.5*NekDouble(m_maxLinItePerNewton))
+                    {
+                        // cout <<"WARNINGL1(false,tmp_cflSafetyFactor *= 0.9; );"<<endl;
+                        
+                        tmp_cflSafetyFactor = 0.9*tmp_cflSafetyFactor;
+                        flagFreezeCFL = true;
+                        WARNINGL1(false," tmp_cflSafetyFactor *= 0.9; ");
+                    }
+                    else if(flagFreezeCFL)
+                    {
+                        flagFreezeCFL = false;
+                    }
+                    else
+                    {
+                        if (m_steadyStateTol > 0.0 && (!((step+1)%m_steadyStateSteps)) )
+                        {
+                            if(restartStep>1)
+                            {
+                                tmp_cflSafetyFactor = min(m_CFLEnd,std::pow(m_steadyStateRes0/m_steadyStateRes,0.7)*tmp_cflSafetyFactor);
+                            }
+                        }
+                        else
+                        {
+                            if(m_CFLGrowth > 1.0&&m_cflSafetyFactor<m_CFLEnd)
+                            {
+                                tmp_cflSafetyFactor = min(m_CFLEnd,m_CFLGrowth*tmp_cflSafetyFactor);
+                            }
+                        }
+                    }
                 }
 
                 if(   (m_CalcuPrecMatCounter>=m_PrcdMatFreezNumb)
@@ -349,6 +384,9 @@ namespace Nektar
                 {
                     break;
                 }
+
+                m_StagesPerStep = 0;
+                m_TotLinItePerStep = 0;
 
                 fields = m_intScheme->TimeIntegrate(
                     stepCounter, m_timestep, m_intSoln, m_ode);
@@ -765,20 +803,17 @@ namespace Nektar
                 if (m_comm->GetRank() == 0)
                 {
                     std::string fName = m_session->GetSessionName() +
-                        std::string(".res");
+                        std::string(".resd");
                     m_errFile.open(fName.c_str());
                     m_errFile << setw(26) << left << "# Time";
 
                     m_errFile << setw(26) << left << "CPU_Time";
 
-                    for (int i = 0; i < m_fields.num_elements(); ++i)
-                    {
-                        m_errFile << setw(26) << m_session->GetVariables()[i];
-                    }
+                    m_errFile << setw(26) << left << "Step";
 
                     for (int i = 0; i < m_fields.num_elements(); ++i)
                     {
-                        m_errFile << setw(26) << (std::string("RHS_")+m_session->GetVariables()[i]);
+                        m_errFile << setw(26) << m_session->GetVariables()[i];
                     }
 
                     m_errFile << endl;
@@ -802,6 +837,63 @@ namespace Nektar
 
             // Holds L2 errors.
             Array<OneD, NekDouble> L2       (nFields);
+
+            SteadyStateResidual(step, L2);
+
+            if (m_comm->GetRank() == 0 && ( ((step+1) % m_infosteps == 0)||((step== m_initialStep)) ))
+            {
+                // Output time
+                m_errFile << boost::format("%25.19e") % m_time;
+
+                m_errFile << " "<< boost::format("%25.19e") % totCPUTime;
+
+                int stepp = step +1;
+
+                m_errFile << " "<< boost::format("%25.19e") % stepp;
+
+                // Output residuals
+                for (int i = 0; i < nFields; ++i)
+                {
+                    m_errFile << " " << boost::format("%25.19e") % L2[i];
+                }
+
+                m_errFile << endl;
+            }
+
+            // Calculate maximum L2 error
+            NekDouble maxL2 = Vmath::Vmax(nFields, L2, 1);
+
+            if (m_session->DefinesCmdLineArgument("verbose") &&
+                m_comm->GetRank() == 0 && ((step+1) % m_infosteps == 0))
+            {
+                cout << "-- Maximum L^2 residual: " << maxL2 << endl;
+            }
+
+            if (maxL2 <= m_steadyStateTol)
+            {
+                return true;
+            }
+
+            for (int i = 0; i < m_fields.num_elements(); ++i)
+            {
+                Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1,
+                                      m_previousSolution[i], 1);
+            }
+
+            m_steadyStateRes0 = m_steadyStateRes;
+            m_steadyStateRes = maxL2;
+
+            return false;
+        }
+
+        void UnsteadySystem::v_SteadyStateResidual(
+            int                         step, 
+            Array<OneD, NekDouble>      &L2)
+        {
+            const int nPoints = GetTotPoints();
+            const int nFields = m_fields.num_elements();
+
+            // Holds L2 errors.
             Array<OneD, NekDouble> RHSL2    (nFields);
             Array<OneD, NekDouble> residual (nFields);
             Array<OneD, NekDouble> reference(nFields);
@@ -823,59 +915,12 @@ namespace Nektar
             m_comm->AllReduce(residual , LibUtilities::ReduceSum);
             m_comm->AllReduce(reference, LibUtilities::ReduceSum);
 
-            NekDouble otimestep =   1.0/m_timestep;
             // L2 error
             for (int i = 0; i < nFields; ++i)
             {
                 reference[i] = (reference[i] == 0) ? 1 : reference[i];
                 L2[i] = sqrt(residual[i] / reference[i]);
-                RHSL2[i] = L2[i]*otimestep;
             }
-
-            if (m_comm->GetRank() == 0 && ((step+1) % m_infosteps == 0))
-            {
-                // Output time
-                m_errFile << boost::format("%25.19e") % m_time;
-
-                m_errFile << " "<< boost::format("%25.19e") % totCPUTime;
-
-                // Output residuals
-                for (int i = 0; i < nFields; ++i)
-                {
-                    m_errFile << " " << boost::format("%25.19e") % L2[i];
-                }
-
-                // Output residuals
-                for (int i = 0; i < nFields; ++i)
-                {
-                    m_errFile << " " << boost::format("%25.19e") % RHSL2[i];
-                }
-
-                m_errFile << endl;
-            }
-
-            // Calculate maximum L2 error
-            NekDouble maxL2 = Vmath::Vmax(nFields, L2, 1);
-
-            if (m_session->DefinesCmdLineArgument("verbose") &&
-                m_comm->GetRank() == 0 && ((step+1) % m_infosteps == 0))
-            {
-                cout << "-- Maximum L^2 residual: " << maxL2
-                     << " RHSL^2 res: " << maxL2*otimestep << endl;
-            }
-
-            if (maxL2 <= m_steadyStateTol)
-            {
-                return true;
-            }
-
-            for (int i = 0; i < m_fields.num_elements(); ++i)
-            {
-                Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1,
-                                      m_previousSolution[i], 1);
-            }
-
-            return false;
         }
     }
 }

@@ -55,6 +55,13 @@ namespace Nektar
             SOLVER_UTILS_EXPORT NekDouble GetTimeStep(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 
+            SOLVER_UTILS_EXPORT void SteadyStateResidual(
+                int                         step, 
+                Array<OneD, NekDouble>      &L2)
+            {
+                v_SteadyStateResidual(step,L2);
+            }
+
             /// CFL safety factor (comprise between 0 to 1)(may be larger than 1 for implicit solvers).
             NekDouble m_cflSafetyFactor;
             NekDouble m_cflNonAcoustic;
@@ -91,6 +98,10 @@ namespace Nektar
             NekDouble                                       m_steadyStateTol;
             /// Check for steady state at step interval
             int                                             m_steadyStateSteps;
+
+            NekDouble                                       m_steadyStateRes    =1.0;
+            NekDouble                                       m_steadyStateRes0   =1.0;
+
             /// Storage for previous solution for steady-state check
             Array<OneD, Array<OneD, NekDouble> >            m_previousSolution;
             // Steady-state residual file
@@ -139,7 +150,10 @@ namespace Nektar
             bool m_CalcuPrecMatFlag     = true;
             int  m_CalcuPrecMatCounter  = std::numeric_limits<int>::max();
 
-            int m_TotLinItePerStep=600;
+            int m_TotLinItePerStep=0;
+            int m_StagesPerStep=1;
+
+            int m_maxLinItePerNewton;
 
 #endif
             /// Initialises UnsteadySystem class members.
@@ -176,6 +190,10 @@ namespace Nektar
             {
                 return true;
             }
+
+            SOLVER_UTILS_EXPORT virtual void v_SteadyStateResidual(
+                int                         step, 
+                Array<OneD, NekDouble>      &L2);
 
             SOLVER_UTILS_EXPORT void CheckForRestartTime(NekDouble &time, int &nchk);
 

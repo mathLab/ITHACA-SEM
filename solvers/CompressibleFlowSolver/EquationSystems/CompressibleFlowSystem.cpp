@@ -142,6 +142,8 @@ namespace Nektar
             //TODO: NekLinSysIterative as a member to avoid repeted initialization
             LibUtilities::CommSharedPtr v_Comm  = m_fields[0]->GetComm()->GetRowComm();
             m_linsol    = MemoryManager<NekLinSysIterative>::AllocateSharedPtr(m_session,v_Comm); 
+
+            m_maxLinItePerNewton = m_linsol->GetMaxLinIte()*m_MaxNonlinIte+m_MaxNonlinIte;
             // m_linsol    =   NekLinSysIterative(m_session,v_Comm);
             // m_LinSysOprtors.DefineMatrixMultiply(&CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff, this);
             m_LinSysOprtors.DefineMatrixMultiply(&CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff_dualtimestep, this);
@@ -1793,6 +1795,11 @@ namespace Nektar
         }
 
         m_TotLinItePerStep += NtotDoOdeRHS;
+        m_StagesPerStep++;
+        if(!converged)
+        {
+            m_TotLinItePerStep +=   m_maxLinItePerNewton*100;
+        }
 
         /// TODO: disconnect these from other arrays to avoid memory cannot release.
         // m_TimeIntegtSol_k   =   nullptr;
@@ -1801,6 +1808,7 @@ namespace Nektar
         // ASSERTL0(converged,"Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
         if((l_verbose||(!converged))&&l_root)
         {
+            
             WARNINGL0(converged,"     # Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
             cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
                 <<"     * Newton-Its converged (RES=" 
@@ -3559,6 +3567,45 @@ namespace Nektar
     {
         ASSERTL0(false, "v_GetViscousSymmtrFluxConservVar not coded");
     }
+    
+    void CompressibleFlowSystem::v_SteadyStateResidual(
+                int                         step, 
+                Array<OneD, NekDouble>      &L2)
+    {
+        const int nPoints = GetTotPoints();
+        const int nFields = m_fields.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > rhs (nFields);
+        Array<OneD, Array<OneD, NekDouble> > inarray (nFields);
+        for (int i = 0; i < nFields; ++i)
+        {
+            rhs[i] =   Array<OneD, NekDouble> (nPoints,0.0);
+            inarray[i] =   m_fields[i]->UpdatePhys();
+        }
+
+        DoOdeRhs(inarray,rhs,m_time);
+
+        // Holds L2 errors.
+        Array<OneD, NekDouble> tmp;
+        Array<OneD, NekDouble> RHSL2    (nFields);
+        Array<OneD, NekDouble> residual(nFields);
+
+        for (int i = 0; i < nFields; ++i)
+        {
+            tmp = rhs[i];
+
+            Vmath::Vmul(nPoints, tmp, 1, tmp, 1, tmp, 1);
+            residual[i] = Vmath::Vsum(nPoints, tmp, 1);
+        }
+
+        m_comm->AllReduce(residual , LibUtilities::ReduceSum);
+
+        NekDouble onPoints = 1.0/NekDouble(nPoints);
+        for (int i = 0; i < nFields; ++i)
+        {
+            L2[i] = sqrt(residual[i]*onPoints);
+        }
+    }
+
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
     void CompressibleFlowSystem::v_GetFluxDerivJacDirctn(
             const MultiRegions::ExpListSharedPtr                            &explist,
@@ -3610,6 +3657,8 @@ namespace Nektar
     {
         ASSERTL0(false, "not coded");
     }
+
+    
 
 #endif
 

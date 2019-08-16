@@ -531,6 +531,11 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
             Array< OneD, int >                                              &nonZeroIndex,    
             const Array<OneD, Array<OneD, NekDouble> >                      &normals);
+        
+        virtual void v_SteadyStateResidual(
+                int                         step, 
+                Array<OneD, NekDouble>      &L2);
+                
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
         virtual void v_GetDiffusionFluxJacPoint(
             const int                                           nelmt,

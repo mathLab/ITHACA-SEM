@@ -178,6 +178,11 @@ namespace Nektar
             const int nDir,
             const NekDouble  tol    =   1.0E-7,
             const NekDouble  factor =   1.0);
+        
+        int GetMaxLinIte()
+        {
+            return (m_maxrestart*m_maxstorage);
+        }
      
  protected:
         /// Global to universal unique map

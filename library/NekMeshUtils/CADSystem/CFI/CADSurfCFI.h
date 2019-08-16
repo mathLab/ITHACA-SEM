@@ -65,6 +65,9 @@ public:
 
     Array<OneD, NekDouble> GetBounds();
 
+    virtual void GetBounds(NekDouble &umin, NekDouble &umax, NekDouble &vmin,
+                           NekDouble &vmax);
+
     Array<OneD, NekDouble> N(Array<OneD, NekDouble> uv);
 
     Array<OneD, NekDouble> D1(Array<OneD, NekDouble> uv);
@@ -73,7 +76,9 @@ public:
 
     Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv);
 
-    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p,  NekDouble &dist);
+    void P(Array<OneD, NekDouble> uv, NekDouble &x, NekDouble &y, NekDouble &z);
+
+    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p, NekDouble &dist);
 
     NekDouble Curvature(Array<OneD, NekDouble> uv);
 

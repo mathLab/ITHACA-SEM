@@ -66,9 +66,8 @@ void NodeOpti1D3D::Optimise()
         NekDouble yc = m_node->m_y;
         NekDouble zc = m_node->m_z;
         NekDouble nt;
-        Array<OneD, NekDouble> p;
 
-        Array<OneD, NekDouble> sk(1);
+        vector<NekDouble> sk(1);
 
         if (m_grad[1] < 1e-6)
         {
@@ -77,7 +76,8 @@ void NodeOpti1D3D::Optimise()
 
         sk[0] = m_grad[0] / m_grad[1] * -1.0;
 
-        Array<OneD, NekDouble> bd = curve->GetBounds();
+        vector<NekDouble> bd(2);
+        curve->GetBounds(bd[0], bd[1]);
 
         bool found = false;
 
@@ -96,10 +96,7 @@ void NodeOpti1D3D::Optimise()
                 continue;
             }
 
-            p           = curve->P(nt);
-            m_node->m_x = p[0];
-            m_node->m_y = p[1];
-            m_node->m_z = p[2];
+            curve->P(nt, m_node->m_x, m_node->m_y, m_node->m_z);
 
             newVal = GetFunctional<3>(minJacNew, false);
 
@@ -116,11 +113,8 @@ void NodeOpti1D3D::Optimise()
         if (!found)
         {
             // reset the node
-            nt          = tc;
-            p           = curve->P(nt);
-            m_node->m_x = p[0];
-            m_node->m_y = p[1];
-            m_node->m_z = p[2];
+            nt = tc;
+            curve->P(nt, m_node->m_x, m_node->m_y, m_node->m_z);
 
             mtx.lock();
             m_res->nReset[0]++;
@@ -129,7 +123,8 @@ void NodeOpti1D3D::Optimise()
         else
         {
             m_minJac = minJacNew;
-            m_node->Move(p, curve->GetId(), nt);
+            m_node->Move(m_node->m_x, m_node->m_y, m_node->m_z, curve->GetId(),
+                         nt);
         }
         mtx.lock();
         m_res->val = max(sqrt((m_node->m_x - xc) * (m_node->m_x - xc) +
@@ -165,10 +160,10 @@ void NodeOpti2D3D::Optimise()
         NekDouble yc = m_node->m_y;
         NekDouble zc = m_node->m_z;
         Array<OneD, NekDouble> uvt(2);
-        Array<OneD, NekDouble> p;
-        Array<OneD, NekDouble> bd = surf->GetBounds();
+        vector<NekDouble> bd(4);
+        surf->GetBounds(bd[0], bd[1], bd[2], bd[3]);
 
-        Array<OneD, NekDouble> sk(2);
+        vector<NekDouble> sk(2);
         NekDouble val;
 
         // Calculate minimum eigenvalue
@@ -203,10 +198,7 @@ void NodeOpti2D3D::Optimise()
                 continue;
             }
 
-            p           = surf->P(uvt);
-            m_node->m_x = p[0];
-            m_node->m_y = p[1];
-            m_node->m_z = p[2];
+            surf->P(uvt, m_node->m_x, m_node->m_y, m_node->m_z);
 
             newVal = GetFunctional<3>(minJacNew, false);
 
@@ -223,10 +215,7 @@ void NodeOpti2D3D::Optimise()
         if (!found)
         {
             // reset the node
-            p           = surf->P(uvc);
-            m_node->m_x = p[0];
-            m_node->m_y = p[1];
-            m_node->m_z = p[2];
+            surf->P(uvc, m_node->m_x, m_node->m_y, m_node->m_z);
 
             mtx.lock();
             m_res->nReset[1]++;
@@ -235,7 +224,8 @@ void NodeOpti2D3D::Optimise()
         else
         {
             m_minJac = minJacNew;
-            m_node->Move(p, surf->GetId(), uvt);
+            m_node->Move(m_node->m_x, m_node->m_y, m_node->m_z, surf->GetId(),
+                         uvt);
         }
 
         mtx.lock();
@@ -261,9 +251,9 @@ void NodeOpti2D3D::Optimise()
 
 void NodeOpti1D3D::ProcessGradient()
 {
-    NekDouble tc = m_node->GetCADCurveInfo(curve->GetId());
-    Array<OneD, NekDouble> grad = m_grad;
-    m_grad = Array<OneD, NekDouble>(2, 0.0);
+    NekDouble tc           = m_node->GetCADCurveInfo(curve->GetId());
+    vector<NekDouble> grad = m_grad;
+    m_grad                 = vector<NekDouble>(2, 0.0);
 
     // Grab first and second order CAD derivatives
     Array<OneD, NekDouble> d2 = curve->D2(tc);
@@ -283,8 +273,8 @@ void NodeOpti2D3D::ProcessGradient()
 {
     Array<OneD, NekDouble> uvc = m_node->GetCADSurfInfo(surf->GetId());
 
-    Array<OneD, NekDouble> grad = m_grad;
-    m_grad = Array<OneD, NekDouble>(5, 0.0);
+    vector<NekDouble> grad = m_grad;
+    m_grad                 = vector<NekDouble>(5, 0.0);
 
     Array<OneD, NekDouble> d2 = surf->D2(uvc);
     // r[0]   x

@@ -136,9 +136,9 @@ IF(NEKTAR_USE_MESHGEN)
     ADD_NEKTAR_TEST(MeshGen/extrusion)
     ADD_NEKTAR_TEST(MeshGen/rev LENGTHY)
 
-    IF(NEKTAR_USE_CCM)              
+    IF(NEKTAR_USE_CCM)
         ADD_NEKTAR_TEST(StarCCM/Ahmed_body)
-    ENDIF() 
+    ENDIF()
 ENDIF()
 
 IF (NEKTAR_USE_HDF5)
@@ -147,3 +147,4 @@ ENDIF()
 
 # varopti tests
 ADD_NEKTAR_TEST(MeshGen/varopti_cubesphere LENGTHY)
+ADD_NEKTAR_TEST(Gmsh/Naca0012_VarOpti)

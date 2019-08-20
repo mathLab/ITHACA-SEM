@@ -46,11 +46,6 @@ using namespace Nektar::LocalRegions;
 using namespace Nektar::SpatialDomains;
 using namespace Nektar::MultiRegions;
 
-int ExpList_GetNcoeffs(ExpListSharedPtr exp)
-{
-    return exp->GetNcoeffs();
-}
-
 ExpansionSharedPtr ExpList_GetExp(ExpListSharedPtr exp, int i)
 {
     return exp->GetExp(i);
@@ -92,6 +87,15 @@ Array<OneD, NekDouble> ExpList_IProductWRTBase(
 {
     Array<OneD, NekDouble> out(exp->GetNcoeffs());
     exp->IProductWRTBase(in, out);
+    return out;
+}
+
+Array<OneD, NekDouble> ExpList_MultiplyByInvMassMatrix(
+    ExpListSharedPtr exp,
+    const Array<OneD, const NekDouble> &in)
+{
+    Array<OneD, NekDouble> out(exp->GetNcoeffs(), 0.0);
+    exp->MultiplyByInvMassMatrix(in, out, eLocal);
     return out;
 }
 
@@ -225,29 +229,42 @@ void ExpList_ResetManagers(ExpListSharedPtr exp)
 
 void export_ExpList()
 {
+    int (ExpList::*GetNcoeffs)() const = &ExpList::GetNcoeffs;
+
     py::class_<ExpList,
                std::shared_ptr<ExpList>,
                boost::noncopyable>(
                    "ExpList", py::no_init)
 
-        .def("GetNpoints", &ExpList::GetNpoints)
-        .def("GetNcoeffs", &ExpList_GetNcoeffs)
-        .def("GetExp", &ExpList_GetExp)
+        // Expansions
+        .def("GetExp", ExpList_GetExp)
         .def("GetExpSize", &ExpList::GetExpSize)
-        .def("WriteVTK", &ExpList_WriteVTK)
+
+        // Query points and offset information
+        .def("GetNpoints", &ExpList::GetNpoints)
+        .def("GetNcoeffs", GetNcoeffs)
         .def("GetCoords", &ExpList_GetCoords)
+        .def("GetPhys_Offset", &ExpList::GetPhys_Offset)
+        .def("GetCoeff_Offset", &ExpList::GetCoeff_Offset)
+
+        // Operators
         .def("FwdTrans", &ExpList_FwdTrans)
         .def("BwdTrans", &ExpList_BwdTrans)
         .def("IProductWRTBase", &ExpList_IProductWRTBase)
+        .def("MultiplyByInvMassMatrix", &ExpList_MultiplyByInvMassMatrix)
         .def("HelmSolve", &ExpList_HelmSolve, (
                  py::arg("in"),
                  py::arg("constFactorMap") = py::object(),
                  py::arg("varCoeffMap") = py::object()
                  ))
+
+        // Error norms
         .def("L2", &ExpList_L2)
         .def("L2", &ExpList_L2_Error)
         .def("Linf", &ExpList_Linf)
         .def("Linf", &ExpList_Linf_Error)
+
+        // Storage setups
         .def("SetPhysArray", &ExpList_SetPhysArray)
         .def("SetPhys", &ExpList_SetPhys)
         .def("GetPhys", &ExpList_GetPhys)
@@ -255,6 +272,9 @@ void export_ExpList()
         .def("GetPhysState", &ExpList::GetPhysState)
         .def("PhysIntegral", &ExpList_PhysIntegral)
         .def("GetPhysAddress", &ExpList_GetPhysAddress)
+
+        // Misc functions
+        .def("WriteVTK", &ExpList_WriteVTK)
         .def("ResetManagers", &ExpList_ResetManagers)
         ;
 }

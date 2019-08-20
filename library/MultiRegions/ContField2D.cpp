@@ -317,6 +317,7 @@ namespace Nektar
             }
             else
             {
+                std::cout << "lol" << std::endl;
                 Array<OneD, NekDouble> globaltmp(contNcoeffs,0.0);
 
                 if(inarray.data() == outarray.data())

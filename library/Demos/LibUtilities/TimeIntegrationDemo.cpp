@@ -275,15 +275,15 @@ int main( int argc, char *argv[] )
 
     switch( nMethod )
     {
-    case 1 : tiScheme = factory.CreateInstance( eIMEXOrder1 );     break;
-    case 2 : tiScheme = factory.CreateInstance( eIMEXOrder2 );     break;
-    case 3 : tiScheme = factory.CreateInstance( eIMEXOrder3 );     break;
-    case 4 : tiScheme = factory.CreateInstance( eIMEXOrder4 );     break;
-    case 5 : tiScheme = factory.CreateInstance( eIMEXdirk_2_3_2 ); break;
-    case 6 : tiScheme = factory.CreateInstance( eIMEXdirk_3_4_3 ); break;
-    case 7 : tiScheme = factory.CreateInstance( eIMEXGear );       break;
-    case 8 : tiScheme = factory.CreateInstance( eCNAB );           break;
-    case 9 : tiScheme = factory.CreateInstance( eMCNAB );          break;
+    case 1 : tiScheme = factory.CreateInstance( "IMEXOrder1" );     break;
+    case 2 : tiScheme = factory.CreateInstance( "IMEXOrder2" );     break;
+    case 3 : tiScheme = factory.CreateInstance( "IMEXOrder3" );     break;
+    case 4 : tiScheme = factory.CreateInstance( "IMEXOrder4" );     break;
+    case 5 : tiScheme = factory.CreateInstance( "IMEXdirk_2_3_2" ); break;
+    case 6 : tiScheme = factory.CreateInstance( "IMEXdirk_3_4_3" ); break;
+    case 7 : tiScheme = factory.CreateInstance( "IMEXGear" );       break;
+    case 8 : tiScheme = factory.CreateInstance( "CNAB" );           break;
+    case 9 : tiScheme = factory.CreateInstance( "MCNAB" );          break;
     default :
       {
         cerr << "The third argument defines the time-integration method to be used:\n\n";

@@ -102,8 +102,7 @@ namespace Nektar
                     vSubStepIntScheme = m_session->GetSolverInfo( "SubStepIntScheme" );
                 }
 
-                LibUtilities::TimeIntegrationMethod method = LibUtilities::TimeIntegrationScheme::methodFromName( vSubStepIntScheme );
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( method );
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( vSubStepIntScheme );
 
                 int nvel = m_velocity.num_elements();
 
@@ -127,8 +126,7 @@ namespace Nektar
                     vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
                 }
 
-                LibUtilities::TimeIntegrationMethod method = LibUtilities::TimeIntegrationScheme::methodFromName( vSubStepIntScheme );
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( method );
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( vSubStepIntScheme );
 
                 int nvel = m_velocity.num_elements();
 

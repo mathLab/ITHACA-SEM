@@ -259,40 +259,24 @@ SET(PolylibSources
 )
 
 SET(TimeIntegrationHeaders
-        ./TimeIntegration/AdamsBashforthOrder2TimeIntegrationScheme.h
-        ./TimeIntegration/AdamsBashforthOrder3TimeIntegrationScheme.h
-        ./TimeIntegration/AdamsMoultonOrder1TimeIntegrationScheme.h
-        ./TimeIntegration/AdamsMoultonOrder2TimeIntegrationScheme.h
-        ./TimeIntegration/BDFImplicitOrder1TimeIntegrationScheme.h
-        ./TimeIntegration/BDFImplicitOrder2TimeIntegrationScheme.h
-        ./TimeIntegration/BackwardEulerTimeIntegrationScheme.h
+        ./TimeIntegration/AdamsBashforthTimeIntegrationSchemes.h
+        ./TimeIntegration/AdamsMoultonTimeIntegrationSchemes.h
+        ./TimeIntegration/BDFImplicitTimeIntegrationSchemes.h
+        ./TimeIntegration/EulerTimeIntegrationSchemes.h
         ./TimeIntegration/CNABTimeIntegrationScheme.h
-        ./TimeIntegration/ClassicalRungeKutta4TimeIntegrationScheme.h
-        ./TimeIntegration/DIRKOrder2TimeIntegrationScheme.h
-        ./TimeIntegration/DIRKOrder3TimeIntegrationScheme.h
-        ./TimeIntegration/ForwardEulerTimeIntegrationScheme.h
+        ./TimeIntegration/DIRKTimeIntegrationSchemes.h
         ./TimeIntegration/IMEXGearTimeIntegrationScheme.h
-        ./TimeIntegration/IMEXOrder1TimeIntegrationScheme.h
-        ./TimeIntegration/IMEXOrder2TimeIntegrationScheme.h
-        ./TimeIntegration/IMEXOrder3TimeIntegrationScheme.h
-        ./TimeIntegration/IMEXdirk_1_2_1TimeIntegrationScheme.h
-        ./TimeIntegration/IMEXdirk_1_2_2TimeIntegrationScheme.h
-        ./TimeIntegration/IMEXdirk_2_2_2TimeIntegrationScheme.h
-        ./TimeIntegration/IMEXdirk_2_3_2TimeIntegrationScheme.h
-        ./TimeIntegration/IMEXdirk_2_3_3TimeIntegrationScheme.h
-        ./TimeIntegration/IMEXdirk_3_4_3TimeIntegrationScheme.h
-        ./TimeIntegration/IMEXdirk_4_4_3TimeIntegrationScheme.h
+        ./TimeIntegration/IMEXTimeIntegrationSchemes.h
+        ./TimeIntegration/IMEXdirkTimeIntegrationSchemes.h
         ./TimeIntegration/MCNABTimeIntegrationScheme.h
-        ./TimeIntegration/RungeKutta2TimeIntegrationScheme.h
-        ./TimeIntegration/RungeKutta2_ImprovedEulerTimeIntegrationScheme.h
-        ./TimeIntegration/RungeKutta2_SSPTimeIntegrationScheme.h
-        ./TimeIntegration/RungeKutta3_SSPTimeIntegrationScheme.h
+        ./TimeIntegration/RungeKuttaTimeIntegrationSchemes.h
         ./TimeIntegration/TimeIntegrationScheme.h
         ./TimeIntegration/TimeIntegrationSchemeData.h
         ./TimeIntegration/TimeIntegrationSolution.h
 )
 
 SET(TimeIntegrationSources
+        ./TimeIntegration/SchemeInitializor.cpp
         ./TimeIntegration/TimeIntegrationScheme.cpp
         ./TimeIntegration/TimeIntegrationSchemeData.cpp
         ./TimeIntegration/TimeIntegrationSolution.cpp

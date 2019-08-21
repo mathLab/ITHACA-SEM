@@ -39,38 +39,6 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
 
-#include <LibUtilities/TimeIntegration/AdamsBashforthOrder2TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/AdamsBashforthOrder3TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/AdamsBashforthOrder4TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/AdamsMoultonOrder1TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/AdamsMoultonOrder2TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/BDFImplicitOrder1TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/BDFImplicitOrder2TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/BackwardEulerTimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/ClassicalRungeKutta4TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/RungeKutta5TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/CNABTimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/DIRKOrder2TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/DIRKOrder3TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/ForwardEulerTimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/IMEXdirk_1_2_1TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/IMEXdirk_1_2_2TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/IMEXdirk_2_2_2TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/IMEXdirk_2_3_2TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/IMEXdirk_2_3_3TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/IMEXdirk_3_4_3TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/IMEXdirk_4_4_3TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/IMEXGearTimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/IMEXOrder1TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/IMEXOrder2TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/IMEXOrder3TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/IMEXOrder4TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/MCNABTimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/RungeKutta2TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/RungeKutta2_ImprovedEulerTimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/RungeKutta2_SSPTimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/RungeKutta3_SSPTimeIntegrationScheme.h>
-
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
 #include <algorithm>
@@ -182,47 +150,22 @@ namespace Nektar
         return instance;
       }
 
-      // FIME: Dd: A "Manager" gives you back a "shared" instance... In theory we want separate versions of each of the data items...
-      //           So the manager should be removed (perhaps replaced with a Factory, but not sure...)
-        // TimeIntegrationSchemeManagerT & GetTimeIntegrationSchemeManager()
-        // {
-        //     static TimeIntegrationSchemeManagerT instance;
-        //     instance.RegisterGlobalCreator( TimeIntegrationScheme::Create );
-        //     return instance;
-        // }
-        
+      std::ostream& operator<<( std::ostream& os, const TimeIntegrationSchemeSharedPtr& rhs )
+      {
+        os << *rhs.get();
+        return os;
+      }
 
-        // bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs)
-        // {
-        //     return (lhs.m_method == rhs.m_method);
-        // }
-        
-        // bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs)
-        // {
-        //     return (lhs.m_method < rhs.m_method);
-        // }
-        
-        // bool TimeIntegrationSchemeKey::opLess::operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const
-        // {
-        //     return (lhs.m_method < rhs.m_method);
-        // }
-
-        std::ostream& operator<<( std::ostream& os, const TimeIntegrationSchemeSharedPtr& rhs )
+      std::ostream& operator<<( std::ostream& os, const TimeIntegrationScheme& rhs )
+      {
+        os << "Time Integration Scheme: " << TimeIntegrationScheme::nameFromMethod( rhs.GetIntegrationMethod() ) << ".\n";
+        os << "        Has " << rhs.m_integration_phases.size() << " phases.\n";
+        for( int i = 0; i < rhs.m_integration_phases.size(); i++ )
         {
-          os << *rhs.get();
-          return os;
+          os << "            - " << TimeIntegrationScheme::nameFromMethod( rhs.m_integration_phases[i]->GetIntegrationMethod() ) << "\n";
         }
-
-        std::ostream& operator<<( std::ostream& os, const TimeIntegrationScheme& rhs )
-        {
-          os << "Time Integration Scheme: " << TimeIntegrationScheme::nameFromMethod( rhs.GetIntegrationMethod() ) << ".\n";
-          os << "        Has " << rhs.m_integration_phases.size() << " phases.\n";
-          for( int i = 0; i < rhs.m_integration_phases.size(); i++ )
-          {
-            os << "            - " << TimeIntegrationScheme::nameFromMethod( rhs.m_integration_phases[i]->GetIntegrationMethod() ) << "\n";
-          }
-          return os;
-        }
+        return os;
+      }
 
       TimeIntegrationScheme::ConstDoubleArray &
       TimeIntegrationScheme::TimeIntegrate( const int                                timestep,
@@ -244,45 +187,6 @@ namespace Nektar
       {
         return m_integration_phases.back()->InitializeData( deltaT, y_0, time, op );
       }
-
-      // Register all the schemes with the Time Integration Scheme Facatory...
-      //
-#     define REGISTER(x) \
-         TimeIntegrationMethod junk##x = GetTimeIntegrationSchemeFactory().RegisterCreatorFunction( e##x, x##TimeIntegrationScheme::create )
-
-//       string x##TimeIntegrationScheme::className = GetTimeIntegrationSchemeFactory().RegisterCreatorFunction( TimeIntegrationMethodMap[ e##x ], x##TimeIntegrationScheme::create )
-
-      REGISTER( AdamsBashforthOrder2 );
-      REGISTER( AdamsBashforthOrder3 );
-      REGISTER( AdamsBashforthOrder4 );
-      REGISTER( AdamsMoultonOrder1 );
-      REGISTER( AdamsMoultonOrder2 );
-      REGISTER( BDFImplicitOrder1 );
-      REGISTER( BDFImplicitOrder2 );
-      REGISTER( BackwardEuler );
-      REGISTER( ClassicalRungeKutta4 );
-      REGISTER( RungeKutta5 );
-      REGISTER( CNAB );
-      REGISTER( DIRKOrder2 );
-      REGISTER( DIRKOrder3 );
-      REGISTER( ForwardEuler );
-      REGISTER( IMEXdirk_1_2_1 );
-      REGISTER( IMEXdirk_1_2_2 );
-      REGISTER( IMEXdirk_2_2_2 );
-      REGISTER( IMEXdirk_2_3_2 );
-      REGISTER( IMEXdirk_2_3_3 );
-      REGISTER( IMEXdirk_3_4_3 );
-      REGISTER( IMEXdirk_4_4_3 );
-      REGISTER( IMEXGear );
-      REGISTER( IMEXOrder1 );
-      REGISTER( IMEXOrder2 );
-      REGISTER( IMEXOrder3 );
-      REGISTER( IMEXOrder4 );
-      REGISTER( MCNAB );
-      REGISTER( RungeKutta2 );
-      REGISTER( RungeKutta2_ImprovedEuler );
-      REGISTER( RungeKutta2_SSP );
-      REGISTER( RungeKutta3_SSP );
 
     } // end namespace LibUtilities
 } // end namespace NekTar

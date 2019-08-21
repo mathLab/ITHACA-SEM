@@ -117,7 +117,8 @@ namespace Nektar
       // create TimeIntegrators.
 
       /// Datatype of the NekFactory used to instantiate classes derived from the EquationSystem class.
-      typedef NekFactory < TimeIntegrationMethod, TimeIntegrationScheme > TimeIntegrationSchemeFactory;
+      typedef NekFactory < std::string, TimeIntegrationScheme > TimeIntegrationSchemeFactory;
+
 
       // Allows a code to create a TimeIntegrator. Usually used like this:
       //

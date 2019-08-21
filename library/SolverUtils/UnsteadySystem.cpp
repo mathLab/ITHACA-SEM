@@ -102,8 +102,8 @@ namespace Nektar
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
             {
-                LibUtilities::TimeIntegrationMethod method = LibUtilities::TimeIntegrationScheme::methodFromName( m_session->GetSolverInfo( "TIMEINTEGRATIONMETHOD" ) );
-                m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( method );
+                std::string methodName = m_session->GetSolverInfo( "TIMEINTEGRATIONMETHOD" );
+                m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( methodName );
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);

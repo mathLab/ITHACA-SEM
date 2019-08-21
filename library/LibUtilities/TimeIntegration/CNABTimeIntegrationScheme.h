@@ -37,7 +37,7 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
-#include <LibUtilities/TimeIntegration/IMEXdirk_3_4_3TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/IMEXdirkTimeIntegrationSchemes.h>
 
 #include <iostream>
 

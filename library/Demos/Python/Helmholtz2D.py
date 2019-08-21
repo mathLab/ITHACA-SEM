@@ -14,7 +14,7 @@ if len(sys.argv) < 2:
 session = SessionReader.CreateInstance(sys.argv)
 graph = MeshGraph.Read(session)
 
-# See if we're actually running in parallel!
+# Grab the communicator from the SessionReader.
 comm = session.GetComm()
 
 # Override polynomial order and create ContField2D.

@@ -55,13 +55,6 @@ void export_Comm()
     // Export ReduceOperator enum
     NEKPY_WRAP_ENUM(ReduceOperator, ReduceOperatorMap);
 
-    /*
-    void (Comm::*AllReduce_Double)(double &, ReduceOperator) =
-        &Comm::AllReduce<double>;
-    void (Comm::*AllReduce_Int)(int &, ReduceOperator) =
-        &Comm::AllReduce<int>;
-    */
-
     py::class_<Comm, std::shared_ptr<Comm>,
                boost::noncopyable>("Comm", py::no_init)
         .def("GetSize", &Comm::GetSize)

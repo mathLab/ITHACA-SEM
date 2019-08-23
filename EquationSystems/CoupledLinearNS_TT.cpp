@@ -5719,6 +5719,9 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	Eigen::MatrixXd collect_f_bnd( curr_f_bnd.size() , Nmax );
 	Eigen::MatrixXd collect_f_p( curr_f_p.size() , Nmax );
 	Eigen::MatrixXd collect_f_int( curr_f_int.size() , Nmax );
+
+	Array<OneD, NekDouble> collected_qoi = Array<OneD, NekDouble> (Nmax);
+
         for(int i = 0; i < Nmax; ++i)
 	{
 //		cout << "general_param_vector[i][0] " << general_param_vector[i][0] << endl;
@@ -5783,6 +5786,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		if (qoi_dof >= 0)
 		{
 			cout << "converged qoi dof " << snapshot_result_phys_velocity_x_y[1][qoi_dof] << endl;
+			collected_qoi[i] = snapshot_result_phys_velocity_x_y[1][qoi_dof];
 		}
 
 		Eigen::VectorXd trafo_f_bnd = curr_f_bnd;
@@ -5810,6 +5814,22 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		}
 
 	}
+
+	std::stringstream sstm;
+	sstm << "FOM_qoi.txt";
+	std::string LocROM_txt = sstm.str();
+	const char* outname = LocROM_txt.c_str();
+	ofstream myfile (outname);
+	if (myfile.is_open())
+	{
+		for (int i0 = 0; i0 < Nmax; i0++)
+		{
+			myfile << collected_qoi[i0] << "\t";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file"; 	
+
 
 	collect_f_all = Eigen::MatrixXd::Zero( curr_f_bnd.size()+curr_f_p.size()+curr_f_int.size() , Nmax );
 	collect_f_all.block(0,0,collect_f_bnd.rows(),collect_f_bnd.cols()) = collect_f_bnd;
@@ -5871,7 +5891,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	}
     }
 
-    void CoupledLinearNS_TT::run_local_ROM_online(std::set<int> current_cluster)
+    void CoupledLinearNS_TT::run_local_ROM_online(std::set<int> current_cluster, int current_cluster_number)
     {
 	// Question: how to init?
 	// could use all-zero or the cluster-mean
@@ -5906,8 +5926,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		}
 		if (debug_mode)
 		{
-			cout << " online phase current nu " << current_nu << endl;
-			cout << " online phase current w " << w << endl;
+//			cout << " online phase current nu " << current_nu << endl;
+//			cout << " online phase current w " << w << endl;
 		}
 		Set_m_kinvis( current_nu );
 		if (use_Newton)
@@ -5917,6 +5937,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		}
 
 		Eigen::MatrixXd curr_xy_proj = project_onto_basis(cluster_mean_x, cluster_mean_y);
+//		Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
 		Eigen::MatrixXd affine_mat_proj;
 		Eigen::VectorXd affine_vec_proj;
 
@@ -5970,8 +5991,9 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //			cout << "relative_change_error " << relative_change_error << endl;
 			no_iter++;
 		} 
-		while( ((relative_change_error > 1e-11) && (no_iter < 100)) );
-
+		while( ((relative_change_error > 1e-3) && (no_iter < 100)) );
+		if (debug_mode)
+			cout << " no_iterations " << no_iter << endl;
 //		cout << "solve_affine " << solve_affine << endl;
 		Eigen::VectorXd repro_solve_affine = RB * solve_affine;
 		Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
@@ -6002,16 +6024,179 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 		if (debug_mode)
 		{
-			cout << "snapshot_x_collection.num_elements() " << snapshot_x_collection.num_elements() << " snapshot_x_collection[0].num_elements() " << snapshot_x_collection[0].num_elements() << endl;
+//			cout << "snapshot_x_collection.num_elements() " << snapshot_x_collection.num_elements() << " snapshot_x_collection[0].num_elements() " << snapshot_x_collection[0].num_elements() << endl;
 		}
 
 		if (write_ROM_field || (qoi_dof >= 0))
 		{
 			recover_snapshot_data(reconstruct_solution, current_index);
 		}
-
-
+	} // for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+	if (use_fine_grid_VV)
+	{
+		// repeat the evaluation without the accuracy check
+		// fine_general_param_vector is available already
+		// start sweeping 
+		Eigen::MatrixXd collected_qoi = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		int fine_grid_dir0_index = 0;
+		int fine_grid_dir1_index = 0;
+		double locROM_qoi;
+		for (int iter_index = 0; iter_index < fine_grid_dir0*fine_grid_dir1; ++iter_index)
+		{
+			cout << "fine_grid_iter_index " << iter_index << " of max " << fine_grid_dir0*fine_grid_dir1 << endl;
+			int current_index = iter_index;
+			double current_nu;
+			double w;
+			Array<OneD, NekDouble> current_param = fine_general_param_vector[current_index];
+			w = current_param[0];	
+			current_nu = current_param[1];
+			if (debug_mode)
+			{
+//				cout << " VV online phase current nu " << current_nu << endl;
+//				cout << " VV online phase current w " << w << endl;
+			}
+			Set_m_kinvis( current_nu );
+			if (use_Newton)
+			{
+				DoInitialiseAdv(cluster_mean_x, cluster_mean_y);
+			}
+			Eigen::MatrixXd curr_xy_proj = project_onto_basis(cluster_mean_x, cluster_mean_y);
+			Eigen::MatrixXd affine_mat_proj;
+			Eigen::VectorXd affine_vec_proj;
+			affine_mat_proj = gen_affine_mat_proj_2d(current_nu, w);
+			affine_vec_proj = gen_affine_vec_proj_2d(current_nu, w, current_index);
+			Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+			double relative_change_error;
+			int no_iter=0;
+			// now start looping
+			do
+			{
+				// for now only Oseen // otherwise need to do the DoInitialiseAdv(cluster_mean_x, cluster_mean_y);
+				Eigen::VectorXd prev_solve_affine = solve_affine;
+				Eigen::VectorXd repro_solve_affine = RB * solve_affine;
+				Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+				Array<OneD, double> field_x;
+				Array<OneD, double> field_y;
+				recover_snapshot_loop(reconstruct_solution, field_x, field_y);
+				if (use_Newton)
+				{
+					DoInitialiseAdv(field_x, field_y);
+				}
+				curr_xy_proj = project_onto_basis(field_x, field_y);
+				if (parameter_space_dimension == 1)
+				{
+					affine_mat_proj = gen_affine_mat_proj(current_nu);
+					affine_vec_proj = gen_affine_vec_proj(current_nu, current_index);
+				}
+				else if (parameter_space_dimension == 2)
+				{
+					affine_mat_proj = gen_affine_mat_proj_2d(current_nu, w);
+					affine_vec_proj = gen_affine_vec_proj_2d(current_nu, w, current_index);
+				}
+				solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+				relative_change_error = (solve_affine - prev_solve_affine).norm() / prev_solve_affine.norm();
+//				cout << "relative_change_error " << relative_change_error << endl;
+				no_iter++;
+			} 
+			while( ((relative_change_error > 1e-5) && (no_iter < 100)) );
+//			cout << "ROM solve no iters used " << no_iter << endl;
+			Eigen::VectorXd repro_solve_affine = RB * solve_affine;
+			Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+			if (write_ROM_field || (qoi_dof >= 0))
+			{
+				locROM_qoi = recover_snapshot_data(reconstruct_solution, 0);
+			}
+			collected_qoi(fine_grid_dir0_index, fine_grid_dir1_index) = locROM_qoi;
+			fine_grid_dir1_index++;
+			if (fine_grid_dir1_index == fine_grid_dir1)
+			{
+				fine_grid_dir1_index = 0;
+				fine_grid_dir0_index++;
+			}			
+		} // for (int iter_index = 0; iter_index < fine_grid_dir0*fine_grid_dir1; ++iter_index)
+		std::stringstream sstm;
+		sstm << "LocROM_cluster" << current_cluster_number << ".txt";
+		std::string LocROM_txt = sstm.str();
+		const char* outname = LocROM_txt.c_str();
+		ofstream myfile (outname);
+		if (myfile.is_open())
+		{
+			for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+			{
+				for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+				{
+					myfile << std::setprecision(17) << collected_qoi(i0,i1) << "\t";
+				}
+				myfile << "\n";
+			}
+			myfile.close();
+		}
+		else cout << "Unable to open file"; 
 	}
+    }
+
+    void CoupledLinearNS_TT::associate_VV_to_clusters(Array<OneD, std::set<int> > clusters)
+    {
+	// for each VV point identify the next closest cluster snapshot
+	Eigen::MatrixXd VV_cluster_association = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+	int fine_general_param_vector_index = 0;
+	int no_clusters = clusters.num_elements();
+	for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+	{
+		for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+		{
+			// find next snapshot location o_i
+			int general_param_vector_index = find_closest_snapshot_location(fine_general_param_vector[fine_general_param_vector_index], general_param_vector);
+			fine_general_param_vector_index++;
+			// identify cluster in which o_i is
+			for (int j = 0; j < no_clusters; ++j)
+			{
+				if (clusters[j].count(general_param_vector_index) == 1)
+					VV_cluster_association(i0, i1) = j;
+			}
+		}
+	}
+	std::stringstream sstm;
+	sstm << "VV_cluster_association.txt";
+	std::string LocROM_txt = sstm.str();
+	const char* outname = LocROM_txt.c_str();
+	ofstream myfile (outname);
+	if (myfile.is_open())
+	{
+		for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+		{
+			for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+			{
+				myfile << VV_cluster_association(i0,i1) << "\t";
+			}
+			myfile << "\n";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file"; 	
+
+    }
+
+    int CoupledLinearNS_TT::find_closest_snapshot_location(Array<OneD, NekDouble> VV_point, Array<OneD, Array<OneD, NekDouble> > general_param_vector)
+    {
+	double min_distance;
+	double min_distance_index;
+	for (int i = 0; i < general_param_vector.num_elements(); ++i)
+	{
+		// elementary euclidean distances
+		double distance = sqrt( (VV_point[0] - general_param_vector[i][0])*(VV_point[0] - general_param_vector[i][0]) + (VV_point[1] - general_param_vector[i][1])*(VV_point[1] - general_param_vector[i][1]) );
+		if (i == 0)
+		{
+			min_distance = distance;
+			min_distance_index = 0;
+		}
+		else if (distance < min_distance)
+		{
+			min_distance = distance;
+			min_distance_index = i;
+		}
+	}
+	return min_distance_index;
     }
 
     void CoupledLinearNS_TT::online_phase()
@@ -6158,7 +6343,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	field_y = curr_PhysBaseVec_y;
     }
 
-    void CoupledLinearNS_TT::recover_snapshot_data(Eigen::VectorXd reconstruct_solution, int current_index)
+    double CoupledLinearNS_TT::recover_snapshot_data(Eigen::VectorXd reconstruct_solution, int current_index)
     {
 
 	Eigen::VectorXd f_bnd = reconstruct_solution.head(curr_f_bnd.size());
@@ -6223,12 +6408,12 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	if (debug_mode)
 	{
-		cout << "eigen_phys_basis_x.norm() " << eigen_phys_basis_x.norm() << endl;
+	/*	cout << "eigen_phys_basis_x.norm() " << eigen_phys_basis_x.norm() << endl;
 		cout << "eigen_phys_basis_x_snap.norm() " << eigen_phys_basis_x_snap.norm() << endl;
 		cout << "(eigen_phys_basis_x - eigen_phys_basis_x_snap).norm() " << (eigen_phys_basis_x - eigen_phys_basis_x_snap).norm() << endl;
 		cout << "eigen_phys_basis_y.norm() " << eigen_phys_basis_y.norm() << endl;
 		cout << "eigen_phys_basis_y_snap.norm() " << eigen_phys_basis_y_snap.norm() << endl;
-		cout << "(eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() " << (eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() << endl;
+		cout << "(eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() " << (eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() << endl; */
 	}
 
 
@@ -6244,13 +6429,13 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
             variables[i]   = m_boundaryConditions->GetVariable(i);
 	    if (debug_mode)
 	    {
-		    cout << "variables[i] " << variables[i] << endl;
+		//    cout << "variables[i] " << variables[i] << endl;
 	    }
         }
 
 	if (debug_mode)
 	{
-		cout << "m_singleMode " << m_singleMode << endl;	
+	//	cout << "m_singleMode " << m_singleMode << endl;	
 	}
 
 	fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs(), 0.0);  
@@ -6263,8 +6448,9 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	if (qoi_dof >= 0)
 	{
-		cout << "converged qoi dof ROM " << curr_PhysBaseVec_y[qoi_dof] << endl;
+		//cout << "converged qoi dof ROM " << curr_PhysBaseVec_y[qoi_dof] << endl;
 	}
+	return curr_PhysBaseVec_y[qoi_dof];
 
 /*        fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs());  
         // project pressure field to velocity space        
@@ -6396,30 +6582,39 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			std::stringstream sstm;
 			sstm << "param" << i;
 			std::string result = sstm.str();
-		//	const char* rr = result.c_str();
+			// const char* rr = result.c_str();
 		        param_vector[i] = m_session->GetParameter(result);
 	        }
 	}
 	else if (parameter_space_dimension == 2)
 	{
 		general_param_vector = Array<OneD, Array<OneD, NekDouble> > (Nmax);
-		int number_of_snapshots_dir0 = m_session->GetParameter("number_of_snapshots_dir0");
-		int number_of_snapshots_dir1 = m_session->GetParameter("number_of_snapshots_dir1");
-		if (m_session->DefinesParameter("fine_grid_dim1")) 
+		number_of_snapshots_dir0 = m_session->GetParameter("number_of_snapshots_dir0");
+		number_of_snapshots_dir1 = m_session->GetParameter("number_of_snapshots_dir1");
+		if (m_session->DefinesParameter("use_fine_grid_VV")) 
 		{
-			fine_grid_dim1 = m_session->GetParameter("fine_grid_dim1");
+			use_fine_grid_VV = m_session->GetParameter("use_fine_grid_VV");
 		}
 		else
 		{
-			fine_grid_dim1 = 0;
+			use_fine_grid_VV = 0;
 		} 
-		if (m_session->DefinesParameter("fine_grid_dim2")) 
+
+		if (m_session->DefinesParameter("fine_grid_dir0")) 
 		{
-			fine_grid_dim2 = m_session->GetParameter("fine_grid_dim2");
+			fine_grid_dir0 = m_session->GetParameter("fine_grid_dir0");
 		}
 		else
 		{
-			fine_grid_dim2 = 0;
+			fine_grid_dir0 = 0;
+		} 
+		if (m_session->DefinesParameter("fine_grid_dir1")) 
+		{
+			fine_grid_dir1 = m_session->GetParameter("fine_grid_dir1");
+		}
+		else
+		{
+			fine_grid_dir1 = 0;
 		} 
 		Array<OneD, NekDouble> index_vector(parameter_space_dimension, 0.0);
 
@@ -6441,19 +6636,85 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			std::stringstream sstm;
 			sstm << "param" << i0 << "_dir0";
 			std::string result = sstm.str();
-		        
-
+		        if (i0 == 0)
+				start_param_dir0 = m_session->GetParameter(result);
+		        if (i0 == number_of_snapshots_dir0-1)
+				end_param_dir0 = m_session->GetParameter(result);
 			for(int i1 = 0; i1 < number_of_snapshots_dir1; ++i1)
 			{
 				// generate the correct string
 				std::stringstream sstm1;
 				sstm1 << "param" << i1 << "_dir1";
 				std::string result1 = sstm1.str();
+			        if (i1 == 0)
+					start_param_dir1 = m_session->GetParameter(result1);
+			        if (i1 == number_of_snapshots_dir1-1)
+					end_param_dir1 = m_session->GetParameter(result1);
 				general_param_vector[i_all][0] = m_session->GetParameter(result);
 			        general_param_vector[i_all][1] = m_session->GetParameter(result1);
 				i_all = i_all + 1;
 //				general_param_vector[i_all] = Array<OneD, NekDouble> (parameter_space_dimension);
 			}
+		}
+		if (use_fine_grid_VV)
+		{
+		//	cout << "start_param_dir0 " << start_param_dir0 << endl;
+		//	cout << "end_param_dir0 " << end_param_dir0 << endl;
+		//	cout << "start_param_dir1 " << start_param_dir1 << endl;
+		//	cout << "end_param_dir1 " << end_param_dir1 << endl;
+			fine_general_param_vector = Array<OneD, Array<OneD, NekDouble> >(fine_grid_dir0*fine_grid_dir1);
+			for(int i = 0; i < fine_grid_dir0*fine_grid_dir1; ++i)
+			{
+				parameter_point = Array<OneD, NekDouble> (parameter_space_dimension, 0.0);
+				fine_general_param_vector[i] = parameter_point;
+			}
+			int current_index = 0;
+			for (int i1 = 0; i1 < fine_grid_dir0; i1++)
+			{
+				for (int i2 = 0; i2 < fine_grid_dir1; i2++)
+				{
+					double p0 = start_param_dir0 + double(i1)/(fine_grid_dir0-1) * (end_param_dir0 - start_param_dir0);
+					double p1 = start_param_dir1 + double(i2)/(fine_grid_dir1-1) * (end_param_dir1 - start_param_dir1);
+					fine_general_param_vector[current_index][0] = p0;
+					fine_general_param_vector[current_index][1] = p1;
+					current_index++;
+//					cout << "p0 " << p0 << " p1 " << p1 << endl;
+				}
+			}
+			// write to file the VV grid
+//				        std::string outname_txt = m_sessionName + ".txt";
+		        std::string VV_grid_txt = "VV_grid_d1.txt";
+			const char* outname_t = VV_grid_txt.c_str();
+			ofstream myfile_t (outname_t);
+			if (myfile_t.is_open())
+			{
+				for (int i1 = 0; i1 < fine_grid_dir0; i1++)
+				{
+					double p0 = start_param_dir0 + double(i1)/(fine_grid_dir0-1) * (end_param_dir0 - start_param_dir0);
+					myfile_t << std::setprecision(17) << p0 << "\t";
+				}
+       				myfile_t.close();
+			}
+			else cout << "Unable to open file"; 
+		        VV_grid_txt = "VV_grid_d2.txt";
+			const char* outname_t2 = VV_grid_txt.c_str();
+			ofstream myfile_t2 (outname_t2);
+			if (myfile_t2.is_open())
+			{
+				for (int i2 = 0; i2 < fine_grid_dir1; i2++)
+				{
+					double p1 = start_param_dir1 + double(i2)/(fine_grid_dir1-1) * (end_param_dir1 - start_param_dir1);
+					myfile_t2 << std::setprecision(17) << p1 << "\t";
+				}
+       				myfile_t2.close();
+			}
+			else cout << "Unable to open file"; 
+
+
+
+
+
+
 		}
 		int type_para1 = m_session->GetParameter("type_para1");
 //		cout << "type para1 " << type_para1 << endl;
@@ -6550,7 +6811,6 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	}*/
 
 //	cout << Geo_T( 0.2 , 0, 0) << endl;;
-
 	InitObject();
 	if ( load_snapshot_data_from_files )
 	{
@@ -6637,12 +6897,105 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		// Open Q: normalize, and if so with which norm ?
 		// Open Q: use phys / loc / loc_bnd_p_int / glo ?
 		
+
+		if (m_session->DefinesParameter("only_single_cluster")) 
+		{
+			only_single_cluster = m_session->GetParameter("only_single_cluster");	
+		}
+		else
+		{
+			only_single_cluster = 0;
+		}
+
+		if (m_session->DefinesParameter("which_single_cluster")) 
+		{
+			which_single_cluster = m_session->GetParameter("which_single_cluster");	
+		}
+		else
+		{
+			which_single_cluster = -1;
+		}
+
+
 		// Test range:
-		int no_clusters = 3;
+//		int no_clusters = 3;
+		int no_clusters = m_session->GetParameter("no_clusters");
+		use_overlap_p_space = m_session->GetParameter("use_overlap_p_space");
 		double optimal_CVT_energy = -1;
 		Array<OneD, std::set<int> > optimal_clusters(no_clusters);
 		std::srand ( unsigned ( std::time(0) ) );
-		for (int iter = 0; iter < 100; ++iter)
+
+		cout << "ATTENTION: using pre-def clustering!" << endl;
+	// 7er
+/* 58 59 60 61 62 63 64 65 66 67 68 69 70 71
+ 35 38 39 40 41 42 43 44 46 47 48 49 50 51 52 53 54 55 56 57
+ 0 1 2 3 9 10 11 18
+ 7 8 14 15 16 17 22 23 24 25 26 30 31 32 33 34
+ 4 5 6 12 13 21
+ 19 20 27 28 36
+ 29 37 45
+*/
+
+// 8er
+/* 21 29 37 45
+ 0 1 2 9
+ 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71
+ 23 24 25 26 30 31 32 33 34 35 38 39 40 41 42 43 44 46 47 48 49
+ 7 8 14 15 16 17 22
+ 10 11 18 19 20 27
+ 28 36
+ 3 4 5 6 12 13
+*/
+		optimal_clusters[0].insert(21);
+		optimal_clusters[0].insert(29);
+		optimal_clusters[0].insert(37);
+		optimal_clusters[0].insert(45);
+
+		optimal_clusters[1].insert(0);
+		optimal_clusters[1].insert(1);
+		optimal_clusters[1].insert(2);
+		optimal_clusters[1].insert(9);
+
+		for (int i = 50; i <= 71; ++i)
+			optimal_clusters[2].insert(i);
+
+		for (int i = 23; i <= 26; ++i)
+			optimal_clusters[3].insert(i);
+		for (int i = 30; i <= 35; ++i)
+			optimal_clusters[3].insert(i);
+		for (int i = 38; i <= 44; ++i)
+			optimal_clusters[3].insert(i);
+		for (int i = 46; i <= 49; ++i)
+			optimal_clusters[3].insert(i);
+ 
+		optimal_clusters[4].insert(7);
+		optimal_clusters[4].insert(8);
+		optimal_clusters[4].insert(14);
+		optimal_clusters[4].insert(15);
+		optimal_clusters[4].insert(16);
+		optimal_clusters[4].insert(17);
+		optimal_clusters[4].insert(22);
+
+		optimal_clusters[5].insert(10);
+		optimal_clusters[5].insert(11);
+		optimal_clusters[5].insert(18);
+		optimal_clusters[5].insert(19);
+		optimal_clusters[5].insert(20);
+		optimal_clusters[5].insert(27);
+
+		optimal_clusters[6].insert(28);
+		optimal_clusters[6].insert(36);
+
+		optimal_clusters[7].insert(3);
+		optimal_clusters[7].insert(4);
+		optimal_clusters[7].insert(5);
+		optimal_clusters[7].insert(6);
+		optimal_clusters[7].insert(12);
+		optimal_clusters[7].insert(13);
+
+
+//		for (int iter = 0; iter < 100; ++iter)
+		for (int iter = 0; iter < 0; ++iter)
 		{
 			Array<OneD, std::set<int> > clusters(no_clusters);
 			double CVT_energy = 0;
@@ -6668,6 +7021,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		}
 
 		// keep collect_f_all for later to continue regular execution, while a LocROM verification and validation module runs from here first
+		cout << "use_fine_grid_VV " << use_fine_grid_VV << endl;
 		evaluate_local_clusters(optimal_clusters);
 
 	}
@@ -6802,23 +7156,153 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	// determine the local cluster projection space and go through each offline phase
 	int no_clusters = optimal_clusters.num_elements();
 	cout << "no_clusters " << no_clusters << endl;
-	for (int i = 0; i < no_clusters; ++i)
+	if (use_fine_grid_VV)
+		associate_VV_to_clusters(optimal_clusters);
+	//int use_overlap_p_space = 1;
+	Array<OneD, std::set<int> > optimal_clusters_mod = Array<OneD, std::set<int> >(no_clusters);
+	Array<OneD, std::set<int> > optimal_clusters_orig = Array<OneD, std::set<int> >(no_clusters);
+	optimal_clusters_orig = optimal_clusters;
+	if (use_overlap_p_space)
 	{
-		Eigen::MatrixXd local_collect_f_all = Eigen::MatrixXd::Zero( collect_f_all.rows() , optimal_clusters[i].size() );
+		// adjust local clusters accordingly
+		for (int i = 0; i < no_clusters; ++i)
+		{
+			int index_all = 0;
+			for (int j0 = 0; j0 < number_of_snapshots_dir0; ++j0)
+			{
+				for (int j1 = 0; j1 < number_of_snapshots_dir1; ++j1)
+				{
+					// is it a neighbour of cluster i?
+					if (!optimal_clusters[i].count(index_all))
+					{
+						int is_neigh = 0;
+						int neigh0;
+						if (j1 > 0)
+						{
+							neigh0 = j1-1 + number_of_snapshots_dir1*j0;
+							//cout << "neigh0 " << neigh0 << endl;
+							if (optimal_clusters[i].count(neigh0))
+								is_neigh = 1;
+						}
+						if (j1 < number_of_snapshots_dir1-1)
+						{
+							neigh0 = j1+1 + number_of_snapshots_dir1*j0;
+							//cout << "neigh0 " << neigh0 << endl;
+							if (optimal_clusters[i].count(neigh0))
+								is_neigh = 1;
+						}
+						if (j0 > 0)
+						{
+							neigh0 = j1 + number_of_snapshots_dir1*(j0-1);
+							//cout << "neigh0 " << neigh0 << endl;
+							if (optimal_clusters[i].count(neigh0))
+								is_neigh = 1;
+						}
+						if (j0 < number_of_snapshots_dir0-1)
+						{
+							neigh0 = j1 + number_of_snapshots_dir1*(j0+1);
+							//cout << "neigh0 " << neigh0 << endl;
+							if (optimal_clusters[i].count(neigh0))
+								is_neigh = 1;
+						}
+						if (is_neigh)
+						{
+							optimal_clusters_mod[i].insert(index_all);
+							//if (debug_mode)
+							//	cout << " inserting to clust " << i << " the index " << index_all << endl;
+						}
+					}
+					else
+						optimal_clusters_mod[i].insert(index_all);
+					index_all++;
+				}
+			}
+		}
+		optimal_clusters = optimal_clusters_mod;
+		if (debug_mode)
+		{
+			cout << "optimal final clustering after possible transition regions " << endl;
+			for (int i = 0; i < no_clusters; ++i)
+			{
+				for (std::set<int>::iterator it=optimal_clusters[i].begin(); it!=optimal_clusters[i].end(); ++it)
+				{
+					std::cout << ' ' << *it;
+				}
+				cout << endl;
+			}
+		}
+	} // if (use_overlap_p_space)
+//	for (int i = 0; i < no_clusters; ++i)
+	if (only_single_cluster)
+	{
+	for (int i = which_single_cluster; i < which_single_cluster+1; ++i)
+	{
+
+		Eigen::MatrixXd local_collect_f_all_orig = Eigen::MatrixXd::Zero( collect_f_all.rows() , optimal_clusters_orig[i].size() );
 		int j = 0;
+		for (std::set<int>::iterator it=optimal_clusters_orig[i].begin(); it!=optimal_clusters_orig[i].end(); ++it)
+		{
+			local_collect_f_all_orig.col(j) = collect_f_all.col(*it);
+			j++;
+		}
+
+//		Eigen::MatrixXd local_collect_f_all = Eigen::MatrixXd::Zero( collect_f_all.rows() , optimal_clusters_orig[i].size() );
+		Eigen::MatrixXd local_collect_f_all_add = Eigen::MatrixXd::Zero( collect_f_all.rows() , optimal_clusters[i].size() - optimal_clusters_orig[i].size() );
+		j = 0;
 		for (std::set<int>::iterator it=optimal_clusters[i].begin(); it!=optimal_clusters[i].end(); ++it)
 		{
-			local_collect_f_all.col(j) = collect_f_all.col(*it);
-			j++;
+			if (!optimal_clusters_orig[i].count(*it))
+			{
+				local_collect_f_all_add.col(j) = collect_f_all.col(*it); 
+				j++;
+			}
 		}
 		for (int j = 0; j < optimal_clusters[i].size(); ++j)
 		{
 //			local_collect_f_all.col(j) = collect_f_all.col(optimal_clusters[i][j]);
 		}
-		run_local_ROM_offline(local_collect_f_all);
-		run_local_ROM_online(optimal_clusters[i]);
+		if (use_overlap_p_space)
+			run_local_ROM_offline_add_transition(local_collect_f_all_orig,local_collect_f_all_add);
+		else
+			run_local_ROM_offline(local_collect_f_all_orig);
+		run_local_ROM_online(optimal_clusters[i], i);
+//		run_local_ROM_online(optimal_clusters_orig[i], i);
 	}
+	}
+	else
+	for (int i = 0; i < no_clusters; ++i)
+	{
 
+		Eigen::MatrixXd local_collect_f_all_orig = Eigen::MatrixXd::Zero( collect_f_all.rows() , optimal_clusters_orig[i].size() );
+		int j = 0;
+		for (std::set<int>::iterator it=optimal_clusters_orig[i].begin(); it!=optimal_clusters_orig[i].end(); ++it)
+		{
+			local_collect_f_all_orig.col(j) = collect_f_all.col(*it);
+			j++;
+		}
+
+//		Eigen::MatrixXd local_collect_f_all = Eigen::MatrixXd::Zero( collect_f_all.rows() , optimal_clusters_orig[i].size() );
+		Eigen::MatrixXd local_collect_f_all_add = Eigen::MatrixXd::Zero( collect_f_all.rows() , optimal_clusters[i].size() - optimal_clusters_orig[i].size() );
+		j = 0;
+		for (std::set<int>::iterator it=optimal_clusters[i].begin(); it!=optimal_clusters[i].end(); ++it)
+		{
+			if (!optimal_clusters_orig[i].count(*it))
+			{
+				local_collect_f_all_add.col(j) = collect_f_all.col(*it); 
+				j++;
+			}
+		}
+		for (int j = 0; j < optimal_clusters[i].size(); ++j)
+		{
+//			local_collect_f_all.col(j) = collect_f_all.col(optimal_clusters[i][j]);
+		}
+		if (use_overlap_p_space)
+			run_local_ROM_offline_add_transition(local_collect_f_all_orig,local_collect_f_all_add);
+		else
+			run_local_ROM_offline(local_collect_f_all_orig);
+		run_local_ROM_online(optimal_clusters[i], i);
+//		run_local_ROM_online(optimal_clusters_orig[i], i);
+	}
     }
 
     void CoupledLinearNS_TT::run_local_ROM_offline(Eigen::MatrixXd collect_f_all)
@@ -6842,7 +7326,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	}
 	if (debug_mode)
 	{
-		cout << "cumulative relative singular value percentages: " << cum_rel_singular_values << endl;
+		cout << "cumulative relative singular value percentages: " << std::setprecision(17) << cum_rel_singular_values << endl;
 		cout << "RBsize: " << RBsize << endl;
 	}
 	
@@ -6909,6 +7393,175 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
    }
 
+
+    void CoupledLinearNS_TT::run_local_ROM_offline_add_transition(Eigen::MatrixXd collect_f_all_orig, Eigen::MatrixXd collect_f_all_add)
+   {
+//	Eigen::MatrixXd collect_f_all_orig_mod = Eigen::MatrixXd::Zero(collect_f_all_orig.rows(), collect_f_all_orig.cols() + collect_f_all_add.cols()); 
+//	collect_f_all_orig_mod << collect_f_all_orig, collect_f_all_add;
+	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all_orig, Eigen::ComputeThinU);
+	Eigen::VectorXd singular_values = svd_collect_f_all.singularValues();
+	if (debug_mode)
+	{
+		cout << "sum singular values " << singular_values.sum() << endl << endl;
+	}
+	Eigen::VectorXd rel_singular_values = singular_values / singular_values.sum();
+	RBsize = 1; 
+	Eigen::VectorXd cum_rel_singular_values = Eigen::VectorXd::Zero(singular_values.rows());
+	for (int i = 0; i < singular_values.rows(); ++i)
+	{
+		cum_rel_singular_values(i) = singular_values.head(i+1).sum() / singular_values.sum();
+		if (cum_rel_singular_values(i) < POD_tolerance)
+		{
+			RBsize = i+2;
+		}		
+	}
+	if (debug_mode)
+	{
+		cout << "cumulative relative singular value percentages: " << std::setprecision(17) << cum_rel_singular_values << endl;
+		cout << "RBsize: " << RBsize << endl;
+	}
+
+	Eigen::MatrixXd collect_f_all_PODmodes_int = svd_collect_f_all.matrixU(); // this is a local variable...
+	Eigen::MatrixXd PODmodes_int = Eigen::MatrixXd::Zero(collect_f_all_PODmodes_int.rows(), RBsize); 
+	PODmodes_int = collect_f_all_PODmodes_int.leftCols(RBsize);
+
+	cout << "now adding" << endl;	
+	collect_f_all_add = collect_f_all_add - PODmodes_int * PODmodes_int.transpose() * collect_f_all_add;
+
+	
+//	Eigen::MatrixXd cfac(collect_f_all_PODmodes.rows(), collect_f_all_PODmodes.cols()+collect_f_all_add.cols());
+	Eigen::MatrixXd cfac(PODmodes_int.rows(), collect_f_all_add.cols());
+	cfac << collect_f_all_add;
+	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_allc(cfac, Eigen::ComputeThinU);
+	singular_values = svd_collect_f_allc.singularValues();
+	if (debug_mode)
+	{
+		cout << "sum singular values " << singular_values.sum() << endl << endl;
+	}
+	rel_singular_values = singular_values / singular_values.sum();
+	int RBsize_c = 1; 
+	cum_rel_singular_values = Eigen::VectorXd::Zero(singular_values.rows());
+
+	double overlap_POD_part = m_session->GetParameter("overlap_POD_part");	
+
+	for (int i = 0; i < singular_values.rows(); ++i)
+	{
+		cum_rel_singular_values(i) = singular_values.head(i+1).sum() / singular_values.sum();
+		if (cum_rel_singular_values(i) < POD_tolerance - POD_tolerance/overlap_POD_part)
+//		if (cum_rel_singular_values(i) < POD_tolerance - POD_tolerance/2)
+		{
+			RBsize_c = i+2;
+		}		
+	}
+	if (debug_mode)
+	{
+		cout << "cumulative relative singular value percentages: " << std::setprecision(17) << cum_rel_singular_values << endl;
+		cout << "RBsize_c: " << RBsize_c << endl;
+	}
+
+//	RBsize_c = 2; 
+
+	RBsize += RBsize_c;
+	Eigen::MatrixXd collect_f_all_PODmodes(PODmodes_int.rows(), RBsize);
+	collect_f_all_PODmodes << PODmodes_int, svd_collect_f_allc.matrixU().leftCols(RBsize_c); // this is a local variable...
+	cout << "are total modes orth?? " << collect_f_all_PODmodes.transpose() * collect_f_all_PODmodes <<  endl;	
+
+	// does yet another POD help?
+/*	Eigen::MatrixXd cfac_ya(PODmodes_int.rows(), collect_f_all_PODmodes.cols());
+	cfac_ya = collect_f_all_PODmodes;
+	Eigen::BDCSVD<Eigen::MatrixXd> svd_cfac_ya(cfac_ya, Eigen::ComputeThinU);
+	singular_values = svd_cfac_ya.singularValues();
+	if (debug_mode)
+	{
+		cout << "sum singular values " << singular_values.sum() << endl << endl;
+	}
+	rel_singular_values = singular_values / singular_values.sum();
+	cum_rel_singular_values = Eigen::VectorXd::Zero(singular_values.rows());
+	for (int i = 0; i < singular_values.rows(); ++i)
+	{
+		cum_rel_singular_values(i) = singular_values.head(i+1).sum() / singular_values.sum();
+	}
+	cout << "cumulative relative singular value percentages: " << std::setprecision(17) << cum_rel_singular_values << endl;
+	collect_f_all_PODmodes = svd_cfac_ya.matrixU();
+*/
+
+	cout << "dimension of proj. space " << collect_f_all_PODmodes.rows() << " by " << collect_f_all_PODmodes.cols() << endl;
+	cout << "dimension of collected snapshots " << collect_f_all.rows() << " by " << collect_f_all.cols() << endl;
+	// double check the projection error of all initial snapshots
+	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+	{
+/*		cout << "projection error of snapshot number " << iter_index << endl;
+		Eigen::VectorXd curr_f_all = collect_f_all.col(iter_index);
+		Eigen::VectorXd proj_curr_f_all = collect_f_all_PODmodes.transpose() * curr_f_all;
+		Eigen::VectorXd reproj_curr_f_all = collect_f_all_PODmodes * proj_curr_f_all;
+		cout << "curr_f_all.norm() " << curr_f_all.norm() << endl;
+		cout << "reproj_curr_f_all.norm() " << reproj_curr_f_all.norm() << endl;
+		cout << "rel error " << (reproj_curr_f_all - curr_f_all).norm() / curr_f_all.norm() << endl; */
+	}
+
+
+	// here probably limit to something like 99.99 percent of PODenergy, this will set RBsize
+	setDBC(collect_f_all); // agnostic to RBsize
+	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields = UpdateFields();
+        int  nel  = m_fields[0]->GetNumElmts(); // number of spectral elements
+//	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), collect_f_all_PODmodes.cols());
+//	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize);  
+//	PODmodes = collect_f_all_PODmodes.leftCols(RBsize);
+	PODmodes = collect_f_all_PODmodes;
+	set_MtM();
+	cout << "RBsize: " << RBsize << endl;
+	if (globally_connected == 1)
+	{
+		setDBC_M(collect_f_all);
+	}
+	if (debug_mode)
+	{
+		cout << "M_no_dbc_in_loc " << M_no_dbc_in_loc << endl;
+		cout << "no_dbc_in_loc " << no_dbc_in_loc << endl;
+		cout << "M_no_not_dbc_in_loc " << M_no_not_dbc_in_loc << endl;
+		cout << "no_not_dbc_in_loc " <<	no_not_dbc_in_loc << endl;
+	}
+	//Eigen::VectorXd f_bnd_dbc_full_size = CLNS.f_bnd_dbc_full_size;
+	// c_f_all_PODmodes_wo_dbc becomes CLNS.RB
+	Eigen::MatrixXd c_f_all_PODmodes_wo_dbc = RB;
+	if (debug_mode)
+	{
+		cout << "c_f_all_PODmodes_wo_dbc.rows() " << c_f_all_PODmodes_wo_dbc.rows() << endl;
+		cout << "c_f_all_PODmodes_wo_dbc.cols() " << c_f_all_PODmodes_wo_dbc.cols() << endl;
+	}
+	gen_phys_base_vecs();
+	if (debug_mode)	
+	{
+//		cout << "finished gen_phys_base_vecs in " << difftime(timer_2, timer_1) << " seconds" << endl;
+	}
+	if (parameter_space_dimension == 1)
+	{
+		gen_proj_adv_terms();
+	}
+	else if (parameter_space_dimension == 2)
+	{
+		gen_proj_adv_terms_2d();
+	}
+	if (debug_mode)	
+	{
+		cout << "finished gen_proj_adv_terms " << endl;
+	}
+	if (parameter_space_dimension == 1)
+	{
+		gen_reference_matrices();
+	}
+	else if (parameter_space_dimension == 2)
+	{
+		gen_reference_matrices_2d();
+	}
+	if (debug_mode)	
+	{
+		cout << "finished gen_reference_matrices " << endl;
+	}
+
+   }
+
+
     void CoupledLinearNS_TT::k_means_ITHACA(int no_clusters, Array<OneD, std::set<int> > &clusters, double &CVT_energy)
     {
 	// should run many times with different (random) start values
@@ -6926,7 +7579,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	// what to use as a cell equivalent - try the one by J. Burkardt, but it cannot change dynamically...
 	// can use an array of sets, since 'no_clusters' is fixed
-	//Array<OneD, std::set<int> > clusters(no_clusters); // the j-th myvector entry is the initial centroid of the j-th cluster
+	// Array<OneD, std::set<int> > clusters(no_clusters); // the j-th myvector entry is the initial centroid of the j-th cluster
 	for (int i = 0; i < Nmax; ++i)
 	{
 		Array<OneD, double> distances(no_clusters);
@@ -6961,7 +7614,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	}
 	Array<OneD, Array< OneD, NekDouble > > mean_kj_x(no_clusters);
 	Array<OneD, Array< OneD, NekDouble > > mean_kj_y(no_clusters);
-	for (int iter = 0; iter < 100; iter++)
+	for (int iter = 0; iter < 10; iter++)
 	{
 		// find new centroids as mean of vectors in the clusters
 		for (int i = 0; i < no_clusters; ++i)
@@ -7235,7 +7888,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	double current_nu = ref_param_nu;
 	int current_index = ref_param_index;
 	Set_m_kinvis( current_nu );
-//	DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]); // why is this necessary? -- it is however
+//	DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]); // why is this necessary? 
 //	the_const_one = Get_no_advection_matrix_pressure();
 	the_const_one = gen_no_advection_matrix_pressure();
 //	cout << "co norm " << the_const_one.block(0, f_bnd_size, 10, 10) << endl;
@@ -8208,6 +8861,41 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
         {
            fieldStr.push_back(m_session->GetVariable(i));
         }
+
+	// better way - difficult:
+        for(int i = 0; i < number_of_snapshots; ++i)
+        {
+		// generate the correct string
+//		std::stringstream sstm;
+//		sstm << "TestSnap" << i+1;
+//		std::string result = sstm.str();
+//		const char* rr = result.c_str();
+
+//	        EvaluateFunction(fieldStr, test_load_snapshot, result);
+
+//	        LibUtilities::FunctionType vType;
+//        	vType = m_session->GetFunctionType(result, fieldStr[0], 0);
+/*		cout << " checking if (vType == LibUtilities::eFunctionTypeExpression)  " << endl;
+		if (vType == LibUtilities::eFunctionTypeExpression)
+			cout << " check if (vType == LibUtilities::eFunctionTypeExpression) successful " << endl;
+		cout << " checking if (vType == LibUtilities::eFunctionTypeFile)  " << endl;
+		if (vType == LibUtilities::eFunctionTypeFile)
+			cout << " check if (vType == LibUtilities::eFunctionTypeFile) successful " << endl;         <-- this usually
+		cout << " checking if (vType == LibUtilities::eFunctionTypeTransientFile)  " << endl;
+		if (vType == LibUtilities::eFunctionTypeTransientFile)
+			cout << " check if (vType == LibUtilities::eFunctionTypeTransientFile) successful " << endl; */
+		// std::string filename = m_session->GetFunctionFilename(result, fieldStr[0], 0);
+		// cout << " determined filename " << filename << endl;
+		// auto gen these
+/*		std::stringstream sstm;
+		sstm << "xml_channel_narrowROM_" << i << ".fld";
+		std::string result = sstm.str();
+		const char* rr = result.c_str();
+
+		EvaluateFunctionFld(fieldStr[0], test_load_snapshot[0], pFunctionName, 0.0, 0);
+*/
+	}
+
 
 	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
 	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);

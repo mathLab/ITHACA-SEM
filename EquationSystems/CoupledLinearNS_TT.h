@@ -102,6 +102,11 @@ namespace Nektar
 	int load_cO_snapshot_data_from_files;
 	int do_trafo_check;
 	double POD_tolerance;
+	double start_param_dir0;
+	double end_param_dir0;
+	double start_param_dir1;
+	double end_param_dir1;
+	int use_fine_grid_VV;
 
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
@@ -128,14 +133,18 @@ namespace Nektar
 	int number_elem_trafo;
 	int qoi_dof;
 	int use_LocROM;
-	int fine_grid_dim1;
-	int fine_grid_dim2;
+	int only_single_cluster;
+	int which_single_cluster;
+	int fine_grid_dir0;
+	int fine_grid_dir1;
 	double L2norm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y );
 	double L2norm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
 	void k_means_ITHACA(int no_clusters, Array<OneD, std::set<int> > &clusters, double &CVT_energy);
 	void evaluate_local_clusters(Array<OneD, std::set<int> > optimal_clusters);
         void run_local_ROM_offline(Eigen::MatrixXd collect_f_all);
-	void run_local_ROM_online(std::set<int> );
+        void run_local_ROM_offline_add_transition(Eigen::MatrixXd , Eigen::MatrixXd );
+	void run_local_ROM_online(std::set<int>, int );
+	void associate_VV_to_clusters(Array<OneD, std::set<int> >);
 
 //	Array<OneD, Eigen::Matrix2d > elements_trafo_matrix; // put this as a function or find a way with symbolic computation
         void gen_phys_base_vecs();
@@ -164,19 +173,24 @@ namespace Nektar
 	Array<OneD, Array<OneD, Eigen::MatrixXd > > gen_adv_mats_proj_x_2d(Array<OneD, double>, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_x_2d);
 	Array<OneD, Array<OneD, Eigen::MatrixXd > > gen_adv_mats_proj_y_2d(Array<OneD, double>, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_y_2d);
 
-	void recover_snapshot_data(Eigen::VectorXd, int);
+	double recover_snapshot_data(Eigen::VectorXd, int);
 	void recover_snapshot_loop(Eigen::VectorXd, Array<OneD, double> &, Array<OneD, double> &);
 
 	void offline_phase();
 	void online_phase();
 	Array<OneD, NekDouble> param_point;
 	Array<OneD, Array<OneD, NekDouble> > general_param_vector;
+	Array<OneD, Array<OneD, NekDouble> > fine_general_param_vector;
+	int find_closest_snapshot_location(Array<OneD, NekDouble>, Array<OneD, Array<OneD, NekDouble> >);
 	Array<OneD, NekDouble> param_vector;
 	int Nmax;
 	int RBsize;
+	int number_of_snapshots_dir0;
+	int number_of_snapshots_dir1;
 	int globally_connected;
 	int use_Newton;
 	int debug_mode;
+	int use_overlap_p_space;
 	int write_ROM_field;
 	int snapshot_computation_plot_rel_errors;
 

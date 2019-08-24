@@ -1086,12 +1086,13 @@ namespace Nektar
                         offset = (nummodes2-1)*nummodes0*nummodes1;
                         jump1 = nummodes0;
                     }
+                    BOOST_FALLTHROUGH;
                 }
                 case 0:
                 {
                     jump1 = nummodes0;
+                    break;
                 }
-                break;
                 case 3:
                 {
                     if (modified)
@@ -1103,12 +1104,13 @@ namespace Nektar
                         offset = nummodes0*(nummodes1-1);
                         jump1 = nummodes0*nummodes1;
                     }
+                    BOOST_FALLTHROUGH;
                 }
                 case 1:
                 {
                     jump1 = nummodes0*nummodes1;
-                }
                     break;
+                }
                 case 2:
                 {
                     if (modified)
@@ -1122,13 +1124,14 @@ namespace Nektar
                         jump2 = nummodes0;
 
                     }
+                    BOOST_FALLTHROUGH;
                 }
                 case 4:
                 {
                     jump1 = nummodes0*nummodes1;
                     jump2 = nummodes0;
-                }
                     break;
+                }
                 default:
                     ASSERTL0(false,"fid must be between 0 and 5");
             }

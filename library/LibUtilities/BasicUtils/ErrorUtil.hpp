@@ -38,6 +38,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 #if defined(NEKTAR_USE_MPI)
@@ -90,6 +92,8 @@ public:
                              unsigned int  level,
                              bool          DoComm = false)
     {
+        boost::ignore_unused(DoComm);
+
         // The user of outStream is primarily for the unit tests.  The unit
         // tests often generate errors on purpose to make sure invalid usage is
         // flagged appropriately.  Printing the error messages to cerr made the

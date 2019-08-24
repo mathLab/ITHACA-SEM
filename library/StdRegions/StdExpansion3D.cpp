@@ -453,6 +453,7 @@ namespace Nektar
                             break;
                         }
                     }
+                    break;
                 }
 
                 case LibUtilities::eGLL_Lagrange:
@@ -481,6 +482,7 @@ namespace Nektar
                             break;
                         }
                     }
+                    break;
                 }
 
                 case LibUtilities::eOrtho_A:
@@ -512,6 +514,7 @@ namespace Nektar
                             break;
                         }
                     }
+                    break;
                 }
                 default:
                 {

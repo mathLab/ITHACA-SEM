@@ -189,6 +189,13 @@ std::string ExpList_GetPhysAddress(ExpListSharedPtr exp)
     return ss.str();
 }
 
+NekDouble ExpList_EvaluateAtCoords(
+    ExpListSharedPtr exp,
+    Array<OneD, NekDouble> coords)
+{	
+	return exp->EvaluateAtCoords(coords);
+}
+
 void export_ExpList()
 {
     py::class_<ExpList,
@@ -216,5 +223,6 @@ void export_ExpList()
         .def("GetPhysState", &ExpList::GetPhysState)
         .def("PhysIntegral", &ExpList_PhysIntegral)
         .def("GetPhysAddress", &ExpList_GetPhysAddress)
+        .def("EvaluateAtCoords", &ExpList_EvaluateAtCoords)
         ;
 }

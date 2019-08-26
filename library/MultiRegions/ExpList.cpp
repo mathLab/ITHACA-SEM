@@ -1543,7 +1543,31 @@ namespace Nektar
                 return -1;
             }
         }
-
+        
+        /** 
+         * Given some coordinates, output the expansion field value
+         * at that point
+         */
+        NekDouble ExpList::EvaluateAtCoords(Array<OneD, NekDouble> coords)
+        {   
+            int dim = GetCoordim(0);
+            ASSERTL0(dim == coords.num_elements(), "Invalid coordinate dimension.");
+            
+            // Grab the element index corresponding to coords.
+            Array<OneD, NekDouble> xi(dim);
+            int elmtIdx = GetExpIndex(coords, xi);
+            
+            // Grab that element
+            LocalRegions::ExpansionSharedPtr elmt = GetExp(elmtIdx);
+            
+            // Grab that element's physical storage.
+            Array<OneD, NekDouble> elmtPhys = GetPhys() + GetPhys_Offset(elmtIdx);
+            
+            // Evaluate your solution field (at physical space) at this point.
+            NekDouble fieldValue = elmt->StdPhysEvaluate(xi, elmtPhys);
+            
+            return fieldValue;
+        }
 
         /**
          * Configures geometric info, such as tangent direction, on each

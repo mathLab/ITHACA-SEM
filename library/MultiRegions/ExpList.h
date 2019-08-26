@@ -686,6 +686,12 @@ namespace Nektar
                 Array<OneD, NekDouble>       &locCoords,
                 NekDouble tol = 0.0,
                 bool returnNearestElmt = false);
+            
+            /** This function return the expansion field value
+             * at the coordinates given as input.
+             **/    
+            MULTI_REGIONS_EXPORT NekDouble EvaluateAtCoords(
+                Array<OneD, NekDouble> coords);
 
             /// Get the start offset position for a global list of #m_coeffs
             /// correspoinding to element n.

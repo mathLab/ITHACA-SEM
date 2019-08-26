@@ -125,7 +125,6 @@ namespace Nektar
                 m_MuVarTrace  =   Array<OneD, NekDouble>(nTracePts, 0.0);
             }
 #ifdef CFS_DEBUGMODE
-        cout <<endl<<" WARNING: CFS_DEBUGMODE is on in DiffusionIP!!!!!!!!!!!"<<endl<<endl;
         m_session->LoadParameter("DebugVolTraceSwitch",                 m_DebugVolTraceSwitch      ,    0);
 #endif
         }

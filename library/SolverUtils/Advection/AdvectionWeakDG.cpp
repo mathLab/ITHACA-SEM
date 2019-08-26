@@ -62,7 +62,6 @@ namespace Nektar
             Advection::v_InitObject(pSession, pFields);
 
 #ifdef CFS_DEBUGMODE
-        cout <<endl<<" WARNING: CFS_DEBUGMODE is on in AdvectionWeakDG!!!!!!!!!!!"<<endl<<endl;
         pSession->LoadParameter("DebugVolTraceSwitch",                 m_DebugVolTraceSwitch      ,    0);
 #endif
         }

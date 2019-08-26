@@ -295,7 +295,6 @@ namespace Nektar
         }
         
 #ifdef CFS_DEBUGMODE
-        cout <<endl<<" WARNING: CFS_DEBUGMODE is on!!!!!!!!!!!"<<endl<<endl;
         m_session->LoadParameter("DebugAdvDiffSwitch",                 m_DebugAdvDiffSwitch      ,    0);
         m_session->LoadParameter("DebugVolTraceSwitch",                 m_DebugVolTraceSwitch      ,    0);
         m_session->LoadParameter("DebugConsDerivSwitch",                 m_DebugConsDerivSwitch      ,    0);
@@ -1808,7 +1807,6 @@ namespace Nektar
         // ASSERTL0(converged,"Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
         if((l_verbose||(!converged))&&l_root)
         {
-            
             WARNINGL0(converged,"     # Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
             cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
                 <<"     * Newton-Its converged (RES=" 
@@ -3657,8 +3655,6 @@ namespace Nektar
     {
         ASSERTL0(false, "not coded");
     }
-
-    
 
 #endif
 

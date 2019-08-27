@@ -171,10 +171,26 @@ struct PythonToOneDArray
             data)->storage.bytes;
         data->convertible = storage;
 
+        // If array originated in C++, then we need to be careful to avoid
+        // circular references. We therefore take a step to 'convert' this to a
+        // Python array so that essentially the reference counting and memory
+        // cleanup is done from the Python side.
+        //
+        // 1) Calling ToPythonArray to point to this numpy array. This ensures
+        //    that any C++ arrays that share this memory also know to call the
+        //    appropriate decrement function.
+        // 2) Creating a new Array from ptr, since ptr will shortly be deleted.
+        // 3) We call set_base to let the numpy array own its own data. This
+        //    will, at the end of the function and after `base` goes out of
+        //    scope, lead to ptr being deleted.
+        //
+        // After all of this references should be consistent between the C++
+        // side and the Python side.
         if (ptr != nullptr)
         {
             ptr->ToPythonArray((void *)objPtr, &decrement);
             new (storage) Array<OneD, T>(*ptr);
+            array.set_base(py::object());
         }
         else
         {

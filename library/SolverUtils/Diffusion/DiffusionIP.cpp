@@ -164,9 +164,6 @@ namespace Nektar
             int nPts      = fields[0]->GetTotPoints();
             int nTracePts = fields[0]->GetTrace()->GetTotPoints();
 
-            Array<OneD, NekDouble>    Fwd(nTracePts,0.0);
-            Array<OneD, NekDouble>    Bwd(nTracePts,0.0);
-
             Array<OneD, Array<OneD, NekDouble> >    vFwd(nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> >    vBwd(nConvectiveFields);
             if (pFwd == NullNekDoubleArrayofArray ||

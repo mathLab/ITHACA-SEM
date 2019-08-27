@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -52,8 +51,10 @@ namespace SpatialDomains
 
     MeshPartitionScotch::MeshPartitionScotch(
         const LibUtilities::SessionReaderSharedPtr session,
-        const MeshGraphSharedPtr meshGraph)
-        : MeshPartition(session, meshGraph)
+        int                                        meshDim,
+        std::map<int, MeshEntity>                  element,
+        CompositeDescriptor                        compMap)
+        : MeshPartition(session, meshDim, element, compMap)
     {
     }
 
@@ -132,7 +133,7 @@ namespace SpatialDomains
         // If no communication load   data provided
         if (vsize2 == NULL) {
             if (PartGraph2 (n, xadj, adjncy, vwgt2, NULL, numflag, nparts,
-                            part, SCOTCH_STRATDEFAULT, 0.01) != 0)
+                            part, SCOTCH_STRATQUALITY, 0.01) != 0)
                 return;
         }
 
@@ -173,7 +174,7 @@ namespace SpatialDomains
             }
 
             o = PartGraph2 (n, xadj, adjncy, vwgt2, edlotax + baseval, numflag,
-                            nparts, part, SCOTCH_STRATDEFAULT, 0.01);
+                            nparts, part, SCOTCH_STRATQUALITY, 0.01);
 
             free (edlotax + baseval);
 
@@ -237,31 +238,31 @@ namespace SpatialDomains
             double                      kbalval)
     {
         // Scotch graph object to interface with libScotch
-        SCOTCH_Graph        grafdat;
+        SCOTCH_Graph *      grafdat = SCOTCH_graphAlloc();
         SCOTCH_Strat        stradat;
         SCOTCH_Num          baseval;
         SCOTCH_Num          vertnbr;
         int                 o;
 
-        SCOTCH_graphInit (&grafdat);
+        SCOTCH_graphInit (grafdat);
 
         baseval = *numflag;
         vertnbr = *n;
 
         o = 1; // Assume something will go wrong
-        if (SCOTCH_graphBuild (&grafdat, baseval, vertnbr, xadj, xadj + 1,
+        if (SCOTCH_graphBuild (grafdat, baseval, vertnbr, xadj, xadj + 1,
                                vwgt, NULL, xadj[vertnbr] - baseval, adjncy,
                                adjwgt) == 0) {
             SCOTCH_stratInit          (&stradat);
             SCOTCH_stratGraphMapBuild (&stradat, flagval, *nparts, kbalval);
 #ifdef SCOTCH_DEBUG_ALL
             // TRICK: next instruction called only if graph is consistent
-            if (SCOTCH_graphCheck (&grafdat) == 0)
+            if (SCOTCH_graphCheck (grafdat) == 0)
 #endif /* SCOTCH_DEBUG_ALL */
-                o = SCOTCH_graphPart (&grafdat, *nparts, &stradat, part);
+                o = SCOTCH_graphPart (grafdat, *nparts, &stradat, part);
             SCOTCH_stratExit (&stradat);
         }
-        SCOTCH_graphExit (&grafdat);
+        SCOTCH_graphExit (grafdat);
 
         if (o != 0)
             return (1);

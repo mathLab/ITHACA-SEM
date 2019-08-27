@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -236,7 +235,28 @@ namespace Nektar
             }
             else
             {
-                ASSERTL1(m_metricinfo->GetGtype() == SpatialDomains::eDeformed,"Wrong route");
+                Array<OneD, Array<OneD, NekDouble> > tangmat(2);
+
+                for (int i=0; i< 2; ++i)
+                {
+                    tangmat[i] = Array<OneD, NekDouble>(nqtot,0.0);
+                    for (int k=0; k<(m_geom->GetCoordim()); ++k)
+                    {
+                        Vmath::Svtvp(nqtot, df[2*k+i][0],
+                                     &direction[k*nqtot], 1,
+                                     &tangmat[i][0], 1, &tangmat[i][0], 1);
+                    }
+                }
+
+                /// D_v = D^v_xi * du/d_xi + D^v_eta * du/d_eta
+                Vmath::Vmul  (nqtot, &tangmat[0][0], 1,
+                                     &diff0[0],      1,
+                                     &out[0],        1);
+
+                Vmath::Vvtvp (nqtot, &tangmat[1][0], 1,
+                                     &diff1[0],      1,
+                                     &out[0],        1,
+                                     &out[0],        1);
             }
         }
 
@@ -543,7 +563,92 @@ namespace Nektar
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
 
         }
-        
+
+
+        void TriExp::v_IProductWRTDirectionalDerivBase(
+            const Array<OneD, const NekDouble>& direction,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD, NekDouble> & outarray)
+        {
+            IProductWRTDirectionalDerivBase_SumFac(direction,
+                                                   inarray,outarray);
+        }
+
+
+        /**
+         * @brief Directinoal Derivative in the modal space in the dir
+         * direction of varcoeffs.
+         */
+        void TriExp::v_IProductWRTDirectionalDerivBase_SumFac(
+            const Array<OneD, const NekDouble>& direction,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD, NekDouble> & outarray)
+        {
+            int    i;
+            int    shapedim = 2;
+            int    nquad0   = m_base[0]->GetNumPoints();
+            int    nquad1   = m_base[1]->GetNumPoints();
+            int    nqtot    = nquad0*nquad1;
+            int    nmodes0  = m_base[0]->GetNumModes();
+            int    wspsize  = max(max(nqtot,m_ncoeffs),nquad1*nmodes0);
+
+            const Array<TwoD, const NekDouble>& df =
+                    m_metricinfo->GetDerivFactors(GetPointsKeys());
+
+            Array<OneD, NekDouble> tmp0 (6*wspsize);
+            Array<OneD, NekDouble> tmp1 (tmp0 +   wspsize);
+            Array<OneD, NekDouble> tmp2 (tmp0 + 2*wspsize);
+            Array<OneD, NekDouble> tmp3 (tmp0 + 3*wspsize);
+            Array<OneD, NekDouble> gfac0(tmp0 + 4*wspsize);
+            Array<OneD, NekDouble> gfac1(tmp0 + 5*wspsize);
+
+            const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
+
+            // set up geometric factor: 2/(1-z1)
+            for(i = 0; i < nquad1; ++i)
+            {
+                gfac0[i] = 2.0/(1-z1[i]);
+            }
+            for(i = 0; i < nquad0; ++i)
+            {
+                gfac1[i] = 0.5*(1+z0[i]);
+            }
+            for(i = 0; i < nquad1; ++i)
+            {
+                Vmath::Smul(nquad0, gfac0[i], &inarray[0] + i*nquad0, 1,
+                                              &tmp0[0]    + i*nquad0, 1);
+            }
+            for(i = 0; i < nquad1; ++i)
+            {
+                Vmath::Vmul(nquad0, &gfac1[0],           1,
+                                    &tmp0[0] + i*nquad0, 1,
+                                    &tmp1[0] + i*nquad0, 1);
+            }
+
+            // Compute gmat \cdot e^j
+            Array<OneD, Array<OneD, NekDouble> > dfdir(shapedim);
+            Expansion::ComputeGmatcdotMF(df, direction, dfdir);
+
+            Vmath::Vmul(nqtot, &dfdir[0][0], 1, &tmp0[0],    1, &tmp0[0], 1);
+            Vmath::Vmul(nqtot, &dfdir[1][0], 1, &tmp1[0],    1, &tmp1[0], 1);
+            Vmath::Vmul(nqtot, &dfdir[1][0], 1, &inarray[0], 1, &tmp2[0], 1);
+
+            Vmath::Vadd(nqtot, &tmp0[0],     1, &tmp1[0],    1, &tmp1[0], 1);
+
+            MultiplyByQuadratureMetric(tmp1,tmp1);
+            MultiplyByQuadratureMetric(tmp2,tmp2);
+
+            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                         m_base[1]->GetBdata(),
+                                         tmp1, tmp3, tmp0);
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                         m_base[1]->GetDbdata(),
+                                         tmp2, outarray, tmp0);
+            Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);
+        }
+
+
         void TriExp::v_NormVectorIProductWRTBase(
             const Array<OneD, const NekDouble> &Fx,
             const Array<OneD, const NekDouble> &Fy,
@@ -623,7 +728,7 @@ namespace Nektar
         {
             Expansion::v_GetCoords(coords_0, coords_1, coords_2);
         }
-
+        
 
         /** 
          * Given the local cartesian coordinate \a Lcoord evaluate the
@@ -757,11 +862,6 @@ namespace Nektar
             }
 
             StdRegions::Orientation orient = GetEorient(edge);
-            if (edge == 2)
-            {
-                orient = orient == StdRegions::eForwards ?
-                    StdRegions::eBackwards : StdRegions::eForwards;
-            }
 
             //Reverse data if necessary
             if(orient == StdRegions::eBackwards)
@@ -1199,6 +1299,94 @@ namespace Nektar
                     }
                 }
                 break;
+                case StdRegions::eWeakDirectionalDeriv:
+                {
+                    if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
+                        mkey.GetNVarCoeff())
+                    {
+                        NekDouble one = 1.0;
+                        DNekMatSharedPtr mat = GenMatrix(mkey);
+
+                        returnval = MemoryManager<DNekScalMat>::
+                                                AllocateSharedPtr(one,mat);
+                    }
+                    else
+                    {
+                        int shapedim = 2;
+
+                        // dfdirxi = tan_{xi_x} * d \xi/dx
+                        //         + tan_{xi_y} * d \xi/dy
+                        //         + tan_{xi_z} * d \xi/dz
+                        // dfdireta = tan_{eta_x} * d \eta/dx
+                        //         + tan_{xi_y} * d \xi/dy
+                        //         + tan_{xi_z} * d \xi/dz
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
+                        Array<TwoD, const NekDouble> df =
+                                m_metricinfo->GetDerivFactors(ptsKeys);
+
+                        Array<OneD, NekDouble> direction =
+                                mkey.GetVarCoeff(StdRegions::eVarCoeffMF);
+
+                        // d / dx = df[0]*deriv0 + df[1]*deriv1
+                        // d / dy = df[2]*deriv0 + df[3]*deriv1
+                        // d / dz = df[4]*deriv0 + df[5]*deriv1
+
+                        // dfdir[dir] = e \cdot (d/dx, d/dy, d/dz)
+                        //            = (e^0 * df[0] + e^1 * df[2]
+                        //                  + e^2 * df[4]) * deriv0
+                        //            + (e^0 * df[1] + e^1 * df[3]
+                        //                  + e^2 * df[5]) * deriv1
+                        // dfdir[dir] = e^0 * df[2 * 0 + dir]
+                        //            + e^1 * df[2 * 1 + dir]
+                        //            + e^2 * df [ 2 * 2 + dir]
+                        Array<OneD, Array<OneD, NekDouble> > dfdir(shapedim);
+                        Expansion::ComputeGmatcdotMF(df, direction, dfdir);
+
+                        StdRegions::VarCoeffMap dfdirxi;
+                        StdRegions::VarCoeffMap dfdireta;
+
+                        dfdirxi[StdRegions::eVarCoeffWeakDeriv]  = dfdir[0];
+                        dfdireta[StdRegions::eVarCoeffWeakDeriv] = dfdir[1];
+
+                        MatrixKey derivxikey( StdRegions::eWeakDeriv0,
+                                              mkey.GetShapeType(), *this,
+                                              StdRegions::NullConstFactorMap,
+                                              dfdirxi);
+                        MatrixKey derivetakey( StdRegions::eWeakDeriv1,
+                                               mkey.GetShapeType(), *this,
+                                               StdRegions::NullConstFactorMap,
+                                               dfdireta);
+
+                        DNekMat &derivxi = *GetStdMatrix(derivxikey);
+                        DNekMat &deriveta = *GetStdMatrix(derivetakey);
+
+                        int rows = derivxi.GetRows();
+                        int cols = deriveta.GetColumns();
+
+                        DNekMatSharedPtr WeakDirDeriv = MemoryManager<DNekMat>::
+                                                AllocateSharedPtr(rows,cols);
+
+                        (*WeakDirDeriv) = derivxi + deriveta;
+
+                        // Add (\nabla \cdot e^k ) Mass
+                        StdRegions::VarCoeffMap DiveMass;
+                        DiveMass[StdRegions::eVarCoeffMass] =
+                                mkey.GetVarCoeff(StdRegions::eVarCoeffMFDiv);
+                        StdRegions::StdMatrixKey stdmasskey(
+                                                StdRegions::eMass,
+                                                mkey.GetShapeType(), *this,
+                                                StdRegions::NullConstFactorMap,
+                                                DiveMass);
+
+                        DNekMatSharedPtr DiveMassmat = GetStdMatrix(stdmasskey);
+
+                        (*WeakDirDeriv) = (*WeakDirDeriv) + (*DiveMassmat);
+
+                        returnval = MemoryManager<DNekScalMat>::
+                                            AllocateSharedPtr(jac,WeakDirDeriv);
+                    }
+                    break;
+                }
             case StdRegions::eLaplacian:
                 {
                     if( (m_metricinfo->GetGtype() == SpatialDomains::eDeformed) ||
@@ -1535,7 +1723,7 @@ namespace Nektar
         {
             StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
         }
-
+    
 
         void TriExp::v_WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray,

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -46,11 +45,25 @@ std::string FilterMovingAverage::className =
 
 FilterMovingAverage::FilterMovingAverage(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams)
-    : FilterFieldConvert(pSession, pParams)
+    : FilterFieldConvert(pSession, pEquation, pParams)
 {
+    // Load sampling frequency
+    auto  it = pParams.find("SampleFrequency");
+    if (it == pParams.end())
+    {
+        m_sampleFrequency = 1;
+    }
+    else
+    {
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
+        m_sampleFrequency = round(equ.Evaluate());
+    }
+
     // Load filter parameter
-    auto it = pParams.find("alpha");
+    it = pParams.find("alpha");
     if (it == pParams.end())
     {
         it = pParams.find("tau");
@@ -95,6 +108,7 @@ FilterMovingAverage::~FilterMovingAverage()
 
 void FilterMovingAverage::v_ProcessSample(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+          std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     const NekDouble &time)
 {
     // Take first sample as initial vector
@@ -105,11 +119,11 @@ void FilterMovingAverage::v_ProcessSample(
     }
 
     // \bar{u}_n = alpha * u_n + (1-alpha) * \bar{u}_{n-1}
-    for (int n = 0; n < pFields.num_elements(); ++n)
+    for (int n = 0; n < m_outFields.size(); ++n)
     {
         Vmath::Svtsvtp(m_outFields[n].num_elements(),
                        alpha,
-                       pFields[n]->GetCoeffs(),
+                       fieldcoeffs[n],
                        1,
                        (1.0 - alpha),
                        m_outFields[n],

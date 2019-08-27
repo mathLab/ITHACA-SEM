@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -65,6 +64,8 @@ void AdvectionSystem::v_InitObject()
 {
     UnsteadySystem::v_InitObject();
     m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
+    m_session->LoadParameter("IO_CFLWriteFld", m_cflWriteFld, 0);
+    m_session->LoadParameter("IO_CFLWriteFldWaitSteps", m_cflWriteFldWaitSteps, 0);
 }
 
 /**
@@ -74,12 +75,12 @@ bool AdvectionSystem::v_PostIntegrate(int step)
 {
     bool result = UnsteadySystem::v_PostIntegrate(step);
 
-    if(m_cflsteps && !((step+1)%m_cflsteps))
+    if((m_cflsteps && !((step+1)%m_cflsteps)) || m_cflWriteFld>0)
     {
         int elmtid;
         NekDouble cfl = GetCFLEstimate(elmtid);
 
-        if(m_comm->GetRank() == 0)
+        if(m_cflsteps && !((step+1)%m_cflsteps) && m_comm->GetRank() == 0)
         {
             if( m_HomogeneousType == eNotHomogeneous)
             {
@@ -90,6 +91,14 @@ bool AdvectionSystem::v_PostIntegrate(int step)
                 cout << "CFL (zero plane): ";
             }
             cout << cfl << " (in elmt " << elmtid << ")" << endl;
+        }
+        
+        // At each timestep, if cflWriteFld is set check if cfl is above treshold
+        if(m_cflWriteFld>0 && cfl >= m_cflWriteFld && step >= m_cflWriteFldWaitSteps)
+        {
+            std::string outname =  m_sessionName +  "_CFLWriteFld";
+            WriteFld(outname + ".fld");
+            m_cflWriteFld = 0;            
         }
     }
 

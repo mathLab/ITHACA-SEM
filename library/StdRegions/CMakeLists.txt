@@ -55,5 +55,9 @@ ADD_NEKTAR_LIBRARY(StdRegions
     SUMMARY "Nektar++ StdRegions library"
     DESCRIPTION "This library provides construction of the reference expansions for the various 1D, 2D and 3D regions.")
 
+IF (NEKTAR_BUILD_PYTHON)
+    SUBDIRS(Python)
+ENDIF()
+
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/StdRegions COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 

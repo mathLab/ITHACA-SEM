@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -43,6 +42,7 @@
 #include <MultiRegions/ExpList3D.h>    
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <SolverUtils/Filters/FilterAeroForces.h>
+#include <SolverUtils/Filters/FilterInterfaces.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
@@ -60,8 +60,9 @@ std::string FilterAeroForces::className =
  */
 FilterAeroForces::FilterAeroForces(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams) :
-    Filter(pSession)
+    Filter(pSession, pEquation)
 {
     // OutputFile
     auto it = pParams.find("OutputFile");
@@ -584,6 +585,13 @@ void FilterAeroForces::CalculateForces(
         return;
     }
 
+    // Lock equation system weak pointer
+    auto equ = m_equ.lock();
+    ASSERTL0(equ, "Weak pointer expired");
+
+    auto fluidEqu = std::dynamic_pointer_cast<FluidInterface>(equ);
+    ASSERTL0(fluidEqu, "Aero forces filter is incompatible with this solver.");
+
     int i, j, k, n, cnt, elmtid, nq, offset, boundary, plane;
     // Get number of quadrature points and dimensions
     int physTot = pFields[0]->GetNpoints();
@@ -600,12 +608,18 @@ void FilterAeroForces::CalculateForces(
     Array<OneD, MultiRegions::ExpListSharedPtr>  
                                     fields( pFields.num_elements() );
 
+    // Arrays of variables in field
+    Array<OneD, Array<OneD, NekDouble> > physfields(pFields.num_elements());
+    Array<OneD, Array<OneD, NekDouble> > velocity(nVel);
+    Array<OneD, NekDouble>               pressure;
+
     // Arrays of variables in the element
-    Array<OneD, Array<OneD, NekDouble> >       velocity(expdim);
-    Array<OneD, NekDouble>                     P(physTot);
+    Array<OneD, Array<OneD, NekDouble> >       velElmt(expdim);
+    Array<OneD, NekDouble>                     pElmt(physTot);
 
     // Velocity gradient
     Array<OneD, Array<OneD, NekDouble> >       grad( expdim*expdim);
+    Array<OneD, NekDouble>                     div;
 
     // Values at the boundary
     Array<OneD, NekDouble>                     Pb; 
@@ -635,10 +649,18 @@ void FilterAeroForces::CalculateForces(
     Array<OneD, Array<OneD, NekDouble> >       fv( expdim );
 
     // Get viscosity
-    NekDouble rho = (m_session->DefinesParameter("rho"))
-            ? (m_session->GetParameter("rho"))
-            : 1;
-    NekDouble mu = rho*m_session->GetParameter("Kinvis");
+    NekDouble mu;
+    if(m_session->DefinesParameter("Kinvis"))
+    {
+        NekDouble rho = (m_session->DefinesParameter("rho"))
+            ? (m_session->GetParameter("rho")) : 1;
+        mu = rho * m_session->GetParameter("Kinvis");
+    }
+    else
+    {
+        mu = m_session->GetParameter("mu");
+    }
+    NekDouble lambda = -2.0/3.0;
 
     // Perform BwdTrans: when we only want the mean force in a 3DH1D
     //     we work in wavespace, otherwise we use physical space            
@@ -659,12 +681,12 @@ void FilterAeroForces::CalculateForces(
     if(m_isHomogeneous1D)
     {
         BndConds = pFields[0]->GetPlane(0)->GetBndConditions();
-        BndExp   = pFields[0]->GetPlane(0)->GetBndCondExpansions();                
+        BndExp   = pFields[0]->GetPlane(0)->GetBndCondExpansions();
     }
     else
     {
         BndConds = pFields[0]->GetBndConditions();
-        BndExp   = pFields[0]->GetBndCondExpansions();                
+        BndExp   = pFields[0]->GetBndCondExpansions();
     }
 
     // For Homogeneous, calculate force on each 2D plane
@@ -689,7 +711,20 @@ void FilterAeroForces::CalculateForces(
                 {
                     fields[n] = pFields[n];
                 }
-            } 
+            }
+
+            // Get velocity and pressure values
+            for(n = 0; n < physfields.num_elements(); ++n)
+            {
+                physfields[n] = fields[n]->GetPhys();
+            }
+            for(n = 0; n < nVel; ++n)
+            {
+                velocity[n] = Array<OneD, NekDouble>(fields[n]->GetTotPoints());
+            }
+            pressure = Array<OneD, NekDouble>(fields[0]->GetTotPoints());
+            fluidEqu->GetVelocity(physfields, velocity);
+            fluidEqu->GetPressure(physfields, pressure);
 
             //Loop all the Boundary Regions
             for( cnt = n = 0; n < BndConds.num_elements(); n++)
@@ -706,21 +741,30 @@ void FilterAeroForces::CalculateForces(
                         // Extract  fields on this element
                         for( j=0; j<expdim; j++)
                         {
-                            velocity[j] = fields[j]->GetPhys() + offset;
+                            velElmt[j] = velocity[j] + offset;
                         }
-                        P = fields[nVel]->GetPhys() + offset;
+                        pElmt = pressure + offset;
 
                         // Compute the velocity gradients
+                        div = Array<OneD, NekDouble>(nq,0.0);
                         for (j=0; j<expdim; j++)
                         {
                             for (k=0; k<expdim; k++)
                             {
                                 grad[j*expdim+k] = 
                                         Array<OneD, NekDouble>(nq,0.0);
-                                elmt->PhysDeriv(k,velocity[j],
+                                elmt->PhysDeriv(k,velElmt[j],
                                         grad[j*expdim+k]);
+
+                                if( j == k)
+                                {
+                                    Vmath::Vadd(nq, grad[j*expdim+k], 1,
+                                                    div, 1, div, 1);
+                                }
                             }
                         }
+                        // Scale div by lambda (for compressible flows)
+                        Vmath::Smul(nq, lambda, div, 1, div, 1);
 
                         // identify boundary of element
                         boundary = m_BCtoTraceID[cnt];
@@ -746,7 +790,7 @@ void FilterAeroForces::CalculateForces(
 
                                 // Extract values at boundary
                                 Pb = Array<OneD, NekDouble>(nbc,0.0);
-                                elmt->GetEdgePhysVals(boundary,bc,P,Pb);
+                                elmt->GetEdgePhysVals(boundary,bc,pElmt,Pb);
                                 for(int j = 0; j < expdim*expdim; ++j)
                                 {
                                     gradb[j] = Array<OneD, NekDouble>
@@ -772,14 +816,14 @@ void FilterAeroForces::CalculateForces(
 
                                 // Extract values at boundary
                                 Pb = Array<OneD, NekDouble>(nbc,0.0);
-                                elmt->GetFacePhysVals(boundary,bc,P,Pb);
+                                elmt->GetFacePhysVals(boundary,bc,pElmt,Pb);
                                 for(int j = 0; j < expdim*expdim; ++j)
                                 {
                                     gradb[j] = Array<OneD, NekDouble>
                                                     (nbc,0.0);
                                     elmt->GetFacePhysVals(boundary,
                                                    bc,grad[j],gradb[j]);
-                                }                                        
+                                }
                             }
                             break;
 
@@ -814,7 +858,15 @@ void FilterAeroForces::CalculateForces(
                                 Vmath::Vvtvp (nbc, gradb[j*expdim+k], 1,
                                                    normals[k], 1,
                                                    fv[j], 1, 
-                                                   fv[j], 1);                                                
+                                                   fv[j], 1);
+                            }
+                            if(!fluidEqu->HasConstantDensity())
+                            {
+                                // Add gradient term
+                                Vmath::Vvtvp (nbc, div, 1,
+                                                   normals[j], 1,
+                                                   fv[j], 1,
+                                                   fv[j], 1);
                             }
                             Vmath::Smul(nbc, -mu, fv[j], 1, fv[j], 1);
                         }
@@ -888,7 +940,7 @@ void FilterAeroForces::CalculateForces(
             pFields[i]->HomogeneousFwdTrans(pFields[i]->GetPhys(),
                                             pFields[i]->UpdatePhys());
         }
-    }            
+    }
 }
 
 /**
@@ -927,13 +979,13 @@ void FilterAeroForces::CalculateForcesMapping(
     Array<OneD, MultiRegions::ExpListSharedPtr>  C     ( nVel*nVel);
     Array<OneD, MultiRegions::ExpListSharedPtr>  CPlane( nVel*nVel);
     Array<OneD, Array<OneD, NekDouble> >         CElmt ( nVel*nVel);
-    Array<OneD, Array<OneD, NekDouble> >         CBnd  ( nVel*nVel);            
+    Array<OneD, Array<OneD, NekDouble> >         CBnd  ( nVel*nVel);
 
     // Jacobian
     MultiRegions::ExpListSharedPtr  Jac;
     MultiRegions::ExpListSharedPtr  JacPlane;
     Array<OneD, NekDouble>          JacElmt;
-    Array<OneD, NekDouble>          JacBnd;               
+    Array<OneD, NekDouble>          JacBnd;
 
     // Communicators to exchange results
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
@@ -983,12 +1035,12 @@ void FilterAeroForces::CalculateForcesMapping(
     if(m_isHomogeneous1D)
     {
         BndConds = pFields[0]->GetPlane(0)->GetBndConditions();
-        BndExp   = pFields[0]->GetPlane(0)->GetBndCondExpansions();                
+        BndExp   = pFields[0]->GetPlane(0)->GetBndCondExpansions();
     }
     else
     {
         BndConds = pFields[0]->GetBndConditions();
-        BndExp   = pFields[0]->GetBndCondExpansions();                
+        BndExp   = pFields[0]->GetBndCondExpansions();
     }
 
     //
@@ -1018,7 +1070,7 @@ void FilterAeroForces::CalculateForcesMapping(
                                 AllocateSharedPtr(*Exp3DH1);
                 }
                 Jac = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::
-                                AllocateSharedPtr(*Exp3DH1);                        
+                                AllocateSharedPtr(*Exp3DH1);
             }
             else
             {
@@ -1038,7 +1090,7 @@ void FilterAeroForces::CalculateForcesMapping(
                                 AllocateSharedPtr(*Exp2D);
                 }
                 Jac = MemoryManager<MultiRegions::ExpList2D>::
-                                AllocateSharedPtr(*Exp2D);                         
+                                AllocateSharedPtr(*Exp2D);
             }
             break;
         }

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -62,6 +61,13 @@ ArtificialDiffusion::ArtificialDiffusion(
     m_diffusion->SetArtificialDiffusionVector(
                         &ArtificialDiffusion::GetArtificialViscosity, this);
     m_diffusion->InitObject (m_session, m_fields);
+
+    // Get constant scaling
+    m_session->LoadParameter("mu0", m_mu0, 1.0);
+
+    // Init h/p scaling
+    int nElements = m_fields[0]->GetExpSize();
+    m_hOverP = Array<OneD, NekDouble>(nElements, 1.0);
 }
 
 /**
@@ -208,6 +214,14 @@ void ArtificialDiffusion::GetArtificialViscosity(
                   Array<OneD, NekDouble  >             &mu)
 {
     v_GetArtificialViscosity(physfield, mu);
+}
+
+/**
+ *
+ */
+void ArtificialDiffusion::SetElmtHP(const Array<OneD, NekDouble> &hOverP)
+{
+    m_hOverP = hOverP;
 }
 
 }

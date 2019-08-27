@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -129,7 +128,11 @@ class Interpolator;
             }
             
             /// Get pressure field if available
-            SOLVER_UTILS_EXPORT MultiRegions::ExpListSharedPtr GetPressure(); 
+            SOLVER_UTILS_EXPORT MultiRegions::ExpListSharedPtr GetPressure();
+
+            SOLVER_UTILS_EXPORT inline void ExtraFldOutput(
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<std::string>             &variables);
             
             /// Print a summary of parameters and solver characteristics.
             SOLVER_UTILS_EXPORT inline void PrintSummary(std::ostream &out);
@@ -577,7 +580,21 @@ class Interpolator;
         {
             return v_GetPressure();
         }
-        
+
+        /**
+         * Append the coefficients and name of variables with solver specific
+         * extra variables
+         *
+         * @param fieldcoeffs     Vector with coefficients
+         * @param variables       Vector with name of variables
+         */
+        inline void EquationSystem::ExtraFldOutput(
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<std::string>             &variables)
+        {
+            v_ExtraFldOutput(fieldcoeffs, variables);
+        }
+
         /**
          * Prints a summary of variables and problem parameters.
          *

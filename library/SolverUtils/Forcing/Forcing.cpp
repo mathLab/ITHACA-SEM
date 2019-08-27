@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -48,8 +47,10 @@ namespace Nektar
             return instance;
         }
 
-        Forcing::Forcing(const LibUtilities::SessionReaderSharedPtr& pSession)
-                : m_session(pSession)
+        Forcing::Forcing(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation)
+                : m_session(pSession), m_equ(pEquation)
         {
 
         }
@@ -82,9 +83,10 @@ namespace Nektar
          *
          */
         vector<ForcingSharedPtr> Forcing::Load(
-                            const LibUtilities::SessionReaderSharedPtr& pSession,
-                            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                            const unsigned int& pNumForcingFields)
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::weak_ptr<EquationSystem>      &pEquation,
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                    const unsigned int& pNumForcingFields)
         {
             vector<ForcingSharedPtr> vForceList;
 
@@ -108,8 +110,8 @@ namespace Nektar
                     string vType = vForce->Attribute("TYPE");
 
                     vForceList.push_back(GetForcingFactory().CreateInstance(
-                                            vType, pSession, pFields,
-                                            vNumForcingFields, vForce));
+                                        vType, pSession, pEquation, pFields,
+                                        vNumForcingFields, vForce));
                     vForce = vForce->NextSiblingElement("FORCE");
                 }
             }

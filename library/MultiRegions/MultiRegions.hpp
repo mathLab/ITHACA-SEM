@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -193,15 +192,15 @@ namespace Nektar
 
         typedef std::shared_ptr<RobinBCInfo> RobinBCInfoSharedPtr;
 
-        typedef struct _PeriodicEntity
+        struct PeriodicEntity
         {
-            _PeriodicEntity(
+            PeriodicEntity(
                 const int                     id,
                 const StdRegions::Orientation orient,
                 const bool                    isLocal) :
                 id(id), orient(orient), isLocal(isLocal) {}
 
-            _PeriodicEntity() {}
+            PeriodicEntity() {}
             
             /// Geometry ID of entity.
             int id;
@@ -209,10 +208,29 @@ namespace Nektar
             StdRegions::Orientation orient;
             /// Flag specifying if this entity is local to this partition.
             bool isLocal;
-        } PeriodicEntity;
+        };
 
         typedef std::map<int, std::vector<PeriodicEntity> > PeriodicMap;
         static PeriodicMap NullPeriodicMap;
+
+        struct RotPeriodicInfo
+        {
+            RotPeriodicInfo(
+                             const int       dir,
+                             const NekDouble angle,
+                             const NekDouble tol) :
+                m_dir(dir), m_angle(angle), m_tol(tol) {}
+
+            RotPeriodicInfo() {}
+            
+            /// Axis of rotation. 0 = 'x', 1 = 'y', 2 = 'z'
+            int m_dir; 
+            /// Angle of rotation in radians
+            NekDouble m_angle;
+            /// Tolerance to rotation is considered identical
+            NekDouble m_tol;
+        }; 
+
     }// end of namespace
 }// end of namespace
 

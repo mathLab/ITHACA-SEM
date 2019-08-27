@@ -28,7 +28,6 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ./AdvectionTerms/SkewSymmetricAdvection.cpp
         ./AdvectionTerms/AlternateSkewAdvection.cpp
         ./AdvectionTerms/NoAdvection.cpp
-        ./Filters/FilterEnergy.cpp
         ./Filters/FilterReynoldsStresses.cpp
         ./Filters/FilterMovingBody.cpp
         ./Forcing/ForcingMovingBody.cpp
@@ -89,6 +88,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(KovaFlow_SubStep_2order)
     ADD_NEKTAR_TEST(KovaFlow_SubStep_2order_VCSWeakPress)
     ADD_NEKTAR_TEST(Kovas_Quad6_Tri4_mixedbcs)
+    ADD_NEKTAR_TEST(Moving_reference_frame)
     ADD_NEKTAR_TEST(SinCos_LinNS_3DHom1D)
     ADD_NEKTAR_TEST(TaylorVor_dt1)
     ADD_NEKTAR_TEST(TaylorVor_dt2 LENGTHY)
@@ -119,6 +119,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(PPF_R10000_ModifiedArnoldi_Shift) 
     ADD_NEKTAR_TEST(PPF_R15000_ModifiedArnoldi_Shift)
     ADD_NEKTAR_TEST(ChanFlow_m8_Flowrate)
+    ADD_NEKTAR_TEST(ChanFlow_3DH1D_FlowrateExplicit_MVM)
 
     IF (NEKTAR_USE_SCOTCH)
         # This tests exhibits sensitivity to the choice of DirectStaticCond
@@ -172,6 +173,8 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ADD_NEKTAR_TEST(ChanFlow_3DH1D_Flowrate_MVM)
         ADD_NEKTAR_TEST(ChanFlow_3DH1D_Flowrate_MVM_hybrid)
         ADD_NEKTAR_TEST(Hex_channel_m3_Flowrate)
+        ADD_NEKTAR_TEST(ChanFlow_3DH1D_FlowrateExplicit_MVM_par)
+        ADD_NEKTAR_TEST(ChanFlow_3DH1D_FlowrateExplicit_MVM_par_hybrid)
 
         IF (NEKTAR_USE_PETSC)
             ADD_NEKTAR_TEST(Tet_channel_m8_petsc_sc_par LENGTHY)
@@ -180,6 +183,10 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
             ADD_NEKTAR_TEST(TriQuadChannelHdf5)
             ADD_NEKTAR_TEST(Tet_channel_m8_hdf)
             ADD_NEKTAR_TEST(KovaFlow_3DH1D_P5_20modes_MVM_hdf5)
+            ADD_NEKTAR_TEST(CylFlow2D_FieldConvertFilter_Hdf5)
+            IF (NEKTAR_USE_SCOTCH)
+                ADD_NEKTAR_TEST(CubeAllElements_ChanFlow)
+            ENDIF()
         ENDIF (NEKTAR_USE_HDF5)
     ENDIF (NEKTAR_USE_MPI)
 ENDIF( NEKTAR_SOLVER_INCNAVIERSTOKES )

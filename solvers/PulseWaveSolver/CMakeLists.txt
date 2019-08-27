@@ -22,6 +22,10 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
         EquationSystems/TimeDependentInflow.cpp
         EquationSystems/QInflow.h
         EquationSystems/QInflow.cpp
+        EquationSystems/AInflow.h
+        EquationSystems/AInflow.cpp
+        EquationSystems/UInflow.h
+        EquationSystems/UInflow.cpp
         EquationSystems/TerminalOutflow.h
         EquationSystems/TerminalOutflow.cpp
         EquationSystems/ROutflow.h
@@ -47,5 +51,7 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
     ADD_NEKTAR_TEST(VariableAreaTest)
     ADD_NEKTAR_TEST(VariableMatPropTest)
     ADD_NEKTAR_TEST(Q_inflow)
+    ADD_NEKTAR_TEST(A_inflow)
+    ADD_NEKTAR_TEST(U_inflow)
     ADD_NEKTAR_TEST(RCR_boundary)
 ENDIF( NEKTAR_SOLVER_PULSEWAVE )

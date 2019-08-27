@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -273,6 +272,42 @@ namespace Nektar
         }
 
 
+        void HexExp::v_PhysDirectionalDeriv(
+            const Array<OneD, const NekDouble>& inarray,
+            const Array<OneD, const NekDouble>& direction,
+                  Array<OneD, NekDouble> & outarray)
+        {
+
+            int    shapedim = 3;
+            int    nquad0   = m_base[0]->GetNumPoints();
+            int    nquad1   = m_base[1]->GetNumPoints();
+            int    nquad2   = m_base[2]->GetNumPoints();
+            int    ntot     = nquad0 * nquad1 * nquad2;
+
+            Array<TwoD, const NekDouble> df =
+                    m_metricinfo->GetDerivFactors(GetPointsKeys());
+            Array<OneD,NekDouble> Diff0 = Array<OneD,NekDouble>(ntot);
+            Array<OneD,NekDouble> Diff1 = Array<OneD,NekDouble>(ntot);
+            Array<OneD,NekDouble> Diff2 = Array<OneD,NekDouble>(ntot);
+
+            StdHexExp::v_PhysDeriv(inarray, Diff0, Diff1, Diff2);
+
+            Array<OneD, Array<OneD, NekDouble> > dfdir(shapedim);
+            Expansion::ComputeGmatcdotMF(df,direction,dfdir);
+
+            Vmath::Vmul (ntot, &dfdir[0][0], 1,
+                               &Diff0[0],    1,
+                               &outarray[0], 1 );
+            Vmath::Vvtvp(ntot, &dfdir[1][0], 1,
+                               &Diff1[0],    1,
+                               &outarray[0], 1,
+                               &outarray[0], 1 );
+            Vmath::Vvtvp(ntot, &dfdir[2][0], 1,
+                               &Diff2[0],    1,
+                               &outarray[0], 1,
+                               &outarray[0], 1 );
+        }
+
         //-----------------------------
         // Transforms
         //-----------------------------
@@ -526,6 +561,69 @@ namespace Nektar
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
+        }
+
+
+        /**
+         *
+         * @param dir       Vector direction in which to take the derivative.
+         * @param inarray   The function \f$ u \f$.
+         * @param outarray  Value of the inner product.
+         */
+        void HexExp::IProductWRTDirectionalDerivBase_SumFac(
+                const Array<OneD, const NekDouble>& direction,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> & outarray)
+        {
+            int shapedim  = 3;
+            const int nq0 = m_base[0]->GetNumPoints();
+            const int nq1 = m_base[1]->GetNumPoints();
+            const int nq2 = m_base[2]->GetNumPoints();
+            const int nq  = nq0*nq1*nq2;
+            const int nm0 = m_base[0]->GetNumModes();
+            const int nm1 = m_base[1]->GetNumModes();
+
+            const Array<TwoD, const NekDouble>& df =
+            m_metricinfo->GetDerivFactors(GetPointsKeys());
+
+            Array<OneD, NekDouble> alloc(4*nq + m_ncoeffs + nm0*nq2*(nq1+nm1));
+            Array<OneD, NekDouble> tmp1 (alloc);               // Quad metric
+            Array<OneD, NekDouble> tmp2 (alloc +   nq);        // Dir1 metric
+            Array<OneD, NekDouble> tmp3 (alloc + 2*nq);        // Dir2 metric
+            Array<OneD, NekDouble> tmp4 (alloc + 3*nq);        // Dir3 metric
+            Array<OneD, NekDouble> tmp5 (alloc + 4*nq);        // iprod tmp
+            Array<OneD, NekDouble> wsp  (tmp5  +   m_ncoeffs); // Wsp
+
+            MultiplyByQuadratureMetric(inarray, tmp1);
+
+            Array<OneD, Array<OneD, NekDouble> > dfdir(shapedim);
+            Expansion::ComputeGmatcdotMF(df,direction,dfdir);
+
+            Vmath::Vmul(nq,&dfdir[0][0],1,tmp1.get(),1,tmp2.get(),1);
+            Vmath::Vmul(nq,&dfdir[1][0],1,tmp1.get(),1,tmp3.get(),1);
+            Vmath::Vmul(nq,&dfdir[2][0],1,tmp1.get(),1,tmp4.get(),1);
+
+            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                         m_base[1]->GetBdata(),
+                                         m_base[2]->GetBdata(),
+                                         tmp2,outarray,wsp,
+                                         false,true,true);
+
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                         m_base[1]->GetDbdata(),
+                                         m_base[2]->GetBdata(),
+                                         tmp3,tmp5,wsp,
+                                         true,false,true);
+
+            Vmath::Vadd(m_ncoeffs, tmp5, 1, outarray, 1, outarray, 1);
+
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                         m_base[1]->GetBdata(),
+                                         m_base[2]->GetDbdata(),
+                                         tmp4,tmp5,wsp,
+                                         true,true,false);
+
+            Vmath::Vadd(m_ncoeffs, tmp5, 1, outarray, 1, outarray, 1);
         }
 
 

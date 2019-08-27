@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -71,6 +70,7 @@ protected:
     LIB_UTILITIES_EXPORT virtual void v_Finalise();
     LIB_UTILITIES_EXPORT virtual int v_GetRank();
     LIB_UTILITIES_EXPORT virtual bool v_TreatAsRankZero(void);
+    LIB_UTILITIES_EXPORT virtual bool v_IsSerial(void);
 
     LIB_UTILITIES_EXPORT virtual void v_Block();
     LIB_UTILITIES_EXPORT virtual NekDouble v_Wtime();
@@ -96,6 +96,18 @@ protected:
         void *sendbuf, int sendcounts[], int sensdispls[],
         CommDataType sendtype, void *recvbuf, int recvcounts[], int rdispls[],
         CommDataType recvtype);
+    LIB_UTILITIES_EXPORT virtual void v_AllGather(void *sendbuf, int sendcount,
+                                                  CommDataType sendtype,
+                                                  void *recvbuf, int recvcount,
+                                                  CommDataType recvtype);
+    LIB_UTILITIES_EXPORT virtual void v_AllGatherv(void *sendbuf, int sendcount,
+                                                   CommDataType sendtype,
+                                                   void *recvbuf, int recvcounts[],
+                                                   int rdispls[],
+                                                   CommDataType recvtype);
+    LIB_UTILITIES_EXPORT virtual void v_AllGatherv(void *recvbuf, int recvcounts[],
+                                                   int rdispls[],
+                                                   CommDataType recvtype);
     LIB_UTILITIES_EXPORT virtual void v_Bcast(void *buffer, int count,
                                               CommDataType dt, int root);
     LIB_UTILITIES_EXPORT virtual void v_Exscan(

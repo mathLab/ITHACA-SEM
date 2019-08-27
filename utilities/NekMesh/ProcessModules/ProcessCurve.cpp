@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -33,7 +32,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <FieldUtils/Interpolator.h>
+#include <LibUtilities/BasicUtils/Interpolator.h>
 
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/QuadExp.h>
@@ -200,7 +199,7 @@ void ProcessCurve::v_GenerateEdgeNodes(EdgeSharedPtr edge)
 
     // Write interior nodes to edge
     for (int k = 1; k < nq-1; ++k)
-    {                       
+    {
         edge->m_edgeNodes[k-1] = NodeSharedPtr(
                     new Node(0, x[k], y[k], n1->m_z));
     }
@@ -218,7 +217,7 @@ NekDouble ProcessCurve::EvaluateCoordinate(NekDouble xCoord)
         LibUtilities::PtsFieldSharedPtr toPts =
             MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(1, tmp);
 
-        FieldUtils::Interpolator interp;
+        LibUtilities::Interpolator interp;
         interp.Interpolate(m_fieldPts, toPts);
 
         return tmp[1][0];

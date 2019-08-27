@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -38,7 +37,7 @@
 
 #include <NekMeshUtils/Module/Module.h>
 
-#include "ccmio.h"
+#include <libccmio/ccmio.h>
 
 namespace Nektar
 {
@@ -67,7 +66,7 @@ protected:
     void GenElement3D(std::vector<NekMeshUtils::NodeSharedPtr> &Nodes,
                       int i,
                       std::vector<int> &ElementFaces,
-                      std::map<int, std::vector<int> > &FaceNodes,
+                      std::unordered_map<int, std::vector<int> > &FaceNodes,
                       int ncomposite,
                       bool DoOrient);
 
@@ -83,11 +82,11 @@ protected:
     Array<OneD, int> SortFaceNodes(
                     std::vector<NekMeshUtils::NodeSharedPtr> &Nodes,
                     std::vector<int> &ElementFaces,
-                    std::map<int, std::vector<int> > &FaceNodes);
+                    std::unordered_map<int, std::vector<int> > &FaceNodes);
 
     void ResetNodes(std::vector<NekMeshUtils::NodeSharedPtr> &Nodes,
                     Array<OneD, std::vector<int> > &ElementFaces,
-                    std::map<int, std::vector<int> > &FaceNodes);
+                    std::unordered_map<int, std::vector<int> > &FaceNodes);
 
 private:
     CCMIOError m_ccmErr; // Star CCM error flag
@@ -99,11 +98,11 @@ private:
 
     void ReadNodes(std::vector<NekMeshUtils::NodeSharedPtr> &Nodes);
 
-    void ReadInternalFaces(std::map<int, std::vector<int> > &FacesNodes,
+    void ReadInternalFaces(std::unordered_map<int, std::vector<int> > &FacesNodes,
                            Array<OneD, std::vector<int> > &ElementFaces);
 
     void ReadBoundaryFaces(std::vector<std::vector<int> > &BndElementFaces,
-                           std::map<int, std::vector<int> > &FacesNodes,
+                           std::unordered_map<int, std::vector<int> > &FacesNodes,
                            Array<OneD, std::vector<int> > &ElementFaces,
                            std::vector<std::string> &facelabels);
 

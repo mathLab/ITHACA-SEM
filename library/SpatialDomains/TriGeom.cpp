@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -116,84 +115,109 @@ NekDouble TriGeom::v_GetCoord(const int i,
 }
 
 StdRegions::Orientation TriGeom::GetFaceOrientation(const TriGeom &face1,
-                                                    const TriGeom &face2)
+                              const TriGeom &face2, bool doRot, int dir,
+                              NekDouble angle, NekDouble tol)
 {
-    return GetFaceOrientation(face1.m_verts, face2.m_verts);
+    return GetFaceOrientation(face1.m_verts, face2.m_verts,
+                              doRot, dir, angle, tol);
 }
 
 StdRegions::Orientation TriGeom::GetFaceOrientation(
-    const PointGeomVector &face1, const PointGeomVector &face2)
+              const PointGeomVector &face1, const PointGeomVector &face2,
+              bool doRot, int dir, NekDouble angle, NekDouble tol)
 {
     int i, j, vmap[3] = {-1, -1, -1};
-    NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
 
-    // For periodic faces, we calculate the vector between the centre
-    // points of the two faces. (For connected faces this will be
-    // zero). We can then use this to determine alignment later in the
-    // algorithm.
-    for (i = 0; i < 3; ++i)
+    if(doRot)
     {
-        cx += (*face2[i])(0) - (*face1[i])(0);
-        cy += (*face2[i])(1) - (*face1[i])(1);
-        cz += (*face2[i])(2) - (*face1[i])(2);
-    }
-    cx /= 3;
-    cy /= 3;
-    cz /= 3;
-
-    // Now construct a mapping which takes us from the vertices of one
-    // face to the other. That is, vertex j of face2 corresponds to
-    // vertex vmap[j] of face1.
-    for (i = 0; i < 3; ++i)
-    {
-        x = (*face1[i])(0);
-        y = (*face1[i])(1);
-        z = (*face1[i])(2);
-        for (j = 0; j < 3; ++j)
+        PointGeom rotPt;
+        
+        for (i = 0; i < 3; ++i)
         {
-            x1 = (*face2[j])(0) - cx;
-            y1 = (*face2[j])(1) - cy;
-            z1 = (*face2[j])(2) - cz;
-            if (sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) +
-                     (z1 - z) * (z1 - z)) < 1e-8)
+            rotPt.Rotate((*face1[i]), dir, angle);
+            for (j = 0; j < 3; ++j)
             {
-                vmap[j] = i;
-                break;
+                if (rotPt.dist(*face2[j]) < tol)
+                {
+                    vmap[j] = i;
+                    break;
+                }
             }
         }
     }
+    else
+    {
+        
+        NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
 
+        // For periodic faces, we calculate the vector between the centre
+        // points of the two faces. (For connected faces this will be
+        // zero). We can then use this to determine alignment later in the
+        // algorithm.
+        for (i = 0; i < 3; ++i)
+        {
+            cx += (*face2[i])(0) - (*face1[i])(0);
+            cy += (*face2[i])(1) - (*face1[i])(1);
+            cz += (*face2[i])(2) - (*face1[i])(2);
+        }
+        cx /= 3;
+        cy /= 3;
+        cz /= 3;
+        
+        // Now construct a mapping which takes us from the vertices of one
+        // face to the other. That is, vertex j of face2 corresponds to
+        // vertex vmap[j] of face1.
+        for (i = 0; i < 3; ++i)
+        {
+            x = (*face1[i])(0);
+            y = (*face1[i])(1);
+            z = (*face1[i])(2);
+            for (j = 0; j < 3; ++j)
+            {
+                x1 = (*face2[j])(0) - cx;
+                y1 = (*face2[j])(1) - cy;
+                z1 = (*face2[j])(2) - cz;
+                if (sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) +
+                         (z1 - z) * (z1 - z)) < 1e-8)
+                {
+                    vmap[j] = i;
+                break;
+                }
+            }
+        }
+    }
+    
     if (vmap[1] == (vmap[0] + 1) % 3)
     {
         switch (vmap[0])
         {
-            case 0:
-                return StdRegions::eDir1FwdDir1_Dir2FwdDir2;
-                break;
-            case 1:
-                return StdRegions::eDir1FwdDir2_Dir2BwdDir1;
-                break;
-            case 2:
-                return StdRegions::eDir1BwdDir1_Dir2BwdDir2;
-                break;
+        case 0:
+            return StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+            break;
+        case 1:
+            return StdRegions::eDir1FwdDir2_Dir2BwdDir1;
+            break;
+        case 2:
+            return StdRegions::eDir1BwdDir1_Dir2BwdDir2;
+            break;
         }
     }
     else
     {
         switch (vmap[0])
         {
-            case 0:
-                return StdRegions::eDir1FwdDir2_Dir2FwdDir1;
-                break;
-            case 1:
-                return StdRegions::eDir1BwdDir1_Dir2FwdDir2;
-                break;
-            case 2:
-                return StdRegions::eDir1BwdDir2_Dir2BwdDir1;
-                break;
+        case 0:
+            return StdRegions::eDir1FwdDir2_Dir2FwdDir1;
+            break;
+        case 1:
+            return StdRegions::eDir1BwdDir1_Dir2FwdDir2;
+            break;
+        case 2:
+            return StdRegions::eDir1BwdDir2_Dir2BwdDir1;
+            break;
         }
     }
-
+    
     ASSERTL0(false, "Unable to determine triangle orientation");
     return StdRegions::eNoOrientation;
 }
@@ -294,7 +318,17 @@ void TriGeom::v_FillGeom()
                 const int offset = 3 + i * (nEdgePts - 2);
                 NekDouble maxDist = 0.0;
 
-                if (m_eorient[i] == StdRegions::eForwards)
+                // Account for different ordering of nodal coordinates
+                // vs. Cartesian ordering of element.
+                StdRegions::Orientation orient = m_eorient[i];
+
+                if (i == 2)
+                {
+                    orient = orient == StdRegions::eForwards ?
+                        StdRegions::eBackwards : StdRegions::eForwards;
+                }
+
+                if (orient == StdRegions::eForwards)
                 {
                     for (j = 0; j < nEdgePts - 2; ++j)
                     {

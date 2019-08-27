@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -392,7 +391,7 @@ namespace Nektar
                 if(init)
                 {
                     m_solverRoll->DoInitialise();
-                    m_vwiForcingObj = std::dynamic_pointer_cast<SolverUtils::ForcingProgrammatic>(GetForcingFactory().CreateInstance("Programmatic", m_sessionRoll, m_solverRoll->UpdateFields(), m_solverRoll->UpdateFields().num_elements() - 1, 0));
+                    m_vwiForcingObj = std::dynamic_pointer_cast<SolverUtils::ForcingProgrammatic>(GetForcingFactory().CreateInstance("Programmatic", m_sessionRoll, m_solverRoll, m_solverRoll->UpdateFields(), m_solverRoll->UpdateFields().num_elements() - 1, 0));
 
                     std::vector<std::string> vFieldNames = m_sessionRoll->GetVariables();
                     vFieldNames.erase(vFieldNames.end()-1);

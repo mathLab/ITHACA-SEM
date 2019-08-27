@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -42,6 +41,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 #include <SolverUtils/Forcing/Forcing.h>
+#include <SolverUtils/Filters/FilterInterfaces.hpp>
 #include <complex>
 
 namespace Nektar
@@ -133,7 +133,8 @@ namespace Nektar
      * \brief This class is the base class for Navier Stokes problems
      *
      */
-    class IncNavierStokes: public SolverUtils::AdvectionSystem
+    class IncNavierStokes: public SolverUtils::AdvectionSystem,
+                           public SolverUtils::FluidInterface
     {
     public:
         // Destructor
@@ -152,6 +153,23 @@ namespace Nektar
         }
 
         void AddForcing(const SolverUtils::ForcingSharedPtr& pForce);
+
+        virtual void GetPressure(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &pressure);
+
+        virtual void GetDensity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &density);
+
+        virtual bool HasConstantDensity()
+        {
+            return true;
+        }
+
+        virtual void GetVelocity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, Array<OneD, NekDouble> >       &velocity);
 
     protected:
 

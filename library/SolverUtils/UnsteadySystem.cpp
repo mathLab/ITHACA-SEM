@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -108,9 +107,14 @@ namespace Nektar
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+                m_session->LoadParameter("IO_FiltersInfoSteps",
+                    m_filtersInfosteps, 10.0 * m_infosteps);
                 m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
                 m_session->LoadParameter("CFL_End", m_CFLEnd, 0.0);
                 m_session->LoadParameter("CFLGrowth", m_CFLGrowth, 1.0);
+
+                // Time tolerance between filter update time and time integration
+                m_session->LoadParameter("FilterTimeWarning", m_filterTimeWarning, 1);
 
                 // Ensure that there is no conflict of parameters
                 if(m_cflSafetyFactor > 0.0)
@@ -148,9 +152,8 @@ namespace Nektar
             // Set up filters
             for (auto &x : m_session->GetFilters())
             {
-                m_filters.push_back(
-                    GetFilterFactory().CreateInstance(
-                        x.first, m_session, x.second));
+                m_filters.push_back(make_pair(x.first, GetFilterFactory().CreateInstance(
+                        x.first, m_session, shared_from_this(), x.second)));
             }
         }
         
@@ -265,17 +268,19 @@ namespace Nektar
             // Initialise filters
             for (auto &x : m_filters)
             {
-                x->Initialise(m_fields, m_time);
+                x.second->Initialise(m_fields, m_time);
             }
 
-            LibUtilities::Timer     timer;
-            bool      doCheckTime   = false;
-            int       step          = m_initialStep;
-            int       stepCounter   = 0;
-            NekDouble intTime       = 0.0;
-            NekDouble lastCheckTime = 0.0;
-            NekDouble cpuTime       = 0.0;
-            NekDouble elapsed       = 0.0;
+            LibUtilities::Timer         timer;
+            bool      doCheckTime       = false;
+            int       step              = m_initialStep;
+            int       stepCounter       = 0;
+            NekDouble intTime           = 0.0;
+            NekDouble lastCheckTime     = 0.0;
+            NekDouble cpuTime           = 0.0;
+            NekDouble cpuPrevious       = 0.0;
+            NekDouble elapsed           = 0.0;
+            NekDouble totFilterTime     = 0.0;
 
 
             m_timestepMax = m_timestep;
@@ -345,6 +350,7 @@ namespace Nektar
 
                     cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
                          <<" INT Time: "<< intTime<<"s"<<endl;
+                    cpuPrevious = cpuTime;
                     
                     cpuTime = 0.0;
                 }
@@ -352,7 +358,10 @@ namespace Nektar
                 // Transform data into coefficient space
                 for (i = 0; i < nvariables; ++i)
                 {
+                    // copy fields into ExpList::m_phys and assign the new
+                    // array to fields
                     m_fields[m_intVariables[i]]->SetPhys(fields[i]);
+                    fields[i] = m_fields[m_intVariables[i]]->UpdatePhys();
                     if( v_RequireFwdTrans() )
                     {
                         m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(
@@ -398,11 +407,44 @@ namespace Nektar
                     ASSERTL0 (!nanFound,
                                 "NaN found during time integration.");
                 }
+
                 // Update filters
                 for (auto &x : m_filters)
                 {
-                    x->Update(m_fields, m_time);
+                    timer.Start();
+                    x.second->Update(m_fields, m_time);
+                    timer.Stop();
+                    elapsed = timer.TimePerTest(1);
+                    totFilterTime += elapsed;
+
+                    // Write out individual filter status information
+                    if(m_session->GetComm()->GetRank() == 0 && 
+                    !((step+1) % m_filtersInfosteps) && !m_filters.empty() && 
+                    m_session->DefinesCmdLineArgument("verbose"))
+                    {
+                        stringstream s0;
+                        s0 << x.first << ":";
+                        stringstream s1;
+                        s1 << elapsed << "s";
+                        stringstream s2;
+                        s2 << elapsed / cpuPrevious * 100 << "%";
+                        cout << "CPU time for filter " << setw(25) << left 
+                            << s0.str() << setw(12) << left << s1.str() << 
+                            endl << "\t Percentage of time integration:     "
+                             << setw(10) << left << s2.str() << endl;
+                    }
                 }
+
+                // Write out overall filter status information
+                if (m_session->GetComm()->GetRank() == 0 && 
+                    !((step+1) % m_filtersInfosteps) && !m_filters.empty())
+                 {
+                    stringstream ss;
+                    ss << totFilterTime << "s";
+                    cout << "Total filters CPU Time:\t\t\t     " << setw(10)
+                        << left << ss.str() << endl;
+                 }
+                totFilterTime = 0.0;
 
                 // Write out checkpoint files
                 if ((m_checksteps && !((step + 1) % m_checksteps)) ||
@@ -491,7 +533,7 @@ namespace Nektar
             // Finalise filters
             for (auto &x : m_filters)
             {
-                x->Finalise(m_fields, m_time);
+                x.second->Finalise(m_fields, m_time);
             }
             
             // Print for 1D problems

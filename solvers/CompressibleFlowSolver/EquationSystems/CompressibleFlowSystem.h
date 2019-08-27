@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -45,14 +44,18 @@
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 #include <SolverUtils/Forcing/Forcing.h>
-#include <MultiRegions/GlobalMatrixKey.h>
+#include <SolverUtils/Filters/FilterInterfaces.hpp>
+#include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/Expansion2D.h>
+
 
 namespace Nektar
 {
     /**
      *
      */
-    class CompressibleFlowSystem: public SolverUtils::AdvectionSystem
+    class CompressibleFlowSystem: public SolverUtils::AdvectionSystem,
+                                  public SolverUtils::FluidInterface
     {
     public:
 
@@ -67,6 +70,26 @@ namespace Nektar
         /// (a vector of them).
         Array<OneD, NekDouble> GetStabilityLimitVector(
             const Array<OneD,int> &ExpOrder);
+
+        /// Function to get estimate of min h/p factor per element
+        Array<OneD, NekDouble>  GetElmtMinHP(void);
+
+        virtual void GetPressure(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &pressure);
+
+        virtual void GetDensity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &density);
+
+        virtual bool HasConstantDensity()
+        {
+            return false;
+        }
+
+        virtual void GetVelocity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, Array<OneD, NekDouble> >       &velocity);
 
     protected:
         SolverUtils::DiffusionSharedPtr     m_diffusion;
@@ -92,6 +115,9 @@ namespace Nektar
 
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
+
+        NekDouble                           m_BndEvaluateTime;
+
 
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession,

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -167,8 +166,8 @@ namespace Nektar
         m_advObject->InitObject( m_session, m_fields);
 
         // Forcing terms
-        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
-                                               v_GetForceDimension());
+        m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
+                                            m_fields, v_GetForceDimension());
 
         // check to see if any Robin boundary conditions and if so set
         // up m_field to boundary condition maps;
@@ -565,8 +564,6 @@ namespace Nektar
         std::string::size_type indxBeg = womStr.find_first_of(':') + 1;
         string filename = womStr.substr(indxBeg,string::npos);
 
-        NekComplexDouble coef;
-
         TiXmlDocument doc(filename);
 
         bool loadOkay = doc.LoadFile();
@@ -817,6 +814,40 @@ namespace Nektar
         stdVelocity = m_extrapolation->GetMaxStdVelocity(velfields);
 
         return stdVelocity;
+    }
+
+    /**
+     *
+     */
+    void IncNavierStokes::GetPressure(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &pressure)
+    {
+        pressure = physfield[m_nConvectiveFields];
+    }
+
+    /**
+     *
+     */
+    void IncNavierStokes::GetDensity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &density)
+    {
+        int nPts  = physfield[0].num_elements();
+        Vmath::Fill(nPts, 1.0, density, 1);
+    }
+
+    /**
+     *
+     */
+    void IncNavierStokes::GetVelocity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, Array<OneD, NekDouble> >       &velocity)
+    {
+        for(int i = 0; i < m_spacedim; ++i)
+        {
+            velocity[i] = physfield[i];
+        }
     }
 
     /**

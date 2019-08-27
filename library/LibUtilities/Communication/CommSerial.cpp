@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -88,6 +87,14 @@ bool CommSerial::v_TreatAsRankZero(void)
 /**
  *
  */
+bool CommSerial::v_IsSerial(void)
+{
+    return true;
+}
+
+/**
+ *
+ */
 void CommSerial::v_Block()
 {
 }
@@ -157,6 +164,25 @@ void CommSerial::v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[],
 {
 }
 
+/**
+ *
+ */
+void CommSerial::v_AllGather(void *sendbuf, int sendcount, CommDataType sendtype,
+                             void *recvbuf, int recvcount, CommDataType recvtype)
+{
+}
+
+void CommSerial::v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
+                              void *recvbuf, int recvcounts[], int rdispls[],
+                              CommDataType recvtype)
+{
+}
+
+void CommSerial::v_AllGatherv(void *recvbuf, int recvcounts[], int rdispls[],
+                              CommDataType recvtype)
+{
+}
+
 void CommSerial::v_Bcast(void *buffer, int count, CommDataType dt, int root)
 {
 }
@@ -193,8 +219,17 @@ void CommSerial::v_SplitComm(int pRows, int pColumns)
  */
 CommSharedPtr CommSerial::v_CommCreateIf(int flag)
 {
-    ASSERTL0(flag, "Serial process must always be split");
-    return shared_from_this();
+     if (flag == 0)
+    {
+        // flag == 0 => get back MPI_COMM_NULL, return a null ptr instead.
+        return std::shared_ptr<Comm>();
+    }
+    else
+    {
+        // Return a real communicator
+        return shared_from_this();
+    }
+
 }
 }
 }

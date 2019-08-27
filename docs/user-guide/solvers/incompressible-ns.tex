@@ -887,14 +887,18 @@ The following parameters can be specified in the \inltt{PARAMETERS} section of
 the session file:
 
 \begin{itemize}
-\item \inltt{TimeStep}: sets the time-step for the integration in time formula
-\item \inltt{NumSteps}: sets the number of time-steps
-\item \inltt{Kinvis}: sets the cinematic viscosity coefficient formula
-\item \inltt{SubStepCFL}: sets the CFL safety limit for the sub-stepping algorithm (default value = 0.5)
-\item \inltt{MinSubSteps}: perform a minimum number of substeps in sub-stepping algorithm (default is 1)
-\item \inltt{MaxSubSteps}: perform a maxmimum  number of substeps in sub-stepping algorithm otherwise exit (default is 100)
-\item \inltt{SVVCutoffRatio}: sets the ratio of Fourier frequency not affected by the SVV technique (default value = 0.75, i.e. the first 75\% of frequency are not damped)
-\item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1 (Exponential and Power kernel), 1 (DG-Kernel))
+\item \inltt{TimeStep}: sets the time-step for the integration in time formula.
+\item \inltt{NumSteps}: sets the number of time-steps.
+\item \inltt{IO\_CheckSteps}: sets the number of steps between successive checkpoint files.
+\item \inltt{IO\_InfoSteps}: sets the number of steps between successive info stats are printed to screen.
+\item \inltt{Kinvis}: sets the cinematic viscosity coefficient formula.
+\item \inltt{SubStepCFL}: sets the CFL safety limit for the sub-stepping algorithm (default value = 0.5).
+\item \inltt{MinSubSteps}: perform a minimum number of substeps in sub-stepping algorithm (default is 1).
+\item \inltt{MaxSubSteps}: perform a maxmimum  number of substeps in sub-stepping algorithm otherwise exit (default is 100).
+\item \inltt{SVVCutoffRatio}: sets the ratio of Fourier frequency not affected by the SVV technique (default value = 0.75, i.e. the first 75\% of frequency are not damped).
+\item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1 (Exponential and Power kernel), 1 (DG-Kernel)).
+\item \inltt{IO\_CFLWriteFld}: sets a treshold value for the CFL number. If CFL exceeds this value, the flow field is written to file (only once). This is useful for debugging purposes, allowing to visually inspect a flow field that is becoming unstable.
+\item \inltt{IO\_CFLWriteFldNumSteps}: sets the number of timesteps after which \inltt{IO\_CFLWriteFld} becomes operational. This avoids writing the flow field at the beginning of a simulation when initialising a new geometry.
 \end{itemize}
 
 \subsection{Womersley Boundary Condition}
@@ -1151,10 +1155,14 @@ table above.
 \end{itemize}
 \item \inltt{ModeType}: this specifies the type of the quasi-3D problem to be solved.
 \begin{itemize}
-\item \inltt{MultipleMode} (stability analysis with multiple modes).
-\item \inltt{SingleMode} (BiGlobal Stability Analysis: full-complex mode).
+\item \inltt{MultipleMode} (stability analysis with multiple modes, \inltt{HomModesZ} sets number of modes).
+\item \inltt{SingleMode} (BiGlobal Stability Analysis: full-complex mode. Overrides \inltt{HomModesZ} to 1.).
 \item \inltt{HalfMode} (BiGlobal Stability Analysis: half-complex mode u.Re v.Re w.Im p.Re).
 \end{itemize}
+\begin{notebox}
+  For visualization of \inltt{Homogeneous} results with \inltt{FieldConvert} you can use \inltt{-{}-output-points-hom-z} to set output number of modes to a desired value.
+  To process results obtained with \inltt{HalfMode} you can convert to \inltt{SingleMode} using \inltt{FieldConvert} module \inltt{halfmodetofourier}.
+\end{notebox}
 \end{itemize}
 
 
@@ -1165,8 +1173,9 @@ The following parameters can be specified in the \texttt{PARAMETERS} section of 
 \item \inltt{Re}: sets the Reynolds number
 \item \inltt{Kinvis}: sets the kinematic viscosity $\nu$.
 \item \inltt{kdim}: sets the dimension of the Krylov subspace $\kappa$. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 16.
-\item \inltt{evtol}: sets the tolerance of the eigenvalues. Can be used in: \item \inltt{imagShift}: provide an imaginary shift to the direct sovler eigenvalue problem by the specified value. 
-ltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $10^{-6}$.
+\item \inltt{evtol}: sets the tolerance of the eigenvalues. Can be used in: \item \inltt{imagShift}:
+provide an imaginary shift to the direct solver eigenvalue problem by the specified value.
+\inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $0.0$. Works only with \inltt{Homogeneous} set to \inltt{1D} and \inltt{ModeType} set to \inltt{SingleMode}.
 \item \inltt{nits}: sets the maximum number of iterations. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 500.
 \item \inltt{LZ}:  sets the length in the spanswise direction $L_z$. Can be used in \inltt{Homogeneous} set to \inltt{1D}. Default value: 1.
 \item \inltt{HomModesZ}: sets the number of planes in the homogeneous directions. Can be used in \inltt{Homogeneous} set to \inltt{1D} and \inltt{ModeType} set to \inltt{MultipleModes}.

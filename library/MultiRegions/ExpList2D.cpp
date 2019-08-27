@@ -1106,13 +1106,17 @@ namespace Nektar
          * into the array \a normals.
          */
         void ExpList2D::v_GetElmtNormalLength(
-            Array<OneD, NekDouble>               &lengths)
+            Array<OneD, NekDouble>  &lengthsFwd,
+            Array<OneD, NekDouble>  &lengthsBwd)
         {
             int i,j,k,e_npoints,offset;
 
             Array<OneD,NekDouble> locLeng;
             Array<OneD,NekDouble> lengintp;
             Array<OneD,int      > LRbndnumbs(2);
+            Array<OneD, Array<OneD,NekDouble> > lengLR(2);
+            lengLR[0]   =   lengthsFwd;
+            lengLR[1]   =   lengthsBwd;
             Array<OneD,LocalRegions::Expansion3DSharedPtr> LRelmts(2);
             LocalRegions::Expansion3DSharedPtr loc_elmt;
             LocalRegions::Expansion2DSharedPtr loc_exp;
@@ -1182,10 +1186,9 @@ namespace Nektar
                             traceBasis1.GetPointsKey(),
                             lengintp);
                     }
-                    // Process each point in the expansion.
                     for (j = 0; j < e_npoints; ++j)
                     {
-                        lengths[offset + j] += lengintp[j];
+                        lengLR[nlr][offset + j] = lengintp[j];
                     }
                 }
             }

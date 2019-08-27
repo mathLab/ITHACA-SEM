@@ -2679,7 +2679,8 @@ namespace Nektar
         }
 
         void ExpList::v_GetElmtNormalLength(
-            Array<OneD, NekDouble>  &lengths)
+            Array<OneD, NekDouble>  &lengthsFwd,
+            Array<OneD, NekDouble>  &lengthsBwd)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

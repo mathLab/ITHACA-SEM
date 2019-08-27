@@ -786,7 +786,9 @@ namespace Nektar
 
             inline void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
-            inline void GetElmtNormalLength(Array<OneD, NekDouble>  &lengths);
+            inline void GetElmtNormalLength(
+                Array<OneD, NekDouble>  &lengthsFwd,
+                Array<OneD, NekDouble>  &lengthsBwd);
 
             void GetBwdWeight(
                 Array<OneD, NekDouble>  &weightAver,
@@ -1281,7 +1283,8 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &normals);
 
             virtual void v_GetElmtNormalLength(
-                Array<OneD, NekDouble>  &lengths);
+                Array<OneD, NekDouble>  &lengthsFwd,
+                Array<OneD, NekDouble>  &lengthsBwd);
 
             virtual void v_AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fx,
@@ -2429,9 +2432,10 @@ namespace Nektar
         }
 
         inline void ExpList::GetElmtNormalLength(
-            Array<OneD, NekDouble>  &lengths)
+            Array<OneD, NekDouble>  &lengthsFwd,
+            Array<OneD, NekDouble>  &lengthsBwd)
         {
-            v_GetElmtNormalLength(lengths);
+            v_GetElmtNormalLength(lengthsFwd,lengthsBwd);
         }
         
         inline void ExpList::AddTraceIntegral(

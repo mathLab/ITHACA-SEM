@@ -145,9 +145,8 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &normals);
 
             virtual void v_GetElmtNormalLength(
-                Array<OneD, NekDouble>  &lengths);
-            virtual void v_GetElmtNormalLengthMin(
-                Array<OneD, NekDouble>  &lengths);
+                Array<OneD, NekDouble>  &lengthsFwd,
+                Array<OneD, NekDouble>  &lengthsBwd);
             
         private:
             /// Set up the normals on each expansion.

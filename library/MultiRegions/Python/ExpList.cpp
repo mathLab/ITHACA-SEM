@@ -247,6 +247,9 @@ void export_ExpList()
         .def("GetPhys_Offset", &ExpList::GetPhys_Offset)
         .def("GetCoeff_Offset", &ExpList::GetCoeff_Offset)
 
+        // Evaluations
+        .def("PhysEvaluate", &ExpList::PhysEvaluate)
+
         // Operators
         .def("FwdTrans", &ExpList_FwdTrans)
         .def("BwdTrans", &ExpList_BwdTrans)

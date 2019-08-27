@@ -262,10 +262,6 @@ namespace Nektar
                             outarray[i], 1,
                             outarray[i], 1);
             }
-            // if (m_shockCaptureType != "Off")
-            // {
-            //     m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
-            // }
             if (m_shockCaptureType != "Off")
             {
                 // Get min h/p

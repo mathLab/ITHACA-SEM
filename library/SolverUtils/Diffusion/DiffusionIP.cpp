@@ -86,20 +86,19 @@ namespace Nektar
             }
 
             pFields[0]->GetTrace()->GetNormals(m_traceNormals);
-            m_traceNormDirctnElmtLength =   Array<OneD, NekDouble> (nTracePts,0.0);
-            pFields[0]->GetTrace()->GetElmtNormalLength(m_traceNormDirctnElmtLength);
-            // pFields[0]->GetTrace()->GetElmtNormalLengthMin(m_traceNormDirctnElmtLength);
+            Array<OneD, NekDouble>  lengthFwd(nTracePts,0.0);
+            Array<OneD, NekDouble>  lengthBwd(nTracePts,0.0);
+            pFields[0]->GetTrace()->GetElmtNormalLength(lengthFwd,lengthBwd);
 
-            // TODO:: to check parallel case
-            Array<OneD, NekDouble> lengthstmp(nTracePts,0.0);
-            pFields[0]->PeriodicBwdCopy(m_traceNormDirctnElmtLength,lengthstmp);
-            Vmath::Vadd(nTracePts,lengthstmp,1,m_traceNormDirctnElmtLength,1,m_traceNormDirctnElmtLength,1);
+            const MultiRegions::AssemblyMapDGSharedPtr TraceMap=pFields[0]->GetTraceMap();
+            pFields[0]->PeriodicBwdCopy(lengthFwd,lengthBwd);
+            TraceMap->UniversalTraceAssemble(lengthFwd);
+            TraceMap->UniversalTraceAssemble(lengthBwd);
 
-            // if(abs(m_IP2ndDervCoeff)>1.0E-14)
-            // {
-                m_traceNormDirctnElmtLengthRecip =   Array<OneD, NekDouble> (nTracePts,0.0);
-                Vmath::Sdiv(nTracePts,1.0,m_traceNormDirctnElmtLength,1,m_traceNormDirctnElmtLengthRecip,1);
-            // }
+            Vmath::Vadd(nTracePts,lengthBwd,1,lengthFwd,1,lengthFwd,1);
+            m_traceNormDirctnElmtLength = lengthFwd;
+            m_traceNormDirctnElmtLengthRecip =   lengthBwd;
+            Vmath::Sdiv(nTracePts,1.0,m_traceNormDirctnElmtLength,1,m_traceNormDirctnElmtLengthRecip,1);
 
             m_tracBwdWeightAver  =   Array<OneD, NekDouble> (nTracePts,0.0);
             m_tracBwdWeightJump  =   Array<OneD, NekDouble> (nTracePts,0.0);

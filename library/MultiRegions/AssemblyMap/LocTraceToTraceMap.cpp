@@ -1176,8 +1176,11 @@ void LocTraceToTraceMap::FindElemNeighbs(
     for(int  ne = 0; ne < nexp; ne++)
     {
         int neighb = ElemNeighbsNumb[ne];
-        ElemNeighbsId[ne]   =   Array<OneD, int >(neighb,-1);
-        Vmath::Vcopy(neighb,tmpId[ne],1,ElemNeighbsId[ne],1);
+        if(neighb>0)
+        {
+            ElemNeighbsId[ne]   =   Array<OneD, int >(neighb,-1);
+            Vmath::Vcopy(neighb,tmpId[ne],1,ElemNeighbsId[ne],1);
+        }
     }
     
     // check errors

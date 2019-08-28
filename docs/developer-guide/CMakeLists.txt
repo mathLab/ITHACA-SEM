@@ -43,13 +43,10 @@ FOREACH(pdf ${pdffiles})
 ENDFOREACH()
 
 ADD_CUSTOM_TARGET(developer-guide-pdf
-    export TEXINPUTS=${CMAKE_SOURCE_DIR}//: && 
     ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
     COMMAND TEXMFOUTPUT=${DEVGUIDE} ${BIBTEX} ${DEVGUIDE}/developers-guide.aux
     COMMAND TEXMFOUTPUT=${DEVGUIDE} ${MAKEINDEX} ${DEVGUIDE}/developers-guide.idx
-    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}//:  
-    ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
-    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}//:  
-    ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
+    COMMAND ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
+    COMMAND ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
     WORKING_DIRECTORY ${DEVGUIDESRC}
 )

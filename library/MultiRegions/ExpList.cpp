@@ -2789,6 +2789,8 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "v_GetBndCondBwdWeight is not defined or valid for this class type");
+            static Array<OneD, NekDouble> tmp;
+            return tmp;
         }
 
         void ExpList::v_SetBndCondBwdWeight(const int index, const NekDouble value)
@@ -2802,7 +2804,8 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            // return;
+            static Array<OneD, Array<OneD, std::shared_ptr<ExpList>>> tmp;
+            return tmp;
         }
         
         const vector<bool> &ExpList::v_GetLeftAdjacentFaces(void) const
@@ -2929,7 +2932,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
+        
         void ExpList::v_NormVectorIProductWRTBase(
                                 Array<OneD, Array<OneD, NekDouble> > &V,
                                 Array<OneD, NekDouble> &outarray)

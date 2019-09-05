@@ -4167,25 +4167,80 @@ namespace Nektar
                 const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
                          Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef)
         {
+            int    nelmt;
+            int    nelmtcoef, nelmtpnts,nelmtcoef0, nelmtpnts0;
+
+            nelmtcoef  = GetNcoeffs(0);
+            nelmtpnts  = GetTotPoints(0);
+
+            Array<OneD,NekDouble> innarray(nelmtpnts,0.0);
+            Array<OneD,NekDouble> outarray(nelmtcoef,0.0);
+
+            Array<OneD,NekDouble> MatQ_data;
+            Array<OneD,NekDouble> MatC_data;
+
             DNekMatSharedPtr tmpMatQ,tmpMatC;
 
-            for(int nelmt = 0; nelmt < (*m_exp).size(); ++nelmt)
+            nelmtcoef0 = nelmtcoef;
+            nelmtpnts0 = nelmtpnts;
+
+            for(nelmt = 0; nelmt < (*m_exp).size(); ++nelmt)
             {
+                nelmtcoef  = GetNcoeffs(nelmt);
+                nelmtpnts  = GetTotPoints(nelmt);
+
                 tmpMatQ     = ElmtJacQuad[nelmt];
                 tmpMatC     = ElmtJacCoef[nelmt];
 
+                MatQ_data   = tmpMatQ->GetPtr();
+                MatC_data   = tmpMatC->GetPtr();
+                
+                if(nelmtcoef!=nelmtcoef0)
+                {
+                    innarray = Array<OneD,NekDouble> (nelmtcoef,0.0);
+                    nelmtcoef0 = nelmtcoef;
+                }
 
-                StdRegions::StdExpansionSharedPtr stdExp;
-                stdExp = (*m_exp)[nelmt]->GetStdExp();
-                    StdRegions::StdMatrixKey  matkey(StdRegions::eBwdTrans,
-                                        stdExp->DetShapeType(), *stdExp);
-                    
-                DNekMatSharedPtr BwdTransMat =  stdExp->GetStdMatrix(matkey);
+                if(nelmtpnts!=nelmtpnts0)
+                {
+                    innarray = Array<OneD,NekDouble> (nelmtpnts,0.0);
+                    nelmtpnts0 = nelmtpnts;
+                }
 
+                for(int np=0; np<nelmtcoef;np++)
+                {
+                    Vmath::Vcopy(nelmtpnts,&MatQ_data[0]+np,nelmtcoef,&innarray[0],1);
+                    (*m_exp)[nelmt]->DividByQuadratureMetric(innarray,innarray);
+                    (*m_exp)[nelmt]->IProductWRTBase(innarray,outarray);
 
-                (*tmpMatC)  =  (*tmpMatC) + (*tmpMatQ)*(*BwdTransMat);  
+                    Vmath::Vadd(nelmtcoef,&outarray[0],1,&MatC_data[0]+np,nelmtcoef,&MatC_data[0]+np,nelmtcoef);
+                }
             }
         }
+
+        // void ExpList::AddRightIPTBaseMatrix(
+        //         const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
+        //                  Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef)
+        // {
+        //     DNekMatSharedPtr tmpMatQ,tmpMatC;
+
+        //     for(int nelmt = 0; nelmt < (*m_exp).size(); ++nelmt)
+        //     {
+        //         tmpMatQ     = ElmtJacQuad[nelmt];
+        //         tmpMatC     = ElmtJacCoef[nelmt];
+
+
+        //         StdRegions::StdExpansionSharedPtr stdExp;
+        //         stdExp = (*m_exp)[nelmt]->GetStdExp();
+        //             StdRegions::StdMatrixKey  matkey(StdRegions::eBwdTrans,
+        //                                 stdExp->DetShapeType(), *stdExp);
+                    
+        //         DNekMatSharedPtr BwdTransMat =  stdExp->GetStdMatrix(matkey);
+
+
+        //         (*tmpMatC)  =  (*tmpMatC) + (*tmpMatQ)*(*BwdTransMat);  
+        //     }
+        // }
 #endif
     } //end of namespace
 } //end of namespace

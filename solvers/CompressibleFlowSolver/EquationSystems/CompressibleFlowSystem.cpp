@@ -2637,6 +2637,8 @@ namespace Nektar
         Array<OneD, unsigned int> rowSizes;
         Array<OneD, unsigned int> colSizes;
 
+        Array<OneD, NekDouble > loc_mat_arr;
+
         DNekMatSharedPtr    loc_matNvar;
 
         for(int n1 = 0; n1 < n1d; ++n1)
@@ -2647,17 +2649,20 @@ namespace Nektar
             for(int i = 0; i < nelmts; ++i)
             {
                 loc_matNvar =   gmtxarray[n1]->GetBlock(i,i);
+                loc_mat_arr = loc_matNvar->GetPtr();
 
                 int nrows = loc_matNvar->GetRows();
                 int ncols = loc_matNvar->GetColumns();
 
-                for(int j = 0; j < nrows; j++)
-                {
-                    for(int k = 0; k < ncols; k++)
-                    {
-                        (*loc_matNvar)(j,k)=valu;
-                    }
-                }
+                Vmath::Fill(nrows*ncols,valu,loc_mat_arr,1);
+
+                // for(int j = 0; j < nrows; j++)
+                // {
+                //     for(int k = 0; k < ncols; k++)
+                //     {
+                //         (*loc_matNvar)(j,k)=valu;
+                //     }
+                // }
             }
         }
 

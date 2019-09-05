@@ -197,7 +197,7 @@ namespace Nektar
                 case LibUtilities::eDIRKOrder3Stage5:
                 case LibUtilities::eDIRKOrder4Stage6:
                 {
-                    TimeStability = 1.0;
+                    TimeStability = 2.0;
                     break;
                 }
                 default:

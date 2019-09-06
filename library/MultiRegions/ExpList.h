@@ -289,6 +289,16 @@ namespace Nektar
                       Array<OneD,      NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
 
+            inline void ExpList::MultiplyByMassMatrix(
+                const Array<OneD,const NekDouble> &inarray,
+                    Array<OneD,      NekDouble> &outarray,
+                      CoeffState coeffstate = eLocal)
+            {
+                Array<OneD, NekDouble > tmp (GetNpoints(),0.0);
+                BwdTrans(inarray,tmp,coeffstate);
+                IProductWRTBase(tmp,outarray,coeffstate);
+            }
+
             /// Smooth a field across elements
             inline void SmoothField(Array<OneD,NekDouble> &field);
 

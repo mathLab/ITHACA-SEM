@@ -4142,7 +4142,7 @@ namespace Nektar
                 
                 if(nelmtcoef!=nelmtcoef0)
                 {
-                    innarray = Array<OneD,NekDouble> (nelmtcoef,0.0);
+                    outarray = Array<OneD,NekDouble> (nelmtcoef,0.0);
                     nelmtcoef0 = nelmtcoef;
                 }
 
@@ -4197,7 +4197,7 @@ namespace Nektar
                 
                 if(nelmtcoef!=nelmtcoef0)
                 {
-                    innarray = Array<OneD,NekDouble> (nelmtcoef,0.0);
+                    outarray = Array<OneD,NekDouble> (nelmtcoef,0.0);
                     nelmtcoef0 = nelmtcoef;
                 }
 

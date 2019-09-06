@@ -612,16 +612,8 @@ namespace Nektar
             ASSERTL0(nvariables*npoints==ntotpnt,"nvariables*npoints==ntotpnt not satisfied in preconditioner_BlkSOR");
 
 
-            Array<OneD, NekDouble> rhs;
-            if(inarray.get() == outarray.get())
-            {
-                rhs =   Array<OneD, NekDouble>(ntotpnt,0.0);
-                Vmath::Vcopy(ntotpnt,inarray,1,rhs,1);
-            }
-            else
-            {
-                rhs =   inarray;
-            }
+            Array<OneD, NekDouble> rhs(ntotpnt,0.0);
+            // Vmath::Vcopy(ntotpnt,inarray,1,rhs,1);
 
             PointerWrapper pwrapp = eWrapper;
 
@@ -636,9 +628,10 @@ namespace Nektar
                 rhs2d[m]        = rhs       + moffset;
                 out_2d[m]       = outarray  + moffset;
                 outTmp_2d[m]    = outTmp    + moffset;
+                m_fields[m]->MultiplyByMassMatrix(inarray+moffset,rhs2d[m]);
             }
 
-            preconditioner_BlkDiag(inarray,outarray);
+            preconditioner_BlkDiag(rhs,outarray);
 
             int nphysic    = GetNpoints();
             int nTracePts  = GetTraceTotPoints();
@@ -870,7 +863,7 @@ namespace Nektar
             Vmath::Fill(nCoeffs,0.0,outarray[i],1);
             // Vmath::Neg                                  (nCoeffs, outarray[i], 1);
             m_fields[i]->AddTraceIntegralToOffDiag       (FwdFlux[i],BwdFlux[i], outarray[i]);
-            m_fields[i]->MultiplyByElmtInvMass          (outarray[i], outarray[i]);
+            // m_fields[i]->MultiplyByElmtInvMass          (outarray[i], outarray[i]);
         }
 
         for(int i = 0; i < nvariables; ++i)
@@ -1913,7 +1906,7 @@ namespace Nektar
         {
             for(int n = 0; n < nConvectiveFields; n++)
             {
-                explist->MultiplyByElmtInvMassOnDiag(gmtxarray[m][n], gmtxarray[m][n]);
+                // explist->MultiplyByElmtInvMassOnDiag(gmtxarray[m][n], gmtxarray[m][n]);
                 for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                 {
                     tmpGmtx =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
@@ -1923,16 +1916,85 @@ namespace Nektar
             }
         }
 
-        for(int m = 0; m < nConvectiveFields; m++)
+        // Array<OneD,NekDouble> MassMatData,tmp,innarray,outarray;
+        // DNekMatSharedPtr MassMat;
+
+        // for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        // {
+        //     int nelmtcoef  = GetNcoeffs(nelmt);
+        //     int nelmtpnts  = GetTotPoints(nelmt);
+
+        //     if(nelmtcoef!=tmp.num_elements())
+        //     {
+        //         tmp = Array<OneD,NekDouble> (nelmtcoef,0.0);
+        //         innarray = Array<OneD,NekDouble> (nelmtcoef,0.0);
+        //         MassMat  =  MemoryManager<DNekMat>
+        //             ::AllocateSharedPtr(nelmtcoef, nelmtcoef, 0.0);
+        //         MassMatData = MassMat->GetPtr();
+        //     }
+
+        //     if(nelmtpnts!=outarray.num_elements())
+        //     {
+        //         outarray = Array<OneD,NekDouble> (nelmtpnts,0.0);
+        //     }
+            
+        //     for(int np=0; np<nelmtcoef;np++)
+        //     {
+        //         innarray[np] = 1.0;
+        //         explist->GetExp(nelmt)->BwdTrans(innarray,outarray);
+        //         explist->GetExp(nelmt)->IProductWRTBase(outarray,tmp);
+        //         Vmath::Vcopy(nelmtcoef,&tmp[0],1,&MassMatData[0]+np*nelmtcoef,1);
+        //         innarray[np] = 0.0;
+        //     }
+
+        //     for(int m = 0; m < nConvectiveFields; m++)
+        //     {
+        //         tmpGmtx =   gmtxarray[m][m]->GetBlock(nelmt,nelmt);
+        //         (*tmpGmtx)    =  (*tmpGmtx) + (*MassMat);
+        //     }
+        // }
+
+        Array<OneD,NekDouble> BwdMatData,MassMatData,tmp;
+        DNekMatSharedPtr MassMat;
+        LibUtilities::ShapeType ElmtTypePrevious = LibUtilities::eNoShapeType;
+
+        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
         {
-            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            int nelmtcoef  = GetNcoeffs(nelmt);
+            int nelmtpnts  = GetTotPoints(nelmt);
+            LibUtilities::ShapeType ElmtTypeNow =   explist->GetExp(nelmt)->DetShapeType();
+
+            if (tmp.num_elements()!=nelmtcoef||(ElmtTypeNow!=ElmtTypePrevious)) 
+            {
+                StdRegions::StdExpansionSharedPtr stdExp;
+                stdExp = explist->GetExp(nelmt)->GetStdExp();
+                StdRegions::StdMatrixKey  matkey(StdRegions::eBwdTrans,
+                                    stdExp->DetShapeType(), *stdExp);
+                    
+                DNekMatSharedPtr BwdMat =  stdExp->GetStdMatrix(matkey);
+                BwdMatData = BwdMat->GetPtr();
+
+                if(nelmtcoef!=tmp.num_elements())
+                {
+                    tmp = Array<OneD,NekDouble> (nelmtcoef,0.0);
+                    MassMat  =  MemoryManager<DNekMat>
+                        ::AllocateSharedPtr(nelmtcoef, nelmtcoef, 0.0);
+                    MassMatData = MassMat->GetPtr();
+                }
+
+                ElmtTypePrevious    = ElmtTypeNow;
+            }
+            
+            for(int np=0; np<nelmtcoef;np++)
+            {
+                explist->GetExp(nelmt)->IProductWRTBase(BwdMatData+np*nelmtpnts,tmp);
+                Vmath::Vcopy(nelmtcoef,&tmp[0],1,&MassMatData[0]+np*nelmtcoef,1);
+            }
+
+            for(int m = 0; m < nConvectiveFields; m++)
             {
                 tmpGmtx =   gmtxarray[m][m]->GetBlock(nelmt,nelmt);
-                nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
-                for(int ncl = 0; ncl < nElmtCoef; ncl++)
-                {
-                    (*tmpGmtx)(ncl,ncl)   += 1.0 ;
-                }
+                (*tmpGmtx)    =  (*tmpGmtx) + (*MassMat);
             }
         }
         return;

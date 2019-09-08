@@ -35,6 +35,7 @@
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
 void export_Basis();
+void export_Comm();
 void export_Points();
 void export_SessionReader();
 void export_ShapeType();
@@ -50,6 +51,7 @@ BOOST_PYTHON_MODULE(_LibUtilities)
     np::initialize();
 
     export_Basis();
+    export_Comm();
     export_Points();
     export_SessionReader();
     export_ShapeType();

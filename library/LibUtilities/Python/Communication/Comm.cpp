@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MatrixKey.cpp
+//  File: ShapeType.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -28,53 +28,42 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Python wrapper for MatrixKey.
+//  Description: Python wrapper for ShapeType.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#include <LocalRegions/MatrixKey.h>
-
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Python/NekPyConfig.hpp>
-#include <boost/python/suite/indexing/map_indexing_suite.hpp>
 
 using namespace Nektar;
-using namespace Nektar::LocalRegions;
+using namespace Nektar::LibUtilities;
 
-MatrixKey *MatrixKey_Init(const StdRegions::MatrixType matType,
-                          const LibUtilities::ShapeType shapeType,
-                          const StdRegions::StdExpansionSharedPtr exp,
-                          const py::object &constFactorMap,
-                          const py::object &varCoeffMap)
+template<typename T>
+T AllReduce(CommSharedPtr &comm, T toReduce, ReduceOperator oper)
 {
-    StdRegions::ConstFactorMap tmp = StdRegions::NullConstFactorMap;
-    StdRegions::VarCoeffMap tmp2 = StdRegions::NullVarCoeffMap;
-
-    if (!constFactorMap.is_none())
-    {
-        tmp = py::extract<StdRegions::ConstFactorMap>(constFactorMap);
-    }
-
-    if (!varCoeffMap.is_none())
-    {
-        tmp2 = py::extract<StdRegions::VarCoeffMap>(varCoeffMap);
-    }
-
-    return new MatrixKey(matType, shapeType, *exp, tmp, tmp2);
+    comm->AllReduce(toReduce, oper);
+    return toReduce;
 }
 
 /**
- * @brief Export for MatrixKey enumeration.
+ * @brief Export for Comm communicator.
  */
-void export_MatrixKey()
+void export_Comm()
 {
-    py::class_<MatrixKey, py::bases<StdRegions::StdMatrixKey>>(
-        "MatrixKey", py::no_init)
-        .def("__init__",
-             py::make_constructor(
-                 &MatrixKey_Init, py::default_call_policies(),
-                 (py::arg("matType"), py::arg("shapeType"), py::arg("exp"),
-                  py::arg("constFactorMap") = py::object(),
-                  py::arg("varCoeffMap") = py::object())))
+    // Export ReduceOperator enum
+    NEKPY_WRAP_ENUM(ReduceOperator, ReduceOperatorMap);
+
+    py::class_<Comm, std::shared_ptr<Comm>,
+               boost::noncopyable>("Comm", py::no_init)
+        .def("GetSize", &Comm::GetSize)
+        .def("GetRank", &Comm::GetRank)
+        .def("GetType", &Comm::GetType,
+             py::return_value_policy<py::copy_const_reference>())
+        .def("AllReduce", &AllReduce<double>)
+        .def("AllReduce", &AllReduce<int>)
+        .def("AllReduce", &AllReduce<long>)
+        .def("AllReduce", &AllReduce<Array<OneD, NekDouble>>)
         ;
 }

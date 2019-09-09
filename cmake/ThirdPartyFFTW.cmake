@@ -69,8 +69,9 @@ IF (NEKTAR_USE_FFTW)
     # version of some C header files and -isystem reorders include paths).
     GET_FILENAME_COMPONENT(X "${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES}"  ABSOLUTE)
     GET_FILENAME_COMPONENT(Y ${FFTW_INCLUDE_DIR} ABSOLUTE)
+    STRING(FIND "${X}" "${Y}" X_FIND)
 
-    IF (NOT Y MATCHES ".*${X}.*")
+    IF (X_FIND EQUAL -1)
         INCLUDE_DIRECTORIES(SYSTEM ${FFTW_INCLUDE_DIR})
     ENDIF()
 

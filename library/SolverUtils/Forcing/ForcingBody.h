@@ -98,6 +98,7 @@ namespace SolverUtils
 
             void Update(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                const Array<OneD, Array<OneD, NekDouble> > &inarray,
                 const NekDouble &time);
     };
 

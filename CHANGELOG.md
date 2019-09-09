@@ -81,6 +81,7 @@ v5.0.0
 - Fix TriExp.cpp orientation bug (!1048)
 - Fix XML attributes in conditions.cpp to be unordered (!1015)
 - Fix issue with HDF5 mesh input in serial (!1049)
+- Add estimate of filters CPU time (!1044)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -118,6 +119,7 @@ v5.0.0
 - Fix issue with extracting 1D curved surface from 2D file (!984)
 - Fix surface extraction, added regression test (!994)
 - Fix 2D meshing running out of memory due to missing else (!1012)
+- Add support for .msh v4.1 file input (!1054)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -142,6 +144,7 @@ v5.0.0
   added check on dimensions for interpolation, fixed seg interp (!999)
 - Fixed scaling for compressed xml, fixed error printout for mesh only (!1040)
 - Add field conversion from Halfmode to SingleMode (!1032)
+- Fix double precision output in .dat format (!1059)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
@@ -187,6 +190,9 @@ v5.0.0
 **Tester**
 - Fix build with boost 1.67 (!947)
 - Various change to tests to decrease test time (!1053)
+
+**Packaging:**
+- Add Dockerfiles and gitlab CI configuration for automatic builds (!1021)
 
 v4.4.2
 ------

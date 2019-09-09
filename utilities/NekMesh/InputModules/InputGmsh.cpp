@@ -764,6 +764,7 @@ void InputGmsh::Process()
             s >> m_version;
             s >> fileType;
             ASSERTL0(fileType == 0, "Cannot read binary Gmsh files.")
+            ASSERTL0(m_version <= 4.1, ".msh file format versions greater than 4.1 are not currently supported.")
         }
         // Process entities (v4+)
         else if (word == "$Entities")
@@ -819,9 +820,16 @@ void InputGmsh::Process()
                     stringstream si(line);
                     si >> tmp >> tmp >> tmp >> nVertices;
 
-                    for (int j = 0; j < nVertices; ++j)
+                    if (m_version == 4.0)
                     {
-                        ReadNextNode();
+                        for (int i = 0; i < nVertices; ++i)
+                        {
+                            ReadNextNode();
+                        }
+                    }
+                    else if (m_version == 4.1)
+                    {
+                        ReadNextNodeBlock(nVertices);
                     }
                 }
             }
@@ -851,8 +859,14 @@ void InputGmsh::Process()
                     stringstream si(line);
 
                     int tagDim;
-                    si >> tag >> tagDim >> elm_type >> nElements;
-
+                    if (m_version == 4.0)
+                    {
+                        si >> tag >> tagDim >> elm_type >> nElements;
+                    }
+                    else
+                    {
+                        si >> tagDim >> tag >> elm_type >> nElements;
+                    }
                     // Query tag in map & don't bother constructing non-physical
                     // surfaces.
                     std::vector<int> physIds = entityMap[tagDim][tag].physicalTags;
@@ -964,6 +978,32 @@ void InputGmsh::Process()
 }
 
 /**
+ * Read in next node block for v4 format
+ */
+void InputGmsh::ReadNextNodeBlock(int nVertices)
+{
+    string line;
+    double x = 0, y = 0, z = 0;
+    vector<int> id(nVertices);
+
+    for (int i = 0; i < nVertices; ++i)
+    {
+        getline(m_mshFile, line);
+        stringstream st(line);
+        st >> id[i];
+    }
+
+    for (int i = 0; i < nVertices; ++i)
+    {
+        getline(m_mshFile, line);
+        stringstream st(line);
+        st >> x >> y >> z;
+
+        SaveNode(id[i], x, y, z);
+    }
+}
+
+/**
  * Read in next node
  */
 void InputGmsh::ReadNextNode()
@@ -975,6 +1015,14 @@ void InputGmsh::ReadNextNode()
     int id = 0;
     st >> id >> x >> y >> z;
 
+    SaveNode(id, x, y, z);
+}
+
+/**
+ * Save node into mesh
+ */
+void InputGmsh::SaveNode(int id, NekDouble x, NekDouble y, NekDouble z)
+{
     if ((x * x) > 0.000001 && m_mesh->m_spaceDim < 1)
     {
         m_mesh->m_spaceDim = 1;

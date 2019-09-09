@@ -52,7 +52,7 @@ namespace NekMeshUtils
 Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
 {
     NekDouble dist;
-    Array<OneD, NekDouble> uv = locuv(p,dist);
+    Array<OneD, NekDouble> uv = locuv(p, dist);
 
     WARNINGL1(dist < 1e-3, "large locuv distance");
 
@@ -78,7 +78,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
                 for (int k = 0; k < np - 1; k++)
                 {
                     NekDouble t = bnds[0] + dt * k;
-                    Array<OneD, NekDouble> l = ein[i]->edges[j]->P(t);
+                    Array<OneD, NekDouble> l  = ein[i]->edges[j]->P(t);
                     Array<OneD, NekDouble> uv = surf->locuv(l);
                     loop.push_back(uv);
                 }
@@ -88,7 +88,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
                 for (int k = np - 1; k > 0; k--)
                 {
                     NekDouble t = bnds[0] + dt * k;
-                    Array<OneD, NekDouble> l = ein[i]->edges[j]->P(t);
+                    Array<OneD, NekDouble> l  = ein[i]->edges[j]->P(t);
                     Array<OneD, NekDouble> uv = surf->locuv(l);
                     loop.push_back(uv);
                 }

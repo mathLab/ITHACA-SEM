@@ -288,8 +288,8 @@ void NodalPrismElec::NodalPointReorder3d()
     }
     for (int i = 0; i < npts - 2; i++)
     {
-        reverse(iFace_0354.begin() + i * (npts - 2),
-                iFace_0354.begin() + i * (npts - 2) + npts - 2);
+        reverse(iFace_0354.begin() + (i * (npts - 2)),
+                iFace_0354.begin() + (i * (npts - 2) + npts - 2));
     }
     for (int i = 0; i < npts - 2; i++)
     {

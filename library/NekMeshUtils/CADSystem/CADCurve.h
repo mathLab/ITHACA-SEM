@@ -35,8 +35,8 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_CADCURVE
 #define NEKMESHUTILS_CADSYSTEM_CADCURVE
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #include <NekMeshUtils/CADSystem/CADObject.h>
 
@@ -80,6 +80,11 @@ public:
     virtual Array<OneD, NekDouble> GetBounds() = 0;
 
     /**
+     * @brief Returns the minimum and maximum parametric coords t of the curve.
+     */
+    virtual void GetBounds(NekDouble &tmin, NekDouble &tmax) = 0;
+
+    /**
      * @brief Calculates the arclength between the two paremetric points \p ti
      * and \p tf. \p ti must be less than \p tf.
      *
@@ -97,6 +102,14 @@ public:
      * @return Array of x,y,z
      */
     virtual Array<OneD, NekDouble> P(NekDouble t) = 0;
+
+    /**
+     * @brief Gets the location (x,y,z) in an array out of the curve at
+     * point \p t.
+     *
+     * @param t Parametric coordinate
+     */
+    virtual void P(NekDouble t, NekDouble &x, NekDouble &y, NekDouble &z) = 0;
 
     /**
      * @brief Gets the second derivatives at t
@@ -138,8 +151,8 @@ public:
      * @brief returns the ids of surfaces bound by this curve as well as their
      *        Orientation with respect to the loop of curves
      */
-    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> >
-        GetAdjSurf()
+    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation>>
+    GetAdjSurf()
     {
         return m_adjSurfs;
     }
@@ -173,8 +186,7 @@ public:
      * @brief locates a point in the parametric space. returns the
      * distance to the point and passes t by reference and updates it
      */
-    virtual NekDouble loct(Array<OneD, NekDouble> xyz,
-                           NekDouble &t) = 0;
+    virtual NekDouble loct(Array<OneD, NekDouble> xyz, NekDouble &t) = 0;
 
     /**
      * @brief Returns the orientation of the curve with respect to a given
@@ -198,7 +210,7 @@ protected:
     /// Length of edge
     NekDouble m_length;
     /// List of surfaces which this curve belongs to.
-    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> >
+    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation>>
         m_adjSurfs;
     /// list of end vertices
     std::vector<CADVertSharedPtr> m_mainVerts;

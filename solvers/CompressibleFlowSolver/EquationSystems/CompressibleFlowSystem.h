@@ -334,6 +334,8 @@ namespace Nektar
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
             const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
             const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qFwd,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qBwd,
             const Array<OneD, NekDouble >                                       &MuVarTrace,
                   Array<OneD, int >                                             &nonZeroIndex,
                   Array<OneD, Array<OneD, NekDouble> >                          &traceflux);

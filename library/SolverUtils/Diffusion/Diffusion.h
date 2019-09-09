@@ -239,12 +239,14 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> >                            &TraceFlux,
                 const Array<OneD, Array<OneD, NekDouble>>                       &pFwd,
                 const Array<OneD, Array<OneD, NekDouble>>                       &pBwd,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qFwd,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qBwd,
                 const Array<OneD, NekDouble>                                    &MuAVTrace,
                 Array< OneD, int >                                              &nonZeroIndex   =   NullInt1DArray,
                 const Array<OneD, Array<OneD, NekDouble>>                       &Aver           =   NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble>>                       &Jump           =   NullNekDoubleArrayofArray)
             {
-                v_DiffuseTraceFlux(nConvectiveFields, fields, inarray,qfield,TraceFlux,pFwd, pBwd,MuAVTrace,nonZeroIndex,Aver,Jump);
+                v_DiffuseTraceFlux(nConvectiveFields, fields, inarray,qfield,TraceFlux,pFwd, pBwd,qFwd,qBwd,MuAVTrace,nonZeroIndex,Aver,Jump);
             }
 
             SOLVER_UTILS_EXPORT void AddDiffusionSymmFluxToCoeff(
@@ -491,6 +493,8 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> >                            &TraceFlux,
                 const Array<OneD, Array<OneD, NekDouble>>                       &pFwd,
                 const Array<OneD, Array<OneD, NekDouble>>                       &pBwd,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qFwd,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qBwd,
                 const Array<OneD, NekDouble>                                    &MuAVTrace,
                 Array< OneD, int >                                              &nonZeroIndex  ,
                 const Array<OneD, Array<OneD, NekDouble>>                       &Aver          ,

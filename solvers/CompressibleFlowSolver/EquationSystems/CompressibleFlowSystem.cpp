@@ -1242,13 +1242,6 @@ namespace Nektar
         }
     }
 
-    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
-    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
-    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
-    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
-    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
-    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
-    //TODO:: Pass Trace_qfield to CalTraceNumericalFlux to avoid repeated communication
     void CompressibleFlowSystem::NumCalRiemFluxJac(
         const int                                                       nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr>               &fields,
@@ -1295,9 +1288,26 @@ namespace Nektar
             numflux[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
         }
 
-        CalTraceNumericalFlux(nConvectiveFields,nDim,npoints,nTracePts,PenaltyFactor2,
-                        fields,AdvVel,inarray,time,qfield,Fwd,Bwd,MuVarTrace,nonZeroIndex,numflux);
+        const MultiRegions::AssemblyMapDGSharedPtr  TraceMap=fields[0]->GetTraceMap();
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    qBwd(nDim);
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    qFwd(nDim);
+        for (int nd = 0; nd < nDim; ++nd)
+        {
+            qBwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+            qFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+            for (int i = 0; i < nConvectiveFields; ++i)
+            {
+                qBwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+                qFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
 
+                fields[i]->GetFwdBwdTracePhysDeriv_serial(nd,qfield[nd][i], qFwd[nd][i], qBwd[nd][i]);
+                TraceMap->UniversalTraceAssemble(qBwd[nd][i]);
+                TraceMap->UniversalTraceAssemble(qFwd[nd][i]);
+            }
+        }
+
+        CalTraceNumericalFlux(nConvectiveFields,nDim,npoints,nTracePts,PenaltyFactor2,
+                        fields,AdvVel,inarray,time,qfield,Fwd,Bwd,qFwd,qBwd,MuVarTrace,nonZeroIndex,numflux);
 
         int nFields = nvariables;
         // int nPts    = nTracePts;
@@ -1351,7 +1361,7 @@ namespace Nektar
             }
 
             CalTraceNumericalFlux(nConvectiveFields,nDim,npoints,nTracePts,PenaltyFactor2,
-                        fields,AdvVel,inarray,time,qfield,plusFwd,plusBwd,MuVarTrace,nonZeroIndex,plusflux);
+                        fields,AdvVel,inarray,time,qfield,plusFwd,plusBwd,qFwd,qBwd,MuVarTrace,nonZeroIndex,plusflux);
 
             for (int n = 0; n < nFields; n++)
             {
@@ -1402,7 +1412,7 @@ namespace Nektar
             }
 
             CalTraceNumericalFlux(nConvectiveFields,nDim,npoints,nTracePts,PenaltyFactor2,
-                        fields,AdvVel,inarray,time,qfield,Fwd,plusBwd,MuVarTrace,nonZeroIndex,plusflux);
+                        fields,AdvVel,inarray,time,qfield,Fwd,plusBwd,qFwd,qBwd,MuVarTrace,nonZeroIndex,plusflux);
 
             for (int n = 0; n < nFields; n++)
             {
@@ -1453,6 +1463,8 @@ namespace Nektar
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
             const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
             const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qFwd,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qBwd,
             const Array<OneD, NekDouble >                                       &MuVarTrace,
                   Array<OneD, int >                                             &nonZeroIndex,
                   Array<OneD, Array<OneD, NekDouble> >                          &traceflux)
@@ -1477,7 +1489,7 @@ namespace Nektar
                 visflux[i]  =    Array<OneD, NekDouble>(nTracePts,0.0);
             }
 
-            m_diffusion->DiffuseTraceFlux(nConvectiveFields, fields, inarray,qfield,visflux,vFwd, vBwd,MuVarTrace,nonZeroIndex);
+            m_diffusion->DiffuseTraceFlux(nConvectiveFields, fields, inarray,qfield,visflux,vFwd, vBwd,qFwd,qBwd,MuVarTrace,nonZeroIndex);
             for(int i = 0; i < nConvectiveFields; i++)
             {
                 Vmath::Vsub(nTracePts,traceflux[i],1,visflux[i],1,traceflux[i],1);

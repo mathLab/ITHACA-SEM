@@ -208,6 +208,8 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> >                            &TraceFlux,
                 const Array<OneD, Array<OneD, NekDouble>>                       &pFwd,
                 const Array<OneD, Array<OneD, NekDouble>>                       &pBwd,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qFwd,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qBwd,
                 const Array<OneD, NekDouble>                                    &MuAVTrace,
                 Array< OneD, int >                                              &nonZeroIndex  ,
                 const Array<OneD, Array<OneD, NekDouble>>                       &Aver          ,

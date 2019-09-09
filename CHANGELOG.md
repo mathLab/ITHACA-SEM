@@ -82,6 +82,7 @@ v5.0.0
 - Fix XML attributes in conditions.cpp to be unordered (!1015)
 - Fix issue with HDF5 mesh input in serial (!1049)
 - Add estimate of filters CPU time (!1044)
+- Update CompressibleFlowSolver/Examples/Test_IsentropicVortex1.xml example (!1045)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

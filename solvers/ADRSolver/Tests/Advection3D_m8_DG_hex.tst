@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>3D unsteady DG advection, hexahedra, order 4, P=12, par(3)</description>
+    <description>3D unsteady DG advection, hexahedra, order 4, P=12</description>
     <executable>ADRSolver</executable>
-    <parameters>--use-scotch Advection3D_m12_DG_hex.xml</parameters>
-    <processes>3</processes>
+    <parameters>Advection3D_m8_DG_hex.xml</parameters>
     <files>
-        <file description="Session File">Advection3D_m12_DG_hex.xml</file>
+        <file description="Session File">Advection3D_m8_DG_hex.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

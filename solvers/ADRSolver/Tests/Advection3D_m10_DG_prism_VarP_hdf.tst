@@ -2,9 +2,9 @@
 <test>
     <description>3D unsteady DG advection, prisms, order 4, P=Variable, HDF output</description>
     <executable>ADRSolver</executable>
-    <parameters>--io-format Hdf5 Advection3D_m12_DG_prism_VarP.xml</parameters>
+    <parameters>--io-format Hdf5 Advection3D_m10_DG_prism_VarP.xml</parameters>
     <files>
-        <file description="Session File">Advection3D_m12_DG_prism_VarP.xml</file>
+        <file description="Session File">Advection3D_m10_DG_prism_VarP.xml</file>
     </files>
     <metrics>
             <metric type="L2" id="1">

@@ -949,6 +949,52 @@ namespace Nektar
                 }
             }
         }
+
+        // void DiffusionIP::v_MinusVolumDerivJacToMatElmtal( 
+        //     const int                                                   nelmt, 
+        //     const int                                                   nflux, 
+        //     const int                                                   nvarb, 
+        //     const int                                                   nConvectiveFields,
+        //     const Array<OneD, MultiRegions::ExpListSharedPtr>           &pFields,
+        //     const Array<OneD, const Array<OneD,  NekDouble> >           &ElmtJacArray,
+        //     DNekBlkMatSharedPtr                                         &gmtxarray,
+        //     DNekMatSharedPtr                                            &swpMatCoef,
+        //     DNekMatSharedPtr                                            &swpMatPnts)
+        // {
+        //     MultiRegions::ExpListSharedPtr explist = pFields[0];
+        //         std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
+
+        //     NekDouble tmp;
+        //     DNekMatSharedPtr        tmpGmtx,ElmtMat;
+
+        //     Array<OneD, NekDouble>  GlobMat_data;
+        //     Array<OneD, NekDouble>  ElmtMat_data;
+
+        //     int nElmtPnt,nElmtCoef;
+        //     nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
+        //     nElmtPnt            = (*pexp)[nelmt]->GetTotPoints();
+
+        //     (*swpMatCoef)   =   0.0;
+        //     (*swpMatPnts)   =   0.0;
+
+        //     explist->GetMatIpwrtDeriveBase(ElmtJacArray[m][n],mtxPerVar);
+        //     //TODO: To check whether it is ok to reuse ElmtJacQuad as output
+        //     explist->AddRightIPTPhysDerivBase(nDervDir,mtxPerVar,mtxPerVarCoeff);
+
+        //     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        //     {
+        //         nElmtCoef       = elmtcoef[nelmt];
+        //         nElmtPnt        = elmtpnts[nelmt];
+
+        //         tmpGmtx         = gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+        //         ElmtMat         = mtxPerVarCoeff[nelmt];
+
+        //         GlobMat_data    = tmpGmtx->GetPtr();
+        //         ElmtMat_data    = ElmtMat->GetPtr();
+
+        //         Vmath::Vsub(nElmtCoef*nElmtCoef,GlobMat_data,1,ElmtMat_data,1,GlobMat_data,1);
+        //     }
+        // }
 #endif
 
     }

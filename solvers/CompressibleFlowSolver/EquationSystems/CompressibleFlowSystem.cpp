@@ -871,7 +871,7 @@ namespace Nektar
             Vmath::Svtvp(nCoeffs,-m_TimeIntegLambda,outarray[i],1,inarray[i],1,outarray[i],1);
         }
     }
-    
+
     void CompressibleFlowSystem::ElmtVarInvMtrx(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
     {
         int n1d = gmtxarray.num_elements();
@@ -893,6 +893,7 @@ namespace Nektar
                     ::AllocateSharedPtr(nElmtCoefVAr, nElmtCoefVAr,0.0);
 
         DNekMatSharedPtr        ElmtMat;
+        Array<OneD, NekDouble>    GMatData,ElmtMatData;
 
         for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
         {
@@ -910,21 +911,23 @@ namespace Nektar
                 nElmtCoefVAr = nElmtCoef0*nConvectiveFields;
                 tmpGmtx = MemoryManager<DNekMat>
                     ::AllocateSharedPtr(nElmtCoefVAr, nElmtCoefVAr,0.0);
+                GMatData = tmpGmtx->GetPtr();
+
             }
 
-            for(int m = 0; m < nConvectiveFields; m++)
+            for(int n = 0; n < nConvectiveFields; n++)
             {
-                for(int n = 0; n < nConvectiveFields; n++)
+                for(int m = 0; m < nConvectiveFields; m++)
                 {
                     ElmtMat =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
-                    for(int nrw = 0; nrw < nElmtCoef; nrw++)
+                    ElmtMatData = ElmtMat->GetPtr();
+
+                    for(int ncl = 0; ncl < nElmtCoef; ncl++)
                     {
-                        int nrwvar = m*nElmtCoef+nrw;
-                        for(int ncl = 0; ncl < nElmtCoef; ncl++)
-                        {
-                            int nclvar = n*nElmtCoef+ncl;
-                            (*tmpGmtx)(nrwvar,nclvar)=(*ElmtMat)(nrw,ncl);
-                        }
+                        int Goffset = (n*nElmtCoef+ncl)*nConvectiveFields*nElmtCoef+m*nElmtCoef;
+                        int Eoffset = ncl*nElmtCoef;
+
+                        Vmath::Vcopy(nElmtCoef,&ElmtMatData[0]+Eoffset,1, &GMatData[0]+Goffset,1);
                     }
                 }
             }
@@ -936,14 +939,14 @@ namespace Nektar
                 for(int n = 0; n < nConvectiveFields; n++)
                 {
                     ElmtMat =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
-                    for(int nrw = 0; nrw < nElmtCoef; nrw++)
+                    ElmtMatData = ElmtMat->GetPtr();
+
+                    for(int ncl = 0; ncl < nElmtCoef; ncl++)
                     {
-                        int nrwvar = m*nElmtCoef+nrw;
-                        for(int ncl = 0; ncl < nElmtCoef; ncl++)
-                        {
-                            int nclvar = n*nElmtCoef+ncl;
-                            (*ElmtMat)(nrw,ncl) =   (*tmpGmtx)(nrwvar,nclvar);
-                        }
+                        int Goffset = (n*nElmtCoef+ncl)*nConvectiveFields*nElmtCoef+m*nElmtCoef;
+                        int Eoffset = ncl*nElmtCoef;
+
+                        Vmath::Vcopy(nElmtCoef, &GMatData[0]+Goffset,1,&ElmtMatData[0]+Eoffset,1);
                     }
                 }
             }
@@ -1902,6 +1905,7 @@ namespace Nektar
             Vmath::Fill(ntotElmt,Negdtlamda,pseudotimefactor,1);
         }
 
+        Array<OneD, NekDouble>    GMatData;
         for(int m = 0; m < nConvectiveFields; m++)
         {
             for(int n = 0; n < nConvectiveFields; n++)
@@ -1910,8 +1914,11 @@ namespace Nektar
                 for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                 {
                     tmpGmtx =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+                    GMatData        = tmpGmtx->GetPtr();
 
-                    (*tmpGmtx)  = pseudotimefactor[nelmt]*(*tmpGmtx);
+                    Vmath::Smul(GMatData.num_elements(),pseudotimefactor[nelmt],GMatData,1,GMatData,1);
+
+                    // (*tmpGmtx)  = pseudotimefactor[nelmt]*(*tmpGmtx);
                 }
             }
         }
@@ -1994,7 +2001,10 @@ namespace Nektar
             for(int m = 0; m < nConvectiveFields; m++)
             {
                 tmpGmtx =   gmtxarray[m][m]->GetBlock(nelmt,nelmt);
-                (*tmpGmtx)    =  (*tmpGmtx) + (*MassMat);
+                GMatData        = tmpGmtx->GetPtr();
+                Vmath::Vadd(MassMatData.num_elements(),MassMatData,1,GMatData,1,GMatData,1);
+
+                // (*tmpGmtx)    =  (*tmpGmtx) + (*MassMat);
             }
         }
         return;

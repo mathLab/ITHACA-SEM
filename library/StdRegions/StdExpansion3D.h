@@ -221,6 +221,42 @@ namespace Nektar
             }
             STD_REGIONS_EXPORT const NormalVector & v_GetSurfaceNormal(const int id) const;
             STD_REGIONS_EXPORT const NormalVector & v_GetFaceNormal(const int face) const;
+
+            inline virtual void v_MultplyStdDerivBase0(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp)
+            {
+                IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                         m_base[1]->GetBdata(),
+                                         m_base[2]->GetBdata(),
+                                         inarray,outarray,wsp,
+                                         false,true,true);
+            }
+            
+            inline virtual void v_MultplyStdDerivBase1(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp)
+            {
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                         m_base[1]->GetDbdata(),
+                                         m_base[2]->GetBdata(),
+                                         inarray, outarray, wsp,
+                                         true,false,true);
+            }
+
+            inline virtual void v_MultplyStdDerivBase2(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp)
+            {
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                         m_base[1]->GetBdata(),
+                                         m_base[2]->GetDbdata(),
+                                         inarray, outarray, wsp,
+                                         true,true,false);
+            }
             
         };
 

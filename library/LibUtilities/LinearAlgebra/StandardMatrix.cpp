@@ -191,11 +191,13 @@ namespace Nektar
         unsigned int requiredStorageSize = GetRequiredStorageSize();
         
         DataType* lhs_array = m_data.data();
+
+        Vmath::Fill(requiredStorageSize,rhs,lhs_array,1);
         
-        for(unsigned int i = 0; i < requiredStorageSize; ++i)
-        {
-            lhs_array[i] = rhs;
-        }
+        // for(unsigned int i = 0; i < requiredStorageSize; ++i)
+        // {
+        //     lhs_array[i] = rhs;
+        // }
         
         return *this;
     }

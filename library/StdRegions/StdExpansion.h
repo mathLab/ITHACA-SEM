@@ -657,6 +657,30 @@ namespace Nektar
                 v_IProductWRTDerivBase(dir,inarray, outarray);
             }
 
+            void MultplyStdDerivBase0(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp)
+            {
+                v_MultplyStdDerivBase0(inarray,outarray,wsp);
+            }
+
+            void MultplyStdDerivBase1(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp)
+            {
+                v_MultplyStdDerivBase1(inarray,outarray,wsp);
+            }
+
+            void MultplyStdDerivBase2(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp)
+            {
+                v_MultplyStdDerivBase2(inarray,outarray,wsp);
+            }
+
             // void   RightIPTBaseMatrix(const int dir,
             //                             const Array<OneD, const NekDouble>& inarray,
             //                             Array<OneD, NekDouble> &outarray);
@@ -1674,6 +1698,31 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void  v_IProductWRTDerivBase (const int dir,
                                                    const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_MultplyStdDerivBase0(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp)
+            {
+                ASSERTL0(false, "StdExpansion::v_MultplyStdDerivBase0 has no (and should have no) implementation");
+            }
+
+            STD_REGIONS_EXPORT virtual void v_MultplyStdDerivBase1(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp)
+            {
+                ASSERTL0(false, "StdExpansion::v_MultplyStdDerivBase1 has no (and should have no) implementation");
+            }
+
+            STD_REGIONS_EXPORT virtual void v_MultplyStdDerivBase2(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp)
+            {
+                ASSERTL0(false, "StdExpansion::v_MultplyStdDerivBase2 has no (and should have no) implementation");
+            }
+
 
             STD_REGIONS_EXPORT virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> &outarray);

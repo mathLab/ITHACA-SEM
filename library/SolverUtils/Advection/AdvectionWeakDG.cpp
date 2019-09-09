@@ -309,6 +309,7 @@ namespace Nektar
 
             Array<OneD, DNekBlkMatSharedPtr>    PntJac;
             DNekMatSharedPtr tmpGmtx,tmp2Add;
+            Array<OneD, NekDouble>    MatData0, MatData1;
 
             Array<OneD, DNekMatSharedPtr>  TraceJacFwd(ntotTrac);
             Array<OneD, DNekMatSharedPtr>  TraceJacBwd(ntotTrac);
@@ -398,7 +399,11 @@ namespace Nektar
                     {
                         tmpGmtx         = gmtxarray[m][n]->GetBlock(nelmt,nelmt);
                         tmp2Add         = ElmtJacCoef[nelmt];
-                        (*tmpGmtx)      = (*tmpGmtx)  +   (*tmp2Add);
+                        MatData0        = tmpGmtx->GetPtr();
+                        MatData1        = tmp2Add->GetPtr();
+
+                        Vmath::Vadd(MatData0.num_elements(),MatData0,1,MatData1,1,MatData0,1);
+                        // (*tmpGmtx)      = (*tmpGmtx)  +   (*tmp2Add);
                     }
                 }
             }

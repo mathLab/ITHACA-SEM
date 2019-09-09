@@ -107,6 +107,14 @@ namespace Nektar
                     const int id) const;
 
             STD_REGIONS_EXPORT const NormalVector & v_GetVertexNormal(const int vertex) const;
+
+            inline virtual void v_MultplyStdDerivBase0(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp)
+            {
+                IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
+            }
         };
 
         typedef std::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -84,7 +83,10 @@ void ProcessRemoveField::Process(po::variables_map &vm)
         m_f->m_variables.erase(it);
         m_f->m_exp.erase(m_f->m_exp.begin() + fieldID);
 
-        cout << "Field " << fieldName[i] << " has been erased" << endl;
+        if (m_f->m_comm->TreatAsRankZero())
+        {
+            cout << "Field " << fieldName[i] << " has been erased" << endl;
+        }
     }
 }
 } // namespace FieldUtils

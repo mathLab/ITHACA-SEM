@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -72,6 +71,8 @@ public:
     SPATIAL_DOMAINS_EXPORT Geometry2D();
     SPATIAL_DOMAINS_EXPORT Geometry2D(const int coordim, CurveSharedPtr curve);
     SPATIAL_DOMAINS_EXPORT virtual ~Geometry2D();
+
+    SPATIAL_DOMAINS_EXPORT static const int kDim = 2;
 
 protected:
     PointGeomVector                      m_verts;

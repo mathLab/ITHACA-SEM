@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -62,6 +61,11 @@ SmoothShockCapture::SmoothShockCapture(
     m_session->LoadParameter ("C2",            m_C2,            5.0);
     m_session->LoadParameter ("mu0",           m_mu0,           1.0);
     m_session->LoadParameter ("SensorOffset",  m_offset,         1);
+
+    ROOTONLY_NEKERROR(Nektar::ErrorUtil::ewarning,
+        "h/p Lambda scaling not implemented for SmoothShockCapture."
+        "There seems to be something wrong with the boundary conditions "
+        "as well.")
 }
 
 void SmoothShockCapture::v_DoArtificialDiffusion(

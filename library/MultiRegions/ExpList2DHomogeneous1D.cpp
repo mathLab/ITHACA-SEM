@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -489,6 +488,22 @@ namespace Nektar
                                  &normals[i][n*nPtsPlane], 1);
                 }
             }
+        }
+
+        NekDouble ExpList2DHomogeneous1D::v_Integral(const Array<OneD, const NekDouble> &inarray)
+        {
+            NekDouble val = 0.0;
+            int       i   = 0;
+
+            for (i = 0; i < (*m_exp).size(); ++i)
+            {
+                val += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
+            }
+            val *= m_lhom/m_homogeneousBasis->GetNumModes();
+            
+            m_comm->GetColumnComm()->AllReduce(val, LibUtilities::ReduceSum);
+
+            return val;
         }
     } //end of namespace
 } //end of namespace

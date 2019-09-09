@@ -1,0 +1,108 @@
+\input{shared/devguide-preamble.tex}
+
+\DeclareOldFontCommand{\bf}{\normalfont\bfseries}{\mathbf}
+
+\usepackage{makeidx}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+ 
+\urlstyle{same}
+ 
+ \makeindex
+
+\newcommand\nek{\emph{Nektar++}}
+\newcommand\shp{spectral/$hp$}
+\newcommand\Shp{Spectral/$hp$}
+\newcommand{\GIT}{\textit{git}}
+\def\code#1{\texttt{#1}}
+\newcommand\hlink{\hyperlink}
+\newcommand\htarget{\hypertarget}%%%
+\newcommand{\BM}[1]{\mbox{\boldmath $#1$}}
+\newcommand{\BMB}[1]{\mbox{$\mathbb #1$}}
+
+%Yu Pan's commands
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+% \usepackage{multicol}
+% \setlength{\columnsep}{0.5cm}
+\tikzset{abs1/.style={xshift=3cm,yshift=2cm}}
+\usetikzlibrary{shapes.geometric,arrows,automata}
+\tikzstyle{arrow}=
+[thick,->,>=stealth]
+\tikzstyle{arrow1}=
+[thick,dashed,->,>=stealth]
+
+\usepackage{standalone}
+\usepackage{rotating}
+%end of Yu Pan's commands
+
+\title{A Programmer's Guide to Nektar++}
+
+%\makeatletter\@addtoreset{chapter}{part}\makeatother%
+\begin{document}
+
+%\frontmatter
+
+% Render pretty title page if not building HTML
+\ifdefined\HCode
+\begin{center}
+    \includegraphics[width=0.1\textwidth]{img/icon-blue.png}
+\end{center}
+\maketitle
+\begin{center}
+       \huge{Nektar++ Developer's Guide}
+\end{center}
+\else
+\titlepage
+\fi
+
+%\clearpage
+
+%\ifx\HCode\undefined
+%\tableofcontents*
+%\fi
+%
+%\clearpage
+
+%\input{test.tex}
+
+\tableofcontents
+
+\import{preface/}{preface}
+
+\input{introduction/introduction.tex}
+%
+\input{prelims/prelims.tex}
+%
+
+\part{Building-Blocks of Our Framework (Inside the Library)} \label{part:library}
+
+
+\import{library/}{library-master}
+%%
+\part{Solvers} \label{part:solvers}
+
+\import{solvers/}{solvers-master}
+
+%%
+\part{Utilities} \label{part:utilities}
+
+\import{utilities/}{utilities-master}
+
+\part{NekPy: Python interface to \nek{}} \label{part:nekpy}
+
+\import{python/}{python-master}
+
+
+\bibliographystyle{plain}
+\bibliography{developers-guide} 
+
+\printindex
+
+\end{document}

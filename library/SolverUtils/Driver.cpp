@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -164,8 +163,11 @@ void Driver::v_InitObject(ostream &out)
                 LinNSCondFile += "_LinNS.xml";
                 LinNSFilename.push_back(meshfile);
                 LinNSFilename.push_back(LinNSCondFile);
+
+                char *argv[] = {
+                    const_cast<char*>("IncNavierStokesSolver"), nullptr };
                 session_LinNS = LibUtilities::SessionReader::CreateInstance(
-                                0, NULL, LinNSFilename, m_session->GetComm());
+                    1, argv, LinNSFilename, m_session->GetComm());
 
                 SpatialDomains::MeshGraphSharedPtr graph_linns =
                     SpatialDomains::MeshGraph::Read(session_LinNS);

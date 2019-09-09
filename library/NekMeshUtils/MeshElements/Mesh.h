@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -135,6 +134,9 @@ public:
     OctreeSharedPtr                 m_octree;
     /// Metadata map for storing any mesh generation parameters
     LibUtilities::FieldMetaDataMap  m_metadata;
+    /// MPI communicator in case we end up using MPI multiple times from
+    /// Nektar++ SessionReader object.
+    LibUtilities::CommSharedPtr     m_comm;
 
     /// Returns the total number of elements in the mesh with
     /// dimension expDim.
@@ -147,6 +149,8 @@ public:
 
     NEKMESHUTILS_EXPORT void MakeOrder(int                      order,
                                        LibUtilities::PointsType distType);
+
+    NEKMESHUTILS_EXPORT void PrintStats(std::ostream &out);
 };
 /// Shared pointer to a mesh.
 typedef std::shared_ptr<Mesh> MeshSharedPtr;

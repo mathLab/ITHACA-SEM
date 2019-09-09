@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="3" SPACE="3" PARTITION="0">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAGH/ZDaXsYnxG7PJxmQpW3R5dnxi9vz4JdHq6OFb+8PQCPJRne</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1jbcNADAMw5ze/v83E4cQiBZBxXLEi/ThLA7pIh9dtYPfPvddd+RDPpjy2Vnq8W9L0z/aIb8zsAB8</EDGE>
+        <FACE>
+            <T COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJyFyzkOADAIA8Hc5Pj/f9PgIiuh0CDMOKV3su+CW9N818D1j+vI5QxuwOuv3oSj11+9hf6GO0GunsEpv1zIAM4A</T>
+        </FACE>
+        <ELEMENT>
+            <A COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAFjFCaCUozo4mzQGlWNHk2NH2caOo4oDQ7lAYACcAAOQAA</A>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> A[0-2] </C>
+            <C ID="1"> F[0,4] </C>
+            <C ID="2"> F[6,8] </C>
+            <C ID="4"> F[9] </C>
+            <C ID="5"> F[2] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    <CONDITIONS />
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="4" TYPE="MODIFIED" FIELDS="u" />
+    </EXPANSIONS>
+</NEKTAR>

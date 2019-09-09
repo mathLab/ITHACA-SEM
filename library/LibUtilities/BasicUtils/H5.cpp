@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -464,6 +463,41 @@ void DataSpace::SelectRange(const hsize_t start, const hsize_t count)
     H5_CALL(H5Sselect_hyperslab,
             (m_Id, H5S_SELECT_SET, &start, NULL, &count, NULL));
 }
+void DataSpace::AppendRange(const hsize_t start, const hsize_t count)
+{
+    H5_CALL(H5Sselect_hyperslab,
+            (m_Id, H5S_SELECT_OR, &start, NULL, &count, NULL));
+}
+void DataSpace::SelectRange(const std::vector<hsize_t> start,
+                            const std::vector<hsize_t> count)
+{
+    H5_CALL(H5Sselect_hyperslab,
+            (m_Id, H5S_SELECT_SET, &start[0], NULL, &count[0], NULL));
+}
+void DataSpace::AppendRange(const std::vector<hsize_t> start,
+                            const std::vector<hsize_t> count)
+{
+    H5_CALL(H5Sselect_hyperslab,
+            (m_Id, H5S_SELECT_OR, &start[0], NULL, &count[0], NULL));
+}
+void DataSpace::SetSelection(const hsize_t num_elmt,
+                             const std::vector<hsize_t> &coords)
+{
+    if (num_elmt == 0)
+    {
+        H5_CALL(H5Sselect_none, (m_Id));
+    }
+    else
+    {
+        H5_CALL(H5Sselect_elements,
+                (m_Id, H5S_SELECT_SET, num_elmt, &coords[0]));
+    }
+}
+
+void DataSpace::ClearRange()
+{
+    H5_CALL(H5Sselect_none, (m_Id));
+}
 
 hsize_t DataSpace::GetSize()
 {
@@ -614,7 +648,10 @@ FileSharedPtr File::Open(const std::string &filename, unsigned mode,
 
 File::~File()
 {
-    Close();
+    if (m_Id != H5I_INVALID_HID)
+    {
+        Close();
+    }
 }
 
 void File::Close()
@@ -633,7 +670,10 @@ Group::Group(hid_t id) : Object(id)
 
 Group::~Group()
 {
-    Close();
+    if (m_Id != H5I_INVALID_HID)
+    {
+        Close();
+    }
 }
 
 void Group::Close()

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,7 +32,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
+#include <MultiRegions/ExpList3D.h>
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
 using namespace Nektar;
@@ -41,11 +42,23 @@ using namespace Nektar::MultiRegions;
 
 void export_ExpList2D()
 {
+    py::class_<ExpList1D, py::bases<ExpList>,
+               std::shared_ptr<ExpList1D> >(
+                   "ExpList1D", py::init<
+                   const LibUtilities::SessionReaderSharedPtr &,
+                   const SpatialDomains::MeshGraphSharedPtr &>());
     py::class_<ExpList2D, py::bases<ExpList>,
                std::shared_ptr<ExpList2D> >(
                    "ExpList2D", py::init<
                    const LibUtilities::SessionReaderSharedPtr &,
                    const SpatialDomains::MeshGraphSharedPtr &>());
+    py::class_<ExpList3D, py::bases<ExpList>,
+               std::shared_ptr<ExpList3D> >(
+                   "ExpList3D", py::init<
+                   const LibUtilities::SessionReaderSharedPtr &,
+                   const SpatialDomains::MeshGraphSharedPtr &>());
 
+    NEKPY_SHPTR_FIX(ExpList1D, ExpList);
     NEKPY_SHPTR_FIX(ExpList2D, ExpList);
+    NEKPY_SHPTR_FIX(ExpList3D, ExpList);
 }

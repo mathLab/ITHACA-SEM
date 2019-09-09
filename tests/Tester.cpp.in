@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -109,6 +108,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    bool verbose = vm.count("verbose");
+
     // Set up set containing metrics to be generated.
     vector<int> metricGenVec;
     if (vm.count("generate-metric"))
@@ -139,8 +140,18 @@ int main(int argc, char *argv[])
 
     try
     {
+        if (verbose)
+        {
+            cerr << "Reading test file definition: " << specFile << endl;
+        }
+
         // Parse the test file
         TestData file(specFile, vm);
+
+        if (verbose && file.GetNumMetrics() > 0)
+        {
+            cerr << "Creating metrics:" << endl;
+        }
 
         // Generate the metric objects
         vector<MetricSharedPtr> metrics;
@@ -155,6 +166,12 @@ int main(int argc, char *argv[])
                                                     file.GetMetric(i),
                                                     genMetric
                                                   ));
+
+            if (verbose)
+            {
+                cerr << "  - ID " << metrics.back()->GetID() << ": "
+                     << metrics.back()->GetType() << endl;
+            }
 
             if (it != metricGen.end())
             {
@@ -181,11 +198,21 @@ int main(int argc, char *argv[])
             fs::remove_all(tmpDir);
         }
 
+        if (verbose)
+        {
+            cerr << "Creating working directory: " << tmpDir << endl;
+        }
+
         // Create temporary directory
         fs::create_directory(tmpDir);
 
         // Change working directory to the temporary directory
         fs::current_path(tmpDir);
+
+        if (verbose && file.GetNumDependentFiles())
+        {
+            cerr << "Copying required files: " << endl;
+        }
 
         // Copy required files for this test from the test definition directory
         // to the temporary directory.
@@ -195,7 +222,24 @@ int main(int argc, char *argv[])
 
             fs::path source = specPath / source_file;
             fs::path dest   = tmpDir   / source_file.filename();
-            fs::copy_file(source, dest);
+            if (verbose)
+            {
+                cerr << "  - " << source << " -> " << dest << endl;
+            }
+
+            fs::copy(source, dest);
+
+            // If source is a directory, then only directory name is
+            // created, so call copy again to copy files.
+            if (fs::is_directory(source))
+            {
+                for (const auto& dirEnt :
+                         fs::recursive_directory_iterator{source})
+                {
+                    fs::path newdest = dest / dirEnt.path().filename();
+                    fs::copy(dirEnt.path(), newdest);
+                }
+            }
         }
 
         // If we're Python, copy script too.
@@ -203,6 +247,11 @@ int main(int argc, char *argv[])
         // Construct test command to run. If in debug mode, append "-g"
         // Output from stdout and stderr are directed to the files output.out
         // and output.err, respectively.
+
+        if (file.IsPythonTest())
+        {
+            command += "PYTHONPATH=\"@CMAKE_BINARY_DIR@\" ";
+        }
 
 #ifdef NEKTAR_TEST_FORCEMPIEXEC
 #else
@@ -228,7 +277,6 @@ int main(int argc, char *argv[])
 
         if (file.IsPythonTest())
         {
-            command += "PYTHONPATH=\"@CMAKE_BINARY_DIR@\" ";
             command += "@PYTHON_EXECUTABLE@ ";
         }
 
@@ -245,6 +293,11 @@ int main(int argc, char *argv[])
 
         status = 0;
         string line;
+
+        if (verbose)
+        {
+            cerr << "Running command: " << command << endl;
+        }
 
         // Run executable to perform test.
         if (system(command.c_str()))
@@ -273,21 +326,50 @@ int main(int argc, char *argv[])
         // Test against all metrics
         if (status == 0)
         {
+            if (verbose && metrics.size())
+            {
+                cerr << "Checking metrics:" << endl;
+            }
+
             for (int i = 0; i < metrics.size(); ++i)
             {
+                bool gen = metricGen.find(metrics[i]->GetID()) != metricGen.end() ||
+                    (vm.count("generate-all-metrics") > 0);
+
                 vStdout.clear();
                 vStderr.clear();
                 vStdout.seekg(0, ios::beg);
                 vStderr.seekg(0, ios::beg);
+
+                if (verbose)
+                {
+                    cerr << "  - " << (gen ? "generating" : "checking")
+                         << " metric " << metrics[i]->GetID()
+                         << " (" << metrics[i]->GetType() << ")... ";
+                }
+
                 if (!metrics[i]->Test(vStdout, vStderr))
                 {
                     status = 1;
+                    if (verbose)
+                    {
+                        cerr << "failed!" << endl;
+                    }
+                }
+                else if (verbose)
+                {
+                    cerr << "passed" << endl;
                 }
             }
         }
 
+        if (verbose)
+        {
+            cerr << endl << endl;
+        }
+
         // Dump output files to terminal for debugging purposes on fail.
-        if (status == 1)
+        if (status == 1 || verbose)
         {
             vStdout.clear();
             vStderr.clear();
@@ -314,6 +396,11 @@ int main(int argc, char *argv[])
 
         // Change back to the original path and delete temporary directory.
         fs::current_path(startDir);
+
+        if (verbose)
+        {
+            cerr << "Removing working directory" << endl;
+        }
 
         // Repeatedly try deleting directory with sleep for filesystems which
         // work asynchronously. This allows time for the filesystem to register
@@ -363,8 +450,21 @@ int main(int argc, char *argv[])
         cerr << "  " << e.what() << endl;
         cerr << "  Files left in " << tmpDir.string() << endl;
     }
+    catch (const TesterException &e)
+    {
+        cerr << "Error occurred during test:" << endl;
+        cerr << "  " << e.what() << endl;
+        cerr << "  Files left in " << tmpDir.string() << endl;
+    }
+    catch (const std::exception &e)
+    {
+        cerr << "Unhandled exception during test:" << endl;
+        cerr << "  " << e.what() << endl;
+        cerr << "  Files left in " << tmpDir.string() << endl;
+    }
     catch (...)
     {
+        cerr << "Unknown error during test" << endl;
         cerr << "  Files left in " << tmpDir.string() << endl;
     }
 

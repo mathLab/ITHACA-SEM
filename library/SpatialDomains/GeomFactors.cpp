@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -833,12 +832,13 @@ namespace Nektar
                     NekDouble radius, xc=0.0, yc=0.0, xdis, ydis;
                     NekDouble la, lb;
 
-                    if (factors.num_elements() > 0 ) {
-                        la = factors[0];
-                        lb = factors[1];
-                        xc = factors[2];
-                        yc = factors[3];
-                    }
+                    ASSERTL1(factors.num_elements() >= 4,
+                             "factors is too short.");
+
+                    la = factors[0];
+                    lb = factors[1];
+                    xc = factors[2];
+                    yc = factors[3];
 
                     for (int i = 0; i < nq; i++)
                     {
@@ -943,7 +943,6 @@ namespace Nektar
             }
 
             int nq        = array[0].num_elements();
-            NekDouble Tol = 0.0000000001;
             Array<OneD, NekDouble> norm (nq, 0.0);
 
             // Compute the norm of each vector.

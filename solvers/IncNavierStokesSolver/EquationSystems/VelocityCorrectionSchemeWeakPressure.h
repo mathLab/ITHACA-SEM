@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -46,10 +45,12 @@ namespace Nektar
 
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession) {
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr &pGraph)
+        {
             SolverUtils::EquationSystemSharedPtr p =
-                                MemoryManager<VCSWeakPressure>::
-                                            AllocateSharedPtr(pSession);
+                MemoryManager<VCSWeakPressure>::AllocateSharedPtr(
+                    pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -59,7 +60,8 @@ namespace Nektar
 
 
         /// Constructor.
-        VCSWeakPressure(const LibUtilities::SessionReaderSharedPtr& pSession);
+        VCSWeakPressure(const LibUtilities::SessionReaderSharedPtr& pSession,
+                        const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
         virtual ~VCSWeakPressure();
 
@@ -95,7 +97,7 @@ namespace Nektar
         
     };
 
-    typedef boost::shared_ptr<VCSWeakPressure>
+    typedef std::shared_ptr<VCSWeakPressure>
                 VCSWeakPressureSharedPtr;
 
 } //end of namespace

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -58,7 +57,7 @@ namespace Nektar
     
     // Forward declaration
     class Extrapolate;
-    typedef boost::shared_ptr<Extrapolate> ExtrapolateSharedPtr;
+    typedef std::shared_ptr<Extrapolate> ExtrapolateSharedPtr;
     typedef LibUtilities::NekFactory< std::string, Extrapolate,
         const LibUtilities::SessionReaderSharedPtr& ,
         Array<OneD, MultiRegions::ExpListSharedPtr>& ,
@@ -67,7 +66,7 @@ namespace Nektar
         const SolverUtils::AdvectionSharedPtr& > ExtrapolateFactory;
 
     struct HighOrderOutflow;
-    typedef boost::shared_ptr<HighOrderOutflow> HighOrderOutflowSharedPtr;
+    typedef std::shared_ptr<HighOrderOutflow> HighOrderOutflowSharedPtr;
 
 
     ExtrapolateFactory& GetExtrapolateFactory();

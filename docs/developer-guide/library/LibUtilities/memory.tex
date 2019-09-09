@@ -1,0 +1,21 @@
+%
+\section{Memory}
+
+This directory contains three files, NekMemoryManager.hpp, ThreadSpecificPools.hpp and ThreadSpecificPools.cpp.
+The strategy used within {\nek} was to preallocate a pool of arrays that could be used for various operations and then
+released back to the pool.  This idea came about through profiling of the code early on -- noticing that the new/delete
+operation of lots of small arrays used for temporary calculations was greatly slowing down the code.  Like with our manager
+idea, we decided to invest in having a memory pool object what preallocated blocks of memory that could be requested and
+then returned back to the pool.
+
+If {\nek} is compiled with \verb+NEKTAR_MEMORY_POOL_ENABLED+, the MemoryManager
+allocates from thread specific memory pools for small objects. Large objects are managed with the 
+system supplied new/delete. These memory pools provide faster allocation and deallocation
+of small objects (particularly useful for shared pointers which
+allocate many 4 byte objects).
+
+All memory allocated from the memory manager must be returned
+to the memory manager.  Calling delete on memory allocated from the
+manager will likely cause undefined behavior.  A particularly subtle
+violation of this rule occurs when giving memory allocated from the
+manager to a shared pointer.

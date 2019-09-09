@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -65,6 +64,12 @@ public:
 
     Array<OneD, NekDouble> GetBoundingBox();
 
+    TopoDS_Shape GetShape()
+    {
+        return shape;
+    }
+
+
 private:
     /// Function to add curve to CADSystem::m_verts.
     void AddVert(int i, TopoDS_Shape in);
@@ -74,10 +79,13 @@ private:
     void AddSurf(int i, TopoDS_Shape in);
 
     TopoDS_Shape BuildNACA(std::string naca);
+    TopoDS_Shape BuildGeo(std::string geo);
     /// OCC master object
     TopoDS_Shape shape;
     TopTools_IndexedMapOfShape mapOfVerts, mapOfEdges, mapOfFaces;
 };
+
+typedef std::shared_ptr<CADSystemOCE> CADSystemOCESharedPtr;
 
 
 }

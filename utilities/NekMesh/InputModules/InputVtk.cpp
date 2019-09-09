@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -34,6 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/MeshElements/Element.h>
+#include <LibUtilities/BasicUtils/VtkUtil.hpp>
 
 #include <vtkPolyDataReader.h>
 #include <vtkPolyData.h>
@@ -121,7 +121,7 @@ void InputVtk::Process()
         }
 
         m_mesh->m_node.push_back(
-            boost::shared_ptr<Node>(new Node(i, p[0], p[1], p[2])));
+            std::shared_ptr<Node>(new Node(i, p[0], p[1], p[2])));
     }
 
     for (int c = 0; c < numCellTypes; ++c)

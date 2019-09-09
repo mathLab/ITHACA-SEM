@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -47,25 +46,48 @@ class AdvectionSystem: virtual public UnsteadySystem
 {
 public:
     SOLVER_UTILS_EXPORT AdvectionSystem(
-            const LibUtilities::SessionReaderSharedPtr &pSession);
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     SOLVER_UTILS_EXPORT virtual ~AdvectionSystem();
 
     SOLVER_UTILS_EXPORT virtual void v_InitObject();
 
     /// Returns the advection object held by this instance.
-    AdvectionSharedPtr GetAdvObject()
+    SOLVER_UTILS_EXPORT AdvectionSharedPtr GetAdvObject()
     {
         return m_advObject;
     }
 
+    SOLVER_UTILS_EXPORT Array<OneD, NekDouble>  GetElmtCFLVals(void);
+    SOLVER_UTILS_EXPORT NekDouble               GetCFLEstimate(int &elmtid);
+
 protected:
     /// Advection term
     SolverUtils::AdvectionSharedPtr m_advObject;
+
+    SOLVER_UTILS_EXPORT virtual bool v_PostIntegrate(int step);
+
+    SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetMaxStdVelocity()
+    {
+        ASSERTL0(false,
+            "v_GetMaxStdVelocity is not implemented by the base class.");
+        Array<OneD, NekDouble> dummy(1);
+        return dummy;
+    }
+
+private:
+    /// dump cfl estimate
+    int m_cflsteps;
+    /// Write field if cfl is higher than IO_CFLWriteFld treshold
+    NekDouble m_cflWriteFld;
+    /// Number of timesteps after which IO_CFLWriteFld is activated
+    int m_cflWriteFldWaitSteps;    
+
 };
 
 /// Shared pointer to an AdvectionSystem class
-typedef boost::shared_ptr<AdvectionSystem> AdvectionSystemSharedPtr;
+typedef std::shared_ptr<AdvectionSystem> AdvectionSystemSharedPtr;
 
 }
 }

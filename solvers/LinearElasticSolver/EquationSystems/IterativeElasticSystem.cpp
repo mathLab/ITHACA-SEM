@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -56,8 +55,9 @@ string IterativeElasticSystem::className = GetEquationSystemFactory().
                             IterativeElasticSystem::create);
 
 IterativeElasticSystem::IterativeElasticSystem(
-    const LibUtilities::SessionReaderSharedPtr& pSession)
-    : LinearElasticSystem(pSession)
+    const LibUtilities::SessionReaderSharedPtr& pSession,
+    const SpatialDomains::MeshGraphSharedPtr &pGraph)
+    : LinearElasticSystem(pSession, pGraph)
 {
 }
 
@@ -219,14 +219,15 @@ void IterativeElasticSystem::WriteGeometry(const int i)
     {
         s << "_xml";
 
-        if(!fs::is_directory(s.str()))
+        string ss = s.str();
+        if(!fs::is_directory(ss))
         {
-            fs::create_directory(s.str());
+            fs::create_directory(ss);
         }
 
         boost::format pad("P%1$07d.xml");
         pad % m_session->GetComm()->GetRank();
-        filename = fs::path(s.str()) / fs::path(pad.str());
+        filename = fs::path(ss) / fs::path(pad.str());
     }
     else
     {

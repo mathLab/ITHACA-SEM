@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -248,6 +247,11 @@ public:
             return it->second;
         }
     }
+    /// Is this element connected to a boundary 
+    NEKMESHUTILS_EXPORT bool HasBoundaryLinks()
+    {
+        return m_boundaryLinks.size() > 0;
+    }
     /// Set the list of tags associated with this element.
     NEKMESHUTILS_EXPORT void SetTagList(const std::vector<int> &tags)
     {
@@ -272,13 +276,83 @@ public:
     {
         ASSERTL0(false,
                  "This function should be implemented at a shape level.");
-        return boost::shared_ptr<SpatialDomains::Geometry>();
+        return std::shared_ptr<SpatialDomains::Geometry>();
     }
 
     /**
      * @brief Obtain the order of an element by looking at edges.
      */
     NEKMESHUTILS_EXPORT int GetMaxOrder();
+
+    /**
+     * @brief Determines whether an element is deformed by inspecting whether
+     * there are any edge, face or volume interior nodes.
+     */
+    NEKMESHUTILS_EXPORT bool IsDeformed()
+    {
+        if (m_volumeNodes.size() > 0)
+        {
+            return true;
+        }
+
+        for (auto &edge : m_edge)
+        {
+            if (edge->m_edgeNodes.size() > 0)
+            {
+                return true;
+            }
+        }
+
+        for (auto &face : m_face)
+        {
+            if (face->m_faceNodes.size() > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @brief Returns the approximate bounding box of this element based on the
+     * coordinates of all vertices, edges and faces of the element. Note that
+     * this does not robustly take into account the curvature of the element.
+     */
+    NEKMESHUTILS_EXPORT std::pair<Node, Node> GetBoundingBox()
+    {
+#define SWAP_NODE(a)                                            \
+        lower.m_x = std::min(lower.m_x, a->m_x);                  \
+        lower.m_y = std::min(lower.m_y, a->m_y);                  \
+        lower.m_z = std::min(lower.m_z, a->m_z);                  \
+        upper.m_x = std::max(upper.m_x, a->m_x);                  \
+        upper.m_y = std::max(upper.m_y, a->m_y);                  \
+        upper.m_z = std::max(upper.m_z, a->m_z);
+
+        Node lower(*m_vertex[0]), upper(*m_vertex[0]);
+
+        for (int i = 1; i < m_vertex.size(); ++i)
+        {
+            SWAP_NODE(m_vertex[i])
+        }
+        for (auto &edge : m_edge)
+        {
+            for (auto &edgeNode : edge->m_edgeNodes)
+            {
+                SWAP_NODE(edgeNode);
+            }
+        }
+        for (auto &face : m_face)
+        {
+            for (auto &faceNode : face->m_faceNodes)
+            {
+                SWAP_NODE(faceNode);
+            }
+        }
+
+        return std::make_pair(lower, upper);
+#undef SWAP_NODE
+    }
 
     /**
      * @brief Insert interior (i.e. volume) points into this element to make the
@@ -403,7 +477,7 @@ protected:
     SpatialDomains::GeometrySharedPtr m_geom;
 };
 
-typedef boost::shared_ptr<Element> ElementSharedPtr;
+typedef std::shared_ptr<Element> ElementSharedPtr;
 /// Container for elements; key is expansion dimension, value is
 /// vector of elements of that dimension.
 typedef std::map<unsigned int, std::vector<ElementSharedPtr> > ElementMap;
@@ -422,7 +496,7 @@ NEKMESHUTILS_EXPORT bool operator==(ElementSharedPtr const &e1,
 /// Define element ordering based on ID.
 struct element_id_less_than
 {
-    typedef boost::shared_ptr<Element> pT;
+    typedef std::shared_ptr<Element> pT;
     bool operator()(const pT a, const pT b) const
     {
         // check for 0

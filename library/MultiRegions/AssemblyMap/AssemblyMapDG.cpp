@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
@@ -138,6 +138,11 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < nbnd; ++i)
             {
+                if (bndCond[i]->GetBoundaryConditionType() ==
+                        SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
                 cnt += bndCondExp[i]->GetExpSize();
             }
 
@@ -146,7 +151,6 @@ namespace Nektar
             m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys  = 0;
 
-            cnt = 0;
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
@@ -163,8 +167,6 @@ namespace Nektar
                         dirTrace.insert(id);
                     }
                 }
-
-                cnt += j;
             }
 
             // Set up integer mapping array and sign change for each degree of
@@ -178,7 +180,7 @@ namespace Nektar
             int nbndry = 0;
             for(i = 0; i < nel; ++i) // count number of elements in array
             {
-                eid     = locExp.GetOffset_Elmt_Id(i);
+                eid     = i;
                 nbndry += expList[eid]->NumDGBndryCoeffs();
                 m_numLocalIntCoeffsPerPatch[i] = 0;
                 m_numLocalBndCoeffsPerPatch[i] =
@@ -230,7 +232,7 @@ namespace Nektar
             // Set up boost Graph
             for(i = 0; i < nel; ++i)
             {
-                eid = locExp.GetOffset_Elmt_Id(i);
+                eid = i;
 
                 for(j = 0; j < expList[eid]->GetNtrace(); ++j)
                 {
@@ -319,8 +321,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < nel; ++i)
             {
-                // order list according to m_offset_elmt_id details in expList
-                eid = locExp.GetOffset_Elmt_Id(i);
+                eid = i;
                 exp = expList[eid];
 
                 for(j = 0; j < exp->GetNtrace(); ++j)
@@ -445,6 +446,11 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < nbnd; ++i)
             {
+                if (bndCond[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
                 cnt += bndCondExp[i]->GetNcoeffs();
             }
 
@@ -454,6 +460,12 @@ namespace Nektar
             int nbndexp = 0, bndOffset, bndTotal = 0;
             for(cnt = i = 0; i < nbnd; ++i)
             {
+                if (bndCond[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     bndExp    = bndCondExp[i]->GetExp(j);
@@ -479,31 +491,16 @@ namespace Nektar
 
             CalculateBndSystemBandWidth();
 
-            if ((m_solnType == eDirectMultiLevelStaticCond ||
-                 m_solnType == eIterativeMultiLevelStaticCond ||
-                 m_solnType == eXxtMultiLevelStaticCond ||
-                 m_solnType == ePETScMultiLevelStaticCond)
-                && nGraphVerts)
-            {
-                if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
-                {
-                    Array<OneD, int> vwgts_perm(nGraphVerts);
-
-                    for(int i = 0; i < nGraphVerts; i++)
-                    {
-                        vwgts_perm[i] = vwgts[perm[i]];
-                    }
-
-                    bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
-                    m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
-                        AllocateSharedPtr(this, bottomUpGraph);
-                }
-            }
-
             cnt = 0;
             m_bndCondTraceToGlobalTraceMap = Array<OneD, int>(nbndexp);
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
+                if (bndCond[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     bndExp    = bndCondExp[i]->GetExp(j);
@@ -515,12 +512,33 @@ namespace Nektar
             }
 
             // Now set up mapping from global coefficients to universal.
-            ExpListSharedPtr tr = boost::dynamic_pointer_cast<ExpList>(trace);
+            ExpListSharedPtr tr = std::dynamic_pointer_cast<ExpList>(trace);
             SetUpUniversalDGMap   (locExp);
             SetUpUniversalTraceMap(locExp, tr, periodicTrace);
 
-            m_hash = boost::hash_range(m_localToGlobalBndMap.begin(),
-                                       m_localToGlobalBndMap.end());
+            if ((m_solnType == eDirectMultiLevelStaticCond ||
+                 m_solnType == eIterativeMultiLevelStaticCond ||
+                 m_solnType == eXxtMultiLevelStaticCond ||
+                 m_solnType == ePETScMultiLevelStaticCond)
+                && nGraphVerts)
+            {
+                if (m_staticCondLevel < (bottomUpGraph->GetNlevels() - 1))
+                {
+                    Array<OneD, int> vwgts_perm(nGraphVerts);
+
+                    for (int i = 0; i < nGraphVerts; i++)
+                    {
+                        vwgts_perm[i] = vwgts[perm[i]];
+                    }
+
+                    bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
+                    m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
+                        AllocateSharedPtr(this, bottomUpGraph);
+                }
+            }
+
+            m_hash = hash_range(m_localToGlobalBndMap.begin(),
+                                m_localToGlobalBndMap.end());
         }
 
         /**
@@ -585,9 +603,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                // Order list according to m_offset_elmt_id details in Exp
-                // so that triangules are listed first and then quads
-                eid = locExp.GetOffset_Elmt_Id(i);
+                eid = i;
                 locExpansion = locExpVector[eid];
                 nDim = locExpansion->GetShapeDimension();
 
@@ -613,7 +629,7 @@ namespace Nektar
                         LocalRegions::SegExpSharedPtr locSegExp =
                             m_elmtToTrace[eid][j]->as<LocalRegions::SegExp>();
 
-                        id  = locSegExp->GetGeom1D()->GetEid();
+                        id  = locSegExp->GetGeom()->GetGlobalID();
                         order_e = locExpansion->GetEdgeNcoeffs(j);
 
                         map<int,int> orientMap;
@@ -658,7 +674,7 @@ namespace Nektar
                                 m_elmtToTrace[eid][j]
                                            ->as<LocalRegions::Expansion2D>();
 
-                        id  = locFaceExp->GetGeom2D()->GetFid();
+                        id  = locFaceExp->GetGeom()->GetGlobalID();
                         order_e = locExpansion->GetFaceNcoeffs(j);
 
                         map<int,int> orientMap;
@@ -761,7 +777,7 @@ namespace Nektar
 
                     // Check to see if this vert is periodic. If it is, then we
                     // need use the unique eid of the two points
-                    PeriodicMap::const_iterator it = perMap.find(eid);
+                    auto it = perMap.find(eid);
                     if (perMap.count(eid) > 0)
                     {
                         PeriodicEntity ent = it->second[0];
@@ -786,7 +802,7 @@ namespace Nektar
                     // need to reverse the trace order of one edge only in the
                     // universal map so that the data are reversed w.r.t each
                     // other. We do this by using the minimum of the two IDs.
-                    PeriodicMap::const_iterator it = perMap.find(eid);
+                    auto it = perMap.find(eid);
                     bool realign = false;
                     if (perMap.count(eid) > 0)
                     {

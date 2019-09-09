@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -289,8 +288,8 @@ void NodalPrismElec::NodalPointReorder3d()
     }
     for (int i = 0; i < npts - 2; i++)
     {
-        reverse(iFace_0354.begin() + i * (npts - 2),
-                iFace_0354.begin() + i * (npts - 2) + npts - 2);
+        reverse(iFace_0354.begin() + (i * (npts - 2)),
+                iFace_0354.begin() + (i * (npts - 2) + npts - 2));
     }
     for (int i = 0; i < npts - 2; i++)
     {
@@ -426,7 +425,7 @@ void NodalPrismElec::CalculateInterpMatrix(
     xi[1] = yia;
     xi[1] = zia;
 
-    boost::shared_ptr<NekMatrix<NekDouble> > mat =
+    std::shared_ptr<NekMatrix<NekDouble> > mat =
         m_util->GetInterpolationMatrix(xi);
     Vmath::Vcopy(mat->GetRows() * mat->GetColumns(), mat->GetRawPtr(), 1,
                  &interp[0], 1);
@@ -444,9 +443,9 @@ void NodalPrismElec::CalculateDerivMatrix()
     m_derivmatrix[2] = m_util->GetDerivMatrix(2);
 }
 
-boost::shared_ptr<PointsBaseType> NodalPrismElec::Create(const PointsKey &key)
+std::shared_ptr<PointsBaseType> NodalPrismElec::Create(const PointsKey &key)
 {
-    boost::shared_ptr<PointsBaseType> returnval(
+    std::shared_ptr<PointsBaseType> returnval(
         MemoryManager<NodalPrismElec>::AllocateSharedPtr(key));
 
     returnval->Initialize();

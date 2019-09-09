@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -178,7 +177,7 @@ template <typename T> struct HOTriangle
 };
 
 typedef HOTriangle<NodeSharedPtr> HOSurf;
-typedef boost::shared_ptr<HOSurf> HOSurfSharedPtr;
+typedef std::shared_ptr<HOSurf> HOSurfSharedPtr;
 
 /**
  * Hash class for high-order surfaces.
@@ -191,22 +190,16 @@ struct HOSurfHash : std::unary_function<HOSurfSharedPtr, std::size_t>
      */
     std::size_t operator()(HOSurfSharedPtr const &p) const
     {
-        std::size_t seed     = 0;
         std::vector<int> ids = p->vertId;
-
         std::sort(ids.begin(), ids.end());
-        for (int i = 0; i < ids.size(); ++i)
-        {
-            boost::hash_combine(seed, ids[i]);
-        }
-        return seed;
+        return hash_range(ids.begin(), ids.end());
     }
 };
 
 NEKMESHUTILS_EXPORT bool operator==(HOSurfSharedPtr const &p1,
                                     HOSurfSharedPtr const &p2);
 
-typedef boost::unordered_set<HOSurfSharedPtr, HOSurfHash> HOSurfSet;
+typedef std::unordered_set<HOSurfSharedPtr, HOSurfHash> HOSurfSet;
 
 /**
  * @brief A lightweight struct for dealing with high-order quadrilateral

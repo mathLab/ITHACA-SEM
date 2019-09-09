@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -44,16 +43,15 @@ namespace Nektar
     namespace MultiRegions
     {
         class PreconditionerLinearWithLowEnergy;
-        typedef boost::shared_ptr<PreconditionerLinearWithLowEnergy>  PreconditionerLinearWithLowEnergySharedPtr;
+        typedef std::shared_ptr<PreconditionerLinearWithLowEnergy>  PreconditionerLinearWithLowEnergySharedPtr;
 
         class PreconditionerLinearWithLowEnergy: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
             static PreconditionerSharedPtr create(
-                        const boost::shared_ptr<GlobalLinSys> &plinsys,
-                        const boost::shared_ptr<AssemblyMap>
-                                                               &pLocToGloMap)
+                        const std::shared_ptr<GlobalLinSys> &plinsys,
+                        const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             {
 	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinearWithLowEnergy>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
@@ -64,15 +62,13 @@ namespace Nektar
             static std::string className;
 
             MULTI_REGIONS_EXPORT PreconditionerLinearWithLowEnergy(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+                         const std::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
             virtual ~PreconditionerLinearWithLowEnergy() {}
 
 	protected:
-            //const boost::weak_ptr<GlobalLinSys>         m_linsys;
-
             PreconditionerSharedPtr m_linSpacePrecon;
             PreconditionerSharedPtr m_lowEnergyPrecon;
 
@@ -88,7 +84,8 @@ namespace Nektar
                 Array<OneD, NekDouble>& pInput);
 
             virtual DNekScalMatSharedPtr
-                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalMat > &loc_mat);
+                v_TransformedSchurCompl(int n, int offset,
+                                        const std::shared_ptr<DNekScalMat > &loc_mat);
 
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,

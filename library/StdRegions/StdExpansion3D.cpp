@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -145,12 +144,12 @@ namespace Nektar
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
             Array<OneD, DNekMatSharedPtr>  I(3);
 
-            WARNINGL2(coords[0] >= -1,"coord[0] < -1");
-            WARNINGL2(coords[0] <=  1,"coord[0] >  1");
-            WARNINGL2(coords[1] >= -1,"coord[1] < -1");
-            WARNINGL2(coords[1] <=  1,"coord[1] >  1");
-            WARNINGL2(coords[2] >= -1,"coord[2] < -1");
-            WARNINGL2(coords[2] <=  1,"coord[2] >  1");
+            WARNINGL2(coords[0] >= -1 - NekConstants::kNekZeroTol,"coord[0] < -1");
+            WARNINGL2(coords[0] <=  1 + NekConstants::kNekZeroTol,"coord[0] >  1");
+            WARNINGL2(coords[1] >= -1 - NekConstants::kNekZeroTol,"coord[1] < -1");
+            WARNINGL2(coords[1] <=  1 + NekConstants::kNekZeroTol,"coord[1] >  1");
+            WARNINGL2(coords[2] >= -1 - NekConstants::kNekZeroTol,"coord[2] < -1");
+            WARNINGL2(coords[2] <=  1 + NekConstants::kNekZeroTol,"coord[2] >  1");
 
             // Obtain local collapsed corodinate from 
             // cartesian coordinate. 
@@ -316,8 +315,7 @@ namespace Nektar
         
         const NormalVector & StdExpansion3D::v_GetFaceNormal(const int face) const
         {
-            std::map<int, NormalVector>::const_iterator x;
-            x = m_faceNormals.find(face);
+            auto x = m_faceNormals.find(face);
             ASSERTL0 (x != m_faceNormals.end(),
                       "face normal not computed.");
             return x->second;

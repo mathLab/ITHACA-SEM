@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -63,11 +62,11 @@ namespace Nektar
             Expansion(geom),
             Expansion1D(geom),
             m_matrixManager(
-                    boost::bind(&SegExp::CreateMatrix, this, _1),
-                    std::string("SegExpMatrix")),
+                std::bind(&SegExp::CreateMatrix, this, std::placeholders::_1),
+                std::string("SegExpMatrix")),
             m_staticCondMatrixManager(
-                    boost::bind(&SegExp::CreateStaticCondMatrix, this, _1),
-                    std::string("SegExpStaticCondMatrix"))
+                std::bind(&SegExp::CreateStaticCondMatrix, this, std::placeholders::_1),
+                std::string("SegExpStaticCondMatrix"))
         {
         }
 
@@ -137,7 +136,7 @@ namespace Nektar
             //ival = StdSegExp::Integral(tmp);
             return ival;
         }
-		
+
         //-----------------------------
         // Differentiation Methods
         //-----------------------------
@@ -426,7 +425,9 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     case LibUtilities::eModified_A:
                     case LibUtilities::eModified_B:
                         {
-                            ASSERTL1(m_base[0]->GetPointsType() == LibUtilities::eGaussLobattoLegendre,"Cannot use FwdTrans_BndConstrained method with non GLL points");
+                            ASSERTL1(m_base[0]->GetPointsType() == LibUtilities::eGaussLobattoLegendre ||
+                                     m_base[0]->GetPointsType() == LibUtilities::ePolyEvenlySpaced,
+                                     "Cannot use FwdTrans_BndConstrained with these points.");
                             offset = 2;
                         }
                         break;
@@ -780,12 +781,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             }
         }
 
-        StdRegions::Orientation SegExp::v_GetPorient(int point)
-        {
-            return m_geom->GetPorient(point);
-        }
-
-
         StdRegions::StdExpansionSharedPtr SegExp::v_GetStdExp() const
         {
             return MemoryManager<StdRegions::StdSegExp>
@@ -868,22 +863,28 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 {
                     // Assume that input is also Gll_Lagrange
                     // but no way to check;
-                    LibUtilities::PointsKey p0(
+                    LibUtilities::PointsKey f0(
                         nummodes[mode_offset],
                         LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::PointsKey t0(
+                        m_base[0]->GetNumModes(),
+                        LibUtilities::eGaussLobattoLegendre);
                     LibUtilities::Interp1D(
-                        p0,data, m_base[0]->GetPointsKey(), coeffs);
+                        f0,data, t0, coeffs);
                 }
                     break;
                 case LibUtilities::eGauss_Lagrange:
                 {
                     // Assume that input is also Gauss_Lagrange
                     // but no way to check;
-                    LibUtilities::PointsKey p0(
+                    LibUtilities::PointsKey f0(
                         nummodes[mode_offset],
                         LibUtilities::eGaussGaussLegendre);
+                    LibUtilities::PointsKey t0(
+                        m_base[0]->GetNumModes(),
+                        LibUtilities::eGaussGaussLegendre);
                     LibUtilities::Interp1D(
-                        p0,data, m_base[0]->GetPointsKey(), coeffs);
+                        f0,data, t0, coeffs);
                 }
                     break;
                 default:

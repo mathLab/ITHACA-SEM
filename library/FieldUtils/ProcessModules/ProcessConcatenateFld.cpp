@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -39,7 +38,6 @@ using namespace std;
 
 #include "ProcessConcatenateFld.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
@@ -51,31 +49,11 @@ ModuleKey ProcessConcatenateFld::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "concatenate"),
         ProcessConcatenateFld::create,
-        "Concatenate field file into single file");
+        "Concatenate field file into single file (deprecated)");
 
 ProcessConcatenateFld::ProcessConcatenateFld(FieldSharedPtr f)
     : ProcessModule(f)
 {
-    // check for correct input files
-    if ((f->m_inputfiles.count("xml") == 0) &&
-        (f->m_inputfiles.count("xml.gz") == 0))
-    {
-        cout << "An xml or xml.gz input file must be specified for the "
-                "concatenate module"
-             << endl;
-        exit(3);
-    }
-
-    if ((f->m_inputfiles.count("fld") == 0) &&
-        (f->m_inputfiles.count("chk") == 0) &&
-        (f->m_inputfiles.count("rst") == 0))
-    {
-        cout << "A fld or chk or rst input file must be specified for the "
-                "concatenate module"
-             << endl;
-
-        exit(3);
-    }
 }
 
 ProcessConcatenateFld::~ProcessConcatenateFld()
@@ -84,33 +62,11 @@ ProcessConcatenateFld::~ProcessConcatenateFld()
 
 void ProcessConcatenateFld::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    if(m_f->m_comm->TreatAsRankZero())
     {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessConcatenateFld: Concatenating field file..."
-                 << endl;
-        }
+        cout << "Concatenate module is not needed. Instead, use " << endl
+             << "\tFieldConvert file1.fld file2.fld file-conc.fld"     << endl;
     }
-
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    // Copy Data into FieldData and set variable
-    for (int j = 0; j < m_f->m_exp.size(); ++j)
-    {
-        for (int i = 0; i < FieldDef.size(); ++i)
-        {
-            // Could do a search here to find correct variable
-            FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
-            m_f->m_exp[0]->AppendFieldData(FieldDef[i], FieldData[i],
-                                           m_f->m_exp[j]->UpdateCoeffs());
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

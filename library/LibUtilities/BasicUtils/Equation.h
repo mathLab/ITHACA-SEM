@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -56,24 +55,34 @@ namespace Nektar
 
         public: 
             LIB_UTILITIES_EXPORT Equation(const Equation &src):
+              m_vlist     (src.m_vlist),
               m_expr      (src.m_expr),
               m_expr_id   (src.m_expr_id),
               m_evaluator (src.m_evaluator)
             {
             }
 
-            LIB_UTILITIES_EXPORT Equation(const SessionReaderSharedPtr& session, const std::string& expr = ""):
+            LIB_UTILITIES_EXPORT Equation(ExpressionEvaluatorShPtr evaluator,
+                                          const std::string& expr = "",
+                                          const std::string& vlist = ""):
+              m_vlist     (vlist),
               m_expr      (expr),
               m_expr_id   (-1),
-              m_evaluator (session->GetExpressionEvaluator())
+              m_evaluator (evaluator)
             {
                 boost::algorithm::trim(m_expr);
+                boost::algorithm::trim(m_vlist);
+
+                if (m_vlist.empty())
+                {
+                    m_vlist = "x y z t";
+                }
 
                 try
                 {
                     if (!m_expr.empty())
                     {
-                        m_expr_id = m_evaluator.DefineFunction("x y z t", m_expr);
+                        m_expr_id = m_evaluator->DefineFunction(m_vlist, m_expr);
                     }
                 }
                 catch (const std::runtime_error& e)
@@ -105,7 +114,7 @@ namespace Nektar
                 {
                     if (m_expr_id != -1)
                     {
-                        return m_evaluator.Evaluate(m_expr_id);
+                        return m_evaluator->Evaluate(m_expr_id);
                     }
                 }
                 catch (const std::runtime_error& e)
@@ -127,7 +136,7 @@ namespace Nektar
                 {
                     if (m_expr_id != -1)
                     {
-                        return m_evaluator.Evaluate(m_expr_id, x,y,z,t);
+                        return m_evaluator->Evaluate(m_expr_id, x,y,z,t);
                     }
                 }
                 catch (const std::runtime_error& e)
@@ -172,11 +181,23 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& t,
                     Array<OneD, NekDouble>& result) const
             {
+                std::vector<Array<OneD, const NekDouble> > points;
+                points.push_back(x);
+                points.push_back(y);
+                points.push_back(z);
+                points.push_back(t);
+                Evaluate(points, result);
+            }
+
+            LIB_UTILITIES_EXPORT void Evaluate(
+                    const std::vector<Array<OneD, const NekDouble> > points,
+                    Array<OneD, NekDouble>& result) const
+            {
                 try
                 {
                     if (m_expr_id != -1)
                     {
-                        m_evaluator.Evaluate(m_expr_id, x,y,z,t, result);
+                        m_evaluator->Evaluate(m_expr_id, points, result);
                     }
                 }
                 catch (const std::runtime_error& e)
@@ -195,12 +216,12 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT void SetParameter(const std::string& name, NekDouble value)
             {
-                m_evaluator.SetParameter(name, value);
+                m_evaluator->SetParameter(name, value);
             }
 
             LIB_UTILITIES_EXPORT void SetConstants(const std::map<std::string, NekDouble> &constants)
             {
-                m_evaluator.AddConstants(constants);
+                m_evaluator->AddConstants(constants);
             }
 
             LIB_UTILITIES_EXPORT std::string GetExpression(void) const
@@ -208,17 +229,23 @@ namespace Nektar
                 return m_expr;
             }
 
+            LIB_UTILITIES_EXPORT std::string GetVlist(void) const
+            {
+                return m_vlist;
+            }
+
             /// Returns time spend on expression evaluation at
             /// points (it does not include parse/pre-processing time).
             LIB_UTILITIES_EXPORT NekDouble GetTime() const
             {
-                return m_evaluator.GetTime();
+                return m_evaluator->GetTime();
             }
 
         private:
+            std::string  m_vlist;
             std::string  m_expr;
             int          m_expr_id;
-            AnalyticExpressionEvaluator&  m_evaluator;
+            ExpressionEvaluatorShPtr m_evaluator;
         };
     }
 }

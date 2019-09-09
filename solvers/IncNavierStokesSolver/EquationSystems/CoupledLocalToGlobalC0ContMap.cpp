@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -79,10 +78,9 @@ namespace Nektar
         Array<OneD, unsigned int>           edgeInteriorMap;
         Array<OneD, int>                    edgeInteriorSign;
         int nvel = fields.num_elements();
-        MultiRegions::PeriodicMap::const_iterator pIt;
 
         const LocalRegions::ExpansionVector &locExpVector = *(fields[0]->GetExp());
-        int eid, id, diff;
+        int id, diff;
         int nel = fields[0]->GetNumElmts();
 
         MultiRegions::PeriodicMap periodicVerts;
@@ -122,7 +120,6 @@ namespace Nektar
 
         map<int,int> IsDirVertDof;
         map<int,int> IsDirEdgeDof;
-        map<int,int>::iterator mapIt;
 
         SpatialDomains::Geometry1DSharedPtr g;
         for(j = 0; j < bndCondExp.num_elements(); ++j)
@@ -146,17 +143,17 @@ namespace Nektar
                     {
                         IsDirEdgeDof[bndCondExp[j]->GetExp(k)
                                      ->as<LocalRegions::Expansion1D>()
-                                     ->GetGeom1D()->GetEid()] += 1;
+                                     ->GetGeom1D()->GetGlobalID()] += 1;
                     }
 
 
                     // Set number of Dirichlet conditions at vertices
                     // with a clamp on its maximum value being nvel to
                     // handle corners between expansions
-                    for(mapIt = BndExpVids.begin(); mapIt !=  BndExpVids.end(); mapIt++)
+                    for(auto &mapIt : BndExpVids)
                     {
-                        id = IsDirVertDof[mapIt->second]+1;
-                        IsDirVertDof[mapIt->second] = (id > nvel)?nvel:id;
+                        id = IsDirVertDof[mapIt.second]+1;
+                        IsDirVertDof[mapIt.second] = (id > nvel)?nvel:id;
                     }
                 }
                 else
@@ -214,7 +211,7 @@ namespace Nektar
                 {
                     id = bndCondExp[i]->GetExp(0)
                                 ->as<LocalRegions::Expansion1D>()->GetGeom1D()
-                                ->GetEid();
+                                ->GetGlobalID();
                     break;
                 }
             }
@@ -247,10 +244,9 @@ namespace Nektar
 
         for(i = 0; i < nel; ++i)
         {
-            eid = fields[0]->GetOffset_Elmt_Id(i);
-            for(j = 0; j < locExpVector[eid]->GetNverts(); ++j)
+            for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
             {
-                vertId = (locExpVector[eid]->as<LocalRegions::Expansion2D>()
+                vertId = (locExpVector[i]->as<LocalRegions::Expansion2D>()
                                            ->GetGeom2D())->GetVid(j);
                 if(Dofs[0].count(vertId) == 0)
                 {
@@ -263,17 +259,17 @@ namespace Nektar
                     }
                 }
 
-                edgeId = (locExpVector[eid]->as<LocalRegions::Expansion2D>()
+                edgeId = (locExpVector[i]->as<LocalRegions::Expansion2D>()
                                            ->GetGeom2D())->GetEid(j);
                 if(Dofs[1].count(edgeId) == 0)
                 {
-                    Dofs[1][edgeId] = nvel*(locExpVector[eid]->GetEdgeNcoeffs(j)-2)*nz_loc;
+                    Dofs[1][edgeId] = nvel*(locExpVector[i]->GetEdgeNcoeffs(j)-2)*nz_loc;
                 }
 
                 // Adjust for Dirichlet boundary conditions to give number to be solved
                 if(IsDirEdgeDof.count(edgeId) != 0)
                 {
-                    Dofs[1][edgeId] -= IsDirEdgeDof[edgeId]*nz_loc*(locExpVector[eid]->GetEdgeNcoeffs(j)-2);
+                    Dofs[1][edgeId] -= IsDirEdgeDof[edgeId]*nz_loc*(locExpVector[i]->GetEdgeNcoeffs(j)-2);
                 }
             }
         }
@@ -318,26 +314,25 @@ namespace Nektar
         // pressure dof to a dirichlet edge
         for(i = 0; i < nel; ++i)
         {
-            eid = fields[0]->GetOffset_Elmt_Id(i);
-            for(j = 0; j < locExpVector[eid]->GetNverts(); ++j)
+            for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
             {
-                edgeId = (locExpVector[eid]->as<LocalRegions::Expansion2D>()
+                edgeId = (locExpVector[i]->as<LocalRegions::Expansion2D>()
                                            ->GetGeom2D())->GetEid(j);
 
                 if(IsDirEdgeDof.count(edgeId) == 0) // interior edge
                 {
                     // setup AddMeanPressureToEdgeId to decide where to
                     // put pressure
-                    if(AddMeanPressureToEdgeId[eid] == -1)
+                    if(AddMeanPressureToEdgeId[i] == -1)
                     {
-                        AddMeanPressureToEdgeId[eid] = edgeId;
+                        AddMeanPressureToEdgeId[i] = edgeId;
                     }
                 }
             }
-            ASSERTL0((AddMeanPressureToEdgeId[eid] != -1),"Did not determine "
+            ASSERTL0((AddMeanPressureToEdgeId[i] != -1),"Did not determine "
                      "an edge to attach mean pressure dof");
             // Add the mean pressure degree of freedom to this edge
-            Dofs[1][AddMeanPressureToEdgeId[eid]] += nz_loc;
+            Dofs[1][AddMeanPressureToEdgeId[i]] += nz_loc;
         }
 
         map<int,int> pressureEdgeOffset;
@@ -357,7 +352,11 @@ namespace Nektar
                     {
                         nLocDirBndCondDofs += bndSegExp->GetNcoeffs()*nz_loc;
                     }
-                    nLocBndCondDofs += bndSegExp->GetNcoeffs()*nz_loc;
+
+                    if (bndConditionsVec[k][i]->GetBoundaryConditionType()!=SpatialDomains::ePeriodic)
+                    {
+                        nLocBndCondDofs += bndSegExp->GetNcoeffs()*nz_loc;
+                    }
                 }
             }
         }
@@ -389,8 +388,7 @@ namespace Nektar
 
         for(i = 0; i < nel; ++i)
         {
-            eid = fields[0]->GetOffset_Elmt_Id(i);
-            locExpansion = locExpVector[eid]->as<StdRegions::StdExpansion2D>();
+            locExpansion = locExpVector[i]->as<StdRegions::StdExpansion2D>();
 
             for(j = 0; j < locExpansion->GetNedges(); ++j)
             {
@@ -481,7 +479,7 @@ namespace Nektar
                             // edges with mixed id;
                             id = bndCondExp[i]->GetExp(k)
                                               ->as<LocalRegions::Expansion1D>()
-                                              ->GetGeom1D()->GetEid();
+                                              ->GetGeom1D()->GetGlobalID();
                             for(n = 0; n < nz_loc; ++n)
                             {
                                 graphVertOffset[ReorderedGraphVertId[1][id]*nvel*nz_loc+j*nz_loc +n] *= -1;
@@ -573,7 +571,7 @@ namespace Nektar
 
         for(i = 0; i < nel; ++i)
         {
-            m_numLocalBndCoeffsPerPatch[i] = (unsigned int) nz_loc*(nvel*locExpVector[fields[0]->GetOffset_Elmt_Id(i)]->NumBndryCoeffs() + 1);
+            m_numLocalBndCoeffsPerPatch[i] = (unsigned int) nz_loc*(nvel*locExpVector[i]->NumBndryCoeffs() + 1);
             m_numLocalIntCoeffsPerPatch[i] = (unsigned int) nz_loc*(pressure->GetExp(i)->GetNcoeffs()-1);
         }
 
@@ -595,8 +593,7 @@ namespace Nektar
         // ordering (element type consistency)
         for(i = 0; i < nel; ++i)
         {
-            eid = fields[0]->GetOffset_Elmt_Id(i);
-            locExpansion = locExpVector[eid]->as<StdRegions::StdExpansion2D>();
+            locExpansion = locExpVector[i]->as<StdRegions::StdExpansion2D>();
 
             velnbndry = locExpansion->NumBndryCoeffs();
 
@@ -622,7 +619,7 @@ namespace Nektar
                 meshVertId   = (locExpansion->as<LocalRegions::Expansion2D>()
                                             ->GetGeom2D())->GetVid(j);
 
-                pIt = periodicEdges.find(meshEdgeId);
+                auto pIt = periodicEdges.find(meshEdgeId);
 
                 // See if this edge is periodic. If it is, then we map all
                 // edges to the one with lowest ID, and align all
@@ -662,14 +659,14 @@ namespace Nektar
             }
 
             // use difference between two edges of the AddMeanPressureEdgeId to det nEdgeInteriorCoeffs.
-            nEdgeInteriorCoeffs = graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[eid]])*nvel*nz_loc+1] - graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[eid]])*nvel*nz_loc];
+            nEdgeInteriorCoeffs = graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]])*nvel*nz_loc+1] - graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]])*nvel*nz_loc];
 
-            int psize = pressure->GetExp(eid)->GetNcoeffs();
+            int psize = pressure->GetExp(i)->GetNcoeffs();
             for(n = 0; n < nz_loc; ++n)
             {
-                m_localToGlobalMap[cnt + nz_loc*nvel*velnbndry + n*psize] = graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[eid]]+1)*nvel*nz_loc-1]+nEdgeInteriorCoeffs + pressureEdgeOffset[AddMeanPressureToEdgeId[eid]];
+                m_localToGlobalMap[cnt + nz_loc*nvel*velnbndry + n*psize] = graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]]+1)*nvel*nz_loc-1]+nEdgeInteriorCoeffs + pressureEdgeOffset[AddMeanPressureToEdgeId[i]];
 
-                pressureEdgeOffset[AddMeanPressureToEdgeId[eid]] += 1;
+                pressureEdgeOffset[AddMeanPressureToEdgeId[i]] += 1;
             }
 
             cnt += (velnbndry*nvel+ psize)*nz_loc;
@@ -681,6 +678,11 @@ namespace Nektar
         {
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
+                if (bndConditionsVec[nv][i]->GetBoundaryConditionType()==SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 for(n = 0; n < nz_loc; ++n)
                 {
                     int ncoeffcnt = 0;
@@ -696,7 +698,7 @@ namespace Nektar
                             m_bndCondCoeffsToGlobalCoeffsMap[cnt+bndSegExp->GetVertexMap(k)] = graphVertOffset[ReorderedGraphVertId[0][meshVertId]*nvel*nz_loc+nv*nz_loc+n];
                         }
 
-                        meshEdgeId = (bndSegExp->GetGeom1D())->GetEid();
+                        meshEdgeId = (bndSegExp->GetGeom1D())->GetGlobalID();
                         bndEdgeCnt = 0;
                         nEdgeCoeffs = bndSegExp->GetNcoeffs();
                         for(k = 0; k < nEdgeCoeffs; k++)
@@ -753,8 +755,7 @@ namespace Nektar
                     Dofs[0].size()+Dofs[1].size()-firstNonDirGraphVertId);
                 for(i = 0; i < locExpVector.size(); ++i)
                 {
-                    eid = fields[0]->GetOffset_Elmt_Id(i);
-                    locExpansion = locExpVector[eid]
+                    locExpansion = locExpVector[i]
                                             ->as<StdRegions::StdExpansion2D>();
                     for(j = 0; j < locExpansion->GetNverts(); ++j)
                     {
@@ -830,9 +831,6 @@ void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(vector<map<int,i
 			}
 		}
 	}
-
-
-	map<int,int>::iterator mapIt;
 
 	// Start at second to last level and find edge on boundary
 	// to attach element
@@ -922,7 +920,7 @@ void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(vector<map<int,i
 
 						if(elmtid != -1)
 						{
-							mapIt = ElmtInBndry.find(elmtid);
+							auto mapIt = ElmtInBndry.find(elmtid);
 
 							if(mapIt != ElmtInBndry.end())
 							{

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -39,6 +38,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <LocalRegions/TetExp.h>
+#include <LocalRegions/PyrExp.h>
 #include <LocalRegions/PrismExp.h>
 #include <LocalRegions/HexExp.h>
 
@@ -48,16 +48,15 @@ namespace Nektar
     namespace MultiRegions
     {
         class PreconditionerLowEnergy;
-        typedef boost::shared_ptr<PreconditionerLowEnergy>  PreconditionerLowEnergySharedPtr;
+        typedef std::shared_ptr<PreconditionerLowEnergy>  PreconditionerLowEnergySharedPtr;
 
         class PreconditionerLowEnergy: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
             static PreconditionerSharedPtr create(
-                const boost::shared_ptr<GlobalLinSys> &plinsys,
-                const boost::shared_ptr<AssemblyMap>
-                &pLocToGloMap)
+                const std::shared_ptr<GlobalLinSys> &plinsys,
+                const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             {
 	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLowEnergy>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
@@ -68,7 +67,7 @@ namespace Nektar
             static std::string className;
 
             MULTI_REGIONS_EXPORT PreconditionerLowEnergy(
-                const boost::shared_ptr<GlobalLinSys> &plinsys,
+                const std::shared_ptr<GlobalLinSys> &plinsys,
                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
@@ -76,53 +75,76 @@ namespace Nektar
 
 	protected:
 
-            const boost::weak_ptr<GlobalLinSys> m_linsys;
-            boost::shared_ptr<AssemblyMap> m_locToGloMap;
+	    DNekBlkMatSharedPtr m_BlkMat;
+            DNekBlkMatSharedPtr m_RBlk;
+            DNekBlkMatSharedPtr m_InvRBlk;
 
-	    DNekBlkMatSharedPtr     m_BlkMat;
-            DNekScalMatSharedPtr    m_bnd_mat;
-
-            DNekScalBlkMatSharedPtr m_RBlk;
-            DNekScalBlkMatSharedPtr m_RTBlk;
-            DNekScalBlkMatSharedPtr m_InvRBlk;
-            DNekScalBlkMatSharedPtr m_InvRTBlk;
-
-            DNekScalMatSharedPtr    m_Rtet;
-            DNekScalMatSharedPtr    m_RTtet;
-            DNekScalMatSharedPtr    m_Rinvtet;
-            DNekScalMatSharedPtr    m_RTinvtet;
-
-            DNekScalMatSharedPtr    m_Rhex;
-            DNekScalMatSharedPtr    m_RThex;
-            DNekScalMatSharedPtr    m_Rinvhex;
-            DNekScalMatSharedPtr    m_RTinvhex;
-
-            DNekScalMatSharedPtr    m_Rprism;
-            DNekScalMatSharedPtr    m_RTprism;
-            DNekScalMatSharedPtr    m_Rinvprism;
-            DNekScalMatSharedPtr    m_RTinvprism;
-
+            
             Array<OneD, NekDouble>  m_locToGloSignMult;
             Array<OneD, NekDouble>  m_multiplicity;
             Array<OneD, int>        m_map;
 
+            bool m_signChange;
+            
+            // store how many consecutive similar blocks there
+            // are in R and Rinv
+            std::vector<std::pair<int,int> >  m_sameBlock;  
+            
 	private:
-
-            void SetUpReferenceElements(void);
-
-            void CreateMultiplicityMap(void);
 
             void SetupBlockTransformationMatrix(void);
 
-            void ModifyPrismTransformationMatrix(
-                LocalRegions::TetExpSharedPtr TetExp,
-                LocalRegions::PrismExpSharedPtr PrismExp,
-                DNekMatSharedPtr Rmodprism,
-                DNekMatSharedPtr RTmodprism);
+            typedef std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr>
+                ShapeToDNekMap;
+            typedef std::map<LibUtilities::ShapeType,
+                LocalRegions::ExpansionSharedPtr > ShapeToExpMap;
+            typedef std::map<LibUtilities::ShapeType,
+                Array<OneD, unsigned int> > ShapeToIntArrayMap;
+            typedef std::map<LibUtilities::ShapeType,
+                Array<OneD, Array<OneD, unsigned int> > >
+                ShapeToIntArrayArrayMap;
+            
+            void SetUpReferenceElements(ShapeToDNekMap &maxRmat,
+                                        ShapeToExpMap &maxElmt,
+                                        ShapeToIntArrayMap      &vertMapMaxR,
+                                        ShapeToIntArrayArrayMap &edgeMapMaxR);
+            
+            void SetUpPyrMaxRMat(int nummodesmax,
+                                 LocalRegions::PyrExpSharedPtr &PyrExp,
+                                 ShapeToDNekMap          &maxRmat,
+                                 ShapeToIntArrayMap      &vertMapMaxR,
+                                 ShapeToIntArrayArrayMap &edgeMapMaxR,
+                                 ShapeToIntArrayArrayMap &faceMapMaxR);
 
-            SpatialDomains::TetGeomSharedPtr CreateRefTetGeom(void);
+            void ReSetTetMaxRMat(int nummodesmax,
+                                 LocalRegions::TetExpSharedPtr &TetExp,
+                                 ShapeToDNekMap          &maxRmat,
+                                 ShapeToIntArrayMap      &vertMapMaxR,
+                                 ShapeToIntArrayArrayMap &edgeMapMaxR,
+                                 ShapeToIntArrayArrayMap &faceMapMaxR);
+
+
+            void ReSetPrismMaxRMat(int nummodesmax,
+                                   LocalRegions::PrismExpSharedPtr &PirsmExp,
+                                   ShapeToDNekMap          &maxRmat,
+                                   ShapeToIntArrayMap      &vertMapMaxR,
+                                   ShapeToIntArrayArrayMap &edgeMapMaxR,
+                                   ShapeToIntArrayArrayMap &faceMapMaxR,
+                                   bool UseTetOnly);
+            
+            DNekMatSharedPtr ExtractLocMat(
+                          StdRegions::StdExpansionSharedPtr &locExp,
+                          DNekScalMatSharedPtr              &maxRmat,
+                          LocalRegions::ExpansionSharedPtr  &expMax,
+                          Array<OneD, unsigned int>         &vertMapMaxR,
+                          Array<OneD, Array<OneD, unsigned int> > &edgeMapMaxR);
+            
+            void CreateMultiplicityMap(void);
+            
+            SpatialDomains::TetGeomSharedPtr   CreateRefTetGeom(void);
+            SpatialDomains::PyrGeomSharedPtr   CreateRefPyrGeom(void);
             SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);
-            SpatialDomains::HexGeomSharedPtr CreateRefHexGeom(void);
+            SpatialDomains::HexGeomSharedPtr   CreateRefHexGeom(void);
 
             virtual void v_InitObject();
 
@@ -137,7 +159,7 @@ namespace Nektar
             virtual void v_DoTransformToLowEnergy(
                 const Array<OneD, NekDouble>& pInput,
                 Array<OneD, NekDouble>& pOutput);
-
+            
             virtual void v_DoTransformFromLowEnergy(
                 Array<OneD, NekDouble>& pInOut);
 
@@ -152,7 +174,8 @@ namespace Nektar
             virtual void v_BuildPreconditioner();
             
             virtual DNekScalMatSharedPtr
-                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalMat > &loc_mat);
+                v_TransformedSchurCompl(int n, int offset, 
+                             const std::shared_ptr<DNekScalMat > &loc_mat);
         };
     }
 }

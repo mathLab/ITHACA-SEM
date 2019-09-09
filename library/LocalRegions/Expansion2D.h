@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -46,15 +45,13 @@ namespace Nektar
     namespace LocalRegions
     {
         class Expansion3D;
-        typedef boost::shared_ptr<Expansion3D> Expansion3DSharedPtr;
-        typedef boost::weak_ptr<Expansion3D>   Expansion3DWeakPtr;
+        typedef std::shared_ptr<Expansion3D> Expansion3DSharedPtr;
+        typedef std::weak_ptr<Expansion3D>   Expansion3DWeakPtr;
 
         class Expansion2D;
-        typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
-        typedef boost::weak_ptr<Expansion2D>   Expansion2DWeakPtr;
+        typedef std::shared_ptr<Expansion2D> Expansion2DSharedPtr;
+        typedef std::weak_ptr<Expansion2D>   Expansion2DWeakPtr;
         typedef std::vector< Expansion2DSharedPtr > Expansion2DVector;
-        typedef std::vector< Expansion2DSharedPtr >::iterator
-            Expansion2DVectorIter;
 
         class Expansion2D: virtual public Expansion,
             virtual public StdRegions::StdExpansion2D
@@ -101,7 +98,7 @@ namespace Nektar
                 Array<OneD, NekDouble>          &edgePhys,
                 const StdRegions::VarCoeffMap   &dirForcing,
                 Array<OneD, NekDouble>          &outarray);
-            
+
             inline void AddHDGHelmholtzTraceTerms(
                 const NekDouble                     tau,
                 const Array<OneD, const NekDouble> &inarray,
@@ -138,6 +135,19 @@ namespace Nektar
             Expansion3DWeakPtr                      m_elementRight;
             int                                     m_elementFaceLeft;
             int                                     m_elementFaceRight;
+
+            LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMF(
+                const int dir,
+                const int shapedim,
+                const StdRegions::VarCoeffMap   &varcoeffs);
+
+            LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMFDiv(
+                const int dir,
+                const StdRegions::VarCoeffMap   &varcoeffs);
+
+            LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMFMag(
+                const int dir,
+                const StdRegions::VarCoeffMap   &varcoeffs);
 
             virtual DNekMatSharedPtr v_GenMatrix(
                 const StdRegions::StdMatrixKey &mkey);
@@ -181,7 +191,14 @@ namespace Nektar
                 ExpansionSharedPtr &EdgeExp,
                 const Array<OneD, const NekDouble>  &varcoeff,
                 Array<OneD,NekDouble> &outarray);
-            
+
+            Array<OneD, NekDouble> v_GetnEdgecdotMF(
+                const int dir,
+                const int edge,
+                ExpansionSharedPtr &EdgeExp_e, 
+                const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                const StdRegions::VarCoeffMap   &varcoeffs);
+
             LOCAL_REGIONS_EXPORT void ReOrientQuadEdgePhysMap(
                 const StdRegions::Orientation    orient,
                 const int                        nq0,
@@ -196,6 +213,8 @@ namespace Nektar
                 const int edge) const;
             const StdRegions::NormalVector &v_GetSurfaceNormal(
                 const int id) const;
+            virtual NekDouble v_VectorFlux(
+                const Array<OneD, Array<OneD, NekDouble > > &vec);
         };
 
         inline Expansion1DSharedPtr Expansion2D::GetEdgeExp(
@@ -268,7 +287,7 @@ namespace Nektar
         inline SpatialDomains::Geometry2DSharedPtr
             Expansion2D::GetGeom2D() const
         {
-            return boost::dynamic_pointer_cast<SpatialDomains::
+            return std::dynamic_pointer_cast<SpatialDomains::
                 Geometry2D>(m_geom);
         }
     } //end of namespace

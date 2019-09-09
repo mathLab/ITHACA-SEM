@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -35,10 +34,18 @@
 #define NOMINMAX
 
 #include <LibUtilities/BasicUtils/CompressData.h>
-#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 #include <LibUtilities/BasicConst/GitRevision.h>
 
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/assign/list_of.hpp>
+
 #include <set>
+#include <cstdint>
 
 #ifdef NEKTAR_USE_MPI
 #include <mpi.h>
@@ -61,8 +68,8 @@ namespace LibUtilities
     {
         union
         {
-            boost::uint32_t value;
-            boost::uint8_t  data[sizeof(boost::uint32_t)];
+            std::uint32_t value;
+            std::uint8_t  data[sizeof(std::uint32_t)];
         } number;
 
         number.data[0] = 0x00;

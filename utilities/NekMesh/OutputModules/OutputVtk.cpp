@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -34,6 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/MeshElements/Element.h>
+#include <LibUtilities/BasicUtils/VtkUtil.hpp>
 
 #include <vtkPolyDataWriter.h>
 #include <vtkPolyData.h>
@@ -72,14 +72,11 @@ void OutputVtk::Process()
     vtkPoints *vtkPoints   = vtkPoints::New();
     vtkCellArray *vtkPolys = vtkCellArray::New();
 
-    std::set<NodeSharedPtr>::iterator it;
-
     std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
                                 m_mesh->m_vertexSet.end());
 
-    for (it = tmp.begin(); it != tmp.end(); ++it)
+    for (auto &n : tmp)
     {
-        NodeSharedPtr n = *it;
         vtkPoints->InsertPoint(n->m_id, n->m_x, n->m_y, n->m_z);
     }
 

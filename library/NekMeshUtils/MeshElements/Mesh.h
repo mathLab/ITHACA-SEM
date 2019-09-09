@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,6 +35,10 @@
 #ifndef NEKMESHUTILS_MESHELEMENTS_MESH
 #define NEKMESHUTILS_MESHELEMENTS_MESH
 
+#include <set>
+
+#include <LibUtilities/BasicUtils/FieldIO.h>
+
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 #include <NekMeshUtils/MeshElements/Composite.h>
@@ -46,7 +49,7 @@ namespace NekMeshUtils
 {
 
 class Octree;
-typedef boost::shared_ptr<Octree> OctreeSharedPtr;
+typedef std::shared_ptr<Octree> OctreeSharedPtr;
 
 /**
  * Enumeration of condition types (Dirichlet, Neumann, etc).
@@ -79,7 +82,7 @@ struct Condition
     std::vector<int> m_composite;
 };
 
-typedef boost::shared_ptr<Condition> ConditionSharedPtr;
+typedef std::shared_ptr<Condition> ConditionSharedPtr;
 typedef std::map<int, ConditionSharedPtr> ConditionMap;
 
 NEKMESHUTILS_EXPORT bool operator==(ConditionSharedPtr const &c1,
@@ -119,7 +122,7 @@ public:
     /// List of fields names.
     std::vector<std::string>        m_fields;
     /// Map of vertex normals.
-    boost::unordered_map<int, Node> m_vertexNormals;
+    std::unordered_map<int, Node>   m_vertexNormals;
     /// Set of all pairs of element ID and edge/face number on which to
     /// apply spherigon surface smoothing.
     std::set<std::pair<int, int> >  m_spherigonSurfs;
@@ -129,7 +132,11 @@ public:
     CADSystemSharedPtr              m_cad;
     /// Octree system pointer, if there is no octree its empty
     OctreeSharedPtr                 m_octree;
-
+    /// Metadata map for storing any mesh generation parameters
+    LibUtilities::FieldMetaDataMap  m_metadata;
+    /// MPI communicator in case we end up using MPI multiple times from
+    /// Nektar++ SessionReader object.
+    LibUtilities::CommSharedPtr     m_comm;
 
     /// Returns the total number of elements in the mesh with
     /// dimension expDim.
@@ -142,9 +149,11 @@ public:
 
     NEKMESHUTILS_EXPORT void MakeOrder(int                      order,
                                        LibUtilities::PointsType distType);
+
+    NEKMESHUTILS_EXPORT void PrintStats(std::ostream &out);
 };
 /// Shared pointer to a mesh.
-typedef boost::shared_ptr<Mesh> MeshSharedPtr;
+typedef std::shared_ptr<Mesh> MeshSharedPtr;
 }
 }
 

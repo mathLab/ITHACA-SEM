@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -395,7 +394,7 @@ namespace Nektar
              xi[1] = yia;
              xi[2] = zia;
 
-             boost::shared_ptr<NekMatrix<NekDouble> > mat =
+             std::shared_ptr<NekMatrix<NekDouble> > mat =
                  m_util->GetInterpolationMatrix(xi);
              Vmath::Vcopy(mat->GetRows() * mat->GetColumns(), mat->GetRawPtr(),
                           1, &interp[0], 1);
@@ -413,9 +412,9 @@ namespace Nektar
             m_derivmatrix[2] = m_util->GetDerivMatrix(2);
         }
 
-        boost::shared_ptr<PointsBaseType> NodalPrismEvenlySpaced::Create(const PointsKey &key)
+        std::shared_ptr<PointsBaseType> NodalPrismEvenlySpaced::Create(const PointsKey &key)
         {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalPrismEvenlySpaced>::AllocateSharedPtr(key));
+            std::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalPrismEvenlySpaced>::AllocateSharedPtr(key));
 
             returnval->Initialize();
 

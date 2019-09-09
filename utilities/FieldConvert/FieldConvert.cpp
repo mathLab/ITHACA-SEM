@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and laimitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,59 +35,69 @@
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
+#include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <FieldUtils/Module.h>
 
 using namespace std;
 using namespace Nektar;
 using namespace Nektar::FieldUtils;
 
+void CheckModules(vector<ModuleSharedPtr> &modules);
+
+void PrintExecutionSequence(vector<ModuleSharedPtr> &modules);
+
+void RunModule(ModuleSharedPtr module, po::variables_map &vm, bool verbose);
+
 int main(int argc, char* argv[])
 {
-    Timer     timer;
-    Timer     moduleTimer;
+    LibUtilities::Timer    timer;
     timer.Start();
+
     po::options_description desc("Available options");
     desc.add_options()
         ("help,h",
-                "Produce this help message.")
+            "Produce this help message.")
         ("modules-list,l",
-                "Print the list of available modules.")
+            "Print the list of available modules.")
         ("output-points,n", po::value<int>(),
-                "Output at n equipspaced points along the collapsed coordinates (for .dat, .vtk).")
+            "Output at n equipspaced points along the "
+            "collapsed coordinates (for .dat, .vtu).")
         ("output-points-hom-z", po::value<int>(),
-                "Number of planes in the z-direction for output of Homogeneous 1D expansion(for .dat, .vtk).")
+            "Number of planes in the z-direction for output of "
+            "Homogeneous 1D expansion(for .dat, .vtu).")
         ("error,e",
-                "Write error of fields for regression checking")
+            "Write error of fields for regression checking")
         ("forceoutput,f",
-                "Force the output to be written without any checks")
+            "Force the output to be written without any checks")
         ("range,r", po::value<string>(),
-                "Define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) "
-                "in which any vertex is contained.")
-        ("noequispaced","Do not use equispaced output. Currently stops the output-points option")
-        ("nprocs", po::value<int>(),
-                "Used to define nprocs if running serial problem to mimic "
-                "parallel run.")
+            "Define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) "
+            "in which any vertex is contained.")
+        ("noequispaced",
+            "Do not use equispaced output.")
+        ("nparts", po::value<int>(),
+            "Define nparts if running serial problem to mimic "
+            "parallel run with many partitions.")
         ("npz", po::value<int>(),
-                "Used to define number of partitions in z for Homogeneous1D "
-                "expansions for parallel runs.")
+            "Used to define number of partitions in z for Homogeneous1D "
+            "expansions for parallel runs.")
         ("onlyshape", po::value<string>(),
-                 "Only use element with defined shape type i.e. -onlyshape "
-                 " Tetrahedron")
+            "Only use element with defined shape type i.e. -onlyshape "
+            " Tetrahedron")
         ("part-only", po::value<int>(),
-                "Partition into specfiied npart partitions and exit")
+            "Partition into specified npart partitions and exit")
         ("part-only-overlapping", po::value<int>(),
-                "Partition into specfiied npart overlapping partitions and exit")
-        ("procid", po::value<int>(),
-                "Process as single procid of a partition of size nproc "
-                "(-nproc must be specified).")
+            "Partition into specified npart overlapping partitions and exit")
         ("modules-opt,p", po::value<string>(),
-                "Print options for a module.")
+            "Print options for a module.")
         ("module,m", po::value<vector<string> >(),
-                "Specify modules which are to be used.")
+            "Specify modules which are to be used.")
         ("useSessionVariables",
-                "Use variables defined in session for output")
+            "Use variables defined in session for output")
+        ("useSessionExpansion",
+            "Use expansion defined in session.")
         ("verbose,v",
-                "Enable verbose mode.");
+            "Enable verbose mode.");
 
     po::options_description hidden("Hidden options");
     hidden.add_options()
@@ -117,6 +126,10 @@ int main(int argc, char* argv[])
         cerr << desc;
         return 1;
     }
+
+#ifdef NEKTAR_DISABLE_BACKUPS
+    vm.insert(std::make_pair("forceoutput", po::variable_value()));
+#endif
 
     // Print available modules.
     if (vm.count("modules-list"))
@@ -159,7 +172,7 @@ int main(int argc, char* argv[])
             t = eProcessModule;
         }
 
-        FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
+        FieldSharedPtr f = std::shared_ptr<Field>(new Field());
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
             ModuleKey(t, tmp1[1]), f);
         cerr << "Options for module " << tmp1[1] << ":" << endl;
@@ -167,7 +180,8 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    if (vm.count("help") || vm.count("input-file") != 1) {
+    if (vm.count("help") || vm.count("input-file") != 1)
+    {
         cerr << "Usage: FieldConvert [options] inputfile.ext1 outputfile.ext2"
              << endl;
         cout << desc;
@@ -199,41 +213,49 @@ int main(int argc, char* argv[])
      * where the only required argument is 'modname', specifing the
      * name of the module to load.
      */
+    FieldSharedPtr f = std::shared_ptr<Field>(new Field());
+    int nParts = 1;
+    int MPInprocs = 1;
+    int MPIrank   = 0;
+    LibUtilities::CommSharedPtr MPIComm;
 
-    FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
     if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
     {
-        if(vm.count("procid"))
+        // get hold of parallel communicator first
+        MPIComm = LibUtilities::GetCommFactory().CreateInstance(
+                                                    "ParallelMPI", argc, argv);
+
+        if(vm.count("nparts"))
         {
-            int nprocs, rank;
+            //work out number of processors to run in serial over partitions
+            MPInprocs = MPIComm->GetSize();
+            MPIrank   = MPIComm->GetRank();
 
-            ASSERTL0(vm.count("nprocs"),
-                     "Must specify --nprocs when using --procid option");
-            nprocs = vm["nprocs"].as<int>();
-            rank   = vm["procid"].as<int>();
+            nParts = vm["nparts"].as<int>();
 
-            f->m_comm = boost::shared_ptr<FieldConvertComm>(
-                                new FieldConvertComm(argc, argv, nprocs,rank));
-
-            // Set forceoutput option. Otherwise only procid 0 will write file
-            vm.insert(std::make_pair("forceoutput", po::variable_value()));
+            f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
+                                                    "Serial", argc, argv);
         }
         else
         {
-            f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
-                                                    "ParallelMPI", argc, argv);
+            f->m_comm = MPIComm;
         }
     }
     else
     {
+        if(vm.count("nparts"))
+        {
+            nParts = vm["nparts"].as<int>();
+        }
+
         f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
                                                     "Serial", argc, argv);
-
     }
 
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
-
+    ModuleKey               module;
+    ModuleSharedPtr         mod;
 
     if (vm.count("verbose"))
     {
@@ -261,19 +283,25 @@ int main(int argc, char* argv[])
     }
 
     InputModuleSharedPtr inputModule;
+    string outfilename;
 
     for (int i = 0; i < modcmds.size(); ++i)
     {
         // First split each command by the colon separator.
         vector<string> tmp1;
-        ModuleKey module;
         int offset = 1;
 
         boost::split(tmp1, modcmds[i], boost::is_any_of(":"));
 
         if (i < nInput || i == modcmds.size() - 1)
         {
+            //assume all modules are input unless last, or specified to be :out
             module.first = (i < nInput ? eInputModule : eOutputModule);
+            if (tmp1.size() > 1 && tmp1.back()=="out")
+            {
+                module.first = eOutputModule;
+                tmp1.pop_back();
+            }
 
             // If no colon detected, automatically detect mesh type from
             // file extension. Otherwise override and use tmp1[1] as the
@@ -284,25 +312,56 @@ int main(int argc, char* argv[])
             // filename.xml:vtk:opt1=arg1:opt2=arg2
             if (tmp1.size() == 1)
             {
-                int    dot    = tmp1[0].find_last_of('.') + 1;
-                string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
+                // First, let's try to guess the input format if we're dealing
+                // with input files.
+                string guess;
 
-                if(ext == "gz")
+                if (module.first == eInputModule)
                 {
-                    string tmp2 = tmp1[0].substr(0,dot-1);
-                    dot = tmp2.find_last_of('.') + 1;
-                    ext = tmp1[0].substr(dot,tmp1[0].length()-dot);
+                    guess = InputModule::GuessFormat(tmp1[0]);
                 }
 
-                module.second = ext;
-                tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")
-                               +tmp1[0]);
+                // Found file type.
+                if (guess != "")
+                {
+                    if (f->m_verbose)
+                    {
+                        cout << "Using input module " << guess << " for: "
+                             << tmp1[0] << endl;
+                    }
+
+                    module.second = guess;
+                    tmp1.push_back(string("infile="+tmp1[0]));
+                }
+                else
+                {
+                    int    dot = tmp1[0].find_last_of('.') + 1;
+                    string ext = tmp1[0].substr(dot, tmp1[0].length() - dot);
+
+                    // Remove trailing separator from extension to allow
+                    //    folder inputs using file.fld/
+                    if(ext.back() == fs::path::preferred_separator)
+                    {
+                        ext.pop_back();
+                    }
+
+                    if(ext == "gz")
+                    {
+                        string tmp2 = tmp1[0].substr(0,dot-1);
+                        dot = tmp2.find_last_of('.') + 1;
+                        ext = tmp1[0].substr(dot,tmp1[0].length()-dot);
+                    }
+
+                    module.second = ext;
+                    tmp1.push_back(string(module.first == eInputModule ? "infile=" :
+                                          "outfile=")  +tmp1[0]);
+                }
             }
             else
             {
                 module.second = tmp1[1];
-                tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")
-                               +tmp1[0]);
+                tmp1.push_back(string(module.first == eInputModule ? "infile=" : "outfile=")
+                               + tmp1[0]);
                 offset++;
             }
         }
@@ -313,14 +372,23 @@ int main(int argc, char* argv[])
         }
 
         // Create module.
-        ModuleSharedPtr mod;
         mod = GetModuleFactory().CreateInstance(module, f);
         modules.push_back(mod);
 
-        if (i < nInput)
+        if (module.first == eInputModule)
         {
-            inputModule = boost::dynamic_pointer_cast<InputModule>(mod);
+            inputModule = std::dynamic_pointer_cast<InputModule>(mod);
             inputModule->AddFile(module.second, tmp1[0]);
+        }
+        else if(module.first == eOutputModule)
+        {
+            outfilename = tmp1[0];
+            if(nParts > 1)
+            {
+                // if nParts is specified then ensure output modules
+                // write out mutipile files
+                mod->RegisterConfig("writemultiplefiles");
+            }
         }
 
         // Set options for this module.
@@ -331,7 +399,7 @@ int main(int argc, char* argv[])
 
             if (tmp2.size() == 1)
             {
-                mod->RegisterConfig(tmp2[0], "1");
+                mod->RegisterConfig(tmp2[0]);
             }
             else if (tmp2.size() == 2)
             {
@@ -349,67 +417,342 @@ int main(int argc, char* argv[])
         mod->SetDefaults();
     }
 
-    // If any output module has to reset points then set intput modules to match
-   if(vm.count("noequispaced"))
-    {
-        for (int i = 0; i < modules.size(); ++i)
-        {
-            modules[i]->SetRequireEquiSpaced(false);
-        }
-    }
-    else
-    {
-        bool RequiresEquiSpaced = false;
-        for (int i = 0; i < modules.size(); ++i)
-        {
-            if(modules[i]->GetRequireEquiSpaced())
-            {
-                RequiresEquiSpaced = true;
-            }
-        }
-        if (RequiresEquiSpaced)
-        {
-            for (int i = 0; i < modules.size(); ++i)
-            {
-                modules[i]->SetRequireEquiSpaced(true);
-            }
-        }
-    }
-    
-    // Run field process.
+    // Include dummy module to create m_exp
+    module.first  = eProcessModule;
+    module.second = string("createExp");
+    mod = GetModuleFactory().CreateInstance(module, f);
+    modules.push_back(mod);
+    mod->SetDefaults();
+
+    // Include equispacedoutput module if needed
+    Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
     for (int i = 0; i < modules.size(); ++i)
     {
-        if(f->m_verbose && f->m_comm->TreatAsRankZero())
-        {
-            moduleTimer.Start();
-        }
-        modules[i]->Process(vm);
-        cout.flush();
-        if(f->m_verbose && f->m_comm->TreatAsRankZero())
-        {
-            moduleTimer.Stop();
-            NekDouble cpuTime = moduleTimer.TimePerTest(1);
-
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << modules[i]->GetModuleName()
-                 << " CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-        }
+        ++modulesCount[modules[i]->GetModulePriority()];
     }
-
-    if(f->m_verbose)
+    if( modulesCount[eModifyPts] != 0 &&
+        modulesCount[eCreatePts] == 0 &&
+        modulesCount[eConvertExpToPts] == 0)
     {
-        if(f->m_comm->TreatAsRankZero())
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
+        module.first  = eProcessModule;
+        module.second = string("equispacedoutput");
+        mod = GetModuleFactory().CreateInstance(module, f);
+        modules.push_back(mod);
+        mod->SetDefaults();
+    }
 
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "Total CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
+    // Check if modules provided are compatible
+    CheckModules(modules);
+    // Can't have ContField with range option (because of boundaries)
+    if (vm.count("range") && f->m_declareExpansionAsContField)
+    {
+        ASSERTL0(false, "Can't use range option with module requiring "
+            "a continuous expansion.");
+    }
+
+    bool verbose = (f->m_verbose && f->m_comm->TreatAsRankZero());
+    if(verbose)
+    {
+        PrintExecutionSequence(modules);
+    }
+
+
+    // Loop on partitions if required
+    LibUtilities::CommSharedPtr defComm = f->m_comm;
+    LibUtilities::CommSharedPtr partComm;
+    for(int p = MPIrank; p < nParts; p += MPInprocs)
+    {
+        // write out which partition is being processed and defined a
+        // new serial communicator
+        if(nParts > 1)
+        {
+            cout << endl << "Processing partition: " << p << endl;
+            
+            int rank = p;
+            f->ClearField();
+            partComm = std::shared_ptr<FieldConvertComm>(
+                             new FieldConvertComm(argc, argv, nParts,rank));
+        }
+        
+        // Run field process.
+        for (int n = 0; n < SIZE_ModulePriority; ++n)
+        {
+            ModulePriority priority = static_cast<ModulePriority>(n);
+
+            if(nParts > 1)
+            {
+                if(((priority == eCreateGraph)||(priority == eOutput)))
+                {
+                    f->m_comm = partComm;
+                }
+                else
+                {
+                    f->m_comm = defComm;
+                }
+            }
+
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                if(modules[i]->GetModulePriority() == priority)
+                {
+                    RunModule(modules[i], vm, verbose);
+                }
+            }
         }
     }
+
+    // write out Info file if required.
+    if (nParts > 1)
+    {
+        int i;
+        // check to see if we have created a fld file.
+        for (i = 0; i < modules.size(); ++i)
+        {
+            if (boost::iequals(modules[i]->GetModuleName(), "OutputFld"))
+            {
+                break;
+            }
+        }
+
+        if (i != modules.size())
+        {
+            if (MPInprocs > 1)
+            {
+                MPIComm->Block();
+            }
+
+            if (MPIrank == 0)
+            {
+                module.first  = eOutputModule;
+                module.second = string("info");
+                mod           = GetModuleFactory().CreateInstance(module, f);
+
+                mod->RegisterConfig("nparts",
+                                    boost::lexical_cast<string>(nParts));
+                mod->SetDefaults();
+
+                if (f->m_writeBndFld)
+                {
+                    // find ending of output file and insert _b1, _b2
+                    int dot = outfilename.find_last_of('.') + 1;
+                    string ext =
+                        outfilename.substr(dot, outfilename.length() - dot);
+                    string name = outfilename.substr(0, dot - 1);
+
+                    for (int b = 0; b < f->m_bndRegionsToWrite.size(); ++b)
+                    {
+                        string outfilenew = name + "_b" +
+                                            boost::lexical_cast<string>(
+                                                f->m_bndRegionsToWrite[b]) +
+                                            "." + ext;
+                        mod->RegisterConfig("outfile", outfilenew);
+                        RunModule(mod, vm, verbose);
+                    }
+                }
+                else
+                {
+                    mod->RegisterConfig("outfile", outfilename);
+                    RunModule(mod, vm, verbose);
+                }
+            }
+        }
+    }
+
+    if(verbose)
+    {
+        timer.Stop();
+        NekDouble cpuTime = timer.TimePerTest(1);
+
+        stringstream ss;
+        ss << cpuTime << "s";
+        cout << "Total CPU Time: " << setw(8) << left
+             << ss.str() << endl;
+    }
+
+    if(MPInprocs > 1)
+    {
+        MPIComm->Block();
+        MPIComm->Finalise();
+    }
+
     return 0;
+}
+
+// This function checks validity conditions for the list of modules provided
+void CheckModules(vector<ModuleSharedPtr> &modules)
+{
+    // Count number of modules by priority
+    Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
+    for (int i = 0; i < modules.size(); ++i)
+    {
+        ++modulesCount[modules[i]->GetModulePriority()];
+    }
+
+    // Modules of type eModifyFieldData require a eCreateFieldData module
+    if( modulesCount[eModifyFieldData] != 0 &&
+        modulesCount[eCreateFieldData] == 0)
+    {
+        stringstream ss;
+        ss << "Module(s): ";
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eModifyFieldData)
+            {
+                ss << modules[i]->GetModuleName()<<" ";
+            }
+        }
+        ss << "require fld input.";
+        ASSERTL0(false, ss.str());
+    }
+
+    // Modules of type eFillExp require eCreateGraph without eCreateFieldData
+    if( modulesCount[eFillExp] != 0)
+    {
+        if( modulesCount[eCreateGraph]       == 0 ||
+            modulesCount[eCreateFieldData]   != 0)
+        {
+            stringstream ss;
+            ss << "Module(s): ";
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                if(modules[i]->GetModulePriority() == eFillExp)
+                {
+                    ss << modules[i]->GetModuleName()<<" ";
+                }
+            }
+            ss << "require xml input without fld input.";
+            ASSERTL0(false, ss.str());
+        }
+    }
+
+    // Modules of type eModifyExp and eBndExtraction
+    //      require a eCreateGraph module
+    if( (modulesCount[eModifyExp] != 0 || modulesCount[eBndExtraction] != 0) &&
+        modulesCount[eCreateGraph] == 0)
+    {
+        stringstream ss;
+        ss << "Module(s): ";
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eModifyExp ||
+               modules[i]->GetModulePriority() == eBndExtraction)
+            {
+                ss << modules[i]->GetModuleName()<<" ";
+            }
+        }
+        ss << "require xml input.";
+        ASSERTL0(false, ss.str());
+    }
+
+    // Modules of type eCreatePts should not be used with xml or fld inputs
+    if( modulesCount[eCreatePts] != 0)
+    {
+        if(modulesCount[eCreateGraph]!=0 || modulesCount[eCreateFieldData]!=0)
+        {
+            stringstream ss;
+            ss << "Module(s): ";
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                if(modules[i]->GetModulePriority() == eCreatePts)
+                {
+                    ss << modules[i]->GetModuleName()<<" ";
+                }
+            }
+            ss << "should not use xml or fld inputs.";
+            ASSERTL0(false, ss.str());
+        }
+    }
+
+    // Modules of type eConvertExpToPts require eCreateGraph, but are not
+    //    compatible with eBndExtraction
+    if( modulesCount[eConvertExpToPts] != 0)
+    {
+        if( modulesCount[eCreateGraph] == 0)
+        {
+            stringstream ss;
+            ss << "Module(s): ";
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                if(modules[i]->GetModulePriority() == eConvertExpToPts)
+                {
+                    ss << modules[i]->GetModuleName()<<" ";
+                }
+            }
+            ss << "require xml input.";
+            ASSERTL0(false, ss.str());
+        }
+        if( modulesCount[eBndExtraction] != 0)
+        {
+            stringstream ss;
+            ss << "Module(s): ";
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                if(modules[i]->GetModulePriority() == eBndExtraction)
+                {
+                    ss << modules[i]->GetModuleName()<<" ";
+                }
+            }
+            ss << "is not compatible with module(s): ";
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                if(modules[i]->GetModulePriority() == eConvertExpToPts)
+                {
+                    ss << modules[i]->GetModuleName()<<" ";
+                }
+            }
+            ss << ".";
+            ASSERTL0(false, ss.str());
+        }
+    }
+}
+
+void PrintExecutionSequence(vector<ModuleSharedPtr> &modules)
+{
+    bool first = true;
+    cout << "Execution sequence:" << endl;
+    for (int n = 0; n < SIZE_ModulePriority; ++n)
+    {
+        ModulePriority priority = static_cast<ModulePriority>(n);
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == priority)
+            {
+                if(first)
+                {
+                    cout << "\t"  << modules[i]->GetModuleName();
+                    first = false;
+                }
+                else
+                {
+                    cout << " -> " << modules[i]->GetModuleName();
+                }
+            }
+        }
+    }
+    cout << endl;
+}
+
+void RunModule(ModuleSharedPtr module, po::variables_map &vm, bool verbose)
+{
+    LibUtilities::Timer moduleTimer;
+    if(verbose)
+    {
+        moduleTimer.Start();
+
+        cout << module->GetModuleName() << ": "
+             << module->GetModuleDescription() << endl;
+    }
+    module->Process(vm);
+    cout.flush();
+    if(verbose)
+    {
+        moduleTimer.Stop();
+        NekDouble cpuTime = moduleTimer.TimePerTest(1);
+
+        stringstream ss;
+        ss << cpuTime << "s";
+        cout << module->GetModuleName()
+             << " CPU Time: " << setw(8) << left
+             << ss.str() << endl;
+    }
 }

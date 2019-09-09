@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,7 +35,7 @@
 #ifndef FIELDUTILS_PROCESSWSS
 #define FIELDUTILS_PROCESSWSS
 
-#include "../Module.h"
+#include "ProcessBoundaryExtract.h"
 
 namespace Nektar
 {
@@ -47,11 +46,11 @@ namespace FieldUtils
  * @brief This processing module calculates the wall shear stress and adds it
  * as an extra-field to the output file, and writes it to a surface output file.
  */
-class ProcessWSS : public ProcessModule
+class ProcessWSS : public ProcessBoundaryExtract
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessWSS>::AllocateSharedPtr(f);
     }
@@ -67,6 +66,22 @@ public:
     {
         return "ProcessWSS";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating wall shear stress";
+    }
+
+protected:
+    void GetViscosity(const Array<OneD, MultiRegions::ExpListSharedPtr> exp,
+                      Array<OneD, NekDouble > &mu, NekDouble &lambda);
+
+    void GetVelocity(const Array<OneD, MultiRegions::ExpListSharedPtr> exp,
+                     Array<OneD, Array<OneD, NekDouble> > &vel);
+
+private:
+    int m_spacedim;
+
 };
 }
 }

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -35,8 +34,6 @@
 
 #ifndef NEKTAR_MESHUTILS_BLMESHING_BLMESH_H
 #define NEKTAR_MESHUTILS_BLMESHING_BLMESH_H
-
-#include <boost/shared_ptr.hpp>
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <NekMeshUtils/MeshElements/Mesh.h>
@@ -102,7 +99,7 @@ public:
             pNode->m_z = oNode->m_z + t * N[2];
         }
     };
-    typedef boost::shared_ptr<blInfo> blInfoSharedPtr;
+    typedef std::shared_ptr<blInfo> blInfoSharedPtr;
 
 private:
     void Setup();
@@ -138,7 +135,7 @@ private:
     NekMatrix<NekDouble> m_deriv[3];
 };
 
-typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;
+typedef std::shared_ptr<BLMesh> BLMeshSharedPtr;
 }
 }
 

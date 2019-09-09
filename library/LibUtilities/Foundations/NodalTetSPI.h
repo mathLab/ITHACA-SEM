@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,12 +35,12 @@
 #ifndef NODALTETSPI_H
 #define NODALTETSPI_H
 
+#include <memory>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
@@ -55,7 +54,7 @@ public:
     {
     }
 
-    LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(
+    LIB_UTILITIES_EXPORT static std::shared_ptr<PointsBaseType> Create(
         const PointsKey &key);
 
     NodalTetSPI(const PointsKey &key) : PointsBaseType(key)

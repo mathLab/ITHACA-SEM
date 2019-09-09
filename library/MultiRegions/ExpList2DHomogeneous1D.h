@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -50,14 +49,11 @@ namespace Nektar
         class ExpList2DHomogeneous1D;
 
         /// Shared pointer to an ExpList2DHomogeneous1D object.
-        typedef boost::shared_ptr<ExpList2DHomogeneous1D>
+        typedef std::shared_ptr<ExpList2DHomogeneous1D>
             ExpList2DHomogeneous1DSharedPtr;
         /// Vector of pointers to ExpList2DHomogeneous1D objects.
         typedef std::vector< ExpList2DHomogeneous1DSharedPtr >
             ExpList2DHomogeneous1DVector;
-        /// Iterator for the vector of ExpList2DHomogeneous1D pointers.
-        typedef std::vector< ExpList2DHomogeneous1DSharedPtr >::iterator
-            ExpList2DHomogeneous1DVectorIter;
 
         /// Abstraction of a two-dimensional multi-elemental expansion which
         /// is merely a collection of local expansions.
@@ -74,7 +70,9 @@ namespace Nektar
                 const NekDouble                             lz,
                 const bool                                  useFFT,
                 const bool                                  dealiasing,
-                const SpatialDomains::MeshGraphSharedPtr   &graph1D);
+                const SpatialDomains::MeshGraphSharedPtr   &graph1D,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
             MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -129,6 +127,8 @@ namespace Nektar
 
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);
+            
+            virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray);
 
         private:
         };

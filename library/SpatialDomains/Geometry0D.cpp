@@ -7,10 +7,9 @@
 //  The MIT License
 //
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//  Department of Aeronautics, Imperial College London (UK), and Scientific 
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,22 +36,25 @@
 
 namespace Nektar
 {
-    namespace SpatialDomains
-    {
+namespace SpatialDomains
+{
 
-        Geometry0D::Geometry0D():
-            Geometry()
-        {
-        }
+Geometry0D::Geometry0D() : Geometry()
+{
+}
 
-        Geometry0D::Geometry0D(const int coordim):
-            Geometry(coordim)
-        {
-        }
+Geometry0D::Geometry0D(const int coordim) : Geometry(coordim)
+{
+}
 
-        Geometry0D::~Geometry0D()
-        {
-        }
+Geometry0D::~Geometry0D()
+{
+}
 
-    }; //end of namespace
-}; //end of namespace
+int Geometry0D::v_GetShapeDim() const
+{
+	return 0;
+}
+
+}; // end of namespace
+}; // end of namespace

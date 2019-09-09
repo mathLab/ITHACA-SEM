@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -124,6 +123,25 @@ bool FaceMesh::ValidateCurves()
     return error;
 }
 
+void FaceMesh::ValidateLoops()
+{
+    OrientateCurves();
+
+    for (int i = 0; i < orderedLoops.size(); i++)
+    {
+        int numPoints = orderedLoops[i].size();
+        if(numPoints == 2)
+        {
+            //force a remesh of the curves
+            for(int j = 0; j < m_edgeloops[i]->edges.size(); j++)
+            {
+                int cid = m_edgeloops[i]->edges[j]->GetId();
+                m_curvemeshes[cid]->ReMesh();
+            }
+        }
+    }
+}
+
 void FaceMesh::Mesh()
 {
     Stretching();
@@ -151,7 +169,7 @@ void FaceMesh::Mesh()
         }
     }
 
-    ASSERTL0(numPoints > 2, ss.str());
+    ASSERTL0(numPoints > 2, "number of verts in face is less than 3");
 
     // create interface to triangle thirdparty library
     TriangleInterfaceSharedPtr pplanemesh =
@@ -348,9 +366,9 @@ void FaceMesh::Smoothing()
                     ud[0] = uj[0] + lambda[0] * (ui[0] - uj[0]);
                     ud[1] = uj[1] + lambda[0] * (ui[1] - uj[1]);
                     Array<OneD, NekDouble> locd = m_cadsurf->P(ud);
-                    NodeSharedPtr dn = boost::shared_ptr<Node>(
+                    NodeSharedPtr dn = std::shared_ptr<Node>(
                         new Node(0, locd[0], locd[1], locd[2]));
-                    dn->SetCADSurf(m_id, m_cadsurf, ud);
+                    dn->SetCADSurf(m_cadsurf, ud);
 
                     nodesystem.push_back(dn);
                     lamp.push_back(lambda[0]);
@@ -706,10 +724,10 @@ void FaceMesh::DiagonalSwap()
 
                 // make the 4 other edges
                 EdgeSharedPtr CA, AD, DB, BC, CAt, ADt, DBt, BCt;
-                CAt = boost::shared_ptr<Edge>(new Edge(C, A));
-                ADt = boost::shared_ptr<Edge>(new Edge(A, D));
-                DBt = boost::shared_ptr<Edge>(new Edge(D, B));
-                BCt = boost::shared_ptr<Edge>(new Edge(B, C));
+                CAt = std::shared_ptr<Edge>(new Edge(C, A));
+                ADt = std::shared_ptr<Edge>(new Edge(A, D));
+                DBt = std::shared_ptr<Edge>(new Edge(D, B));
+                BCt = std::shared_ptr<Edge>(new Edge(B, C));
 
                 vector<EdgeSharedPtr> es = tri1->GetEdgeList();
                 for (int i = 0; i < 3; i++)
@@ -783,7 +801,7 @@ void FaceMesh::DiagonalSwap()
                     DB->m_elLink.push_back(links[i]);
                 }
 
-                EdgeSharedPtr newe = boost::shared_ptr<Edge>(new Edge(C, D));
+                EdgeSharedPtr newe = std::shared_ptr<Edge>(new Edge(C, D));
 
                 vector<NodeSharedPtr> t1, t2;
                 t1.push_back(B);
@@ -793,7 +811,8 @@ void FaceMesh::DiagonalSwap()
                 t2.push_back(C);
                 t2.push_back(D);
 
-                ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
+                ElmtConfig conf(LibUtilities::eTriangle, 1, false, false,
+                                m_mesh->m_spaceDim != 3);
                 vector<int> tags = tri1->GetTagList();
 
                 int id1 = tri1->GetId();
@@ -889,7 +908,8 @@ void FaceMesh::BuildLocalMesh()
 
     for (int i = 0; i < m_connec.size(); i++)
     {
-        ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
+        ElmtConfig conf(LibUtilities::eTriangle, 1, false, false,
+                        m_mesh->m_spaceDim != 3);
 
         vector<int> tags;
         tags.push_back(m_compId);
@@ -1112,7 +1132,7 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
     Array<OneD, NekDouble> np = m_cadsurf->P(uv);
     NekDouble npDelta = m_mesh->m_octree->Query(np);
 
-    NodeSharedPtr n = boost::shared_ptr<Node>(
+    NodeSharedPtr n = std::shared_ptr<Node>(
         new Node(m_mesh->m_numNodes++, np[0], np[1], np[2]));
 
     bool add = true;
@@ -1147,7 +1167,7 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
 
     if (add)
     {
-        n->SetCADSurf(m_id, m_cadsurf, uv);
+        n->SetCADSurf(m_cadsurf, uv);
         m_stienerpoints.push_back(n);
     }
 }

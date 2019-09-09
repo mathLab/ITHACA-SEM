@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -48,9 +47,11 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
         {
-            EquationSystemSharedPtr p = MemoryManager<SteadyAdvectionDiffusion>::AllocateSharedPtr(pSession);
+            EquationSystemSharedPtr p = MemoryManager<SteadyAdvectionDiffusion>
+                ::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -65,7 +66,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> >  m_velocity;
 
         SteadyAdvectionDiffusion(
-                const LibUtilities::SessionReaderSharedPtr& pSession);
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         virtual void v_InitObject();
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);

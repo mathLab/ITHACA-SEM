@@ -8,7 +8,6 @@
 // University of Utah (USA) and Department of Aeronautics, Imperial
 // College London (UK).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -42,7 +41,5 @@
 #else
 #define FIELD_UTILS_EXPORT
 #endif
-
-#define LOKI_CLASS_LEVEL_THREADING
 
 #endif // NEKTAR_FIELD_UTILS_DECLSPEC_H

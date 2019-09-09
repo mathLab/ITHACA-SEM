@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -40,8 +39,7 @@
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/GeomFactors.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
+#include <memory>
 #include <vector>
 #include <map>
 
@@ -64,11 +62,9 @@ namespace Nektar
             eMetricQuadrature
         };
 
-        // type defines for use of PrismExp in a boost vector
-        typedef boost::shared_ptr<Expansion> ExpansionSharedPtr;
-        typedef boost::weak_ptr<Expansion> ExpansionWeakPtr;
+        typedef std::shared_ptr<Expansion> ExpansionSharedPtr;
+        typedef std::weak_ptr<Expansion> ExpansionWeakPtr;
         typedef std::vector< ExpansionSharedPtr > ExpansionVector;
-        typedef std::vector< ExpansionSharedPtr >::iterator ExpansionVectorIter;
         typedef std::map<MetricType, Array<OneD, NekDouble> > MetricMap;
 
         class Expansion : virtual public StdRegions::StdExpansion
@@ -88,8 +84,7 @@ namespace Nektar
 
                 LOCAL_REGIONS_EXPORT void Reset();
 
-                LOCAL_REGIONS_EXPORT virtual const
-                    SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
+                LOCAL_REGIONS_EXPORT const SpatialDomains::GeomFactorsSharedPtr& GetMetricInfo() const;
 
                 LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
                     const DNekScalMatSharedPtr &r_bnd, 
@@ -105,18 +100,18 @@ namespace Nektar
                     std::vector<LibUtilities::BasisType> &fromType);
                 LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryInt(
                     const int                           edge,
-                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const std::shared_ptr<Expansion>   &EdgeExp,
                     const Array<OneD, const NekDouble> &Fx,
                     const Array<OneD, const NekDouble> &Fy,
                           Array<OneD,       NekDouble> &outarray);
                 LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryInt(
                     const int                           edge,
-                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const std::shared_ptr<Expansion>   &EdgeExp,
                     const Array<OneD, const NekDouble> &Fn,
                           Array<OneD,       NekDouble> &outarray);
                 LOCAL_REGIONS_EXPORT void AddFaceNormBoundaryInt(
                     const int                           face,
-                    const boost::shared_ptr<Expansion> &FaceExp,
+                    const std::shared_ptr<Expansion>   &FaceExp,
                     const Array<OneD, const NekDouble> &Fn,
                           Array<OneD,       NekDouble> &outarray);
                 LOCAL_REGIONS_EXPORT void DGDeriv(
@@ -125,6 +120,8 @@ namespace Nektar
                           Array<OneD, ExpansionSharedPtr>      &EdgeExp,
                           Array<OneD, Array<OneD, NekDouble> > &coeffs,
                           Array<OneD,             NekDouble>   &outarray);
+                LOCAL_REGIONS_EXPORT NekDouble VectorFlux(
+                    const Array<OneD, Array<OneD, NekDouble > > &vec);
 
             protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;
@@ -133,25 +130,45 @@ namespace Nektar
 
                 void ComputeLaplacianMetric();
                 void ComputeQuadratureMetric();
+                void ComputeGmatcdotMF(
+                    const Array<TwoD, const NekDouble> &df,
+                    const Array<OneD, const NekDouble> &direction,
+                          Array<OneD, Array<OneD, NekDouble> > &dfdir);
 
                 virtual void v_MultiplyByQuadratureMetric(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray);
 
                 virtual void v_ComputeLaplacianMetric() {};
 
-                virtual void v_GetCoords(Array<OneD,NekDouble> &coords_1,
-                                         Array<OneD,NekDouble> &coords_2,
-                                         Array<OneD,NekDouble> &coords_3);
+                virtual void v_GetCoords(
+                    Array<OneD,NekDouble> &coords_1,
+                    Array<OneD,NekDouble> &coords_2,
+                    Array<OneD,NekDouble> &coords_3);
 
-                virtual DNekScalMatSharedPtr v_GetLocMatrix(const LocalRegions::MatrixKey &mkey);
+                Array<OneD, NekDouble> v_GetMF(
+                    const int dir,
+                    const int shapedim,
+                    const StdRegions::VarCoeffMap &varcoeffs);
+
+                Array<OneD, NekDouble> v_GetMFDiv(
+                    const int dir,
+                    const StdRegions::VarCoeffMap &varcoeffs);
+
+                Array<OneD, NekDouble> v_GetMFMag(
+                    const int dir,
+                    const StdRegions::VarCoeffMap &varcoeffs);
+
+                virtual DNekScalMatSharedPtr v_GetLocMatrix(
+                    const LocalRegions::MatrixKey &mkey);
 
                 virtual DNekMatSharedPtr v_BuildTransformationMatrix(
-                    const DNekScalMatSharedPtr &r_bnd, 
+                    const DNekScalMatSharedPtr &r_bnd,
                     const StdRegions::MatrixType matrixType);
 
                 virtual DNekMatSharedPtr v_BuildVertexMatrix(
-                    const DNekScalMatSharedPtr &r_bnd); 
+                    const DNekScalMatSharedPtr &r_bnd);
+
                 virtual void v_ExtractDataToCoeffs(
                     const NekDouble *data,
                     const std::vector<unsigned int > &nummodes,
@@ -160,18 +177,18 @@ namespace Nektar
                     std::vector<LibUtilities::BasisType> &fromType);
                 virtual void v_AddEdgeNormBoundaryInt(
                     const int                           edge,
-                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const std::shared_ptr<Expansion>   &EdgeExp,
                     const Array<OneD, const NekDouble> &Fx,
                     const Array<OneD, const NekDouble> &Fy,
                           Array<OneD,       NekDouble> &outarray);
                 virtual void v_AddEdgeNormBoundaryInt(
                     const int                           edge,
-                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const std::shared_ptr<Expansion>   &EdgeExp,
                     const Array<OneD, const NekDouble> &Fn,
                           Array<OneD,       NekDouble> &outarray);
                 virtual void v_AddFaceNormBoundaryInt(
                     const int                           face,
-                    const boost::shared_ptr<Expansion> &FaceExp,
+                    const std::shared_ptr<Expansion>   &FaceExp,
                     const Array<OneD, const NekDouble> &Fn,
                           Array<OneD,       NekDouble> &outarray);
                 virtual void v_DGDeriv(
@@ -180,6 +197,8 @@ namespace Nektar
                           Array<OneD, ExpansionSharedPtr>      &EdgeExp,
                           Array<OneD, Array<OneD, NekDouble> > &coeffs,
                           Array<OneD,             NekDouble>   &outarray);
+                virtual NekDouble v_VectorFlux(
+                    const Array<OneD, Array<OneD, NekDouble > > &vec);
 
             private:
 

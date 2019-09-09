@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -51,10 +50,10 @@ namespace Nektar
             double d[] = {1.0, 2.0, 3.0, 4.0,
                           5.0, 6.0, 7.0, 8.0,
                           9.0, 10.0, 11.0, 12.0};
-            boost::shared_ptr<OwnedType> o(new OwnedType(3, 4, d));
+            std::shared_ptr<OwnedType> o(new OwnedType(3, 4, d));
             NekMatrix<OwnedType, ScaledMatrixTag> m1(2.0, o);
-            boost::shared_ptr<ConstMatrix<double> > m2(new NekMatrix<OwnedType, ScaledMatrixTag>(3.0, o));
-            boost::shared_ptr<NekMatrix<OwnedType, ScaledMatrixTag> > m3(new NekMatrix<OwnedType, ScaledMatrixTag>(0.0, o));
+            std::shared_ptr<ConstMatrix<double> > m2(new NekMatrix<OwnedType, ScaledMatrixTag>(3.0, o));
+            std::shared_ptr<NekMatrix<OwnedType, ScaledMatrixTag> > m3(new NekMatrix<OwnedType, ScaledMatrixTag>(0.0, o));
             
             BOOST_CHECK_EQUAL(m1.Scale(), 2.0);
             //BOOST_CHECK_EQUAL(m2->Scale(), 3.0);
@@ -66,17 +65,17 @@ namespace Nektar
             
         }
         
-        BOOST_AUTO_TEST_CASE(TestElementAccess)
+        BOOST_AUTO_TEST_CASE(TestElementAccessScaledMatrix)
         {
             typedef NekMatrix<double> OwnedType;
             double d[] = {1.0, 5.0, 9.0,
                           2.0, 6.0, 10.0,
                           3.0, 7.0, 11.0,
                           4.0, 8.0, 12.0};
-            boost::shared_ptr<OwnedType> o(new OwnedType(3, 4, d));
+            std::shared_ptr<OwnedType> o(new OwnedType(3, 4, d));
             NekMatrix<OwnedType, ScaledMatrixTag> m1(2.0, o);
-            boost::shared_ptr<ConstMatrix<double> > m2(new NekMatrix<OwnedType, ScaledMatrixTag>(3.0, o));
-            boost::shared_ptr<NekMatrix<OwnedType, ScaledMatrixTag> > m3(new NekMatrix<OwnedType, ScaledMatrixTag>(0.0, o));
+            std::shared_ptr<ConstMatrix<double> > m2(new NekMatrix<OwnedType, ScaledMatrixTag>(3.0, o));
+            std::shared_ptr<NekMatrix<OwnedType, ScaledMatrixTag> > m3(new NekMatrix<OwnedType, ScaledMatrixTag>(0.0, o));
             
             BOOST_CHECK_EQUAL(m1(0,0), 2.0);
             BOOST_CHECK_EQUAL(m1(0,1), 4.0);
@@ -127,10 +126,10 @@ namespace Nektar
                           2.0, 6.0, 10.0,
                           3.0, 7.0, 11.0,
                           4.0, 8.0, 12.0};
-            boost::shared_ptr<OwnedType> o(new OwnedType(3, 4, d));
+            std::shared_ptr<OwnedType> o(new OwnedType(3, 4, d));
             NekMatrix<OwnedType, ScaledMatrixTag> m1(2.0, o);
-            boost::shared_ptr<ConstMatrix<double> > m2(new NekMatrix<OwnedType, ScaledMatrixTag>(3.0, o));
-            boost::shared_ptr<NekMatrix<OwnedType, ScaledMatrixTag> > m3(new NekMatrix<OwnedType, ScaledMatrixTag>(0.0, o));
+            std::shared_ptr<ConstMatrix<double> > m2(new NekMatrix<OwnedType, ScaledMatrixTag>(3.0, o));
+            std::shared_ptr<NekMatrix<OwnedType, ScaledMatrixTag> > m3(new NekMatrix<OwnedType, ScaledMatrixTag>(0.0, o));
             
             BOOST_CHECK_EQUAL(m1.GetStorageSize(), 12);
             BOOST_CHECK_EQUAL(m2->GetStorageSize(), 12);
@@ -144,10 +143,10 @@ namespace Nektar
                           2.0, 6.0, 10.0,
                           3.0, 7.0, 11.0,
                           4.0, 8.0, 12.0};
-            boost::shared_ptr<OwnedType> o(new OwnedType(3, 4, d));
+            std::shared_ptr<OwnedType> o(new OwnedType(3, 4, d));
             NekMatrix<OwnedType, ScaledMatrixTag> m1(2.0, o);
-            boost::shared_ptr<ConstMatrix<double> > m2(new NekMatrix<OwnedType, ScaledMatrixTag>(3.0, o));
-            boost::shared_ptr<NekMatrix<OwnedType, ScaledMatrixTag> > m3(new NekMatrix<OwnedType, ScaledMatrixTag>(0.0, o));
+            std::shared_ptr<ConstMatrix<double> > m2(new NekMatrix<OwnedType, ScaledMatrixTag>(3.0, o));
+            std::shared_ptr<NekMatrix<OwnedType, ScaledMatrixTag> > m3(new NekMatrix<OwnedType, ScaledMatrixTag>(0.0, o));
             
             BOOST_CHECK_EQUAL(m1.GetStorageType(), eFULL);
             BOOST_CHECK_EQUAL(m2->GetStorageType(), eFULL);

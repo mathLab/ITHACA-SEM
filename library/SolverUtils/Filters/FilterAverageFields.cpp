@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -45,9 +44,22 @@ std::string FilterAverageFields::className =
 
 FilterAverageFields::FilterAverageFields(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams)
-    : FilterFieldConvert(pSession, pParams)
+    : FilterFieldConvert(pSession, pEquation, pParams)
 {
+    // Load sampling frequency
+    auto it = pParams.find("SampleFrequency");
+    if (it == pParams.end())
+    {
+        m_sampleFrequency = 1;
+    }
+    else
+    {
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
+        m_sampleFrequency = round(equ.Evaluate());
+    }
 }
 
 FilterAverageFields::~FilterAverageFields()
@@ -56,12 +68,13 @@ FilterAverageFields::~FilterAverageFields()
 
 void FilterAverageFields::v_ProcessSample(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+          std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     const NekDouble &time)
 {
-    for(int n = 0; n < pFields.num_elements(); ++n)
+    for(int n = 0; n < m_outFields.size(); ++n)
     {
         Vmath::Vadd(m_outFields[n].num_elements(),
-                    pFields[n]->GetCoeffs(),
+                    fieldcoeffs[n],
                     1,
                     m_outFields[n],
                     1,

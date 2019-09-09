@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,8 +33,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorCommon.hpp>
-
 
 namespace Nektar
 {
@@ -370,10 +367,8 @@ namespace Nektar
         return (*this)(2);
     }
 
-    #ifndef NEKTAR_USE_EXPRESSION_TEMPLATES
     template<typename DataType>
     NekVector<DataType> NekVector<DataType>::operator-() const { return Negate(*this); }
-    #endif
 
     template<typename DataType>
     DataType NekVector<DataType>::Magnitude() const { return Nektar::Magnitude(*this); }
@@ -517,8 +512,8 @@ namespace Nektar
            const NekVector<InputDataType>& rhs)
     {
         ResultDataType* r_buf = result.GetRawPtr();
-        typename boost::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
-        typename boost::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
+        typename std::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
+        typename std::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
         const unsigned int ldim = lhs.GetDimension();
         for(int i = 0; i < ldim; ++i)
         {
@@ -532,8 +527,8 @@ namespace Nektar
            const NekVector<InputDataType>& rhs)
     {
         ResultDataType* r_buf = result.GetRawPtr();
-        typename boost::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
-        typename boost::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
+        typename std::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
+        typename std::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
         const unsigned int ldim = lhs.GetDimension();
         for(int i = 0; i < ldim; ++i)
         {
@@ -556,7 +551,7 @@ namespace Nektar
            const NekVector<InputDataType>& rhs)
     {
         ResultDataType* r_buf = result.GetRawPtr();
-        typename boost::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
+        typename std::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
         const unsigned int rdim = rhs.GetDimension();
         for(int i = 0; i < rdim; ++i)
         {
@@ -569,7 +564,7 @@ namespace Nektar
            const NekVector<InputDataType>& rhs)
     {
                 ResultDataType* r_buf = result.GetRawPtr();
-        typename boost::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
+        typename std::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
         const unsigned int rdim = rhs.GetDimension();
         for(int i = 0; i < rdim; ++i)
         {
@@ -606,7 +601,7 @@ namespace Nektar
            const NekDouble& rhs)
     {
         ResultDataType* r_buf = result.GetRawPtr();
-        typename boost::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
+        typename std::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
 
         const unsigned int ldim = lhs.GetDimension();
         for(int i = 0; i < ldim; ++i)

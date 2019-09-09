@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -77,11 +76,9 @@ void ProcessLinkCheck::Process()
 
     if(m_mesh->m_expDim == 2)
     {
-        EdgeSet::iterator eit;
-        for(eit = m_mesh->m_edgeSet.begin();
-            eit != m_mesh->m_edgeSet.end(); eit++)
+        for(auto &edge : m_mesh->m_edgeSet)
         {
-            if((*eit)->m_elLink.size() != 2)
+            if(edge->m_elLink.size() != 2)
             {
                 count++;
             }
@@ -89,11 +86,9 @@ void ProcessLinkCheck::Process()
     }
     else
     {
-        FaceSet::iterator fit;
-        for(fit = m_mesh->m_faceSet.begin();
-            fit != m_mesh->m_faceSet.end(); fit++)
+        for(auto &face : m_mesh->m_faceSet)
         {
-            if((*fit)->m_elLink.size() != 2)
+            if(face->m_elLink.size() != 2)
             {
                 count++;
             }

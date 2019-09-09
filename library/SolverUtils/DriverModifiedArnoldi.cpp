@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -56,8 +55,9 @@ string DriverModifiedArnoldi::driverLookupId =
  *
  */
 DriverModifiedArnoldi::DriverModifiedArnoldi(
-        const LibUtilities::SessionReaderSharedPtr pSession)
-    : DriverArnoldi(pSession)
+    const LibUtilities::SessionReaderSharedPtr pSession,
+    const SpatialDomains::MeshGraphSharedPtr pGraph)
+    : DriverArnoldi(pSession, pGraph)
 {
 }
 
@@ -530,7 +530,10 @@ void DriverModifiedArnoldi::EV_post(
                 + boost::lexical_cast<std::string>(j)
                 + ".fld";
 
-            WriteEvs(cout, j, wr[j], wi[j]);
+            if (m_comm->GetRank() == 0)
+            {
+                WriteEvs(cout, j, wr[j], wi[j]);
+            }
             WriteFld(file,Kseq[j]);
         }
     }

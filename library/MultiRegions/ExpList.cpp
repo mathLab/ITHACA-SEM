@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -105,7 +104,6 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
-            m_offset_elmt_id(),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
@@ -132,7 +130,6 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
-            m_offset_elmt_id(),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
@@ -160,19 +157,18 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
-            m_offset_elmt_id(),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
         }
-        
+
         /**
          * Copies the eIds elements from an existing expansion list.
          * @param   in              Source expansion list.
          * @param   in              elements that will be in the new exp list.
          */
-        ExpList::ExpList(const ExpList &in, 
+        ExpList::ExpList(const ExpList &in,
                          const std::vector<unsigned int> &eIDs,
                          const bool DeclareCoeffPhysArrays):
             m_comm(in.m_comm),
@@ -187,12 +183,11 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
-            m_offset_elmt_id(),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
-            
+
             for (int i=0; i < eIDs.size(); ++i)
             {
                 (*m_exp).push_back( (*(in.m_exp))[eIDs[i]]);
@@ -225,7 +220,6 @@ namespace Nektar
             m_coll_phys_offset(in.m_coll_phys_offset),
             m_coeff_offset(in.m_coeff_offset),
             m_phys_offset(in.m_phys_offset),
-            m_offset_elmt_id(in.m_offset_elmt_id),
             m_globalOptParam(in.m_globalOptParam),
             m_blockMat(in.m_blockMat),
             m_WaveSpace(false)
@@ -236,6 +230,35 @@ namespace Nektar
             {
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs, 0.0);
                 m_phys   = Array<OneD, NekDouble>(m_npoints, 0.0);
+            }
+        }
+
+
+        /**
+         * Each expansion (local element) is processed in turn to
+         * determine the number of coefficients and physical data
+         * points it contributes to the domain. Twoe arrays,
+         * #m_coeff_offset are #m_phys_offset are also initialised and
+         * updated to store the data offsets of each element in the
+         * #m_coeffs and #m_phys arrays, and the element id that each
+         * consecutive block is associated respectively.
+         */
+        void ExpList::SetCoeffPhysOffsets()
+        {
+            int i;
+
+            // Set up offset information and array sizes
+            m_coeff_offset   = Array<OneD,int>(m_exp->size());
+            m_phys_offset    = Array<OneD,int>(m_exp->size());
+
+            m_ncoeffs = m_npoints = 0;
+
+            for(i = 0; i < m_exp->size(); ++i)
+            {
+                m_coeff_offset[i]   = m_ncoeffs;
+                m_phys_offset [i]   = m_npoints;
+                m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
+                m_npoints += (*m_exp)[i]->GetTotPoints();
             }
         }
 
@@ -392,6 +415,43 @@ namespace Nektar
             {
                 (*m_exp)[i]->IProductWRTDerivBase(dir,inarray+m_phys_offset[i],
                                                   e_outarray = outarray+m_coeff_offset[i]);
+            }
+        }
+
+
+        /**
+         * @brief Directional derivative along a given direction
+         *
+         */
+        void ExpList::IProductWRTDirectionalDerivBase(
+            const Array<OneD, const NekDouble> &direction,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD, NekDouble> &outarray)
+        {
+            int npts_e;
+            int coordim = (*m_exp)[0]->GetGeom()->GetCoordim();
+            int nq      = direction.num_elements()/coordim;
+
+            Array<OneD, NekDouble> e_outarray;
+            Array<OneD, NekDouble> e_MFdiv;
+
+            Array<OneD, NekDouble> locdir;
+
+            for(int i = 0; i < (*m_exp).size(); ++i)
+            {
+                npts_e = (*m_exp)[i]->GetTotPoints();
+                locdir = Array<OneD, NekDouble>(npts_e*coordim);
+
+                for (int k = 0; k<coordim; ++k)
+                {
+                    Vmath::Vcopy(npts_e, &direction[k*nq+m_phys_offset[i]], 1,
+                                         &locdir[k*npts_e],                 1);
+                }
+
+                (*m_exp)[i]->IProductWRTDirectionalDerivBase(
+                                    locdir,
+                                    inarray+m_phys_offset[i],
+                                    e_outarray = outarray+m_coeff_offset[i] );
             }
         }
 
@@ -581,7 +641,7 @@ namespace Nektar
                 {
                     PhysDeriv(xDir, Vel[yDir], Vx);
                     PhysDeriv(yDir, Vel[xDir], Uy);
-                    
+
 
                     Vmath::Vsub(nq, Vx, 1, Uy, 1, Dummy, 1);
 
@@ -627,6 +687,57 @@ namespace Nektar
                 default:
                     ASSERTL0(0,"Dimension not supported");
                     break;
+            }
+        }
+
+
+        void  ExpList::v_PhysDirectionalDeriv(
+            const Array<OneD, const NekDouble> &direction,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD, NekDouble> &outarray)
+        {
+            int npts_e;
+            int coordim = (*m_exp)[0]->GetGeom()->GetCoordim();
+            int nq      = direction.num_elements() / coordim;
+
+            Array<OneD, NekDouble> e_outarray;
+            Array<OneD, NekDouble> e_MFdiv;
+            Array<OneD, NekDouble> locdir;
+
+            for(int i = 0; i < (*m_exp).size(); ++i)
+            {
+                npts_e = (*m_exp)[i]->GetTotPoints();
+                locdir = Array<OneD, NekDouble>(npts_e*coordim);
+
+                for (int k = 0; k<coordim; ++k)
+                {
+                    Vmath::Vcopy(npts_e, &direction[k*nq+m_phys_offset[i]], 1,
+                                         &locdir[k*npts_e],                 1);
+                }
+
+                (*m_exp)[i]->PhysDirectionalDeriv(
+                                     inarray + m_phys_offset[i],
+                                     locdir,
+                                     e_outarray = outarray+m_phys_offset[i] );
+            }
+        }
+
+
+        void ExpList::ExponentialFilter(
+                Array<OneD, NekDouble> &array,
+                const NekDouble        alpha,
+                const NekDouble        exponent,
+                const NekDouble        cutoff)
+        {
+            Array<OneD,NekDouble> e_array;
+
+            for(int i = 0; i < (*m_exp).size(); ++i)
+            {
+                (*m_exp)[i]->ExponentialFilter(
+                            e_array = array+m_phys_offset[i],
+                            alpha,
+                            exponent,
+                            cutoff);
             }
         }
 
@@ -765,10 +876,10 @@ namespace Nektar
             {
                 for(i = 0 ; i < (*m_exp).size(); ++i)
                 {
-                    if((*m_exp)[m_offset_elmt_id[i]]->DetShapeType()
+                    if((*m_exp)[i]->DetShapeType()
                        == ShapeType)
                     {
-                        elmt_id[n_exp++] = m_offset_elmt_id[i];
+                        elmt_id[n_exp++] = i;
                     }
                 }
             }
@@ -777,7 +888,7 @@ namespace Nektar
                 n_exp = (*m_exp).size();
                 for(i = 0; i < n_exp; ++i)
                 {
-                    elmt_id[i] = m_offset_elmt_id[i];
+                    elmt_id[i] = i;
                 }
             }
 
@@ -867,10 +978,9 @@ namespace Nektar
                 eid = elmt_id[i];
                 if(nvarcoeffs>0)
                 {
-                    StdRegions::VarCoeffMap::const_iterator x;
-                    for (x = gkey.GetVarCoeffs().begin(); x != gkey.GetVarCoeffs().end(); ++x)
+                    for (auto &x : gkey.GetVarCoeffs())
                     {
-                        varcoeffs[x->first] = x->second + m_phys_offset[eid];
+                        varcoeffs[x.first] = x.second + m_phys_offset[eid];
                     }
                 }
 
@@ -880,7 +990,7 @@ namespace Nektar
                                                gkey.GetConstFactors(),
                                                varcoeffs );
 
-                loc_mat = boost::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[elmt_id.find(i)->second])->GetLocMatrix(matkey);
+                loc_mat = std::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[elmt_id.find(i)->second])->GetLocMatrix(matkey);
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
 
@@ -890,7 +1000,7 @@ namespace Nektar
         const DNekScalBlkMatSharedPtr& ExpList::GetBlockMatrix(
                                                                const GlobalMatrixKey &gkey)
         {
-            BlockMatrixMap::iterator matrixIter = m_blockMat->find(gkey);
+            auto matrixIter = m_blockMat->find(gkey);
 
             if(matrixIter == m_blockMat->end())
             {
@@ -922,9 +1032,9 @@ namespace Nektar
                     const LibUtilities::ShapeType vType
                                     = m_globalOptParam->GetShapeList()[n];
                     const MultiRegions::GlobalMatrixKey vKey(gkey, vType);
-                    if (cnt < m_offset_elmt_id.num_elements())
+                    if (cnt < m_coeff_offset.num_elements())
                     {
-                        eid = m_offset_elmt_id[cnt];
+                        eid = cnt;
                         MultiplyByBlockMatrix(vKey,inarray + m_coeff_offset[eid],
                                               tmp_outarray = outarray + m_coeff_offset[eid]);
                         cnt += num_elmts[n];
@@ -940,13 +1050,12 @@ namespace Nektar
                         // need to be initialised with zero size for non variable coefficient case
                         StdRegions::VarCoeffMap varcoeffs;
 
-                        eid = m_offset_elmt_id[cnt++];
+                        eid = cnt++;
                         if(nvarcoeffs>0)
                         {
-                            StdRegions::VarCoeffMap::const_iterator x;
-                            for (x = gkey.GetVarCoeffs().begin(); x != gkey.GetVarCoeffs().end(); ++x)
+                            for (auto &x : gkey.GetVarCoeffs())
                             {
-                                varcoeffs[x->first] = x->second + m_phys_offset[eid];
+                                varcoeffs[x.first] = x.second + m_phys_offset[eid];
                             }
                         }
 
@@ -1038,13 +1147,12 @@ namespace Nektar
                 // need to be initialised with zero size for non variable coefficient case
                 StdRegions::VarCoeffMap varcoeffs;
 
-                eid = m_offset_elmt_id[n];
+                eid = n;
                 if(nvarcoeffs>0)
                 {
-                    StdRegions::VarCoeffMap::const_iterator x;
-                    for (x = mkey.GetVarCoeffs().begin(); x != mkey.GetVarCoeffs().end(); ++x)
+                    for (auto &x : mkey.GetVarCoeffs())
                     {
-                        varcoeffs[x->first] = x->second + m_phys_offset[eid];
+                        varcoeffs[x.first] = x.second + m_phys_offset[eid];
                     }
                 }
 
@@ -1053,7 +1161,7 @@ namespace Nektar
                                               *((*m_exp)[eid]),
                                               mkey.GetConstFactors(),varcoeffs);
 
-                loc_mat = boost::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[m_offset_elmt_id[n]])->GetLocMatrix(matkey);
+                loc_mat = std::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[n])->GetLocMatrix(matkey);
 
                 loc_rows = loc_mat->GetRows();
                 loc_cols = loc_mat->GetColumns();
@@ -1158,13 +1266,12 @@ namespace Nektar
                 // need to be initialised with zero size for non variable coefficient case
                 StdRegions::VarCoeffMap varcoeffs;
 
-                eid = m_offset_elmt_id[n];
+                eid = n;
                 if(nvarcoeffs>0)
                 {
-                    StdRegions::VarCoeffMap::const_iterator x;
-                    for (x = mkey.GetVarCoeffs().begin(); x != mkey.GetVarCoeffs().end(); ++x)
+                    for (auto &x : mkey.GetVarCoeffs())
                     {
-                        varcoeffs[x->first] = x->second + m_phys_offset[eid];
+                        varcoeffs[x.first] = x.second + m_phys_offset[eid];
                     }
                 }
 
@@ -1173,7 +1280,7 @@ namespace Nektar
                                               *((*m_exp)[eid]),
                                               mkey.GetConstFactors(),varcoeffs);
 
-                loc_mat = boost::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[n])->GetLocMatrix(matkey);
+                loc_mat = std::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[n])->GetLocMatrix(matkey);
 
 
                 if(RobinBCInfo.count(n) != 0) // add robin mass matrix
@@ -1253,7 +1360,7 @@ namespace Nektar
                     const AssemblyMapCGSharedPtr &locToGloMap)
         {
             GlobalLinSysSharedPtr returnlinsys;
-            boost::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
+            std::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
 
             MultiRegions::GlobalSysSolnType vType = mkey.GetGlobalSysSolnType();
 
@@ -1271,7 +1378,7 @@ namespace Nektar
                     const GlobalLinSysKey     &mkey,
                     const AssemblyMapSharedPtr &locToGloMap)
         {
-            boost::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
+            std::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
             const map<int,RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
 
             MultiRegions::GlobalSysSolnType vType = mkey.GetGlobalSysSolnType();
@@ -1348,149 +1455,118 @@ namespace Nektar
         }
 
 
-        int ExpList::GetExpIndex(const Array<OneD, const NekDouble> &gloCoords,
-                                 Array<OneD, NekDouble> &locCoords,
-                                 NekDouble tol,
-                                 bool returnNearestElmt)
+        int ExpList::GetExpIndex(
+                const Array<OneD, const NekDouble> &gloCoords,
+                      Array<OneD, NekDouble> &locCoords,
+                NekDouble tol,
+                bool returnNearestElmt)
         {
-            NekDouble nearpt = 1e6;
-
             if (GetNumElmts() == 0)
             {
                 return -1;
             }
-            std::vector<std::pair<int,NekDouble> > elmtIdDist;
 
-            // Manifold case (point may match multiple elements)
-            if (GetExp(0)->GetCoordim() > GetExp(0)->GetShapeDimension())
+            if (m_elmtToExpId.size() == 0)
             {
-                SpatialDomains::PointGeomSharedPtr v;
-                SpatialDomains::PointGeom w;
-                NekDouble dist = 0.0;
-
-                // Scan all elements and store those which may contain the point
-                for (int i = 0; i < (*m_exp).size(); ++i)
+                // Loop in reverse order so that in case where using a
+                // Homogeneous expansion it sets geometry ids to first part of
+                // m_exp list. Otherwise will set to second (complex) expansion
+                for(int i = (*m_exp).size()-1; i >= 0; --i)
                 {
-                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords,
-                                                              locCoords,
-                                                              tol, nearpt))
-                    {
-                        w.SetX(gloCoords[0]);
-                        w.SetY(gloCoords[1]);
-                        w.SetZ(gloCoords[2]);
-
-                        // Find closest vertex
-                        for (int j = 0; j < (*m_exp)[i]->GetNverts(); ++j) {
-                            v = m_graph->GetVertex(
-                                            (*m_exp)[i]->GetGeom()->GetVid(j));
-                            if (j == 0 || dist > v->dist(w))
-                            {
-                                dist = v->dist(w);
-                            }
-                        }
-                        elmtIdDist.push_back(
-                                    std::pair<int, NekDouble>(i, dist));
-                    }
+                    m_elmtToExpId[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
                 }
+            }
 
-                // Find nearest element
-                if (!elmtIdDist.empty())
+            NekDouble x = (gloCoords.num_elements() > 0 ? gloCoords[0] : 0.0);
+            NekDouble y = (gloCoords.num_elements() > 1 ? gloCoords[1] : 0.0);
+            NekDouble z = (gloCoords.num_elements() > 2 ? gloCoords[2] : 0.0);
+            SpatialDomains::PointGeomSharedPtr p
+                = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(
+                        GetExp(0)->GetCoordim(), -1, x, y, z);
+
+            // Get the list of elements whose bounding box contains the desired
+            // point.
+            std::vector<SpatialDomains::BgRtreeValue> elmts =
+                    m_graph->GetElementsContainingPoint(p);
+
+            NekDouble nearpt     = 1e6;
+            NekDouble nearpt_min = 1e6;
+            int       min_id     = 0;
+            Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
+
+            // Check each element in turn to see if point lies within it.
+            for (int i = 0; i < elmts.size(); ++i)
+            {
+                if ((*m_exp)[m_elmtToExpId[elmts[i].second]]->
+                            GetGeom()->ContainsPoint(gloCoords,
+                                                     locCoords,
+                                                     tol, nearpt))
                 {
-                    int         min_id = elmtIdDist[0].first;
-                    NekDouble   min_d  = elmtIdDist[0].second;
-
-                    for (int i = 1; i < elmtIdDist.size(); ++i)
-                    {
-                        if (elmtIdDist[i].second < min_d) {
-                            min_id = elmtIdDist[i].first;
-                            min_d = elmtIdDist[i].second;
-                        }
-                    }
-
-                    // retrieve local coordinate of point
-                    (*m_exp)[min_id]->GetGeom()->GetLocCoords(gloCoords,
-                                                              locCoords);
-                    return min_id;
+                    return m_elmtToExpId[elmts[i].second];
                 }
                 else
                 {
-                    return -1;
+                    // If it does not lie within, keep track of which element
+                    // is nearest.
+                    if(nearpt < nearpt_min)
+                    {
+                        min_id    = m_elmtToExpId[elmts[i].second];
+                        nearpt_min = nearpt;
+                        Vmath::Vcopy(locCoords.num_elements(),locCoords,    1,
+                                                              savLocCoords, 1);
+                    }
                 }
             }
-            // non-embedded mesh (point can only match one element)
-            else
+
+            // If the calling function is with just the nearest element, return
+            // that. Otherwise return -1 to indicate no matching elemenet found.
+            if(returnNearestElmt)
             {
-                static int start = 0;
-                int min_id  = 0;
-                NekDouble nearpt_min = 1e6;
-                Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
 
-                // restart search from last found value
-                for (int i = start; i < (*m_exp).size(); ++i)
-                {
-                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, 
-                                                              locCoords,
-                                                              tol, nearpt))
-                    {
-                        start = i;
-                        return i;
-                    }
-                    else
-                    {
-                        if(nearpt < nearpt_min)
-                        {
-                            min_id    = i;
-                            nearpt_min = nearpt;
-                            Vmath::Vcopy(locCoords.num_elements(),locCoords,1,savLocCoords,1);
-                        }
-                    }
-                }
-
-                for (int i = 0; i < start; ++i)
-                {
-                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, 
-                                                              locCoords,
-                                                              tol, nearpt))
-                    {
-                        start = i;
-                        return i;
-                    }
-                    else
-                    {
-                        if(nearpt < nearpt_min)
-                        {
-                            min_id    = i;
-                            nearpt_min = nearpt;
-                            Vmath::Vcopy(locCoords.num_elements(),
-                                         locCoords,1,savLocCoords,1);
-                        }
-                    }
-                }
-
-                if(returnNearestElmt)
-                {
-
-                    std::string msg = "Failed to find point within element to tolerance of "
+                std::string msg = "Failed to find point within element to "
+                          "tolerance of "
                         + boost::lexical_cast<std::string>(tol)
                         + " using local point ("
                         + boost::lexical_cast<std::string>(locCoords[0]) +","
                         + boost::lexical_cast<std::string>(locCoords[1]) +","
-                        + boost::lexical_cast<std::string>(locCoords[1]) 
+                        + boost::lexical_cast<std::string>(locCoords[1])
                         + ") in element: "
                         + boost::lexical_cast<std::string>(min_id);
-                    WARNINGL1(false,msg.c_str());
-                    
-                    Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
-                    return min_id;
-                }
-                else
-                {
-                    return -1;
-                }
+                WARNINGL1(false,msg.c_str());
 
+                Vmath::Vcopy(locCoords.num_elements(),savLocCoords, 1,
+                                                      locCoords,    1);
+                return min_id;
+            }
+            else
+            {
+                return -1;
             }
         }
 
+        /**
+         * Given some coordinates, output the expansion field value at that
+         * point
+         */
+        NekDouble ExpList::PhysEvaluate(
+            const Array<OneD, const NekDouble> &coords,
+            const Array<OneD, const NekDouble> &phys)
+        {
+            int dim = GetCoordim(0);
+            ASSERTL0(dim == coords.num_elements(),
+                     "Invalid coordinate dimension.");
+
+            // Grab the element index corresponding to coords.
+            Array<OneD, NekDouble> xi(dim);
+            int elmtIdx = GetExpIndex(coords, xi);
+            ASSERTL0(elmtIdx > 0, "Unable to find element containing point.");
+
+            // Grab that element's physical storage.
+            Array<OneD, NekDouble> elmtPhys = phys + m_phys_offset[elmtIdx];
+
+            // Evaluate the element at the appropriate point.
+            return (*m_exp)[elmtIdx]->StdPhysEvaluate(xi, elmtPhys);
+        }
 
         /**
          * Configures geometric info, such as tangent direction, on each
@@ -1677,11 +1753,11 @@ namespace Nektar
             int nbase = (*m_exp)[0]->GetNumBases();
             int cnt = 0;
 
-            boost::shared_ptr<LocalRegions::ExpansionVector> exp = m_exp;
+            std::shared_ptr<LocalRegions::ExpansionVector> exp = m_exp;
 
             if (expansion != -1)
             {
-                exp = boost::shared_ptr<LocalRegions::ExpansionVector>(
+                exp = std::shared_ptr<LocalRegions::ExpansionVector>(
                     new LocalRegions::ExpansionVector(1));
                 (*exp)[0] = (*m_exp)[expansion];
             }
@@ -1919,11 +1995,30 @@ namespace Nektar
 
             for (i = 0; i < (*m_exp).size(); ++i)
             {
-                err += (*m_exp)[m_offset_elmt_id[i]]->Integral(inarray + m_phys_offset[i]);
+                err += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
             }
             m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
 
             return err;
+        }
+
+        NekDouble ExpList::v_VectorFlux(const Array<OneD, Array<OneD, NekDouble> > &inarray)
+        {
+            NekDouble flux = 0.0;
+            int       i    = 0;
+            int       j;
+
+            for (i = 0; i < (*m_exp).size(); ++i)
+            {
+                Array<OneD, Array<OneD, NekDouble> > tmp(inarray.num_elements());
+                for (j = 0; j < inarray.num_elements(); ++j)
+                {
+                    tmp[j] = Array<OneD, NekDouble>(inarray[j] + m_phys_offset[i]);
+                }
+                flux += (*m_exp)[i]->VectorFlux(tmp);
+            }
+
+            return flux;
         }
 
         Array<OneD, const NekDouble> ExpList::v_HomogeneousEnergy (void)
@@ -1948,6 +2043,12 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
             NekDouble len = 0.0;
             return len;
+        }
+
+        void ExpList::v_SetHomoLen(const NekDouble lhom)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
         }
 
         Array<OneD, const unsigned int> ExpList::v_GetZIDs(void)
@@ -1977,18 +2078,18 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         void ExpList::v_ClearGlobalLinSysManager(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         void ExpList::ExtractFileBCs(
             const std::string               &fileName,
             LibUtilities::CommSharedPtr      comm,
             const std::string               &varName,
-            const boost::shared_ptr<ExpList> locExpList)
+            const std::shared_ptr<ExpList> locExpList)
         {
             string varString = fileName.substr(0, fileName.find_last_of("."));
             int j, k, len = varString.length();
@@ -2071,7 +2172,7 @@ namespace Nektar
                                                   std::vector<unsigned int> &HomoSIDs,
                                                   std::vector<unsigned int> &HomoZIDs,
                                                   std::vector<unsigned int> &HomoYIDs)
-        {   
+        {
             int startenum = (int) LibUtilities::eSegment;
             int endenum   = (int) LibUtilities::eHexahedron;
             int s         = 0;
@@ -2222,7 +2323,7 @@ namespace Nektar
             v_ExtractDataToCoeffs(fielddef,fielddata,field,coeffs);
         }
 
-        void ExpList::ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
+        void ExpList::ExtractCoeffsToCoeffs(const std::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
         {
             v_ExtractCoeffsToCoeffs(fromExpList,fromCoeffs,toCoeffs);
         }
@@ -2270,8 +2371,6 @@ namespace Nektar
                 }
             }
 
-            boost::unordered_map<int, int>::iterator eIt;
-
             for (i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
                 // Reset modes_offset in the case where all expansions of
@@ -2281,11 +2380,11 @@ namespace Nektar
                     modes_offset = 0;
                 }
 
-                datalen = LibUtilities::GetNumberOfCoefficients(fielddef->m_shapeType,
-                                                                fielddef->m_numModes, modes_offset);
+                datalen = LibUtilities::GetNumberOfCoefficients(
+                    fielddef->m_shapeType, fielddef->m_numModes, modes_offset);
 
                 const int elmtId = fielddef->m_elementIDs[i];
-                eIt = m_elmtToExpId.find(elmtId);
+                auto eIt = m_elmtToExpId.find(elmtId);
 
                 if (eIt == m_elmtToExpId.end())
                 {
@@ -2326,7 +2425,7 @@ namespace Nektar
             return;
         }
 
-        void ExpList::v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
+        void ExpList::v_ExtractCoeffsToCoeffs(const std::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
         {
             int i;
             int offset = 0;
@@ -2335,36 +2434,117 @@ namespace Nektar
             {
                 std::vector<unsigned int> nummodes;
                 vector<LibUtilities::BasisType> basisTypes;
-                int eid = m_offset_elmt_id[i];
-                for(int j= 0; j < fromExpList->GetExp(eid)->GetNumBases(); ++j)
+                for(int j= 0; j < fromExpList->GetExp(i)->GetNumBases(); ++j)
                 {
-                    nummodes.push_back(fromExpList->GetExp(eid)->GetBasisNumModes(j));
-                    basisTypes.push_back(fromExpList->GetExp(eid)->GetBasisType(j));
+                    nummodes.push_back(fromExpList->GetExp(i)->GetBasisNumModes(j));
+                    basisTypes.push_back(fromExpList->GetExp(i)->GetBasisType(j));
                 }
 
-                (*m_exp)[eid]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0,
-                                                   &toCoeffs[m_coeff_offset[eid]],
+                (*m_exp)[i]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0,
+                                                   &toCoeffs[m_coeff_offset[i]],
                                                    basisTypes);
 
-                offset += fromExpList->GetExp(eid)->GetNcoeffs();
+                offset += fromExpList->GetExp(i)->GetNcoeffs();
             }
         }
 
 
-        const Array<OneD,const boost::shared_ptr<ExpList> >
+        void ExpList::v_GetMovingFrames(
+            const SpatialDomains::GeomMMF MMFdir,
+            const Array<OneD, const NekDouble> &CircCentre,
+                  Array<OneD, Array<OneD, NekDouble> > &outarray)
+        {
+            int npts;
+
+            int MFdim = 3;
+            int nq = outarray[0].num_elements()/MFdim;
+
+            // Assume whole array is of same coordinate dimension
+            int coordim = (*m_exp)[0]->GetGeom()->GetCoordim();
+
+            Array<OneD, Array<OneD, NekDouble> > MFloc(MFdim*coordim);
+            // Process each expansion.
+            for(int i = 0; i < m_exp->size(); ++i)
+            {
+                npts  = (*m_exp)[i]->GetTotPoints();
+
+                for (int j=0; j< MFdim*coordim; ++j)
+                {
+                    MFloc[j] = Array<OneD, NekDouble>(npts, 0.0);
+                }
+
+                // MF from LOCALREGIONS
+                (*m_exp)[i]->GetMetricInfo()->GetMovingFrames(
+                                        (*m_exp)[i]->GetPointsKeys(),
+                                        MMFdir,
+                                        CircCentre,
+                                        MFloc );
+
+                // Get the physical data offset for this expansion.
+                for (int j = 0; j < MFdim; ++j)
+                {
+                    for (int k = 0; k < coordim; ++k)
+                    {
+                        Vmath::Vcopy(npts,
+                                     &MFloc[j*coordim+k][0],              1,
+                                     &outarray[j][k*nq+m_phys_offset[i]], 1);
+                    }
+                }
+            }
+
+        }
+
+
+
+        /**
+         * @brief Generate vector v such that v[i] = scalar1 if i is in the
+         * element < ElementID. Otherwise, v[i] = scalar2.
+         *
+         */
+        void ExpList::GenerateElementVector(
+            const int ElementID,
+            const NekDouble scalar1,
+            const NekDouble scalar2,
+            Array<OneD, NekDouble> &outarray)
+        {
+            int npoints_e;
+            NekDouble coeff;
+
+            Array<OneD, NekDouble> outarray_e;
+
+            for(int i = 0 ; i < (*m_exp).size(); ++i)
+            {
+                npoints_e = (*m_exp)[i]->GetTotPoints();
+
+                if(i <= ElementID)
+                {
+                    coeff = scalar1;
+                }
+                else
+                {
+                    coeff = scalar2;
+                }
+
+                outarray_e = Array<OneD, NekDouble>(npoints_e, coeff);
+                Vmath::Vcopy(npoints_e, &outarray_e[0],              1,
+                                        &outarray[m_phys_offset[i]], 1);
+            }
+        }
+
+        const Array<OneD,const std::shared_ptr<ExpList> >
                                         &ExpList::v_GetBndCondExpansions(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static Array<OneD,const boost::shared_ptr<ExpList> > result;
+            static Array<OneD,const std::shared_ptr<ExpList> > result;
             return result;
         }
 
-        boost::shared_ptr<ExpList>  &ExpList::v_UpdateBndCondExpansion(int i)
+        std::shared_ptr<ExpList>  &ExpList::v_UpdateBndCondExpansion(int i)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList> result;
+            static std::shared_ptr<ExpList> result;
             return result;
         }
 
@@ -2388,19 +2568,19 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        boost::shared_ptr<ExpList> &ExpList::v_GetTrace()
+        std::shared_ptr<ExpList> &ExpList::v_GetTrace()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList> returnVal;
+            static std::shared_ptr<ExpList> returnVal;
             return returnVal;
         }
 
-        boost::shared_ptr<AssemblyMapDG> &ExpList::v_GetTraceMap()
+        std::shared_ptr<AssemblyMapDG> &ExpList::v_GetTraceMap()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static boost::shared_ptr<AssemblyMapDG> result;
+            static std::shared_ptr<AssemblyMapDG> result;
             return result;
         }
 
@@ -2457,7 +2637,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         const vector<bool> &ExpList::v_GetLeftAdjacentFaces(void) const
         {
             ASSERTL0(false,
@@ -2496,6 +2676,7 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
+                const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
@@ -2581,7 +2762,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         void ExpList::v_NormVectorIProductWRTBase(
                                 Array<OneD, Array<OneD, NekDouble> > &V,
                                 Array<OneD, NekDouble> &outarray)
@@ -2594,7 +2775,7 @@ namespace Nektar
                     for(int i = 0; i < GetExpSize(); ++i)
                     {
                         (*m_exp)[i]->NormVectorIProductWRTBase(
-                                        V[0] + GetPhys_Offset(i), 
+                                        V[0] + GetPhys_Offset(i),
                                         tmp = outarray + GetCoeff_Offset(i));
                     }
                 }
@@ -2788,84 +2969,83 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         /**
          */
         void ExpList::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         /**
          */
-        void ExpList::v_ExtractElmtToBndPhys(int i,
-                            Array<OneD, NekDouble> &element,
-                            Array<OneD, NekDouble> &boundary)
+        void ExpList::v_ExtractElmtToBndPhys(const int i,
+                                             const Array<OneD, NekDouble> &element,
+                                             Array<OneD, NekDouble> &boundary)
         {
             int n, cnt;
             Array<OneD, NekDouble> tmp1, tmp2;
-            StdRegions::StdExpansionSharedPtr elmt;
-            
+            LocalRegions::ExpansionSharedPtr elmt;
+
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
-            
+
             // Initialise result
-            boundary = Array<OneD, NekDouble> 
+            boundary = Array<OneD, NekDouble>
                             (GetBndCondExpansions()[i]->GetTotPoints(), 0.0);
-            
+
             // Skip other boundary regions
             for (cnt = n = 0; n < i; ++n)
             {
                 cnt += GetBndCondExpansions()[n]->GetExpSize();
             }
-            
+
             int offsetBnd;
             int offsetElmt = 0;
             for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
             {
                 offsetBnd = GetBndCondExpansions()[i]->GetPhys_Offset(n);
-                
+
                 elmt   = GetExp(ElmtID[cnt+n]);
                 elmt->GetTracePhysVals(EdgeID[cnt+n],
                                       GetBndCondExpansions()[i]->GetExp(n),
                                       tmp1 = element + offsetElmt,
                                       tmp2 = boundary + offsetBnd);
-                
+
                 offsetElmt += elmt->GetTotPoints();
             }
         }
-        
+
         /**
          */
-        void ExpList::v_ExtractPhysToBndElmt(int i,
+        void ExpList::v_ExtractPhysToBndElmt(const int i,
                             const Array<OneD, const NekDouble> &phys,
                             Array<OneD, NekDouble> &bndElmt)
         {
             int n, cnt, nq;
-            Array<OneD, NekDouble> tmp1, tmp2;
-            
+
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
-            
+
             // Skip other boundary regions
             for (cnt = n = 0; n < i; ++n)
             {
                 cnt += GetBndCondExpansions()[n]->GetExpSize();
             }
-            
+
             // Count number of points
             int npoints = 0;
             for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
             {
                 npoints += GetExp(ElmtID[cnt+n])->GetTotPoints();
             }
-            
+
             // Initialise result
             bndElmt = Array<OneD, NekDouble> (npoints, 0.0);
-            
+
             // Extract data
             int offsetPhys;
             int offsetElmt = 0;
@@ -2873,8 +3053,8 @@ namespace Nektar
             {
                 nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
                 offsetPhys = GetPhys_Offset(ElmtID[cnt+n]);
-                Vmath::Vcopy(nq, tmp1 = phys    + offsetPhys, 1,
-                                 tmp2 = bndElmt + offsetElmt, 1);
+                Vmath::Vcopy(nq, &phys[offsetPhys],    1,
+                                 &bndElmt[offsetElmt], 1);
                 offsetElmt += nq;
             }
         }
@@ -2886,7 +3066,7 @@ namespace Nektar
                             Array<OneD, NekDouble> &bnd)
         {
             int n, cnt;
-            Array<OneD, NekDouble> tmp1, tmp2;
+            Array<OneD, NekDouble> tmp1;
             StdRegions::StdExpansionSharedPtr elmt;
 
             Array<OneD, int> ElmtID,EdgeID;
@@ -2912,8 +3092,8 @@ namespace Nektar
                 elmt   = GetExp(ElmtID[cnt+n]);
                 elmt->GetTracePhysVals(EdgeID[cnt+n],
                                       GetBndCondExpansions()[i]->GetExp(n),
-                                      tmp1 = phys + offsetPhys,
-                                      tmp2 = bnd + offsetBnd);
+                                      phys + offsetPhys,
+                                      tmp1 = bnd + offsetBnd);
             }
         }
 
@@ -2925,31 +3105,31 @@ namespace Nektar
             int j, n, cnt, nq;
             int coordim = GetCoordim(0);
             Array<OneD, NekDouble> tmp;
-            StdRegions::StdExpansionSharedPtr elmt;
-            
+            LocalRegions::ExpansionSharedPtr elmt;
+
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
-            
+
             // Initialise result
             normals = Array<OneD, Array<OneD, NekDouble> > (coordim);
             for (j = 0; j < coordim; ++j)
             {
-                normals[j] = Array<OneD, NekDouble> ( 
+                normals[j] = Array<OneD, NekDouble> (
                                 GetBndCondExpansions()[i]->GetTotPoints(), 0.0);
             }
-            
+
             // Skip other boundary regions
             for (cnt = n = 0; n < i; ++n)
             {
                 cnt += GetBndCondExpansions()[n]->GetExpSize();
             }
-            
+
             int offset;
             for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
             {
                 offset = GetBndCondExpansions()[i]->GetPhys_Offset(n);
                 nq = GetBndCondExpansions()[i]->GetExp(n)->GetTotPoints();
-                
+
                 elmt   = GetExp(ElmtID[cnt+n]);
                 const Array<OneD, const Array<OneD, NekDouble> > normalsElmt
                             = elmt->GetSurfaceNormal(EdgeID[cnt+n]);
@@ -2970,7 +3150,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         /**
          */
         void ExpList::v_ReadGlobalOptimizationParameters()
@@ -3039,12 +3219,20 @@ namespace Nektar
             unsigned int regionId,
             const std::string& variable)
         {
-            SpatialDomains::BoundaryConditionCollection::const_iterator collectionIter = collection.find(regionId);
-            ASSERTL1(collectionIter != collection.end(), "Unable to locate collection "+boost::lexical_cast<string>(regionId));
-            const SpatialDomains::BoundaryConditionMapShPtr boundaryConditionMap = (*collectionIter).second;
-            SpatialDomains::BoundaryConditionMap::const_iterator conditionMapIter = boundaryConditionMap->find(variable);
-            ASSERTL1(conditionMapIter != boundaryConditionMap->end(), "Unable to locate condition map.");
-            const SpatialDomains::BoundaryConditionShPtr boundaryCondition = (*conditionMapIter).second;
+            auto collectionIter = collection.find(regionId);
+            ASSERTL1(collectionIter != collection.end(),
+                     "Unable to locate collection " +
+                     boost::lexical_cast<string>(regionId));
+
+            const SpatialDomains::BoundaryConditionMapShPtr bndCondMap
+                = (*collectionIter).second;
+            auto conditionMapIter = bndCondMap->find(variable);
+            ASSERTL1(conditionMapIter != bndCondMap->end(),
+                     "Unable to locate condition map.");
+
+            const SpatialDomains::BoundaryConditionShPtr boundaryCondition
+                = (*conditionMapIter).second;
+
             return boundaryCondition;
         }
 
@@ -3055,73 +3243,6 @@ namespace Nektar
             return NullExpListSharedPtr;
         }
 
-
-        StdRegions::StdExpansionSharedPtr GetStdExp(StdRegions::StdExpansionSharedPtr exp)
-        {
-
-            StdRegions::StdExpansionSharedPtr stdExp;
-
-            switch(exp->DetShapeType())
-            {
-            case LibUtilities::eSegment:
-                stdExp = MemoryManager<StdRegions::StdSegExp>
-                    ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey());
-                break;
-            case LibUtilities::eTriangle:
-                {
-                    StdRegions::StdNodalTriExpSharedPtr nexp;
-                    if((nexp = exp->as<StdRegions::StdNodalTriExp>()))
-                    {
-                        stdExp = MemoryManager<StdRegions::StdNodalTriExp>
-                            ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                                exp->GetBasis(1)->GetBasisKey(),
-                                                nexp->GetNodalPointsKey().GetPointsType());
-                    }
-                    else
-                    {
-                        stdExp = MemoryManager<StdRegions::StdTriExp>
-                            ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                                exp->GetBasis(1)->GetBasisKey());
-                    }
-                }
-                break;
-            case LibUtilities::eQuadrilateral:
-                stdExp = MemoryManager<StdRegions::StdQuadExp>
-                    ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                        exp->GetBasis(1)->GetBasisKey());
-                break;
-            case LibUtilities::eTetrahedron:
-                    stdExp = MemoryManager<StdRegions::StdTetExp>
-                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                            exp->GetBasis(1)->GetBasisKey(),
-                                            exp->GetBasis(2)->GetBasisKey());
-                    break;
-            case LibUtilities::ePyramid:
-                stdExp = MemoryManager<StdRegions::StdPyrExp>
-                    ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                        exp->GetBasis(1)->GetBasisKey(),
-                                        exp->GetBasis(2)->GetBasisKey());
-                break;
-            case LibUtilities::ePrism:
-                stdExp = MemoryManager<StdRegions::StdPrismExp>
-                    ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                        exp->GetBasis(1)->GetBasisKey(),
-                                        exp->GetBasis(2)->GetBasisKey());
-                break;
-            case LibUtilities::eHexahedron:
-                    stdExp = MemoryManager<StdRegions::StdHexExp>
-                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                            exp->GetBasis(1)->GetBasisKey(),
-                                            exp->GetBasis(2)->GetBasisKey());
-                    break;
-            default:
-                ASSERTL0(false,"Shape type not setup");
-                break;
-            }
-
-            return stdExp;
-        }
-
         /**
          * @brief Construct collections of elements containing a single element
          * type and polynomial order from the list of expansions.
@@ -3130,8 +3251,6 @@ namespace Nektar
         {
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > > collections;
-            map<LibUtilities::ShapeType,
-                vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
 
             // Figure out optimisation parameters if provided in
             // session file or default given
@@ -3157,23 +3276,23 @@ namespace Nektar
                     std::pair<LocalRegions::ExpansionSharedPtr,int> ((*m_exp)[i],i));
             }
 
-            for (it = collections.begin(); it != collections.end(); ++it)
+            for (auto &it : collections)
             {
-                LocalRegions::ExpansionSharedPtr exp = it->second[0].first;
+                LocalRegions::ExpansionSharedPtr exp = it.second[0].first;
 
                 Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(exp);
                 vector<StdRegions::StdExpansionSharedPtr> collExp;
 
-                int prevCoeffOffset     = m_coeff_offset[it->second[0].second];
-                int prevPhysOffset      = m_phys_offset [it->second[0].second];
+                int prevCoeffOffset     = m_coeff_offset[it.second[0].second];
+                int prevPhysOffset      = m_phys_offset [it.second[0].second];
                 int collcnt;
 
                 m_coll_coeff_offset.push_back(prevCoeffOffset);
                 m_coll_phys_offset .push_back(prevPhysOffset);
 
-                if(it->second.size() == 1) // single element case
+                if(it.second.size() == 1) // single element case
                 {
-                    collExp.push_back(it->second[0].first);
+                    collExp.push_back(it.second[0].first);
 
                     // if no Imp Type provided and No settign in xml file.
                     // reset impTypes using timings
@@ -3189,17 +3308,17 @@ namespace Nektar
                 else
                 {
                     // set up first geometry
-                    collExp.push_back(it->second[0].first);
-                    int prevnCoeff = it->second[0].first->GetNcoeffs();
-                    int prevnPhys  = it->second[0].first->GetTotPoints();
+                    collExp.push_back(it.second[0].first);
+                    int prevnCoeff = it.second[0].first->GetNcoeffs();
+                    int prevnPhys  = it.second[0].first->GetTotPoints();
                     collcnt = 1;
 
-                    for (int i = 1; i < it->second.size(); ++i)
+                    for (int i = 1; i < it.second.size(); ++i)
                     {
-                        int nCoeffs     = it->second[i].first->GetNcoeffs();
-                        int nPhys       = it->second[i].first->GetTotPoints();
-                        int coeffOffset = m_coeff_offset[it->second[i].second];
-                        int physOffset  = m_phys_offset [it->second[i].second];
+                        int nCoeffs     = it.second[i].first->GetNcoeffs();
+                        int nPhys       = it.second[i].first->GetTotPoints();
+                        int coeffOffset = m_coeff_offset[it.second[i].second];
+                        int physOffset  = m_phys_offset [it.second[i].second];
 
                         // check to see if next elmt is different or
                         // collmax reached and if so end collection
@@ -3229,17 +3348,17 @@ namespace Nektar
 
                             m_coll_coeff_offset.push_back(coeffOffset);
                             m_coll_phys_offset .push_back(physOffset);
-                            collExp.push_back(it->second[i].first);
+                            collExp.push_back(it.second[i].first);
                             collcnt = 1;
                         }
                         else // add to list of collections
                         {
-                            collExp.push_back(it->second[i].first);
+                            collExp.push_back(it.second[i].first);
                             collcnt++;
                         }
 
                         // if end of list finish up collection
-                        if (i == it->second.size() - 1)
+                        if (i == it.second.size() - 1)
                         {
                             // if no Imp Type provided and No
                             // settign in xml file.
@@ -3264,7 +3383,7 @@ namespace Nektar
                 }
             }
         }
-        
+
         void ExpList::ClearGlobalLinSysManager(void)
         {
             v_ClearGlobalLinSysManager();

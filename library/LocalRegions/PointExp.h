@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -104,13 +103,13 @@ namespace Nektar
 
             inline void GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
             {
-                SpatialDomains::PointGeomSharedPtr v = boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
+                SpatialDomains::PointGeomSharedPtr v = std::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
                 v->GetCoords(x,y,z);
             }
 
             inline const SpatialDomains::PointGeomSharedPtr GetGeom() const
             {
-                return boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
+                return std::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
             }
 
         protected:
@@ -127,10 +126,8 @@ namespace Nektar
                           Array<OneD, NekDouble> &outarray);
         };
         
-        // type defines for use of PointExp in a boost vector
-        typedef boost::shared_ptr<PointExp> PointExpSharedPtr;
+        typedef std::shared_ptr<PointExp> PointExpSharedPtr;
         typedef std::vector<PointExpSharedPtr> PointExpVector;
-        typedef std::vector<PointExpSharedPtr>::iterator PointExpVectorIter;
         
         const static Array<OneD, PointExpSharedPtr> NullPointExpSharedPtrArray;
     } //end of namespace

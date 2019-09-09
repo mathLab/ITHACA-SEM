@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -126,7 +125,7 @@ void TetMesh::Mesh()
     tetgen->GetNewPoints(ctbefore, newp);
     for (int i = 0; i < newp.size(); i++)
     {
-        NodeSharedPtr n = boost::shared_ptr<Node>(
+        NodeSharedPtr n = std::shared_ptr<Node>(
             new Node(ctbefore + i, newp[i][0], newp[i][1], newp[i][2]));
         IdToNode[ctbefore + i] = n;
     }

@@ -7,7 +7,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -26,7 +25,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +42,7 @@ namespace Nektar
 {
     namespace HexExpTests
     {
-        SpatialDomains::SegGeomSharedPtr CreateSegGeom(unsigned int id, 
+        SpatialDomains::SegGeomSharedPtr CreateSegGeom(unsigned int id,
             SpatialDomains::PointGeomSharedPtr v0,
             SpatialDomains::PointGeomSharedPtr v1)
         {
@@ -100,58 +99,15 @@ namespace Nektar
                 e8, e9, e10, e11
             };
 
-            Nektar::StdRegions::Orientation edgeorient0[Nektar::SpatialDomains::QuadGeom::kNedges] =
-            {
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF0[0], *edgesF0[1]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF0[1], *edgesF0[2]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF0[2], *edgesF0[3]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF0[3], *edgesF0[0])
-            };
-            Nektar::StdRegions::Orientation edgeorient1[Nektar::SpatialDomains::QuadGeom::kNedges] =
-            {
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF1[0], *edgesF1[1]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF1[1], *edgesF1[2]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF1[2], *edgesF1[3]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF1[3], *edgesF1[0])
-            };
-            Nektar::StdRegions::Orientation edgeorient2[Nektar::SpatialDomains::QuadGeom::kNedges] =
-            {
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF2[0], *edgesF2[1]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF2[1], *edgesF2[2]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF2[2], *edgesF2[3]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF2[3], *edgesF2[0])
-            };
-            Nektar::StdRegions::Orientation edgeorient3[Nektar::SpatialDomains::QuadGeom::kNedges] =
-            {
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF3[0], *edgesF3[1]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF3[1], *edgesF3[2]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF3[2], *edgesF3[3]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF3[3], *edgesF3[0])
-            };
-            Nektar::StdRegions::Orientation edgeorient4[Nektar::SpatialDomains::QuadGeom::kNedges] =
-            {
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF4[0], *edgesF4[1]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF4[1], *edgesF4[2]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF4[2], *edgesF4[3]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF4[3], *edgesF4[0])
-            };
-            Nektar::StdRegions::Orientation edgeorient5[Nektar::SpatialDomains::QuadGeom::kNedges] =
-            {
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF5[0], *edgesF5[1]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF5[1], *edgesF5[2]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF5[2], *edgesF5[3]),
-                Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF5[3], *edgesF5[0])
-            };
-
-            Nektar::SpatialDomains::QuadGeomSharedPtr face0(new SpatialDomains::QuadGeom(0, edgesF0, edgeorient0));
-            Nektar::SpatialDomains::QuadGeomSharedPtr face1(new SpatialDomains::QuadGeom(1, edgesF1, edgeorient1));
-            Nektar::SpatialDomains::QuadGeomSharedPtr face2(new SpatialDomains::QuadGeom(2, edgesF2, edgeorient2));
-            Nektar::SpatialDomains::QuadGeomSharedPtr face3(new SpatialDomains::QuadGeom(3, edgesF3, edgeorient3));
-            Nektar::SpatialDomains::QuadGeomSharedPtr face4(new SpatialDomains::QuadGeom(4, edgesF4, edgeorient4));
-            Nektar::SpatialDomains::QuadGeomSharedPtr face5(new SpatialDomains::QuadGeom(5, edgesF5, edgeorient5));
+            Nektar::SpatialDomains::QuadGeomSharedPtr face0(new SpatialDomains::QuadGeom(0, edgesF0));
+            Nektar::SpatialDomains::QuadGeomSharedPtr face1(new SpatialDomains::QuadGeom(1, edgesF1));
+            Nektar::SpatialDomains::QuadGeomSharedPtr face2(new SpatialDomains::QuadGeom(2, edgesF2));
+            Nektar::SpatialDomains::QuadGeomSharedPtr face3(new SpatialDomains::QuadGeom(3, edgesF3));
+            Nektar::SpatialDomains::QuadGeomSharedPtr face4(new SpatialDomains::QuadGeom(4, edgesF4));
+            Nektar::SpatialDomains::QuadGeomSharedPtr face5(new SpatialDomains::QuadGeom(5, edgesF5));
 
             Nektar::SpatialDomains::QuadGeomSharedPtr qfaces[] = {face0, face1, face2, face3, face4, face5};
-            SpatialDomains::HexGeomSharedPtr hexGeom(new SpatialDomains::HexGeom(qfaces));
+            SpatialDomains::HexGeomSharedPtr hexGeom(new SpatialDomains::HexGeom(0,qfaces));
             return hexGeom;
         }
 
@@ -165,16 +121,16 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, 1.0, -1.0, 1.0));
             SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(3u, 6u, 1.0, 1.0, 1.0));
             SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(3u, 7u, -1.0, 1.0, 1.0));
-            
+
             SpatialDomains::HexGeomSharedPtr hexGeom = CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
-            
+
             Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
             unsigned int numQuadPoints = 6;
             const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
             const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
 
-            Nektar::LocalRegions::HexExpSharedPtr hexExp = 
+            Nektar::LocalRegions::HexExpSharedPtr hexExp =
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir1, basisKeyDir1, hexGeom);
 
@@ -182,8 +138,8 @@ namespace Nektar
             Array<OneD, NekDouble> c1 = Array<OneD, NekDouble>(hexExp->GetTotPoints());
             Array<OneD, NekDouble> c2 = Array<OneD, NekDouble>(hexExp->GetTotPoints());
             hexExp->GetCoords(c0, c1, c2);
-            boost::shared_ptr<StdRegions::StdHexExp> stdHex =
-                boost::dynamic_pointer_cast<StdRegions::StdHexExp>(hexExp);
+            std::shared_ptr<StdRegions::StdHexExp> stdHex =
+                std::dynamic_pointer_cast<StdRegions::StdHexExp>(hexExp);
             stdHex->GetCoords(c0, c1, c2);
             double epsilon = 1.0e-8;
             BOOST_CHECK_CLOSE(c0[0], -1.0, epsilon);
@@ -193,7 +149,7 @@ namespace Nektar
             BOOST_CHECK_CLOSE(c0[4], 0.76505532392946474, epsilon);
             BOOST_CHECK_CLOSE(c0[5], 1.0, epsilon);
         }
-        
+
         BOOST_AUTO_TEST_CASE(TestScaledAndTranslatedHexExp)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, 0.0, 0.0, 0.0));
@@ -213,7 +169,7 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
             const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
 
-            Nektar::LocalRegions::HexExpSharedPtr hexExp = 
+            Nektar::LocalRegions::HexExpSharedPtr hexExp =
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir1, basisKeyDir1, hexGeom);
 

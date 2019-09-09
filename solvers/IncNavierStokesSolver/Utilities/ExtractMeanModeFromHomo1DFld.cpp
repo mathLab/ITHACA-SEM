@@ -19,8 +19,6 @@ int main(int argc, char *argv[])
     int n       = 0;
     int nz      = 0;
     int ncoeffs = 0;
-    //default meshgraph
-    SpatialDomains::MeshGraph graph;
 
     //----------------------------------------------
     // Import fieldfile.
@@ -68,10 +66,8 @@ int main(int argc, char *argv[])
                 break;
             }
 
-            std::vector<NekDouble>::iterator vec_iter;
-
             vector<NekDouble> newdata;
-            vec_iter = fielddata[i].begin();
+            auto vec_iter = fielddata[i].begin();
 
             for(k = 0; k < fielddef[i]->m_fields.size(); ++k)
             {

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -102,8 +101,6 @@ namespace Lapack
 
     // Non-standard versions.
     void dgetrs(char trans, int matrixRows, int matrixColumns, const double* A, double* x);
-
-#ifdef NEKTAR_USING_LAPACK
 
     /// \brief factor a real packed-symmetric matrix using Bunch-Kaufman
     /// pivoting.
@@ -251,54 +248,5 @@ namespace Lapack
     {
         F77NAME(dtptrs) (uplo, trans, diag, n, nrhs, a, b, ldb, info);
     }
-
-    
-#endif //NEKTAR_USING_LAPACK
 }
 #endif //NEKTAR_LIB_UTILITIES_LAPACK_HPP
-
-/***
-$Log: Lapack.hpp,v $
-Revision 1.5  2008/06/01 19:04:57  bnelson
-Added triangular solvers.
-
-Revision 1.4  2008/04/30 02:57:15  bnelson
-Fixed gcc compiler warning.
-
-Revision 1.3  2008/04/06 05:55:11  bnelson
-Changed ConstArray to Array<const>
-
-Revision 1.2  2007/04/10 14:00:45  sherwin
-Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
-
-Revision 1.1  2007/04/03 03:59:24  bnelson
-Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
-
-Revision 1.3  2007/02/04 00:15:40  bnelson
-*** empty log message ***
-
-Revision 1.2  2006/06/01 13:44:28  kirby
-*** empty log message ***
-
-Revision 1.1  2006/06/01 11:07:52  kirby
-*** empty log message ***
-
-Revision 1.1  2006/05/04 18:57:43  kirby
-*** empty log message ***
-
-Revision 1.4  2006/02/26 21:13:45  bnelson
-Fixed a variety of compiler errors caused by updates to the coding standard.
-
-Revision 1.3  2006/02/15 08:07:15  sherwin
-
-Put codes into standard although have not yet been compiled
-
-Revision 1.2  2006/02/12 21:51:42  sherwin
-
-Added licence
-
-Revision 1.1  2006/02/12 15:06:12  sherwin
-
-Changed .h files to .hpp
-
-**/

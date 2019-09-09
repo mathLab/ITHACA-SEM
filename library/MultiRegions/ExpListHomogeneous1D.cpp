@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -55,15 +54,20 @@ namespace Nektar
         {
         }
 
-        ExpListHomogeneous1D::ExpListHomogeneous1D(const LibUtilities::SessionReaderSharedPtr
-                &pSession,const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, const bool useFFT, const bool dealiasing):
+        ExpListHomogeneous1D::ExpListHomogeneous1D(
+                   const LibUtilities::SessionReaderSharedPtr
+                   &pSession,const LibUtilities::BasisKey &HomoBasis,
+                   const NekDouble lhom,
+                   const bool useFFT,
+                   const bool dealiasing):
             ExpList(pSession),
             m_useFFT(useFFT),
             m_lhom(lhom),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr()),
             m_dealiasing(dealiasing)
         {
-            ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,"Homogeneous Basis is a null basis");
+            ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,
+                     "Homogeneous Basis is a null basis");
             
             m_homogeneousBasis = LibUtilities::BasisManager()[HomoBasis];
 
@@ -87,7 +91,8 @@ namespace Nektar
             }
 
             m_transposition = MemoryManager<LibUtilities::Transposition>
-                                ::AllocateSharedPtr(HomoBasis, m_comm, m_StripZcomm);
+                                ::AllocateSharedPtr(HomoBasis, m_comm,
+                                                    m_StripZcomm);
 
             m_planes = Array<OneD,ExpListSharedPtr>(
                                 m_homogeneousBasis->GetNumPoints() /
@@ -730,7 +735,7 @@ namespace Nektar
 
         DNekBlkMatSharedPtr ExpListHomogeneous1D::GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, CoeffState coeffstate) const
         {
-            Homo1DBlockMatrixMap::iterator matrixIter = m_homogeneous1DBlockMat->find(mattype);
+            auto matrixIter = m_homogeneous1DBlockMat->find(mattype);
             
             if(matrixIter == m_homogeneous1DBlockMat->end())
             {
@@ -983,7 +988,6 @@ namespace Nektar
                 int modes_offset = 0;
                 int planes_offset = 0;
                 Array<OneD, NekDouble> coeff_tmp;
-                boost::unordered_map<int,int>::iterator it;
                 
                 // Build map of plane IDs lying on this processor and determine
                 // mapping from element ids to location in expansion list.
@@ -1025,7 +1029,7 @@ namespace Nektar
                                                                         fielddef->m_numModes,
                                                                         modes_offset);
 
-                    it = m_elmtToExpId.find(fielddef->m_elementIDs[i]);
+                    auto it = m_elmtToExpId.find(fielddef->m_elementIDs[i]);
                     
                     // ensure element is on this partition for parallel case. 
                     if(it == m_elmtToExpId.end())
@@ -1038,7 +1042,15 @@ namespace Nektar
                     }
                     
                     int eid = it->second;
-                        
+                    bool sameBasis = true;
+                    for (int j = 0; j < fielddef->m_basis.size()-1; ++j)
+                    {
+                        if (fielddef->m_basis[j] != (*m_exp)[eid]->GetBasisType(j))
+                        {
+                            sameBasis = false;
+                            break;
+                        }
+                    }
                     
                     for(n = 0; n < nzmodes; ++n, offset += datalen)
                     {
@@ -1052,7 +1064,7 @@ namespace Nektar
                         } 
                         
                         planes_offset = it->second;
-                        if(datalen == (*m_exp)[eid]->GetNcoeffs())
+                        if(datalen == (*m_exp)[eid]->GetNcoeffs() && sameBasis)
                         {
                             Vmath::Vcopy(datalen,&fielddata[offset],1,&coeffs[m_coeff_offset[eid]+planes_offset*ncoeffs_per_plane],1);
                         }
@@ -1068,7 +1080,7 @@ namespace Nektar
         
         //Extract the data in fielddata into the m_coeff list
         void ExpListHomogeneous1D::v_ExtractCoeffsToCoeffs(
-                                                           const boost::shared_ptr<ExpList> &fromExpList,const  Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
+                                                           const std::shared_ptr<ExpList> &fromExpList,const  Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
         {
             int i;
             int fromNcoeffs_per_plane = fromExpList->GetPlane(0)->GetNcoeffs();
@@ -1432,16 +1444,14 @@ namespace Nektar
             return m_lhom;
         }
 
+        void ExpListHomogeneous1D::v_SetHomoLen(const NekDouble lhom)
+        {
+            m_lhom = lhom;
+        }
+
         Array<OneD, const unsigned int> ExpListHomogeneous1D::v_GetZIDs(void)
         {
             return m_transposition->GetPlanesIDs();
         }
     } //end of namespace
 } //end of namespace
-
-
-/**
-* $Log: v $
-*
-**/
-

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -113,23 +112,21 @@ namespace Nektar
             m_planeCounter = 0;
 
             // Override Riemann solver scalar and vector callbacks.
-            map<string, RSScalarFuncType>::iterator it1;
-            map<string, RSVecFuncType>::iterator it2;
             map<string, RSScalarFuncType> scalars = m_riemann->GetScalars();
             map<string, RSVecFuncType> vectors = m_riemann->GetVectors();
 
-            for (it1 = scalars.begin(); it1 != scalars.end(); ++it1)
+            for (auto &it1 : scalars)
             {
-                boost::shared_ptr<HomoRSScalar> tmp = MemoryManager<HomoRSScalar>
-                    ::AllocateSharedPtr(it1->second, m_numPlanes);
-                m_riemann->SetScalar(it1->first, &HomoRSScalar::Exec, tmp);
+                std::shared_ptr<HomoRSScalar> tmp = MemoryManager<HomoRSScalar>
+                    ::AllocateSharedPtr(it1.second, m_numPlanes);
+                m_riemann->SetScalar(it1.first, &HomoRSScalar::Exec, tmp);
             }
 
-            for (it2 = vectors.begin(); it2 != vectors.end(); ++it2)
+            for (auto &it2 : vectors)
             {
-                boost::shared_ptr<HomoRSVector> tmp = MemoryManager<HomoRSVector>
-                    ::AllocateSharedPtr(it2->second, m_numPlanes, it2->first);
-                m_riemann->SetVector(it2->first, &HomoRSVector::Exec, tmp);
+                std::shared_ptr<HomoRSVector> tmp = MemoryManager<HomoRSVector>
+                    ::AllocateSharedPtr(it2.second, m_numPlanes, it2.first);
+                m_riemann->SetVector(it2.first, &HomoRSVector::Exec, tmp);
             }
 
             m_fluxVecStore = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(

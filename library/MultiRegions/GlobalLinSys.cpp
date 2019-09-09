@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -85,9 +84,15 @@ namespace Nektar
                 MultiRegions::ePETScMultiLevelStaticCond)
         };
 
+#ifdef NEKTAR_USE_SCOTCH
         std::string GlobalLinSys::def = LibUtilities::SessionReader::
             RegisterDefaultSolverInfo("GlobalSysSoln",
                                       "DirectMultiLevelStaticCond");
+#else
+        std::string GlobalLinSys::def = LibUtilities::SessionReader::
+            RegisterDefaultSolverInfo("GlobalSysSoln",
+                                      "DirectStaticCond");
+#endif
 
         /**
          * @class GlobalLinSys
@@ -187,8 +192,8 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping.
          */
         GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &pKey,
-                const boost::weak_ptr<ExpList> &pExpList,
-                const boost::shared_ptr<AssemblyMap>
+                const std::weak_ptr<ExpList> &pExpList,
+                const std::shared_ptr<AssemblyMap>
                                    &pLocToGloMap):
             m_linSysKey(pKey),
             m_expList(pExpList),
@@ -203,11 +208,8 @@ namespace Nektar
          */
         GlobalLinSysFactory& GetGlobalLinSysFactory()
         {
-            typedef Loki::SingletonHolder<GlobalLinSysFactory,
-                Loki::CreateUsingNew,
-                Loki::NoDestroy,
-                Loki::SingleThreaded> Type;
-            return Type::Instance();
+            static GlobalLinSysFactory instance;
+            return instance;
         }
 
         /**
@@ -216,7 +218,8 @@ namespace Nektar
          *
          * @param asmMap  Assembly map used to construct the global system.
          */
-        PreconditionerSharedPtr GlobalLinSys::CreatePrecon(AssemblyMapSharedPtr asmMap)
+        PreconditionerSharedPtr GlobalLinSys::CreatePrecon(AssemblyMapSharedPtr
+                                                           asmMap)
         {
             PreconditionerType pType = asmMap->GetPreconType();
             std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
@@ -236,6 +239,84 @@ namespace Nektar
             return m_expList.lock()->GetExpSize();
         }
 
+
+        /** 
+            Assemble the matrix key for each block n 
+        **/
+        
+        LocalRegions::MatrixKey GlobalLinSys::GetBlockMatrixKey(unsigned int n)
+        {            
+            
+            std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+            int cnt = 0;
+            
+            LocalRegions::ExpansionSharedPtr vExp = expList->GetExp( n );
+            
+            // need to be initialised with zero size for non variable
+            // coefficient case
+            StdRegions::VarCoeffMap vVarCoeffMap;
+
+            StdRegions::ConstFactorMap vConstFactorMap =
+                m_linSysKey.GetConstFactors();
+
+            // setup variable factors
+            if(m_linSysKey.GetNVarFactors() > 0)
+            {
+                if(m_linSysKey.GetVarFactors().
+                   count(StdRegions::eFactorSVVDiffCoeff) != 0)
+                {
+                    vConstFactorMap[StdRegions::eFactorSVVDiffCoeff] =
+                        m_linSysKey.GetVarFactors(
+                                      StdRegions::eFactorSVVDiffCoeff)[n];
+ 
+                    ASSERTL1(m_linSysKey.GetConstFactors().
+                             count(StdRegions::eFactorSVVCutoffRatio),
+                             "VarCoeffSVVCuroffRatio is set but "
+                             " not FactorSVVCutoffRatio");
+
+                    vConstFactorMap[StdRegions::eFactorSVVCutoffRatio] =
+                        m_linSysKey.GetVarFactors(
+                                   StdRegions::eFactorSVVCutoffRatio)[n];
+                    
+                }
+                
+                if(m_linSysKey.GetVarFactors().
+                   count(StdRegions::eFactorSVVPowerKerDiffCoeff) != 0)
+                {
+                    vConstFactorMap[StdRegions::eFactorSVVPowerKerDiffCoeff] =
+                        m_linSysKey.GetVarFactors(
+                               StdRegions::eFactorSVVPowerKerDiffCoeff)[n];
+                }
+
+                if(m_linSysKey.GetVarFactors().
+                   count(StdRegions::eFactorSVVDGKerDiffCoeff) != 0)
+                {
+                    vConstFactorMap[StdRegions::eFactorSVVDGKerDiffCoeff] =
+                        m_linSysKey.GetVarFactors(
+                                  StdRegions::eFactorSVVDGKerDiffCoeff)[n];
+                }
+            }
+
+            // retrieve variable coefficients
+            if(m_linSysKey.GetNVarCoeffs() > 0)
+            {
+                cnt = expList->GetPhys_Offset(n);
+                
+                for (auto &x : m_linSysKey.GetVarCoeffs())
+                {
+                    vVarCoeffMap[x.first] = x.second + cnt;
+                }
+            }
+            
+
+            LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
+                                           vExp->DetShapeType(),
+                                           *vExp,
+                                           vConstFactorMap,
+                                           vVarCoeffMap);
+            return matkey;
+        }
+
         /**
          * @brief Retrieves the block matrix from n-th expansion using the
          * matrix key provided by the #m_linSysKey.
@@ -245,36 +326,9 @@ namespace Nektar
          */
         DNekScalMatSharedPtr GlobalLinSys::v_GetBlock(unsigned int n)
         {
-            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
-            int cnt = 0;
+            LocalRegions::ExpansionSharedPtr vExp = m_expList.lock()->GetExp( n );
             DNekScalMatSharedPtr loc_mat;
-
-            LocalRegions::ExpansionSharedPtr vExp = 
-                boost::dynamic_pointer_cast<LocalRegions::Expansion>(
-                    expList->GetExp(n));
-
-            // need to be initialised with zero size for non variable
-            // coefficient case
-            StdRegions::VarCoeffMap vVarCoeffMap;
-
-            // retrieve variable coefficients
-            if(m_linSysKey.GetNVarCoeffs() > 0)
-            {
-                StdRegions::VarCoeffMap::const_iterator x;
-                cnt = expList->GetPhys_Offset(n);
-                
-                for (x = m_linSysKey.GetVarCoeffs().begin(); 
-                     x != m_linSysKey.GetVarCoeffs().end(); ++x)
-                {
-                    vVarCoeffMap[x->first] = x->second + cnt;
-                }
-            }
-
-            LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
-                                           vExp->DetShapeType(),
-                                           *vExp, m_linSysKey.GetConstFactors(),
-                                           vVarCoeffMap);
-            loc_mat = vExp->GetLocMatrix(matkey);
+            loc_mat = vExp->GetLocMatrix(GetBlockMatrixKey(n));
 
             // apply robin boundary conditions to the matrix.
             if(m_robinBCInfo.count(n) != 0) // add robin mass matrix
@@ -316,39 +370,14 @@ namespace Nektar
         DNekScalBlkMatSharedPtr GlobalLinSys::v_GetStaticCondBlock(
             unsigned int n)
         {
-            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
-            int cnt = 0;
+            
+            LocalRegions::ExpansionSharedPtr vExp = m_expList.lock()->GetExp( n );
             DNekScalBlkMatSharedPtr loc_mat;
-            DNekScalMatSharedPtr    tmp_mat;
-
-            StdRegions::StdExpansionSharedPtr vExp = expList->GetExp(n);
-
-            // need to be initialised with zero size for non variable
-            // coefficient case
-            StdRegions::VarCoeffMap vVarCoeffMap;
-
-            // retrieve variable coefficients
-            if(m_linSysKey.GetNVarCoeffs() > 0)
-            {
-                StdRegions::VarCoeffMap::const_iterator x;
-                cnt = expList->GetPhys_Offset(n);
-                for (x  = m_linSysKey.GetVarCoeffs().begin(); 
-                     x != m_linSysKey.GetVarCoeffs().end  (); ++x)
-                {
-                    vVarCoeffMap[x->first] = x->second + cnt;
-                }
-            }
-
-            LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
-                                           vExp->DetShapeType(),
-                                           *vExp,
-                                           m_linSysKey.GetConstFactors(),
-                                           vVarCoeffMap);
-
-            loc_mat = vExp->GetLocStaticCondMatrix(matkey);
+            loc_mat = vExp->GetLocStaticCondMatrix(GetBlockMatrixKey(n));
 
             if(m_robinBCInfo.count(n) != 0) // add robin mass matrix
             {
+                DNekScalMatSharedPtr    tmp_mat;
                 RobinBCInfoSharedPtr rBC;
 
                 tmp_mat = loc_mat->GetBlock(0,0);
@@ -395,33 +424,8 @@ namespace Nektar
          */
         void GlobalLinSys::v_DropStaticCondBlock(unsigned int n)
         {
-            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
-
-            StdRegions::StdExpansionSharedPtr vExp = expList->GetExp(n);
-
-            // need to be initialised with zero size for non variable
-            // coefficient case
-            StdRegions::VarCoeffMap vVarCoeffMap;
-
-            // retrieve variable coefficients
-            if(m_linSysKey.GetNVarCoeffs() > 0)
-            {
-                StdRegions::VarCoeffMap::const_iterator x;
-                int cnt = expList->GetPhys_Offset(n);
-                for (x  = m_linSysKey.GetVarCoeffs().begin(); 
-                     x != m_linSysKey.GetVarCoeffs().end  (); ++x)
-                {
-                    vVarCoeffMap[x->first] = x->second + cnt;
-                }
-            }
-
-            LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
-                                           vExp->DetShapeType(),
-                                           *vExp,
-                                           m_linSysKey.GetConstFactors(),
-                                           vVarCoeffMap);
-
-            vExp->DropLocStaticCondMatrix(matkey);
+            LocalRegions::ExpansionSharedPtr vExp = m_expList.lock()->GetExp( n );
+            vExp->DropLocStaticCondMatrix(GetBlockMatrixKey(n));
         }
 
         void GlobalLinSys::v_InitObject()
@@ -430,7 +434,7 @@ namespace Nektar
 	}
 
         void GlobalLinSys::v_Initialise(
-            const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
+            const std::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
             NEKERROR(ErrorUtil::efatal, "Method does not exist" );
 	}

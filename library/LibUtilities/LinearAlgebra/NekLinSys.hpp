@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -46,9 +45,7 @@
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
 #include <iostream>
 
-#include <boost/shared_ptr.hpp> 
-#include <boost/utility/enable_if.hpp>
-#include <boost/type_traits.hpp>
+#include <type_traits>
 
 #ifdef max
 #undef max
@@ -61,10 +58,10 @@
 namespace Nektar
 {
     template<typename DataType>
-    struct IsSharedPointer : public boost::false_type {};
+    struct IsSharedPointer : public std::false_type {};
 
     template<typename DataType>
-    struct IsSharedPointer<boost::shared_ptr<DataType> > : public boost::true_type {};
+    struct IsSharedPointer<std::shared_ptr<DataType> > : public std::true_type {};
 
     // The solving of the linear system is located in this class instead of in the LinearSystem 
     // class because XCode gcc 4.2 didn't compile it correctly when it was moved to the 
@@ -330,7 +327,7 @@ namespace Nektar
     {
         public:
             template<typename MatrixType>
-            explicit LinearSystem(const boost::shared_ptr<MatrixType> &theA, PointerWrapper wrapperType = eCopy) :
+            explicit LinearSystem(const std::shared_ptr<MatrixType> &theA, PointerWrapper wrapperType = eCopy) :
                 n(theA->GetRows()),
                 A(theA->GetPtr(), eVECTOR_WRAPPER),
                 m_ipivot(),
@@ -400,9 +397,9 @@ namespace Nektar
             // In the following calls to Solve, VectorType must be a NekVector.
             // Anything else won't compile.        
             template<typename VectorType>
-            typename RawType<VectorType>::type Solve(const VectorType& b)
+            RawType_t<VectorType> Solve(const VectorType& b)
             {
-                typename RawType<VectorType>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
+                RawType_t<VectorType> x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
                 LinearSystemSolver::Solve(ConsistentObjectAccess<VectorType>::const_reference(b), x, m_matrixType,
                     m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                 return x;
@@ -418,9 +415,9 @@ namespace Nektar
 
             // Transpose variant of solve
             template<typename VectorType>
-            typename RawType<VectorType>::type SolveTranspose(const VectorType& b)
+            RawType_t<VectorType> SolveTranspose(const VectorType& b)
             {
-                typename RawType<VectorType>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
+                RawType_t<VectorType> x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
                 LinearSystemSolver::SolveTranspose(ConsistentObjectAccess<VectorType>::const_reference(b), x, m_matrixType,
                     m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                 return x;

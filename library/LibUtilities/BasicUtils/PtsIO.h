@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -39,8 +38,7 @@
 
 #include <string>
 #include <vector>
-
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <tinyxml.h>
 
@@ -48,7 +46,6 @@
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
 
@@ -80,10 +77,14 @@ public:
                                     const PtsFieldSharedPtr &ptsField,
                                     const bool backup = false);
 
-    LIB_UTILITIES_EXPORT void ImportFieldData(TiXmlDocument docInput,
+    LIB_UTILITIES_EXPORT void ImportFieldData(const string inFile,
                                               PtsFieldSharedPtr &ptsField);
 
 protected:
+
+    LIB_UTILITIES_EXPORT virtual void v_ImportFieldData(const string inFile,
+                                              PtsFieldSharedPtr &ptsField);
+
     LIB_UTILITIES_EXPORT void SetUpFieldMetaData(const std::string outname);
 
     LIB_UTILITIES_EXPORT virtual std::string GetFileEnding() const
@@ -92,7 +93,7 @@ protected:
     };
 };
 
-typedef boost::shared_ptr<PtsIO> PtsIOSharedPtr;
+typedef std::shared_ptr<PtsIO> PtsIOSharedPtr;
 }
 }
 #endif

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -41,7 +40,7 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList2D.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
 using namespace Nektar;
@@ -105,12 +104,12 @@ int main(int argc, char *argv[])
     //-----------------------------------------------------------
     LibUtilities::SessionReaderSharedPtr vSession
         = LibUtilities::SessionReader::CreateInstance(2, argv);
+    SpatialDomains::MeshGraphSharedPtr mesh =
+        SpatialDomains::MeshGraph::Read(vSession);
     
     //-------------------------------------------------------------
     // Read in mesh from input file
     //------------------------------------------------------------
-    string meshfile(argv[argc-3]);
-    SpatialDomains::MeshGraphSharedPtr mesh = SpatialDomains::MeshGraph::Read(vSession);
     TiXmlDocument& meshdoc = vSession->GetDocument();
     TiXmlHandle docHandle(&meshdoc);
     TiXmlElement* doc = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
@@ -160,23 +159,23 @@ int main(int argc, char *argv[])
 
 void GetInterfaceVerts(const int compositeID, SpatialDomains::MeshGraphSharedPtr &mesh, vector<int> &InterfaceVerts)
 {
-    SpatialDomains::Composite composite;
+    SpatialDomains::CompositeSharedPtr composite;
     composite = mesh->GetComposite(compositeID);
-    int compsize = composite->size();
+    int compsize = composite->m_geomVec.size();
     map<int,int> vertmap;
 
     for(int i = 0; i < compsize; ++i)
     {
-        if(vertmap.count((*composite)[i]->GetVid(0)) == 0)
+        if(vertmap.count(composite->m_geomVec[i]->GetVid(0)) == 0)
         {
-            InterfaceVerts.push_back((*composite)[i]->GetVid(0)); 
-            vertmap[(*composite)[i]->GetVid(0)]  = 1;
+            InterfaceVerts.push_back(composite->m_geomVec[i]->GetVid(0)); 
+            vertmap[composite->m_geomVec[i]->GetVid(0)]  = 1;
         }
 
-        if(vertmap.count((*composite)[i]->GetVid(1)) == 0)
+        if(vertmap.count(composite->m_geomVec[i]->GetVid(1)) == 0)
         {
-            InterfaceVerts.push_back((*composite)[i]->GetVid(1)); 
-            vertmap[(*composite)[i]->GetVid(1)]  = 1;
+            InterfaceVerts.push_back(composite->m_geomVec[i]->GetVid(1)); 
+            vertmap[composite->m_geomVec[i]->GetVid(1)]  = 1;
         }
     }
 }
@@ -236,8 +235,6 @@ void GetNewVertexLocation(TiXmlElement *doc,
     Array<OneD,MoveVerts> Verts(nverts);
     
     // loop mesh edges and fill in verts info
-    std::map<int,SpatialDomains::SegGeomSharedPtr>::iterator segIter;
-    
     SpatialDomains::PointGeomSharedPtr v0,v1;
     SpatialDomains::PointGeom dist;
 
@@ -246,13 +243,13 @@ void GetNewVertexLocation(TiXmlElement *doc,
     NekDouble x,y,x1,y1,z1,x2,y2,z2;
 
     // Setup intiial spring and verts
-    for(segIter = meshedges.begin(); segIter != meshedges.end(); ++segIter)
+    for(auto &segIter : meshedges)
     {
-        vid0 = (segIter->second)->GetVid(0);
-        vid1 = (segIter->second)->GetVid(1);
+        vid0 = (segIter.second)->GetVid(0);
+        vid1 = (segIter.second)->GetVid(1);
 
-        v0 = (segIter->second)->GetVertex(0);
-        v1 = (segIter->second)->GetVertex(1);
+        v0 = (segIter.second)->GetVertex(0);
+        v1 = (segIter.second)->GetVertex(1);
         
         kspring = 1.0/v0->dist(*v1); 
         
@@ -317,12 +314,11 @@ void GetNewVertexLocation(TiXmlElement *doc,
 
     // shift quads in critical layer to move more or less rigidly
     SpatialDomains::QuadGeomMap quadgeom = mesh->GetAllQuadGeoms();
-    std::map<int,SpatialDomains::QuadGeomSharedPtr>::iterator quadIter;
-    for(quadIter = quadgeom.begin(); quadIter != quadgeom.end(); ++quadIter)
+    for(auto &quadIter : quadgeom)
     {
         for(i = 0; i < 4; ++i)
         {
-            vid0 = (quadIter->second)->GetVid(i);
+            vid0 = (quadIter.second)->GetVid(i);
             
             switch(Verts[vid0].solve)
             {
@@ -514,9 +510,8 @@ void  TurnOffEdges(TiXmlElement *doc,
             
             std::string indxStr = compositeElementStr.substr(indxBeg, indxEnd - indxBeg + 1);
             std::vector<unsigned int> seqVector;
-            std::vector<unsigned int>::iterator seqIter;
             
-            bool err = ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector);
+            bool err = ParseUtils::GenerateSeqVector(indxStr, seqVector);
             
             ASSERTL0(err, (std::string("Error reading composite elements: ") + indxStr).c_str());
             

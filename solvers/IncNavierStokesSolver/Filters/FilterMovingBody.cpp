@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <iomanip>
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
@@ -53,15 +53,13 @@ std::string FilterMovingBody::className = SolverUtils::GetFilterFactory().
  *
  */
 FilterMovingBody::FilterMovingBody(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const ParamMap &pParams)
-    : Filter(pSession),
-      m_session(pSession)
+    : Filter(pSession, pEquation)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         m_outputFile_fce = pSession->GetSessionName();
@@ -93,8 +91,9 @@ FilterMovingBody::FilterMovingBody(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
-        m_outputFrequency = floor(equ.Evaluate());
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
+        m_outputFrequency = round(equ.Evaluate());
     }
 
     pSession->MatchSolverInfo("Homogeneous", "1D", m_isHomogeneous1D, false);
@@ -139,7 +138,7 @@ void FilterMovingBody::v_Initialise(
     std::string IndString = m_BoundaryString.substr(FirstInd,
                                                     LastInd - FirstInd + 1);
 
-    bool parseGood = ParseUtils::GenerateSeqVector(IndString.c_str(),
+    bool parseGood = ParseUtils::GenerateSeqVector(IndString,
                                                    m_boundaryRegionsIdList);
 
     ASSERTL0(parseGood && !m_boundaryRegionsIdList.empty(),
@@ -147,8 +146,6 @@ void FilterMovingBody::v_Initialise(
               "range for FilterAeroForces: ") + IndString).c_str());
 
     // determine what boundary regions need to be considered
-    int cnt;
-
     unsigned int numBoundaryRegions
                     = pFields[0]->GetBndConditions().num_elements();
 
@@ -160,17 +157,16 @@ void FilterMovingBody::v_Initialise(
     const SpatialDomains::BoundaryRegionCollection &bregions
                     = bcs.GetBoundaryRegions();
 
-    SpatialDomains::BoundaryRegionCollection::const_iterator it;
-
-    for (cnt = 0, it = bregions.begin(); it != bregions.end();
-            ++it, cnt++)
+    int cnt = 0;
+    for (auto &it : bregions)
     {
         if ( std::find(m_boundaryRegionsIdList.begin(),
-                       m_boundaryRegionsIdList.end(), it->first) !=
+                       m_boundaryRegionsIdList.end(), it.first) !=
                 m_boundaryRegionsIdList.end() )
         {
             m_boundaryRegionIsInList[cnt] = 1;
         }
+        ++cnt;
     }
 
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();

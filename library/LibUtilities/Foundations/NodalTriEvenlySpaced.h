@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,10 +35,11 @@
 #ifndef NODALTRIEVENLYSPACED_H
 #define NODALTRIEVENLYSPACED_H
 
+#include <memory>
+
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
-#include <boost/shared_ptr.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -61,7 +61,7 @@ namespace Nektar
 
             }
             
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> 
+            LIB_UTILITIES_EXPORT static std::shared_ptr<PointsBaseType> 
                 Create(const PointsKey &key);
 
             const MatrixSharedPtrType GetI(const PointsKey &pkey)
@@ -90,7 +90,7 @@ namespace Nektar
             }
 
         private:
-            boost::shared_ptr<NodalUtilTriangle> m_util;
+            std::shared_ptr<NodalUtilTriangle> m_util;
 
             /// Deafult constructor should not be called except by Create matrix
             NodalTriEvenlySpaced():PointsBaseType(NullPointsKey)

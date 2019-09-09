@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -49,17 +48,15 @@ namespace Nektar
     namespace SpatialDomains
     {
         class HexGeom;
-        typedef boost::shared_ptr<HexGeom> HexGeomSharedPtr;
+        typedef std::shared_ptr<HexGeom> HexGeomSharedPtr;
     }
 
     namespace LocalRegions 
     {
         class HexExp;
 
-        // type defines for use of HexExp in a boost vector
-        typedef boost::shared_ptr<HexExp> HexExpSharedPtr;
+        typedef std::shared_ptr<HexExp> HexExpSharedPtr;
         typedef std::vector< HexExpSharedPtr > HexExpVector;
-        typedef std::vector< HexExpSharedPtr >::iterator HexExpVectorIter;
  
         class HexExp: virtual public StdRegions::StdHexExp, virtual public Expansion3D
         {
@@ -94,6 +91,11 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv(const int dir,
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray);
+
+            LOCAL_REGIONS_EXPORT void v_PhysDirectionalDeriv(
+                const Array<OneD, const NekDouble> &inarray,
+                const Array<OneD, const NekDouble> &direction,
+                      Array<OneD,       NekDouble> &out);
 
 
             //---------------------------------------
@@ -130,6 +132,21 @@ namespace Nektar
                 const int                           dir,
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray);
+
+            LOCAL_REGIONS_EXPORT void v_IProductWRTDirectionalDerivBase(
+                const Array<OneD, const NekDouble>& direction,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray)
+            {
+                IProductWRTDirectionalDerivBase_SumFac(direction, inarray,
+                                                       outarray);
+            }
+
+            LOCAL_REGIONS_EXPORT void IProductWRTDirectionalDerivBase_SumFac(
+                const Array<OneD, const NekDouble>& direction,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
+
 
             //---------------------------------------
             // Evaluation functions

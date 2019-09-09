@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -39,36 +38,11 @@
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
-#include "metis.h"
+#include <metis.h>
 
 namespace Metis
 {
-    extern "C"
-    {
-        void AS_METIS_NodeND(int *nVerts, int *xadj, int *adjncy, int *vwgt,
-                             int *options, int *perm, int *iperm, int *map,
-                             int *mdswitch);
-    }
-
-    inline static void as_onmetis(
-            int                              nVerts,
-            Nektar::Array<Nektar::OneD, int> xadj,
-            Nektar::Array<Nektar::OneD, int> adjncy,
-            Nektar::Array<Nektar::OneD, int> perm,
-            Nektar::Array<Nektar::OneD, int> iperm,
-            Nektar::Array<Nektar::OneD, int> map,
-            int                              mdswitch = 1)
-    {
-        ASSERTL1(xadj.num_elements() == nVerts+1,"Array xadj out of bounds");
-        ASSERTL1(perm.num_elements() == nVerts,"Array perm out of bounds");
-        ASSERTL1(iperm.num_elements() == nVerts,"Array iperm out of bounds");
-
-        AS_METIS_NodeND(&nVerts, &xadj[0], &adjncy[0], NULL, NULL, &perm[0],
-                        &iperm[0], &map[0], &mdswitch);
-    }
-
-
-    inline static void PartGraphVKway( 
+    inline static void PartGraphVKway(
             int&                              nVerts,
             int&                              nVertConds,
             Nektar::Array<Nektar::OneD, int>& xadj,

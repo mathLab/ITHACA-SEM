@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/Expansion2D.h>
 
 using namespace std;
 
@@ -41,7 +41,21 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        
+        void Expansion1D::v_NegateVertexNormal(const int vertex)
+        {
+            m_negatedNormals[vertex] = true;
+            for (int i = 0; i < GetCoordim(); ++i)
+            {
+                Vmath::Neg(m_vertexNormals[vertex][i].num_elements(),
+                           m_vertexNormals[vertex][i], 1);
+            }
+        }
+
+        bool Expansion1D::v_VertexNormalNegated(const int vertex)
+        {
+            return m_negatedNormals[vertex];
+        }
+
         DNekMatSharedPtr Expansion1D::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
@@ -397,6 +411,21 @@ namespace Nektar
             int map = GetVertexMap(vert);
             Vmath::Zero(GetNcoeffs(), coeffs, 1);
             coeffs[map] = primCoeffs[0];
+        }
+
+        NekDouble Expansion1D::v_VectorFlux(
+            const Array<OneD, Array<OneD, NekDouble> > &vec)
+        {
+            const Array<OneD, const Array<OneD, NekDouble> >
+                &normals = GetLeftAdjacentElementExp()->
+                GetEdgeNormal(GetLeftAdjacentElementEdge());
+
+            int nq = m_base[0]->GetNumPoints();
+            Array<OneD, NekDouble > Fn(nq);
+            Vmath::Vmul (nq, &vec[0][0], 1, &normals[0][0], 1, &Fn[0], 1);
+            Vmath::Vvtvp(nq, &vec[1][0], 1, &normals[1][0], 1, &Fn[0], 1, &Fn[0], 1);
+
+            return Integral(Fn);
         }
     } //end of namespace
 } //end of namespace

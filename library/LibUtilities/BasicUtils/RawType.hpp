@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,122 +36,44 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASICUTILS_RAW_TYPE_HPP
 #define NEKTAR_LIB_UTILITIES_BASICUTILS_RAW_TYPE_HPP
 
-#include <boost/shared_ptr.hpp>
+#include <type_traits>
+#include <memory>
 
 namespace Nektar
 {
     template<typename T>
-    struct RawType { typedef T type; };
-    
-    template<typename T>
-    struct RawType<const T> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<volatile T> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<const volatile T> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<T*> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<const T*> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<volatile T*> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<const volatile T*> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<T* const> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<const T* const> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<volatile T* const> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<const volatile T* const> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<T* volatile> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<const T* volatile> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<volatile T* volatile> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<const volatile T* volatile> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<T* const volatile> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<const T* const volatile> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<volatile T* const volatile> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<const volatile T* const volatile> { typedef T type; };
-    
-    template<typename T>
-    struct RawType<boost::shared_ptr<T> > { typedef T type; };
+    struct RawType
+    {
+        typedef typename
+                  std::decay<typename std::remove_pointer<T>::type >::type type;
+    };
 
     template<typename T>
-    struct RawType<const boost::shared_ptr<T> > { typedef T type; };
+    struct RawType<std::shared_ptr<T>>
+    {
+        typedef typename RawType<T>::type type;
+    };
 
     template<typename T>
-    struct RawType<volatile boost::shared_ptr<T> > { typedef T type; };
+    struct RawType<const std::shared_ptr<T>>
+    {
+        typedef typename RawType<T>::type type;
+    };
 
     template<typename T>
-    struct RawType<const volatile boost::shared_ptr<T> > { typedef T type; };
-    
-    
-    template<typename T>
-    struct RawType<boost::shared_ptr<const T> > { typedef T type; };
+    struct RawType<volatile std::shared_ptr<T>>
+    {
+        typedef typename RawType<T>::type type;
+    };
 
     template<typename T>
-    struct RawType<const boost::shared_ptr<const T> > { typedef T type; };
+    struct RawType<const volatile std::shared_ptr<T>>
+    {
+        typedef typename RawType<T>::type type;
+    };
 
     template<typename T>
-    struct RawType<volatile boost::shared_ptr<const T> > { typedef T type; };
-
-    template<typename T>
-    struct RawType<const volatile boost::shared_ptr<const T> > { typedef T type; };
-    
-    
-    
-    template<typename T>
-    struct RawType<boost::shared_ptr<volatile T> > { typedef T type; };
-
-    template<typename T>
-    struct RawType<const boost::shared_ptr<volatile T> > { typedef T type; };
-
-    template<typename T>
-    struct RawType<volatile boost::shared_ptr<volatile T> > { typedef T type; };
-
-    template<typename T>
-    struct RawType<const volatile boost::shared_ptr<volatile T> > { typedef T type; };
-    
-    
-    template<typename T>
-    struct RawType<boost::shared_ptr<const volatile T> > { typedef T type; };
-
-    template<typename T>
-    struct RawType<const boost::shared_ptr<const volatile T> > { typedef T type; };
-
-    template<typename T>
-    struct RawType<volatile boost::shared_ptr<const volatile T> > { typedef T type; };
-
-    template<typename T>
-    struct RawType<const volatile boost::shared_ptr<const volatile T> > { typedef T type; };
-    
+    using RawType_t = typename RawType<T>::type;
 }
 
 #endif //NEKTAR_LIB_UTILITIES_BASICUTILS_RAW_TYPE_HPP

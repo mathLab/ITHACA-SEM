@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -56,7 +55,7 @@ namespace Nektar
             SMat m;
             BOOST_CHECK_EQUAL(0u, m.GetRows());
             BOOST_CHECK_EQUAL(0u, m.GetColumns());
-            BOOST_CHECK(boost::shared_ptr<InnerMatrix>() != m.GetOwnedMatrix());
+            BOOST_CHECK(std::shared_ptr<InnerMatrix>() != m.GetOwnedMatrix());
             BOOST_CHECK_EQUAL('N', m.GetTransposeFlag());
             BOOST_CHECK_EQUAL(0u, m.GetStorageSize());
             BOOST_CHECK_EQUAL(eFULL, m.GetStorageType());
@@ -69,7 +68,7 @@ namespace Nektar
             double buf[] = {1.0, 2.0, 3.0,
                             4.0, 5.0, 6.0};
 
-            boost::shared_ptr<InnerMatrix> in(new InnerMatrix(3, 2, buf));
+            std::shared_ptr<InnerMatrix> in(new InnerMatrix(3, 2, buf));
             SMat m(2.7, in);
             BOOST_CHECK_EQUAL(3u, m.GetRows());
             BOOST_CHECK_EQUAL(2u, m.GetColumns());
@@ -81,15 +80,15 @@ namespace Nektar
 
         }
 
-        BOOST_AUTO_TEST_CASE(TestElementAccess)
+        BOOST_AUTO_TEST_CASE(TestElementAccessLinearAlgerbra)
         {
             double buf[] = {1.0, 2.0, 3.0,
                             4.0, 5.0, 6.0};
 
-            boost::shared_ptr<InnerMatrix> in1(new InnerMatrix(3, 2, buf));
-            boost::shared_ptr<InnerMatrix> in2(new InnerMatrix(3, 2, buf));
-            boost::shared_ptr<InnerMatrix> in3(new InnerMatrix(3, 2, buf));
-            boost::shared_ptr<InnerMatrix> in4(new InnerMatrix(3, 2, buf));
+            std::shared_ptr<InnerMatrix> in1(new InnerMatrix(3, 2, buf));
+            std::shared_ptr<InnerMatrix> in2(new InnerMatrix(3, 2, buf));
+            std::shared_ptr<InnerMatrix> in3(new InnerMatrix(3, 2, buf));
+            std::shared_ptr<InnerMatrix> in4(new InnerMatrix(3, 2, buf));
             in3->Transpose();
             in4->Transpose();
 
@@ -141,10 +140,10 @@ namespace Nektar
             double buf[] = {1.0, 2.0, 3.0,
                             4.0, 5.0, 6.0};
 
-            boost::shared_ptr<InnerMatrix> in1(new InnerMatrix(3, 2, buf));
-            boost::shared_ptr<InnerMatrix> in2(new InnerMatrix(3, 2, buf));
-            boost::shared_ptr<InnerMatrix> in3(new InnerMatrix(3, 2, buf));
-            boost::shared_ptr<InnerMatrix> in4(new InnerMatrix(3, 2, buf));
+            std::shared_ptr<InnerMatrix> in1(new InnerMatrix(3, 2, buf));
+            std::shared_ptr<InnerMatrix> in2(new InnerMatrix(3, 2, buf));
+            std::shared_ptr<InnerMatrix> in3(new InnerMatrix(3, 2, buf));
+            std::shared_ptr<InnerMatrix> in4(new InnerMatrix(3, 2, buf));
             in3->Transpose();
             in4->Transpose();
 
@@ -207,8 +206,8 @@ namespace Nektar
                 double rhs_buf[] = {7.0, 8.0,
                                     9.0, 10.0,
                                     11.0, 12.0};
-                boost::shared_ptr<InnerMatrix> in1(new InnerMatrix(3, 2, lhs_buf));
-                boost::shared_ptr<InnerMatrix> in2(new InnerMatrix(2, 3, rhs_buf));
+                std::shared_ptr<InnerMatrix> in1(new InnerMatrix(3, 2, lhs_buf));
+                std::shared_ptr<InnerMatrix> in2(new InnerMatrix(2, 3, rhs_buf));
 
                 SMat m1(1.0, in1);
                 SMat m2(2.0, in2);
@@ -248,8 +247,8 @@ namespace Nektar
                 double rhs_buf[] = {7.0, 8.0,
                                     9.0, 10.0,
                                     11.0, 12.0};
-                boost::shared_ptr<InnerMatrix> in1(new InnerMatrix(2, 3, lhs_buf));
-                boost::shared_ptr<InnerMatrix> in2(new InnerMatrix(2, 3, rhs_buf));
+                std::shared_ptr<InnerMatrix> in1(new InnerMatrix(2, 3, lhs_buf));
+                std::shared_ptr<InnerMatrix> in2(new InnerMatrix(2, 3, rhs_buf));
 
                 SMat m1(1.0, in1);
                 SMat m2(2.0, in2);
@@ -293,8 +292,8 @@ namespace Nektar
                 double rhs_buf[] = {7.0, 8.0,
                                     9.0, 10.0,
                                     11.0, 12.0};
-                boost::shared_ptr<InnerMatrix> in1(new InnerMatrix(2, 3, lhs_buf));
-                boost::shared_ptr<InnerMatrix> in2(new InnerMatrix(2, 3, rhs_buf));
+                std::shared_ptr<InnerMatrix> in1(new InnerMatrix(2, 3, lhs_buf));
+                std::shared_ptr<InnerMatrix> in2(new InnerMatrix(2, 3, rhs_buf));
 
                 SMat m1(1.0, in1);
                 SMat m2(2.0, in2);
@@ -336,8 +335,8 @@ namespace Nektar
                 double rhs_buf[] = {7.0, 8.0,
                                     9.0, 10.0,
                                     11.0, 12.0};
-                boost::shared_ptr<InnerMatrix> in1(new InnerMatrix(3, 2, lhs_buf));
-                boost::shared_ptr<InnerMatrix> in2(new InnerMatrix(2, 3, rhs_buf));
+                std::shared_ptr<InnerMatrix> in1(new InnerMatrix(3, 2, lhs_buf));
+                std::shared_ptr<InnerMatrix> in2(new InnerMatrix(2, 3, rhs_buf));
 
                 SMat m1(1.0, in1);
                 SMat m2(2.0, in2);
@@ -376,7 +375,7 @@ namespace Nektar
                 double lhs_buf[] = {1, 2, 3,
                                           4, 5, 6};
 
-                boost::shared_ptr<InnerMatrix> in1(new InnerMatrix(3, 2, lhs_buf));
+                std::shared_ptr<InnerMatrix> in1(new InnerMatrix(3, 2, lhs_buf));
                 SMat m1(1, in1);
                 SMat transpose = Transpose(m1);
                 
@@ -396,7 +395,7 @@ namespace Nektar
                     2.0, 4.0, 6.0, 8.0};
                 double rhs_buf[] = {1.0, 2.0};
 
-                boost::shared_ptr<InnerMatrix> in1(new InnerMatrix(4, 2, lhs_buf));
+                std::shared_ptr<InnerMatrix> in1(new InnerMatrix(4, 2, lhs_buf));
                 NekVector<double> rhs(2, rhs_buf);
                 SMat m1(2.0, in1);
 
@@ -420,23 +419,14 @@ namespace Nektar
             double buf2[] = {5.0, 6.0, 7.0, 8.0};
             double buf3[] = {-1.0, -2.0, -3.0, -4.0};
             
-            boost::shared_ptr<NekMatrix<NekDouble> > DMatInner(
+            std::shared_ptr<NekMatrix<NekDouble> > DMatInner(
                 new NekMatrix<NekDouble>(2, 2, buf1));
-            boost::shared_ptr<NekMatrix<NekDouble> > InvMassInner(
+            std::shared_ptr<NekMatrix<NekDouble> > InvMassInner(
                 new NekMatrix<NekDouble>(2, 2, buf2));
             NekMatrix<NekDouble> Mat(2, 2, buf3);
             DNekScalMat DMat(2.0, DMatInner);
             DNekScalMat InvMass(3.0, InvMassInner);
             
-            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            typedef expt::Node<DNekScalMat> MatrixNode;
-            typedef expt::Node<MatrixNode, expt::MultiplyOp, MatrixNode> MatMultNode;
-            typedef expt::Node<MatMultNode, expt::MultiplyOp, MatrixNode> RhsNode;
-            typedef expt::Node<MatrixNode, expt::AddOp, RhsNode> Expression;
-
-            //BOOST_MPL_ASSERT(( boost::mpl::not_<IsDgemmLeftSide<MatrixNode> > ));
-            #endif
-
             Mat = Mat + DMat*InvMass*Transpose(DMat);
             
             BOOST_CHECK_EQUAL(1391.0, Mat(0,0));
@@ -451,10 +441,10 @@ namespace Nektar
                 double dmat_buf[] = {1.0, 2.0,
                                      3.0, 4.0,
                                      5.0, 6.0};
-                boost::shared_ptr<NekMatrix<NekDouble> > inner(new NekMatrix<NekDouble>(2, 3, dmat_buf));
+                std::shared_ptr<NekMatrix<NekDouble> > inner(new NekMatrix<NekDouble>(2, 3, dmat_buf));
                 DNekScalMat Dmat(2.0, inner);
                 
-                boost::shared_ptr<NekMatrix<NekDouble> > inner1(new NekMatrix<NekDouble>(2, 3, dmat_buf));
+                std::shared_ptr<NekMatrix<NekDouble> > inner1(new NekMatrix<NekDouble>(2, 3, dmat_buf));
                 DNekScalMat invMass(3.0, inner1);
                 
                 NekMatrix<NekDouble> LocMat; 
@@ -476,9 +466,9 @@ namespace Nektar
                 double dmat_buf[] = {1.0, 2.0,
                                      3.0, 4.0,
                                      5.0, 6.0};
-                boost::shared_ptr<NekMatrix<NekDouble> > inner(new NekMatrix<NekDouble>(2, 3, dmat_buf));
+                std::shared_ptr<NekMatrix<NekDouble> > inner(new NekMatrix<NekDouble>(2, 3, dmat_buf));
                 DNekScalMat Dmat(2.0, inner);
-                boost::shared_ptr<NekMatrix<NekDouble> > inner1(new NekMatrix<NekDouble>(2, 3, dmat_buf));
+                std::shared_ptr<NekMatrix<NekDouble> > inner1(new NekMatrix<NekDouble>(2, 3, dmat_buf));
                 DNekScalMat invMass(3.0, inner1);
 
                 NekMatrix<NekDouble> result2 = 
@@ -504,7 +494,7 @@ namespace Nektar
                                     7.0, 8.0};
                 double rhs_buf[] = {1.0, 2.0};
 
-                boost::shared_ptr<InnerMatrix> in1(new InnerMatrix(2, 4, lhs_buf));
+                std::shared_ptr<InnerMatrix> in1(new InnerMatrix(2, 4, lhs_buf));
                 NekVector<double> rhs(2, rhs_buf);
                 SMat m1(2.0, in1);
 

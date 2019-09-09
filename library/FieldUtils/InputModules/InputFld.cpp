@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -40,9 +39,6 @@ using namespace std;
 #include "InputFld.h"
 using namespace Nektar;
 
-static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
-    "NumberOfPoints", "n", "Define number of points to dump output");
-
 namespace Nektar
 {
 namespace FieldUtils
@@ -50,17 +46,18 @@ namespace FieldUtils
 
 ModuleKey InputFld::m_className[4] = {
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "fld"), InputFld::create, "Reads Fld file."),
-    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eInputModule, "chk"),
-                                               InputFld::create,
-                                               "Reads checkpoint file."),
-    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eInputModule, "rst"),
-                                               InputFld::create,
-                                               "Reads restart file."),
+        ModuleKey(eInputModule, "fld"),
+        InputFld::create, "Reads Fld file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "chk"),
+        InputFld::create, "Reads checkpoint file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "rst"),
+        InputFld::create, "Reads restart file."),
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "bse"),
-        InputFld::create,
-        "Reads stability base-flow file.")};
+        InputFld::create, "Reads stability base-flow file.")
+};
 
 /**
  * @brief Set up InputFld object.
@@ -86,170 +83,60 @@ InputFld::~InputFld()
  */
 void InputFld::Process(po::variables_map &vm)
 {
+    int i;
+    string fileName = m_config["infile"].as<string>();
 
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "Processing input fld file" << endl;
-        }
-    }
+    LibUtilities::FieldIOSharedPtr fld =
+                m_f->FieldIOForFile(fileName);
 
-    int i, j;
-    string fldending;
-    // Determine appropriate field input
-    if (m_f->m_inputfiles.count("fld") != 0)
-    {
-        fldending = "fld";
-    }
-    else if (m_f->m_inputfiles.count("chk") != 0)
-    {
-        fldending = "chk";
-    }
-    else if (m_f->m_inputfiles.count("rst") != 0)
-    {
-        fldending = "rst";
-    }
-    else if (m_f->m_inputfiles.count("bse") != 0)
-    {
-        fldending = "bse";
-    }
-    else
-    {
-        ASSERTL0(false, "no input file found");
-    }
-
+    int oldSize = m_f->m_fielddef.size();
     if(m_f->m_graph)
     {
-        if (m_f->m_data.size() == 0)
+        // Determine IDs of elements in the domain
+        vector<int> IDs;
+        auto domain = m_f->m_graph->GetDomain();
+        for(int d = 0; d < domain.size(); ++d)
         {
-            // currently load all field (possibly could read data from
-            //  expansion list but it is re-arranged in expansion)
-
-            const SpatialDomains::ExpansionMap &expansions =
-                m_f->m_graph->GetExpansions();
-
-            // if Range has been speficied it is possible to have a
-            // partition which is empty so check this and return if
-            // no elements present.
-
-            if (!expansions.size())
+            for (auto &compIter : domain[d])
             {
-                return;
+                for (auto &x : compIter.second->m_geomVec)
+                {
+                    IDs.push_back(x->GetGlobalID());
+                }
             }
-
-            m_f->m_exp.resize(1);
-
-            Array<OneD, int> ElementGIDs(expansions.size());
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-
-            i = 0;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
-            {
-                ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
-            }
-
-            m_f->m_fielddef.clear();
-            m_f->m_data.clear();
-
-            m_f->FieldIOForFile(m_f->m_inputfiles[fldending][0])->Import(
-                m_f->m_inputfiles[fldending][0], m_f->m_fielddef, m_f->m_data,
-                m_f->m_fieldMetaDataMap, ElementGIDs);
         }
+
+        if (!IDs.size())
+        {
+            return;
+        }
+
+        // Move to an array to match FieldIO interface
+        Array<OneD, int> ElementGIDs(IDs.size(), IDs.data());
+
+        fld->Import(
+            fileName, m_f->m_fielddef, m_f->m_data,
+            m_f->m_fieldMetaDataMap, ElementGIDs);
     }
     else // load all data.
     {
-        m_f->FieldIOForFile(m_f->m_inputfiles[fldending][0])->Import(
-            m_f->m_inputfiles[fldending][0], m_f->m_fielddef, m_f->m_data,
+        fld->Import(
+            fileName, m_f->m_fielddef, m_f->m_data,
             m_f->m_fieldMetaDataMap);
     }
 
-    // if m_exp defined presume we want to load all field  into expansions
-    if (m_f->m_exp.size())
+    // save field names
+    for(i = 0; i < m_f->m_fielddef[oldSize]->m_fields.size(); ++i)
     {
-        int nfields, nstrips;
+        // check for multiple fld files
+        auto it = find (m_f->m_variables.begin(),
+                        m_f->m_variables.end(),
+                        m_f->m_fielddef[oldSize]->m_fields[i]);
 
-        m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
-
-        if (vm.count("useSessionVariables"))
+        if(it == m_f->m_variables.end())
         {
-            nfields = m_f->m_session->GetVariables().size();
+            m_f->m_variables.push_back(m_f->m_fielddef[oldSize]->m_fields[i]);
         }
-        else
-        {
-            nfields = m_f->m_fielddef[0]->m_fields.size();
-        }
-
-        m_f->m_exp.resize(nfields * nstrips);
-
-        vector<string> vars = m_f->m_session->GetVariables();
-
-        // declare other fields;
-        for (int s = 0; s < nstrips; ++s) // homogeneous strip varient
-        {
-            for (i = 0; i < nfields; ++i)
-            {
-                if (i < vars.size())
-                {
-                    // check to see if field already defined
-                    if (!m_f->m_exp[s * nfields + i])
-                    {
-                        m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
-                            m_f->m_fielddef[0]->m_numHomogeneousDir, vars[i]);
-                    }
-                }
-                else
-                {
-                    if (vars.size())
-                    {
-                        m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
-                            m_f->m_fielddef[0]->m_numHomogeneousDir, vars[0]);
-                    }
-                    else
-                    {
-                        m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
-                            m_f->m_fielddef[0]->m_numHomogeneousDir);
-                    }
-                }
-            }
-        }
-
-        // Extract data to coeffs and bwd transform
-        for (int s = 0; s < nstrips; ++s) // homogeneous strip varient
-        {
-            for (j = 0; j < nfields; ++j)
-            {
-                for (i = 0; i < m_f->m_data.size() / nstrips; ++i)
-                {
-                    m_f->m_exp[s * nfields + j]->ExtractDataToCoeffs(
-                        m_f->m_fielddef[i * nstrips + s],
-                        m_f->m_data[i * nstrips + s],
-                        m_f->m_fielddef[i * nstrips + s]->m_fields[j],
-                        m_f->m_exp[s * nfields + j]->UpdateCoeffs());
-                }
-                m_f->m_exp[s * nfields + j]->BwdTrans(
-                    m_f->m_exp[s * nfields + j]->GetCoeffs(),
-                    m_f->m_exp[s * nfields + j]->UpdatePhys());
-            }
-        }
-
-        // reset output field in case Import loaded elements that are not
-        // in the expansion (because of range option of partitioning)
-        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-            m_f->m_exp[0]->GetFieldDefinitions();
-        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-        for (j = 0; j < nfields; ++j)
-        {
-            for (i = 0; i < FieldDef.size(); ++i)
-            {
-                FieldDef[i]->m_fields.push_back(
-                    m_f->m_fielddef[0]->m_fields[j]);
-                m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-            }
-        }
-        m_f->m_fielddef = FieldDef;
-        m_f->m_data     = FieldData;
     }
 }
 }

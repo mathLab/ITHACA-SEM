@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -50,11 +49,9 @@ namespace Nektar
         class ExpList3DHomogeneous2D;
 
         /// Shared pointer to an ExpList3DHomogeneous2D object.
-        typedef boost::shared_ptr<ExpList3DHomogeneous2D>      ExpList3DHomogeneous2DSharedPtr;
+        typedef std::shared_ptr<ExpList3DHomogeneous2D>      ExpList3DHomogeneous2DSharedPtr;
         /// Vector of pointers to ExpList3DHomogeneous2D objects.
         typedef std::vector< ExpList3DHomogeneous2DSharedPtr > ExpList3DHomogeneous2DVector;
-        /// Iterator for the vector of ExpList3DHomogeneous2D pointers.
-        typedef std::vector< ExpList3DHomogeneous2DSharedPtr >::iterator ExpList3DHomogeneous2DVectorIter;
 
         /// Abstraction of a one-dimensional multi-elemental expansion which
         /// is merely a collection of local expansions.
@@ -64,32 +61,43 @@ namespace Nektar
             /// Default constructor.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D();
 
-            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                        const LibUtilities::BasisKey &HomoBasis_y,
-														const LibUtilities::BasisKey &HomoBasis_z,
-														const NekDouble lhom_y,
-														const NekDouble lhom_z,
-														const bool useFFT,
-														const bool dealiasing);
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const LibUtilities::BasisKey &HomoBasis_y,
+                    const LibUtilities::BasisKey &HomoBasis_z,
+                    const NekDouble lhom_y,
+                    const NekDouble lhom_z,
+                    const bool useFFT,
+                    const bool dealiasing,
+                    const Collections::ImplementationType ImpType
+                    = Collections::eNoImpType);
 
             /// Sets up a list of local expansions based on an input mesh.
-            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                        const LibUtilities::BasisKey &HomoBasis_y,
-														const LibUtilities::BasisKey &HomoBasis_z,
-														const NekDouble lhom_y,
-														const NekDouble lhom_z,
-														const bool useFFT,
-														const bool dealiasing,
-														const SpatialDomains::MeshGraphSharedPtr &graph1D);
-
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const LibUtilities::BasisKey &HomoBasis_y,
+                    const LibUtilities::BasisKey &HomoBasis_z,
+                    const NekDouble lhom_y,
+                    const NekDouble lhom_z,
+                    const bool useFFT,
+                    const bool dealiasing,
+                    const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                    const Collections::ImplementationType ImpType
+                    = Collections::eNoImpType);
+                    
+            
             /// Copy constructor.
-            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In,
-                                   const bool DeclareLinesSetCoeffPhys = true);
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(
+                                  const ExpList3DHomogeneous2D &In,
+                                  const bool DeclareLinesSetCoeffPhys = true);
             
             /// 
-            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In,
-                                    const std::vector<unsigned int> &eIDs,
-                                    const bool DeclareLinesSetCoeffPhys = true);
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(
+                                  const ExpList3DHomogeneous2D &In,
+                                  const std::vector<unsigned int> &eIDs,
+                                  const bool DeclareLinesSetCoeffPhys = true,
+                                  const Collections::ImplementationType ImpType
+                                  = Collections::eNoImpType);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList3DHomogeneous2D();

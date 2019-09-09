@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -72,7 +71,7 @@ enum OctantLocation
 };
 
 class Octant; // have to forward declare the class for the sharedptr
-typedef boost::shared_ptr<Octant> OctantSharedPtr;
+typedef std::shared_ptr<Octant> OctantSharedPtr;
 
 /**
  * @brief this class contains the infomration and methods for individal octants

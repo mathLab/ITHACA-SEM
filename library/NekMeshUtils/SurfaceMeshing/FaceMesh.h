@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -78,6 +77,11 @@ public:
      */
     bool ValidateCurves();
 
+    /**
+     * @brief validate the curve meshes considering the loops
+     */
+    void ValidateLoops();
+
 private:
 
     /**
@@ -135,7 +139,7 @@ private:
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
     /// data structure containing the edges, their order and oreientation for
     /// the surface
-    std::vector<CADSystem::EdgeLoopSharedPtr> m_edgeloops;
+    std::vector<EdgeLoopSharedPtr> m_edgeloops;
     /// id of the surface mesh
     int m_id;
     /// list of boundary nodes in their order loops
@@ -158,7 +162,7 @@ private:
     int m_compId;
 };
 
-typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;
+typedef std::shared_ptr<FaceMesh> FaceMeshSharedPtr;
 }
 }
 

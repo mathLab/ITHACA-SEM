@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -39,38 +38,38 @@
 
 #include <StdRegions/StdExpansion3D.h>
 #include <StdRegions/StdRegionsDeclspec.h>
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 
 namespace Nektar
 {
     namespace StdRegions
     {
-        typedef boost::tuple<
+        typedef std::tuple<
             unsigned int, unsigned int, unsigned int, unsigned int> Mode;
 
         struct cmpop
         {
             bool operator()(Mode const &a, Mode const &b) const
             {
-                if (a.get<0>() < b.get<0>())
+                if (std::get<0>(a) < std::get<0>(b))
                 {
                     return true;
                 }
-                if (a.get<0>() > b.get<0>())
+                if (std::get<0>(a) > std::get<0>(b))
                 {
                     return false;
                 }
-    
-                if (a.get<1>() < b.get<1>())
+
+                if (std::get<1>(a) < std::get<1>(b))
                 {
                     return true;
                 }
-                if (a.get<1>() > b.get<1>())
+                if (std::get<1>(a) > std::get<1>(b))
                 {
                     return false;
                 }
-    
-                if (a.get<2>() < b.get<2>())
+
+                if (std::get<2>(a) < std::get<2>(b))
                 {
                     return true;
                 }
@@ -203,6 +202,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_GetNfaces() const;
             STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
+            STD_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int v_GetEdgeNcoeffs(const int i) const;
             STD_REGIONS_EXPORT virtual int v_GetFaceNcoeffs(const int i) const;
             STD_REGIONS_EXPORT virtual int v_GetFaceIntNcoeffs(const int i) const;
@@ -267,7 +267,7 @@ namespace Nektar
             //---------------------------------------
             STD_REGIONS_EXPORT int GetMode(int I, int J, int K);
         };    
-        typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
+        typedef std::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
     } //end of namespace
 } //end of namespace
 

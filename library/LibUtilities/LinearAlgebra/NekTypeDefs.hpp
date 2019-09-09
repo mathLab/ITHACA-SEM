@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -67,24 +66,24 @@ namespace Nektar
     typedef NekMatrix<NekMatrix<NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>, BlockMatrixTag>
             BlkMatDNekScalBlkMat;
 
-    typedef boost::shared_ptr<DNekMat>          DNekMatSharedPtr;
-    typedef boost::shared_ptr<DNekScalMat>      DNekScalMatSharedPtr;
-    typedef boost::shared_ptr<DNekBlkMat>    DNekBlkMatSharedPtr;
-    typedef boost::shared_ptr<BlkMatDNekBlkMat>  BlkMatDNekBlkMatSharedPtr;
-    typedef boost::shared_ptr<DNekScalBlkMat>      DNekScalBlkMatSharedPtr;
-    typedef boost::shared_ptr<BlkMatDNekScalBlkMat>  BlkMatDNekScalBlkMatSharedPtr;
-    typedef boost::shared_ptr<BlkMatDNekScalBlkMat>  BlkMatDNekScalBlkMatSharedPtr;
+    typedef std::shared_ptr<DNekMat>               DNekMatSharedPtr;
+    typedef std::shared_ptr<DNekScalMat>           DNekScalMatSharedPtr;
+    typedef std::shared_ptr<DNekBlkMat>            DNekBlkMatSharedPtr;
+    typedef std::shared_ptr<BlkMatDNekBlkMat>      BlkMatDNekBlkMatSharedPtr;
+    typedef std::shared_ptr<DNekScalBlkMat>        DNekScalBlkMatSharedPtr;
+    typedef std::shared_ptr<BlkMatDNekScalBlkMat>  BlkMatDNekScalBlkMatSharedPtr;
+    typedef std::shared_ptr<BlkMatDNekScalBlkMat>  BlkMatDNekScalBlkMatSharedPtr;
 
 
     static DNekMatSharedPtr NullDNekMatSharedPtr;
     static DNekScalMatSharedPtr NullDNekScalMatSharedPtr;
     static DNekScalBlkMatSharedPtr NullDNekScalBlkMatSharedPtr;
 
-    typedef LinearSystem                        DNekLinSys;
-    typedef boost::shared_ptr<DNekLinSys>       DNekLinSysSharedPtr;
+    typedef LinearSystem                      DNekLinSys;
+    typedef std::shared_ptr<DNekLinSys>       DNekLinSysSharedPtr;
 
-    typedef LinearSystem                        DNekScalLinSys; 
-    typedef boost::shared_ptr<DNekScalLinSys>   DNekScalLinSysSharedPtr;
+    typedef LinearSystem                      DNekScalLinSys;
+    typedef std::shared_ptr<DNekScalLinSys>   DNekScalLinSysSharedPtr;
 
 }
 

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -39,7 +38,7 @@
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
-
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -104,13 +103,18 @@ namespace Nektar
             const LocalRegions::ExpansionVector &locExpVector =
                 *(locExp.GetExp());
             LibUtilities::CommSharedPtr vComm = m_comm->GetRowComm();
-            PeriodicMap::const_iterator pIt;
 
             m_numLocalBndCondCoeffs = 0;
             m_systemSingular = checkIfSystemSingular;
 
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
+                if (bndConditions[0][i]->GetBoundaryConditionType() ==
+                       SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 // Check to see if any value on boundary has Dirichlet value.
                 cnt = 0;
                 for(k = 0; k < bndConditions.num_elements(); ++k)
@@ -210,6 +214,13 @@ namespace Nektar
             int n = vComm->GetSize();
             int p = vComm->GetRank();
 
+            if(vComm->IsSerial())
+            {
+                // for FieldConvert Comm this is true and it resets
+                // parallel processing back to serial case
+                n = 1;
+                p = 0;
+            }
             // At this point, graph only contains information from Dirichlet
             // boundaries. Therefore make a global list of the vert and edge
             // information on all processors.
@@ -233,22 +244,19 @@ namespace Nektar
 
             Array<OneD, int> vertlist(nTotVerts, 0);
             Array<OneD, int> edgelist(nTotEdges, 0);
-            std::map<int, int>::iterator it;
 
             // construct list of global ids of global vertices
-            for (it  = graph[0].begin(), i = 0;
-                 it != graph[0].end();
-                 ++it, ++i)
+            i = 0;
+            for (auto &it : graph[0])
             {
-                vertlist[vertoffsets[p] + i] = it->first;
+                vertlist[vertoffsets[p] + i++] = it.first;
             }
 
             // construct list of global ids of global edges
-            for (it  = graph[1].begin(), i = 0;
-                 it != graph[1].end();
-                 ++it, ++i)
+            i = 0;
+            for (auto &it : graph[1])
             {
-                edgelist[edgeoffsets[p] + i] = it->first;
+                edgelist[edgeoffsets[p] + i++] = it.first;
             }
             vComm->AllReduce(vertlist, LibUtilities::ReduceSum);
             vComm->AllReduce(edgelist, LibUtilities::ReduceSum);
@@ -275,7 +283,7 @@ namespace Nektar
 
                 for(j = 0; j < locExpVector.size(); j++)
                 {
-                    exp = locExpVector[locExp.GetOffset_Elmt_Id(j)];
+                    exp = locExpVector[j];
 
                     for(k = 0; k < exp->GetNverts(); k++)
                     {
@@ -315,12 +323,11 @@ namespace Nektar
 
             // Low Energy preconditioner needs to know how many extra Dirichlet
             // edges are on this process so store map in array.
-            map<int, int>::const_iterator mapConstIt;
             m_extraDirEdges = Array<OneD, int>(extraDirEdgeIds.size(), -1);
-            for (mapConstIt  = extraDirEdgeIds.begin(), i = 0;
-                 mapConstIt != extraDirEdgeIds.end(); mapConstIt++)
+            i = 0;
+            for (auto &it : extraDirEdgeIds)
             {
-                meshEdgeId = mapConstIt->first;
+                meshEdgeId = it.first;
                 m_extraDirEdges[i++] = meshEdgeId;
             }
 
@@ -358,18 +365,20 @@ namespace Nektar
             Array<OneD, int> vertprocs(nTotVerts, 0);
             Array<OneD, int> edgeprocs(nTotEdges, 0);
 
-            for (it  = extraDirVertIds.begin(), i = 0;
-                 it != extraDirVertIds.end(); ++it, ++i)
+            i = 0;
+            for (auto &it : extraDirVertIds)
             {
-                vertids  [vertoffsets[p]+i] = it->first;
-                vertprocs[vertoffsets[p]+i] = it->second;
+                vertids  [vertoffsets[p]+i] = it.first;
+                vertprocs[vertoffsets[p]+i] = it.second;
+                ++i;
             }
 
-            for (it  = extraDirEdgeIds.begin(), i = 0;
-                 it != extraDirEdgeIds.end(); ++it, ++i)
+            i = 0;
+            for (auto &it : extraDirEdgeIds)
             {
-                edgeids  [edgeoffsets[p]+i] = it->first;
-                edgeprocs[edgeoffsets[p]+i] = it->second;
+                edgeids  [edgeoffsets[p]+i] = it.first;
+                edgeprocs[edgeoffsets[p]+i] = it.second;
+                ++i;
             }
 
             vComm->AllReduce(vertids,   LibUtilities::ReduceSum);
@@ -381,7 +390,7 @@ namespace Nektar
             // partitions
             for (i = 0; i < nTotVerts; ++i)
             {
-                if (vComm->GetRank() == vertprocs[i])
+                if (p == vertprocs[i]) // rank = vertproc[i]
                 {
                     extraDirVerts.insert(vertids[i]);
                 }
@@ -390,7 +399,7 @@ namespace Nektar
             // Set up list of edges that need to be shared to other partitions
             for (i = 0; i < nTotEdges; ++i)
             {
-                if (vComm->GetRank() == edgeprocs[i])
+                if (p == edgeprocs[i]) // rank = vertproc[i]
                 {
                     extraDirEdges.insert(edgeids[i]);
                 }
@@ -489,33 +498,32 @@ namespace Nektar
                     gId = graph[0][meshVertId];
                 }
 
-                for (pIt  = periodicVerts.begin();
-                     pIt != periodicVerts.end(); ++pIt)
+                for (auto &pIt : periodicVerts)
                 {
                     // Either the vertex is local to this processor (in which
-                    // case it will be in the pIt->first position) or else
+                    // case it will be in the pIt.first position) or else
                     // meshVertId might be contained within another processor's
                     // vertex list. The if statement below covers both cases. If
                     // we find it, set as Dirichlet with the vertex id gId.
-                    if (pIt->first == meshVertId)
+                    if (pIt.first == meshVertId)
                     {
                         gId = gId < 0 ? graphVertId++ : gId;
                         graph[0][meshVertId] = gId;
 
-                        for (i = 0; i < pIt->second.size(); ++i)
+                        for (i = 0; i < pIt.second.size(); ++i)
                         {
-                            if (pIt->second[i].isLocal)
+                            if (pIt.second[i].isLocal)
                             {
-                                graph[0][pIt->second[i].id] = graph[0][meshVertId];
+                                graph[0][pIt.second[i].id] = graph[0][meshVertId];
                             }
                         }
                     }
                     else
                     {
                         bool found = false;
-                        for (i = 0; i < pIt->second.size(); ++i)
+                        for (i = 0; i < pIt.second.size(); ++i)
                         {
-                            if (pIt->second[i].id == meshVertId)
+                            if (pIt.second[i].id == meshVertId)
                             {
                                 found = true;
                                 break;
@@ -525,13 +533,13 @@ namespace Nektar
                         if (found)
                         {
                             gId = gId < 0 ? graphVertId++ : gId;
-                            graph[0][pIt->first] = gId;
+                            graph[0][pIt.first] = gId;
 
-                            for (i = 0; i < pIt->second.size(); ++i)
+                            for (i = 0; i < pIt.second.size(); ++i)
                             {
-                                if (pIt->second[i].isLocal)
+                                if (pIt.second[i].isLocal)
                                 {
-                                    graph[0][pIt->second[i].id] = graph[0][pIt->first];
+                                    graph[0][pIt.second[i].id] = graph[0][pIt.first];
                                 }
                             }
                         }
@@ -580,7 +588,7 @@ namespace Nektar
             /// -  Count verts, edges, face and add up edges and face sizes
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                exp = locExpVector[locExp.GetOffset_Elmt_Id(i)];
+                exp = locExpVector[i];
                 nTotalVerts += exp->GetNverts();
                 nTotalEdges += exp->GetNedges();
                 nTotalFaces += exp->GetNfaces();
@@ -621,18 +629,18 @@ namespace Nektar
             }
 
             /// - Periodic vertices
-            for (pIt = periodicVerts.begin(); pIt != periodicVerts.end(); ++pIt)
+            for (auto &pIt : periodicVerts)
             {
-                meshVertId = pIt->first;
+                meshVertId = pIt.first;
 
                 // This periodic vertex is joined to a Dirichlet condition.
-                if (graph[0].count(pIt->first) != 0)
+                if (graph[0].count(pIt.first) != 0)
                 {
-                    for (i = 0; i < pIt->second.size(); ++i)
+                    for (i = 0; i < pIt.second.size(); ++i)
                     {
-                        meshVertId2 = pIt->second[i].id;
+                        meshVertId2 = pIt.second[i].id;
                         if (graph[0].count(meshVertId2) == 0 &&
-                            pIt->second[i].isLocal)
+                            pIt.second[i].isLocal)
                         {
                             graph[0][meshVertId2] =
                                 graph[0][meshVertId];
@@ -643,14 +651,14 @@ namespace Nektar
 
                 // One of the attached vertices is Dirichlet.
                 bool isDirichlet = false;
-                for (i = 0; i < pIt->second.size(); ++i)
+                for (i = 0; i < pIt.second.size(); ++i)
                 {
-                    if (!pIt->second[i].isLocal)
+                    if (!pIt.second[i].isLocal)
                     {
                         continue;
                     }
 
-                    meshVertId2 = pIt->second[i].id;
+                    meshVertId2 = pIt.second[i].id;
                     if (graph[0].count(meshVertId2) > 0)
                     {
                         isDirichlet = true;
@@ -661,39 +669,39 @@ namespace Nektar
                 if (isDirichlet)
                 {
                     graph[0][meshVertId] =
-                        graph[0][pIt->second[i].id];
+                        graph[0][pIt.second[i].id];
 
-                    for (j = 0; j < pIt->second.size(); ++j)
+                    for (j = 0; j < pIt.second.size(); ++j)
                     {
-                        meshVertId2 = pIt->second[i].id;
-                        if (j == i || !pIt->second[j].isLocal ||
+                        meshVertId2 = pIt.second[i].id;
+                        if (j == i || !pIt.second[j].isLocal ||
                             graph[0].count(meshVertId2) > 0)
                         {
                             continue;
                         }
 
                         graph[0][meshVertId2] =
-                            graph[0][pIt->second[i].id];
+                            graph[0][pIt.second[i].id];
                     }
 
                     continue;
                 }
 
                 // Otherwise, see if a vertex ID has already been set.
-                for (i = 0; i < pIt->second.size(); ++i)
+                for (i = 0; i < pIt.second.size(); ++i)
                 {
-                    if (!pIt->second[i].isLocal)
+                    if (!pIt.second[i].isLocal)
                     {
                         continue;
                     }
 
-                    if (tempGraph[0].count(pIt->second[i].id) > 0)
+                    if (tempGraph[0].count(pIt.second[i].id) > 0)
                     {
                         break;
                     }
                 }
 
-                if (i == pIt->second.size())
+                if (i == pIt.second.size())
                 {
                     boost::add_vertex(boostGraphObj);
                     tempGraph[0][meshVertId] = tempGraphVertId++;
@@ -701,7 +709,7 @@ namespace Nektar
                 }
                 else
                 {
-                    tempGraph[0][meshVertId] = tempGraph[0][pIt->second[i].id];
+                    tempGraph[0][meshVertId] = tempGraph[0][pIt.second[i].id];
                 }
             }
 
@@ -737,18 +745,18 @@ namespace Nektar
             }
 
             /// - Periodic edges
-            for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
+            for (auto &pIt : periodicEdges)
             {
-                meshEdgeId = pIt->first;
+                meshEdgeId = pIt.first;
 
                 // This periodic edge is joined to a Dirichlet condition.
-                if (graph[1].count(pIt->first) != 0)
+                if (graph[1].count(pIt.first) != 0)
                 {
-                    for (i = 0; i < pIt->second.size(); ++i)
+                    for (i = 0; i < pIt.second.size(); ++i)
                     {
-                        meshEdgeId2 = pIt->second[i].id;
+                        meshEdgeId2 = pIt.second[i].id;
                         if (graph[1].count(meshEdgeId2) == 0 &&
-                            pIt->second[i].isLocal)
+                            pIt.second[i].isLocal)
                         {
                             graph[1][meshEdgeId2] =
                                 graph[1][meshEdgeId];
@@ -759,14 +767,14 @@ namespace Nektar
 
                 // One of the attached edges is Dirichlet.
                 bool isDirichlet = false;
-                for (i = 0; i < pIt->second.size(); ++i)
+                for (i = 0; i < pIt.second.size(); ++i)
                 {
-                    if (!pIt->second[i].isLocal)
+                    if (!pIt.second[i].isLocal)
                     {
                         continue;
                     }
 
-                    meshEdgeId2 = pIt->second[i].id;
+                    meshEdgeId2 = pIt.second[i].id;
                     if (graph[1].count(meshEdgeId2) > 0)
                     {
                         isDirichlet = true;
@@ -777,39 +785,39 @@ namespace Nektar
                 if (isDirichlet)
                 {
                     graph[1][meshEdgeId] =
-                        graph[1][pIt->second[i].id];
+                        graph[1][pIt.second[i].id];
 
-                    for (j = 0; j < pIt->second.size(); ++j)
+                    for (j = 0; j < pIt.second.size(); ++j)
                     {
-                        meshEdgeId2 = pIt->second[i].id;
-                        if (j == i || !pIt->second[j].isLocal ||
+                        meshEdgeId2 = pIt.second[i].id;
+                        if (j == i || !pIt.second[j].isLocal ||
                             graph[1].count(meshEdgeId2) > 0)
                         {
                             continue;
                         }
 
                         graph[1][meshEdgeId2] =
-                            graph[1][pIt->second[i].id];
+                            graph[1][pIt.second[i].id];
                     }
 
                     continue;
                 }
 
                 // Otherwise, see if a edge ID has already been set.
-                for (i = 0; i < pIt->second.size(); ++i)
+                for (i = 0; i < pIt.second.size(); ++i)
                 {
-                    if (!pIt->second[i].isLocal)
+                    if (!pIt.second[i].isLocal)
                     {
                         continue;
                     }
 
-                    if (tempGraph[1].count(pIt->second[i].id) > 0)
+                    if (tempGraph[1].count(pIt.second[i].id) > 0)
                     {
                         break;
                     }
                 }
 
-                if (i == pIt->second.size())
+                if (i == pIt.second.size())
                 {
                     boost::add_vertex(boostGraphObj);
                     tempGraph[1][meshEdgeId] = tempGraphVertId++;
@@ -818,7 +826,7 @@ namespace Nektar
                 }
                 else
                 {
-                    tempGraph[1][meshEdgeId] = tempGraph[1][pIt->second[i].id];
+                    tempGraph[1][meshEdgeId] = tempGraph[1][pIt.second[i].id];
                 }
             }
 
@@ -854,12 +862,12 @@ namespace Nektar
             }
 
             /// - Periodic faces
-            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+            for (auto &pIt : periodicFaces)
             {
-                if (!pIt->second[0].isLocal)
+                if (!pIt.second[0].isLocal)
                 {
                     // The face mapped to is on another process.
-                    meshFaceId = pIt->first;
+                    meshFaceId = pIt.first;
                     ASSERTL0(graph[2].count(meshFaceId) == 0,
                              "This periodic boundary edge has been specified before");
                     boost::add_vertex(boostGraphObj);
@@ -868,17 +876,17 @@ namespace Nektar
                     m_numNonDirFaceModes+=nFaceIntCoeffs;
                     m_numNonDirFaces++;
                 }
-                else if (pIt->first < pIt->second[0].id)
+                else if (pIt.first < pIt.second[0].id)
                 {
-                    ASSERTL0(graph[2].count(pIt->first) == 0,
+                    ASSERTL0(graph[2].count(pIt.first) == 0,
                              "This periodic boundary face has been specified before");
-                    ASSERTL0(graph[2].count(pIt->second[0].id) == 0,
+                    ASSERTL0(graph[2].count(pIt.second[0].id) == 0,
                              "This periodic boundary face has been specified before");
 
                     boost::add_vertex(boostGraphObj);
-                    tempGraph[2][pIt->first]        = tempGraphVertId;
-                    tempGraph[2][pIt->second[0].id] = tempGraphVertId++;
-                    nFaceIntCoeffs  = FaceSize[pIt->first];
+                    tempGraph[2][pIt.first]        = tempGraphVertId;
+                    tempGraph[2][pIt.second[0].id] = tempGraphVertId++;
+                    nFaceIntCoeffs  = FaceSize[pIt.first];
                     m_numNonDirFaceModes+=nFaceIntCoeffs;
                     m_numNonDirFaces++;
                 }
@@ -1073,7 +1081,7 @@ namespace Nektar
                 // edges respectively which are local to this process.
                 for(i = cnt = 0; i < locExpVector.size(); ++i)
                 {
-                    int elmtid = locExp.GetOffset_Elmt_Id(i);
+                    int elmtid = i;
                     exp = locExpVector[elmtid];
                     for (j = 0; j < exp->GetNverts(); ++j)
                     {
@@ -1178,25 +1186,25 @@ namespace Nektar
                 }
 
                 // Now fill with all vertices on periodic BCs
-                for (pIt = periodicVerts.begin(); pIt != periodicVerts.end(); ++pIt)
+                for (auto &pIt : periodicVerts)
                 {
-                    if (graph[0].count(pIt->first) == 0)
+                    if (graph[0].count(pIt.first) == 0)
                     {
-                        partVerts.insert(tempGraph[0][pIt->first]);
+                        partVerts.insert(tempGraph[0][pIt.first]);
                     }
                 }
-                for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
+                for (auto &pIt : periodicEdges)
                 {
-                    if (graph[1].count(pIt->first) == 0)
+                    if (graph[1].count(pIt.first) == 0)
                     {
-                        partVerts.insert(tempGraph[1][pIt->first]);
+                        partVerts.insert(tempGraph[1][pIt.first]);
                     }
                 }
-                for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+                for (auto &pIt : periodicFaces)
                 {
-                    if (graph[2].count(pIt->first) == 0)
+                    if (graph[2].count(pIt.first) == 0)
                     {
-                        partVerts.insert(tempGraph[2][pIt->first]);
+                        partVerts.insert(tempGraph[2][pIt.first]);
                     }
                 }
             }
@@ -1272,18 +1280,17 @@ namespace Nektar
              * STEP 4: Fill the #graph[0] and
              * #graph[1] with the optimal ordering from boost.
              */
-            map<int, int>::iterator mapIt;
-            for(mapIt = tempGraph[0].begin(); mapIt != tempGraph[0].end(); mapIt++)
+            for(auto &mapIt : tempGraph[0])
             {
-                graph[0][mapIt->first] = iperm[mapIt->second] + graphVertId;
+                graph[0][mapIt.first] = iperm[mapIt.second] + graphVertId;
             }
-            for(mapIt = tempGraph[1].begin(); mapIt != tempGraph[1].end(); mapIt++)
+            for(auto &mapIt : tempGraph[1])
             {
-                graph[1][mapIt->first] = iperm[mapIt->second] + graphVertId;
+                graph[1][mapIt.first] = iperm[mapIt.second] + graphVertId;
             }
-            for(mapIt = tempGraph[2].begin(); mapIt != tempGraph[2].end(); mapIt++)
+            for(auto &mapIt : tempGraph[2])
             {
-                graph[2][mapIt->first] = iperm[mapIt->second] + graphVertId;
+                graph[2][mapIt.first] = iperm[mapIt.second] + graphVertId;
             }
 
             return nGraphVerts;
@@ -1322,7 +1329,6 @@ namespace Nektar
             Array<OneD, int>                    edgeInteriorSign;
             Array<OneD, unsigned int>           faceInteriorMap;
             Array<OneD, int>                    faceInteriorSign;
-            PeriodicMap::const_iterator pIt;
 
             const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
 
@@ -1395,7 +1401,7 @@ namespace Nektar
 
                         // Get shape of this face
                         SpatialDomains::Geometry3DSharedPtr geom;
-                        geom = boost::dynamic_pointer_cast<SpatialDomains::
+                        geom = std::dynamic_pointer_cast<SpatialDomains::
                                 Geometry3D> (exp->GetGeom());
                         faceType[meshFaceId] =
                                 geom->GetFace(j)->GetShapeType();
@@ -1404,22 +1410,22 @@ namespace Nektar
             }
 
             // Add non-local periodic dofs to the map
-            for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
+            for (auto &pIt : periodicEdges)
             {
-                for (i = 0; i < pIt->second.size(); ++i)
+                for (i = 0; i < pIt.second.size(); ++i)
                 {
-                    meshEdgeId2 = pIt->second[i].id;
+                    meshEdgeId2 = pIt.second[i].id;
                     if (dofs[1].count(meshEdgeId2) == 0)
                     {
                         dofs[1][meshEdgeId2] = 1e6;
                     }
                 }
             }
-            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+            for (auto &pIt : periodicFaces)
             {
-                for (i = 0; i < pIt->second.size(); ++i)
+                for (i = 0; i < pIt.second.size(); ++i)
                 {
-                    meshFaceId2 = pIt->second[i].id;
+                    meshFaceId2 = pIt.second[i].id;
                     if (faceModes[0].count(meshFaceId2) == 0)
                     {
                         faceModes[0][meshFaceId2] = 1e6;
@@ -1428,31 +1434,32 @@ namespace Nektar
                 }
             }
 
-            // Now use information from all partitions to determine
-            //    the correct size
-            map<int, int>::iterator dofIt, dofIt2;
+            // Now use information from all partitions to determine the correct
+            // size
+
             // edges
             Array<OneD, long> edgeId (dofs[1].size());
             Array<OneD, NekDouble> edgeDof (dofs[1].size());
-            for(dofIt = dofs[1].begin(), i=0; dofIt != dofs[1].end(); dofIt++, i++)
+            i = 0;
+            for(auto &dofIt : dofs[1])
             {
-                edgeId[i] = dofIt->first + 1;
-                edgeDof[i] = (NekDouble) dofIt->second;
+                edgeId [i  ] = dofIt.first + 1;
+                edgeDof[i++] = (NekDouble) dofIt.second;
             }
             Gs::gs_data *tmp = Gs::Init(edgeId, vComm, verbose);
             Gs::Gather(edgeDof, Gs::gs_min, tmp);
             Gs::Finalise(tmp);
-            for (i=0; i < dofs[1].size(); i++)
+            for (i = 0; i < dofs[1].size(); i++)
             {
                 dofs[1][edgeId[i]-1] = (int) (edgeDof[i]+0.5);
             }
             // Periodic edges
-            for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
+            for (auto &pIt : periodicEdges)
             {
-                meshEdgeId = pIt->first;
-                for (i = 0; i < pIt->second.size(); ++i)
+                meshEdgeId = pIt.first;
+                for (i = 0; i < pIt.second.size(); ++i)
                 {
-                    meshEdgeId2 = pIt->second[i].id;
+                    meshEdgeId2 = pIt.second[i].id;
                     if (dofs[1][meshEdgeId2] < dofs[1][meshEdgeId])
                     {
                         dofs[1][meshEdgeId] = dofs[1][meshEdgeId2];
@@ -1463,7 +1470,9 @@ namespace Nektar
             Array<OneD, long> faceId (faceModes[0].size());
             Array<OneD, NekDouble> faceP (faceModes[0].size());
             Array<OneD, NekDouble> faceQ (faceModes[0].size());
-            for(dofIt = faceModes[0].begin(), dofIt2 = faceModes[1].begin(),i=0;
+
+            i = 0;
+            for(auto dofIt = faceModes[0].begin(), dofIt2 = faceModes[1].begin();
                 dofIt != faceModes[0].end(); dofIt++, dofIt2++, i++)
             {
                 faceId[i] = dofIt->first+1;
@@ -1480,12 +1489,12 @@ namespace Nektar
                 faceModes[1][faceId[i]-1] = (int) (faceQ[i]+0.5);
             }
             // Periodic faces
-            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+            for (auto &pIt : periodicFaces)
             {
-                meshFaceId = pIt->first;
-                for (i = 0; i < pIt->second.size(); ++i)
+                meshFaceId = pIt.first;
+                for (i = 0; i < pIt.second.size(); ++i)
                 {
-                    meshFaceId2 = pIt->second[i].id;
+                    meshFaceId2 = pIt.second[i].id;
                     if (faceModes[0][meshFaceId2] < faceModes[0][meshFaceId])
                     {
                         faceModes[0][meshFaceId] = faceModes[0][meshFaceId2];
@@ -1527,6 +1536,7 @@ namespace Nektar
             int mdswitch;
             m_session->LoadParameter(
                 "MDSwitch", mdswitch, 10);
+
             int nGraphVerts =
                 CreateGraph(locExp, bndCondExp, bndCondVec,
                             checkIfSystemSingular, periodicVerts, periodicEdges,
@@ -1552,7 +1562,7 @@ namespace Nektar
 
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                exp = locExpVector[locExp.GetOffset_Elmt_Id(i)];
+                exp = locExpVector[i];
 
                 for(j = 0; j < exp->GetNverts(); ++j)
                 {
@@ -1612,10 +1622,10 @@ namespace Nektar
             for(i = 0; i < m_numPatches; ++i)
             {
                 m_numLocalBndCoeffsPerPatch[i] = (unsigned int)
-                    locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
+                    locExpVector[i]->NumBndryCoeffs();
                 m_numLocalIntCoeffsPerPatch[i] = (unsigned int)
-                    locExpVector[locExp.GetOffset_Elmt_Id(i)]->GetNcoeffs() -
-                    locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
+                    locExpVector[i]->GetNcoeffs() -
+                    locExpVector[i]->NumBndryCoeffs();
             }
 
             /**
@@ -1649,7 +1659,7 @@ namespace Nektar
                     edgeOrient          = exp->GetGeom()->GetEorient(j);
                     meshEdgeId          = exp->GetGeom()->GetEid(j);
 
-                    pIt = periodicEdges.find(meshEdgeId);
+                    auto pIt = periodicEdges.find(meshEdgeId);
 
                     // See if this edge is periodic. If it is, then we map all
                     // edges to the one with lowest ID, and align all
@@ -1665,25 +1675,25 @@ namespace Nektar
                     exp->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
 
                     // Set the global DOF's for the interior modes of edge j
-                    for(k = 0; k < dofs[1][exp->GetGeom()->GetEid(j)]; ++k)
+                    for(k = 0; k < dofs[1][meshEdgeId]; ++k)
                     {
                         m_localToGlobalMap[cnt+edgeInteriorMap[k]] =
                             graphVertOffset[graph[1][meshEdgeId]]+k;
                     }
-                    for(k = dofs[1][exp->GetGeom()->GetEid(j)]; k < nEdgeInteriorCoeffs; ++k)
+                    for(k = dofs[1][meshEdgeId]; k < nEdgeInteriorCoeffs; ++k)
                     {
-                        m_localToGlobalMap[cnt+edgeInteriorMap[k]] =
-                            graphVertOffset[graph[1][meshEdgeId]];
+                        m_localToGlobalMap[cnt+edgeInteriorMap[k]] = 0;
                     }
-
+                    
                     // Fill the sign vector if required
                     if(m_signChange)
                     {
-                        for(k = 0; k < dofs[1][exp->GetGeom()->GetEid(j)]; ++k)
+                        for(k = 0; k < dofs[1][meshEdgeId]; ++k)
                         {
-                            m_localToGlobalSign[cnt+edgeInteriorMap[k]] = (NekDouble) edgeInteriorSign[k];
+                            m_localToGlobalSign[cnt+edgeInteriorMap[k]] =
+                                (NekDouble) edgeInteriorSign[k];
                         }
-                        for(k = dofs[1][exp->GetGeom()->GetEid(j)]; k < nEdgeInteriorCoeffs; ++k)
+                        for(k = dofs[1][meshEdgeId]; k < nEdgeInteriorCoeffs; ++k)
                         {
                             m_localToGlobalSign[cnt+edgeInteriorMap[k]] = 0.0;
                         }
@@ -1695,7 +1705,7 @@ namespace Nektar
                     faceOrient          = exp->GetGeom()->GetForient(j);
                     meshFaceId          = exp->GetGeom()->GetFid(j);
 
-                    pIt = periodicFaces.find(meshFaceId);
+                    auto pIt = periodicFaces.find(meshFaceId);
 
                     if (pIt != periodicFaces.end() &&
                         meshFaceId == min(meshFaceId, pIt->second[0].id))
@@ -1731,8 +1741,7 @@ namespace Nektar
                                 }
                                 else
                                 {
-                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =
-                                        graphVertOffset[graph[2][meshFaceId]];
+                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =  0; 
                                     if(m_signChange)
                                     {
                                         m_localToGlobalSign[cnt+faceInteriorMap[kLoc]] = 0.0;
@@ -1765,8 +1774,7 @@ namespace Nektar
                                 }
                                 else
                                 {
-                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =
-                                        graphVertOffset[graph[2][meshFaceId]];
+                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] = 0;
                                     if(m_signChange)
                                     {
                                         m_localToGlobalSign[cnt+faceInteriorMap[kLoc]] = 0.0;
@@ -1789,6 +1797,12 @@ namespace Nektar
             int offset = 0;
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
+                if (bndConditions[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 set<int> foundExtraVerts, foundExtraEdges;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
@@ -1805,7 +1819,7 @@ namespace Nektar
                             continue;
                         }
 
-                        set<int>::iterator iter = extraDirVerts.find(meshVertId);
+                        auto iter = extraDirVerts.find(meshVertId);
                         if (iter != extraDirVerts.end() &&
                             foundExtraVerts.count(meshVertId) == 0)
                         {
@@ -1825,7 +1839,7 @@ namespace Nektar
                         edgeOrient          = bndExp->GetGeom()->GetEorient(k);
                         meshEdgeId          = bndExp->GetGeom()->GetEid(k);
 
-                        pIt = periodicEdges.find(meshEdgeId);
+                        auto pIt = periodicEdges.find(meshEdgeId);
 
                         // See if this edge is periodic. If it is, then we map
                         // all edges to the one with lowest ID, and align all
@@ -1871,7 +1885,7 @@ namespace Nektar
                             continue;
                         }
 
-                        set<int>::iterator iter = extraDirEdges.find(meshEdgeId);
+                        auto iter = extraDirEdges.find(meshEdgeId);
                         if (iter != extraDirEdges.end()            &&
                             foundExtraEdges.count(meshEdgeId) == 0 &&
                             nEdgeInteriorCoeffs > 0)
@@ -1950,25 +1964,25 @@ namespace Nektar
 
             // Fill in Dirichlet coefficients that are to be sent to other
             // processors with a value of 1
-            map<int, vector<ExtraDirDof> >::iterator Tit;
 
             // Generate valence for extraDirDofs
-            for (Tit = m_extraDirDofs.begin(); Tit != m_extraDirDofs.end(); ++Tit)
+            for (auto &Tit : m_extraDirDofs)
             {
-                for (i = 0; i < Tit->second.size(); ++i)
+                for (i = 0; i < Tit.second.size(); ++i)
                 {
-                    valence[Tit->second[i].get<1>()] = 1.0;
+                    valence[std::get<1>(Tit.second[i])] = 1.0;
                 }
             }
 
             UniversalAssembleBnd(valence);
 
             // Set third argument of tuple to inverse of valence.
-            for (Tit = m_extraDirDofs.begin(); Tit != m_extraDirDofs.end(); ++Tit)
+            for (auto &Tit : m_extraDirDofs)
             {
-                for (i = 0; i < Tit->second.size(); ++i)
+                for (i = 0; i < Tit.second.size(); ++i)
                 {
-                    boost::get<2>(Tit->second.at(i)) /= valence[Tit->second.at(i).get<1>()];
+                    std::get<2>(Tit.second.at(i)) /=
+                        valence[std::get<1>(Tit.second.at(i))];
                 }
             }
 
@@ -1987,7 +2001,7 @@ namespace Nektar
 
                     for (i = 0; i < locExpVector.size(); ++i)
                     {
-                        exp = locExpVector[locExp.GetOffset_Elmt_Id(i)];
+                        exp = locExpVector[i];
 
                         for (j = 0; j < exp->GetNverts(); ++j)
                         {
@@ -2032,8 +2046,8 @@ namespace Nektar
                 }
             }
 
-            m_hash = boost::hash_range(m_localToGlobalMap.begin(),
-                                       m_localToGlobalMap.end());
+            m_hash = hash_range(m_localToGlobalMap.begin(),
+                                m_localToGlobalMap.end());
 
             // Add up hash values if parallel
             int hash = m_hash;
@@ -2192,7 +2206,6 @@ namespace Nektar
             Array<OneD, unsigned int>   faceInteriorMap;
             Array<OneD, int>            faceInteriorSign;
             Array<OneD, unsigned int>   interiorMap;
-            PeriodicMap::const_iterator pIt;
 
             const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
             LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
@@ -2246,7 +2259,7 @@ namespace Nektar
                     meshVertId = exp->GetGeom()->GetVid(j);
                     vGlobalId  = m_localToGlobalMap[cnt+exp->GetVertexMap(j)];
 
-                    pIt = perVerts.find(meshVertId);
+                    auto pIt = perVerts.find(meshVertId);
                     if (pIt != perVerts.end())
                     {
                         for (k = 0; k < pIt->second.size(); ++k)
@@ -2264,7 +2277,7 @@ namespace Nektar
                 for(j = 0; j < exp->GetNedges(); ++j)
                 {
                     meshEdgeId = exp->GetGeom()->GetEid(j);
-                    pIt = perEdges.find(meshEdgeId);
+                    auto pIt = perEdges.find(meshEdgeId);
                     edgeOrient = exp->GetGeom()->GetEorient(j);
 
                     if (pIt != perEdges.end())
@@ -2306,7 +2319,7 @@ namespace Nektar
 
                     meshFaceId = exp->GetGeom()->GetFid(j);
 
-                    pIt = perFaces.find(meshFaceId);
+                    auto pIt = perFaces.find(meshFaceId);
                     if (pIt != perFaces.end())
                     {
                         if(meshFaceId == min(meshFaceId, pIt->second[0].id))
@@ -2392,7 +2405,7 @@ namespace Nektar
 
             int i, j;
             int nverts = 0;
-            const boost::shared_ptr<LocalRegions::ExpansionVector> exp
+            const std::shared_ptr<LocalRegions::ExpansionVector> exp
                 = locexp.GetExp();
             int nelmts = exp->size();
             const bool verbose = locexp.GetSession()->DefinesCmdLineArgument("verbose");

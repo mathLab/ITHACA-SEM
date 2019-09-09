@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 #include <LocalRegions/PyrExp.h>
 #include <LibUtilities/Foundations/Interp.h>
 
+using namespace std;
+
 namespace Nektar 
 {
     namespace LocalRegions 
@@ -59,10 +60,10 @@ namespace Nektar
             Expansion     (geom),
             Expansion3D   (geom),
             m_matrixManager(
-                    boost::bind(&PyrExp::CreateMatrix, this, _1),
+                    std::bind(&PyrExp::CreateMatrix, this, std::placeholders::_1),
                     std::string("PyrExpMatrix")),
             m_staticCondMatrixManager(
-                    boost::bind(&PyrExp::CreateStaticCondMatrix, this, _1),
+                    std::bind(&PyrExp::CreateStaticCondMatrix, this, std::placeholders::_1),
                     std::string("PyrExpStaticCondMatrix"))
         {
         }
@@ -527,6 +528,75 @@ namespace Nektar
             Expansion::v_GetCoords(coords_1, coords_2, coords_3);
         }
 
+
+        void PyrExp::v_ExtractDataToCoeffs(
+                const NekDouble *data,
+                const std::vector<unsigned int > &nummodes,
+                const int mode_offset,
+                NekDouble * coeffs,
+                std::vector<LibUtilities::BasisType> &fromType)
+        {
+            int data_order0 = nummodes[mode_offset];
+            int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
+            int data_order1 = nummodes[mode_offset+1];
+            int order1      = m_base[1]->GetNumModes();
+            int fillorder1  = min(order1,data_order1);
+            int data_order2 = nummodes[mode_offset+2];
+            int order2      = m_base[2]->GetNumModes();
+            int fillorder2  = min(order2,data_order2);
+
+            // Check if not same order or basis and if not make temp
+            // element to read in data
+            if (fromType[0] != m_base[0]->GetBasisType() ||
+                fromType[1] != m_base[1]->GetBasisType() ||
+                fromType[2] != m_base[2]->GetBasisType() || 
+                data_order0 != fillorder0 ||
+                data_order1 != fillorder1 ||
+                data_order2 != fillorder2)
+            {
+                // Construct a pyr with the appropriate basis type at our
+                // quadrature points, and one more to do a forwards
+                // transform. We can then copy the output to coeffs.
+                StdRegions::StdPyrExp tmpPyr(
+                    LibUtilities::BasisKey(
+                        fromType[0], data_order0, m_base[0]->GetPointsKey()),
+                    LibUtilities::BasisKey(
+                        fromType[1], data_order1, m_base[1]->GetPointsKey()),
+                    LibUtilities::BasisKey(
+                        fromType[2], data_order2, m_base[2]->GetPointsKey()));
+
+                StdRegions::StdPyrExp tmpPyr2(m_base[0]->GetBasisKey(),
+                                              m_base[1]->GetBasisKey(),
+                                              m_base[2]->GetBasisKey());
+
+                Array<OneD, const NekDouble> tmpData(tmpPyr.GetNcoeffs(), data);
+                Array<OneD, NekDouble> tmpBwd(tmpPyr2.GetTotPoints());
+                Array<OneD, NekDouble> tmpOut(tmpPyr2.GetNcoeffs());
+
+                tmpPyr.BwdTrans(tmpData, tmpBwd);
+                tmpPyr2.FwdTrans(tmpBwd, tmpOut);
+                Vmath::Vcopy(tmpOut.num_elements(), &tmpOut[0], 1, coeffs, 1);
+
+            }
+            else
+            {
+                Vmath::Vcopy(m_ncoeffs,&data[0],1,coeffs,1);
+            }
+        }
+            
+        /** 
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble PyrExp::v_StdPhysEvaluate(
+                const Array<OneD, const NekDouble> &Lcoord,
+                const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local coordinates.
+            return StdPyrExp::v_PhysEvaluate(Lcoord,physvals);
+        }
+
         NekDouble PyrExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord,
                                          const Array<OneD, const NekDouble>& physvals)
         {
@@ -654,7 +724,18 @@ namespace Nektar
         {
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
                 GetGeom()->GetMetricInfo();
+
             LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
+            for(int i = 0; i < ptsKeys.size(); ++i)
+            {
+                // Need at least 2 points for computing normals
+                if (ptsKeys[i].GetNumPoints() == 1)
+                {
+                    LibUtilities::PointsKey pKey(2, ptsKeys[i].GetPointsType());
+                    ptsKeys[i] = pKey;
+                }
+            }
+
             SpatialDomains::GeomType type            = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> &df   = geomFactors->GetDerivFactors(ptsKeys);
             const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac(ptsKeys);
@@ -1115,6 +1196,28 @@ namespace Nektar
                     (*helm) = LapMat + factor*MassMat;
 
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0, helm);
+                }
+                break;
+            case StdRegions::ePreconLinearSpace:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconLinearSpaceMass:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
+                    DNekScalBlkMatSharedPtr massStatCond = GetLocStaticCondMatrix(masskey);
+                    DNekScalMatSharedPtr A =massStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
                 }
                 break;
             default:

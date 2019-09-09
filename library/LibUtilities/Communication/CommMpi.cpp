@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -90,6 +89,12 @@ CommMpi::CommMpi(MPI_Comm pComm) : Comm()
  */
 CommMpi::~CommMpi()
 {
+    int flag;
+    MPI_Finalized(&flag);
+    if (!flag && m_comm != MPI_COMM_WORLD)
+    {
+        MPI_Comm_free(&m_comm);
+    }
 }
 
 /**
@@ -138,6 +143,21 @@ bool CommMpi::v_TreatAsRankZero(void)
         return false;
     }
     return true;
+}
+
+/**
+ *
+ */
+bool CommMpi::v_IsSerial(void)
+{
+    if(m_size == 1)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 /**
@@ -266,6 +286,37 @@ void CommMpi::v_AlltoAllv(void *sendbuf, int sendcounts[], int sdispls[],
     ASSERTL0(retval == MPI_SUCCESS, "MPI error performing All-to-All-v.");
 }
 
+/**
+ *
+ */
+void CommMpi::v_AllGather(void *sendbuf, int sendcount, CommDataType sendtype,
+                          void *recvbuf, int recvcount, CommDataType recvtype)
+{
+    int retval = MPI_Allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                               recvtype, m_comm);
+
+    ASSERTL0(retval == MPI_SUCCESS, "MPI error performing Allgather.");
+}
+
+void CommMpi::v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
+                           void *recvbuf, int recvcounts[], int rdispls[],
+                           CommDataType recvtype)
+{
+    int retval = MPI_Allgatherv(sendbuf, sendcount, sendtype, recvbuf,
+                                recvcounts, rdispls, recvtype, m_comm);
+
+    ASSERTL0(retval == MPI_SUCCESS, "MPI error performing Allgather.");
+}
+
+void CommMpi::v_AllGatherv(void *recvbuf, int recvcounts[], int rdispls[],
+                           CommDataType recvtype)
+{
+    int retval = MPI_Allgatherv(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, recvbuf,
+                                recvcounts, rdispls, recvtype, m_comm);
+
+    ASSERTL0(retval == MPI_SUCCESS, "MPI error performing Allgatherv.");
+}
+
 void CommMpi::v_Bcast(void *buffer, int count, CommDataType dt, int root)
 {
     int retval = MPI_Bcast(buffer, count, dt, root, m_comm);
@@ -339,13 +390,13 @@ void CommMpi::v_SplitComm(int pRows, int pColumns)
     // the same communicator. The rank within this communicator is the
     // column index.
     MPI_Comm_split(m_comm, myRow, myCol, &newComm);
-    m_commRow = boost::shared_ptr<Comm>(new CommMpi(newComm));
+    m_commRow = std::shared_ptr<Comm>(new CommMpi(newComm));
 
     // Split Comm into columns - all processes with same myCol are put
     // in the same communicator. The rank within this communicator is
     // the row index.
     MPI_Comm_split(m_comm, myCol, myRow, &newComm);
-    m_commColumn = boost::shared_ptr<Comm>(new CommMpi(newComm));
+    m_commColumn = std::shared_ptr<Comm>(new CommMpi(newComm));
 }
 
 /**
@@ -362,12 +413,12 @@ CommSharedPtr CommMpi::v_CommCreateIf(int flag)
     if (flag == 0)
     {
         // flag == 0 => get back MPI_COMM_NULL, return a null ptr instead.
-        return boost::shared_ptr<Comm>();
+        return std::shared_ptr<Comm>();
     }
     else
     {
         // Return a real communicator
-        return boost::shared_ptr<Comm>(new CommMpi(newComm));
+        return std::shared_ptr<Comm>(new CommMpi(newComm));
     }
 }
 }

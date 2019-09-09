@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -39,7 +38,6 @@ using namespace std;
 
 #include "ProcessMeanMode.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
@@ -63,14 +61,6 @@ ProcessMeanMode::~ProcessMeanMode()
 
 void ProcessMeanMode::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessMeanMode: Extracting mean mode..." << endl;
-        }
-    }
-
     // Set parameters for mean mode
     RegisterConfig("planeid", "0");
     RegisterConfig("wavespace", "1");

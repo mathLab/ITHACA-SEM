@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,7 +35,7 @@
 #ifndef FIELDUTILS_FIELD
 #define FIELDUTILS_FIELD
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
@@ -50,18 +49,9 @@
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
-#include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 
-#include <MultiRegions/DisContField1D.h>
-#include <MultiRegions/DisContField2D.h>
-#include <MultiRegions/DisContField3D.h>
-#include <MultiRegions/DisContField3DHomogeneous1D.h>
-#include <MultiRegions/DisContField3DHomogeneous2D.h>
-
 #include "FieldUtilsDeclspec.h"
-
-using namespace std;
 
 namespace Nektar
 {
@@ -74,8 +64,7 @@ struct Field
         : m_verbose(false), m_declareExpansionAsContField(false),
           m_declareExpansionAsDisContField(false),
           m_requireBoundaryExpansion(false), m_writeBndFld(false),
-          m_fldToBnd(false), m_addNormals(false),
-          m_setUpEquiSpacedFields(false), m_fieldPts(LibUtilities::NullPtsField)
+          m_addNormals(false), m_fieldPts(LibUtilities::NullPtsField)
     {
     }
 
@@ -87,9 +76,12 @@ struct Field
         }
     }
     bool m_verbose;
-    vector<LibUtilities::FieldDefinitionsSharedPtr> m_fielddef;
-    vector<vector<double> > m_data;
-    vector<MultiRegions::ExpListSharedPtr> m_exp;
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> m_fielddef;
+    std::vector<std::vector<double> > m_data;
+    std::vector<MultiRegions::ExpListSharedPtr> m_exp;
+    std::vector<std::string> m_variables;
+
+    int m_numHomogeneousDir;
 
     bool m_declareExpansionAsContField;
     bool m_declareExpansionAsDisContField;
@@ -101,19 +93,13 @@ struct Field
     LibUtilities::CommSharedPtr m_comm;
     LibUtilities::SessionReaderSharedPtr m_session;
     SpatialDomains::MeshGraphSharedPtr m_graph;
-    LibUtilities::PtsIOSharedPtr m_ptsIO;
-    map<string, vector<string> > m_inputfiles;
+    std::map<std::string, std::vector<std::string> > m_inputfiles;
 
     bool m_writeBndFld;
-    vector<unsigned int> m_bndRegionsToWrite;
-    bool m_fldToBnd;
+    std::vector<unsigned int> m_bndRegionsToWrite;
     bool m_addNormals;
 
-    bool m_setUpEquiSpacedFields;
-
     LibUtilities::PtsFieldSharedPtr m_fieldPts;
-
-    MultiRegions::AssemblyMapCGSharedPtr m_locToGlobalMap;
 
     LibUtilities::FieldMetaDataMap m_fieldMetaDataMap;
 
@@ -177,7 +163,8 @@ struct Field
                     Exp2DH1 =
                         MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::
                             AllocateSharedPtr(m_session, Bkey, ly, m_useFFT,
-                                              dealiasing, m_graph);
+                                              dealiasing, m_graph,
+                                              Collections::eNoCollection);
                     exp = Exp2DH1;
                 }
                 else if (NumHomogeneousDir == 2)
@@ -223,7 +210,8 @@ struct Field
                             MultiRegions::ContField3DHomogeneous2D>::
                             AllocateSharedPtr(m_session, BkeyY, BkeyZ, ly, lz,
                                               m_useFFT, dealiasing, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              Collections::eNoCollection);
                     }
                     else if (m_declareExpansionAsDisContField)
                     {
@@ -231,14 +219,16 @@ struct Field
                             MultiRegions::DisContField3DHomogeneous2D>::
                             AllocateSharedPtr(m_session, BkeyY, BkeyZ, ly, lz,
                                               m_useFFT, dealiasing, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              Collections::eNoCollection);
                     }
                     else
                     {
                         Exp3DH2 = MemoryManager<
                             MultiRegions::ExpList3DHomogeneous2D>::
                             AllocateSharedPtr(m_session, BkeyY, BkeyZ, ly, lz,
-                                              m_useFFT, dealiasing, m_graph);
+                                              m_useFFT, dealiasing, m_graph,
+                                              Collections::eNoCollection);
                     }
 
                     exp = Exp3DH2;
@@ -251,18 +241,23 @@ struct Field
                     {
                         Exp1D = MemoryManager<MultiRegions::ContField1D>::
                             AllocateSharedPtr(m_session, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              Collections::eNoCollection);
                     }
                     else if (m_declareExpansionAsDisContField)
                     {
                         Exp1D = MemoryManager<MultiRegions::DisContField1D>::
                             AllocateSharedPtr(m_session, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              true,
+                                              Collections::eNoCollection);
                     }
                     else
                     {
                         Exp1D = MemoryManager<MultiRegions::ExpList1D>::
-                            AllocateSharedPtr(m_session, m_graph);
+                            AllocateSharedPtr(m_session, m_graph,
+                                              true,
+                                              Collections::eNoCollection);
                     }
 
                     exp = Exp1D;
@@ -327,7 +322,8 @@ struct Field
                             MultiRegions::ContField3DHomogeneous1D>::
                             AllocateSharedPtr(m_session, Bkey, lz, m_useFFT,
                                               dealiasing, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              Collections::eNoCollection);
                     }
                     else if (m_declareExpansionAsDisContField)
                     {
@@ -335,14 +331,17 @@ struct Field
                             MultiRegions::DisContField3DHomogeneous1D>::
                             AllocateSharedPtr(m_session, Bkey, lz, m_useFFT,
                                               dealiasing, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              Collections::eNoCollection);
                     }
                     else
                     {
                         Exp3DH1 = MemoryManager<
                             MultiRegions::ExpList3DHomogeneous1D>::
                             AllocateSharedPtr(m_session, Bkey, lz, m_useFFT,
-                                              dealiasing, m_graph);
+                                              dealiasing, m_graph,
+                                              "DefaultVar",
+                                              Collections::eNoCollection);
                     }
                     exp = Exp3DH1;
                 }
@@ -354,18 +353,25 @@ struct Field
                     {
                         Exp2D = MemoryManager<MultiRegions::ContField2D>::
                             AllocateSharedPtr(m_session, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              true,false,
+                                              Collections::eNoCollection);
                     }
                     else if (m_declareExpansionAsDisContField)
                     {
                         Exp2D = MemoryManager<MultiRegions::DisContField2D>::
                             AllocateSharedPtr(m_session, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              true,true,
+                                              Collections::eNoCollection);
                     }
                     else
                     {
                         Exp2D = MemoryManager<MultiRegions::ExpList2D>::
-                            AllocateSharedPtr(m_session, m_graph);
+                            AllocateSharedPtr(m_session, m_graph,
+                                              true, 
+                                              "DefaultVar",
+                                              Collections::eNoCollection);
                     }
 
                     exp = Exp2D;
@@ -380,19 +386,26 @@ struct Field
                 {
                     Exp3D = MemoryManager<MultiRegions::ContField3D>::
                         AllocateSharedPtr(m_session, m_graph,
-                                          m_session->GetVariable(0));
+                                          m_session->GetVariable(0),
+                                          false,
+                                          Collections::eNoCollection);
                 }
                 else if (m_declareExpansionAsDisContField)
                 {
                     Exp3D = MemoryManager<MultiRegions::DisContField3D>::
                         AllocateSharedPtr(m_session, m_graph,
-                                          m_session->GetVariable(0));
+                                          m_session->GetVariable(0),
+                                          true,
+                                          Collections::eNoCollection);
                 }
                 else
                 {
                     Exp3D = MemoryManager<
-                        MultiRegions::ExpList3D>::AllocateSharedPtr(m_session,
-                                                                    m_graph);
+                        MultiRegions::ExpList3D>::AllocateSharedPtr(
+                                               m_session,
+                                               m_graph,
+                                               "DefaultVar",
+                                               Collections::eNoCollection);
                 }
 
                 exp = Exp3D;
@@ -418,13 +431,11 @@ struct Field
      * @return Reader for @p filename.
      */
     FIELD_UTILS_EXPORT LibUtilities::FieldIOSharedPtr FieldIOForFile(
-        string filename)
+        std::string filename)
     {
-        LibUtilities::CommSharedPtr c = m_session ? m_session->GetComm() :
-            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+        LibUtilities::CommSharedPtr c = m_comm;
         string fmt = LibUtilities::FieldIO::GetFileType(filename, c);
-        map<string, LibUtilities::FieldIOSharedPtr>::iterator it =
-            m_fld.find(fmt);
+        auto it = m_fld.find(fmt);
 
         if (it == m_fld.end())
         {
@@ -440,7 +451,9 @@ struct Field
     }
 
     FIELD_UTILS_EXPORT MultiRegions::ExpListSharedPtr AppendExpList(
-        int NumHomogeneousDir, string var = "DefaultVar", bool NewField = false)
+        int NumHomogeneousDir,
+        std::string var = "DefaultVar",
+        bool NewField = false)
     {
         if (var.compare("DefaultVar") == 0 && m_requireBoundaryExpansion)
         {
@@ -463,7 +476,7 @@ struct Field
                              "implemented");
 
                     MultiRegions::ExpList2DHomogeneous1DSharedPtr tmp2 =
-                        boost::dynamic_pointer_cast<
+                        std::dynamic_pointer_cast<
                             MultiRegions::ExpList2DHomogeneous1D>(m_exp[0]);
 
                     tmp = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::
@@ -474,7 +487,7 @@ struct Field
                     if (m_declareExpansionAsContField)
                     {
                         MultiRegions::ContField3DHomogeneous2DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::ContField3DHomogeneous2D>(
                                 m_exp[0]);
 
@@ -485,7 +498,7 @@ struct Field
                     else if (m_declareExpansionAsDisContField)
                     {
                         MultiRegions::DisContField3DHomogeneous2DSharedPtr
-                            tmp2 = boost::dynamic_pointer_cast<
+                            tmp2 = std::dynamic_pointer_cast<
                                 MultiRegions::DisContField3DHomogeneous2D>(
                                 m_exp[0]);
 
@@ -496,7 +509,7 @@ struct Field
                     else
                     {
                         MultiRegions::ExpList3DHomogeneous2DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::ExpList3DHomogeneous2D>(m_exp[0]);
 
                         tmp = MemoryManager<
@@ -509,7 +522,7 @@ struct Field
                     if (m_declareExpansionAsContField)
                     {
                         MultiRegions::ContField1DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::ContField1D>(m_exp[0]);
 
                         tmp = MemoryManager<MultiRegions::ContField1D>::
@@ -518,7 +531,7 @@ struct Field
                     else if (m_declareExpansionAsDisContField)
                     {
                         MultiRegions::DisContField1DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::DisContField1D>(m_exp[0]);
 
                         tmp = MemoryManager<MultiRegions::DisContField1D>::
@@ -527,7 +540,7 @@ struct Field
                     else
                     {
                         MultiRegions::ExpList1DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::ExpList1D>(m_exp[0]);
 
                         tmp = MemoryManager<
@@ -558,7 +571,7 @@ struct Field
                         else
                         {
                             MultiRegions::ContField3DHomogeneous1DSharedPtr
-                                tmp2 = boost::dynamic_pointer_cast<
+                                tmp2 = std::dynamic_pointer_cast<
                                     MultiRegions::ContField3DHomogeneous1D>(
                                     m_exp[0]);
 
@@ -586,7 +599,7 @@ struct Field
                         else
                         {
                             MultiRegions::DisContField3DHomogeneous1DSharedPtr
-                                tmp2 = boost::dynamic_pointer_cast<
+                                tmp2 = std::dynamic_pointer_cast<
                                     MultiRegions::DisContField3DHomogeneous1D>(
                                     m_exp[0]);
                             ASSERTL0(tmp2, "Failed to type cast m_exp[0]");
@@ -614,7 +627,7 @@ struct Field
                         else
                         {
                             MultiRegions::ExpList3DHomogeneous1DSharedPtr tmp2 =
-                                boost::dynamic_pointer_cast<
+                                std::dynamic_pointer_cast<
                                     MultiRegions::ExpList3DHomogeneous1D>(
                                     m_exp[0]);
                             ASSERTL0(tmp2, "Failed to type cast m_exp[0]");
@@ -638,7 +651,7 @@ struct Field
                         {
 
                             MultiRegions::ContField2DSharedPtr tmp2 =
-                                boost::dynamic_pointer_cast<
+                                std::dynamic_pointer_cast<
                                     MultiRegions::ContField2D>(m_exp[0]);
 
                             tmp = MemoryManager<MultiRegions::ContField2D>::
@@ -655,7 +668,7 @@ struct Field
                         else // call copy constructor
                         {
                             MultiRegions::DisContField2DSharedPtr tmp2 =
-                                boost::dynamic_pointer_cast<
+                                std::dynamic_pointer_cast<
                                     MultiRegions::DisContField2D>(m_exp[0]);
 
                             tmp = MemoryManager<MultiRegions::DisContField2D>::
@@ -665,7 +678,7 @@ struct Field
                     else
                     {
                         MultiRegions::ExpList2DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::ExpList2D>(m_exp[0]);
 
                         tmp = MemoryManager<
@@ -686,13 +699,11 @@ struct Field
                     else
                     {
                         MultiRegions::ContField3DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::ContField3D>(m_exp[0]);
 
                         tmp = MemoryManager<MultiRegions::ContField3D>::
                             AllocateSharedPtr(*tmp2, m_graph, var);
-
-                        m_locToGlobalMap = tmp2->GetLocalToGlobalMap();
                     }
                 }
                 else if (m_declareExpansionAsDisContField)
@@ -705,7 +716,7 @@ struct Field
                     else
                     {
                         MultiRegions::DisContField3DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::DisContField3D>(m_exp[0]);
 
                         tmp = MemoryManager<MultiRegions::DisContField3D>::
@@ -715,7 +726,7 @@ struct Field
                 else
                 {
                     MultiRegions::ExpList3DSharedPtr tmp2 =
-                        boost::dynamic_pointer_cast<MultiRegions::ExpList3D>(
+                        std::dynamic_pointer_cast<MultiRegions::ExpList3D>(
                             m_exp[0]);
 
                     tmp = MemoryManager<
@@ -731,13 +742,24 @@ struct Field
         return tmp;
     }
 
+    FIELD_UTILS_EXPORT void ClearField()
+    {
+        m_session  = LibUtilities::SessionReaderSharedPtr();
+        m_graph    = SpatialDomains::MeshGraphSharedPtr();
+        m_fieldPts = LibUtilities::NullPtsField;
+        m_exp.clear();
+        m_fielddef = std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
+        m_data     = std::vector<std::vector<NekDouble> > ();
+        m_variables.clear();
+    }
+
 private:
     /// Map to store FieldIO instances. Key is the reader type, value is the
     /// FieldIO object.
-    map<string, LibUtilities::FieldIOSharedPtr> m_fld;
+    std::map<std::string, LibUtilities::FieldIOSharedPtr> m_fld;
 };
 
-typedef boost::shared_ptr<Field> FieldSharedPtr;
+typedef std::shared_ptr<Field> FieldSharedPtr;
 }
 }
 

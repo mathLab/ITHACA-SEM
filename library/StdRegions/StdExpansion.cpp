@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -55,13 +54,13 @@ namespace Nektar
             m_elmt_id(0),
             m_ncoeffs(numcoeffs),
             m_stdMatrixManager(
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1),
+                std::bind(&StdExpansion::CreateStdMatrix, this, std::placeholders::_1),
                 std::string("StdExpansionStdMatrix")),
             m_stdStaticCondMatrixManager(
-                boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1),
+                std::bind(&StdExpansion::CreateStdStaticCondMatrix, this, std::placeholders::_1),
                 std::string("StdExpansionStdStaticCondMatrix")),
             m_IndexMapManager(
-                boost::bind(&StdExpansion::CreateIndexMap,this, _1),
+                std::bind(&StdExpansion::CreateIndexMap,this, std::placeholders::_1),
                 std::string("StdExpansionIndexMap"))
         {
             switch(m_base.num_elements())
@@ -801,28 +800,32 @@ namespace Nektar
             v_IProductWRTBase(tmp, outarray);
         }
 
-        void StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                                Array<OneD,NekDouble> &outarray,
-                                                                const StdMatrixKey &mkey)
+        void StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,NekDouble> &outarray,
+            const StdMatrixKey &mkey)
         {
             int nq = GetTotPoints();
-            //            int varsize = ((mkey.GetVariableCoefficient(0)).num_elements())/dim;
-            Array<OneD, NekDouble> tmp(nq);
+
+            Array<OneD, NekDouble> tmp(nq), Dtmp(nq);
+            Array<OneD, NekDouble> Mtmp(nq), Mout(m_ncoeffs);
 
             v_BwdTrans(inarray,tmp);
-            // For Deformed mesh ==============
-            //            if (varsize==nq)
-            //            {
-            //                v_PhysDirectionalDeriv(tmp,mkey.GetVariableCoefficient(0),tmp);
-            //            }
-            //
-            //            // For Regular mesh ==========
-            //            else
-            //            {
-            //                ASSERTL0(false, "Wrong route");
-            //            }
+            v_PhysDirectionalDeriv(tmp, mkey.GetVarCoeff(eVarCoeffMF), Dtmp);
 
-            v_IProductWRTBase(tmp, outarray);
+            v_IProductWRTBase(Dtmp, outarray);
+
+            // Compte M_{div tv}
+            Vmath::Vmul(nq, &(mkey.GetVarCoeff(eVarCoeffMFDiv))[0], 1,
+                            &tmp[0],                                1,
+                            &Mtmp[0],                               1);
+
+            v_IProductWRTBase(Mtmp, Mout);
+
+            // Add D_tv + M_{div tv}
+            Vmath::Vadd(m_ncoeffs, &Mout[0],     1,
+                                   &outarray[0], 1,
+                                   &outarray[0], 1);
         }
 
         void StdExpansion::MassLevelCurvatureMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
@@ -1046,20 +1049,6 @@ namespace Nektar
             return eForwards;
         }
 
-        StdRegions::Orientation StdExpansion::v_GetPorient(int point)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is only valid for one-dimensional  LocalRegions");
-            return eFwd;
-        }
-
-
-        StdRegions::Orientation StdExpansion::v_GetCartesianEorient(int edge)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
-            return eForwards;
-        }
-
-
         void StdExpansion::v_SetCoeffsToOrientation(StdRegions::Orientation dir,
                                                     Array<OneD, const NekDouble> &inarray,
                                                     Array<OneD, NekDouble> &outarray)
@@ -1205,7 +1194,7 @@ namespace Nektar
             return LibUtilities::eNoShapeType;
         }
 
-        boost::shared_ptr<StdExpansion> 
+        std::shared_ptr<StdExpansion> 
         StdExpansion::v_GetStdExp(void) const
         {
             ASSERTL0(false,"This method is not defined for this expansion");
@@ -1213,7 +1202,7 @@ namespace Nektar
             return returnval;
         }
 
-        boost::shared_ptr<StdExpansion> 
+        std::shared_ptr<StdExpansion> 
         StdExpansion::v_GetLinStdExp(void) const
         {
             ASSERTL0(false,"This method is not defined for this expansion");
@@ -1245,6 +1234,19 @@ namespace Nektar
         {
             NEKERROR(ErrorUtil::efatal, "This method has not been defined");
         }
+
+
+        /**
+         *
+         */
+        void  StdExpansion::v_IProductWRTDirectionalDerivBase (
+            const Array<OneD, const NekDouble>& direction,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This method has not been defined");
+        }
+
 
         /**
          *
@@ -1466,12 +1468,12 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
-            void StdExpansion::v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void StdExpansion::v_GetEdgePhysVals(const int edge,  const std::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
-        void StdExpansion::v_GetTracePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray, StdRegions::Orientation  orient)
+        void StdExpansion::v_GetTracePhysVals(const int edge,  const std::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray, StdRegions::Orientation  orient)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
@@ -1495,7 +1497,7 @@ namespace Nektar
             }
         
             void StdExpansion::v_GetFacePhysVals( const int                                face,
-                                             const boost::shared_ptr<StdExpansion>   &FaceExp,
+                                             const std::shared_ptr<StdExpansion>   &FaceExp,
                 const Array<OneD, const NekDouble>      &inarray,
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient)
@@ -1531,13 +1533,6 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape or library");
             }
 
-            const  boost::shared_ptr<SpatialDomains::GeomFactors>& StdExpansion::v_GetMetricInfo() const
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return SpatialDomains::NullGeomFactorsSharedPtr;
-
-            }
-
             void StdExpansion::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
             {
@@ -1549,6 +1544,18 @@ namespace Nektar
                                                         bool multiplybyweights)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
+            /**
+             *
+             */
+            void StdExpansion::v_IProductWRTDirectionalDerivBase_SumFac(
+                const Array<OneD, const NekDouble>& direction,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "Method does not exist for this shape" );
             }
 
             void StdExpansion::v_IProductWRTDerivBase_SumFac(const int dir,
@@ -1579,6 +1586,15 @@ namespace Nektar
 
              void StdExpansion::v_SVVLaplacianFilter(Array<OneD,NekDouble> &array,
                                              const StdMatrixKey &mkey)
+             {
+                 ASSERTL0(false, "This function is not defined in StdExpansion.");
+             }
+
+            void StdExpansion::v_ExponentialFilter(
+                                          Array<OneD, NekDouble> &array,
+                                    const NekDouble        alpha,
+                                    const NekDouble        exponent,
+                                    const NekDouble        cutoff)
              {
                  ASSERTL0(false, "This function is not defined in StdExpansion.");
              }
@@ -1720,6 +1736,17 @@ namespace Nektar
             ASSERTL0(false, "Cannot compute vertex normal for this expansion.");
         }
 
+        void StdExpansion::v_NegateVertexNormal(const int vertex)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
+
+        bool StdExpansion::v_VertexNormalNegated(const int vertex)
+        {
+            ASSERTL0(false, "Not implemented.");
+            return false;
+        }
+
         const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
         {
             ASSERTL0(false, "Cannot get face normals for this expansion.");
@@ -1751,13 +1778,23 @@ namespace Nektar
 
         Array<OneD, unsigned int>
         StdExpansion::v_GetFaceInverseBoundaryMap(int fid,
-                                StdRegions::Orientation faceOrient)
+                                                  StdRegions::Orientation faceOrient,
+                                                  int P1,
+                                                  int P2)
         {
             ASSERTL0(false, "Not implemented.");
             Array<OneD, unsigned int> noinversemap(1);
             return noinversemap;
         }
 
+        void StdExpansion::v_GetInverseBoundaryMaps(
+                    Array<OneD, unsigned int> &vmap,
+                    Array<OneD, Array<OneD, unsigned int> > &emap,
+                    Array<OneD, Array<OneD, unsigned int> > &fmap)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
+        
         DNekMatSharedPtr
         StdExpansion::v_BuildInverseTransformationMatrix(
             const DNekScalMatSharedPtr & m_transformationmatrix)

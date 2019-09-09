@@ -8,7 +8,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,17 +35,14 @@ namespace Nektar
     namespace LibUtilities
     {
         /** 
-         * \brief create portable path on different platforms for boost::filesystem path 
-         */        
+         * \brief create portable path on different platforms for 
+         *        boost::filesystem path 
+         */
         std::string PortablePath(const boost::filesystem::path& path)
         {
             fs::path temp = path;
-#if BOOST_VERSION > 104200
             temp.make_preferred();
             return temp.string();
-#else
-            return temp.file_string();
-#endif
         }
     }
 }

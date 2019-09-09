@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -64,8 +63,8 @@ namespace Nektar
          */
         GlobalLinSysPETSc::GlobalLinSysPETSc(
             const GlobalLinSysKey                &pKey,
-            const boost::weak_ptr<ExpList>       &pExp,
-            const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+            const std::weak_ptr<ExpList>         &pExp,
+            const std::shared_ptr<AssemblyMap>   &pLocToGloMap)
             : GlobalLinSys(pKey, pExp, pLocToGloMap)
         {
             // Determine whether to use standard sparse matrix approach or
@@ -87,7 +86,7 @@ namespace Nektar
                 if (commType.find("MPI") != std::string::npos)
                 {
                     LibUtilities::CommMpiSharedPtr comm =
-                        boost::static_pointer_cast<LibUtilities::CommMpi>(
+                        std::static_pointer_cast<LibUtilities::CommMpi>(
                             m_expList.lock()->GetSession()->GetComm());
                     PETSC_COMM_WORLD = comm->GetComm();
                 }

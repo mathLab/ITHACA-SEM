@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -52,11 +51,11 @@ namespace Nektar
             Expansion     (geom),
             Expansion2D   (geom),
             m_matrixManager(
-                    boost::bind(&NodalTriExp::CreateMatrix, this, _1),
-                    std::string("NodalTriExpMatrix")),
+                std::bind(&NodalTriExp::CreateMatrix, this, std::placeholders::_1),
+                std::string("NodalTriExpMatrix")),
             m_staticCondMatrixManager(
-                    boost::bind(&NodalTriExp::CreateStaticCondMatrix, this, _1),
-                    std::string("NodalTriExpStaticCondMatrix"))
+                std::bind(&NodalTriExp::CreateStaticCondMatrix, this, std::placeholders::_1),
+                std::string("NodalTriExpStaticCondMatrix"))
         {
         }
         

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -60,17 +59,15 @@ namespace Nektar
         /// matrices.
         typedef std::map< Homogeneous1DMatType, DNekBlkMatSharedPtr> Homo1DBlockMatrixMap;
         /// A shared pointer to a BlockMatrixMap.
-        typedef boost::shared_ptr<Homo1DBlockMatrixMap> Homo1DBlockMatrixMapShPtr;
+        typedef std::shared_ptr<Homo1DBlockMatrixMap> Homo1DBlockMatrixMapShPtr;
 
         // Forward declaration for typedefs
         class ExpListHomogeneous1D;
 
         /// Shared pointer to an ExpList3DHomogeneous1D object.
-        typedef boost::shared_ptr<ExpListHomogeneous1D>   ExpListHomogeneous1DSharedPtr;
+        typedef std::shared_ptr<ExpListHomogeneous1D>   ExpListHomogeneous1DSharedPtr;
         /// Vector of pointers to ExpList3DHomogeneous1D objects.
         typedef std::vector< ExpListHomogeneous1DSharedPtr > ExpListHomogeneous1DVector;
-        /// Iterator for the vector of ExpList3DHomogeneous1D pointers.
-        typedef std::vector< ExpListHomogeneous1DSharedPtr >::iterator ExpListHomogeneous1DVectorIter;
 
         /// Abstraction of a two-dimensional multi-elemental expansion which
         /// is merely a collection of local expansions.
@@ -152,7 +149,7 @@ namespace Nektar
             Homo1DBlockMatrixMapShPtr       m_homogeneous1DBlockMat;
             Array<OneD, ExpListSharedPtr>   m_planes;
 
-            boost::unordered_map<int, int>  m_zIdToPlane;
+            std::unordered_map<int, int>  m_zIdToPlane;
             
             DNekBlkMatSharedPtr GenHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, CoeffState coeffstate = eLocal) const;
             
@@ -219,7 +216,7 @@ namespace Nektar
             virtual void v_ExtractDataToCoeffs(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs);
             
             virtual void v_ExtractCoeffsToCoeffs(
-                                                 const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
+                                                 const std::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
 
             virtual void v_WriteVtkPieceData(std::ostream &outfile, int expansion,
                                              std::string var);
@@ -272,6 +269,8 @@ namespace Nektar
             
             virtual NekDouble v_GetHomoLen(void);
             
+            virtual void v_SetHomoLen(const NekDouble lhom);
+
         private:
             
             //Padding operations variables
@@ -304,9 +303,3 @@ namespace Nektar
 } //end of namespace
 
 #endif//EXPLISTHOMO1D_H
-
-/**
-* $Log: v $
-*
-**/
-

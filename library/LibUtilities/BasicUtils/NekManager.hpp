@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,14 +36,16 @@
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_MANAGER_HPP
 
 #include <map>
+#include <memory>
+#include <functional>
 
-#include <boost/function.hpp>
-#include <boost/call_traits.hpp>
-#include <boost/concept_check.hpp>
+#include <boost/lexical_cast.hpp>
+
+#ifdef NEKTAR_USE_THREAD_SAFETY
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>
+#endif
 
-#include <boost/shared_ptr.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
@@ -53,8 +54,10 @@ namespace Nektar
     {
         using namespace std;
 
+#ifdef NEKTAR_USE_THREAD_SAFETY
         typedef boost::unique_lock<boost::shared_mutex> WriteLock;
         typedef boost::shared_lock<boost::shared_mutex> ReadLock;
+#endif
 
         template <typename KeyType>
         struct defOpLessCreator
@@ -69,15 +72,13 @@ namespace Nektar
         class NekManager
         {
             public:
-                BOOST_CLASS_REQUIRE(KeyType, boost, LessThanComparableConcept);
-
-                typedef boost::shared_ptr<ValueT> ValueType;
-                typedef boost::function<ValueType (const KeyType& key)> CreateFuncType;
+                typedef std::shared_ptr<ValueT> ValueType;
+                typedef std::function<ValueType (const KeyType& key)> CreateFuncType;
                 typedef std::map<KeyType, ValueType> ValueContainer;
-                typedef boost::shared_ptr<ValueContainer> ValueContainerShPtr;
+                typedef std::shared_ptr<ValueContainer> ValueContainerShPtr;
                 typedef std::map<KeyType, CreateFuncType, opLessCreator> CreateFuncContainer;
-                typedef std::map<std::string, boost::shared_ptr<ValueContainer> > ValueContainerPool;
-                typedef boost::shared_ptr<bool> BoolSharedPtr;
+                typedef std::map<std::string, std::shared_ptr<ValueContainer> > ValueContainerPool;
+                typedef std::shared_ptr<bool> BoolSharedPtr;
                 typedef std::map<std::string, BoolSharedPtr> FlagContainerPool;
 
                 NekManager(std::string whichPool="") :
@@ -88,7 +89,7 @@ namespace Nektar
                 {
                     if (!whichPool.empty())
                     {
-                        typename ValueContainerPool::iterator iter = m_ValueContainerPool.find(whichPool);
+                        auto iter = m_ValueContainerPool.find(whichPool);
                         if (iter != m_ValueContainerPool.end())
                         {
                             m_values = iter->second;
@@ -120,8 +121,10 @@ namespace Nektar
                 {
                     if (!whichPool.empty())
                     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                         ReadLock v_rlock(m_mutex); // reading static members
-                        typename ValueContainerPool::iterator iter = m_ValueContainerPool.find(whichPool);
+#endif
+                        auto iter = m_ValueContainerPool.find(whichPool);
                         if (iter != m_ValueContainerPool.end())
                         {
                             m_values = iter->second;
@@ -129,12 +132,17 @@ namespace Nektar
                         }
                         else
                         {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                             v_rlock.unlock();
-                            // now writing static members.  Apparently upgrade_lock has less desirable properties
-                            // than just dropping read lock, grabbing write lock.
-                            // write will block until all reads are done, but reads cannot be acquired if write
-                            // lock is blocking.  In this context writes are supposed to be rare.
+                            // now writing static members.  Apparently
+                            // upgrade_lock has less desirable properties than
+                            // just dropping read lock, grabbing write lock.
+                            // write will block until all reads are done, but
+                            // reads cannot be acquired if write lock is
+                            // blocking.  In this context writes are supposed to
+                            // be rare.
                             WriteLock v_wlock(m_mutex);
+#endif
                             m_values = ValueContainerShPtr(new ValueContainer);
                             m_ValueContainerPool[whichPool] = m_values;
                             if (m_managementEnabledContainerPool.find(whichPool) == m_managementEnabledContainerPool.end())
@@ -158,7 +166,7 @@ namespace Nektar
 
                 /// Register the given function and associate it with the key.
                 /// The return value is just to facilitate calling statically.
-                bool RegisterCreator(typename boost::call_traits<KeyType>::const_reference key,
+                bool RegisterCreator(const KeyType& key,
                                      const CreateFuncType& createFunc)
                 {
                     m_keySpecificCreateFuncs[key] = createFunc;
@@ -175,10 +183,10 @@ namespace Nektar
                     return true;
                 }
 
-                bool AlreadyCreated(typename boost::call_traits<KeyType>::const_reference key)
+                bool AlreadyCreated(const KeyType &key)
                 {
                     bool value = false;
-                    typename ValueContainer::iterator found = m_values->find(key);
+                    auto found = m_values->find(key);
                     if( found != m_values->end() )
                     {
                         value = true;
@@ -187,9 +195,9 @@ namespace Nektar
                     return value;
                 }
 
-                ValueType operator[](typename boost::call_traits<KeyType>::const_reference key)
+                ValueType operator[](const KeyType &key)
                 {
-                    typename ValueContainer::iterator found = m_values->find(key);
+                    auto found = m_values->find(key);
 
                     if( found != m_values->end() )
                     {
@@ -199,7 +207,7 @@ namespace Nektar
                     {
                         // No object, create a new one.
                         CreateFuncType f = m_globalCreateFunc;
-                        typename CreateFuncContainer::iterator keyFound = m_keySpecificCreateFuncs.find(key);
+                        auto keyFound = m_keySpecificCreateFuncs.find(key);
                         if( keyFound != m_keySpecificCreateFuncs.end() )
                         {
                             f = (*keyFound).second;
@@ -225,9 +233,9 @@ namespace Nektar
                     }
                 }
 
-                void DeleteObject(typename boost::call_traits<KeyType>::const_reference key)
+                void DeleteObject(const KeyType &key)
                 {
-                    typename ValueContainer::iterator found = m_values->find(key);
+                    auto found = m_values->find(key);
 
                     if( found != m_values->end() )
                     {
@@ -237,23 +245,25 @@ namespace Nektar
 
                 static void ClearManager(std::string whichPool = "")
                 {
-                    typename ValueContainerPool::iterator x;
                     if (!whichPool.empty())
                     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                         WriteLock v_wlock(m_mutex);
-
-                        x = m_ValueContainerPool.find(whichPool);
+#endif
+                        auto x = m_ValueContainerPool.find(whichPool);
                         ASSERTL1(x != m_ValueContainerPool.end(),
                                 "Could not find pool " + whichPool);
                         x->second->clear();
                     }
                     else
                     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                         WriteLock v_wlock(m_mutex);
+#endif
 
-                        for (x = m_ValueContainerPool.begin(); x != m_ValueContainerPool.end(); ++x)
+                        for (auto &x : m_ValueContainerPool)
                         {
-                            x->second->clear();
+                            x.second->clear();
                         }
                     }
                 }
@@ -261,9 +271,7 @@ namespace Nektar
                 static bool PoolCreated(std::string whichPool)
                 {
                     bool value = false;
-                    typename ValueContainerPool::iterator x;
-
-                    x = m_ValueContainerPool.find(whichPool);
+                    auto x = m_ValueContainerPool.find(whichPool);
                     if (x != m_ValueContainerPool.end())
                     {
                         value = true;
@@ -273,12 +281,13 @@ namespace Nektar
 
                 static void EnableManagement(std::string whichPool = "")
                 {
-                    typename FlagContainerPool::iterator x;
                     if (!whichPool.empty())
                     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                         WriteLock v_wlock(m_mutex);
+#endif
 
-                        x = m_managementEnabledContainerPool.find(whichPool);
+                        auto x = m_managementEnabledContainerPool.find(whichPool);
                         if (x != m_managementEnabledContainerPool.end())
                         {
                             (*x->second) = true;
@@ -292,12 +301,12 @@ namespace Nektar
 
                 static void DisableManagement(std::string whichPool = "")
                 {
-                    typename FlagContainerPool::iterator x;
                     if (!whichPool.empty())
                     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                         WriteLock v_wlock(m_mutex);
-
-                        x = m_managementEnabledContainerPool.find(whichPool);
+#endif
+                        auto x = m_managementEnabledContainerPool.find(whichPool);
                         if (x != m_managementEnabledContainerPool.end())
                         {
                             (*x->second) = false;
@@ -319,12 +328,16 @@ namespace Nektar
                 static FlagContainerPool m_managementEnabledContainerPool;
                 CreateFuncType m_globalCreateFunc;
                 CreateFuncContainer m_keySpecificCreateFuncs;
+#ifdef NEKTAR_USE_THREAD_SAFETY
                 static boost::shared_mutex m_mutex;
+#endif
         };
         template <typename KeyType, typename ValueT, typename opLessCreator> typename NekManager<KeyType, ValueT, opLessCreator>::ValueContainerPool NekManager<KeyType, ValueT, opLessCreator>::m_ValueContainerPool;
         template <typename KeyType, typename ValueT, typename opLessCreator> typename NekManager<KeyType, ValueT, opLessCreator>::FlagContainerPool NekManager<KeyType, ValueT, opLessCreator>::m_managementEnabledContainerPool;
+#ifdef NEKTAR_USE_THREAD_SAFETY
         template <typename KeyType, typename ValueT, typename opLessCreator>
             typename boost::shared_mutex NekManager<KeyType, ValueT, opLessCreator>::m_mutex;
+#endif
     }
 }
 

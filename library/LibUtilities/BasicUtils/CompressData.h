@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -38,16 +37,7 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
-#include <boost/iostreams/copy.hpp>
-#include <boost/iostreams/filter/zlib.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/assign/list_of.hpp>
-
 #include "zlib.h"
-
 
 // Buffer size for zlib compression/decompression
 #define CHUNK 16384
@@ -80,10 +70,7 @@ namespace LibUtilities
     namespace CompressData
     {
         LIB_UTILITIES_EXPORT std::string GetCompressString(void);
-
-
         LIB_UTILITIES_EXPORT std::string GetBitSizeStr(void);
-
 
         /**
          * Compress a vector of NekDouble values into a string using zlib.

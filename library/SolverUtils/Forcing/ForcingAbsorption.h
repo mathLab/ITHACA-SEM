@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -38,11 +37,18 @@
 
 #include <string>
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Forcing/Forcing.h>
+
+namespace bg  = boost::geometry;
+namespace bgi = boost::geometry::index;
 
 namespace Nektar
 {
@@ -55,13 +61,14 @@ namespace SolverUtils
 
             /// Creates an instance of this class
             SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
-                    const LibUtilities::SessionReaderSharedPtr& pSession,
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::weak_ptr<EquationSystem>      &pEquation,
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                     const unsigned int& pNumForcingFields,
                     const TiXmlElement* pForce)
             {
                 ForcingSharedPtr p = MemoryManager<ForcingAbsorption>::
-                                                AllocateSharedPtr(pSession);
+                                        AllocateSharedPtr(pSession, pEquation);
                 p->InitObject(pFields, pNumForcingFields, pForce);
                 return p;
             }
@@ -70,11 +77,18 @@ namespace SolverUtils
             static std::string className;
 
         protected:
+
+            typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> BPoint;
+            typedef std::pair<BPoint, unsigned int>                   BPointPair;
+            typedef bgi::rtree<BPointPair, bgi::rstar<16> >           BRTree;
+
             bool                                    m_hasRefFlow;
             bool                                    m_hasRefFlowTime;
             Array<OneD, Array<OneD, NekDouble> >    m_Absorption;
             Array<OneD, Array<OneD, NekDouble> >    m_Refflow;
             std::string                             m_funcNameTime;
+            std::vector<unsigned int>               m_bRegions;
+            std::shared_ptr<BRTree>               m_rtree;
   
             SOLVER_UTILS_EXPORT virtual void v_InitObject(
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
@@ -88,11 +102,15 @@ namespace SolverUtils
                     const NekDouble &time);
 
         private:
-            ForcingAbsorption(const LibUtilities::SessionReaderSharedPtr& pSession);
+            ForcingAbsorption(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::weak_ptr<EquationSystem>      &pEquation);
             virtual ~ForcingAbsorption(void){};
 
+            void CalcAbsorption(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                const TiXmlElement *pForce);
     };
-
 }
 }
 // Hui XU  21 Jul 2013 Created 

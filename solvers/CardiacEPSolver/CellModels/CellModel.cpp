@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -46,10 +45,8 @@ namespace Nektar
 {
     CellModelFactory& GetCellModelFactory()
     {
-        typedef Loki::SingletonHolder<CellModelFactory,
-            Loki::CreateUsingNew,
-            Loki::NoDestroy > Type;
-        return Type::Instance();
+        static CellModelFactory instance;
+        return instance;
     }
 
     /**
@@ -362,25 +359,23 @@ namespace Nektar
         std::map<std::string, FDef>  FieldDef;
         std::map<std::string, FData> FieldData;
         LibUtilities::FieldMetaDataMap fieldMetaDataMap;
-        LibUtilities::FieldMetaDataMap::iterator iter;
-        std::set<std::string>::const_iterator setIt;
 	
-        for (setIt = filelist.begin(); setIt != filelist.end(); ++setIt)
+        for (auto &setIt : filelist)
         {
             if (root)
             {
-                cout << "  - Reading file: " << *setIt << endl;
+                cout << "  - Reading file: " << setIt << endl;
             }
-            FieldDef[*setIt] = FDef(0);
-            FieldData[*setIt] = FData(0);
+            FieldDef[setIt] = FDef(0);
+            FieldData[setIt] = FData(0);
             LibUtilities::FieldIOSharedPtr fld =
-                LibUtilities::FieldIO::CreateForFile(m_session, *setIt);
-            fld->Import(*setIt, FieldDef[*setIt], FieldData[*setIt],
+                LibUtilities::FieldIO::CreateForFile(m_session, setIt);
+            fld->Import(setIt, FieldDef[setIt], FieldData[setIt],
                         fieldMetaDataMap);
         }
 
         // Get time of checkpoint from file if available
-        iter = fieldMetaDataMap.find("Time");
+        auto iter = fieldMetaDataMap.find("Time");
         if(iter != fieldMetaDataMap.end())
         {
              m_lastTime = boost::lexical_cast<NekDouble>(iter->second);

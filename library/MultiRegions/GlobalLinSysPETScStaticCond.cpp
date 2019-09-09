@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSys.cpp
+// File GlobalLinSysPETScStaticCond.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -88,8 +87,8 @@ namespace Nektar
          */
         GlobalLinSysPETScStaticCond::GlobalLinSysPETScStaticCond(
                      const GlobalLinSysKey                &pKey,
-                     const boost::weak_ptr<ExpList>       &pExpList,
-                     const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                     const std::weak_ptr<ExpList>         &pExpList,
+                     const std::shared_ptr<AssemblyMap>   &pLocToGloMap)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysPETSc     (pKey, pExpList, pLocToGloMap),
               GlobalLinSysStaticCond(pKey, pExpList, pLocToGloMap)
@@ -109,12 +108,12 @@ namespace Nektar
          */
         GlobalLinSysPETScStaticCond::GlobalLinSysPETScStaticCond(
                      const GlobalLinSysKey                &pKey,
-                     const boost::weak_ptr<ExpList>       &pExpList,
+                     const std::weak_ptr<ExpList>         &pExpList,
                      const DNekScalBlkMatSharedPtr         pSchurCompl,
                      const DNekScalBlkMatSharedPtr         pBinvD,
                      const DNekScalBlkMatSharedPtr         pC,
                      const DNekScalBlkMatSharedPtr         pInvD,
-                     const boost::shared_ptr<AssemblyMap> &pLocToGloMap,
+                     const std::shared_ptr<AssemblyMap>   &pLocToGloMap,
                      const PreconditionerSharedPtr         pPrecon)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysPETSc     (pKey, pExpList, pLocToGloMap),
@@ -137,17 +136,19 @@ namespace Nektar
 
         void GlobalLinSysPETScStaticCond::v_InitObject()
         {
-            m_precon = CreatePrecon(m_locToGloMap);
+            auto asmMap = m_locToGloMap.lock();
+
+            m_precon = CreatePrecon(asmMap);
 
             // Allocate memory for top-level structure
-            SetupTopLevel(m_locToGloMap);
+            SetupTopLevel(asmMap);
 
             // Setup Block Matrix systems
             int n, n_exp = m_expList.lock()->GetNumElmts();
 
             MatrixStorage blkmatStorage = eDIAGONAL;
             const Array<OneD,const unsigned int>& nbdry_size
-                    = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
+                    = asmMap->GetNumLocalBndCoeffsPerPatch();
 
             m_S1Blk = MemoryManager<DNekScalBlkMat>
                 ::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
@@ -163,6 +164,7 @@ namespace Nektar
             m_precon->BuildPreconditioner();
 
             // Do transform of Schur complement matrix
+            int cnt = 0;
             for (n = 0; n < n_exp; ++n)
             {
                 if (m_linSysKey.GetMatrixType() !=
@@ -170,13 +172,14 @@ namespace Nektar
                 {
                     DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
                     DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
-                        m_expList.lock()->GetOffset_Elmt_Id(n), mat);
+                                                             n, cnt, mat);
                     m_schurCompl->SetBlock(n, n, t);
+                    cnt += mat->GetRows();
                 }
             }
 
             // Construct this level
-            Initialise(m_locToGloMap);
+            Initialise(asmMap);
         }
 
         /**
@@ -203,7 +206,7 @@ namespace Nektar
             if (m_linSysKey.GetGlobalSysSolnType() ==
                     ePETScMultiLevelStaticCond)
             {
-                m_precon = CreatePrecon(m_locToGloMap);
+                m_precon = CreatePrecon(m_locToGloMap.lock());
                 m_precon->BuildPreconditioner();
             }
 
@@ -268,7 +271,7 @@ namespace Nektar
             v_GetStaticCondBlock(unsigned int n)
         {
             DNekScalBlkMatSharedPtr schurComplBlock;
-            int  scLevel           = m_locToGloMap->GetStaticCondLevel();
+            int  scLevel           = m_locToGloMap.lock()->GetStaticCondLevel();
             DNekScalBlkMatSharedPtr sc = scLevel == 0 ? m_S1Blk : m_schurCompl;
             DNekScalMatSharedPtr    localMat = sc->GetBlock(n,n);
             unsigned int nbdry    = localMat->GetRows();
@@ -292,7 +295,7 @@ namespace Nektar
                 // level, the preconditioner is never set up.
                 if (!m_precon)
                 {
-                    m_precon = CreatePrecon(m_locToGloMap);
+                    m_precon = CreatePrecon(m_locToGloMap.lock());
                     m_precon->BuildPreconditioner();
                 }
 
@@ -304,14 +307,14 @@ namespace Nektar
             }
         }
 
-        void GlobalLinSysPETScStaticCond::v_BasisTransform(
+        void GlobalLinSysPETScStaticCond::v_BasisFwdTransform(
             Array<OneD, NekDouble>& pInOut,
             int                     offset)
         {
             m_precon->DoTransformToLowEnergy(pInOut, offset);
         }
 
-        void GlobalLinSysPETScStaticCond::v_BasisInvTransform(
+        void GlobalLinSysPETScStaticCond::v_BasisBwdTransform(
             Array<OneD, NekDouble>& pInOut)
         {
             m_precon->DoTransformFromLowEnergy(pInOut);
@@ -332,23 +335,25 @@ namespace Nektar
             const Array<OneD, const NekDouble> &input,
                   Array<OneD,       NekDouble> &output)
         {
-            int nLocBndDofs = m_locToGloMap->GetNumLocalBndCoeffs();
-            int nDirDofs    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            auto asmMap = m_locToGloMap.lock();
+
+            int nLocBndDofs = asmMap->GetNumLocalBndCoeffs();
+            int nDirDofs    = asmMap->GetNumGlobalDirBndCoeffs();
 
             NekVector<NekDouble> in(nLocBndDofs), out(nLocBndDofs);
-            m_locToGloMap->GlobalToLocalBnd(input, in.GetPtr(), nDirDofs);
+            asmMap->GlobalToLocalBnd(input, in.GetPtr(), nDirDofs);
             out = (*m_schurCompl) * in;
-            m_locToGloMap->AssembleBnd(out.GetPtr(), output, nDirDofs);
+            asmMap->AssembleBnd(out.GetPtr(), output, nDirDofs);
         }
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysPETScStaticCond::v_Recurse(
             const GlobalLinSysKey                &mkey,
-            const boost::weak_ptr<ExpList>       &pExpList,
+            const std::weak_ptr<ExpList>         &pExpList,
             const DNekScalBlkMatSharedPtr         pSchurCompl,
             const DNekScalBlkMatSharedPtr         pBinvD,
             const DNekScalBlkMatSharedPtr         pC,
             const DNekScalBlkMatSharedPtr         pInvD,
-            const boost::shared_ptr<AssemblyMap> &l2gMap)
+            const std::shared_ptr<AssemblyMap>   &l2gMap)
         {
             GlobalLinSysPETScStaticCondSharedPtr sys = MemoryManager<
                 GlobalLinSysPETScStaticCond>::AllocateSharedPtr(

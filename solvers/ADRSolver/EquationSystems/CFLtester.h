@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,7 +35,8 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_CFLTESTER_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_CFLTESTER_H
 
-#include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/AdvectionSystem.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -78,25 +78,32 @@ namespace Nektar
 	{724.129308, 1297.665239, 1890.995890, 2477.394447, 3025.267650, 3552.997300, 4093.052410, 4609.237151, 5136.747279, 5661.792457, 6397.687000, 7383.760000, 8431.678000, 9540.598000}, 
 	{732.175780, 1305.179484, 1897.615616, 2483.199183, 3030.256925, 3557.347822, 4096.823380, 4612.552660, 5139.604517, 5664.300842, 6771.812000, 7388.760000, 8436.678000, 9546.598000}};
 	
-	class CFLtester : public UnsteadySystem
+	class CFLtester : public SolverUtils::AdvectionSystem
     {
     public:
         friend class MemoryManager<CFLtester>;
 
-        static EquationSystemSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
-              EquationSystemSharedPtr p = MemoryManager<CFLtester>::AllocateSharedPtr(pSession);
-              p->InitObject();
-              return p;}
+        static EquationSystemSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        {
+            EquationSystemSharedPtr p = MemoryManager<CFLtester>
+                ::AllocateSharedPtr(pSession, pGraph);
+            p->InitObject();
+            return p;
+        }
 
         static std::string className;
 
         virtual ~CFLtester();
         		
     protected:
-        
-		Array<OneD, Array<OneD, NekDouble> > m_velocity;
+        SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
+        Array<OneD, Array<OneD, NekDouble> > m_velocity;
+        Array<OneD, NekDouble>               m_traceVn;
 
-        CFLtester(const LibUtilities::SessionReaderSharedPtr& pSession);
+        CFLtester(const LibUtilities::SessionReaderSharedPtr& pSession,
+                  const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                       Array<OneD,  Array<OneD, NekDouble> > &outarray,
@@ -106,11 +113,14 @@ namespace Nektar
                           Array<OneD,  Array<OneD, NekDouble> > &outarray,
                           const NekDouble time);
 		
+        /// Get the normal velocity
+        Array<OneD, NekDouble> &GetNormalVelocity();
+
         virtual void v_InitObject();
 
-        virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
-
-        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux);
+        void GetFluxVector(
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
         virtual void v_GenerateSummary(SummaryList& s);
     private:

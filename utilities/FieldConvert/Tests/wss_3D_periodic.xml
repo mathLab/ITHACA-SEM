@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="3" SPACE="3">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAGH+wh9AN7mAgjA37AhFU/AjBj1YUwnwWrfoQ5rFj1I+TZsIo/sJ81EwR22rNj1c/AAJPnwGEuTJ4Th/th8lw43A+T58bhfpg8ABZZK+8A</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1kDcSwCAQA3HEOfv/X3VhttmZo9FInHSClP5TFawDngLeBIi/Fc8FO+UNBXvlw/GRP8qXxX1PziTO3CxO3hLMrcpB39Sfd+7qj37Ij35Kp/elvei39vLvj3LRX/nRP3ffAdYA</EDGE>
+        <FACE>
+            <T COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjY4AALijNC6V5oDQHlGaC0nxQmh+HPiEoLYhmDkyfMJQWgdIALwgAzAAA</T>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxdjjkSgDAMAwPmDEdIgP9/lUYqWDc746zkpPSfTuzFwN4zios4IGd/ElfkAr69LM7oDew3vPM/vpfhO+97p3iJB/L2C7wdve67xVds6HX+gVfFD+DQAakA</Q>
+        </FACE>
+        <ELEMENT>
+            <H COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAFjFCaCUozQ2kWKM0KpQEBUAAQ</H>
+            <R COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjZIAAZijNBqXZoTQHlOaE0kxo8lxQmhtK80BpXigNAA6AAFoA</R>
+        </ELEMENT>
+        <CURVED COMPRESSED="B64Z-LittleEndian" BITSIZE="64">
+            <E>eJxjYEAFrAzYAQuUZoTSHDjUw/gw9QAFUAAh</E>
+            <DATAPOINTS ID="0">
+                <INDEX>eJwtxbcBACAIADAsiP7/sAPJkog2PL28nT4uXz9/BXgALgAA</INDEX>
+                <POINTS>eJxjYMAPGKG0oqFnnbrUMfsNUx/LXHFcux8mz4Si+oH9rJkgsBMuzwyld2zOVSirfIWhnwVF/wd7dPtZcbgLao89Gw73weTZcbgPJs+Bw30weU4c7oPJAwA3bkWl</POINTS>
+            </DATAPOINTS>
+        </CURVED>
+        <COMPOSITE>
+            <C ID="1"> F[13] </C>
+            <C ID="2"> F[11,2] </C>
+            <C ID="3"> F[1] </C>
+            <C ID="4"> F[9,4] </C>
+            <C ID="100"> H[0] </C>
+            <C ID="111"> R[1-2] </C>
+            <C ID="113"> F[12,8,0] </C>
+            <C ID="114"> F[10,6,5] </C>
+        </COMPOSITE>
+        <DOMAIN> C[100,111] </DOMAIN>
+    </GEOMETRY>
+    <EXPANSIONS>
+        <E COMPOSITE="C[100]" NUMMODES="2" TYPE="MODIFIED" FIELDS="rho,rhou,rhov,rhow,E" />
+        <E COMPOSITE="C[111]" NUMMODES="2" TYPE="MODIFIED" FIELDS="rho,rhou,rhov,rhow,E" />
+    </EXPANSIONS>
+
+      <CONDITIONS>
+
+    <SOLVERINFO>
+        <I PROPERTY="EQType"                VALUE="NavierStokesCFE"     />
+        <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+        <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+        <I PROPERTY="DiffusionType"         VALUE="LDGNS"               />
+        <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+        <I PROPERTY="UpwindType"            VALUE="Roe"                 />
+        <I PROPERTY="ProblemType"           VALUE="General"             />
+        <I PROPERTY="ViscosityType"         VALUE="Variable"            />
+    </SOLVERINFO>
+
+    <VARIABLES>
+      <V ID="0"> rho  </V>
+      <V ID="1"> rhou </V>
+      <V ID="2"> rhov </V>
+      <V ID="3"> rhow </V>
+      <V ID="4"> E    </V>
+    </VARIABLES>
+
+    <BOUNDARYREGIONS>
+      <B ID="0"> C[2] </B>
+      <B ID="1"> C[3] </B>
+      <B ID="2"> C[4] </B>
+      <B ID="3"> C[1] </B>
+      <B ID="4"> C[113] </B>
+      <B ID="5"> C[114] </B>
+    </BOUNDARYREGIONS>
+
+    <BOUNDARYCONDITIONS>
+      <REGION REF="0">
+        <D VAR="rho"  VALUE="0" />
+        <D VAR="rhou" VALUE="0" />
+        <D VAR="rhov" VALUE="0" />
+        <D VAR="rhow" VALUE="0" />
+        <D VAR="E"    VALUE="0" />
+      </REGION>
+      <REGION REF="1">
+        <D VAR="rho"  USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+        <D VAR="rhou" USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+        <D VAR="rhov" USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+        <D VAR="rhow" USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+        <D VAR="E"    USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+      </REGION>
+      <REGION REF="2">
+        <D VAR="rho"  USERDEFINEDTYPE="PressureOutflowNonReflective" VALUE="0" />
+        <D VAR="rhou" USERDEFINEDTYPE="PressureOutflowNonReflective" VALUE="0" />
+        <D VAR="rhov" USERDEFINEDTYPE="PressureOutflowNonReflective" VALUE="0" />
+        <D VAR="rhow" USERDEFINEDTYPE="PressureOutflowNonReflective" VALUE="0" />
+        <D VAR="E"    USERDEFINEDTYPE="PressureOutflowNonReflective" VALUE="0" />
+      </REGION>
+      <REGION REF="3">
+        <D VAR="rho"  VALUE="0" />
+        <D VAR="rhou" VALUE="0" />
+        <D VAR="rhov" VALUE="0" />
+        <D VAR="rhow" VALUE="0" />
+        <D VAR="E"    VALUE="0" />
+      </REGION>
+      <REGION REF="4">
+        <P VAR="rho"  VALUE="[5]" />
+        <P VAR="rhou" VALUE="[5]" />
+        <P VAR="rhov" VALUE="[5]" />
+        <P VAR="rhow" VALUE="[5]" />
+        <P VAR="E"    VALUE="[5]" />
+      </REGION>
+      <REGION REF="5">
+        <P VAR="rho"  VALUE="[4]" />
+        <P VAR="rhou" VALUE="[4]" />
+        <P VAR="rhov" VALUE="[4]" />
+        <P VAR="rhow" VALUE="[4]" />
+        <P VAR="E"    VALUE="[4]" />
+      </REGION>
+    </BOUNDARYCONDITIONS>
+
+    </CONDITIONS>
+</NEKTAR>

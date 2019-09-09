@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -63,7 +62,7 @@ namespace Nektar
 	 */
         
         PreconditionerLinearWithLowEnergy::PreconditionerLinearWithLowEnergy(
-            const boost::shared_ptr<GlobalLinSys> &plinsys,
+            const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
         {
@@ -74,8 +73,8 @@ namespace Nektar
          */ 
         void PreconditionerLinearWithLowEnergy::v_InitObject()
         {
-            m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap);
-            m_lowEnergyPrecon = GetPreconFactory().CreateInstance("LowEnergyBlock",m_linsys.lock(),m_locToGloMap);
+            m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap.lock());
+            m_lowEnergyPrecon = GetPreconFactory().CreateInstance("LowEnergyBlock",m_linsys.lock(),m_locToGloMap.lock());
         }
 
         /**
@@ -99,10 +98,11 @@ namespace Nektar
 
 
         DNekScalMatSharedPtr PreconditionerLinearWithLowEnergy::
-        v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalMat > &loc_mat)
+        v_TransformedSchurCompl(int n, int offset,
+                                const std::shared_ptr<DNekScalMat > &loc_mat)
 	{
             DNekScalMatSharedPtr returnval;
-            returnval=m_lowEnergyPrecon->TransformedSchurCompl(offset,loc_mat);
+            returnval=m_lowEnergyPrecon->TransformedSchurCompl(n,offset, loc_mat);
             return returnval;
         }
 

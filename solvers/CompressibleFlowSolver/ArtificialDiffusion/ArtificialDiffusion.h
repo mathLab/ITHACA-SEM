@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -47,11 +46,11 @@
 
 namespace Nektar
 {
-//  Forward declaration
+// Forward declaration
 class ArtificialDiffusion;
 
 /// A shared pointer to a artificial diffusion object
-typedef boost::shared_ptr<ArtificialDiffusion> ArtificialDiffusionSharedPtr;
+typedef std::shared_ptr<ArtificialDiffusion> ArtificialDiffusionSharedPtr;
 
 /// Declaration of the artificial diffusion factory
 typedef LibUtilities::NekFactory<std::string, ArtificialDiffusion,
@@ -81,6 +80,9 @@ class ArtificialDiffusion
             const Array<OneD, Array<OneD, NekDouble> > &physfield,
                   Array<OneD, NekDouble  >             &mu);
 
+        /// Set h/p scaling
+        void SetElmtHP(const Array<OneD, NekDouble> &hOverP);
+
     protected:
         /// Session reader
         LibUtilities::SessionReaderSharedPtr        m_session;
@@ -90,19 +92,14 @@ class ArtificialDiffusion
         VariableConverterSharedPtr                  m_varConv;
         /// LDG Diffusion operator
         SolverUtils::DiffusionSharedPtr             m_diffusion;
-
-        /// Parameters
-        NekDouble       m_FacL;
-        NekDouble       m_FacH;
-        NekDouble       m_hFactor;
-        NekDouble       m_C1;
-        NekDouble       m_C2;
-        NekDouble       m_mu0;
-        NekDouble       m_Skappa;
-        NekDouble       m_Kappa;
+        /// Constant scaling
+        NekDouble                                   m_mu0;
+        /// h/p scaling
+        Array<OneD, NekDouble>                      m_hOverP;
 
         /// Constructor
-        ArtificialDiffusion(const LibUtilities::SessionReaderSharedPtr& pSession,
+        ArtificialDiffusion(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                 const int spacedim);
 

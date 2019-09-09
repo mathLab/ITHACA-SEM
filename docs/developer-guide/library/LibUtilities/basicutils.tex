@@ -1,0 +1,30 @@
+%
+\section{BasicUtils}
+
+This directory contains some of the lowest level basic computer science routines within {\nek}.  
+ The directory currently contains the following:
+ 
+\begin{center}
+\begin{tabular}{|c | c | c |} \hline
+ArrayEqualityComparison.cpp & ArrayPolicies.hpp &	CompressData.cpp	\\ \hline	
+CompressData.h & ConsistentObjectAccess.hpp & CsvIO.cpp	\\ \hline		
+CsvIO.h &	 Equation.cpp & Equation.h	\\ \hline		
+ErrorUtil.hpp & FieldIO.cpp & FieldIO.h	\\ \hline		
+FieldIOHdf5.cpp & FieldIOHdf5.h & FieldIOXml.cpp \\ \hline			
+FieldIOXml.h & FileSystem.cpp	& FileSystem.h	\\ \hline		
+H5.cpp & H5.h & HashUtils.hpp			\\ \hline
+Metis.hpp & {\bf NekFactory.hpp} & {\bf NekManager.hpp} \\ \hline			
+OperatorGenerators.hpp & ParseUtils.cpp & ParseUtils.h \\ \hline
+Progressbar.hpp & PtsField.cpp & PtsField.h \\ \hline
+PtsIO.cpp & PtsIO.h & RawType.hpp \\ \hline
+Scotch.hpp & SessionReader.cpp & SessionReader.h \\ \hline
+ShapeType.hpp & SharedArray.hpp & Tau.hpp \\ \hline
+Thread.cpp & Thread.h & ThreadBoost.cpp \\ \hline
+ThreadBoost.h & Timer.cpp & Timer.h \\ \hline
+VDmath.hpp & VDmathArray.hpp & Vmath.cpp \\ \hline
+{\bf Vmath.hpp} & VmathArray.hpp & VtkUtil.hpp \\ \hline
+\end{tabular}
+\end{center}
+
+We have used {\bf bold} to denote (as examples) routines at our used throughout {\nek}.  They are in this sense ``fundamental''.
+Note that this list includes input/output routines (e.g. CompressData, FieldIo, H5), partitioning (e.g. Metis and Scotch) and Threading (e.g. Thread and ThreadBoost).

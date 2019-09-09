@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -69,19 +68,16 @@ void OutputSTL::Process()
 
     m_mshFile << std::scientific << setprecision(8);
 
-    CompositeMap::iterator it;
-
-    for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end();
-         ++it)
+    for (auto &it : m_mesh->m_composite)
     {
-        if (it->second->m_tag != "F")
+        if (it.second->m_tag != "F")
         {
             continue;
         }
 
-        m_mshFile << "solid comp:" << it->second->m_id << endl;
+        m_mshFile << "solid comp:" << it.second->m_id << endl;
 
-        vector<ElementSharedPtr> el = it->second->m_items;
+        vector<ElementSharedPtr> el = it.second->m_items;
 
         for (int i = 0; i < el.size(); i++)
         {

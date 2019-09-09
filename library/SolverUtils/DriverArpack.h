@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -52,8 +51,12 @@ public:
     friend class MemoryManager<DriverArpack>;
 
     /// Creates an instance of this class
-    static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
-        DriverSharedPtr p = MemoryManager<DriverArpack>::AllocateSharedPtr(pSession);
+    static DriverSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    {
+        DriverSharedPtr p = MemoryManager<DriverArpack>::AllocateSharedPtr(
+            pSession, pGraph);
         p->InitObject();
         return p;
     }
@@ -69,7 +72,8 @@ protected:
     int m_maxncv;//Largest number of basis vector used in Implicitly Restarted Arnoldi
 
     /// Constructor
-    DriverArpack( const LibUtilities::SessionReaderSharedPtr        pSession);
+    DriverArpack(const LibUtilities::SessionReaderSharedPtr pSession,
+                 const SpatialDomains::MeshGraphSharedPtr pGraph);
 
     /// Destructor
     virtual ~DriverArpack();

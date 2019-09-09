@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -45,6 +44,7 @@
 #include <mpi.h>
 #endif
 
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 
 using namespace std;
@@ -105,24 +105,14 @@ void PtsIO::Import(const string &inFile,
             fullpath = pinfilename / pfilename;
             string fname = PortablePath(fullpath);
 
-            TiXmlDocument doc1(fname);
-            bool loadOkay1 = doc1.LoadFile();
-
-            std::stringstream errstr;
-            errstr << "Unable to load file: " << fname << std::endl;
-            errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
-            errstr << "Position: Line " << doc1.ErrorRow() << ", Column "
-                   << doc1.ErrorCol() << std::endl;
-            ASSERTL0(loadOkay1, errstr.str());
-
             if (i == 0)
             {
-                ImportFieldData(doc1, ptsField);
+                ImportFieldData(fname, ptsField);
             }
             else
             {
                 LibUtilities::PtsFieldSharedPtr newPtsField;
-                ImportFieldData(doc1, newPtsField);
+                ImportFieldData(fname, newPtsField);
                 Array<OneD, Array<OneD, NekDouble> > pts;
                 newPtsField->GetPts(pts);
                 ptsField->AddPoints(pts);
@@ -132,17 +122,7 @@ void PtsIO::Import(const string &inFile,
     }
     else
     {
-        TiXmlDocument doc(infile);
-        bool loadOkay = doc.LoadFile();
-
-        std::stringstream errstr;
-        errstr << "Unable to load file: " << infile << std::endl;
-        errstr << "Reason: " << doc.ErrorDesc() << std::endl;
-        errstr << "Position: Line " << doc.ErrorRow() << ", Column "
-               << doc.ErrorCol() << std::endl;
-        ASSERTL0(loadOkay, errstr.str());
-
-        ImportFieldData(doc, ptsField);
+        ImportFieldData(infile, ptsField);
     }
 }
 
@@ -228,9 +208,24 @@ void PtsIO::Write(const string &outFile,
     doc.SaveFile(filename);
     */
 }
-
-void PtsIO::ImportFieldData(TiXmlDocument docInput, PtsFieldSharedPtr &ptsField)
+void PtsIO::ImportFieldData(const string inFile, PtsFieldSharedPtr &ptsField)
 {
+    v_ImportFieldData(inFile, ptsField);
+}
+
+
+void PtsIO::v_ImportFieldData(const string inFile, PtsFieldSharedPtr &ptsField)
+{
+    TiXmlDocument docInput(inFile);
+    bool loadOkay1 = docInput.LoadFile();
+
+    std::stringstream errstr;
+    errstr << "Unable to load file: " << inFile << std::endl;
+    errstr << "Reason: " << docInput.ErrorDesc() << std::endl;
+    errstr << "Position: Line " << docInput.ErrorRow() << ", Column "
+        << docInput.ErrorCol() << std::endl;
+    ASSERTL0(loadOkay1, errstr.str());
+
     TiXmlElement *nektar = docInput.FirstChildElement("NEKTAR");
     TiXmlElement *points = nektar->FirstChildElement("POINTS");
     int dim;
@@ -244,7 +239,7 @@ void PtsIO::ImportFieldData(TiXmlDocument docInput, PtsFieldSharedPtr &ptsField)
     if (!fields.empty())
     {
         bool valid =
-            ParseUtils::GenerateOrderedStringVector(fields.c_str(), fieldNames);
+            ParseUtils::GenerateVector(fields, fieldNames);
         ASSERTL0(
             valid,
             "Unable to process list of field variable in  FIELDS attribute:  " +

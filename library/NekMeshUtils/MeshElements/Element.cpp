@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -33,8 +32,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <loki/Singleton.h>
-
 #include <NekMeshUtils/MeshElements/Element.h>
 
 using namespace std;
@@ -46,9 +43,8 @@ namespace NekMeshUtils
 
 ElementFactory &GetElementFactory()
 {
-    typedef Loki::SingletonHolder<ElementFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy> Type;
-    return Type::Instance();
+    static ElementFactory instance;
+    return instance;
 }
 
 Element::Element(ElmtConfig pConf, unsigned int pNumNodes,

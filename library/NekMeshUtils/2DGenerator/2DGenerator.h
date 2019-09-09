@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -54,7 +53,7 @@ class Generator2D : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static std::shared_ptr<Module> create(MeshSharedPtr m)
     {
         return MemoryManager<Generator2D>::AllocateSharedPtr(m);
     }
@@ -67,6 +66,8 @@ public:
     virtual void Process();
 
 private:
+    void FindBLEnds();
+
     void MakeBLPrep();
 
     void PeriodicPrep();
@@ -82,11 +83,18 @@ private:
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
     /// map of periodic curve pairs
     std::map<unsigned, unsigned> m_periodicPairs;
-
+    /// list of curves needing a BL
     std::vector<unsigned int> m_blCurves;
+    /// map of curves and Bl ends: 0, 1 or 2 (for both)
+    std::map<unsigned, unsigned> m_blends;
+    /// list of BL edges
+    std::vector<EdgeSharedPtr> m_blEdges;
+    /// BL thickness expression
     LibUtilities::AnalyticExpressionEvaluator m_thickness;
+    /// BL thickness expression ID
     int m_thickness_ID;
-    std::map<NodeSharedPtr, std::vector<EdgeSharedPtr> > m_nodesToEdge;
+    /// map of BL curve nodes to adjacent edges
+    std::map<NodeSharedPtr, std::vector<EdgeSharedPtr>> m_nodesToEdge;
 };
 }
 }

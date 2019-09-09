@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -70,8 +69,8 @@ namespace Nektar
          */
         GlobalLinSysIterativeFull::GlobalLinSysIterativeFull(
                     const GlobalLinSysKey &pKey,
-                    const boost::weak_ptr<ExpList> &pExp,
-                    const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                    const std::weak_ptr<ExpList> &pExp,
+                    const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             : GlobalLinSys         (pKey, pExp, pLocToGloMap),
               GlobalLinSysIterative(pKey, pExp, pLocToGloMap)
         {
@@ -114,15 +113,15 @@ namespace Nektar
                     const AssemblyMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
-            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+            std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             bool vCG;
-            if ((m_locToGloMap = boost::dynamic_pointer_cast<AssemblyMapCG>(
-                     pLocToGloMap)))
+            m_locToGloMap = pLocToGloMap;
+
+            if (std::dynamic_pointer_cast<AssemblyMapCG>(pLocToGloMap))
             {
                 vCG = true;
             }
-            else if ((m_locToGloMap = boost::dynamic_pointer_cast<
-                          AssemblyMapDG>(pLocToGloMap)))
+            else if (std::dynamic_pointer_cast<AssemblyMapDG>(pLocToGloMap))
             {
                 vCG = false;
             }
@@ -191,19 +190,21 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+            std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             // Perform matrix-vector operation A*d_i
             expList->GeneralMatrixOp(m_linSysKey,
                                      pInput, pOutput, eGlobal);
+
+            AssemblyMapSharedPtr asmMap = m_locToGloMap.lock();
 
             // Apply robin boundary conditions to the solution.
             if(m_robinBCInfo.size() > 0)
             {
                 ASSERTL0(false,
                         "Robin boundaries not set up in IterativeFull solver.");
-                int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-                int nLocal  = m_locToGloMap->GetNumLocalCoeffs();
-                int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+                int nGlobal = asmMap->GetNumGlobalCoeffs();
+                int nLocal  = asmMap->GetNumLocalCoeffs();
+                int nDir    = asmMap->GetNumGlobalDirBndCoeffs();
                 int nNonDir = nGlobal - nDir;
                 Array<OneD, NekDouble> robin_A(nGlobal, 0.0);
                 Array<OneD, NekDouble> robin_l(nLocal,  0.0);
@@ -213,13 +214,13 @@ namespace Nektar
 
                 // Operation: p_A = A * d_A
                 // First map d_A to local solution
-                m_locToGloMap->GlobalToLocal(pInput, robin_l);
+                asmMap->GlobalToLocal(pInput, robin_l);
 
                 // Iterate over all the elements computing Robin BCs where
                 // necessary
                 for (int n = 0; n < expList->GetNumElmts(); ++n)
                 {
-                    int nel = expList->GetOffset_Elmt_Id(n);
+                    int nel = n;
                     int offset = expList->GetCoeff_Offset(n);
                     int ncoeffs = expList->GetExp(nel)->GetNcoeffs();
 
@@ -227,7 +228,7 @@ namespace Nektar
                     {
                         RobinBCInfoSharedPtr rBC;
                         Array<OneD, NekDouble> tmp;
-                        StdRegions::StdExpansionSharedPtr vExp = expList->GetExp(nel);
+                        LocalRegions::ExpansionSharedPtr vExp = expList->GetExp(nel);
 
                         // add local matrix contribution
                         for(rBC = m_robinBCInfo.find(nel)->second;rBC; rBC = rBC->next)
@@ -242,7 +243,7 @@ namespace Nektar
                 }
 
                 // Map local Robin contribution back to global coefficients
-                m_locToGloMap->LocalToGlobal(robin_l, robin_A);
+                asmMap->LocalToGlobal(robin_l, robin_A);
                 // Add them to the output of the GeneralMatrixOp
                 Vmath::Vadd(nGlobal, pOutput, 1, robin_A, 1, pOutput, 1);
             }
@@ -254,7 +255,7 @@ namespace Nektar
          */
         void GlobalLinSysIterativeFull::v_UniqueMap()
         {
-            m_map = m_locToGloMap->GetGlobalToUniversalMapUnique();
+            m_map = m_locToGloMap.lock()->GetGlobalToUniversalMapUnique();
         }
 
     }

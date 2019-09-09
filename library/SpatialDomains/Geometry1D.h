@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -39,46 +38,33 @@
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
-#include <StdRegions/StdExpansion1D.h>  // for StdExpansion1DSharedPtr, etc
+#include <StdRegions/StdExpansion1D.h>
 
 namespace Nektar
 {
-    namespace SpatialDomains
-    {
-        class Geometry1D;
+namespace SpatialDomains
+{
 
-        // shorthand for boost pointer
-        typedef boost::shared_ptr<Geometry1D> Geometry1DSharedPtr;
-        typedef std::vector< Geometry1DSharedPtr > Geometry1DVector;
-        typedef std::vector< Geometry1DSharedPtr >::iterator Geometry1DVectorIter;
+class Geometry1D;
 
-        /// 1D geometry information
-        class Geometry1D: public Geometry
-        {
-        public:
-            SPATIAL_DOMAINS_EXPORT Geometry1D();
-            SPATIAL_DOMAINS_EXPORT Geometry1D(const int coordim);
-            SPATIAL_DOMAINS_EXPORT virtual ~Geometry1D();
-            SPATIAL_DOMAINS_EXPORT PointGeomSharedPtr
-                        GetVertex(const int i) const;
-            SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType
-                        DetShapeType() const;
-            SPATIAL_DOMAINS_EXPORT int GetEid() const;
+typedef std::shared_ptr<Geometry1D> Geometry1DSharedPtr;
+typedef std::vector<Geometry1DSharedPtr> Geometry1DVector;
 
-        protected:
-            using Geometry::v_GetEid;
-            
-            virtual int v_GetShapeDim() const;
-            virtual int v_GetEid() const;
-            virtual int v_GetVid(int i) const;
+/// 1D geometry information
+class Geometry1D : public Geometry
+{
+public:
+    SPATIAL_DOMAINS_EXPORT Geometry1D();
+    SPATIAL_DOMAINS_EXPORT Geometry1D(const int coordim);
+    SPATIAL_DOMAINS_EXPORT virtual ~Geometry1D();
 
-            virtual PointGeomSharedPtr
-                         v_GetVertex(const int i) const;
-            virtual LibUtilities::ShapeType
-                         v_DetShapeType() const;
-        };
-    }; //end of namespace
-}; //end of namespace
+    SPATIAL_DOMAINS_EXPORT static const int kDim = 1;
 
-#endif //NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H
+protected:
+    virtual int v_GetShapeDim() const;
+};
 
+}
+}
+
+#endif // NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H

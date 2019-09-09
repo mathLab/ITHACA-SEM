@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -96,12 +95,12 @@ namespace Nektar
             m_bdata(bkey.GetTotNumModes()*bkey.GetTotNumPoints()),
             m_dbdata(bkey.GetTotNumModes()*bkey.GetTotNumPoints())
         {
-            m_InterpManager.RegisterGlobalCreator(boost::bind(&Basis::CalculateInterpMatrix,this,_1));
+            m_InterpManager.RegisterGlobalCreator(std::bind(&Basis::CalculateInterpMatrix,this,std::placeholders::_1));
         }
 
-        boost::shared_ptr<Basis> Basis::Create(const BasisKey &bkey)
+        std::shared_ptr<Basis> Basis::Create(const BasisKey &bkey)
         {
-            boost::shared_ptr<Basis> returnval(new Basis(bkey));
+            std::shared_ptr<Basis> returnval(new Basis(bkey));
             returnval->Initialize();
 
             return returnval;
@@ -119,7 +118,7 @@ namespace Nektar
         /** \brief Calculate the interpolation Matrix for coefficient from
         *  one base (m_basisKey) to another (tbasis0)
         */
-        boost::shared_ptr< NekMatrix<NekDouble> > Basis::CalculateInterpMatrix(const BasisKey &tbasis0)
+        std::shared_ptr< NekMatrix<NekDouble> > Basis::CalculateInterpMatrix(const BasisKey &tbasis0)
         {
             int dim = m_basisKey.GetNumModes();
             const PointsKey pkey(dim,LibUtilities::eGaussLobattoLegendre);
@@ -143,7 +142,7 @@ namespace Nektar
 
             // Compute transformation matrix
             Array<OneD, NekDouble> zero1D(dim*dim,0.0);
-            boost::shared_ptr< NekMatrix<NekDouble> > ftB(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(dim,dim,zero1D));
+            std::shared_ptr< NekMatrix<NekDouble> > ftB(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(dim,dim,zero1D));
             (*ftB) = tB*fB;
 
             return ftB;
@@ -674,7 +673,7 @@ namespace Nektar
             case eGLL_Lagrange:
                 {
                     mode = m_bdata.data();
-                    boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes, eGaussLobattoLegendre)];
+                    std::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes, eGaussLobattoLegendre)];
                     const Array<OneD, const NekDouble>& zp(m_points->GetZ());
 
                     for (p=0; p<numModes; ++p, mode += numPoints)
@@ -695,7 +694,7 @@ namespace Nektar
             case eGauss_Lagrange:
                 {
                     mode = m_bdata.data();
-                    boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes, eGaussGaussLegendre)];
+                    std::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes, eGaussGaussLegendre)];
                     const Array<OneD, const NekDouble>& zp(m_points->GetZ());
 					
                     for (p=0; p<numModes; ++p,mode += numPoints)

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -47,10 +46,8 @@ namespace Nektar
     namespace LocalRegions 
     {
         class Expansion0D;
-        typedef boost::shared_ptr<Expansion0D>      Expansion0DSharedPtr;
+        typedef std::shared_ptr<Expansion0D>      Expansion0DSharedPtr;
         typedef std::vector< Expansion0DSharedPtr > Expansion0DVector;
-        typedef std::vector< Expansion0DSharedPtr >::iterator
-            Expansion0DVectorIter;
 
         class Expansion0D: virtual public Expansion,
             virtual public StdRegions::StdExpansion0D
@@ -133,7 +130,7 @@ namespace Nektar
         inline SpatialDomains::Geometry0DSharedPtr
             Expansion0D::GetGeom0D() const
         {
-            return boost::dynamic_pointer_cast<SpatialDomains::
+            return std::dynamic_pointer_cast<SpatialDomains::
                 Geometry0D>(m_geom);
 			
         }

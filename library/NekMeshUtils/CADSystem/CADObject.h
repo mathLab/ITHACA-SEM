@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -35,8 +34,6 @@
 
 #ifndef NEKMESHUTILS_CADSYSTEM_CADOBJ
 #define NEKMESHUTILS_CADSYSTEM_CADOBJ
-
-#include <boost/shared_ptr.hpp>
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -82,22 +79,44 @@ public:
     }
 
     /**
-     * @brief Return ID of the vertex
+     * @brief Return ID of the CAD object
      */
     int GetId()
     {
         return m_id;
     }
 
+    /**
+     * @brief Get the type of the CAD object
+     */
     CADType::cadType GetType()
     {
         return m_type;
     }
 
+    /**
+     * @brief Get the Orientation of the CAD object
+     */
     virtual CADOrientation::Orientation Orientation()
     {
         ASSERTL0(false,"must be implemented at the cad object level");
         return CADOrientation::eUnknown;
+    }
+
+    /**
+     * @brief Give the CAD object a string name
+     */
+    void SetName(std::string i)
+    {
+        m_name = i;
+    }
+
+    /**
+     * @brief Get the name of a CAD object
+     */
+    std::string GetName()
+    {
+        return m_name;
     }
 
 protected:
@@ -107,9 +126,11 @@ protected:
     CADType::cadType m_type;
     /// orientation of the CADObject
     CADOrientation::Orientation m_orientation;
+    /// string name of the cad
+    std::string m_name;
 };
 
-typedef boost::shared_ptr<CADObject> CADObjectSharedPtr;
+typedef std::shared_ptr<CADObject> CADObjectSharedPtr;
 }
 }
 

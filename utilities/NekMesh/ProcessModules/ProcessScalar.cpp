@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -33,7 +32,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <NekMeshUtils/MeshElements/Element.h>
 
@@ -72,7 +71,7 @@ void ProcessScalar::Process()
 
     // Obtain vector of surface IDs from string.
     vector<unsigned int> surfs;
-    ParseUtils::GenerateSeqVector(surf.c_str(), surfs);
+    ParseUtils::GenerateSeqVector(surf, surfs);
     sort(surfs.begin(), surfs.end());
 
     // If we're running in verbose mode print out a list of surfaces.

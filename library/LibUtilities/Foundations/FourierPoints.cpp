@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -113,9 +112,9 @@ namespace Nektar
             }           
         }
 
-        boost::shared_ptr<Points<NekDouble> > FourierPoints::Create(const PointsKey &key)
+        std::shared_ptr<Points<NekDouble> > FourierPoints::Create(const PointsKey &key)
         {
-            boost::shared_ptr<Points<NekDouble> > returnval(MemoryManager<FourierPoints>::AllocateSharedPtr(key));
+            std::shared_ptr<Points<NekDouble> > returnval(MemoryManager<FourierPoints>::AllocateSharedPtr(key));
 
             returnval->Initialize();
 
@@ -123,7 +122,7 @@ namespace Nektar
         }
 
 
-        boost::shared_ptr< NekMatrix<NekDouble> > FourierPoints::CreateMatrix(const PointsKey &pkey)
+        std::shared_ptr< NekMatrix<NekDouble> > FourierPoints::CreateMatrix(const PointsKey &pkey)
         {
             int numpoints = pkey.GetNumPoints();
             Array<OneD, const NekDouble> xpoints;
@@ -134,14 +133,14 @@ namespace Nektar
             return GetI(numpoints, xpoints);
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(const PointsKey& pkey)
+        const std::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(const PointsKey& pkey)
         {
             ASSERTL0(pkey.GetPointsDim()==1, "Fourier Points can only interp to other 1d point distributions");
 
             return m_InterpManager[pkey];
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(const Array<OneD, const NekDouble>& x)
+        const std::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(const Array<OneD, const NekDouble>& x)
         {
             int numpoints = 1;
 
@@ -149,7 +148,7 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x)
+        const std::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x)
         {
             Array<OneD, NekDouble> interp(GetNumPoints()*numpoints);
 
@@ -157,7 +156,7 @@ namespace Nektar
 
             NekDouble* t = interp.data();
             unsigned int np = GetNumPoints();
-            boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,np,t));
+            std::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,np,t));
 
             return returnval;
         }

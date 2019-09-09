@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -48,7 +47,7 @@ namespace Nektar
         class ExpList;
         class GlobalLinSysStaticCond;
 
-        typedef boost::shared_ptr<GlobalLinSysStaticCond>
+        typedef std::shared_ptr<GlobalLinSysStaticCond>
             GlobalLinSysStaticCondSharedPtr;
 
         /// A global linear system.
@@ -58,8 +57,8 @@ namespace Nektar
             /// Constructor for full direct matrix solve.
             GlobalLinSysStaticCond(
                 const GlobalLinSysKey                &mkey,
-                const boost::weak_ptr<ExpList>       &pExpList,
-                const boost::shared_ptr<AssemblyMap> &locToGloMap);
+                const std::weak_ptr<ExpList>         &pExpList,
+                const std::shared_ptr<AssemblyMap>   &locToGloMap);
 
             virtual ~GlobalLinSysStaticCond();
 
@@ -71,21 +70,21 @@ namespace Nektar
                 return m_schurCompl;
             }
 
-            virtual void v_BasisTransform(
+            virtual void v_BasisFwdTransform(
                 Array<OneD, NekDouble>& pInOut,
                 int offset)
             {
 
             }
 
-            virtual void v_BasisInvTransform(
+            virtual void v_BasisBwdTransform(
                 Array<OneD, NekDouble>& pInOut)
             {
                 
             }
 
             virtual void v_AssembleSchurComplement(
-                boost::shared_ptr<AssemblyMap> pLoctoGloMap)
+                std::shared_ptr<AssemblyMap> pLoctoGloMap)
             {
                 
             }
@@ -94,12 +93,12 @@ namespace Nektar
 
             virtual GlobalLinSysStaticCondSharedPtr v_Recurse(
                 const GlobalLinSysKey                &mkey,
-                const boost::weak_ptr<ExpList>       &pExpList,
+                const std::weak_ptr<ExpList>         &pExpList,
                 const DNekScalBlkMatSharedPtr         pSchurCompl,
                 const DNekScalBlkMatSharedPtr         pBinvD,
                 const DNekScalBlkMatSharedPtr         pC,
                 const DNekScalBlkMatSharedPtr         pInvD,
-                const boost::shared_ptr<AssemblyMap> &locToGloMap) = 0;
+                const std::shared_ptr<AssemblyMap>   &locToGloMap) = 0;
             
             /// Schur complement for Direct Static Condensation.
             GlobalLinSysStaticCondSharedPtr          m_recursiveSchurCompl;
@@ -112,7 +111,7 @@ namespace Nektar
             /// Block \f$ D^{-1} \f$ matrix.
             DNekScalBlkMatSharedPtr                  m_invD;
             /// Local to global map.
-            boost::shared_ptr<AssemblyMap>           m_locToGloMap;
+            std::weak_ptr<AssemblyMap>               m_locToGloMap;
             /// Workspace array for matrix multiplication
             Array<OneD, NekDouble>                   m_wsp;
 
@@ -122,23 +121,23 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &in,
                       Array<OneD,       NekDouble> &out,
                 const AssemblyMapSharedPtr         &locToGloMap,
-                const Array<OneD, const NekDouble>  &dirForcing
+                const Array<OneD, const NekDouble> &dirForcing
                     = NullNekDouble1DArray);
 
             virtual void v_InitObject();
 
             /// Initialise this object
             virtual void v_Initialise(
-                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
+                    const std::shared_ptr<AssemblyMap>& locToGloMap);
 
             /// Set up the storage for the Schur complement or the top level
             /// of the multi-level Schur complement.
             void SetupTopLevel(
-                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
+                    const std::shared_ptr<AssemblyMap>& locToGloMap);
 
             ///
             void ConstructNextLevelCondensedSystem(
-                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
+                    const std::shared_ptr<AssemblyMap>& locToGloMap);
         };
     }
 }

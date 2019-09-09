@@ -10,7 +10,6 @@
 // University of Utah (USA) and Department of Aeronautics, Imperial
 // College London (UK).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -29,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:
+// Description: Example of using time-integration schemes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -39,34 +38,34 @@
 // For more information, please consult the following reference:
 //
 // Vos, P.E.J., Eskilsson, C., Bolis, A., Chun, S., Kirby, R.M. and Sherwin, S.J.
-// "A Generic Framework for Time-Stepping PDEs: general linear methods, 
+// "A Generic Framework for Time-Stepping PDEs: general linear methods,
 //  object-oriented implementation and application to fluid problems"
 // International Journal of Computational Fluid Dynamics, to appear
 
 // It solves the one-dimensional advection-diffusion problem, defined as
 //
 //  |    du     du     d^2 u
-//  |    -- + V -- = D -----,  
+//  |    -- + V -- = D -----,
 //  |    dt     dx     d x^2
 //  |
 //  |    subject to:
 //  |    - periodic boundary conditions
 //  |    - the initial condition
 //  |        u(x,0) = sin(2*pi*k*x)
-//  |    
-//  |    and with  x = [0,1] 
+//  |
+//  |    and with  x = [0,1]
 //  |              t = [0,1]
 //  |              U = 1
 //  |              D = 0.05
 //  |              k = 1
-//  |    
+//  |
 //
 // using the finite difference method.
 // The exact solution of the equation above is given by
 //
 //  u(x,t) = exp(-D * (2*pi*k)^2 * t) * sin(2*pi*k * (x - U*t) )
 //
-// The output is written out to the files 
+// The output is written out to the files
 //
 //   - OneDfinDiffAdvDiffSolverOutput.dat (containing the data)
 //   - OneDfinDiffAdvDiffSolverOutput.p   (containing a gnuplot script)
@@ -79,6 +78,9 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+
+#include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
@@ -86,7 +88,9 @@ using namespace std;
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
 
-// We first implement a class that represents 
+namespace po = boost::program_options;
+
+// We first implement a class that represents
 // the 1D finite difference solver
 class OneDfinDiffAdvDiffSolver
 {
@@ -114,12 +118,12 @@ public:
     void HelmSolve(const Array<OneD, const Array<OneD, double> >& inarray,
                          Array<OneD,       Array<OneD, double> >& outarray,
                    const NekDouble time,
-                   const NekDouble lambda) const; 
-    
+                   const NekDouble lambda) const;
+
     void EvaluateAdvectionTerm(const Array<OneD, const  Array<OneD, double> >& inarray,
                                      Array<OneD,        Array<OneD, double> >& outarray,
                                const NekDouble time) const;
-    
+
     void Project(const Array<OneD, const  Array<OneD, double> >& inarray,
                        Array<OneD,        Array<OneD, double> >& outarray,
                  const NekDouble time) const;
@@ -161,45 +165,72 @@ private:
     double m_dt;         // the size of a time-step
 
     // value of the coefficients
-    double m_wavenumber; // wave number 
+    double m_wavenumber; // wave number
     double m_U;          // advection speed
     double m_D;          // diffusion coefficient
 
-    
-    void solveTriDiagMatrix (int n, double alpha, double beta, 
+
+    void solveTriDiagMatrix (int n, double alpha, double beta,
                              const Array<OneD, const double>& inarray,
-                             Array<OneD,       double>& outarray) const;  
+                             Array<OneD,       double>& outarray) const;
 };
 
+
 int main(int argc, char *argv[])
-{  
-    // Check if the number of arguments given to the executable is correct
-    if(argc != 4)
+{
+    po::options_description desc("Available options");
+    desc.add_options()
+        ("help,h",      "Produce this help message.")
+        ("points,p",    po::value<int>(),
+                        "Number of grid points to be used.")
+        ("timesteps,t", po::value<int>(),
+                        "Number of timesteps to be used.")
+        ("method,m",    po::value<int>(),
+                    "TimeIntegrationMethod is a number in the range [1,8].\n"
+                    "It defines the time-integration method to be used:\n"
+                    "- 1: 1st order multi-step IMEX scheme\n"
+                    "     (Euler Backwards/Euler Forwards)\n"
+                    "- 2: 2nd order multi-step IMEX scheme\n"
+                    "- 3: 3rd order multi-step IMEX scheme\n"
+                    "- 4: 4th order multi-step IMEX scheme\n"
+                    "- 5: 2nd order multi-stage DIRK IMEX scheme\n"
+                    "- 6: 3nd order multi-stage DIRK IMEX scheme\n"
+                    "- 7: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
+                    "- 8: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
+                    "- 9: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
+                    "     (MCNAB)"
+        );
+    po::variables_map vm;
+    try
     {
-        cerr << "Usage: Project1D Npoints Ntimesteps TimeIntegrationMethod" << endl;        
-        cerr << "Where  - Npoints is the number of grid points to be used" << endl;      
-        cerr << "         for the finite difference discretisation" << endl; 
-        cerr << "       - Ntimesteps is the number of timesteps to be used" << endl;
-        cerr << "         for the time-integration method" << endl;    
-        cerr << "       - TimeIntegrationMethod is a number in the range [1,5]" << endl;    
-        cerr << "         and defines the time-integration method to be used, i.e." << endl; 
-        cerr << "           - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)" << endl;   
-        cerr << "           - 2: 2nd order multi-step IMEX scheme" << endl;   
-        cerr << "           - 3: 3rd order multi-step IMEX scheme" << endl; 
-        cerr << "           - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;    
-        cerr << "           - 5: 3nd order multi-stage DIRK IMEX scheme" << endl;    
-        exit(1);
+        po::store(po::command_line_parser(argc, argv).
+                  options(desc).run(), vm);
+        po::notify(vm);
+    }
+    catch (const std::exception& e)
+    {
+        cerr << e.what() << endl;
+        cerr << desc;
+        return 1;
     }
 
-    // Read the discretisation parameters
-    int nPoints    = atoi(argv[1]);
-    int nTimesteps = atoi(argv[2]);
+    if (!vm.count("points") || !vm.count("timesteps") || !vm.count("method")
+            || vm.count("help"))
+    {
+        cout << "Please specify points, timesteps and method." << endl << endl;
+        cout << desc;
+        return 1;
+    }
+
+    int nPoints = vm["points"].as<int>();
+    int nTimesteps = vm["timesteps"].as<int>();
+    int nMethod = vm["method"].as<int>();
 
     // Open a file for writing the solution
     ofstream outfile;
     outfile.open("OneDfinDiffAdvDiffSolverOutput.dat");
 
-    
+
 
     // -----------------------------------------------------------------------------
     // THE IMPLEMENTATION BELOW SHOWS HOW THE TIME-STEPPING FRAMEWORK CAN BE
@@ -207,14 +238,14 @@ int main(int argc, char *argv[])
 
     // 1. THE SPATIAL DISCRETISATION
     //    Create an object of the OneDfinDiffAdvDiffSolver class.
-    //    This class can be thought of as representing the 
+    //    This class can be thought of as representing the
     //    spatial (finite difference) discretisation.
     OneDfinDiffAdvDiffSolver* solver = new OneDfinDiffAdvDiffSolver(nPoints,nTimesteps);
-    //    After this spatial discretisation, the PDE has actually been 
+    //    After this spatial discretisation, the PDE has actually been
     //    reduced (through the method-of-lines) to an ODE.
     //    In order to use the time-stepping framework, we need to give it the necessary
     //    information about this ODE.
-    //    Therefore, we create an oject of the class TimeIntegrationSchemeOperators that 
+    //    Therefore, we create an oject of the class TimeIntegrationSchemeOperators that
     //    contains a 'function pointer' (in fact a 'functor') to the
     //    - explicit term of the ODE (i.e. the advection term)
     //    - implicit solve routine (i.e. the Helmholtz solver)
@@ -227,26 +258,26 @@ int main(int argc, char *argv[])
     // 2. THE TEMPORAL DISCRETISATION
     // 2.1 Read in which method should be used.
     //     For a multi-step scheme, also set up
-    //     which method should be used for appropriately 
+    //     which method should be used for appropriately
     //     starting up the system
     Array<OneD, TimeIntegrationMethod> method;
     int nSteps = 1;
-    switch (atoi(argv[3]))
+    switch (nMethod)
     {
     case 1 :
         {
             nSteps = 1;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);
             method[0] = eIMEXOrder1;
-        } 
+        }
         break;
     case 2 :
         {
             nSteps = 2;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);
             method[0] = eIMEXdirk_2_3_2; // the start-up method for step 1
-            method[1] = eIMEXOrder2;     
-        } 
+            method[1] = eIMEXOrder2;
+        }
         break;
     case 3 :
         {
@@ -255,32 +286,66 @@ int main(int argc, char *argv[])
             method[0] = eIMEXdirk_3_4_3; // the start-up method for step 1
             method[1] = eIMEXdirk_3_4_3; // the start-up method for step 2
             method[2] = eIMEXOrder3;
-        } 
+        }
         break;
     case 4 :
         {
-            nSteps = 1;
+            nSteps = 4;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXdirk_2_3_2;
-        } 
+            method[0] = eIMEXdirk_3_4_3; // the start-up method for step 1
+            method[1] = eIMEXdirk_3_4_3; // the start-up method for step 2
+            method[2] = eIMEXOrder3;     // the start-up method for step 3
+            method[3] = eIMEXOrder4;
+        }
         break;
     case 5 :
         {
             nSteps = 1;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXdirk_3_4_3;
-        } 
+            method[0] = eIMEXdirk_2_3_2;
+        }
         break;
-    default : 
-        {      
-            cerr << "The third argument defines the time-integration method to be used" << endl;    
-            cerr << "and should be a number in the range [1,5], i.e." << endl; 
-            cerr << "  - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)" << endl;   
-            cerr << "  - 2: 2nd order multi-step IMEX scheme" << endl;   
-            cerr << "  - 3: 3rd order multi-step IMEX scheme" << endl; 
-            cerr << "  - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;    
-            cerr << "  - 5: 3rd order multi-stage DIRK IMEX scheme" << endl;  
-            exit(1); 
+    case 6 :
+        {
+            nSteps = 1;
+            method = Array<OneD, TimeIntegrationMethod>(nSteps);
+            method[0] = eIMEXdirk_3_4_3;
+        }
+        break;
+    case 7 :
+        {
+            nSteps = 2;
+            method = Array<OneD, TimeIntegrationMethod>(nSteps);
+            method[0] = eIMEXdirk_2_2_2;
+            method[1] = eIMEXGear;
+
+        }
+        break;
+    case 8 :
+        {
+            nSteps = 3;
+            method = Array<OneD, TimeIntegrationMethod>(nSteps);
+            method[0] = eIMEXdirk_3_4_3;
+            method[1] = eIMEXdirk_3_4_3;
+            method[2] = eCNAB;
+
+        }
+        break;
+    case 9 :
+        {
+            nSteps = 3;
+            method = Array<OneD, TimeIntegrationMethod>(nSteps);
+            method[0] = eIMEXdirk_3_4_3;
+            method[1] = eIMEXdirk_3_4_3;
+            method[2] = eMCNAB;
+
+        }
+        break;
+    default :
+        {
+            cout << "Invalid method." << endl << endl;
+            cout << desc;
+            exit(1);
         }
     }
 
@@ -291,10 +356,10 @@ int main(int argc, char *argv[])
     for(int i = 0; i < nSteps; i++)
     {
         TimeIntegrationSchemeKey IntKey(method[i]);
-        IntScheme[i] = LibUtilities::TimeIntegrationSchemeManager()[IntKey]; 
+        IntScheme[i] = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
     }
 
-    // 2.3 Initialise some arrays that contain the numerical and 
+    // 2.3 Initialise some arrays that contain the numerical and
     //     analytical solutions
     double t0 = solver->GetInitialTime();
     Array<OneD, Array<OneD, double> > fidifsol(1); // Array containing the numerical solution
@@ -307,36 +372,36 @@ int main(int argc, char *argv[])
 
     // 2.4 Initialize the time-integration scheme
     double dt = solver->GetTimeStep();
-    LibUtilities::TimeIntegrationSolutionSharedPtr sol; 
-    sol = IntScheme[nSteps-1]->InitializeScheme(dt,fidifsol,t0,ode); 
-    
+    LibUtilities::TimeIntegrationSolutionSharedPtr sol;
+    sol = IntScheme[nSteps-1]->InitializeScheme(dt,fidifsol,t0,ode);
+
     // 2.5 Do the time-integration
-    double t  = t0;   
+    double t  = t0;
     int whichscheme;
     for(int i = 0; i < nTimesteps; i++)
-    {       
+    {
         t = t0 + i*dt;
 
-        whichscheme = (i<nSteps)?i:(nSteps-1); // For multi-step schemes, 
+        whichscheme = (i<nSteps)?i:(nSteps-1); // For multi-step schemes,
                                                // the first steps should use the start-up scheme
         fidifsol = IntScheme[whichscheme]->TimeIntegrate(dt,sol,ode); // Time-integration for 1 time-step
 
 
         solver->EvaluateExactSolution(exactsol,t);       // Calculate the exact solution
         solver->AppendOutput(outfile,fidifsol,exactsol); // Dump the output to a file
-    }  
-    
+    }
+
     // Calculate the error and dump to screen
-    cout << "The L2 error is " << scientific << setw (19) << setprecision(10)  <<  solver->EvaluateL2Error(fidifsol,exactsol) << endl;
+    cout << "L 2 error :" <<  solver->EvaluateL2Error(fidifsol,exactsol) << endl;
 
     // Some more writing out the results
     solver->GenerateGnuplotScript();
     outfile.close();
 
-    
+
     delete solver;
 
-  return 0;    
+  return 0;
 }
 
 void OneDfinDiffAdvDiffSolver::HelmSolve(const Array<OneD, const Array<OneD, double> >& inarray,
@@ -345,7 +410,7 @@ void OneDfinDiffAdvDiffSolver::HelmSolve(const Array<OneD, const Array<OneD, dou
                                          const NekDouble lambda) const
 {
     // This function implements a 1D finite difference helmholtz solver.
-    // The 1D Helmholtz equation leads to a cyclic triadiagonal matrix to be 
+    // The 1D Helmholtz equation leads to a cyclic triadiagonal matrix to be
     // solved.
     // In this function, this is solved as follows:
     // - Based upon the static condensation technique, we first solve
@@ -354,7 +419,7 @@ void OneDfinDiffAdvDiffSolver::HelmSolve(const Array<OneD, const Array<OneD, dou
     //   system is solved based upon the Thomas algorithm
     double a = - m_D * lambda / (m_dx * m_dx); //off diagonal term
     double b  = 1.0 + 2.0 * lambda * m_D / (m_dx * m_dx); // diagonal term of triadiagonal matrix
-    
+
     int nIntPoints = m_nPoints-2;
 
     Array<OneD, double> invD_f(nIntPoints);
@@ -391,22 +456,22 @@ void OneDfinDiffAdvDiffSolver::EvaluateAdvectionTerm(const Array<OneD, const  Ar
         // central differences
         outarray[0][0]           = - m_U * (inarray[0][1]-inarray[0][m_nPoints-2]) / (2.0 * m_dx);
         outarray[0][m_nPoints-1] = outarray[0][0];
-        
+
         for(int i = 1; i < m_nPoints-1; i++)
         {
-            outarray[0][i] = - m_U * (inarray[0][i+1]-inarray[0][i-1]) / (2.0 * m_dx); 
+            outarray[0][i] = - m_U * (inarray[0][i+1]-inarray[0][i-1]) / (2.0 * m_dx);
         }
     }
     else
     {
-        // upwind differences     
+        // upwind differences
         for(int i = 1; i < m_nPoints; i++)
         {
             outarray[0][i] = - m_U * (inarray[0][i]-inarray[0][i-1]) / (m_dx);
         }
         outarray[0][0] = outarray[0][m_nPoints-1];
 
-    }    
+    }
 
 }
 
@@ -421,7 +486,7 @@ void OneDfinDiffAdvDiffSolver::Project(const Array<OneD, const  Array<OneD, doub
     }
 }
 
-void OneDfinDiffAdvDiffSolver::solveTriDiagMatrix (int n, double a, double b, 
+void OneDfinDiffAdvDiffSolver::solveTriDiagMatrix (int n, double a, double b,
                                                    const Array<OneD, const double>& inarray,
                                                          Array<OneD,       double>& outarray) const
 {
@@ -430,7 +495,7 @@ void OneDfinDiffAdvDiffSolver::solveTriDiagMatrix (int n, double a, double b,
     Array<OneD, double> dprime(n);
 
     cprime[0] = a / b;
-    dprime[0] = inarray[0] / b;	
+    dprime[0] = inarray[0] / b;
 
     for(int i = 1; i < n; i++)
     {
@@ -440,7 +505,7 @@ void OneDfinDiffAdvDiffSolver::solveTriDiagMatrix (int n, double a, double b,
     }
 
     outarray[n-1] = dprime[n-1];
-    for (int i = n - 2; i >= 0; i--)  
+    for (int i = n - 2; i >= 0; i--)
     {
         outarray[i] = dprime[i] - cprime[i] * outarray[i+1];
     }
@@ -449,7 +514,7 @@ void OneDfinDiffAdvDiffSolver::solveTriDiagMatrix (int n, double a, double b,
 int OneDfinDiffAdvDiffSolver::GetNpoints() const
 {
     return m_nPoints;
-}   
+}
 
 void OneDfinDiffAdvDiffSolver::EvaluateExactSolution(Array<OneD, Array<OneD, double> >& outarray,
                                                      const NekDouble time) const
@@ -458,22 +523,22 @@ void OneDfinDiffAdvDiffSolver::EvaluateExactSolution(Array<OneD, Array<OneD, dou
     for(int i = 0; i < m_nPoints; i++)
     {
         x = m_x0 + i*m_dx;
-        outarray[0][i] = exp(-m_D * 2.0 * 2.0 * M_PI * M_PI * m_wavenumber*m_wavenumber*time) * 
+        outarray[0][i] = exp(-m_D * 2.0 * 2.0 * M_PI * M_PI * m_wavenumber*m_wavenumber*time) *
             sin( 2.0 * m_wavenumber * M_PI * (x - m_U*time) );
     }
 }
 double OneDfinDiffAdvDiffSolver::EvaluateL2Error(const Array<OneD, const  Array<OneD, double> >& approx,
                                                  const Array<OneD, const  Array<OneD, double> >& exact) const
-{    
+{
     double a = 0.0;
     double b = 0.0;
-        
+
     for(int i = 0; i < m_nPoints; i++)
     {
         a += (approx[0][i]-exact[0][i])*(approx[0][i]-exact[0][i]);
         b += exact[0][i]*exact[0][i];
     }
-    
+
     return sqrt(a/b);
 }
 
@@ -483,14 +548,14 @@ void OneDfinDiffAdvDiffSolver::AppendOutput(ofstream& outfile,
 {
     for(int i = 0; i < m_nPoints; i++)
     {
-        outfile << scientific 
-                << setw (17) 
-                << setprecision(10) 
+        outfile << scientific
+                << setw (17)
+                << setprecision(10)
                 << m_x0 + i*m_dx
-                << "  " 
-                << approx[0][i] 
-                << "  " 
-                << exact[0][i] 
+                << "  "
+                << approx[0][i]
+                << "  "
+                << exact[0][i]
                 << endl;
     }
     outfile << endl << endl;
@@ -500,19 +565,19 @@ void OneDfinDiffAdvDiffSolver::GenerateGnuplotScript() const
 {
     ofstream outfile;
     outfile.open("OneDfinDiffAdvDiffSolverOutput.p");
-    
+
     outfile << "# Gnuplot script file" << endl;
-    outfile << "set   autoscale" << endl;                       
-    outfile << "unset log" << endl;                           
-    outfile << "unset label" << endl;                          
-    outfile << "set xtic auto" << endl;                    
-    outfile << "set ytic auto" << endl;                        
+    outfile << "set   autoscale" << endl;
+    outfile << "unset log" << endl;
+    outfile << "unset label" << endl;
+    outfile << "set xtic auto" << endl;
+    outfile << "set ytic auto" << endl;
     outfile << "set title \"Finite Difference Solution to the 1D advection-diffusion equation\"" << endl;
     outfile << "set xlabel \"x\"" << endl;
     outfile << "set ylabel \"u\"" << endl;
     outfile << "set xr [" << m_x0 << ":" << m_xend << "]" << endl;
     outfile << "set yr [-1.0:1.0]" << endl;
-    
+
     double t;
     for(int i=0; i <= m_nTimeSteps; i++)
     {
@@ -525,14 +590,14 @@ void OneDfinDiffAdvDiffSolver::GenerateGnuplotScript() const
         outfile << i << " title 'Exact Solution (t=" << t << ")' with linespoints" << endl;
         outfile << "pause " << 4.0/m_nTimeSteps << endl;
     }
-    
+
     outfile.close();
 }
 
 double OneDfinDiffAdvDiffSolver::GetInitialTime() const
 {
     return m_t0;
-}  
+}
 
 double OneDfinDiffAdvDiffSolver::GetTimeStep() const
 {

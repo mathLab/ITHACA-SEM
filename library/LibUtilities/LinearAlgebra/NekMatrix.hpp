@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -44,14 +43,8 @@
 #include <LibUtilities/LinearAlgebra/StandardMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-// Only need NekVector if we are using expression templates so we can define the 
-// commutative traits.
-#include <ExpressionTemplates/ExpressionTemplates.hpp>
-#include <LibUtilities/LinearAlgebra/NekVector.hpp>
-#endif
 namespace Nektar
-{        
+{
     template<typename DataType, typename FormType>
     std::ostream& operator<<(std::ostream& os, const NekMatrix<DataType, FormType>& rhs)
     {
@@ -112,37 +105,6 @@ namespace Nektar
         return os;
     }
 }
-
-
-    
-    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-namespace expt
-{
-    template<typename T>
-    struct IsBlockMatrix : public boost::false_type {};
-
-    template<typename T>
-    struct IsBlockMatrix<Nektar::NekMatrix<T, Nektar::BlockMatrixTag> > : public boost::true_type {};
-
-    template<typename DataType>
-    struct HasUnaryOp<NegateOp, DataType, typename boost::enable_if<IsBlockMatrix<DataType> >::type> : public boost::false_type {};
-
-        template<typename LhsDataType, typename LhsMatrixType,
-            typename RhsDataType, typename RhsMatrixType>
-        struct CommutativeTraits<Nektar::NekMatrix<LhsDataType, LhsMatrixType> ,
-            expt::MultiplyOp, Nektar::NekMatrix<RhsDataType, RhsMatrixType> > : public boost::false_type
-        {
-        };
-
-    template<typename LhsDataType, typename LhsMatrixType,
-        typename RhsDataType>
-    struct CommutativeTraits<Nektar::NekMatrix<LhsDataType, LhsMatrixType> ,
-        expt::MultiplyOp, Nektar::NekVector<RhsDataType> > : public boost::false_type
-    {
-    };
-}
-
-    #endif
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_MATRIX_HPP
 

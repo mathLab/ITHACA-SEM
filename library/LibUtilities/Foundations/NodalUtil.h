@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,7 +36,7 @@
 #ifndef NODALUTIL_H
 #define NODALUTIL_H
 
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -53,7 +52,7 @@ namespace Nektar
 namespace LibUtilities
 {
 
-typedef boost::shared_ptr<NekMatrix<NekDouble> > SharedMatrix;
+typedef std::shared_ptr<NekMatrix<NekDouble> > SharedMatrix;
 
 /**
  * @brief A class to assist in the construction of nodal simplex and hybrid
@@ -144,7 +143,7 @@ protected:
      *
      * @param xi  Distribution of nodal points to create utility with.
      */
-    virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
+    virtual std::shared_ptr<NodalUtil> v_CreateUtil(
         Array<OneD, Array<OneD, NekDouble> > &xi) = 0;
 
     /**
@@ -190,7 +189,7 @@ protected:
     virtual NekVector<NekDouble> v_OrthoBasisDeriv(
         const int dir, const int mode);
 
-    virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
+    virtual std::shared_ptr<NodalUtil> v_CreateUtil(
         Array<OneD, Array<OneD, NekDouble> > &xi)
     {
         return MemoryManager<NodalUtilTriangle>::AllocateSharedPtr(
@@ -214,7 +213,7 @@ protected:
  */
 class NodalUtilTetrahedron : public NodalUtil
 {
-    typedef boost::tuple<int, int, int> Mode;
+    typedef std::tuple<int, int, int> Mode;
 
 public:
     LIB_UTILITIES_EXPORT NodalUtilTetrahedron(int degree,
@@ -239,7 +238,7 @@ protected:
     virtual NekVector<NekDouble> v_OrthoBasisDeriv(
         const int dir, const int mode);
 
-    virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
+    virtual std::shared_ptr<NodalUtil> v_CreateUtil(
         Array<OneD, Array<OneD, NekDouble> > &xi)
     {
         return MemoryManager<NodalUtilTetrahedron>::AllocateSharedPtr(
@@ -263,7 +262,7 @@ protected:
  */
 class NodalUtilPrism : public NodalUtil
 {
-    typedef boost::tuple<int, int, int> Mode;
+    typedef std::tuple<int, int, int> Mode;
 
 public:
     LIB_UTILITIES_EXPORT NodalUtilPrism(int degree,
@@ -288,7 +287,7 @@ protected:
     virtual NekVector<NekDouble> v_OrthoBasisDeriv(
         const int dir, const int mode);
 
-    virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
+    virtual std::shared_ptr<NodalUtil> v_CreateUtil(
         Array<OneD, Array<OneD, NekDouble> > &xi)
     {
         return MemoryManager<NodalUtilPrism>::AllocateSharedPtr(
@@ -329,7 +328,7 @@ protected:
     virtual NekVector<NekDouble> v_OrthoBasisDeriv(
         const int dir, const int mode);
 
-    virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
+    virtual std::shared_ptr<NodalUtil> v_CreateUtil(
         Array<OneD, Array<OneD, NekDouble> > &xi)
     {
         return MemoryManager<NodalUtilQuad>::AllocateSharedPtr(
@@ -352,7 +351,7 @@ protected:
  */
 class NodalUtilHex : public NodalUtil
 {
-    typedef boost::tuple<int, int, int> Mode;
+    typedef std::tuple<int, int, int> Mode;
 
 public:
     LIB_UTILITIES_EXPORT NodalUtilHex(int degree,
@@ -373,7 +372,7 @@ protected:
     virtual NekVector<NekDouble> v_OrthoBasisDeriv(
         const int dir, const int mode);
 
-    virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
+    virtual std::shared_ptr<NodalUtil> v_CreateUtil(
         Array<OneD, Array<OneD, NekDouble> > &xi)
     {
         return MemoryManager<NodalUtilHex>::AllocateSharedPtr(

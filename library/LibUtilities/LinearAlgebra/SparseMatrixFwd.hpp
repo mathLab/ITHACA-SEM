@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -40,7 +39,7 @@
 #include <vector>
 #include <utility>
 #include <fstream>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp> ///< \todo: forward declare
@@ -57,14 +56,14 @@ namespace Nektar
     typedef NekDouble                           COOEntryType;
     typedef std::map<CoordType, NekDouble>      COOMatType;
     typedef COOMatType::const_iterator          COOMatTypeConstIt;
-    typedef boost::shared_ptr<COOMatType>       COOMatTypeSharedPtr;
+    typedef std::shared_ptr<COOMatType>         COOMatTypeSharedPtr;
     typedef Array<OneD, COOMatType>             COOMatVector;
 
     // Block COO (BCO): each entry is a dense submatrix (of same size)
     typedef Array<OneD, NekDouble>              BCOEntryType;
     typedef std::map<CoordType, BCOEntryType >  BCOMatType;
     typedef BCOMatType::const_iterator          BCOMatTypeConstIt;
-    typedef boost::shared_ptr<BCOMatType>       BCOMatTypeSharedPtr;
+    typedef std::shared_ptr<BCOMatType>         BCOMatTypeSharedPtr;
     typedef Array<OneD, BCOMatType>             BCOMatVector;
 
 

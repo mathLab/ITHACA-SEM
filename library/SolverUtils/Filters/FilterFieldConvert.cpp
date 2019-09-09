@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -47,13 +46,12 @@ std::string FilterFieldConvert::className =
 
 FilterFieldConvert::FilterFieldConvert(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams)
-    : Filter(pSession)
+    : Filter(pSession, pEquation)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         std::stringstream outname;
@@ -96,18 +94,6 @@ FilterFieldConvert::FilterFieldConvert(
         }
     }
 
-    // SampleFrequency
-    it = pParams.find("SampleFrequency");
-    if (it == pParams.end())
-    {
-        m_sampleFrequency = 1;
-    }
-    else
-    {
-        LibUtilities::Equation equ(m_session, it->second);
-        m_sampleFrequency = floor(equ.Evaluate());
-    }
-
     // OutputFrequency
     it = pParams.find("OutputFrequency");
     if (it == pParams.end())
@@ -116,9 +102,14 @@ FilterFieldConvert::FilterFieldConvert(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
-        m_outputFrequency = floor(equ.Evaluate());
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
+        m_outputFrequency = round(equ.Evaluate());
     }
+
+    // The base class can use SampleFrequency = OutputFrequency
+    //    (Derived classes need to override this if needed)
+    m_sampleFrequency = m_outputFrequency;
 
     m_numSamples  = 0;
     m_index       = 0;
@@ -127,7 +118,7 @@ FilterFieldConvert::FilterFieldConvert(
     //
     // FieldConvert modules
     //
-    m_f = boost::shared_ptr<Field>(new Field());
+    m_f = std::shared_ptr<Field>(new Field());
     vector<string>          modcmds;
     // Process modules
     std::stringstream moduleStream;
@@ -149,6 +140,10 @@ FilterFieldConvert::FilterFieldConvert(
     modcmds.push_back(m_outputFile);
     // Create modules
     CreateModules(modcmds);
+    // Strip options from m_outputFile
+    vector<string> tmp;
+    boost::split(tmp, m_outputFile, boost::is_any_of(":"));
+    m_outputFile = tmp[0];
 }
 
 FilterFieldConvert::~FilterFieldConvert()
@@ -161,21 +156,20 @@ void FilterFieldConvert::v_Initialise(
 {
     v_FillVariablesName(pFields);
 
-    int ncoeff = pFields[0]->GetNcoeffs();
     // m_variables need to be filled by a derived class
     m_outFields.resize(m_variables.size());
+    int nfield;
 
     for (int n = 0; n < m_variables.size(); ++n)
     {
-        m_outFields[n] = Array<OneD, NekDouble>(ncoeff, 0.0);
+        // if n >= pFields.num_elements() assum we have used n=0 field
+        nfield = (n < pFields.num_elements())? n: 0;
+
+        m_outFields[n] =
+                Array<OneD, NekDouble>(pFields[nfield]->GetNcoeffs(), 0.0);
     }
-
+    
     m_fieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);
-
-    // Fill some parameters of m_f
-    m_f->m_session = m_session;
-    m_f->m_graph = pFields[0]->GetGraph();
-    m_f->m_comm = m_f->m_session->GetComm();
 
     // Load restart file if necessary
     if (m_restartFile != "")
@@ -189,11 +183,28 @@ void FilterFieldConvert::v_Initialise(
         fld->Import(m_restartFile, fieldDef, fieldData, fieldMetaData);
 
         // Extract fields to output
+        int nfield = -1, k;
         for (int j = 0; j < m_variables.size(); ++j)
         {
+            // see if m_variables is part of pFields definition and if
+            // so use that field for extract
+            for(k = 0; k < pFields.num_elements(); ++k)
+            {
+                if(pFields[k]->GetSession()->GetVariable(k)
+                   == m_variables[j])
+                {
+                    nfield = k;
+                    break;
+                }
+            }
+            if(nfield == -1)
+            {
+                nfield = 0;
+            }
+            
             for (int i = 0; i < fieldData.size(); ++i)
             {
-                pFields[0]->ExtractDataToCoeffs(
+                pFields[nfield]->ExtractDataToCoeffs(
                     fieldDef[i],
                     fieldData[i],
                     m_variables[j],
@@ -211,6 +222,11 @@ void FilterFieldConvert::v_Initialise(
             m_numSamples = 1;
         }
 
+        if(fieldMetaData.count("InitialTime"))
+        {
+            m_fieldMetaData["InitialTime"] = fieldMetaData["InitialTime"];
+        }
+        
         // Divide by scale
         NekDouble scale = v_GetScale();
         for (int n = 0; n < m_outFields.size(); ++n)
@@ -234,6 +250,17 @@ void FilterFieldConvert::v_FillVariablesName(
     {
         m_variables[n] = pFields[n]->GetSession()->GetVariable(n);
     }
+
+    // Need to create a dummy coeffs vector to get extra variables names...
+    vector<Array<OneD, NekDouble> > coeffs(nfield);
+    for (int n = 0; n < nfield; ++n)
+    {
+        coeffs[n] = pFields[n]->GetCoeffs();
+    }
+    // Get extra variables
+    auto equ = m_equ.lock();
+    ASSERTL0(equ, "Weak pointer expired");
+    equ->ExtraFldOutput(coeffs, m_variables);
 }
 
 void FilterFieldConvert::v_Update(
@@ -246,8 +273,20 @@ void FilterFieldConvert::v_Update(
         return;
     }
 
+    // Append extra fields
+    int nfield = pFields.num_elements();
+    vector<Array<OneD, NekDouble> > coeffs(nfield);
+    for (int n = 0; n < nfield; ++n)
+    {
+        coeffs[n] = pFields[n]->GetCoeffs();
+    }
+    vector<std::string> variables = m_variables;
+    auto equ = m_equ.lock();
+    ASSERTL0(equ, "Weak pointer expired");
+    equ->ExtraFldOutput(coeffs, variables);
+
     m_numSamples++;
-    v_ProcessSample(pFields, time);
+    v_ProcessSample(pFields, coeffs, time);
 
     if (m_index % m_outputFrequency == 0)
     {
@@ -266,14 +305,15 @@ void FilterFieldConvert::v_Finalise(
     OutputField(pFields);
 }
 
-void FilterFieldConvert::v_PrepareOutput(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
+void FilterFieldConvert::v_ProcessSample(
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+          std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+    const NekDouble &time)
 {
-    for(int n = 0; n < pFields.num_elements(); ++n)
+    for(int n = 0; n < m_outFields.size(); ++n)
     {
         Vmath::Vcopy(m_outFields[n].num_elements(),
-                    pFields[n]->GetCoeffs(),
+                    fieldcoeffs[n],
                     1,
                     m_outFields[n],
                     1);
@@ -312,22 +352,29 @@ void FilterFieldConvert::OutputField(
     }
     m_modules[m_modules.size()-1]->RegisterConfig("outfile", outname.str());
 
-    // Prevent checking before overwritting
+    // Prevent checking before overwriting
     po::options_description desc("Available options");
         desc.add_options()
             ("forceoutput,f",
                 "Force the output to be written without any checks");
     po::variables_map vm;
     vm.insert(std::make_pair("forceoutput", po::variable_value()));
+
     // Run field process.
-    for (int i = 0; i < m_modules.size(); ++i)
+    for (int n = 0; n < SIZE_ModulePriority; ++n)
     {
-        m_modules[i]->Process(vm);
-        cout.flush();
+        ModulePriority priority = static_cast<ModulePriority>(n);
+        for (int i = 0; i < m_modules.size(); ++i)
+        {
+            if(m_modules[i]->GetModulePriority() == priority)
+            {
+                m_modules[i]->Process(vm);
+            }
+        }
     }
 
     // Empty m_f to save memory
-    ClearFields();
+    m_f->ClearField();
 
     if (dump != -1) // not final dump so rescale
     {
@@ -404,7 +451,7 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
 
             if (tmp2.size() == 1)
             {
-                mod->RegisterConfig(tmp2[0], "1");
+                mod->RegisterConfig(tmp2[0]);
             }
             else if (tmp2.size() == 2)
             {
@@ -422,73 +469,136 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
         mod->SetDefaults();
     }
 
-    bool RequiresEquiSpaced = false;
+    // Include equispaced output if needed
+    Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
     for (int i = 0; i < m_modules.size(); ++i)
     {
-        if(m_modules[i]->GetRequireEquiSpaced())
-        {
-            RequiresEquiSpaced = true;
-        }
+        ++modulesCount[m_modules[i]->GetModulePriority()];
     }
-    if (RequiresEquiSpaced)
+    if( modulesCount[eModifyPts] != 0 &&
+        modulesCount[eCreatePts] == 0 &&
+        modulesCount[eConvertExpToPts] == 0)
     {
-        for (int i = 0; i < m_modules.size(); ++i)
-        {
-            m_modules[i]->SetRequireEquiSpaced(true);
-        }
+        ModuleKey               module;
+        ModuleSharedPtr         mod;
+        module.first  = eProcessModule;
+        module.second = string("equispacedoutput");
+        mod = GetModuleFactory().CreateInstance(module, m_f);
+        m_modules.insert(m_modules.end()-1, mod);
+        mod->SetDefaults();
     }
+
+    // Check if modules provided are compatible
+    CheckModules(m_modules);
 }
 
 void FilterFieldConvert::CreateFields(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
 {
+    // Fill some parameters of m_f
+    m_f->m_session = m_session;
+    m_f->m_graph = pFields[0]->GetGraph();
+    m_f->m_comm = m_f->m_session->GetComm();
     m_f->m_fieldMetaDataMap = m_fieldMetaData;
     m_f->m_fieldPts = LibUtilities::NullPtsField;
     // Create m_f->m_exp
-    int NumHomogeneousDir = 0;
+    m_f->m_numHomogeneousDir = 0;
     if (pFields[0]->GetExpType() == MultiRegions::e3DH1D)
     {
-        NumHomogeneousDir = 1;
+        m_f->m_numHomogeneousDir = 1;
     }
     else if (pFields[0]->GetExpType() == MultiRegions::e3DH2D)
     {
-        NumHomogeneousDir = 2;
+        m_f->m_numHomogeneousDir = 2;
     }
 
     m_f->m_exp.resize(m_variables.size());
     m_f->m_exp[0] = pFields[0];
+    int nfield;
     for (int n = 0; n < m_variables.size(); ++n)
     {
+        // if n >= pFields.num_elements() assume we have used n=0 field
+        nfield = (n < pFields.num_elements())? n: 0;
+        
         m_f->m_exp[n] = m_f->AppendExpList(
-                            NumHomogeneousDir, m_variables[0]);
+                            m_f->m_numHomogeneousDir, m_variables[0]);
         m_f->m_exp[n]->SetWaveSpace(false);
-        Vmath::Vcopy( m_outFields[n].num_elements(),
-                      m_outFields[n], 1,
-                      m_f->m_exp[n]->UpdateCoeffs(), 1);
+
+        ASSERTL1(pFields[nfield]->GetNcoeffs() == m_outFields[n].num_elements(),
+                 "pFields[nfield] does not have the "
+                 "same number of coefficients as m_outFields[n]");
+        
+        m_f->m_exp[n]->ExtractCoeffsToCoeffs(pFields[nfield], m_outFields[n],
+                                             m_f->m_exp[n]->UpdateCoeffs());
+
         m_f->m_exp[n]->BwdTrans( m_f->m_exp[n]->GetCoeffs(),
                                  m_f->m_exp[n]->UpdatePhys());
     }
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        pFields[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-    for (int n = 0; n < m_outFields.size(); ++n)
-    {
-        for (int i = 0; i < FieldDef.size(); ++i)
-        {
-            FieldDef[i]->m_fields.push_back(m_variables[n]);
-            m_f->m_exp[n]->AppendFieldData(FieldDef[i], FieldData[i]);
-        }
-    }
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
+    m_f->m_variables= m_variables;
 }
 
-void FilterFieldConvert::ClearFields()
+// This function checks validity conditions for the list of modules provided
+void FilterFieldConvert::CheckModules(vector<ModuleSharedPtr> &modules)
 {
-    m_f->m_fieldPts = LibUtilities::NullPtsField;
-    m_f->m_exp.clear();
-    m_f->m_fielddef = std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
-    m_f->m_data = std::vector<std::vector<NekDouble> > ();
+    // Count number of modules by priority
+    Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
+    for (int i = 0; i < modules.size(); ++i)
+    {
+        ++modulesCount[modules[i]->GetModulePriority()];
+    }
+
+    // FilterFieldConvert already starts with m_exp, so anything before
+    //    eModifyExp is not valid, and also eCreatePts
+    if( modulesCount[eCreateGraph] != 0     ||
+        modulesCount[eCreateFieldData] != 0 ||
+        modulesCount[eModifyFieldData] != 0 ||
+        modulesCount[eCreateExp] != 0       ||
+        modulesCount[eFillExp] != 0         ||
+        modulesCount[eCreatePts] != 0)
+    {
+        stringstream ss;
+        ss << "Module(s): ";
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eCreateGraph     ||
+               modules[i]->GetModulePriority() == eCreateFieldData ||
+               modules[i]->GetModulePriority() == eModifyFieldData ||
+               modules[i]->GetModulePriority() == eCreateExp       ||
+               modules[i]->GetModulePriority() == eFillExp         ||
+               modules[i]->GetModulePriority() == eCreatePts)
+            {
+                ss << modules[i]->GetModuleName()<<" ";
+            }
+        }
+        ss << "not compatible with FilterFieldConvert.";
+        ASSERTL0(false, ss.str());
+    }
+
+    // Modules of type eConvertExpToPts are not compatible with eBndExtraction
+    if( modulesCount[eConvertExpToPts] != 0 &&
+        modulesCount[eBndExtraction]   != 0)
+    {
+        stringstream ss;
+        ss << "Module(s): ";
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eBndExtraction)
+            {
+                ss << modules[i]->GetModuleName()<<" ";
+            }
+        }
+        ss << "is not compatible with module(s): ";
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eConvertExpToPts)
+            {
+                ss << modules[i]->GetModuleName()<<" ";
+            }
+        }
+        ss << ".";
+        ASSERTL0(false, ss.str());
+    }
+
 }
 
 }

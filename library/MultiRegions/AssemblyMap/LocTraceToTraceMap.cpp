@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -121,7 +120,7 @@ void LocTraceToTraceMap::Setup2D(
     m_traceCoeffsToElmtSign  = Array<OneD, Array<OneD, int> >(2);
 
     LocalRegions::Expansion2DSharedPtr exp2d;
-    const boost::shared_ptr<LocalRegions::ExpansionVector> exp =
+    const std::shared_ptr<LocalRegions::ExpansionVector> exp =
         locExp.GetExp();
 
     int cnt, n, e, phys_offset;
@@ -177,7 +176,6 @@ void LocTraceToTraceMap::Setup2D(
 
     // Gather information about trace interpolations
     map<TraceInterpPoints, vector<pair<int, int> >, cmpop> TraceInterpMap;
-    map<TraceInterpPoints, vector<pair<int, int> >, cmpop>::iterator it;
 
     vector<vector<int> > TraceOrder;
     TraceOrder.resize(nexp);
@@ -298,10 +296,11 @@ void LocTraceToTraceMap::Setup2D(
     Array<OneD, int> locTraceToTraceMap;
     cnt = 0;
 
-    for (it = TraceInterpMap.begin(); it != TraceInterpMap.end(); ++it, ++cnt1)
+    for (auto it = TraceInterpMap.begin(); it != TraceInterpMap.end();
+         ++it, ++cnt1)
     {
-        LibUtilities::PointsKey fromPointsKey0 = it->first.get<0>();
-        LibUtilities::PointsKey toPointsKey0   = it->first.get<2>();
+        LibUtilities::PointsKey fromPointsKey0 = std::get<0>(it->first);
+        LibUtilities::PointsKey toPointsKey0   = std::get<2>(it->first);
 
         bool fwdSet = false;
         bool bwdSet = false;
@@ -323,7 +322,7 @@ void LocTraceToTraceMap::Setup2D(
             nedgepts  = exp2d->GetEdgeNumPoints(e);
             nedgepts1 = edge->GetTotPoints();
 
-            StdRegions::Orientation orient = exp2d->GetCartesianEorient(e);
+            StdRegions::Orientation orient = exp2d->GetEorient(e);
 
             // Account for eBackwards orientation
             exp2d->ReOrientEdgePhysMap(elmtToTrace[n][e]->GetNverts(),
@@ -459,7 +458,7 @@ void LocTraceToTraceMap::Setup3D(
     m_traceCoeffsToElmtSign  = Array<OneD, Array<OneD, int> >(2);
 
     LocalRegions::Expansion3DSharedPtr exp3d;
-    const boost::shared_ptr<LocalRegions::ExpansionVector> exp =
+    const std::shared_ptr<LocalRegions::ExpansionVector> exp =
         locExp.GetExp();
 
     int cnt, n, e, phys_offset;
@@ -515,7 +514,6 @@ void LocTraceToTraceMap::Setup3D(
 
     // Gather information about trace interpolations
     map<TraceInterpPoints, vector<pair<int, int> >, cmpop> TraceInterpMap;
-    map<TraceInterpPoints, vector<pair<int, int> >, cmpop>::iterator it;
 
     vector<vector<int> > TraceOrder;
     TraceOrder.resize(nexp);
@@ -636,12 +634,13 @@ void LocTraceToTraceMap::Setup3D(
     Array<OneD, int> faceids;
     Array<OneD, int> locTraceToTraceMap;
     cnt = 0;
-    for (it = TraceInterpMap.begin(); it != TraceInterpMap.end(); ++it, ++cnt1)
+    for (auto it = TraceInterpMap.begin(); it != TraceInterpMap.end();
+         ++it, ++cnt1)
     {
-        LibUtilities::PointsKey fromPointsKey0 = it->first.get<0>();
-        LibUtilities::PointsKey fromPointsKey1 = it->first.get<1>();
-        LibUtilities::PointsKey toPointsKey0   = it->first.get<2>();
-        LibUtilities::PointsKey toPointsKey1   = it->first.get<3>();
+        LibUtilities::PointsKey fromPointsKey0 = std::get<0>(it->first);
+        LibUtilities::PointsKey fromPointsKey1 = std::get<1>(it->first);
+        LibUtilities::PointsKey toPointsKey0   = std::get<2>(it->first);
+        LibUtilities::PointsKey toPointsKey1   = std::get<3>(it->first);
 
         bool fwdSet = false;
         bool bwdSet = false;
@@ -899,9 +898,9 @@ void LocTraceToTraceMap::InterpLocEdgesToTrace(
         {
             // Get to/from points
             LibUtilities::PointsKey fromPointsKey0 =
-                m_interpPoints[dir][i].get<0>();
+                std::get<0>(m_interpPoints[dir][i]);
             LibUtilities::PointsKey toPointsKey0 =
-                m_interpPoints[dir][i].get<2>();
+                std::get<2>(m_interpPoints[dir][i]);
 
             int fnp    = fromPointsKey0.GetNumPoints();
             int tnp    = toPointsKey0.GetNumPoints();
@@ -1001,13 +1000,13 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
         {
             // Get to/from points
             LibUtilities::PointsKey fromPointsKey0 =
-                m_interpPoints[dir][i].get<0>();
+                std::get<0>(m_interpPoints[dir][i]);
             LibUtilities::PointsKey fromPointsKey1 =
-                m_interpPoints[dir][i].get<1>();
+                std::get<1>(m_interpPoints[dir][i]);
             LibUtilities::PointsKey toPointsKey0 =
-                m_interpPoints[dir][i].get<2>();
+                std::get<2>(m_interpPoints[dir][i]);
             LibUtilities::PointsKey toPointsKey1 =
-                m_interpPoints[dir][i].get<3>();
+                std::get<3>(m_interpPoints[dir][i]);
 
             int fnp0         = fromPointsKey0.GetNumPoints();
             int fnp1         = fromPointsKey1.GetNumPoints();

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,17 +33,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
-#include <LocalRegions/TriExp.h>
-#include <MultiRegions/ExpList.h>
-
 
 using namespace std;
 
 namespace Nektar
 {
     CompressibleFlowSystem::CompressibleFlowSystem(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph)
     {
     }
 
@@ -53,7 +51,7 @@ namespace Nektar
      */
     void CompressibleFlowSystem::v_InitObject()
     {
-        UnsteadySystem::v_InitObject();
+        AdvectionSystem::v_InitObject();
 
         m_varConv = MemoryManager<VariableConverter>::AllocateSharedPtr(
                     m_session, m_spacedim);
@@ -89,15 +87,22 @@ namespace Nektar
         }
 
         // Forcing terms for the sponge region
-        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
-                                               m_fields.num_elements());
+        m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
+                                        m_fields, m_fields.num_elements());
 
         // User-defined boundary conditions
         int cnt = 0;
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
-            std::string type = 
-                    m_fields[0]->GetBndConditions()[n]->GetUserDefined();
+            std::string type =
+                m_fields[0]->GetBndConditions()[n]->GetUserDefined();
+
+            if (m_fields[0]->GetBndConditions()[n]->GetBoundaryConditionType()
+                == SpatialDomains::ePeriodic)
+            {
+                continue;
+            }
+
             if(!type.empty())
             {
                 m_bndConds.push_back(GetCFSBndCondFactory().CreateInstance(
@@ -136,68 +141,31 @@ namespace Nektar
      */
     void CompressibleFlowSystem::InitialiseParameters()
     {
-        NekDouble velInf, gasConstant;
-
         // Get gamma parameter from session file.
         m_session->LoadParameter("Gamma", m_gamma, 1.4);
 
-        // Get gas constant from session file and compute Cp
-        m_session->LoadParameter ("GasConstant",   gasConstant,   287.058);
-        m_Cp      = m_gamma / (m_gamma - 1.0) * gasConstant;
-
-        // Get pInf parameter from session file.
-        m_session->LoadParameter("pInf", m_pInf, 101325);
-
-        // Get rhoInf parameter from session file.
-        m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
-
-        // Get uInf parameter from session file.
-        m_session->LoadParameter("uInf", velInf, 0.1);
-
-        m_UInf = velInf*velInf;
-
-        // Get vInf parameter from session file.
-        if (m_spacedim == 2 || m_spacedim == 3)
-        {
-            m_session->LoadParameter("vInf", velInf, 0.0);
-            m_UInf += velInf*velInf;
-        }
-
-        // Get wInf parameter from session file.
-        if (m_spacedim == 3)
-        {
-            m_session->LoadParameter("wInf", velInf, 0.0);
-            m_UInf += velInf*velInf;
-        }
-        m_UInf = sqrt(m_UInf);
-
-        // Viscosity
-        m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
-        m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
-
-        // Thermal conductivity or Prandtl
-        if( m_session->DefinesParameter("thermalConductivity"))
-        {
-            ASSERTL0( !m_session->DefinesParameter("Pr"),
-                 "Cannot define both Pr and thermalConductivity.");
-
-            m_session->LoadParameter ("thermalConductivity",
-                                        m_thermalConductivity);
-            m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
-        }
-        else
-        {
-            m_session->LoadParameter ("Pr",
-                                        m_Prandtl, 0.72);
-            m_thermalConductivity = m_Cp * m_mu / m_Prandtl;
-        }
-
-        // Steady state tolerance
-        m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 0.0);
-
         // Shock capture
         m_session->LoadSolverInfo("ShockCaptureType",
-                                  m_shockCaptureType,    "Off");
+                                  m_shockCaptureType, "Off");
+
+        // Load parameters for exponential filtering
+        m_session->MatchSolverInfo("ExponentialFiltering","True",
+                                   m_useFiltering, false);
+        if(m_useFiltering)
+        {
+            m_session->LoadParameter ("FilterAlpha", m_filterAlpha, 36);
+            m_session->LoadParameter ("FilterExponent", m_filterExponent, 16);
+            m_session->LoadParameter ("FilterCutoff", m_filterCutoff, 0);
+        }
+
+        // Load CFL for local time-stepping (for steady state)
+        m_session->MatchSolverInfo("LocalTimeStep","True",
+                                   m_useLocalTimeStep, false);
+        if(m_useLocalTimeStep)
+        {
+            ASSERTL0(m_cflSafetyFactor != 0,
+                    "Local time stepping requires CFL parameter.");
+        }
     }
 
     /**
@@ -212,17 +180,17 @@ namespace Nektar
         string advName, riemName;
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
 
-        m_advection = SolverUtils::GetAdvectionFactory()
+        m_advObject = SolverUtils::GetAdvectionFactory()
                                     .CreateInstance(advName, advName);
 
         if (m_specHP_dealiasing)
         {
-            m_advection->SetFluxVector(&CompressibleFlowSystem::
+            m_advObject->SetFluxVector(&CompressibleFlowSystem::
                                        GetFluxVectorDeAlias, this);
         }
         else
         {
-            m_advection->SetFluxVector  (&CompressibleFlowSystem::
+            m_advObject->SetFluxVector  (&CompressibleFlowSystem::
                                           GetFluxVector, this);
         }
 
@@ -231,7 +199,7 @@ namespace Nektar
 
         SolverUtils::RiemannSolverSharedPtr riemannSolver;
         riemannSolver = SolverUtils::GetRiemannSolverFactory()
-                                    .CreateInstance(riemName);
+                                    .CreateInstance(riemName, m_session);
 
         // Setting up parameters for advection operator Riemann solver
         riemannSolver->SetParam (
@@ -242,8 +210,8 @@ namespace Nektar
             "N",       &CompressibleFlowSystem::GetNormals, this);
 
         // Concluding initialisation of advection / diffusion operators
-        m_advection->SetRiemannSolver   (riemannSolver);
-        m_advection->InitObject         (m_session, m_fields);
+        m_advObject->SetRiemannSolver   (riemannSolver);
+        m_advObject->InitObject         (m_session, m_fields);
     }
 
     /**
@@ -291,15 +259,38 @@ namespace Nektar
         DoDiffusion(inarray, outarray, Fwd, Bwd);
 
         // Add forcing terms
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        for (auto &x : m_forcing)
         {
-            (*x)->Apply(m_fields, inarray, outarray, time);
+            x->Apply(m_fields, inarray, outarray, time);
+        }
+
+        if (m_useLocalTimeStep)
+        {
+            int nElements = m_fields[0]->GetExpSize();
+            int nq, offset;
+            NekDouble fac;
+            Array<OneD, NekDouble> tmp;
+
+            Array<OneD, NekDouble> tstep (nElements, 0.0);
+            GetElmtTimeStep(inarray, tstep);
+
+            // Loop over elements
+            for(int n = 0; n < nElements; ++n)
+            {
+                nq     = m_fields[0]->GetExp(n)->GetTotPoints();
+                offset = m_fields[0]->GetPhys_Offset(n);
+                fac    = tstep[n] / m_timestep;
+                for(i = 0; i < nvariables; ++i)
+                {
+                    Vmath::Smul(nq, fac, outarray[i] + offset, 1,
+                                         tmp = outarray[i] + offset, 1);
+                }
+            }
         }
     }
 
     /**
-     * @brief Compute the projection and call the method for imposing the 
+     * @brief Compute the projection and call the method for imposing the
      * boundary conditions in case of discontinuous projection.
      */
     void CompressibleFlowSystem::DoOdeProjection(
@@ -320,6 +311,11 @@ namespace Nektar
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
+                    if(m_useFiltering)
+                    {
+                        m_fields[i]->ExponentialFilter(outarray[i],
+                            m_filterAlpha, m_filterExponent, m_filterCutoff);
+                    }
                 }
                 SetBoundaryConditions(outarray, time);
                 break;
@@ -350,7 +346,7 @@ namespace Nektar
         int nvariables = inarray.num_elements();
         Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
 
-        m_advection->Advect(nvariables, m_fields, advVel, inarray,
+        m_advObject->Advect(nvariables, m_fields, advVel, inarray,
                             outarray, time, pFwd, pBwd);
     }
 
@@ -367,6 +363,8 @@ namespace Nektar
 
         if (m_shockCaptureType != "Off")
         {
+            // Get min h/p
+            m_artificialDiffusion->SetElmtHP(GetElmtMinHP());
             m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
         }
     }
@@ -388,10 +386,9 @@ namespace Nektar
         if (m_bndConds.size())
         {
             // Loop over user-defined boundary conditions
-            std::vector<CFSBndCondSharedPtr>::iterator x;
-            for (x = m_bndConds.begin(); x != m_bndConds.end(); ++x)
+            for (auto &x : m_bndConds)
             {
-                (*x)->Apply(Fwd, physarray, time);
+                x->Apply(Fwd, physarray, time);
             }
         }
     }
@@ -421,7 +418,7 @@ namespace Nektar
         }
 
         m_varConv->GetVelocityVector(physfield, velocity);
-        m_varConv->GetPressure(physfield, velocity, pressure);
+        m_varConv->GetPressure(physfield, pressure);
 
         // Flux vector for the velocity fields
         for (i = 0; i < m_spacedim; ++i)
@@ -507,7 +504,7 @@ namespace Nektar
         }
 
         m_varConv->GetVelocityVector(physfield_interp, velocity);
-        m_varConv->GetPressure      (physfield_interp, velocity, pressure);
+        m_varConv->GetPressure      (physfield_interp, pressure);
 
         // Evaluation of flux vector for the velocity fields
         for (i = 0; i < m_spacedim; ++i)
@@ -523,7 +520,7 @@ namespace Nektar
                         flux_interp[i+1][i], 1);
         }
 
-        // Galerkin project solution back to origianl space
+        // Galerkin project solution back to original space
         for (i = 0; i < m_spacedim; ++i)
         {
             for (j = 0; j < m_spacedim; ++j)
@@ -542,7 +539,7 @@ namespace Nektar
             Vmath::Vmul(nq, velocity[j], 1, pressure, 1,
                         flux_interp[m_spacedim+1][j], 1);
 
-            // Galerkin project solution back to origianl space
+            // Galerkin project solution back to original space
             m_fields[0]->PhysGalerkinProjection1DScaled(
                 OneDptscale,
                 flux_interp[m_spacedim+1][j],
@@ -551,97 +548,34 @@ namespace Nektar
     }
 
     /**
-     * @brief Perform post-integration checks, presently just to check steady
-     * state behaviour.
+     * @brief Calculate the maximum timestep on each element
+     *        subject to CFL restrictions.
      */
-    bool CompressibleFlowSystem::v_PostIntegrate(int step)
+    void CompressibleFlowSystem::GetElmtTimeStep(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD, NekDouble> &tstep)
     {
-        if (m_steadyStateTol > 0.0)
+        int n;
+        int nElements = m_fields[0]->GetExpSize();
+
+        // Change value of m_timestep (in case it is set to zero)
+        NekDouble tmp = m_timestep;
+        m_timestep    = 1.0;
+
+        Array<OneD, NekDouble> cfl(nElements);
+        cfl = GetElmtCFLVals();
+
+        // Factors to compute the time-step limit
+        NekDouble alpha     = MaxTimeStepEstimator();
+
+        // Loop over elements to compute the time-step limit for each element
+        for(n = 0; n < nElements; ++n)
         {
-            bool doOutput = step % m_infosteps == 0;
-            if (CalcSteadyState(doOutput))
-            {
-                if (m_comm->GetRank() == 0)
-                {
-                    cout << "Reached Steady State to tolerance "
-                         << m_steadyStateTol << endl;
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @brief Calculate whether the system has reached a steady state by
-     * observing residuals to a user-defined tolerance.
-     */
-    bool CompressibleFlowSystem::CalcSteadyState(bool output)
-    {
-        const int nPoints = GetTotPoints();
-        const int nFields = m_fields.num_elements();
-
-        // Holds L2 errors.
-        Array<OneD, NekDouble> L2      (nFields);
-        Array<OneD, NekDouble> residual(nFields);
-
-        for (int i = 0; i < nFields; ++i)
-        {
-            Array<OneD, NekDouble> diff(nPoints);
-
-            Vmath::Vsub(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1, diff, 1);
-            Vmath::Vmul(nPoints, diff, 1, diff, 1, diff, 1);
-            residual[i] = Vmath::Vsum(nPoints, diff, 1);
+            tstep[n] = m_cflSafetyFactor * alpha / cfl[n];
         }
 
-        m_comm->AllReduce(residual, LibUtilities::ReduceSum);
-
-        // L2 error
-        L2[0] = sqrt(residual[0]) / m_rhoInf;
-
-        for (int i = 1; i < nFields-1; ++i)
-        {
-            L2[i] = sqrt(residual[i]) / m_UInf / m_rhoInf;
-        }
-
-        NekDouble Einf = m_pInf / (m_gamma-1.0) + 0.5 * m_rhoInf * m_UInf;
-        L2[nFields-1] = sqrt(residual[nFields-1]) / Einf;
-
-        if (m_comm->GetRank() == 0 && output)
-        {
-            // Output time
-            m_errFile << setprecision(8) << setw(17) << scientific << m_time;
-
-            // Output residuals
-            for (int i = 0; i < nFields; ++i)
-            {
-                m_errFile << setprecision(11) << setw(22) << scientific
-                          << L2[i];
-            }
-
-            m_errFile << endl;
-        }
-
-        // Calculate maximum L2 error
-        NekDouble maxL2 = Vmath::Vmax(nFields, L2, 1);
-
-        if (m_session->DefinesCmdLineArgument("verbose") &&
-            m_comm->GetRank() == 0 && output)
-        {
-            cout << "-- Maximum L^2 residual: " << maxL2 << endl;
-        }
-
-        if (maxL2 <= m_steadyStateTol)
-        {
-            return true;
-        }
-
-        for (int i = 0; i < m_fields.num_elements(); ++i)
-        {
-            Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1);
-        }
-
-        return false;
+        // Restore value of m_timestep
+        m_timestep = tmp;
     }
 
     /**
@@ -650,38 +584,10 @@ namespace Nektar
     NekDouble CompressibleFlowSystem::v_GetTimeStep(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray)
     {
-        int n;
         int nElements = m_fields[0]->GetExpSize();
-        const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
+        Array<OneD, NekDouble> tstep (nElements, 0.0);
 
-        Array<OneD, NekDouble> tstep      (nElements, 0.0);
-        Array<OneD, NekDouble> stdVelocity(nElements);
-
-        // Get standard velocity to compute the time-step limit
-        GetStdVelocity(inarray, stdVelocity);
-
-        // Factors to compute the time-step limit
-        NekDouble minLength = 0.0;
-        NekDouble alpha     = MaxTimeStepEstimator();
-        NekDouble cLambda   = 0.2; // Spencer book-317
-
-        // Loop over elements to compute the time-step limit for each element
-        for(n = 0; n < nElements; ++n)
-        {
-            int npoints = m_fields[0]->GetExp(n)->GetTotPoints();
-            Array<OneD, NekDouble> one2D(npoints, 1.0);
-            NekDouble Area = m_fields[0]->GetExp(n)->Integral(one2D);
-
-            minLength = sqrt(Area);
-            if (m_fields[0]->GetExp(n)->as<LocalRegions::TriExp>())
-            {
-                minLength *= 2.0;
-            }
-
-            tstep[n] = m_cflSafetyFactor * alpha * minLength
-                     / (stdVelocity[n] * cLambda
-                        * (ExpOrder[n] - 1) * (ExpOrder[n] - 1));
-        }
+        GetElmtTimeStep(inarray, tstep);
 
         // Get the minimum time-step limit and return the time-step
         NekDouble TimeStep = Vmath::Vmin(nElements, tstep, 1);
@@ -722,142 +628,134 @@ namespace Nektar
             }
         }
 
-        InitializeSteadyState();
-
-        if (dumpInitialConditions)
+        if (dumpInitialConditions && m_checksteps)
         {
-            // Dump initial conditions to file
-            Checkpoint_Output(0);
+            Checkpoint_Output(m_nchk);
+            m_nchk++;
         }
     }
-
-    void CompressibleFlowSystem::InitializeSteadyState()
-    {
-        if (m_session->DefinesParameter("SteadyStateTol"))
-        {
-            const int nPoints = m_fields[0]->GetTotPoints();
-            m_un = Array<OneD, Array<OneD, NekDouble> > (
-                m_fields.num_elements());
-
-            for (int i = 0; i < m_fields.num_elements(); ++i)
-            {
-                m_un[i] = Array<OneD, NekDouble>(nPoints);
-                Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1);
-            }
-
-            if (m_comm->GetRank() == 0)
-            {
-                std::string fName = m_session->GetSessionName() +
-                    std::string(".res");
-                m_errFile.open(fName.c_str());
-                m_errFile << "# "
-                          << setw(15) << left << "Time"
-                          << setw(22) << left << "rho";
-
-                std::string velFields[3] = {"u", "v", "w"};
-
-                for (int i = 0; i < m_fields.num_elements()-2; ++i)
-                {
-                    m_errFile << setw(22) << "rho"+velFields[i];
-                }
-
-                m_errFile << setw(22) << left << "E" << endl;
-            }
-        }
-    }
-
 
     /**
      * @brief Compute the advection velocity in the standard space
      * for each element of the expansion.
-     *
-     * @param inarray    Momentum field.
-     * @param stdV       Standard velocity field.
      */
-    void CompressibleFlowSystem::GetStdVelocity(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,                   NekDouble>   &stdV)
+    Array<OneD, NekDouble> CompressibleFlowSystem::v_GetMaxStdVelocity()
     {
         int nTotQuadPoints = GetTotPoints();
         int n_element      = m_fields[0]->GetExpSize();
-        int nBCEdgePts           = 0;
+        int expdim         = m_fields[0]->GetGraph()->GetMeshDimension();
+        int nfields        = m_fields.num_elements();
+        int offset;
+        Array<OneD, NekDouble> tmp;
+
+        Array<OneD, Array<OneD, NekDouble> > physfields(nfields);
+        for (int i = 0; i < nfields; ++i)
+        {
+            physfields[i] = m_fields[i]->GetPhys();
+        }
+
+        Array<OneD, NekDouble> stdV(n_element, 0.0);
 
         // Getting the velocity vector on the 2D normal space
         Array<OneD, Array<OneD, NekDouble> > velocity   (m_spacedim);
         Array<OneD, Array<OneD, NekDouble> > stdVelocity(m_spacedim);
-        Array<OneD, NekDouble>               pressure   (nTotQuadPoints);
+        Array<OneD, Array<OneD, NekDouble> > stdSoundSpeed(m_spacedim);
         Array<OneD, NekDouble>               soundspeed (nTotQuadPoints);
         LibUtilities::PointsKeyVector        ptsKeys;
 
-        // Zero output array
-        Vmath::Zero(stdV.num_elements(), stdV, 1);
-
         for (int i = 0; i < m_spacedim; ++i)
         {
-            velocity   [i] = Array<OneD, NekDouble>(nTotQuadPoints);
-            stdVelocity[i] = Array<OneD, NekDouble>(nTotQuadPoints, 0.0);
+            velocity   [i]   = Array<OneD, NekDouble>(nTotQuadPoints);
+            stdVelocity[i]   = Array<OneD, NekDouble>(nTotQuadPoints, 0.0);
+            stdSoundSpeed[i] = Array<OneD, NekDouble>(nTotQuadPoints, 0.0);
         }
 
-        m_varConv->GetVelocityVector(inarray, velocity);
-        m_varConv->GetPressure      (inarray, velocity, pressure);
-        m_varConv->GetSoundSpeed    (inarray, pressure, soundspeed);
+        m_varConv->GetVelocityVector(physfields, velocity);
+        m_varConv->GetSoundSpeed    (physfields, soundspeed);
 
         for(int el = 0; el < n_element; ++el)
         {
             ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
+            offset  = m_fields[0]->GetPhys_Offset(el);
+            int nq = m_fields[0]->GetExp(el)->GetTotPoints();
 
-            // Possible bug: not multiply by jacobian??
             const SpatialDomains::GeomFactorsSharedPtr metricInfo =
                 m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo();
             const Array<TwoD, const NekDouble> &gmat =
                 m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()
                                                   ->GetDerivFactors(ptsKeys);
 
-            int nq = m_fields[0]->GetExp(el)->GetTotPoints();
-
+            // Convert to standard element
+            //    consider soundspeed in all directions
+            //    (this might overestimate the cfl)
             if(metricInfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 // d xi/ dx = gmat = 1/J * d x/d xi
-                for (int i = 0; i < m_spacedim; ++i)
+                for (int i = 0; i < expdim; ++i)
                 {
-                    Vmath::Vmul(nq, gmat[i], 1, velocity[0], 1,
-                                stdVelocity[i], 1);
-                    for (int j = 1; j < m_spacedim; ++j)
+                    Vmath::Vmul(nq, gmat[i], 1,
+                                    velocity[0] + offset, 1,
+                                    tmp = stdVelocity[i] + offset, 1);
+                    Vmath::Vmul(nq, gmat[i], 1,
+                                    soundspeed + offset, 1,
+                                    tmp = stdSoundSpeed[i] + offset, 1);
+                    for (int j = 1; j < expdim; ++j)
                     {
-                        Vmath::Vvtvp(nq, gmat[m_spacedim*j+i], 1, velocity[j],
-                                     1, stdVelocity[i], 1, stdVelocity[i], 1);
+                        Vmath::Vvtvp(nq, gmat[expdim*j+i], 1,
+                                         velocity[j] + offset, 1,
+                                         stdVelocity[i] + offset, 1,
+                                         tmp = stdVelocity[i] + offset, 1);
+                        Vmath::Vvtvp(nq, gmat[expdim*j+i], 1,
+                                         soundspeed + offset, 1,
+                                         stdSoundSpeed[i] + offset, 1,
+                                         tmp = stdSoundSpeed[i] + offset, 1);
                     }
                 }
             }
             else
             {
-                for (int i = 0; i < m_spacedim; ++i)
+                for (int i = 0; i < expdim; ++i)
                 {
-                    Vmath::Smul(nq, gmat[i][0], velocity[0], 1,
-                                stdVelocity[i], 1);
-                    for (int j = 1; j < m_spacedim; ++j)
+                    Vmath::Smul(nq, gmat[i][0],
+                                    velocity[0] + offset, 1,
+                                    tmp = stdVelocity[i] + offset, 1);
+                    Vmath::Smul(nq, gmat[i][0],
+                                    soundspeed + offset, 1,
+                                    tmp = stdSoundSpeed[i] + offset, 1);
+                    for (int j = 1; j < expdim; ++j)
                     {
-                        Vmath::Svtvp(nq, gmat[m_spacedim*j+i][0], velocity[j],
-                                     1, stdVelocity[i], 1, stdVelocity[i], 1);
+                        Vmath::Svtvp(nq, gmat[expdim*j+i][0],
+                                         velocity[j] + offset, 1,
+                                         stdVelocity[i] + offset, 1,
+                                         tmp = stdVelocity[i] + offset, 1);
+                        Vmath::Svtvp(nq, gmat[expdim*j+i][0],
+                                         soundspeed + offset, 1,
+                                         stdSoundSpeed[i] + offset, 1,
+                                         tmp = stdSoundSpeed[i] + offset, 1);
                     }
                 }
             }
 
+            NekDouble vel;
             for (int i = 0; i < nq; ++i)
             {
                 NekDouble pntVelocity = 0.0;
-                for (int j = 0; j < m_spacedim; ++j)
+                for (int j = 0; j < expdim; ++j)
                 {
-                    pntVelocity += stdVelocity[j][i]*stdVelocity[j][i];
+                    // Add sound speed
+                    vel = std::abs(stdVelocity[j][offset + i]) +
+                          std::abs(stdSoundSpeed[j][offset + i]);
+                    pntVelocity += vel * vel;
                 }
-                pntVelocity = sqrt(pntVelocity) + soundspeed[nBCEdgePts];
+                pntVelocity = sqrt(pntVelocity);
                 if (pntVelocity > stdV[el])
                 {
                     stdV[el] = pntVelocity;
                 }
-                nBCEdgePts++;
             }
         }
+
+        return stdV;
     }
 
     /**
@@ -930,40 +828,168 @@ namespace Nektar
                 tmp[i] = m_fields[i]->GetPhys();
             }
 
-            Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys);
+            Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
+            Array<OneD, Array<OneD, NekDouble> > velFwd  (m_spacedim);
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                velocity[i] = Array<OneD, NekDouble> (nPhys);
+                velFwd[i]   = Array<OneD, NekDouble> (nCoeffs);
+            }
+
+            Array<OneD, NekDouble> pressure(nPhys), temperature(nPhys);
+            Array<OneD, NekDouble> entropy(nPhys);
+            Array<OneD, NekDouble> soundspeed(nPhys), mach(nPhys);
             Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys);
 
+            m_varConv->GetVelocityVector(tmp, velocity);
             m_varConv->GetPressure  (tmp, pressure);
-            m_varConv->GetSoundSpeed(tmp, pressure, soundspeed);
+            m_varConv->GetTemperature(tmp, temperature);
+            m_varConv->GetEntropy   (tmp, entropy);
+            m_varConv->GetSoundSpeed(tmp, soundspeed);
             m_varConv->GetMach      (tmp, soundspeed, mach);
-            m_varConv->GetSensor    (m_fields[0], tmp, sensor, SensorKappa);
 
-            Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs);
+            int sensorOffset;
+            m_session->LoadParameter ("SensorOffset", sensorOffset, 1);
+            m_varConv->GetSensor (m_fields[0], tmp, sensor, SensorKappa,
+                                    sensorOffset);
+
+            Array<OneD, NekDouble> pFwd(nCoeffs), TFwd(nCoeffs);
+            Array<OneD, NekDouble> sFwd(nCoeffs);
+            Array<OneD, NekDouble> aFwd(nCoeffs), mFwd(nCoeffs);
             Array<OneD, NekDouble> sensFwd(nCoeffs);
 
+            string velNames[3] = {"u", "v", "w"};
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                m_fields[0]->FwdTrans_IterPerExp(velocity[i], velFwd[i]);
+                variables.push_back(velNames[i]);
+                fieldcoeffs.push_back(velFwd[i]);
+            }
+
             m_fields[0]->FwdTrans_IterPerExp(pressure,   pFwd);
-            m_fields[0]->FwdTrans_IterPerExp(soundspeed, sFwd);
+            m_fields[0]->FwdTrans_IterPerExp(temperature,TFwd);
+            m_fields[0]->FwdTrans_IterPerExp(entropy,    sFwd);
+            m_fields[0]->FwdTrans_IterPerExp(soundspeed, aFwd);
             m_fields[0]->FwdTrans_IterPerExp(mach,       mFwd);
             m_fields[0]->FwdTrans_IterPerExp(sensor,     sensFwd);
 
             variables.push_back  ("p");
+            variables.push_back  ("T");
+            variables.push_back  ("s");
             variables.push_back  ("a");
             variables.push_back  ("Mach");
             variables.push_back  ("Sensor");
             fieldcoeffs.push_back(pFwd);
+            fieldcoeffs.push_back(TFwd);
             fieldcoeffs.push_back(sFwd);
+            fieldcoeffs.push_back(aFwd);
             fieldcoeffs.push_back(mFwd);
             fieldcoeffs.push_back(sensFwd);
 
             if (m_artificialDiffusion)
             {
+                // Get min h/p
+                m_artificialDiffusion->SetElmtHP(GetElmtMinHP());
                 // reuse pressure
+                Array<OneD, NekDouble> sensorFwd(nCoeffs);
                 m_artificialDiffusion->GetArtificialViscosity(tmp, pressure);
-                m_fields[0]->FwdTrans_IterPerExp(pressure,   pFwd);
+                m_fields[0]->FwdTrans_IterPerExp(pressure,   sensorFwd);
 
                 variables.push_back  ("ArtificialVisc");
-                fieldcoeffs.push_back(pFwd);
+                fieldcoeffs.push_back(sensorFwd);
             }
         }
     }
+
+    /**
+     *
+     */
+    void CompressibleFlowSystem::GetPressure(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &pressure)
+    {
+        m_varConv->GetPressure(physfield, pressure);
+    }
+
+    /**
+     *
+     */
+    void CompressibleFlowSystem::GetDensity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &density)
+    {
+        density = physfield[0];
+    }
+
+    /**
+     *
+     */
+    void CompressibleFlowSystem::GetVelocity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, Array<OneD, NekDouble> >       &velocity)
+    {
+        m_varConv->GetVelocityVector(physfield, velocity);
+    }
+
+/**
+ * @brief Compute an estimate of minimum h/p
+ * for each element of the expansion.
+ */
+Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
+{
+    int nElements               = m_fields[0]->GetExpSize();
+    Array<OneD, NekDouble> hOverP(nElements, 1.0);
+
+    // Determine h/p scaling
+    Array<OneD, int> pOrderElmt = m_fields[0]->EvalBasisNumModesMaxPerExp();
+    for (int e = 0; e < nElements; e++)
+    {
+        NekDouble h = 1.0e+10;
+        switch(m_expdim)
+        {
+            case 3:
+            {
+                LocalRegions::Expansion3DSharedPtr exp3D;
+                exp3D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion3D>();
+                for(int i = 0; i < exp3D->GetNedges(); ++i)
+                {
+                    h = min(h, exp3D->GetGeom3D()->GetEdge(i)->GetVertex(0)->
+                        dist(*(exp3D->GetGeom3D()->GetEdge(i)->GetVertex(1))));
+                }
+            break;
+            }
+
+            case 2:
+            {
+                LocalRegions::Expansion2DSharedPtr exp2D;
+                exp2D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion2D>();
+                for(int i = 0; i < exp2D->GetNedges(); ++i)
+                {
+                    h = min(h, exp2D->GetGeom2D()->GetEdge(i)->GetVertex(0)->
+                        dist(*(exp2D->GetGeom2D()->GetEdge(i)->GetVertex(1))));
+                }
+            break;
+            }
+            case 1:
+            {
+                LocalRegions::Expansion1DSharedPtr exp1D;
+                exp1D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion1D>();
+
+                h = min(h, exp1D->GetGeom1D()->GetVertex(0)->
+                    dist(*(exp1D->GetGeom1D()->GetVertex(1))));
+
+            break;
+            }
+            default:
+            {
+                ASSERTL0(false,"Dimension out of bound.")
+            }
+        }
+
+        // Determine h/p scaling
+        hOverP[e] = h/max(pOrderElmt[e]-1,1);
+
+    }
+    return hOverP;
+}
 }

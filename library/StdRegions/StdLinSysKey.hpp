@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -72,17 +71,3 @@ namespace Nektar
 } // end of namespace
 
 #endif //STDLINSYSKEY_HPP
-
-/**
-* $Log: StdLinSysKey.hpp,v $
-* Revision 1.3  2007/07/20 02:16:54  bnelson
-* Replaced boost::shared_ptr with Nektar::ptr
-*
-* Revision 1.2  2007/04/10 14:00:45  sherwin
-* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
-*
-* Revision 1.1  2007/02/28 19:05:11  sherwin
-* Moved key definitions to their own files to make things more transparent
-*
-*
-***/

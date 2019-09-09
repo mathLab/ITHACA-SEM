@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -59,11 +58,23 @@ namespace Nektar
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                     const AssemblyMapSharedPtr &locToGloMap,
                     const StdRegions::ConstFactorMap &factors,
-                    const StdRegions::VarCoeffMap &varCoeffs) :
+                    const StdRegions::VarCoeffMap &varCoeffs,
+                    const VarFactorsMap &varFactors) :
             GlobalMatrixKey(matrixType, locToGloMap, factors, varCoeffs),
-            m_solnType(locToGloMap->GetGlobalSysSolnType())
+            m_solnType(locToGloMap->GetGlobalSysSolnType()),
+            m_varFactors(varFactors),
+            m_varFactors_hashes(varFactors.size())
         {
-
+            // Create hash
+            int i = 0;
+            for (VarFactorsMap::const_iterator x = varFactors.begin();
+                 x != varFactors.end(); ++x)
+            {
+                m_varFactors_hashes[i] = boost::hash_range(x->second.begin(),
+                              x->second.begin() + x->second.num_elements());
+                boost::hash_combine(m_varFactors_hashes[i], (int)x->first);
+                i++;
+            }
         }
 
 
@@ -72,7 +83,9 @@ namespace Nektar
          */
         GlobalLinSysKey::GlobalLinSysKey(const GlobalLinSysKey &key):
             GlobalMatrixKey(key),
-            m_solnType(key.m_solnType)
+            m_solnType(key.m_solnType),
+            m_varFactors(key.m_varFactors),
+            m_varFactors_hashes(key.m_varFactors_hashes)
         {
         }
 
@@ -105,6 +118,28 @@ namespace Nektar
                 return false;
             }
 
+            if(lhs.m_varFactors.size() < rhs.m_varFactors.size())
+            {
+                return true;
+            }
+
+            if(lhs.m_varFactors.size() > rhs.m_varFactors.size())
+            {
+                return false;
+            }
+
+            for (unsigned int i = 0; i < lhs.m_varFactors_hashes.size(); ++i)
+            {
+                if(lhs.m_varFactors_hashes[i] < rhs.m_varFactors_hashes[i])
+                {
+                    return true;
+                }
+                if(lhs.m_varFactors_hashes[i] > rhs.m_varFactors_hashes[i])
+                {
+                    return false;
+                }
+            }
+
             return (*dynamic_cast<const GlobalMatrixKey*>(&lhs)
                     < *dynamic_cast<const GlobalMatrixKey*>(&rhs));
         }
@@ -124,14 +159,16 @@ namespace Nektar
             os << "Solution Type: " 
                << GlobalSysSolnTypeMap[rhs.GetGlobalSysSolnType()] << endl;
             os << "Number of constants: " << rhs.GetNConstFactors() << endl;
-            StdRegions::ConstFactorMap::const_iterator x;
-            for (x = rhs.GetConstFactors().begin(); x != rhs.GetConstFactors().end(); ++x)
+            for (auto &x : rhs.GetConstFactors())
             {
-                os << "  Constant " << StdRegions::ConstFactorTypeMap[x->first]
-                   << ": " << x->second << endl;
+                os << "  Constant " << StdRegions::ConstFactorTypeMap[x.first]
+                   << ": " << x.second << endl;
             }
             os << "Number of variable coefficients: " 
                << rhs.GetNVarCoeffs() << endl;
+
+            os << "Number of variable factors : " 
+               << rhs.GetNVarFactors() << endl;
             
             return os;
         }

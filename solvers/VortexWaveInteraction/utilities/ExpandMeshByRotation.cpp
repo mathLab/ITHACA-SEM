@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,7 +34,7 @@
 
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <cstdio>
@@ -77,15 +76,15 @@ int main(int argc, char *argv[])
     // Read in mesh from input file
     string meshfile(argv[argc-2]);
     SpatialDomains::MeshGraphSharedPtr graphShPt=SpatialDomains::MeshGraph::Read(vSession);
-    SpatialDomains::Composite composite;
+    SpatialDomains::CompositeSharedPtr composite;
     composite = graphShPt->GetComposite(300);
     std::map<int,int> jointEdges, jointVerts, newVerts, newEdges; 
-    int compsize = composite->size();
+    int compsize = composite->m_geomVec.size();
     for(i = 0; i < compsize; ++i)
     {
-        SpatialDomains::Geometry1DSharedPtr tmp1 = boost::dynamic_pointer_cast<SpatialDomains::Geometry1D>((*composite)[i]);
-        SpatialDomains::Geometry1DSharedPtr tmp2 = boost::dynamic_pointer_cast<SpatialDomains::Geometry1D>((*composite)[compsize-1-i]);
-        jointEdges[tmp1->GetEid() ] = tmp2->GetEid();
+        SpatialDomains::Geometry1DSharedPtr tmp1 = std::dynamic_pointer_cast<SpatialDomains::Geometry1D>(composite->m_geomVec[i]);
+        SpatialDomains::Geometry1DSharedPtr tmp2 = std::dynamic_pointer_cast<SpatialDomains::Geometry1D>(composite->m_geomVec[compsize-1-i]);
+        jointEdges[tmp1->GetGlobalID()] = tmp2->GetGlobalID();
         jointVerts[tmp1->GetVid(0)] = tmp2->GetVid(1);
         jointVerts[tmp1->GetVid(1)] = tmp2->GetVid(0);
     }
@@ -430,14 +429,13 @@ void ExpandElmts(TiXmlElement* mesh, map<int,int> &newEdges, int &nelmts)
 string GetXmlString(char tag, vector<unsigned int> &ids)
 {
     stringstream st;
-    vector<unsigned int>::iterator it;
     bool range = false;
     int vId = ids[0];
     int prevId = vId;
     
     st << " " << tag << "[" << vId;
     
-    for (it = ids.begin()+1; it != ids.end(); ++it){
+    for (auto it = ids.begin()+1; it != ids.end(); ++it){
         // store previous element ID and get current one
         prevId = vId;
         vId = (*it);
@@ -525,9 +523,8 @@ void  ExpandComposites(TiXmlElement * mesh, map<int,int> newEdges, int nOrigElmt
             
             std::string indxStr = compositeElementStr.substr(indxBeg, indxEnd - indxBeg + 1);
             std::vector<unsigned int> seqVector;
-            std::vector<unsigned int>::iterator seqIter;
             
-            bool err = ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector);
+            bool err = ParseUtils::GenerateSeqVector(indxStr, seqVector);
             
             ASSERTL0(err, (std::string("Error reading composite elements: ") + indxStr).c_str());
             

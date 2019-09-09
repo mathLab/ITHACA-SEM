@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,7 +32,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <loki/Singleton.h>
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 
@@ -45,36 +43,36 @@ namespace Collections {
  */
 bool operator< (OperatorKey const &p1, OperatorKey const &p2)
 {
-    if (boost::get<0>(p1) < boost::get<0>(p2))
+    if (std::get<0>(p1) < std::get<0>(p2))
     {
         return true;
     }
-    if (boost::get<0>(p1) > boost::get<0>(p2))
+    if (std::get<0>(p1) > std::get<0>(p2))
     {
         return false;
     }
-    if (boost::get<1>(p1) < boost::get<1>(p2))
+    if (std::get<1>(p1) < std::get<1>(p2))
     {
         return true;
     }
-    if (boost::get<1>(p1) > boost::get<1>(p2))
+    if (std::get<1>(p1) > std::get<1>(p2))
     {
         return false;
     }
-    if (boost::get<2>(p1) < boost::get<2>(p2))
+    if (std::get<2>(p1) < std::get<2>(p2))
     {
         return true;
     }
-    if (boost::get<2>(p1) > boost::get<2>(p2))
+    if (std::get<2>(p1) > std::get<2>(p2))
     {
         return false;
     }
 
-    if (boost::get<3>(p1) < boost::get<3>(p2))
+    if (std::get<3>(p1) < std::get<3>(p2))
     {
         return true;
     }
-    if (boost::get<3>(p1) > boost::get<3>(p2))
+    if (std::get<3>(p1) > std::get<3>(p2))
     {
         return false;
     }
@@ -88,10 +86,10 @@ bool operator< (OperatorKey const &p1, OperatorKey const &p2)
  */
 std::ostream &operator<<(std::ostream &os, OperatorKey const &p)
 {
-    os << LibUtilities::ShapeTypeMap[boost::get<0>(p)] << ", "
-       << OperatorTypeMap           [boost::get<1>(p)] << ", "
-       << ImplementationTypeMap     [boost::get<2>(p)] << ", "
-       << (boost::get<3>(p) ? "Nodal" : "Modal");
+    os << LibUtilities::ShapeTypeMap[std::get<0>(p)] << ", "
+       << OperatorTypeMap           [std::get<1>(p)] << ", "
+       << ImplementationTypeMap     [std::get<2>(p)] << ", "
+       << (std::get<3>(p) ? "Nodal" : "Modal");
     return os;
 }
 
@@ -109,11 +107,8 @@ Operator::~Operator()
  */
 OperatorFactory& GetOperatorFactory()
 {
-    typedef Loki::SingletonHolder<OperatorFactory,
-                                  Loki::CreateUsingNew,
-                                  Loki::NoDestroy,
-                                  Loki::SingleThreaded> Type;
-    return Type::Instance();
+    static OperatorFactory instance;
+    return instance;
 }
 
 

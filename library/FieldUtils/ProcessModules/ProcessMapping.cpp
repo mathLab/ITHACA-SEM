@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -39,7 +38,6 @@ using namespace std;
 
 #include "ProcessMapping.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
@@ -62,25 +60,29 @@ ProcessMapping::~ProcessMapping()
 
 void ProcessMapping::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessMapping: Applying mapping to field..." << endl;
-        }
-    }
-
     // Determine dimensions of mesh, solution, etc...
     int npoints  = m_f->m_exp[0]->GetNpoints();
     int expdim   = m_f->m_graph->GetMeshDimension();
     int spacedim = expdim;
-    if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-        (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
+    if ((m_f->m_numHomogeneousDir) == 1 || (m_f->m_numHomogeneousDir) == 2)
     {
         spacedim = 3;
     }
-    int nfields   = m_f->m_fielddef[0]->m_fields.size();
+    int nfields   = m_f->m_variables.size();
     int addfields = expdim;
+
+    string fieldNames[3] = {"xCoord", "yCoord", "zCoord"};
+    for (int i = 0; i < addfields; ++i)
+    {
+        m_f->m_variables.push_back(fieldNames[i]);
+    }
+
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     m_f->m_exp.resize(nfields + addfields);
 
     // Load mapping
@@ -135,41 +137,15 @@ void ProcessMapping::Process(po::variables_map &vm)
     mapping->GetCartesianCoordinates(coords[0], coords[1], coords[2]);
 
     // Add new information to m_f
-    string fieldNames[3] = {"xCoord", "yCoord", "zCoord"};
-    vector<string> outname;
     for (int i = 0; i < addfields; ++i)
     {
         m_f->m_exp[nfields + i] =
-            m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
-        m_f->m_exp[nfields + i]->UpdatePhys() = coords[i];
+            m_f->AppendExpList(m_f->m_numHomogeneousDir);
+        Vmath::Vcopy(npoints, coords[i], 1,
+                     m_f->m_exp[nfields + i]->UpdatePhys(), 1);
         m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(
             coords[i], m_f->m_exp[nfields + i]->UpdateCoeffs());
-        outname.push_back(fieldNames[i]);
     }
-
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (int j = 0; j < nfields + addfields; ++j)
-    {
-        for (int i = 0; i < FieldDef.size(); ++i)
-        {
-            if (j >= nfields)
-            {
-                FieldDef[i]->m_fields.push_back(outname[j - nfields]);
-            }
-            else
-            {
-                FieldDef[i]->m_fields.push_back(
-                    m_f->m_fielddef[0]->m_fields[j]);
-            }
-            m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 
 GlobalMapping::MappingSharedPtr ProcessMapping::GetMapping(FieldSharedPtr f)
@@ -195,12 +171,7 @@ GlobalMapping::MappingSharedPtr ProcessMapping::GetMapping(FieldSharedPtr f)
     // Get field information
     int npoints  = f->m_exp[0]->GetNpoints();
     int expdim   = f->m_graph->GetMeshDimension();
-    int spacedim = expdim;
-    if ((f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-        (f->m_fielddef[0]->m_numHomogeneousDir) == 2)
-    {
-        spacedim = 3;
-    }
+    int spacedim = expdim + f->m_numHomogeneousDir;
 
     // Declare coordinates storage
     Array<OneD, Array<OneD, NekDouble> > coords_new(3);

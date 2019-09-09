@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -80,9 +79,8 @@ namespace Nektar
         /// Constructor for full direct matrix solve.
         GlobalLinSysDirectFull::GlobalLinSysDirectFull(
                     const GlobalLinSysKey &pLinSysKey,
-                    const boost::weak_ptr<ExpList> &pExp,
-                    const boost::shared_ptr<AssemblyMap>
-                                                            &pLocToGloMap)
+                    const std::weak_ptr<ExpList> &pExp,
+                    const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             : GlobalLinSys(pLinSysKey, pExp, pLocToGloMap),
               GlobalLinSysDirect(pLinSysKey, pExp, pLocToGloMap)
         {
@@ -129,6 +127,7 @@ namespace Nektar
                 }
                 else
                 {
+		    Vmath::Zero(nGlobDofs-nDirDofs, &pOutput[nDirDofs], 1);
                     // Calculate Dirichlet forcing and subtract it from the rhs
                     m_expList.lock()->GeneralMatrixOp(
                         m_linSysKey, pOutput, tmp, eGlobal);
@@ -219,7 +218,7 @@ namespace Nektar
             int loc_lda;
             for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
             {
-                loc_mat = GetBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
+                loc_mat = GetBlock(n);
                 loc_lda = loc_mat->GetRows();
 
                 for(i = 0; i < loc_lda; ++i)

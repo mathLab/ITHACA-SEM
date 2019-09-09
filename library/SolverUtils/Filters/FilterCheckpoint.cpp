@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -45,13 +44,12 @@ std::string FilterCheckpoint::className =
 
 FilterCheckpoint::FilterCheckpoint(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams) :
-    Filter(pSession)
+    Filter(pSession, pEquation)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         m_outputFile = m_session->GetSessionName();
@@ -65,8 +63,8 @@ FilterCheckpoint::FilterCheckpoint(
     // OutputFrequency
     it = pParams.find("OutputFrequency");
     ASSERTL0(it != pParams.end(), "Missing parameter 'OutputFrequency'.");
-    LibUtilities::Equation equ(m_session, it->second);
-    m_outputFrequency = floor(equ.Evaluate());
+    LibUtilities::Equation equ(m_session->GetExpressionEvaluator(), it->second);
+    m_outputFrequency = round(equ.Evaluate());
 
     m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
 }

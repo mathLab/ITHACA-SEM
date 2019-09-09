@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -40,7 +39,6 @@ using namespace std;
 
 #include "ProcessMultiShear.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 
@@ -61,11 +59,6 @@ ProcessMultiShear::ProcessMultiShear(FieldSharedPtr f) : ProcessModule(f)
     m_config["fromfld"] = ConfigOption(
         false, "NotSet",
         "First fld file. First underscore flags position of id in name.");
-
-    ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
-             "Need to specify fromfld=file.fld ");
-
-    m_f->m_fldToBnd = false;
 }
 
 ProcessMultiShear::~ProcessMultiShear()
@@ -74,14 +67,14 @@ ProcessMultiShear::~ProcessMultiShear()
 
 void ProcessMultiShear::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessMultiShear: Calculating shear stress metrics..."
-                 << endl;
-        }
+        return;
     }
+
+    ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
+             "Need to specify fromfld=file.fld ");
 
     int nstart, i, j, nfields=0;
     bool wssg      = false;
@@ -89,7 +82,7 @@ void ProcessMultiShear::Process(po::variables_map &vm)
     string fromfld, basename, endname, nstartStr;
     stringstream filename;
     vector<string> infiles(nfld);
-    vector<boost::shared_ptr<Field> > m_fromField(nfld);
+    vector<std::shared_ptr<Field> > fromField(nfld);
 
     // Set up list of input fld files.
     fromfld  = m_config["fromfld"].as<string>();
@@ -113,9 +106,9 @@ void ProcessMultiShear::Process(po::variables_map &vm)
 
     for (i = 0; i < nfld; ++i)
     {
-        m_fromField[i]            = boost::shared_ptr<Field>(new Field());
-        m_fromField[i]->m_session = m_f->m_session;
-        m_fromField[i]->m_graph   = m_f->m_graph;
+        fromField[i]            = std::shared_ptr<Field>(new Field());
+        fromField[i]->m_session = m_f->m_session;
+        fromField[i]->m_graph   = m_f->m_graph;
     }
 
     // Import all fld files.
@@ -131,19 +124,19 @@ void ProcessMultiShear::Process(po::variables_map &vm)
                     m_f->m_exp[0]->GetExp(j)->GetGeom()->GetGlobalID();
             }
             m_f->FieldIOForFile(infiles[i])->Import(
-                infiles[i], m_fromField[i]->m_fielddef, m_fromField[i]->m_data,
+                infiles[i], fromField[i]->m_fielddef, fromField[i]->m_data,
                 LibUtilities::NullFieldMetaDataMap, ElementGIDs);
         }
         else
         {
             m_f->FieldIOForFile(infiles[i])->Import(
-                infiles[i], m_fromField[i]->m_fielddef, m_fromField[i]->m_data,
+                infiles[i], fromField[i]->m_fielddef, fromField[i]->m_data,
                 LibUtilities::NullFieldMetaDataMap);
         }
 
-        nfields = m_fromField[i]->m_fielddef[0]->m_fields.size();
+        nfields = fromField[i]->m_fielddef[0]->m_fields.size();
         int NumHomogeneousDir =
-            m_fromField[i]->m_fielddef[0]->m_numHomogeneousDir;
+            fromField[i]->m_fielddef[0]->m_numHomogeneousDir;
 
         if (nfields == 5 || nfields == 7)
         {
@@ -151,36 +144,36 @@ void ProcessMultiShear::Process(po::variables_map &vm)
         }
 
         // Set up Expansion information to use mode order from field
-        m_fromField[i]->m_graph->SetExpansions(m_fromField[i]->m_fielddef);
+        fromField[i]->m_graph->SetExpansions(fromField[i]->m_fielddef);
 
         // Set up expansions, and extract data.
-        m_fromField[i]->m_exp.resize(nfields);
-        m_fromField[i]->m_exp[0] =
-            m_fromField[i]->SetUpFirstExpList(NumHomogeneousDir, true);
+        fromField[i]->m_exp.resize(nfields);
+        fromField[i]->m_exp[0] =
+            fromField[i]->SetUpFirstExpList(NumHomogeneousDir, true);
 
         for (j = 1; j < nfields; ++j)
         {
-            m_fromField[i]->m_exp[j] = m_f->AppendExpList(NumHomogeneousDir);
+            fromField[i]->m_exp[j] = m_f->AppendExpList(NumHomogeneousDir);
         }
 
         for (j = 0; j < nfields; ++j)
         {
-            for (int k = 0; k < m_fromField[i]->m_data.size(); ++k)
+            for (int k = 0; k < fromField[i]->m_data.size(); ++k)
             {
-                m_fromField[i]->m_exp[j]->ExtractDataToCoeffs(
-                    m_fromField[i]->m_fielddef[k], m_fromField[i]->m_data[k],
-                    m_fromField[i]->m_fielddef[k]->m_fields[j],
-                    m_fromField[i]->m_exp[j]->UpdateCoeffs());
+                fromField[i]->m_exp[j]->ExtractDataToCoeffs(
+                    fromField[i]->m_fielddef[k], fromField[i]->m_data[k],
+                    fromField[i]->m_fielddef[k]->m_fields[j],
+                    fromField[i]->m_exp[j]->UpdateCoeffs());
             }
-            m_fromField[i]->m_exp[j]->BwdTrans(
-                m_fromField[i]->m_exp[j]->GetCoeffs(),
-                m_fromField[i]->m_exp[j]->UpdatePhys());
+            fromField[i]->m_exp[j]->BwdTrans(
+                fromField[i]->m_exp[j]->GetCoeffs(),
+                fromField[i]->m_exp[j]->UpdatePhys());
         }
     }
 
     int spacedim = m_f->m_graph->GetSpaceDimension();
-    if ((m_fromField[0]->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-        (m_fromField[0]->m_fielddef[0]->m_numHomogeneousDir) == 2)
+    if ((fromField[0]->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
+        (fromField[0]->m_fielddef[0]->m_numHomogeneousDir) == 2)
     {
         spacedim = 3;
     }
@@ -191,7 +184,7 @@ void ProcessMultiShear::Process(po::variables_map &vm)
         nout = 6;
     }
 
-    int npoints = m_fromField[0]->m_exp[0]->GetNpoints();
+    int npoints = fromField[0]->m_exp[0]->GetNpoints();
     Array<OneD, Array<OneD, NekDouble> > normTemporalMeanVec(spacedim),
         normCrossDir(spacedim), outfield(nout), dtemp(spacedim);
     Array<OneD, NekDouble> TemporalMeanMag(npoints, 0.0),
@@ -218,7 +211,7 @@ void ProcessMultiShear::Process(po::variables_map &vm)
     {
         for (j = 0; j < spacedim; ++j)
         {
-            Vmath::Vadd(npoints, m_fromField[i]->m_exp[j]->GetPhys(), 1,
+            Vmath::Vadd(npoints, fromField[i]->m_exp[j]->GetPhys(), 1,
                         normTemporalMeanVec[j], 1, normTemporalMeanVec[j], 1);
         }
     }
@@ -243,21 +236,21 @@ void ProcessMultiShear::Process(po::variables_map &vm)
     if (wssg) // cross product with normals to obtain direction parallel to
               // temporal mean vector.
     {
-        Vmath::Vmul(npoints, m_fromField[0]->m_exp[nfields - 1]->GetPhys(), 1,
+        Vmath::Vmul(npoints, fromField[0]->m_exp[nfields - 1]->GetPhys(), 1,
                     normTemporalMeanVec[1], 1, normCrossDir[0], 1);
-        Vmath::Vvtvm(npoints, m_fromField[0]->m_exp[nfields - 2]->GetPhys(), 1,
+        Vmath::Vvtvm(npoints, fromField[0]->m_exp[nfields - 2]->GetPhys(), 1,
                      normTemporalMeanVec[2], 1, normCrossDir[0], 1,
                      normCrossDir[0], 1);
 
-        Vmath::Vmul(npoints, m_fromField[0]->m_exp[nfields - 3]->GetPhys(), 1,
+        Vmath::Vmul(npoints, fromField[0]->m_exp[nfields - 3]->GetPhys(), 1,
                     normTemporalMeanVec[2], 1, normCrossDir[1], 1);
-        Vmath::Vvtvm(npoints, m_fromField[0]->m_exp[nfields - 1]->GetPhys(), 1,
+        Vmath::Vvtvm(npoints, fromField[0]->m_exp[nfields - 1]->GetPhys(), 1,
                      normTemporalMeanVec[0], 1, normCrossDir[1], 1,
                      normCrossDir[1], 1);
 
-        Vmath::Vmul(npoints, m_fromField[0]->m_exp[nfields - 2]->GetPhys(), 1,
+        Vmath::Vmul(npoints, fromField[0]->m_exp[nfields - 2]->GetPhys(), 1,
                     normTemporalMeanVec[0], 1, normCrossDir[2], 1);
-        Vmath::Vvtvm(npoints, m_fromField[0]->m_exp[nfields - 3]->GetPhys(), 1,
+        Vmath::Vvtvm(npoints, fromField[0]->m_exp[nfields - 3]->GetPhys(), 1,
                      normTemporalMeanVec[1], 1, normCrossDir[2], 1,
                      normCrossDir[2], 1);
     }
@@ -267,19 +260,19 @@ void ProcessMultiShear::Process(po::variables_map &vm)
     {
         for (j = 0; j < spacedim; ++j)
         {
-            Vmath::Vvtvp(npoints, m_fromField[i]->m_exp[j]->GetPhys(), 1,
+            Vmath::Vvtvp(npoints, fromField[i]->m_exp[j]->GetPhys(), 1,
                          normTemporalMeanVec[j], 1, DotProduct, 1, DotProduct,
                          1);
         }
 
         // TAWSS
-        Vmath::Vadd(npoints, m_fromField[i]->m_exp[spacedim]->GetPhys(), 1,
+        Vmath::Vadd(npoints, fromField[i]->m_exp[spacedim]->GetPhys(), 1,
                     outfield[0], 1, outfield[0], 1);
 
         // transWSS
         Vmath::Vmul(npoints, DotProduct, 1, DotProduct, 1, temp, 1);
-        Vmath::Vvtvm(npoints, m_fromField[i]->m_exp[spacedim]->GetPhys(), 1,
-                     m_fromField[i]->m_exp[spacedim]->GetPhys(), 1, temp, 1,
+        Vmath::Vvtvm(npoints, fromField[i]->m_exp[spacedim]->GetPhys(), 1,
+                     fromField[i]->m_exp[spacedim]->GetPhys(), 1, temp, 1,
                      temp, 1);
 
         for (j = 0; j < npoints; ++j)
@@ -292,7 +285,7 @@ void ProcessMultiShear::Process(po::variables_map &vm)
 
         // TAAFI
         Vmath::Vdiv(npoints, DotProduct, 1,
-                    m_fromField[i]->m_exp[spacedim]->GetPhys(), 1, temp, 1);
+                    fromField[i]->m_exp[spacedim]->GetPhys(), 1, temp, 1);
         Vmath::Vadd(npoints, temp, 1, outfield[3], 1, outfield[3], 1);
 
         // TACFI
@@ -311,7 +304,7 @@ void ProcessMultiShear::Process(po::variables_map &vm)
             // parallel component:
             Vmath::Zero(npoints, temp, 1);
 
-            m_fromField[i]->m_exp[0]->PhysDeriv(DotProduct, dtemp[0], dtemp[1],
+            fromField[i]->m_exp[0]->PhysDeriv(DotProduct, dtemp[0], dtemp[1],
                                                 dtemp[2]);
             for (j = 0; j < spacedim; j++)
             {
@@ -325,10 +318,10 @@ void ProcessMultiShear::Process(po::variables_map &vm)
 
             for (j = 0; j < spacedim; ++j)
             {
-                Vmath::Vvtvp(npoints, m_fromField[i]->m_exp[j]->GetPhys(), 1,
+                Vmath::Vvtvp(npoints, fromField[i]->m_exp[j]->GetPhys(), 1,
                              normCrossDir[j], 1, DotProduct, 1, DotProduct, 1);
             }
-            m_fromField[i]->m_exp[0]->PhysDeriv(DotProduct, dtemp[0], dtemp[1],
+            fromField[i]->m_exp[0]->PhysDeriv(DotProduct, dtemp[0], dtemp[1],
                                                 dtemp[2]);
             Vmath::Zero(npoints, DotProduct, 1);
 
@@ -368,7 +361,7 @@ void ProcessMultiShear::Process(po::variables_map &vm)
      */
 
     m_f->m_exp.resize(nout);
-    m_f->m_fielddef = m_fromField[0]->m_fielddef;
+    m_f->m_fielddef = fromField[0]->m_fielddef;
     m_f->m_exp[0] =
         m_f->SetUpFirstExpList(m_f->m_fielddef[0]->m_numHomogeneousDir, true);
 
@@ -391,28 +384,14 @@ void ProcessMultiShear::Process(po::variables_map &vm)
         Vmath::Smul(npoints, 1.0 / nfld, outfield[5], 1, outfield[5], 1);
     }
 
+    m_f->m_variables = m_f->m_fielddef[0]->m_fields;
+
     for (i = 0; i < nout; ++i)
     {
         m_f->m_exp[i]->FwdTrans(outfield[i], m_f->m_exp[i]->UpdateCoeffs());
         m_f->m_exp[i]->BwdTrans(m_f->m_exp[i]->GetCoeffs(),
                                 m_f->m_exp[i]->UpdatePhys());
     }
-
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_fromField[0]->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (i = 0; i < nout; ++i)
-    {
-        for (j = 0; j < FieldDef.size(); ++j)
-        {
-            FieldDef[j]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[i]);
-            m_f->m_exp[i]->AppendFieldData(FieldDef[j], FieldData[j]);
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

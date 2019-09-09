@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -64,7 +63,9 @@ namespace Nektar
         const std::string& GetDescription() const;
         const fs::path&    GetExecutable() const;
         const std::string& GetParameters() const;
+        const std::string& GetCommand() const;
         const unsigned int& GetNProcesses() const;
+        bool IsPythonTest() const;
 
         std::string GetMetricType(unsigned int pId) const;
         unsigned int GetNumMetrics() const;
@@ -81,10 +82,12 @@ namespace Nektar
         std::string                     m_description;
         fs::path                        m_executable;
         std::string                     m_parameters;
+        std::string                     m_command;
         unsigned int                    m_processes;
         TiXmlDocument*                  m_doc;
         std::vector<TiXmlElement*>      m_metrics;
         std::vector<DependentFile>      m_files;
+        bool                            m_pythonTest;
 
         void Parse(TiXmlDocument* pDoc);
     };

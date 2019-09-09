@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -50,11 +49,9 @@ namespace Nektar
         class ExpList1DHomogeneous2D;
 
         /// Shared pointer to an ExpList1DHomogeneous2D object.
-        typedef boost::shared_ptr<ExpList1DHomogeneous2D>      ExpList1DHomogeneous2DSharedPtr;
+        typedef std::shared_ptr<ExpList1DHomogeneous2D>      ExpList1DHomogeneous2DSharedPtr;
         /// Vector of pointers to ExpList1DHomogeneous2D objects.
         typedef std::vector< ExpList1DHomogeneous2DSharedPtr > ExpList1DHomogeneous2DVector;
-        /// Iterator for the vector of ExpList1DHomogeneous2D pointers.
-        typedef std::vector< ExpList1DHomogeneous2DSharedPtr >::iterator ExpList1DHomogeneous2DVectorIter;
 
         /// Abstraction of a one-dimensional multi-elemental expansion which
         /// is merely a collection of local expansions.

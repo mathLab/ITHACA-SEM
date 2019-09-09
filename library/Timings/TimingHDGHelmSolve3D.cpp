@@ -3,7 +3,7 @@
 #include <iomanip>
 
 #include <boost/filesystem/path.hpp>
-#include <SpatialDomains/MeshGraph3D.h>
+#include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/DisContField3D.h>
 
 using namespace std;
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     NekDouble  lambda;
     vector<string> vFilenames;
     //defining timing variables
-    Timer timer;
+    LibUtilities::Timer timer;
     NekDouble exeTime, fullTime, ppTime;
 
     if(argc < 6)//< is used to be able to submit "verbose" option
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
     timer.Start();
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraphSharedPtr graph3D = MemoryManager<SpatialDomains::MeshGraph3D>::AllocateSharedPtr(vSession);
+    SpatialDomains::MeshGraphSharedPtr graph3D = SpatialDomains::MeshGraph::Read(vSession);;
     //----------------------------------------------
 
     //----------------------------------------------
@@ -513,11 +513,6 @@ int main(int argc, char *argv[])
 std::string PortablePath(const boost::filesystem::path& path)
 {
     boost::filesystem::path temp = path;
-#if BOOST_VERSION > 104200
     temp.make_preferred();
     return temp.string();
-#else
-    return temp.file_string();
-#endif
-
 }

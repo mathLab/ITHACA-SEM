@@ -40,11 +40,18 @@ TetExp.h
 TriExp.h
 )
 
-
 ADD_DEFINITIONS(-DLOCAL_REGIONS_EXPORTS)
 
-ADD_NEKTAR_LIBRARY(LocalRegions lib ${NEKTAR_LIBRARY_TYPE} ${LOCAL_REGIONS_SOURCES} ${LOCAL_REGIONS_HEADERS})
+ADD_NEKTAR_LIBRARY(LocalRegions
+    SOURCES ${LOCAL_REGIONS_SOURCES}
+    HEADERS ${LOCAL_REGIONS_HEADERS}
+    DEPENDS SpatialDomains
+    SUMMARY "Nektar++ LocalRegions library"
+    DESCRIPTION "This library provides physical space expansions on the various supported regions.")
 
-TARGET_LINK_LIBRARIES(LocalRegions SpatialDomains StdRegions LibUtilities)
+IF (NEKTAR_BUILD_PYTHON)
+    SUBDIRS(Python)
+ENDIF()
 
-INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/LocalRegions COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/LocalRegions
+    COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

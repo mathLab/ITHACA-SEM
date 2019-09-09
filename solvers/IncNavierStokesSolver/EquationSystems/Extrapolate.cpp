@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -49,11 +48,8 @@ namespace Nektar
 
     ExtrapolateFactory& GetExtrapolateFactory()
     {
-        typedef Loki::SingletonHolder<ExtrapolateFactory,
-                                      Loki::CreateUsingNew,
-                                      Loki::NoDestroy,
-                                      Loki::SingleThreaded > Type;
-        return Type::Instance();
+        static ExtrapolateFactory instance;
+        return instance;
     }
 
     Extrapolate::Extrapolate(
@@ -590,6 +586,8 @@ namespace Nektar
                 {
                     velbc[i] = Array<OneD, NekDouble> 
                         (VelBndExp[i][n]->GetTotPoints(), 0.0);
+                    VelBndExp[i][n]->SetWaveSpace(
+                            m_fields[m_velocity[i]]->GetWaveSpace());
                     VelBndExp[i][n]->BwdTrans(VelBndExp[i][n]->GetCoeffs(),
                                               velbc[i]);
                 }
@@ -794,7 +792,7 @@ namespace Nektar
                     }
                     
                     LibUtilities::Equation coeff = 
-                        boost::static_pointer_cast<
+                        std::static_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition
                         >(m_PBndConds[n])->m_robinPrimitiveCoeff;
                     
@@ -807,7 +805,7 @@ namespace Nektar
                             UBndConds = m_fields[m_velocity[i]]->GetBndConditions();
                         
                         LibUtilities::Equation coeff1 = 
-                            boost::static_pointer_cast<
+                            std::static_pointer_cast<
                                 SpatialDomains::RobinBoundaryCondition
                             >(UBndConds[n])->m_robinPrimitiveCoeff;
 
@@ -852,7 +850,7 @@ namespace Nektar
                                                          [m_pressureCalls-1]);
                     
                     SpatialDomains::RobinBCShPtr rcond = 
-                        boost::dynamic_pointer_cast<
+                        std::dynamic_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition >(UBndConds[n]);
                     
                     SpatialDomains::BoundaryConditionShPtr bcond =

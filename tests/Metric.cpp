@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,7 +33,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <Metric.h>
-#include <loki/Singleton.h>
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
@@ -43,17 +41,15 @@ namespace Nektar
 {
     MetricFactory& GetMetricFactory()
     {
-        typedef Loki::SingletonHolder<MetricFactory,
-                                      Loki::CreateUsingNew,
-                                      Loki::NoDestroy > Type;
-        return Type::Instance();
+        static MetricFactory instance;
+        return instance;
     }
     
     /**
      * @brief Constructor.
      */
     Metric::Metric(TiXmlElement *metric, bool generate) :
-        m_metric(metric), m_generate(generate)
+        m_generate(generate), m_metric(metric)
     {
         if (!metric->Attribute("id"))
         {

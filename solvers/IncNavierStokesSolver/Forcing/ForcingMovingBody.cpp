@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -47,8 +46,9 @@ std::string ForcingMovingBody::className = SolverUtils::GetForcingFactory().
                                     "Moving Body Forcing");
 
 ForcingMovingBody::ForcingMovingBody(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : Forcing(pSession)
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation)
+    : Forcing(pSession, pEquation)
 {
 }
 
@@ -155,10 +155,8 @@ void ForcingMovingBody::v_Apply(
             }
             else
             {
-                EvaluateFunction(pFields, m_session, m_motion[0], m_zta[j],
-                                 m_funcName[j], time);
-                EvaluateFunction(pFields, m_session, m_motion[1], m_eta[j],
-                                 m_funcName[j], time);
+                GetFunction(pFields, m_session, m_funcName[j], true)->Evaluate(m_motion[0], m_zta[j], time);
+                GetFunction(pFields, m_session, m_funcName[j], true)->Evaluate(m_motion[1], m_eta[j], time);
                 cnt = cnt + 2;
             }
         }
@@ -1251,7 +1249,7 @@ void ForcingMovingBody::InitialiseFilter(
     // fluid forces and write both the aerodynamic forces and motion variables
     // into the output files
     m_MovBodyfilter = MemoryManager<FilterMovingBody>::
-                                    AllocateSharedPtr(pSession, vParams);
+                                    AllocateSharedPtr(pSession, m_equ, vParams);
 
     // Initialise the object of MovingBody filter
     m_MovBodyfilter->Initialise(pFields, 0.0);

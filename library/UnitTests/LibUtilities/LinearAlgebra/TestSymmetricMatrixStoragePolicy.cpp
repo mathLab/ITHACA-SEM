@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -52,46 +51,46 @@ namespace Nektar
         typedef SymmetricMatrixFuncs Policy;
 
                     
-        BOOST_AUTO_TEST_CASE(TestAdvance)
+        BOOST_AUTO_TEST_CASE(TestAdvanceSymmetric)
         {
             UnitTests::RedirectCerrIfNeeded();
             {
 
                 unsigned int curRow = 0; 
                 unsigned int curColumn = 0;
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(1, curRow);
                 BOOST_CHECK_EQUAL(0, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(2, curRow);
                 BOOST_CHECK_EQUAL(0, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(0, curRow);
                 BOOST_CHECK_EQUAL(1, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(1, curRow);
                 BOOST_CHECK_EQUAL(1, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(2, curRow);
                 BOOST_CHECK_EQUAL(1, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(0, curRow);
                 BOOST_CHECK_EQUAL(2, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(1, curRow);
                 BOOST_CHECK_EQUAL(2, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(2, curRow);
                 BOOST_CHECK_EQUAL(2, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curRow);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curColumn);
             }
@@ -100,7 +99,7 @@ namespace Nektar
 
                 unsigned int curRow = 0; 
                 unsigned int curColumn = 0;
-                boost::tie(curRow, curColumn) = Policy::Advance(1, 1, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(1, 1, curRow, curColumn);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curRow);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curColumn);
             }
@@ -109,19 +108,19 @@ namespace Nektar
 
                 unsigned int curRow = 0; 
                 unsigned int curColumn = 0;
-                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
                 BOOST_CHECK_EQUAL(1, curRow);
                 BOOST_CHECK_EQUAL(0, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
                 BOOST_CHECK_EQUAL(0, curRow);
                 BOOST_CHECK_EQUAL(1, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
                 BOOST_CHECK_EQUAL(1, curRow);
                 BOOST_CHECK_EQUAL(1, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
+                std::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curRow);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curColumn);
             }

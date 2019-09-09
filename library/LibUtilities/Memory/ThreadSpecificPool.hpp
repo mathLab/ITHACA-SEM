@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -34,18 +33,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
-#ifndef NEKATAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
-#define NEKATAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
+#ifndef NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
+#define NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
 
 #include <boost/thread/tss.hpp>
 #include <boost/pool/pool.hpp>
-#include <boost/thread/mutex.hpp>
-
-#include <loki/Singleton.h>
+#include <memory>
 #include <map>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+
+#ifdef NEKTAR_USE_THREAD_SAFETY
+#include <boost/thread/mutex.hpp>
+#endif
 
 #include <cstring>
 
@@ -81,11 +81,11 @@ namespace Nektar
             public:
                 ThreadSpecificPool(size_t ByteSize) :
                     m_pool(),
-                    m_blockSize(ByteSize),
-                    m_mutex()
+                    m_blockSize(ByteSize)
                 {
-                    // We can do the new in the constructor list because the thread specific 
-                    // pointer doesn't have a supporting constructor.
+                    // We can't do the new in the constructor list because the
+                    // thread specific pointer doesn't have a supporting
+                    // constructor.
                     m_pool = new boost::pool<>(m_blockSize);
                 }
 
@@ -100,7 +100,9 @@ namespace Nektar
                 /// \throw std::bad_alloc if memory is exhausted.
                 void* Allocate()
                 {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                     boost::mutex::scoped_lock l(m_mutex);
+#endif
                     void* result = m_pool->malloc();
 
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
@@ -116,7 +118,9 @@ namespace Nektar
                 /// from this pool.  Doing this will result in undefined behavior.
                 void Deallocate(const void* p)
                 {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                     boost::mutex::scoped_lock l(m_mutex);
+#endif
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
                     // The idea here is to fill the returned memory with some known
                     // pattern, then detect that pattern on the allocate.  If the 
@@ -135,14 +139,16 @@ namespace Nektar
                 //boost::thread_specific_ptr<boost::pool<> > m_pool;
                 boost::pool<>* m_pool;
                 size_t m_blockSize;
+#ifdef NEKTAR_USE_THREAD_SAFETY
                 boost::mutex m_mutex;
+#endif
         };
     }
 
     class MemPool
     {
         public:
-            typedef std::map<size_t, boost::shared_ptr<detail::ThreadSpecificPool> > PoolMapType;
+            typedef std::map<size_t, std::shared_ptr<detail::ThreadSpecificPool> > PoolMapType;
             
         public:
             MemPool() :
@@ -156,14 +162,14 @@ namespace Nektar
                 // bytes, then a request for 10 bytes will return a 32 byte chunk of memory from the 32 byte pool.
                 
                 typedef PoolMapType::value_type PairType;
-                m_pools.insert(PairType(8, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(8))));
-                m_pools.insert(PairType(16, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(16))));
-                m_pools.insert(PairType(32, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(32))));
-                m_pools.insert(PairType(64, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(64))));
-                m_pools.insert(PairType(128, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(128))));
-                m_pools.insert(PairType(256, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(256))));
-                m_pools.insert(PairType(512, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(512))));
-                m_pools.insert(PairType(1024, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(1024))));
+                m_pools.insert(PairType(8, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(8))));
+                m_pools.insert(PairType(16, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(16))));
+                m_pools.insert(PairType(32, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(32))));
+                m_pools.insert(PairType(64, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(64))));
+                m_pools.insert(PairType(128, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(128))));
+                m_pools.insert(PairType(256, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(256))));
+                m_pools.insert(PairType(512, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(512))));
+                m_pools.insert(PairType(1024, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(1024))));
             }
             
             ~MemPool()
@@ -194,7 +200,7 @@ namespace Nektar
                 {
                     PoolMapType::iterator iter = m_pools.lower_bound(bytes);
                     ASSERTL1(iter != m_pools.end(), "The memory manager is mishandling a memory request for " +
-                        boost::lexical_cast<std::string>(bytes) + " bytes of memory.");
+                             std::to_string(bytes) + " bytes of memory.");
                     
                     return (*iter).second->Allocate();
                 }
@@ -218,7 +224,7 @@ namespace Nektar
                 {
                     PoolMapType::iterator iter = m_pools.lower_bound(bytes);
                     ASSERTL1(iter != m_pools.end(), "The memory manager is mishandling a memory request for " +
-                        boost::lexical_cast<std::string>(bytes) + " bytes of memory.");
+                             std::to_string(bytes) + " bytes of memory.");
                     
                     (*iter).second->Deallocate(p);
                 }
@@ -226,7 +232,7 @@ namespace Nektar
             
         private:
             detail::ThreadSpecificPool m_fourBytePool;
-            std::map<size_t, boost::shared_ptr<detail::ThreadSpecificPool> > m_pools;
+            std::map<size_t, std::shared_ptr<detail::ThreadSpecificPool> > m_pools;
             size_t m_upperBound;
     };
 

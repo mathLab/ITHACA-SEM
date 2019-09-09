@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -39,7 +38,6 @@
 #include <UnitTests/util.h>
 
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
@@ -763,9 +761,9 @@ namespace Nektar
     
         BOOST_AUTO_TEST_CASE(TestSharedPtr)
         {
-            boost::shared_ptr<double> a(new double[10]);
-            boost::shared_ptr<const double> b(a);
-            boost::shared_ptr<const double> c;
+            std::shared_ptr<double> a(new double[10]);
+            std::shared_ptr<const double> b(a);
+            std::shared_ptr<const double> c;
             c = a;
             
         }

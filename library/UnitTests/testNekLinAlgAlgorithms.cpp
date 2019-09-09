@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,8 +31,6 @@
 // Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
-
-#include <UnitTests/testNekLinAlgAlgorithms.h>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -73,27 +70,3 @@ namespace Nektar
         }
     }
 }
-
-/**
-    $Log: testNekLinAlgAlgorithms.cpp,v $
-    Revision 1.6  2008/03/28 01:45:56  bnelson
-    Updated constant sized vectors so they inherit from NekVector<DataType> like the variable sized vectors.
-
-    Revision 1.5  2008/03/06 04:48:23  ehan
-    Changed NekVector<NekDouble, 3> to NekVector<NekDouble, ThreeD> to match the changes of enum to struct typename dim.
-
-    Revision 1.4  2007/10/03 03:01:01  bnelson
-    *** empty log message ***
-
-    Revision 1.3  2007/09/12 03:59:41  bnelson
-    *** empty log message ***
-
-    Revision 1.2  2007/01/16 05:31:34  bnelson
-    Major improvements for expression templates.
-
-    Revision 1.1  2006/11/20 03:39:41  bnelson
-    Added Gram-Schmidt tests
-
-
- **/
-

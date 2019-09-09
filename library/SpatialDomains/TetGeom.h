@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -42,73 +41,56 @@
 
 namespace Nektar
 {
-    namespace SpatialDomains
-    {
+namespace SpatialDomains
+{
 
-        class TetGeom: public LibUtilities::GraphVertexObject, 
-                       public Geometry3D
-        {
-        public:
-            SPATIAL_DOMAINS_EXPORT TetGeom ();
-            SPATIAL_DOMAINS_EXPORT TetGeom (const TriGeomSharedPtr faces[]);
-            SPATIAL_DOMAINS_EXPORT ~TetGeom();
-            
-            SPATIAL_DOMAINS_EXPORT static const int         kNverts  = 4;
-            SPATIAL_DOMAINS_EXPORT static const int         kNedges  = 6;
-            SPATIAL_DOMAINS_EXPORT static const int         kNqfaces = 0;
-            SPATIAL_DOMAINS_EXPORT static const int         kNtfaces = 4;
-            SPATIAL_DOMAINS_EXPORT static const int         kNfaces  = kNqfaces + kNtfaces;
-            SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
+class TetGeom : public Geometry3D
+{
+public:
+    SPATIAL_DOMAINS_EXPORT TetGeom();
+    SPATIAL_DOMAINS_EXPORT TetGeom(int id, const TriGeomSharedPtr faces[]);
+    SPATIAL_DOMAINS_EXPORT ~TetGeom();
 
-        protected:
-            virtual NekDouble v_GetLocCoords(
-                const Array<OneD, const NekDouble> &coords,
-                      Array<OneD,       NekDouble> &Lcoords);
-            virtual bool v_ContainsPoint(
-                const Array<OneD, const NekDouble> &gloCoord,
-                      NekDouble                     tol = 0.0);
-            virtual bool v_ContainsPoint(
-                const Array<OneD, const NekDouble> &gloCoord,
-                      Array<OneD, NekDouble>       &locCoord,
-                      NekDouble                     tol);
-            virtual bool v_ContainsPoint(
-                const Array<OneD, const NekDouble> &gloCoord,
-                      Array<OneD, NekDouble>       &locCoord,
-                      NekDouble                     tol,
-                      NekDouble                    &resid);
-            virtual int v_GetNumVerts() const;
-            virtual int v_GetNumEdges() const;
-            virtual int v_GetNumFaces() const;
-            virtual int v_GetVertexEdgeMap(
-                const int i, const int j) const;
-            virtual int v_GetVertexFaceMap(
-                const int i, const int j) const;
-            virtual int v_GetEdgeFaceMap(
-                const int i, const int j) const;
-            virtual int v_GetDir(
-                const int faceidx, const int facedir) const;
-            virtual void v_Reset(
-                CurveMap &curvedEdges,
-                CurveMap &curvedFaces);
+    SPATIAL_DOMAINS_EXPORT static const int kNverts = 4;
+    SPATIAL_DOMAINS_EXPORT static const int kNedges = 6;
+    SPATIAL_DOMAINS_EXPORT static const int kNqfaces = 0;
+    SPATIAL_DOMAINS_EXPORT static const int kNtfaces = 4;
+    SPATIAL_DOMAINS_EXPORT static const int kNfaces = kNqfaces + kNtfaces;
+    SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
 
-        private:
-            void SetUpLocalEdges();
-            void SetUpLocalVertices();
-            void SetUpEdgeOrientation();
-            void SetUpFaceOrientation();
-            void SetUpXmap();
+protected:
+    virtual NekDouble v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
+                                     Array<OneD, NekDouble> &Lcoords);
+    virtual bool v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
+                                 Array<OneD, NekDouble> &locCoord,
+                                 NekDouble tol,
+                                 NekDouble &resid);
+    virtual int v_GetVertexEdgeMap(const int i, const int j) const;
+    virtual int v_GetVertexFaceMap(const int i, const int j) const;
+    virtual int v_GetEdgeFaceMap(const int i, const int j) const;
+    virtual int v_GetDir(const int faceidx, const int facedir) const;
+    virtual void v_Reset(CurveMap &curvedEdges, CurveMap &curvedFaces);
+    virtual void v_Setup();
+    virtual void v_GenGeomFactors();
 
-	    static const unsigned int VertexEdgeConnectivity[4][3];
-            static const unsigned int VertexFaceConnectivity[4][3];
-            static const unsigned int EdgeFaceConnectivity  [6][2];
-        };
+private:
+    void SetUpLocalEdges();
+    void SetUpLocalVertices();
+    void SetUpEdgeOrientation();
+    void SetUpFaceOrientation();
+    void SetUpXmap();
 
-        typedef boost::shared_ptr<TetGeom> TetGeomSharedPtr;
-        typedef std::vector< TetGeomSharedPtr > TetGeomVector;
-        typedef std::vector< TetGeomSharedPtr >::iterator TetGeomVectorIter;
-        typedef std::map<int, TetGeomSharedPtr> TetGeomMap;
-        typedef std::map<int, TetGeomSharedPtr>::iterator TetGeomMapIter;
-    }; //end of namespace
-}; //end of namespace
+    static const unsigned int VertexEdgeConnectivity[4][3];
+    static const unsigned int VertexFaceConnectivity[4][3];
+    static const unsigned int EdgeFaceConnectivity[6][2];
+};
 
-#endif //NEKTAR_SPATIALDOMAINS_TETGEOM
+typedef std::shared_ptr<TetGeom> TetGeomSharedPtr;
+typedef std::vector<TetGeomSharedPtr> TetGeomVector;
+typedef std::map<int, TetGeomSharedPtr> TetGeomMap;
+
+
+}
+}
+
+#endif // NEKTAR_SPATIALDOMAINS_TETGEOM

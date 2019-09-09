@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -55,28 +54,6 @@ ModuleKey InputNek5000::m_className[1] = {
 };
 
 /**
- * @brief Swap endian ordering of the input variable.
- */
-template <typename T>
-void swap_endian(T &u)
-{
-    union
-    {
-        T u;
-        unsigned char u8[sizeof(T)];
-    } source, dest;
-
-    source.u = u;
-
-    for (size_t k = 0; k < sizeof(T); k++)
-    {
-        dest.u8[k] = source.u8[sizeof(T) - k - 1];
-    }
-
-    u = dest.u;
-}
-
-/**
  * @brief Set up InputNek5000 object.
  *
  */
@@ -105,16 +82,7 @@ InputNek5000::~InputNek5000()
  */
 void InputNek5000::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "Processing Nek5000 field file" << endl;
-        }
-    }
-
-    string fldending = "fld5000";
-    ifstream file(m_f->m_inputfiles[fldending][0].c_str(), ios::binary);
+    ifstream file(m_config["infile"].as<string>().c_str(), ios::binary);
 
     // Header: 132 bytes for binary.
     vector<char> data(132);
@@ -246,7 +214,8 @@ void InputNek5000::Process(po::variables_map &vm)
             case ' ':
                 continue;
             default:
-                cerr << "Field contains unknown variable: " << remain[i] << endl;
+                cerr << "Field contains unknown variable: "
+                     << remain[i] << endl;
                 abort();
         }
     }
@@ -303,6 +272,9 @@ void InputNek5000::Process(po::variables_map &vm)
     }
 
     m_f->m_fielddef.push_back(fielddef);
+
+    // save field names
+    m_f->m_variables = m_f->m_fielddef[0]->m_fields;
 }
 }
 }

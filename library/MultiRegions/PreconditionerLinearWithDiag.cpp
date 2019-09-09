@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -63,7 +62,7 @@ namespace Nektar
 	 */
         
         PreconditionerLinearWithDiag::PreconditionerLinearWithDiag(
-            const boost::shared_ptr<GlobalLinSys> &plinsys,
+            const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
         {
@@ -74,8 +73,8 @@ namespace Nektar
          */ 
         void PreconditionerLinearWithDiag::v_InitObject()
         {
-            m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap);
-            m_diagonalPrecon = GetPreconFactory().CreateInstance("Diagonal",m_linsys.lock(),m_locToGloMap);
+            m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap.lock());
+            m_diagonalPrecon = GetPreconFactory().CreateInstance("Diagonal",m_linsys.lock(),m_locToGloMap.lock());
         }
 
         /**

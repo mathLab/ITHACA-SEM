@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -210,6 +209,12 @@ namespace Nektar
             //--------------------------
             // Mappings
             //--------------------------
+            STD_REGIONS_EXPORT virtual void v_GetEdgeToElementMap(
+                    const int                  eid,
+                    const Orientation          edgeOrient,
+                    Array<OneD, unsigned int>& maparray,
+                    Array<OneD,          int>& signarray,
+                    int                        P);
             STD_REGIONS_EXPORT virtual void v_GetFaceToElementMap(
                     const int                  fid,
                     const Orientation      faceOrient,
@@ -218,7 +223,9 @@ namespace Nektar
                     int                        P = -1,
                     int                        Q = -1);
             STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId,
-                                                          bool useCoeffPacking = false);            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(const int eid,
+                                                          bool useCoeffPacking = false);
+            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(
+                    const int eid,
                     const Orientation edgeOrient,
                     Array<OneD, unsigned int> &maparray,
                     Array<OneD, int> &signarray);
@@ -269,7 +276,7 @@ namespace Nektar
             STD_REGIONS_EXPORT int  GetMode(const int i, const int j, const int k);
         };
 
-        typedef boost::shared_ptr<StdTetExp> StdTetExpSharedPtr;
+        typedef std::shared_ptr<StdTetExp> StdTetExpSharedPtr;
     } //end of namespace
 } //end of namespace
 

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,9 +35,10 @@
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
 #define NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
 
-#include <boost/unordered_set.hpp>
+#include <unordered_set>
 
 #include <LibUtilities/Foundations/Basis.h>
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <SpatialDomains/SpatialDomains.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <StdRegions/StdExpansion.h>
@@ -52,24 +52,19 @@ namespace SpatialDomains
     class GeomFactors;
     class Geometry;
 
-    typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
+    typedef std::shared_ptr<Geometry> GeometrySharedPtr;
 
     /// Equivalence test for GeomFactors objects
     SPATIAL_DOMAINS_EXPORT bool operator==(const GeomFactors &lhs,
                                            const GeomFactors &rhs);
 
     /// Pointer to a GeomFactors object.
-    typedef boost::shared_ptr<GeomFactors>      GeomFactorsSharedPtr;
+    typedef std::shared_ptr<GeomFactors>        GeomFactorsSharedPtr;
     /// A vector of GeomFactor pointers.
     typedef std::vector< GeomFactorsSharedPtr > GeomFactorsVector;
-    /// Iterator for the GeomFactorsVector.
-    typedef GeomFactorsVector::iterator         GeomFactorsVectorIter;
     /// An unordered set of GeomFactor pointers.
-    typedef boost::unordered_set< GeomFactorsSharedPtr >
+    typedef std::unordered_set< GeomFactorsSharedPtr >
                                                 GeomFactorsSet;
-    /// Iterator for the GeomFactorsSet
-    typedef boost::unordered_set< GeomFactorsSharedPtr >::iterator
-                                                GeomFactorsSetIter;
     /// Storage type for derivative of mapping.
     typedef Array<OneD, Array<OneD, Array<OneD,NekDouble> > >
                                                 DerivStorage;
@@ -116,6 +111,13 @@ namespace SpatialDomains
             inline const Array<TwoD, const NekDouble> GetDerivFactors(
                     const LibUtilities::PointsKeyVector &keyTgt);
 
+            /// Returns moving frames
+            inline void GetMovingFrames(
+                    const LibUtilities::PointsKeyVector &keyTgt,
+                    const SpatialDomains::GeomMMF MMFdir,
+                    const Array<OneD, const NekDouble> &CircCentre,
+                          Array<OneD, Array<OneD, NekDouble> > &outarray);
+
             /// Returns whether the geometry is regular or deformed.
             inline GeomType GetGtype();
 
@@ -137,6 +139,10 @@ namespace SpatialDomains
             int m_coordDim;
             /// Validity of element (Jacobian positive)
             bool m_valid;
+
+            /// Principle tangent direction for MMF.
+            enum GeomMMF m_MMFDir;
+
             /// Stores information about the expansion.
             StdRegions::StdExpansionSharedPtr m_xmap;
             /// Stores coordinates of the geometry.
@@ -170,6 +176,12 @@ namespace SpatialDomains
             SPATIAL_DOMAINS_EXPORT Array<TwoD, NekDouble> ComputeDerivFactors(
                     const LibUtilities::PointsKeyVector &keyTgt) const;
 
+            SPATIAL_DOMAINS_EXPORT void ComputeMovingFrames(
+                    const LibUtilities::PointsKeyVector &keyTgt,
+                    const SpatialDomains::GeomMMF MMFdir,
+                    const Array<OneD, const NekDouble> &CircCentre,
+                          Array<OneD, Array<OneD, NekDouble> > &movingframes);
+
             /// Perform interpolation of data between two point
             /// distributions.
             void Interp(
@@ -182,6 +194,19 @@ namespace SpatialDomains
             void Adjoint(
                     const Array<TwoD, const NekDouble>& src,
                     Array<TwoD, NekDouble>& tgt) const;
+
+            void ComputePrincipleDirection(
+                    const LibUtilities::PointsKeyVector& keyTgt,
+                    const SpatialDomains::GeomMMF MMFdir,
+                    const Array<OneD, const NekDouble> &CircCentre,
+                          Array<OneD,Array<OneD,NekDouble> > &output);
+
+            void VectorNormalise(Array<OneD, Array<OneD, NekDouble> > &array);
+
+            void VectorCrossProd(
+                    const Array<OneD, const Array<OneD, NekDouble> > &v1,
+                    const Array<OneD, const Array<OneD, NekDouble> > &v2,
+                          Array<OneD,       Array<OneD, NekDouble> > &v3);
 
     };
 
@@ -223,10 +248,9 @@ namespace SpatialDomains
     inline const Array<OneD, const NekDouble> GeomFactors::GetJac(
             const LibUtilities::PointsKeyVector &keyTgt)
     {
-        std::map<LibUtilities::PointsKeyVector,
-            Array<OneD, NekDouble> >::const_iterator x;
-        
-        if ((x = m_jacCache.find(keyTgt)) != m_jacCache.end())
+        auto x = m_jacCache.find(keyTgt);
+
+        if (x != m_jacCache.end())
         {
             return x->second;
         }
@@ -262,10 +286,9 @@ namespace SpatialDomains
     inline const Array<TwoD, const NekDouble> GeomFactors::GetDerivFactors(
             const LibUtilities::PointsKeyVector &keyTgt)
     {
-        std::map<LibUtilities::PointsKeyVector,
-                 Array<TwoD, NekDouble> >::const_iterator x;
+        auto x = m_derivFactorCache.find(keyTgt);
 
-        if ((x = m_derivFactorCache.find(keyTgt)) != m_derivFactorCache.end())
+        if (x != m_derivFactorCache.end())
         {
             return x->second;
         }
@@ -274,6 +297,14 @@ namespace SpatialDomains
 
         return m_derivFactorCache[keyTgt];
 
+    }
+    
+    inline void GeomFactors::GetMovingFrames(const LibUtilities::PointsKeyVector &keyTgt,
+                                             const SpatialDomains::GeomMMF MMFdir,
+                                             const Array<OneD, const NekDouble> &CircCentre,
+                                             Array<OneD, Array<OneD, NekDouble> > &outarray)
+    {
+        ComputeMovingFrames(keyTgt,MMFdir,CircCentre,outarray);
     }
 
 
@@ -320,16 +351,14 @@ namespace SpatialDomains
         const Array<OneD, const NekDouble> jac = GetJac(ptsKeys);
 
         size_t hash = 0;
-        boost::hash_combine(hash, (int)m_type);
-        boost::hash_combine(hash, m_expDim);
-        boost::hash_combine(hash, m_coordDim);
+        hash_combine(hash, (int)m_type, m_expDim, m_coordDim);
         if (m_type == eDeformed)
         {
-            boost::hash_range(hash, jac.begin(), jac.end());
+            hash_range(hash, jac.begin(), jac.end());
         }
         else
         {
-            boost::hash_combine(hash, jac[0]);
+            hash_combine(hash, jac[0]);
         }
         return hash;
     }

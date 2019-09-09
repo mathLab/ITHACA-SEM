@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -663,11 +662,11 @@ namespace Nektar
             return result;
         }
         
-        boost::shared_ptr<AssemblyMap> AssemblyMap::v_LinearSpaceMap(
+        std::shared_ptr<AssemblyMap> AssemblyMap::v_LinearSpaceMap(
             const ExpList &locexp, GlobalSysSolnType solnType)
         {
             ASSERTL0(false, "Not defined for this sub class");
-            static boost::shared_ptr<AssemblyMap> result;
+            static std::shared_ptr<AssemblyMap> result;
             return result;
         }
 
@@ -829,7 +828,7 @@ namespace Nektar
             return v_GetExtraDirEdges();
         }
 
-        boost::shared_ptr<AssemblyMap> AssemblyMap::LinearSpaceMap(const ExpList &locexp, GlobalSysSolnType solnType)
+        std::shared_ptr<AssemblyMap> AssemblyMap::LinearSpaceMap(const ExpList &locexp, GlobalSysSolnType solnType)
         {
             return v_LinearSpaceMap(locexp, solnType);
         }

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -47,6 +46,7 @@ namespace Nektar
         ExpList2DHomogeneous1D::ExpList2DHomogeneous1D():
             ExpListHomogeneous1D()
         {
+            SetExpType(e2DH1D);
         }
 
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
@@ -59,6 +59,7 @@ namespace Nektar
             const Array<OneD, ExpListSharedPtr>        &planes)
             : ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
+            SetExpType(e2DH1D);
             int i, n, cnt, nel;
 
             ASSERTL1(m_planes.num_elements() == planes.num_elements(),
@@ -94,15 +95,17 @@ namespace Nektar
             const NekDouble lhom,
             const bool useFFT,
             const bool dealiasing,
-            const SpatialDomains::MeshGraphSharedPtr &graph1D):
+            const SpatialDomains::MeshGraphSharedPtr &graph1D,
+            const Collections::ImplementationType ImpType):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
+            SetExpType(e2DH1D);
             int n, j, nel;
             ExpList1DSharedPtr plane_zero;
 
             // note that nzplanes can be larger than nzmodes
             m_planes[0] = plane_zero = MemoryManager<ExpList1D>::
-                AllocateSharedPtr(m_session, graph1D, false);
+                AllocateSharedPtr(m_session, graph1D, false, ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
 
@@ -139,8 +142,9 @@ namespace Nektar
             const ExpList2DHomogeneous1D &In):
             ExpListHomogeneous1D(In)
         {
+            SetExpType(e2DH1D);
             ExpList1DSharedPtr zero_plane =
-                boost::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
+                std::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
 
             for (int n = 0; n < m_planes.num_elements(); ++n)
             {
@@ -176,7 +180,6 @@ namespace Nektar
             int nel = m_planes[0]->GetExpSize();
             m_coeff_offset   = Array<OneD,int>(nel*nzplanes);
             m_phys_offset    = Array<OneD,int>(nel*nzplanes);
-            m_offset_elmt_id = Array<OneD,int>(nel*nzplanes);
             Array<OneD, NekDouble> tmparray;
 
             for (cnt  = n = 0; n < nzplanes; ++n)
@@ -190,10 +193,8 @@ namespace Nektar
                 {
                     m_coeff_offset[cnt] = m_planes[n]->GetCoeff_Offset(i)
                         + n*ncoeffs_per_plane;
-                    m_phys_offset[cnt] =  m_planes[n]->GetPhys_Offset(i)
+                    m_phys_offset[cnt++] =  m_planes[n]->GetPhys_Offset(i)
                         + n*npoints_per_plane;
-                    m_offset_elmt_id[cnt++] = m_planes[n]->GetOffset_Elmt_Id(i)
-                        + n*nel;
                 }
             }
         }
@@ -487,6 +488,22 @@ namespace Nektar
                                  &normals[i][n*nPtsPlane], 1);
                 }
             }
+        }
+
+        NekDouble ExpList2DHomogeneous1D::v_Integral(const Array<OneD, const NekDouble> &inarray)
+        {
+            NekDouble val = 0.0;
+            int       i   = 0;
+
+            for (i = 0; i < (*m_exp).size(); ++i)
+            {
+                val += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
+            }
+            val *= m_lhom/m_homogeneousBasis->GetNumModes();
+            
+            m_comm->GetColumnComm()->AllReduce(val, LibUtilities::ReduceSum);
+
+            return val;
         }
     } //end of namespace
 } //end of namespace

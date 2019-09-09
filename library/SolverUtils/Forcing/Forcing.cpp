@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <FieldUtils/Interpolator.h>
 #include <SolverUtils/Forcing/Forcing.h>
 
 using namespace std;
@@ -43,15 +43,14 @@ namespace Nektar
     {
         ForcingFactory& GetForcingFactory()
         {
-            typedef Loki::SingletonHolder<ForcingFactory,
-                                          Loki::CreateUsingNew,
-                                          Loki::NoDestroy,
-                                          Loki::SingleThreaded> Type;
-            return Type::Instance();
+            static ForcingFactory instance;
+            return instance;
         }
 
-        Forcing::Forcing(const LibUtilities::SessionReaderSharedPtr& pSession)
-                : m_session(pSession)
+        Forcing::Forcing(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation)
+                : m_session(pSession), m_equ(pEquation)
         {
 
         }
@@ -84,9 +83,10 @@ namespace Nektar
          *
          */
         vector<ForcingSharedPtr> Forcing::Load(
-                            const LibUtilities::SessionReaderSharedPtr& pSession,
-                            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                            const unsigned int& pNumForcingFields)
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::weak_ptr<EquationSystem>      &pEquation,
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                    const unsigned int& pNumForcingFields)
         {
             vector<ForcingSharedPtr> vForceList;
 
@@ -110,8 +110,8 @@ namespace Nektar
                     string vType = vForce->Attribute("TYPE");
 
                     vForceList.push_back(GetForcingFactory().CreateInstance(
-                                            vType, pSession, pFields,
-                                            vNumForcingFields, vForce));
+                                        vType, pSession, pEquation, pFields,
+                                        vNumForcingFields, vForce));
                     vForce = vForce->NextSiblingElement("FORCE");
                 }
             }
@@ -156,79 +156,29 @@ namespace Nektar
             pEqn->Evaluate(x0, x0, x0, pTime, pArray);
         }
         
-
-
-        void Forcing::EvaluateFunction(
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
-                LibUtilities::SessionReaderSharedPtr              pSession,
-                std::string                                       pFieldName,
-                Array<OneD, NekDouble>&                           pArray,
-                const std::string&                                pFunctionName,
-                NekDouble                                         pTime)
+        SessionFunctionSharedPtr Forcing::GetFunction(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>  &pFields,
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                std::string                                         pName,
+                bool                                                pCache)
         {
-            ASSERTL0(pSession->DefinesFunction(pFunctionName),
-                     "Function '" + pFunctionName + "' does not exist.");
-
-            unsigned int nq = pFields[0]->GetNpoints();
-            if (pArray.num_elements() != nq)
+            if (pCache)
             {
-                pArray = Array<OneD, NekDouble> (nq);
-            }
-
-            LibUtilities::FunctionType vType;
-            vType = pSession->GetFunctionType(pFunctionName, pFieldName);
-            if (vType == LibUtilities::eFunctionTypeExpression)
-            {
-                Array<OneD, NekDouble> x0(nq);
-                Array<OneD, NekDouble> x1(nq);
-                Array<OneD, NekDouble> x2(nq);
-                
-                pFields[0]->GetCoords(x0, x1, x2);
-                LibUtilities::EquationSharedPtr ffunc =
-                    pSession->GetFunction(pFunctionName, pFieldName);
-                
-                ffunc->Evaluate(x0, x1, x2, pTime, pArray);
-            }
-            else if (vType == LibUtilities::eFunctionTypeFile)
-            {
-                std::string filename = pSession->GetFunctionFilename(
-                                                    pFunctionName,
-                                                    pFieldName);
-
-                std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
-                std::vector<std::vector<NekDouble> > FieldData;
-                Array<OneD, NekDouble> vCoeffs(pFields[0]->GetNcoeffs());
-                Vmath::Zero(vCoeffs.num_elements(), vCoeffs, 1);
-
-                LibUtilities::FieldIOSharedPtr fld =
-                    LibUtilities::FieldIO::CreateForFile(m_session, filename);
-                fld->Import(filename, FieldDef, FieldData);
-
-                int idx = -1;
-                for (int i = 0; i < FieldDef.size(); ++i)
+                if ((m_sessionFunctions.find(pName) == m_sessionFunctions.end())
+                    || (m_sessionFunctions[pName]->GetSession() != pSession)
+                    || (m_sessionFunctions[pName]->GetExpansion() != pFields[0])
+                )
                 {
-                    for (int j = 0; j < FieldDef[i]->m_fields.size(); ++j)
-                    {
-                        if (FieldDef[i]->m_fields[j] == pFieldName)
-                        {
-                            idx = j;
-                        }
-                    }
-
-                    if (idx >= 0)
-                    {
-                        pFields[0]->ExtractDataToCoeffs(
-                                                    FieldDef[i],
-                                                    FieldData[i],
-                                                    FieldDef[i]->m_fields[idx],
-                                                    vCoeffs);
-                    }
-                    else
-                    {
-                        cout << "Field " + pFieldName + " not found." << endl;
-                    }
+                    m_sessionFunctions[pName] =
+                        MemoryManager<SessionFunction>::AllocateSharedPtr(
+                            pSession, pFields[0], pName, pCache);
                 }
-                pFields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
+
+                return m_sessionFunctions[pName];
+            }
+            else
+            {
+                return SessionFunctionSharedPtr(new SessionFunction(pSession, pFields[0], pName, pCache));
             }
         }
 

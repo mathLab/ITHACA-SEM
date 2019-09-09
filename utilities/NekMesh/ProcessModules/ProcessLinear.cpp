@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -83,18 +82,14 @@ void ProcessLinear::Process()
 
     if (all)
     {
-        EdgeSet::iterator eit;
-        for (eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end();
-             eit++)
+        for (auto &edge : m_mesh->m_edgeSet)
         {
-            (*eit)->m_edgeNodes.clear();
+            edge->m_edgeNodes.clear();
         }
 
-        FaceSet::iterator fit;
-        for (fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end();
-             fit++)
+        for (auto &face : m_mesh->m_faceSet)
         {
-            (*fit)->m_faceNodes.clear();
+            face->m_faceNodes.clear();
         }
 
         for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
@@ -127,21 +122,19 @@ void ProcessLinear::Process()
 
         if(m_mesh->m_expDim > 2)
         {
-            FaceSet::iterator it;
-            for(it = m_mesh->m_faceSet.begin();
-                it != m_mesh->m_faceSet.end(); it++)
+            for(auto &face : m_mesh->m_faceSet)
             {
-                vector<EdgeSharedPtr> es = (*it)->m_edgeList;
+                vector<EdgeSharedPtr> es = face->m_edgeList;
                 for(int i = 0; i < es.size(); i++)
                 {
-                    eidToFace[es[i]->m_id].push_back((*it));
+                    eidToFace[es[i]->m_id].push_back(face);
                 }
             }
         }
 
         set<int> neigh;
         vector<NodeSharedPtr> zeroNodes;
-        boost::unordered_set<int> clearedEdges, clearedFaces, clearedElmts;
+        std::unordered_set<int> clearedEdges, clearedFaces, clearedElmts;
 
         vector<ElementSharedPtr> dumpEls;
 
@@ -181,8 +174,7 @@ void ProcessLinear::Process()
                     {
                         for(int j = 0; j < e.size(); j++)
                         {
-                            map<int,vector<FaceSharedPtr> >::iterator it =
-                                eidToFace.find(e[j]->m_id);
+                            auto it = eidToFace.find(e[j]->m_id);
                             for(int k = 0; k < it->second.size(); k++)
                             {
                                 clearedEdges.insert(it->second[k]->m_id);
@@ -193,8 +185,7 @@ void ProcessLinear::Process()
 
                     for(int j = 0; j < e.size(); j++)
                     {
-                        map<int,vector<ElementSharedPtr> >::iterator it =
-                                            eidToElm.find(e[j]->m_id);
+                        auto it = eidToElm.find(e[j]->m_id);
                         for(int k = 0; k < it->second.size(); k++)
                         {
                             neigh.insert(it->second[k]->GetId());
@@ -204,12 +195,10 @@ void ProcessLinear::Process()
             }
 
             el.clear();
-            set<int>::iterator it1;
-            boost::unordered_set<int>::iterator it2;
             for(int i = 0; i < els.size(); i++)
             {
-                it1 = neigh.find(els[i]->GetId());
-                it2 = clearedElmts.find(els[i]->GetId());
+                auto it1 = neigh.find(els[i]->GetId());
+                auto it2 = clearedElmts.find(els[i]->GetId());
                 if(it1 != neigh.end() && it2 == clearedElmts.end())
                 {
                     el.push_back(els[i]);
@@ -227,7 +216,7 @@ void ProcessLinear::Process()
 
         if(m_config["extract"].beenSet)
         {
-            MeshSharedPtr dmp = boost::shared_ptr<Mesh>(new Mesh());
+            MeshSharedPtr dmp = std::shared_ptr<Mesh>(new Mesh());
             dmp->m_expDim     = 3;
             dmp->m_spaceDim   = 3;
             dmp->m_nummode    = 2;
@@ -274,7 +263,7 @@ bool ProcessLinear::Invalid(ElementSharedPtr el, NekDouble thr)
     SpatialDomains::GeometrySharedPtr geomL = elL->GetGeom(m_mesh->m_spaceDim);
     SpatialDomains::GeomFactorsSharedPtr gfacL = geomL->GetGeomFactors();
 
-    LibUtilities::PointsKeyVector p = geom->GetPointsKeys();
+    LibUtilities::PointsKeyVector p = geom->GetXmap()->GetPointsKeys();
     SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
     SpatialDomains::DerivStorage derivL = gfacL->GetDeriv(p);
     const int pts = deriv[0][0].num_elements();

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -55,7 +54,7 @@ namespace LibUtilities
 class CommMpi;
 
 /// Pointer to a Communicator object.
-typedef boost::shared_ptr<CommMpi> CommMpiSharedPtr;
+typedef std::shared_ptr<CommMpi> CommMpiSharedPtr;
 
 /// A global linear system.
 class CommMpi : public Comm
@@ -76,11 +75,21 @@ public:
     MPI_Comm GetComm();
 
 protected:
+
+    MPI_Comm m_comm;
+    int m_rank;
+
+    CommMpi(MPI_Comm pComm);
+
+    CommMpi()
+    {};
+
     virtual void v_Finalise();
     virtual int v_GetRank();
     virtual void v_Block();
     virtual double v_Wtime();
     virtual bool v_TreatAsRankZero(void);
+    virtual bool v_IsSerial(void);
     virtual void v_Send(void *buf, int count, CommDataType dt, int dest);
     virtual void v_Recv(void *buf, int count, CommDataType dt, int source);
     virtual void v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype,
@@ -91,12 +100,18 @@ protected:
     virtual void v_AllReduce(void *buf, int count, CommDataType dt,
                              enum ReduceOperator pOp);
     virtual void v_AlltoAll(void *sendbuf, int sendcount, CommDataType sendtype,
-                            void *recvbuf, int recvcount,
-                            CommDataType recvtype);
+                            void *recvbuf, int recvcount, CommDataType recvtype);
     virtual void v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[],
                              CommDataType sendtype, void *recvbuf,
                              int recvcounts[], int rdispls[],
                              CommDataType recvtype);
+    virtual void v_AllGather(void *sendbuf, int sendcount, CommDataType sendtype,
+                             void *recvbuf, int recvcount, CommDataType recvtype);
+    virtual void v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
+                              void *recvbuf, int recvcounts[], int rdispls[],
+                              CommDataType recvtype);
+    virtual void v_AllGatherv(void *recvbuf, int recvcounts[], int rdispls[],
+                              CommDataType recvtype);
     virtual void v_Bcast(void *buffer, int count, CommDataType dt, int root);
     virtual void v_Exscan(Array<OneD, unsigned long long> &pData,
                           const enum ReduceOperator pOp,
@@ -109,16 +124,13 @@ protected:
                            void *recvbuf, int recvcount, CommDataType recvtype,
                            int root);
 
+
     virtual void v_SplitComm(int pRows, int pColumns);
     virtual CommSharedPtr v_CommCreateIf(int flag);
 
-private:
-    MPI_Comm m_comm;
-    int m_rank;
-
-    CommMpi(MPI_Comm pComm);
 };
 }
 }
+
 
 #endif

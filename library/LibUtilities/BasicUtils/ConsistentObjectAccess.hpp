@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,9 +36,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_CONSISTENT_ACCESS_OBJECT_HPP
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_CONSISTENT_ACCESS_OBJECT_HPP
 
-#include <boost/shared_ptr.hpp>
-#include <boost/call_traits.hpp>
-#include <boost/type_traits.hpp>
+#include <memory>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
@@ -68,13 +65,13 @@ namespace Nektar
     
 
     template<typename DataType>
-    struct ConsistentObjectAccess<boost::shared_ptr<DataType> >
+    struct ConsistentObjectAccess<std::shared_ptr<DataType> >
     {
-        static const DataType& const_reference(const boost::shared_ptr<DataType>& o) { ASSERTL1(o, "Can't dereference null pointer."); return *o; }
-        static const DataType* const_pointer(const boost::shared_ptr<DataType>& o) { return o.get(); }
-        static DataType& reference(const boost::shared_ptr<DataType>& o) { ASSERTL1(o, "Can't dereference null pointer."); return *o; }
-        static DataType* pointer(const boost::shared_ptr<DataType>& o) { return o.get(); }
-        static bool ReferencesObject(const boost::shared_ptr<DataType>& o) { return o.get(); }
+        static const DataType& const_reference(const std::shared_ptr<DataType>& o) { ASSERTL1(o, "Can't dereference null pointer."); return *o; }
+        static const DataType* const_pointer(const std::shared_ptr<DataType>& o) { return o.get(); }
+        static DataType& reference(const std::shared_ptr<DataType>& o) { ASSERTL1(o, "Can't dereference null pointer."); return *o; }
+        static DataType* pointer(const std::shared_ptr<DataType>& o) { return o.get(); }
+        static bool ReferencesObject(const std::shared_ptr<DataType>& o) { return o.get(); }
     };
 }
     

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #include <SpatialDomains/GeomFactors.h>
 #include <Collections/CoalescedGeomData.h>
+
+#include <LocalRegions/Expansion.h>
 
 using namespace std;
 
@@ -73,11 +74,12 @@ const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(
         int cnt = 0;
         for(int i = 0; i < nElmts; ++i)
         {
-            const Array<OneD, const NekDouble> jac =
-                                pCollExp[i]->GetMetricInfo()->GetJac(ptsKeys);
+            const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
+            const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
+          
+            const Array<OneD, const NekDouble> jac = lep->GetMetricInfo()->GetJac( ptsKeys );
 
-            if (pCollExp[i]->GetMetricInfo()->GetGtype() ==
-                    SpatialDomains::eDeformed)
+            if( lep->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed )
             {
                 Vmath::Vcopy(npts, &jac[0], 1, &newjac[cnt], 1);
             }
@@ -119,11 +121,12 @@ const Array<OneD, const NekDouble> &CoalescedGeomData::GetJacWithStdWeights(
         int cnt = 0;
         for(int i = 0; i < nElmts; ++i)
         {
-            const Array<OneD, const NekDouble> jac =
-                            pCollExp[i]->GetMetricInfo()->GetJac(ptsKeys);
+            const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
+            const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
 
-            if (pCollExp[i]->GetMetricInfo()->GetGtype() ==
-                    SpatialDomains::eDeformed)
+            const Array<OneD, const NekDouble> jac = lep->GetMetricInfo()->GetJac(ptsKeys);
+
+            if( lep->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed )
             {
                 Vmath::Vcopy(npts, &jac[0], 1, &newjac[cnt], 1);
             }
@@ -169,11 +172,12 @@ const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(
         int cnt = 0;
         for(int i = 0; i < nElmts; ++i)
         {
-            const Array<TwoD, const NekDouble> Dfac =
-                    pCollExp[i]->GetMetricInfo()->GetDerivFactors(ptsKeys);
+            const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
+            const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
 
-            if (pCollExp[i]->GetMetricInfo()->GetGtype() ==
-                    SpatialDomains::eDeformed)
+            const Array<TwoD, const NekDouble> Dfac = lep->GetMetricInfo()->GetDerivFactors( ptsKeys );
+
+            if( lep->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed)
             {
                 for (int j = 0; j < dim*coordim; ++j)
                 {

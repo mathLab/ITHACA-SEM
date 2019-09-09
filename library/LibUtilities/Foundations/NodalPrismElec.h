@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,13 +35,12 @@
 #ifndef NODALPRISMELEC_H
 #define NODALPRISMELEC_H
 
+#include <memory>
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
@@ -61,7 +59,7 @@ public:
     {
     }
 
-    LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(
+    LIB_UTILITIES_EXPORT static std::shared_ptr<PointsBaseType> Create(
         const PointsKey &key);
 
     const MatrixSharedPtrType GetI(const PointsKey &pkey)
@@ -90,7 +88,7 @@ public:
     }
 
 private:
-    boost::shared_ptr<NodalUtilPrism> m_util;
+    std::shared_ptr<NodalUtilPrism> m_util;
 
     /// Default constructor should not be called except by Create matrix
     NodalPrismElec() : PointsBaseType(NullPointsKey)

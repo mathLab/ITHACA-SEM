@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,38 +35,37 @@
 #ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONER_H
 #define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONER_H
 
-#include <MultiRegions/GlobalLinSys.h>
-#include <MultiRegions/MultiRegionsDeclspec.h>
-#include <StdRegions/StdExpansion.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/Communication/GsLib.hpp>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/MultiRegionsDeclspec.h>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
         class AssemblyMap;
-        typedef boost::shared_ptr<AssemblyMap> AssemblyMapSharedPtr;
+        typedef std::shared_ptr<AssemblyMap> AssemblyMapSharedPtr;
 
         class Preconditioner;
-        typedef boost::shared_ptr<Preconditioner>  PreconditionerSharedPtr;
+        typedef std::shared_ptr<Preconditioner>  PreconditionerSharedPtr;
 
         static PreconditionerSharedPtr NullPreconditionerSharedPtr;
 
         typedef LibUtilities::NekFactory< std::string, Preconditioner, 
-            const boost::shared_ptr<GlobalLinSys>&,
-            const boost::shared_ptr<AssemblyMap>& > PreconFactory;
+            const std::shared_ptr<GlobalLinSys>&,
+            const std::shared_ptr<AssemblyMap>& > PreconFactory;
         PreconFactory& GetPreconFactory();
 
         class Preconditioner
         {
         public:
             MULTI_REGIONS_EXPORT Preconditioner(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+                         const std::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
@@ -128,17 +126,19 @@ namespace Nektar
                 GetBlockTransposedTransformationMatrix() const;
 
             inline DNekScalMatSharedPtr TransformedSchurCompl(
-                int offset, const boost::shared_ptr<DNekScalMat > &loc_mat);
+                   int offset, int bndoffset, 
+                   const std::shared_ptr<DNekScalMat > &loc_mat);
 
 	protected:
-            const boost::weak_ptr<GlobalLinSys> m_linsys;
+            const std::weak_ptr<GlobalLinSys>   m_linsys;
             PreconditionerType                  m_preconType;
             DNekMatSharedPtr                    m_preconditioner;
-            boost::shared_ptr<AssemblyMap>      m_locToGloMap;
+            std::weak_ptr<AssemblyMap>          m_locToGloMap;
             LibUtilities::CommSharedPtr         m_comm;
 
             virtual DNekScalMatSharedPtr v_TransformedSchurCompl(
-                int offset, const boost::shared_ptr<DNekScalMat > &loc_mat);
+                        int offset, int bndoffset,
+                        const std::shared_ptr<DNekScalMat > &loc_mat);
 
 
 	private:
@@ -182,7 +182,7 @@ namespace Nektar
             static std::string lookupIds[];
             static std::string def;
 	};
-        typedef boost::shared_ptr<Preconditioner>  PreconditionerSharedPtr;
+        typedef std::shared_ptr<Preconditioner>  PreconditionerSharedPtr;
 
         /**
          *
@@ -196,9 +196,10 @@ namespace Nektar
          *
          */ 
         inline DNekScalMatSharedPtr Preconditioner::TransformedSchurCompl(
-            int offset, const boost::shared_ptr<DNekScalMat > &loc_mat)
+                            int offset, int bndoffset,
+                            const std::shared_ptr<DNekScalMat > &loc_mat)
         {
-            return v_TransformedSchurCompl(offset,loc_mat);
+            return v_TransformedSchurCompl(offset,bndoffset,loc_mat);
         }
 
         /**

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific 
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -53,19 +52,6 @@ namespace Nektar
 
         Graph::~Graph()
         {
-#if 0       
-            std::list<GraphVertexObject *>::const_iterator def; 
-            for(def = m_vertset.begin(); def != m_vertset.end(); ++def)
-            {
-                delete  *def;
-            }
-
-            std::list<GraphEdgeObject *>::const_iterator def1; 
-            for(def1 = _Edgeset.begin(); def1 != _Edgeset.end(); ++def1)
-            {
-                delete  *def1;
-            }
-#endif    
         }
 
         bool operator  == (const GraphVertexObject &x, const GraphVertexObject &y)

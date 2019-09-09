@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -44,16 +43,15 @@ namespace Nektar
     namespace MultiRegions
     {
         class PreconditionerLinearWithBlock;
-        typedef boost::shared_ptr<PreconditionerLinearWithBlock>  PreconditionerLinearWithBlockSharedPtr;
+        typedef std::shared_ptr<PreconditionerLinearWithBlock>  PreconditionerLinearWithBlockSharedPtr;
 
         class PreconditionerLinearWithBlock: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
             static PreconditionerSharedPtr create(
-                        const boost::shared_ptr<GlobalLinSys> &plinsys,
-                        const boost::shared_ptr<AssemblyMap>
-                                                               &pLocToGloMap)
+                        const std::shared_ptr<GlobalLinSys> &plinsys,
+                        const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             {
 	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinearWithBlock>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
@@ -64,7 +62,7 @@ namespace Nektar
             static std::string className;
 
             MULTI_REGIONS_EXPORT PreconditionerLinearWithBlock(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+                         const std::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -150,9 +149,9 @@ namespace Nektar
                                    8, 10, 0};
                               
     
-                boost::shared_ptr<DenseMatrix> m(new DenseMatrix(4, 4, buf, eBANDED, 1, 1));
+                std::shared_ptr<DenseMatrix> m(new DenseMatrix(4, 4, buf, eBANDED, 1, 1));
 
-                boost::shared_ptr<ScaledMatrix> scaled(new ScaledMatrix(2.0, m));
+                std::shared_ptr<ScaledMatrix> scaled(new ScaledMatrix(2.0, m));
                 
                 NekDouble vector_buf[] = {1.0, 2.0, 3.0, 4.0};
                 NekVector<NekDouble> v(4, vector_buf);
@@ -507,12 +506,12 @@ namespace Nektar
                                      42, 36 };
 
                 NekMatrix<double> lhs1(4, 4, lhs_buf, eBANDED, 2, 1);
-                boost::shared_ptr<NekMatrix<NekMatrix<double, StandardMatrixTag>, ScaledMatrixTag> > lhs2;
-                boost::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > lhs3;
+                std::shared_ptr<NekMatrix<NekMatrix<double, StandardMatrixTag>, ScaledMatrixTag> > lhs2;
+                std::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > lhs3;
 
                 NekMatrix<double> rhs1(4, 4, rhs_buf, eBANDED, 0, 1);
-                boost::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > rhs2;
-                boost::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > rhs3;
+                std::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > rhs2;
+                std::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > rhs3;
 
                 GenerateMatrices(lhs1, 2.0, 2, 2, lhs2, lhs3);
                 GenerateMatrices(rhs1, 2.0, 2, 2, rhs2, rhs3);
@@ -522,8 +521,6 @@ namespace Nektar
                                        400, 568, 924, 1640,
                                        0, 504, 756, 1128};
                 NekMatrix<double> result(4, 4, result_buf);
-                
-                //RunAllTestCombinations(lhs1, *lhs2, *lhs3, rhs1, *rhs2, *rhs3, result, DoMultiplication());
             }
         }
     }

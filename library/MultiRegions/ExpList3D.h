@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -58,7 +57,9 @@ namespace Nektar
             /// Constructor copying only elements defined in eIds.
             MULTI_REGIONS_EXPORT ExpList3D(  const ExpList3D &In,
                 const std::vector<unsigned int> &eIDs,
-                const bool DeclareCoeffPhysArrays = true);
+                const bool DeclareCoeffPhysArrays = true,
+                const Collections::ImplementationType ImpType
+                        = Collections::eNoImpType);
 
             MULTI_REGIONS_EXPORT ExpList3D(  
                         const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -70,16 +71,21 @@ namespace Nektar
                         const LibUtilities::BasisKey &HBc,
                         const SpatialDomains::MeshGraphSharedPtr &graph3D,
                         const LibUtilities::PointsType TetNb
-                                            = LibUtilities::SIZE_PointsType);
+                        = LibUtilities::SIZE_PointsType,
+                        const Collections::ImplementationType ImpType
+                        = Collections::eNoImpType);
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList3D(
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                        const std::string  &variable = "DefaultVar");
+                        const std::string  &variable = "DefaultVar",
+                        const Collections::ImplementationType ImpType
+                        = Collections::eNoImpType);
 
             /// Sets up a list of local expansions based on an expansion vector
-            MULTI_REGIONS_EXPORT  ExpList3D(const SpatialDomains::ExpansionMap &expansions);
+            MULTI_REGIONS_EXPORT  ExpList3D(const SpatialDomains::ExpansionMap &expansions,   const Collections::ImplementationType ImpType
+                        = Collections::eNoImpType);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList3D();
@@ -90,16 +96,6 @@ namespace Nektar
             virtual void v_SetUpPhysNormals();
 
         private:
-            /// Definition of the total number of degrees of freedom and
-            /// quadrature points. Sets up the storage for \a m_coeff and \a
-            ///  m_phys.
-            void SetCoeffPhys(void);
-
-/*            LocalRegions::HexExpVector    m_hex;
-            LocalRegions::PrismExpVector  m_prism;
-            LocalRegions::PyrExpVector    m_pyr;
-            LocalRegions::TetExpVector    m_tet;
-*/
 
             virtual void v_ReadGlobalOptimizationParameters();
 
@@ -112,12 +108,9 @@ namespace Nektar
         };
 
         /// Shared pointer to an ExpList3D object.
-        typedef boost::shared_ptr<ExpList3D>      ExpList3DSharedPtr;
+        typedef std::shared_ptr<ExpList3D>      ExpList3DSharedPtr;
         /// Vector of pointers to ExpList3D objects.
         typedef std::vector<ExpList3DSharedPtr>   ExpList3DVector;
-        /// Iterator over an ExpList3DVector.
-        typedef std::vector<ExpList3DSharedPtr>::iterator ExpList3DVectorIter;
-
     } //end of namespace
 } //end of namespace
 

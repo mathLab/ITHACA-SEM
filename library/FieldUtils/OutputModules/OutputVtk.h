@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,7 +35,7 @@
 #ifndef FIELDUTILS_OUTPUTVTK
 #define FIELDUTILS_OUTPUTVTK
 
-#include "../Module.h"
+#include "OutputFileBase.h"
 #include <tinyxml.h>
 
 namespace Nektar
@@ -45,11 +44,11 @@ namespace FieldUtils
 {
 
 /// Converter from fld to vtk.
-class OutputVtk : public OutputModule
+class OutputVtk : public OutputFileBase
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<OutputVtk>::AllocateSharedPtr(f);
     }
@@ -58,15 +57,37 @@ public:
     OutputVtk(FieldSharedPtr f);
     virtual ~OutputVtk();
 
-    /// Write fld to output file.
-    virtual void Process(po::variables_map &vm);
-
-    void WriteEmptyVtkPiece(std::ofstream &outfile);
-
     virtual std::string GetModuleName()
     {
         return "OutputVtk";
     }
+
+protected:
+    /// Write from pts to output file.
+    virtual void OutputFromPts(po::variables_map &vm);
+
+    /// Write from m_exp to output file.
+    virtual void OutputFromExp(po::variables_map &vm);
+
+    /// Write from data to output file.
+    virtual void OutputFromData(po::variables_map &vm);
+
+    virtual fs::path GetPath(std::string &filename,
+                                    po::variables_map &vm);
+
+    virtual fs::path GetFullOutName(std::string &filename,
+                                    po::variables_map &vm);
+
+private:
+    void WriteVtkHeader(std::ostream &outfile);
+
+    void WriteVtkFooter(std::ostream &outfile);
+
+    void WriteEmptyVtkPiece(std::ofstream &outfile);
+
+    void WritePVtu(po::variables_map &vm);
+
+    std::string PrepareOutput(po::variables_map &vm);
 };
 }
 }

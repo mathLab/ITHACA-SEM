@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,18 +32,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <type_traits>
+
 #include <LibUtilities/LinearAlgebra/ExplicitInstantiation.h>
-#include <LibUtilities/LinearAlgebra/MatrixVectorMultiplication.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicUtils/RawType.hpp>
 
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LinearAlgebra/CanGetRawPtr.hpp>
-
-#include <ExpressionTemplates/CommutativeTraits.hpp>
-#include <boost/type_traits.hpp>
 
 #include <LibUtilities/LinearAlgebra/StandardMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/BlockMatrix.hpp>
@@ -53,8 +49,6 @@
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
-
-
 
 namespace Nektar
 {
@@ -101,10 +95,8 @@ namespace Nektar
     void NekMultiplyBandedMatrix(NekDouble* result,
                     const NekMatrix<LhsDataType, MatrixType>& lhs,
                     const NekDouble* rhs,
-                    typename boost::enable_if
-                    <
-                        CanGetRawPtr<NekMatrix<LhsDataType, MatrixType> >
-                    >::type* p=0)
+                    typename std::enable_if<
+                                 CanGetRawPtr<NekMatrix<LhsDataType, MatrixType> >::value >::type* p=0)
     {
         int m  = lhs.GetRows();
         int n  = lhs.GetColumns();
@@ -126,10 +118,8 @@ namespace Nektar
     void NekMultiplyBandedMatrix(DataType* result,
                     const NekMatrix<LhsDataType, BlockMatrixTag>& lhs,
                     const DataType* rhs,
-                    typename boost::enable_if
-                    <
-                        boost::mpl::not_<CanGetRawPtr<NekMatrix<LhsDataType, BlockMatrixTag> > >
-                    >::type* p=0)
+                    typename std::enable_if<
+                                 !CanGetRawPtr<NekMatrix<LhsDataType, BlockMatrixTag> >::value>::type* p=0)
     {
         NEKERROR(ErrorUtil::efatal, "Banded block matrix multiplication not yet implemented");
     }
@@ -176,7 +166,7 @@ namespace Nektar
                     curWrapperRow += lhs.GetNumberOfColumnsInBlockColumn(blockColumn-1);
                 }
 
-                //const boost::shared_ptr<const LhsInnerMatrixType>& block = lhs.GetBlock(blockRow, blockColumn);
+                //const std::shared_ptr<const LhsInnerMatrixType>& block = lhs.GetBlock(blockRow, blockColumn);
                 const LhsInnerMatrixType* block = lhs.GetBlockPtr(blockRow, blockColumn);
                 if( !block )
                 {
@@ -410,10 +400,7 @@ namespace Nektar
 
     template<typename InnerMatrixType, typename MatrixTag>
     void NekMultiplySymmetricMatrix(NekDouble* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const NekDouble* rhs,
-        typename boost::enable_if
-        <
-            CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >
-        >::type* p=0)
+                                    typename std::enable_if<CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >::value >::type* p=0)
     {
         const unsigned int* size = lhs.GetSize();
 
@@ -430,20 +417,14 @@ namespace Nektar
 
     template<typename InnerMatrixType, typename MatrixTag>
     void NekMultiplySymmetricMatrix(NekDouble* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const NekDouble* rhs,
-        typename boost::enable_if
-        <
-            boost::mpl::not_<CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> > >
-        >::type* p = 0)
+                                    typename std::enable_if<!CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >::value >::type* p = 0)
     {
         NekMultiplyUnspecializedMatrixType(result, lhs, rhs);
     }
 
     template<typename InnerMatrixType, typename MatrixTag>
     void NekMultiplyFullMatrix(NekDouble* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const NekDouble* rhs,
-        typename boost::enable_if
-        <
-            CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >
-        >::type* p=0)
+                               typename std::enable_if<CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >::value >::type* p=0)
     {
         const unsigned int* size = lhs.GetSize();
 
@@ -463,10 +444,7 @@ namespace Nektar
 
     template<typename InnerMatrixType, typename MatrixTag>
     void NekMultiplyFullMatrix(NekDouble* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const NekDouble* rhs,
-        typename boost::enable_if
-        <
-            boost::mpl::not_<CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> > >
-        >::type* p = 0)
+        typename std::enable_if<!CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >::value>::type* p = 0)
     {
         NekMultiplyUnspecializedMatrixType(result, lhs, rhs);
     }

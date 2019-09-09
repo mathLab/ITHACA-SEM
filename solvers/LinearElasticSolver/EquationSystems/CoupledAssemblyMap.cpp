@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LinearElasticSolver/EquationSystems/CoupledAssemblyMap.h>
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <SpatialDomains/MeshGraph.h>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/Expansion1D.h>
@@ -273,7 +273,7 @@ CoupledAssemblyMap::CoupledAssemblyMap(
         m_globalToUniversalBndMapUnique[i] = (tmp2[i] >= 0 ? 1 : 0);
     }
 
-    m_hash = boost::hash_range(
+    m_hash = hash_range(
         m_localToGlobalMap.begin(), m_localToGlobalMap.end());
 }
 

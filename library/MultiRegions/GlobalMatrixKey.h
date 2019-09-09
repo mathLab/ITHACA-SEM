@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -100,7 +99,7 @@ namespace Nektar
             StdRegions::VarCoeffMap     m_varCoeffs;
 
             /// Pointer to the local to global mapping.
-            AssemblyMapSharedPtr m_locToGloMap;
+            std::weak_ptr<AssemblyMap>  m_locToGloMap;
 
         private:
 
@@ -126,7 +125,7 @@ namespace Nektar
 
         inline bool GlobalMatrixKey::LocToGloMapIsDefined(void) const
         {
-            if( m_locToGloMap.get() == 0) //NullAssemblyMapSharedPtr)
+            if( m_locToGloMap.lock().get() == 0) //NullAssemblyMapSharedPtr)
             {
                 return false;
             }
@@ -142,7 +141,7 @@ namespace Nektar
         /// @Todo error checking
         inline NekDouble GlobalMatrixKey::GetConstFactor(const StdRegions::ConstFactorType &factor) const
         {
-            StdRegions::ConstFactorMap::const_iterator found = m_constFactors.find(factor);
+            auto found = m_constFactors.find(factor);
             return (*found).second;
         }
 
@@ -159,7 +158,7 @@ namespace Nektar
 
         inline const Array<OneD, const NekDouble> & GlobalMatrixKey::GetVarCoeff(const StdRegions::VarCoeffType &coeff) const
         {
-            StdRegions::VarCoeffMap::const_iterator found = m_varCoeffs.find(coeff);
+            auto found = m_varCoeffs.find(coeff);
             return (*found).second;
         }
 

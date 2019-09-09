@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -39,7 +38,6 @@ using namespace std;
 
 #include "ProcessQualityMetric.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/Interp.h>
 #include <StdRegions/StdPrismExp.h>
@@ -62,7 +60,7 @@ ModuleKey ProcessQualityMetric::className =
 ProcessQualityMetric::ProcessQualityMetric(FieldSharedPtr f) : ProcessModule(f)
 {
     m_config["scaled"] =
-        ConfigOption(true, "", "use scaled jacobian instead");
+        ConfigOption(true, "0", "use scaled jacobian instead");
 }
 
 ProcessQualityMetric::~ProcessQualityMetric()
@@ -71,24 +69,38 @@ ProcessQualityMetric::~ProcessQualityMetric()
 
 void ProcessQualityMetric::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    int nfields           = m_f->m_variables.size();
+    m_f->m_variables.push_back("qualitymetric");
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessQualityMetric: Adding quality metric to field"
-                 << endl;
-        }
+        return;
     }
 
-    Array<OneD, NekDouble> &phys   = m_f->m_exp[0]->UpdatePhys();
-    Array<OneD, NekDouble> &coeffs = m_f->m_exp[0]->UpdateCoeffs();
+    int NumHomogeneousDir = m_f->m_numHomogeneousDir;
+    MultiRegions::ExpListSharedPtr exp;
 
-    for (int i = 0; i < m_f->m_exp[0]->GetExpSize(); ++i)
+    if (nfields)
+    {
+        m_f->m_exp.resize(nfields + 1);
+        exp = m_f->AppendExpList(NumHomogeneousDir);
+
+        m_f->m_exp[nfields] = exp;
+    }
+    else
+    {
+        exp = m_f->m_exp[0];
+    }
+
+    Array<OneD, NekDouble> &phys   = exp->UpdatePhys();
+    Array<OneD, NekDouble> &coeffs = exp->UpdateCoeffs();
+
+    for (int i = 0; i < exp->GetExpSize(); ++i)
     {
         // copy Jacobian into field
-        LocalRegions::ExpansionSharedPtr Elmt = m_f->m_exp[0]->GetExp(i);
-        int offset = m_f->m_exp[0]->GetPhys_Offset(i);
-        Array<OneD, NekDouble> q = GetQ(Elmt,m_config["scaled"].m_beenSet);
+        LocalRegions::ExpansionSharedPtr Elmt = exp->GetExp(i);
+        int offset = exp->GetPhys_Offset(i);
+        Array<OneD, NekDouble> q = GetQ(Elmt,m_config["scaled"].as<bool>());
         Array<OneD, NekDouble> out = phys + offset;
 
         ASSERTL0(q.num_elements() == Elmt->GetTotPoints(),
@@ -96,20 +108,7 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
         Vmath::Vcopy(q.num_elements(), q, 1, out, 1);
     }
 
-    m_f->m_exp[0]->FwdTrans_IterPerExp(phys, coeffs);
-
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (int i = 0; i < FieldDef.size(); ++i)
-    {
-        FieldDef[i]->m_fields.push_back("QualityMetric");
-        m_f->m_exp[0]->AppendFieldData(FieldDef[i], FieldData[i]);
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
+    exp->FwdTrans_IterPerExp(phys, coeffs);
 }
 
 inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,7 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <Collections/CollectionOptimisation.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
 
@@ -51,9 +50,7 @@ CollectionOptimisation::CollectionOptimisation(
         ImplementationType defaultType)
 {
     int i;
-    map<ElmtOrder, ImplementationType> defaults;
-    map<ElmtOrder, ImplementationType> defaultsPhysDeriv;
-    map<ElmtOrder, ImplementationType>::iterator it;
+    map<ElmtOrder, ImplementationType> defaults, defaultsPhysDeriv;
     bool verbose  = (pSession.get()) &&
                     (pSession->DefinesCmdLineArgument("verbose")) &&
                     (pSession->GetComm()->GetRank() == 0);
@@ -64,7 +61,6 @@ CollectionOptimisation::CollectionOptimisation(
     m_defaultType = defaultType == eNoImpType ? eIterPerExp : defaultType;
 
     map<string, LibUtilities::ShapeType> elTypes;
-    map<string, LibUtilities::ShapeType>::iterator it2;
     elTypes["S"] = LibUtilities::eSegment;
     elTypes["T"] = LibUtilities::eTriangle;
     elTypes["Q"] = LibUtilities::eQuadrilateral;
@@ -74,24 +70,29 @@ CollectionOptimisation::CollectionOptimisation(
     elTypes["H"] = LibUtilities::eHexahedron;
 
     // Set defaults for all element types.
-    for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
+    for (auto &it2 : elTypes)
     {
-        defaults          [ElmtOrder(it2->second, -1)] = m_defaultType;
-        defaultsPhysDeriv [ElmtOrder(it2->second, -1)] = m_defaultType;
+        defaults          [ElmtOrder(it2.second, -1)] = m_defaultType;
+        defaultsPhysDeriv [ElmtOrder(it2.second, -1)] = m_defaultType;
     }
 
     if (defaultType == eNoImpType)
     {
-        for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
+        for (auto &it2 : elTypes)
         {
-            defaultsPhysDeriv [ElmtOrder(it2->second, -1)] = eNoCollection;
+            // For 1<=N<=5 use StdMat otherwise IterPerExp or given default type
             for (int i = 1; i < 5; ++i)
             {
-                defaults[ElmtOrder(it2->second, i)] = eStdMat;
+                defaults[ElmtOrder(it2.second, i)] = eStdMat;
             }
+
+            // For 1<=N<=3 use SumFac otherwise NoCollection. Note that
+            // default is not currently overwritten by given default
+            // type
+            defaultsPhysDeriv [ElmtOrder(it2.second, -1)] = eNoCollection;
             for (int i = 1; i < 3; ++i)
             {
-                defaultsPhysDeriv[ElmtOrder(it2->second, i)] = eSumFac;
+                defaultsPhysDeriv[ElmtOrder(it2.second, i)] = eSumFac;
             }
         }
     }
@@ -157,10 +158,11 @@ CollectionOptimisation::CollectionOptimisation(
                     ASSERTL0(i != Collections::SIZE_ImplementationType,
                          "Unknown default collection scheme: "+collinfo);
 
+                    defaults.clear();
                     // Override default types
-                    for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
+                    for (auto &it2 : elTypes)
                     {
-                        defaults[ElmtOrder(it2->second, -1)] = m_defaultType;
+                        defaults[ElmtOrder(it2.second, -1)] = m_defaultType;
                     }
 
                     for (i = 0; i < SIZE_OperatorType; ++i)
@@ -204,7 +206,7 @@ CollectionOptimisation::CollectionOptimisation(
                     ASSERTL0(attr, "Missing TYPE in ELEMENT tag.");
 
                     string elType(attr);
-                    it2 = elTypes.find(elType);
+                    auto it2 = elTypes.find(elType);
                     ASSERTL0(it2 != elTypes.end(),
                             "Unknown element type "+elType+" in ELEMENT "
                             "tag");
@@ -227,7 +229,7 @@ CollectionOptimisation::CollectionOptimisation(
                     else
                     {
                         vector<unsigned int> orders;
-                        ParseUtils::GenerateSeqVector(order.c_str(), orders);
+                        ParseUtils::GenerateSeqVector(order, orders);
 
                         for (int i = 0; i < orders.size(); ++i)
                         {
@@ -254,21 +256,17 @@ CollectionOptimisation::CollectionOptimisation(
 
                 if (m_setByXml)
                 {
-                    map<OperatorType, map<ElmtOrder,
-                                          ImplementationType> >::iterator mIt;
-                    map<ElmtOrder, ImplementationType>::iterator eIt;
-                    for (mIt = m_global.begin(); mIt != m_global.end(); mIt++)
+                    for (auto &mIt : m_global)
                     {
-                        cout << "Operator " << OperatorTypeMap[mIt->first]
-                                                               << ":" << endl;
+                        cout << "Operator " << OperatorTypeMap[mIt.first]
+                             << ":" << endl;
 
-                        for (eIt = mIt->second.begin();
-                                eIt != mIt->second.end(); eIt++)
+                        for (auto &eIt : mIt.second)
                         {
                             cout << "- "
-                                 << LibUtilities::ShapeTypeMap[eIt->first.first]
-                                 << " order " << eIt->first.second << " -> "
-                                 << ImplementationTypeMap[eIt->second] << endl;
+                                 << LibUtilities::ShapeTypeMap[eIt.first.first]
+                                 << " order " << eIt.first.second << " -> "
+                                 << ImplementationTypeMap[eIt.second] << endl;
                         }
                     }
                 }
@@ -280,24 +278,21 @@ CollectionOptimisation::CollectionOptimisation(
 OperatorImpMap  CollectionOptimisation::GetOperatorImpMap(
         StdRegions::StdExpansionSharedPtr pExp)
 {
-    map<OperatorType, map<ElmtOrder, ImplementationType> >::iterator it;
-    map<ElmtOrder, ImplementationType>::iterator it2;
-
     OperatorImpMap ret;
     ElmtOrder searchKey(pExp->DetShapeType(),
                         pExp->GetBasisNumModes(0));
     ElmtOrder defSearch(pExp->DetShapeType(), -1);
 
-    for (it = m_global.begin(); it != m_global.end(); ++it)
+    for (auto &it : m_global)
     {
         ImplementationType impType;
 
-        it2 = it->second.find(searchKey);
+        auto it2 = it.second.find(searchKey);
 
-        if (it2 == it->second.end())
+        if (it2 == it.second.end())
         {
-            it2 = it->second.find(defSearch);
-            if (it2 == it->second.end())
+            it2 = it.second.find(defSearch);
+            if (it2 == it.second.end())
             {
                 // Shouldn't be able to reach here.
                 impType = eNoCollection;
@@ -312,7 +307,7 @@ OperatorImpMap  CollectionOptimisation::GetOperatorImpMap(
             impType = it2->second;
         }
 
-        ret[it->first] = impType;
+        ret[it.first] = impType;
     }
 
     return ret;
@@ -341,7 +336,7 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
     Array<OneD, NekDouble> outarray2(maxsize);
     Array<OneD, NekDouble> outarray3(maxsize);
 
-    Timer t;
+    LibUtilities::Timer t;
 
     if(verbose)
     {

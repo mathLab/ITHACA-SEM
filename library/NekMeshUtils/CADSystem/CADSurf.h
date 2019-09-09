@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,9 +35,10 @@
 #ifndef NekMeshUtils_CADSYSTEM_CADSURF
 #define NekMeshUtils_CADSYSTEM_CADSURF
 
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+
 #include <NekMeshUtils/CADSystem/CADObject.h>
-#include <NekMeshUtils/CADSystem/CADSystem.h>
-#include <NekMeshUtils/CADSystem/CADVert.h>
 
 namespace Nektar
 {
@@ -46,7 +46,23 @@ namespace NekMeshUtils
 {
 
 class CADCurve;
-typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
+class CADSurf;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
+
+/**
+ * @brief struct which descibes a collection of cad edges which are a
+ *        loop on the cad surface
+ */
+struct EdgeLoop
+{
+    std::vector<CADCurveSharedPtr> edges;
+    std::vector<CADOrientation::Orientation> edgeo;
+    Array<OneD, NekDouble> center;
+    NekDouble area;
+};
+
+typedef std::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
 
 /**
  * @brief base class for a cad surface
@@ -62,26 +78,32 @@ public:
      */
     CADSurf()
     {
-        m_type = CADType::eSurf;
+        m_type        = CADType::eSurf;
         m_orientation = CADOrientation::eForwards;
     }
 
-    ~CADSurf()
+    virtual ~CADSurf()
     {
     }
 
-    static void OrientateEdges(
-        CADSurfSharedPtr surf, std::vector<CADSystem::EdgeLoopSharedPtr> &ein);
+    /**
+     * @brief Static function which orientates the edge loop on a surface
+     */
+    static void OrientateEdges(CADSurfSharedPtr surf,
+                               std::vector<EdgeLoopSharedPtr> &ein);
 
     /**
      * @brief Get the loop structures which bound the cad surface
      */
-    std::vector<CADSystem::EdgeLoopSharedPtr> GetEdges()
+    std::vector<EdgeLoopSharedPtr> GetEdges()
     {
         return m_edges;
     }
 
-    void SetEdges(std::vector<CADSystem::EdgeLoopSharedPtr> ein)
+    /**
+     * @brief Set the edge loop
+     */
+    void SetEdges(std::vector<EdgeLoopSharedPtr> ein)
     {
         m_edges = ein;
     }
@@ -92,6 +114,12 @@ public:
      * @return Array of 4 entries with parametric umin,umax,vmin,vmax.
      */
     virtual Array<OneD, NekDouble> GetBounds() = 0;
+
+    /**
+     * @brief Get the limits of the parametric space for the surface.
+     */
+    virtual void GetBounds(NekDouble &umin, NekDouble &umax, NekDouble &vmin,
+                           NekDouble &vmax) = 0;
 
     /**
      * @brief Get the normal vector at parametric point u,v.
@@ -121,37 +149,51 @@ public:
      * @brief Get the x,y,z at parametric point u,v.
      *
      * @param uv Array of u and v parametric coords.
-     * @return Array of xyz location.
+     * @return Array of x,y,z location.
      */
     virtual Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv) = 0;
 
     /**
+     * @brief Get the x,y,z at parametric point u,v.
+     *
+     * @param uv Array of u and v parametric coords.
+     */
+    virtual void P(Array<OneD, NekDouble> uv, NekDouble &x, NekDouble &y,
+                   NekDouble &z) = 0;
+
+    /**
      * @brief Performs a reverse look up to find u,v and x,y,z.
+     * if xyz is off the surface it will return the closest point
      *
      * @param p Array of xyz location
      * @return The parametric location of xyz on this surface
      */
-    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p) = 0;
+    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p,
+                                         NekDouble &dist) = 0;
 
     /**
-     * @brief does unconstrained locuv to project point from anywhere
-     * and calculate the distance between the orthonormal projection to the
-     * surface
-     * and the point
+     * @brief overload function of locuv ommiting the dist parameter
+     * in this case if the projection is greater than a certain distance
+     * it will produce a warning. To do large distance projection use the other
+     * locuv method
      */
-    virtual NekDouble DistanceTo(Array<OneD, NekDouble> p) = 0;
+    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
 
     /**
-     * @brief takes a point from anywhere find the nearest surface point and its
-     * uv
+     * @brief Returns the bounding box of the surface
      */
-    virtual void ProjectTo(Array<OneD, NekDouble> &tp,
-                           Array<OneD, NekDouble> &uv) = 0;
+    virtual Array<OneD, NekDouble> BoundingBox() = 0;
 
     /**
      * @brief returns curvature at point uv
      */
     virtual NekDouble Curvature(Array<OneD, NekDouble> uv) = 0;
+
+    /**
+     * @brief Is the surface defined by a planar surface (i.e not nurbs and is
+     * flat)
+     */
+    virtual bool IsPlanar() = 0;
 
     /**
      * @brief query reversed normal
@@ -163,18 +205,18 @@ public:
 
 protected:
     /// List of bounding edges in loops with orientation.
-    std::vector<CADSystem::EdgeLoopSharedPtr> m_edges;
+    std::vector<EdgeLoopSharedPtr> m_edges;
 
     /// Function which tests the the value of uv used is within the surface
     virtual void Test(Array<OneD, NekDouble> uv) = 0;
 };
 
-typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, CADSurf> CADSurfFactory;
 
 CADSurfFactory &GetCADSurfFactory();
-}
-}
+} // namespace NekMeshUtils
+} // namespace Nektar
 
 #endif

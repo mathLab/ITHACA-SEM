@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -40,9 +39,9 @@ using namespace std;
 
 #include "ProcessPointDataToFld.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
+
 namespace Nektar
 {
 namespace FieldUtils
@@ -54,41 +53,16 @@ ModuleKey ProcessPointDataToFld::className =
         ProcessPointDataToFld::create,
         "Given discrete data at quadrature points project them onto an "
         "expansion"
-        "basis and output fld file. Requires .pts .xml and .fld files.");
+        "basis and output fld file. Requires frompts and .xml and .fld files.");
 
 ProcessPointDataToFld::ProcessPointDataToFld(FieldSharedPtr f)
     : ProcessModule(f)
 {
-    m_requireEquiSpaced = true;
-
     m_config["setnantovalue"] = ConfigOption(
         false, "NotSet", "reset any nan value to prescribed value");
 
-    if ((f->m_inputfiles.count("pts") == 0))
-    {
-        cout << endl
-             << "A pts input file must be specified for the boundary "
-                "extraction module"
-             << endl;
-
-        cout
-            << "Usage: Fieldconvert -m pointdatatofld file.pts file.xml out.fld"
-            << endl;
-        exit(3);
-    }
-
-    if ((f->m_inputfiles.count("xml") == 0) &&
-        (f->m_inputfiles.count("xml.gz") == 0))
-    {
-        cout << endl
-             << "An xml or xml.gz input file must be specified for the "
-                "boundary extraction module"
-             << endl;
-        cout
-            << "Usage: Fieldconvert -m pointdatatofld file.pts file.xml out.fld"
-            << endl;
-        exit(3);
-    }
+    m_config["frompts"] = ConfigOption(
+        false, "NotSet", "Pts file from which to interpolate field");
 }
 
 ProcessPointDataToFld::~ProcessPointDataToFld()
@@ -97,15 +71,6 @@ ProcessPointDataToFld::~ProcessPointDataToFld()
 
 void ProcessPointDataToFld::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessPointDataToFld: projecting data to expansion..."
-                 << endl;
-        }
-    }
-
     int i, j;
     bool setnantovalue = false;
     NekDouble defvalue=0.0;
@@ -117,23 +82,33 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
     }
 
     // Check for command line point specification if no .pts file specified
-    ASSERTL0(m_f->m_fieldPts != LibUtilities::NullPtsField,
-             "No input points found");
+    // Load pts file
+    LibUtilities::PtsFieldSharedPtr fieldPts;
+    ASSERTL0( m_config["frompts"].as<string>().compare("NotSet") != 0,
+            "ProcessInterpPointDataToFld requires frompts parameter");
+    string inFile = m_config["frompts"].as<string>().c_str();
+    LibUtilities::CommSharedPtr  c     =
+            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+    LibUtilities::PtsIOSharedPtr ptsIO =
+            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
+    ptsIO->Import(inFile, fieldPts);
 
-    int nFields = m_f->m_fieldPts->GetNFields();
+    int nFields = fieldPts->GetNFields();
     ASSERTL0(nFields > 0, "No field values provided in input");
 
-    int dim = m_f->m_fieldPts->GetDim();
+    int dim = fieldPts->GetDim();
 
     // assume one field is already defined from input file.
+    ASSERTL0(m_f->m_numHomogeneousDir == 0,
+        "ProcessInterpPointDataToFld does not support homogeneous expansion");
+
     m_f->m_exp.resize(nFields);
     for (i = 1; i < nFields; ++i)
     {
-        m_f->m_exp[i] = m_f->AppendExpList(0);
+        m_f->m_exp[i] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
     }
-
     Array<OneD, Array<OneD, NekDouble> > pts;
-    m_f->m_fieldPts->GetPts(pts);
+    fieldPts->GetPts(pts);
 
     // set any nan values to default value if requested
     if (setnantovalue)
@@ -150,7 +125,7 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
         }
     }
 
-    if (m_f->m_fieldPts->m_ptsInfo.count(LibUtilities::eIsEquiSpacedData) != 0)
+    if (fieldPts->m_ptsInfo.count(LibUtilities::eIsEquiSpacedData) != 0)
     {
         int totcoeffs = m_f->m_exp[0]->GetNcoeffs();
 
@@ -173,6 +148,8 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
                     coeffs + offset, tmp = coeffs + offset);
                 cnt += ncoeffs;
             }
+            m_f->m_exp[i]->BwdTrans(m_f->m_exp[i]->GetCoeffs(),
+                                    m_f->m_exp[i]->UpdatePhys());
         }
     }
     else
@@ -218,11 +195,6 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
             }
         }
 
-        if (m_f->m_session->GetComm()->GetRank() == 0)
-        {
-            cout << endl;
-        }
-
         // forward transform fields
         for (i = 0; i < nFields; ++i)
         {
@@ -231,23 +203,11 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
         }
     }
 
-    // set up output fld file.
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (j = 0; j < nFields; ++j)
+    // save field names
+    for (int j = 0; j < fieldPts->GetNFields(); ++j)
     {
-        for (i = 0; i < FieldDef.size(); ++i)
-        {
-            FieldDef[i]->m_fields.push_back(m_f->m_fieldPts->GetFieldName(j));
-
-            m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-        }
+        m_f->m_variables.push_back(fieldPts->GetFieldName(j));
     }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

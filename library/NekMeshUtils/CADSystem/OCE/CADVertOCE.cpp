@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 #include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
 #include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
 
+#include <NekMeshUtils/MeshElements/Node.h>
+
 using namespace std;
 
 namespace Nektar
@@ -48,20 +49,20 @@ std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
 
 void CADVertOCE::Initialise(int i, TopoDS_Shape in)
 {
-    gp_Trsf transform;
+    /*gp_Trsf transform;
     gp_Pnt ori(0.0, 0.0, 0.0);
     transform.SetScale(ori, 1.0 / 1000.0);
     TopLoc_Location mv(transform);
-    in.Move(mv);
+    in.Move(mv);*/
 
     m_id      = i;
     m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
 
-    m_node = boost::shared_ptr<Node>(
-        new Node(i - 1, m_occVert.X(), m_occVert.Y(), m_occVert.Z()));
-    degen = false;
-
+    m_node = std::shared_ptr<Node>(new Node(i - 1, m_occVert.X() / 1000.0,
+                                            m_occVert.Y() / 1000.0,
+                                            m_occVert.Z() / 1000.0));
+    degen  = false;
 }
 
-}
-}
+} // namespace NekMeshUtils
+} // namespace Nektar

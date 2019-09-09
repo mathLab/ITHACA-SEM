@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -47,7 +46,7 @@
     friend class MemoryManager<cname>;                          \
     static OperatorSharedPtr create(                            \
         std::vector<StdRegions::StdExpansionSharedPtr> pCollExp,\
-        boost::shared_ptr<CoalescedGeomData> GeomData)          \
+        std::shared_ptr<CoalescedGeomData> GeomData)            \
     {                                                           \
         return MemoryManager<cname>                             \
             ::AllocateSharedPtr(pCollExp, GeomData);            \
@@ -59,7 +58,7 @@ namespace Collections
 {
 
 class CoalescedGeomData;
-typedef boost::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;
+typedef std::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;
 
 enum OperatorType
 {
@@ -111,7 +110,7 @@ class Operator
         /// Constructor
         Operator(
                 std::vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                boost::shared_ptr<CoalescedGeomData> GeomData)
+                std::shared_ptr<CoalescedGeomData> GeomData)
             : m_stdExp(pCollExp[0]->GetStdExp()),
               m_numElmt(pCollExp.size()),
               m_wspSize(0)
@@ -149,10 +148,10 @@ class Operator
 };
 
 /// Shared pointer to an Operator object
-typedef boost::shared_ptr<Operator> OperatorSharedPtr;
+typedef std::shared_ptr<Operator> OperatorSharedPtr;
 
 /// Key for describing an Operator
-typedef boost::tuple<
+typedef std::tuple<
     LibUtilities::ShapeType,
     OperatorType,
     ImplementationType,

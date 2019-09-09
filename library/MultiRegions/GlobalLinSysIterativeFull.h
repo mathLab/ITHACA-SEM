@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -51,8 +50,8 @@ namespace Nektar
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(
                     const GlobalLinSysKey &pLinSysKey,
-                    const boost::weak_ptr<ExpList> &pExpList,
-                    const boost::shared_ptr<AssemblyMap>
+                    const std::weak_ptr<ExpList> &pExpList,
+                    const std::shared_ptr<AssemblyMap>
                                                            &pLocToGloMap)
             {
                 return MemoryManager<GlobalLinSysIterativeFull>
@@ -65,15 +64,15 @@ namespace Nektar
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysIterativeFull(
                     const GlobalLinSysKey &pLinSysKey,
-                    const boost::weak_ptr<ExpList> &pExpList,
-                    const boost::shared_ptr<AssemblyMap>
+                    const std::weak_ptr<ExpList> &pExpList,
+                    const std::shared_ptr<AssemblyMap>
                                                            &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysIterativeFull();
 
         private:
             // Local to global map.
-            boost::shared_ptr<AssemblyMap>     m_locToGloMap;
+            std::weak_ptr<AssemblyMap> m_locToGloMap;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.

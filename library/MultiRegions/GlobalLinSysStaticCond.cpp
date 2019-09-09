@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysStaticCond.h>
-#include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
@@ -75,8 +73,8 @@ namespace Nektar
          */
         GlobalLinSysStaticCond::GlobalLinSysStaticCond(
             const GlobalLinSysKey                &pKey,
-            const boost::weak_ptr<ExpList>       &pExpList,
-            const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+            const std::weak_ptr<ExpList>         &pExpList,
+            const std::shared_ptr<AssemblyMap>   &pLocToGloMap)
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap),
                   m_locToGloMap (pLocToGloMap)
         {
@@ -85,10 +83,10 @@ namespace Nektar
         void GlobalLinSysStaticCond::v_InitObject()
         {
             // Allocate memory for top-level structure
-            SetupTopLevel(m_locToGloMap);
+            SetupTopLevel(m_locToGloMap.lock());
 
             // Construct this level
-            Initialise(m_locToGloMap);
+            Initialise(m_locToGloMap.lock());
         }
         
         /**
@@ -180,7 +178,7 @@ namespace Nektar
                 Subtract(F_HomBnd, F_HomBnd, V_GlobHomBndTmp);
 
                 // Transform from original basis to low energy
-                v_BasisTransform(F, nDirBndDofs);
+                v_BasisFwdTransform(F, nDirBndDofs);
 
                 // For parallel multi-level static condensation some
                 // processors may have different levels to others. This
@@ -216,7 +214,7 @@ namespace Nektar
                         nGlobBndDofs, F, pert, pLocToGloMap, nDirBndDofs);
 
                     // Transform back to original basis
-                    v_BasisInvTransform(pert);
+                    v_BasisBwdTransform(pert);
 
                     // Add back initial conditions onto difference
                     Vmath::Vadd(nGlobHomBndDofs,&out[nDirBndDofs],1,
@@ -263,10 +261,10 @@ namespace Nektar
          * @param   pLocToGloMap    Local to global mapping.
          */
         void GlobalLinSysStaticCond::v_Initialise(
-                const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
+                const std::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
-            int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
-            int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
+            int nLocalBnd = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
+            int nGlobal = m_locToGloMap.lock()->GetNumGlobalCoeffs();
             int nGlobBndDofs       = pLocToGloMap->GetNumGlobalBndCoeffs();
             int nDirBndDofs        = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
@@ -297,7 +295,7 @@ namespace Nektar
          * @param
          */
         void GlobalLinSysStaticCond::SetupTopLevel(
-                const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
+                const std::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
             int n;
             int n_exp = m_expList.lock()->GetNumElmts();
@@ -324,15 +322,13 @@ namespace Nektar
                         StdRegions::eHybridDGHelmBndLam)
                 {
                     DNekScalMatSharedPtr loc_mat
-                        = GlobalLinSys::v_GetBlock(
-                            m_expList.lock()->GetOffset_Elmt_Id(n));
+                        = GlobalLinSys::v_GetBlock(n);
                     m_schurCompl->SetBlock(n,n,loc_mat);
                 }
                 else
                 {
                     DNekScalBlkMatSharedPtr loc_schur
-                        = GlobalLinSys::v_GetStaticCondBlock(
-                            m_expList.lock()->GetOffset_Elmt_Id(n));
+                        = GlobalLinSys::v_GetStaticCondBlock(n);
                     DNekScalMatSharedPtr t;
                     m_schurCompl->SetBlock(n, n, t = loc_schur->GetBlock(0,0));
                     m_BinvD     ->SetBlock(n, n, t = loc_schur->GetBlock(0,1));

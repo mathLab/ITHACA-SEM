@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -50,11 +49,9 @@ namespace Nektar
         class ExpList3DHomogeneous1D;
 
         /// Shared pointer to an ExpList3DHomogeneous1D object.
-        typedef boost::shared_ptr<ExpList3DHomogeneous1D>      ExpList3DHomogeneous1DSharedPtr;
+        typedef std::shared_ptr<ExpList3DHomogeneous1D>      ExpList3DHomogeneous1DSharedPtr;
         /// Vector of pointers to ExpList3DHomogeneous1D objects.
         typedef std::vector< ExpList3DHomogeneous1DSharedPtr > ExpList3DHomogeneous1DVector;
-        /// Iterator for the vector of ExpList3DHomogeneous1D pointers.
-        typedef std::vector< ExpList3DHomogeneous1DSharedPtr >::iterator ExpList3DHomogeneous1DVectorIter;
 
         /// Abstraction of a two-dimensional multi-elemental expansion which
         /// is merely a collection of local expansions.
@@ -69,7 +66,7 @@ namespace Nektar
                                    const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom,
                                    const bool useFFT,
-								   const bool dealiasing);
+                                   const bool dealiasing);
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
@@ -77,30 +74,37 @@ namespace Nektar
                                    const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom,
                                    const bool useFFT,
-								   const bool dealiasing,
+                                   const bool dealiasing,
                                    const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                   const std::string &var = "DefaultVar");
-
+                                   const std::string &var = "DefaultVar",
+                                   const Collections::ImplementationType ImpType
+                                   = Collections::eNoImpType);
+                                                   
+            
             /// Sets up a list of local expansions based on an mesh expansion
             MULTI_REGIONS_EXPORT  ExpList3DHomogeneous1D(
-                                    const LibUtilities::SessionReaderSharedPtr &pSession,
-                                    const LibUtilities::BasisKey &HomoBasis,
-                                    const NekDouble lhom, 
-                                    const bool useFFT,
-									const bool dealiasing,
-                                    const SpatialDomains::ExpansionMap &expansions);
-
+                         const LibUtilities::SessionReaderSharedPtr &pSession,
+                         const LibUtilities::BasisKey &HomoBasis,
+                         const NekDouble lhom, 
+                         const bool useFFT,
+                         const bool dealiasing,
+                         const SpatialDomains::ExpansionMap &expansions,
+                         const Collections::ImplementationType ImpType
+                         = Collections::eNoImpType);
+                                    
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
-                                         const ExpList3DHomogeneous1D &In,
-                                         const bool DeclarePlanesSetCoeffPhys = true);
+                                const ExpList3DHomogeneous1D &In,
+                                const bool DeclarePlanesSetCoeffPhys = true);
             
             /// Constructor copying only elements defined in eIds.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
-                                         const ExpList3DHomogeneous1D &In,
-                                         const std::vector<unsigned int> &eIDs,
-                                         const bool DeclarePlanesSetCoeffPhys = true);
-
+                                 const ExpList3DHomogeneous1D &In,
+                                 const std::vector<unsigned int> &eIDs,
+                                 const bool DeclarePlanesSetCoeffPhys = true,
+                                 const Collections::ImplementationType ImpType
+                                 = Collections::eNoImpType);
+                                 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList3DHomogeneous1D();
 
@@ -150,8 +154,7 @@ namespace Nektar
 
         private:
 
-            MULTI_REGIONS_EXPORT void GenExpList3DHomogeneous1D(const SpatialDomains::ExpansionMap &expansions);
-
+            MULTI_REGIONS_EXPORT void GenExpList3DHomogeneous1D(const SpatialDomains::ExpansionMap &expansions,  const Collections::ImplementationType ImpType);
 
         };
 

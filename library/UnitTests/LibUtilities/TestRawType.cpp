@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,55 +33,90 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <boost/mpl/assert.hpp>
 #include <LibUtilities/BasicUtils/RawType.hpp>
-#include <boost/type_traits.hpp>
+#include <type_traits>
 
 namespace Nektar
 {
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<double>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const double>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<volatile double>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const volatile double>::type> ));
-    
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<double*>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const double*>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<volatile double*>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const volatile double*>::type> ));
+static_assert(std::is_same<double, RawType<double>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const double>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<volatile double>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const volatile double>::type>::value,
+              "RawType error");
 
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<double* const>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const double* const>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<volatile double* const>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const volatile double* const>::type> ));
+static_assert(std::is_same<double, RawType<double*>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const double*>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<volatile double*>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const volatile double*>::type>::value,
+              "RawType error");
 
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<double* volatile>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const double* volatile>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<volatile double* volatile >::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const volatile double* volatile>::type> ));
+static_assert(std::is_same<double, RawType<double* const>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const double* const>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<volatile double* const>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const volatile double* const>::type>::value,
+              "RawType error");
 
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<double* const volatile>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const double* const volatile>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<volatile double* const volatile>::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const volatile double* const volatile>::type> ));
-    
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<boost::shared_ptr<double> >::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const boost::shared_ptr<double> >::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<volatile boost::shared_ptr<double> >::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const volatile boost::shared_ptr<double> >::type> ));
-    
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<boost::shared_ptr<const double> >::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const boost::shared_ptr<const double> >::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<volatile boost::shared_ptr<const double> >::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const volatile boost::shared_ptr<const double> >::type> ));
-    
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<boost::shared_ptr<volatile double> >::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const boost::shared_ptr<volatile double> >::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<volatile boost::shared_ptr<volatile double> >::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const volatile boost::shared_ptr<volatile double> >::type> ));
-    
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<boost::shared_ptr<const volatile double> >::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const boost::shared_ptr<const volatile double> >::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<volatile boost::shared_ptr<const volatile double> >::type> ));
-    BOOST_MPL_ASSERT(( boost::is_same<double, RawType<const volatile boost::shared_ptr<const volatile double> >::type> ));
+static_assert(std::is_same<double, RawType<double* volatile>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const double* volatile>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<volatile double* volatile >::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const volatile double* volatile>::type>::value,
+              "RawType error");
+
+static_assert(std::is_same<double, RawType<double* const volatile>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const double* const volatile>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<volatile double* const volatile>::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const volatile double* const volatile>::type>::value,
+              "RawType error");
+
+static_assert(std::is_same<double, RawType<std::shared_ptr<double> >::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const std::shared_ptr<double> >::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<volatile std::shared_ptr<double> >::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const volatile std::shared_ptr<double> >::type>::value,
+              "RawType error");
+
+static_assert(std::is_same<double, RawType<std::shared_ptr<const double> >::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const std::shared_ptr<const double> >::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<volatile std::shared_ptr<const double> >::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const volatile std::shared_ptr<const double> >::type>::value,
+              "RawType error");
+
+static_assert(std::is_same<double, RawType<std::shared_ptr<volatile double> >::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const std::shared_ptr<volatile double> >::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<volatile std::shared_ptr<volatile double> >::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const volatile std::shared_ptr<volatile double> >::type>::value,
+              "RawType error");
+
+static_assert(std::is_same<double, RawType<std::shared_ptr<const volatile double> >::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const std::shared_ptr<const volatile double> >::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<volatile std::shared_ptr<const volatile double> >::type>::value,
+              "RawType error");
+static_assert(std::is_same<double, RawType<const volatile std::shared_ptr<const volatile double> >::type>::value,
+              "RawType error");
 
 }

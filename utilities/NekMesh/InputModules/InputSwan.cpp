@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -140,7 +139,7 @@ void InputSwan::Process()
         double y = pts[1 * NB_Points + i];
         double z = pts[2 * NB_Points + i];
         m_mesh->m_node.push_back(
-            boost::shared_ptr<Node>(new Node(vid, x, y, z)));
+            std::shared_ptr<Node>(new Node(vid, x, y, z)));
         vid++;
     }
 

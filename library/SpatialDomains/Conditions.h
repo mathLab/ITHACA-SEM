@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -43,7 +42,6 @@
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <SpatialDomains/MeshGraph.h>
 
-
 namespace Nektar
 {
     struct OneD;
@@ -63,11 +61,12 @@ namespace Nektar
         {
             BoundaryConditionBase(
                 BoundaryConditionType type,
-                const std::string &userDefined 
-                         = std::string("NoUserDefined")):
+                const std::string &userDefined = std::string("NoUserDefined"),
+                LibUtilities::CommSharedPtr comm = LibUtilities::CommSharedPtr()):
                     m_boundaryConditionType(type),
                     m_userDefined(userDefined),
-                    m_isTimeDependent(false)
+                    m_isTimeDependent(false),
+                    m_comm(comm)
             {
             }
 
@@ -104,10 +103,16 @@ namespace Nektar
                 return m_isTimeDependent;
             }
 
+            LibUtilities::CommSharedPtr GetComm()
+            {
+                return m_comm;
+            }
+
         protected:
-            BoundaryConditionType m_boundaryConditionType;
-            std::string           m_userDefined;
-            bool                  m_isTimeDependent;
+            BoundaryConditionType       m_boundaryConditionType;
+            std::string                 m_userDefined;
+            bool                        m_isTimeDependent;
+            LibUtilities::CommSharedPtr m_comm;
         };
 
         struct DirichletBoundaryCondition : public BoundaryConditionBase
@@ -119,18 +124,16 @@ namespace Nektar
                 const std::string& userDefined = std::string("NoUserDefined"),
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
-                    BoundaryConditionBase(eDirichlet, userDefined),
-                    m_dirichletCondition(pSession, eqn),
+                    BoundaryConditionBase(eDirichlet, userDefined, comm),
+                    m_dirichletCondition(pSession->GetExpressionEvaluator(), eqn),
                     m_expr(eqn),
-                    m_filename(filename),
-                    m_comm(comm)
+                    m_filename(filename)
             {
             }
 
             LibUtilities::Equation m_dirichletCondition;
             std::string m_expr;
             std::string m_filename;
-            LibUtilities::CommSharedPtr m_comm;
         };
 
         struct NeumannBoundaryCondition : public BoundaryConditionBase
@@ -141,16 +144,14 @@ namespace Nektar
                 const std::string& userDefined = std::string("NoUserDefined"),
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
-                    BoundaryConditionBase(eNeumann, userDefined),
-                    m_neumannCondition(pSession, eqn),
-                    m_filename(filename),
-                    m_comm(comm)
+                    BoundaryConditionBase(eNeumann, userDefined, comm),
+                    m_neumannCondition(pSession->GetExpressionEvaluator(), eqn),
+                    m_filename(filename)
             {
             }
 
             LibUtilities::Equation m_neumannCondition;
             std::string m_filename;
-            LibUtilities::CommSharedPtr m_comm;
         };
 
         struct RobinBoundaryCondition : public BoundaryConditionBase
@@ -162,11 +163,10 @@ namespace Nektar
                 const std::string &userDefined = std::string("NoUserDefined"),
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
-                    BoundaryConditionBase(eRobin, userDefined),
-                    m_robinFunction(pSession, a),
-                    m_robinPrimitiveCoeff(pSession, b),
-                    m_filename(filename),
-                    m_comm(comm)
+                    BoundaryConditionBase(eRobin, userDefined, comm),
+                    m_robinFunction(pSession->GetExpressionEvaluator(), a),
+                    m_robinPrimitiveCoeff(pSession->GetExpressionEvaluator(), b),
+                    m_filename(filename)
             {
             }
             // \frac{\partial {u}}{\partial{n}} +
@@ -174,15 +174,17 @@ namespace Nektar
             LibUtilities::Equation m_robinFunction;
             LibUtilities::Equation m_robinPrimitiveCoeff;
             std::string m_filename;
-            LibUtilities::CommSharedPtr m_comm;
         };
 
 
         struct PeriodicBoundaryCondition : public BoundaryConditionBase
         {
-            PeriodicBoundaryCondition(const unsigned int n):
-                BoundaryConditionBase(ePeriodic),
-                m_connectedBoundaryRegion(n)
+            PeriodicBoundaryCondition(
+                const unsigned int n,
+                const std::string &userDefined = std::string("NoUserDefined"),
+                const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr())
+                : BoundaryConditionBase(ePeriodic, userDefined, comm),
+                  m_connectedBoundaryRegion(n)
             {
             }
 
@@ -197,32 +199,30 @@ namespace Nektar
                     const std::string& eqn,
                     const std::string& userDefined = std::string("NoUserDefined"),
                     const std::string& filename=std::string(""),
-                    const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
-            BoundaryConditionBase(eNotDefined, userDefined),
-                m_notDefinedCondition(pSession, eqn),
-                m_filename(filename),
-                m_comm(comm)
+                    const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr())
+                   : BoundaryConditionBase(eNotDefined, userDefined, comm),
+                     m_notDefinedCondition(pSession->GetExpressionEvaluator(), eqn),
+                     m_filename(filename)
                 {
                 }
 
             LibUtilities::Equation m_notDefinedCondition;
             std::string m_filename;
-            LibUtilities::CommSharedPtr m_comm;
         };
 
 
-        typedef std::map<int, Composite> BoundaryRegion;
-        typedef boost::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
-        typedef boost::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
+        typedef std::map<int, CompositeSharedPtr> BoundaryRegion;
+        typedef std::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
+        typedef std::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
         typedef std::map<int, BoundaryRegionShPtr> BoundaryRegionCollection;
 
-        typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
-        typedef boost::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;
-        typedef boost::shared_ptr<NeumannBoundaryCondition>   NeumannBCShPtr;
-        typedef boost::shared_ptr<RobinBoundaryCondition>     RobinBCShPtr;
+        typedef std::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
+        typedef std::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;
+        typedef std::shared_ptr<NeumannBoundaryCondition>   NeumannBCShPtr;
+        typedef std::shared_ptr<RobinBoundaryCondition>     RobinBCShPtr;
 
         typedef std::map<std::string,BoundaryConditionShPtr>  BoundaryConditionMap;
-        typedef boost::shared_ptr<BoundaryConditionMap>  BoundaryConditionMapShPtr;
+        typedef std::shared_ptr<BoundaryConditionMap>  BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
 
         const static Array<OneD, BoundaryConditionShPtr> NullBoundaryConditionShPtrArray;
@@ -261,6 +261,11 @@ namespace Nektar
                 return m_session->GetVariable(indx);
             }
 
+            std::map<int, LibUtilities::CommSharedPtr> GetBoundaryCommunicators() const
+            {
+                return m_boundaryCommunicators;
+            }
+
         protected:
             /// The mesh graph to use for referencing geometry info.
             MeshGraphSharedPtr                      m_meshGraph;
@@ -280,7 +285,7 @@ namespace Nektar
             void CreateBoundaryComms();
         };
 
-        typedef boost::shared_ptr<BoundaryConditions> 
+        typedef std::shared_ptr<BoundaryConditions> 
             BoundaryConditionsSharedPtr;
     }
 }

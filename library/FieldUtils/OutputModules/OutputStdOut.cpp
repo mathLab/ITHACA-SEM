@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -38,7 +37,6 @@
 using namespace std;
 
 #include "OutputStdOut.h"
-#include <LibUtilities/BasicUtils/MeshPartition.h>
 #include <boost/format.hpp>
 
 namespace Nektar
@@ -62,13 +60,7 @@ OutputStdOut::~OutputStdOut()
 
 void OutputStdOut::Process(po::variables_map &vm)
 {
-    // Extract the output filename and extension
-    string filename = m_config["outfile"].as<string>();
-
-    if (m_f->m_verbose)
-    {
-        cout << "OutputStdOut: Output written to StdOut" << endl;
-    }
 }
+
 }
 }

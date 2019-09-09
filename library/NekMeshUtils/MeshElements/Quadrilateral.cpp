@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -196,7 +195,7 @@ void Quadrilateral::MakeOrder(int                                order,
                 x[k] = xmap->PhysEvaluate(xp, phys[k]);
             }
 
-            m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+            m_volumeNodes[cnt] = std::shared_ptr<Node>(
                 new Node(id++, x[0], x[1], x[2]));
         }
     }
@@ -205,24 +204,17 @@ void Quadrilateral::MakeOrder(int                                order,
 SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
 {
     SpatialDomains::SegGeomSharedPtr edges[4];
-    SpatialDomains::PointGeomSharedPtr verts[4];
     SpatialDomains::QuadGeomSharedPtr ret;
 
     for (int i = 0; i < 4; ++i)
     {
         edges[i] = m_edge[i]->GetGeom(coordDim);
-        verts[i] = m_vertex[i]->GetGeom(coordDim);
     }
 
-    StdRegions::Orientation edgeorient[4] = {
-        SpatialDomains::SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
-        SpatialDomains::SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
-        SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
-        SpatialDomains::SegGeom::GetEdgeOrientation(*edges[3], *edges[0])};
-
     ret = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(
-        m_id, verts, edges, edgeorient);
+        m_id, edges);
 
+    ret->Setup();
     return ret;
 }
 

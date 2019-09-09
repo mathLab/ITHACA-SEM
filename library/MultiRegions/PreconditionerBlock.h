@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -46,7 +45,7 @@ namespace Nektar
     namespace MultiRegions
     {
         class PreconditionerBlock;
-        typedef boost::shared_ptr<PreconditionerBlock>
+        typedef std::shared_ptr<PreconditionerBlock>
             PreconditionerBlockSharedPtr;
 
         class PreconditionerBlock : public Preconditioner
@@ -54,9 +53,8 @@ namespace Nektar
         public:
             /// Creates an instance of this class
             static PreconditionerSharedPtr create(
-                        const boost::shared_ptr<GlobalLinSys> &plinsys,
-                        const boost::shared_ptr<AssemblyMap>
-                                                               &pLocToGloMap)
+                        const std::shared_ptr<GlobalLinSys> &plinsys,
+                        const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             {
                 PreconditionerSharedPtr p = MemoryManager<PreconditionerBlock>
                     ::AllocateSharedPtr(plinsys,pLocToGloMap);
@@ -68,17 +66,14 @@ namespace Nektar
             static std::string className;
 
             MULTI_REGIONS_EXPORT PreconditionerBlock(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+                         const std::shared_ptr<GlobalLinSys> &plinsys,
                          const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
             virtual ~PreconditionerBlock() {}
 
         protected:
-            const boost::weak_ptr<GlobalLinSys>         m_linsys;
-            PreconditionerType                          m_preconType;
-            DNekBlkMatSharedPtr                         m_blkMat;
-            boost::shared_ptr<AssemblyMap>              m_locToGloMap;
+            DNekBlkMatSharedPtr m_blkMat;
 
         private:
             void BlockPreconditionerCG(void);

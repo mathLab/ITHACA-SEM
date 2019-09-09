@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -48,8 +47,6 @@ Collection::Collection(
         vector<StdRegions::StdExpansionSharedPtr>    pCollExp,
         OperatorImpMap                              &impTypes)
 {
-    OperatorImpMap::iterator it;
-
     // Initialise geometry data.
     m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
 
@@ -59,7 +56,8 @@ Collection::Collection(
         OperatorType opType = (OperatorType)i;
         ImplementationType impType;
 
-        if ((it = impTypes.find(opType)) != impTypes.end())
+        auto it = impTypes.find(opType);
+        if (it != impTypes.end())
         {
             impType = it->second;
             OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType,

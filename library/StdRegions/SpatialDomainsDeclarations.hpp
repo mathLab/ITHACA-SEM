@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,13 +35,12 @@
 #ifndef SPATIALDOMDEF_H
 #define SPATIALDOMDEF_H
 
-#include<boost/shared_ptr.hpp>
+#include <memory>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
-        
         class Geometry;
         class EdgeComponent;
         class SegGeom;
@@ -52,11 +50,11 @@ namespace Nektar
         class Geometry3D;
         class GeomFactors;
 
-        static boost::shared_ptr<GeomFactors> NullGeomFactorsSharedPtr; 
-        static boost::shared_ptr<Geometry>    NullGeometrySharedPtr;
-        static boost::shared_ptr<Geometry1D>  NullGeometry1DSharedPtr;
-        static boost::shared_ptr<Geometry2D>  NullGeometry2DSharedPtr;
-        static boost::shared_ptr<Geometry3D>  NullGeometry3DSharedPtr;
+        static std::shared_ptr<GeomFactors> NullGeomFactorsSharedPtr;
+        static std::shared_ptr<Geometry>    NullGeometrySharedPtr;
+        static std::shared_ptr<Geometry1D>  NullGeometry1DSharedPtr;
+        static std::shared_ptr<Geometry2D>  NullGeometry2DSharedPtr;
+        static std::shared_ptr<Geometry3D>  NullGeometry3DSharedPtr;
     } // end of namespace
 } // end of namespace
 

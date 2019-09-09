@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -54,7 +53,7 @@ ProcessJac::ProcessJac(MeshSharedPtr m) : ProcessModule(m)
     m_config["extract"] =
         ConfigOption(false, "0.0", "Extract non-valid elements from mesh.");
     m_config["list"] = ConfigOption(
-        false, "0", "Print list of elements having negative Jacobian.");
+        true, "0", "Print list of elements having negative Jacobian.");
 }
 
 ProcessJac::~ProcessJac()
@@ -98,7 +97,7 @@ void ProcessJac::Process()
         // Generate geometric factors.
         SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
 
-        LibUtilities::PointsKeyVector p = geom->GetPointsKeys();
+        LibUtilities::PointsKeyVector p = geom->GetXmap()->GetPointsKeys();
         SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
         const int pts = deriv[0][0].num_elements();
         Array<OneD,NekDouble> jc(pts);

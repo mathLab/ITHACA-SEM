@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,7 +33,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-#include <UnitTests/LibUtilities/LinearAlgebra/TestCombinationRunner.h>
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
@@ -78,7 +76,7 @@ namespace Nektar
             NekDouble a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
             NekDouble x_buf[] = {10, 20, 30, 40};
 
-            boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > m(
+            std::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > m(
                 new NekMatrix<NekDouble>(4, 4, a_buf, eUPPER_TRIANGULAR));
             NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> scaled(2, m);
             NekVector<NekDouble> x(4, x_buf);
@@ -120,7 +118,7 @@ namespace Nektar
             NekDouble a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
             NekDouble x_buf[] = {10, 20, 30, 40};
 
-            boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > m(
+            std::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > m(
                 new NekMatrix<NekDouble>(4, 4, a_buf, eLOWER_TRIANGULAR));
             NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag > scaled(3.0, m);
             NekVector<NekDouble> x(4, x_buf);

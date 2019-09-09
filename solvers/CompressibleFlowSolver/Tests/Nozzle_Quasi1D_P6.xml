@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="1" SPACE="1">
+        <VERTEX>
+            <V ID="0"> 0.000000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="1"> 3.125000E-01 0.000000E+00 0.000000E+00</V>
+            <V ID="2"> 6.250000E-01 0.000000E+00 0.000000E+00</V>
+            <V ID="3"> 9.375000E-01 0.000000E+00 0.000000E+00</V>
+            <V ID="4"> 1.250000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="5"> 1.562500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="6"> 1.875000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="7"> 2.187500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="8"> 2.500000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="9"> 2.812500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="10"> 3.125000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="11"> 3.437500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="12"> 3.750000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="13"> 4.062500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="14"> 4.375000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="15"> 4.687500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="16"> 5.000000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="17"> 5.312500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="18"> 5.625000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="19"> 5.937500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="20"> 6.250000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="21"> 6.562500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="22"> 6.875000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="23"> 7.187500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="24"> 7.500000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="25"> 7.812500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="26"> 8.125000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="27"> 8.437500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="28"> 8.750000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="29"> 9.062500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="30"> 9.375000E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="31"> 9.687500E+00 0.000000E+00 0.000000E+00</V>
+            <V ID="32"> 1.000000E+01 0.000000E+00 0.000000E+00</V>
+        </VERTEX>
+        <ELEMENT>
+            <S ID="0">    0    1 </S>
+            <S ID="1">    1    2 </S>
+            <S ID="2">    2    3 </S>
+            <S ID="3">    3    4 </S>
+            <S ID="4">    4    5 </S>
+            <S ID="5">    5    6 </S>
+            <S ID="6">    6    7 </S>
+            <S ID="7">    7    8 </S>
+            <S ID="8">    8    9 </S>
+            <S ID="9">    9    10 </S>
+            <S ID="10">    10    11 </S>
+            <S ID="11">    11    12 </S>
+            <S ID="12">    12    13 </S>
+            <S ID="13">    13    14 </S>
+            <S ID="14">    14    15 </S>
+            <S ID="15">    15    16 </S>
+            <S ID="16">    16    17 </S>
+            <S ID="17">    17    18 </S>
+            <S ID="18">    18    19 </S>
+            <S ID="19">    19    20 </S>
+            <S ID="20">    20    21 </S>
+            <S ID="21">    21    22 </S>
+            <S ID="22">    22    23 </S>
+            <S ID="23">    23    24 </S>
+            <S ID="24">    24    25 </S>
+            <S ID="25">    25    26 </S>
+            <S ID="26">    26    27 </S>
+            <S ID="27">    27    28 </S>
+            <S ID="28">    28    29 </S>
+            <S ID="29">    29    30 </S>
+            <S ID="30">    30    31 </S>
+            <S ID="31">    31    32 </S>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> S[0-31] </C>
+            <C ID="1"> V[0] </C>
+            <C ID="2"> V[32] </C>
+        </COMPOSITE>
+
+        <DOMAIN>  C[0] </DOMAIN>
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" BASISTYPE="Modified_A" NUMMODES="6"
+           POINTSTYPE="GaussLobattoLegendre" NUMPOINTS="13"
+           FIELDS="rho,rhou,E" />
+    </EXPANSIONS>
+
+    <!-- <COLLECTIONS DEFAULT="Auto" /> -->
+
+   <CONDITIONS>
+        <PARAMETERS>
+            <!-- Simulation parameters -->
+            <P> TimeStep       = 5e-8               </P>
+            <P> NumSteps       = 100  </P>
+            <P> IO_InfoSteps   = 100                </P>
+            <P> IO_CheckSteps  = 0                </P>
+            <P> SteadyStateTol = 1e-7                </P>
+
+            <!-- Fluid Properties -->
+            <P> Gamma          = 1.4      </P>
+            <P> GasConstant    = 287.058      </P>
+
+            <!-- Parameters for boundary conditions -->
+            <P> pIn           = 1e5           </P>
+            <P> pOut          = 0.83049*pIn   </P>
+            <P> TIn           = 288           </P>
+            <P> MachIn        = 0.239543      </P>
+
+            <P> rhoIn         = pIn/(GasConstant*TIn) </P>
+            <P> cIn           = sqrt(Gamma*pIn/rhoIn) </P>
+            <P> uIn           = MachIn*cIn            </P>
+            <P> pStagIn   = pIn * (1 + (Gamma-1)/2 * MachIn^2)^(Gamma/(Gamma-1)) </P>
+            <P> rhoStagIn = rhoIn * (pStagIn/pIn)^(1/Gamma) </P>
+            <!-- Reference state -->
+            <P> rhoInf         = 1.225      </P>
+            <P> pInf           = pIn       </P>
+            <P> uInf           = 1      </P>
+
+            <!-- Parameters for artificial diffusion -->
+            <P> Skappa           = -1.5      </P>
+            <P> Kappa            = 0.25      </P>
+            <P> mu0            = 1      </P>
+            <P> SensorOffset   = 2      </P>
+
+            <!-- Parameters for explicit filter -->
+            <P> FilterAlpha    = 36      </P>
+            <P> FilterCutoff   = 0.0      </P>
+            <P> FilterExponent = 16      </P>
+       </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="EulerCFE" />
+            <I PROPERTY="Projection" VALUE="DisContinuous" />
+            <I PROPERTY="AdvectionType" VALUE="WeakDG" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="RungeKutta3_SSP" />
+            <I PROPERTY="UpwindType"  VALUE="HLLC"/>
+            <I PROPERTY="ShockCaptureType"  VALUE="NonSmooth"/>
+            <I PROPERTY="ExponentialFiltering"  VALUE="True"/>
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> rho </V>
+            <V ID="1"> rhou </V>
+            <V ID="2"> E </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="rho" USERDEFINEDTYPE="StagnationInflow" VALUE="rhoStagIn" />
+                <D VAR="rhou" USERDEFINEDTYPE="StagnationInflow" VALUE="0" />
+                <D VAR="E" USERDEFINEDTYPE="StagnationInflow" VALUE="pStagIn/(Gamma-1)" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="rho" USERDEFINEDTYPE="PressureOutflow" VALUE="0" />
+                <D VAR="rhou" USERDEFINEDTYPE="PressureOutflow" VALUE="0" />
+                <D VAR="E" USERDEFINEDTYPE="PressureOutflow" VALUE="pOut" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="rho" VALUE="rhoInf" />
+            <E VAR="rhou"  VALUE="rhoInf*uInf" />
+            <E VAR="E" VALUE="pIn/(Gamma-1) + 0.5*rhoInf*uInf*uInf" />
+        </FUNCTION>
+
+        <FUNCTION NAME="Area">
+            <E VAR="*" VALUE="(x<=5)*( 2.5 + 3*(x/5 - 1.5)*(x/5)*(x/5) ) + (x>5)*( 3.5 - (x/5)*(6-4.5*x/5+(x/5)*(x/5)) )" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+   <FORCING>
+        <FORCE TYPE="Quasi1D">
+            <AREAFCN> Area </AREAFCN>
+        </FORCE>
+    </FORCING>
+
+</NEKTAR>
+

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,7 +32,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <loki/Singleton.h>
 #include <LibUtilities/Foundations/GaussPoints.h>
 #include <LibUtilities/Foundations/FourierPoints.h>
 #include <LibUtilities/Foundations/FourierSingleModePoints.h>
@@ -109,12 +107,14 @@ namespace Nektar
 
         PointsManagerT &PointsManager(void)
         {
-            return Loki::SingletonHolder<PointsManagerT>::Instance();
+            static PointsManagerT instance;
+            return instance;
         }
 
         BasisManagerT &BasisManager(void)
         {
-            return Loki::SingletonHolder<BasisManagerT>::Instance();
+            static BasisManagerT instance;
+            return instance;
         }
 
     } // end of namespace LibUtilities

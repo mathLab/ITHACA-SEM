@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -48,10 +47,8 @@ namespace FieldUtils
  */
 ModuleFactory &GetModuleFactory()
 {
-    typedef Loki::SingletonHolder<ModuleFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
+    static ModuleFactory instance;
+    return instance;
 }
 
 /**
@@ -102,7 +99,7 @@ void OutputModule::OpenStream()
  */
 void Module::RegisterConfig(string key, string val)
 {
-    map<string, ConfigOption>::iterator it = m_config.find(key);
+    auto it = m_config.find(key);
     if (it == m_config.end())
     {
         cerr << "WARNING: Unrecognised config option " << key
@@ -111,7 +108,7 @@ void Module::RegisterConfig(string key, string val)
 
     it->second.m_beenSet = true;
 
-    if (it->second.m_isBool)
+    if (it->second.m_isBool && val=="")
     {
         it->second.m_value = "1";
     }
@@ -126,17 +123,15 @@ void Module::RegisterConfig(string key, string val)
  */
 void Module::PrintConfig()
 {
-    map<string, ConfigOption>::iterator it;
-
     if (m_config.size() == 0)
     {
         cerr << "No configuration options for this module." << endl;
         return;
     }
 
-    for (it = m_config.begin(); it != m_config.end(); ++it)
+    for (auto &it : m_config)
     {
-        cerr << setw(10) << it->first << ": " << it->second.m_desc << endl;
+        cerr << setw(10) << it.first << ": " << it.second.m_desc << endl;
     }
 }
 
@@ -146,15 +141,45 @@ void Module::PrintConfig()
  */
 void Module::SetDefaults()
 {
-    map<string, ConfigOption>::iterator it;
-
-    for (it = m_config.begin(); it != m_config.end(); ++it)
+    for (auto &it : m_config)
     {
-        if (!it->second.m_beenSet)
+        if (!it.second.m_beenSet)
         {
-            it->second.m_value = it->second.m_defValue;
+            it.second.m_value = it.second.m_defValue;
         }
     }
+}
+
+/**
+ * @brief Tries to guess the format of the input file.
+ */
+string InputModule::GuessFormat(string filename)
+{
+    // Read first 64 bytes of data, assuming input is this long.
+    ifstream inFile(filename.c_str(), ios::binary);
+    vector<char> data(64, 0);
+    inFile.read(&data[0], 64);
+
+    string check(&data[0], 64);
+
+    // Nek5000 format: first four characters are: #std
+    if (check.compare(0, 4, "#std") == 0)
+    {
+        inFile.close();
+        return "fld5000";
+    }
+
+    // Semtex format: first line should contain the string "Session" at
+    // character 27.
+    if (check.compare(26, 7, "Session") == 0)
+    {
+        inFile.close();
+        return "fldsem";
+    }
+
+    // Otherwise don't really know -- try to guess from file extension.
+    inFile.close();
+    return "";
 }
 
 /**

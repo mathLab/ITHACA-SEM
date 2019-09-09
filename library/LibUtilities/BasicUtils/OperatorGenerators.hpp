@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -48,12 +47,6 @@
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/tuple/eat.hpp>
-
-#include <ExpressionTemplates/Operators.hpp>
-
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-#include <ExpressionTemplates/Node.hpp>
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
 namespace Nektar
 {
@@ -101,45 +94,6 @@ namespace Nektar
          operator-(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
                const GET_TYPE(RightType, RhsType, NumRightParams)& rhs);
 
- #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-     #define GENERATE_MULTIPLICATION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
-         PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
-         expt::Node<expt::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, expt::MultiplyOp, expt::Node<GET_TYPE(RightType, RhsType, NumRightParams) > > \
-         operator*(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
-               const GET_TYPE(RightType, RhsType, NumRightParams)& rhs) \
-         { \
-             return expt::CreateBinaryExpression<expt::MultiplyOp>(lhs, rhs); \
-         }
-         
-     #define GENERATE_DIVISION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
-         PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
-         expt::Node<expt::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, expt::DivideOp, expt::Node<GET_TYPE(RightType, RhsType, NumRightParams) > >  \
-         operator/(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
-               const GET_TYPE(RightType, RhsType, NumRightParams)& rhs) \
-         { \
-             return expt::CreateBinaryExpression<expt::DivideOp>(lhs, rhs); \
-         }
-         
-     #define GENERATE_ADDITION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
-         PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
-         expt::Node<expt::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, expt::AddOp, expt::Node<GET_TYPE(RightType, RhsType, NumRightParams) > > \
-         operator+(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
-               const GET_TYPE(RightType, RhsType, NumRightParams)& rhs) \
-         { \
-             return expt::CreateBinaryExpression<expt::AddOp>(lhs, rhs); \
-         }
-     
-     #define GENERATE_SUBTRACTION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
-         PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
-         expt::Node<expt::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, expt::SubtractOp, expt::Node<GET_TYPE(RightType, RhsType, NumRightParams) > >  \
-         operator-(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
-               const GET_TYPE(RightType, RhsType, NumRightParams)& rhs) \
-         { \
-             return expt::CreateBinaryExpression<expt::SubtractOp>(lhs, rhs); \
-         }
-         
- #else //NEKTAR_USE_EXPRESSION_TEMPLATES
- 
     #define GENERATE_MULTIPLICATION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
         PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
         SHOW_TYPENAME(NumLeftParams, NumRightParams) expt::MultiplyOp::ResultType<GET_TYPE(LeftType, LhsType, NumLeftParams), GET_TYPE(RightType, RhsType, NumRightParams)>::type \
@@ -177,8 +131,6 @@ namespace Nektar
         { \
             return Subtract(lhs, rhs); \
         }
-
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 }
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_OPERATOR_GENERATORS_HPP

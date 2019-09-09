@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -80,7 +79,7 @@ namespace Nektar
         int m_bcPosition; // Position of boundary condition in region
     };
 
-    typedef boost::shared_ptr<InterfacePoint> InterfacePointShPtr;
+    typedef std::shared_ptr<InterfacePoint> InterfacePointShPtr;
 
     /// Base class for unsteady solvers.
     class PulseWaveSystem : public UnsteadySystem
@@ -128,7 +127,8 @@ namespace Nektar
         std::vector<std::vector<InterfacePointShPtr> >  m_mergingJcts;
     
         /// Initialises PulseWaveSystem class members.
-        PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& m_session);
+        PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& pSession,
+                        const SpatialDomains::MeshGraphSharedPtr& pGraph);
         
         virtual void v_InitObject();
 	
@@ -183,7 +183,7 @@ namespace Nektar
             
     };
         
-    typedef boost::shared_ptr<PulseWaveSystem> PulseWaveSystemSharedPtr;
+    typedef std::shared_ptr<PulseWaveSystem> PulseWaveSystemSharedPtr;
 
        
 }

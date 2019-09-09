@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -214,7 +213,7 @@ namespace Nektar
                                        3.0, 6.0, 9.0};
                 double vector_buf[] = {20.0, 30.0, 40.0};
                 
-                boost::shared_ptr<NekMatrix<double> > m(new NekMatrix<double>(3, 3, matrix_buf));
+                std::shared_ptr<NekMatrix<double> > m(new NekMatrix<double>(3, 3, matrix_buf));
                 NekMatrix<NekMatrix<double>, ScaledMatrixTag> s(2.0, m);
                 NekVector<double> v(3, vector_buf);
                 NekVector<double> result = s*v;
@@ -234,9 +233,9 @@ namespace Nektar
                 double m3_buf[] = {9.0, 11.0, 10.0, 12.0};
                 double vector_buf[] = {20.0, 30.0};
                 
-                boost::shared_ptr<NekMatrix<double> > m1(new NekMatrix<double>(2, 2, m1_buf));
-                boost::shared_ptr<NekMatrix<double> > m2(new NekMatrix<double>(2, 2, m2_buf));
-                boost::shared_ptr<NekMatrix<double> > m3(new NekMatrix<double>(2, 2, m3_buf));
+                std::shared_ptr<NekMatrix<double> > m1(new NekMatrix<double>(2, 2, m1_buf));
+                std::shared_ptr<NekMatrix<double> > m2(new NekMatrix<double>(2, 2, m2_buf));
+                std::shared_ptr<NekMatrix<double> > m3(new NekMatrix<double>(2, 2, m3_buf));
                 
                 NekMatrix<NekMatrix<double>, BlockMatrixTag> b(3, 1, 2, 2);
                 b.SetBlock(0,0,m1);

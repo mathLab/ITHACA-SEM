@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,15 +35,15 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLOCK_MATRIX_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLOCK_MATRIX_HPP
 
+#include <memory>
+#include <tuple>
+
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixFuncs.h>
-
-#include <boost/shared_ptr.hpp>
-#include <boost/foreach.hpp>
 
 namespace Nektar
 {
@@ -97,7 +96,7 @@ namespace Nektar
                     {
                         if( m_curRow != std::numeric_limits<unsigned int>::max() )
                         {
-                            boost::tie(m_curRow, m_curColumn) = StoragePolicy::Advance(
+                            std::tie(m_curRow, m_curColumn) = StoragePolicy::Advance(
                                 m_matrix.GetRows(), m_matrix.GetColumns(), m_curRow, m_curColumn);
                         }
                     }
@@ -121,7 +120,6 @@ namespace Nektar
                     iterator_base<MatrixType>& operator=(const iterator_base<MatrixType>& rhs);
 
                     MatrixType& m_matrix;
-                    //boost::shared_ptr<IteratorInnerType> m_curBlock;
                     unsigned int m_curRow;
                     unsigned int m_curColumn;
 
@@ -157,11 +155,11 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT const InnerType* GetBlockPtr(unsigned int row, unsigned int column) const;
 
-            LIB_UTILITIES_EXPORT boost::shared_ptr<const InnerType> GetBlock(unsigned int row, unsigned int column) const;
+            LIB_UTILITIES_EXPORT std::shared_ptr<const InnerType> GetBlock(unsigned int row, unsigned int column) const;
 
-            LIB_UTILITIES_EXPORT boost::shared_ptr<InnerType>& GetBlock(unsigned int row, unsigned int column);
+            LIB_UTILITIES_EXPORT std::shared_ptr<InnerType>& GetBlock(unsigned int row, unsigned int column);
 
-            LIB_UTILITIES_EXPORT void SetBlock(unsigned int row, unsigned int column, boost::shared_ptr<InnerType>& m);
+            LIB_UTILITIES_EXPORT void SetBlock(unsigned int row, unsigned int column, std::shared_ptr<InnerType>& m);
 
             LIB_UTILITIES_EXPORT ConstGetValueType operator()(unsigned int row, unsigned int col) const;
 
@@ -186,7 +184,7 @@ namespace Nektar
         public:
             LIB_UTILITIES_EXPORT static ThisType CreateWrapper(const ThisType& rhs);
 
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<ThisType> CreateWrapper(const boost::shared_ptr<ThisType>& rhs);
+            LIB_UTILITIES_EXPORT static std::shared_ptr<ThisType> CreateWrapper(const std::shared_ptr<ThisType>& rhs);
 
         private:
 
@@ -200,8 +198,8 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT virtual void v_Transpose();
 
-            Array<OneD, boost::shared_ptr<InnerType> > m_data;
-            boost::shared_ptr<InnerType> m_nullBlockPtr;
+            Array<OneD, std::shared_ptr<InnerType> > m_data;
+            std::shared_ptr<InnerType> m_nullBlockPtr;
             Array<OneD, unsigned int> m_rowSizes;
             Array<OneD, unsigned int> m_columnSizes;
             unsigned int m_storageSize;

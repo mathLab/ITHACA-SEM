@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -48,15 +47,17 @@ namespace Nektar
 namespace SolverUtils
 {
 class Filter;
+class EquationSystem;
 
 /// A shared pointer to a Driver object
-typedef boost::shared_ptr<Filter> FilterSharedPtr;
+typedef std::shared_ptr<Filter> FilterSharedPtr;
 
 /// Datatype of the NekFactory used to instantiate classes derived from
 /// the Driver class.
 typedef LibUtilities::NekFactory<
     std::string, Filter,
     const LibUtilities::SessionReaderSharedPtr&,
+    const std::weak_ptr<EquationSystem>&,
     const std::map<std::string, std::string>&
     > FilterFactory;
 SOLVER_UTILS_EXPORT FilterFactory& GetFilterFactory();
@@ -66,7 +67,8 @@ class Filter
 public:
     typedef std::map<std::string, std::string> ParamMap;
     SOLVER_UTILS_EXPORT Filter(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation);
     SOLVER_UTILS_EXPORT virtual ~Filter();
 
     SOLVER_UTILS_EXPORT inline void Initialise(
@@ -81,7 +83,8 @@ public:
     SOLVER_UTILS_EXPORT inline bool IsTimeDependent();
 
 protected:
-    LibUtilities::SessionReaderSharedPtr m_session;
+    LibUtilities::SessionReaderSharedPtr  m_session;
+    const std::weak_ptr<EquationSystem> m_equ;
 
     virtual void v_Initialise(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,

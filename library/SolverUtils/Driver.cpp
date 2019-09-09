@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -65,19 +64,18 @@ std::string Driver::driverDefault =
 
 DriverFactory& GetDriverFactory()
 {
-    typedef Loki::SingletonHolder<DriverFactory,
-    Loki::CreateUsingNew,
-    Loki::NoDestroy,
-    Loki::SingleThreaded> Type;
-    return Type::Instance();
+    static DriverFactory instance;
+    return instance;
 }
 
 /**
  *
  */
-Driver::Driver(const LibUtilities::SessionReaderSharedPtr pSession)
+Driver::Driver(const LibUtilities::SessionReaderSharedPtr pSession,
+               const SpatialDomains::MeshGraphSharedPtr pGraph)
     : m_comm(pSession->GetComm()),
-      m_session(pSession)
+      m_session(pSession),
+      m_graph(pGraph)
 {
 }
 
@@ -124,33 +122,33 @@ void Driver::v_InitObject(ostream &out)
             case eNonlinear:
                 m_session->SetTag("AdvectiveType","Convective");
                 m_equ[0] = GetEquationSystemFactory().CreateInstance(
-                                    vEquation, m_session);
+                                    vEquation, m_session, m_graph);
                 break;
             case eDirect:
                 m_session->SetTag("AdvectiveType","Linearised");
                 m_equ[0] = GetEquationSystemFactory().CreateInstance(
-                                    vEquation, m_session);
+                                    vEquation, m_session, m_graph);
                 break;
             case eAdjoint:
                 m_session->SetTag("AdvectiveType","Adjoint");
                 m_equ[0] = GetEquationSystemFactory().CreateInstance(
-                                    vEquation, m_session);
+                                    vEquation, m_session, m_graph);
                 break;
             case eTransientGrowth:
                 //forward timestepping
                 m_session->SetTag("AdvectiveType","Linearised");
                 m_equ[0] = GetEquationSystemFactory().CreateInstance(
-                                    vEquation, m_session);
+                                    vEquation, m_session, m_graph);
 
                 //backward timestepping
                 m_session->SetTag("AdvectiveType","Adjoint");
                 m_equ[1] = GetEquationSystemFactory().CreateInstance(
-                                    vEquation, m_session);
+                                    vEquation, m_session, m_graph);
                 break;
             case eSkewSymmetric:
                 m_session->SetTag("AdvectiveType","SkewSymmetric");
                 m_equ[0] = GetEquationSystemFactory().CreateInstance(
-                                    vEquation, m_session);
+                                    vEquation, m_session, m_graph);
                 break;
             case eAdaptiveSFD:
             {
@@ -165,18 +163,24 @@ void Driver::v_InitObject(ostream &out)
                 LinNSCondFile += "_LinNS.xml";
                 LinNSFilename.push_back(meshfile);
                 LinNSFilename.push_back(LinNSCondFile);
+
+                char *argv[] = {
+                    const_cast<char*>("IncNavierStokesSolver"), nullptr };
                 session_LinNS = LibUtilities::SessionReader::CreateInstance(
-                                0, NULL, LinNSFilename, m_session->GetComm());
+                    1, argv, LinNSFilename, m_session->GetComm());
+
+                SpatialDomains::MeshGraphSharedPtr graph_linns =
+                    SpatialDomains::MeshGraph::Read(session_LinNS);
 
                 //For running stability analysis
                 session_LinNS->SetTag("AdvectiveType","Linearised");
                 m_equ[0] = GetEquationSystemFactory().CreateInstance(
-                                    vEquation, session_LinNS);
+                    vEquation, session_LinNS, graph_linns);
 
                 //For running the SFD method on the nonlinear problem
                 m_session->SetTag("AdvectiveType","Convective");
                 m_equ[1] = GetEquationSystemFactory().CreateInstance(
-                                    vEquation, m_session);
+                    vEquation, m_session, m_graph);
             }
                 break;
             default:

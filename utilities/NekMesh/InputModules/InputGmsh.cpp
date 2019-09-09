@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,7 +36,7 @@
 #include <iostream>
 using namespace std;
 
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 
 #include <NekMeshUtils/MeshElements/Element.h>
 #include <NekMeshUtils/MeshElements/Point.h>
@@ -218,28 +217,28 @@ std::vector<int> triTensorNodeOrdering(const std::vector<int> &nodes, int n)
     return nodeList;
 }
 
-typedef boost::tuple<int, int, int> Mode;
+typedef std::tuple<int, int, int> Mode;
 struct cmpop
 {
     bool operator()(Mode const &a, Mode const &b) const
     {
-        if (a.get<0>() < b.get<0>())
+        if (std::get<0>(a) < std::get<0>(b))
         {
             return true;
         }
-        if (a.get<0>() > b.get<0>())
+        if (std::get<0>(a) > std::get<0>(b))
         {
             return false;
         }
-        if (a.get<1>() < b.get<1>())
+        if (std::get<1>(a) < std::get<1>(b))
         {
             return true;
         }
-        if (a.get<1>() > b.get<1>())
+        if (std::get<1>(a) > std::get<1>(b))
         {
             return false;
         }
-        if (a.get<2>() < b.get<2>())
+        if (std::get<2>(a) < std::get<2>(b))
         {
             return true;
         }
@@ -698,13 +697,24 @@ std::vector<int> hexTensorNodeOrdering(const std::vector<int> &nodes, int n)
  * @brief Set up InputGmsh object.
  *
  */
-InputGmsh::InputGmsh(MeshSharedPtr m) : InputModule(m)
+InputGmsh::InputGmsh(MeshSharedPtr m)
+    : InputModule(m), m_version(0.0), m_prevId(-1), m_maxTagId(-1)
 {
 }
 
 InputGmsh::~InputGmsh()
 {
 }
+
+/**
+ * @brief Representation of Gmsh entity so that we can extract physical tag IDs.
+ */
+struct GmshEntity
+{
+    double minX, minY, minZ;
+    double maxX, maxY, maxZ;
+    std::vector<int> physicalTags;
+};
 
 /**
  * Gmsh file contains a list of nodes and their coordinates, along with a list
@@ -723,24 +733,21 @@ void InputGmsh::Process()
     m_mesh->m_expDim   = 0;
     m_mesh->m_spaceDim = 0;
     string line;
-    int nVertices = 0;
-    int nEntities = 0;
-    int elm_type  = 0;
-    int prevId    = -1;
-    int maxTagId  = -1;
-
-    map<unsigned int, ElmtConfig>::iterator it;
-
-    // This map takes each element ID and maps it to a permutation map
-    // that is required to take Gmsh element node orderings and map them
-    // to Nektar++ orderings.
-    boost::unordered_map<int, vector<int> > orderingMap;
-    boost::unordered_map<int, vector<int> >::iterator oIt;
+    int fileType      = 0;
+    int nVBlocks      = 0;
+    int nVertices     = 0;
+    int nEBlocks      = 0;
+    int nElements     = 0;
+    int tag           = 0;
+    int elm_type      = 0;
+    int tmp           = 0;
 
     if (m_mesh->m_verbose)
     {
         cout << "InputGmsh: Start reading file..." << endl;
     }
+
+    std::vector<std::map<int, GmshEntity>> entityMap(4);
 
     while (!m_mshFile.eof())
     {
@@ -749,43 +756,91 @@ void InputGmsh::Process()
         string word;
         s >> word;
 
-        // Process nodes.
-        if (word == "$Nodes")
+        // Process file format.
+        if (word == "$MeshFormat")
         {
             getline(m_mshFile, line);
             stringstream s(line);
-            s >> nVertices;
-            int id = 0;
-            for (int i = 0; i < nVertices; ++i)
+            s >> m_version;
+            s >> fileType;
+            ASSERTL0(fileType == 0, "Cannot read binary Gmsh files.")
+            ASSERTL0(m_version <= 4.1, ".msh file format versions greater than 4.1 are not currently supported.")
+        }
+        // Process entities (v4+)
+        else if (word == "$Entities")
+        {
+            size_t nEntity[4];
+            getline(m_mshFile, line);
+            stringstream s(line);
+
+            s >> nEntity[0] >> nEntity[1] >> nEntity[2] >> nEntity[3];
+
+            for (int i = 0; i < 4; ++i)
             {
-                getline(m_mshFile, line);
-                stringstream st(line);
-                double x = 0, y = 0, z = 0;
-                st >> id >> x >> y >> z;
+                for (int j = 0; j < nEntity[i]; ++j)
+                {
+                    getline(m_mshFile, line);
+                    stringstream si(line);
+                    GmshEntity ent;
 
-                if ((x * x) > 0.000001 && m_mesh->m_spaceDim < 1)
-                {
-                    m_mesh->m_spaceDim = 1;
-                }
-                if ((y * y) > 0.000001 && m_mesh->m_spaceDim < 2)
-                {
-                    m_mesh->m_spaceDim = 2;
-                }
-                if ((z * z) > 0.000001 && m_mesh->m_spaceDim < 3)
-                {
-                    m_mesh->m_spaceDim = 3;
-                }
+                    int entityId;
+                    si >> entityId >> ent.minX >> ent.minY >> ent.minZ;
 
-                id -= 1; // counter starts at 0
+                    if (i > 0)
+                    {
+                        si >> ent.maxX >> ent.maxY >> ent.maxZ;
+                    }
 
-                if (id - prevId != 1)
-                {
-                    cerr << "Gmsh vertex ids should be contiguous" << endl;
-                    abort();
+                    int nPhysTags, tmp;
+                    si >> nPhysTags;
+
+                    for (int k = 0; k < nPhysTags; ++k)
+                    {
+                        si >> tmp;
+                        ent.physicalTags.push_back(tmp);
+                    }
+
+                    entityMap[i][entityId] = ent;
                 }
-                prevId = id;
-                m_mesh->m_node.push_back(
-                    boost::shared_ptr<Node>(new Node(id, x, y, z)));
+            }
+        }
+        // Process nodes.
+        else if (word == "$Nodes")
+        {
+            getline(m_mshFile, line);
+            stringstream s(line);
+
+            if (m_version >= 4.0)
+            {
+                s >> nVBlocks;
+
+                for (int i = 0; i < nVBlocks; ++i)
+                {
+                    getline(m_mshFile, line);
+                    stringstream si(line);
+                    si >> tmp >> tmp >> tmp >> nVertices;
+
+                    if (m_version == 4.0)
+                    {
+                        for (int i = 0; i < nVertices; ++i)
+                        {
+                            ReadNextNode();
+                        }
+                    }
+                    else if (m_version == 4.1)
+                    {
+                        ReadNextNodeBlock(nVertices);
+                    }
+                }
+            }
+            else
+            {
+                s >> nVertices;
+
+                for (int i = 0; i < nVertices; ++i)
+                {
+                    ReadNextNode();
+                }
             }
         }
         // Process elements
@@ -793,78 +848,54 @@ void InputGmsh::Process()
         {
             getline(m_mshFile, line);
             stringstream s(line);
-            s >> nEntities;
-            for (int i = 0; i < nEntities; ++i)
+
+            if (m_version >= 4.0)
             {
-                getline(m_mshFile, line);
-                stringstream st(line);
-                int id = 0, num_tag = 0, num_nodes = 0;
+                s >> nEBlocks;
 
-                st >> id >> elm_type >> num_tag;
-                id -= 1; // counter starts at 0
-
-                it = elmMap.find(elm_type);
-                if (it == elmMap.end())
+                for (int i = 0; i < nEBlocks; ++i)
                 {
-                    cerr << "Error: element type " << elm_type
-                         << " not supported" << endl;
-                    abort();
-                }
+                    getline(m_mshFile, line);
+                    stringstream si(line);
 
-                // Read element tags
-                vector<int> tags;
-                for (int j = 0; j < num_tag; ++j)
-                {
-                    int tag = 0;
-                    st >> tag;
-                    tags.push_back(tag);
-                }
-                tags.resize(1);
-
-                maxTagId = max(maxTagId, tags[0]);
-
-                // Read element node list
-                vector<NodeSharedPtr> nodeList;
-                num_nodes = GetNnodes(elm_type);
-                for (int k = 0; k < num_nodes; ++k)
-                {
-                    int node = 0;
-                    st >> node;
-                    node -= 1; // counter starts at 0
-                    nodeList.push_back(m_mesh->m_node[node]);
-                }
-
-                // Look up reordering.
-                oIt = orderingMap.find(elm_type);
-
-                // If it's not created, then create it.
-                if (oIt == orderingMap.end())
-                {
-                    oIt = orderingMap.insert(
-                        make_pair(elm_type, CreateReordering(elm_type))).first;
-                }
-
-                // Apply reordering map where necessary.
-                if (oIt->second.size() > 0)
-                {
-                    vector<int> &mapping      = oIt->second;
-                    vector<NodeSharedPtr> tmp = nodeList;
-                    for (int i = 0; i < mapping.size(); ++i)
+                    int tagDim;
+                    if (m_version == 4.0)
                     {
-                        nodeList[i] = tmp[mapping[i]];
+                        si >> tag >> tagDim >> elm_type >> nElements;
                     }
+                    else
+                    {
+                        si >> tagDim >> tag >> elm_type >> nElements;
+                    }
+                    // Query tag in map & don't bother constructing non-physical
+                    // surfaces.
+                    std::vector<int> physIds = entityMap[tagDim][tag].physicalTags;
+
+                    if (physIds.size() == 0)
+                    {
+                        for (int j = 0; j < nElements; ++j)
+                        {
+                            getline(m_mshFile, line);
+                        }
+                    }
+                    else
+                    {
+                        tag = physIds[0];
+                        for (int j = 0; j < nElements; ++j)
+                        {
+                            ReadNextElement(tag, elm_type);
+                        }
+                    }
+
                 }
-
-                // Create element
-                ElementSharedPtr E = GetElementFactory().CreateInstance(
-                    it->second.m_e, it->second, nodeList, tags);
-
-                // Determine mesh expansion dimension
-                if (E->GetDim() > m_mesh->m_expDim)
+            }
+            else
+            {
+                s >> nElements;
+                for (int i = 0; i < nElements; ++i)
                 {
-                    m_mesh->m_expDim = E->GetDim();
+                    ReadNextElement();
                 }
-                m_mesh->m_element[E->GetDim()].push_back(E);
             }
         }
     }
@@ -872,8 +903,6 @@ void InputGmsh::Process()
 
     // Go through element and remap tags if necessary.
     map<int, map<LibUtilities::ShapeType, int> > compMap;
-    map<int, map<LibUtilities::ShapeType, int> >::iterator cIt;
-    map<LibUtilities::ShapeType, int>::iterator sIt;
 
     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
     {
@@ -883,7 +912,7 @@ void InputGmsh::Process()
         vector<int> tags = el->GetTagList();
         int tag          = tags[0];
 
-        cIt = compMap.find(tag);
+        auto cIt = compMap.find(tag);
 
         if (cIt == compMap.end())
         {
@@ -892,12 +921,12 @@ void InputGmsh::Process()
         }
 
         // Reset tag for this element.
-        sIt = cIt->second.find(type);
+        auto sIt = cIt->second.find(type);
         if (sIt == cIt->second.end())
         {
-            maxTagId++;
-            cIt->second[type] = maxTagId;
-            tags[0] = maxTagId;
+            m_maxTagId++;
+            cIt->second[type] = m_maxTagId;
+            tags[0] = m_maxTagId;
             el->SetTagList(tags);
         }
         else if (sIt->second != tag)
@@ -908,9 +937,9 @@ void InputGmsh::Process()
     }
 
     bool printInfo = false;
-    for (cIt = compMap.begin(); cIt != compMap.end(); ++cIt)
+    for (auto &cIt : compMap)
     {
-        if (cIt->second.size() > 1)
+        if (cIt.second.size() > 1)
         {
             printInfo = true;
             break;
@@ -920,16 +949,16 @@ void InputGmsh::Process()
     if (printInfo)
     {
         cout << "Multiple elements in composite detected; remapped:" << endl;
-        for (cIt = compMap.begin(); cIt != compMap.end(); ++cIt)
+        for (auto &cIt : compMap)
         {
-            if (cIt->second.size() > 1)
+            if (cIt.second.size() > 1)
             {
-                sIt = cIt->second.begin();
-                cout << "- Tag " << cIt->first << " => " << sIt->second << " ("
+                auto sIt = cIt.second.begin();
+                cout << "- Tag " << cIt.first << " => " << sIt->second << " ("
                      << LibUtilities::ShapeTypeMap[sIt->first] << ")";
                 sIt++;
 
-                for (; sIt != cIt->second.end(); ++sIt)
+                for (; sIt != cIt.second.end(); ++sIt)
                 {
                     cout << ", " << sIt->second << " ("
                          << LibUtilities::ShapeTypeMap[sIt->first] << ")";
@@ -949,14 +978,192 @@ void InputGmsh::Process()
 }
 
 /**
+ * Read in next node block for v4 format
+ */
+void InputGmsh::ReadNextNodeBlock(int nVertices)
+{
+    string line;
+    double x = 0, y = 0, z = 0;
+    vector<int> id(nVertices);
+
+    for (int i = 0; i < nVertices; ++i)
+    {
+        getline(m_mshFile, line);
+        stringstream st(line);
+        st >> id[i];
+    }
+
+    for (int i = 0; i < nVertices; ++i)
+    {
+        getline(m_mshFile, line);
+        stringstream st(line);
+        st >> x >> y >> z;
+
+        SaveNode(id[i], x, y, z);
+    }
+}
+
+/**
+ * Read in next node
+ */
+void InputGmsh::ReadNextNode()
+{
+    string line;
+    getline(m_mshFile, line);
+    stringstream st(line);
+    double x = 0, y = 0, z = 0;
+    int id = 0;
+    st >> id >> x >> y >> z;
+
+    SaveNode(id, x, y, z);
+}
+
+/**
+ * Save node into mesh
+ */
+void InputGmsh::SaveNode(int id, NekDouble x, NekDouble y, NekDouble z)
+{
+    if ((x * x) > 0.000001 && m_mesh->m_spaceDim < 1)
+    {
+        m_mesh->m_spaceDim = 1;
+    }
+    if ((y * y) > 0.000001 && m_mesh->m_spaceDim < 2)
+    {
+        m_mesh->m_spaceDim = 2;
+    }
+    if ((z * z) > 0.000001 && m_mesh->m_spaceDim < 3)
+    {
+        m_mesh->m_spaceDim = 3;
+    }
+
+    id -= 1; // counter starts at 0
+
+    if (!m_idMap.size())
+    {
+        if (id - m_prevId == 1)
+        {
+            m_prevId = id;
+        }
+        else
+        {
+            // Build m_idMap so far
+            for (int i = 0; i < m_mesh->m_node.size(); ++i)
+            {
+                m_idMap[i] = i;
+            }
+
+            m_idMap[id] = m_mesh->m_node.size();
+        }
+    }
+    else
+    {
+        m_idMap[id] = m_mesh->m_node.size();
+    }
+
+    m_mesh->m_node.push_back(std::shared_ptr<Node>(new Node(id, x, y, z)));
+}
+
+/**
+ * Read in next element
+ */
+void InputGmsh::ReadNextElement(int tag, int elm_type)
+{
+    string line;
+    getline(m_mshFile, line);
+    stringstream st(line);
+    int id = 0, num_tag = 0, num_nodes = 0;
+
+    st >> id;
+    id -= 1; // counter starts at 0
+
+    if (m_version < 4.0)
+    {
+        st >> elm_type >> num_tag;
+    }
+
+    auto it = elmMap.find(elm_type);
+    if (it == elmMap.end())
+    {
+        cerr << "Error: element type " << elm_type << " not supported" << endl;
+        abort();
+    }
+
+    // Read element tags (version 2 only)
+    vector<int> tags;
+    for (int j = 0; j < num_tag; ++j)
+    {
+        int tag = 0;
+        st >> tag;
+        tags.push_back(tag);
+    }
+    if (m_version >= 4.0)
+    {
+        tags.push_back(tag);
+    }
+    tags.resize(1);
+
+    m_maxTagId = max(m_maxTagId, tags[0]);
+
+    // Read element node list
+    vector<NodeSharedPtr> nodeList;
+    num_nodes = GetNnodes(elm_type);
+    for (int k = 0; k < num_nodes; ++k)
+    {
+        int node = 0;
+        st >> node;
+        node -= 1; // counter starts at 0
+        if (!m_idMap.size())
+        {
+            nodeList.push_back(m_mesh->m_node[node]);
+        }
+        else
+        {
+            nodeList.push_back(m_mesh->m_node[m_idMap[node]]);
+        }
+    }
+
+    // Look up reordering.
+    auto oIt = m_orderingMap.find(elm_type);
+
+    // If it's not created, then create it.
+    if (oIt == m_orderingMap.end())
+    {
+        oIt =
+            m_orderingMap.insert(make_pair(elm_type, CreateReordering(elm_type)))
+                .first;
+    }
+
+    // Apply reordering map where necessary.
+    if (oIt->second.size() > 0)
+    {
+        vector<int> &mapping      = oIt->second;
+        vector<NodeSharedPtr> tmp = nodeList;
+        for (int i = 0; i < mapping.size(); ++i)
+        {
+            nodeList[i] = tmp[mapping[i]];
+        }
+    }
+
+    // Create element
+    ElementSharedPtr E = GetElementFactory().CreateInstance(
+        it->second.m_e, it->second, nodeList, tags);
+
+    // Determine mesh expansion dimension
+    if (E->GetDim() > m_mesh->m_expDim)
+    {
+        m_mesh->m_expDim = E->GetDim();
+    }
+    m_mesh->m_element[E->GetDim()].push_back(E);
+}
+
+/**
  * For a given msh ID, return the corresponding number of nodes.
  */
 int InputGmsh::GetNnodes(unsigned int InputGmshEntity)
 {
     int nNodes;
-    map<unsigned int, ElmtConfig>::iterator it;
 
-    it = elmMap.find(InputGmshEntity);
+    auto it = elmMap.find(InputGmshEntity);
 
     if (it == elmMap.end())
     {
@@ -1010,9 +1217,7 @@ int InputGmsh::GetNnodes(unsigned int InputGmshEntity)
  */
 vector<int> InputGmsh::CreateReordering(unsigned int InputGmshEntity)
 {
-    map<unsigned int, ElmtConfig>::iterator it;
-
-    it = elmMap.find(InputGmshEntity);
+    auto it = elmMap.find(InputGmshEntity);
 
     if (it == elmMap.end())
     {

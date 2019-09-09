@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -51,10 +50,10 @@ namespace Nektar
         class TimeIntegrationSolution;
 
         // typedefs
-        typedef boost::shared_ptr<TimeIntegrationScheme>                TimeIntegrationSchemeSharedPtr;
+        typedef std::shared_ptr<TimeIntegrationScheme>                  TimeIntegrationSchemeSharedPtr;
         typedef std::vector<TimeIntegrationSchemeSharedPtr>             TimeIntegrationSchemeVector; 
         typedef std::vector<TimeIntegrationSchemeSharedPtr>::iterator   TimeIntegrationSchemeVectorIter; 
-        typedef boost::shared_ptr<TimeIntegrationSolution>              TimeIntegrationSolutionSharedPtr;
+        typedef std::shared_ptr<TimeIntegrationSolution>                TimeIntegrationSolutionSharedPtr;
         typedef std::vector<TimeIntegrationSolutionSharedPtr>           TimeIntegrationSolutionVector; 
         typedef std::vector<TimeIntegrationSolutionSharedPtr>::iterator TimeIntegrationSolutionVectorIter; 
 
@@ -67,12 +66,14 @@ namespace Nektar
             eAdamsBashforthOrder1,            //!< Adams-Bashforth Forward multi-step scheme of order 1
             eAdamsBashforthOrder2,            //!< Adams-Bashforth Forward multi-step scheme of order 2
             eAdamsBashforthOrder3,            //!< Adams-Bashforth Forward multi-step scheme of order 3
+            eAdamsBashforthOrder4,            //!< Adams-Bashforth Forward multi-step scheme of order 4
             eAdamsMoultonOrder1,              //!< Adams-Moulton Forward multi-step scheme of order 1
             eAdamsMoultonOrder2,              //!< Adams-Moulton Forward multi-step scheme of order 2
             eBDFImplicitOrder1,               //!< BDF multi-step scheme of order 1 (implicit)
             eBDFImplicitOrder2,               //!< BDF multi-step scheme of order 2 (implicit)
             eClassicalRungeKutta4,            //!< Runge-Kutta multi-stage scheme 4th order explicit (old name)
             eRungeKutta4,                     //!< Classical RungeKutta4 method (new name for eClassicalRungeKutta4)
+            eRungeKutta5,                     //!< RungeKutta5 method
             eRungeKutta3_SSP,                 //!< Nonlinear SSP RungeKutta3 explicit
             eRungeKutta2_ImprovedEuler,       //!< Improved RungeKutta2 explicit (old name meaning Heun's method)
             eRungeKutta2_SSP,                 //!< Nonlinear SSP RungeKutta2 explicit (surrogate for eRungeKutta2_ImprovedEuler)
@@ -81,21 +82,22 @@ namespace Nektar
             eIMEXOrder1,                      //!< IMEX 1st order scheme using Euler Backwards/Euler Forwards
             eIMEXOrder2,                      //!< IMEX 2nd order scheme using Backward Different Formula & Extrapolation
             eIMEXOrder3,                      //!< IMEX 3rd order scheme using Backward Different Formula & Extrapolation
+            eIMEXOrder4,                      //!< IMEX 4th order scheme using Backward Different Formula & Extrapolation
             eMidpoint,                        //!< midpoint method (old name)
             eRungeKutta2,                     //!< Classical RungeKutta2 method (new name for eMidpoint)
-            eDIRKOrder2,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
+            eDIRKOrder2,                      //!< Diagonally Implicit Runge Kutta scheme of order 2
             eDIRKOrder3,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
-            eCNAB,		                      //!< Crank-Nicolson/Adams-Bashforth Order 2 (CNAB)
-            eIMEXGear,		                  //!< IMEX Gear Order 2
-            eMCNAB,		                      //!< Modified Crank-Nicolson/Adams-Bashforth Order 2 (MCNAB)
-            eIMEXdirk_1_1_1,		      	  //!< Forward-Backward Euler IMEX DIRK(1,1,1)
-            eIMEXdirk_1_2_1,		      	  //!< Forward-Backward Euler IMEX DIRK(1,2,1)
-            eIMEXdirk_1_2_2,		      	  //!< Implicit-Explicit Midpoint IMEX DIRK(1,2,2)
-            eIMEXdirk_2_2_2,		          //!< L-stable, two stage, second order IMEX DIRK(2,2,2)
+            eCNAB,                            //!< Crank-Nicolson/Adams-Bashforth Order 2 (CNAB)
+            eIMEXGear,                        //!< IMEX Gear Order 2
+            eMCNAB,                           //!< Modified Crank-Nicolson/Adams-Bashforth Order 2 (MCNAB)
+            eIMEXdirk_1_1_1,                  //!< Forward-Backward Euler IMEX DIRK(1,1,1)
+            eIMEXdirk_1_2_1,                  //!< Forward-Backward Euler IMEX DIRK(1,2,1)
+            eIMEXdirk_1_2_2,                  //!< Implicit-Explicit Midpoint IMEX DIRK(1,2,2)
+            eIMEXdirk_2_2_2,                  //!< L-stable, two stage, second order IMEX DIRK(2,2,2)
             eIMEXdirk_2_3_2,                  //!< L-stable, three stage, third order IMEX DIRK(3,4,3)
-            eIMEXdirk_2_3_3,		      	  //!< L-stable, two stage, third order IMEX DIRK(2,3,3)
+            eIMEXdirk_2_3_3,                  //!< L-stable, two stage, third order IMEX DIRK(2,3,3)
             eIMEXdirk_3_4_3,                  //!< L-stable, three stage, third order IMEX DIRK(3,4,3)
-            eIMEXdirk_4_4_3,		      	  //!< L-stable, four stage, third order IMEX DIRK(4,4,3)
+            eIMEXdirk_4_4_3,                  //!< L-stable, four stage, third order IMEX DIRK(4,4,3)
             SIZE_TimeIntegrationMethod        //!< Length of enum list
         };
 
@@ -105,12 +107,14 @@ namespace Nektar
             "AdamsBashforthOrder1",
             "AdamsBashforthOrder2",
             "AdamsBashforthOrder3",
+            "AdamsBashforthOrder4",
             "AdamsMoultonOrder1",
             "AdamsMoultonOrder2",
             "BDFImplicitOrder1",
             "BDFImplicitOrder2",
             "ClassicalRungeKutta4",
             "RungeKutta4",
+            "RungeKutta5",
             "RungeKutta3_SSP",
             "RungeKutta2_ImprovedEuler",
             "RungeKutta2_SSP",
@@ -119,6 +123,7 @@ namespace Nektar
             "IMEXOrder1",
             "IMEXOrder2",
             "IMEXOrder3",
+            "IMEXOrder4",
             "Midpoint",
             "RungeKutta2",
             "DIRKOrder2",
@@ -165,8 +170,8 @@ namespace Nektar
             typedef const Array<OneD, const Array<OneD, NekDouble> > InArrayType;
             typedef       Array<OneD,       Array<OneD, NekDouble> > OutArrayType;
             
-            typedef boost::function< void (InArrayType&, OutArrayType&, const NekDouble) >                  FunctorType1;
-            typedef boost::function< void (InArrayType&, OutArrayType&, const NekDouble, const NekDouble) > FunctorType2;
+            typedef std::function< void (InArrayType&, OutArrayType&, const NekDouble) >                  FunctorType1;
+            typedef std::function< void (InArrayType&, OutArrayType&, const NekDouble, const NekDouble) > FunctorType2;
 
             typedef const FunctorType1& ConstFunctorType1Ref;
             typedef const FunctorType2& ConstFunctorType2Ref;
@@ -183,31 +188,41 @@ namespace Nektar
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineOdeRhs(FuncPointerT func, ObjectPointerT obj)
             {
-                m_functors1[0] =  boost::bind(func, obj, _1, _2, _3);
+                m_functors1[0] =  std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineOdeExplicitRhs(FuncPointerT func, ObjectPointerT obj)
             {
-                m_functors1[1] =  boost::bind(func, obj, _1, _2, _3);
+                m_functors1[1] =  std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineOdeImplicitRhs(FuncPointerT func, ObjectPointerT obj)
             {
-                m_functors1[2] =  boost::bind(func, obj, _1, _2, _3);
+                m_functors1[2] =  std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineProjection(FuncPointerT func, ObjectPointerT obj)
             {
-                m_functors1[3] =  boost::bind(func, obj, _1, _2, _3);
+                m_functors1[3] =  std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineImplicitSolve(FuncPointerT func, ObjectPointerT obj)
             {
-                m_functors2[0] =  boost::bind(func, obj, _1, _2, _3, _4);
+                m_functors2[0] =  std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3, std::placeholders::_4);
             }
 
             
@@ -215,7 +230,7 @@ namespace Nektar
                                  OutArrayType    &outarray, 
                                  const NekDouble time) const
             {
-                ASSERTL1(!(m_functors1[0].empty()),"OdeRhs should be defined for this time integration scheme");
+                ASSERTL1(m_functors1[0],"OdeRhs should be defined for this time integration scheme");
                 m_functors1[0](inarray,outarray,time);
             }
             
@@ -223,7 +238,7 @@ namespace Nektar
                                          OutArrayType    &outarray, 
                                          const NekDouble time) const
             {
-                ASSERTL1(!(m_functors1[1].empty()),"OdeExplicitRhs should be defined for this time integration scheme");
+                ASSERTL1(m_functors1[1],"OdeExplicitRhs should be defined for this time integration scheme");
                 m_functors1[1](inarray,outarray,time);
             }
             
@@ -231,7 +246,7 @@ namespace Nektar
                                         OutArrayType    &outarray, 
                                         const NekDouble time) const
             {
-                ASSERTL1(!(m_functors1[2].empty()),"OdeImplictRhs should be defined for this time integration scheme");
+                ASSERTL1(m_functors1[2],"OdeImplictRhs should be defined for this time integration scheme");
                 m_functors1[2](inarray,outarray,time);
             }
 
@@ -239,7 +254,7 @@ namespace Nektar
                                      OutArrayType    &outarray, 
                                      const NekDouble time) const
             {
-                ASSERTL1(!(m_functors1[3].empty()),"Projection operation should be defined for this time integration scheme");
+                ASSERTL1(m_functors1[3],"Projection operation should be defined for this time integration scheme");
                 m_functors1[3](inarray,outarray,time);
             }
             
@@ -248,7 +263,7 @@ namespace Nektar
                                         const NekDouble time, 
                                         const NekDouble lambda) const
             {
-                ASSERTL1(!(m_functors2[0].empty()),"ImplicitSolve should be defined for this time integration scheme");
+                ASSERTL1(m_functors2[0],"ImplicitSolve should be defined for this time integration scheme");
                 m_functors2[0](inarray,outarray,time,lambda);
             }
 
@@ -368,8 +383,8 @@ namespace Nektar
                 typedef       Array<OneD,       Array<OneD, NekDouble> >               DoubleArray;
                 typedef const Array<OneD, const NekDouble >                            ConstSingleArray;
                 typedef       Array<OneD,       NekDouble >                            SingleArray;
-                typedef boost::function< void (ConstDoubleArray&, DoubleArray&, const NekDouble) >                  FunctorType1;
-                typedef boost::function< void (ConstDoubleArray&, DoubleArray&, const NekDouble, const NekDouble) > FunctorType2;
+                typedef std::function< void (ConstDoubleArray&, DoubleArray&, const NekDouble) >                  FunctorType1;
+                typedef std::function< void (ConstDoubleArray&, DoubleArray&, const NekDouble, const NekDouble) > FunctorType2;
 
         public:
 
@@ -552,7 +567,7 @@ namespace Nektar
             template <typename> friend class Nektar::MemoryManager;
             LIB_UTILITIES_EXPORT friend TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void);
 
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<TimeIntegrationScheme> Create(const TimeIntegrationSchemeKey &key);
+            LIB_UTILITIES_EXPORT static std::shared_ptr<TimeIntegrationScheme> Create(const TimeIntegrationSchemeKey &key);
 
             TimeIntegrationScheme(const TimeIntegrationSchemeKey &key);
             

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -1329,6 +1328,12 @@ namespace Nektar
                 GetBndCondExpansions().num_elements();
                 for (j = 0; j < nBndRegions; ++j)
                 {
+                    if (fields[i+1]->GetBndConditions()[j]->
+                        GetBoundaryConditionType() == SpatialDomains::ePeriodic)
+                    {
+                        continue;
+                    }
+
                     nBndEdges = fields[i+1]->
                     GetBndCondExpansions()[j]->GetExpSize();
                     for (e = 0; e < nBndEdges; ++e)
@@ -1414,6 +1419,13 @@ namespace Nektar
             {
                 nBndEdges = fields[nScalars]->
                 GetBndCondExpansions()[j]->GetExpSize();
+
+                if (fields[nScalars]->GetBndConditions()[j]->
+                    GetBoundaryConditionType() == SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 for (e = 0; e < nBndEdges; ++e)
                 {
                     nBndEdgePts = fields[nScalars]->
@@ -1588,6 +1600,12 @@ namespace Nektar
                 nBndEdges = fields[var]->
                 GetBndCondExpansions()[i]->GetExpSize();
                 
+                if (fields[var]->GetBndConditions()[i]->
+                    GetBoundaryConditionType() == SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 // Weakly impose bcs by modifying flux values
                 for (e = 0; e < nBndEdges; ++e)
                 {
@@ -1905,7 +1923,7 @@ namespace Nektar
                                 
                                 for (j = 0; j < nquad1; ++j)
                                 {
-                                    cnt = (nquad0 - 1) + j*nquad0 - i;
+                                    cnt = j*nquad0 + i;
                                     divCFluxE2[cnt] = fluxJumps[i] * m_dGR_xi2[n][j];
                                 }
                             }
@@ -1917,7 +1935,7 @@ namespace Nektar
                                 //fluxJumps[i] = -(m_Q2D_e3[n][i]) * fluxJumps[i];
                                 for (j = 0; j < nquad0; ++j)
                                 {
-                                    cnt = (nquad0*nquad1 - nquad0) + j - i*nquad0;
+                                    cnt = j + i*nquad0;
                                     divCFluxE3[cnt] = fluxJumps[i] * m_dGL_xi1[n][j];  
                                 }
                             }
@@ -2106,7 +2124,7 @@ namespace Nektar
                                 
                                 for (j = 0; j < nquad1; ++j)
                                 {
-                                    cnt = (nquad0 - 1) + j*nquad0 - i;
+                                    cnt = j*nquad0 + i;
                                     divCFluxE2[cnt] = fluxJumps[i] * m_dGR_xi2[n][j];
                                 }
                             }
@@ -2118,7 +2136,7 @@ namespace Nektar
                                 fluxJumps[i] = -(m_Q2D_e3[n][i]) * fluxJumps[i];
                                 for (j = 0; j < nquad0; ++j)
                                 {
-                                    cnt = (nquad0*nquad1 - nquad0) + j - i*nquad0;
+                                    cnt = j + i*nquad0;
                                     divCFluxE3[cnt] = fluxJumps[i] * m_dGL_xi1[n][j];
                                     
                                 }
@@ -2408,7 +2426,7 @@ namespace Nektar
                             {
                                 for (j = 0; j < nquad1; ++j)
                                 {
-                                    cnt = (nquad0 - 1) + j*nquad0 - i;
+                                    cnt = j*nquad0 + i;
                                     divCFluxE2[cnt] =
                                     fluxJumps[i] * m_dGR_xi2[n][j];
                                 }
@@ -2474,8 +2492,7 @@ namespace Nektar
                             {
                                 for (j = 0; j < nquad0; ++j)
                                 {
-                                    cnt = (nquad0*nquad1 - nquad0) + j
-                                    - i*nquad0;
+                                    cnt = j + i*nquad0;
                                     divCFluxE3[cnt] =
                                     -fluxJumps[i] * m_dGL_xi1[n][j];
                                 }

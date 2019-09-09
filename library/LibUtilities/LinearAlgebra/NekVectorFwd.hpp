@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,10 +35,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP
 
-
-#include <LibUtilities/LinearAlgebra/Space.h>
-#include <boost/type_traits.hpp>
-
+#include <type_traits>
 
 namespace Nektar
 {
@@ -49,10 +45,10 @@ namespace Nektar
     
     
     template<typename T>
-    struct IsVector : public boost::false_type {};
+    struct IsVector : public std::false_type {};
     
     template<typename DataType>
-    struct IsVector<NekVector<DataType> > : public boost::true_type {}; 
+    struct IsVector<NekVector<DataType> > : public std::true_type {}; 
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP

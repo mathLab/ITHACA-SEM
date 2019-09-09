@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -39,6 +38,7 @@ using namespace std;
 
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/CsvIO.h>
 
 #include <tinyxml.h>
 
@@ -54,6 +54,10 @@ ModuleKey InputPts::m_className[5] = {
         ModuleKey(eInputModule, "pts"), InputPts::create, "Reads Pts file."),
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "pts.gz"), InputPts::create, "Reads Pts file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "csv"), InputPts::create, "Reads csv file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "csv.gz"), InputPts::create, "Reads csv file."),
 };
 
 /**
@@ -63,6 +67,7 @@ ModuleKey InputPts::m_className[5] = {
 InputPts::InputPts(FieldSharedPtr f) : InputModule(f)
 {
     m_allowedFiles.insert("pts");
+    m_allowedFiles.insert("csv");
 }
 
 /**
@@ -77,29 +82,31 @@ InputPts::~InputPts()
  */
 void InputPts::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    string inFile = m_config["infile"].as<string>();
+
+    // Determine appropriate field input
+    if (m_f->m_inputfiles.count("csv") != 0)
     {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "Processing input pts file" << endl;
-        }
+        LibUtilities::CsvIOSharedPtr csvIO =
+            MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(m_f->m_comm);
+        csvIO->Import(inFile, m_f->m_fieldPts);
+    }
+    else if (m_f->m_inputfiles.count("pts") != 0)
+    {
+        LibUtilities::PtsIOSharedPtr ptsIO =
+            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
+        ptsIO->Import(inFile, m_f->m_fieldPts);
+    }
+    else
+    {
+        ASSERTL0(false, "unknown input file type");
     }
 
-    string inFile = (m_f->m_inputfiles["pts"][0]).c_str();
-
-    if (m_f->m_session)
+    // save field names
+    for (int j = 0; j < m_f->m_fieldPts->GetNFields(); ++j)
     {
-        m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(
-            m_f->m_session->GetComm());
+        m_f->m_variables.push_back(m_f->m_fieldPts->GetFieldName(j));
     }
-    else // serial communicator
-    {
-        LibUtilities::CommSharedPtr c =
-            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-        m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
-    }
-
-    m_f->m_ptsIO->Import(inFile, m_f->m_fieldPts);
 }
 }
 }

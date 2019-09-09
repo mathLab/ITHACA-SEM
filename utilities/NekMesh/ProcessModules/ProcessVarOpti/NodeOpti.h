@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,7 +36,9 @@
 #define UTILITIES_NEKMESH_NODEOPTI
 
 #include <ostream>
+#include <mutex>
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <LibUtilities/BasicUtils/Thread.h>
 
 #include "ProcessVarOpti.h"
@@ -51,11 +52,15 @@ class NodeOptiJob;
 
 class NodeOpti
 {
+    // Typedef for derivative storage, we use boost::multi_array so we can pass
+    // this to functions easily
+    typedef boost::multi_array<NekDouble, 4> DerivArray;
+
 public:
     NodeOpti(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
              ResidualSharedPtr r,
              std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
-             optiType o)
+             optiType o, int dim)
         : m_node(n), m_res(r), m_derivUtils(d), m_opti(o)
     {
         // filter element types within d vector
@@ -63,6 +68,26 @@ public:
         {
             m_data[e[i]->GetEl()->GetShapeType()].push_back(e[i]);
         }
+
+        // Set up storage for GetFunctional to avoid reallocation on each call.
+        size_t storageCount = 0;
+
+        // Count total storage needed.
+        for (auto &typeIt : m_data)
+        {
+            const int pts    = m_derivUtils[typeIt.first]->pts;
+            const int nElmt  = typeIt.second.size();
+
+            storageCount = std::max(storageCount,
+                                    dim * m_derivUtils[typeIt.first]->ptsStd *
+                                    typeIt.second.size());
+
+            m_derivs.insert(std::make_pair(
+                                typeIt.first,
+                                DerivArray(boost::extents[dim][nElmt][dim][pts])));
+        }
+
+        m_tmpStore.resize(storageCount);
     }
 
     virtual ~NodeOpti(){};
@@ -79,9 +104,12 @@ public:
 
 protected:
     NodeSharedPtr m_node;
-    boost::mutex mtx;
+    std::mutex mtx;
     std::map<LibUtilities::ShapeType, std::vector<ElUtilSharedPtr> > m_data;
-    Array<OneD, NekDouble> m_grad;
+    vector<NekDouble> m_grad;
+    std::vector<NekDouble> m_tmpStore;
+    std::unordered_map<LibUtilities::ShapeType, DerivArray, EnumHash> m_derivs;
+
 
     template <int DIM> int IsIndefinite();
 
@@ -104,7 +132,7 @@ protected:
     }
 };
 
-typedef boost::shared_ptr<NodeOpti> NodeOptiSharedPtr;
+typedef std::shared_ptr<NodeOpti> NodeOptiSharedPtr;
 typedef LibUtilities::NekFactory<
     int, NodeOpti, NodeSharedPtr, std::vector<ElUtilSharedPtr>,
     ResidualSharedPtr, std::map<LibUtilities::ShapeType, DerivUtilSharedPtr>,
@@ -120,7 +148,7 @@ public:
                  ResidualSharedPtr r,
                  std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o)
-        : NodeOpti(n, e, r, d, o)
+        : NodeOpti(n, e, r, d, o, 3)
     {
     }
 
@@ -146,7 +174,7 @@ public:
                  ResidualSharedPtr r,
                  std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o)
-        : NodeOpti(n, e, r, d, o)
+        : NodeOpti(n, e, r, d, o, 2)
     {
     }
 

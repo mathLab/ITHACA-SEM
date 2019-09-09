@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -33,7 +32,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "ProcessDetectSurf.h"
 
@@ -86,7 +85,7 @@ void ProcessDetectSurf::Process()
     vector<unsigned int> surfs;
     if (surf != "-1")
     {
-        ParseUtils::GenerateSeqVector(surf.c_str(), surfs);
+        ParseUtils::GenerateSeqVector(surf, surfs);
         sort(surfs.begin(), surfs.end());
     }
 
@@ -143,18 +142,14 @@ void ProcessDetectSurf::Process()
         idMap[elmt->GetId()] = i;
     }
 
-    CompositeMap::iterator cIt;
     unsigned int maxId = 0;
 
-    for (cIt = m_mesh->m_composite.begin(); cIt != m_mesh->m_composite.end();
-         ++cIt)
+    for (auto &cIt : m_mesh->m_composite)
     {
-        maxId = (std::max)(cIt->first, maxId);
+        maxId = (std::max)(cIt.first, maxId);
     }
 
     ++maxId;
-
-    map<int, EdgeInfo>::iterator eIt;
 
     while (doneIds.size() > 0)
     {
@@ -173,7 +168,7 @@ void ProcessDetectSurf::Process()
 
             for (j = 0; j < elmt->GetEdgeCount(); ++j)
             {
-                eIt = edgeCount.find(elmt->GetEdge(j)->m_id);
+                auto eIt = edgeCount.find(elmt->GetEdge(j)->m_id);
                 ASSERTL0(eIt != edgeCount.end(), "Couldn't find edge");
                 eIt->second.group = maxId;
             }
@@ -182,15 +177,15 @@ void ProcessDetectSurf::Process()
         ++maxId;
     }
 
-    for (eIt = edgeCount.begin(); eIt != edgeCount.end(); ++eIt)
+    for (auto &eIt : edgeCount)
     {
-        if (eIt->second.count > 1)
+        if (eIt.second.count > 1)
         {
             continue;
         }
 
-        unsigned int compId        = eIt->second.group;
-        CompositeMap::iterator cIt = m_mesh->m_composite.find(compId);
+        unsigned int compId = eIt.second.group;
+        auto cIt            = m_mesh->m_composite.find(compId);
 
         if (cIt == m_mesh->m_composite.end())
         {
@@ -204,13 +199,13 @@ void ProcessDetectSurf::Process()
         vector<int> tags(1);
         tags[0] = compId;
         vector<NodeSharedPtr> nodeList(2);
-        nodeList[0] = eIt->second.edge->m_n1;
-        nodeList[1] = eIt->second.edge->m_n2;
+        nodeList[0] = eIt.second.edge->m_n1;
+        nodeList[1] = eIt.second.edge->m_n2;
 
         ElmtConfig conf(LibUtilities::eSegment, 1, false, false);
         ElementSharedPtr elmt = GetElementFactory().CreateInstance(
             LibUtilities::eSegment, conf, nodeList, tags);
-        elmt->SetEdgeLink(eIt->second.edge);
+        elmt->SetEdgeLink(eIt.second.edge);
 
         cIt->second->m_items.push_back(elmt);
     }

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -35,6 +34,7 @@
 
 #include <set>
 #include <string>
+#include <boost/format.hpp>
 using namespace std;
 
 #include "OutputFld.h"
@@ -54,7 +54,7 @@ ModuleKey OutputFld::m_className[2] = {
                                                "Writes a Fld file."),
 };
 
-OutputFld::OutputFld(FieldSharedPtr f) : OutputModule(f)
+OutputFld::OutputFld(FieldSharedPtr f) : OutputFileBase(f)
 {
     m_config["format"] = ConfigOption(
         false, "Xml", "Output format of field file");
@@ -64,259 +64,123 @@ OutputFld::~OutputFld()
 {
 }
 
-void OutputFld::Process(po::variables_map &vm)
+void OutputFld::OutputFromPts(po::variables_map &vm)
 {
+    ASSERTL0(false, "OutputFld can't write using Pts information.");
+}
+
+void OutputFld::OutputFromExp(po::variables_map &vm)
+{
+    ASSERTL0(m_f->m_variables.size(),
+            "OutputFld: need input data.")
+
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 
-    // Set up communicator and FieldIO object.
-    LibUtilities::CommSharedPtr c = m_f->m_session ? m_f->m_session->GetComm() :
-        LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+    // Set up FieldIO object.
     LibUtilities::FieldIOSharedPtr fld =
         LibUtilities::GetFieldIOFactory().CreateInstance(
-            m_config["format"].as<string>(), c, true);
+            GetIOFormat(), m_f->m_comm, true);
 
-    if (m_f->m_writeBndFld)
+    int i, j, s;
+    int nfields = m_f->m_variables.size();
+    int nstrips;
+    m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
+
+    if(m_f->m_exp[0]->GetNumElmts() != 0)
     {
-        ModuleKey module;
-
-        if (m_f->m_verbose)
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
+            m_f->m_exp[0]->GetFieldDefinitions();
+        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+        for (s = 0; s < nstrips; ++s)
         {
-            if (m_f->m_comm->TreatAsRankZero())
+            for (j = 0; j < nfields; ++j)
             {
-                cout << "OutputFld: Writing boundary file(s): ";
-                for (int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
+                for (i = 0; i < FieldDef.size() / nstrips; ++i)
                 {
-                    cout << m_f->m_bndRegionsToWrite[i];
-                    if (i < m_f->m_bndRegionsToWrite.size() - 1)
-                    {
-                        cout << ",";
-                    }
+                    int n = s * FieldDef.size() / nstrips + i;
+
+                    FieldDef[n]->m_fields.push_back(m_f->m_variables[j]);
+                    m_f->m_exp[s * nfields + j]->AppendFieldData(
+                        FieldDef[n], FieldData[n]);
                 }
-                cout << endl;
             }
         }
-
-        // Extract data to boundaryconditions
-        if (m_f->m_fldToBnd)
-        {
-            for (int i = 0; i < m_f->m_exp.size(); ++i)
-            {
-                m_f->m_exp[i]->FillBndCondFromField();
-            }
-        }
-
-        int nfields = m_f->m_exp.size();
-        Array<OneD, Array<OneD, const MultiRegions::ExpListSharedPtr> > BndExp(
-            nfields);
-        for (int i = 0; i < nfields; ++i)
-        {
-            BndExp[i] = m_f->m_exp[i]->GetBndCondExpansions();
-        }
-
-        // get hold of partition boundary regions so we can match it to desired
-        // region extraction
-        SpatialDomains::BoundaryConditions bcs(m_f->m_session,
-                                               m_f->m_exp[0]->GetGraph());
-        const SpatialDomains::BoundaryRegionCollection bregions =
-            bcs.GetBoundaryRegions();
-        SpatialDomains::BoundaryRegionCollection::const_iterator breg_it;
-        map<int, int> BndRegionMap;
-        int cnt = 0;
-        for (breg_it = bregions.begin(); breg_it != bregions.end();
-             ++breg_it, ++cnt)
-        {
-            BndRegionMap[breg_it->first] = cnt;
-        }
-
-        // find ending of output file and insert _b1, _b2
-        int dot     = filename.find_last_of('.') + 1;
-        string ext  = filename.substr(dot, filename.length() - dot);
-        string name = filename.substr(0, dot - 1);
-
-        for (int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
-        {
-            string outname =
-                name + "_b" +
-                boost::lexical_cast<string>(m_f->m_bndRegionsToWrite[i]) + "." +
-                ext;
-
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
-            std::vector<std::vector<NekDouble> > FieldData;
-
-            if (BndRegionMap.count(m_f->m_bndRegionsToWrite[i]) == 1)
-            {
-                int Border = BndRegionMap[m_f->m_bndRegionsToWrite[i]];
-
-                FieldDef = BndExp[0][Border]->GetFieldDefinitions();
-                FieldData.resize(FieldDef.size());
-
-                for (int j = 0; j < nfields; ++j)
-                {
-                    for (int k = 0; k < FieldDef.size(); ++k)
-                    {
-                        BndExp[j][Border]->AppendFieldData(FieldDef[k],
-                                                           FieldData[k]);
-
-                        if (m_f->m_fielddef.size() > 0)
-                        {
-                            FieldDef[k]->m_fields.push_back(
-                                m_f->m_fielddef[0]->m_fields[j]);
-                        }
-                        else
-                        {
-                            FieldDef[k]->m_fields.push_back(
-                                m_f->m_session->GetVariable(j));
-                        }
-                    }
-                }
-
-                if (m_f->m_addNormals)
-                {
-                    int normdim       = m_f->m_graph->GetMeshDimension();
-                    string normstr[3] = {"Norm_x", "Norm_y", "Norm_z"};
-
-                    // Get normals
-                    Array<OneD, Array<OneD, NekDouble> > NormPhys;
-                    m_f->m_exp[0]->GetBoundaryNormals(Border, NormPhys);
-
-                    // add normal coefficients to list to be dumped
-                    for (int j = 0; j < normdim; ++j)
-                    {
-                        BndExp[0][Border]->FwdTrans(
-                            NormPhys[j], BndExp[0][Border]->UpdateCoeffs());
-
-                        for (int k = 0; k < FieldDef.size(); ++k)
-                        {
-                            BndExp[0][Border]->AppendFieldData(FieldDef[k],
-                                                               FieldData[k]);
-                            FieldDef[k]->m_fields.push_back(normstr[j]);
-                        }
-                    }
-                }
-
-                // output error for regression checking.
-                if (vm.count("error"))
-                {
-                    int rank = m_f->m_session->GetComm()->GetRank();
-
-                    for (int j = 0; j < nfields; ++j)
-                    {
-                        BndExp[j][Border]->BwdTrans(
-                            BndExp[j][Border]->GetCoeffs(),
-                            BndExp[j][Border]->UpdatePhys());
-
-                        // Note currently these calls will
-                        // hange since not all partitions will
-                        // call error.
-                        NekDouble l2err =
-                            BndExp[j][Border]->L2(BndExp[j][Border]->GetPhys());
-
-                        NekDouble linferr = BndExp[j][Border]->Linf(
-                            BndExp[j][Border]->GetPhys());
-
-                        if (rank == 0)
-                        {
-                            cout << "L 2 error (variable "
-                                 << FieldDef[0]->m_fields[j] << ") : " << l2err
-                                 << endl;
-
-                            cout << "L inf error (variable "
-                                 << FieldDef[0]->m_fields[j]
-                                 << ") : " << linferr << endl;
-                        }
-                    }
-                }
-            }
-
-            fld->Write(outname, FieldDef, FieldData, m_f->m_fieldMetaDataMap);
-        }
+        fld->Write(filename, FieldDef, FieldData, m_f->m_fieldMetaDataMap,
+                   false);
     }
     else
     {
-        if (m_f->m_verbose)
-        {
-            if (m_f->m_comm->TreatAsRankZero())
-            {
-                cout << "OutputFld: Writing file..." << endl;
-            }
-        }
-
-        fs::path writefile(filename);
-        int writefld = 1;
-        if (fs::exists(writefile) && (vm.count("forceoutput") == 0))
-        {
-            int rank = 0;
-            LibUtilities::CommSharedPtr comm;
-
-            if (m_f->m_session)
-            {
-                comm = m_f->m_session->GetComm();
-                rank = comm->GetRank();
-            }
-            else
-            {
-                comm = LibUtilities::GetCommFactory().CreateInstance(
-                    "Serial", 0, 0);
-            }
-
-            writefld = 0; // set to zero for reduce all to be correct.
-
-            if (rank == 0)
-            {
-                string answer;
-                cout << "Did you wish to overwrite " << filename << " (y/n)? ";
-                getline(cin, answer);
-                if (answer.compare("y") == 0)
-                {
-                    writefld = 1;
-                }
-                else
-                {
-                    cout << "Not writing file " << filename
-                         << " because it already exists" << endl;
-                }
-            }
-
-            comm->AllReduce(writefld, LibUtilities::ReduceSum);
-        }
-
-        if (writefld)
-        {
-            fld->Write(filename, m_f->m_fielddef, m_f->m_data,
-                       m_f->m_fieldMetaDataMap);
-        }
-
-        // output error for regression checking.
-        if (vm.count("error"))
-        {
-            int rank = m_f->m_session->GetComm()->GetRank();
-
-            for (int j = 0; j < m_f->m_exp.size(); ++j)
-            {
-                if (m_f->m_exp[j]->GetPhysState() == false)
-                {
-                    m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
-                                            m_f->m_exp[j]->UpdatePhys());
-                }
-
-                NekDouble l2err = m_f->m_exp[j]->L2(m_f->m_exp[j]->GetPhys());
-
-                NekDouble linferr =
-                    m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys());
-                if (rank == 0)
-                {
-                    cout << "L 2 error (variable "
-                         << m_f->m_fielddef[0]->m_fields[j] << ") : " << l2err
-                         << endl;
-
-                    cout << "L inf error (variable "
-                         << m_f->m_fielddef[0]->m_fields[j] << ") : " << linferr
-                         << endl;
-                }
-            }
-        }
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
+        std::vector<std::vector<NekDouble> > FieldData =
+            std::vector<std::vector<NekDouble> >();
+        fld->Write(filename, FieldDef, FieldData, m_f->m_fieldMetaDataMap);
     }
 }
+
+void OutputFld::OutputFromData(po::variables_map &vm)
+{
+    // Extract the output filename and extension
+    string filename = m_config["outfile"].as<string>();
+    // Set up FieldIO object.
+    LibUtilities::FieldIOSharedPtr fld =
+        LibUtilities::GetFieldIOFactory().CreateInstance(
+            GetIOFormat(), m_f->m_comm, true);
+
+    fld->Write(filename, m_f->m_fielddef, m_f->m_data,
+                   m_f->m_fieldMetaDataMap);
+}
+
+fs::path OutputFld::GetPath(std::string &filename,
+                            po::variables_map &vm)
+{
+    return   fs::path(filename);
+}
+
+fs::path OutputFld::GetFullOutName(std::string &filename,
+                            po::variables_map &vm)
+{
+    int nprocs = m_f->m_comm->GetSize();
+    fs::path specPath(filename), fulloutname;
+    if (nprocs == 1)
+    {
+        fulloutname = specPath;
+    }
+    else
+    {
+        // Guess at filename that might belong to this process.
+        boost::format pad("P%1$07d.%2$s");
+        pad % m_f->m_comm->GetRank() % "fld";
+
+        // Generate full path name
+        fs::path poutfile(pad.str());
+        fulloutname = specPath / poutfile;
+    }
+    return   fulloutname;
+}
+
+std::string OutputFld::GetIOFormat()
+{
+    std::string iofmt("Xml");
+    if(m_f->m_session)
+    {
+        if (m_f->m_session->DefinesSolverInfo("IOFormat"))
+        {
+            iofmt = m_f->m_session->GetSolverInfo("IOFormat");
+        }
+        if (m_f->m_session->DefinesCmdLineArgument("io-format"))
+        {
+            iofmt =
+                m_f->m_session->GetCmdLineArgument<std::string>("io-format");
+        }
+    }
+    if(m_config["format"].m_beenSet)
+    {
+        iofmt = m_config["format"].as<string>();
+    }
+    return iofmt;
+}
+
 }
 }

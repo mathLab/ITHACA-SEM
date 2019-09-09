@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -72,7 +71,7 @@ namespace Nektar
             //-------------------------------
             LOCAL_REGIONS_EXPORT virtual NekDouble v_Integral(
                     const Array<OneD, const NekDouble> &inarray);
-			
+
             //----------------------------
             // Differentiation Methods
             //----------------------------
@@ -199,8 +198,6 @@ namespace Nektar
                         std::vector<LibUtilities::BasisType> &fromType);
             LOCAL_REGIONS_EXPORT virtual
                 StdRegions::Orientation v_GetEorient(int edge);
-            LOCAL_REGIONS_EXPORT virtual
-                StdRegions::Orientation v_GetCartesianEorient(int edge);
             LOCAL_REGIONS_EXPORT virtual const
                 LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const;
             LOCAL_REGIONS_EXPORT virtual int v_GetNumPoints(
@@ -293,10 +290,8 @@ namespace Nektar
 
         };
 
-        // type defines for use of QuadExp in a boost vector
-        typedef boost::shared_ptr<QuadExp> QuadExpSharedPtr;
+        typedef std::shared_ptr<QuadExp> QuadExpSharedPtr;
         typedef std::vector< QuadExpSharedPtr > QuadExpVector;
-        typedef std::vector< QuadExpSharedPtr >::iterator QuadExpVectorIter;
     }
 }
 

@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
 
     // Create a session reader to read pacing parameters
     vSession = LibUtilities::SessionReader::CreateInstance(argc, argv);
+    vSession->InitSession();
 
     try
     {

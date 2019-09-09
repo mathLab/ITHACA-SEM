@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -97,21 +96,9 @@ namespace Nektar
             }
             else
             {
-                
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-		
-                Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0, (m_base[0]->GetBdata()).get(),
+                Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,
+                            (m_base[0]->GetBdata()).get(),
                             nquad,&inarray[0],1,0.0,&outarray[0],1);
-				
-#else //NEKTAR_USING_DIRECT_BLAS_CALLS
-				
-                NekVector<NekDouble> in(m_ncoeffs,inarray,eWrapper);
-                NekVector<NekDouble> out(nquad,outarray,eWrapper);
-                NekMatrix<NekDouble> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
-                out = B * in;
-				
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
-				
             }
         }
 		

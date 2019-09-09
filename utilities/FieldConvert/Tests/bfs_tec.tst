@@ -2,7 +2,7 @@
 <test>
     <description> Process 2D tecplot output </description>
     <executable>FieldConvert</executable>
-    <parameters> -e bfs_tg.xml bfs_tg.fld bfs_tg.dat</parameters>
+    <parameters> -f -e bfs_tg.xml bfs_tg.fld bfs_tg.dat</parameters>
     <files>
         <file description="Session File">bfs_tg.xml</file>
 	<file description="Session File">bfs_tg.fld</file>

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -44,8 +43,9 @@ namespace Nektar
     string UnsteadyDiffusion::className = GetEquationSystemFactory().RegisterCreatorFunction("UnsteadyDiffusion", UnsteadyDiffusion::create);
 
     UnsteadyDiffusion::UnsteadyDiffusion(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph)
     {
     }
 
@@ -251,22 +251,19 @@ namespace Nektar
             Vmath::Smul(npoints, 
                         -factors[StdRegions::eFactorLambda], 
                         inarray[i], 1, 
-                        m_fields[i]->UpdatePhys(), 1);
+                        outarray[i], 1);
             
             // Solve a system of equations with Helmholtz solver
-            m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
-                                   m_fields[i]->UpdateCoeffs(), 
+            m_fields[i]->HelmSolve(outarray[i],
+                                   m_fields[i]->UpdateCoeffs(),
                                    NullFlagList, 
                                    factors, 
                                    m_varcoeff);
             
-            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), 
-                                  m_fields[i]->UpdatePhys());
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                  outarray[i]);
             
             m_fields[i]->SetPhysState(false);
-            
-            // The solution is Y[i]
-            outarray[i] = m_fields[i]->GetPhys();
         }
     }
     

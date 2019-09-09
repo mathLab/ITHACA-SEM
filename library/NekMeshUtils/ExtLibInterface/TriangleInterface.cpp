@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -63,7 +62,6 @@ void TriangleInterface::Mesh(bool Quality)
     dt.in.numberofpoints          = numPoints;
     dt.in.numberofpointattributes = 0;
     dt.in.pointlist               = new double[dt.in.numberofpoints * 2];
-    dt.in.pointmarkerlist         = new int [dt.in.numberofpoints];
 
     int pointc = 0;
 
@@ -117,16 +115,16 @@ void TriangleInterface::Mesh(bool Quality)
     string cmd;
     if (Quality)
     {
-        cmd = "pqY";
+        cmd = "pqzQY";
     }
     else if (!Quality)
     {
-        cmd = "pY";
+        cmd = "pzQY";
     }
     char *cstr = new char[cmd.length() + 1];
     strcpy(cstr, cmd.c_str());
 
-    dt.triangulate(cstr);
+    dt.Run(cstr);
 }
 
 void TriangleInterface::SetUp()

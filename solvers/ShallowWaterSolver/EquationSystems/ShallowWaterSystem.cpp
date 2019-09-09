@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -67,8 +66,9 @@ namespace Nektar
     
 
     ShallowWaterSystem::ShallowWaterSystem(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph)
     {
     }
 
@@ -166,13 +166,13 @@ namespace Nektar
 
   void ShallowWaterSystem::EvaluateWaterDepth(void)
   {
-    EvaluateFunction("d",m_depth,"WaterDepth");
+    GetFunction("WaterDepth")->Evaluate("d", m_depth);
   }
   
   
   void ShallowWaterSystem::EvaluateCoriolis(void)
   {
-    EvaluateFunction("f",m_coriolis,"Coriolis");
+    GetFunction("Coriolis")->Evaluate("f", m_coriolis);
   }
 
   void ShallowWaterSystem::CopyBoundaryTrace(const Array<OneD, NekDouble>&Fwd, Array<OneD, NekDouble>&Bwd)
@@ -182,7 +182,12 @@ namespace Nektar
     // loop over Boundary Regions
     for(int bcRegion = 0; bcRegion < m_fields[0]->GetBndConditions().num_elements(); ++bcRegion)
       {	
-	
+        if (m_fields[0]->GetBndConditions()[bcRegion]->GetBoundaryConditionType()
+            == SpatialDomains::ePeriodic)
+        {
+            continue;
+        }
+
 	// Copy the forward trace of the field to the backward trace
         int e, id2, npts;
         

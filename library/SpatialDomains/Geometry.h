@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -34,474 +33,643 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 
-#include <SpatialDomains/GeomFactors.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
-
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/functional/hash.hpp>
-#include <boost/shared_ptr.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+#include <SpatialDomains/GeomFactors.h>
+
+#include <unordered_map>
+
+#include <boost/optional.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+
+namespace bg = boost::geometry;
 
 namespace Nektar
 {
-    namespace SpatialDomains
+
+namespace SpatialDomains
+{
+
+class Geometry; // Forward declaration for typedef.
+typedef std::shared_ptr<Geometry> GeometrySharedPtr;
+typedef std::vector<GeometrySharedPtr> GeometryVector;
+typedef std::unordered_set<GeometrySharedPtr> GeometrySet;
+typedef std::shared_ptr<GeometryVector> GeometryVectorSharedPtr;
+
+class PointGeom;
+typedef std::shared_ptr<PointGeom> PointGeomSharedPtr;
+
+class Geometry1D;
+class Geometry2D;
+typedef std::shared_ptr<Geometry1D> Geometry1DSharedPtr;
+typedef std::shared_ptr<Geometry2D> Geometry2DSharedPtr;
+
+struct Curve;
+typedef std::shared_ptr<Curve> CurveSharedPtr;
+typedef std::unordered_map<int, CurveSharedPtr> CurveMap;
+static CurveMap NullCurveMap;
+
+/// \brief Less than operator to sort Geometry objects by global id when sorting
+/// STL containers.
+SPATIAL_DOMAINS_EXPORT bool SortByGlobalId(
+    const std::shared_ptr<Geometry> &lhs,
+    const std::shared_ptr<Geometry> &rhs);
+
+SPATIAL_DOMAINS_EXPORT bool GlobalIdEquality(
+    const std::shared_ptr<Geometry> &lhs,
+    const std::shared_ptr<Geometry> &rhs);
+
+typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> BgPoint;
+typedef bg::model::box<BgPoint> BgBox;
+
+/// Base class for shape geometry information
+class Geometry
+{
+public:
+    SPATIAL_DOMAINS_EXPORT Geometry();
+    SPATIAL_DOMAINS_EXPORT Geometry(int coordim);
+
+    SPATIAL_DOMAINS_EXPORT virtual ~Geometry();
+
+    //---------------------------------------
+    // Helper functions
+    //---------------------------------------
+
+    SPATIAL_DOMAINS_EXPORT inline int GetCoordim() const;
+    SPATIAL_DOMAINS_EXPORT inline void SetCoordim(int coordim);
+
+    SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetGeomFactors();
+    SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetRefGeomFactors(
+        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+    SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetMetricInfo();
+    SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType GetShapeType(void);
+
+    //---------------------------------------
+    // Set and get ID
+    //---------------------------------------
+    SPATIAL_DOMAINS_EXPORT inline int GetGlobalID(void) const;
+    SPATIAL_DOMAINS_EXPORT inline void SetGlobalID(int globalid);
+
+    //---------------------------------------
+    // Vertex, edge and face access
+    //---------------------------------------
+    SPATIAL_DOMAINS_EXPORT int GetVid(int i) const;
+    SPATIAL_DOMAINS_EXPORT int GetEid(int i) const;
+    SPATIAL_DOMAINS_EXPORT int GetFid(int i) const;
+    SPATIAL_DOMAINS_EXPORT inline int GetTid(int i) const;
+    SPATIAL_DOMAINS_EXPORT inline PointGeomSharedPtr GetVertex(int i) const;
+    SPATIAL_DOMAINS_EXPORT inline Geometry1DSharedPtr GetEdge(int i) const;
+    SPATIAL_DOMAINS_EXPORT inline Geometry2DSharedPtr GetFace(int i) const;
+    SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation GetEorient(
+        const int i) const;
+    SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation GetForient(
+        const int i) const;
+    SPATIAL_DOMAINS_EXPORT inline int GetNumVerts() const;
+    SPATIAL_DOMAINS_EXPORT inline int GetNumEdges() const;
+    SPATIAL_DOMAINS_EXPORT inline int GetNumFaces() const;
+    SPATIAL_DOMAINS_EXPORT inline int GetShapeDim() const;
+
+    //---------------------------------------
+    // \chi mapping access
+    //---------------------------------------
+    SPATIAL_DOMAINS_EXPORT inline
+        StdRegions::StdExpansionSharedPtr GetXmap() const;
+    SPATIAL_DOMAINS_EXPORT inline const
+        Array<OneD, const NekDouble> &GetCoeffs(const int i) const;
+    SPATIAL_DOMAINS_EXPORT inline void FillGeom();
+
+    //---------------------------------------
+    // Point lookups
+    //---------------------------------------
+    SPATIAL_DOMAINS_EXPORT inline BgBox GetBoundingBox();
+
+    SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
+        const Array<OneD, const NekDouble> &gloCoord,
+        NekDouble tol = 0.0);
+    SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
+        const Array<OneD, const NekDouble> &gloCoord,
+        Array<OneD, NekDouble> &locCoord,
+        NekDouble tol);
+    SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
+        const Array<OneD, const NekDouble> &gloCoord,
+        Array<OneD, NekDouble> &locCoord,
+        NekDouble tol,
+        NekDouble &resid);
+    SPATIAL_DOMAINS_EXPORT inline NekDouble GetLocCoords(
+        const Array<OneD, const NekDouble> &coords,
+        Array<OneD, NekDouble> &Lcoords);
+    SPATIAL_DOMAINS_EXPORT inline NekDouble GetCoord(
+        const int i, const Array<OneD, const NekDouble> &Lcoord);
+
+    //---------------------------------------
+    // Misc. helper functions
+    //---------------------------------------
+    SPATIAL_DOMAINS_EXPORT inline int GetVertexEdgeMap(int i, int j) const;
+    SPATIAL_DOMAINS_EXPORT inline int GetVertexFaceMap(int i, int j) const;
+    SPATIAL_DOMAINS_EXPORT inline int GetEdgeFaceMap(int i, int j) const;
+
+    SPATIAL_DOMAINS_EXPORT inline void Reset(CurveMap &curvedEdges,
+                                             CurveMap &curvedFaces);
+    SPATIAL_DOMAINS_EXPORT inline void Setup();
+
+protected:
+    SPATIAL_DOMAINS_EXPORT static GeomFactorsSharedPtr ValidateRegGeomFactor(
+        GeomFactorsSharedPtr geomFactor);
+    static GeomFactorsVector m_regGeomFactorsManager;
+
+    /// Coordinate dimension of this geometry object.
+    int                               m_coordim;
+    /// Geometric factors.
+    GeomFactorsSharedPtr              m_geomFactors;
+    /// State of the geometric factors
+    GeomState                         m_geomFactorsState;
+    /// \f$\chi\f$ mapping containing isoparametric transformation.
+    StdRegions::StdExpansionSharedPtr m_xmap;
+    /// Enumeration to dictate whether coefficients are filled.
+    GeomState                         m_state;
+    /// Wether or not the setup routines have been run
+    bool                              m_setupState;
+    /// Type of geometry.
+    GeomType                          m_geomType;
+    /// Type of shape.
+    LibUtilities::ShapeType           m_shapeType;
+    /// Global ID
+    int                               m_globalID;
+    /// Array containing expansion coefficients of @p m_xmap
+    Array<OneD, Array<OneD, NekDouble> > m_coeffs;
+    /// Stores the optional bounding box of the element
+    boost::optional<BgBox>            m_boundingBox;
+
+    /// Handles generation of geometry factors.
+    void                              GenGeomFactors();
+    /// Generates the bounding box of the element.
+    void                              GenBoundingBox();
+
+    //---------------------------------------
+    // Helper functions
+    //---------------------------------------
+    virtual PointGeomSharedPtr v_GetVertex(int i) const = 0;
+    virtual Geometry1DSharedPtr v_GetEdge(int i) const;
+    virtual Geometry2DSharedPtr v_GetFace(int i) const;
+    virtual StdRegions::Orientation v_GetEorient(const int i) const;
+    virtual StdRegions::Orientation v_GetForient(const int i) const;
+    virtual int v_GetNumVerts() const;
+    virtual int v_GetNumEdges() const;
+    virtual int v_GetNumFaces() const;
+    virtual int v_GetShapeDim() const;
+
+    virtual StdRegions::StdExpansionSharedPtr v_GetXmap() const;
+    virtual void v_FillGeom();
+
+    virtual bool v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
+                                 Array<OneD, NekDouble> &locCoord,
+                                 NekDouble tol,
+                                 NekDouble &resid);
+
+    virtual NekDouble v_GetCoord(const int i,
+                                 const Array<OneD, const NekDouble> &Lcoord);
+    virtual NekDouble v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
+                                     Array<OneD, NekDouble> &Lcoords);
+
+    virtual int v_GetVertexEdgeMap(int i, int j) const;
+    virtual int v_GetVertexFaceMap(int i, int j) const;
+    virtual int v_GetEdgeFaceMap(int i, int j) const;
+
+    virtual void v_Reset(CurveMap &curvedEdges, CurveMap &curvedFaces);
+    virtual void v_Setup();
+    virtual void v_GenGeomFactors() = 0;
+
+    inline void SetUpCoeffs(const int nCoeffs);
+}; // class Geometry
+
+/**
+ * @brief Unary function that constructs a hash of a Geometry object, based on
+ * the vertex IDs.
+ */
+struct GeometryHash : std::unary_function<GeometrySharedPtr, std::size_t>
+{
+    std::size_t operator()(GeometrySharedPtr const& p) const
     {
-        class Geometry; // Forward declaration for typedef.
-        typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
-        typedef std::vector< GeometrySharedPtr > GeometryVector;
-        typedef boost::unordered_set< GeometrySharedPtr > GeometrySet;
-        typedef boost::shared_ptr <GeometryVector> GeometryVectorSharedPtr;
-        typedef std::vector< GeometrySharedPtr >::iterator GeometryVectorIter;
+        int i;
+        size_t seed  = 0;
+        int nVert = p->GetNumVerts();
+        std::vector<unsigned int> ids(nVert);
 
-        class PointGeom;
-        typedef boost::shared_ptr< PointGeom >  PointGeomSharedPtr;
-
-        struct Curve;
-        typedef boost::shared_ptr<Curve> CurveSharedPtr;
-        typedef boost::unordered_map<int, CurveSharedPtr> CurveMap;
-
-        /// \brief Less than operator to sort Geometry objects by global id when sorting 
-        /// STL containers.
-        SPATIAL_DOMAINS_EXPORT  bool SortByGlobalId(const boost::shared_ptr<Geometry>& lhs, 
-            const boost::shared_ptr<Geometry>& rhs);
-
-        SPATIAL_DOMAINS_EXPORT  bool GlobalIdEquality(const boost::shared_ptr<Geometry>& lhs, 
-            const boost::shared_ptr<Geometry>& rhs);
-
-        /// Base class for shape geometry information
-        class Geometry
+        for (i = 0; i < nVert; ++i)
         {
-            public:
-                SPATIAL_DOMAINS_EXPORT Geometry();
-                SPATIAL_DOMAINS_EXPORT Geometry(int coordim);
-
-                SPATIAL_DOMAINS_EXPORT virtual ~Geometry();
-
-                //---------------------------------------
-                // Element connection functions
-                //---------------------------------------
-                SPATIAL_DOMAINS_EXPORT inline bool IsElmtConnected(
-                            int gvo_id,
-                            int locid) const;
-                SPATIAL_DOMAINS_EXPORT inline void AddElmtConnected(
-                            int gvo_id,
-                            int locid);
-                SPATIAL_DOMAINS_EXPORT inline int  NumElmtConnected() const;
-
-                //---------------------------------------
-                // Helper functions
-                //---------------------------------------
-
-                SPATIAL_DOMAINS_EXPORT inline int GetCoordim() const;
-                SPATIAL_DOMAINS_EXPORT void SetCoordim(int coordim) 
-                {
-                    m_coordim = coordim;
-                }
-                SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetGeomFactors();
-                SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetRefGeomFactors(
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
-                SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetMetricInfo();
-                SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType GetShapeType(void);
-                SPATIAL_DOMAINS_EXPORT inline int GetGlobalID(void);
-                SPATIAL_DOMAINS_EXPORT inline void SetGlobalID(int globalid);
-                SPATIAL_DOMAINS_EXPORT inline int GetVid(int i) const;
-                SPATIAL_DOMAINS_EXPORT inline int GetEid(int i) const;
-                SPATIAL_DOMAINS_EXPORT inline int GetFid(int i) const;
-                SPATIAL_DOMAINS_EXPORT inline int GetTid(int i) const;
-                SPATIAL_DOMAINS_EXPORT inline int GetNumVerts() const;
-                SPATIAL_DOMAINS_EXPORT inline PointGeomSharedPtr GetVertex(int i) const;
-                SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
-                            GetEorient(const int i) const;
-                SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
-                            GetPorient(const int i) const;
-                SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
-                            GetForient(const int i) const;
-                SPATIAL_DOMAINS_EXPORT inline int GetNumEdges() const;
-                SPATIAL_DOMAINS_EXPORT inline int GetNumFaces() const;
-                SPATIAL_DOMAINS_EXPORT inline int GetShapeDim() const;
-                SPATIAL_DOMAINS_EXPORT inline StdRegions::StdExpansionSharedPtr
-                            GetXmap() const;
-                SPATIAL_DOMAINS_EXPORT inline const Array<OneD, const NekDouble> &
-                            GetCoeffs(const int i) const;
-                SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
-                        const Array<OneD, const NekDouble>& gloCoord,
-                              NekDouble tol = 0.0);
-                SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
-                        const Array<OneD, const NekDouble>& gloCoord,
-                              Array<OneD, NekDouble> &locCoord,
-                              NekDouble tol);
-                SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
-                        const Array<OneD, const NekDouble>& gloCoord,
-                        Array<OneD, NekDouble> &locCoord,
-                        NekDouble tol,
-                        NekDouble &resid);
-                SPATIAL_DOMAINS_EXPORT inline int GetVertexEdgeMap(int i, int j) const;
-                SPATIAL_DOMAINS_EXPORT inline int GetVertexFaceMap(int i, int j) const;
-                SPATIAL_DOMAINS_EXPORT inline int GetEdgeFaceMap(int i, int j) const;
-
-                SPATIAL_DOMAINS_EXPORT inline void FillGeom();
-                SPATIAL_DOMAINS_EXPORT inline NekDouble GetLocCoords(
-                        const Array<OneD, const NekDouble> &coords,
-                        Array<OneD,       NekDouble> &Lcoords);
-                SPATIAL_DOMAINS_EXPORT inline NekDouble GetCoord(
-                        const int i, const Array<OneD, const NekDouble> &Lcoord);
-
-                SPATIAL_DOMAINS_EXPORT inline void SetOwnData();
-                SPATIAL_DOMAINS_EXPORT inline const LibUtilities::BasisSharedPtr
-                            GetBasis(const int i);
-                SPATIAL_DOMAINS_EXPORT inline const LibUtilities::PointsKeyVector
-                            GetPointsKeys();
-                SPATIAL_DOMAINS_EXPORT inline void Reset(
-                    CurveMap &curvedEdges,
-                    CurveMap &curvedFaces);
-
-            protected:
-
-                SPATIAL_DOMAINS_EXPORT static GeomFactorsSharedPtr
-                            ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
-                static GeomFactorsVector m_regGeomFactorsManager;
-
-                /// coordinate dimension
-                int                  m_coordim;
-                GeomFactorsSharedPtr m_geomFactors;
-                GeomState            m_geomFactorsState;
-                StdRegions::StdExpansionSharedPtr m_xmap;
-
-                /// enum identifier to determine if quad points are filled
-                GeomState            m_state;
-                GeomType             m_geomType;
-                LibUtilities::ShapeType   m_shapeType;
-                int                  m_globalID;
-
-                Array<OneD, Array<OneD, NekDouble> > m_coeffs;
-            
-                void GenGeomFactors();
-
-                //---------------------------------------
-                // Element connection functions
-                //---------------------------------------
-                virtual bool v_IsElmtConnected(
-                            int gvo_id,
-                            int locid) const;
-                virtual void v_AddElmtConnected(
-                            int gvo_id,
-                            int locid);
-                virtual int  v_NumElmtConnected() const;
-
-                //---------------------------------------
-                // Helper functions
-                //---------------------------------------
-
-                virtual int  v_GetEid(int i) const;
-                virtual int  v_GetVid(int i) const;
-                virtual int  v_GetFid(int i) const;
-                virtual void v_GenGeomFactors() = 0;
-                virtual int  v_GetNumVerts() const;
-                virtual PointGeomSharedPtr v_GetVertex(int i) const = 0;
-                virtual StdRegions::Orientation
-                             v_GetEorient(const int i) const;
-                virtual StdRegions::Orientation
-                             v_GetPorient(const int i) const;
-                virtual StdRegions::Orientation
-                             v_GetForient(const int i) const;
-                virtual int  v_GetNumEdges() const;
-                virtual int  v_GetNumFaces() const;
-                virtual int  v_GetShapeDim() const;
-                virtual StdRegions::StdExpansionSharedPtr
-                             v_GetXmap() const;
-                virtual int  v_GetCoordim() const;
-                virtual bool v_ContainsPoint(
-                        const Array<OneD, const NekDouble>& gloCoord,
-                              NekDouble tol = 0.0);
-                virtual bool v_ContainsPoint(
-                        const Array<OneD, const NekDouble>& gloCoord,
-                        Array<OneD, NekDouble>& locCoord,
-                        NekDouble tol);
-                virtual bool v_ContainsPoint(
-                        const Array<OneD, const NekDouble>& gloCoord,
-                        Array<OneD, NekDouble>& locCoord,
-                        NekDouble tol,
-                        NekDouble &resid);
-
-                virtual int v_GetVertexEdgeMap(int i,int j) const;
-                virtual int v_GetVertexFaceMap(int i,int j) const;
-                virtual int v_GetEdgeFaceMap(int i,int j) const;
-
-                virtual void v_FillGeom();
-                virtual NekDouble v_GetCoord(
-                            const int i,
-                            const Array<OneD,const NekDouble>& Lcoord);
-                virtual NekDouble v_GetLocCoords(
-                            const Array<OneD,const NekDouble>& coords,
-                            Array<OneD,NekDouble>& Lcoords);
-
-                virtual void v_SetOwnData();
-                virtual const LibUtilities::BasisSharedPtr
-                             v_GetBasis(const int i);
-                virtual void v_Reset(
-                    CurveMap &curvedEdges,
-                    CurveMap &curvedFaces);
-                inline void SetUpCoeffs(const int nCoeffs);
-        }; // class Geometry
-
-
-        struct GeometryHash : std::unary_function<GeometrySharedPtr, std::size_t>
-        {
-            std::size_t operator()(GeometrySharedPtr const& p) const
-            {
-                int i;
-                size_t seed  = 0;
-                int nVert = p->GetNumVerts();
-                std::vector<unsigned int> ids(nVert);
-                
-                for (i = 0; i < nVert; ++i)
-                {
-                    ids[i] = p->GetVid(i);
-                }
-                std::sort(ids.begin(), ids.end());
-                boost::hash_range(seed, ids.begin(), ids.end());
-
-                return seed;
-            }
-        };
-
-
-        inline void Geometry::AddElmtConnected(int gvo_id, int locid)
-        {
-            return v_AddElmtConnected(gvo_id, locid);
+            ids[i] = p->GetVid(i);
         }
+        std::sort(ids.begin(), ids.end());
+        hash_range(seed, ids.begin(), ids.end());
 
-        inline int  Geometry::NumElmtConnected() const
-        {
-            return v_NumElmtConnected();
-        }
+        return seed;
+    }
+};
 
-        inline bool Geometry::IsElmtConnected(int gvo_id, int locid) const
-        {
-            return v_IsElmtConnected(gvo_id,locid);
-        }
+/**
+ * @brief Return the coordinate dimension of this object (i.e. the dimension of
+ * the space in which this object is embedded).
+ */
+inline int Geometry::GetCoordim() const
+{
+    return m_coordim;
+}
 
-        inline int Geometry::GetCoordim() const
-        {
-            return v_GetCoordim();
-        }
+/**
+ * @brief Sets the coordinate dimension of this object (i.e. the dimension of
+ * the space in which this object is embedded).
+ */
+inline void Geometry::SetCoordim(int dim)
+{
+    m_coordim = dim;
+}
 
-        inline GeomFactorsSharedPtr Geometry::GetGeomFactors()
-        {
-            GenGeomFactors();
-            return ValidateRegGeomFactor(m_geomFactors);
-        }
+/**
+ * @brief Get the geometric factors for this object, generating them if
+ * required.
+ */
+inline GeomFactorsSharedPtr Geometry::GetGeomFactors()
+{
+    GenGeomFactors();
+    return ValidateRegGeomFactor(m_geomFactors);
+}
 
-        inline GeomFactorsSharedPtr Geometry::GetMetricInfo()
-        {
-            return m_geomFactors;
-        }
+/**
+ * @brief Get the geometric factors for this object.
+ */
+inline GeomFactorsSharedPtr Geometry::GetMetricInfo()
+{
+    return m_geomFactors;
+}
 
-        inline LibUtilities::ShapeType Geometry::GetShapeType()
-        {
-            return m_shapeType;
-        }
+/**
+ * @brief Get the geometric shape type of this object.
+ */
+inline LibUtilities::ShapeType Geometry::GetShapeType()
+{
+    return m_shapeType;
+}
 
-        inline int Geometry::GetGlobalID(void)
-        {
-            return m_globalID;
-        }
+/**
+ * @brief Get the ID of this object.
+ */
+inline int Geometry::GetGlobalID(void) const
+{
+    return m_globalID;
+}
 
-        inline void Geometry::SetGlobalID(int globalid)
-        {
-            m_globalID = globalid;
-        }
+/**
+ * @brief Set the ID of this object.
+ */
+inline void Geometry::SetGlobalID(int globalid)
+{
+    m_globalID = globalid;
+}
 
-        inline int Geometry::GetVid(int i) const
-        {
-            return v_GetVid(i);
-        }
+/**
+ * @brief Get the ID of trace @p i of this object.
+ *
+ * The trace element is the facet one dimension lower than the object; for
+ * example, a quadrilateral has four trace segments forming its boundary.
+ */
+inline int Geometry::GetTid(int i) const
+{
+    const int nDim = GetShapeDim();
+    return nDim == 1 ? GetVid(i) : nDim == 2 ? GetEid(i) :
+           nDim == 3 ? GetFid(i) : 0;
+}
 
-        inline int Geometry::GetEid(int i) const
-        {
-            return v_GetEid(i);
-        }
+/**
+ * @brief Returns vertex @p i of this object.
+ */
+inline PointGeomSharedPtr Geometry::GetVertex(int i) const
+{
+    return v_GetVertex(i);
+}
 
-        inline int Geometry::GetFid(int i) const
-        {
-            return v_GetFid(i);
-        }
+/**
+ * @brief Returns edge @p i of this object.
+ */
+inline Geometry1DSharedPtr Geometry::GetEdge(int i) const
+{
+    return v_GetEdge(i);
+}
 
-        inline int Geometry::GetTid(int i) const
-        {
-            const int nDim = GetShapeDim();
-            return
-                nDim == 1 ? v_GetVid(i) :
-                nDim == 2 ? v_GetEid(i) :
-                nDim == 3 ? v_GetFid(i) : 0;
-        }
+/**
+ * @brief Returns face @p i of this object.
+ */
+inline Geometry2DSharedPtr Geometry::GetFace(int i) const
+{
+    return v_GetFace(i);
+}
 
-        inline int Geometry::GetNumVerts() const
-        {
-            return v_GetNumVerts();
-        }
+/**
+ * @brief Returns the orientation of edge @p i with respect to the ordering of
+ * edges in the standard element.
+ */
+inline StdRegions::Orientation Geometry::GetEorient(const int i) const
+{
+    return v_GetEorient(i);
+}
 
-        inline PointGeomSharedPtr Geometry::GetVertex(int i) const
-        {
-            return v_GetVertex(i);
-        }
+/**
+ * @brief Returns the orientation of face @p i with respect to the ordering of
+ * faces in the standard element.
+ */
+inline StdRegions::Orientation Geometry::GetForient(const int i) const
+{
+    return v_GetForient(i);
+}
 
-        inline StdRegions::Orientation Geometry::GetEorient(const int i) const
-        {
-            return v_GetEorient(i);
-        }
+/**
+ * @brief Get the number of vertices of this object.
+ */
+inline int Geometry::GetNumVerts() const
+{
+    return v_GetNumVerts();
+}
 
-        inline StdRegions::Orientation Geometry::GetPorient(const int i) const
-        {
-            return v_GetPorient(i);
-        }
+/**
+ * @brief Get the number of edges of this object.
+ */
+inline int Geometry::GetNumEdges() const
+{
+    return v_GetNumEdges();
+}
 
-        inline StdRegions::Orientation Geometry::GetForient(const int i) const
-        {
-            return v_GetForient(i);
-        }
+/**
+ * @brief Get the number of faces of this object.
+ */
+inline int Geometry::GetNumFaces() const
+{
+    return v_GetNumFaces();
+}
 
-        inline int Geometry::GetNumEdges() const
-        {
-            return v_GetNumEdges();
-        }
+/**
+ * @brief Get the object's shape dimension.
+ *
+ * For example, a segment is one dimensional and quadrilateral is two
+ * dimensional.
+ */
+inline int Geometry::GetShapeDim() const
+{
+    return v_GetShapeDim();
+}
 
-        inline int Geometry::GetNumFaces() const
-        {
-            return v_GetNumFaces();
-        }
+/**
+ * @brief Return the mapping object Geometry::m_xmap that represents the
+ * coordinate transformation from standard element to physical element.
+ */
+inline StdRegions::StdExpansionSharedPtr Geometry::GetXmap() const
+{
+    return v_GetXmap();
+}
 
-        inline int Geometry::GetShapeDim() const
-        {
-            return v_GetShapeDim();
-        }
+/**
+ * @brief Return the coefficients of the transformation Geometry::m_xmap in
+ * coordinate direction @p i.
+ */
+inline const Array<OneD, const NekDouble> &Geometry::GetCoeffs(
+    const int i) const
+{
+    return m_coeffs[i];
+}
 
-        inline StdRegions::StdExpansionSharedPtr Geometry::GetXmap() const
-        {
-            return v_GetXmap();
-        }
+/**
+ * @brief Populate the coordinate mapping Geometry::m_coeffs information from
+ * any children geometry elements.
+ *
+ * @see v_FillGeom()
+ */
+inline void Geometry::FillGeom()
+{
+    v_FillGeom();
+}
 
-        inline const Array<OneD, const NekDouble> &Geometry::GetCoeffs(const int i) const
-        {
-            return m_coeffs[i];
-        }
+/**
+ * @brief Returns the bounding box of the element.
+ */
+inline BgBox Geometry::GetBoundingBox()
+{
+    if (!m_boundingBox)
+    {
+        GenBoundingBox();
+    }
+    return *m_boundingBox;
+}
 
-        inline bool Geometry::ContainsPoint(
-                const Array<OneD, const NekDouble>& gloCoord,
-                NekDouble tol)
-        {
-            return v_ContainsPoint(gloCoord,tol);
-        }
+/**
+ * @brief Determine whether an element contains a particular Cartesian
+ * coordinate \f$(x,y,z)\f$.
+ *
+ * @see Geometry::ContainsPoint
+ */
+inline bool Geometry::ContainsPoint(
+    const Array<OneD, const NekDouble> &gloCoord,
+    NekDouble tol)
+{
+    Array<OneD,NekDouble> locCoord(GetCoordim(), 0.0);
+    NekDouble resid;
+    return v_ContainsPoint(gloCoord, locCoord, tol, resid);
+}
 
-        inline bool Geometry::ContainsPoint(
-                const Array<OneD, const NekDouble>& gloCoord,
-                      Array<OneD, NekDouble> &locCoord,
-                      NekDouble tol)
-        {
-            return v_ContainsPoint(gloCoord,locCoord,tol);
-        }
+/**
+ * @brief Determine whether an element contains a particular Cartesian
+ * coordinate \f$(x,y,z)\f$.
+ *
+ * @see Geometry::ContainsPoint
+ */
+inline bool Geometry::ContainsPoint(
+    const Array<OneD, const NekDouble> &gloCoord,
+    Array<OneD, NekDouble> &locCoord,
+    NekDouble tol)
+{
+    NekDouble resid;
+    return v_ContainsPoint(gloCoord, locCoord, tol, resid);
+}
 
-        inline bool Geometry::ContainsPoint(
-                const Array<OneD, const NekDouble>& gloCoord,
-                      Array<OneD, NekDouble> &locCoord,
-                NekDouble tol,
-                NekDouble &resid)
-        {
-            return v_ContainsPoint(gloCoord,locCoord,tol,resid);
-        }
+/**
+ * @brief Determine whether an element contains a particular Cartesian
+ * coordinate \f$\vec{x} = (x,y,z)\f$.
+ *
+ * For curvilinear and non-affine elements (i.e. where the Jacobian varies as a
+ * function of the standard element coordinates), this is a non-linear
+ * optimisation problem that requires the use of a Newton iteration. Note
+ * therefore that this can be an expensive operation.
+ *
+ * The parameter @p tol which is by default 0, can be used to expand the
+ * coordinate range of the standard element from \f$[-1,1]^d\f$ to
+ * \f$[-1-\epsilon,1+\epsilon\f$ to handle challenging edge cases. The function
+ * also returns the local coordinates corresponding to @p gloCoord that can be
+ * used to speed up subsequent searches.
+ *
+ * @param gloCoord  The coordinate \f$ (x,y,z) \f$.
+ * @param locCoord  On exit, this is the local coordinate \f$\vec{\xi}\f$ such
+ *                  that \f$\chi(\vec{\xi}) = \vec{x}\f$.
+ * @param tol       The tolerance used to dictate the bounding box of the
+ *                  standard coordinates \f$\vec{\xi}\f$.
+ * @param resid     On exit, returns the minimum distance between @p gloCoord
+ *                  and the quadrature points inside the element.
+ *
+ * @return `true` if the coordinate @p gloCoord is contained in the element;
+ *         false otherwise.
+ *
+ * @see Geometry::GetLocCoords.
+ */
+inline bool Geometry::ContainsPoint(
+    const Array<OneD, const NekDouble> &gloCoord,
+    Array<OneD, NekDouble> &locCoord,
+    NekDouble tol,
+    NekDouble &resid)
+{
+    return v_ContainsPoint(gloCoord, locCoord, tol, resid);
+}
 
-        inline int Geometry::GetVertexEdgeMap(int i, int j) const
-        {
-            return v_GetVertexEdgeMap(i,j);
-        }
+/**
+ * @brief Determine the local collapsed coordinates that correspond to a
+ * given Cartesian coordinate for this geometry object.
+ *
+ * For curvilinear and non-affine elements (i.e. where the Jacobian varies as a
+ * function of the standard element coordinates), this is a non-linear
+ * optimisation problem that requires the use of a Newton iteration. Note
+ * therefore that this can be an expensive operation.
+ *
+ * Note that, clearly, the provided Cartesian coordinate lie outside the
+ * element. The function therefore returns the minimum distance from some
+ * position in the element to . @p Lcoords will also be constrained to fit
+ * within the range \f$[-1,1]^d\f$ where \f$ d \f$ is the dimension of the
+ * element.
+ *
+ * @param coords   Input Cartesian global coordinates
+ * @param Lcoords  Corresponding local coordinates
+ *
+ * @return Distance between obtained coordinates and provided ones.
+ */
+inline NekDouble Geometry::GetLocCoords(
+    const Array<OneD, const NekDouble> &coords,
+    Array<OneD, NekDouble> &Lcoords)
+{
+    return v_GetLocCoords(coords, Lcoords);
+}
 
-        /// return the id of the \f$j^{th}\f$ face attached to the \f$ i^{th}\f$ vertex
-        inline int Geometry::GetVertexFaceMap(int i, int j) const
-        {
-            return v_GetVertexFaceMap(i,j);
-        }
+/**
+ * @brief Given local collapsed coordinate @p Lcoord, return the value of
+ * physical coordinate in direction @p i.
+ */
+inline NekDouble Geometry::GetCoord(const int i,
+                                    const Array<OneD, const NekDouble> &Lcoord)
+{
+    return v_GetCoord(i, Lcoord);
+}
 
-        inline int Geometry::GetEdgeFaceMap(int i, int j) const
-        {
-            return v_GetEdgeFaceMap(i,j);
-        }
+/**
+ * @brief Returns the standard element edge IDs that are connected to a given
+ * vertex.
+ *
+ * For example, on a prism, vertex 0 is connnected to edges 0, 3, and 4;
+ * `GetVertexEdgeMap(0,j)` would therefore return the values 0, 1 and 4
+ * respectively. We assume that @p j runs between 0 and 2 inclusive, which is
+ * true for every 3D element asides from the pyramid.
+ *
+ * This function is used in the construction of the low-energy preconditioner.
+ *
+ * @param i  The vertex to query connectivity for.
+ * @param j  The local edge index between 0 and 2 connected to this element.
+ *
+ * @todo Expand to work with pyramid elements.
+ * @see MultiRegions::PreconditionerLowEnergy
+ */
+inline int Geometry::GetVertexEdgeMap(int i, int j) const
+{
+    return v_GetVertexEdgeMap(i, j);
+}
 
-        inline void Geometry::GenGeomFactors()
-        {
-            return v_GenGeomFactors();
-        }
+/**
+ * @brief Returns the standard element face IDs that are connected to a given
+ * vertex.
+ *
+ * For example, on a hexahedron, vertex 0 is connnected to faces 0, 1, and 4;
+ * `GetVertexFaceMap(0,j)` would therefore return the values 0, 1 and 4
+ * respectively. We assume that @p j runs between 0 and 2 inclusive, which is
+ * true for every 3D element asides from the pyramid.
+ *
+ * This is used in the construction of the low-energy preconditioner.
+ *
+ * @param i  The vertex to query connectivity for.
+ * @param j  The local face index between 0 and 2 connected to this element.
+ *
+ * @todo Expand to work with pyramid elements.
+ * @see MultiRegions::PreconditionerLowEnergy
+ */
+inline int Geometry::GetVertexFaceMap(int i, int j) const
+{
+    return v_GetVertexFaceMap(i, j);
+}
 
+/**
+ * @brief Returns the standard element edge IDs that are connected to a given
+ * face.
+ *
+ * For example, on a prism, edge 0 is connnected to faces 0 and 1;
+ * `GetEdgeFaceMap(0,j)` would therefore return the values 0 and 1
+ * respectively. We assume that @p j runs between 0 and 1 inclusive, since every
+ * face is connected to precisely two faces for all 3D elements.
+ *
+ * This function is used in the construction of the low-energy preconditioner.
+ *
+ * @param i  The edge to query connectivity for.
+ * @param j  The local face index between 0 and 1 connected to this element.
+ *
+ * @see MultiRegions::PreconditionerLowEnergy
+ */
+inline int Geometry::GetEdgeFaceMap(int i, int j) const
+{
+    return v_GetEdgeFaceMap(i, j);
+}
 
-       /**
-        * @brief Put all quadrature information into face/edge structure and
-        * backward transform.
-        *
-        * @see v_FillGeom()
-        */
-        inline void Geometry::FillGeom()
-        {
-            v_FillGeom();
-        }
+/**
+ * @brief Reset this geometry object: unset the current state, zero
+ * Geometry::m_coeffs and remove allocated GeomFactors.
+ */
+inline void Geometry::Reset(CurveMap &curvedEdges, CurveMap &curvedFaces)
+{
+    v_Reset(curvedEdges, curvedFaces);
+}
+inline void Geometry::Setup()
+{
+    v_Setup();
+}
 
-        inline NekDouble Geometry::GetLocCoords(
-            const Array<OneD, const NekDouble> &coords,
-            Array<OneD,       NekDouble> &Lcoords)
-        {
-            return v_GetLocCoords(coords, Lcoords);
-        }
+/**
+ * @brief Generate the geometric factors (i.e. derivatives of \f$\chi\f$) and
+ * related metrics.
+ *
+ * @see SpatialDomains::GeomFactors
+ */
+inline void Geometry::GenGeomFactors()
+{
+    return v_GenGeomFactors();
+}
 
-        /**
-         * @brief Given local collapsed coordinate Lcoord return the value of
-         * physical coordinate in direction i.
-         */
-        inline NekDouble Geometry::GetCoord(
-            const int i, const Array<OneD, const NekDouble> &Lcoord)
-        {
-            return v_GetCoord(i, Lcoord);
-        }
+/**
+ * @brief Initialise the Geometry::m_coeffs array.
+ */
+inline void Geometry::SetUpCoeffs(const int nCoeffs)
+{
+    m_coeffs = Array<OneD, Array<OneD, NekDouble> >(m_coordim);
 
-        inline void Geometry::SetOwnData()
-        {
-            v_SetOwnData();
-        }
+    for (int i = 0; i < m_coordim; ++i)
+    {
+        m_coeffs[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
+    }
+}
 
-        /**
-         * @brief Return the j-th basis of the i-th co-ordinate dimension.
-         */
-        inline const LibUtilities::BasisSharedPtr Geometry::GetBasis(
-            const int i)
-        {
-            return v_GetBasis(i);
-        }
+}
+}
 
-        /**
-         * @brief Initialise the m_coeffs array.
-         */
-        inline void Geometry::SetUpCoeffs(const int nCoeffs)
-        {
-            m_coeffs = Array<OneD, Array<OneD, NekDouble> >(m_coordim);
-
-            for (int i = 0; i < m_coordim; ++i)
-            {
-                m_coeffs[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
-            }
-        }
-
-        inline const LibUtilities::PointsKeyVector Geometry::GetPointsKeys()
-        {
-            return m_xmap->GetPointsKeys();
-        }
-
-        inline void Geometry::Reset(CurveMap &curvedEdges,
-                                    CurveMap &curvedFaces)
-        {
-            v_Reset(curvedEdges, curvedFaces);
-        }
-    }; //end of namespace
-}; // end of namespace
-
-#endif //NEKTAR_SPATIALDOMAINS_GEOMETRY_H
+#endif // NEKTAR_SPATIALDOMAINS_GEOMETRY_H

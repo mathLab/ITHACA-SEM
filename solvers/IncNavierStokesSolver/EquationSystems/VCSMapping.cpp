@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -55,9 +54,10 @@ namespace Nektar
      * \param
      */
     VCSMapping::VCSMapping(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          VelocityCorrectionScheme(pSession)  
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          VelocityCorrectionScheme(pSession, pGraph)  
     {
 
     }
@@ -80,7 +80,7 @@ namespace Nektar
             m_advObject); 
         m_extrapolation->SubSteppingTimeIntegration(
                             m_intScheme->GetIntegrationMethod(), m_intScheme);
-        m_extrapolation->GenerateHOPBCMap(m_session);        
+        m_extrapolation->GenerateHOPBCMap(m_session);
 
        // Storage to extrapolate pressure forcing
         int physTot = m_fields[0]->GetTotPoints();
@@ -90,10 +90,11 @@ namespace Nektar
         {
             case LibUtilities::eIMEXOrder1:
             {
-                intSteps = 1; 
+                intSteps = 1;
             }
             break;
             case LibUtilities::eIMEXOrder2:
+            case LibUtilities::eIMEXGear:
             {
                 intSteps = 2;
             }
@@ -101,6 +102,11 @@ namespace Nektar
             case LibUtilities::eIMEXOrder3:
             {
                 intSteps = 3;
+            }
+            break;
+            case LibUtilities::eIMEXOrder4:
+            {
+                intSteps = 4;
             }
             break;
         }        
@@ -204,10 +210,9 @@ namespace Nektar
         }
 
         // Add forcing terms
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        for (auto &x : m_forcing)
         {
-            (*x)->Apply(m_fields, inarray, outarray, time);
+            x->Apply(m_fields, inarray, outarray, time);
         }
         
         // Add mapping terms

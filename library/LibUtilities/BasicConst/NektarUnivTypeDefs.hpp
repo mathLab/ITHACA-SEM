@@ -10,7 +10,6 @@
 // University of Utah (USA) and Department of Aeronautics, Imperial
 // College London (UK).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,18 +36,18 @@
 #define  NEKTARUNIVTYPEDEF_HPP
 
 #include <map>
-#include <boost/cstdint.hpp>
+#include <cstdint>
 
 namespace Nektar
 {
     typedef double NekDouble;
 
-    typedef boost::int32_t  NekInt;
-    typedef boost::int32_t  NekInt32;
-    typedef boost::int64_t  NekInt64;
-    typedef boost::uint32_t NekUInt;
-    typedef boost::uint32_t NekUInt32;
-    typedef boost::uint64_t NekUInt64;
+    typedef std::int32_t  NekInt;
+    typedef std::int32_t  NekInt32;
+    typedef std::int64_t  NekInt64;
+    typedef std::uint32_t NekUInt;
+    typedef std::uint32_t NekUInt32;
+    typedef std::uint64_t NekUInt64;
 
     struct OneD
     {
@@ -105,8 +104,8 @@ namespace Nektar
         }
         bool isSet(const FlagType &key) const
         {
-            std::map<FlagType, bool>::const_iterator x;
-            return ((x = m_data.find(key)) != m_data.end() && x->second);
+            auto x = m_data.find(key);
+            return x != m_data.end() && x->second;
         }
     private:
         std::map<FlagType, bool> m_data;

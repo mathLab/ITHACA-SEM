@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -50,12 +49,12 @@ using namespace NekMeshUtils;
 struct DerivUtil;
 struct Residual;
 
-typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
-typedef boost::shared_ptr<Residual> ResidualSharedPtr;
+typedef std::shared_ptr<DerivUtil> DerivUtilSharedPtr;
+typedef std::shared_ptr<Residual> ResidualSharedPtr;
 
 class ElUtilJob;
 
-class ElUtil : public boost::enable_shared_from_this<ElUtil>
+class ElUtil : public std::enable_shared_from_this<ElUtil>
 {
 public:
     ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d,
@@ -70,7 +69,7 @@ public:
 
     //leaving these varibles as public for sake of efficency 
     std::vector<std::vector<NekDouble *> > nodes;
-    std::vector<Array<OneD, NekDouble> > maps, mapsStd;
+    std::vector<vector<NekDouble> > maps, mapsStd;
 
     void Evaluate();
     void InitialMinJac();
@@ -111,7 +110,7 @@ private:
     DerivUtilSharedPtr m_derivUtil;
     ResidualSharedPtr m_res;
 };
-typedef boost::shared_ptr<ElUtil> ElUtilSharedPtr;
+typedef std::shared_ptr<ElUtil> ElUtilSharedPtr;
 
 class ElUtilJob : public Thread::ThreadJob
 {

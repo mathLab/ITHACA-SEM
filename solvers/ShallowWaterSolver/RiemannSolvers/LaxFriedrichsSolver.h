@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -43,16 +42,18 @@ namespace Nektar
     class LaxFriedrichsSolver : public NonlinearSWESolver
     {
     public:
-        static RiemannSolverSharedPtr create()
+        static RiemannSolverSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             return RiemannSolverSharedPtr(
-                new LaxFriedrichsSolver());
+                new LaxFriedrichsSolver(pSession));
         }
         
         static std::string solverName;
         
     protected:
-        LaxFriedrichsSolver();
+        LaxFriedrichsSolver(
+                const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_PointSolve(
             double  hL, double  huL, double  hvL,

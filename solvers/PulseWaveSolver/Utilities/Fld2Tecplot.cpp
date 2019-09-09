@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
 
     
     LibUtilities::SessionReaderSharedPtr session;
+    SpatialDomains::MeshGraphSharedPtr graph;
     string vDriverModule;
     DriverSharedPtr drv;  
 
@@ -45,8 +46,9 @@ int main(int argc, char *argv[])
             newargv[i+1] = argv[i];
         }
         
-        // Create session reader.
+        // Create session reader and MeshGraph.
         session = LibUtilities::SessionReader::CreateInstance(newargc, newargv);
+        graph = SpatialDomains::MeshGraph::Read(session);
         delete[] newargv;
         
         bool CalcCharacteristicVariables = false;
@@ -59,12 +61,12 @@ int main(int argc, char *argv[])
         
         // Create driver
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");
-        drv = GetDriverFactory().CreateInstance(vDriverModule, session);
+        drv = GetDriverFactory().CreateInstance(vDriverModule, session, graph);
         
         EquationSystemSharedPtr EqSys = drv->GetEqu()[0];
         
         PulseWaveSystemSharedPtr PulseWave;
-        if(!(PulseWave = boost::dynamic_pointer_cast
+        if(!(PulseWave = std::dynamic_pointer_cast
              <PulseWaveSystem>(EqSys)))
         {
             ASSERTL0(false,"Failed to dynamically cast to PulseWaveSystemOutput");

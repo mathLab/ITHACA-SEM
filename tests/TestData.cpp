@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,26 +32,22 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <boost/version.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <TestData.h>
+#include <TestException.hpp>
 
 using namespace std;
 
 namespace Nektar
 {
     TestData::TestData(const fs::path& pFilename, po::variables_map& pVm)
-            : m_cmdoptions(pVm)
+            : m_cmdoptions(pVm), m_pythonTest(false)
     {
         // Process test file format.
-#if BOOST_VERSION > 104200
         m_doc = new TiXmlDocument(pFilename.string().c_str());
-#else
-        m_doc = new TiXmlDocument(pFilename.file_string().c_str());
-#endif
+
         bool loadOkay = m_doc->LoadFile();
 
         ASSERTL0(loadOkay, "Failed to load test definition file: "
@@ -82,9 +77,19 @@ namespace Nektar
         return m_parameters;
     }
 
+    const std::string& TestData::GetCommand() const
+    {
+        return m_command;
+    }
+
     const unsigned int& TestData::GetNProcesses() const
     {
         return m_processes;
+    }
+
+    bool TestData::IsPythonTest() const
+    {
+        return m_pythonTest;
     }
 
     std::string TestData::GetMetricType(unsigned int pId) const
@@ -151,10 +156,16 @@ namespace Nektar
             tmp = testElement->FirstChildElement("executable");
             ASSERTL0(tmp, "Cannot find 'executable' for test.");
             m_executable = fs::path(tmp->GetText());
+
+            // Test to see if this test requires Python
+            std::string needsPython;
+            tmp->QueryStringAttribute("python", &needsPython);
+            m_pythonTest = needsPython == "true";
+
 #if defined(RELWITHDEBINFO)
-            m_executable += "-rg";
+            m_executable += m_pythonTest ? "" : "-rg";
 #elif !defined(NDEBUG)
-            m_executable += "-g";
+            m_executable += m_pythonTest ? "" : "-g";
 #endif
         }
 
@@ -164,6 +175,16 @@ namespace Nektar
         if (tmp->GetText())
         {
             m_parameters = string(tmp->GetText());
+        }
+
+        tmp = testElement->FirstChildElement("command");
+        if (tmp)
+        {
+            m_command = string(tmp->GetText());
+        }
+        else
+        {
+            m_command = "";
         }
 
         // Find parallel processes tah.

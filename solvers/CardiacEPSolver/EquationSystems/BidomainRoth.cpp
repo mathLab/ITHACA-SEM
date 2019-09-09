@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -57,8 +56,9 @@ string BidomainRoth::className
  *
  */
 BidomainRoth::BidomainRoth(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : UnsteadySystem(pSession)
+    const LibUtilities::SessionReaderSharedPtr& pSession,
+    const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : UnsteadySystem(pSession, pGraph)
 {
 }
 
@@ -158,8 +158,8 @@ void BidomainRoth::v_InitObject()
                                         aniso_var[j]),
                      "Function 'AnisotropicConductivity' not correctly "
                      "defined.");
-            EvaluateFunction(aniso_var[j], vTemp_j,
-                             "ExtracellularAnisotropicConductivity");
+
+            GetFunction("ExtracellularAnisotropicConductivity")->Evaluate(aniso_var[j], vTemp_j);
 
             // Loop through rows of D
             for (int i = 0; i < j + 1; ++i)
@@ -170,8 +170,7 @@ void BidomainRoth::v_InitObject()
                          "Function 'ExtracellularAnisotropicConductivity' not "
                          "correctly defined.");
 
-                EvaluateFunction(aniso_var[i], vTemp_i,
-                                 "ExtracellularAnisotropicConductivity");
+                GetFunction("ExtracellularAnisotropicConductivity")->Evaluate(aniso_var[i], vTemp_i);
 
                 Vmath::Vmul(nq, vTemp_i, 1, vTemp_j, 1,
                                 m_vardiffe[varCoeffEnum[k]], 1);
@@ -232,8 +231,7 @@ void BidomainRoth::v_InitObject()
                      "Function 'IntracellularAnisotropicConductivity' not "
                      "correctly defined.");
 
-            EvaluateFunction(aniso_var[j], vTemp_j,
-                             "IntracellularAnisotropicConductivity");
+            GetFunction("IntracellularAnisotropicConductivity")->Evaluate(aniso_var[j], vTemp_j);
 
             // Loop through rows of D
             for (int i = 0; i < j + 1; ++i)
@@ -243,8 +241,7 @@ void BidomainRoth::v_InitObject()
                                     aniso_var[i]),
                          "Function 'IntracellularAnisotropicConductivity' not "
                          "correctly defined.");
-                EvaluateFunction(aniso_var[i], vTemp_i,
-                                 "IntracellularAnisotropicConductivity");
+                GetFunction("IntracellularAnisotropicConductivity")->Evaluate(aniso_var[i], vTemp_i);
 
                 Vmath::Vmul(nq, vTemp_i, 1, vTemp_j, 1,
                                 m_vardiffi[varCoeffEnum[k]], 1);
@@ -296,20 +293,16 @@ void BidomainRoth::v_InitObject()
 
     // Search through the loaded filters and pass the cell model to any
     // CheckpointCellModel filters loaded.
-    int k = 0;
-    const LibUtilities::FilterMap& f = m_session->GetFilters();
-    LibUtilities::FilterMap::const_iterator x;
-    for (x = f.begin(); x != f.end(); ++x, ++k)
+    for (auto &x : m_filters)
     {
-        if (x->first == "CheckpointCellModel")
+        if (x.first == "CheckpointCellModel")
         {
-            boost::shared_ptr<FilterCheckpointCellModel> c
-                = boost::dynamic_pointer_cast<FilterCheckpointCellModel>(
-                                                            m_filters[k]);
+            std::shared_ptr<FilterCheckpointCellModel> c
+                = std::dynamic_pointer_cast<FilterCheckpointCellModel>(
+                x.second);
             c->SetCellModel(m_cell);
         }
     }
-
     // Load stimuli
     m_stimulus = Stimulus::LoadStimuli(m_session, m_fields[0]);
 

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -52,7 +51,7 @@ public:
                  ResidualSharedPtr r,
                  std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o, CADCurveSharedPtr c)
-        : NodeOpti(n, e, r, d, o), curve(c)
+        : NodeOpti(n, e, r, d, o, 3), curve(c)
     {
     }
 
@@ -65,8 +64,8 @@ public:
         NodeSharedPtr n, std::vector<ElUtilSharedPtr> e, ResidualSharedPtr r,
         std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d, optiType o)
     {
-        std::vector<std::pair<int, CADCurveSharedPtr> > cs = n->GetCADCurves();
-        return NodeOptiSharedPtr(new NodeOpti1D3D(n, e, r, d, o, cs[0].second));
+        std::vector<CADCurveSharedPtr> cs = n->GetCADCurves();
+        return NodeOptiSharedPtr(new NodeOpti1D3D(n, e, r, d, o, cs[0]));
     }
 
 private:
@@ -81,7 +80,7 @@ public:
                  ResidualSharedPtr r,
                  std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o, CADSurfSharedPtr s)
-        : NodeOpti(n, e, r, d, o), surf(s)
+        : NodeOpti(n, e, r, d, o, 3), surf(s)
     {
     }
 
@@ -94,8 +93,8 @@ public:
         NodeSharedPtr n, std::vector<ElUtilSharedPtr> e, ResidualSharedPtr r,
         std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d, optiType o)
     {
-        std::vector<std::pair<int, CADSurfSharedPtr> > ss = n->GetCADSurfs();
-        return NodeOptiSharedPtr(new NodeOpti2D3D(n, e, r, d, o, ss[0].second));
+        std::vector<CADSurfSharedPtr> ss = n->GetCADSurfs();
+        return NodeOptiSharedPtr(new NodeOpti2D3D(n, e, r, d, o, ss[0]));
     }
 
 private:

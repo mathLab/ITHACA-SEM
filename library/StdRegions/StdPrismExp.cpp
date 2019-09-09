@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -1074,6 +1073,8 @@ namespace Nektar
                 nummodesA = m_base[1]->GetNumModes();
                 nummodesB = m_base[2]->GetNumModes();
                 break;
+            default:
+                ASSERTL0(false,"fid must be between 0 and 4");
             }
 
             bool CheckForZeroedModes = false;
@@ -1988,7 +1989,7 @@ namespace Nektar
                 default:
                     for(i = 0; i < nquad2; ++i)
                     {
-                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*w2[i],
+                        Blas::Dscal(nquad0*nquad1,0.5*(1-z2[i])*w2[i],
                                     &outarray[0]+i*nquad0*nquad1,1);
                     }
                     break;
@@ -2019,44 +2020,113 @@ namespace Nektar
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
             int i,j,k,cnt = 0;
 
-            //SVV filter paramaters (how much added diffusion relative to physical one
-            // and fraction of modes from which you start applying this added diffusion)
-            //
-            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
-            NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
-
-            //Defining the cut of mode
-            int cutoff_a = (int) (SVVCutOff*nmodes_a);
-            int cutoff_b = (int) (SVVCutOff*nmodes_b);
-            int cutoff_c = (int) (SVVCutOff*nmodes_c);
-            //To avoid the fac[j] from blowing up
-            NekDouble epsilon = 1;
-
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
-            int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
-            NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
 
-            //------"New" Version August 22nd '13--------------------
-            for(i = 0; i < nmodes_a; ++i)//P
+            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff)) 
             {
-                for(j = 0; j < nmodes_b; ++j) //Q
+                // Rodrigo's power kernel                
+                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                NekDouble  SvvDiffCoeff  =
+                    mkey.GetConstFactor(eFactorSVVPowerKerDiffCoeff)*
+                    mkey.GetConstFactor(eFactorSVVDiffCoeff);
+                
+                for(int i = 0; i < nmodes_a; ++i)
                 {
-                    for(k = 0; k < nmodes_c-i; ++k) //R
+                    for(int j = 0; j < nmodes_b; ++j)
                     {
-                        if(j >= cutoff ||  i + k >= cutoff)
+                        NekDouble fac1 = std::max(
+                                   pow((1.0*i)/(nmodes_a-1),cutoff*nmodes_a),
+                                   pow((1.0*j)/(nmodes_b-1),cutoff*nmodes_b));
+
+                        for(int k = 0; k < nmodes_c-i; ++k)
                         {
-                            orthocoeffs[cnt] *= (SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/((NekDouble)((i+k-cutoff+epsilon)*(i+k-cutoff+epsilon))))*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon)))));
+                            NekDouble fac = std::max(fac1,
+                                   pow((1.0*k)/(nmodes_c-1),cutoff*nmodes_c));
+                            
+                            orthocoeffs[cnt] *= SvvDiffCoeff * fac;
+                            cnt++;
                         }
-                        else
-                        {
-                            orthocoeffs[cnt] *= 0.0;
-                        }
-                        cnt++;
                     }
                 }
             }
+            else if(mkey.ConstFactorExists(eFactorSVVDGKerDiffCoeff))  // Rodrigo/Mansoor's DG Kernel
+            {
+                NekDouble  SvvDiffCoeff  =
+                    mkey.GetConstFactor(eFactorSVVDGKerDiffCoeff)*
+                    mkey.GetConstFactor(eFactorSVVDiffCoeff);
 
+                int max_abc = max(nmodes_a-kSVVDGFiltermodesmin,
+                                  nmodes_b-kSVVDGFiltermodesmin);
+                max_abc = max(max_abc, nmodes_c-kSVVDGFiltermodesmin);
+                // clamp max_abc
+                max_abc = max(max_abc,0);
+                max_abc = min(max_abc,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
+                
+                for(int i = 0; i < nmodes_a; ++i)
+                {
+                    for(int j = 0; j < nmodes_b; ++j)
+                    {
+                        int maxij = max(i,j);
+
+                        for(int k = 0; k < nmodes_c-i; ++k)
+                        {
+                            int maxijk = max(maxij,k);
+                            maxijk = min(maxijk,kSVVDGFiltermodesmax-1);
+                        
+                            orthocoeffs[cnt] *= SvvDiffCoeff *
+                                kSVVDGFilter[max_abc][maxijk];
+                            cnt++;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // SVV filter paramaters (how much added diffusion relative
+                // to physical one and fraction of modes from which you
+                // start applying this added diffusion)
+                //
+                NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+                NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
+                
+                //Defining the cut of mode
+                int cutoff_a = (int) (SVVCutOff*nmodes_a);
+                int cutoff_b = (int) (SVVCutOff*nmodes_b);
+                int cutoff_c = (int) (SVVCutOff*nmodes_c);
+                //To avoid the fac[j] from blowing up
+                NekDouble epsilon = 1;
+                
+                int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
+                NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
+                
+                //------"New" Version August 22nd '13--------------------
+                for(i = 0; i < nmodes_a; ++i)//P
+                {
+                    for(j = 0; j < nmodes_b; ++j) //Q
+                    {
+                        for(k = 0; k < nmodes_c-i; ++k) //R
+                        {
+                            if(j >= cutoff ||  i + k >= cutoff)
+                            {
+                                orthocoeffs[cnt] *=
+                                    (SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/
+                                           ((NekDouble)((i+k-cutoff+epsilon)*
+                                                        (i+k-cutoff+epsilon))))*
+                                     exp(-(j-nmodes)*(j-nmodes)/
+                                         ((NekDouble)((j-cutoff+epsilon)*
+                                                      (j-cutoff+epsilon)))));
+                            }
+                            else
+                            {
+                                orthocoeffs[cnt] *= 0.0;
+                            }
+                            cnt++;
+                        }
+                    }
+                }
+            }
+            
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }

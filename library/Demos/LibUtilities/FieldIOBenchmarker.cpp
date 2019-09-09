@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and laimitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -39,10 +38,10 @@
 #include <LibUtilities/Communication/CommMpi.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
-#include <boost/unordered_set.hpp>
+#include <unordered_set>
 #include <string>
 
-typedef boost::unordered_set<int> IntSet;
+typedef std::unordered_set<int> IntSet;
 
 using namespace Nektar;
 using namespace LibUtilities;
@@ -218,8 +217,8 @@ Array<OneD, int> ReadIDsForThisRank(Experiment &exp, FieldIOSharedPtr fio)
 
     std::string infoFile = exp.dataSource + "/Info.xml";
 
-    boost::shared_ptr<FieldIOXml> fioXml =
-        boost::dynamic_pointer_cast<FieldIOXml>(fio);
+    std::shared_ptr<FieldIOXml> fioXml =
+        std::dynamic_pointer_cast<FieldIOXml>(fio);
     fioXml->ImportMultiFldFileIDs(infoFile, fileNames, elementList,
                                   fieldmetadatamap);
 
@@ -328,7 +327,6 @@ void FilterDataForThisRank(const DefVec &inFieldDefs,
         if (elOut.size())
         {
             // create the outFieldDefs
-            // boost::make_shared only works up to 9 arguments it seems.
             FieldDefinitionsSharedPtr defOut =
                 FieldDefinitionsSharedPtr(new FieldDefinitions(
                     inDef->m_shapeType,

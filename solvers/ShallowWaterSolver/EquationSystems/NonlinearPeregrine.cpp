@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -52,8 +51,9 @@ string NonlinearPeregrine::className =
                 "Nonlinear Peregrine equations in conservative variables.");
 
 NonlinearPeregrine::NonlinearPeregrine(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : ShallowWaterSystem(pSession), m_factors()
+    const LibUtilities::SessionReaderSharedPtr& pSession,
+    const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : ShallowWaterSystem(pSession, pGraph), m_factors()
 {
     m_factors[StdRegions::eFactorLambda] = 0.0;
     m_factors[StdRegions::eFactorTau] = 1000000.0;
@@ -138,7 +138,7 @@ void NonlinearPeregrine::v_InitObject()
 
             m_riemannSolver =
                     SolverUtils::GetRiemannSolverFactory().CreateInstance(
-                            riemName);
+                            riemName, m_session);
 
             // Setting up parameters for advection operator Riemann solver
             m_riemannSolver->SetParam("gravity",

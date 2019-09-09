@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -42,11 +41,8 @@ namespace Nektar
 {
 ArtificialDiffusionFactory& GetArtificialDiffusionFactory()
 {
-    typedef Loki::SingletonHolder<ArtificialDiffusionFactory,
-                                  Loki::CreateUsingNew,
-                                  Loki::NoDestroy,
-                                  Loki::SingleThreaded> Type;
-    return Type::Instance();
+    static ArtificialDiffusionFactory instance;
+    return instance;
 }
 
 ArtificialDiffusion::ArtificialDiffusion(
@@ -54,17 +50,8 @@ ArtificialDiffusion::ArtificialDiffusion(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                 const int spacedim)
         : m_session(pSession),
-        m_fields(pFields)
+          m_fields(pFields)
 {
-    m_session->LoadParameter ("FL",            m_FacL,          0.0);
-    m_session->LoadParameter ("FH",            m_FacH,          0.0);
-    m_session->LoadParameter ("hFactor",       m_hFactor,       1.0);
-    m_session->LoadParameter ("C1",            m_C1,            3.0);
-    m_session->LoadParameter ("C2",            m_C2,            5.0);
-    m_session->LoadParameter ("mu0",           m_mu0,           1.0);
-    m_session->LoadParameter ("Skappa",        m_Skappa,        -2.048);
-    m_session->LoadParameter ("Kappa",         m_Kappa,         0.0);
-
     // Create auxiliary object to convert variables
     m_varConv = MemoryManager<VariableConverter>::AllocateSharedPtr(
                 m_session, spacedim);
@@ -74,6 +61,13 @@ ArtificialDiffusion::ArtificialDiffusion(
     m_diffusion->SetArtificialDiffusionVector(
                         &ArtificialDiffusion::GetArtificialViscosity, this);
     m_diffusion->InitObject (m_session, m_fields);
+
+    // Get constant scaling
+    m_session->LoadParameter("mu0", m_mu0, 1.0);
+
+    // Init h/p scaling
+    int nElements = m_fields[0]->GetExpSize();
+    m_hOverP = Array<OneD, NekDouble>(nElements, 1.0);
 }
 
 /**
@@ -123,6 +117,14 @@ void ArtificialDiffusion::GetArtificialViscosity(
                   Array<OneD, NekDouble  >             &mu)
 {
     v_GetArtificialViscosity(physfield, mu);
+}
+
+/**
+ *
+ */
+void ArtificialDiffusion::SetElmtHP(const Array<OneD, NekDouble> &hOverP)
+{
+    m_hOverP = hOverP;
 }
 
 }

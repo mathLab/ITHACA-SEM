@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64" XSCALE="2.0" YSCALE="2.0">eJxjYICAidoBz6q2vd4P4T2whwozMGKX3w+TZ0KVt0eXBwCI6BJF</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYIAARgZUAOMz4eAzoPEBAWgACgAA</EDGE>
+        <ELEMENT>
+            <T COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAFjFCaCUoDAABAAAQA</T>
+        </ELEMENT>
+        <CURVED COMPRESSED="B64Z-LittleEndian" BITSIZE="64">
+            <E>eJxjYIAAJijNyoAdsEBpAAFAAAwA</E>
+            <DATAPOINTS ID="0">
+                <INDEX>eJxjYIAARijNBKWZoTQLlAYAAMgACwAA</INDEX>
+                <POINTS>eJxjYICAidoBz6q2vd4P4T2whwozMELps5M13000OLGf2fdHclLOe7g8EwMyeGAPNQcuzwyl/Q2/x22zeWevcdrS7c2nK3B5FlT7oeIP9sPkAbD0IgkA</POINTS>
+            </DATAPOINTS>
+        </CURVED>
+        <COMPOSITE>
+            <C ID="1"> T[0] </C>
+        </COMPOSITE>
+        <DOMAIN> C[1] </DOMAIN>
+    </GEOMETRY>
+    <EXPANSIONS>
+        <E COMPOSITE="C[1]" NUMMODES="12" TYPE="MODIFIED" FIELDS="u" />
+    </EXPANSIONS>
+</NEKTAR>

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -87,8 +86,8 @@ namespace Nektar
             DisContField1D(),
             m_locToGloMap(),
             m_globalLinSysManager(
-                    boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField1D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
         }
 
@@ -114,14 +113,16 @@ namespace Nektar
          * @param   variable    An optional parameter to indicate for which
          *                      variable the field should be constructed.
          */
-        ContField1D::ContField1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                                 const std::string &variable):
-            DisContField1D(pSession,graph1D,variable,false),
+        ContField1D::ContField1D(
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
+                      const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                      const std::string &variable,
+                      const Collections::ImplementationType ImpType):
+            DisContField1D(pSession,graph1D,variable,false,ImpType),
             m_locToGloMap(),
             m_globalLinSysManager(
-                    boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField1D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
@@ -144,8 +145,8 @@ namespace Nektar
             DisContField1D(In),
             m_locToGloMap(In.m_locToGloMap),
             m_globalLinSysManager(
-                    boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField1D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
         }
 
@@ -158,8 +159,8 @@ namespace Nektar
             DisContField1D(In),
             m_locToGloMap(),
             m_globalLinSysManager(
-                    boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField1D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
             m_locToGloMap = MemoryManager<AssemblyMapCG>
                 ::AllocateSharedPtr(pSession, m_ncoeffs, In);
@@ -540,6 +541,7 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
+                const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
@@ -562,7 +564,10 @@ namespace Nektar
             int i;
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::eNeumann ||
+                   m_bndConditions[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::eRobin)
                 {
                     wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(i)]
                         += m_bndCondExpansions[i]->GetCoeff(0);
@@ -571,7 +576,7 @@ namespace Nektar
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eHelmholtz,
-                                m_locToGloMap,factors,varcoeff);
+                                m_locToGloMap,factors,varcoeff,varfactors);
 
             if(flags.isSet(eUseGlobal))
             {

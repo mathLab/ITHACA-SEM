@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -97,7 +96,7 @@ namespace GlobalMapping {
                 exp->GetCoords(coord[0], coord[1]);
 
                 SpatialDomains::Geometry2DSharedPtr geom =
-                    boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>(
+                    std::dynamic_pointer_cast<SpatialDomains::Geometry2D>(
                         exp->GetGeom());
 
                 for (j = 0; j < exp->GetNedges(); ++j)
@@ -178,7 +177,7 @@ namespace GlobalMapping {
                 exp->GetCoords(coord[0], coord[1], coord[2]);
 
                 SpatialDomains::Geometry3DSharedPtr geom =
-                    boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
+                    std::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
                         exp->GetGeom());
 
                 for (j = 0; j < exp->GetNfaces(); ++j)

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -60,8 +59,8 @@ namespace Nektar
         /// Constructor for full direct matrix solve.
         GlobalLinSysXxtFull::GlobalLinSysXxtFull(
                     const GlobalLinSysKey &pLinSysKey,
-                    const boost::weak_ptr<ExpList> &pExp,
-                    const boost::shared_ptr<AssemblyMap>
+                    const std::weak_ptr<ExpList> &pExp,
+                    const std::shared_ptr<AssemblyMap>
                                                             &pLocToGloMap)
             : GlobalLinSys   (pLinSysKey, pExp, pLocToGloMap),
               GlobalLinSysXxt(pLinSysKey, pExp, pLocToGloMap)
@@ -151,7 +150,7 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping information.
          */
         void GlobalLinSysXxtFull::CreateMap(
-                    const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                    const std::shared_ptr<AssemblyMap> &pLocToGloMap)
         {
             const Array<OneD, const int> &vMap
                                     = pLocToGloMap->GetLocalToGlobalMap();
@@ -186,7 +185,7 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping information.
          */
         void GlobalLinSysXxtFull::AssembleMatrixArrays(
-                        const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                        const std::shared_ptr<AssemblyMap> &pLocToGloMap)
         {
             ExpListSharedPtr vExp = m_expList.lock();
             unsigned int nElmt = vExp->GetNumElmts();
@@ -213,8 +212,7 @@ namespace Nektar
             {
                 for (n = 0; n < nElmt; ++n)
                 {
-                    i = vExp->GetOffset_Elmt_Id(n);
-                    vSizes[n] = vExp->GetExp(i)->GetNverts();
+                    vSizes[n] = vExp->GetExp(n)->GetNverts();
                     nEntries += vSizes[n]*vSizes[n];
                 }
             }
@@ -222,8 +220,7 @@ namespace Nektar
             {
                 for (n = 0; n < nElmt; ++n)
                 {
-                    i = vExp->GetOffset_Elmt_Id(n);
-                    vSizes[n] = vExp->GetExp(i)->GetNcoeffs();
+                    vSizes[n] = vExp->GetExp(n)->GetNcoeffs();
                     nEntries += vSizes[n]*vSizes[n];
                 }
             }
@@ -240,7 +237,7 @@ namespace Nektar
             // and set the universal ID array
             for(n = iCount = 0; n < nElmt; ++n)
             {
-                loc_mat = GetBlock(vExp->GetOffset_Elmt_Id(n));
+                loc_mat = GetBlock(n);
                 nRows = loc_mat->GetRows();
 
                 for(i = 0; i < nRows; ++i)

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -119,8 +118,8 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestNekMatrixConstruction)
         {
             {
-                boost::shared_ptr<Nektar::Matrix<double> > a(new Nektar::NekMatrix<double>(3,4));
-                boost::shared_ptr<Nektar::NekMatrix<double> > b(new Nektar::NekMatrix<double>(5,6));
+                std::shared_ptr<Nektar::Matrix<double> > a(new Nektar::NekMatrix<double>(3,4));
+                std::shared_ptr<Nektar::NekMatrix<double> > b(new Nektar::NekMatrix<double>(5,6));
                 
                 BOOST_CHECK_EQUAL(a->GetRows(), 3u);
                 BOOST_CHECK_EQUAL(a->GetColumns(), 4u);
@@ -140,8 +139,8 @@ namespace Nektar
             }
             
             {
-                boost::shared_ptr<Nektar::Matrix<double> > a(new Nektar::NekMatrix<double>(3,3, eDIAGONAL));
-                boost::shared_ptr<Nektar::NekMatrix<double> > b(new Nektar::NekMatrix<double>(5,5,eDIAGONAL));
+                std::shared_ptr<Nektar::Matrix<double> > a(new Nektar::NekMatrix<double>(3,3, eDIAGONAL));
+                std::shared_ptr<Nektar::NekMatrix<double> > b(new Nektar::NekMatrix<double>(5,5,eDIAGONAL));
                 
                 BOOST_CHECK_EQUAL(a->GetRows(), 3);
                 BOOST_CHECK_EQUAL(a->GetColumns(), 3);
@@ -192,8 +191,8 @@ namespace Nektar
             BOOST_CHECK_THROW( m(4,3), ErrorUtil::NekError);
             #endif //NEKTAR_FULLDEBUG
             
-            boost::shared_ptr<Nektar::Matrix<double> > m1(new Nektar::NekMatrix<double>(4, 3, data));
-            boost::shared_ptr<Nektar::NekMatrix<double> > m2(new Nektar::NekMatrix<double>(4, 3, data));
+            std::shared_ptr<Nektar::Matrix<double> > m1(new Nektar::NekMatrix<double>(4, 3, data));
+            std::shared_ptr<Nektar::NekMatrix<double> > m2(new Nektar::NekMatrix<double>(4, 3, data));
             
             BOOST_CHECK_EQUAL( (*m1)(0,0), 1.0 );
             BOOST_CHECK_EQUAL( (*m1)(0,1), 2.0 );
@@ -246,8 +245,8 @@ namespace Nektar
             UnitTests::RedirectCerrIfNeeded();
             double data[] = {8.9, 3.4, 5.7};
             Nektar::NekMatrix<double> m1(3, 3, data, eDIAGONAL);
-            boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double>(3, 3, data, eDIAGONAL));
-            boost::shared_ptr<Nektar::NekMatrix<double > > m3(new Nektar::NekMatrix<double>(3, 3, data, eDIAGONAL));
+            std::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double>(3, 3, data, eDIAGONAL));
+            std::shared_ptr<Nektar::NekMatrix<double > > m3(new Nektar::NekMatrix<double>(3, 3, data, eDIAGONAL));
             
             BOOST_CHECK_EQUAL(m1(0,0), 8.9);
             BOOST_CHECK_EQUAL((*m2)(0,0), 8.9);
@@ -307,8 +306,8 @@ namespace Nektar
             double data[] = {1.0, 3.0, 5.0,
                              2.0, 4.0, 6.0};
             Nektar::NekMatrix<double> m1(3, 2, data);
-            boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double>(3, 2, data));
-            boost::shared_ptr<Nektar::NekMatrix<double> > m3(new Nektar::NekMatrix<double>(3, 2, data));
+            std::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double>(3, 2, data));
+            std::shared_ptr<Nektar::NekMatrix<double> > m3(new Nektar::NekMatrix<double>(3, 2, data));
             
             m1.SetValue(0,0,-1.0);
             m2->SetValue(1,1,-2.0);
@@ -341,8 +340,8 @@ namespace Nektar
             UnitTests::RedirectCerrIfNeeded();
             double data[] = {8.9, 3.4, 5.7};
             Nektar::NekMatrix<double> m1(3, 3, data, eDIAGONAL);
-            boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double>(3, 3, data, eDIAGONAL));
-            boost::shared_ptr<Nektar::NekMatrix<double > > m3(new Nektar::NekMatrix<double>(3, 3, data, eDIAGONAL));
+            std::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double>(3, 3, data, eDIAGONAL));
+            std::shared_ptr<Nektar::NekMatrix<double > > m3(new Nektar::NekMatrix<double>(3, 3, data, eDIAGONAL));
             
             m1.SetValue(0,0,1.0);
             m2->SetValue(1,1,2.0);
@@ -553,110 +552,3 @@ namespace Nektar
 
     }
 }
-
-
-/**
-    $Log: testNekMatrix.cpp,v $
-    Revision 1.33  2008/05/30 23:43:42  bnelson
-    Redirected the ASSERT messages to a file when running unit tests.
-
-    Revision 1.32  2008/04/22 05:22:47  bnelson
-    Speed enhancements.
-
-    Revision 1.31  2008/04/06 06:04:54  bnelson
-    Changed ConstArray to Array<const>
-
-    Revision 1.30  2007/10/03 03:01:01  bnelson
-    *** empty log message ***
-
-    Revision 1.29  2007/09/12 03:59:41  bnelson
-    *** empty log message ***
-
-    Revision 1.28  2007/07/22 23:04:28  bnelson
-    Backed out Nektar::ptr.
-
-    Revision 1.27  2007/07/20 02:24:41  bnelson
-    Replaced boost::shared_ptr with Nektar::ptr
-
-    Revision 1.26  2007/07/11 04:00:33  bnelson
-    Added invert tests.
-
-    Revision 1.25  2007/07/11 03:18:23  bnelson
-    *** empty log message ***
-
-    Revision 1.24  2007/06/10 23:45:59  bnelson
-    Matrix updates.
-
-    Revision 1.23  2007/05/15 05:19:55  bnelson
-    Updated to use the new Array object.
-
-    Revision 1.22  2007/03/29 19:42:03  bnelson
-    *** empty log message ***
-
-    Revision 1.21  2007/02/13 02:47:23  bnelson
-    *** empty log message ***
-
-    Revision 1.20  2007/01/18 20:59:28  sherwin
-    Before new configuration
-
-    Revision 1.19  2007/01/16 05:31:34  bnelson
-    Major improvements for expression templates.
-
-    Revision 1.18  2006/10/30 05:08:13  bnelson
-    Added preliminary linear system and block matrix support.
-
-    Revision 1.17  2006/10/02 01:20:48  bnelson
-    Started working on adding BLAS and LAPACK
-
-    Revision 1.16  2006/09/30 15:38:29  bnelson
-    no message
-
-    Revision 1.15  2006/09/11 03:28:41  bnelson
-    no message
-
-    Revision 1.14  2006/08/25 01:38:59  bnelson
-    no message
-
-    Revision 1.13  2006/08/25 01:36:25  bnelson
-    no message
-
-    Revision 1.12  2006/08/14 02:35:45  bnelson
-    Added many LinearAlgebra tests
-
-    Revision 1.11  2006/06/05 02:23:17  bnelson
-    Updates for the reorganization of LibUtilities.
-
-    Revision 1.10  2006/05/31 23:24:47  bnelson
-    Updated NekMatrix method names for the coding standard.
-
-    Revision 1.9  2006/05/31 04:19:36  bnelson
-    Removed a test for invalid access to a matrix.
-
-    Revision 1.8  2006/05/29 03:40:48  bnelson
-    Updated the tests to reflect the changed parameter order in the NekMatrix constructor.
-
-    Revision 1.7  2006/05/25 02:54:54  bnelson
-    Added Matrix/Vector multiplication test.
-
-    Revision 1.6  2006/05/18 04:25:19  bnelson
-    Added a multiplication test.
-
-    Revision 1.5  2006/05/16 20:35:30  jfrazier
-    Added the float literal specifier to make the unit test happy.
-
-    Revision 1.4  2006/05/15 05:06:07  bnelson
-    Added addition tests.
-
-    Revision 1.3  2006/05/15 04:10:35  bnelson
-    no message
-
-    Revision 1.2  2006/05/14 21:33:58  bnelson
-    *** empty log message ***
-
-    Revision 1.1  2006/05/07 21:10:09  bnelson
-    *** empty log message ***
-
- **/
-
-
-

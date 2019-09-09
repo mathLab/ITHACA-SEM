@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -186,6 +185,7 @@ int main(int argc, char *argv[])
     //ATTEnTION !!! with argc=2 you impose that vSession refers to is argv[1]=meshfile!!!!!
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(2, argv);
+    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);
     //----------------------------------------------
 
     if( argc == 6 &&
@@ -195,11 +195,6 @@ int main(int argc, char *argv[])
         cr = boost::lexical_cast<NekDouble>(argv[argc-1]);
         argc=5;
     }
-
-    // Read in mesh from input file
-    string meshfile(argv[argc-4]);
-    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
-    //----------------------------------------------
 
     // Also read and store the boundary conditions
     SpatialDomains::BoundaryConditionsSharedPtr boundaryConditions;
@@ -504,7 +499,7 @@ int main(int argc, char *argv[])
 
          bndSegExp = bndfieldx[lastIregion]->GetExp(r)
                                            ->as<LocalRegions::SegExp>();
-         Eid = (bndSegExp->GetGeom1D())->GetEid();
+         Eid = (bndSegExp->GetGeom1D())->GetGlobalID();
          id1 = (bndSegExp->GetGeom1D())->GetVid(0);
          id2 = (bndSegExp->GetGeom1D())->GetVid(1);
          vertex1 = graphShPt->GetVertex(id1);
@@ -1946,7 +1941,7 @@ void OrderVertices (int nedges, SpatialDomains::MeshGraphSharedPtr graphShPt,
       {
           LocalRegions::SegExpSharedPtr  bndSegExplow =
                   bndfield->GetExp(j)->as<LocalRegions::SegExp>();
-          edge = (bndSegExplow->GetGeom1D())->GetEid();
+          edge = (bndSegExplow->GetGeom1D())->GetGlobalID();
 //cout<<" edge="<<edge<<endl;
           for(int k=0; k<2; k++)
           {
@@ -2220,7 +2215,7 @@ void GenerateMapEidsv1v2(MultiRegions::ExpListSharedPtr field,
                  Array<OneD, int> &V1, Array<OneD, int> &V2)
 {
 
-      const boost::shared_ptr<LocalRegions::ExpansionVector> exp2D = field->GetExp();
+      const std::shared_ptr<LocalRegions::ExpansionVector> exp2D = field->GetExp();
       int nel        = exp2D->size();
       LocalRegions::QuadExpSharedPtr locQuadExp;
       LocalRegions::TriExpSharedPtr  locTriExp;
@@ -2236,7 +2231,7 @@ void GenerateMapEidsv1v2(MultiRegions::ExpListSharedPtr field,
                 for(int j = 0; j < locQuadExp->GetNedges(); ++j)
                 {
                     SegGeom = (locQuadExp->GetGeom2D())->GetEdge(j);
-                    id = SegGeom->GetEid();
+                    id = SegGeom->GetGlobalID();
                     if( V1tmp[id] == 10000)
                     {
                          V1tmp[id]= SegGeom->GetVertex(0)->GetVid();
@@ -2252,7 +2247,7 @@ void GenerateMapEidsv1v2(MultiRegions::ExpListSharedPtr field,
                 for(int j = 0; j < locTriExp->GetNedges(); ++j)
                 {
                      SegGeom = (locTriExp->GetGeom2D())->GetEdge(j);
-                     id = SegGeom->GetEid();
+                     id = SegGeom->GetGlobalID();
 
                      if( V1tmp[id] == 10000)
                      {
@@ -3633,7 +3628,7 @@ void CheckSingularQuads( MultiRegions::ExpListSharedPtr Exp,
                  Array<OneD, int> V1, Array<OneD, int> V2,
 	         Array<OneD, NekDouble>& xnew,Array<OneD, NekDouble>& ynew)
 {
-      const boost::shared_ptr<LocalRegions::ExpansionVector> exp2D = Exp->GetExp();
+      const std::shared_ptr<LocalRegions::ExpansionVector> exp2D = Exp->GetExp();
       int nel        = exp2D->size();
       LocalRegions::QuadExpSharedPtr locQuadExp;
       LocalRegions::TriExpSharedPtr  locTriExp;
@@ -3647,7 +3642,7 @@ void CheckSingularQuads( MultiRegions::ExpListSharedPtr Exp,
            if((locQuadExp = (*exp2D)[i]->as<LocalRegions::QuadExp>()))
            {
                 SegGeom = (locQuadExp->GetGeom2D())->GetEdge(0);
-                idbef = SegGeom->GetEid();
+                idbef = SegGeom->GetGlobalID();
                 if(xnew[  V1[idbef] ]<= xnew[  V2[idbef] ])
                 {
                 xV1 = xnew[  V1[idbef] ];
@@ -3669,7 +3664,7 @@ void CheckSingularQuads( MultiRegions::ExpListSharedPtr Exp,
                 for(int j = 1; j < locQuadExp->GetNedges(); ++j)
                 {
                     SegGeom = (locQuadExp->GetGeom2D())->GetEdge(j);
-                    idnext = SegGeom->GetEid();
+                    idnext = SegGeom->GetGlobalID();
 //cout<<"id="<<idnext<<" locid="<<j<<endl;
 //cout<<" V1 x="<<xnew[  V1[idnext] ]<<"   y="<<ynew[  V1[idnext] ]<<endl;
 //cout<<" V2 x="<<xnew[  V2[idnext] ]<<"   y="<<ynew[  V2[idnext] ]<<endl;

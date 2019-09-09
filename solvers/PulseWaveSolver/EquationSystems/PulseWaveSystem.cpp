@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -62,8 +61,10 @@ namespace Nektar
      *
      *  @param   m_Session        Session object to read parameters from.
      */
-    PulseWaveSystem::PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& m_session)
-        : UnsteadySystem(m_session)
+    PulseWaveSystem::PulseWaveSystem(
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph)
     {
     }
     
@@ -164,14 +165,6 @@ namespace Nektar
                 cnt1 += m_vessels[i*m_nVariables+n]->GetTotPoints();                
             }
         }
-        
-        // Set Default Parameter
-        m_session->LoadParameter("Time",     m_time, 0.0);
-        m_session->LoadParameter("TimeStep", m_timestep, 0.01);
-        m_session->LoadParameter("NumSteps", m_steps, 0);
-        m_session->LoadParameter("IO_CheckSteps", m_checksteps, m_steps);
-        m_session->LoadParameter("FinTime", m_fintime, 0);
-        m_session->LoadParameter("NumQuadPointsError", m_NumQuadPointsError, 0);
 		
         m_fields[0] = m_vessels[0];
         m_fields[1] = m_vessels[1];
@@ -190,8 +183,7 @@ namespace Nektar
                 break;
             }
         }
-        // Load solver- specific parameters
-        m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+
         // Load blood density
         m_session->LoadParameter("rho", m_rho, 0.5);
         // Load external pressure
@@ -220,10 +212,10 @@ namespace Nektar
             m_fields[0] = m_vessels[2*omega];
             
             m_beta[omega] = Array<OneD, NekDouble>(nq);
-            EvaluateFunction("beta", m_beta[omega], "MaterialProperties", m_time, omega);
+            GetFunction("MaterialProperties")->Evaluate("beta",  m_beta[omega], m_time, omega);
 
             m_A_0[omega] = Array<OneD, NekDouble>(nq); 
-            EvaluateFunction("A_0", m_A_0[omega], "A_0", m_time, omega);
+            GetFunction("A_0")->Evaluate("A_0",  m_A_0[omega], m_time, omega);
 
             int nqTrace = GetTraceTotPoints();
 
@@ -263,7 +255,6 @@ namespace Nektar
     void PulseWaveSystem::SetUpDomainInterfaces(void)
     {
         map<int,std::vector<InterfacePointShPtr> > VidToDomain;
-        map<int,std::vector<InterfacePointShPtr> >::iterator iter;
 
         // loop over domain and find out if we have any undefined
         // boundary conditions representing interfaces. If so make a
@@ -326,13 +317,13 @@ namespace Nektar
         }
 
         // loop over map and set up Interface information;
-        for(iter = VidToDomain.begin(); iter != VidToDomain.end(); ++iter)
+        for(auto &iter : VidToDomain)
         {
-            if(iter->second.size() == 2) // Vessel jump interface
+            if(iter.second.size() == 2) // Vessel jump interface
             {
-                m_vesselJcts.push_back(iter->second);
+                m_vesselJcts.push_back(iter.second);
             }
-            else if(iter->second.size() == 3) // Bifurcation or Merging junction. 
+            else if(iter.second.size() == 3) // Bifurcation or Merging junction. 
             {
                 int nbeg = 0;
                 int nend = 0;
@@ -343,7 +334,7 @@ namespace Nektar
                 // indicates a bifurcation
                 for(int i = 0; i < 3; ++i)
                 {
-                    if(iter->second[i]->m_elmtVert == 0)
+                    if(iter.second[i]->m_elmtVert == 0)
                     {
                         nbeg += 1;
                     }
@@ -357,26 +348,26 @@ namespace Nektar
                 if(nbeg == 2)
                 {
                     // ensure first InterfacePoint is parent 
-                    if(iter->second[0]->m_elmtVert == 1) //m_elmtVert: Vertex id in local element
+                    if(iter.second[0]->m_elmtVert == 1) //m_elmtVert: Vertex id in local element
                     {
-                        m_bifurcations.push_back(iter->second);
+                        m_bifurcations.push_back(iter.second);
                     }
                     else
                     {
                         //order points according to Riemann solver convention
                         InterfacePointShPtr I;
                         //find merging vessel 
-                        if(iter->second[1]->m_elmtVert == 1)
+                        if(iter.second[1]->m_elmtVert == 1)
                         {
-                            I = iter->second[0];
-                            iter->second[0] = iter->second[1];
-                            iter->second[1] = I;
+                            I = iter.second[0];
+                            iter.second[0] = iter.second[1];
+                            iter.second[1] = I;
                         }
-                        else if (iter->second[2]->m_elmtVert == 1)
+                        else if (iter.second[2]->m_elmtVert == 1)
                         {
-                            I = iter->second[0];
-                            iter->second[0] = iter->second[2];
-                            iter->second[2] = I;
+                            I = iter.second[0];
+                            iter.second[0] = iter.second[2];
+                            iter.second[2] = I;
                         }
                         NEKERROR(ErrorUtil::ewarning,"This routine has not been checked");
                     }                    
@@ -384,26 +375,26 @@ namespace Nektar
                 else
                 {
                     // ensure last InterfacePoint is merged vessel
-                    if(iter->second[0]->m_elmtVert == 0)
+                    if(iter.second[0]->m_elmtVert == 0)
                     {
-                        m_mergingJcts.push_back(iter->second);
+                        m_mergingJcts.push_back(iter.second);
                     }
                     else
                     {
                         //order points according to Riemann solver convention
                         InterfacePointShPtr I;
                         //find merging vessel 
-                        if(iter->second[1]->m_elmtVert == 0)
+                        if(iter.second[1]->m_elmtVert == 0)
                         {
-                            I = iter->second[0];
-                            iter->second[0] = iter->second[1];
-                            iter->second[1] = I;
+                            I = iter.second[0];
+                            iter.second[0] = iter.second[1];
+                            iter.second[1] = I;
                         }
-                        else if (iter->second[2]->m_elmtVert == 0)
+                        else if (iter.second[2]->m_elmtVert == 0)
                         {
-                            I = iter->second[0];
-                            iter->second[0] = iter->second[2];
-                            iter->second[2] = I;
+                            I = iter.second[0];
+                            iter.second[0] = iter.second[2];
+                            iter.second[2] = I;
                         }
                         NEKERROR(ErrorUtil::ewarning,"This routine has not been checked");
                     }
@@ -489,7 +480,7 @@ namespace Nektar
         // Time loop
         for(n = 0; n < m_steps; ++n)
         {				
-            Timer timer;
+            LibUtilities::Timer timer;
             timer.Start();
             fields = m_intScheme->TimeIntegrate(n,m_timestep,m_intSoln,m_ode);
             //cout<<"integration: "<<fields[0][fields[0].num_elements()-1]<<endl;                
@@ -1187,8 +1178,7 @@ namespace Nektar
                     
                     LibUtilities::EquationSharedPtr vEqu
                         = m_session->GetFunction("ExactSolution",field,omega);
-                    EvaluateFunction(m_session->GetVariable(field),exactsoln,"ExactSolution",
-                                     m_time);
+                    GetFunction("ExactSolution")->Evaluate(m_session->GetVariable(field), exactsoln, m_time);
                     
                     L2error_dom = m_vessels[vesselid]->L2(
                                         m_vessels[vesselid]->GetPhys(),
@@ -1266,8 +1256,7 @@ namespace Nektar
                 {
                     Array<OneD, NekDouble> exactsoln(m_vessels[vesselid]->GetNpoints());
                     
-                    EvaluateFunction(m_session->GetVariable(field),exactsoln,"ExactSolution",
-                                     m_time);
+                    GetFunction("ExactSolution")->Evaluate(m_session->GetVariable(field), exactsoln, m_time);
                     
                     LinferrorDom = m_vessels[vesselid]->Linf(
                                         m_vessels[vesselid]->GetPhys(),

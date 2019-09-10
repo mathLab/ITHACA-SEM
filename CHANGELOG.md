@@ -191,6 +191,7 @@ v5.0.0
 
 **Tester**
 - Fix build with boost 1.67 (!947)
+- Various change to tests to decrease test time (!1053)
 
 **Packaging:**
 - Add Dockerfiles and gitlab CI configuration for automatic builds (!1021)

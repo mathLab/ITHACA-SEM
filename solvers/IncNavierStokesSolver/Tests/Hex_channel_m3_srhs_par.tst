@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>3D channel flow, Hexahedral elements, P=8, Successive RHS(5), par(2)</description>
+    <description>3D channel flow, Hexahedral elements, P=3, Successive RHS(5), par(2)</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>--use-scotch Hex_channel_m8_srhs.xml</parameters>
+    <parameters>--use-scotch Hex_channel_m3_srhs.xml</parameters>
     <processes>2</processes>
     <files>
-        <file description="Session File">Hex_channel_m8_srhs.xml</file>
+        <file description="Session File">Hex_channel_m3_srhs.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

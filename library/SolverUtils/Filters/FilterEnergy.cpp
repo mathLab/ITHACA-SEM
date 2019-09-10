@@ -88,7 +88,7 @@ FilterEnergy::FilterEnergy(
     // OutputFrequency
     it = pParams.find("OutputFrequency");
     ASSERTL0(it != pParams.end(), "Missing parameter 'OutputFrequency'.");
-    LibUtilities::Equation equ(m_session->GetExpressionEvaluator(), it->second);
+    LibUtilities::Equation equ(m_session->GetInterpreter(), it->second);
     m_outputFrequency = round(equ.Evaluate());
 }
 

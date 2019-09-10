@@ -42,19 +42,20 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-using namespace std;
 
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/algorithm/string.hpp>
+
 #include <tinyxml.h>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
@@ -62,6 +63,8 @@ using namespace std;
 #ifndef NEKTAR_VERSION
 #define NEKTAR_VERSION "Unknown"
 #endif
+
+using namespace std;
 
 namespace po = boost::program_options;
 namespace io = boost::iostreams;
@@ -203,9 +206,8 @@ namespace Nektar
                     "IterativeStaticCond";
             }
 
-            m_exprEvaluator = MemoryManager<AnalyticExpressionEvaluator>
-                ::AllocateSharedPtr();
-            m_exprEvaluator->SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
+            m_interpreter = MemoryManager<Interpreter>::AllocateSharedPtr();
+            m_interpreter->SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
 
             // Split up the communicator
             PartitionComm();
@@ -249,9 +251,8 @@ namespace Nektar
                     "IterativeStaticCond";
             }
 
-            m_exprEvaluator = MemoryManager<AnalyticExpressionEvaluator>
-                ::AllocateSharedPtr();
-            m_exprEvaluator->SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
+            m_interpreter = MemoryManager<Interpreter>::AllocateSharedPtr();
+            m_interpreter->SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
 
             // Split up the communicator
             PartitionComm();
@@ -592,7 +593,7 @@ namespace Nektar
          */
         TiXmlElement* SessionReader::GetElement(const string& pPath)
         {
-            std::string vPath = boost::to_upper_copy(pPath);
+            std::string vPath = to_upper_copy(pPath);
             std::vector<std::string> st;
             boost::split(st, vPath, boost::is_any_of("\\/ "));
             ASSERTL0(st.size() > 0, "No path given in XML element request.");
@@ -615,7 +616,7 @@ namespace Nektar
          */
         bool SessionReader::DefinesElement(const std::string &pPath) const
         {
-            std::string vPath = boost::to_upper_copy(pPath);
+            std::string vPath = to_upper_copy(pPath);
             std::vector<std::string> st;
             boost::split(st, vPath, boost::is_any_of("\\/ "));
             ASSERTL0(st.size() > 0, "No path given in XML element request.");
@@ -697,7 +698,7 @@ namespace Nektar
          */
         bool SessionReader::DefinesParameter(const std::string& pName) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             return m_parameters.find(vName) != m_parameters.end();
         }
 
@@ -713,7 +714,7 @@ namespace Nektar
         const NekDouble& SessionReader::GetParameter(
             const std::string& pName) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto paramIter = m_parameters.find(vName);
 
             ASSERTL0(paramIter != m_parameters.end(),
@@ -729,7 +730,7 @@ namespace Nektar
         void SessionReader::LoadParameter(
             const std::string &pName, int &pVar) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto paramIter = m_parameters.find(vName);
             ASSERTL0(paramIter != m_parameters.end(), "Required parameter '" +
                      pName + "' not specified in session.");
@@ -743,7 +744,7 @@ namespace Nektar
         void SessionReader::LoadParameter(
             const std::string &pName, int &pVar, const int &pDefault) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto paramIter = m_parameters.find(vName);
             if(paramIter != m_parameters.end())
             {
@@ -762,7 +763,7 @@ namespace Nektar
         void SessionReader::LoadParameter(
             const std::string &pName, NekDouble& pVar) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto paramIter = m_parameters.find(vName);
             ASSERTL0(paramIter != m_parameters.end(), "Required parameter '" +
                      pName + "' not specified in session.");
@@ -778,7 +779,7 @@ namespace Nektar
                   NekDouble   &pVar,
             const NekDouble   &pDefault) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto paramIter = m_parameters.find(vName);
             if(paramIter != m_parameters.end())
             {
@@ -797,7 +798,7 @@ namespace Nektar
          */
         void SessionReader::SetParameter(const std::string &pName, int &pVar)
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             m_parameters[vName] = pVar;
         }
 
@@ -808,7 +809,7 @@ namespace Nektar
         void SessionReader::SetParameter(
             const std::string &pName, NekDouble& pVar)
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             m_parameters[vName] = pVar;
         }
 
@@ -819,7 +820,7 @@ namespace Nektar
          */
         bool SessionReader::DefinesSolverInfo(const std::string &pName) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto infoIter = m_solverInfo.find(vName);
             return (infoIter != m_solverInfo.end());
         }
@@ -831,7 +832,7 @@ namespace Nektar
         const std::string& SessionReader::GetSolverInfo(
             const std::string &pProperty) const
         {
-            std::string vProperty = boost::to_upper_copy(pProperty);
+            std::string vProperty = to_upper_copy(pProperty);
             auto iter = m_solverInfo.find(vProperty);
 
             ASSERTL1(iter != m_solverInfo.end(),
@@ -846,7 +847,7 @@ namespace Nektar
         void SessionReader::SetSolverInfo(
             const std::string &pProperty, const std::string &pValue)
         {
-            std::string vProperty = boost::to_upper_copy(pProperty);
+            std::string vProperty = to_upper_copy(pProperty);
             auto iter = m_solverInfo.find(vProperty);
 
             ASSERTL1(iter != m_solverInfo.end(),
@@ -863,7 +864,7 @@ namespace Nektar
                   std::string &pVar,
             const std::string &pDefault) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto infoIter = m_solverInfo.find(vName);
             if(infoIter != m_solverInfo.end())
             {
@@ -885,7 +886,7 @@ namespace Nektar
                   bool        &pVar,
             const bool        &pDefault) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto infoIter = m_solverInfo.find(vName);
             if(infoIter != m_solverInfo.end())
             {
@@ -907,7 +908,7 @@ namespace Nektar
         {
             if (DefinesSolverInfo(pName))
             {
-                std::string vName = boost::to_upper_copy(pName);
+                std::string vName = to_upper_copy(pName);
                 auto iter = m_solverInfo.find(vName);
                 if(iter != m_solverInfo.end())
                 {
@@ -930,7 +931,7 @@ namespace Nektar
                 return false;
             }
 
-            std::string vProperty = boost::to_upper_copy(pProperty);
+            std::string vProperty = to_upper_copy(pProperty);
 
             auto iter1 = iter->second.find(vProperty);
             if(iter1 == iter->second.end())
@@ -951,7 +952,7 @@ namespace Nektar
             ASSERTL0(iter != GetGloSysSolnList().end(),
                      "Failed to find variable in GlobalSysSolnInfoList");
 
-            std::string vProperty = boost::to_upper_copy(pProperty);
+            std::string vProperty = to_upper_copy(pProperty);
             auto iter1 = iter->second.find(vProperty);
 
             ASSERTL0(iter1 != iter->second.end(),
@@ -997,7 +998,7 @@ namespace Nektar
          */
         bool SessionReader::DefinesGeometricInfo(const std::string &pName) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             return m_geometricInfo.find(vName) != m_geometricInfo.end();
         }
 
@@ -1010,7 +1011,7 @@ namespace Nektar
                   std::string &pVar,
             const std::string &pDefault) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto iter = m_geometricInfo.find(vName);
             if(iter != m_geometricInfo.end())
             {
@@ -1031,7 +1032,7 @@ namespace Nektar
                   bool        &pVar,
             const bool        &pDefault) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto iter = m_geometricInfo.find(vName);
             if(iter != m_geometricInfo.end())
             {
@@ -1059,7 +1060,7 @@ namespace Nektar
                   NekDouble   &pVar,
             const NekDouble   &pDefault) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto iter = m_geometricInfo.find(vName);
             if(iter != m_geometricInfo.end())
             {
@@ -1081,7 +1082,7 @@ namespace Nektar
                   bool        &pVar,
             const bool        &pDefault) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto iter = m_geometricInfo.find(vName);
             if(iter != m_geometricInfo.end())
             {
@@ -1131,7 +1132,7 @@ namespace Nektar
          */
         bool SessionReader::DefinesFunction(const std::string &pName) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             return m_functions.find(vName) != m_functions.end();
         }
 
@@ -1144,7 +1145,7 @@ namespace Nektar
             const std::string &pVariable,
             const int pDomain) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
 
             // Check function exists
             auto it1 = m_functions.find(vName);
@@ -1169,7 +1170,7 @@ namespace Nektar
             const std::string &pVariable,
             const int pDomain) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto it1 = m_functions.find(vName);
 
             ASSERTL0(it1 != m_functions.end(),
@@ -1225,7 +1226,7 @@ namespace Nektar
             const std::string &pVariable,
             const int pDomain) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto it1 = m_functions.find(vName);
 
             ASSERTL0 (it1 != m_functions.end(),
@@ -1279,7 +1280,7 @@ namespace Nektar
             const std::string &pVariable,
             const int pDomain) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto it1 = m_functions.find(vName);
 
             ASSERTL0 (it1 != m_functions.end(),
@@ -1333,7 +1334,7 @@ namespace Nektar
             const std::string &pVariable,
             const int pDomain) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto it1 = m_functions.find(vName);
 
             ASSERTL0 (it1 != m_functions.end(),
@@ -1371,7 +1372,7 @@ namespace Nektar
          */
         bool SessionReader::DefinesTag(const std::string &pName) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             return m_tags.find(vName) != m_tags.end();
         }
 
@@ -1383,7 +1384,7 @@ namespace Nektar
             const std::string &pName,
             const std::string &pValue)
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             m_tags[vName] = pValue;
         }
 
@@ -1393,7 +1394,7 @@ namespace Nektar
          */
         const std::string &SessionReader::GetTag(const std::string& pName) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             auto vTagIterator = m_tags.find(vName);
             ASSERTL0(vTagIterator != m_tags.end(),
                      "Requested tag does not exist.");
@@ -1716,7 +1717,7 @@ namespace Nektar
                             try
                             {
                                 LibUtilities::Equation expession(
-                                    m_exprEvaluator, rhs);
+                                    m_interpreter, rhs);
                                 value = expession.Evaluate();
                             }
                             catch (const std::runtime_error &)
@@ -1726,7 +1727,7 @@ namespace Nektar
                                          " '" + rhs + "' in XML element: \n\t'"
                                          + tagcontent.str() + "'");
                             }
-                            m_exprEvaluator->SetParameter(lhs, value);
+                            m_interpreter->SetParameter(lhs, value);
                             caseSensitiveParameters[lhs] = value;
                             boost::to_upper(lhs);
                             m_parameters[lhs] = value;
@@ -1776,7 +1777,7 @@ namespace Nektar
 
                     // make sure that solver property is capitalised
                     std::string solverPropertyUpper =
-                        boost::to_upper_copy(solverProperty);
+                        to_upper_copy(solverProperty);
 
                     // read the value
                     ASSERTL0(solverInfo->Attribute("VALUE"),
@@ -1882,7 +1883,7 @@ namespace Nektar
 
                         // make sure that solver property is capitalised
                         std::string SysSolnPropertyUpper =
-                                        boost::to_upper_copy(SysSolnProperty);
+                                        to_upper_copy(SysSolnProperty);
 
                         // read the value
                         ASSERTL0(SysSolnInfo->Attribute("VALUE"),
@@ -2177,7 +2178,7 @@ namespace Nektar
 
                         // set expression
                         funcDef.m_expression = MemoryManager<Equation>
-                            ::AllocateSharedPtr(m_exprEvaluator, fcnStr, evarsStr);
+                            ::AllocateSharedPtr(m_interpreter, fcnStr, evarsStr);
                     }
 
                     // Files are denoted by F
@@ -2377,7 +2378,7 @@ namespace Nektar
                                  "option: "+solverInfoList[i]);
                     }
 
-                    std::string lhsUpper = boost::to_upper_copy(lhs);
+                    std::string lhsUpper = to_upper_copy(lhs);
                     m_solverInfo[lhsUpper] = rhs;
                 }
             }
@@ -2402,7 +2403,7 @@ namespace Nektar
                                  "option: "+parametersList[i]);
                     }
 
-                    std::string lhsUpper = boost::to_upper_copy(lhs);
+                    std::string lhsUpper = to_upper_copy(lhs);
 
                     try
                     {
@@ -2442,9 +2443,9 @@ namespace Nektar
             m_xmlDoc = MergeDoc(m_filenames);
         }
 
-        ExpressionEvaluatorShPtr SessionReader::GetExpressionEvaluator()
+        InterpreterSharedPtr SessionReader::GetInterpreter()
         {
-            return m_exprEvaluator;
+            return m_interpreter;
         }
     }
 }

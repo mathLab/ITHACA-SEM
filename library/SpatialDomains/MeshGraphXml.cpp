@@ -36,7 +36,7 @@
 #include <SpatialDomains/MeshGraphXml.h>
 #include <SpatialDomains/MeshPartition.h>
 
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
@@ -455,8 +455,7 @@ void MeshGraphXml::ReadVertices()
 
     // check to see if any scaling parameters are in
     // attributes and determine these values
-    LibUtilities::AnalyticExpressionEvaluator expEvaluator;
-    // LibUtilities::ExpressionEvaluator expEvaluator;
+    LibUtilities::Interpreter expEvaluator;
     const char *xscal = element->Attribute("XSCALE");
     if (!xscal)
     {
@@ -498,7 +497,6 @@ void MeshGraphXml::ReadVertices()
     // check to see if any moving parameters are in
     // attributes and determine these values
 
-    // LibUtilities::ExpressionEvaluator expEvaluator;
     const char *xmov = element->Attribute("XMOVE");
     if (!xmov)
     {
@@ -617,7 +615,7 @@ void MeshGraphXml::ReadCurves()
 
     NekDouble xscale, yscale, zscale;
 
-    LibUtilities::AnalyticExpressionEvaluator expEvaluator;
+    LibUtilities::Interpreter expEvaluator;
     const char *xscal = element->Attribute("XSCALE");
     if (!xscal)
     {
@@ -659,7 +657,6 @@ void MeshGraphXml::ReadCurves()
     // check to see if any moving parameters are in
     // attributes and determine these values
 
-    // LibUtilities::ExpressionEvaluator expEvaluator;
     const char *xmov = element->Attribute("XMOVE");
     if (!xmov)
     {

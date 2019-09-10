@@ -57,7 +57,7 @@ FilterAverageFields::FilterAverageFields(
     else
     {
         LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+            m_session->GetInterpreter(), it->second);
         m_sampleFrequency = round(equ.Evaluate());
     }
 }

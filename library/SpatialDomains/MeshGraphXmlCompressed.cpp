@@ -40,6 +40,7 @@
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/CompressData.h>
 
+#include <LibUtilities/Interpreter/Interpreter.h>
 #include <SpatialDomains/MeshEntities.hpp>
 
 // These are required for the Write(...) and Import(...) functions.
@@ -75,8 +76,7 @@ void MeshGraphXmlCompressed::ReadVertices()
 
     // check to see if any scaling parameters are in
     // attributes and determine these values
-    LibUtilities::AnalyticExpressionEvaluator expEvaluator;
-    // LibUtilities::ExpressionEvaluator expEvaluator;
+    LibUtilities::Interpreter expEvaluator;
     const char *xscal = element->Attribute("XSCALE");
     if (!xscal)
     {
@@ -118,7 +118,6 @@ void MeshGraphXmlCompressed::ReadVertices()
     // check to see if any moving parameters are in
     // attributes and determine these values
 
-    // LibUtilities::ExpressionEvaluator expEvaluator;
     const char *xmov = element->Attribute("XMOVE");
     if (!xmov)
     {
@@ -213,7 +212,7 @@ void MeshGraphXmlCompressed::ReadCurves()
 
     NekDouble xscale, yscale, zscale;
 
-    LibUtilities::AnalyticExpressionEvaluator expEvaluator;
+    LibUtilities::Interpreter expEvaluator;
     const char *xscal = element->Attribute("XSCALE");
     if (!xscal)
     {
@@ -255,7 +254,6 @@ void MeshGraphXmlCompressed::ReadCurves()
     // check to see if any moving parameters are in
     // attributes and determine these values
 
-    // LibUtilities::ExpressionEvaluator expEvaluator;
     const char *xmov = element->Attribute("XMOVE");
     if (!xmov)
     {

@@ -177,11 +177,11 @@ SET(FoundationSources
 )
 
 SET(InterpreterHeaders
-      ./Interpreter/AnalyticExpressionEvaluator.hpp
+    ./Interpreter/Interpreter.h
 )
 
 SET(InterpreterSources
-        ./Interpreter/AnalyticExpressionEvaluator.cpp
+    ./Interpreter/Interpreter.cpp
 )
 
 SET(KernelHeaders

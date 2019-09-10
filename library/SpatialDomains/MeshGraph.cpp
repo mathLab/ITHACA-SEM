@@ -2762,7 +2762,7 @@ void MeshGraph::ReadExpansions()
                     // nummodes ");
                     if (m_session)
                     {
-                        LibUtilities::Equation nummodesEqn(m_session->GetExpressionEvaluator(), nummodesStr);
+                        LibUtilities::Equation nummodesEqn(m_session->GetInterpreter(), nummodesStr);
                         num_modes = (int)nummodesEqn.Evaluate();
                     }
                     else
@@ -3038,7 +3038,7 @@ void MeshGraph::ReadExpansions()
 
                     if (m_session)
                     {
-                        LibUtilities::Equation nummodesEqn(m_session->GetExpressionEvaluator(), nummodesStr);
+                        LibUtilities::Equation nummodesEqn(m_session->GetInterpreter(), nummodesStr);
                         num_modes_x = (int)nummodesEqn.Evaluate();
                     }
                     else
@@ -3070,7 +3070,7 @@ void MeshGraph::ReadExpansions()
                     // nummodes ");
                     if (m_session)
                     {
-                        LibUtilities::Equation nummodesEqn(m_session->GetExpressionEvaluator(), nummodesStr);
+                        LibUtilities::Equation nummodesEqn(m_session->GetInterpreter(), nummodesStr);
                         num_modes_y = (int)nummodesEqn.Evaluate();
                     }
                     else
@@ -3102,7 +3102,7 @@ void MeshGraph::ReadExpansions()
                     // nummodes ");
                     if (m_session)
                     {
-                        LibUtilities::Equation nummodesEqn(m_session->GetExpressionEvaluator(), nummodesStr);
+                        LibUtilities::Equation nummodesEqn(m_session->GetInterpreter(), nummodesStr);
                         num_modes_z = (int)nummodesEqn.Evaluate();
                     }
                     else

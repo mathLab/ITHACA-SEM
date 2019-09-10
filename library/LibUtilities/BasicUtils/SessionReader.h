@@ -40,10 +40,11 @@
 #include <memory>
 
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/StringUtils.hpp>
+#include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/program_options/variables_map.hpp>
 
 class TiXmlElement;
@@ -94,13 +95,6 @@ namespace Nektar
             "Expression",
             "File"
         };
-
-        class Equation;
-        typedef std::shared_ptr<Equation> EquationSharedPtr;
-
-        class AnalyticExpressionEvaluator;
-        typedef std::shared_ptr<AnalyticExpressionEvaluator>
-            ExpressionEvaluatorShPtr;
 
         struct FunctionVariableDefinition
         {
@@ -378,10 +372,9 @@ namespace Nektar
                 const std::string &variable,
                 const int pDomain = 0) const;
 
-            /// Returns the instance of AnalyticExpressionEvaluator specific to
-            /// this session.
-            LIB_UTILITIES_EXPORT ExpressionEvaluatorShPtr
-                GetExpressionEvaluator();
+            /// Returns the instance of the Interpreter specific to this
+            /// session.
+            LIB_UTILITIES_EXPORT InterpreterSharedPtr GetInterpreter();
 
             /* ------ TAGS ------ */
             /// Checks if a specified tag is defined.
@@ -446,8 +439,8 @@ namespace Nektar
             GeometricInfoMap                          m_geometricInfo;
             /// Expressions.
             ExpressionMap                             m_expressions;
-            /// Analytic expression evaluator instance.
-            ExpressionEvaluatorShPtr                  m_exprEvaluator;
+            /// Interpreter instance.
+            InterpreterSharedPtr                      m_interpreter;
             /// Functions.
             FunctionMap                               m_functions;
             /// Variables.
@@ -547,7 +540,7 @@ namespace Nektar
         inline const T SessionReader::GetSolverInfoAsEnum(
             const std::string &pName) const
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             ASSERTL0(DefinesSolverInfo(vName),
                      "Solver info '" + pName + "' not defined.");
 
@@ -574,7 +567,7 @@ namespace Nektar
             const std::string &pName,
             const std::string &pValue) const
         {
-            std::string vName  = boost::to_upper_copy(pName);
+            std::string vName  = to_upper_copy(pName);
 
             auto x = GetSolverInfoEnums().find(vName);
             ASSERTL0(x != GetSolverInfoEnums().end(),
@@ -616,7 +609,7 @@ namespace Nektar
         inline std::string SessionReader::RegisterEnumValue(
             std::string pEnum, std::string pString, int pEnumValue)
         {
-            std::string vEnum = boost::to_upper_copy(pEnum);
+            std::string vEnum = to_upper_copy(pEnum);
             auto x = GetSolverInfoEnums().find(vEnum);
 
             if (x == GetSolverInfoEnums().end())
@@ -651,7 +644,7 @@ namespace Nektar
             const std::string &pName,
             const std::string &pValue)
         {
-            std::string vName = boost::to_upper_copy(pName);
+            std::string vName = to_upper_copy(pName);
             GetSolverInfoDefaults()[vName] = pValue;
             return pValue;
         }

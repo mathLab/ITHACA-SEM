@@ -6,6 +6,7 @@ v5.0.0
 **Library**
 - Added in sum factorisation version for pyramid expansions and orthogonal
   expansion in pyramids (!750)
+- Added detection of 'abort' file to cleanly terminate simulation early (!772)
 - Significant overhaul of CMake infrastructure (!770, !804)
 - Fix ThridpartyCCM options (!802)
 - Fix Windows CRLF tokens in GEO reader and improve comment handling (!805)

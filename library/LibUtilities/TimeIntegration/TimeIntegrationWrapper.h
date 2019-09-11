@@ -117,7 +117,7 @@ namespace LibUtilities {
     // IMEXOrder1
     // --------
     class TimeIntegrationIMEXOrder1;
-    typedef boost::shared_ptr<TimeIntegrationIMEXOrder1>
+    typedef std::shared_ptr<TimeIntegrationIMEXOrder1>
     TimeIntegrationIMEXOrder1SharedPtr;
 
     class TimeIntegrationIMEXOrder1 : public TimeIntegrationWrapper

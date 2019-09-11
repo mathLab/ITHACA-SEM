@@ -160,18 +160,18 @@ namespace Nektar
     {
         ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
         ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
-            boost::lexical_cast<std::string>(curRow) + " of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
+            std::to_string(curRow) + " of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " upper triangular matrix.");
         ASSERTL1(curColumn < totalColumns, "Attemping to iterate through an element on row " +
-            boost::lexical_cast<std::string>(curColumn) + " of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
+            std::to_string(curColumn) + " of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " upper triangular matrix.");
         ASSERTL1(curRow <= curColumn, "Attemping to iterate through element (" +
-            boost::lexical_cast<std::string>(curRow) + ", " +
-            boost::lexical_cast<std::string>(curColumn) + ") of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
+            std::to_string(curRow) + ", " +
+            std::to_string(curColumn) + ") of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " upper triangular matrix.");
 
         unsigned int nextRow = curRow;
         unsigned int nextColumn = curColumn;
@@ -216,18 +216,18 @@ namespace Nektar
     {
         ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
         ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
-            boost::lexical_cast<std::string>(curRow) + " of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
+            std::to_string(curRow) + " of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " lower triangular matrix.");
         ASSERTL1(curColumn < totalColumns, "Attemping to iterate through an element on row " +
-            boost::lexical_cast<std::string>(curColumn) + " of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
+            std::to_string(curColumn) + " of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " lower triangular matrix.");
         ASSERTL1(curRow >= curColumn, "Attemping to iterate through element (" +
-            boost::lexical_cast<std::string>(curRow) + ", " +
-            boost::lexical_cast<std::string>(curColumn) + ") of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
+            std::to_string(curRow) + ", " +
+            std::to_string(curColumn) + ") of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " lower triangular matrix.");
 
         if( transpose == 'T' )
         {
@@ -277,13 +277,13 @@ namespace Nektar
     {
         ASSERTL1(totalRows == totalColumns, "Symmetric matrices must be square.");
         ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
-            boost::lexical_cast<std::string>(curRow) + " of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " symmetric matrix.");
+            std::to_string(curRow) + " of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " symmetric matrix.");
         ASSERTL1(curColumn < totalColumns, "Attemping to iterate through an element on row " +
-            boost::lexical_cast<std::string>(curColumn) + " of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " symmetric matrix.");
+            std::to_string(curColumn) + " of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " symmetric matrix.");
 
         unsigned int nextRow = curRow;
         unsigned int nextColumn = curColumn;

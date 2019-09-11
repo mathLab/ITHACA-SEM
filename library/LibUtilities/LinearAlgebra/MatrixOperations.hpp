@@ -222,9 +222,9 @@ void MultiplyEqual(
 {
     ASSERTL1(result.GetColumns() == rhs.GetRows(),
              std::string("A left side matrix with column count ") +
-                 boost::lexical_cast<std::string>(result.GetColumns()) +
+                 std::to_string(result.GetColumns()) +
                  std::string(" and a right side matrix with row count ") +
-                 boost::lexical_cast<std::string>(rhs.GetRows()) +
+                 std::to_string(rhs.GetRows()) +
                  std::string(" can't be multiplied."));
     NekMatrix<DataType, StandardMatrixTag> temp(result.GetRows(),
                                                 result.GetColumns());

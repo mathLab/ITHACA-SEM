@@ -45,8 +45,6 @@
 #include <LibUtilities/LinearAlgebra/SparseMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 
-#include <boost/lexical_cast.hpp>
-
 using std::min;
 using std::max;
 

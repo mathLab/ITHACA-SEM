@@ -117,14 +117,14 @@ GeomFactorsSharedPtr Geometry::ValidateRegGeomFactor(
     return returnval;
 }
 
-bool SortByGlobalId(const boost::shared_ptr<Geometry> &lhs,
-                    const boost::shared_ptr<Geometry> &rhs)
+bool SortByGlobalId(const std::shared_ptr<Geometry> &lhs,
+                    const std::shared_ptr<Geometry> &rhs)
 {
     return lhs->GetGlobalID() < rhs->GetGlobalID();
 }
 
-bool GlobalIdEquality(const boost::shared_ptr<Geometry> &lhs,
-                      const boost::shared_ptr<Geometry> &rhs)
+bool GlobalIdEquality(const std::shared_ptr<Geometry> &lhs,
+                      const std::shared_ptr<Geometry> &rhs)
 {
     return lhs->GetGlobalID() == rhs->GetGlobalID();
 }

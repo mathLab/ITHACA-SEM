@@ -410,7 +410,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         {
             bakPath = specPath.parent_path();
             bakPath += specPath.stem();
-            bakPath += fs::path(".bak" + boost::lexical_cast<std::string>(cnt++));
+            bakPath += fs::path(".bak" + std::to_string(cnt++));
             bakPath += specPath.extension();
         }
         std::cout << "renaming " << specPath << " -> " << bakPath << std::endl;

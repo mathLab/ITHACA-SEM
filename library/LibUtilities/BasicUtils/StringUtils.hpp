@@ -23,6 +23,21 @@ inline std::string to_upper_copy(const std::string &s)
     return cp;
 }
 
+inline void to_lower(std::string &s)
+{
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c) {
+                       return std::tolower(c);
+                   });
+}
+
+inline std::string to_lower_copy(const std::string &s)
+{
+    std::string cp = s;
+    to_lower(cp);
+    return cp;
+}
+
 }
 
 #endif

@@ -82,13 +82,13 @@ void LEE::v_InitObject()
 
     string riemName;
     m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
-    if (boost::to_lower_copy(riemName) == "characteristics" ||
-        boost::to_lower_copy(riemName) == "leeupwind" ||
-        boost::to_lower_copy(riemName) == "upwind")
+    if (to_lower_copy(riemName) == "characteristics" ||
+        to_lower_copy(riemName) == "leeupwind" ||
+        to_lower_copy(riemName) == "upwind")
     {
         riemName = "LEEUpwind";
     }
-    if (boost::to_lower_copy(riemName) == "laxfriedrichs")
+    if (to_lower_copy(riemName) == "laxfriedrichs")
     {
         riemName = "LEELaxFriedrichs";
     }

@@ -346,7 +346,7 @@ void Geometry::v_Setup()
  * region to account for convex hull elements where the true extent of the
  * element may extend slightly beyond the quadrature points.
  */
-void Geometry::GenBoundingBox()
+std::array<NekDouble, 6> Geometry::GetBoundingBox()
 {
     //NekDouble minx, miny, minz, maxx, maxy, maxz;
     Array<OneD, NekDouble> min(3), max(3);
@@ -405,10 +405,9 @@ void Geometry::GenBoundingBox()
         min[j] -= NekConstants::kGeomFactorsTol*len;
         max[j] += NekConstants::kGeomFactorsTol*len;
     }
-    // Save bounding box
-    BgPoint pmin(min[0], min[1], min[2]);
-    BgPoint pmax(max[0], max[1], max[2]);
-    m_boundingBox = BgBox(pmin, pmax);
+
+    // Return bounding box
+    return { min[0], min[1], min[2], max[0], max[1], max[2] };
 }
 
 }

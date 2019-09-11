@@ -41,7 +41,7 @@
 
 namespace Nektar
 {
-Gs::string MMFAdvection::className =
+std::string MMFAdvection::className =
     SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
         "MMFAdvection", MMFAdvection::create, "MMFAdvection equation.");
 
@@ -74,7 +74,7 @@ void MMFAdvection::v_InitObject()
     // Define TestType
     ASSERTL0(m_session->DefinesSolverInfo("TESTTYPE"),
              "No TESTTYPE defined in session.");
-    Gs::string TestTypeStr = m_session->GetSolverInfo("TESTTYPE");
+    std::string TestTypeStr = m_session->GetSolverInfo("TESTTYPE");
     for (int i = 0; i < (int)SIZE_TestType; ++i)
     {
         if (boost::iequals(TestTypeMap[i], TestTypeStr))
@@ -93,7 +93,7 @@ void MMFAdvection::v_InitObject()
     m_session->LoadParameter("advy", m_advy, 1.0);
     m_session->LoadParameter("advz", m_advz, 1.0);
 
-    std::vector<Gs::string> vel;
+    std::vector<std::string> vel;
     vel.push_back("Vx");
     vel.push_back("Vy");
     vel.push_back("Vz");
@@ -132,9 +132,9 @@ void MMFAdvection::v_InitObject()
             break;
     }
 
-    Gs::cout << "|Velocity vector| = ( " << RootMeanSquare(m_velocity[0])
+    std::cout << "|Velocity vector| = ( " << RootMeanSquare(m_velocity[0])
              << " , " << RootMeanSquare(m_velocity[1]) << " , "
-             << RootMeanSquare(m_velocity[2]) << " ) " << Gs::endl;
+             << RootMeanSquare(m_velocity[2]) << " ) " << std::endl;
 
     // Define the normal velocity fields
     if (m_fields[0]->GetTrace())
@@ -142,8 +142,8 @@ void MMFAdvection::v_InitObject()
         m_traceVn = Array<OneD, NekDouble>(GetTraceNpoints());
     }
 
-    string advName;
-    string riemName;
+    std::string advName;
+    std::string riemName;
     m_session->LoadSolverInfo(
         "AdvectionType", advName, "WeakDG");
     m_advObject = SolverUtils::
@@ -165,8 +165,8 @@ void MMFAdvection::v_InitObject()
 
     // Compute m_vellc = nabal a^j \cdot m_vel
     ComputeNablaCdotVelocity(m_vellc);
-    Gs::cout << "m_vellc is generated with mag = " << AvgInt(m_vellc)
-             << Gs::endl;
+    std::cout << "m_vellc is generated with mag = " << AvgInt(m_vellc)
+             << std::endl;
 
     // Compute vel \cdot MF
     ComputeveldotMF(m_veldotMF);
@@ -282,21 +282,21 @@ void MMFAdvection::v_DoSolve()
         // Write out status information
         if (m_session->GetComm()->GetRank() == 0 && !((step + 1) % m_infosteps))
         {
-            Gs::cout << "Steps: " << std::setw(8) << Gs::left << step + 1 << " "
-                     << "Time: " << std::setw(12) << Gs::left << m_time;
+            std::cout << "Steps: " << std::setw(8) << std::left << step + 1 << " "
+                     << "Time: " << std::setw(12) << std::left << m_time;
 
-            Gs::stringstream ss;
+            std::stringstream ss;
             ss << cpuTime << "s";
-            Gs::cout << " CPU Time: " << std::setw(8) << Gs::left << ss.str()
-                     << Gs::endl;
+            std::cout << " CPU Time: " << std::setw(8) << std::left << ss.str()
+                     << std::endl;
 
             // Masss = h^*
             indx = (step + 1) / m_checksteps;
             dMass[indx] =
                 (m_fields[0]->PhysIntegral(fields[0]) - m_Mass0) / m_Mass0;
 
-            Gs::cout << "dMass = " << std::setw(8) << Gs::left << dMass[indx]
-                     << Gs::endl;
+            std::cout << "dMass = " << std::setw(8) << std::left << dMass[indx]
+                     << std::endl;
 
             cpuTime = 0.0;
         }
@@ -322,25 +322,25 @@ void MMFAdvection::v_DoSolve()
         ++step;
     }
 
-    Gs::cout << "dMass = ";
+    std::cout << "dMass = ";
     for (i = 0; i < Ntot; ++i)
     {
-        Gs::cout << dMass[i] << " , ";
+        std::cout << dMass[i] << " , ";
     }
-    Gs::cout << Gs::endl << Gs::endl;
+    std::cout << std::endl << std::endl;
 
     // Print out summary statistics
     if (m_session->GetComm()->GetRank() == 0)
     {
         if (m_cflSafetyFactor > 0.0)
         {
-            Gs::cout << "CFL safety factor : " << m_cflSafetyFactor << Gs::endl
-                     << "CFL time-step     : " << m_timestep << Gs::endl;
+            std::cout << "CFL safety factor : " << m_cflSafetyFactor << std::endl
+                     << "CFL time-step     : " << m_timestep << std::endl;
         }
 
         if (m_session->GetSolverInfo("Driver") != "SteadyState")
         {
-            Gs::cout << "Time-integration  : " << intTime << "s" << Gs::endl;
+            std::cout << "Time-integration  : " << intTime << "s" << std::endl;
         }
     }
 
@@ -675,9 +675,9 @@ void MMFAdvection::EvaluateAdvectionVelocity(
             Vmath::Vadd(nq, tmp, 1, Projection, 1, Projection, 1);
         }
 
-        Gs::cout
+        std::cout
             << "Velocity vector is projected onto the tangent plane: Diff = "
-            << RootMeanSquare(Projection) << Gs::endl;
+            << RootMeanSquare(Projection) << std::endl;
 
         for (int k = 0; k < m_spacedim; ++k)
         {
@@ -845,12 +845,12 @@ zcutoff)/(1.0-zcutoff) );
           newvelocity[k] = Array<OneD, NekDouble>(nq);
         }
 
-        Gs::cout <<"=====================================================" <<
-Gs::endl;
-        Gs::cout << "Velocity vector is projected onto the tangent plane " <<
-Gs::endl;
-        Gs::cout <<"=====================================================" <<
-Gs::endl;
+        std::cout <<"=====================================================" <<
+std::endl;
+        std::cout << "Velocity vector is projected onto the tangent plane " <<
+std::endl;
+        std::cout <<"=====================================================" <<
+std::endl;
         GramSchumitz(m_surfaceNormal, m_velocity, newvelocity);
 
       for(int k=0; k<m_spacedim; ++k)
@@ -1045,7 +1045,7 @@ void MMFAdvection::v_SetInitialConditions(const NekDouble initialtime,
             m_fields[0]->SetPhys(u);
 
             m_Mass0 = m_fields[0]->PhysIntegral(u);
-            Gs::cout << "m_Mass0 = " << m_Mass0 << Gs::endl;
+            std::cout << "m_Mass0 = " << m_Mass0 << std::endl;
 
             // forward transform to fill the modal coeffs
             for (int i = 0; i < m_fields.num_elements(); ++i)
@@ -1079,7 +1079,7 @@ void MMFAdvection::v_SetInitialConditions(const NekDouble initialtime,
     if (dumpInitialConditions)
     {
         // dump initial conditions to file
-        Gs::string outname = m_sessionName + "_initial.chk";
+        std::string outname = m_sessionName + "_initial.chk";
         WriteFld(outname);
     }
 }

@@ -37,10 +37,6 @@
 
 #include <unordered_map>
 
-#include <boost/geometry/geometry.hpp>
-#include <boost/geometry/index/rtree.hpp>
-namespace bg = boost::geometry;
-
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 
@@ -164,9 +160,6 @@ typedef std::shared_ptr<std::vector<std::pair<GeometrySharedPtr, int>>>
 
 typedef std::map<std::string, std::string> MeshMetaDataMap;
 
-typedef std::pair<BgBox, int> BgRtreeValue;
-typedef bg::index::rtree< BgRtreeValue, bg::index::rstar<16, 4> > BgRtree;
-
 class MeshGraph;
 typedef std::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 
@@ -174,9 +167,8 @@ typedef std::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 class MeshGraph
 {
 public:
-    SPATIAL_DOMAINS_EXPORT MeshGraph()
-    {
-    }
+    SPATIAL_DOMAINS_EXPORT MeshGraph();
+    SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph();
 
     SPATIAL_DOMAINS_EXPORT static MeshGraphSharedPtr Read(
         const LibUtilities::SessionReaderSharedPtr pSession,
@@ -200,13 +192,11 @@ public:
 
     SPATIAL_DOMAINS_EXPORT void FillBoundingBoxTree();
 
-    SPATIAL_DOMAINS_EXPORT std::vector<BgRtreeValue> GetElementsContainingPoint(
-            PointGeomSharedPtr p);
+    SPATIAL_DOMAINS_EXPORT std::vector<int> GetElementsContainingPoint(
+        PointGeomSharedPtr p);
 
     ////////////////////
     ////////////////////
-
-    SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph();
 
     SPATIAL_DOMAINS_EXPORT void ReadExpansions();
 
@@ -478,7 +468,8 @@ protected:
     CompositeOrdering m_compOrder;
     BndRegionOrdering m_bndRegOrder;
 
-    BgRtree m_boundingBoxTree;
+    struct GeomRTree;
+    std::unique_ptr<GeomRTree> m_boundingBoxTree;
 };
 typedef std::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 typedef LibUtilities::NekFactory<std::string, MeshGraph> MeshGraphFactory;

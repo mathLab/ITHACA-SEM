@@ -44,6 +44,10 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <tuple>
 
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+
 using namespace std;
 
  namespace Nektar

@@ -93,7 +93,7 @@ public:
         const int step,
         const NekDouble time,
         const Array<OneD, const Array<OneD, NekDouble> > &field,
-        vector<string> &varNames)
+        std::vector<std::string> &varNames)
     {
         v_Send(step, time, field, varNames);
     }
@@ -102,7 +102,7 @@ public:
         const int step,
         const NekDouble time,
         Array<OneD, Array<OneD, NekDouble> > &field,
-        vector<string> &varNames)
+        std::vector<std::string> &varNames)
     {
         v_Receive(step, time, field, varNames);
     }
@@ -130,13 +130,13 @@ protected:
         const int step,
         const NekDouble time,
         const Array<OneD, const Array<OneD, NekDouble> > &field,
-        vector<string> &varNames) = 0;
+        std::vector<std::string> &varNames) = 0;
 
     SOLVER_UTILS_EXPORT virtual void v_Receive(
         const int step,
         const NekDouble time,
         Array<OneD, Array<OneD, NekDouble> > &field,
-        vector<string> &varNames) = 0;
+        std::vector<std::string> &varNames) = 0;
 
     SOLVER_UTILS_EXPORT virtual void v_Finalize()
     {

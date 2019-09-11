@@ -82,7 +82,7 @@ namespace LibUtilities {
             TimeIntegrationSolutionSharedPtr     &solvector,
             const TimeIntegrationSchemeOperators &op)
         {
-            return m_intScheme[min(timestep, m_intSteps - 1)]
+            return m_intScheme[std::min(timestep, m_intSteps - 1)]
                 ->TimeIntegrate(delta_t, solvector, op);
         }
 

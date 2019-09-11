@@ -163,12 +163,12 @@ void InputXml::Process(po::variables_map &vm)
 
         rng->m_checkShape = true;
 
-        string shapematch = boost::to_upper_copy(vm["onlyshape"].as<string>());
+        string shapematch = to_upper_copy(vm["onlyshape"].as<string>());
         int i;
         for (i = 0; i < LibUtilities::SIZE_ShapeType; ++i)
         {
             string shapeval = LibUtilities::ShapeTypeMap[i];
-            boost::to_upper(shapeval);
+            to_upper(shapeval);
             if (shapematch.compare(shapeval) == 0)
             {
                 rng->m_shapeType = (LibUtilities::ShapeType)i;

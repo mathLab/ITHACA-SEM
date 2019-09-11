@@ -85,7 +85,7 @@ void Coupling::v_Init()
                      tagcontent.str() + "'");
 
         // make sure that solver property is capitalised
-        std::string propertyUpper = boost::to_upper_copy(property);
+        std::string propertyUpper = to_upper_copy(property);
 
         CouplingConfigMap::const_iterator x = m_config.find(propertyUpper);
         ASSERTL0(x != m_config.end(),

@@ -42,8 +42,6 @@
 #undef min
 #endif
 
-using namespace std;
-
 namespace Nektar
 {
     namespace LibUtilities
@@ -254,7 +252,7 @@ namespace Nektar
                 {
                     for (int b = 0; b < Nb; ++b)
                     {
-                        for (int c = 0; c < Nc - max(a,b); ++c)
+                        for (int c = 0; c < Nc - std::max(a,b); ++c)
                         {
                             ++nCoeff;
                         }

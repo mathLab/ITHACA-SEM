@@ -43,6 +43,8 @@
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
+#include <boost/algorithm/string/predicate.hpp>
+
 using namespace std;
 
 namespace Nektar

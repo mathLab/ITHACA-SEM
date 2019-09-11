@@ -35,6 +35,7 @@
 #include "DiffusionLDGNS.h"
 #include <iostream>
 #include <iomanip>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <LocalRegions/Expansion2D.h>
 

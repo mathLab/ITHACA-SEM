@@ -42,12 +42,7 @@
 #include <SpatialDomains/GeomFactors.h>
 
 #include <unordered_map>
-
-#include <boost/optional.hpp>
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/geometries/box.hpp>
-
-namespace bg = boost::geometry;
+#include <array>
 
 namespace Nektar
 {
@@ -83,9 +78,6 @@ SPATIAL_DOMAINS_EXPORT bool SortByGlobalId(
 SPATIAL_DOMAINS_EXPORT bool GlobalIdEquality(
     const std::shared_ptr<Geometry> &lhs,
     const std::shared_ptr<Geometry> &rhs);
-
-typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> BgPoint;
-typedef bg::model::box<BgPoint> BgBox;
 
 /// Base class for shape geometry information
 class Geometry
@@ -146,7 +138,7 @@ public:
     //---------------------------------------
     // Point lookups
     //---------------------------------------
-    SPATIAL_DOMAINS_EXPORT inline BgBox GetBoundingBox();
+    SPATIAL_DOMAINS_EXPORT std::array<NekDouble, 6> GetBoundingBox();
 
     SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
         const Array<OneD, const NekDouble> &gloCoord,
@@ -202,13 +194,9 @@ protected:
     int                               m_globalID;
     /// Array containing expansion coefficients of @p m_xmap
     Array<OneD, Array<OneD, NekDouble> > m_coeffs;
-    /// Stores the optional bounding box of the element
-    boost::optional<BgBox>            m_boundingBox;
 
     /// Handles generation of geometry factors.
     void                              GenGeomFactors();
-    /// Generates the bounding box of the element.
-    void                              GenBoundingBox();
 
     //---------------------------------------
     // Helper functions
@@ -449,18 +437,6 @@ inline const Array<OneD, const NekDouble> &Geometry::GetCoeffs(
 inline void Geometry::FillGeom()
 {
     v_FillGeom();
-}
-
-/**
- * @brief Returns the bounding box of the element.
- */
-inline BgBox Geometry::GetBoundingBox()
-{
-    if (!m_boundingBox)
-    {
-        GenBoundingBox();
-    }
-    return *m_boundingBox;
 }
 
 /**

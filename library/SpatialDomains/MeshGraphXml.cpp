@@ -33,10 +33,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <iomanip>
+
 #include <SpatialDomains/MeshGraphXml.h>
 #include <SpatialDomains/MeshPartition.h>
 
 #include <LibUtilities/Interpreter/Interpreter.h>
+#include <LibUtilities/BasicUtils/StringUtils.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
@@ -44,6 +47,7 @@
 #include <boost/format.hpp>
 
 #include <tinyxml.h>
+
 using namespace std;
 
 namespace Nektar
@@ -3209,7 +3213,7 @@ void MeshGraphXml::WriteXMLGeometry(std::string outname,
             m_session->GetElement("Nektar")->FirstChildElement();
         while (vSrc)
         {
-            std::string vName = boost::to_upper_copy(vSrc->ValueStr());
+            std::string vName = to_upper_copy(vSrc->ValueStr());
             if (vName != "GEOMETRY" && vName != "CONDITIONS")
             {
                 root->LinkEndChild(new TiXmlElement(*vSrc));

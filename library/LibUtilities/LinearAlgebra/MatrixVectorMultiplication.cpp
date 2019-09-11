@@ -47,7 +47,7 @@
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
-#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
+//#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
 
 namespace Nektar

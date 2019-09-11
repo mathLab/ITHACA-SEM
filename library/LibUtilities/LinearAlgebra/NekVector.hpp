@@ -43,7 +43,7 @@
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 
-#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
+//#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 
 #include <functional>
 #include <algorithm>

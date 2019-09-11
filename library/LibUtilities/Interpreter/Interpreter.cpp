@@ -43,8 +43,8 @@
 #include <boost/spirit/include/classic_assign_actor.hpp>
 #include <boost/spirit/include/classic_push_back_actor.hpp>
 
-#include <boost/random/mersenne_twister.hpp>  // for mt19937
-#include <boost/random/variate_generator.hpp>  // for variate_generator
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/variate_generator.hpp>
 #include <boost/random/normal_distribution.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
@@ -67,7 +67,7 @@ namespace LibUtilities
 {
 
 // signum function
-NekDouble tmp_sign(NekDouble arg)
+NekDouble sign(NekDouble arg)
 {
     return (arg > 0.0) - (arg < 0.0);
 }
@@ -75,7 +75,7 @@ NekDouble tmp_sign(NekDouble arg)
 // Additive white Gaussian noise function.  Arg: sigma of the zero-mean gaussian
 // distribution Attention: this function is not actually used for evaluation
 // purposes.
-NekDouble tmp_awgn(NekDouble sigma)
+NekDouble awgn(NekDouble sigma)
 {
     boost::mt19937 rng;
     boost::variate_generator<boost::mt19937&, boost::normal_distribution<>>
@@ -149,14 +149,14 @@ static struct functions : bsp::symbols<func>
             ("tan",     tan     )
             ("tanh",    tanh    )
             // and few more custom functions
-            ("sign",    tmp_sign    )
-            ("awgn",    tmp_awgn    )
+            ("sign",    sign    )
+            ("awgn",    awgn    )
             ;
     }
 } functions_p;
 
 
-struct Interpreter::ExpressionEvaluator
+class Interpreter::ExpressionEvaluator
 {
 private:
 
@@ -251,7 +251,7 @@ public:
         m_function [E_SQRT  ] = sqrt;
         m_function [E_TAN   ] = tan;
         m_function [E_TANH  ] = tanh;
-        m_function [E_SIGN  ] = tmp_sign;
+        m_function [E_SIGN  ] = sign;
         m_function2[E_ATAN2 ] = atan2;
         m_function2[E_ANG   ] = ang;
         m_function2[E_RAD   ] = rad;

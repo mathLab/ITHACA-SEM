@@ -41,7 +41,6 @@
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
-#include <boost/assign/list_of.hpp>
 #include <boost/multi_array.hpp>
 
 namespace Nektar
@@ -503,71 +502,6 @@ namespace Nektar
 
     };
 
-    /// \brief 3D array with garbage collection and bounds checking.
-    template<typename DataType>
-    class Array<ThreeD, const DataType>
-    {
-        public:
-            typedef boost::multi_array_ref<DataType, 3> ArrayType;
-            typedef typename ArrayType::const_reference const_reference;
-            typedef typename ArrayType::reference reference;
-
-            typedef typename ArrayType::index index;
-            typedef typename ArrayType::const_iterator const_iterator;
-            typedef typename ArrayType::iterator iterator;
-
-            typedef typename ArrayType::element element;
-            typedef typename ArrayType::size_type size_type;
-
-
-
-        public:
-            Array() :
-                m_data(CreateStorage<DataType>(0, 0, 0))
-            {
-            }
-
-            /// \brief Constructs a 3 dimensional array.  The elements of the array are not initialized.
-            Array(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size) :
-                m_data(CreateStorage<DataType>(dim1Size, dim2Size, dim3Size))
-            {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
-            }
-
-            Array(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size, const DataType& initValue) :
-                m_data(CreateStorage<DataType>(dim1Size, dim2Size, dim3Size))
-            {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
-            }
-
-            Array(const Array<ThreeD, const DataType>& rhs) :
-                m_data(rhs.m_data)
-            {
-            }
-
-            Array<ThreeD, const DataType>& operator=(const Array<ThreeD, const DataType>& rhs)
-            {
-                m_data = rhs.m_data;
-                return *this;
-            }
-
-            const_iterator begin() const { return m_data->begin(); }
-            const_iterator end() const { return m_data->end(); }
-            const_reference operator[](index i) const { return (*m_data)[i]; }
-            const element* get() const { return m_data->data(); }
-            const element* data() const { return m_data->data(); }
-            size_type num_dimensions() const { return m_data->num_dimensions(); }
-            const size_type* shape() const { return m_data->shape(); }
-            size_type num_elements() const { return m_data->num_elements(); }
-
-        protected:
-            std::shared_ptr<ArrayType> m_data;
-
-        private:
-
-    };
-
-
     enum AllowWrappingOfConstArrays
     {
         eVECTOR_WRAPPER
@@ -772,64 +706,6 @@ namespace Nektar
 
     };
 
-    /// \brief A 3D array.
-    template<typename DataType>
-    class Array<ThreeD, DataType> : public Array<ThreeD, const DataType>
-    {
-        public:
-            typedef Array<ThreeD, const DataType> BaseType;
-            typedef typename BaseType::iterator iterator;
-            typedef typename BaseType::reference reference;
-            typedef typename BaseType::index index;
-            typedef typename BaseType::size_type size_type;
-            typedef typename BaseType::element element;
-
-        public:
-            Array() :
-                BaseType()
-            {
-            }
-
-            Array(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size) :
-                BaseType(dim1Size, dim2Size, dim3Size)
-            {
-            }
-
-            Array(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size, const DataType& initValue) :
-                BaseType(dim1Size, dim2Size, dim3Size, initValue)
-            {
-            }
-
-            Array(const Array<ThreeD, DataType>& rhs) :
-                BaseType(rhs)
-            {
-            }
-
-            Array<ThreeD, DataType>& operator=(const Array<ThreeD, DataType>& rhs)
-            {
-                BaseType::operator=(rhs);
-                return *this;
-            }
-
-            using BaseType::begin;
-            iterator begin() { return this->m_data->begin(); }
-
-            using BaseType::end;
-            iterator end() { return this->m_data->end(); }
-
-            using BaseType::operator[];
-            reference operator[](index i) { return (*this->m_data)[i]; }
-
-            using BaseType::get;
-            element* get() { return this->m_data->data(); }
-
-            using BaseType::data;
-            element* data() { return this->m_data->data(); }
-
-        private:
-
-    };
-
     LIB_UTILITIES_EXPORT bool IsEqual(const Array<OneD, const NekDouble>& lhs,
                  const Array<OneD, const NekDouble>& rhs,
                  NekDouble tol = NekConstants::kNekZeroTol);
@@ -930,8 +806,8 @@ namespace Nektar
     {
         static std::vector<NekDouble> NullNekDoubleVector;
         static std::vector<unsigned int> NullUnsignedIntVector;
-        static std::vector<std::vector<NekDouble> > NullVectorNekDoubleVector =
-            boost::assign::list_of(NullNekDoubleVector);
+        static std::vector<std::vector<NekDouble> > NullVectorNekDoubleVector
+            = { NullNekDoubleVector };
     }
 }
 

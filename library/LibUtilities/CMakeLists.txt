@@ -19,7 +19,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/HashUtils.hpp
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
-    ./BasicUtils/OperatorGenerators.hpp
     ./BasicUtils/ParseUtils.h
     ./BasicUtils/Progressbar.hpp
     ./BasicUtils/PtsField.h

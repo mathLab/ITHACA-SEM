@@ -792,18 +792,18 @@ namespace Nektar
            
             if(abs(PenaltyFactor2)>1.0E-12)
             {
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivBwd(nDim);
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivFwd(nDim);
-                for (int nd = 0; nd < nDim; ++nd)
-                {
-                    numDerivBwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
-                    numDerivFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
-                    for (int i = 0; i < nConvectiveFields; ++i)
-                    {
-                        numDerivBwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
-                        numDerivFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
-                    }
-                }
+                // Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivBwd(nDim);
+                // Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivFwd(nDim);
+                // for (int nd = 0; nd < nDim; ++nd)
+                // {
+                //     numDerivBwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+                //     numDerivFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+                //     for (int i = 0; i < nConvectiveFields; ++i)
+                //     {
+                //         numDerivBwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+                //         numDerivFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+                //     }
+                // }
                 AddSecondDerivTOTrace_ReduceComm(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,fields,qfield,numDerivFwd,numDerivBwd);
                 for (int nd = 0; nd < nDim; ++nd)
                 {
@@ -820,23 +820,32 @@ namespace Nektar
             }
             else
             {
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivFwd(nDim);
-                for (int nd = 0; nd < nDim; ++nd)
-                {
-                    numDerivFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
-                    for (int i = 0; i < nConvectiveFields; ++i)
-                    {
-                        numDerivFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
-                    }
-                }
+                // Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivFwd(nDim);
+                // for (int nd = 0; nd < nDim; ++nd)
+                // {
+                //     numDerivFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+                //     for (int i = 0; i < nConvectiveFields; ++i)
+                //     {
+                //         numDerivFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+                //     }
+                // }
 
                 for (int nd = 0; nd < nDim; ++nd)
                 {
                     for (int i = 0; i < nConvectiveFields; ++i)
                     {
-                        Vmath::Vadd(nTracePts,qFwd[nd][i],1,qBwd[nd][i],1,numDerivFwd[nd][i],1);
-                        Vmath::Smul(nTracePts,0.5,numDerivFwd[nd][i],1,numDerivFwd[nd][i],1);
+                        Vmath::Svtvp(nTracePts,0.5,qBwd[nd][i],1,numDerivBwd[nd][i],1,numDerivBwd[nd][i],1);
+                        Vmath::Svtvp(nTracePts,0.5,qFwd[nd][i],1,numDerivFwd[nd][i],1,numDerivFwd[nd][i],1);
+                        Vmath::Vadd(nTracePts,numDerivFwd[nd][i],1,numDerivBwd[nd][i],1,numDerivFwd[nd][i],1);
                     }
+                }
+            }
+
+            for (int nd = 0; nd < nDim; ++nd)
+            {
+                for (int i = 0; i < nConvectiveFields; ++i)
+                {
+                    numDerivBwd[nd][i]    = NullNekDouble1DArray;
                 }
             }
 

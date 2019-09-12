@@ -49,10 +49,10 @@ namespace LibUtilities
 class Interpreter
 {
 public:
-    Interpreter();
-    ~Interpreter();
-    Interpreter(Interpreter &&);
-    Interpreter &operator=(Interpreter &&);
+    LIB_UTILITIES_EXPORT Interpreter();
+    LIB_UTILITIES_EXPORT ~Interpreter();
+    LIB_UTILITIES_EXPORT Interpreter(Interpreter &&);
+    LIB_UTILITIES_EXPORT Interpreter &operator=(Interpreter &&);
 
     LIB_UTILITIES_EXPORT void SetRandomSeed(unsigned int seed = 123u);
 

@@ -435,7 +435,7 @@ public:
         {
             ASSERTL1(stack.size() == 0, "Constant expression yeilds non-empty execution stack. Bug in PrepareExecutionAsYouParse()");
 
-            int const_index = AddConstant(std::string("EXPRESSION_") + boost::lexical_cast<std::string>(stackId), v.second);
+            int const_index = AddConstant(std::string("EXPRESSION_") + std::to_string(stackId), v.second);
             stack.push_back ( makeStep<StoreConst>( 0, const_index ) );
         }
 
@@ -738,7 +738,7 @@ public:
                 // additive white gaussian noise function
                 if (it->second == E_AWGN)
                 {
-                    int const_index = AddConstant(std::string("SUB_EXPR_") + boost::lexical_cast<std::string>(m_constant.size()), v.second);
+                    int const_index = AddConstant(std::string("SUB_EXPR_") + std::to_string(m_constant.size()), v.second);
                     stack.push_back ( makeStep<StoreConst>( stateIndex, const_index ) );
                     stack.push_back ( makeStep<EvalAWGN>( stateIndex, stateIndex ) );
                     return std::make_pair(false,0);
@@ -904,12 +904,12 @@ public:
             // add pre-evaluated value to the contaner of constants
             if (true == left.first)
             {
-                int const_index = AddConstant(std::string("SUB_EXPR_") + boost::lexical_cast<std::string>(m_constant.size()), left.second);
+                int const_index = AddConstant(std::string("SUB_EXPR_") + std::to_string(m_constant.size()), left.second);
                 stack.push_back ( makeStep<StoreConst>( stateIndex, const_index ) );
             }
             if (true == right.first)
             {
-                int const_index = AddConstant(std::string("SUB_EXPR_") + boost::lexical_cast<std::string>(m_constant.size()), right.second);
+                int const_index = AddConstant(std::string("SUB_EXPR_") + std::to_string(m_constant.size()), right.second);
                 stack.push_back ( makeStep<StoreConst>( stateIndex+1, const_index ) );
             }
 

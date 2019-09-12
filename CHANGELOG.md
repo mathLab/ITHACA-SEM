@@ -6,6 +6,7 @@ v5.0.0
 **Library**
 - Added in sum factorisation version for pyramid expansions and orthogonal
   expansion in pyramids (!750)
+- Added detection of 'abort' file to cleanly terminate simulation early (!772)
 - Significant overhaul of CMake infrastructure (!770, !804)
 - Fix ThridpartyCCM options (!802)
 - Fix Windows CRLF tokens in GEO reader and improve comment handling (!805)
@@ -82,6 +83,7 @@ v5.0.0
 - Fix XML attributes in conditions.cpp to be unordered (!1015)
 - Fix issue with HDF5 mesh input in serial (!1049)
 - Add estimate of filters CPU time (!1044)
+- Update CompressibleFlowSolver/Examples/Test_IsentropicVortex1.xml example (!1045)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -189,6 +191,7 @@ v5.0.0
 
 **Tester**
 - Fix build with boost 1.67 (!947)
+- Various change to tests to decrease test time (!1053)
 
 **Packaging:**
 - Add Dockerfiles and gitlab CI configuration for automatic builds (!1021)

@@ -247,7 +247,7 @@
     </GEOMETRY>
 
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v,p" TYPE="GLL_LAGRANGE" />
+        <E COMPOSITE="C[0]" NUMMODES="10" FIELDS="u,v,p" TYPE="GLL_LAGRANGE" />
     </EXPANSIONS>
 
     <CONDITIONS>
@@ -263,8 +263,8 @@
         </SOLVERINFO>
 
         <PARAMETERS>
-            <P> TimeStep      = 0.002  </P>
-            <P> NumSteps      = 70     </P>
+            <P> TimeStep      = 0.007  </P>
+            <P> NumSteps      = 20     </P>
             <P> IO_CheckSteps = 1000   </P>
             <P> IO_InfoSteps  = 20     </P>
             <P> Re            = 7500   </P>

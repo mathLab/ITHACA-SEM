@@ -289,7 +289,7 @@ namespace Nektar
                       Array<OneD,      NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
 
-            inline void ExpList::MultiplyByMassMatrix(
+            inline void MultiplyByMassMatrix(
                 const Array<OneD,const NekDouble> &inarray,
                     Array<OneD,      NekDouble> &outarray,
                       CoeffState coeffstate = eLocal)

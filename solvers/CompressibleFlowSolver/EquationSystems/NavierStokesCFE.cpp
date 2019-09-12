@@ -153,6 +153,9 @@ namespace Nektar
             }
         }
 
+        m_diffusion->SetCalcViscosity(
+                &NavierStokesCFE::CalcViscosity, this);
+
         // Concluding initialisation of diffusion operator
         m_diffusion->InitObject         (m_session, m_fields);
         
@@ -1218,15 +1221,7 @@ namespace Nektar
         int nPts                = inaverg[nConvectiveFields-1].num_elements();
         int nDim=m_spacedim;
 
-        if (m_ViscosityType == "Variable")
-        {
-            m_varConv->GetTemperature(inaverg,auxVars[0]);
-            m_varConv->GetDynamicViscosity(auxVars[0], mu);
-        }
-        else
-        {
-            Vmath::Fill(nPts, m_mu, mu, 1);
-        }
+        CalcViscosity(inaverg,mu);
 
         int nAuxVars_count = 0;
 
@@ -1265,6 +1260,26 @@ namespace Nektar
         Vmath::Vmul(nPts,&inaverg[nDim_plus_one][0],1,&orho[0],1,&E_minus_q2[0],1);
         Vmath::Vsub(nPts,&E_minus_q2[0],1,&q2[0],1,&E_minus_q2[0],1);
         Vmath::Vmul(nPts,&mu[0],1,&orho[0],1,&tmp[0],1);
+    }
+
+    void NavierStokesCFE::CalcViscosity(
+        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
+        Array<OneD, NekDouble>                                          &mu)
+    {
+        int nConvectiveFields       = inaverg.num_elements();
+        int nPts                = inaverg[nConvectiveFields-1].num_elements();
+        int nDim=m_spacedim;
+
+        if (m_ViscosityType == "Variable")
+        {
+            Array<OneD, NekDouble> tmp(nPts,0.0);
+            m_varConv->GetTemperature(inaverg,tmp);
+            m_varConv->GetDynamicViscosity(tmp, mu);
+        }
+        else
+        {
+            Vmath::Fill(nPts, m_mu, mu, 1);
+        }
     }
 
     void NavierStokesCFE::GetViscousFluxBilinearForm(

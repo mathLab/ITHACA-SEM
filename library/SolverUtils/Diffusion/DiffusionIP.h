@@ -80,6 +80,7 @@ namespace Nektar
 
 #ifdef CFS_DEBUGMODE
             int                                 m_DebugVolTraceSwitch; 
+            int                                 m_DebugIP_DDGSwitch; 
 #endif
 
             void GetPenaltyFactor(

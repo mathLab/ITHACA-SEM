@@ -296,14 +296,14 @@ namespace Nektar
         
 #ifdef CFS_DEBUGMODE
         m_session->LoadParameter("DebugAdvDiffSwitch",                 m_DebugAdvDiffSwitch      ,    0);
-        m_session->LoadParameter("DebugVolTraceSwitch",                 m_DebugVolTraceSwitch      ,    0);
-        m_session->LoadParameter("DebugConsDerivSwitch",                 m_DebugConsDerivSwitch      ,    0);
+        m_session->LoadParameter("DebugVolTraceSwitch",                m_DebugVolTraceSwitch      ,    0);
+        m_session->LoadParameter("DebugConsDerivSwitch",               m_DebugConsDerivSwitch      ,    0);
 
-        cout << " m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT "<<m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT<<endl;
-        cout << " m_DEBUG_VISCOUS_JAC_MAT "<<m_DEBUG_VISCOUS_JAC_MAT<<endl;
-        cout << " m_DebugAdvDiffSwitch "<<m_DebugAdvDiffSwitch<<endl;
-        cout << " m_DebugVolTraceSwitch "<<m_DebugVolTraceSwitch<<endl;
-        cout << " m_DebugConsDerivSwitch "<<m_DebugConsDerivSwitch<<endl;
+        // cout << " m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT "<<m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT<<endl;
+        // cout << " m_DEBUG_VISCOUS_JAC_MAT "<<m_DEBUG_VISCOUS_JAC_MAT<<endl;
+        // cout << " m_DebugAdvDiffSwitch "<<m_DebugAdvDiffSwitch<<endl;
+        // cout << " m_DebugVolTraceSwitch "<<m_DebugVolTraceSwitch<<endl;
+        // cout << " m_DebugConsDerivSwitch "<<m_DebugConsDerivSwitch<<endl;
 
 #endif
     }

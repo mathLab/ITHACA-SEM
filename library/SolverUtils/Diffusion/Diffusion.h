@@ -137,6 +137,15 @@ namespace Nektar
             const int                                                       ,
                   Array<OneD,       Array<OneD, NekDouble> >                &)> SpecialBndTreat;
 
+        /**
+         * Parameter list meaning:
+         *  1st: trace conservative variables
+         *  2rd: dynamic viscosity
+         */
+        typedef std::function<void (
+            const Array<OneD, const Array<OneD, NekDouble> >                &,
+            Array<OneD, NekDouble>                                          &)> CalcViscosity;
+
         class Diffusion
         {
         public:
@@ -345,6 +354,13 @@ namespace Nektar
             }
 
             template<typename FuncPointerT, typename ObjectPointerT>
+            void SetCalcViscosity(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_CalcViscosity = std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2);
+            }
+
+            template<typename FuncPointerT, typename ObjectPointerT>
             void SetDiffusionSymmFluxCons(FuncPointerT func, ObjectPointerT obj)
             {
                 m_FunctorSymmetricfluxCons = std::bind(
@@ -410,6 +426,7 @@ namespace Nektar
             DiffusionFluxCons               m_FunctorDiffusionfluxCons;
             FunctorDerivBndCond             m_FunctorDerivBndCond;
             SpecialBndTreat                 m_SpecialBndTreat;
+            CalcViscosity                   m_CalcViscosity;
             DiffusionSymmFluxCons           m_FunctorSymmetricfluxCons;
 
             NekDouble                       m_time=0.0;

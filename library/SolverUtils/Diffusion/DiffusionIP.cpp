@@ -125,6 +125,7 @@ namespace Nektar
             }
 #ifdef CFS_DEBUGMODE
         m_session->LoadParameter("DebugVolTraceSwitch",                 m_DebugVolTraceSwitch      ,    0);
+        m_session->LoadParameter("DebugIP_DDGSwitch",                   m_DebugIP_DDGSwitch      ,    0);
 #endif
         }
         
@@ -841,6 +842,10 @@ namespace Nektar
 
             ConsVarAveJump(nConvectiveFields,nTracePts,vFwd,vBwd,solution_Aver,solution_jump);
 
+#ifdef CFS_DEBUGMODE
+            if(0==m_DebugIP_DDGSwitch)
+            {
+#endif
             Array<OneD, NekDouble> jumpTmp(nTracePts,0.0);
             Array<OneD, NekDouble> PenaltyFactor(nTracePts,0.0);
 
@@ -857,9 +862,36 @@ namespace Nektar
             }
             jumpTmp         =   NullNekDouble1DArray;
             PenaltyFactor   =   NullNekDouble1DArray;
+#ifdef CFS_DEBUGMODE
+            }
+#endif
 
             // Calculate normal viscous flux
             m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,solution_Aver,numDerivFwd,traceflux,nonZeroIndexflux,m_traceNormals,MuVarTrace);
+
+#ifdef CFS_DEBUGMODE
+            if(1==m_DebugIP_DDGSwitch)
+            {
+            Array<OneD, NekDouble> mu(nTracePts,0.0);
+
+            m_CalcViscosity(solution_Aver,mu);
+
+            Array<OneD, NekDouble> PenaltyFactor(nTracePts,0.0);
+
+            GetPenaltyFactor_const(fields,PenaltyFactor);
+
+            Vmath::Vmul(nTracePts,PenaltyFactor,1, m_traceNormDirctnElmtLengthRecip,1,PenaltyFactor,1);
+            Vmath::Vmul(nTracePts,PenaltyFactor,1, mu,1,PenaltyFactor,1);
+            // Vmath::Neg(nTracePts,PenaltyFactor,1);
+            for (int i = 0; i < nConvectiveFields; ++i)
+            {
+                // Vmath::Vmul(nTracePts,solution_jump[i],1, PenaltyFactor,1,jumpTmp,1);
+                Vmath::Vvtvp(nTracePts,solution_jump[i],1, PenaltyFactor,1,traceflux[0][i],1,traceflux[0][i],1);
+            }
+            mu         =   NullNekDouble1DArray;
+            PenaltyFactor   =   NullNekDouble1DArray;
+            }
+#endif
         }
         
         void DiffusionIP::AddSecondDerivTOTrace_ReduceComm(

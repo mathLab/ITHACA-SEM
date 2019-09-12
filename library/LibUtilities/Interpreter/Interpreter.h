@@ -51,8 +51,8 @@ class Interpreter
 public:
     Interpreter();
     ~Interpreter();
-    Interpreter(Interpreter &&) = default;
-    Interpreter &operator=(Interpreter &&) = default;
+    Interpreter(Interpreter &&);
+    Interpreter &operator=(Interpreter &&);
 
     LIB_UTILITIES_EXPORT void SetRandomSeed(unsigned int seed = 123u);
 

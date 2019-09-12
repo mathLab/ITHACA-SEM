@@ -1517,6 +1517,16 @@ Interpreter::~Interpreter()
 {
 }
 
+Interpreter::Interpreter(Interpreter &&r) : m_impl(std::move(r.m_impl))
+{
+}
+
+Interpreter &Interpreter::operator=(Interpreter &&r)
+{
+    m_impl = std::move(r.m_impl);
+    return *this;
+}
+
 void Interpreter::SetRandomSeed(unsigned int seed)
 {
     m_impl->SetRandomSeed(seed);

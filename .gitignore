@@ -1,7 +1,9 @@
 .*
 !.gitignore
+!.gitlab-ci.yml
 !.gitattributes
 !.clang-format
+!.dockerignore
 # Ignore builds and ThirdParty directories
 build
 builds

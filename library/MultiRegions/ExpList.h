@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -676,6 +675,13 @@ namespace Nektar
                 Array<OneD, NekDouble>       &locCoords,
                 NekDouble tol = 0.0,
                 bool returnNearestElmt = false);
+            
+            /** This function return the expansion field value
+             * at the coordinates given as input.
+             **/
+            MULTI_REGIONS_EXPORT NekDouble PhysEvaluate(
+                const Array<OneD, const NekDouble> &coords,
+                const Array<OneD, const NekDouble> &phys);
 
             /// Get the start offset position for a global list of #m_coeffs
             /// correspoinding to element n.

@@ -29,7 +29,7 @@ IF (THIRDPARTY_BUILD_CCMIO)
     EXTERNALPROJECT_ADD(
         libccmio-2.6.1
         PREFIX ${TPSRC}
-        URL http://portal.nersc.gov/svn/visit/trunk/third_party/libccmio-2.6.1.tar.gz
+        URL http://visit.ilight.com/svn/visit/trunk/third_party/libccmio-2.6.1.tar.gz
         URL_MD5 f81fbdfb960b1a4f3bcc7feee491efe4
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}

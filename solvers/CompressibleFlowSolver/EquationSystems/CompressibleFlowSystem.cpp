@@ -298,12 +298,7 @@ namespace Nektar
         m_session->LoadParameter("DebugAdvDiffSwitch",                 m_DebugAdvDiffSwitch      ,    0);
         m_session->LoadParameter("DebugVolTraceSwitch",                m_DebugVolTraceSwitch      ,    0);
         m_session->LoadParameter("DebugConsDerivSwitch",               m_DebugConsDerivSwitch      ,    0);
-
-        // cout << " m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT "<<m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT<<endl;
-        // cout << " m_DEBUG_VISCOUS_JAC_MAT "<<m_DEBUG_VISCOUS_JAC_MAT<<endl;
-        // cout << " m_DebugAdvDiffSwitch "<<m_DebugAdvDiffSwitch<<endl;
-        // cout << " m_DebugVolTraceSwitch "<<m_DebugVolTraceSwitch<<endl;
-        // cout << " m_DebugConsDerivSwitch "<<m_DebugConsDerivSwitch<<endl;
+        m_session->LoadParameter("DebugIP_DDGSwitch",                   m_DebugIP_DDGSwitch      ,    0);
 
 #endif
     }

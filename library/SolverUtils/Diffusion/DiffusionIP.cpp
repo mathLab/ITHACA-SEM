@@ -58,7 +58,7 @@ namespace Nektar
                                   m_shockCaptureType,    "Off");	
 
             m_session->LoadParameter("IPSymmFtluxCoeff",
-                                  m_IPSymmFtluxCoeff,   0.0);	//0.5
+                                  m_IPSymmFtluxCoeff,   0.0);	//-1.0
 
             m_session->LoadParameter("IP2ndDervCoeff",
                                   m_IP2ndDervCoeff,   0.0); // 1.0/12.0	
@@ -339,9 +339,10 @@ namespace Nektar
             }
 
             Array<OneD, Array<OneD, NekDouble> > tmparray2D = NullNekDoubleArrayofArray;
+            Array<OneD, Array<OneD, NekDouble> > tmparray2D1 = NullNekDoubleArrayofArray;
 
             // TODO: qfield AND elmtFlux share storage????
-            m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,inarray,qfield, VolumeFlux,nonZeroIndex,tmparray2D,muvar);
+            m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,inarray,qfield, VolumeFlux,nonZeroIndex,tmparray2D,tmparray2D1,muvar);
         }
             
         void DiffusionIP::v_DiffuseTraceFlux(
@@ -376,6 +377,7 @@ namespace Nektar
                     qFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
 
                     fields[i]->GetFwdBwdTracePhysDeriv_serial(nd,qfield[nd][i], qFwd[nd][i], qBwd[nd][i]);
+                    // fields[i]->GetFwdBwdTracePhysDeriv_serial(nd,VolumeFlux[nd][i], qFwd[nd][i], qBwd[nd][i]);
                     TraceMap->UniversalTraceAssemble(qBwd[nd][i]);
                     TraceMap->UniversalTraceAssemble(qFwd[nd][i]);
                 }
@@ -385,6 +387,10 @@ namespace Nektar
                 nConvectiveFields, nDim, nPts, nTracePts, m_IP2ndDervCoeff,
                 fields, inarray, qfield, pFwd, pBwd, qFwd, qBwd, m_MuVarTrace,
                 nonZeroIndex, traceflux3D, m_traceAver, m_traceJump);
+            // CalTraceNumFlux_ReduceComm_Flux(
+            //     nConvectiveFields, nDim, nPts, nTracePts, m_IP2ndDervCoeff,
+            //     fields, inarray, VolumeFlux, pFwd, pBwd, qFwd, qBwd, m_MuVarTrace,
+            //     nonZeroIndex, traceflux3D, m_traceAver, m_traceJump);
         }
 
         void DiffusionIP::v_DiffuseTraceFlux(
@@ -529,7 +535,7 @@ namespace Nektar
 
             for (int i = 0; i < nConvectiveFields; ++i)
             {
-                Vmath::Smul(nTracePts,m_IPSymmFtluxCoeff,solution_jump[i],1,solution_jump[i],1);
+                Vmath::Smul(nTracePts,-0.5*m_IPSymmFtluxCoeff,solution_jump[i],1,solution_jump[i],1);
             }
             
             m_FunctorSymmetricfluxCons(nConvectiveFields,nDim,solution_Aver,solution_jump,traceSymflux,nonZeroIndexsymm,m_traceNormals);
@@ -752,6 +758,89 @@ namespace Nektar
             }
         }
 
+        //TODO::WIP
+        // void DiffusionIP::CalTraceNumFlux_ReduceComm_Flux(
+        //     const int                                                           nConvectiveFields,
+        //     const int                                                           nDim,
+        //     const int                                                           nPts,
+        //     const int                                                           nTracePts,
+        //     const NekDouble                                                     PenaltyFactor2,
+        //     const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+        //     const Array<OneD, Array<OneD, NekDouble> >                          &inarray,
+        //     const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &VolFlux,
+        //     const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
+        //     const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
+        //     const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &FluxFwd,
+        //     const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &FluxBwd,
+        //     const Array<OneD, NekDouble >                                       &MuVarTrace,
+        //           Array<OneD, int >                                             &nonZeroIndexflux,
+        //           Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux,
+        //           Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
+        //           Array<OneD, Array<OneD, NekDouble> >                          &solution_jump)
+        // {
+        //     const MultiRegions::AssemblyMapDGSharedPtr                      TraceMap=fields[0]->GetTraceMap();
+
+        //     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivBwd(nDim);
+        //     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivFwd(nDim);
+        //     for (int nd = 0; nd < nDim; ++nd)
+        //     {
+        //         numDerivBwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+        //         numDerivFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+        //         for (int i = 0; i < nConvectiveFields; ++i)
+        //         {
+        //             numDerivBwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+        //             numDerivFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+        //         }
+        //     }
+
+        //     for (int nd = 0; nd < nDim; ++nd)
+        //     {
+        //         for (int i = 0; i < nConvectiveFields; ++i)
+        //         {
+        //             Vmath::Svtvp(nTracePts,0.5,FluxBwd[nd][i],1,numDerivBwd[nd][i],1,numDerivBwd[nd][i],1);
+        //             Vmath::Svtvp(nTracePts,0.5,FluxFwd[nd][i],1,numDerivFwd[nd][i],1,numDerivFwd[nd][i],1);
+        //             Vmath::Vadd(nTracePts,numDerivFwd[nd][i],1,numDerivBwd[nd][i],1,numDerivFwd[nd][i],1);
+        //         }
+        //     }
+
+        //     for (int nd = 0; nd < nDim; ++nd)
+        //     {
+        //         for (int i = 0; i < nConvectiveFields; ++i)
+        //         {
+        //             numDerivBwd[nd][i]    = NullNekDouble1DArray;
+        //         }
+        //     }
+
+        //     ConsVarAveJump(nConvectiveFields,nTracePts,vFwd,vBwd,solution_Aver,solution_jump);
+
+        //     Array<OneD, Array<OneD, NekDouble> > PenaltyFlux;
+        //     Array<OneD, NekDouble> mu(nTracePts,0.0);
+
+        //     m_CalcViscosity(solution_Aver,mu);
+
+        //     Array<OneD, NekDouble> PenaltyFactor(nTracePts,0.0);
+
+        //     GetPenaltyFactor_const(fields,PenaltyFactor);
+
+        //     Vmath::Vmul(nTracePts,PenaltyFactor,1, m_traceNormDirctnElmtLengthRecip,1,PenaltyFactor,1);
+        //     Vmath::Vmul(nTracePts,PenaltyFactor,1, mu,1,PenaltyFactor,1);
+        //     mu         =   NullNekDouble1DArray;
+        //     PenaltyFlux =  Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+        //     for (int i = 0; i < nConvectiveFields; ++i)
+        //     {
+        //         PenaltyFlux[i]  =   Array<OneD, NekDouble> (nTracePts,0.0);
+        //         Vmath::Vmul(nTracePts,solution_jump[i],1, PenaltyFactor,1,PenaltyFlux[i],1);
+        //         Vmath::Vdiv(nTracePts,PenaltyFlux[i],1, solution_Aver[0],1,PenaltyFlux[i],1);
+        //     }
+        //     PenaltyFactor   =   NullNekDouble1DArray;
+        //     for()
+        //     {
+        //         traceflux[0][i] =   
+        //     }
+        //     // Calculate normal viscous flux
+        //     // m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,solution_Aver,numDerivFwd,traceflux,nonZeroIndexflux,m_traceNormals,PenaltyFlux,MuVarTrace);
+        // }
+        
         void DiffusionIP::CalTraceNumFlux_ReduceComm(
             const int                                                           nConvectiveFields,
             const int                                                           nDim,
@@ -851,8 +940,32 @@ namespace Nektar
 
             ConsVarAveJump(nConvectiveFields,nTracePts,vFwd,vBwd,solution_Aver,solution_jump);
 
+            Array<OneD, Array<OneD, NekDouble> > PenaltyFlux;
+
 #ifdef CFS_DEBUGMODE
-            if(0==m_DebugIP_DDGSwitch)
+            if(1==m_DebugIP_DDGSwitch)
+            {
+                Array<OneD, NekDouble> mu(nTracePts,0.0);
+
+                m_CalcViscosity(solution_Aver,mu);
+
+                Array<OneD, NekDouble> PenaltyFactor(nTracePts,0.0);
+
+                GetPenaltyFactor_const(fields,PenaltyFactor);
+
+                Vmath::Vmul(nTracePts,PenaltyFactor,1, m_traceNormDirctnElmtLengthRecip,1,PenaltyFactor,1);
+                Vmath::Vmul(nTracePts,PenaltyFactor,1, mu,1,PenaltyFactor,1);
+                mu         =   NullNekDouble1DArray;
+                PenaltyFlux =  Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+                for (int i = 0; i < nConvectiveFields; ++i)
+                {
+                    PenaltyFlux[i]  =   Array<OneD, NekDouble> (nTracePts,0.0);
+                    Vmath::Vmul(nTracePts,solution_jump[i],1, PenaltyFactor,1,PenaltyFlux[i],1);
+                    Vmath::Vdiv(nTracePts,PenaltyFlux[i],1, solution_Aver[0],1,PenaltyFlux[i],1);
+                }
+                PenaltyFactor   =   NullNekDouble1DArray;
+            } 
+            else 
             {
 #endif
             Array<OneD, NekDouble> jumpTmp(nTracePts,0.0);
@@ -874,33 +987,8 @@ namespace Nektar
 #ifdef CFS_DEBUGMODE
             }
 #endif
-
             // Calculate normal viscous flux
-            m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,solution_Aver,numDerivFwd,traceflux,nonZeroIndexflux,m_traceNormals,MuVarTrace);
-
-#ifdef CFS_DEBUGMODE
-            if(1==m_DebugIP_DDGSwitch)
-            {
-            Array<OneD, NekDouble> mu(nTracePts,0.0);
-
-            m_CalcViscosity(solution_Aver,mu);
-
-            Array<OneD, NekDouble> PenaltyFactor(nTracePts,0.0);
-
-            GetPenaltyFactor_const(fields,PenaltyFactor);
-
-            Vmath::Vmul(nTracePts,PenaltyFactor,1, m_traceNormDirctnElmtLengthRecip,1,PenaltyFactor,1);
-            Vmath::Vmul(nTracePts,PenaltyFactor,1, mu,1,PenaltyFactor,1);
-            // Vmath::Neg(nTracePts,PenaltyFactor,1);
-            for (int i = 0; i < nConvectiveFields; ++i)
-            {
-                // Vmath::Vmul(nTracePts,solution_jump[i],1, PenaltyFactor,1,jumpTmp,1);
-                Vmath::Vvtvp(nTracePts,solution_jump[i],1, PenaltyFactor,1,traceflux[0][i],1,traceflux[0][i],1);
-            }
-            mu         =   NullNekDouble1DArray;
-            PenaltyFactor   =   NullNekDouble1DArray;
-            }
-#endif
+            m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,solution_Aver,numDerivFwd,traceflux,nonZeroIndexflux,m_traceNormals,PenaltyFlux,MuVarTrace);
         }
         
         void DiffusionIP::AddSecondDerivTOTrace_ReduceComm(

@@ -105,6 +105,7 @@ namespace Nektar
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &,
                   Array< OneD, int >                                        &,    
             const Array<OneD, Array<OneD, NekDouble> >                      &,           
+            const Array<OneD, Array<OneD, NekDouble> >                      &,           
             const Array<OneD, NekDouble>                                    &)> DiffusionFluxCons;
 
         /**
@@ -329,7 +330,8 @@ namespace Nektar
                     func, obj, std::placeholders::_1, std::placeholders::_2,
                                std::placeholders::_3, std::placeholders::_4,
                                std::placeholders::_5, std::placeholders::_6,
-                               std::placeholders::_7, std::placeholders::_8);
+                               std::placeholders::_7, std::placeholders::_8,
+                               std::placeholders::_9);
             }
             
             void SetDiffusionFluxCons(DiffusionFluxCons flux)

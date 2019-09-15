@@ -910,6 +910,7 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray,
               Array< OneD, int >                                        &nonZeroIndex,    
         const Array<OneD, Array<OneD, NekDouble> >                      &normal,         
+        const Array<OneD, Array<OneD, NekDouble> >                      &PenaltyFlux,         
         const Array<OneD, NekDouble>                                    &ArtifDiffFactor)
     {
         int nPts=inarray[0].num_elements();
@@ -943,18 +944,6 @@ namespace Nektar
 
         if(normal.num_elements())
         {
-            // fluxVec =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nDim);
-
-            // for(int i=0; i< nDim; i++)
-            // {
-            //     fluxVec[i]  =   Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
-
-            //     for(int j=0; j< nConvectiveFields; j++)
-            //     {
-            //         fluxVec[i][j]  =   Array<OneD, NekDouble>(nPts,0.0);
-            //     }
-            // }
-
             for(int nd=0;nd<nDim;nd++)
             {
                 for(int nderiv=0;nderiv<nDim;nderiv++)
@@ -963,11 +952,20 @@ namespace Nektar
 
                     for(int j=0;j<nConvectiveFields;j++)
                     {
-                        // Vmath::Vadd(nPts,&outtmp[j][0],1,&fluxVec[nd][j][0],1,&fluxVec[nd][j][0],1);
                         Vmath::Vvtvp(nPts,&normal[nd][0],1,&outtmp[j][0],1,&outarray[0][j][0],1,&outarray[0][j][0],1);
                     }
                 }
             }
+#ifdef CFS_DEBUGMODE
+            if(1==m_DebugIP_DDGSwitch)
+            {
+                for(int j=0;j<nConvectiveFields;j++)
+                {
+                    Vmath::Vadd(nPts,&PenaltyFlux[j][0],1,&outarray[0][j][0],1,&outarray[0][j][0],1);
+                }
+                n_nonZero = nConvectiveFields;
+            }
+#endif
             ApplyFluxBndConds(nConvectiveFields,outarray[0]);
         }
         else

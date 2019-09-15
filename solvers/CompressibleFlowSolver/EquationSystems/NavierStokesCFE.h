@@ -96,6 +96,7 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray,
               Array< OneD, int >                                        &nonZeroIndex       =   NullInt1DArray,    
         const Array<OneD, Array<OneD, NekDouble> >                      &normal             =   NullNekDoubleArrayofArray,           
+        const Array<OneD, Array<OneD, NekDouble> >                      &PenaltyFlux        =   NullNekDoubleArrayofArray,         
         const Array<OneD, NekDouble>                                    &ArtifDiffFactor    =   NullNekDouble1DArray);
     
     void GetPrimDerivFromConsDeriv(

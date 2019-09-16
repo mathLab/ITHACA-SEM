@@ -91,6 +91,11 @@ namespace LibUtilities {
             return m_method;
         }
 
+        LIB_UTILITIES_EXPORT TimeIntegrationSchemeType GetIntegrationSchemeType() const
+        {
+            return m_intScheme.back()->GetIntegrationSchemeType();
+        }
+
         LIB_UTILITIES_EXPORT unsigned int GetIntegrationSteps()
         {
             return m_intSteps;

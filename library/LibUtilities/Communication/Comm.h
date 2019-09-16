@@ -66,7 +66,15 @@ enum ReduceOperator
 {
     ReduceSum,
     ReduceMax,
-    ReduceMin
+    ReduceMin,
+    SIZE_ReduceOperator
+};
+
+const char* const ReduceOperatorMap[] =
+{
+    "ReduceSum",
+    "ReduceMax",
+    "ReduceMin"
 };
 
 /// Base communications class

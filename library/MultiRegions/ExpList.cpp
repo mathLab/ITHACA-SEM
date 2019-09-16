@@ -1544,6 +1544,29 @@ namespace Nektar
             }
         }
 
+        /**
+         * Given some coordinates, output the expansion field value at that
+         * point
+         */
+        NekDouble ExpList::PhysEvaluate(
+            const Array<OneD, const NekDouble> &coords,
+            const Array<OneD, const NekDouble> &phys)
+        {
+            int dim = GetCoordim(0);
+            ASSERTL0(dim == coords.num_elements(),
+                     "Invalid coordinate dimension.");
+
+            // Grab the element index corresponding to coords.
+            Array<OneD, NekDouble> xi(dim);
+            int elmtIdx = GetExpIndex(coords, xi);
+            ASSERTL0(elmtIdx > 0, "Unable to find element containing point.");
+
+            // Grab that element's physical storage.
+            Array<OneD, NekDouble> elmtPhys = phys + m_phys_offset[elmtIdx];
+
+            // Evaluate the element at the appropriate point.
+            return (*m_exp)[elmtIdx]->StdPhysEvaluate(xi, elmtPhys);
+        }
 
         /**
          * Configures geometric info, such as tangent direction, on each

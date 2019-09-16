@@ -23,6 +23,13 @@ names are shared between filter types for consistency. Numerical filter
 parameters may be expressions and so may include session parameters defined in
 the \inltt{PARAMETERS} section.
 
+Some filters may perform a large number of operations, potentially taking up
+a significant percentage of the total simulation time. For this purpose, the parameter
+\inltt{IO\_FiltersInfoSteps} is used to set the number of steps between successive total
+filter CPU time stats are printed. By default it is set to 10 times \inltt{IO\_InfoSteps}. If the
+solver is run with the verbose \inltt{-v} flag, further information is printed, detailing the
+CPU time of each individual filter and percentage of time integration.
+
 In the following we document the filters implemented. Note that some filters are
 solver-specific and will therefore only work for a given subset of the available
 solvers.

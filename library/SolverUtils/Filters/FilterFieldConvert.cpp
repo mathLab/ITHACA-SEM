@@ -114,26 +114,23 @@ FilterFieldConvert::FilterFieldConvert(
     // If phase average is computed, m_sampleFrequency is the frequency 
     // used to check for sampling. In general it would be best to set it to 1.
     // Phase average option
-    it = pParams.find("PhaseAverage");
-    if (it == pParams.end())
-    {
-        m_phaseAverage = false;
-    }
-    else
-    {
-        LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
-        m_phaseAverage = round(equ.Evaluate());
-    }
+    // it = pParams.find("PhaseAverage");
+    // if (it == pParams.end())
+    // {
+    //     m_phaseAverage = false;
+    // }
+    // else
+    // {
+    //     LibUtilities::Equation equ(
+    //         m_session->GetExpressionEvaluator(), it->second);
+    //     m_phaseAverage = round(equ.Evaluate());
+    // }
+    auto itPeriod = pParams.find("PhaseAveragePeriod");
+    auto itPhase = pParams.find("PhaseAveragePhase");
 
-    if(m_phaseAverage)
+    if(itPeriod != pParams.end() && itPhase != pParams.end())
     {
-        // In case of phase average, load period and phase (both required)
-        auto itPeriod = pParams.find("PhaseAveragePeriod");
-        auto itPhase = pParams.find("PhaseAveragePhase");
-        ASSERTL0((itPeriod != pParams.end() && itPhase != pParams.end()), 
-            "PhaseAverage requires both 'PhaseAveragePeriod' and " 
-            "'PhaseAveragePhase' to be set.");
+        m_phaseAverage = true;
 
         LibUtilities::Equation equPeriod(
             m_session->GetExpressionEvaluator(), itPeriod->second);
@@ -143,6 +140,11 @@ FilterFieldConvert::FilterFieldConvert(
             m_session->GetExpressionEvaluator(), itPhase->second);
         m_phaseAveragePhase = equPhase.Evaluate();
     }
+
+    // Error if only one of the required params for PhaseAverage is present
+    ASSERTL0((itPeriod != pParams.end() && itPhase != pParams.end()), 
+            "The phase average feature requires both 'PhaseAveragePeriod' and "
+            "'PhaseAveragePhase' to be set.");
     
     m_numSamples  = 0;
     m_index       = 0;

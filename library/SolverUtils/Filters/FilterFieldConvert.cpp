@@ -111,20 +111,6 @@ FilterFieldConvert::FilterFieldConvert(
     //    (Derived classes need to override this if needed)
     m_sampleFrequency = m_outputFrequency;
 
-    // If phase average is computed, m_sampleFrequency is the frequency 
-    // used to check for sampling. In general it would be best to set it to 1.
-    // Phase average option
-    // it = pParams.find("PhaseAverage");
-    // if (it == pParams.end())
-    // {
-    //     m_phaseAverage = false;
-    // }
-    // else
-    // {
-    //     LibUtilities::Equation equ(
-    //         m_session->GetExpressionEvaluator(), it->second);
-    //     m_phaseAverage = round(equ.Evaluate());
-    // }
     auto itPeriod = pParams.find("PhaseAveragePeriod");
     auto itPhase = pParams.find("PhaseAveragePhase");
 
@@ -139,11 +125,13 @@ FilterFieldConvert::FilterFieldConvert(
         LibUtilities::Equation equPhase(
             m_session->GetExpressionEvaluator(), itPhase->second);
         m_phaseAveragePhase = equPhase.Evaluate();
+
+        // Check that phase is within required limits
     }
 
     // Error if only one of the required params for PhaseAverage is present
     ASSERTL0((itPeriod != pParams.end() && itPhase != pParams.end()), 
-            "The phase average feature requires both 'PhaseAveragePeriod' and "
+            "The phase sampling feature requires both 'PhaseAveragePeriod' and "
             "'PhaseAveragePhase' to be set.");
     
     m_numSamples  = 0;

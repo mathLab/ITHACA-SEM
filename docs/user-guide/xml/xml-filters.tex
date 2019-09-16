@@ -27,6 +27,39 @@ In the following we document the filters implemented. Note that some filters are
 solver-specific and will therefore only work for a given subset of the available
 solvers.
 
+\subsection{Phase sampling}
+\begin{notebox}
+  This feature is currently only supported for filters derived from the
+  FieldConvert filter: AverageFields, MovingAverage, ReynoldsStresses.
+\end{notebox}
+
+When analysing certain time-dependent problems, it might be of interest to
+activate a filter in a specific physical phase and with a certain period
+(for instance, to carry out phase averaging).
+The simulation time can be written as
+$t = m \mathcal{T} + n_{\mathcal{T}} \mathcal{T}$,
+where $m$ is an integer representing the number of periods $\mathcal{T}$
+elapsed, and $0 \leq n_{\mathcal{T}} \leq 1$ is the phase.
+This feature can be activated by adding the two parameters below to the
+filter of interest:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} &
+    \textbf{Description} \\
+    \midrule
+    \inltt{PhaseAveragePeriod}      & \cmark   &  &
+    Period $\mathcal{T}$\\
+    \inltt{PhaseAveragePhase} & \cmark   &  &
+    Phase $n_{\mathcal{T}}$.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+Since this feature checks the current phase every \inltt{SampleFrequency},
+for best results it is recommended to set \inltt{SampleFrequency}$=1$.
+
 \subsection{FieldConvert checkpoints}
 
 \begin{notebox}

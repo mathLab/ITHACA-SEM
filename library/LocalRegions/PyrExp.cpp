@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -584,8 +583,20 @@ namespace Nektar
                 Vmath::Vcopy(m_ncoeffs,&data[0],1,coeffs,1);
             }
         }
-
             
+        /** 
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble PyrExp::v_StdPhysEvaluate(
+                const Array<OneD, const NekDouble> &Lcoord,
+                const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local coordinates.
+            return StdPyrExp::v_PhysEvaluate(Lcoord,physvals);
+        }
+
         NekDouble PyrExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord,
                                          const Array<OneD, const NekDouble>& physvals)
         {

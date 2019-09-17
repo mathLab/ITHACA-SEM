@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -192,8 +191,8 @@ namespace Nektar
             /// Returns the session name with process rank
             LIB_UTILITIES_EXPORT const std::string  GetSessionNameRank() const;
             /// Returns the communication object.
-            LIB_UTILITIES_EXPORT CommSharedPtr &GetComm();
-            /// Returns the communication object.
+            LIB_UTILITIES_EXPORT CommSharedPtr GetComm();
+            /// Returns if file system shared
             LIB_UTILITIES_EXPORT bool GetSharedFilesystem();
             /// Finalises the session.
             LIB_UTILITIES_EXPORT void Finalise();

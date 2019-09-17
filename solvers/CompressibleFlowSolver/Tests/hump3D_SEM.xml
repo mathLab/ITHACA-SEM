@@ -27,7 +27,7 @@
         </COMPOSITE>
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
- <EXPANSIONS>       
+ <EXPANSIONS>
         <E COMPOSITE="C[0]" NUMMODES="3" TYPE="GLL_LAGRANGE_SEM" FIELDS="rho,rhou,rhov,rhow, E" />
     </EXPANSIONS>
  <CONDITIONS>
@@ -58,7 +58,7 @@
             <P> Pr                  = 0.72                              </P>
             <P> Cp                  = (Gamma / (Gamma - 1))*GasConstant </P>
         </PARAMETERS>
-        
+
         <SOLVERINFO>
             <I PROPERTY="EQType"                VALUE="NavierStokesCFE"     />
             <I PROPERTY="Projection"            VALUE="DisContinuous"       />
@@ -78,7 +78,7 @@
             <V ID="3"> rhow </V>
             <V ID="4"> E    </V>
         </VARIABLES>
-        
+
         <BOUNDARYREGIONS>
             <B ID="0">  C[1]  </B>
             <B ID="1">  C[2]  </B>
@@ -115,7 +115,7 @@
                 <D VAR="rhou" USERDEFINEDTYPE="PressureOutflow" VALUE="0" />
                 <D VAR="rhov" USERDEFINEDTYPE="PressureOutflow" VALUE="0" />
                 <D VAR="rhow" USERDEFINEDTYPE="PressureOutflow" VALUE="0" />
-                <D VAR="E"    USERDEFINEDTYPE="PressureOutflow" VALUE="0" />
+                <D VAR="E"    USERDEFINEDTYPE="PressureOutflow" VALUE="pInf" />
             </REGION>
             <REGION REF="4">
                 <P VAR="rho"    VALUE="[5]" />
@@ -132,14 +132,14 @@
                 <P VAR="E"      VALUE="[4]" />
             </REGION>
         </BOUNDARYCONDITIONS>
-         
+
         <FUNCTION NAME="InitialConditions">
             <F VAR="rho"  FILE="hump3D.rst" />
             <F VAR="rhou" FILE="hump3D.rst" />
             <F VAR="rhov" FILE="hump3D.rst" />
             <F VAR="rhow" FILE="hump3D.rst" />
             <F VAR="E"    FILE="hump3D.rst" />
-        </FUNCTION>        
+        </FUNCTION>
         <FUNCTION NAME="ExactSolution">
             <E VAR="rho"  VALUE="rhoInf" />
             <E VAR="rhou" VALUE="rhoInf * uInf" />

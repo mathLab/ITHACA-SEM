@@ -6,13 +6,15 @@ v5.0.0
 **Library**
 - Added in sum factorisation version for pyramid expansions and orthogonal
   expansion in pyramids (!750)
+- Added detection of 'abort' file to cleanly terminate simulation early (!772)
 - Significant overhaul of CMake infrastructure (!770, !804)
 - Fix ThridpartyCCM options (!802)
 - Fix Windows CRLF tokens in GEO reader and improve comment handling (!805)
 - Use chrono in Timer (!807)
 - Fix caching of FUNCTION tags that read from file and provide the same
   functionality in FUNCTIONs defined for forcings (!759)
-- Add patch to tinyxml to fix size_t vs int bug (!820)
+- Transition to C++11 (!795, !847)
+- Add patch to tinyxml to fix size_t vs int bug (!820, !1006)
 - Add ARPACK thirdparty build capabilities (!828)
 - Added native support for csv files in addititon to pts (!760, !835, !906)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
@@ -38,7 +40,7 @@ v5.0.0
 - Added in sum factorisation version for pyramid expnasions and orthogonal
   expansion in pyramids (!750)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
-  !904)
+  !904, !941)
 - Restructure the low energy preconditioner to handle pyramidic and variable
   p expansions (!920)
 - Remove requirement for modmetis, switch to SCOTCH by default (!899)
@@ -48,10 +50,40 @@ v5.0.0
   WeightPartitions was used in parallel (!923)
 - Removed instance count from beginning of Array storage to improve memory
   alignment (!921)
-- Fix naming issue of duplicate Unit tests (!924) 
+- Fix naming issue of duplicate Unit tests (!924)
 - Fix warnings about missing virtual destructors in abstract classes (!932)
+- Fix ability to have periodic boundary conditions that are aligned by a
+  rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
-  and a DummySolver to test the implementations (!853 !931)
+  and a DummySolver to test the implementations (!853, !931, !950, !973)
+- Fix compilation issue with newer Boost versions and clang (!940)
+- If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
+  `MultiRegions` will be built by default (!945)
+- Dont add doxygen documentation to the all target (!834)
+- Fix missing metadata import from Hdf5 files (!971)
+- Fix missing flags for periodic BC in DiffusionLDG (!985)
+- Add the moving reference frame as a forcing (!987)
+- Added rtree for element bounding box lookup to accelerate interpolation (!996)
+- Fix integration weights on prisms and pyramids if not using the default
+  integration rule (!998)
+- Fix missing ContainsPoint in Pyramid expansion (!1000)
+- Added path prefixes to find packaged Scotch (!979, !1008)
+- Add HDF5 geometry format (!977)
+- Combine and generalise demo code in StdRegions and LocalRegions (!993)
+- Fix for error output to allow for custom error streams (!944)
+- Fixed bug in ReOrientQuadFacePhysMap (!1003)
+- Add NekPy Python interface (!962, !990, !989, !1004)
+- Fix edge case for ThirdPartyScotch and FindScoth (!1009)
+- Fix to populate m_elmtToExpId map if not already set up in GetExpIndex (!1019)
+- Added flag to skip periodic BCs while filling Dirichlet BCs in
+  ContField3D.cpp (!1018)
+- Fix bounding box for interpolation (!1033)
+- Added IMEXOrder4, RK5 and AB4 time integration schemes (!1037)
+- Fix TriExp.cpp orientation bug (!1048)
+- Fix XML attributes in conditions.cpp to be unordered (!1015)
+- Fix issue with HDF5 mesh input in serial (!1049)
+- Add estimate of filters CPU time (!1044)
+- Update CompressibleFlowSolver/Examples/Test_IsentropicVortex1.xml example (!1045)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -82,6 +114,14 @@ v5.0.0
 - Order nodes in Gmsh output (!912)
 - Fix manifold face curvature nodes (!913)
 - Fix writing 1D surfaces (!930)
+- Fix surface string parsin in BL splitting (!937)
+- Enable use of distributed packages for triangle and TetGen (!953)
+- Fix issue with MLSC after Scotch conversion (!943)
+- Add support for Gmsh 4.0 mesh file format (!964)
+- Fix issue with extracting 1D curved surface from 2D file (!984)
+- Fix surface extraction, added regression test (!994)
+- Fix 2D meshing running out of memory due to missing else (!1012)
+- Add support for .msh v4.1 file input (!1054)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -97,6 +137,16 @@ v5.0.0
 - Add Lambda 2 vortex detection criteria (!882)
 - Add module for modifying/adding fields from expressions (!889, !903)
 - Add module for evaluating the mean of variables on the domain (!894)
+- Add module for counting the total number of DOF (!948)
+- Fixed wss module for compressible flows (!958)
+- Made Sutherland's law non-dimensional (!972)
+- Add module for removing fields from .fld files (!978)
+- Fixed nparts option in FieldConvert and automated Info.xml generation (!995)
+- Added if statement to fix case of 1D/2D manifold interpolation in 1D/2D space,
+  added check on dimensions for interpolation, fixed seg interp (!999)
+- Fixed scaling for compressed xml, fixed error printout for mesh only (!1040)
+- Add field conversion from Halfmode to SingleMode (!1032)
+- Fix double precision output in .dat format (!1059)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
@@ -104,6 +154,7 @@ v5.0.0
 - Updated SVV to allow for the DGKernel extension (!851)
 - Pre-calculate Time invariant portion of Womersley Solution (!814)
 - Fix for independent setting of SVV in Homogeneous direction (!936)
+- Write flow field based on CFL treshold (!1025)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
@@ -113,13 +164,37 @@ v5.0.0
   seg, quad and hex elements (!771, !862)
 - Fix compressible solver with NUMMODES=1 (!868)
 - Introduce equations of state to account for real gas effects (!880)
+- Made Sutherland's law non-dimensional (!972)
+- Modified pressure outlet BCs to allow for the reference static pressure to be
+  set from the VALUE fields (!981)
+- hp scaling for Laplacian AV (!1013)
 
-**APESolver:**
+**AcousticSolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC
   and WhiteNoise (!782)
+- Store base flow fields in a discontinuous projection (!918)
+- Enabled 1D cases (!918)
+- The APE system now uses u_i, c^2 and rho as base flow fields (!918)
+- Added the Linearized Euler Equations (LEE) (!918)
+
+**ADRSolver:**
+- Fix forcing from file for Poisson solver (!1029)
+
+**APESolver:**
+- APESolver was replaced with AcousticSolver (!918)
+
+**PulseWaveSolver**
+- Added two new boundary conditions: AInflow and UInflow
 
 **Documentation**:
-- Added the developer-guide repository as a submodule (!751)
+- Added an initial developer's guide (!1001)
+
+**Tester**
+- Fix build with boost 1.67 (!947)
+- Various change to tests to decrease test time (!1053)
+
+**Packaging:**
+- Add Dockerfiles and gitlab CI configuration for automatic builds (!1021)
 
 v4.4.2
 ------
@@ -134,7 +209,9 @@ v4.4.2
 - Fix deadlock in DiffusionLDG (!885)
 - Fix uninitialised coefficients in DirectFull solver (!898)
 - Updated PETSc to 3.7.7 (!916)
-- Fix typcase to an integer which set Lz < 1 to zero when postprocess hdf5 output (!9922)
+- Fix typecast to an integer which set Lz < 1 to zero when postprocess hdf5 output (!922)
+- Fix program options errors on Windows in debug mode (!986)
+- Fix potential clobbered output of ModArnoldi EVs when run in parallel (!983)
 
 **IncNavierStokesSolver**
 - Add a test for imaginary shift to be only used with Homogenous and SingleMode on. (!928)
@@ -152,6 +229,7 @@ v4.4.2
 
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)
+- Fix the interpcoord option  of the interppointdatatofld module (!952)
 
 **Utilities**
 - Fix VtkToPng to account for deprecated VTK API for VTK version > 8.1 (!925)

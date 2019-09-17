@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -191,7 +190,7 @@ namespace Nektar
             "PreconLinearSpaceMass",
             "InterpGauss",
             "GaussDG",
-            "PhysInterpToEquiSpaced"
+            "PhysInterpToEquiSpaced",
             "EquiSpacedToCoeffs"
         };
 
@@ -208,7 +207,26 @@ namespace Nektar
             eVarCoeffD12,
             eVarCoeffVelX,
             eVarCoeffVelY,
-            eVarCoeffVelZ
+            eVarCoeffVelZ,
+            eVarCoeffMF1x,
+            eVarCoeffMF1y,
+            eVarCoeffMF1z,
+            eVarCoeffMF1Div,
+            eVarCoeffMF1Mag,
+            eVarCoeffMF2x,
+            eVarCoeffMF2y,
+            eVarCoeffMF2z,
+            eVarCoeffMF2Div,
+            eVarCoeffMF2Mag,
+            eVarCoeffMF3x,
+            eVarCoeffMF3y,
+            eVarCoeffMF3z,
+            eVarCoeffMF3Div,
+            eVarCoeffMF3Mag,
+            eVarCoeffMF,
+            eVarCoeffMFDiv,
+            eVarCoeffGmat,
+            SIZE_VarCoeffType
         };
 
         const char* const VarCoeffTypeMap[] = {
@@ -222,7 +240,26 @@ namespace Nektar
             "VarCoeffD02",
             "VarCoeffD12",
             "VarCoeffVelX",
-            "VarCoeffVelY"
+            "VarCoeffVelY",
+            "VarCoeffVelZ",
+            "VarCoeffMF1x",
+            "VarCoeffMF1y",
+            "VarCoeffMF1z",
+            "VarCoeffMF1Div",
+            "VarCoeffMF1Mag",
+            "VarCoeffMF2x",
+            "VarCoeffMF2y",
+            "VarCoeffMF2z",
+            "VarCoeffMF2Div",
+            "VarCoeffMF2Mag",
+            "VarCoeffMF3x",
+            "VarCoeffMF3y",
+            "VarCoeffMF3z",
+            "VarCoeffMF3Div",
+            "VarCoeffMF3Mag",
+            "VarCoeffMF",
+            "VarCoeffMFDiv",
+            "VarCoeffGmat"
         };
         typedef std::map<StdRegions::VarCoeffType, Array<OneD, NekDouble> > VarCoeffMap;
         static VarCoeffMap NullVarCoeffMap;
@@ -238,7 +275,8 @@ namespace Nektar
                 eFactorSVVDGKerDiffCoeff,
                 eFactorGaussVertex,
                 eFactorGaussEdge,
-                eFactorConst
+                eFactorConst,
+                SIZE_ConstFactorType
             };
 
         const char* const ConstFactorTypeMap[] = {

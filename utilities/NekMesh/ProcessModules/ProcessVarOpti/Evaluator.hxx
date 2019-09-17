@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -311,7 +310,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
     NekDouble ep =
         m_minJac < 0.0 ? sqrt(1e-8 + 0.04 * m_minJac * m_minJac) : 1e-4;
     NekDouble jacIdeal[DIM][DIM], jacDet;
-    m_grad = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
+    m_grad = vector<NekDouble>(DIM == 2 ? 5 : 9, 0.0);
 
     switch (m_opti)
     {

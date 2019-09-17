@@ -1,0 +1,163 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{CompressibleFlowSolver: Solving the Compressible Navier-Stokes Equations}
+
+In this chapter, we walk the reader through our 2D and 3D compressible Navier-Stokes Solver (CompressibleFlowSolver). 
+\section{Fundamental Theories of CompressibleFlowSolver}
+\clearpage
+\section{Data Structure of CompressibleFlowSolver}
+   \begin{figure}
+          \caption{CompressibleFlowSolver DataStructure}
+        \centering
+        \begin{turn}{90}
+        \includestandalone[width=1.2\linewidth]{DataStructure}
+        \end{turn}
+    \end{figure}
+
+\clearpage
+\section{Flow Chart of CompressibleFlowSolver}
+   \begin{figure}
+          \caption{CompressibleFlowSolver Main Flow Chart}
+        \centering
+      \begin{tikzpicture}[scale=0.2,node distance=1cm]
+\node (A)
+[rectangle,
+rounded corners,
+minimum width=8cm,
+minimum height=1cm,
+text centered,
+draw=black,
+fill=red!30]
+{CompressibleFlowSolver$.$cpp};
+\node (B_1)
+[rectangle,
+rounded corners,
+minimum width=8cm,
+minimum height=1cm,
+text width=8cm,
+text centered,
+draw=black,
+fill=blue!20,
+below =of A,
+xshift=0cm,
+yshift=0cm]
+{Initialize Objects\\eg. DriverStandard::v$\_$InitObject\\See Figure \ref{fig1}};
+\draw[arrow](A)--(B_1);
+\node (B_2)
+[rectangle,
+rounded corners,
+minimum width=8cm,
+minimum height=1cm,
+text width=8cm,
+text centered,
+draw=black,
+fill=blue!20,
+below =of B_1,
+xshift=0cm,
+yshift=0cm]
+{Execute Solver beginning from driver:\\eg. DriverStandard::v$\_$Execute};
+\draw[arrow](B_1)--(B_2);
+\node (C_1)
+[rectangle,
+rounded corners,
+minimum width=8cm,
+minimum height=1cm,
+text width=8cm,
+text centered,
+draw=black,
+fill=yellow!20,
+right= of B_2,
+xshift=0cm,
+yshift=0cm]
+{Initial conditions: \\m$\_$equ[0]-$>$DoInitialise\\ See Figure \ref{fig2}};
+\draw[arrow](B_2.east)--(C_1);
+\node (C_2)
+[rectangle,
+rounded corners,
+minimum width=8cm,
+minimum height=1cm,
+text width=8cm,
+text centered,
+draw=black,
+fill=yellow!20,
+below = of C_1,
+xshift=0cm,
+yshift=0cm]
+{Main execution of solver:\\m$\_$equ[0]-$>$DoSolve\\ See Figure \ref{fig3} and Figure \ref{fig4}};
+\draw[arrow](B_2.east)--($(B_2.east)+(2cm,0)$)|-(C_2);
+\node (C_3)
+[rectangle,
+rounded corners,
+minimum width=8cm,
+minimum height=1cm,
+text width=8cm,
+text centered,
+draw=black,
+fill=yellow!20,
+below = of C_2,
+xshift=0cm,
+yshift=0cm]
+{Output brief information:\\m$\_$equ[0]-$>$Output};
+\draw[arrow](B_2.east)--($(B_2.east)+(2cm,0)$)|-(C_3);
+\end{tikzpicture}
+    \end{figure}
+
+\clearpage
+   \begin{figure}
+          \caption{CompressibleFlowSolver InitObject}\label{fig1}
+        \centering
+        \includestandalone[width=1\linewidth]{FlowChart1}
+    \end{figure}
+
+\clearpage
+   \begin{figure}
+          \caption{CompressibleFlowSolver Initialize Conditions}\label{fig2}
+        \centering
+        \includestandalone[width=1\linewidth]{FlowChart2}
+    \end{figure}
+
+\clearpage
+   \begin{figure}
+          \caption{CompressibleFlowSolver Execute Advection}\label{fig3}
+        \centering
+        \includestandalone[width=0.5\linewidth]{FlowChart3}
+   \end{figure}
+
+\clearpage
+   \begin{figure}
+          \caption{CompressibleFlowSolver Execute Diffusion}\label{fig4}
+        \centering
+        \includestandalone[width=0.5\linewidth]{FlowChart4}
+   \end{figure}
+
+
+% \section{The Fundamentals Behind the Compressible Flow Solver}
+
+% \subsection{Strong Form of the System}
+
+% \subsection{Variational Form of the System}
+
+% \section{The Fundamentals Behind the Data Structures}
+
+% \subsection{Overview}
+
+% \subsection{Equation System Description}
+
+% \subsection{Advection Components}
+
+% \subsection{Diffusion Components}
+
+
+% \section{The Fundamental Flow Control of The Solver: Flow Chart}
+
+% \subsection{Top-Down Perspective}
+
+% \subsection{Evaluation of the Explicit Term}
+
+% \subsection{Evaluation of the Implicit Term}
+
+% \section{The Fundamental Algorithms}
+
+% \paragraph{How Would I Change From External Energy Form to Internal Energy Form?}
+
+% \paragraph{How Is De-Aliasing Applied to the Non-Linear Terms?}
+

@@ -10,7 +10,6 @@
 // University of Utah (USA) and Department of Aeronautics, Imperial
 // College London (UK).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -57,6 +56,12 @@ namespace Nektar
     template<typename DataType>
     class Array<OneD, const DataType>
     {
+#ifdef WITH_PYTHON
+        struct PythonInfo {
+            void *m_pyObject; // Underlying PyObject pointer
+            void (*m_callback)(void *); // Callback
+        };
+#endif
         public:
             typedef DataType* ArrayType;
             typedef const DataType& const_reference;
@@ -72,11 +77,14 @@ namespace Nektar
         public:
             /// \brief Creates an empty array.
             Array() :
+#ifdef WITH_PYTHON
+                m_pythonInfo(nullptr),
+#endif
                 m_size( 0 ),
                 m_capacity( 0 ),
                 m_data( nullptr ),
                 m_count( nullptr ),
-                m_offset( 0 )
+                m_offset( 0 )                
             {
                 CreateStorage(m_capacity);
             }
@@ -87,18 +95,21 @@ namespace Nektar
             /// uninitialized.  If it is any other type, each element is initialized with DataType's default
             /// constructor.
             explicit Array(unsigned int dim1Size) :
+#ifdef WITH_PYTHON
+                m_pythonInfo(nullptr),
+#endif
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
                 m_count( nullptr ),
-                m_offset( 0 )
+                m_offset( 0 )                
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity );
             }
 
-             /// \brief Creates a 1D array with each element
-             /// initialized to an initial value.
+            /// \brief Creates a 1D array with each element
+            /// initialized to an initial value.
             /// \param dim1Size The array's size.
             /// \param initValue Each element's initial value.
             ///
@@ -107,11 +118,14 @@ namespace Nektar
             /// element.  Otherwise, the DataType's copy constructor
             /// is used to initialize each element.
             Array(unsigned int dim1Size, const DataType& initValue) :
+#ifdef WITH_PYTHON
+                m_pythonInfo(nullptr),
+#endif
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
                 m_count( nullptr ),
-                m_offset( 0 )
+                m_offset( 0 )                
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity, initValue );
@@ -125,11 +139,14 @@ namespace Nektar
             /// directly into the underlying storage.  Otherwise, the DataType's copy constructor
             /// is used to copy each element.
             Array(unsigned int dim1Size, const DataType* data) :
+#ifdef WITH_PYTHON
+                m_pythonInfo(nullptr),
+#endif
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
                 m_count( nullptr ),
-                m_offset( 0 )
+                m_offset( 0 )                
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity, data );
@@ -145,23 +162,52 @@ namespace Nektar
             /// The memory for the array will only be deallocated when
             /// both rhs and this array have gone out of scope.
             Array(unsigned int dim1Size, const Array<OneD, const DataType>& rhs) :
+#ifdef WITH_PYTHON
+                m_pythonInfo(rhs.m_pythonInfo),
+#endif
                 m_size(dim1Size),
                 m_capacity(rhs.m_capacity),
                 m_data(rhs.m_data),
                 m_count(rhs.m_count),
-                m_offset(rhs.m_offset)
+                m_offset(rhs.m_offset)                
             {
                 *m_count += 1;
                 ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
             }
 
+#ifdef WITH_PYTHON
+            /// \brief Creates a 1D array a copies data into it.
+            /// \param dim1Size the array's size.
+            /// \param data The data to reference.
+            /// \param memory_pointer Pointer to the memory address of the array
+            /// \param python_decrement Pointer to decrementer
+            Array(unsigned int dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
+                m_size( dim1Size ),
+                m_capacity( dim1Size ),
+                m_data( data ),
+                m_count( nullptr ),
+                m_offset( 0 )                               
+            {
+                m_count = new unsigned int(); 
+                *m_count = 1;
+
+                m_pythonInfo = new PythonInfo *();
+                *m_pythonInfo = new PythonInfo();
+                (*m_pythonInfo)->m_callback = python_decrement;
+                (*m_pythonInfo)->m_pyObject = memory_pointer;
+            }
+#endif
+
             /// \brief Creates a reference to rhs.
             Array(const Array<OneD, const DataType>& rhs) :
+#ifdef WITH_PYTHON
+                m_pythonInfo(rhs.m_pythonInfo),
+#endif
                 m_size(rhs.m_size),
                 m_capacity(rhs.m_capacity),
                 m_data(rhs.m_data),
                 m_count(rhs.m_count),
-                m_offset(rhs.m_offset)
+                m_offset(rhs.m_offset)                
             {
                 *m_count += 1;
             }
@@ -176,22 +222,56 @@ namespace Nektar
                 *m_count -= 1;
                 if( *m_count == 0 )
                 {
+#ifdef WITH_PYTHON
+                    if (*m_pythonInfo == nullptr)
+                    {
+                        ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
+                        MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
+                    }
+                    else
+                    {
+                        (*m_pythonInfo)->m_callback((*m_pythonInfo)->m_pyObject);
+                        delete *m_pythonInfo;
+                    }
+
+                    delete m_pythonInfo;
+
+#else
+
                     ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
                     MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
+
+#endif
 
                     delete m_count; // Clean up the memory used for the reference count.
                 }
             }
 
             /// \brief Creates a reference to rhs.
-            Array<OneD, const DataType>& operator=(const Array<OneD, const DataType>& rhs)
+            Array<OneD, const DataType>& operator=(const Array<OneD, const DataType>& rhs) 
             {
                 *m_count -= 1;
                 if( *m_count == 0 )
                 {
+#ifdef WITH_PYTHON
+                    if (*m_pythonInfo == nullptr)
+                    {
+                        ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
+                        MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
+                    }
+                    else if ((*rhs.m_pythonInfo) != nullptr && (*m_pythonInfo)->m_pyObject != (*rhs.m_pythonInfo)->m_pyObject)
+                    {
+                        (*m_pythonInfo)->m_callback((*m_pythonInfo)->m_pyObject);
+                        delete *m_pythonInfo;
+                    }
+
+                    delete m_pythonInfo;
+#else
+
                     ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
                     MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
-                    delete m_count; // Clean up memory used for reference count.
+#endif
+                    delete m_count; // Clean up the memory used for the reference count.
                 }
 
                 m_data = rhs.m_data;
@@ -200,6 +280,9 @@ namespace Nektar
                 *m_count += 1;
                 m_offset = rhs.m_offset;
                 m_size = rhs.m_size;
+#ifdef WITH_PYTHON
+                m_pythonInfo = rhs.m_pythonInfo;
+#endif
                 return *this;
             }
 
@@ -208,9 +291,10 @@ namespace Nektar
 
             const_reference operator[](unsigned int i) const
             {
-                ASSERTL1(static_cast<size_type>(i) < m_size, (std::string("Element ") +
-                    boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
-                    boost::lexical_cast<std::string>(m_size)));
+                ASSERTL1(static_cast<size_type>(i) < m_size,
+                         std::string("Element ") + std::to_string(i) +
+                         std::string(" requested in an array of size ") +
+                         std::to_string(m_size));
                 return *( m_data + i + m_offset );
             }
 
@@ -231,6 +315,9 @@ namespace Nektar
             /// \brief Returns the array's offset.
             unsigned int GetOffset() const { return m_offset; }
 
+            /// \brief Returns the array's reference counter.
+            unsigned int GetCount() const { return *m_count; }
+
             /// \brief Returns true is this array and rhs overlap.
             bool Overlaps(const Array<OneD, const DataType>& rhs) const
             {
@@ -243,6 +330,20 @@ namespace Nektar
                 return (rhs_start >= start && rhs_start <= end) ||
                        (rhs_end >= start && rhs_end <= end);
             }
+
+#ifdef WITH_PYTHON
+            bool IsPythonArray()
+            {
+                return *m_pythonInfo != nullptr;
+            }
+
+            void ToPythonArray(void* memory_pointer, void (*python_decrement)(void *))
+            {
+                *m_pythonInfo = new PythonInfo();
+                (*m_pythonInfo)->m_callback = python_decrement;
+                (*m_pythonInfo)->m_pyObject = memory_pointer;
+            }
+#endif
 
             template<typename T1, typename T2>
             friend bool operator==(const Array<OneD, T1>&, const Array<OneD, T2>&);
@@ -266,6 +367,11 @@ namespace Nektar
             friend Array<OneD, T> operator+(unsigned int offset, const Array<OneD, T>& rhs);
 
         protected:
+
+#ifdef WITH_PYTHON
+            PythonInfo **m_pythonInfo;
+#endif
+
             unsigned int m_size;
             unsigned int m_capacity;
             DataType* m_data;
@@ -274,8 +380,7 @@ namespace Nektar
             // Previously, the reference count was stored in the first 4 bytes of the m_data array.
             unsigned int* m_count; 
 
-            unsigned int m_offset;
-
+            unsigned int m_offset;            
 
         private:
         //            struct DestroyArray
@@ -302,6 +407,10 @@ namespace Nektar
                 // pointed to "(unsigned int*)storage".
                 m_count = new unsigned int(); 
                 *m_count = 1;
+#ifdef WITH_PYTHON
+                m_pythonInfo = new PythonInfo*();
+                *m_pythonInfo = nullptr;
+#endif
             }
 
             template<typename T>
@@ -526,6 +635,18 @@ namespace Nektar
             {
             }
 
+#ifdef WITH_PYTHON
+            Array(unsigned int dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
+                BaseType(dim1Size, data, memory_pointer, python_decrement)
+            {
+            }
+
+            void ToPythonArray(void* memory_pointer, void (*python_decrement)(void *))
+            {
+                BaseType::ToPythonArray(memory_pointer, python_decrement);
+            }
+#endif
+
             Array<OneD, DataType>& operator=(const Array<OneD, DataType>& rhs)
             {
                 BaseType::operator=(rhs);
@@ -550,9 +671,10 @@ namespace Nektar
             using BaseType::operator[];
             reference operator[](unsigned int i)
             {
-                ASSERTL1(static_cast<size_type>(i) < this->num_elements(), (std::string("Element ") +
-                    boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
-                    boost::lexical_cast<std::string>(this->num_elements())));
+                ASSERTL1(static_cast<size_type>(i) < this->num_elements(),
+                         std::string("Element ") + std::to_string(i) +
+                         std::string(" requested in an array of size ") +
+                         std::to_string(this->num_elements()));
                 return (get())[i];
             }
 

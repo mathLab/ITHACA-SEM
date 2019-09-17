@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -325,7 +324,19 @@ public:
     ~DataSpace();
 
     void Close();
+
     void SelectRange(const hsize_t start, const hsize_t count);
+    void AppendRange(const hsize_t start, const hsize_t count);
+
+    void SelectRange(const std::vector<hsize_t> start,
+                     const std::vector<hsize_t> count);
+    void AppendRange(const std::vector<hsize_t> start,
+                     const std::vector<hsize_t> count);
+
+    void SetSelection(const hsize_t num_elmt,
+                      const std::vector<hsize_t> &coords);
+
+    void ClearRange();
 
     hsize_t GetSize();
     std::vector<hsize_t> GetDims();

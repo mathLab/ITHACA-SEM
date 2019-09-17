@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -168,7 +167,7 @@ static inline gs_data *Init(const Nektar::Array<OneD, long> pId,
                             bool verbose = true)
 {
 #ifdef NEKTAR_USE_MPI
-    if (pComm->GetSize() == 1)
+    if (pComm->IsSerial())
     {
         return 0;
     }
@@ -201,7 +200,7 @@ static inline void Unique(const Nektar::Array<OneD, long> pId,
                           const LibUtilities::CommSharedPtr &pComm)
 {
 #ifdef NEKTAR_USE_MPI
-    if (pComm->GetSize() == 1)
+    if (pComm->IsSerial())
     {
         return;
     }

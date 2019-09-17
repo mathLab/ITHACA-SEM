@@ -111,12 +111,32 @@ FilterFieldConvert::FilterFieldConvert(
     //    (Derived classes need to override this if needed)
     m_sampleFrequency = m_outputFrequency;
 
-    auto itPeriod = pParams.find("PhaseAveragePeriod");
-    auto itPhase = pParams.find("PhaseAveragePhase");
-
-    if(itPeriod != pParams.end() && itPhase != pParams.end())
+    // Phase sampling option
+    it = pParams.find("PhaseAverage");
+    if (it == pParams.end())
     {
-        m_phaseAverage = true;
+        m_phaseAverage = false;
+    }
+    else
+    {
+        // LibUtilities::Equation equ(
+        //     m_session->GetExpressionEvaluator(), it->second);
+        // m_phaseAverage = round(equ.Evaluate());
+
+        std::string sOption = it->second.c_str();
+        m_phaseAverage = (boost::iequals(sOption, "true")) ||
+                   (boost::iequals(sOption, "yes"));
+    }
+
+    if(m_phaseAverage)
+    {
+        auto itPeriod = pParams.find("PhaseAveragePeriod");
+        auto itPhase = pParams.find("PhaseAveragePhase");
+    
+        // Error if only one of the required params for PhaseAverage is present
+        ASSERTL0((itPeriod != pParams.end() && itPhase != pParams.end()), 
+            "The phase sampling feature requires both 'PhaseAveragePeriod' and "
+            "'PhaseAveragePhase' to be set.");
 
         LibUtilities::Equation equPeriod(
             m_session->GetExpressionEvaluator(), itPeriod->second);
@@ -127,12 +147,9 @@ FilterFieldConvert::FilterFieldConvert(
         m_phaseAveragePhase = equPhase.Evaluate();
 
         // Check that phase is within required limits
+        ASSERTL0(m_phaseAveragePhase>=0 && m_phaseAveragePhase<=1,
+            "PhaseAveragePhase must be between 0 and 1.")
     }
-
-    // Error if only one of the required params for PhaseAverage is present
-    ASSERTL0((itPeriod != pParams.end() && itPhase != pParams.end()), 
-            "The phase sampling feature requires both 'PhaseAveragePeriod' and "
-            "'PhaseAveragePhase' to be set.");
     
     m_numSamples  = 0;
     m_index       = 0;

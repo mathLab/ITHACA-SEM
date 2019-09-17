@@ -47,8 +47,8 @@ The simulation time can be written as
 $t = m \mathcal{T} + n_{\mathcal{T}} \mathcal{T}$,
 where $m$ is an integer representing the number of periods $\mathcal{T}$
 elapsed, and $0 \leq n_{\mathcal{T}} \leq 1$ is the phase.
-This feature can be activated by adding the two parameters below to the
-filter of interest:
+This feature is not a filter in itself and it is activated by adding the
+parameters below to the filter of interest:
 
 \begin{center}
   \begin{tabularx}{0.99\textwidth}{lllX}
@@ -56,6 +56,8 @@ filter of interest:
     \textbf{Option name} & \textbf{Required} & \textbf{Default} &
     \textbf{Description} \\
     \midrule
+    \inltt{PhaseAverage}      & \cmark   &  &
+    Feature activation\\
     \inltt{PhaseAveragePeriod}      & \cmark   &  &
     Period $\mathcal{T}$\\
     \inltt{PhaseAveragePhase} & \cmark   &  &
@@ -64,7 +66,20 @@ filter of interest:
   \end{tabularx}
 \end{center}
 
-Since this feature checks the current phase every \inltt{SampleFrequency},
+For instance, to activate phase averaging with a period of $\mathcal{T}=10$
+at phase $n_{\mathcal{T}}=1$:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="FilterName">
+      <PARAM NAME="Param1"> Value1 </PARAM>
+      <PARAM NAME="Param2"> Value2 </PARAM>
+      <PARAM NAME="PhaseAverage"> True </PARAM>
+      <PARAM NAME="PhaseAveragePeriod"> 10 </PARAM>
+      <PARAM NAME="PhaseAveragePhase"> 1 </PARAM>
+  </FILTER>
+\end{lstlisting}
+
+Since this feature monitors $n_{\mathcal{T}}$ every \inltt{SampleFrequency},
 for best results it is recommended to set \inltt{SampleFrequency}$=1$.
 
 \subsection{FieldConvert checkpoints}

@@ -1476,20 +1476,20 @@ namespace Nektar
             }
         }
         
-        if(m_DEBUG_VISCOUS_JAC_MAT)
-        {
-            Array<OneD, Array<OneD, NekDouble > > visflux(nConvectiveFields);
-            for(int i = 0; i < nConvectiveFields; i++)
-            {
-                visflux[i]  =    Array<OneD, NekDouble>(nTracePts,0.0);
-            }
+        // if(m_DEBUG_VISCOUS_JAC_MAT)
+        // {
+        //     Array<OneD, Array<OneD, NekDouble > > visflux(nConvectiveFields);
+        //     for(int i = 0; i < nConvectiveFields; i++)
+        //     {
+        //         visflux[i]  =    Array<OneD, NekDouble>(nTracePts,0.0);
+        //     }
 
-            m_diffusion->DiffuseTraceFlux(nConvectiveFields, fields, inarray,qfield,visflux,vFwd, vBwd,qFwd,qBwd,MuVarTrace,nonZeroIndex);
-            for(int i = 0; i < nConvectiveFields; i++)
-            {
-                Vmath::Vsub(nTracePts,traceflux[i],1,visflux[i],1,traceflux[i],1);
-            }
-        }
+        //     m_diffusion->DiffuseTraceFlux(nConvectiveFields, fields, inarray,qfield,visflux,vFwd, vBwd,qFwd,qBwd,MuVarTrace,nonZeroIndex);
+        //     for(int i = 0; i < nConvectiveFields; i++)
+        //     {
+        //         Vmath::Vsub(nTracePts,traceflux[i],1,visflux[i],1,traceflux[i],1);
+        //     }
+        // }
     }
 
 

@@ -1113,7 +1113,7 @@ namespace Nektar
             int i,j,k,e_npoints,offset;
 
             Array<OneD,NekDouble> locLeng;
-            Array<OneD,NekDouble> lengintp;
+            Array<OneD,Array<OneD,NekDouble>> lengintp(2);
             Array<OneD,int      > LRbndnumbs(2);
             Array<OneD, Array<OneD,NekDouble> > lengLR(2);
             lengLR[0]   =   lengthsFwd;
@@ -1136,7 +1136,8 @@ namespace Nektar
                 e_npoints  =   TraceNq0*TraceNq1;
                 if(e_npoints0<e_npoints)
                 {
-                    lengintp = Array<OneD, NekDouble>(e_npoints,0.0);
+                    lengintp[0] = Array<OneD, NekDouble>(e_npoints,0.0);
+                    lengintp[1] = Array<OneD, NekDouble>(e_npoints,0.0);
                     e_npoints0 = e_npoints;
                 }
                 
@@ -1147,7 +1148,7 @@ namespace Nektar
                 LRbndnumbs[1]   =   loc_exp->GetRightAdjacentElementFace();
                 for(int nlr=0;nlr<2;nlr++)
                 {
-                    Vmath::Zero(e_npoints0,lengintp,1);
+                    Vmath::Zero(e_npoints0,lengintp[nlr],1);
                     int bndNumber = LRbndnumbs[nlr];
                     loc_elmt = LRelmts[nlr];
                     if(bndNumber>=0)
@@ -1185,11 +1186,19 @@ namespace Nektar
                             alignedLeng,
                             traceBasis0.GetPointsKey(),
                             traceBasis1.GetPointsKey(),
-                            lengintp);
+                            lengintp[nlr]);
                     }
+                    else
+                    {
+                        if(1==nlr)
+                        {
+                            Vmath::Vcopy(e_npoints,lengintp[0],1,lengintp[1],1);
+                        }
+                    }
+                    
                     for (j = 0; j < e_npoints; ++j)
                     {
-                        lengLR[nlr][offset + j] = lengintp[j];
+                        lengLR[nlr][offset + j] = lengintp[nlr][j];
                     }
                 }
             }

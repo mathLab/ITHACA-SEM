@@ -2352,6 +2352,60 @@ namespace Nektar
             }
         }
 
+        void ExpList::GetTraceFwdBwdadjacentElmtEdgeNumbers(
+            Array<OneD, int >                                   &FwdElmtEdgeNumb,
+            Array<OneD, int >                                   &BwdElmtEdgeNumb)
+        {
+            MultiRegions::ExpListSharedPtr tracelist = GetTrace();
+            std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
+            int ntotTrac            = (*traceExp).size();
+            int nTracPnt,noffset;
+            
+            const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap = GetlocTraceToTraceMap();
+            
+            const Array<OneD, const Array<OneD, int >> LRAdjExpid  =   locTraceToTraceMap->GetLeftRightAdjacentExpId();
+            const Array<OneD, const Array<OneD, bool>> LRAdjflag   =   locTraceToTraceMap->GetLeftRightAdjacentExpFlag();
+
+            Array<OneD, int > factorFwdBwd(2,0.0);
+
+            NekDouble spaceDim    =   NekDouble( GetCoordim(0) );
+
+            int nlr = 0;
+            for(int ntrace = 0; ntrace < ntotTrac; ++ntrace)
+            {
+                noffset     = tracelist->GetPhys_Offset(ntrace);
+                nTracPnt    = tracelist->GetTotPoints(ntrace);
+
+                factorFwdBwd[0] =   0.0;
+                factorFwdBwd[1] =   0.0;
+                
+                nlr = 0;
+                if(LRAdjflag[nlr][ntrace])
+                {
+                    factorFwdBwd[nlr]       = GetExp(LRAdjExpid[nlr][ntrace])->GetNedges();  
+                }
+                else
+                {
+                    ASSERTL0(false, " Error: Fwd adjacent neighbour element not exist");
+                }
+
+                nlr = 1;
+                if(LRAdjflag[nlr][ntrace])
+                {
+                    factorFwdBwd[nlr]       = GetExp(LRAdjExpid[nlr][ntrace])->GetNedges();  
+                }
+                else
+                {
+                    factorFwdBwd[nlr] = factorFwdBwd[0]; 
+                }
+                
+                for(int np = 0; np < nTracPnt; ++np)
+                {
+                    FwdElmtEdgeNumb[noffset+np]    =   factorFwdBwd[0];
+                    BwdElmtEdgeNumb[noffset+np]    =   factorFwdBwd[1];
+                }
+            }
+        }
 
         //
         // Virtual functions

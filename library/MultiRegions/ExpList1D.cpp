@@ -1157,8 +1157,8 @@ namespace Nektar
             int i,j,k,e_npoints,offset;
 
             Array<OneD,NekDouble> locLeng;
-            Array<OneD,NekDouble> lengintp;
-            Array<OneD,NekDouble> lengAdd;
+            Array<OneD,Array<OneD,NekDouble>> lengintp(2);
+            Array<OneD,Array<OneD,NekDouble>> lengAdd(2);
             Array<OneD,int      > LRbndnumbs(2);
             Array<OneD, Array<OneD,NekDouble> > lengLR(2);
             lengLR[0]   =   lengthsFwd;
@@ -1176,7 +1176,10 @@ namespace Nektar
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
                 if(e_npoints0<e_npoints)
                 {
-                    lengintp = Array<OneD, NekDouble>(e_npoints,0.0);
+                    for(int nlr=0;nlr<2;nlr++)
+                    {
+                        lengintp[nlr] = Array<OneD, NekDouble>(e_npoints,0.0);
+                    }
                     e_npoints0 = e_npoints;
                 }
                 
@@ -1185,36 +1188,70 @@ namespace Nektar
 
                 LRbndnumbs[0]   =   loc_exp->GetLeftAdjacentElementEdge();
                 LRbndnumbs[1]   =   loc_exp->GetRightAdjacentElementEdge();
+                
+                int nlr =0;
+                Vmath::Zero(e_npoints0,lengintp[nlr],1);
+                lengAdd[nlr]     =   lengintp[nlr];
+                int bndNumber = LRbndnumbs[nlr];
+                loc_elmt = LRelmts[nlr];
+                if(bndNumber>=0)
+                {
+                    locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
+                    lengAdd[nlr]  =   locLeng;
+
+                    int loc_nmodes  = loc_elmt->GetBasis(0)->GetNumModes();
+
+                    if (e_nmodes != loc_nmodes)
+                    {
+                        // Parallel case: need to interpolate.
+                        LibUtilities::PointsKey to_key =
+                            loc_exp->GetBasis(0)->GetPointsKey();
+                        LibUtilities::PointsKey from_key =
+                            loc_elmt->GetBasis(0)->GetPointsKey();
+                        LibUtilities::Interp1D(from_key,
+                                            locLeng,
+                                            to_key,
+                                            lengintp[nlr]);
+                        lengAdd[nlr]     =   lengintp[nlr];
+                    }
+                }
+
+                nlr =1;
+                Vmath::Zero(e_npoints0,lengintp[nlr],1);
+                lengAdd[nlr]     =   lengintp[nlr];
+                bndNumber = LRbndnumbs[nlr];
+                loc_elmt = LRelmts[nlr];
+                if(bndNumber>=0)
+                {
+                    locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
+                    lengAdd[nlr]  =   locLeng;
+
+                    int loc_nmodes  = loc_elmt->GetBasis(0)->GetNumModes();
+
+                    if (e_nmodes != loc_nmodes)
+                    {
+                        // Parallel case: need to interpolate.
+                        LibUtilities::PointsKey to_key =
+                            loc_exp->GetBasis(0)->GetPointsKey();
+                        LibUtilities::PointsKey from_key =
+                            loc_elmt->GetBasis(0)->GetPointsKey();
+                        LibUtilities::Interp1D(from_key,
+                                            locLeng,
+                                            to_key,
+                                            lengintp[nlr]);
+                        lengAdd[nlr]     =   lengintp[nlr];
+                    }
+                }
+                else
+                {
+                    lengAdd[nlr]     =   lengAdd[0];
+                }
+                
                 for(int nlr=0;nlr<2;nlr++)
                 {
-                    Vmath::Zero(e_npoints0,lengintp,1);
-                    lengAdd     =   lengintp;
-                    int bndNumber = LRbndnumbs[nlr];
-                    loc_elmt = LRelmts[nlr];
-                    if(bndNumber>=0)
-                    {
-                        locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
-                        lengAdd  =   locLeng;
-
-                        int loc_nmodes  = loc_elmt->GetBasis(0)->GetNumModes();
-
-                        if (e_nmodes != loc_nmodes)
-                        {
-                            // Parallel case: need to interpolate.
-                            LibUtilities::PointsKey to_key =
-                                loc_exp->GetBasis(0)->GetPointsKey();
-                            LibUtilities::PointsKey from_key =
-                                loc_elmt->GetBasis(0)->GetPointsKey();
-                            LibUtilities::Interp1D(from_key,
-                                                locLeng,
-                                                to_key,
-                                                lengintp);
-                            lengAdd     =   lengintp;
-                        }
-                    }
                     for (j = 0; j < e_npoints; ++j)
                     {
-                        lengLR[nlr][offset + j] = lengAdd[j];
+                        lengLR[nlr][offset + j] = lengAdd[nlr][j];
                     }
                 }
             }

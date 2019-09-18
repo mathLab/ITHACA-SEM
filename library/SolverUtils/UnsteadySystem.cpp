@@ -296,7 +296,8 @@ namespace Nektar
                 //         <<" m_maxLinItePerNewton= "<<m_maxLinItePerNewton<<endl;
                 if(m_CFLEnd>tmp_cflSafetyFactor)
                 {
-                    if(NekDouble(m_TotLinItePerStep)/NekDouble(m_StagesPerStep)>0.5*NekDouble(m_maxLinItePerNewton))
+                    if( m_steadyStateTol > 0.0 &&
+                        (NekDouble(m_TotLinItePerStep)/NekDouble(m_StagesPerStep)>0.5*NekDouble(m_maxLinItePerNewton)))
                     {
                         // cout <<"WARNINGL1(false,tmp_cflSafetyFactor *= 0.9; );"<<endl;
                         

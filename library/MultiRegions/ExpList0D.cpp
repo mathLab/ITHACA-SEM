@@ -263,7 +263,7 @@ namespace Nektar
 
             Array<OneD,NekDouble> locLeng;
             Array<OneD,NekDouble> lengintp;
-            Array<OneD,NekDouble> lengAdd;
+            Array<OneD,Array<OneD,NekDouble>> lengAdd(2);
             Array<OneD,int      > LRbndnumbs(2);
             Array<OneD, Array<OneD,NekDouble> > lengLR(2);
             lengLR[0]   =   lengthsFwd;
@@ -290,20 +290,38 @@ namespace Nektar
 
                 LRbndnumbs[0]   =   loc_exp->GetLeftAdjacentElementVertex();
                 LRbndnumbs[1]   =   loc_exp->GetRightAdjacentElementVertex();
+                
+                int nlr = 0;
+                Vmath::Zero(e_npoints0,lengintp,1);
+                lengAdd[nlr]     =   lengintp;
+                int bndNumber = LRbndnumbs[nlr];
+                loc_elmt = LRelmts[nlr];
+                if(bndNumber>=0)
+                {
+                    locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
+                    lengAdd[nlr]    = locLeng;
+                }
+
+                nlr = 1;
+                Vmath::Zero(e_npoints0,lengintp,1);
+                lengAdd[nlr]     =   lengintp;
+                bndNumber = LRbndnumbs[nlr];
+                loc_elmt = LRelmts[nlr];
+                if(bndNumber>=0)
+                {
+                    locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
+                    lengAdd[nlr]    = locLeng;
+                }
+                else
+                {
+                    lengAdd[nlr]    = lengAdd[0];
+                }
+                
                 for(int nlr=0;nlr<2;nlr++)
                 {
-                    Vmath::Zero(e_npoints0,lengintp,1);
-                    lengAdd     =   lengintp;
-                    int bndNumber = LRbndnumbs[nlr];
-                    loc_elmt = LRelmts[nlr];
-                    if(bndNumber>=0)
-                    {
-                        locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
-                        lengAdd  =   locLeng;
-                    }
                     for (j = 0; j < e_npoints; ++j)
                     {
-                        lengLR[nlr][offset + j] = lengAdd[j];
+                        lengLR[nlr][offset + j] = lengAdd[nlr][j];
                     }
                 }
             }

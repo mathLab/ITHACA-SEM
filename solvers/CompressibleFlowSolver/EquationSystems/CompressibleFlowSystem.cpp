@@ -298,7 +298,6 @@ namespace Nektar
         m_session->LoadParameter("DebugAdvDiffSwitch",                 m_DebugAdvDiffSwitch      ,    0);
         m_session->LoadParameter("DebugVolTraceSwitch",                m_DebugVolTraceSwitch      ,    0);
         m_session->LoadParameter("DebugConsDerivSwitch",               m_DebugConsDerivSwitch      ,    0);
-        m_session->LoadParameter("DebugIP_DDGSwitch",                   m_DebugIP_DDGSwitch      ,    0);
 
 #endif
     }
@@ -1476,20 +1475,20 @@ namespace Nektar
             }
         }
         
-        // if(m_DEBUG_VISCOUS_JAC_MAT)
-        // {
-        //     Array<OneD, Array<OneD, NekDouble > > visflux(nConvectiveFields);
-        //     for(int i = 0; i < nConvectiveFields; i++)
-        //     {
-        //         visflux[i]  =    Array<OneD, NekDouble>(nTracePts,0.0);
-        //     }
+        if(m_DEBUG_VISCOUS_JAC_MAT)
+        {
+            Array<OneD, Array<OneD, NekDouble > > visflux(nConvectiveFields);
+            for(int i = 0; i < nConvectiveFields; i++)
+            {
+                visflux[i]  =    Array<OneD, NekDouble>(nTracePts,0.0);
+            }
 
-        //     m_diffusion->DiffuseTraceFlux(nConvectiveFields, fields, inarray,qfield,visflux,vFwd, vBwd,qFwd,qBwd,MuVarTrace,nonZeroIndex);
-        //     for(int i = 0; i < nConvectiveFields; i++)
-        //     {
-        //         Vmath::Vsub(nTracePts,traceflux[i],1,visflux[i],1,traceflux[i],1);
-        //     }
-        // }
+            m_diffusion->DiffuseTraceFlux(nConvectiveFields, fields, inarray,qfield,visflux,vFwd, vBwd,qFwd,qBwd,MuVarTrace,nonZeroIndex);
+            for(int i = 0; i < nConvectiveFields; i++)
+            {
+                Vmath::Vsub(nTracePts,traceflux[i],1,visflux[i],1,traceflux[i],1);
+            }
+        }
     }
 
 

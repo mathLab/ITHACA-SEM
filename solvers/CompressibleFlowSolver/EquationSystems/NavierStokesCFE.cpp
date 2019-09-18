@@ -910,7 +910,6 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray,
               Array< OneD, int >                                        &nonZeroIndex,    
         const Array<OneD, Array<OneD, NekDouble> >                      &normal,         
-        const Array<OneD, Array<OneD, NekDouble> >                      &PenaltyFlux,         
         const Array<OneD, NekDouble>                                    &ArtifDiffFactor)
     {
         int nPts=inarray[0].num_elements();
@@ -956,16 +955,6 @@ namespace Nektar
                     }
                 }
             }
-#ifdef CFS_DEBUGMODE
-            if(1==m_DebugIP_DDGSwitch)
-            {
-                for(int j=0;j<nConvectiveFields;j++)
-                {
-                    Vmath::Vadd(nPts,&PenaltyFlux[j][0],1,&outarray[0][j][0],1,&outarray[0][j][0],1);
-                }
-                n_nonZero = nConvectiveFields;
-            }
-#endif
             ApplyFluxBndConds(nConvectiveFields,outarray[0]);
         }
         else

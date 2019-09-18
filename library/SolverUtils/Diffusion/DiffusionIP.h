@@ -130,14 +130,6 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
                 Array< OneD, int >                                  &nonZeroIndex);
             
-            void DiffuseTraceSymmFlux_IP(
-                const int                                           nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &SymmFlux,
-                const Array<OneD, Array<OneD, NekDouble>>           &innarray,
-                Array<OneD, Array<OneD, NekDouble>>                 &jump,
-                Array< OneD, int >                                  &nonZeroIndex);
-
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
@@ -261,24 +253,6 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
                       Array<OneD, Array<OneD, NekDouble> >                          &solution_jump);
 
-            void CalTraceNumFlux_ReduceComm_Flux(
-                const int                                                           nConvectiveFields,
-                const int                                                           nDim,
-                const int                                                           nPts,
-                const int                                                           nTracePts,
-                const NekDouble                                                     PenaltyFactor2,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
-                const Array<OneD, Array<OneD, NekDouble> >                          &inarray,
-                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
-                const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
-                const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
-                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qFwd,
-                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qBwd,
-                const Array<OneD, NekDouble >                                       &MuVarTrace,
-                      Array<OneD, int >                                             &nonZeroIndexflux,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux,
-                      Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
-                      Array<OneD, Array<OneD, NekDouble> >                          &solution_jump);
             void ApplyFluxBndConds(
                 const int                                               nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,

@@ -99,9 +99,6 @@ namespace Nektar
         int                                 m_DebugVolTraceSwitch; 
        // 1: Con; 2: Deriv; Default: all
         int                                 m_DebugConsDerivSwitch; 
-        //Penalty term: 0: DDG; 1: IP; Default: DDG
-        int                                 m_DebugIP_DDGSwitch; 
-
 #endif
 
         // Auxiliary object to convert variables

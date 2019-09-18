@@ -2359,6 +2359,7 @@ namespace Nektar
             MultiRegions::ExpListSharedPtr tracelist = GetTrace();
             std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
             int ntotTrac            = (*traceExp).size();
+            int nTotTracPnt          = tracelist->GetTotPoints();
             int nTracPnt,noffset;
             
             const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap = GetlocTraceToTraceMap();
@@ -2369,6 +2370,12 @@ namespace Nektar
             Array<OneD, int > factorFwdBwd(2,0.0);
 
             NekDouble spaceDim    =   NekDouble( GetCoordim(0) );
+
+            for(int i=0; i<nTotTracPnt;i++)
+            {
+                FwdElmtEdgeNumb[i]    =   -1;
+                BwdElmtEdgeNumb[i]    =   -1;
+            }
 
             int nlr = 0;
             for(int ntrace = 0; ntrace < ntotTrac; ++ntrace)
@@ -2384,25 +2391,50 @@ namespace Nektar
                 {
                     factorFwdBwd[nlr]       = GetExp(LRAdjExpid[nlr][ntrace])->GetNedges();  
                 }
-                else
-                {
-                    ASSERTL0(false, " Error: Fwd adjacent neighbour element not exist");
-                }
 
                 nlr = 1;
                 if(LRAdjflag[nlr][ntrace])
                 {
                     factorFwdBwd[nlr]       = GetExp(LRAdjExpid[nlr][ntrace])->GetNedges();  
                 }
-                else
-                {
-                    factorFwdBwd[nlr] = factorFwdBwd[0]; 
-                }
                 
                 for(int np = 0; np < nTracPnt; ++np)
                 {
                     FwdElmtEdgeNumb[noffset+np]    =   factorFwdBwd[0];
                     BwdElmtEdgeNumb[noffset+np]    =   factorFwdBwd[1];
+                }
+            }
+
+            Array< OneD, NekDouble > tmpDouble(nTotTracPnt);
+            for(int i=0; i<nTotTracPnt;i++)
+            {
+                tmpDouble[i]    =   NekDouble(FwdElmtEdgeNumb[i]);
+            }
+            GetTraceMap()->UniversalTraceAssemble(tmpDouble);
+            for(int i=0; i<nTotTracPnt;i++)
+            {
+                FwdElmtEdgeNumb[i]    =   round(tmpDouble[i]);
+            }
+            for(int i=0; i<nTotTracPnt;i++)
+            {
+                tmpDouble[i]    =   NekDouble(BwdElmtEdgeNumb[i]);
+            }
+            GetTraceMap()->UniversalTraceAssemble(tmpDouble);
+            for(int i=0; i<nTotTracPnt;i++)
+            {
+                BwdElmtEdgeNumb[i]    =   round(tmpDouble[i]);
+            }
+
+            for(int i=0; i<nTotTracPnt;i++)
+            {
+                if(FwdElmtEdgeNumb[i]<0)
+                {
+                    FwdElmtEdgeNumb[i]       = BwdElmtEdgeNumb[i];  
+                }
+
+                if(BwdElmtEdgeNumb[i]<0)
+                {
+                    BwdElmtEdgeNumb[i]       = FwdElmtEdgeNumb[i];  
                 }
             }
         }

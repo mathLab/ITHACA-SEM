@@ -84,6 +84,7 @@ v5.0.0
 - Fix issue with HDF5 mesh input in serial (!1049)
 - Add estimate of filters CPU time (!1044)
 - Update CompressibleFlowSolver/Examples/Test_IsentropicVortex1.xml example (!1045)
+- Add error if HDG used with periodic BCs (!1071)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -168,6 +169,7 @@ v5.0.0
 - Modified pressure outlet BCs to allow for the reference static pressure to be
   set from the VALUE fields (!981)
 - hp scaling for Laplacian AV (!1013)
+- Removed smooth AV (!1072)
 
 **AcousticSolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC

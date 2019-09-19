@@ -310,7 +310,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
     NekDouble ep =
         m_minJac < 0.0 ? sqrt(1e-8 + 0.04 * m_minJac * m_minJac) : 1e-4;
     NekDouble jacIdeal[DIM][DIM], jacDet;
-    m_grad = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
+    m_grad = vector<NekDouble>(DIM == 2 ? 5 : 9, 0.0);
 
     switch (m_opti)
     {

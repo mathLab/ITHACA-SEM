@@ -64,10 +64,14 @@ public:
     void Initialise(int i, TopoDS_Shape in);
 
     virtual Array<OneD, NekDouble> GetBounds();
+    virtual void GetBounds(NekDouble &umin, NekDouble &umax, NekDouble &vmin,
+                           NekDouble &vmax);
     virtual Array<OneD, NekDouble> N(Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> D1(Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> D2(Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv);
+    virtual void P(Array<OneD, NekDouble> uv, NekDouble &x, NekDouble &y,
+                   NekDouble &z);
     virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p,
                                          NekDouble &dist);
     virtual NekDouble Curvature(Array<OneD, NekDouble> uv);

@@ -160,6 +160,14 @@ namespace Nektar
             vConvectiveType = m_session->GetTag("AdvectiveType");
         }
 
+        // Check that advection type makes sense for Stokes equations.
+        if (m_equationType == eUnsteadyStokes)
+        {
+            ASSERTL0(vConvectiveType == "NoAdvection",
+                     "Stokes operator should always have 'NoAdvection'"
+                     "advective type.");
+        }
+
         // Initialise advection
         m_advObject = SolverUtils::GetAdvectionFactory().CreateInstance(
                         vConvectiveType, vConvectiveType);

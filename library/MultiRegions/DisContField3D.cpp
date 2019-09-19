@@ -2332,6 +2332,12 @@ using namespace std;
                         BndRhs[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
                     }
                 }
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::ePeriodic)
+                {
+                    ASSERTL0(false, "HDG implementation does not support "
+                             "periodic boundary conditions at present.");
+                }
             }
 
             //----------------------------------

@@ -1258,6 +1258,12 @@ namespace Nektar
                     id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
                     BndRhs[id] += m_bndCondExpansions[i]->GetCoeff(0);
                 }
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::ePeriodic)
+                {
+                    ASSERTL0(false, "HDG implementation does not support "
+                             "periodic boundary conditions at present.");
+                }
             }
 
             //----------------------------------

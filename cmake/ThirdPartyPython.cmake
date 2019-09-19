@@ -6,16 +6,15 @@
 #
 ########################################################################
 
-IF (NEKTAR_BUILD_PYTHON)
-    CMAKE_DEPENDENT_OPTION(NEKTAR_USE_PYTHON3
-        "If true, prefer to use Python 3." OFF "NEKTAR_BUILD_PYTHON" OFF)
-
+FUNCTION(NEKTAR_FIND_PYTHON)
     # Unset any existing python executable/library settings so that
     # we can rediscover correct python version if v2/3 settings changed
     unset(PYTHON_EXECUTABLE CACHE)
     unset(PYTHON_INCLUDE_DIR CACHE)
     unset(PYTHON_LIBRARY CACHE)
     unset(PYTHON_LIBRARY_DEBUG CACHE)
+    unset(BOOST_PYTHON_LIB CACHE)
+    unset(BOOST_NUMPY_LIB CACHE)
 
     SET(PYTHONVER 2.7)
     IF (NEKTAR_USE_PYTHON3)
@@ -28,7 +27,6 @@ IF (NEKTAR_BUILD_PYTHON)
     INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
 
     ADD_DEFINITIONS(-DWITH_PYTHON)
-
     # Include headers from root directory for config file.
 
     # Now try to find Boost::Python. For now we are relying entirely on
@@ -110,6 +108,14 @@ IF (NEKTAR_BUILD_PYTHON)
         ADD_CUSTOM_TARGET(boost-numpy ALL)
         ADD_DEFINITIONS(-DBOOST_HAS_NUMPY)
     ENDIF()
+ENDFUNCTION()
+
+VARIABLE_WATCH(NEKTAR_USE_PYTHON3 NEKTAR_FIND_PYTHON)
+
+IF (NEKTAR_BUILD_PYTHON)
+    CMAKE_DEPENDENT_OPTION(NEKTAR_USE_PYTHON3
+        "If true, prefer to use Python 3." OFF "NEKTAR_BUILD_PYTHON" OFF)
+
     CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/python/setup.py.in ${CMAKE_BINARY_DIR}/setup.py)
 
     ADD_CUSTOM_TARGET(nekpy-install-user

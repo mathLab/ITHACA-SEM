@@ -184,11 +184,13 @@ Since we are solving the unsteady advection problem, we must specify this in the
 solver information. We also choose to use a discontinuous flux-reconstruction
 projection and use a Runge-Kutta order 4 time-integration scheme.
 \begin{lstlisting}[style=XMLStyle]
-<I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvection"   />
-<I PROPERTY="Projection"            VALUE="DisContinuous"       />
-<I PROPERTY="AdvectionType"         VALUE="FRDG"                />
-<I PROPERTY="UpwindType"            VALUE="Upwind"              />
-<I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+<SOLVERINFO>
+    <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvection"    />
+    <I PROPERTY="Projection"            VALUE="DisContinuous"        />
+    <I PROPERTY="AdvectionType"         VALUE="FRDG"                 />
+    <I PROPERTY="UpwindType"            VALUE="Upwind"               />
+    <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+</SOLVERINFO>
 \end{lstlisting}
 
 We choose to advect our solution for $20$ time units with a time-step of $0.01$
@@ -307,8 +309,8 @@ information.
 </PARAMETERS>
 
 <SOLVERINFO>
-    <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
-    <I PROPERTY="Projection" VALUE="Continuous" />
+    <I PROPERTY="EQTYPE"        VALUE="Helmholtz"  />
+    <I PROPERTY="Projection"    VALUE="Continuous" />
 </SOLVERINFO>
 \end{lstlisting}
 
@@ -468,12 +470,14 @@ We choose to use a continuous projection and an first-order implicit-explicit
 time-integration scheme. The \inltt{DiffusionAdvancement} and
 \inltt{AdvectionAdvancement} parameters specify how these terms are treated.
 \begin{lstlisting}[style=XMLStyle]
-<I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvectionDiffusion" />
-<I PROPERTY="Projection"            VALUE="Continuous" />
-<I PROPERTY="DiffusionAdvancement"  VALUE="Implicit" />
-<I PROPERTY="AdvectionAdvancement"  VALUE="Explicit" />
-<I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
-<I PROPERTY="GlobalSysSoln"         VALUE="IterativeStaticCond" />
+<SOLVERINFO>
+    <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvectionDiffusion" />
+    <I PROPERTY="Projection"            VALUE="Continuous"                 />
+    <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"                   />
+    <I PROPERTY="AdvectionAdvancement"  VALUE="Explicit"                   />
+    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1"                 />
+    <I PROPERTY="GlobalSysSoln"         VALUE="IterativeStaticCond"        />
+</SOLVERINFO>
 \end{lstlisting}
 
 We integrate for a total of $30$ time units with a time-step of $0.0005$,

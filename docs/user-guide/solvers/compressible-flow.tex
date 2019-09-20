@@ -235,15 +235,15 @@ conditions are employed (i.e. $T_{w}$). Default value = 300.15$K$;
 Under this section it is possible to set the solver information.
 \begin{lstlisting}[style=XmlStyle]
 <SOLVERINFO>
-  <I PROPERTY="EQType"                VALUE="NavierStokesCFE"     />
-  <I PROPERTY="Projection"            VALUE="DisContinuous"       />
-  <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
-  <I PROPERTY="DiffusionType"         VALUE="LDGNS"               />
-  <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
-  <I PROPERTY="UpwindType"            VALUE="ExactToro"           />
-  <I PROPERTY="ProblemType"           VALUE="General"             />
-  <I PROPERTY="ViscosityType"         VALUE="Constant"            />
-  <I PROPERTY="EquationOfState"       VALUE="IdealGas"            />
+  <I PROPERTY="EQType"                VALUE="NavierStokesCFE"      />
+  <I PROPERTY="Projection"            VALUE="DisContinuous"        />
+  <I PROPERTY="AdvectionType"         VALUE="WeakDG"               />
+  <I PROPERTY="DiffusionType"         VALUE="LDGNS"                />
+  <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+  <I PROPERTY="UpwindType"            VALUE="ExactToro"            />
+  <I PROPERTY="ProblemType"           VALUE="General"              />
+  <I PROPERTY="ViscosityType"         VALUE="Constant"             />
+  <I PROPERTY="EquationOfState"       VALUE="IdealGas"             />
 </SOLVERINFO>
 \end{lstlisting}
 \begin{itemize}
@@ -481,7 +481,7 @@ where $s_0 = s_\kappa - 4.25\;log_{10}(p)$.
 To enable the non-smooth viscosity model, the following line has to be added to the \inltt{SOLVERINFO} section:
 \begin{lstlisting}[style=XmlStyle]
  <SOLVERINFO>
-<I PROPERTY="ShockCaptureType"      VALUE="NonSmooth"               />
+  <I PROPERTY="ShockCaptureType"      VALUE="NonSmooth" />
  <SOLVERINFO>
 \end{lstlisting}
 The diffusivity and the sensor can be controlled by the following parameters:
@@ -514,7 +514,7 @@ where $S_\kappa$ is a normalised sensor value and serves as a forcing term for t
 To enable the smooth viscosity model, the following line has to be added to the \inltt{SOLVERINFO} section:
 \begin{lstlisting}[style=XmlStyle]
  <SOLVERINFO>
-<I PROPERTY="ShockCaptureType"      VALUE="Smooth"               />
+  <I PROPERTY="ShockCaptureType"      VALUE="Smooth" />
  <SOLVERINFO>
 \end{lstlisting}
 Furthermore, the extra viscosity variable \inltt{eps} has to be added to the variable list:

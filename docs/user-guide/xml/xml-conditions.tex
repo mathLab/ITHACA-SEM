@@ -65,11 +65,11 @@ In the following example, the driver \inltt{Standard} is used to manage the
 execution of the incompressible Navier-Stokes equations:
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
-    <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
-    <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
-    <I PROPERTY="Projection" VALUE="Galerkin" />
-    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
-    <I PROPERTY="Driver" VALUE="Standard" />
+    <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes"     />
+    <I PROPERTY="SolverType"            VALUE="VelocityCorrectionScheme" />
+    <I PROPERTY="Projection"            VALUE="Galerkin"                 />
+    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"               />
+    <I PROPERTY="Driver"                VALUE="Standard"                 />
 </SOLVERINFO>
 \end{lstlisting}
 
@@ -618,12 +618,12 @@ homogeneouns dimension; here an example
 
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
-  <I PROPERTY="SolverType"            VALUE="VelocityCorrectionScheme"/>
-  <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes"/>
-  <I PROPERTY="AdvectionForm"         VALUE="Convective"/>
-  <I PROPERTY="Projection"            VALUE="Galerkin"/>
-  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
-  <I PROPERTY="HOMOGENEOUS"           VALUE="1D"/>
+  <I PROPERTY="SolverType"            VALUE="VelocityCorrectionScheme" />
+  <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes"     />
+  <I PROPERTY="AdvectionForm"         VALUE="Convective"               />
+  <I PROPERTY="Projection"            VALUE="Galerkin"                 />
+  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"               />
+  <I PROPERTY="HOMOGENEOUS"           VALUE="1D"                       />
 </SOLVERINFO>
 \end{lstlisting}
 
@@ -652,11 +652,11 @@ for two harmonic directions (in Y and Z direction). For Example,
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
   <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvectionDiffusion" />
-  <I PROPERTY="Projection"            VALUE="Continuous"/>
-  <I PROPERTY="HOMOGENEOUS"           VALUE="2D"/>
-  <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"/>
-  <I PROPERTY="AdvectionAdvancement"  VALUE="Explicit"/>
-  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
+  <I PROPERTY="Projection"            VALUE="Continuous"                 />
+  <I PROPERTY="HOMOGENEOUS"           VALUE="2D"                         />
+  <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"                   />
+  <I PROPERTY="AdvectionAdvancement"  VALUE="Explicit"                   />
+  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"                 />
 </SOLVERINFO>
 <PARAMETERS>
   <P> TimeStep      = 0.001 </P>
@@ -683,16 +683,16 @@ below:
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
   <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvectionDiffusion" />
-  <I PROPERTY="Projection"            VALUE="Continuous"/>
-  <I PROPERTY="HOMOGENEOUS"           VALUE="2D"/>
-  <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"/>
-  <I PROPERTY="AdvectionAdvancement"  VALUE="Explicit"/>
-  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
-  <I PROPERTY="USEFFT"                VALUE="FFTW"/>
+  <I PROPERTY="Projection"            VALUE="Continuous"                 />
+  <I PROPERTY="HOMOGENEOUS"           VALUE="2D"                         />
+  <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"                   />
+  <I PROPERTY="AdvectionAdvancement"  VALUE="Explicit"                   />
+  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"                 />
+  <I PROPERTY="USEFFT"                VALUE="FFTW"                       />
 </SOLVERINFO>
 \end{lstlisting}
 
-The number of homogenenous modes has to be even. The Quasi-3D apporach can be
+The number of homogenenous modes has to be even. The Quasi-3D approach can be
 created starting from a 2D mesh and adding one homogenous expansion or starting
 form a 1D mesh and adding two homogeneous expansions. Not other options
 available. In case of a 1D homogeneous extension, the homogeneous direction will

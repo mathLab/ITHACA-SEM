@@ -469,6 +469,8 @@ class Interpolator;
             SOLVER_UTILS_EXPORT virtual void v_ExtraFldOutput(
                 std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                 std::vector<std::string>             &variables);
+
+            static std::string equationSystemTypeLookupIds[];
             
         private:
             

@@ -431,12 +431,6 @@ void FilterModalEnergy::SetUpBaseFields(
     m_session->MatchSolverInfo("DEALIASING", "True",
                                m_homogen_dealiasing, false);
 
-    if (m_homogen_dealiasing == false)
-    {
-        m_session->MatchSolverInfo("DEALIASING", "On",
-                                   m_homogen_dealiasing, false);
-    }
-
     // Stability Analysis flags
     if (m_session->DefinesSolverInfo("ModeType"))
     {

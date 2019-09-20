@@ -49,7 +49,7 @@ namespace Nektar
                                                     "Phenomenological Model.");
 
     // Register cell model variants
-    std::string FentonKarma::lookupIds[24] = {
+    std::string FentonKarma::lookupIds[] = {
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
                     "BR",   FentonKarma::eBR),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
@@ -71,31 +71,31 @@ namespace Nektar
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
                     "CF3b",  FentonKarma::eCF3b),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "Fenton2",  FentonKarma::eFenton2),
+                    "FC2002Set1a",  FentonKarma::eFC2002Set1a),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "Fenton4",  FentonKarma::eFenton4),
+                    "FC2002Set1b",  FentonKarma::eFC2002Set1b),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "Fenton5",  FentonKarma::eFenton5),
+                    "FC2002Set1c",  FentonKarma::eFC2002Set1c),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "Fenton6",  FentonKarma::eFenton6),
+                    "FC2002Set1d",  FentonKarma::eFC2002Set1d),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "Fenton7",  FentonKarma::eFenton7),
+                    "FC2002Set1e",  FentonKarma::eFC2002Set1e),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "Fenton8",  FentonKarma::eFenton8),
+                    "FC2002Set2",  FentonKarma::eFC2002Set2),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "Fenton9",  FentonKarma::eFenton9),
+                    "FC2002Set4",  FentonKarma::eFC2002Set4),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "FC2002Set5",  FentonKarma::eFC2002Set5),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "FC2002Set6",  FentonKarma::eFC2002Set6),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "FC2002Set7",  FentonKarma::eFC2002Set7),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "FC2002Set8",  FentonKarma::eFC2002Set8),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "FC2002Set9",  FentonKarma::eFC2002Set9),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
                     "Lawson",  FentonKarma::eLawson),
-            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "Fenton1a",  FentonKarma::eFenton1a),
-            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "Fenton1b",  FentonKarma::eFenton1b),
-            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "Fenton1c",  FentonKarma::eFenton1c),
-            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "Fenton1d",  FentonKarma::eFenton1d),
-            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "Fenton1e",  FentonKarma::eFenton1e),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
                     "CAF",  FentonKarma::eCAF)
     };
@@ -125,7 +125,7 @@ namespace Nektar
         V_fi =  15;
 
         switch (model_variant) {
-            case eBR:
+            case eBR:   // (Fenton, Karma, Chaos 8(1), 1998)
                 g_fi_max     = 4;
                 tau_r        = 33.33;
                 tau_si       = 29;
@@ -143,7 +143,7 @@ namespace Nektar
                 k1           = 10;
                 k2           = 0.0;
                 break;
-            case eMBR:
+            case eMBR:  // (Fenton, Karma, Chaos 8(1), 1998)
                 g_fi_max     = 4;
                 tau_r        = 50;
                 tau_si       = 44.84;
@@ -161,7 +161,7 @@ namespace Nektar
                 k1           = 10;
                 k2           = 0.0;
                 break;
-            case eMLR1:
+            case eMLR1: // (Fenton, Karma, Chaos 8(1), 1998)
                 g_fi_max     = 5.8;
                 tau_r        = 130;
                 tau_si       = 127;
@@ -179,7 +179,7 @@ namespace Nektar
                 k1           = 10;
                 k2           = 0.0;
                 break;
-            case eGP:
+            case eGP:   // (Fenton, Karma, Chaos 8(1), 1998)
                 g_fi_max     = 8.7;
                 tau_r        = 25;
                 tau_si       = 22.22;
@@ -197,7 +197,7 @@ namespace Nektar
                 k1           = 10;
                 k2           = 0.0;
                 break;
-            case eCF1:
+            case eCF1:  // (Cherry, Fenton, Am J Physiol Heart 286, 2004)
                 g_fi_max     = 6.6666;
                 tau_r        = 12.5;
                 tau_si       = 10;
@@ -215,7 +215,7 @@ namespace Nektar
                 k1           = 15;
                 k2           = 0;
                 break;
-            case eCF2a:
+            case eCF2a: // (Cherry, Fenton, Am J Physiol Heart 286, 2004)
                 g_fi_max     = 6.6666;
                 tau_r        = 31;
                 tau_si       = 26.5;
@@ -233,7 +233,7 @@ namespace Nektar
                 k1           = 10;
                 k2           = 1;
                 break;
-            case eCF2b:
+            case eCF2b: // (Cherry, Fenton, Am J Physiol Heart 286, 2004)
                 g_fi_max     = 6.6666;
                 tau_r        = 31;
                 tau_si       = 26.5;
@@ -251,7 +251,7 @@ namespace Nektar
                 k1           = 10;
                 k2           = 1;
                 break;
-            case eCF2c:
+            case eCF2c: // (Cherry, Fenton, Am J Physiol Heart 286, 2004)
                 g_fi_max     = 6.6666;
                 tau_r        = 31;
                 tau_si       = 26.5;
@@ -269,7 +269,7 @@ namespace Nektar
                 k1           = 10;
                 k2           = 1;
                 break;
-            case eCF3a:
+            case eCF3a: // (Cherry, Fenton, Am J Physiol Heart 286, 2004)
                 g_fi_max     = 13.3333;
                 tau_r        = 38;
                 tau_si       = 127;
@@ -289,7 +289,7 @@ namespace Nektar
                 k1           = 60;
                 k2           = 0;
                 break;
-            case eCF3b:
+            case eCF3b: // (Cherry, Fenton, Am J Physiol Heart 286, 2004)
                 g_fi_max     = 13.3333;
                 tau_r        = 38;
                 tau_si       = 127;
@@ -309,7 +309,97 @@ namespace Nektar
                 k1           = 60;
                 k2           = 0;
                 break;
-            case eFenton2:
+            case eFC2002Set1a:  // (Fenton, Cherry, Chaos 12(852), 2002)
+                g_fi_max     = 1/0.41; //2.44 - Fig 1A
+                tau_r        = 50;
+                tau_si       = 45;
+                tau_0        = 1/0.12; //8.33
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 1000;
+                tau_v2_minus = 19.6;
+                tau_w_plus   = 667;
+                tau_w_minus  = 11;
+                u_c          = 0.13;
+                u_v          = 0.055;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.85;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eFC2002Set1b:  // (Fenton, Cherry, Chaos 12(852), 2002)
+                g_fi_max     = 1/0.392; //2.55 - Fig 1B
+                tau_r        = 50;
+                tau_si       = 45;
+                tau_0        = 1/0.12; //8.33
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 1000;
+                tau_v2_minus = 19.6;
+                tau_w_plus   = 667;
+                tau_w_minus  = 11;
+                u_c          = 0.13;
+                u_v          = 0.055;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.85;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eFC2002Set1c:  // (Fenton, Cherry, Chaos 12(852), 2002)
+                g_fi_max     = 1/0.381; //2.62 - Fig 1C
+                tau_r        = 50;
+                tau_si       = 45;
+                tau_0        = 1/0.12; //8.33
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 1000;
+                tau_v2_minus = 19.6;
+                tau_w_plus   = 667;
+                tau_w_minus  = 11;
+                u_c          = 0.13;
+                u_v          = 0.055;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.85;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eFC2002Set1d:  // (Fenton, Cherry, Chaos 12(852), 2002)
+                g_fi_max     = 1/0.36; //2.77 - Fig 1D
+                tau_r        = 50;
+                tau_si       = 45;
+                tau_0        = 1/0.12; //8.33
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 1000;
+                tau_v2_minus = 19.6;
+                tau_w_plus   = 667;
+                tau_w_minus  = 11;
+                u_c          = 0.13;
+                u_v          = 0.055;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.85;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eFC2002Set1e:  // (Fenton, Cherry, Chaos 12(852), 2002)
+                g_fi_max     = 1/0.25;  // 4 - Fig 1E
+                tau_r        = 50;
+                tau_si       = 45;
+                tau_0        = 1/0.12; //8.33
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 1000;
+                tau_v2_minus = 19.6;
+                tau_w_plus   = 667;
+                tau_w_minus  = 11;
+                u_c          = 0.13;
+                u_v          = 0.055;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.85;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eFC2002Set2:   // (Fenton, Cherry, Chaos 12(852), 2002)
                 g_fi_max     = 4;
                 tau_r        = 190;
                 tau_si       = 100000;
@@ -327,14 +417,14 @@ namespace Nektar
                 k1           = 10;
                 k2           = 0;
                 break;
-            case eFenton4:
+            case eFC2002Set4:   // (Fenton, Cherry, Chaos 12(852), 2002)
                 g_fi_max     = 2.46;
                 tau_r        = 34;
                 tau_si       = 26.5;
                 tau_0        = 9;
                 tau_v_plus   = 3.33;
-                tau_v1_minus = 5;
-                tau_v2_minus = 15.6;
+                tau_v1_minus = 5;       // Opposite convention
+                tau_v2_minus = 15.6;    // to the paper
                 tau_w_plus   = 350;
                 tau_w_minus  = 80;
                 u_c          = 0.15;
@@ -345,14 +435,14 @@ namespace Nektar
                 k1           = 15;
                 k2           = 0;
                 break;
-            case eFenton5:
+            case eFC2002Set5:   // (Fenton, Cherry, Chaos 12(852), 2002)
                 g_fi_max     = 2.76;
                 tau_r        = 33.33;
                 tau_si       = 29;
                 tau_0        = 5;
                 tau_v_plus   = 3.33;
-                tau_v1_minus = 2;
-                tau_v2_minus = 12;
+                tau_v1_minus = 2;       // Opposite convention
+                tau_v2_minus = 12;      // to the paper
                 tau_w_plus   = 1000;
                 tau_w_minus  = 100;
                 u_c          = 0.13;
@@ -363,14 +453,14 @@ namespace Nektar
                 k1           = 15;
                 k2           = 0;
                 break;
-            case eFenton6:
+            case eFC2002Set6:   // (Fenton, Cherry, Chaos 12(852), 2002)
                 g_fi_max     = 2.53;
                 tau_r        = 33.33;
                 tau_si       = 29;
                 tau_0        = 9;
                 tau_v_plus   = 3.33;
-                tau_v1_minus = 8;
-                tau_v2_minus = 9;
+                tau_v1_minus = 8;       // Opposite convention
+                tau_v2_minus = 9;       // to the paper
                 tau_w_plus   = 250;
                 tau_w_minus  = 60;
                 u_c          = 0.13;
@@ -381,14 +471,14 @@ namespace Nektar
                 k1           = 15;
                 k2           = 0;
                 break;
-            case eFenton7:
+            case eFC2002Set7:   // (Fenton, Cherry, Chaos 12(852), 2002)
                 g_fi_max     = 4;
                 tau_r        = 100;
                 tau_si       = 100000;
                 tau_0        = 12;
                 tau_v_plus   = 10;
-                tau_v1_minus = 7;
-                tau_v2_minus = 7;
+                tau_v1_minus = 7;       // Opposite convention
+                tau_v2_minus = 7;       // to the paper
                 tau_w_plus   = 100000;
                 tau_w_minus  = 100000;
                 u_c          = 0.13;
@@ -399,14 +489,14 @@ namespace Nektar
                 k1           = 10;
                 k2           = 0;
                 break;
-            case eFenton8:
+            case eFC2002Set8:   // (Fenton, Cherry, Chaos 12(852), 2002)
                 g_fi_max     = 2.2;
                 tau_r        = 33.25;
                 tau_si       = 29;
                 tau_0        = 12.5;
                 tau_v_plus   = 13.03;
-                tau_v1_minus = 1250;
-                tau_v2_minus = 19.6;
+                tau_v1_minus = 1250;    // Opposite convention
+                tau_v2_minus = 19.6;    // to the paper
                 tau_w_plus   = 800;
                 tau_w_minus  = 40;
                 u_c          = 0.13;
@@ -417,14 +507,14 @@ namespace Nektar
                 k1           = 10;
                 k2           = 0;
                 break;
-            case eFenton9:
+            case eFC2002Set9:   // (Fenton, Cherry, Chaos 12(852), 2002)
                 g_fi_max     = 4;
                 tau_r        = 28;
                 tau_si       = 29;
                 tau_0        = 12.5;
                 tau_v_plus   = 3.33;
-                tau_v1_minus = 2;
-                tau_v2_minus = 15;
+                tau_v1_minus = 2;       // Opposite convention
+                tau_v2_minus = 15;      // to the paper
                 tau_w_plus   = 670;
                 tau_w_minus  = 61;
                 u_c          = 0.13;
@@ -435,101 +525,11 @@ namespace Nektar
                 k1           = 10;
                 k2           = 0;
                 break;
-            case eLawson:
+            case eLawson:       // (Lawson, Front. Physiol, 2018)
                 g_fi_max     = 3;
                 tau_r        = 1/0.02;
                 tau_si       = 1/0.0223;
                 tau_0        = 1/0.12;
-                tau_v_plus   = 3.33;
-                tau_v1_minus = 1000;
-                tau_v2_minus = 19.6;
-                tau_w_plus   = 667;
-                tau_w_minus  = 11;
-                u_c          = 0.13;
-                u_v          = 0.055;
-                u_r          = u_c;
-                u_fi         = u_c;
-                u_csi        = 0.85;
-                k1           = 10;
-                k2           = 0;
-                break;
-            case eFenton1a:
-                g_fi_max     = 1/0.41; //2.44
-                tau_r        = 50;
-                tau_si       = 45;
-                tau_0        = 1/0.12; //8.33
-                tau_v_plus   = 3.33;
-                tau_v1_minus = 1000;
-                tau_v2_minus = 19.6;
-                tau_w_plus   = 667;
-                tau_w_minus  = 11;
-                u_c          = 0.13;
-                u_v          = 0.055;
-                u_r          = u_c;
-                u_fi         = u_c;
-                u_csi        = 0.85;
-                k1           = 10;
-                k2           = 0;
-                break;
-            case eFenton1b:
-                g_fi_max     = 1/0.392; //2.55
-                tau_r        = 50;
-                tau_si       = 45;
-                tau_0        = 1/0.12; //8.33
-                tau_v_plus   = 3.33;
-                tau_v1_minus = 1000;
-                tau_v2_minus = 19.6;
-                tau_w_plus   = 667;
-                tau_w_minus  = 11;
-                u_c          = 0.13;
-                u_v          = 0.055;
-                u_r          = u_c;
-                u_fi         = u_c;
-                u_csi        = 0.85;
-                k1           = 10;
-                k2           = 0;
-                break;
-            case eFenton1c:
-                g_fi_max     = 1/0.381; //2.62
-                tau_r        = 50;
-                tau_si       = 45;
-                tau_0        = 1/0.12; //8.33
-                tau_v_plus   = 3.33;
-                tau_v1_minus = 1000;
-                tau_v2_minus = 19.6;
-                tau_w_plus   = 667;
-                tau_w_minus  = 11;
-                u_c          = 0.13;
-                u_v          = 0.055;
-                u_r          = u_c;
-                u_fi         = u_c;
-                u_csi        = 0.85;
-                k1           = 10;
-                k2           = 0;
-                break;
-            case eFenton1d:
-                g_fi_max     = 1/0.36; //2.77
-                tau_r        = 50;
-                tau_si       = 45;
-                tau_0        = 1/0.12; //8.33
-                tau_v_plus   = 3.33;
-                tau_v1_minus = 1000;
-                tau_v2_minus = 19.6;
-                tau_w_plus   = 667;
-                tau_w_minus  = 11;
-                u_c          = 0.13;
-                u_v          = 0.055;
-                u_r          = u_c;
-                u_fi         = u_c;
-                u_csi        = 0.85;
-                k1           = 10;
-                k2           = 0;
-                break;
-            case eFenton1e:
-                g_fi_max     = 4;
-                tau_r        = 50;
-                tau_si       = 45;
-                tau_0        = 1/0.12; //8.33
                 tau_v_plus   = 3.33;
                 tau_v1_minus = 1000;
                 tau_v2_minus = 19.6;

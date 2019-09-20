@@ -106,10 +106,6 @@ namespace Nektar
     void SpecialBndTreat(
         const int                                           nConvectiveFields,
               Array<OneD,       Array<OneD, NekDouble> >    &consvar);
-    void ApplyFluxBndConds(
-        const int                                           nConvectiveFields,
-              Array<OneD,       Array<OneD, NekDouble> >    &flux);
-
 
     void GetArtificialViscosity(
         const Array<OneD, Array<OneD, NekDouble> >  &inarray,

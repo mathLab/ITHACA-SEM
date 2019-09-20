@@ -1033,7 +1033,7 @@ namespace Nektar
             Fill1DArrayOfBlkDiagonalMat(TraceJac,0.0);
         }
 #endif        
-
+    
         if(m_DEBUG_VISCOUS_JAC_MAT&&m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
         {
                 for(int i = 0; i< m_spacedim; i++)

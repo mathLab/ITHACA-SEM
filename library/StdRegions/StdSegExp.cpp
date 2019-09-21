@@ -167,6 +167,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(dir);
             ASSERTL1(dir==0,"input dir is out of range");
             PhysTensorDeriv(inarray,outarray);
             // PhysDeriv(inarray, outarray);
@@ -188,6 +189,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(dir);
             ASSERTL1(dir==0,"input dir is out of range");
             PhysTensorDeriv(inarray,outarray);
             // PhysDeriv(inarray, outarray);
@@ -473,7 +475,8 @@ namespace Nektar
                 const int dir,
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> & outarray)
-      {
+        {
+            boost::ignore_unused(dir);
             ASSERTL1(dir >= 0 && dir < 1,"input dir is out of range");
             v_IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
         }

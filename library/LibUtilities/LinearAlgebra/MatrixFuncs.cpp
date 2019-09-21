@@ -163,6 +163,8 @@ namespace Nektar
     UpperTriangularMatrixFuncs::Advance(const unsigned int totalRows, const unsigned int totalColumns,
             const unsigned int curRow, const unsigned int curColumn)
     {
+        boost::ignore_unused(totalRows);
+
         ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
         ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
             boost::lexical_cast<std::string>(curRow) + " of a (" +

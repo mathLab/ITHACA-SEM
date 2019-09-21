@@ -726,9 +726,11 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
                 {
-                    int i,j,k,dir;
-                    int nbndry = NumDGBndryCoeffs();
-                    //int nquad  = GetNumPoints(0);
+                    int i       = 0;
+                    int j       = 0;
+                    int k       = 0;
+                    int dir     = 0;
+                    int nbndry  = NumDGBndryCoeffs();
                     int coordim = GetCoordim();
                     int ncoeffs = GetNcoeffs();
                     int nfaces  = GetNfaces();

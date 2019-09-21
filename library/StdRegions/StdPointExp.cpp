@@ -139,7 +139,7 @@ namespace Nektar
             else
             {
                 int nInteriorDofs = m_ncoeffs-2;
-                int offset;
+                int offset = 0;
 				
                 switch(m_base[0]->GetBasisType())
                 {
@@ -228,6 +228,7 @@ namespace Nektar
 											   const Array<OneD, const NekDouble>& inarray,
 											   Array<OneD, NekDouble> & outarray)
 		{
+            boost::ignore_unused(dir);
             ASSERTL1(dir >= 0 && dir < 1,"input dir is out of range");
             v_IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
         }

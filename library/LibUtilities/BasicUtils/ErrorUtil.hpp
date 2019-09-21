@@ -104,6 +104,8 @@ public:
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
         baseMsg += "Where   : " + std::string(routine) + "[" +
             std::to_string(lineNumber) + "]\n Message : ";
+#else
+        boost::ignore_unused(routine, lineNumber);
 #endif
         baseMsg += std::string(msg);
 
@@ -120,6 +122,8 @@ public:
                 MPI_Comm_rank(MPI_COMM_WORLD,&rank);
             }
         }
+#else
+        boost::ignore_unused(DoComm);
 #endif
 
         std::string btMessage("");

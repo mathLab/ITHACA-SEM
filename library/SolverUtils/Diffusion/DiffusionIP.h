@@ -115,9 +115,9 @@ namespace Nektar
                 const int                                                           nDim,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
                 const Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
-                      Array<OneD, Array<OneD, NekDouble> >                          &solution_jump,
-                      Array<OneD, int >                                             &nonZeroIndexsymm,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceSymflux);
+                const Array<OneD, Array<OneD, NekDouble> >                          &solution_jump,
+                    Array<OneD, int >                                             &nonZeroIndexsymm,
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceSymflux);
             
             void DiffuseTraceSymmFlux(
                 const int                                           nConvectiveFields,
@@ -202,15 +202,15 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >          &pBwd);
 
-            virtual void v_AddDiffusionSymmFluxToPhys(
-                const int                                           nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
-                const Array<OneD, Array<OneD, NekDouble> >          &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
-                Array<OneD, Array<OneD, NekDouble> >                &outarray,
-                const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
-                const Array<OneD, Array<OneD, NekDouble> >          &pBwd);
+            // virtual void v_AddDiffusionSymmFluxToPhys(
+            //     const int                                           nConvectiveFields,
+            //     const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+            //     const Array<OneD, Array<OneD, NekDouble> >          &inarray,
+            //     Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
+            //     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+            //     Array<OneD, Array<OneD, NekDouble> >                &outarray,
+            //     const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
+            //     const Array<OneD, Array<OneD, NekDouble> >          &pBwd);
 
             virtual void v_DiffuseCalculateDerivative(
                 const int                                                   nConvectiveFields,

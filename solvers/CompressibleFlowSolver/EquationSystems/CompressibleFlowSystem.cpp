@@ -1652,6 +1652,7 @@ namespace Nektar
 
 // Cout2DArrayBlkMat(m_PrecMatVars);
 
+// ASSERTL0(false, "debugstop");
         // ElmtVarInvMtrx_coeff(m_PrecMatVars);
         // TODO: auto precondition recompute. use random vector&L1 norm relative error.
         if(m_CalcuPrecMatFlag||(m_TimeIntegLambdaPrcMat!=m_TimeIntegLambda))
@@ -2356,7 +2357,7 @@ namespace Nektar
             for (int npnt = 0; npnt < nElmtcoef; npnt++)
             {
                 tmpinn[i][nElmtOffset+npnt] = 1.0;
-                MatrixMultiply_MatrixFree_coeff(tmpinn_1d,tmpout_1d);
+                MatrixMultiply_MatrixFree_coeff_central(tmpinn_1d,tmpout_1d);
                 
                 for (int j = 0; j < nvariables; j++)
                 {

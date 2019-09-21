@@ -188,6 +188,9 @@ v5.0.0
 **PulseWaveSolver**
 - Added two new boundary conditions: AInflow and UInflow
 
+**CardiacEPSolver**
+- Converted FentonKarma model to dimensional form and added variants (!1011)
+
 **Documentation**:
 - Added an initial developer's guide (!1001)
 

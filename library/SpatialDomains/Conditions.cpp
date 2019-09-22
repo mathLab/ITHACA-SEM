@@ -727,45 +727,7 @@ void BoundaryConditions::ReadBoundaryConditions(TiXmlElement *conditions)
 
                             if (attrName == "VAR")
                             {
-<<<<<<< HEAD
-                                std::string attrName1, attrData1, userDefined;
-                                vector<unsigned int> periodicBndRegionIndex;
-                                while(attr)
-                                {
-                                    attrName1 = attr->Name();
-
-                                    if (attrName1 == "USERDEFINEDTYPE")
-                                    {
-                                        // Do stuff for the user defined attribute
-                                        attrData1 = attr->Value();
-                                        ASSERTL0(!attrData1.empty(), "USERDEFINEDTYPE attribute must have associated value.");
-
-                                        m_session->SubstituteExpressions(attrData1);
-                                        userDefined = attrData1;
-                                        isTimeDependent = boost::iequals(attrData1,"TimeDependent");
-                                    }
-                                    else if (attrName1 == "VALUE")
-                                    {
-                                        attrData1 = attr->Value();
-                                        ASSERTL0(!attrData1.empty(), "VALUE attribute must have associated value.");
-
-                                        int beg = attrData1.find_first_of("[");
-                                        int end = attrData1.find_first_of("]");
-                                        std::string periodicBndRegionIndexStr = attrData1.substr(beg+1,end-beg-1);
-                                        ASSERTL0(beg < end, (std::string("Error reading periodic boundary region definition for boundary region: ") + boundaryRegionIDStrm.str()).c_str());
-
-                                        bool parseGood = ParseUtils::GenerateSeqVector(periodicBndRegionIndexStr.c_str(), periodicBndRegionIndex);
-
-                                        ASSERTL0(parseGood && (periodicBndRegionIndex.size()==1), (std::string("Unable to read periodic boundary condition for boundary region: ") + boundaryRegionIDStrm.str()).c_str());
-                                    }
-                                    attr = attr->Next();
-                                }
-                                BoundaryConditionShPtr periodicCondition(
-                                                                         MemoryManager<PeriodicBoundaryCondition>::AllocateSharedPtr(periodicBndRegionIndex[0], userDefined, boundaryRegionComm));
-                                (*boundaryConditions)[*iter]  = periodicCondition;
-=======
                                 // if VAR do nothing
->>>>>>> master
                             }
                             else if (attrName == "USERDEFINEDTYPE")
                             {

@@ -234,10 +234,12 @@ void export_ExpList()
     py::class_<ExpList,
                std::shared_ptr<ExpList>,
                boost::noncopyable>(
-                   "ExpList", py::no_init)
-
-        // Expansions
-        .def("GetExp", ExpList_GetExp)
+                   "ExpList", py::init<
+		    const LibUtilities::SessionReaderSharedPtr &,
+		    const SpatialDomains::MeshGraphSharedPtr &>())
+        .def("GetNpoints", &ExpList::GetNpoints)
+        .def("GetNcoeffs", &ExpList_GetNcoeffs)
+        .def("GetExp", &ExpList_GetExp)
         .def("GetExpSize", &ExpList::GetExpSize)
 
         // Query points and offset information

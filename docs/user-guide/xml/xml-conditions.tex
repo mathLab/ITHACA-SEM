@@ -557,9 +557,9 @@ three-dimensional incompressible Navier-Stokes simulation, this produces an FLD
 file with the variables \inltt{u}, \inltt{v}, \inltt{w} and \inltt{p}. If we
 wanted to use this velocity field as input for an advection velocity, the
 advection-diffusion-reaction solver expects the variables \inltt{Vx}, \inltt{Vy}
-and \inltt{Vz}.
-
-We can manually specify this mapping by adding a colon to the
+and \inltt{Vz}. We can manually specify this mapping by adding a colon to the
+filename, indicating the variable names in the target file that align with the
+desired function variable names. This gives a definition such as:
 
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="AdvectionVelocity">
@@ -570,8 +570,9 @@ We can manually specify this mapping by adding a colon to the
 There are some caveats with this syntax:
 
 \begin{itemize}
-  \item You must specify the same number of fields for both the variable, and
-  after the colon. For example, the following is not valid.
+  \item The same number of fields must be defined for both the \inltt{VAR}
+  attribute and in the comma-separated list after the colon. For example, the
+  following is not valid:
   \begin{lstlisting}[style=XMLStyle,gobble=4]
     <FUNCTION NAME="AdvectionVelocity">
       <F VAR="Vx,Vy,Vz" FILE="file.fld:u" />

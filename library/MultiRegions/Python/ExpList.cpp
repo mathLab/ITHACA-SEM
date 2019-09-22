@@ -95,7 +95,7 @@ Array<OneD, NekDouble> ExpList_MultiplyByInvMassMatrix(
     const Array<OneD, const NekDouble> &in)
 {
     Array<OneD, NekDouble> out(exp->GetNcoeffs(), 0.0);
-    exp->MultiplyByInvMassMatrix(in, out, eLocal);
+    exp->MultiplyByInvMassMatrix(in, out);
     return out;
 }
 

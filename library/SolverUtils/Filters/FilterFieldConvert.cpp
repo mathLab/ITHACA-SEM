@@ -341,7 +341,7 @@ void FilterFieldConvert::OutputField(
 
     // Determine new file name
     std::stringstream outname;
-    int    dot         = m_outputFile.find_last_of('.');
+    int         dot    = m_outputFile.find_last_of('.');
     std::string name   = m_outputFile.substr(0, dot);
     std::string ext    = m_outputFile.substr(dot, m_outputFile.length() - dot);
     std::string suffix = v_GetFileSuffix();

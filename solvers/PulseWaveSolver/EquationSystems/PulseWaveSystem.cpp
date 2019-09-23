@@ -114,7 +114,7 @@ namespace Nektar
         if(m_session->DefinesCmdLineArgument("SetToOneSpaceDimension"))
         {
             std::string cmdline = m_session->GetCmdLineArgument<std::string>("SetToOneSpaceDimension");
-            if(to_upper_copy(cmdline) == "FALSE")
+            if(boost::to_upper_copy(cmdline) == "FALSE")
             {
                 SetToOneSpaceDimension  = false;
             }

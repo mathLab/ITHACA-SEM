@@ -3878,7 +3878,7 @@ cout<<"alpha="<<s_alp<<endl;
                       //rhs = rhs.substr(rhs.find_first_not_of(" "));
                       //rhs = rhs.substr(0, rhs.find_last_not_of(" ")+1);
 
-                  to_upper(lhs);
+                  boost::to_upper(lhs);
                   if(lhs == "ALPHA")
                   {
                       alphastring = "Alpha   =  "+ s_alp;

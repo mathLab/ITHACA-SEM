@@ -40,11 +40,11 @@
 #include <memory>
 
 #include <LibUtilities/Communication/Comm.h>
-#include <LibUtilities/BasicUtils/StringUtils.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/program_options/variables_map.hpp>
 
 class TiXmlElement;
@@ -540,7 +540,7 @@ namespace Nektar
         inline const T SessionReader::GetSolverInfoAsEnum(
             const std::string &pName) const
         {
-            std::string vName = to_upper_copy(pName);
+            std::string vName = boost::to_upper_copy(pName);
             ASSERTL0(DefinesSolverInfo(vName),
                      "Solver info '" + pName + "' not defined.");
 
@@ -567,7 +567,7 @@ namespace Nektar
             const std::string &pName,
             const std::string &pValue) const
         {
-            std::string vName  = to_upper_copy(pName);
+            std::string vName  = boost::to_upper_copy(pName);
 
             auto x = GetSolverInfoEnums().find(vName);
             ASSERTL0(x != GetSolverInfoEnums().end(),
@@ -609,7 +609,7 @@ namespace Nektar
         inline std::string SessionReader::RegisterEnumValue(
             std::string pEnum, std::string pString, int pEnumValue)
         {
-            std::string vEnum = to_upper_copy(pEnum);
+            std::string vEnum = boost::to_upper_copy(pEnum);
             auto x = GetSolverInfoEnums().find(vEnum);
 
             if (x == GetSolverInfoEnums().end())
@@ -644,7 +644,7 @@ namespace Nektar
             const std::string &pName,
             const std::string &pValue)
         {
-            std::string vName = to_upper_copy(pName);
+            std::string vName = boost::to_upper_copy(pName);
             GetSolverInfoDefaults()[vName] = pValue;
             return pValue;
         }

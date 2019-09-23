@@ -72,45 +72,36 @@ namespace Nektar
             int nVariable = pFields.num_elements();
             int nTracePts = pFields[0]->GetTrace()->GetTotPoints();
 
+            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
+            for(i = 0; i < nDim; ++i)
+            {
+                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts,0.0);
+            }
+            m_traceAver = Array<OneD, Array<OneD, NekDouble> >(nVariable);
+            m_traceJump = Array<OneD, Array<OneD, NekDouble> >(nVariable);
+            for(i = 0; i < nVariable; ++i)
+            {
+                m_traceAver[i] = Array<OneD, NekDouble> (nTracePts,0.0);
+                m_traceJump[i] = Array<OneD, NekDouble> (nTracePts,0.0);
+            }
+
+            pFields[0]->GetTrace()->GetNormals(m_traceNormals);
             Array<OneD, NekDouble>  lengthFwd(nTracePts,0.0);
             Array<OneD, NekDouble>  lengthBwd(nTracePts,0.0);
             pFields[0]->GetTrace()->GetElmtNormalLength(lengthFwd,lengthBwd);
+
+            const MultiRegions::AssemblyMapDGSharedPtr TraceMap=pFields[0]->GetTraceMap();
             pFields[0]->PeriodicBwdCopy(lengthFwd,lengthBwd);
-            pFields[0]->GetTraceMap()->UniversalTraceAssemble(lengthFwd);
-            pFields[0]->GetTraceMap()->UniversalTraceAssemble(lengthBwd);
-
-            Vmath::Sdiv(nTracePts,1.0,lengthFwd,1,lengthFwd,1);
-            Vmath::Sdiv(nTracePts,1.0,lengthBwd,1,lengthBwd,1);
-
-            m_traceNormDirctnElmtLength         = Array<OneD, NekDouble> (nTracePts,0.0);
-            Vmath::Vadd(nTracePts,lengthFwd,1,lengthBwd,1,m_traceNormDirctnElmtLength,1);
-            Vmath::Sdiv(nTracePts,1.0,m_traceNormDirctnElmtLength,1,m_traceNormDirctnElmtLength,1);
-           
-            Array<OneD, int>        FwdElmtEdgeNumb(nTracePts,0.0);
-            Array<OneD, int>        BwdElmtEdgeNumb(nTracePts,0.0);
-            pFields[0]->GetTraceFwdBwdadjacentElmtEdgeNumbers(FwdElmtEdgeNumb,BwdElmtEdgeNumb);
-
-            Array<OneD, NekDouble>  lengthTmp(nTracePts,0.0);
-            for(int i=0;i<nTracePts;i++)
-            {
-                lengthTmp[i] = NekDouble(FwdElmtEdgeNumb[i]);
-            }
-            Vmath::Vmul(nTracePts,lengthTmp,1,lengthFwd,1,lengthFwd,1);
-
-            for(int i=0;i<nTracePts;i++)
-            {
-                lengthTmp[i] = NekDouble(BwdElmtEdgeNumb[i]);
-            }
-            Vmath::Vmul(nTracePts,lengthTmp,1,lengthBwd,1,lengthBwd,1);
+            TraceMap->UniversalTraceAssemble(lengthFwd);
+            TraceMap->UniversalTraceAssemble(lengthBwd);
 
             Vmath::Vadd(nTracePts,lengthBwd,1,lengthFwd,1,lengthFwd,1);
-            Vmath::Smul(nTracePts,0.5,lengthFwd,1,lengthFwd,1);
-            m_oIPPenaltyLength    = lengthFwd;
+            m_traceNormDirctnElmtLength = lengthFwd;
+            m_oIPPenaltyLength =   lengthBwd;
+            Vmath::Sdiv(nTracePts,1.0,m_traceNormDirctnElmtLength,1,m_oIPPenaltyLength,1);
 
-            m_tracBwdWeightAver  =   lengthTmp;
-            m_tracBwdWeightJump  =   lengthBwd;
-            Vmath::Zero(nTracePts,m_tracBwdWeightAver,1);
-            Vmath::Zero(nTracePts,m_tracBwdWeightJump,1);
+            m_tracBwdWeightAver  =   Array<OneD, NekDouble> (nTracePts,0.0);
+            m_tracBwdWeightJump  =   Array<OneD, NekDouble> (nTracePts,0.0);
             pFields[0]->GetBwdWeight(m_tracBwdWeightAver,m_tracBwdWeightJump);
             Array<OneD, NekDouble> tmpBwdWeight(nTracePts,0.0);
             Array<OneD, NekDouble> tmpBwdWeightJump(nTracePts,0.0);
@@ -126,32 +117,11 @@ namespace Nektar
                 }
                 ASSERTL0(norm<1.0E-11,"different BWD for different variable not coded yet");
             }
-            tmpBwdWeightJump    = NullNekDouble1DArray;
 
             m_MuVarTrace   =   NullNekDouble1DArray;
             if (m_ArtificialDiffusionVector)
             {
-                m_MuVarTrace  =   tmpBwdWeight;
-                Vmath::Zero(nTracePts,m_MuVarTrace,1);
-            }
-            else
-            {
-                tmpBwdWeight        = NullNekDouble1DArray;
-            }
-            
-            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
-            for(i = 0; i < nDim; ++i)
-            {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts,0.0);
-            }
-            pFields[0]->GetTrace()->GetNormals(m_traceNormals);
-
-            m_traceAver = Array<OneD, Array<OneD, NekDouble> >(nVariable);
-            m_traceJump = Array<OneD, Array<OneD, NekDouble> >(nVariable);
-            for(i = 0; i < nVariable; ++i)
-            {
-                m_traceAver[i] = Array<OneD, NekDouble> (nTracePts,0.0);
-                m_traceJump[i] = Array<OneD, NekDouble> (nTracePts,0.0);
+                m_MuVarTrace  =   Array<OneD, NekDouble>(nTracePts, 0.0);
             }
 
 #ifdef CFS_DEBUGMODE

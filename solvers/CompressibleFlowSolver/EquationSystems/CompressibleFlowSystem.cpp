@@ -660,6 +660,7 @@ namespace Nektar
             if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
             {
                 flagUpdateDervFlux = true;
+                flagUpdateDervFlux = false;
             }
             
             Array<OneD, NekVector<NekDouble> > tmparray(nvariables);
@@ -685,6 +686,7 @@ namespace Nektar
                 if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
                 {
                     flagUpdateDervFlux = true;
+                    flagUpdateDervFlux = false;
                 }
             }
         }
@@ -1035,6 +1037,7 @@ namespace Nektar
 #endif        
     
         if(m_DEBUG_VISCOUS_JAC_MAT&&m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+        // if(m_DEBUG_VISCOUS_JAC_MAT)
         {
                 for(int i = 0; i< m_spacedim; i++)
                 {
@@ -1210,6 +1213,7 @@ namespace Nektar
         }
         
         DNekMatSharedPtr tmpMatinn,tmpMatout;
+        Array<OneD, NekDouble > tmpMatinnData, tmpMatoutData;
         for(int nDervDir = 0; nDervDir < m_spacedim; nDervDir++)
         {
             GetFluxDerivJacDirctn(tracelist,tracenormals,nDervDir,solution_Aver,ElmtJac);
@@ -1222,14 +1226,16 @@ namespace Nektar
                 {
                     pntoffset = noffset+npnt;
                     NekDouble weight = tracBwdWeightJump[pntoffset];
-                    tmpMatinn   =   ElmtJac[ntrace][npnt];
-                    tmpMatout   =   BJac->GetBlock(pntoffset,pntoffset);
-                    for(int i = 0; i< nConvectiveFields;i++)
+
+                    tmpMatinn       = ElmtJac[ntrace][npnt];
+                    tmpMatinnData   = tmpMatinn->GetPtr(); 
+                    tmpMatout       = BJac->GetBlock(pntoffset,pntoffset);
+                    tmpMatoutData   = tmpMatout->GetPtr(); 
+                    Vmath::Smul(nConvectiveFields*nConvectiveFields,weight,tmpMatinnData,1,tmpMatinnData,1);
+                    for(int j = 0; j< nConvectiveFields;j++)
                     {
-                        for(int j = 0; j< nConvectiveFields;j++)
-                        {
-                            (*tmpMatout)(i,j*m_spacedim+nDervDir)    = weight*(*tmpMatinn)(i,j);
-                        }
+                        Vmath::Vcopy(nConvectiveFields,&tmpMatinnData[j*nConvectiveFields],1,
+                                    &tmpMatoutData[(j*m_spacedim+nDervDir)*nConvectiveFields],1);
                     }
                 }
             }

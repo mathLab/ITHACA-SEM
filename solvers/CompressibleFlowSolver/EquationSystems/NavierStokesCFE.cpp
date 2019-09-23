@@ -1225,7 +1225,7 @@ namespace Nektar
     {
         int nPts                = inaverg[nConvectiveFields-1].num_elements();
         int nDim=m_spacedim;
-
+        
         Array<OneD,Array<OneD, NekDouble>> outtmp = outarray;
         for(int i=0; i<nConvectiveFields;i++)
         {
@@ -1368,21 +1368,26 @@ namespace Nektar
         TwoThird=2.0*OneThird;
         FourThird=4.0*OneThird;
 
-        (*OutputMatrix)(0,0)=tmp*(-FourThird*u*nx-v*ny);
-        (*OutputMatrix)(0,1)=tmp*(FourThird*nx);
-        (*OutputMatrix)(0,2)=tmp*ny;
-        (*OutputMatrix)(0,3)=0.0;
-        (*OutputMatrix)(1,0)=tmp*(-v*nx+TwoThird*u*ny);
-        (*OutputMatrix)(1,1)=tmp*(-TwoThird*ny);
-        (*OutputMatrix)(1,2)=tmp*nx;
-        (*OutputMatrix)(1,3)=0.0;
-        (*OutputMatrix)(2,0)=(FourThird*u*u+v*v+tmp2*(E-q2))*nx+OneThird*u*v*ny;
-        (*OutputMatrix)(2,0)=-tmp*(*OutputMatrix)(2,0);
-        (*OutputMatrix)(2,1)=(FourThird-tmp2)*u*nx-TwoThird*v*ny;
-        (*OutputMatrix)(2,1)=tmp*(*OutputMatrix)(2,1);
-        (*OutputMatrix)(2,2)=(1-tmp2)*v*nx+u*ny;
-        (*OutputMatrix)(2,2)=tmp*(*OutputMatrix)(2,2);
-        (*OutputMatrix)(2,3)=tmp*tmp2*nx;
+        Array<OneD, NekDouble> tmpArray;
+        tmpArray = OutputMatrix->GetPtr();
+        int nrow = OutputMatrix->GetRows();
+        int ncol = OutputMatrix->GetColumns();
+
+        tmpArray[0+0*nrow]=tmp*(-FourThird*u*nx-v*ny);
+        tmpArray[0+1*nrow]=tmp*(FourThird*nx);
+        tmpArray[0+2*nrow]=tmp*ny;
+        tmpArray[0+3*nrow]=0.0;
+        tmpArray[1+0*nrow]=tmp*(-v*nx+TwoThird*u*ny);
+        tmpArray[1+1*nrow]=tmp*(-TwoThird*ny);
+        tmpArray[1+2*nrow]=tmp*nx;
+        tmpArray[1+3*nrow]=0.0;
+        tmpArray[2+0*nrow]=(FourThird*u*u+v*v+tmp2*(E-q2))*nx+OneThird*u*v*ny;
+        tmpArray[2+0*nrow]=-tmp*(*OutputMatrix)(2,0);
+        tmpArray[2+1*nrow]=(FourThird-tmp2)*u*nx-TwoThird*v*ny;
+        tmpArray[2+1*nrow]=tmp*(*OutputMatrix)(2,1);
+        tmpArray[2+2*nrow]=(1-tmp2)*v*nx+u*ny;
+        tmpArray[2+2*nrow]=tmp*(*OutputMatrix)(2,2);
+        tmpArray[2+3*nrow]=tmp*tmp2*nx;
     }
 
      /**
@@ -1426,22 +1431,27 @@ namespace Nektar
         OneThird=1.0/3.0;
         TwoThird=2.0*OneThird;
         FourThird=4.0*OneThird;
+
+        Array<OneD, NekDouble> tmpArray;
+        tmpArray = OutputMatrix->GetPtr();
+        int nrow = OutputMatrix->GetRows();
+        int ncol = OutputMatrix->GetColumns();
            
-        (*OutputMatrix)(0,0)=tmp*(TwoThird*v*nx-u*ny);
-        (*OutputMatrix)(0,1)=tmp*ny;
-        (*OutputMatrix)(0,2)=tmp*(-TwoThird)*nx;
-        (*OutputMatrix)(0,3)=0.0;
-        (*OutputMatrix)(1,0)=tmp*(-u*nx-FourThird*v*ny);
-        (*OutputMatrix)(1,1)=tmp*nx;
-        (*OutputMatrix)(1,2)=tmp*(FourThird*ny);
-        (*OutputMatrix)(1,3)=0.0;
-        (*OutputMatrix)(2,0)=OneThird*u*v*nx+(FourThird*v*v+u*u+tmp2*(E-q2))*ny;
-        (*OutputMatrix)(2,0)=-tmp*(*OutputMatrix)(2,0);
-        (*OutputMatrix)(2,1)=(1-tmp2)*u*ny+v*nx;
-        (*OutputMatrix)(2,1)=tmp*(*OutputMatrix)(2,1);
-        (*OutputMatrix)(2,2)=(FourThird-tmp2)*v*ny-TwoThird*u*nx;
-        (*OutputMatrix)(2,2)=tmp*(*OutputMatrix)(2,2);
-        (*OutputMatrix)(2,3)=tmp*tmp2*ny;
+        tmpArray[0+0*nrow]=tmp*(TwoThird*v*nx-u*ny);
+        tmpArray[0+1*nrow]=tmp*ny;
+        tmpArray[0+2*nrow]=tmp*(-TwoThird)*nx;
+        tmpArray[0+3*nrow]=0.0;
+        tmpArray[1+0*nrow]=tmp*(-u*nx-FourThird*v*ny);
+        tmpArray[1+1*nrow]=tmp*nx;
+        tmpArray[1+2*nrow]=tmp*(FourThird*ny);
+        tmpArray[1+3*nrow]=0.0;
+        tmpArray[2+0*nrow]=OneThird*u*v*nx+(FourThird*v*v+u*u+tmp2*(E-q2))*ny;
+        tmpArray[2+0*nrow]=-tmp*(*OutputMatrix)(2,0);
+        tmpArray[2+1*nrow]=(1-tmp2)*u*ny+v*nx;
+        tmpArray[2+1*nrow]=tmp*(*OutputMatrix)(2,1);
+        tmpArray[2+2*nrow]=(FourThird-tmp2)*v*ny-TwoThird*u*nx;
+        tmpArray[2+2*nrow]=tmp*(*OutputMatrix)(2,2);
+        tmpArray[2+3*nrow]=tmp*tmp2*ny;
     }
 
     /**
@@ -1493,26 +1503,31 @@ namespace Nektar
         TwoThird=2.0*OneThird;
         FourThird=4.0*OneThird;
 
-        (*OutputMatrix)(0,0)=tmpx*(-FourThird*u)+tmpy*(-v)+tmpz*(-w);
-        (*OutputMatrix)(0,1)=tmpx*FourThird;
-        (*OutputMatrix)(0,2)=tmpy;
-        (*OutputMatrix)(0,3)=tmpz;
-        (*OutputMatrix)(0,4)=0.0;
-        (*OutputMatrix)(1,0)=tmpx*(-v)+tmpy*(TwoThird*u);
-        (*OutputMatrix)(1,1)=tmpy*(-TwoThird);
-        (*OutputMatrix)(1,2)=tmpx;
-        (*OutputMatrix)(1,3)=0.0;
-        (*OutputMatrix)(1,4)=0.0;
-        (*OutputMatrix)(2,0)=tmpx*(-w)+tmpz*(TwoThird*u);
-        (*OutputMatrix)(2,1)=tmpz*(-TwoThird);
-        (*OutputMatrix)(2,2)=0.0;
-        (*OutputMatrix)(2,3)=tmpx;
-        (*OutputMatrix)(2,4)=0.0;
-        (*OutputMatrix)(3,0)=-tmpx*(FourThird*u*u+v*v+w*w+tmp2*(E-q2))+tmpy*(-OneThird*u*v)+tmpz*(-OneThird*u*w);
-        (*OutputMatrix)(3,1)=tmpx*(FourThird-tmp2)*u+tmpy*(-TwoThird*v)+tmpz*(-TwoThird*w);
-        (*OutputMatrix)(3,2)=tmpx*(1.0-tmp2)*v+tmpy*u;
-        (*OutputMatrix)(3,3)=tmpx*(1.0-tmp2)*w+tmpz*u;
-        (*OutputMatrix)(3,4)=tmpx*tmp2;
+        Array<OneD, NekDouble> tmpArray;
+        tmpArray = OutputMatrix->GetPtr();
+        int nrow = OutputMatrix->GetRows();
+        int ncol = OutputMatrix->GetColumns();
+
+        tmpArray[0+0*nrow]=tmpx*(-FourThird*u)+tmpy*(-v)+tmpz*(-w);
+        tmpArray[0+1*nrow]=tmpx*FourThird;
+        tmpArray[0+2*nrow]=tmpy;
+        tmpArray[0+3*nrow]=tmpz;
+        tmpArray[0+4*nrow]=0.0;
+        tmpArray[1+0*nrow]=tmpx*(-v)+tmpy*(TwoThird*u);
+        tmpArray[1+1*nrow]=tmpy*(-TwoThird);
+        tmpArray[1+2*nrow]=tmpx;
+        tmpArray[1+3*nrow]=0.0;
+        tmpArray[1+4*nrow]=0.0;
+        tmpArray[2+0*nrow]=tmpx*(-w)+tmpz*(TwoThird*u);
+        tmpArray[2+1*nrow]=tmpz*(-TwoThird);
+        tmpArray[2+2*nrow]=0.0;
+        tmpArray[2+3*nrow]=tmpx;
+        tmpArray[2+4*nrow]=0.0;
+        tmpArray[3+0*nrow]=-tmpx*(FourThird*u*u+v*v+w*w+tmp2*(E-q2))+tmpy*(-OneThird*u*v)+tmpz*(-OneThird*u*w);
+        tmpArray[3+1*nrow]=tmpx*(FourThird-tmp2)*u+tmpy*(-TwoThird*v)+tmpz*(-TwoThird*w);
+        tmpArray[3+2*nrow]=tmpx*(1.0-tmp2)*v+tmpy*u;
+        tmpArray[3+3*nrow]=tmpx*(1.0-tmp2)*w+tmpz*u;
+        tmpArray[3+4*nrow]=tmpx*tmp2;
     }
 
     /**
@@ -1564,26 +1579,31 @@ namespace Nektar
         TwoThird=2.0*OneThird;
         FourThird=4.0*OneThird;
 
-        (*OutputMatrix)(0,0)=tmpx*(TwoThird*v)+tmpy*(-u);
-        (*OutputMatrix)(0,1)=tmpy;
-        (*OutputMatrix)(0,2)=tmpx*(-TwoThird);
-        (*OutputMatrix)(0,3)=0.0;
-        (*OutputMatrix)(0,4)=0.0;
-        (*OutputMatrix)(1,0)=tmpx*(-u)+tmpy*(-FourThird*v)+tmpz*(-w);
-        (*OutputMatrix)(1,1)=tmpx;
-        (*OutputMatrix)(1,2)=tmpy*FourThird;
-        (*OutputMatrix)(1,3)=tmpz;
-        (*OutputMatrix)(1,4)=0.0;
-        (*OutputMatrix)(2,0)=tmpy*(-w)+tmpz*(TwoThird*v);
-        (*OutputMatrix)(2,1)=0.0;
-        (*OutputMatrix)(2,2)=tmpz*(-TwoThird);
-        (*OutputMatrix)(2,3)=tmpy;
-        (*OutputMatrix)(2,4)=0.0;
-        (*OutputMatrix)(3,0)=tmpx*(-OneThird*u*v)-tmpy*(u*u+FourThird*v*v+w*w+tmp2*(E-q2))+tmpz*(-OneThird*v*w);
-        (*OutputMatrix)(3,1)=tmpx*v+tmpy*(1-tmp2)*u;
-        (*OutputMatrix)(3,2)=tmpx*(-TwoThird*u)+tmpy*(FourThird-tmp2)*v+tmpz*(-TwoThird*w);
-        (*OutputMatrix)(3,3)=tmpy*(1-tmp2)*w+tmpz*v;
-        (*OutputMatrix)(3,4)=tmpy*tmp2;
+        Array<OneD, NekDouble> tmpArray;
+        tmpArray = OutputMatrix->GetPtr();
+        int nrow = OutputMatrix->GetRows();
+        int ncol = OutputMatrix->GetColumns();
+
+        tmpArray[0+0*nrow]=tmpx*(TwoThird*v)+tmpy*(-u);
+        tmpArray[0+1*nrow]=tmpy;
+        tmpArray[0+2*nrow]=tmpx*(-TwoThird);
+        tmpArray[0+3*nrow]=0.0;
+        tmpArray[0+4*nrow]=0.0;
+        tmpArray[1+0*nrow]=tmpx*(-u)+tmpy*(-FourThird*v)+tmpz*(-w);
+        tmpArray[1+1*nrow]=tmpx;
+        tmpArray[1+2*nrow]=tmpy*FourThird;
+        tmpArray[1+3*nrow]=tmpz;
+        tmpArray[1+4*nrow]=0.0;
+        tmpArray[2+0*nrow]=tmpy*(-w)+tmpz*(TwoThird*v);
+        tmpArray[2+1*nrow]=0.0;
+        tmpArray[2+2*nrow]=tmpz*(-TwoThird);
+        tmpArray[2+3*nrow]=tmpy;
+        tmpArray[2+4*nrow]=0.0;
+        tmpArray[3+0*nrow]=tmpx*(-OneThird*u*v)-tmpy*(u*u+FourThird*v*v+w*w+tmp2*(E-q2))+tmpz*(-OneThird*v*w);
+        tmpArray[3+1*nrow]=tmpx*v+tmpy*(1-tmp2)*u;
+        tmpArray[3+2*nrow]=tmpx*(-TwoThird*u)+tmpy*(FourThird-tmp2)*v+tmpz*(-TwoThird*w);
+        tmpArray[3+3*nrow]=tmpy*(1-tmp2)*w+tmpz*v;
+        tmpArray[3+4*nrow]=tmpy*tmp2;
     }
 
     /**
@@ -1635,26 +1655,31 @@ namespace Nektar
         TwoThird=2.0*OneThird;
         FourThird=4.0*OneThird;
 
-        (*OutputMatrix)(0,0)=tmpx*(TwoThird*w)+tmpz*(-u);
-        (*OutputMatrix)(0,1)=tmpz;
-        (*OutputMatrix)(0,2)=0.0;
-        (*OutputMatrix)(0,3)=tmpx*(-TwoThird);
-        (*OutputMatrix)(0,4)=0.0;
-        (*OutputMatrix)(1,0)=tmpy*(TwoThird*w)+tmpz*(-v);
-        (*OutputMatrix)(1,1)=0.0;
-        (*OutputMatrix)(1,2)=tmpz;
-        (*OutputMatrix)(1,3)=tmpy*(-TwoThird);
-        (*OutputMatrix)(1,4)=0.0;
-        (*OutputMatrix)(2,0)=tmpx*(-u)+tmpy*(-v)+tmpz*(-FourThird*w);
-        (*OutputMatrix)(2,1)=tmpx;
-        (*OutputMatrix)(2,2)=tmpy;
-        (*OutputMatrix)(2,3)=tmpz*FourThird;
-        (*OutputMatrix)(2,4)=0.0;
-        (*OutputMatrix)(3,0)=tmpx*(-OneThird*u*w)+tmpy*(-OneThird*v*w)-tmpz*(u*u+v*v+FourThird*w*w+tmp2*(E-q2));
-        (*OutputMatrix)(3,1)=tmpx*w+tmpz*(1-tmp2)*u;
-        (*OutputMatrix)(3,2)=tmpy*w+tmpz*(1-tmp2)*v;
-        (*OutputMatrix)(3,3)=tmpx*(-TwoThird*u)+tmpy*(-TwoThird*v)+tmpz*(FourThird-tmp2)*w;
-        (*OutputMatrix)(3,4)=tmpz*tmp2;
+        Array<OneD, NekDouble> tmpArray;
+        tmpArray = OutputMatrix->GetPtr();
+        int nrow = OutputMatrix->GetRows();
+        int ncol = OutputMatrix->GetColumns();
+
+        tmpArray[0+0*nrow]=tmpx*(TwoThird*w)+tmpz*(-u);
+        tmpArray[0+1*nrow]=tmpz;
+        tmpArray[0+2*nrow]=0.0;
+        tmpArray[0+3*nrow]=tmpx*(-TwoThird);
+        tmpArray[0+4*nrow]=0.0;
+        tmpArray[1+0*nrow]=tmpy*(TwoThird*w)+tmpz*(-v);
+        tmpArray[1+1*nrow]=0.0;
+        tmpArray[1+2*nrow]=tmpz;
+        tmpArray[1+3*nrow]=tmpy*(-TwoThird);
+        tmpArray[1+4*nrow]=0.0;
+        tmpArray[2+0*nrow]=tmpx*(-u)+tmpy*(-v)+tmpz*(-FourThird*w);
+        tmpArray[2+1*nrow]=tmpx;
+        tmpArray[2+2*nrow]=tmpy;
+        tmpArray[2+3*nrow]=tmpz*FourThird;
+        tmpArray[2+4*nrow]=0.0;
+        tmpArray[3+0*nrow]=tmpx*(-OneThird*u*w)+tmpy*(-OneThird*v*w)-tmpz*(u*u+v*v+FourThird*w*w+tmp2*(E-q2));
+        tmpArray[3+1*nrow]=tmpx*w+tmpz*(1-tmp2)*u;
+        tmpArray[3+2*nrow]=tmpy*w+tmpz*(1-tmp2)*v;
+        tmpArray[3+3*nrow]=tmpx*(-TwoThird*u)+tmpy*(-TwoThird*v)+tmpz*(FourThird-tmp2)*w;
+        tmpArray[3+4*nrow]=tmpz*tmp2;
     }
 
     /**
@@ -1675,6 +1700,11 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
               DNekMatSharedPtr                              &OutputMatrix)
     {
+        Array<OneD, NekDouble> tmpArray;
+        tmpArray = OutputMatrix->GetPtr();
+        int nrow = OutputMatrix->GetRows();
+        int ncol = OutputMatrix->GetColumns();
+
         NekDouble nx=normals[0];
         NekDouble ny=normals[1];
         NekDouble U1=U[0];
@@ -1737,7 +1767,7 @@ namespace Nektar
         {
             for(int j=0;j<4;j++)
             {
-                (*OutputMatrix)(i,j)=dmu_dT*dT_dU[j]*tmp[i];
+                tmpArray[i+j*nrow]=dmu_dT*dT_dU[j]*tmp[i];
             }
         }
         
@@ -1783,15 +1813,15 @@ namespace Nektar
         dsnv_dU1=u*dsnx_dU1+v*dsny_dU1-orho2*U2*snx-orho2*U3*sny;
         dsnv_dU2=u*dsnx_dU2+v*dsny_dU2+orho1*snx;
         dsnv_dU3=u*dsnx_dU3+v*dsny_dU3+orho1*sny;
-        (*OutputMatrix)(0,0)=(*OutputMatrix)(0,0)+mu*dsnx_dU1;
-        (*OutputMatrix)(0,1)=(*OutputMatrix)(0,1)+mu*dsnx_dU2;
-        (*OutputMatrix)(0,2)=(*OutputMatrix)(0,2)+mu*dsnx_dU3;
-        (*OutputMatrix)(1,0)=(*OutputMatrix)(1,0)+mu*dsny_dU1;
-        (*OutputMatrix)(1,1)=(*OutputMatrix)(1,1)+mu*dsny_dU2;
-        (*OutputMatrix)(1,2)=(*OutputMatrix)(1,2)+mu*dsny_dU3;
-        (*OutputMatrix)(2,0)=(*OutputMatrix)(2,0)+mu*dsnv_dU1;
-        (*OutputMatrix)(2,1)=(*OutputMatrix)(2,1)+mu*dsnv_dU2;
-        (*OutputMatrix)(2,2)=(*OutputMatrix)(2,2)+mu*dsnv_dU3;
+        tmpArray[0+0*nrow]=tmpArray[0+0*nrow]+mu*dsnx_dU1;
+        tmpArray[0+1*nrow]=tmpArray[0+1*nrow]+mu*dsnx_dU2;
+        tmpArray[0+2*nrow]=tmpArray[0+2*nrow]+mu*dsnx_dU3;
+        tmpArray[1+0*nrow]=tmpArray[1+0*nrow]+mu*dsny_dU1;
+        tmpArray[1+1*nrow]=tmpArray[1+1*nrow]+mu*dsny_dU2;
+        tmpArray[1+2*nrow]=tmpArray[1+2*nrow]+mu*dsny_dU3;
+        tmpArray[2+0*nrow]=tmpArray[2+0*nrow]+mu*dsnv_dU1;
+        tmpArray[2+1*nrow]=tmpArray[2+1*nrow]+mu*dsnv_dU2;
+        tmpArray[2+2*nrow]=tmpArray[2+2*nrow]+mu*dsnv_dU3;
 
         //Consider +qn's effect (does not include mu's effect)
         NekDouble dqx_dU1,dqx_dU2,dqx_dU3,dqx_dU4;
@@ -1806,10 +1836,10 @@ namespace Nektar
         dqy_dU2=tmpy*(-orho2*dU2_dy+2*orho3*U2*dU1_dy);
         dqy_dU3=tmpy*(-orho2*dU3_dy+2*orho3*U3*dU1_dy);
         dqy_dU4=-tmpy*orho2*dU1_dy;
-        (*OutputMatrix)(2,0)=(*OutputMatrix)(2,0)-dqx_dU1-dqy_dU1;
-        (*OutputMatrix)(2,1)=(*OutputMatrix)(2,1)-dqx_dU2-dqy_dU2;
-        (*OutputMatrix)(2,2)=(*OutputMatrix)(2,2)-dqx_dU3-dqy_dU3;
-        (*OutputMatrix)(2,3)=(*OutputMatrix)(2,3)-dqx_dU4-dqy_dU4;
+        tmpArray[2+0*nrow]=tmpArray[2+0*nrow]-dqx_dU1-dqy_dU1;
+        tmpArray[2+1*nrow]=tmpArray[2+1*nrow]-dqx_dU2-dqy_dU2;
+        tmpArray[2+2*nrow]=tmpArray[2+2*nrow]-dqx_dU3-dqy_dU3;
+        tmpArray[2+3*nrow]=tmpArray[2+3*nrow]-dqx_dU4-dqy_dU4;
     }
 
      /**
@@ -1830,6 +1860,11 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
               DNekMatSharedPtr                              &OutputMatrix)
     {
+        Array<OneD, NekDouble> tmpArray;
+        tmpArray = OutputMatrix->GetPtr();
+        int nrow = OutputMatrix->GetRows();
+        int ncol = OutputMatrix->GetColumns();
+
         NekDouble nx=normals[0];
         NekDouble ny=normals[1];
         NekDouble nz=normals[2];
@@ -1916,7 +1951,7 @@ namespace Nektar
         {
             for(int j=0;j<5;j++)
             {
-                (*OutputMatrix)(i,j)=dmu_dT*dT_dU[j]*tmp[i];
+                tmpArray[i+j*nrow]=dmu_dT*dT_dU[j]*tmp[i];
             }
         }
 
@@ -2009,22 +2044,22 @@ namespace Nektar
         dsnv_dU2=u*dsnx_dU2+v*dsny_dU2+w*dsnz_dU2+orho1*snx;
         dsnv_dU3=u*dsnx_dU3+v*dsny_dU3+w*dsnz_dU3+orho1*sny;
         dsnv_dU4=u*dsnx_dU4+v*dsny_dU4+w*dsnz_dU4+orho1*snz;
-        (*OutputMatrix)(0,0)=(*OutputMatrix)(0,0)+mu*dsnx_dU1;
-        (*OutputMatrix)(0,1)=(*OutputMatrix)(0,1)+mu*dsnx_dU2;
-        (*OutputMatrix)(0,2)=(*OutputMatrix)(0,2)+mu*dsnx_dU3;
-        (*OutputMatrix)(0,3)=(*OutputMatrix)(0,3)+mu*dsnx_dU4;
-        (*OutputMatrix)(1,0)=(*OutputMatrix)(1,0)+mu*dsny_dU1;
-        (*OutputMatrix)(1,1)=(*OutputMatrix)(1,1)+mu*dsny_dU2;
-        (*OutputMatrix)(1,2)=(*OutputMatrix)(1,2)+mu*dsny_dU3;
-        (*OutputMatrix)(1,3)=(*OutputMatrix)(1,3)+mu*dsny_dU4;
-        (*OutputMatrix)(2,0)=(*OutputMatrix)(2,0)+mu*dsnz_dU1;
-        (*OutputMatrix)(2,1)=(*OutputMatrix)(2,1)+mu*dsnz_dU2;
-        (*OutputMatrix)(2,2)=(*OutputMatrix)(2,2)+mu*dsnz_dU3;
-        (*OutputMatrix)(2,3)=(*OutputMatrix)(2,3)+mu*dsnz_dU4;
-        (*OutputMatrix)(3,0)=(*OutputMatrix)(3,0)+mu*dsnv_dU1;
-        (*OutputMatrix)(3,1)=(*OutputMatrix)(3,1)+mu*dsnv_dU2;
-        (*OutputMatrix)(3,2)=(*OutputMatrix)(3,2)+mu*dsnv_dU3;
-        (*OutputMatrix)(3,3)=(*OutputMatrix)(3,3)+mu*dsnv_dU4;
+        tmpArray[0+0*nrow]=tmpArray[0+0*nrow]+mu*dsnx_dU1;
+        tmpArray[0+1*nrow]=tmpArray[0+1*nrow]+mu*dsnx_dU2;
+        tmpArray[0+2*nrow]=tmpArray[0+2*nrow]+mu*dsnx_dU3;
+        tmpArray[0+3*nrow]=tmpArray[0+3*nrow]+mu*dsnx_dU4;
+        tmpArray[1+0*nrow]=tmpArray[1+0*nrow]+mu*dsny_dU1;
+        tmpArray[1+1*nrow]=tmpArray[1+1*nrow]+mu*dsny_dU2;
+        tmpArray[1+2*nrow]=tmpArray[1+2*nrow]+mu*dsny_dU3;
+        tmpArray[1+3*nrow]=tmpArray[1+3*nrow]+mu*dsny_dU4;
+        tmpArray[2+0*nrow]=tmpArray[2+0*nrow]+mu*dsnz_dU1;
+        tmpArray[2+1*nrow]=tmpArray[2+1*nrow]+mu*dsnz_dU2;
+        tmpArray[2+2*nrow]=tmpArray[2+2*nrow]+mu*dsnz_dU3;
+        tmpArray[2+3*nrow]=tmpArray[2+3*nrow]+mu*dsnz_dU4;
+        tmpArray[3+0*nrow]=tmpArray[3+0*nrow]+mu*dsnv_dU1;
+        tmpArray[3+1*nrow]=tmpArray[3+1*nrow]+mu*dsnv_dU2;
+        tmpArray[3+2*nrow]=tmpArray[3+2*nrow]+mu*dsnv_dU3;
+        tmpArray[3+3*nrow]=tmpArray[3+3*nrow]+mu*dsnv_dU4;
 
         //Consider heat flux qn's effect (does not include mu's effect)
         NekDouble dqx_dU1,dqx_dU2,dqx_dU3,dqx_dU4,dqx_dU5;
@@ -2048,11 +2083,11 @@ namespace Nektar
         dqz_dU3=tmpz*(-orho2*dU3_dz+2*orho3*U3*dU1_dz);
         dqz_dU4=tmpz*(-orho2*dU4_dz+2*orho3*U4*dU1_dz);
         dqz_dU5=-tmpz*orho2*dU1_dz;
-        (*OutputMatrix)(3,0)=(*OutputMatrix)(3,0)-dqx_dU1-dqy_dU1-dqz_dU1;
-        (*OutputMatrix)(3,1)=(*OutputMatrix)(3,1)-dqx_dU2-dqy_dU2-dqz_dU2;
-        (*OutputMatrix)(3,2)=(*OutputMatrix)(3,2)-dqx_dU3-dqy_dU3-dqz_dU3;
-        (*OutputMatrix)(3,3)=(*OutputMatrix)(3,3)-dqx_dU4-dqy_dU4-dqz_dU4;
-        (*OutputMatrix)(3,4)=(*OutputMatrix)(3,4)-dqx_dU5-dqy_dU5-dqz_dU5;
+        tmpArray[3+0*nrow]=tmpArray[3+0*nrow]-dqx_dU1-dqy_dU1-dqz_dU1;
+        tmpArray[3+1*nrow]=tmpArray[3+1*nrow]-dqx_dU2-dqy_dU2-dqz_dU2;
+        tmpArray[3+2*nrow]=tmpArray[3+2*nrow]-dqx_dU3-dqy_dU3-dqz_dU3;
+        tmpArray[3+3*nrow]=tmpArray[3+3*nrow]-dqx_dU4-dqy_dU4-dqz_dU4;
+        tmpArray[3+4*nrow]=tmpArray[3+4*nrow]-dqx_dU5-dqy_dU5-dqz_dU5;
     }
 
     void NavierStokesCFE::v_MinusDiffusionFluxJacDirctn(
@@ -2327,6 +2362,7 @@ namespace Nektar
 
         DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
                                 ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
+        Array<OneD, NekDouble > tmpMatinnData, tmpMatoutData;
         // GetdFlux_dDeriv functor = NavierStokesCFE::GetdFlux_dQx_2D;
 
         // // store a free function
@@ -2373,16 +2409,13 @@ namespace Nektar
                         // GetdFlux_dQx_2D(pointnormals,pointmu,pointVar,PointFJac);
                         // functor(pointnormals,pointmu,pointVar,PointFJac);
                         m_GetdFlux_dDeriv_Array[nDervDir](pointnormals,pointmu,pointVar,PointFJac);
+                        tmpMatinnData = PointFJac->GetPtr();
+                        tmpMatoutData = ElmtJac[nelmt][npnt]->GetPtr();
+
+                        Vmath::Fill(nConvectiveFields,0.0,&tmpMatoutData[0],nConvectiveFields);
                         for (int j =0; j < nConvectiveFields; j++)
                         {
-                            (*ElmtJac[nelmt][npnt])(0,j) =  0.0;
-                        }
-                        for (int i =0; i < nConvectiveFields-1; i++)
-                        {
-                            for (int j =0; j < nConvectiveFields; j++)
-                            {
-                                (*ElmtJac[nelmt][npnt])(i+1,j) =  (*PointFJac)(i,j);
-                            }
+                            Vmath::Vcopy(nConvectiveFields-1,&tmpMatinnData[j*(nConvectiveFields-1)],1,&tmpMatoutData[1+j*nConvectiveFields],1);
                         }
                         // (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
                     }

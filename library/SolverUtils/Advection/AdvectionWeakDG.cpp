@@ -366,13 +366,6 @@ namespace Nektar
                         (*ElmtJacQuad[nelmt]) =  0.0;
                     }
 
-                    PntJac = TracePntJacCons;
-                    CalcJacobTraceInteg(pFields,m,n,PntJac, TraceJacConsSign,TraceJacFwd,TraceJacBwd);
-                    //TODO: To modify CalcJacobTraceInteg&AddTraceJacToElmtJac to Bwd after Fwd not at the same time
-                    pFields[0]->AddTraceJacToElmtJac(TraceJacFwd, TraceJacBwd,ElmtJacQuad);
-                    //TODO: To check whether it is ok to reuse ElmtJacQuad as output
-                    pFields[0]->AddRightIPTBaseMatrix(ElmtJacQuad,ElmtJacCoef);
-
                     if(TracePntJacGradflag)
                     {
                         // TODO: only 1 BJac is stored here because BJac = - FJac
@@ -392,7 +385,21 @@ namespace Nektar
                             //TODO:: 3 directions together to lower down cost
                             pFields[0]->AddRightIPTPhysDerivBase(ndir,ElmtJacQuad,ElmtJacCoef);
                         }
+                        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                        {
+                            MatData0 =  Transpose((*ElmtJacCoef[nelmt])).GetPtr();
+                            MatData1 =  ElmtJacCoef[nelmt]->GetPtr();
+                            Vmath::Vadd(nElmtCoef*nElmtCoef,MatData0,1,MatData1,1,MatData1,1);
+                            Vmath::Smul(nElmtCoef*nElmtCoef,0.5,MatData1,1,MatData1,1);
+                        }
                     }
+
+                    PntJac = TracePntJacCons;
+                    CalcJacobTraceInteg(pFields,m,n,PntJac, TraceJacConsSign,TraceJacFwd,TraceJacBwd);
+                    //TODO: To modify CalcJacobTraceInteg&AddTraceJacToElmtJac to Bwd after Fwd not at the same time
+                    pFields[0]->AddTraceJacToElmtJac(TraceJacFwd, TraceJacBwd,ElmtJacQuad);
+                    //TODO: To check whether it is ok to reuse ElmtJacQuad as output
+                    pFields[0]->AddRightIPTBaseMatrix(ElmtJacQuad,ElmtJacCoef);
 
                     // add ElmtJacCons to gmtxarray[m][n]
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)

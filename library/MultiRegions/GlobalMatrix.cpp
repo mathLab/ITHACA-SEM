@@ -107,7 +107,7 @@ namespace Nektar
 
             convertCooToBco(block_size, cooMat, bcoMat);
 
-            size_t matBytes;
+            size_t matBytes = 0;
             switch(storageType)
             {
                 case eSmvBSR:

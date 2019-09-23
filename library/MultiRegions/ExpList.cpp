@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/GlobalLinSys.h>
@@ -208,6 +210,7 @@ namespace Nektar
          * @param   in              Source expansion list.
          */
         ExpList::ExpList(const ExpList &in, const bool DeclareCoeffPhysArrays):
+            std::enable_shared_from_this<ExpList>(in),
             m_comm(in.m_comm),
             m_session(in.m_session),
             m_graph(in.m_graph),
@@ -822,6 +825,7 @@ namespace Nektar
          */
         void ExpList::v_SmoothField(Array<OneD, NekDouble> &field)
         {
+            boost::ignore_unused(field);
             // Do nothing unless the method is implemented in the appropriate
             // class, i.e. ContField1D,ContField2D, etc.
 
@@ -1850,11 +1854,14 @@ namespace Nektar
 
         void ExpList::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip)
         {
-            ASSERTL0(false, "Routine not implemented for this expansion.");
+            boost::ignore_unused(outfile, expansion, istrip);
+            NEKERROR(ErrorUtil::efatal,
+                     "Routine not implemented for this expansion.");
         }
 
         void ExpList::WriteVtkPieceFooter(std::ostream &outfile, int expansion)
         {
+            boost::ignore_unused(expansion);
             outfile << "      </PointData>" << endl;
             outfile << "    </Piece>" << endl;
         }
@@ -2000,7 +2007,7 @@ namespace Nektar
 
         Array<OneD, const NekDouble> ExpList::v_HomogeneousEnergy (void)
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             Array<OneD, NekDouble> NoEnergy(1,0.0);
             return NoEnergy;
@@ -2008,7 +2015,7 @@ namespace Nektar
 
         LibUtilities::TranspositionSharedPtr ExpList::v_GetTransposition(void)
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             LibUtilities::TranspositionSharedPtr trans;
             return trans;
@@ -2016,7 +2023,7 @@ namespace Nektar
 
         NekDouble ExpList::v_GetHomoLen(void)
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             NekDouble len = 0.0;
             return len;
@@ -2024,13 +2031,14 @@ namespace Nektar
 
         void ExpList::v_SetHomoLen(const NekDouble lhom)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(lhom);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
         Array<OneD, const unsigned int> ExpList::v_GetZIDs(void)
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             Array<OneD, unsigned int> NoModes(1);
             return NoModes;
@@ -2038,27 +2046,36 @@ namespace Nektar
 
         Array<OneD, const unsigned int> ExpList::v_GetYIDs(void)
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             Array<OneD, unsigned int> NoModes(1);
             return NoModes;
         }
 
 
-        void ExpList::v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        void ExpList::v_PhysInterp1DScaled(
+                const NekDouble scale,
+                const Array<OneD, NekDouble> &inarray,
+                      Array<OneD, NekDouble> &outarray)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(scale, inarray, outarray);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
-        void ExpList::v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)        {
-            ASSERTL0(false,
+        void ExpList::v_PhysGalerkinProjection1DScaled(
+                const NekDouble scale,
+                const Array<OneD, NekDouble> &inarray,
+                      Array<OneD, NekDouble> &outarray)
+        {
+            boost::ignore_unused(scale, inarray, outarray);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
         void ExpList::v_ClearGlobalLinSysManager(void)
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2519,7 +2536,8 @@ namespace Nektar
 
         std::shared_ptr<ExpList>  &ExpList::v_UpdateBndCondExpansion(int i)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(i);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             static std::shared_ptr<ExpList> result;
             return result;
@@ -2531,7 +2549,8 @@ namespace Nektar
             const Array<OneD,                   const NekDouble>   &Bwd,
                   Array<OneD,                         NekDouble>   &Upwind)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(Vec, Fwd, Bwd, Upwind);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2541,13 +2560,14 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Bwd,
                   Array<OneD,       NekDouble> &Upwind)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(Vn, Fwd, Bwd, Upwind);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
         std::shared_ptr<ExpList> &ExpList::v_GetTrace()
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             static std::shared_ptr<ExpList> returnVal;
             return returnVal;
@@ -2555,7 +2575,7 @@ namespace Nektar
 
         std::shared_ptr<AssemblyMapDG> &ExpList::v_GetTraceMap()
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             static std::shared_ptr<AssemblyMapDG> result;
             return result;
@@ -2569,7 +2589,8 @@ namespace Nektar
         void ExpList::v_GetNormals(
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(normals);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2578,7 +2599,8 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &Fy,
                                       Array<OneD, NekDouble> &outarray)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(Fx, Fy, outarray);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2586,7 +2608,8 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &Fn,
                                       Array<OneD, NekDouble> &outarray)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(Fn, outarray);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2595,14 +2618,16 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &Bwd,
                                       Array<OneD, NekDouble> &outarray)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(Fwd, Bwd, outarray);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
         void ExpList::v_GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,
                                            Array<OneD,NekDouble> &Bwd)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(Fwd, Bwd);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2611,13 +2636,14 @@ namespace Nektar
                                       Array<OneD,NekDouble> &Fwd,
                                       Array<OneD,NekDouble> &Bwd)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(field, Fwd, Bwd);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
         const vector<bool> &ExpList::v_GetLeftAdjacentFaces(void) const
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             static vector<bool> tmp;
             return tmp;
@@ -2626,7 +2652,8 @@ namespace Nektar
 
         void ExpList::v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(outarray);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2634,16 +2661,18 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,NekDouble> &outarray)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(inarray, outarray);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
         void ExpList::v_MultiplyByInvMassMatrix(
                                 const Array<OneD,const NekDouble> &inarray,
-                                Array<OneD,      NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                      Array<OneD,      NekDouble> &outarray,
+                                CoeffState                         coeffstate)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(inarray, outarray, coeffstate);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2657,7 +2686,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
-            ASSERTL0(false, "HelmSolve not implemented.");
+            boost::ignore_unused(inarray, outarray, flags, factors, varcoeff,
+                                 varfactors, dirForcing, PhysSpaceForcing);
+            NEKERROR(ErrorUtil::efatal, "HelmSolve not implemented.");
         }
 
         void ExpList::v_LinearAdvectionDiffusionReactionSolve(
@@ -2668,7 +2699,9 @@ namespace Nektar
                        CoeffState coeffstate,
                        const Array<OneD, const NekDouble>&  dirForcing)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(velocity, inarray, outarray, lambda,
+                                 coeffstate, dirForcing);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2680,7 +2713,9 @@ namespace Nektar
                        CoeffState coeffstate,
                        const Array<OneD, const NekDouble>&  dirForcing)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(velocity, inarray, outarray, lambda,
+                                 coeffstate, dirForcing);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2690,7 +2725,8 @@ namespace Nektar
                                             bool Shuff,
                                             bool UnShuff)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(inarray, outarray, coeffstate, Shuff, UnShuff);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2700,7 +2736,8 @@ namespace Nektar
                                             bool Shuff,
                                             bool UnShuff)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(inarray, outarray, coeffstate, Shuff, UnShuff);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2709,7 +2746,8 @@ namespace Nektar
                                       Array<OneD, NekDouble> &outarray,
                                       CoeffState coeffstate)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(inarray1, inarray2, outarray, coeffstate);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2719,7 +2757,8 @@ namespace Nektar
                         Array<OneD, Array<OneD, NekDouble> > &outarray,
                         CoeffState coeffstate)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(inarray1, inarray2, outarray, coeffstate);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2727,7 +2766,8 @@ namespace Nektar
                                     const Array<OneD, NekDouble> &TotField,
                                     int BndID)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(BndVals, TotField, BndID);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2736,7 +2776,8 @@ namespace Nektar
                                                   Array<OneD, NekDouble> &outarray,
                                                   int BndID)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(V1, V2, outarray, BndID);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2788,7 +2829,8 @@ namespace Nektar
 
         void ExpList::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(outarray);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2796,7 +2838,7 @@ namespace Nektar
          */
         void ExpList::v_FillBndCondFromField()
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2804,13 +2846,15 @@ namespace Nektar
          */
         void ExpList::v_FillBndCondFromField(const int nreg)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(nreg);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
         void ExpList::v_LocalToGlobal(bool useComm)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(useComm);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2819,14 +2863,15 @@ namespace Nektar
                                       Array<OneD,NekDouble> &outarray,
                                       bool useComm)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(inarray, outarray, useComm);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
 
         void ExpList::v_GlobalToLocal(void)
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2834,7 +2879,8 @@ namespace Nektar
         void ExpList::v_GlobalToLocal(const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,NekDouble> &outarray)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(inarray, outarray);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2843,6 +2889,7 @@ namespace Nektar
                                  Array<OneD,       NekDouble> &outarray,
                                  CoeffState coeffstate)
         {
+            boost::ignore_unused(coeffstate);
             v_BwdTrans_IterPerExp(inarray,outarray);
         }
 
@@ -2850,6 +2897,7 @@ namespace Nektar
                                  Array<OneD,       NekDouble> &outarray,
                                  CoeffState coeffstate)
         {
+            boost::ignore_unused(coeffstate);
             v_FwdTrans_IterPerExp(inarray,outarray);
         }
 
@@ -2858,6 +2906,7 @@ namespace Nektar
                                 Array<OneD,       NekDouble> &outarray,
                                 CoeffState coeffstate)
         {
+            boost::ignore_unused(coeffstate);
             Array<OneD,NekDouble>  tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
@@ -2874,6 +2923,7 @@ namespace Nektar
                                         Array<OneD,      NekDouble> &outarray,
                                         CoeffState coeffstate)
         {
+            boost::ignore_unused(coeffstate);
             GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
         }
 
@@ -2943,7 +2993,7 @@ namespace Nektar
          */
         void ExpList::v_SetUpPhysNormals()
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -2953,7 +3003,8 @@ namespace Nektar
                             std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(i, result, DeclareCoeffPhysArrays);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -3124,7 +3175,8 @@ namespace Nektar
         void ExpList::v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                             Array<OneD,int> &EdgeID)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(ElmtID, EdgeID);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -3132,7 +3184,7 @@ namespace Nektar
          */
         void ExpList::v_ReadGlobalOptimizationParameters()
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -3141,7 +3193,7 @@ namespace Nektar
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
                                             &ExpList::v_GetBndConditions(void)
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             static Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                         result;
@@ -3152,7 +3204,7 @@ namespace Nektar
          */
         Array<OneD,SpatialDomains::BoundaryConditionShPtr> &ExpList::v_UpdateBndConditions()
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             static Array<OneD, SpatialDomains::BoundaryConditionShPtr> result;
             return result;
@@ -3166,7 +3218,8 @@ namespace Nektar
             const NekDouble x2_in,
             const NekDouble x3_in)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(time, varName, x2_in, x3_in);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -3174,7 +3227,7 @@ namespace Nektar
          */
         map<int, RobinBCInfoSharedPtr> ExpList::v_GetRobinBCInfo(void)
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             static map<int,RobinBCInfoSharedPtr> result;
             return result;
@@ -3187,7 +3240,8 @@ namespace Nektar
             PeriodicMap &periodicEdges,
             PeriodicMap &periodicFaces)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(periodicVerts, periodicEdges, periodicFaces);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
 
@@ -3215,7 +3269,8 @@ namespace Nektar
 
         ExpListSharedPtr &ExpList::v_GetPlane(int n)
         {
-            ASSERTL0(false,
+            boost::ignore_unused(n);
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             return NullExpListSharedPtr;
         }

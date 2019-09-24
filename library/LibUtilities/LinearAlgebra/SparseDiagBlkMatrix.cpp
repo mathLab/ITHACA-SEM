@@ -45,9 +45,6 @@
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 
-#include <boost/lexical_cast.hpp>
-
-
 namespace Nektar
 {
 

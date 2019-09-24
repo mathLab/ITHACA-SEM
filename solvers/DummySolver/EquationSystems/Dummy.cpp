@@ -35,6 +35,7 @@
 
 #include <iostream>
 
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <DummySolver/EquationSystems/Dummy.h>
 
 using namespace std;

@@ -36,6 +36,7 @@
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 
 #include <boost/thread.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <tinyxml.h>
 

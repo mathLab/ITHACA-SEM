@@ -85,7 +85,7 @@ FilterEnergy1D::FilterEnergy1D(
     else
     {
         LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+            m_session->GetInterpreter(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
 }

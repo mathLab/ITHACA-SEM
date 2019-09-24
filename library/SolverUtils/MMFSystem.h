@@ -377,7 +377,7 @@ protected:
 };
 
 // Shared pointer to an MMFSystem class
-typedef boost::shared_ptr<MMFSystem> MMFSystemSharedPtr;
+typedef std::shared_ptr<MMFSystem> MMFSystemSharedPtr;
 }
 }
 

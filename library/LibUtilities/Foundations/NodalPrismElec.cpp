@@ -270,33 +270,33 @@ void NodalPrismElec::NodalPointReorder3d()
     }
 
     // sort vertices
-    swap(vertex[2], vertex[4]);
+    std::swap(vertex[2], vertex[4]);
     // sort edges
-    reverse(iEdge_23.begin(), iEdge_23.end());
-    reverse(iEdge_30.begin(), iEdge_30.end());
-    reverse(iEdge_04.begin(), iEdge_04.end());
-    reverse(iEdge_35.begin(), iEdge_35.end());
+    std::reverse(iEdge_23.begin(), iEdge_23.end());
+    std::reverse(iEdge_30.begin(), iEdge_30.end());
+    std::reverse(iEdge_04.begin(), iEdge_04.end());
+    std::reverse(iEdge_35.begin(), iEdge_35.end());
 
     // faces
     for (int i = 0; i < npts - 2; i++)
     {
         for (int j = i + 1; j < npts - 2; j++)
         {
-            swap(iFace_1254[i * (npts - 2) + j],
-                 iFace_1254[j * (npts - 2) + i]);
+            std::swap(iFace_1254[i * (npts - 2) + j],
+                      iFace_1254[j * (npts - 2) + i]);
         }
     }
     for (int i = 0; i < npts - 2; i++)
     {
-        reverse(iFace_0354.begin() + (i * (npts - 2)),
-                iFace_0354.begin() + (i * (npts - 2) + npts - 2));
+        std::reverse(iFace_0354.begin() + (i * (npts - 2)),
+                     iFace_0354.begin() + (i * (npts - 2) + npts - 2));
     }
     for (int i = 0; i < npts - 2; i++)
     {
         for (int j = i + 1; j < npts - 2; j++)
         {
-            swap(iFace_0354[i * (npts - 2) + j],
-                 iFace_0354[j * (npts - 2) + i]);
+            std::swap(iFace_0354[i * (npts - 2) + j],
+                      iFace_0354[j * (npts - 2) + i]);
         }
     }
 

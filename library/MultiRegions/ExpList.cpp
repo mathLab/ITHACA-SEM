@@ -1486,8 +1486,7 @@ namespace Nektar
 
             // Get the list of elements whose bounding box contains the desired
             // point.
-            std::vector<SpatialDomains::BgRtreeValue> elmts =
-                    m_graph->GetElementsContainingPoint(p);
+            std::vector<int> elmts = m_graph->GetElementsContainingPoint(p);
 
             NekDouble nearpt     = 1e6;
             NekDouble nearpt_min = 1e6;
@@ -1497,12 +1496,12 @@ namespace Nektar
             // Check each element in turn to see if point lies within it.
             for (int i = 0; i < elmts.size(); ++i)
             {
-                if ((*m_exp)[m_elmtToExpId[elmts[i].second]]->
+                if ((*m_exp)[m_elmtToExpId[elmts[i]]]->
                             GetGeom()->ContainsPoint(gloCoords,
                                                      locCoords,
                                                      tol, nearpt))
                 {
-                    return m_elmtToExpId[elmts[i].second];
+                    return m_elmtToExpId[elmts[i]];
                 }
                 else
                 {
@@ -1510,7 +1509,7 @@ namespace Nektar
                     // is nearest.
                     if(nearpt < nearpt_min)
                     {
-                        min_id    = m_elmtToExpId[elmts[i].second];
+                        min_id     = m_elmtToExpId[elmts[i]];
                         nearpt_min = nearpt;
                         Vmath::Vcopy(locCoords.num_elements(),locCoords,    1,
                                                               savLocCoords, 1);

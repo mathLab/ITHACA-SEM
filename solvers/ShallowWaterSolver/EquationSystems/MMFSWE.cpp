@@ -32,16 +32,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <boost/algorithm/string.hpp>
 #include <iomanip>
 #include <iostream>
+#include <boost/algorithm/string/predicate.hpp>
 
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <ShallowWaterSolver/EquationSystems/MMFSWE.h>
 
 namespace Nektar
 {
-Gs::string MMFSWE::className =
+std::string MMFSWE::className =
     SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
         "MMFSWE", MMFSWE::create, "MMFSWE equation.");
 
@@ -85,7 +86,7 @@ void MMFSWE::v_InitObject()
     // Define TestType
     ASSERTL0(m_session->DefinesSolverInfo("TESTTYPE"),
              "No TESTTYPE defined in session.");
-    Gs::string TestTypeStr = m_session->GetSolverInfo("TESTTYPE");
+    std::string TestTypeStr = m_session->GetSolverInfo("TESTTYPE");
     for (int i = 0; i < (int)SIZE_TestType; ++i)
     {
         if (boost::iequals(TestTypeMap[i], TestTypeStr))
@@ -186,9 +187,9 @@ void MMFSWE::v_InitObject()
             m_en   = exp(-4.0 / (m_theta1 - m_theta0) / (m_theta1 - m_theta0));
             m_hbar = 120.0 / rad_earth;
 
-            Gs::cout << "m_theta0 = " << m_theta0 << ", m_theta1 = " << m_theta1
-                     << ", m_en = " << m_en << ", m_hbar = " << m_hbar
-                     << Gs::endl;
+            std::cout << "m_theta0 = " << m_theta0 << ", m_theta1 = " << m_theta1
+                      << ", m_en = " << m_en << ", m_hbar = " << m_hbar
+                      << std::endl;
         }
         break;
 
@@ -315,13 +316,13 @@ void MMFSWE::v_DoSolve()
         // Write out status information
         if (m_session->GetComm()->GetRank() == 0 && !((step + 1) % m_infosteps))
         {
-            Gs::cout << "Steps: " << std::setw(8) << Gs::left << step + 1 << " "
-                     << "Time: " << std::setw(12) << Gs::left << m_time;
+            std::cout << "Steps: " << std::setw(8) << std::left << step + 1 << " "
+                      << "Time: " << std::setw(12) << std::left << m_time;
 
-            Gs::stringstream ss;
+            std::stringstream ss;
             ss << cpuTime << "s";
-            Gs::cout << " CPU Time: " << std::setw(8) << Gs::left << ss.str()
-                     << Gs::endl;
+            std::cout << " CPU Time: " << std::setw(8) << std::left << ss.str()
+                      << std::endl;
 
             // Printout Mass, Energy, Enstrophy
             ConservativeToPrimitive(fields, fieldsprimitive);
@@ -348,14 +349,14 @@ void MMFSWE::v_DoSolve()
                  m_Enstrophy0) /
                 m_Enstrophy0;
 
-            Gs::cout << "dMass = " << std::setw(8) << Gs::left << Mass << " "
-                     << ", dEnergy = " << std::setw(8) << Gs::left << Energy
-                     << " "
-                     << ", dEnstrophy = " << std::setw(8) << Gs::left
-                     << Enstrophy << " "
-                     << ", dVorticity = " << std::setw(8) << Gs::left
-                     << Vorticity << Gs::endl
-                     << Gs::endl;
+            std::cout << "dMass = " << std::setw(8) << std::left << Mass << " "
+                      << ", dEnergy = " << std::setw(8) << std::left << Energy
+                      << " "
+                      << ", dEnstrophy = " << std::setw(8) << std::left
+                      << Enstrophy << " "
+                      << ", dVorticity = " << std::setw(8) << std::left
+                      << Vorticity << std::endl
+                      << std::endl;
 
             cpuTime = 0.0;
         }
@@ -392,13 +393,13 @@ void MMFSWE::v_DoSolve()
     {
         if (m_cflSafetyFactor > 0.0)
         {
-            Gs::cout << "CFL safety factor : " << m_cflSafetyFactor << Gs::endl
-                     << "CFL time-step     : " << m_timestep << Gs::endl;
+            std::cout << "CFL safety factor : " << m_cflSafetyFactor << std::endl
+                      << "CFL time-step     : " << m_timestep << std::endl;
         }
 
         if (m_session->GetSolverInfo("Driver") != "SteadyState")
         {
-            Gs::cout << "Time-integration  : " << intTime << "s" << Gs::endl;
+            std::cout << "Time-integration  : " << intTime << "s" << std::endl;
         }
     }
 
@@ -1618,9 +1619,9 @@ void MMFSWE::EvaluateWaterDepth(void)
                 if ((std::abs(sin(phic) - sin_varphi) +
                      std::abs(sin(thetac) - sin_theta)) < Tol)
                 {
-                    Gs::cout << "A point " << j
-                             << " is coincient with the singularity "
-                             << Gs::endl;
+                    std::cout << "A point " << j
+                              << " is coincient with the singularity "
+                              << std::endl;
                     indx = 1;
                 }
 
@@ -1641,8 +1642,8 @@ void MMFSWE::EvaluateWaterDepth(void)
 
             if (!indx)
             {
-                Gs::cout << "No point is coincident with the singularity point"
-                         << Gs::endl;
+                std::cout << "No point is coincident with the singularity point"
+                          << std::endl;
             }
         }
         break;
@@ -1680,10 +1681,10 @@ void MMFSWE::EvaluateWaterDepth(void)
                                           m_Derivdepth[j]);
     }
 
-    Gs::cout << "Water Depth (m_depth) was generated with mag = "
-             << AvgAbsInt(m_depth) << " with max. deriv = ( "
-             << Vmath::Vamax(nq, m_Derivdepth[0], 1) << " , "
-             << Vmath::Vamax(nq, m_Derivdepth[1], 1) << " ) " << Gs::endl;
+    std::cout << "Water Depth (m_depth) was generated with mag = "
+              << AvgAbsInt(m_depth) << " with max. deriv = ( "
+              << Vmath::Vamax(nq, m_Derivdepth[0], 1) << " , "
+              << Vmath::Vamax(nq, m_Derivdepth[1], 1) << " ) " << std::endl;
 }
 
 void MMFSWE::EvaluateCoriolis(void)
@@ -3004,22 +3005,22 @@ void MMFSWE::TestVorticityComputation(void)
     u = CartesianToMovingframes(uvec, 0);
     v = CartesianToMovingframes(uvec, 1);
 
-    Gs::cout << "chi migi1" << Gs::endl;
+    std::cout << "chi migi1" << std::endl;
 
     ComputeVorticity(u, v, vorticitycompt);
     /*for (int k=0; k < nq; k++)
     {
 
-        Gs::cout << "vorticitycompt[ " << k << "]"<< "\t"<<vorticitycompt[k]<<
-    Gs::endl;
+        std::cout << "vorticitycompt[ " << k << "]"<< "\t"<<vorticitycompt[k]<<
+    std::endl;
 
     }*/
 
     Vmath::Vsub(nq, vorticityexact, 1, vorticitycompt, 1, vorticitycompt, 1);
 
-    Gs::cout << "Vorticity: L2 error = " << AvgAbsInt(vorticitycompt)
-             << ", Linf error =  " << Vmath::Vamax(nq, vorticitycompt, 1)
-             << Gs::endl;
+    std::cout << "Vorticity: L2 error = " << AvgAbsInt(vorticitycompt)
+              << ", Linf error =  " << Vmath::Vamax(nq, vorticitycompt, 1)
+              << std::endl;
 }
 
 NekDouble MMFSWE::v_L2Error(unsigned int field,
@@ -3158,8 +3159,8 @@ NekDouble MMFSWE::v_LinfError(unsigned int field,
             indx = Vmath::Iamax(nq, exactsolution, 1);
 
             LinfError = fabs(LinfError / Letaint);
-            // Gs::cout << "LinfError of eta occurs at ( " << x[indx] << " , "
-            // << y[indx] << " , " << z[indx] << " ) " << Gs::endl;
+            // std::cout << "LinfError of eta occurs at ( " << x[indx] << " , "
+            // << y[indx] << " , " << z[indx] << " ) " << std::endl;
         }
         break;
 
@@ -3197,8 +3198,8 @@ NekDouble MMFSWE::v_LinfError(unsigned int field,
             LinfError = Vmath::Vamax(nq, Lerr, 1) / Vmath::Vamax(nq, uT, 1);
             indx      = Vmath::Iamax(nq, Lerr, 1);
 
-            // Gs::cout << "LinfError of u occurs at ( " << x[indx] << " , " <<
-            // y[indx] << " , " << z[indx] << " ) " << Gs::endl;
+            // std::cout << "LinfError of u occurs at ( " << x[indx] << " , " <<
+            // y[indx] << " , " << z[indx] << " ) " << std::endl;
         }
         break;
 

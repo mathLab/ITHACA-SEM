@@ -361,7 +361,7 @@ void FieldIOXml::v_Write(const std::string &outFile,
     if (m_comm->TreatAsRankZero())
     {
         tm1 = m_comm->Wtime();
-        cout << " (" << tm1 - tm0 << "s, XML)" << endl;
+        std::cout << " (" << tm1 - tm0 << "s, XML)" << std::endl;
     }
 }
 
@@ -404,9 +404,9 @@ void FieldIOXml::WriteMultiFldFileIDs(
 
             elemIDs->SetAttribute("FileName", fileNames[t]);
 
-            string IDstring = ParseUtils::GenerateSeqString(elementList[t]);
+            std::string IDstr = ParseUtils::GenerateSeqString(elementList[t]);
 
-            elemIDs->LinkEndChild(new TiXmlText(IDstring));
+            elemIDs->LinkEndChild(new TiXmlText(IDstr));
         }
     }
 
@@ -532,7 +532,7 @@ void FieldIOXml::v_Import(const std::string &infilename,
             {
                 fs::path pfilename(filenames[i]);
                 fullpath                       = pinfilename / pfilename;
-                string fname                   = PortablePath(fullpath);
+                std::string fname              = PortablePath(fullpath);
                 DataSourceSharedPtr dataSource = XmlDataSource::create(fname);
                 ImportFieldDefs(dataSource, fielddefs, false);
                 if (fielddata != NullVectorNekDoubleVector)
@@ -544,9 +544,8 @@ void FieldIOXml::v_Import(const std::string &infilename,
         else // only load relevant elements from partitions
         {
             int i, j;
-            map<int, vector<int> > FileIDs;
-            map<int, vector<int> >::iterator it;
-            set<int> LoadFile;
+            std::map<int, std::vector<int> > FileIDs;
+            std::set<int> LoadFile;
 
             for (i = 0; i < elementIDs_OnPartitions.size(); ++i)
             {
@@ -558,7 +557,7 @@ void FieldIOXml::v_Import(const std::string &infilename,
 
             for (i = 0; i < ElementIDs.num_elements(); ++i)
             {
-                it = FileIDs.find(ElementIDs[i]);
+                auto it = FileIDs.find(ElementIDs[i]);
                 if (it != FileIDs.end())
                 {
                     for (j = 0; j < it->second.size(); ++j)
@@ -568,12 +567,11 @@ void FieldIOXml::v_Import(const std::string &infilename,
                 }
             }
 
-            set<int>::iterator iter;
-            for (iter = LoadFile.begin(); iter != LoadFile.end(); ++iter)
+            for (auto &iter : LoadFile)
             {
-                fs::path pfilename(filenames[*iter]);
+                fs::path pfilename(filenames[iter]);
                 fullpath                       = pinfilename / pfilename;
-                string fname                   = PortablePath(fullpath);
+                std::string fname              = PortablePath(fullpath);
                 DataSourceSharedPtr dataSource = XmlDataSource::create(fname);
                 ImportFieldDefs(dataSource, fielddefs, false);
                 if (fielddata != NullVectorNekDoubleVector)
@@ -695,7 +693,7 @@ DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
  */
 void FieldIOXml::SetUpFieldMetaData(
     const std::string &outname,
-    const vector<FieldDefinitionsSharedPtr> &fielddefs,
+    const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
     const FieldMetaDataMap &fieldmetadatamap)
 {
     ASSERTL0(!outname.empty(), "Empty path given to SetUpFieldMetaData()");
@@ -745,7 +743,7 @@ void FieldIOXml::SetUpFieldMetaData(
         }
 
         // Write the Info.xml file
-        string infofile =
+        std::string infofile =
             LibUtilities::PortablePath(specPath / fs::path("Info.xml"));
 
         WriteMultiFldFileIDs(infofile, filenames, ElementIDs, fieldmetadatamap);
@@ -867,7 +865,7 @@ void FieldIOXml::ImportFieldDefs(
                               "Compressed formats do not "
                               "match. Expected: " +
                               CompressData::GetCompressString() +
-                              " but got " + string(attr->Value()));
+                              " but got " + std::string(attr->Value()));
                 }
                 else if (attrName == "BITSIZE")
                 {
@@ -888,7 +886,7 @@ void FieldIOXml::ImportFieldDefs(
 
             // Check to see if using strips formulation
             bool strips = false;
-            if (shapeString.find("Strips") != string::npos)
+            if (shapeString.find("Strips") != std::string::npos)
             {
                 strips = true;
             }
@@ -898,9 +896,9 @@ void FieldIOXml::ImportFieldDefs(
             int numHomoDir = 0;
             size_t loc;
             //---> This finds the first location of  'n'!
-            if ((loc = shapeString.find_first_of("-")) != string::npos)
+            if ((loc = shapeString.find_first_of("-")) != std::string::npos)
             {
-                if (shapeString.find("Exp1D") != string::npos)
+                if (shapeString.find("Exp1D") != std::string::npos)
                 {
                     numHomoDir = 1;
                 }
@@ -1145,7 +1143,7 @@ void FieldIOXml::ImportFieldData(
                           "Compressed formats do not match. "
                           "Expected: " +
                           CompressData::GetCompressString() +
-                          " but got " + string(CompressStr));
+                          " but got " + std::string(CompressStr));
             }
 
             ASSERTL0(Z_OK == CompressData::ZlibDecodeFromBase64Str(

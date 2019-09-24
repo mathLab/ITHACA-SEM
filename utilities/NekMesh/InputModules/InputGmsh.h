@@ -81,13 +81,13 @@ private:
     // Previous id for contiguousness
     int m_prevId;
     // Id map if non-contiguous
-    map<int, int> m_idMap;
+    std::map<int, int> m_idMap;
     // Highest tag number
     int m_maxTagId;
     // This map takes each element ID and maps it to a permutation map
     // that is required to take Gmsh element node orderings and map them
     // to Nektar++ orderings.
-    std::unordered_map<int, vector<int>> m_orderingMap;
+    std::unordered_map<int, std::vector<int>> m_orderingMap;
 
     void ReadNextNode();
     void ReadNextNodeBlock(int nVertices = 0);

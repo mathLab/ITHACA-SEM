@@ -41,6 +41,7 @@
 
 #include <chrono>
 #include <ctime>
+#include <ios>
 #include <iomanip>
 #include <fstream>
 #include <set>
@@ -121,7 +122,7 @@ const std::string FieldIO::GetFileType(const std::string &filename,
         const unsigned char magic[8] = {
             0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a};
 
-        std::ifstream datafile(datafilename.c_str(), ios_base::binary);
+        std::ifstream datafile(datafilename.c_str(), std::ios_base::binary);
         ASSERTL0(datafile.good(), "Unable to open file: " + filename);
 
         ioType = eHDF5;
@@ -331,7 +332,7 @@ void FieldIO::AddInfoTag(TagWriterSharedPtr root,
     FieldMetaDataMap ProvenanceMap;
 
     // Nektar++ release version from VERSION file
-    ProvenanceMap["NektarVersion"] = string(NEKTAR_VERSION);
+    ProvenanceMap["NektarVersion"] = std::string(NEKTAR_VERSION);
 
     // Date/time stamp
     auto now = std::chrono::system_clock::now();
@@ -409,7 +410,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         {
             bakPath = specPath.parent_path();
             bakPath += specPath.stem();
-            bakPath += fs::path(".bak" + boost::lexical_cast<std::string>(cnt++));
+            bakPath += fs::path(".bak" + std::to_string(cnt++));
             bakPath += specPath.extension();
         }
         std::cout << "renaming " << specPath << " -> " << bakPath << std::endl;
@@ -420,7 +421,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         catch (fs::filesystem_error &e)
         {
             ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                        "Filesystem error: " + string(e.what()));
+                     "Filesystem error: " + std::string(e.what()));
         }
     }
 
@@ -467,7 +468,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
             catch (fs::filesystem_error &e)
             {
                 ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                         "Filesystem error: " + string(e.what()));
+                         "Filesystem error: " + std::string(e.what()));
             }
         }
 
@@ -483,7 +484,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
             catch (fs::filesystem_error &e)
             {
                 ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                         "Filesystem error: " + string(e.what()));
+                         "Filesystem error: " + std::string(e.what()));
             }
         }
 
@@ -500,7 +501,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
 
     if (root)
     {
-        cout << "Writing: " << specPath;
+        std::cout << "Writing: " << specPath;
     }
 
     // serial processing just add ending.
@@ -521,7 +522,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         }
         catch (fs::filesystem_error &e)
         {
-            ASSERTL0(false, "Filesystem error: " + string(e.what()));
+            ASSERTL0(false, "Filesystem error: " + std::string(e.what()));
         }
 
         m_comm->Block();

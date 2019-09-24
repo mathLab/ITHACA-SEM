@@ -45,6 +45,8 @@
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
+#include <boost/algorithm/string/predicate.hpp>
+
 using namespace std;
 
 namespace Nektar
@@ -1959,6 +1961,12 @@ namespace Nektar
                         id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
                         BndRhs[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
                     }
+                }
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::ePeriodic)
+                {
+                    ASSERTL0(false, "HDG implementation does not support "
+                             "periodic boundary conditions at present.");
                 }
             }
 

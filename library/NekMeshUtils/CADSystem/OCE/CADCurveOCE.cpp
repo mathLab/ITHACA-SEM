@@ -61,7 +61,7 @@ void CADCurveOCE::Initialise(int i, TopoDS_Shape in)
 NekDouble CADCurveOCE::tAtArcLength(NekDouble s)
 {
     GeomAdaptor_Curve c(m_c);
-    GCPnts_AbscissaPoint ap(c, s*1000.0, m_b[0]);
+    GCPnts_AbscissaPoint ap(c, s * 1000.0, m_b[0]);
     return ap.Parameter();
 }
 
@@ -92,11 +92,20 @@ Array<OneD, NekDouble> CADCurveOCE::P(NekDouble t)
     Array<OneD, NekDouble> location(3);
     gp_Pnt loc = m_c->Value(t);
 
-    location[0] = loc.X()/1000.0;
-    location[1] = loc.Y()/1000.0;
-    location[2] = loc.Z()/1000.0;
+    location[0] = loc.X() / 1000.0;
+    location[1] = loc.Y() / 1000.0;
+    location[2] = loc.Z() / 1000.0;
 
     return location;
+}
+
+void CADCurveOCE::P(NekDouble t, NekDouble &x, NekDouble &y, NekDouble &z)
+{
+    gp_Pnt loc = m_c->Value(t);
+
+    x = loc.X() / 1000.0;
+    y = loc.Y() / 1000.0;
+    z = loc.Z() / 1000.0;
 }
 
 Array<OneD, NekDouble> CADCurveOCE::D2(NekDouble t)
@@ -106,15 +115,15 @@ Array<OneD, NekDouble> CADCurveOCE::D2(NekDouble t)
     gp_Vec d1, d2;
     m_c->D2(t, loc, d1, d2);
 
-    out[0] = loc.X()/1000.0;
-    out[1] = loc.Y()/1000.0;
-    out[2] = loc.Z()/1000.0;
-    out[3] = d1.X()/1000.0;
-    out[4] = d1.Y()/1000.0;
-    out[5] = d1.Z()/1000.0;
-    out[6] = d2.X()/1000.0;
-    out[7] = d2.Y()/1000.0;
-    out[8] = d2.Z()/1000.0;
+    out[0] = loc.X() / 1000.0;
+    out[1] = loc.Y() / 1000.0;
+    out[2] = loc.Z() / 1000.0;
+    out[3] = d1.X() / 1000.0;
+    out[4] = d1.Y() / 1000.0;
+    out[5] = d1.Z() / 1000.0;
+    out[6] = d2.X() / 1000.0;
+    out[7] = d2.Y() / 1000.0;
+    out[8] = d2.Z() / 1000.0;
 
     return out;
 }
@@ -155,6 +164,12 @@ Array<OneD, NekDouble> CADCurveOCE::GetBounds()
     return m_b;
 }
 
+void CADCurveOCE::GetBounds(NekDouble &tmin, NekDouble &tmax)
+{
+    tmin = m_b[0];
+    tmax = m_b[1];
+}
+
 Array<OneD, NekDouble> CADCurveOCE::GetMinMax()
 {
     Array<OneD, NekDouble> locs(6);
@@ -163,12 +178,12 @@ Array<OneD, NekDouble> CADCurveOCE::GetMinMax()
         BRep_Tool::Pnt(TopExp::FirstVertex(m_occEdge, Standard_True));
     gp_Pnt end = BRep_Tool::Pnt(TopExp::LastVertex(m_occEdge, Standard_True));
 
-    locs[0] = start.X()/1000.0;
-    locs[1] = start.Y()/1000.0;
-    locs[2] = start.Z()/1000.0;
-    locs[3] = end.X()/1000.0;
-    locs[4] = end.Y()/1000.0;
-    locs[5] = end.Z()/1000.0;
+    locs[0] = start.X() / 1000.0;
+    locs[1] = start.Y() / 1000.0;
+    locs[2] = start.Z() / 1000.0;
+    locs[3] = end.X() / 1000.0;
+    locs[4] = end.Y() / 1000.0;
+    locs[5] = end.Z() / 1000.0;
 
     return locs;
 }

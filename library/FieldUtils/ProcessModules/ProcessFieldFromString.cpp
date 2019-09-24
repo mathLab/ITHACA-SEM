@@ -138,7 +138,7 @@ void ProcessFieldFromString::Process(po::variables_map &vm)
     }
 
     // Create new function
-    LibUtilities::AnalyticExpressionEvaluator strEval;
+    LibUtilities::Interpreter strEval;
     int exprId      = -1;
     string fieldstr = m_config["fieldstr"].as<string>();
     exprId          = strEval.DefineFunction(varstr.c_str(), fieldstr);

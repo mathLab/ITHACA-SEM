@@ -46,6 +46,10 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <tuple>
 
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+
 using namespace std;
 
  namespace Nektar
@@ -773,7 +777,7 @@ using namespace std;
                         RotInfo.m_dir = (tmpstr[1] == "x")? 0:
                             (tmpstr[1] == "y")? 1:2;
 
-                        LibUtilities::AnalyticExpressionEvaluator strEval;
+                        LibUtilities::Interpreter strEval;
                         int ExprId = strEval.DefineFunction("", tmpstr[2]);
                         RotInfo.m_angle = strEval.Evaluate(ExprId);
 
@@ -2336,6 +2340,12 @@ using namespace std;
                         id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
                         BndRhs[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
                     }
+                }
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::ePeriodic)
+                {
+                    ASSERTL0(false, "HDG implementation does not support "
+                             "periodic boundary conditions at present.");
                 }
             }
 

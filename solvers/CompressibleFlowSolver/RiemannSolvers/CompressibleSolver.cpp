@@ -33,6 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace Nektar
 {

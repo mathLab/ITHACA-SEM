@@ -36,6 +36,9 @@
 #include <string>
 using namespace std;
 
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -43,7 +46,6 @@ using namespace std;
 namespace io = boost::iostreams;
 
 #include <tinyxml.h>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/PointGeom.h>
 #include <NekMeshUtils/MeshElements/Element.h>
@@ -86,7 +88,7 @@ OutputNekpp::~OutputNekpp()
 template <typename T> void TestElmts(
     const std::map<int, std::shared_ptr<T> >  &geomMap,
     SpatialDomains::MeshGraphSharedPtr        &graph,
-    LibUtilities::AnalyticExpressionEvaluator &strEval,
+    LibUtilities::Interpreter                 &strEval,
     int                                        exprId)
 {
     for (auto &geomIt : geomMap)

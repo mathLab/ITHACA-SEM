@@ -38,6 +38,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <SpatialDomains/MeshPartition.h>
 #include <SpatialDomains/MeshGraphHDF5.h>
@@ -163,7 +164,7 @@ inline void UniqueValues(std::unordered_set<int> &unique,
  */
 void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 {
-    Timer all;
+    LibUtilities::Timer all;
     all.Start();
     int err;
     LibUtilities::CommSharedPtr comm = session->GetComm();
@@ -293,7 +294,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     // parallel partitioning.
     std::unordered_map<int, int> row2id, id2row;
 
-    Timer t;
+    LibUtilities::Timer t;
     t.Start();
     int rowCount = 0;
     for (auto &it : dataSets[m_meshDimension])

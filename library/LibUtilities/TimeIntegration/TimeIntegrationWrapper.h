@@ -82,13 +82,18 @@ namespace LibUtilities {
             TimeIntegrationSolutionSharedPtr     &solvector,
             const TimeIntegrationSchemeOperators &op)
         {
-            return m_intScheme[min(timestep, m_intSteps - 1)]
+            return m_intScheme[std::min(timestep, m_intSteps - 1)]
                 ->TimeIntegrate(delta_t, solvector, op);
         }
 
         LIB_UTILITIES_EXPORT TimeIntegrationMethod GetIntegrationMethod()
         {
             return m_method;
+        }
+
+        LIB_UTILITIES_EXPORT TimeIntegrationSchemeType GetIntegrationSchemeType() const
+        {
+            return m_intScheme.back()->GetIntegrationSchemeType();
         }
 
         LIB_UTILITIES_EXPORT unsigned int GetIntegrationSteps()
@@ -112,7 +117,7 @@ namespace LibUtilities {
     // IMEXOrder1
     // --------
     class TimeIntegrationIMEXOrder1;
-    typedef boost::shared_ptr<TimeIntegrationIMEXOrder1>
+    typedef std::shared_ptr<TimeIntegrationIMEXOrder1>
     TimeIntegrationIMEXOrder1SharedPtr;
 
     class TimeIntegrationIMEXOrder1 : public TimeIntegrationWrapper

@@ -38,7 +38,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/BLPoints.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 #include <LocalRegions/HexExp.h>
 #include <LocalRegions/PrismExp.h>
 #include <LocalRegions/QuadExp.h>
@@ -163,7 +163,7 @@ void ProcessBL::BoundaryLayer2D()
     int nq      = m_config["nq"].    as<int>();
 
     // determine if geometric ratio is string or a constant.
-    LibUtilities::AnalyticExpressionEvaluator rEval;
+    LibUtilities::Interpreter rEval;
     NekDouble r             =  1;
     int       rExprId       = -1;
     bool      ratioIsString = false;
@@ -590,7 +590,7 @@ void ProcessBL::BoundaryLayer3D()
     int nq     = m_config["nq"].as<int>();
 
     // determine if geometric ratio is string or a constant.
-    LibUtilities::AnalyticExpressionEvaluator rEval;
+    LibUtilities::Interpreter rEval;
     NekDouble r        = 1;
     int rExprId        = -1;
     bool ratioIsString = false;

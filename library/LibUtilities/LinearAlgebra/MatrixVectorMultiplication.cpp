@@ -49,7 +49,6 @@
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
-#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
 
 namespace Nektar
@@ -503,9 +502,9 @@ namespace Nektar
     {
                        
         ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
-            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+            std::to_string(lhs.GetColumns()) + 
             std::string(" and a right side vector with row count ") + 
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+            std::to_string(rhs.GetRows()) + std::string(" can't be multiplied."));
         Multiply(result.GetRawPtr(), lhs, rhs.GetRawPtr());
     }
 

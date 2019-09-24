@@ -61,8 +61,10 @@ public:
     }
 
     virtual Array<OneD, NekDouble> GetBounds();
+    virtual void GetBounds(NekDouble &tmin, NekDouble &tmax);
     virtual NekDouble Length(NekDouble ti, NekDouble tf);
     virtual Array<OneD, NekDouble> P(NekDouble t);
+    virtual void P(NekDouble t, NekDouble &x, NekDouble &y, NekDouble &z);
     virtual Array<OneD, NekDouble> D2(NekDouble t);
     virtual NekDouble Curvature(NekDouble t)
     {

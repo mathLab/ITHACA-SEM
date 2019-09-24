@@ -42,7 +42,6 @@
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
 #include <boost/core/ignore_unused.hpp>
-#include <boost/assign/list_of.hpp>
 #include <boost/multi_array.hpp>
 
 namespace Nektar
@@ -57,6 +56,12 @@ namespace Nektar
     template<typename DataType>
     class Array<OneD, const DataType>
     {
+#ifdef WITH_PYTHON
+        struct PythonInfo {
+            void *m_pyObject; // Underlying PyObject pointer
+            void (*m_callback)(void *); // Callback
+        };
+#endif
         public:
             typedef DataType* ArrayType;
             typedef const DataType& const_reference;
@@ -73,8 +78,7 @@ namespace Nektar
             /// \brief Creates an empty array.
             Array() :
 #ifdef WITH_PYTHON
-                m_memory_pointer( nullptr ),
-                m_python_decrement( nullptr ),
+                m_pythonInfo(nullptr),
 #endif
                 m_size( 0 ),
                 m_capacity( 0 ),
@@ -92,8 +96,7 @@ namespace Nektar
             /// constructor.
             explicit Array(unsigned int dim1Size) :
 #ifdef WITH_PYTHON
-                m_memory_pointer( nullptr ),
-                m_python_decrement( nullptr ),
+                m_pythonInfo(nullptr),
 #endif
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
@@ -116,8 +119,7 @@ namespace Nektar
             /// is used to initialize each element.
             Array(unsigned int dim1Size, const DataType& initValue) :
 #ifdef WITH_PYTHON
-                m_memory_pointer( nullptr ),
-                m_python_decrement( nullptr ),
+                m_pythonInfo(nullptr),
 #endif
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
@@ -138,8 +140,7 @@ namespace Nektar
             /// is used to copy each element.
             Array(unsigned int dim1Size, const DataType* data) :
 #ifdef WITH_PYTHON
-                m_memory_pointer( nullptr ),
-                m_python_decrement( nullptr ),
+                m_pythonInfo(nullptr),
 #endif
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
@@ -162,8 +163,7 @@ namespace Nektar
             /// both rhs and this array have gone out of scope.
             Array(unsigned int dim1Size, const Array<OneD, const DataType>& rhs) :
 #ifdef WITH_PYTHON
-                m_memory_pointer(rhs.m_memory_pointer),
-                m_python_decrement(rhs.m_python_decrement),
+                m_pythonInfo(rhs.m_pythonInfo),
 #endif
                 m_size(dim1Size),
                 m_capacity(rhs.m_capacity),
@@ -182,8 +182,6 @@ namespace Nektar
             /// \param memory_pointer Pointer to the memory address of the array
             /// \param python_decrement Pointer to decrementer
             Array(unsigned int dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
-                m_memory_pointer( memory_pointer ),
-                m_python_decrement( python_decrement ),
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
                 m_data( data ),
@@ -192,14 +190,18 @@ namespace Nektar
             {
                 m_count = new unsigned int(); 
                 *m_count = 1;
+
+                m_pythonInfo = new PythonInfo *();
+                *m_pythonInfo = new PythonInfo();
+                (*m_pythonInfo)->m_callback = python_decrement;
+                (*m_pythonInfo)->m_pyObject = memory_pointer;
             }
 #endif
 
             /// \brief Creates a reference to rhs.
             Array(const Array<OneD, const DataType>& rhs) :
 #ifdef WITH_PYTHON
-                m_memory_pointer(rhs.m_memory_pointer),
-                m_python_decrement(rhs.m_python_decrement),
+                m_pythonInfo(rhs.m_pythonInfo),
 #endif
                 m_size(rhs.m_size),
                 m_capacity(rhs.m_capacity),
@@ -208,7 +210,7 @@ namespace Nektar
                 m_offset(rhs.m_offset)                
             {
                 *m_count += 1;
-            }           
+            }
 
             ~Array()
             {
@@ -221,18 +223,24 @@ namespace Nektar
                 if( *m_count == 0 )
                 {
 #ifdef WITH_PYTHON
-                    if (m_memory_pointer == nullptr)
+                    if (*m_pythonInfo == nullptr)
                     {
                         ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
                         MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
                     }
                     else
                     {
-                        m_python_decrement(m_memory_pointer);
+                        (*m_pythonInfo)->m_callback((*m_pythonInfo)->m_pyObject);
+                        delete *m_pythonInfo;
                     }
+
+                    delete m_pythonInfo;
+
 #else
+
                     ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
                     MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
+
 #endif
 
                     delete m_count; // Clean up the memory used for the reference count.
@@ -246,16 +254,20 @@ namespace Nektar
                 if( *m_count == 0 )
                 {
 #ifdef WITH_PYTHON
-                    if (m_memory_pointer == nullptr)
+                    if (*m_pythonInfo == nullptr)
                     {
                         ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
                         MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
                     }
-                    else
+                    else if ((*rhs.m_pythonInfo) != nullptr && (*m_pythonInfo)->m_pyObject != (*rhs.m_pythonInfo)->m_pyObject)
                     {
-                        m_python_decrement(m_memory_pointer);
+                        (*m_pythonInfo)->m_callback((*m_pythonInfo)->m_pyObject);
+                        delete *m_pythonInfo;
                     }
+
+                    delete m_pythonInfo;
 #else
+
                     ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
                     MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
 #endif
@@ -269,8 +281,7 @@ namespace Nektar
                 m_offset = rhs.m_offset;
                 m_size = rhs.m_size;
 #ifdef WITH_PYTHON
-                m_memory_pointer = rhs.m_memory_pointer;
-                m_python_decrement = rhs.m_python_decrement;
+                m_pythonInfo = rhs.m_pythonInfo;
 #endif
                 return *this;
             }
@@ -305,7 +316,7 @@ namespace Nektar
             unsigned int GetOffset() const { return m_offset; }
 
             /// \brief Returns the array's reference counter.
-            unsigned int GetCount() const { return m_count; }
+            unsigned int GetCount() const { return *m_count; }
 
             /// \brief Returns true is this array and rhs overlap.
             bool Overlaps(const Array<OneD, const DataType>& rhs) const
@@ -319,6 +330,20 @@ namespace Nektar
                 return (rhs_start >= start && rhs_start <= end) ||
                        (rhs_end >= start && rhs_end <= end);
             }
+
+#ifdef WITH_PYTHON
+            bool IsPythonArray()
+            {
+                return *m_pythonInfo != nullptr;
+            }
+
+            void ToPythonArray(void* memory_pointer, void (*python_decrement)(void *))
+            {
+                *m_pythonInfo = new PythonInfo();
+                (*m_pythonInfo)->m_callback = python_decrement;
+                (*m_pythonInfo)->m_pyObject = memory_pointer;
+            }
+#endif
 
             template<typename T1, typename T2>
             friend bool operator==(const Array<OneD, T1>&, const Array<OneD, T2>&);
@@ -344,11 +369,7 @@ namespace Nektar
         protected:
 
 #ifdef WITH_PYTHON
-            // m_memory_pointer holds a pointer to the array.
-            void* m_memory_pointer;
-            // m_python_decrement holds a pointer to a function decrementing the reference
-            // counter in Python memory manager.
-            void (*m_python_decrement)(void *);
+            PythonInfo **m_pythonInfo;
 #endif
 
             unsigned int m_size;
@@ -386,6 +407,10 @@ namespace Nektar
                 // pointed to "(unsigned int*)storage".
                 m_count = new unsigned int(); 
                 *m_count = 1;
+#ifdef WITH_PYTHON
+                m_pythonInfo = new PythonInfo*();
+                *m_pythonInfo = nullptr;
+#endif
             }
 
             template<typename T>
@@ -478,71 +503,6 @@ namespace Nektar
 
     };
 
-    /// \brief 3D array with garbage collection and bounds checking.
-    template<typename DataType>
-    class Array<ThreeD, const DataType>
-    {
-        public:
-            typedef boost::multi_array_ref<DataType, 3> ArrayType;
-            typedef typename ArrayType::const_reference const_reference;
-            typedef typename ArrayType::reference reference;
-
-            typedef typename ArrayType::index index;
-            typedef typename ArrayType::const_iterator const_iterator;
-            typedef typename ArrayType::iterator iterator;
-
-            typedef typename ArrayType::element element;
-            typedef typename ArrayType::size_type size_type;
-
-
-
-        public:
-            Array() :
-                m_data(CreateStorage<DataType>(0, 0, 0))
-            {
-            }
-
-            /// \brief Constructs a 3 dimensional array.  The elements of the array are not initialized.
-            Array(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size) :
-                m_data(CreateStorage<DataType>(dim1Size, dim2Size, dim3Size))
-            {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
-            }
-
-            Array(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size, const DataType& initValue) :
-                m_data(CreateStorage<DataType>(dim1Size, dim2Size, dim3Size))
-            {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
-            }
-
-            Array(const Array<ThreeD, const DataType>& rhs) :
-                m_data(rhs.m_data)
-            {
-            }
-
-            Array<ThreeD, const DataType>& operator=(const Array<ThreeD, const DataType>& rhs)
-            {
-                m_data = rhs.m_data;
-                return *this;
-            }
-
-            const_iterator begin() const { return m_data->begin(); }
-            const_iterator end() const { return m_data->end(); }
-            const_reference operator[](index i) const { return (*m_data)[i]; }
-            const element* get() const { return m_data->data(); }
-            const element* data() const { return m_data->data(); }
-            size_type num_dimensions() const { return m_data->num_dimensions(); }
-            const size_type* shape() const { return m_data->shape(); }
-            size_type num_elements() const { return m_data->num_elements(); }
-
-        protected:
-            std::shared_ptr<ArrayType> m_data;
-
-        private:
-
-    };
-
-
     enum AllowWrappingOfConstArrays
     {
         eVECTOR_WRAPPER
@@ -614,6 +574,11 @@ namespace Nektar
             Array(unsigned int dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
                 BaseType(dim1Size, data, memory_pointer, python_decrement)
             {
+            }
+
+            void ToPythonArray(void* memory_pointer, void (*python_decrement)(void *))
+            {
+                BaseType::ToPythonArray(memory_pointer, python_decrement);
             }
 #endif
 
@@ -743,64 +708,6 @@ namespace Nektar
 
     };
 
-    /// \brief A 3D array.
-    template<typename DataType>
-    class Array<ThreeD, DataType> : public Array<ThreeD, const DataType>
-    {
-        public:
-            typedef Array<ThreeD, const DataType> BaseType;
-            typedef typename BaseType::iterator iterator;
-            typedef typename BaseType::reference reference;
-            typedef typename BaseType::index index;
-            typedef typename BaseType::size_type size_type;
-            typedef typename BaseType::element element;
-
-        public:
-            Array() :
-                BaseType()
-            {
-            }
-
-            Array(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size) :
-                BaseType(dim1Size, dim2Size, dim3Size)
-            {
-            }
-
-            Array(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size, const DataType& initValue) :
-                BaseType(dim1Size, dim2Size, dim3Size, initValue)
-            {
-            }
-
-            Array(const Array<ThreeD, DataType>& rhs) :
-                BaseType(rhs)
-            {
-            }
-
-            Array<ThreeD, DataType>& operator=(const Array<ThreeD, DataType>& rhs)
-            {
-                BaseType::operator=(rhs);
-                return *this;
-            }
-
-            using BaseType::begin;
-            iterator begin() { return this->m_data->begin(); }
-
-            using BaseType::end;
-            iterator end() { return this->m_data->end(); }
-
-            using BaseType::operator[];
-            reference operator[](index i) { return (*this->m_data)[i]; }
-
-            using BaseType::get;
-            element* get() { return this->m_data->data(); }
-
-            using BaseType::data;
-            element* data() { return this->m_data->data(); }
-
-        private:
-
-    };
-
     LIB_UTILITIES_EXPORT bool IsEqual(const Array<OneD, const NekDouble>& lhs,
                  const Array<OneD, const NekDouble>& rhs,
                  NekDouble tol = NekConstants::kNekZeroTol);
@@ -901,8 +808,8 @@ namespace Nektar
     {
         static std::vector<NekDouble> NullNekDoubleVector;
         static std::vector<unsigned int> NullUnsignedIntVector;
-        static std::vector<std::vector<NekDouble> > NullVectorNekDoubleVector =
-            boost::assign::list_of(NullNekDoubleVector);
+        static std::vector<std::vector<NekDouble> > NullVectorNekDoubleVector
+            = { NullNekDoubleVector };
     }
 }
 

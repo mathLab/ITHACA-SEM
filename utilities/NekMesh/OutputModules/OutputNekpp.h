@@ -60,7 +60,7 @@ public:
     virtual void Process();
 
 private:
-    LibUtilities::AnalyticExpressionEvaluator m_strEval;
+    LibUtilities::Interpreter m_strEval;
 
     void TransferVertices(SpatialDomains::MeshGraphSharedPtr graph);
     void TransferEdges(

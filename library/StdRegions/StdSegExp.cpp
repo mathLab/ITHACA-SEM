@@ -327,7 +327,7 @@ namespace Nektar
             else
             {
                 int nInteriorDofs = m_ncoeffs-2;
-                int offset;
+                int offset        = 0;
 
                 switch(m_base[0]->GetBasisType())
                 {

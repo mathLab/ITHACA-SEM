@@ -6,6 +6,7 @@ v5.0.0
 **Library**
 - Added in sum factorisation version for pyramid expansions and orthogonal
   expansion in pyramids (!750)
+- Added detection of 'abort' file to cleanly terminate simulation early (!772)
 - Significant overhaul of CMake infrastructure (!770, !804)
 - Fix ThridpartyCCM options (!802)
 - Fix Windows CRLF tokens in GEO reader and improve comment handling (!805)
@@ -62,7 +63,8 @@ v5.0.0
 - Fix missing metadata import from Hdf5 files (!971)
 - Fix missing flags for periodic BC in DiffusionLDG (!985)
 - Add the moving reference frame as a forcing (!987)
-- Added rtree for element bounding box lookup to accelerate interpolation (!996)
+- Added rtree for element bounding box lookup to accelerate interpolation (!996,
+  !1066)
 - Fix integration weights on prisms and pyramids if not using the default
   integration rule (!998)
 - Fix missing ContainsPoint in Pyramid expansion (!1000)
@@ -81,6 +83,12 @@ v5.0.0
 - Fix TriExp.cpp orientation bug (!1048)
 - Fix XML attributes in conditions.cpp to be unordered (!1015)
 - Fix issue with HDF5 mesh input in serial (!1049)
+- Add estimate of filters CPU time (!1044)
+- Update CompressibleFlowSolver/Examples/Test_IsentropicVortex1.xml example (!1045)
+- Add error if HDG used with periodic BCs (!1071)
+- Fix issues related to leading factors, arithmetic order and associativity of
+  exponential operator in expression evaluator (!1066)
+- Remove use of `using namespace std` in header files (!1066)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -118,6 +126,7 @@ v5.0.0
 - Fix issue with extracting 1D curved surface from 2D file (!984)
 - Fix surface extraction, added regression test (!994)
 - Fix 2D meshing running out of memory due to missing else (!1012)
+- Add support for .msh v4.1 file input (!1054)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -142,6 +151,7 @@ v5.0.0
   added check on dimensions for interpolation, fixed seg interp (!999)
 - Fixed scaling for compressed xml, fixed error printout for mesh only (!1040)
 - Add field conversion from Halfmode to SingleMode (!1032)
+- Fix double precision output in .dat format (!1059)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
@@ -163,6 +173,7 @@ v5.0.0
 - Modified pressure outlet BCs to allow for the reference static pressure to be
   set from the VALUE fields (!981)
 - hp scaling for Laplacian AV (!1013)
+- Removed smooth AV (!1072)
 
 **AcousticSolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC
@@ -181,11 +192,18 @@ v5.0.0
 **PulseWaveSolver**
 - Added two new boundary conditions: AInflow and UInflow
 
+**CardiacEPSolver**
+- Converted FentonKarma model to dimensional form and added variants (!1011)
+
 **Documentation**:
 - Added an initial developer's guide (!1001)
 
 **Tester**
 - Fix build with boost 1.67 (!947)
+- Various change to tests to decrease test time (!1053)
+
+**Packaging:**
+- Add Dockerfiles and gitlab CI configuration for automatic builds (!1021)
 
 v4.4.2
 ------

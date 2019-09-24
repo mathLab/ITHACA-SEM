@@ -130,11 +130,6 @@ namespace Nektar
 
                 int numConvFields = nConvectiveFields;
 
-                if (m_shockCaptureType == "Smooth")
-                {
-                    numConvFields = nConvectiveFields - 1;
-                }
-
                 for (j = 0; j < nDim; ++j)
                 {
                     for (i = 0; i < numConvFields; ++i)

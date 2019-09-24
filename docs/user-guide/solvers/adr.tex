@@ -43,6 +43,8 @@ $ \dfrac{\partial u}{\partial t} + \mathbf{V}\nabla u = f$ &
     \inltt{UnsteadyAdvection} & All & Continuous/Discontinuous \\
 $\dfrac{\partial u}{\partial t}  = \epsilon \nabla^2 u$ & 
     \inltt{UnsteadyDiffusion} & All & Continuous/Discontinuous \\
+$\dfrac{\partial u}{\partial t}  = \epsilon \nabla^2 u + R(u)$ &
+    \inltt{UnsteadyReactionDiffusion} & All & Continuous \\
 $\dfrac{\partial u}{\partial t}  + \mathbf{V}\nabla u = \epsilon \nabla^2 u$ &
     \inltt{UnsteadyAdvectionDiffusion} & All & Continuous/Discontinuous \\
 $\dfrac{\partial u}{\partial t}  + u\nabla u =  0$ &
@@ -82,6 +84,7 @@ The solver info are listed below:
 \midrule
 \inltt{UnsteadyAdvection} &  \checkmark 	 &	 & 	&\\
 \inltt{UnsteadyDiffusion} &  \checkmark 	 & \checkmark 	 & 	&\\
+\inltt{UnsteadyReactionDiffusion} &  	 &  	 & \checkmark	&\\
 \inltt{UnsteadyAdvectionDiffusion} &  	 &   	& \checkmark	&\\
 \inltt{UnsteadyInviscidBurger} &  \checkmark 	 &	 & 	&\\
 \bottomrule
@@ -552,5 +555,57 @@ streamwise direction, as shown in Fig.~\ref{f:adrsolver:masstransport}.
 \end{center}
 \end{figure}
 
+\subsection{Unsteady reaction-diffusion systems}
 
+Reaction-diffusion systems are prevalent in a number of areas relating to the
+modelling of various physical phenomena, and are particularly prevalent in the
+study of chemical interactions and pattern formation. The ADRSolver supports the
+solution of a single-variable system
+\[
+  \frac{\partial u}{\partial t} = \epsilon\nabla^2{u}{x} + R(u)
+\]
+where the diffusion coefficient $\epsilon$ and reaction term $R(u)$ are defined
+using the session file.
 
+\subsubsection{Numerical restrictions}
+
+The reaction-diffusion system is only supported in a selected configuration,
+which is mostly defined inside the \inltt{SOLVERINFO} block:
+
+\begin{itemize}
+  \item use of a continuous Galerkin discretisation;
+  \item use an implicit-explicit (IMEX) timestepping scheme, such as
+  \inltt{IMEXOrder3};
+\end{itemize}
+
+This naturally leads to the following \inltt{SOLVERINFO} configuration:
+\begin{lstlisting}[style=XMLStyle]
+<SOLVERINFO>
+    <I PROPERTY="EQTYPE"                VALUE="UnsteadyReactionDiffusion" />
+    <I PROPERTY="Projection"            VALUE="Continuous"                />
+    <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"                  />
+    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3"                />
+</SOLVERINFO>
+\end{lstlisting}
+Further to this, the reaction term $R(u)$ is imposed by the definition of a body
+forcing function. For example, the reaction term $R(u) = 0.1u$ may be defined
+using the function:
+\begin{lstlisting}[style=XMLStyle]
+<!-- Body force to enforce reaction term -->
+<FUNCTION NAME="BodyForce">
+    <E VAR="u" EVARS="u" VALUE="0.1*u" />
+</FUNCTION>
+\end{lstlisting}
+Note in particular the use of the \inltt{EVARS} (equation variables) attribute,
+which permits the definition of this function in terms of the scalar variable
+$u$. This function should be used together with an appropriate \inltt{FORCING}
+block (as described in section~\ref{sec:xml:forcing}):
+\begin{lstlisting}[style=XMLStyle]
+<FORCING>
+    <FORCE TYPE="Body">
+        <BODYFORCE> BodyForce </BODYFORCE>
+    </FORCE>
+</FORCING>
+\end{lstlisting}
+An example of a simple unsteady reaction-diffusion problem can be found in the
+\inltt{Tests} directory in the session file \inltt{ReactionDiffusion2D.xml}.

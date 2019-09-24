@@ -69,7 +69,7 @@ public:
 
     //leaving these varibles as public for sake of efficency 
     std::vector<std::vector<NekDouble *> > nodes;
-    std::vector<Array<OneD, NekDouble> > maps, mapsStd;
+    std::vector<std::vector<NekDouble> > maps, mapsStd;
 
     void Evaluate();
     void InitialMinJac();

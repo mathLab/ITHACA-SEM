@@ -106,7 +106,7 @@ protected:
     NodeSharedPtr m_node;
     std::mutex mtx;
     std::map<LibUtilities::ShapeType, std::vector<ElUtilSharedPtr> > m_data;
-    Array<OneD, NekDouble> m_grad;
+    std::vector<NekDouble> m_grad;
     std::vector<NekDouble> m_tmpStore;
     std::unordered_map<LibUtilities::ShapeType, DerivArray, EnumHash> m_derivs;
 

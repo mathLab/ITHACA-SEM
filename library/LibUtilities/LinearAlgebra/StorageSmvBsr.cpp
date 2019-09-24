@@ -44,8 +44,6 @@
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 #include <LibUtilities/LinearAlgebra/NistSparseDescriptors.hpp>
 
-#include <boost/lexical_cast.hpp>
-
 namespace Nektar
 {
 

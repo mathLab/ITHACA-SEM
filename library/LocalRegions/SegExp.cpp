@@ -409,7 +409,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             else
             {
                 int nInteriorDofs = m_ncoeffs-2;
-                int offset;
+                int offset        = 0;
 
                 switch (m_base[0]->GetBasisType())
                 {

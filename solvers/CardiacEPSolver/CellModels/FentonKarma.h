@@ -79,6 +79,7 @@ namespace Nektar
     private:
         NekDouble C_m;
         NekDouble V_0;
+        NekDouble V_fi;
         NekDouble u_fi;
         NekDouble u_c;
         NekDouble u_v;
@@ -111,7 +112,21 @@ namespace Nektar
             eCF2b,
             eCF2c,
             eCF3a,
-            eCF3b
+            eCF3b,
+            eFC2002Set1a,
+            eFC2002Set1b,
+            eFC2002Set1c,
+            eFC2002Set1d,
+            eFC2002Set1e,
+            eFC2002Set2,
+            eFC2002Set4,
+            eFC2002Set5,
+            eFC2002Set6,
+            eFC2002Set7,
+            eFC2002Set8,
+            eFC2002Set9,
+            eLawson,
+            eCAF
         };
         enum Variants model_variant;
 

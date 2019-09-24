@@ -36,7 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
 #define NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
 
-#include <boost/thread/tss.hpp>
 #include <boost/pool/pool.hpp>
 #include <memory>
 #include <map>
@@ -237,7 +236,6 @@ namespace Nektar
     };
 
     LIB_UTILITIES_EXPORT MemPool& GetMemoryPool();
-
 }
 
 

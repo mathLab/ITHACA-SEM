@@ -3812,7 +3812,7 @@ void Replacevertices(string filename, Array<OneD, NekDouble> newx,
        TiXmlElement* mesh = master->FirstChildElement("GEOMETRY");
        TiXmlElement* element = mesh->FirstChildElement("VERTEX");
        NekDouble xscale = 1.0;
-       LibUtilities::AnalyticExpressionEvaluator expEvaluator;
+       LibUtilities::Interpreter expEvaluator;
        const char *xscal = element->Attribute("XSCALE");
        if(xscal)
        {

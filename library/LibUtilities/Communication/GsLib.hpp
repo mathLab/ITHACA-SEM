@@ -45,8 +45,8 @@
 
 namespace Gs
 {
-using namespace std;
 using namespace Nektar;
+
 typedef enum { gs_double, gs_float, gs_int, gs_long, gs_dom_n } gs_dom;
 typedef enum { gs_add, gs_mul, gs_min, gs_max, gs_bpr, gs_op_n } gs_op;
 typedef enum { mode_plain, mode_vec, mode_many, mode_dry_run } gs_mode;

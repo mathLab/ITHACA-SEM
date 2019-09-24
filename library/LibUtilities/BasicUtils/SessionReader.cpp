@@ -42,18 +42,20 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-using namespace std;
 
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/algorithm/string.hpp>
+
 #include <tinyxml.h>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/Interpreter/Interpreter.h>
 
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
@@ -61,6 +63,8 @@ using namespace std;
 #ifndef NEKTAR_VERSION
 #define NEKTAR_VERSION "Unknown"
 #endif
+
+using namespace std;
 
 namespace po = boost::program_options;
 namespace io = boost::iostreams;
@@ -202,9 +206,8 @@ namespace Nektar
                     "IterativeStaticCond";
             }
 
-            m_exprEvaluator = MemoryManager<AnalyticExpressionEvaluator>
-                ::AllocateSharedPtr();
-            m_exprEvaluator->SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
+            m_interpreter = MemoryManager<Interpreter>::AllocateSharedPtr();
+            m_interpreter->SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
 
             // Split up the communicator
             PartitionComm();
@@ -248,9 +251,8 @@ namespace Nektar
                     "IterativeStaticCond";
             }
 
-            m_exprEvaluator = MemoryManager<AnalyticExpressionEvaluator>
-                ::AllocateSharedPtr();
-            m_exprEvaluator->SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
+            m_interpreter = MemoryManager<Interpreter>::AllocateSharedPtr();
+            m_interpreter->SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
 
             // Split up the communicator
             PartitionComm();
@@ -669,7 +671,7 @@ namespace Nektar
         /**
          *
          */
-        CommSharedPtr& SessionReader::GetComm()
+        CommSharedPtr SessionReader::GetComm()
         {
             return m_comm;
         }
@@ -1715,7 +1717,7 @@ namespace Nektar
                             try
                             {
                                 LibUtilities::Equation expession(
-                                    m_exprEvaluator, rhs);
+                                    m_interpreter, rhs);
                                 value = expession.Evaluate();
                             }
                             catch (const std::runtime_error &)
@@ -1725,7 +1727,7 @@ namespace Nektar
                                          " '" + rhs + "' in XML element: \n\t'"
                                          + tagcontent.str() + "'");
                             }
-                            m_exprEvaluator->SetParameter(lhs, value);
+                            m_interpreter->SetParameter(lhs, value);
                             caseSensitiveParameters[lhs] = value;
                             boost::to_upper(lhs);
                             m_parameters[lhs] = value;
@@ -2176,7 +2178,7 @@ namespace Nektar
 
                         // set expression
                         funcDef.m_expression = MemoryManager<Equation>
-                            ::AllocateSharedPtr(m_exprEvaluator, fcnStr, evarsStr);
+                            ::AllocateSharedPtr(m_interpreter, fcnStr, evarsStr);
                     }
 
                     // Files are denoted by F
@@ -2439,6 +2441,11 @@ namespace Nektar
         void SessionReader::SetUpXmlDoc(void)
         {
             m_xmlDoc = MergeDoc(m_filenames);
+        }
+
+        InterpreterSharedPtr SessionReader::GetInterpreter()
+        {
+            return m_interpreter;
         }
     }
 }

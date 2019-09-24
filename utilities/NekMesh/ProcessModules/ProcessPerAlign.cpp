@@ -44,7 +44,7 @@
 #include "ProcessPerAlign.h"
 
 #include <boost/algorithm/string.hpp>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 
 using namespace std;
 using namespace Nektar::NekMeshUtils;
@@ -127,7 +127,7 @@ void ProcessPerAlign::Process()
         // set up for syntax -m peralign:dir=“x":rot="PI/11":surf1=3:surf2=4:tol=1e-6 
         rotalign = true;
         // Evaluate expression since may be give as function of PI
-        LibUtilities::AnalyticExpressionEvaluator strEval;
+        LibUtilities::Interpreter strEval;
         int ExprId = strEval.DefineFunction(" ", tmp2[0]);
         rotangle = strEval.Evaluate(ExprId);
 

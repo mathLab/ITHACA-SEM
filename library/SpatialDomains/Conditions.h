@@ -125,7 +125,7 @@ namespace Nektar
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
                     BoundaryConditionBase(eDirichlet, userDefined, comm),
-                    m_dirichletCondition(pSession->GetExpressionEvaluator(), eqn),
+                    m_dirichletCondition(pSession->GetInterpreter(), eqn),
                     m_expr(eqn),
                     m_filename(filename)
             {
@@ -145,7 +145,7 @@ namespace Nektar
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
                     BoundaryConditionBase(eNeumann, userDefined, comm),
-                    m_neumannCondition(pSession->GetExpressionEvaluator(), eqn),
+                    m_neumannCondition(pSession->GetInterpreter(), eqn),
                     m_filename(filename)
             {
             }
@@ -164,8 +164,8 @@ namespace Nektar
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
                     BoundaryConditionBase(eRobin, userDefined, comm),
-                    m_robinFunction(pSession->GetExpressionEvaluator(), a),
-                    m_robinPrimitiveCoeff(pSession->GetExpressionEvaluator(), b),
+                    m_robinFunction(pSession->GetInterpreter(), a),
+                    m_robinPrimitiveCoeff(pSession->GetInterpreter(), b),
                     m_filename(filename)
             {
             }
@@ -201,7 +201,7 @@ namespace Nektar
                     const std::string& filename=std::string(""),
                     const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr())
                    : BoundaryConditionBase(eNotDefined, userDefined, comm),
-                     m_notDefinedCondition(pSession->GetExpressionEvaluator(), eqn),
+                     m_notDefinedCondition(pSession->GetInterpreter(), eqn),
                      m_filename(filename)
                 {
                 }

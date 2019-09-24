@@ -107,12 +107,12 @@ protected:
 
     SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent();
     
-    void CreateModules( vector<string> &modcmds);
+    void CreateModules(std::vector<std::string> &modcmds);
 
     void CreateFields(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
 
-    void CheckModules(vector<ModuleSharedPtr> &modules);
+    void CheckModules(std::vector<ModuleSharedPtr> &modules);
 
     unsigned int m_numSamples;
     unsigned int m_outputFrequency;
@@ -121,7 +121,7 @@ protected:
     std::string  m_restartFile;
     unsigned int m_index;
     unsigned int m_outputIndex;
-    vector<ModuleSharedPtr> m_modules;
+    std::vector<ModuleSharedPtr> m_modules;
     LibUtilities::FieldMetaDataMap m_fieldMetaData;
     std::vector<Array<OneD, NekDouble> > m_outFields;
     std::vector<std::string> m_variables;

@@ -66,7 +66,7 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeKey& rhs)
         {
-            os << "Time Integration Scheme: " << TimeIntegrationMethodMap[rhs.GetIntegrationMethod()] << endl;
+            os << "Time Integration Scheme: " << TimeIntegrationMethodMap[rhs.GetIntegrationMethod()] << std::endl;
 
             return os;
         }
@@ -1935,11 +1935,11 @@ namespace Nektar
             int oswidth = 9;
             int osprecision = 6;
 
-            os << "Time Integration Scheme: " << TimeIntegrationMethodMap[rhs.GetIntegrationMethod()] << endl;
-            os << "- number of steps:  " << r << endl;
-            os << "- number of stages: " << s << endl;
-            os << "- type of scheme:   " << TimeIntegrationSchemeTypeMap[rhs.GetIntegrationSchemeType()] << endl;
-            os << "General linear method tableau: " << endl;
+            os << "Time Integration Scheme: " << TimeIntegrationMethodMap[rhs.GetIntegrationMethod()] << std::endl;
+            os << "- number of steps:  " << r << std::endl;
+            os << "- number of stages: " << s << std::endl;
+            os << "- type of scheme:   " << TimeIntegrationSchemeTypeMap[rhs.GetIntegrationSchemeType()] << std::endl;
+            os << "General linear method tableau: " << std::endl;
 
             for(i = 0; i < s; i++)
             {
@@ -1947,7 +1947,7 @@ namespace Nektar
                 {
                     os.width(oswidth);
                     os.precision(osprecision);
-                    os << right << rhs.A(i,j) << " ";
+                    os << std::right << rhs.A(i,j) << " ";
                 }
                 if(type == eIMEX)
                 {
@@ -1956,7 +1956,7 @@ namespace Nektar
                     {
                         os.width(oswidth);
                         os.precision(osprecision);
-                        os << right << rhs.A_IMEX(i,j) << " ";
+                        os << std::right << rhs.A_IMEX(i,j) << " ";
                     }
                 }
                 os << " |"; 
@@ -1965,23 +1965,23 @@ namespace Nektar
                 {
                     os.width(oswidth);
                     os.precision(osprecision);
-                    os << right << rhs.U(i,j);
+                    os << std::right << rhs.U(i,j);
                 }
-                os << endl;
+                os << std::endl;
             }
             int imexflag = (type == eIMEX)?2:1;
             for(int i = 0; i < (r+imexflag*s)*(oswidth+1)+imexflag*2-1; i++)
             {
                 os << "-";
             }
-            os << endl;
+            os << std::endl;
             for(i = 0; i < r; i++)
             {
                 for(j = 0; j < s; j++)
                 {
                     os.width(oswidth);
                     os.precision(osprecision);
-                    os << right << rhs.B(i,j) << " ";
+                    os << std::right << rhs.B(i,j) << " ";
                 }
                 if(type == eIMEX)
                 {
@@ -1990,7 +1990,7 @@ namespace Nektar
                     {
                         os.width(oswidth);
                         os.precision(osprecision);
-                        os << right << rhs.B_IMEX(i,j) << " ";
+                        os << std::right << rhs.B_IMEX(i,j) << " ";
                     }
                 }
                 os << " |"; 
@@ -1999,9 +1999,9 @@ namespace Nektar
                 {
                     os.width(oswidth);
                     os.precision(osprecision);
-                    os << right << rhs.V(i,j);
+                    os << std::right << rhs.V(i,j);
                 }
-                os << endl;
+                os << std::endl;
             }
             return os;
         }

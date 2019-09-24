@@ -110,7 +110,7 @@ void swap_endian(T &u)
 }
 
 template <typename T>
-void swap_endian(vector<T> &u)
+void swap_endian(std::vector<T> &u)
 {
     size_t vecSize = u.size();
     for (int i = 0; i < vecSize; ++i)
@@ -151,9 +151,9 @@ struct ConfigOption
         {
             return boost::lexical_cast<T>(m_value);
         }
-        catch (const exception &e)
+        catch (const std::exception &e)
         {
-            cerr << e.what() << endl;
+            std::cerr << e.what() << std::endl;
             abort();
         }
     }
@@ -268,8 +268,9 @@ protected:
     std::ofstream m_fldFile;
 };
 
-typedef pair<ModuleType, std::string> ModuleKey;
-FIELD_UTILS_EXPORT std::ostream &operator<<(ostream &os, const ModuleKey &rhs);
+typedef std::pair<ModuleType, std::string> ModuleKey;
+FIELD_UTILS_EXPORT std::ostream &operator<<(
+    std::ostream &os, const ModuleKey &rhs);
 
 typedef std::shared_ptr<Module> ModuleSharedPtr;
 typedef LibUtilities::NekFactory<ModuleKey, Module, FieldSharedPtr>

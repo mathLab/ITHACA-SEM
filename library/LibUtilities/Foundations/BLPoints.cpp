@@ -75,7 +75,7 @@ namespace Nektar
             
             if (m_pointsKey.GetPointsType() == eBoundaryLayerPointsRev)
             {
-                vector<NekDouble> tmp(npts);
+                std::vector<NekDouble> tmp(npts);
                 for (unsigned int i = 0; i < npts; ++i)
                 {
                     tmp[i] = - m_points[0][npts-1-i];

@@ -154,7 +154,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
             Array<OneD, NekDouble> pts(m_f->m_fieldPts->GetNpoints());
 
             // evaluate new function
-            LibUtilities::AnalyticExpressionEvaluator strEval;
+            LibUtilities::Interpreter strEval;
             string varstr = "x y z";
             vector<Array<OneD, const NekDouble> > interpfields;
 

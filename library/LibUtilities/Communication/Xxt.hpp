@@ -47,7 +47,6 @@
 
 namespace Xxt
 {
-using namespace std;
 using namespace Nektar;
 #ifdef NEKTAR_USE_MPI
 typedef MPI_Comm comm_ext;

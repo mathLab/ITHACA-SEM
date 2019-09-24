@@ -37,6 +37,7 @@
 #include <SolverUtils/Diffusion/DiffusionLFRNS.h>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <boost/math/special_functions/gamma.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <iostream>
 #include <iomanip>
 

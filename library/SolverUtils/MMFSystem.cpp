@@ -170,9 +170,9 @@ void MMFSystem::SetUpMovingFrames(
     {
         for (int k=0; k<m_spacedim; k++)
         {
-            Gs::cout << "before ehsan " << nq << "\t"<< m_shapedim << "\t" <<
+            std::cout << "before ehsan " << nq << "\t"<< m_shapedim << "\t" <<
     m_spacedim << "\t" <<"m_movingframes " << m_movingframes[j][k*nq] <<
-    Gs::endl;
+    std::endl;
         }
     }*/
     // Get Tangetn vectors from GeomFactors2D, Orthonormalized = true
@@ -181,9 +181,9 @@ void MMFSystem::SetUpMovingFrames(
       {
           for (int k=0; k<m_spacedim; k++)
           {
-                Gs::cout << "ehsan " << nq << "\t"<< m_shapedim << "\t" <<
+                std::cout << "ehsan " << nq << "\t"<< m_shapedim << "\t" <<
       m_spacedim << "\t" <<"m_movingframes " << m_movingframes[j][k*nq] <<
-      Gs::endl;
+      std::endl;
           }
       }*/
     // Align the tangentX direction after TangentXelem
@@ -207,13 +207,13 @@ void MMFSystem::SetUpMovingFrames(
                     &m_movingframes[1][1 * nq], 1);
 
         int indxtmp = Vmath::Imax(nq, tmp, 1);
-        Gs::cout << "*** MF in PML Region is aligned as MF1 = ( "
-                 << m_movingframes[0][indxtmp] << " , "
-                 << m_movingframes[0][nq + indxtmp] << " , "
-                 << m_movingframes[0][2 * nq + indxtmp] << " ) "
-                 << ", MF2 = ( " << m_movingframes[1][indxtmp] << " , "
-                 << m_movingframes[1][nq + indxtmp] << " , "
-                 << m_movingframes[1][2 * nq + indxtmp] << " ) " << Gs::endl;
+        std::cout << "*** MF in PML Region is aligned as MF1 = ( "
+                  << m_movingframes[0][indxtmp] << " , "
+                  << m_movingframes[0][nq + indxtmp] << " , "
+                  << m_movingframes[0][2 * nq + indxtmp] << " ) "
+                  << ", MF2 = ( " << m_movingframes[1][indxtmp] << " , "
+                  << m_movingframes[1][nq + indxtmp] << " , "
+                  << m_movingframes[1][2 * nq + indxtmp] << " ) " << std::endl;
     }
 
     // Multiply Anisotropy to movingframes
@@ -258,48 +258,48 @@ void MMFSystem::CheckMovingFrames(
         dot31 = t3x * t1x + t3y * t1y + t3z * t1z;
     }
 
-    Gs::cout << "======================================================"
-             << Gs::endl;
-    Gs::cout << "======================================================"
-             << Gs::endl;
-    Gs::cout << "*** The first moving frame is alinged along"
-             << SpatialDomains::GeomMMFMap[m_MMFdir] << Gs::endl;
+    std::cout << "======================================================"
+              << std::endl;
+    std::cout << "======================================================"
+              << std::endl;
+    std::cout << "*** The first moving frame is alinged along"
+              << SpatialDomains::GeomMMFMap[m_MMFdir] << std::endl;
 
     Array<OneD, NekDouble> tmpx(nq), tmpy(nq), tmpz(nq);
 
     Vmath::Vcopy(nq, &movingframes[0][0], 1, &tmpx[0], 1);
     Vmath::Vcopy(nq, &movingframes[0][nq], 1, &tmpy[0], 1);
     Vmath::Vcopy(nq, &movingframes[0][2 * nq], 1, &tmpz[0], 1);
-    Gs::cout << nq << " , "
-             << "*** Avg MF1 = ( " << AvgAbsInt(tmpx) << " , "
-             << AvgAbsInt(tmpy) << " , " << AvgAbsInt(tmpz) << " ) "
-             << Gs::endl;
+    std::cout << nq << " , "
+              << "*** Avg MF1 = ( " << AvgAbsInt(tmpx) << " , "
+              << AvgAbsInt(tmpy) << " , " << AvgAbsInt(tmpz) << " ) "
+              << std::endl;
 
     Vmath::Vcopy(nq, &movingframes[1][0], 1, &tmpx[0], 1);
     Vmath::Vcopy(nq, &movingframes[1][nq], 1, &tmpy[0], 1);
     Vmath::Vcopy(nq, &movingframes[1][2 * nq], 1, &tmpz[0], 1);
-    Gs::cout << "*** Avg MF2 = ( " << AvgAbsInt(tmpx) << " , "
-             << AvgAbsInt(tmpy) << " , " << AvgAbsInt(tmpz) << " ) "
-             << Gs::endl;
+    std::cout << "*** Avg MF2 = ( " << AvgAbsInt(tmpx) << " , "
+              << AvgAbsInt(tmpy) << " , " << AvgAbsInt(tmpz) << " ) "
+              << std::endl;
 
     if (m_shapedim == 3)
     {
         Vmath::Vcopy(nq, &movingframes[2][0], 1, &tmpx[0], 1);
         Vmath::Vcopy(nq, &movingframes[2][nq], 1, &tmpy[0], 1);
         Vmath::Vcopy(nq, &movingframes[2][2 * nq], 1, &tmpz[0], 1);
-        Gs::cout << "*** Avg MF3 = ( " << AvgAbsInt(tmpx) << " , "
-                 << AvgAbsInt(tmpy) << " , " << AvgAbsInt(tmpz) << " ) "
-                 << Gs::endl;
+        std::cout << "*** Avg MF3 = ( " << AvgAbsInt(tmpx) << " , "
+                  << AvgAbsInt(tmpy) << " , " << AvgAbsInt(tmpz) << " ) "
+                  << std::endl;
     }
 
     if ((fabs(dot12) + fabs(dot23) + fabs(dot31)) < Tol)
     {
-        Gs::cout << "*** Moving frames are Orthogonal" << Gs::endl;
+        std::cout << "*** Moving frames are Orthogonal" << std::endl;
     }
 
     else
     {
-        Gs::cout << "*** Moving frames are NOT Orthogonal" << Gs::endl;
+        std::cout << "*** Moving frames are NOT Orthogonal" << std::endl;
     }
 
     Array<OneD, NekDouble> tmp;
@@ -312,8 +312,8 @@ void MMFSystem::CheckMovingFrames(
                          &movingframes[j][k * nq], 1, &tmp[0], 1, &tmp[0], 1);
         }
         Vmath::Vsqrt(nq, tmp, 1, tmp, 1);
-        Gs::cout << "*** Avg. Magnitude of MF" << j << " = " << AvgAbsInt(tmp)
-                 << Gs::endl;
+        std::cout << "*** Avg. Magnitude of MF" << j << " = " << AvgAbsInt(tmp)
+                  << std::endl;
     }
 }
 
@@ -397,48 +397,48 @@ void MMFSystem::ComputencdotMF()
 
     if (m_shapedim == 2)
     {
-        Gs::cout << "*** m_ncdotMFFwd = ( " << RootMeanSquare(m_ncdotMFFwd[0])
-                 << " , " << RootMeanSquare(m_ncdotMFFwd[1]) << " ) "
-                 << Gs::endl;
-        Gs::cout << "*** m_ncdotMFBwd = ( " << RootMeanSquare(m_ncdotMFBwd[0])
-                 << " , " << RootMeanSquare(m_ncdotMFBwd[1]) << " ) "
-                 << Gs::endl;
+        std::cout << "*** m_ncdotMFFwd = ( " << RootMeanSquare(m_ncdotMFFwd[0])
+                  << " , " << RootMeanSquare(m_ncdotMFFwd[1]) << " ) "
+                  << std::endl;
+        std::cout << "*** m_ncdotMFBwd = ( " << RootMeanSquare(m_ncdotMFBwd[0])
+                  << " , " << RootMeanSquare(m_ncdotMFBwd[1]) << " ) "
+                  << std::endl;
 
-        Gs::cout << "*** m_nperpcdotMFFwd = ( "
-                 << RootMeanSquare(m_nperpcdotMFFwd[0]) << " , "
-                 << RootMeanSquare(m_nperpcdotMFFwd[1]) << " ) " << Gs::endl;
-        Gs::cout << "*** m_nperpcdotMFBwd = ( "
-                 << RootMeanSquare(m_nperpcdotMFBwd[0]) << " , "
-                 << RootMeanSquare(m_nperpcdotMFBwd[1]) << " ) " << Gs::endl;
+        std::cout << "*** m_nperpcdotMFFwd = ( "
+                  << RootMeanSquare(m_nperpcdotMFFwd[0]) << " , "
+                  << RootMeanSquare(m_nperpcdotMFFwd[1]) << " ) " << std::endl;
+        std::cout << "*** m_nperpcdotMFBwd = ( "
+                  << RootMeanSquare(m_nperpcdotMFBwd[0]) << " , "
+                  << RootMeanSquare(m_nperpcdotMFBwd[1]) << " ) " << std::endl;
     }
 
     else if (m_shapedim == 3)
     {
-        Gs::cout << "*** m_ncdotMFFwd = ( "
-                 << Vmath::Vsum(nTracePointsTot, m_ncdotMFFwd[0], 1) << " , "
-                 << Vmath::Vsum(nTracePointsTot, m_ncdotMFFwd[1], 1) << " , "
-                 << Vmath::Vsum(nTracePointsTot, m_ncdotMFFwd[2], 1) << " ) "
-                 << Gs::endl;
-        Gs::cout << "*** m_ncdotMFBwd = ( "
-                 << Vmath::Vsum(nTracePointsTot, m_ncdotMFBwd[0], 1) << " , "
-                 << Vmath::Vsum(nTracePointsTot, m_ncdotMFBwd[1], 1) << " , "
-                 << Vmath::Vsum(nTracePointsTot, m_ncdotMFBwd[2], 1) << " ) "
-                 << Gs::endl;
+        std::cout << "*** m_ncdotMFFwd = ( "
+                  << Vmath::Vsum(nTracePointsTot, m_ncdotMFFwd[0], 1) << " , "
+                  << Vmath::Vsum(nTracePointsTot, m_ncdotMFFwd[1], 1) << " , "
+                  << Vmath::Vsum(nTracePointsTot, m_ncdotMFFwd[2], 1) << " ) "
+                  << std::endl;
+        std::cout << "*** m_ncdotMFBwd = ( "
+                  << Vmath::Vsum(nTracePointsTot, m_ncdotMFBwd[0], 1) << " , "
+                  << Vmath::Vsum(nTracePointsTot, m_ncdotMFBwd[1], 1) << " , "
+                  << Vmath::Vsum(nTracePointsTot, m_ncdotMFBwd[2], 1) << " ) "
+                  << std::endl;
 
-        Gs::cout << "*** m_nperpcdotMFFwd = ( "
-                 << Vmath::Vsum(nTracePointsTot, m_nperpcdotMFFwd[0], 1)
-                 << " , "
-                 << Vmath::Vsum(nTracePointsTot, m_nperpcdotMFFwd[1], 1)
-                 << " , "
-                 << Vmath::Vsum(nTracePointsTot, m_nperpcdotMFFwd[2], 1)
-                 << " ) " << Gs::endl;
-        Gs::cout << "*** m_nperpcdotMFBwd = ( "
-                 << Vmath::Vsum(nTracePointsTot, m_nperpcdotMFBwd[0], 1)
-                 << " , "
-                 << Vmath::Vsum(nTracePointsTot, m_nperpcdotMFBwd[1], 1)
-                 << " , "
-                 << Vmath::Vsum(nTracePointsTot, m_nperpcdotMFBwd[2], 1)
-                 << " ) " << Gs::endl;
+        std::cout << "*** m_nperpcdotMFFwd = ( "
+                  << Vmath::Vsum(nTracePointsTot, m_nperpcdotMFFwd[0], 1)
+                  << " , "
+                  << Vmath::Vsum(nTracePointsTot, m_nperpcdotMFFwd[1], 1)
+                  << " , "
+                  << Vmath::Vsum(nTracePointsTot, m_nperpcdotMFFwd[2], 1)
+                  << " ) " << std::endl;
+        std::cout << "*** m_nperpcdotMFBwd = ( "
+                  << Vmath::Vsum(nTracePointsTot, m_nperpcdotMFBwd[0], 1)
+                  << " , "
+                  << Vmath::Vsum(nTracePointsTot, m_nperpcdotMFBwd[1], 1)
+                  << " , "
+                  << Vmath::Vsum(nTracePointsTot, m_nperpcdotMFBwd[2], 1)
+                  << " ) " << std::endl;
     }
 }
 
@@ -463,9 +463,9 @@ void MMFSystem::ComputeDivCurlMF()
         }
     }
 
-    Gs::cout << "*** Divergence of MF1 = " << AvgInt(m_DivMF[0])
-             << ", MF2 = " << AvgInt(m_DivMF[1])
-             << ", MF3 = " << AvgInt(m_DivMF[2]) << Gs::endl;
+    std::cout << "*** Divergence of MF1 = " << AvgInt(m_DivMF[0])
+              << ", MF2 = " << AvgInt(m_DivMF[1])
+              << ", MF3 = " << AvgInt(m_DivMF[2]) << std::endl;
 
     // Compute Curl of MF: CurlMF[i][j] = (\nabla \times e^i) cdot e^j
     m_CurlMF = Array<OneD, Array<OneD, Array<OneD, NekDouble>>>(MMFdim);
@@ -508,15 +508,15 @@ void MMFSystem::ComputeDivCurlMF()
         }
     }
 
-    Gs::cout << "*** Curl of MF1 = ( " << AvgInt(m_CurlMF[0][0]) << " , "
-             << AvgInt(m_CurlMF[0][1]) << " , " << AvgInt(m_CurlMF[0][2])
-             << " ) " << Gs::endl;
-    Gs::cout << "*** Curl of MF2 = ( " << AvgInt(m_CurlMF[1][0]) << " , "
-             << AvgInt(m_CurlMF[1][1]) << " , " << AvgInt(m_CurlMF[1][2])
-             << " ) " << Gs::endl;
-    Gs::cout << "*** Curl of MF3 = ( " << AvgInt(m_CurlMF[2][0]) << " , "
-             << AvgInt(m_CurlMF[2][1]) << " , " << AvgInt(m_CurlMF[2][2])
-             << " ) " << Gs::endl;
+    std::cout << "*** Curl of MF1 = ( " << AvgInt(m_CurlMF[0][0]) << " , "
+              << AvgInt(m_CurlMF[0][1]) << " , " << AvgInt(m_CurlMF[0][2])
+              << " ) " << std::endl;
+    std::cout << "*** Curl of MF2 = ( " << AvgInt(m_CurlMF[1][0]) << " , "
+              << AvgInt(m_CurlMF[1][1]) << " , " << AvgInt(m_CurlMF[1][2])
+              << " ) " << std::endl;
+    std::cout << "*** Curl of MF3 = ( " << AvgInt(m_CurlMF[2][0]) << " , "
+              << AvgInt(m_CurlMF[2][1]) << " , " << AvgInt(m_CurlMF[2][2])
+              << " ) " << std::endl;
 }
 
 void MMFSystem::ComputeMFtrace()
@@ -560,12 +560,12 @@ void MMFSystem::ComputeMFtrace()
         }
     }
 
-    Gs::cout << "*** MFtraceFwd = ( " << VectorAvgMagnitude(m_MFtraceFwd[0])
-             << " , " << VectorAvgMagnitude(m_MFtraceFwd[1]) << " , "
-             << VectorAvgMagnitude(m_MFtraceFwd[2]) << " ) " << Gs::endl;
-    Gs::cout << "*** MFtraceBwd = ( " << VectorAvgMagnitude(m_MFtraceBwd[0])
-             << " , " << VectorAvgMagnitude(m_MFtraceBwd[1]) << " , "
-             << VectorAvgMagnitude(m_MFtraceBwd[2]) << " ) " << Gs::endl;
+    std::cout << "*** MFtraceFwd = ( " << VectorAvgMagnitude(m_MFtraceFwd[0])
+              << " , " << VectorAvgMagnitude(m_MFtraceFwd[1]) << " , "
+              << VectorAvgMagnitude(m_MFtraceFwd[2]) << " ) " << std::endl;
+    std::cout << "*** MFtraceBwd = ( " << VectorAvgMagnitude(m_MFtraceBwd[0])
+              << " , " << VectorAvgMagnitude(m_MFtraceBwd[1]) << " , "
+              << VectorAvgMagnitude(m_MFtraceBwd[2]) << " ) " << std::endl;
 }
 
 void MMFSystem::DeriveCrossProductMF(
@@ -653,22 +653,22 @@ void MMFSystem::ComputeNtimesMF()
                         m_ntimes_ntimesMFBwd[j]);
     }
 
-    Gs::cout << "*** m_ntimesMFFwd = ( " << VectorAvgMagnitude(m_ntimesMFFwd[0])
-             << " , " << VectorAvgMagnitude(m_ntimesMFFwd[1]) << " , "
-             << VectorAvgMagnitude(m_ntimesMFFwd[2]) << " ) " << Gs::endl;
-    Gs::cout << "*** m_ntimesMFBwd = ( " << VectorAvgMagnitude(m_ntimesMFBwd[0])
-             << " , " << VectorAvgMagnitude(m_ntimesMFBwd[1]) << " , "
-             << VectorAvgMagnitude(m_ntimesMFBwd[2]) << " ) " << Gs::endl;
-    Gs::cout << "*** m_ntimes_ntimesMFFwd = ( "
-             << VectorAvgMagnitude(m_ntimes_ntimesMFFwd[0]) << " , "
-             << VectorAvgMagnitude(m_ntimes_ntimesMFFwd[1]) << " , "
-             << VectorAvgMagnitude(m_ntimes_ntimesMFFwd[2]) << " ) "
-             << Gs::endl;
-    Gs::cout << "*** m_ntimes_ntimesMFBwd = ( "
-             << VectorAvgMagnitude(m_ntimes_ntimesMFBwd[0]) << " , "
-             << VectorAvgMagnitude(m_ntimes_ntimesMFBwd[1]) << " , "
-             << VectorAvgMagnitude(m_ntimes_ntimesMFBwd[2]) << " ) "
-             << Gs::endl;
+    std::cout << "*** m_ntimesMFFwd = ( " << VectorAvgMagnitude(m_ntimesMFFwd[0])
+              << " , " << VectorAvgMagnitude(m_ntimesMFFwd[1]) << " , "
+              << VectorAvgMagnitude(m_ntimesMFFwd[2]) << " ) " << std::endl;
+    std::cout << "*** m_ntimesMFBwd = ( " << VectorAvgMagnitude(m_ntimesMFBwd[0])
+              << " , " << VectorAvgMagnitude(m_ntimesMFBwd[1]) << " , "
+              << VectorAvgMagnitude(m_ntimesMFBwd[2]) << " ) " << std::endl;
+    std::cout << "*** m_ntimes_ntimesMFFwd = ( "
+              << VectorAvgMagnitude(m_ntimes_ntimesMFFwd[0]) << " , "
+              << VectorAvgMagnitude(m_ntimes_ntimesMFFwd[1]) << " , "
+              << VectorAvgMagnitude(m_ntimes_ntimesMFFwd[2]) << " ) "
+              << std::endl;
+    std::cout << "*** m_ntimes_ntimesMFBwd = ( "
+              << VectorAvgMagnitude(m_ntimes_ntimesMFBwd[0]) << " , "
+              << VectorAvgMagnitude(m_ntimes_ntimesMFBwd[1]) << " , "
+              << VectorAvgMagnitude(m_ntimes_ntimesMFBwd[2]) << " ) "
+              << std::endl;
 }
 
 void MMFSystem::VectorDotProd(
@@ -1145,11 +1145,11 @@ void MMFSystem::ComputeZimYim(Array<OneD, Array<OneD, NekDouble>> &epsvec,
                 m_YimBwd[0][i] = 1.0 / m_ZimBwd[0][i];
             }
 
-            Gs::cout << "*** ZimFwd = " << RootMeanSquare(m_ZimFwd[0])
-                     << ", ZimBwd = " << RootMeanSquare(m_ZimBwd[0])
-                     << ", YimFwd = " << RootMeanSquare(m_YimFwd[0])
-                     << ", YimBwd = " << RootMeanSquare(m_YimBwd[0])
-                     << Gs::endl;
+            std::cout << "*** ZimFwd = " << RootMeanSquare(m_ZimFwd[0])
+                      << ", ZimBwd = " << RootMeanSquare(m_ZimBwd[0])
+                      << ", YimFwd = " << RootMeanSquare(m_YimFwd[0])
+                      << ", YimBwd = " << RootMeanSquare(m_YimBwd[0])
+                      << std::endl;
         }
         break;
 
@@ -1253,20 +1253,20 @@ void MMFSystem::ComputeZimYim(Array<OneD, Array<OneD, NekDouble>> &epsvec,
                     break;
             } // PolType
 
-            Gs::cout << "*** ZimFwd0 = [ "
-                     << Vmath::Vmin(nTraceNumPoints, m_ZimFwd[0], 1) << " , "
-                     << Vmath::Vmax(nTraceNumPoints, m_ZimFwd[0], 1)
-                     << " ], ZimBwd0 = [ "
-                     << Vmath::Vmin(nTraceNumPoints, m_ZimBwd[0], 1) << " , "
-                     << Vmath::Vmax(nTraceNumPoints, m_ZimBwd[0], 1) << " ] "
-                     << Gs::endl;
-            Gs::cout << "*** ZimFwd1 = [ "
-                     << Vmath::Vmin(nTraceNumPoints, m_ZimFwd[1], 1) << " , "
-                     << Vmath::Vmax(nTraceNumPoints, m_ZimFwd[1], 1)
-                     << " ], ZimBwd1 = [ "
-                     << Vmath::Vmin(nTraceNumPoints, m_ZimBwd[1], 1) << " , "
-                     << Vmath::Vmax(nTraceNumPoints, m_ZimBwd[1], 1) << " ] "
-                     << Gs::endl;
+            std::cout << "*** ZimFwd0 = [ "
+                      << Vmath::Vmin(nTraceNumPoints, m_ZimFwd[0], 1) << " , "
+                      << Vmath::Vmax(nTraceNumPoints, m_ZimFwd[0], 1)
+                      << " ], ZimBwd0 = [ "
+                      << Vmath::Vmin(nTraceNumPoints, m_ZimBwd[0], 1) << " , "
+                      << Vmath::Vmax(nTraceNumPoints, m_ZimBwd[0], 1) << " ] "
+                      << std::endl;
+            std::cout << "*** ZimFwd1 = [ "
+                      << Vmath::Vmin(nTraceNumPoints, m_ZimFwd[1], 1) << " , "
+                      << Vmath::Vmax(nTraceNumPoints, m_ZimFwd[1], 1)
+                      << " ], ZimBwd1 = [ "
+                      << Vmath::Vmin(nTraceNumPoints, m_ZimBwd[1], 1) << " , "
+                      << Vmath::Vmax(nTraceNumPoints, m_ZimBwd[1], 1) << " ] "
+                      << std::endl;
         }
         break; // eMaxwell2D
 
@@ -1330,40 +1330,40 @@ void MMFSystem::Computedemdxicdote()
     }
 
     int indx = 0;
-    Gs::cout << "*** m_dedxi_cdot_e[0]/dxi1 = ( "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][0][0]) << " , "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][0][1]) << " , "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][0][2]) << " )_1, "
-             << Gs::endl;
-    Gs::cout << "*** m_dedxi_cdot_e[0]/dxi2 = ( "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][1][0]) << " , "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][1][1]) << " , "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][1][2]) << " )_2 "
-             << Gs::endl;
+    std::cout << "*** m_dedxi_cdot_e[0]/dxi1 = ( "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][0][0]) << " , "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][0][1]) << " , "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][0][2]) << " )_1, "
+              << std::endl;
+    std::cout << "*** m_dedxi_cdot_e[0]/dxi2 = ( "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][1][0]) << " , "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][1][1]) << " , "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][1][2]) << " )_2 "
+              << std::endl;
 
     indx = 1;
-    Gs::cout << "*** m_dedxi_cdot_e[1]/dxi1 = ( "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][0][0]) << " , "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][0][1]) << " , "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][0][2]) << " )_1, "
-             << Gs::endl;
-    Gs::cout << "*** m_dedxi_cdot_e[1]/dxi2 = ( "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][1][0]) << " , "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][1][1]) << " , "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][1][2]) << " )_2 "
-             << Gs::endl;
+    std::cout << "*** m_dedxi_cdot_e[1]/dxi1 = ( "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][0][0]) << " , "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][0][1]) << " , "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][0][2]) << " )_1, "
+              << std::endl;
+    std::cout << "*** m_dedxi_cdot_e[1]/dxi2 = ( "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][1][0]) << " , "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][1][1]) << " , "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][1][2]) << " )_2 "
+              << std::endl;
 
     indx = 2;
-    Gs::cout << "*** m_dedxi_cdot_e[2]/dxi1 = ( "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][0][0]) << " , "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][0][1]) << " , "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][0][2]) << " )_1, "
-             << Gs::endl;
-    Gs::cout << "*** m_dedxi_cdot_e[2]/dxi2 = ( "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][1][0]) << " , "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][1][1]) << " , "
-             << RootMeanSquare(m_dedxi_cdot_e[indx][1][2]) << " )_2 "
-             << Gs::endl;
+    std::cout << "*** m_dedxi_cdot_e[2]/dxi1 = ( "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][0][0]) << " , "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][0][1]) << " , "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][0][2]) << " )_1, "
+              << std::endl;
+    std::cout << "*** m_dedxi_cdot_e[2]/dxi2 = ( "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][1][0]) << " , "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][1][1]) << " , "
+              << RootMeanSquare(m_dedxi_cdot_e[indx][1][2]) << " )_2 "
+              << std::endl;
 }
 
 void MMFSystem::AdddedtMaxwell(

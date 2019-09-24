@@ -133,7 +133,8 @@ int main(int argc, char *argv[])
 
     // Temporary directory to create and in which to conduct test
     const fs::path tmpDir = fs::current_path()
-        / fs::path("tmp_" + specFileStem);
+        / fs::path("tmp_" + specFileStem + "_" 
+                          + fs::unique_path("%%%%%%").string());
 
     // The current directory
     const fs::path startDir = fs::current_path();

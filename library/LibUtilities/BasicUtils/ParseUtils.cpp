@@ -34,7 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <sstream>
-#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/qi_core.hpp>
+#include <boost/spirit/include/qi_auto.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 
 namespace qi = boost::spirit::qi;

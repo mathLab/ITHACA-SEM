@@ -305,12 +305,12 @@ namespace Nektar
             const element* data() const { return m_data + m_offset; }
 
             /// \brief Returns 1.
-            size_type num_dimensions() const { return 1; }
+            size_t num_dimensions() const { return 1; }
 
             /// \brief Returns the array's size.
-            size_type num_elements() const { return m_size; }
+            size_t num_elements() const { return m_size; }
 
-            size_type capacity() const { return m_capacity; }
+            size_t capacity() const { return m_capacity; }
 
             /// \brief Returns the array's offset.
             size_t GetOffset() const { return m_offset; }

@@ -89,7 +89,7 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
     {
         case eNearestNeighbour:
         {
-            m_weights   = Array<TwoD, float>(nOutPts, 1, 0.0);
+            m_weights   = Array<TwoD, NekDouble>(nOutPts, 1, 0.0);
             m_neighInds = Array<TwoD, unsigned int>(nOutPts, 1, (unsigned int) 0);
 
             for (int i = 0; i < nOutPts; ++i)
@@ -119,7 +119,7 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
             ASSERTL0(m_ptsInField->GetDim() == 1 || m_coordId >= 0,
                      "not implemented");
 
-            m_weights   = Array<TwoD, float>(nOutPts, 3, 0.0);
+            m_weights   = Array<TwoD, NekDouble>(nOutPts, 3, 0.0);
             m_neighInds = Array<TwoD, unsigned int>(nOutPts, 3, (unsigned int) 0);
 
             for (int i = 0; i < nOutPts; ++i)
@@ -157,7 +157,7 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
             numPts     = 2 << numPts; // 2 ^ numPts
             numPts     = min(numPts, int(m_ptsInField->GetNpoints() / 2));
 
-            m_weights   = Array<TwoD, float>(nOutPts, numPts, 0.0);
+            m_weights   = Array<TwoD, NekDouble>(nOutPts, numPts, 0.0);
             m_neighInds = Array<TwoD, unsigned int>(nOutPts, numPts, (unsigned int) 0);
 
             for (int i = 0; i < nOutPts; ++i)
@@ -191,7 +191,7 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
 
             m_maxPts = min(m_maxPts, int(m_ptsInField->GetNpoints() / 2));
 
-            m_weights   = Array<TwoD, float>(nOutPts, m_maxPts, 0.0);
+            m_weights   = Array<TwoD, NekDouble>(nOutPts, m_maxPts, 0.0);
             m_neighInds = Array<TwoD, unsigned int>(nOutPts, m_maxPts, (unsigned int) 0);
 
             for (int i = 0; i < nOutPts; ++i)

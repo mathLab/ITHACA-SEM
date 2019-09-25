@@ -730,7 +730,7 @@ void FieldIOXml::SetUpFieldMetaData(
         ElementIDs[0] = idlist;
         for (size_t i = 1; i < nprocs; ++i)
         {
-            std::vector<size_t> tmp(elmtnums[i]);
+            std::vector<unsigned int> tmp(elmtnums[i]);
             m_comm->Recv(i, tmp);
             ElementIDs[i] = tmp;
         }

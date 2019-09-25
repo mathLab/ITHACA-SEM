@@ -100,9 +100,9 @@ public:
 
     LIB_UTILITIES_EXPORT void SetDim(const int ptsDim);
 
-    LIB_UTILITIES_EXPORT int GetDim() const;
+    LIB_UTILITIES_EXPORT size_t GetDim() const;
 
-    LIB_UTILITIES_EXPORT int GetNFields() const;
+    LIB_UTILITIES_EXPORT size_t GetNFields() const;
 
     LIB_UTILITIES_EXPORT std::vector<std::string> GetFieldNames() const;
 
@@ -118,13 +118,13 @@ public:
 
     LIB_UTILITIES_EXPORT void AddPoints(const Array< OneD, const Array< OneD, NekDouble > > &pts);
 
-    LIB_UTILITIES_EXPORT int GetNpoints() const;
+    LIB_UTILITIES_EXPORT size_t GetNpoints() const;
 
-    LIB_UTILITIES_EXPORT NekDouble GetPointVal(const int fieldInd,
-                                               const int ptInd) const;
+    LIB_UTILITIES_EXPORT NekDouble GetPointVal(const size_t fieldInd,
+                                               const size_t ptInd) const;
 
-    LIB_UTILITIES_EXPORT void SetPointVal(const int fieldInd,
-                                          const int ptInd,
+    LIB_UTILITIES_EXPORT void SetPointVal(const size_t fieldInd,
+                                          const size_t ptInd,
                                           const NekDouble val);
 
     LIB_UTILITIES_EXPORT void GetPts(
@@ -135,12 +135,12 @@ public:
 
     LIB_UTILITIES_EXPORT void SetPts(Array<OneD, Array<OneD, NekDouble> > &pts);
 
-    LIB_UTILITIES_EXPORT std::vector<int> GetPointsPerEdge() const;
+    LIB_UTILITIES_EXPORT std::vector<size_t> GetPointsPerEdge() const;
 
-    LIB_UTILITIES_EXPORT int GetPointsPerEdge(const int i) const;
+    LIB_UTILITIES_EXPORT size_t GetPointsPerEdge(const size_t i) const;
 
     LIB_UTILITIES_EXPORT void SetPointsPerEdge(
-        const std::vector<int> nPtsPerEdge);
+        const std::vector<size_t> nPtsPerEdge);
 
     LIB_UTILITIES_EXPORT PtsType GetPtsType() const;
 
@@ -155,7 +155,7 @@ public:
 
 private:
     /// Dimension of the pts field
-    int m_dim;
+    size_t m_dim;
     /// Names of the field variables
     std::vector<std::string> m_fieldNames;
     /// Point data. For a n-dimensional field, the first m_dim fields are the
@@ -164,7 +164,7 @@ private:
     /// Number of points per edge. Empty if the point data has no
     /// specific shape (ePtsLine) or is a block (ePtsTetBlock,
     /// ePtsTriBlock), size=1 for ePtsLine and 2 for a ePtsPlane
-    std::vector<int> m_nPtsPerEdge;
+    std::vector<size_t> m_nPtsPerEdge;
     /// Connectivity data needed for ePtsTetBlock and ePtsTriBlock. For n
     /// Blocks with m elements each, m_ptsConn is a vector of n arrays with
     /// 3*m (ePtsTriBlock) or 4*m (ePtsTetBlock) entries.

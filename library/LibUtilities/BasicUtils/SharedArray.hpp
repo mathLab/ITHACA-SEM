@@ -378,9 +378,9 @@ namespace Nektar
 
             // m_count points to an integer used as a reference count to this array's data (m_data).
             // Previously, the reference count was stored in the first 4 bytes of the m_data array.
-            size_t* m_count; 
+            size_t* m_count;
 
-            size_t m_offset;            
+            size_t m_offset;
 
         private:
         //            struct DestroyArray
@@ -405,7 +405,7 @@ namespace Nektar
                 // Allocate an integer to hold the reference count.  Note 1, all arrays that share this array's
                 // data (ie, point to m_data) will also share the m_count data.  Note 2, previously m_count
                 // pointed to "(unsigned int*)storage".
-                m_count = new size_t(); 
+                m_count = new size_t();
                 *m_count = 1;
 #ifdef WITH_PYTHON
                 m_pythonInfo = new PythonInfo*();

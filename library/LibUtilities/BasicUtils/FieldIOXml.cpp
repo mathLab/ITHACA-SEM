@@ -701,8 +701,8 @@ void FieldIOXml::SetUpFieldMetaData(
 {
     ASSERTL0(!outname.empty(), "Empty path given to SetUpFieldMetaData()");
 
-    int nprocs = m_comm->GetSize();
-    int rank   = m_comm->GetRank();
+    unsigned int nprocs = m_comm->GetSize();
+    unsigned int rank   = m_comm->GetRank();
 
     fs::path specPath(outname);
 
@@ -730,7 +730,7 @@ void FieldIOXml::SetUpFieldMetaData(
         ElementIDs[0] = idlist;
         for (size_t i = 1; i < nprocs; ++i)
         {
-            std::vector<unsigned int> tmp(elmtnums[i]);
+            std::vector<size_t> tmp(elmtnums[i]);
             m_comm->Recv(i, tmp);
             ElementIDs[i] = tmp;
         }

@@ -128,7 +128,7 @@ const std::string FieldIO::GetFileType(const std::string &filename,
         ioType = eHDF5;
         for (unsigned i = 0; i < 8 && datafile.good(); ++i)
         {
-            unsigned char byte = datafile.get();
+            int byte = datafile.get();
             if (byte != magic[i])
             {
                 ioType = eXML;
@@ -156,7 +156,7 @@ const std::string FieldIO::GetFileType(const std::string &filename,
     else
     {
         // Error
-        ASSERTL0(false, "Unknown file format");
+        NEKERROR(ErrorUtil::efatal, "Unknown file format");
     }
 
     return iofmt;
@@ -790,7 +790,7 @@ int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
         }
     }
 
-    return datasize;
+    return (int)datasize;
 }
 }
 }

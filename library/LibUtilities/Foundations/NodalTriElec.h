@@ -74,7 +74,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& x, 
                 const Array<OneD, const NekDouble>& y)
             {
-                int numpoints = x.num_elements();
+                size_t numpoints = x.num_elements();
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
                 CalculateInterpMatrix(x, y, interp);
                 

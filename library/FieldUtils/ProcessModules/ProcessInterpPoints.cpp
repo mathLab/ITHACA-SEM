@@ -298,7 +298,7 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
             }
         }
 
-        vector<int> ppe;
+        vector<size_t> ppe;
         ppe.push_back(npts);
         m_f->m_fieldPts =
             MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim,
@@ -368,7 +368,7 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
             }
         }
 
-        vector<int> ppe;
+        vector<size_t> ppe;
         ppe.push_back(npts[0]);
         ppe.push_back(npts[1]);
         m_f->m_fieldPts =
@@ -431,7 +431,7 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
             }
         }
 
-        vector<int> ppe;
+        vector<size_t> ppe;
         ppe.push_back(npts[0]);
         ppe.push_back(npts[1]);
         ppe.push_back(npts[2]);

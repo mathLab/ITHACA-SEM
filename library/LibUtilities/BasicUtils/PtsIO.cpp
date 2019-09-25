@@ -136,8 +136,8 @@ void PtsIO::Write(const string &outFile,
                   const Nektar::LibUtilities::PtsFieldSharedPtr &ptsField,
                   const bool backup)
 {
-    int nTotvars = ptsField->GetNFields() + ptsField->GetDim();
-    int np = ptsField->GetNpoints();
+    size_t nTotvars = ptsField->GetNFields() + ptsField->GetDim();
+    size_t np       = ptsField->GetNpoints();
 
     std::string filename = SetUpOutput(outFile, true, backup);
     SetUpFieldMetaData(outFile);
@@ -156,11 +156,11 @@ void PtsIO::Write(const string &outFile,
 
     Array<OneD, Array<OneD, NekDouble> > pts;
     ptsField->GetPts(pts);
-    for (int i = 0; i < np; ++i)
+    for (size_t i = 0; i < np; ++i)
     {
         ptsFile << "    ";
         ptsFile << pts[0][i];
-        for (int j = 1; j < nTotvars; ++j)
+        for (size_t j = 1; j < nTotvars; ++j)
         {
             ptsFile << " " << pts[j][i];
         }

@@ -163,8 +163,8 @@ namespace Nektar
             unsigned int npts = GetNumPoints();
             NekDouble delta = 2.0/(npts - 1.0);
             for(unsigned int z=0, index=0; z<npts; ++z){
-                for(int y=0; y<npts; ++y){
-                    for(int x=0; x<npts-z; ++x, ++index){
+                for(unsigned int y=0; y<npts; ++y){
+                    for(unsigned int x=0; x<npts-z; ++x, ++index){
                         NekDouble xi = -1.0 + x*delta;
                         NekDouble yi = -1.0 + y*delta;
                         NekDouble zi = -1.0 + z*delta;
@@ -204,9 +204,9 @@ namespace Nektar
             vector<int> map;
 
             // Build the lattice prism left to right - bottom to top
-            for(int z=0, index=0; z<npts; ++z){
-                for(int y=0; y<npts; ++y){
-                    for(int x=0; x<npts-z; ++x, ++index){
+            for(unsigned int z=0, index=0; z<npts; ++z){
+                for(unsigned int y=0; y<npts; ++y){
+                    for(unsigned int x=0; x<npts-z; ++x, ++index){
                         if (isVertex(x,y,z,npts))
                         {
                             vertex.push_back(index);

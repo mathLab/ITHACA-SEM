@@ -371,6 +371,7 @@ const std::string& ThreadStartupManager::GetType() const
 ThreadStartupManager& ThreadStartupManager::operator=(
         const ThreadStartupManager& src)
 {
+    boost::ignore_unused(src);
     return *this;
 }
 

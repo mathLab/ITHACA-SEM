@@ -76,8 +76,8 @@ public:
                                    const Array<OneD, const NekDouble> &y,
                                    const Array<OneD, const NekDouble> &z)
     {
-        int numpoints   = x.num_elements();
-        unsigned int np = GetTotNumPoints();
+        size_t       numpoints   = x.num_elements();
+        unsigned int np          = GetTotNumPoints();
 
         Array<OneD, NekDouble> interp(GetTotNumPoints() * numpoints);
         CalculateInterpMatrix(x, y, z, interp);

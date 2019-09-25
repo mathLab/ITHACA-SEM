@@ -819,7 +819,7 @@ namespace Nektar
                 }//end scope
                 break;
             default:
-                ASSERTL0(false, "Basis Type not known or "
+                NEKERROR(ErrorUtil::efatal, "Basis Type not known or "
                                 "not implemented at this time.");
             }
         }

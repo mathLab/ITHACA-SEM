@@ -164,9 +164,9 @@ void NodalPrismElec::CalculatePoints()
     Array<OneD, NekDouble> u;
     LibUtilities::PointsManager()[pkey2]->GetPoints(u);
 
-    for (int y = 0, index = 0; y < npts; y++)
+    for (unsigned int y = 0, index = 0; y < npts; y++)
     {
-        for (int t = 0; t < u1.num_elements(); t++, index++)
+        for (size_t t = 0; t < u1.num_elements(); t++, index++)
         {
             m_points[0][index] = u1[t];
             m_points[1][index] = u[y];
@@ -202,9 +202,9 @@ void NodalPrismElec::NodalPointReorder3d()
     vector<int> map;
 
     // Build the lattice prism left to right - bottom to top
-    for (int y = 0, index = 0; y < npts; y++)
+    for (unsigned int y = 0, index = 0; y < npts; y++)
     {
-        for (int t = 0; t < npts * (npts + 1) / 2; t++, index++)
+        for (unsigned int t = 0; t < npts * (npts + 1) / 2; t++, index++)
         {
             if (isVertex(t, y, npts))
             {
@@ -288,9 +288,9 @@ void NodalPrismElec::NodalPointReorder3d()
     std::reverse(iEdge_35.begin(), iEdge_35.end());
 
     // faces
-    for (int i = 0; i < npts - 2; i++)
+    for (unsigned int i = 0; i < npts - 2; i++)
     {
-        for (int j = i + 1; j < npts - 2; j++)
+        for (unsigned int j = i + 1; j < npts - 2; j++)
         {
             std::swap(iFace_1254[i * (npts - 2) + j],
                       iFace_1254[j * (npts - 2) + i]);
@@ -301,9 +301,9 @@ void NodalPrismElec::NodalPointReorder3d()
         std::reverse(iFace_0354.begin() + (i * (npts - 2)),
                      iFace_0354.begin() + (i * (npts - 2) + npts - 2));
     }
-    for (int i = 0; i < npts - 2; i++)
+    for (unsigned int i = 0; i < npts - 2; i++)
     {
-        for (int j = i + 1; j < npts - 2; j++)
+        for (unsigned int j = i + 1; j < npts - 2; j++)
         {
             std::swap(iFace_0354[i * (npts - 2) + j],
                       iFace_0354[j * (npts - 2) + i]);

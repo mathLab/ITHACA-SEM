@@ -128,7 +128,9 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, intFields);
 
     int coord_id = m_config["interpcoord"].as<int>();
-    ASSERTL0(coord_id <= outPts->GetDim() - 1,
+    cout << coord_id << endl;
+    cout << outPts->GetDim() << endl;
+    ASSERTL0(coord_id <= static_cast<int>(outPts->GetDim()) - 1,
              "interpcoord is bigger than the Pts files dimension");
 
     Interpolator interp(LibUtilities::eNoMethod, coord_id);

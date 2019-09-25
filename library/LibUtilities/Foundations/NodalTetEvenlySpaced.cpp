@@ -123,8 +123,8 @@ namespace Nektar
             unsigned int npts = GetNumPoints();
             NekDouble delta = 2.0/(npts - 1.0);
             for(unsigned int z=0, index=0; z<npts; ++z){
-                for(int y=0; y<npts-z; ++y){
-                    for(int x=0; x<npts-z-y; ++x, ++index){
+                for(unsigned int y=0; y<npts-z; ++y){
+                    for(unsigned int x=0; x<npts-z-y; ++x, ++index){
                         NekDouble xi = -1.0 + x*delta;
                         NekDouble yi = -1.0 + y*delta;
                         NekDouble zi = -1.0 + z*delta;

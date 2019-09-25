@@ -64,7 +64,7 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
     m_ptsInField  = ptsInField;
     m_ptsOutField = ptsOutField;
 
-    int nOutPts  = m_ptsOutField->GetNpoints();
+    size_t nOutPts  = m_ptsOutField->GetNpoints();
     int lastProg = 0;
 
     // set a default method
@@ -92,10 +92,10 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
             m_weights   = Array<TwoD, NekDouble>(nOutPts, 1, 0.0);
             m_neighInds = Array<TwoD, unsigned int>(nOutPts, 1, (unsigned int) 0);
 
-            for (int i = 0; i < nOutPts; ++i)
+            for (size_t i = 0; i < nOutPts; ++i)
             {
                 Array<OneD, NekDouble> tmp(m_dim, 0.0);
-                for (int j = 0; j < m_ptsOutField->GetDim(); ++j)
+                for (size_t j = 0; j < m_ptsOutField->GetDim(); ++j)
                 {
                     tmp[j] = m_ptsOutField->GetPointVal(j, i);
                 }
@@ -122,10 +122,10 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
             m_weights   = Array<TwoD, NekDouble>(nOutPts, 3, 0.0);
             m_neighInds = Array<TwoD, unsigned int>(nOutPts, 3, (unsigned int) 0);
 
-            for (int i = 0; i < nOutPts; ++i)
+            for (size_t i = 0; i < nOutPts; ++i)
             {
                 Array<OneD, NekDouble> tmp(m_dim, 0.0);
-                for (int j = 0; j < m_ptsOutField->GetDim(); ++j)
+                for (size_t j = 0; j < m_ptsOutField->GetDim(); ++j)
                 {
                     tmp[j] = m_ptsOutField->GetPointVal(j, i);
                 }
@@ -160,10 +160,10 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
             m_weights   = Array<TwoD, NekDouble>(nOutPts, numPts, 0.0);
             m_neighInds = Array<TwoD, unsigned int>(nOutPts, numPts, (unsigned int) 0);
 
-            for (int i = 0; i < nOutPts; ++i)
+            for (size_t i = 0; i < nOutPts; ++i)
             {
                 Array<OneD, NekDouble> tmp(m_dim, 0.0);
-                for (int j = 0; j < m_ptsOutField->GetDim(); ++j)
+                for (size_t j = 0; j < m_ptsOutField->GetDim(); ++j)
                 {
                     tmp[j] = m_ptsOutField->GetPointVal(j, i);
                 }
@@ -194,10 +194,10 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
             m_weights   = Array<TwoD, NekDouble>(nOutPts, m_maxPts, 0.0);
             m_neighInds = Array<TwoD, unsigned int>(nOutPts, m_maxPts, (unsigned int) 0);
 
-            for (int i = 0; i < nOutPts; ++i)
+            for (size_t i = 0; i < nOutPts; ++i)
             {
                 Array<OneD, NekDouble> tmp(m_dim, 0.0);
-                for (int j = 0; j < m_ptsOutField->GetDim(); ++j)
+                for (size_t j = 0; j < m_ptsOutField->GetDim(); ++j)
                 {
                     tmp[j] = m_ptsOutField->GetPointVal(j, i);
                 }

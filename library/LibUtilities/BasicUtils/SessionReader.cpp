@@ -1529,7 +1529,7 @@ namespace Nektar
                                 "an empty XML element " +
                                 std::string(p->Value()) +
                                 " which will be ignored.";
-                            WARNINGL0(false, warningmsg.c_str());
+                            NEKERROR(ErrorUtil::ewarning, warningmsg.c_str());
                         }
                         else
                         {

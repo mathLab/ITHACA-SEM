@@ -275,11 +275,12 @@ void ThreadManagerBoost::SetNumWorkersImpl(const unsigned int num)
 /**
  *
  */
-void ThreadManagerBoost::SetNumWorkers(unsigned int num)
+void ThreadManagerBoost::SetNumWorkers(const unsigned int num)
 {
-    num = std::min(num, m_numThreads);
-    num = std::max(num, static_cast<unsigned int>(0));
-    SetNumWorkersImpl(num);
+    unsigned int n;
+    n = std::min(num, m_numThreads);
+    n = std::max(n,   static_cast<unsigned int>(0));
+    SetNumWorkersImpl(n);
 }
 
 

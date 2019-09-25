@@ -122,7 +122,8 @@ namespace Nektar
                 break;
 		
             default:
-                ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
+                NEKERROR(ErrorUtil::efatal,
+                         "Unknown Gauss quadrature point distribution requested");
             }
         }
 
@@ -208,7 +209,8 @@ namespace Nektar
                 break;
 	      
             default:
-                ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
+                NEKERROR(ErrorUtil::efatal,
+                         "Unknown Gauss quadrature point distribution requested");
             }
 	    
             std::copy(dmtemp,dmtemp+totpoints*totpoints,m_derivmatrix[0]->begin());
@@ -282,7 +284,8 @@ namespace Nektar
                 break;
 
             default:
-                ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
+                NEKERROR(ErrorUtil::efatal,
+                         "Unknown Gauss quadrature point distribution requested");
             }
         }
 

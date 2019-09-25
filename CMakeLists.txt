@@ -70,7 +70,7 @@ IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 ENDIF()
 
 # Find default search paths for OS X; adapted from Stack Overflow question
-# 1487752
+# 1487752.
 IF (APPLE)
     EXECUTE_PROCESS(COMMAND which port
         RESULT_VARIABLE DETECT_MACPORTS

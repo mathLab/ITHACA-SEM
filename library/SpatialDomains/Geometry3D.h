@@ -106,7 +106,7 @@ protected:
     bool MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord,
                      Array<OneD, NekDouble> &locCoord);
 
-    void ClampLocalCoords(Array<OneD, NekDouble> &locCoord, NekDouble tol);
+    void ClampLocCoords(Array<OneD, NekDouble> &locCoord, NekDouble tol);
 
     //---------------------------------------
     // Helper functions

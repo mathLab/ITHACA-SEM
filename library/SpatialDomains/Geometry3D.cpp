@@ -352,7 +352,7 @@ bool Geometry3D::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord,
 /**
 * @brief Clamp local coords to be within [-1,1]^3.
 */
-void Geometry3D::ClampLocalCoords(Array<OneD, NekDouble> &locCoord,
+void Geometry3D::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
                                   NekDouble tol)
 {
     // If out of range clamp locCoord to be within [-1,1]^3

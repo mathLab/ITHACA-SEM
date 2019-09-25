@@ -274,7 +274,7 @@ bool HexGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
     }
 
     //Clamp local coords
-    ClampLocalCoords(locCoord, tol);
+    ClampLocCoords(locCoord, tol);
 
     return false;
 }

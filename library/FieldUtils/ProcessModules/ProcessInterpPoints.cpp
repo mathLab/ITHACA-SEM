@@ -36,17 +36,19 @@
 #include <string>
 using namespace std;
 
-#include <FieldUtils/Interpolator.h>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/geometry.hpp>
-#include "ProcessInterpPoints.h"
+#include <boost/lexical_cast.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
+#include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 #include <LibUtilities/BasicUtils/CsvIO.h>
-#include <boost/lexical_cast.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessInterpPoints.h"
 
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
@@ -223,6 +225,8 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
 void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int rank   = m_f->m_comm->GetRank();
     int nprocs = m_f->m_comm->GetSize();
     // Check for command line point specification
@@ -458,6 +462,8 @@ void ProcessInterpPoints::InterpolateFieldToPts(
     NekDouble clamp_up,
     NekDouble def_value)
 {
+    boost::ignore_unused(def_value);
+
     ASSERTL0(pts->GetNFields() == field0.size(), "ptField has too few fields");
 
     int nfields = field0.size();

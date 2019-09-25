@@ -37,9 +37,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessHalfModeToFourier.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessHalfModeToFourier.h"
 
 namespace Nektar
 {
@@ -65,6 +67,7 @@ ProcessHalfModeToFourier::~ProcessHalfModeToFourier()
 
 void ProcessHalfModeToFourier::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
 
     // modify field definition
     for (int i = 0; i < m_f->m_data.size(); ++i)

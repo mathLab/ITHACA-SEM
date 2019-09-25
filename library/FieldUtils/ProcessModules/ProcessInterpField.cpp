@@ -35,14 +35,16 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/geometry.hpp>
-#include "ProcessInterpField.h"
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessInterpField.h"
 
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
@@ -81,6 +83,8 @@ ProcessInterpField::~ProcessInterpField()
 
 void ProcessInterpField::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
 
     std::vector<std::string> files;

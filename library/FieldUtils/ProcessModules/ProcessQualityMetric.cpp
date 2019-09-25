@@ -36,7 +36,7 @@
 #include <string>
 using namespace std;
 
-#include "ProcessQualityMetric.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/Interp.h>
@@ -45,6 +45,8 @@ using namespace std;
 #include <StdRegions/StdTetExp.h>
 #include <StdRegions/StdHexExp.h>
 #include <StdRegions/StdTriExp.h>
+
+#include "ProcessQualityMetric.h"
 
 namespace Nektar
 {
@@ -69,6 +71,8 @@ ProcessQualityMetric::~ProcessQualityMetric()
 
 void ProcessQualityMetric::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nfields           = m_f->m_variables.size();
     m_f->m_variables.push_back("qualitymetric");
     // Skip in case of empty partition

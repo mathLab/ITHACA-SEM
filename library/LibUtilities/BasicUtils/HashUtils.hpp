@@ -59,6 +59,7 @@ inline void hash_combine(std::size_t& seed, const T& v, Args... args)
 template <typename T, typename... Args>
 inline std::size_t hash_combine(const T& v, Args... args)
 {
+    boost::ignore_unused(v);
     std::size_t seed = 0;
     hash_combine(seed, args...);
     return seed;

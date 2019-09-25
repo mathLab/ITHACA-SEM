@@ -34,18 +34,19 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <iostream>
 #include <string>
-
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/geometry.hpp>
-#include "ProcessInterpPointDataToFld.h"
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 #include <LibUtilities/BasicUtils/CsvIO.h>
-#include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessInterpPointDataToFld.h"
 
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
@@ -78,6 +79,8 @@ ProcessInterpPointDataToFld::~ProcessInterpPointDataToFld()
 
 void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int i, j;
     LibUtilities::PtsFieldSharedPtr fieldPts;
     // Load pts file

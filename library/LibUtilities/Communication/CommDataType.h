@@ -122,7 +122,7 @@ public:
     {
         return &val[0];
     }
-    static int GetCount(const std::vector<elemT> &val)
+    static size_t GetCount(const std::vector<elemT> &val)
     {
         return val.size();
     }
@@ -147,7 +147,7 @@ public:
     {
         return val.get();
     }
-    static int GetCount(const Array<OneD, elemT> &val)
+    static size_t GetCount(const Array<OneD, elemT> &val)
     {
         return val.num_elements();
     }

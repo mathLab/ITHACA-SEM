@@ -133,7 +133,7 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
         }
     }
 
-    int totvars = fieldNames.size();
+    size_t totvars = fieldNames.size();
 
     std::vector<NekDouble> ptsSerial;
     typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
@@ -155,22 +155,22 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
             }
             catch(const boost::bad_lexical_cast &)
             {
-                ASSERTL0(false, "could not convert line: " + line);
+                NEKERROR(ErrorUtil::efatal, "could not convert line: " + line);
             }
         }
     }
 
-    int npts = ptsSerial.size() / totvars;
+    size_t npts = ptsSerial.size() / totvars;
 
     Array<OneD, Array<OneD, NekDouble> > pts(totvars);
-    for (int i = 0; i < totvars; ++i)
+    for (size_t i = 0; i < totvars; ++i)
     {
         pts[i] = Array<OneD, NekDouble>(npts);
     }
 
-    for (int i = 0; i < npts; ++i)
+    for (size_t i = 0; i < npts; ++i)
     {
-        for (int j = 0; j < totvars; ++j)
+        for (size_t j = 0; j < totvars; ++j)
         {
             pts[j][i] = ptsSerial[i * totvars + j];
         }
@@ -183,7 +183,7 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
         auto p = std::find(fieldNames.begin(), fieldNames.end(), dimNames[i]);
         if (p != fieldNames.end())
         {
-            int j = std::distance(fieldNames.begin(), p);
+            auto j = std::distance(fieldNames.begin(), p);
 
             if (i == j)
             {

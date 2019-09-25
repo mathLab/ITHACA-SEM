@@ -522,7 +522,8 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         }
         catch (fs::filesystem_error &e)
         {
-            ASSERTL0(false, "Filesystem error: " + std::string(e.what()));
+            NEKERROR(ErrorUtil::efatal,
+                     "Filesystem error: " + std::string(e.what()));
         }
 
         m_comm->Block();
@@ -589,11 +590,11 @@ int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
             numbasis = 3;
             break;
         default:
-            ASSERTL0(false, "Unsupported shape type.");
+            NEKERROR(ErrorUtil::efatal, "Unsupported shape type.");
             break;
     }
 
-    unsigned int datasize = 0;
+    size_t datasize = 0;
 
     ASSERTL0(fielddefs->m_basis.size() == numbasis,
              "Length of basis vector is incorrect");
@@ -686,7 +687,7 @@ int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
             }
             break;
             default:
-                ASSERTL0(false, "Unsupported shape type.");
+                NEKERROR(ErrorUtil::efatal, "Unsupported shape type.");
                 break;
         }
 
@@ -783,7 +784,7 @@ int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
                 }
                 break;
                 default:
-                    ASSERTL0(false, "Unsupported shape type.");
+                    NEKERROR(ErrorUtil::efatal, "Unsupported shape type.");
                     break;
             }
         }

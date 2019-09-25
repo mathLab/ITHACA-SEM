@@ -92,7 +92,7 @@ namespace LibUtilities
 
             ASSERTL0(ret == Z_OK, "Error initializing Zlib.");
 
-            strm.avail_in = in.size() * sizeof(T) / sizeof(char);
+            strm.avail_in = (unsigned int)in.size() * sizeof(T) / sizeof(char);
             strm.next_in = input;
 
             // Deflate input until output buffer is no longer full.
@@ -169,7 +169,7 @@ namespace LibUtilities
             ret = inflateInit(&strm);
             ASSERTL0(ret == Z_OK, "Error initializing zlib decompression.");
 
-            strm.avail_in = in.size();
+            strm.avail_in = (unsigned int)in.size();
             strm.next_in = (unsigned char*)(&in[0]);
 
             do {
@@ -200,7 +200,7 @@ namespace LibUtilities
             if (ret == Z_STREAM_END)
             {
                 T* readFieldData = (T*) output.c_str();
-                unsigned int len = output.size() * sizeof(*output.c_str())
+                unsigned int len = (unsigned int)output.size() * sizeof(*output.c_str())
                                                  / sizeof(T);
                 out.assign( readFieldData, readFieldData + len);
                 return Z_OK;

@@ -392,7 +392,7 @@ void ThreadWorkerBoost::LoadJobs()
  */
 unsigned int ThreadWorkerBoost::GetNumToLoad()
 {
-    unsigned int numToLoad;
+    unsigned int numToLoad = 0;
     switch (m_threadManager->m_schedType)
     {
         case e_guided:
@@ -408,7 +408,7 @@ unsigned int ThreadWorkerBoost::GetNumToLoad()
             break;
 
         default:
-            ASSERTL0(0, "Invalid value for SchedType.");
+            NEKERROR(ErrorUtil::efatal, "Invalid value for SchedType.");
             break;
     }
     return numToLoad;

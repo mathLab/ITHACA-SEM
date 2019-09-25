@@ -337,7 +337,7 @@ namespace Nektar
                 returnval = modes[offset]*modes[offset+1]*modes[offset+2];
                 break;
             default:
-                ASSERTL0(false,"Unknown Shape Type");
+                NEKERROR(ErrorUtil::efatal,"Unknown Shape Type");
                 break;
             }
 
@@ -372,7 +372,7 @@ namespace Nektar
                 returnval = na*nb*nc;
                 break;
             default:
-                ASSERTL0(false,"Unknown Shape Type");
+                NEKERROR(ErrorUtil::efatal,"Unknown Shape Type");
                 break;
             }
 

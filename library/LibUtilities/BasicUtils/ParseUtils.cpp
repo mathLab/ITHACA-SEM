@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <sstream>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/spirit/include/qi_core.hpp>
 #include <boost/spirit/include/qi_auto.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
@@ -76,6 +77,13 @@ struct PushBackFunctor
         }
     }
 private:
+    // Do not allow assignment
+    PushBackFunctor& operator=(const PushBackFunctor& src)
+    {
+        boost::ignore_unused(src);
+        return *this;
+    }
+
     /// Storage vector that will hold parsed variables from boost::spirit.
     std::vector<T> &m_vec;
 };

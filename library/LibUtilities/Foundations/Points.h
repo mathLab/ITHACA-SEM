@@ -189,7 +189,8 @@ namespace Nektar
                     totpoints = m_numpoints*(m_numpoints+1)/2;
                     break;
                 case eNodalTriSPI:
-                    ASSERTL0(false,"this method cannot be implemented");
+                    NEKERROR(ErrorUtil::efatal,
+                             "This method cannot be implemented");
                     break;
 
                 case eNodalQuadElec:
@@ -201,7 +202,8 @@ namespace Nektar
                     totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
                     break;
                 case eNodalTetSPI:
-                    ASSERTL0(false,"this method cannot be implemented");
+                    NEKERROR(ErrorUtil::efatal,
+                             "This method cannot be implemented");
                     break;
 
                 case eNodalPrismEvenlySpaced:
@@ -209,7 +211,8 @@ namespace Nektar
                     totpoints = m_numpoints*m_numpoints*(m_numpoints+1)/2;
                     break;
                 case eNodalPrismSPI:
-                    ASSERTL0(false,"this method cannot be implemented");
+                    NEKERROR(ErrorUtil::efatal,
+                             "This method cannot be implemented");
                     break;
 
                 case eNodalHexElec:
@@ -327,7 +330,7 @@ namespace Nektar
             virtual const MatrixSharedPtrType GetI(const PointsKey &key)
             {
                 boost::ignore_unused(key);
-                ASSERTL0(false, "Method not implemented ");
+                NEKERROR(ErrorUtil::efatal, "Method not implemented ");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
@@ -335,7 +338,7 @@ namespace Nektar
             virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x)
             {
                 boost::ignore_unused(x);
-                ASSERTL0(false, "Method not implemented");
+                NEKERROR(ErrorUtil::efatal, "Method not implemented");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
@@ -343,7 +346,7 @@ namespace Nektar
             virtual const MatrixSharedPtrType GetI(unsigned int, const Array<OneD, const DataType>& x)
             {
                 boost::ignore_unused(x);
-                ASSERTL0(false, "Method not implemented");
+                NEKERROR(ErrorUtil::efatal, "Method not implemented");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
@@ -351,7 +354,7 @@ namespace Nektar
             virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x, const Array<OneD, const DataType>& y)
             {
                 boost::ignore_unused(x, y);
-                ASSERTL0(false, "Method not implemented");
+                NEKERROR(ErrorUtil::efatal, "Method not implemented");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
@@ -360,7 +363,7 @@ namespace Nektar
                                                    const Array<OneD, const DataType>& z)
             {
                 boost::ignore_unused(x, y, z);
-                ASSERTL0(false, "Method not implemented");
+                NEKERROR(ErrorUtil::efatal, "Method not implemented");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
@@ -368,7 +371,7 @@ namespace Nektar
             virtual const MatrixSharedPtrType GetGalerkinProjection(const PointsKey &pkey)
             {
                 boost::ignore_unused(pkey);
-                ASSERTL0(false, "Method not implemented ");
+                NEKERROR(ErrorUtil::efatal, "Method not implemented ");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
@@ -415,11 +418,13 @@ namespace Nektar
             Points(const Points &pts)
             {
                 boost::ignore_unused(pts);
-                NEKERROR(ErrorUtil::efatal,"Copy Constructor for Points should not be called");
+                NEKERROR(ErrorUtil::efatal,
+                         "Copy Constructor for Points should not be called");
             }
             Points()
             {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor for Points should not be called");
+                NEKERROR(ErrorUtil::efatal,
+                         "Default Constructor for Points should not be called");
             }
         };
 

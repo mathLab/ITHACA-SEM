@@ -212,6 +212,16 @@ ThreadStartupManager::ThreadStartupManager() : m_type("Threading starting up")
 
 
 /**
+ * @brief ThreadDefaultManager copy constructor
+ */
+ThreadStartupManager::ThreadStartupManager(const ThreadStartupManager& src)
+    : m_type(src.m_type)
+{
+    // empty
+}
+
+
+/**
  *
  */
 ThreadStartupManager::~ThreadStartupManager()
@@ -352,6 +362,16 @@ bool ThreadStartupManager::IsInitialised()
 const std::string& ThreadStartupManager::GetType() const
 {
     return m_type;
+}
+
+
+/**
+ * @brief ThreadDefaultManager copy constructor
+ */
+ThreadStartupManager& ThreadStartupManager::operator=(
+        const ThreadStartupManager& src)
+{
+    return *this;
 }
 
 } // Thread

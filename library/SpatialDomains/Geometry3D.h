@@ -103,6 +103,11 @@ protected:
     virtual NekDouble v_GetCoord(const int i,
                                  const Array<OneD, const NekDouble> &Lcoord);
 
+    bool MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord,
+                     Array<OneD, NekDouble> &locCoord);
+
+    void ClampLocalCoords(Array<OneD, NekDouble> &locCoord, NekDouble tol);
+
     //---------------------------------------
     // Helper functions
     //---------------------------------------

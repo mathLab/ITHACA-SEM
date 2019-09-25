@@ -256,45 +256,16 @@ bool HexGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                               NekDouble tol,
                               NekDouble &resid)
 {
-    ASSERTL1(gloCoord.num_elements() == 3,
-             "Three dimensional geometry expects three coordinates.");
-
-    // find min, max point and check if within twice this distance other false
-    // this is advisable since GetLocCoord is expensive for non regular
-    // elements.
-    if (GetMetricInfo()->GetGtype() != eRegular)
+    //Rough check if within twice min/max point
+    if(!MinMaxCheck(gloCoord, locCoord))
     {
-        int i;
-        Array<OneD, NekDouble> mincoord(3), maxcoord(3);
-        NekDouble diff = 0.0;
-
-        v_FillGeom();
-
-        const int npts = m_xmap->GetTotPoints();
-        Array<OneD, NekDouble> pts(npts);
-
-        for (i = 0; i < 3; ++i)
-        {
-            m_xmap->BwdTrans(m_coeffs[i], pts);
-
-            mincoord[i] = Vmath::Vmin(pts.num_elements(), pts, 1);
-            maxcoord[i] = Vmath::Vmax(pts.num_elements(), pts, 1);
-
-            diff = max(maxcoord[i] - mincoord[i], diff);
-        }
-
-        for (i = 0; i < 3; ++i)
-        {
-            if ((gloCoord[i] < mincoord[i] - 0.2 * diff) ||
-                (gloCoord[i] > maxcoord[i] + 0.2 * diff))
-            {
-                return false;
-            }
-        }
+        return false;
     }
 
-    v_GetLocCoords(gloCoord, locCoord);
+    // Convert to the local Cartesian coordinates.
+    resid = v_GetLocCoords(gloCoord, locCoord);
 
+    // Check local coordinate is within cartesian bounds.
     if (locCoord[0] >= -(1 + tol) && locCoord[0] <= 1 + tol &&
         locCoord[1] >= -(1 + tol) && locCoord[1] <= 1 + tol &&
         locCoord[2] >= -(1 + tol) && locCoord[2] <= 1 + tol)
@@ -302,21 +273,8 @@ bool HexGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
         return true;
     }
 
-    // If out of range clamp locCoord to be within [-1,1]^3 since any larger
-    // value will be very oscillatory if called by 'returnNearestElmt' option in
-    // ExpList::GetExpIndex
-    for (int i = 0; i < 3; ++i)
-    {
-        if (locCoord[i] < -(1 + tol))
-        {
-            locCoord[i] = -(1 + tol);
-        }
-
-        if (locCoord[i] > (1 + tol))
-        {
-            locCoord[i] = 1 + tol;
-        }
-    }
+    //Clamp local coords
+    ClampLocalCoords(locCoord, tol);
 
     return false;
 }

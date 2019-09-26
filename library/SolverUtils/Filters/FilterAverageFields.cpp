@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Filters/FilterAverageFields.h>
 
 namespace Nektar
@@ -71,6 +73,8 @@ void FilterAverageFields::v_ProcessSample(
           std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     const NekDouble &time)
 {
+    boost::ignore_unused(pFields, time);
+
     for(int n = 0; n < m_outFields.size(); ++n)
     {
         Vmath::Vadd(m_outFields[n].num_elements(),
@@ -87,6 +91,8 @@ void FilterAverageFields::v_PrepareOutput(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
+    boost::ignore_unused(pFields, time);
+
     m_fieldMetaData["NumberOfFieldDumps"] =
         boost::lexical_cast<std::string>(m_numSamples);
 }

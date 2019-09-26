@@ -37,6 +37,7 @@
 #include <SolverUtils/Diffusion/DiffusionLFR.h>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <MultiRegions/DisContField1D.h>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/math/special_functions/gamma.hpp>
 #include <iostream>
 #include <iomanip>
@@ -174,6 +175,8 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
+            boost::ignore_unused(pSession);
+
             int i, n;
             int nquad0, nquad1;
             int phys_offset;
@@ -323,7 +326,9 @@ namespace Nektar
         void DiffusionLFR::v_SetupCFunctions(
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
-        {        
+        {
+            boost::ignore_unused(pSession);
+
             int i, n;
             NekDouble c0 = 0.0;
             NekDouble c1 = 0.0;
@@ -853,6 +858,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
+            boost::ignore_unused(pFwd, pBwd);
+
             int i, j, n;
             int phys_offset;
             //Array<TwoD, const NekDouble> gmat;
@@ -1303,6 +1310,8 @@ namespace Nektar
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
                   Array<OneD, Array<OneD, NekDouble> >               &qflux)
         {
+            boost::ignore_unused(ufield);
+
             int i, j;
             int nTracePts  = fields[0]->GetTrace()->GetTotPoints();
             int nvariables = fields.num_elements();
@@ -1401,6 +1410,8 @@ namespace Nektar
                   Array<OneD,       NekDouble>                &penaltyflux,
             NekDouble                                          C11)
         {
+            boost::ignore_unused(C11);
+
             int i, e, id1, id2;
             int nBndEdges, nBndEdgePts;
             int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
@@ -1467,6 +1478,8 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &iFlux,
                   Array<OneD,       NekDouble>                &derCFlux)
         {
+            boost::ignore_unused(nConvectiveFields);
+
             int n;
             int nLocalSolutionPts, phys_offset, t_offset;
             
@@ -1585,7 +1598,9 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &flux, 
             const Array<OneD,       NekDouble>                &iFlux,
                   Array<OneD,       NekDouble>                &derCFlux)
-        {                   
+        {
+            boost::ignore_unused(nConvectiveFields);
+
             int n, e, i, j, cnt;
             
             Array<TwoD, const NekDouble> gmat;
@@ -1800,7 +1815,9 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &fluxX2, 
             const Array<OneD, const NekDouble>                &numericalFlux,
                   Array<OneD,       NekDouble>                &divCFlux)
-        {                   
+        {
+            boost::ignore_unused(nConvectiveFields);
+
             int n, e, i, j, cnt;
             
             int nElements = fields[0]->GetExpSize();
@@ -1997,6 +2014,8 @@ namespace Nektar
             const Array<OneD, const NekDouble> &numericalFlux,
                   Array<OneD,       NekDouble> &divCFlux)
         {
+            boost::ignore_unused(nConvectiveFields);
+
             int n, e, i, j, cnt;
             
             int nElements   = fields[0]->GetExpSize();

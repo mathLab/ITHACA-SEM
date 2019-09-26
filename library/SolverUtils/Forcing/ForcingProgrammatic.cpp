@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Forcing/ForcingProgrammatic.h>
 
 namespace Nektar
@@ -61,6 +63,8 @@ namespace SolverUtils
             const unsigned int& pNumForcingFields,
             const TiXmlElement* pForce)
     {
+        boost::ignore_unused(pForce);
+
         m_NumVariable = pNumForcingFields;
         int nq         = pFields[0]->GetTotPoints();
 
@@ -77,6 +81,8 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
+        boost::ignore_unused(fields, inarray, time);
+
         for (int i = 0; i < m_NumVariable; i++)
         {
             Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,

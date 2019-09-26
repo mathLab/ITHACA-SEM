@@ -34,6 +34,8 @@
 
 #include <iomanip>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <SolverUtils/Filters/FilterModalEnergy.h>
 
@@ -212,7 +214,7 @@ void FilterModalEnergy::v_Update(
                 SetUpBaseFields(graphShrPtr);
                 string file = m_session->
                     GetFunctionFilename("BaseFlow", 0);
-                ImportFldBase(file, graphShrPtr);
+                ImportFldBase(file);
 
                 for (int i = 0; i < pFields.num_elements()-1; ++i)
                 {
@@ -344,6 +346,8 @@ void FilterModalEnergy::v_Finalise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     if (pFields[0]->GetComm()->GetRank() == 0)
     {
         m_outputStream.close();
@@ -359,6 +363,8 @@ NekDouble FilterModalEnergy::L2Error(
     unsigned int field,
     const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     NekDouble L2error = -1.0;
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
 
@@ -631,8 +637,7 @@ void FilterModalEnergy::SetUpBaseFields(
  *  Import the base flow fld file.
  */
 void FilterModalEnergy::ImportFldBase(
-    std::string pInfile,
-    SpatialDomains::MeshGraphSharedPtr pGraph)
+    std::string pInfile)
 {
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
     std::vector<std::vector<NekDouble> > FieldData;

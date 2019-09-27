@@ -472,12 +472,13 @@ the Incompressible Navier-Stokes solver,
 \end{lstlisting}
 
 Boundary conditions can also be loaded simultaneously from a file and from an 
-analytic expression. For example in the scenario where a spatial boundary 
+analytic expression (currently only implemented in 3D).
+For example, in the scenario where a spatial boundary 
 condition is read from a file, but needs to be modulated by a time-dependent 
 analytic expression:
 \begin{lstlisting}[style=XMLStyle]
 <REGION REF="1">
-  <D VAR="u" VALUE="USERDEFINEDTYPE="TimeDependent" VALUE="sin(PI*(x-t))"
+  <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="sin(PI*(x-t))"
              FILE="bcsfromfiles_u_1.bc" />
 </REGION>
 \end{lstlisting}

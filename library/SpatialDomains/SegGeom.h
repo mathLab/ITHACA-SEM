@@ -102,11 +102,6 @@ protected:
         NekDouble tol,
         NekDouble &resid);
 
-    virtual bool v_MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord);
-
-    virtual void v_ClampLocCoords(Array<OneD, NekDouble> &locCoord,
-                                  NekDouble tol);
-
 private:
     /// Boolean indicating whether object owns the data
     CurveSharedPtr m_curve;

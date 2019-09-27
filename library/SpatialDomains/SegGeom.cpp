@@ -368,69 +368,6 @@ NekDouble SegGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
     return resid;
 }
 
-bool SegGeom::v_MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
-{
-    // Validation checks
-    ASSERTL1(gloCoord.num_elements() >= 1,
-             "One dimensional geometry expects at least one coordinates.");
-
-    // find min, max point and check if within twice this
-    // distance other false this is advisable since
-    // GetLocCoord is expensive for non regular elements.
-    if (GetMetricInfo()->GetGtype() != eRegular)
-    {
-        int i;
-        Array<OneD, NekDouble> mincoord(m_coordim), maxcoord(m_coordim);
-        NekDouble diff = 0.0;
-
-        v_FillGeom();
-
-        const int npts = m_xmap->GetTotPoints();
-        Array<OneD, NekDouble> pts(npts);
-
-        for (i = 0; i < m_coordim; ++i)
-        {
-            m_xmap->BwdTrans(m_coeffs[i], pts);
-            mincoord[i] = Vmath::Vmin(pts.num_elements(), pts, 1);
-            maxcoord[i] = Vmath::Vmax(pts.num_elements(), pts, 1);
-
-            diff = std::max(maxcoord[i] - mincoord[i], diff);
-        }
-
-        for (i = 0; i < m_coordim; ++i)
-        {
-            if ((gloCoord[i] < mincoord[i] - 0.2 * diff) ||
-                (gloCoord[i] > maxcoord[i] + 0.2 * diff))
-            {
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
-/**
-* @brief Clamp local coords to be within [-1,1].
-*/
-void SegGeom::v_ClampLocCoords(Array<OneD, NekDouble> &locCoord,
-                                  NekDouble tol)
-{
-    // If out of range clamp locCoord to be within [-1,1]
-    // since any larger value will be very oscillatory if
-    // called by 'returnNearestElmt' option in
-    // ExpList::GetExpIndex
-    if (locCoord[0] < -(1 + tol))
-    {
-        locCoord[0] = -(1 + tol);
-    }
-
-    if (locCoord[0] > (1 + tol))
-    {
-        locCoord[0] = 1 + tol;
-    }
-}
-
 bool SegGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                               Array<OneD, NekDouble> &stdCoord,
                               NekDouble tol,

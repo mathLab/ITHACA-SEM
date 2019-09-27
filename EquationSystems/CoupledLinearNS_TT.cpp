@@ -4814,8 +4814,10 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
         int nel  = m_fields[m_velocity[0]]->GetNumElmts();
         int nvel   = m_velocity.num_elements();
         int nsize_bndry = nvel*m_fields[m_velocity[0]]->GetExp(0)->NumBndryCoeffs()*nz_loc;
+        int nbndry = nsize_bndry;
         int nsize_bndry_p1 = nsize_bndry+nz_loc;
         int nsize_int = (nvel*m_fields[m_velocity[0]]->GetExp(0)->GetNcoeffs()*nz_loc - nsize_bndry);
+	int nint = nsize_int;
         int nsize_p = m_pressure->GetExp(0)->GetNcoeffs()*nz_loc;
 //	cout << "nsize_int " << nsize_int << endl;
 //	cout << "nsize_p " << nsize_p << endl;
@@ -4832,6 +4834,16 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	Array<OneD, Eigen::MatrixXd > Ch_elem(m_fields[0]->GetNumElmts()); // nsize_p_m1, nsize_bndry_p1
 	Array<OneD, Eigen::MatrixXd > Dh_elem(m_fields[0]->GetNumElmts()); // nsize_p_m1, nsize_p_m1
 	
+	// set the newton forcing in terms of the current iterate
+	myAdvField_Newton = Array<OneD, Array<OneD, NekDouble> > (2);
+	myAdvField_Newton[0] = Array<OneD, NekDouble> (m_fields[0]->GetTotPoints(),0.0);
+	myAdvField_Newton[1] = Array<OneD, NekDouble> (m_fields[0]->GetTotPoints(),0.0);
+	for (int i = 0; i<m_fields[0]->GetTotPoints(); ++i)
+	{
+		myAdvField_Newton[0][i] = snapshot_x[i];
+		myAdvField_Newton[1][i] = snapshot_y[i];
+	}
+
 
 	for (int curr_elem = 0; curr_elem < m_fields[0]->GetNumElmts(); ++curr_elem)
 	{
@@ -4850,7 +4862,11 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
                 int ncoeffs = m_fields[m_velocity[0]]->GetExp(curr_elem)->GetNcoeffs();
                 int nphys   = m_fields[m_velocity[0]]->GetExp(curr_elem)->GetTotPoints();
 		int pqsize  = m_pressure->GetExp(curr_elem)->GetTotPoints();
-
+                int npoints = locExp->GetTotPoints();
+                int phys_offset = m_fields[m_velocity[0]]->GetPhys_Offset(curr_elem);
+                Array<OneD, Array<OneD, NekDouble> > AdvDeriv(nvel*nvel);
+//                Array<OneD, NekDouble> tmpphys = m_fields[0]->UpdatePhys();
+                Array<OneD, NekDouble> tmpphys = Array<OneD, NekDouble>(npoints,0.0);
 //		cout << "ncoeffs " << ncoeffs << endl;
 //		cout << "nphys " << nphys << endl;
 //		cout << "pqsize " << pqsize << endl;   // pqsize == nphys and ncoeffs == nphys / 2 when?
@@ -4864,6 +4880,26 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			curr_snap_x_part[i] = snapshot_x[curr_elem*nphys + i];
 			curr_snap_y_part[i] = snapshot_y[curr_elem*nphys + i];
 		}
+
+                // Calculate derivative of base flow 
+                if(use_Newton)
+                {
+                    int cnt = 0;
+                    AdvDeriv[0] = Array<OneD, NekDouble>(nvel*nvel*npoints);
+                    for(int nv = 0; nv < nvel; ++nv)
+                    {
+                        for(int nv1 = 0; nv1 < nvel; ++nv1)
+                        {
+                            if(cnt < nvel*nvel-1)
+                            {
+                                AdvDeriv[cnt+1] = AdvDeriv[cnt] + npoints;
+                                ++cnt;
+                            }
+                            locExp->PhysDeriv(MultiRegions::DirCartesianMap[nv1],myAdvField_Newton[nv] + phys_offset, AdvDeriv[nv*nvel+nv1]);
+                        }
+                    }
+                }
+                
 
 		Array<OneD, double> Ah_ele_vec(Ahrows*Ahrows, 0.0);
 		Array<OneD, double> B_ele_vec(nsize_bndry*nsize_int, 0.0);
@@ -4977,6 +5013,31 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 
 				}
+
+
+                        if(use_Newton)
+                        {
+                            for(int nv = 0; nv < nvel; ++nv)
+                            {
+                                // u' . Grad U terms 
+                                Vmath::Vmul(npoints,phys,1, AdvDeriv[k*nvel+nv], 1,tmpphys,1);
+                                locExp->IProductWRTBase(tmpphys,coeffs);
+                                
+                                for(int n1 = 0; n1 < nz_loc; ++n1) // n1 is only zero
+                                {
+                                    for(int j = 0; j < nbmap; ++j)
+                                    {
+                                        Ah_ele_vec[j+(k*nz_loc+n1)*nbmap + (i+(nv*nz_loc+n1)*nbmap)*Ahrows] += coeffs[bmap[j]];
+                                    }
+                                    
+                                    for(int j = 0; j < nimap; ++j)
+                                    {
+                                        C_ele_vec[i+(nv*nz_loc+n1)*nbmap + (j+(k*nz_loc+n1)*nimap)*nbndry] += coeffs[imap[j]];
+                                    }
+                                }
+                            } 
+			}
+
 			} //for (int k = 0; k < 2; ++k)
 
 
@@ -5072,6 +5133,32 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 						Dint_ele_vec[ (k*nimap + i)*nsize_p + il ] = detT * (Tb * pcoeffs_x[il] + Td * pcoeffs_y[il]);
 					}
 				}
+
+                        if(use_Newton)
+                        {
+                            for(int nv = 0; nv < nvel; ++nv)
+                            {
+                                // u' . Grad U terms 
+                                Vmath::Vmul(npoints,phys,1, AdvDeriv[k*nvel+nv], 1,tmpphys,1);
+                                locExp->IProductWRTBase(tmpphys,coeffs);
+                                
+                                for(int n1 = 0; n1 < nz_loc; ++n1) // n1 is only zero
+                                {
+                                    for(int j = 0; j < nbmap; ++j)
+                                    {
+                                        B_ele_vec[j+(k*nz_loc+n1)*nbmap + (i+(nv*nz_loc+n1)*nimap)*nbndry] += coeffs[bmap[j]];
+                                    }
+                                    
+                                    for(int j = 0; j < nimap; ++j)
+                                    {
+                                        D_ele_vec[j+(k*nz_loc+n1)*nimap + (i+(nv*nz_loc+n1)*nimap)*nint] += coeffs[imap[j]];
+                                    }
+                                }
+                            } 
+			}
+
+
+
 			} //for (int k = 0; k < 2; ++k)
 
 
@@ -5186,7 +5273,13 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		Dh_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_p_m1, nsize_p_m1 );
 		Dh_elem[curr_elem] = Dh_curr_ele;
 
-
+		///////////////////////////
+		// temporary debugging
+//		cout << "Dh_elem[curr_elem](0,0) " << Dh_elem[curr_elem](0,0) << endl;
+//		cout << "Dh_elem[curr_elem](1,0) " << Dh_elem[curr_elem](1,0) << endl;
+//		cout << "Dh_elem[curr_elem](0,1) " << Dh_elem[curr_elem](0,1) << endl;
+//		cout << "Dh_elem[curr_elem](1,1) " << Dh_elem[curr_elem](1,1) << endl;
+		/////////////////////////
 		
 
 
@@ -5256,8 +5349,170 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
         Array<OneD, NekDouble > f_int(num_elem*nsize_int);
         NekVector< NekDouble  > F_int(f_int.num_elements(),f_int, eWrapper);
 
+	Array<OneD, Array<OneD, NekDouble> > forcing(2); // local dofs
+	forcing[0] = Array<OneD, NekDouble>(m_fields[m_velocity[0]]->GetNcoeffs(),0.0);
+	forcing[1] = Array<OneD, NekDouble>(m_fields[m_velocity[0]]->GetNcoeffs(),0.0);
+
+	// set the newton forcing in terms of the current iterate
+//	myAdvField_Newton = Array<OneD, Array<OneD, NekDouble> > (2);
+//	myAdvField_Newton[0] = Array<OneD, NekDouble> (m_fields[0]->GetTotPoints(),0.0);
+//	myAdvField_Newton[1] = Array<OneD, NekDouble> (m_fields[0]->GetTotPoints(),0.0);
+        Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
+	Array<OneD, Array<OneD, NekDouble> > Eval_Adv(m_velocity.num_elements());
+	Array<OneD, Array<OneD, NekDouble> > AdvTerm(m_velocity.num_elements());
+        for(int il = 0; il < m_velocity.num_elements(); ++il)
+        {
+                AdvField[il] = Array<OneD, NekDouble> (m_fields[m_velocity[il]]->GetTotPoints(),0.0);
+		Eval_Adv[il] = Array<OneD, NekDouble> (m_fields[m_velocity[il]]->GetTotPoints(),0.0);
+		AdvTerm[il] = Array<OneD, NekDouble> (m_fields[m_velocity[il]]->GetNcoeffs(),0.0);
+        }
+/*	for (int i = 0; i<m_fields[0]->GetTotPoints(); ++i)
+	{
+		myAdvField_Newton[0][i] = snapshot_x[i];
+		myAdvField_Newton[1][i] = snapshot_y[i];
+	}
+*/
+	EvaluateAdvectionTerms(myAdvField_Newton, Eval_Adv);
+        for (unsigned int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[i]->SetWaveSpace(true);
+//            m_fields[i]->IProductWRTBase(forcing_phys[i], forcing[i]);
+            m_fields[m_velocity[i]]->IProductWRTBase(Eval_Adv[i], AdvTerm[i]); //(w, (u.grad)u)
+	    if (use_Newton)
+	    {
+		for (unsigned int il = 0; il < forcing[i].num_elements(); ++il)
+	        {
+			forcing[i][il] = forcing[i][il] - AdvTerm[i][il];
+//			cout << Eval_Adv[i][il] << endl;
+		}
+	    }
+            m_fields[i]->SetWaveSpace(waveSpace);
+        }
+
+
+        // Assemble f_bnd and f_int
+
+        int cnt = 0;
+	int cnt1 = 0;
+        for(int i = 0; i < num_elem; ++i) // loop over elements
+        {
+            int eid = i;
+            m_fields[m_velocity[0]]->GetExp(eid)->GetBoundaryMap(bmap);
+            m_fields[m_velocity[0]]->GetExp(eid)->GetInteriorMap(imap);
+            int nbnd   = bmap.num_elements();
+            int nint   = imap.num_elements();
+            int offset = m_fields[m_velocity[0]]->GetCoeff_Offset(eid);
+            
+            for(int j = 0; j < nvel; ++j) // loop over velocity fields 
+            {
+                    for(int k = 0; k < nbnd; ++k)
+                    {
+                        f_bnd[cnt+k] = forcing[j][ offset+bmap[k]];
+                    }
+                    for(int k = 0; k < nint; ++k)
+                    {
+                        f_int[cnt1+k] = forcing[j][ offset+imap[k]];
+                    }
+                    cnt  += nbnd;
+                    cnt1 += nint;
+            }
+        }
+
+        Array<OneD, NekDouble > f_p(num_elem*nsize_p);
+        NekVector<  NekDouble > F_p(f_p.num_elements(),f_p,eWrapper);
+        NekVector<  NekDouble > F_p_tmp(num_elem*nsize_int);
+        
+
+	Eigen::VectorXd f_bnd_rhs_eigen = Eigen::VectorXd::Zero(f_bnd.num_elements());
+	for (int i = 0; i < f_bnd.num_elements(); ++i)
+	{
+		f_bnd_rhs_eigen(i) = f_bnd[i];
+	}
+	Eigen::VectorXd f_p_rhs_eigen = Eigen::VectorXd::Zero(f_p.num_elements());
+	for (int i = 0; i < f_p.num_elements(); ++i)
+	{
+		f_p_rhs_eigen(i) = f_p[i]; // should be undefined at this stage
+	}
+	Eigen::VectorXd f_int_rhs_eigen = Eigen::VectorXd::Zero(f_int.num_elements()); // num_elem*nsize_int
+	Eigen::VectorXd f_p_tmp_eigen = Eigen::VectorXd::Zero(f_int.num_elements()); // num_elem*nsize_int
+	for (int i = 0; i < f_int.num_elements(); ++i)
+	{
+		f_int_rhs_eigen(i) = f_int[i];
+	}
+
+
+
+        // fbnd does not currently hold the pressure mean
+//        F_bnd = F_bnd - (*m_mat[mode].m_BCinv)*F_int;
+//        F_p_tmp = (*m_mat[mode].m_Cinv)*F_int;
+//        F_p = (*m_mat[mode].m_D_int) * F_p_tmp;
+
+//	 should do these operations in Eigen
+	for (int i = 0; i < num_elem; ++i)
+	{
+		f_bnd_rhs_eigen.segment(i*nsize_bndry, nsize_bndry) = f_bnd_rhs_eigen.segment(i*nsize_bndry, nsize_bndry) - B_elem[i] * f_int_rhs_eigen.segment(i*nsize_int, nsize_int);
+		f_p_tmp_eigen.segment(i*nsize_int, nsize_int) = D_elem[i] * f_int_rhs_eigen.segment(i*nsize_int, nsize_int);
+		f_p_rhs_eigen.segment(i*nsize_p, nsize_p) = Dint_elem[i] * f_p_tmp_eigen.segment(i*nsize_int, nsize_int);
+
+	}
+
+
+	////////////////////
+	// temporary debugging
+/*	cout << "f_bnd_rhs_eigen.size() " << f_bnd_rhs_eigen.size() << endl;
+	cout << "f_bnd_rhs_eigen.norm() " << f_bnd_rhs_eigen.norm() << endl;
+	cout << "f_p_rhs_eigen.size() " << f_p_rhs_eigen.size() << endl;
+	cout << "f_p_rhs_eigen.norm() " << f_p_rhs_eigen.norm() << endl;
+
+*/
+	///////////////////
+
+
+
         Array<OneD, NekDouble > bnd   (m_locToGloMap[0]->GetNumGlobalCoeffs(),0.0);
         Array<OneD, NekDouble > fh_bnd(m_locToGloMap[0]->GetNumGlobalCoeffs(),0.0);
+
+        const Array<OneD,const int>& loctoglomap = m_locToGloMap[0]->GetLocalToGlobalMap();
+        const Array<OneD,const NekDouble>& loctoglosign = m_locToGloMap[0]->GetLocalToGlobalSign();
+        
+	int offset = 0;
+	cnt = 0; 
+        for(int i = 0; i < num_elem; ++i)
+        {
+            int eid  = i;
+            int nbnd = nz_loc*m_fields[0]->GetExp(eid)->NumBndryCoeffs(); 
+            
+            for(int j = 0; j < nvel; ++j)
+            {
+                for(int k = 0; k < nbnd; ++k)
+                {
+                    fh_bnd[loctoglomap[offset+j*nbnd+k]] += loctoglosign[offset+j*nbnd+k]*f_bnd_rhs_eigen(cnt+k);
+                }
+                cnt += nbnd;
+            }
+            
+            int nint    = m_pressure->GetExp(eid)->GetNcoeffs();
+            offset += nvel*nbnd + nint*nz_loc; 
+        }
+        
+        offset = cnt1 = 0; 
+        for(int i = 0; i <  num_elem; ++i)
+        {
+            int eid  = i;
+            int nbnd = nz_loc*m_fields[0]->GetExp(eid)->NumBndryCoeffs(); 
+            int nint = m_pressure->GetExp(eid)->GetNcoeffs(); 
+            
+            for(int n = 0; n < nz_loc; ++n)
+            {
+                for(int j = 0; j < nint; ++j)
+                {
+                    fh_bnd[loctoglomap[offset + nvel*nbnd + n*nint+j]] = f_p_rhs_eigen(cnt1+j);
+                }
+                cnt1   += nint;
+            }
+            offset += nvel*nbnd + nz_loc*nint; 
+        }
 
         //  Set Weak BC into f_bnd and Dirichlet Dofs in bnd
         const Array<OneD,const int>& bndmap = m_locToGloMap[0]->GetBndCondCoeffsToGlobalCoeffsMap();
@@ -5311,6 +5566,29 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
             }
         }
 
+	////////////////////////////
+	// temporary debugging
+	cout << "fh_bnd.num_elements() " << fh_bnd.num_elements() << endl;
+	double temp_norm = 0;
+	for (int i = 0; i < fh_bnd.num_elements(); i++)
+		temp_norm += fh_bnd[i];
+//	temp_norm = sqrt(temp_norm);
+	cout << "fh_bnd norm " << temp_norm << endl;
+	///////////////////////////
+
+	////////////////////////////
+	// temporary debugging
+	cout << "bnd.num_elements() " << bnd.num_elements() << endl;
+	temp_norm = 0;
+	for (int i = 0; i < bnd.num_elements(); i++)
+	{
+		temp_norm += bnd[i];
+//		cout << bnd[i] << " ";
+	}
+//	temp_norm = sqrt(temp_norm);
+	cout << "bnd norm " << temp_norm << endl;
+	///////////////////////////
+
 	int nLocBndDofs = num_elem * nsize_bndry_p1;
 	// ??	nGlobDofs = ??
 	// nGlobBndDofs defined??, si, si, si come nBndDofs
@@ -5349,10 +5627,15 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		tmp(loctoglobndmap[i]) += loctoglobndsign[i] * loc_dbc(i);
 	}
 
-	int offset = nDirBndDofs;
+	offset = nDirBndDofs;
 	V_GlobHomBndTmp = tmp.segment(offset, nGlobBndDofs-offset);
 	// actually this, but is mixing Nektar and Eigen data structures V_GlobHomBndTmp = -V_GlobHomBndTmp + fh_bnd[NumDirBCs : nGlobHomBndDofs + NumDirBCs]
-	V_GlobHomBndTmp = -V_GlobHomBndTmp;
+	Eigen::VectorXd fh_bnd_add1 = Eigen::VectorXd::Zero(nGlobHomBndDofs);
+	for (int i = 0; i < nGlobHomBndDofs; ++i)
+	{
+		fh_bnd_add1(i) = fh_bnd[NumDirBCs + i] ;
+	}
+	V_GlobHomBndTmp = -V_GlobHomBndTmp + fh_bnd_add1;
 	Eigen::VectorXd my_sys_in = V_GlobHomBndTmp;
 
 	Eigen::VectorXd my_Asolution = my_Gmat.colPivHouseholderQr().solve(my_sys_in);
@@ -5368,14 +5651,31 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		loc_dbc(i) = loctoglobndsign[i] * V_GlobBnd(loctoglobndmap[i]);
 	}
+
+	////////////////////////////
+	// temporary debugging
+/*	cout << "loc_dbc.num_elements() " << loc_dbc.num_elements() << endl;
+	double temp_norm = 0;
+	for (int i = 0; i < loc_dbc.num_elements(); i++)
+		temp_norm += loc_dbc[i] * loc_dbc[i];
+	temp_norm = sqrt(temp_norm);
+	cout << "loc_dbc norm " << temp_norm << endl; */
+	///////////////////////////
+
 	Eigen::VectorXd Fint = Eigen::VectorXd::Zero(num_elem*nsize_p - num_elem);
 	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
 	{
 		int cnt = curr_elem*nsize_bndry_p1;
 		Eigen::MatrixXd loc_Ch = Ch_elem[curr_elem];
-		Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1) = - loc_Ch * loc_dbc.segment(cnt, nsize_bndry_p1);  // actually an fh_bnd in case of body forcing as well
+//		F_int[curr_elem*nsize_p_m1:curr_elem*nsize_p_m1+nsize_p_m1] = fh_bnd[nGlobHomBndDofs + NumDirBCs + curr_elem*nsize_p_m1: nGlobHomBndDofs + NumDirBCs + curr_elem*nsize_p_m1+nsize_p_m1] - np.dot(loc_Ch,  loc_dbc[cnt:cnt+nsize_bndry_p1])
+		Eigen::VectorXd fh_bnd_add2 = Eigen::VectorXd::Zero(nsize_p_m1);
+		for (int i = 0; i < nsize_p_m1; ++i)
+		{
+			fh_bnd_add2(i) = fh_bnd[NumDirBCs + nGlobHomBndDofs + curr_elem*nsize_p_m1 + i] ;
+		}
+		Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1) = fh_bnd_add2 - loc_Ch * loc_dbc.segment(cnt, nsize_bndry_p1);  // actually an fh_bnd in case of body forcing as well
 		Eigen::MatrixXd loc_Dh = Dh_elem[curr_elem];
-		Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1) = loc_Dh * Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1);
+		Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1) = loc_Dh * Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1).eval();
 	}
 	my_bnd_after.segment(nGlobBndDofs, m_locToGloMap[0]->GetNumGlobalCoeffs() - nGlobBndDofs) = Fint;
 
@@ -5386,12 +5686,27 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	// can I now copy-paste from Nektar ?? -- try to do so:
 
-        const Array<OneD,const int>& loctoglomap = m_locToGloMap[0]->GetLocalToGlobalMap();
-        const Array<OneD,const NekDouble>& loctoglosign = m_locToGloMap[0]->GetLocalToGlobalSign();
+//        const Array<OneD,const int>& loctoglomap = m_locToGloMap[0]->GetLocalToGlobalMap();
+//        const Array<OneD,const NekDouble>& loctoglosign = m_locToGloMap[0]->GetLocalToGlobalSign();
+
+
+	////////////////////////////
+	// temporary debugging
+	cout << "bnd.num_elements() " << bnd.num_elements() << endl;
+	temp_norm = 0;
+	for (int i = 0; i < bnd.num_elements(); i++)
+	{
+		temp_norm += bnd[i] * bnd[i];
+//		cout << bnd[i] << " ";
+	}
+	temp_norm = sqrt(temp_norm);
+	cout << "bnd norm " << temp_norm << endl;
+	///////////////////////////
+
 
         // unpack pressure and velocity boundary systems. 
         offset = 0;
-	int cnt = 0; 
+	cnt = 0; 
         int totpcoeffs = m_pressure->GetNcoeffs();
         Array<OneD, NekDouble> p_coeffs = m_pressure->UpdateCoeffs();
         for(int i = 0; i <  nel; ++i)
@@ -5413,12 +5728,12 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
         m_pressure->SetPhysState(false);
         
-        Array<OneD, NekDouble > f_p(num_elem*nsize_p);
-        NekVector<  NekDouble > F_p(f_p.num_elements(),f_p,eWrapper);
+  //      Array<OneD, NekDouble > f_p(num_elem*nsize_p);
+//        NekVector<  NekDouble > F_p(f_p.num_elements(),f_p,eWrapper);
 
         offset = 0; 
 	cnt = 0; 
-	int cnt1 = 0;
+	cnt1 = 0;
         for(int i = 0; i < nel; ++i)
         {
             int eid  = i;
@@ -5470,7 +5785,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //		cout << "f_bnd_eigen.rows, f_bnd_eigen.cols " << f_bnd_eigen.rows() << " " << f_bnd_eigen.cols() << endl;
 //		Eigen::VectorXd nn =  f_p_eigen.segment(cnt_Dint, nsize_p);
 //		cout << "nn.rows, nn.cols " << nn.rows() << " " << nn.cols() << endl;
-		f_int_eigen.segment(curr_elem*nsize_int, nsize_int) = loc_Dint.transpose() * f_p_eigen.segment(cnt_Dint, nsize_p) - loc_C.transpose() * f_bnd_eigen.segment(cnt_C, nsize_bndry);
+		f_int_eigen.segment(curr_elem*nsize_int, nsize_int) = f_int_rhs_eigen.segment(curr_elem*nsize_int, nsize_int) + loc_Dint.transpose() * f_p_eigen.segment(cnt_Dint, nsize_p) - loc_C.transpose() * f_bnd_eigen.segment(cnt_C, nsize_bndry);  // also f_int_rhs here
 		f_int_eigen.segment(curr_elem*nsize_int, nsize_int) = loc_D * f_int_eigen.segment(curr_elem*nsize_int, nsize_int);
 	}
 
@@ -5722,7 +6037,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	Array<OneD, NekDouble> collected_qoi = Array<OneD, NekDouble> (Nmax);
 
-        for(int i = 0; i < Nmax; ++i)
+        for(int i = Nmax-1; i < Nmax; ++i)
 	{
 //		cout << "general_param_vector[i][0] " << general_param_vector[i][0] << endl;
 //		cout << "general_param_vector[i][1] " << general_param_vector[i][1] << endl;
@@ -5741,6 +6056,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		Eigen::VectorXd ref_f_bnd;
 		Eigen::VectorXd ref_f_p;
 		Eigen::VectorXd ref_f_int;
+
+		// if using Newton should set myAdvField
 
 		Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection[i], snapshot_y_collection[i], general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int); 
 

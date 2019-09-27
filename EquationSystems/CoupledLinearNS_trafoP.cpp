@@ -1188,6 +1188,15 @@ namespace Nektar
             pBh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Bh));
             pCh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Ch));
             pDh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Dh));    
+
+	    /////////////////
+	    // temporary debugging
+	    //cout << "(*Dh)(0,0) " << (*Dh)(0,0) << endl;
+	    //cout << "(*Dh)(1,0) " << (*Dh)(1,0) << endl;
+//	    cout << "(*Dh)(0,1) " << (*Dh)(0,1) << endl;
+//	    cout << "(*Dh)(1,1) " << (*Dh)(1,1) << endl;
+	    /////////////////
+
         }
         timer.Stop();
 //        cout << "Matrix Setup Costs: " << timer.TimePerTest(1) << endl;
@@ -2187,6 +2196,24 @@ namespace Nektar
         F_p_tmp = (*m_mat[mode].m_Cinv)*F_int;
         F_p = (*m_mat[mode].m_D_int) * F_p_tmp;
         
+	////////////////////////////
+	// temporary debugging
+/*	cout << "F_bnd.GetDimension() " << F_bnd.GetDimension() << endl;
+	double temp_norm = 0;
+	for (int i = 0; i < F_bnd.GetDimension(); i++)
+		temp_norm += F_bnd[i] * F_bnd[i];
+	temp_norm = sqrt(temp_norm);
+	cout << "F_bnd norm " << temp_norm << endl;
+
+	cout << "F_p.GetDimension() " << F_p.GetDimension() << endl;
+	temp_norm = 0;
+	for (int i = 0; i < F_p.GetDimension(); i++)
+		temp_norm += F_p[i] * F_p[i];
+	temp_norm = sqrt(temp_norm);
+	cout << "F_p norm " << temp_norm << endl;
+*/
+	///////////////////////////
+
         // construct inner forcing 
         Array<OneD, NekDouble > bnd   (m_locToGloMap[mode]->GetNumGlobalCoeffs(),0.0);
         Array<OneD, NekDouble > fh_bnd(m_locToGloMap[mode]->GetNumGlobalCoeffs(),0.0);
@@ -2206,8 +2233,7 @@ namespace Nektar
             {
                 for(k = 0; k < nbnd; ++k)
                 {
-                    fh_bnd[loctoglomap[offset+j*nbnd+k]] += 
-                    loctoglosign[offset+j*nbnd+k]*f_bnd[cnt+k];
+                    fh_bnd[loctoglomap[offset+j*nbnd+k]] += loctoglosign[offset+j*nbnd+k]*f_bnd[cnt+k];
                 }
                 cnt += nbnd;
             }
@@ -2290,8 +2316,47 @@ namespace Nektar
             }
         }
         
+
+	////////////////////////////
+	// temporary debugging
+	cout << "fh_bnd.num_elements() " << fh_bnd.num_elements() << endl;
+	double temp_norm = 0;
+	for (int i = 0; i < fh_bnd.num_elements(); i++)
+		temp_norm += fh_bnd[i];
+//	temp_norm = sqrt(temp_norm);
+	cout << "fh_bnd norm " << temp_norm << endl; 
+	///////////////////////////
+
+	////////////////////////////
+	// temporary debugging
+	cout << "bnd.num_elements() " << bnd.num_elements() << endl;
+	 temp_norm = 0;
+	for (int i = 0; i < bnd.num_elements(); i++)
+	{
+		temp_norm += bnd[i];
+//		cout << bnd[i] << " ";
+	}
+//	temp_norm = sqrt(temp_norm);
+	cout << "bnd norm " << temp_norm << endl;
+	///////////////////////////
+
+
         m_mat[mode].m_CoupledBndSys->Solve(fh_bnd,bnd,m_locToGloMap[mode]);
         
+	////////////////////////////
+	// temporary debugging
+	cout << "bnd.num_elements() " << bnd.num_elements() << endl;
+	temp_norm = 0;
+	for (int i = 0; i < bnd.num_elements(); i++)
+	{
+		temp_norm += bnd[i] * bnd[i];
+//		cout << bnd[i] << " ";
+	}
+	temp_norm = sqrt(temp_norm);
+	cout << "bnd norm " << temp_norm << endl;
+	///////////////////////////
+
+
         // unpack pressure and velocity boundary systems. 
         offset = cnt = 0; 
         int totpcoeffs = pressure->GetNcoeffs();

@@ -38,10 +38,14 @@
 #include <sstream>
 #include <vector>
 
+#include <boost/core/ignore_unused.hpp>
+
 using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
+    boost::ignore_unused(argc, argv);
+
     // Set up a stringstream to catch any error output.
     std::stringstream ss;
     ErrorUtil::SetErrorStream(ss);

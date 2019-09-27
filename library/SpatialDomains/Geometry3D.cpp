@@ -306,8 +306,7 @@ NekDouble Geometry3D::v_GetCoord(const int i,
 * @brief Check if given global coord is within twice the min/max distance
  * of the element, return True if within or False otherwise.
 */
-bool Geometry3D::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord,
-                             Array<OneD, NekDouble> &locCoord)
+bool Geometry3D::v_MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
  {
      // Validation checks
      ASSERTL1(gloCoord.num_elements() == 3,
@@ -352,7 +351,7 @@ bool Geometry3D::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord,
 /**
 * @brief Clamp local coords to be within [-1,1]^3.
 */
-void Geometry3D::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
+void Geometry3D::v_ClampLocCoords(Array<OneD, NekDouble> &locCoord,
                                   NekDouble tol)
 {
     // If out of range clamp locCoord to be within [-1,1]^3

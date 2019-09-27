@@ -104,13 +104,13 @@ bool PrismGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                 NekDouble &resid)
 {
     //Rough check if within twice min/max point
-    if(!MinMaxCheck(gloCoord, locCoord))
+    if(!MinMaxCheck(gloCoord))
     {
         return false;
     }
 
     // Convert to the local Cartesian coordinates.
-    resid = v_GetLocCoords(gloCoord, locCoord);
+    resid = GetLocCoords(gloCoord, locCoord);
 
     // Check local coordinate is within std region bounds.
     if (locCoord[0] >= -(1 + tol) && locCoord[1] >= -(1 + tol) &&

@@ -90,13 +90,13 @@ bool TetGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                               NekDouble &resid)
 {
     //Rough check if within twice min/max point
-    if(!MinMaxCheck(gloCoord, locCoord))
+    if(!MinMaxCheck(gloCoord))
     {
         return false;
     }
 
     // Convert to the local (eta) coordinates.
-    resid = v_GetLocCoords(gloCoord, locCoord);
+    resid = GetLocCoords(gloCoord, locCoord);
 
     // Check local coordinate is within cartesian bounds.
     if (locCoord[0] >= -(1 + tol) && locCoord[1] >= -(1 + tol) &&

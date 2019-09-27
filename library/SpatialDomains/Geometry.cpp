@@ -298,6 +298,26 @@ NekDouble Geometry::v_GetCoord(const int i,
 }
 
 /**
+ * @copydoc Geometry::MinMaxCheck()
+ */
+bool Geometry::v_MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function has not been defined for this geometry");
+    return false;
+}
+
+/**
+ * @copydoc Geometry::ClampLocCoords()
+ */
+void Geometry::v_ClampLocCoords(Array<OneD, NekDouble> &locCoord,
+                                NekDouble tol)
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function has not been defined for this geometry");
+}
+
+/**
  * @copydoc Geometry::GetLocCoords()
  */
 NekDouble Geometry::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,

@@ -157,6 +157,11 @@ public:
         Array<OneD, NekDouble> &Lcoords);
     SPATIAL_DOMAINS_EXPORT inline NekDouble GetCoord(
         const int i, const Array<OneD, const NekDouble> &Lcoord);
+    SPATIAL_DOMAINS_EXPORT inline bool MinMaxCheck(
+        const Array<OneD, const NekDouble> &gloCoord);
+    SPATIAL_DOMAINS_EXPORT inline void ClampLocCoords(
+        Array<OneD, NekDouble> &locCoord,
+        NekDouble tol);
 
     //---------------------------------------
     // Misc. helper functions
@@ -218,6 +223,11 @@ protected:
                                  Array<OneD, NekDouble> &locCoord,
                                  NekDouble tol,
                                  NekDouble &resid);
+
+    virtual bool v_MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord);
+
+    virtual void v_ClampLocCoords(Array<OneD, NekDouble> &locCoord,
+                                  NekDouble tol);
 
     virtual NekDouble v_GetCoord(const int i,
                                  const Array<OneD, const NekDouble> &Lcoord);
@@ -541,6 +551,30 @@ inline NekDouble Geometry::GetCoord(const int i,
                                     const Array<OneD, const NekDouble> &Lcoord)
 {
     return v_GetCoord(i, Lcoord);
+}
+
+/**
+ * @brief Check if given global coord is within twice the min/max distance
+ * of the element.
+ *
+ * @param coords   Input Cartesian global coordinates
+ *
+ * @return True if within distance or False otherwise.
+ */
+inline bool Geometry::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
+{
+    return v_MinMaxCheck(gloCoord);
+}
+
+/**
+ * @brief Clamp local coords to be within standard region.
+ *
+ * @param Lcoords  Corresponding local coordinates
+ */
+inline void Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
+                                         NekDouble tol)
+{
+    return v_ClampLocCoords(locCoord, tol);
 }
 
 /**

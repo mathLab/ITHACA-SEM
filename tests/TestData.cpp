@@ -32,6 +32,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -59,7 +60,7 @@ namespace Nektar
 
     TestData::TestData(const TestData& pSrc)
     {
-
+        boost::ignore_unused(pSrc);
     }
 
     const std::string& TestData::GetDescription() const
@@ -135,7 +136,7 @@ namespace Nektar
 
     void TestData::Parse(TiXmlDocument* pDoc)
     {
-        TiXmlHandle handle(m_doc);
+        TiXmlHandle handle(pDoc);
         TiXmlElement *testElement, *tmp, *metrics, *files;
         testElement = handle.FirstChildElement("test").Element();
         ASSERTL0(testElement, "Cannot find 'test' root element.");

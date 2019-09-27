@@ -36,8 +36,10 @@
 #include <fstream>
 #include <vector>
 
-#include <MetricFile.h>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <MetricFile.h>
 #include <sha1.h>
 
 namespace Nektar
@@ -164,6 +166,8 @@ namespace Nektar
     
     bool MetricFile::v_Test(std::istream& pStdout, std::istream& pStderr)
     {
+        boost::ignore_unused(pStdout, pStderr);
+
         std::map<std::string, std::string>::iterator it;
         bool success = true;
         
@@ -185,6 +189,8 @@ namespace Nektar
 
     void MetricFile::v_Generate(std::istream& pStdout, std::istream& pStderr)
     {
+        boost::ignore_unused(pStdout, pStderr);
+
         std::map<std::string, std::string>::iterator it;
 
         // Update SHA1 hashes.

@@ -33,6 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
 namespace Nektar
@@ -134,6 +135,8 @@ namespace Nektar
         NekDouble rhoR, NekDouble pR, NekDouble eR, NekDouble HR, NekDouble srR,
         NekDouble HRoe, NekDouble URoe2, NekDouble srLR)
     {
+        boost::ignore_unused(HL, srL, HR, srR, srLR);
+
         static NekDouble gamma = m_params["gamma"]();
         NekDouble cRoe;
         if(m_idealGas)

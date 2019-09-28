@@ -120,7 +120,8 @@ void ProcessPerAlign::Process()
     boost::split(tmp2, rot, boost::is_any_of(","));
     bool rotalign = false;
 
-    NekDouble vec[3],rotangle;
+    NekDouble vec[3] = {0.0, 0.0, 0.0};
+    NekDouble rotangle = 0.0;
 
     if (tmp2[0] != "")
     {

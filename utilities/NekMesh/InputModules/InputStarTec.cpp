@@ -32,6 +32,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -672,6 +673,8 @@ void InputTec::GenElement2D(vector<NodeSharedPtr> &VertNodes,
                             vector<vector<int> > &FaceNodes,
                             int nComposite)
 {
+    boost::ignore_unused(i);
+
     LibUtilities::ShapeType elType;
     // set up Node list
 
@@ -715,6 +718,8 @@ void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
                             int nComposite,
                             bool DoOrient)
 {
+    boost::ignore_unused(i);
+
     LibUtilities::ShapeType elType;
     // set up Node list
     Array<OneD, int> Nodes = SortFaceNodes(VertNodes, ElementFaces, FaceNodes);

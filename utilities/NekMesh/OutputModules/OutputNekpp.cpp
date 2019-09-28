@@ -36,6 +36,7 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -91,6 +92,8 @@ template <typename T> void TestElmts(
     LibUtilities::Interpreter                 &strEval,
     int                                        exprId)
 {
+    boost::ignore_unused(graph);
+
     for (auto &geomIt : geomMap)
     {
         SpatialDomains::GeometrySharedPtr geom = geomIt.second;

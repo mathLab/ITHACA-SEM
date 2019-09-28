@@ -32,6 +32,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
@@ -457,6 +458,8 @@ void InputStar::GenElement2D(vector<NodeSharedPtr> &VertNodes,
                              vector<int> &FaceNodes,
                              int nComposite)
 {
+    boost::ignore_unused(i);
+
     LibUtilities::ShapeType elType;
 
     if (FaceNodes.size() == 3)
@@ -499,6 +502,8 @@ void InputStar::GenElement3D(vector<NodeSharedPtr> &VertNodes,
                              int nComposite,
                              bool DoOrient)
 {
+    boost::ignore_unused(i);
+
     LibUtilities::ShapeType elType;
     // set up Node list
     Array<OneD, int> Nodes = SortFaceNodes(VertNodes, ElementFaces, FaceNodes);
@@ -920,7 +925,7 @@ void InputStar::InitCCM(void)
 void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
 {
     CCMIOID mapID, vertices;
-    CCMIOSize nVertices, size;
+    CCMIOSize nVertices;
     int dims = 1;
 
     CCMIOReadProcessor(

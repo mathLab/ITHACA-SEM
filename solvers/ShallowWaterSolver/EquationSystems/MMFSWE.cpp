@@ -34,6 +34,8 @@
 
 #include <iomanip>
 #include <iostream>
+
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <LibUtilities/BasicUtils/Timer.h>
@@ -423,6 +425,8 @@ void MMFSWE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble>> &inarray,
                       Array<OneD, Array<OneD, NekDouble>> &outarray,
                       const NekDouble time)
 {
+    boost::ignore_unused(time);
+
     int i;
     int nvariables = inarray.num_elements();
     int ncoeffs    = GetNcoeffs();
@@ -844,6 +848,8 @@ void MMFSWE::RiemannSolverHLLC(const int index, NekDouble hL, NekDouble uL,
                                NekDouble vR, Array<OneD, NekDouble> &numfluxF,
                                Array<OneD, NekDouble> &numfluxB)
 {
+    boost::ignore_unused(index);
+
     NekDouble g = m_g;
 
     NekDouble cL = sqrt(g * hL);
@@ -1205,7 +1211,7 @@ void MMFSWE::AddCoriolis(Array<OneD, Array<OneD, NekDouble>> &physarray,
     // h = \eta + d
     Vmath::Vadd(nq, physarray[0], 1, m_depth, 1, h, 1);
 
-    int indx;
+    int indx = 0;
     for (int j = 0; j < m_shapedim; ++j)
     {
         if (j == 0)
@@ -1780,6 +1786,8 @@ void MMFSWE::v_SetInitialConditions(const NekDouble initialtime,
                                     bool dumpInitialConditions,
                                     const int domain)
 {
+    boost::ignore_unused(domain);
+
     int nq = GetTotPoints();
 
     switch (m_TestType)
@@ -1976,6 +1984,8 @@ void MMFSWE::v_SetInitialConditions(const NekDouble initialtime,
 void MMFSWE::TestSWE2Dproblem(const NekDouble time, unsigned int field,
                               Array<OneD, NekDouble> &outfield)
 {
+    boost::ignore_unused(time);
+
     int nq = m_fields[0]->GetNpoints();
 
     Array<OneD, NekDouble> x0(nq);
@@ -2382,6 +2392,8 @@ void MMFSWE::UnsteadyZonalFlow(unsigned int field, const NekDouble time,
 void MMFSWE::IsolatedMountainFlow(unsigned int field, const NekDouble time,
                                   Array<OneD, NekDouble> &outfield)
 {
+    boost::ignore_unused(time);
+
     int nq = GetTotPoints();
 
     NekDouble uhat, vhat;
@@ -2469,6 +2481,8 @@ void MMFSWE::IsolatedMountainFlow(unsigned int field, const NekDouble time,
 void MMFSWE::UnstableJetFlow(unsigned int field, const NekDouble time,
                              Array<OneD, NekDouble> &outfield)
 {
+    boost::ignore_unused(time);
+
     int nq = GetTotPoints();
 
     NekDouble uhat, vhat;
@@ -2940,7 +2954,7 @@ void MMFSWE::TestVorticityComputation(void)
 
     NekDouble xp, yp, zp, Re;
     NekDouble theta, phi, sin_theta, cos_theta, sin_varphi, cos_varphi;
-    NekDouble cosntheta3, cosntheta4;
+    NekDouble cosntheta3;
 
     NekDouble thetax, thetay, thetaz;
     NekDouble phix, phiy, phiz;
@@ -2981,7 +2995,6 @@ void MMFSWE::TestVorticityComputation(void)
         phi   = atan2(sin_varphi, cos_varphi);
 
         cosntheta3 = cos(n * theta) * cos(n * theta) * cos(n * theta);
-        cosntheta4 = cosntheta3 * cos(n * theta);
 
         beta_theta = -4.0 * n * cosntheta3 * cos(m * phi) * sin(n * theta) / Re;
         beta_phi   = -m * cosntheta3 * sin(m * phi) / Re;
@@ -3027,6 +3040,8 @@ NekDouble MMFSWE::v_L2Error(unsigned int field,
                             const Array<OneD, NekDouble> &exactsoln,
                             bool Normalised)
 {
+    boost::ignore_unused(exactsoln);
+
     int nq            = m_fields[field]->GetNpoints();
     NekDouble L2error = -1.0;
 
@@ -3122,7 +3137,8 @@ NekDouble MMFSWE::v_L2Error(unsigned int field,
 NekDouble MMFSWE::v_LinfError(unsigned int field,
                               const Array<OneD, NekDouble> &exactsoln)
 {
-    int indx;
+    boost::ignore_unused(exactsoln);
+
     NekDouble LinfError = -1.0;
 
     if (m_fields[field]->GetPhysState() == false)
@@ -3156,11 +3172,8 @@ NekDouble MMFSWE::v_LinfError(unsigned int field,
 
             Vmath::Vsub(nq, &(m_fields[0]->GetPhys())[0], 1, &exactsolution[0],
                         1, &exactsolution[0], 1);
-            indx = Vmath::Iamax(nq, exactsolution, 1);
 
             LinfError = fabs(LinfError / Letaint);
-            // std::cout << "LinfError of eta occurs at ( " << x[indx] << " , "
-            // << y[indx] << " , " << z[indx] << " ) " << std::endl;
         }
         break;
 
@@ -3196,10 +3209,6 @@ NekDouble MMFSWE::v_LinfError(unsigned int field,
             Vmath::Vsqrt(nq, &uT[0], 1, &uT[0], 1);
 
             LinfError = Vmath::Vamax(nq, Lerr, 1) / Vmath::Vamax(nq, uT, 1);
-            indx      = Vmath::Iamax(nq, Lerr, 1);
-
-            // std::cout << "LinfError of u occurs at ( " << x[indx] << " , " <<
-            // y[indx] << " , " << z[indx] << " ) " << std::endl;
         }
         break;
 

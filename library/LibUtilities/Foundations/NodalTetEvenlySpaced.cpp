@@ -47,6 +47,10 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        bool NodalTetEvenlySpaced::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eNodalTetEvenlySpaced), NodalTetEvenlySpaced::Create)
+        };
+
         namespace
         {
            // construct the geometory and set the coordinate of tetrahedron

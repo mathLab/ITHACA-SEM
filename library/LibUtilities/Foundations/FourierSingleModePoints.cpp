@@ -43,6 +43,9 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
+        bool FourierSingleModePoints::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eFourierSingleModeSpaced), FourierSingleModePoints::Create)
+        };
 
         void FourierSingleModePoints::CalculatePoints()
         {

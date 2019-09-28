@@ -37,6 +37,8 @@
 
 #include <iostream>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #ifdef NEKTAR_USE_MPI
@@ -183,6 +185,7 @@ static inline gs_data *Init(const Nektar::Array<OneD, long> pId,
     MPI_Comm_free(&vComm.c);
     return result;
 #else
+    boost::ignore_unused(pId, pComm, verbose);
     return 0;
 #endif
 }
@@ -212,6 +215,8 @@ static inline void Unique(const Nektar::Array<OneD, long> pId,
     vComm.id = vCommMpi->GetRank();
     vComm.np = vCommMpi->GetSize();
     nektar_gs_unique(pId.get(), pId.num_elements(), &vComm);
+#else
+    boost::ignore_unused(pId, pComm);
 #endif
 }
 
@@ -227,6 +232,8 @@ static inline void Finalise(gs_data *pGsh)
     {
         nektar_gs_free(pGsh);
     }
+#else
+    boost::ignore_unused(pGsh);
 #endif
 }
 
@@ -255,6 +262,8 @@ static inline void Gather(
         buf.n   = pBuffer.num_elements();
         nektar_gs(pU.get(), gs_double, pOp, false, pGsh, &buf);
     }
+#else
+    boost::ignore_unused(pU, pOp, pGsh, pBuffer);
 #endif
 }
 }

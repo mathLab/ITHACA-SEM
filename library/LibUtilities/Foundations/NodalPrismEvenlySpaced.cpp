@@ -44,6 +44,10 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        bool NodalPrismEvenlySpaced::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eNodalPrismEvenlySpaced), NodalPrismEvenlySpaced::Create)
+        };
+
         namespace
         {
             bool isVertex(int x, int y, int z, int npts)

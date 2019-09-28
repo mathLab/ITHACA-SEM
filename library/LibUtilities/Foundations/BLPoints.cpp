@@ -43,6 +43,11 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
+        bool BLPoints::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eBoundaryLayerPoints),    BLPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eBoundaryLayerPointsRev), BLPoints::Create)
+        };
+
         void BLPoints::CalculatePoints()
         {
             // Allocate the storage for points.

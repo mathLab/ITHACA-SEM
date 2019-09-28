@@ -46,7 +46,26 @@
 namespace Nektar
 {
     namespace LibUtilities 
-    {  
+    {
+        bool GaussPoints::initPointsManager[] = {
+                PointsManager().RegisterCreator(PointsKey(0, eGaussGaussLegendre),           GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMLegendre),          GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauPLegendre),          GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoLegendre),         GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussGaussChebyshev),          GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMChebyshev),         GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauPChebyshev),         GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoChebyshev),        GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1),       GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2),       GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0),       GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),       GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussKronrodLegendre),         GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauKronrodMLegendre),   GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauKronrodMAlpha1Beta0),GaussPoints::Create),
+                PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoKronrodLegendre),  GaussPoints::Create)
+        };
+
         void GaussPoints::CalculatePoints()
         {
             // Allocate the storage for points and weights

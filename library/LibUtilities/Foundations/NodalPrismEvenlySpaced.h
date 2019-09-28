@@ -92,6 +92,8 @@ namespace Nektar
             }
 
         private:
+            static bool initPointsManager[];
+
             std::shared_ptr<NodalUtilPrism> m_util;
 
             /// Default constructor should not be called except by Create matrix

@@ -90,6 +90,8 @@ namespace Nektar
             }
 
         private:
+            static bool initPointsManager[];
+
             std::shared_ptr<NodalUtilTetrahedron> m_util;
 
             NodalTetElec():PointsBaseType(NullPointsKey)

@@ -93,6 +93,8 @@ namespace Nektar
             }
 
         private:
+            static bool initPointsManager[];
+
             std::shared_ptr<NodalUtilTetrahedron> m_util;
 
             /// Default constructor should not be called except by Create matrix

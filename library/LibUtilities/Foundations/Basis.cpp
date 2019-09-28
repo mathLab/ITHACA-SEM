@@ -44,6 +44,9 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        bool Basis::initBasisManager[] = {
+            BasisManager().RegisterGlobalCreator(Basis::Create)
+        };
 
         bool operator<(const BasisKey &lhs, const BasisKey &rhs)
         {

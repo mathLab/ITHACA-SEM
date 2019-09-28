@@ -48,6 +48,10 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        bool NodalTriEvenlySpaced::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eNodalTriEvenlySpaced), NodalTriEvenlySpaced::Create)
+        };
+
         namespace
         {
            // construct the geometory and set the coordinate of triangle

@@ -89,7 +89,7 @@ v5.0.0
 - Fix issues related to leading factors, arithmetic order and associativity of
   exponential operator in expression evaluator (!1066)
 - Remove use of `using namespace std` in header files (!1066)
-- Generalise ContainsPoint routine for Geometry3D (!1078)
+- Generalise ContainsPoint routine (!1078)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

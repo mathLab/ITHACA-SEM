@@ -421,8 +421,9 @@ std::array<NekDouble, 6> Geometry::GetBoundingBox()
 bool Geometry::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
 {
     // Validation checks
-    ASSERTL1(gloCoord.num_elements() == m_coordim,
-             "Expects same number of global coordinates as mesh dimension.");
+    ASSERTL1(gloCoord.num_elements() >= m_coordim,
+             "Expects number of global coordinates supplied to be greater than "
+             "or equal to the mesh dimension.");
 
     // find min, max point and check if within twice this
     // distance other false this is advisable since

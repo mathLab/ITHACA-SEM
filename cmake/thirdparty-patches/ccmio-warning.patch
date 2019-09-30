@@ -1,5 +1,32 @@
---- libccmio/ccmioutility.c	2019-09-30 20:53:29.490953659 +0100
-+++ libccmio/ccmioutility.c	2019-09-30 20:53:36.919024079 +0100
+--- libccmio/ccmioutility.c	2019-09-30 22:56:12.400753340 +0100
++++ libccmio/ccmioutility.c	2019-09-30 22:56:28.004901262 +0100
+@@ -35,7 +35,7 @@
+     #include <direct.h>
+     #include <io.h>
+     #define getcwd _getcwd
+-    #define mktemp _mktemp
++    #define mkstemp _mktemp
+ #else
+     #include <unistd.h>
+     #include <strings.h> /* for rindex() */
+@@ -222,7 +222,7 @@
+ 	basename[bytes++] = 'X';
+     basename[bytes] = '\0';
+     tmpFilename = strdup(basename);
+-    if (!mktemp(tmpFilename))
++    if (!mkstemp(tmpFilename))
+ 	return(*err = kCCMIOIOErr);
+ 
+     *err = CCMIOOpen(filename, kCCMIORead, &origRoot);
+@@ -246,7 +246,7 @@
+     if ((*err) == kCCMIONoErr)
+     {
+ 	moved = strdup(basename);
+-	if (!mktemp(moved))
++	if (!mkstemp(moved))
+ 	    goto error;
+ 	errno = 0;
+ 	rename(filename, moved);
 @@ -299,7 +299,6 @@
        bytes = (char*)malloc(size);
  	if (!bytes)
@@ -8,3 +35,4 @@
  	    return(*err = kCCMIONoMemoryErr);
  	}
  	ADF_Read_All_Data(origNode.node, bytes, &adfErr);
+

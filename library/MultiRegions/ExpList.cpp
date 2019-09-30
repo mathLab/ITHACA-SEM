@@ -1091,13 +1091,13 @@ namespace Nektar
             NekDouble sign1,sign2;
             DNekScalMatSharedPtr loc_mat;
 
-            unsigned int glob_rows;
-            unsigned int glob_cols;
-            unsigned int loc_rows;
-            unsigned int loc_cols;
+            unsigned int glob_rows = 0;
+            unsigned int glob_cols = 0;
+            unsigned int loc_rows  = 0;
+            unsigned int loc_cols  = 0;
 
-            bool assembleFirstDim;
-            bool assembleSecondDim;
+            bool assembleFirstDim  = false;
+            bool assembleSecondDim = false;
 
             switch(mkey.GetMatrixType())
             {

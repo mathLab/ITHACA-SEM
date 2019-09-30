@@ -109,7 +109,7 @@ void Mvdir(string dir, NekDouble dir_ending)
     
     // make new directory
     syscall = "mkdir " + dir;
-    system(syscall.c_str());
+    (void)system(syscall.c_str());
 }
 
 void DoFixedForcingIteration(VortexWaveInteraction &vwi)
@@ -166,8 +166,8 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                     exit_iteration = true;
                 }
             }
-
         }
+        break;
     case eFixedWaveForcing:
         {
             int i;

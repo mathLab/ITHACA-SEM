@@ -71,12 +71,12 @@ namespace Nektar
                 ASSERTL2(Bc!=LibUtilities::NullBasisKey,
                     "NULL Basis attempting to be used.");
                 m_base[2] = LibUtilities::BasisManager()[Bc];
-
+                /* Falls through. */
             case 2:
                 ASSERTL2(Bb!=LibUtilities::NullBasisKey,
                     "NULL Basis attempting to be used.");
-
                 m_base[1] = LibUtilities::BasisManager()[Bb];
+                /* Falls through. */
             case 1:
                 ASSERTL2(Ba!=LibUtilities::NullBasisKey,
                     "NULL Basis attempting to be used.");

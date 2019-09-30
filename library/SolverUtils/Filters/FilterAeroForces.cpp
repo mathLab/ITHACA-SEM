@@ -775,7 +775,7 @@ void FilterAeroForces::CalculateForces(
                         // Dimension specific part for obtaining values
                         //   at boundary and normal vector
                         Array<OneD, Array<OneD, NekDouble> > normals;
-                        int nbc;
+                        int nbc = 0;
                         switch(expdim)
                         {
                             case 2:
@@ -1262,7 +1262,7 @@ void FilterAeroForces::CalculateForcesMapping(
                         // Dimension specific part for obtaining values
                         //   at boundary and normal vector
                         Array<OneD, Array<OneD, NekDouble> > normals;
-                        int nbc;
+                        int nbc = 0;
                         switch(expdim)
                         {
                             case 2:

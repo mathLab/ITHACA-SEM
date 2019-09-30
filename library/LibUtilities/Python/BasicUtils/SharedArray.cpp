@@ -113,7 +113,7 @@ struct PythonToOneDArray
                 return 0;
             }
         }
-        catch (boost::python::error_already_set)
+        catch (boost::python::error_already_set&)
         {
             py::handle_exception();
             PyErr_Clear();

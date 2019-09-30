@@ -482,7 +482,7 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(
         }
 
         jacIdeal = jac * i2rm[k];
-        NekDouble jacDet;
+        NekDouble jacDet = 1.0;
 
         if (expDim == 2)
         {
@@ -500,7 +500,7 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(
         }
         else
         {
-            ASSERTL0(false, "silly exp dim");
+            NEKERROR(ErrorUtil::efatal, "invalid expansion dimension.");
         }
 
         if(s)

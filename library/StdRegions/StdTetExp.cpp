@@ -688,7 +688,7 @@ namespace Nektar
             ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
 
             int nq = GetTotPoints();
-            MatrixType mtype;
+            MatrixType mtype = eIProductWRTDerivBase0;
 
             switch (dir)
             {

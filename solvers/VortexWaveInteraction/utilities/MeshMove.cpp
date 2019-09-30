@@ -3644,7 +3644,7 @@ void CheckSingularQuads( MultiRegions::ExpListSharedPtr Exp,
       SpatialDomains::Geometry1DSharedPtr SegGeom;
       int idbef, idnext;
       NekDouble xV1, yV1, xV2,yV2;
-      NekDouble slopebef,slopenext,slopenew;
+      NekDouble slopebef = 0.0,slopenext = 0.0,slopenew = 0.0;
       Array<OneD, int> locEids(4);
       for(int i=0; i<nel; i++)
       {

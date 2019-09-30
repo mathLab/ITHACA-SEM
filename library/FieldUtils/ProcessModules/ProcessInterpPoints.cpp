@@ -146,17 +146,19 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                 rng->m_zmin -= 1;
                 rng->m_zmax += 1;
             }
+            /* Falls through. */
         case 2:
             rng->m_doYrange = true;
             rng->m_ymin     = Vmath::Vmin(npts, pts[1], 1);
             rng->m_ymax     = Vmath::Vmax(npts, pts[1], 1);
+            /* Falls through. */
         case 1:
             rng->m_doXrange = true;
             rng->m_xmin     = Vmath::Vmin(npts, pts[0], 1);
             rng->m_xmax     = Vmath::Vmax(npts, pts[0], 1);
             break;
         default:
-            ASSERTL0(false, "too many values specfied in range");
+            NEKERROR(ErrorUtil::efatal, "too many values specfied in range");
     }
     // setup rng parameters.
     fromField->m_graph =

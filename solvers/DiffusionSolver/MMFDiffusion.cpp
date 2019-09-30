@@ -853,7 +853,7 @@ namespace Nektar
 	  int nq  = GetTotPoints();
 	  outfield = Array<OneD, NekDouble>(nq, 0.0);
 	}
-
+        /* Falls through. */
       default:
         {
 	  EquationSystem::v_EvaluateExactSolution(field,outfield,time);

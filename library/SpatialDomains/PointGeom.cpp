@@ -79,8 +79,10 @@ void PointGeom::GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
     {
         case 3:
             z = (*this)(2);
+            /* Falls through. */
         case 2:
             y = (*this)(1);
+            /* Falls through. */
         case 1:
             x = (*this)(0);
             break;
@@ -93,8 +95,10 @@ void PointGeom::GetCoords(Array<OneD, NekDouble> &coords)
     {
         case 3:
             coords[2] = (*this)(2);
+            /* Falls through. */
         case 2:
             coords[1] = (*this)(1);
+            /* Falls through. */
         case 1:
             coords[0] = (*this)(0);
             break;

@@ -675,7 +675,7 @@ void InputTec::GenElement2D(vector<NodeSharedPtr> &VertNodes,
 {
     boost::ignore_unused(i);
 
-    LibUtilities::ShapeType elType;
+    LibUtilities::ShapeType elType = (LibUtilities::ShapeType)0;
     // set up Node list
 
     if (ElementFaces.size() == 3)
@@ -688,7 +688,8 @@ void InputTec::GenElement2D(vector<NodeSharedPtr> &VertNodes,
     }
     else
     {
-        ASSERTL0(false, "Not set up for elements which are not Tets or Prism");
+        NEKERROR(ErrorUtil::efatal,
+                 "Not set up for elements which are not Tris or Quads");
     }
 
     // Create element tags
@@ -720,7 +721,7 @@ void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
 {
     boost::ignore_unused(i);
 
-    LibUtilities::ShapeType elType;
+    LibUtilities::ShapeType elType = (LibUtilities::ShapeType)0;
     // set up Node list
     Array<OneD, int> Nodes = SortFaceNodes(VertNodes, ElementFaces, FaceNodes);
     int nnodes             = Nodes.num_elements();
@@ -744,8 +745,9 @@ void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
     }
     else
     {
-
-        ASSERTL0(false, "Not set up for elements which are not Tets or Prism");
+        NEKERROR(ErrorUtil::efatal,
+                 "Not set up for elements which are not Tets, "
+                 "Prisms or Pyramids.");
     }
 
     // Create element tags

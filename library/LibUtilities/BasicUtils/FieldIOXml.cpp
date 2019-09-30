@@ -921,7 +921,7 @@ void FieldIOXml::ImportFieldDefs(
             }
 
             // Get the geometrical shape
-            ShapeType shape;
+            ShapeType shape = (ShapeType)0;
             bool valid = false;
             for (unsigned int j = 0; j < SIZE_ShapeType; j++)
             {

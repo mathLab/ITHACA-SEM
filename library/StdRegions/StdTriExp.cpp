@@ -896,12 +896,15 @@ namespace Nektar
                     }
 
                     default:
-                        ASSERTL0(false,"unexpected points distribution");
+                        NEKERROR(ErrorUtil::efatal,
+                                 "unexpected points distribution");
                         break;
                     }
+                    break;
                 }
                 default:
-                    ASSERTL0(false,"Information not available to set edge key");
+                    NEKERROR(ErrorUtil::efatal,
+                             "Information not available to set edge key");
                     break;
                 }
             }

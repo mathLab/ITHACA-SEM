@@ -1013,7 +1013,7 @@ namespace Nektar
         {
             // make directory and presume will fail if it already exists
             string mkdir = "mkdir " + dir;
-            system(mkdir.c_str());
+            (void)system(mkdir.c_str());
 
             opendir[dir] = 1;
         }
@@ -1037,7 +1037,7 @@ namespace Nektar
         {
             // make directory and presume will fail if it already exists
             string mkdir = "mkdir " + dir;
-            system(mkdir.c_str());
+            (void)system(mkdir.c_str());
             opendir[dir] = 1;
         }
         

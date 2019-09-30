@@ -461,8 +461,8 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
             {
                 locCoord = x.second;
                 expId    = x.first->GetGlobalID();
-                NekDouble value;
-                int plane = m_planeIDs[m_historyLocalPointMap[k]];
+                NekDouble value = 0.0;
+                const int plane = m_planeIDs[m_historyLocalPointMap[k]];
 
                 if (m_waveSpace)
                 {

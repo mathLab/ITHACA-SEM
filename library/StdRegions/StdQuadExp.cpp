@@ -855,7 +855,7 @@ namespace Nektar
             int i,j;
             int cnt=0;
             int nummodes0, nummodes1;
-            int startvalue;
+            int startvalue = 0;
             if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());

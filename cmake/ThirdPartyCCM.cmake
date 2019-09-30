@@ -37,6 +37,7 @@ IF (THIRDPARTY_BUILD_CCMIO)
         BINARY_DIR ${TPBUILD}/libccmio-2.6.1
         TMP_DIR ${TPBUILD}/libccmio-2.6.1-tmp
         PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/thirdparty-patches/CMakeLists_CCM.txt ${TPSRC}/libccmio-2.6.1/CMakeLists.txt
+        COMMAND patch -p 0 < ${CMAKE_SOURCE_DIR}/cmake/thirdparty-patches/ccmio-warning.patch
         INSTALL_DIR ${TPDIST}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
             -G ${CMAKE_GENERATOR}

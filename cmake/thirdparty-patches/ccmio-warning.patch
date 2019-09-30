@@ -1,0 +1,10 @@
+--- libccmio/ccmioutility.c	2019-09-30 20:53:29.490953659 +0100
++++ libccmio/ccmioutility.c	2019-09-30 20:53:36.919024079 +0100
+@@ -299,7 +299,6 @@
+       bytes = (char*)malloc(size);
+ 	if (!bytes)
+ 	{
+-	    free(dims);
+ 	    return(*err = kCCMIONoMemoryErr);
+ 	}
+ 	ADF_Read_All_Data(origNode.node, bytes, &adfErr);

@@ -483,12 +483,12 @@ namespace Nektar
                             if( info < 0 )
                             {
                                 std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dsptrf";
-                                ASSERTL0(false, message.c_str());
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                             else if( info > 0 )
                             {
                                 std::string message = "ERROR: Element u_" + std::to_string(info) +   std::to_string(info) + " is 0 from dsptrf";
-                                ASSERTL0(false, message.c_str());
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                         }
                         break;
@@ -500,12 +500,12 @@ namespace Nektar
                             if( info < 0 )
                             {
                                 std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dpptrf";
-                                ASSERTL0(false, message.c_str());
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                             else if( info > 0 )
                             {
                                 std::string message = "ERROR: The leading minor of order " + std::to_string(info) +  " is not positive definite from dpptrf";
-                                ASSERTL0(false, message.c_str());
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                         }
                         break;
@@ -541,12 +541,12 @@ namespace Nektar
                             if( info < 0 )
                             {
                                 std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dgbtrf";
-                                ASSERTL0(false, message.c_str());
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                             else if( info > 0 )
                             {
                                 std::string message = "ERROR: Element u_" + std::to_string(info) +   std::to_string(info) + " is 0 from dgbtrf";
-                                ASSERTL0(false, message.c_str());
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                         }
                         break;
@@ -563,12 +563,12 @@ namespace Nektar
                             if( info < 0 )
                             {
                                 std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dpbtrf";
-                                ASSERTL0(false, message.c_str());
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                             else if( info > 0 )
                             {
                                 std::string message = "ERROR: The leading minor of order " + std::to_string(info) +  " is not positive definite from dpbtrf";
-                                ASSERTL0(false, message.c_str());
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                         }
                         break;

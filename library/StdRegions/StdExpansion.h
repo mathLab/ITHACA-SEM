@@ -448,7 +448,7 @@ namespace Nektar
              */
             int GetNtrace() const
             {
-                const int nBase = m_base.num_elements();
+                const size_t nBase = m_base.num_elements();
                 return
                     nBase == 1 ? 2 :
                     nBase == 2 ? GetNedges() :
@@ -1651,7 +1651,8 @@ namespace Nektar
                                   int coll_check)
             {
                 boost::ignore_unused(base, inarray, outarray, coll_check);
-                ASSERTL0(false, "StdExpansion::v_IProductWRTBase has no (and should have no) implementation");
+                NEKERROR(ErrorUtil::efatal,
+                         "StdExpansion::v_IProductWRTBase has no (and should have no) implementation");
             }
 
             STD_REGIONS_EXPORT virtual void  v_IProductWRTDerivBase (const int dir,

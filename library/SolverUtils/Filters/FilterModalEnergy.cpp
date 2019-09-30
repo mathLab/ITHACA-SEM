@@ -592,7 +592,8 @@ void FilterModalEnergy::SetUpBaseFields(
             }
             break;
             default:
-                ASSERTL0(false, "Expansion dimension not recognised");
+                NEKERROR(ErrorUtil::efatal,
+                         "Expansion dimension not recognised");
                 break;
         }
     }
@@ -625,9 +626,11 @@ void FilterModalEnergy::SetUpBaseFields(
                 break;
             }
             case 3:
-                ASSERTL0(false, "3D not set up");
+                NEKERROR(ErrorUtil::efatal, "3D not set up");
+                break;
             default:
-                ASSERTL0(false, "Expansion dimension not recognised");
+                NEKERROR(ErrorUtil::efatal,
+                         "Expansion dimension not recognised");
                 break;
         }
     }

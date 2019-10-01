@@ -25,6 +25,14 @@ ENDIF ()
 OPTION(THIRDPARTY_BUILD_CCMIO "Build CCMIO library from ThirdParty." ${BUILD_CCMIO})
 
 IF (THIRDPARTY_BUILD_CCMIO)
+    UNSET(PATCH CACHE)
+    FIND_PROGRAM(PATCH patch)
+    IF(NOT PATCH)
+        MESSAGE(FATAL_ERROR
+            "'patch' tool for modifying files not found. Cannot build CCN.")
+    ENDIF()
+    MARK_AS_ADVANCED(PATCH)
+
     INCLUDE(ExternalProject)
     EXTERNALPROJECT_ADD(
         libccmio-2.6.1
@@ -37,7 +45,7 @@ IF (THIRDPARTY_BUILD_CCMIO)
         BINARY_DIR ${TPBUILD}/libccmio-2.6.1
         TMP_DIR ${TPBUILD}/libccmio-2.6.1-tmp
         PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/thirdparty-patches/CMakeLists_CCM.txt ${TPSRC}/libccmio-2.6.1/CMakeLists.txt
-        COMMAND patch -p 0 < ${CMAKE_SOURCE_DIR}/cmake/thirdparty-patches/ccmio-warning.patch
+        COMMAND ${PATCH} -p 0 < ${CMAKE_SOURCE_DIR}/cmake/thirdparty-patches/ccmio-warning.patch
         INSTALL_DIR ${TPDIST}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
             -G ${CMAKE_GENERATOR}

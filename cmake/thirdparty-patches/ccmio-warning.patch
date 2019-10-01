@@ -36,3 +36,17 @@
  	}
  	ADF_Read_All_Data(origNode.node, bytes, &adfErr);
 
+--- libccmio/ccmio.c	2019-10-01 10:52:27.872670035 +0100
++++ libccmio/ccmio.c	2019-10-01 10:52:54.900797471 +0100
+@@ -520,9 +520,9 @@
+ 	type == kCCMIORestartData || type == kCCMIOReferenceData ||
+ 	type == kCCMIOModelConstants)
+ #if kHasSNPrintf
+-	snprintf(name, kCCMIOMaxStringLength, gEntityNames[(int)type]);
++	snprintf(name, kCCMIOMaxStringLength, "%s", gEntityNames[(int)type]);
+ #else
+-	sprintf(name, gEntityNames[(int)type]);
++	sprintf(name, "%s", gEntityNames[(int)type]);
+ #endif
+     else
+ #if kHasSNPrintf

@@ -109,7 +109,8 @@ void Mvdir(string dir, NekDouble dir_ending)
     
     // make new directory
     syscall = "mkdir " + dir;
-    (void)system(syscall.c_str());
+    ASSERTL0(system(syscall.c_str()) == 0,
+             "Failed to make directory '" + dir + "'");
 }
 
 void DoFixedForcingIteration(VortexWaveInteraction &vwi)

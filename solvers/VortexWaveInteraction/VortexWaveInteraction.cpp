@@ -1022,7 +1022,7 @@ namespace Nektar
         string savefile = dir + "/" + file + "." + boost::lexical_cast<std::string>(n);
         string syscall  = "cp -f "  + file + " " + savefile; 
 
-        ASSERT(system(syscall.c_str()) == 0, syscall.c_str());
+        ASSERTL0(system(syscall.c_str()) == 0, syscall.c_str());
      }
 
 

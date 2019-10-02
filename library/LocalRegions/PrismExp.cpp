@@ -71,7 +71,7 @@ namespace Nektar
         PrismExp::PrismExp(const PrismExp &T):
             StdExpansion(T),
             StdExpansion3D(T),
-            StdRegions::StdPrismExp(T),
+            StdPrismExp(T),
             Expansion(T),
             Expansion3D(T),
             m_matrixManager(T.m_matrixManager),

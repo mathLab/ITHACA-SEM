@@ -71,7 +71,7 @@ namespace Nektar
                 LibUtilities::StdTetData::getNumberOfCoefficients(
                     Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),
                     Ba, Bb, Bc),
-            StdRegions::StdTetExp(Ba,Bb,Bc),
+            StdTetExp(Ba,Bb,Bc),
             Expansion     (geom),
             Expansion3D   (geom),
             m_matrixManager(
@@ -88,8 +88,8 @@ namespace Nektar
          * \brief Copy Constructor
          */
         TetExp::TetExp(const TetExp &T):
-            StdExpansion(T),
-            StdExpansion3D(T),
+            StdRegions::StdExpansion(T),
+            StdRegions::StdExpansion3D(T),
             StdRegions::StdTetExp(T),
             Expansion(T),
             Expansion3D(T),

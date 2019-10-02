@@ -50,11 +50,11 @@ class OptiObj
 
         OptiObj()
         {
-        };
+        }
 
         virtual ~OptiObj()
         {
-        };
+        }
 
         virtual NekDouble F(Array<OneD, NekDouble> xitst)
         {
@@ -62,7 +62,7 @@ class OptiObj
             NEKERROR(ErrorUtil::efatal,
                      "F() should be implemented in inheriting class");
             return 0.0;
-        };
+        }
 
         virtual DNekMat dF(Array<OneD, NekDouble> xitst)
         {
@@ -70,35 +70,35 @@ class OptiObj
             NEKERROR(ErrorUtil::efatal,
                      "dF() should be implemented in inheriting class");
             return DNekMat(1,1,0.0);
-        };
+        }
 
         virtual Array<OneD, NekDouble> Getxi()
         {
             NEKERROR(ErrorUtil::efatal,
                      "Getxi() should be implemented in inheriting class");
             return Array<OneD,NekDouble>();
-        };
+        }
 
         virtual Array<OneD, NekDouble> Getli()
         {
             NEKERROR(ErrorUtil::efatal,
                      "Getli() should be implemented in inheriting class");
             return Array<OneD,NekDouble>();
-        };
+        }
 
         virtual Array<OneD, NekDouble> Getui()
         {
             NEKERROR(ErrorUtil::efatal,
                      "Getui() should be implemented in inheriting class");
             return Array<OneD,NekDouble>();
-        };
+        }
 
         virtual void Update(Array<OneD, NekDouble> xinew)
         {
             boost::ignore_unused(xinew);
             NEKERROR(ErrorUtil::efatal,
                      "Update() should be implemented in inheriting class");
-        };
+        }
 
 };
 typedef std::shared_ptr<OptiObj> OptiObjSharedPtr;

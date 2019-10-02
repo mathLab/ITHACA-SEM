@@ -382,7 +382,7 @@ class ThreadStartupManager: public ThreadManager
 {
     public:
         ThreadStartupManager();
-        ThreadStartupManager(const ThreadStartupManager& src);
+        ThreadStartupManager(const ThreadStartupManager& src) = default;
         virtual ~ThreadStartupManager();
         virtual void QueueJobs(std::vector<ThreadJob*>& joblist);
         virtual void QueueJob(ThreadJob* job);

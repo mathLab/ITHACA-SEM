@@ -160,9 +160,7 @@ public:
     template<typename... Args>
     static std::shared_ptr<DataType> AllocateSharedPtr(const Args &...args)
     {
-        return AllocateSharedPtrD([](DataType * ptr){
-                    boost::ignore_unused(ptr);
-                }, args...);
+        return AllocateSharedPtrD( [](DataType *){}, args...);
     }
 
     template<typename DeallocatorType, typename... Args>

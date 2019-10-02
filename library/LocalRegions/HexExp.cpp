@@ -63,7 +63,7 @@ namespace Nektar
                        const SpatialDomains::HexGeomSharedPtr &geom):
             StdExpansion  (Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(),3,Ba,Bb,Bc),
             StdExpansion3D(Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(),Ba,Bb,Bc),
-            StdRegions::StdHexExp(Ba,Bb,Bc),
+            StdHexExp(Ba,Bb,Bc),
             Expansion     (geom),
             Expansion3D   (geom),
             m_matrixManager(
@@ -84,7 +84,7 @@ namespace Nektar
         HexExp::HexExp(const HexExp &T):
             StdExpansion(T),
             StdExpansion3D(T),
-            StdRegions::StdHexExp(T),
+            StdHexExp(T),
             Expansion(T),
             Expansion3D(T),
             m_matrixManager(T.m_matrixManager),

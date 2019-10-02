@@ -36,19 +36,20 @@
 
 namespace Nektar
 {
-    namespace LibUtilities
-    {
-        PointsManagerT &PointsManager(void)
-        {
-            static PointsManagerT instance;
-            return instance;
-        }
+namespace LibUtilities
+{
 
-        BasisManagerT &BasisManager(void)
-        {
-            static BasisManagerT instance;
-            return instance;
-        }
+PointsManagerT &PointsManager(void)
+{
+    static PointsManagerT instance;
+    return instance;
+}
 
-    } // end of namespace LibUtilities
+BasisManagerT &BasisManager(void)
+{
+    static BasisManagerT instance;
+    return instance;
+}
+
+} // end of namespace LibUtilities
 } // end of namespace Nektar

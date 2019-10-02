@@ -212,16 +212,6 @@ ThreadStartupManager::ThreadStartupManager() : m_type("Threading starting up")
 
 
 /**
- * @brief ThreadDefaultManager copy constructor
- */
-ThreadStartupManager::ThreadStartupManager(const ThreadStartupManager& src)
-    : m_type(src.m_type)
-{
-    // empty
-}
-
-
-/**
  *
  */
 ThreadStartupManager::~ThreadStartupManager()

@@ -61,15 +61,6 @@ namespace Nektar
         }
 
 
-/*        StdHexExp::StdHexExp(const  LibUtilities::BasisKey &Ba,
-                        const  LibUtilities::BasisKey &Bb,
-                        const  LibUtilities::BasisKey &Bc,
-                        NekDouble *coeffs,
-                        NekDouble *phys)
-        {
-        }
-*/
-
         StdHexExp::StdHexExp(const StdHexExp &T):
             StdExpansion(T),
             StdExpansion3D(T)

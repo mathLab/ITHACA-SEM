@@ -54,14 +54,14 @@ namespace Nektar
     {
         boost::ignore_unused(nDim);
 
-	// extract the forward and backward trace of the depth
-  	const Array<OneD, NekDouble> &dFwd = m_scalars["depthFwd"]();
- 	const Array<OneD, NekDouble> &dBwd = m_scalars["depthBwd"]();
+        // extract the forward and backward trace of the depth
+          const Array<OneD, NekDouble> &dFwd = m_scalars["depthFwd"]();
+         const Array<OneD, NekDouble> &dBwd = m_scalars["depthBwd"]();
 
 
         if (m_pointSolve)
         {
-	  	  
+                    
             int expDim = Fwd.num_elements()-1;
             NekDouble vf;
 
@@ -70,8 +70,8 @@ namespace Nektar
                 for (int i = 0; i < Fwd[0].num_elements(); ++i)
                 {
                     v_PointSolve(
-			Fwd [0][i], Fwd [1][i], 0.0, dFwd[i], 
-		  	Bwd [0][i], Bwd [1][i], 0.0, dBwd[i],
+                        Fwd [0][i], Fwd [1][i], 0.0, dFwd[i], 
+                          Bwd [0][i], Bwd [1][i], 0.0, dBwd[i],
                         flux[0][i], flux[1][i], vf);
                 }
             }
@@ -79,16 +79,16 @@ namespace Nektar
             {
                 for (int i = 0; i < Fwd[0].num_elements(); ++i)
                 {
-		  v_PointSolve(
-			Fwd [0][i], Fwd [1][i], Fwd [2][i], dFwd[i],
-			Bwd [0][i], Bwd [1][i], Bwd [2][i], dBwd[i],
+                  v_PointSolve(
+                        Fwd [0][i], Fwd [1][i], Fwd [2][i], dFwd[i],
+                        Bwd [0][i], Bwd [1][i], Bwd [2][i], dBwd[i],
                         flux[0][i], flux[1][i], flux[2][i]);
                 }
             }
             else if (expDim == 3)
             {
-	      ASSERTL0(false, "No 3D Shallow water supported.");
-	    }
+              ASSERTL0(false, "No 3D Shallow water supported.");
+            }
         }
         else
         {

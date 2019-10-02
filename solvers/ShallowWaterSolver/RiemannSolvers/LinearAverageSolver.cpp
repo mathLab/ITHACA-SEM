@@ -69,9 +69,9 @@ namespace Nektar
      * @param vf     Computed Riemann flux for y-momentum component 
      */
     void LinearAverageSolver::v_PointSolve(
-        double  etaL, double  uL, double  vL, double dL,
-        double  etaR, double  uR, double  vR, double dR,
-        double &etaf, double &uf, double &vf)
+        NekDouble  etaL, NekDouble  uL, NekDouble  vL, NekDouble dL,
+        NekDouble  etaR, NekDouble  uR, NekDouble  vR, NekDouble dR,
+        NekDouble &etaf, NekDouble &uf, NekDouble &vf)
     {
         boost::ignore_unused(vL, vR);
 

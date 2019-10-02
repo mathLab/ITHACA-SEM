@@ -138,7 +138,6 @@ namespace Nektar
                                     variable,
                                     m_periodicVerts,
                                     m_periodicEdges);
-
             if (m_session->DefinesCmdLineArgument("verbose"))
             {
                 m_locToGloMap->PrintStats(std::cout, variable);

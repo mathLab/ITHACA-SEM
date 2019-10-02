@@ -60,6 +60,12 @@ OutputFileBase::~OutputFileBase()
 
 void OutputFileBase::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	//if (vm.count("nparts"))
+	//{
+		//m_f->m_comm = m_f->m_partComm;
+	//}
+	
     string filename = m_config["outfile"].as<string>();
 
     if(m_f->m_fieldPts != LibUtilities::NullPtsField)
@@ -84,7 +90,6 @@ void OutputFileBase::Process(po::variables_map &vm)
         {
             ConvertExpToEquispaced(vm);
         }
-
         if (m_f->m_writeBndFld)
         {
             if (m_f->m_verbose && m_f->m_comm->TreatAsRankZero())
@@ -104,6 +109,7 @@ void OutputFileBase::Process(po::variables_map &vm)
         }
         if (m_f->m_writeBndFld)
         {
+			
             int nfields = m_f->m_variables.size();
             int normdim = m_f->m_graph->GetMeshDimension();
 
@@ -225,8 +231,10 @@ void OutputFileBase::Process(po::variables_map &vm)
             // Restore m_exp
             exp.swap(m_f->m_exp);
         }
+        
         else
         {
+			
             if( WriteFile(filename, vm))
             {
                 OutputFromExp(vm);
@@ -360,6 +368,7 @@ void OutputFileBase::ConvertExpToEquispaced(po::variables_map &vm)
             }
         }
     }
+    m_f->m_fielddef = std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
 }
 
 void OutputFileBase::PrintErrorFromPts()

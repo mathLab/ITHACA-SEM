@@ -113,18 +113,15 @@ namespace Nektar
               m_periodicFwdCopy(),
               m_periodicBwdCopy()
         {
-
             if (variable.compare("DefaultVar") != 0) // do not set up BCs if default variable
             {
                 SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
                 GenerateBoundaryConditionExpansion(graph2D, bcs, variable,
                                                    DeclareCoeffPhysArrays);
-                
                 if (DeclareCoeffPhysArrays)
                 {
                     EvaluateBoundaryConditions(0.0, variable);
                 }
-
                 // Find periodic edges for this variable.
                 FindPeriodicEdges(bcs, variable);
             }
@@ -163,7 +160,6 @@ namespace Nektar
                     }
                     cnt += m_bndCondExpansions[i]->GetExpSize();
                 }
-                
                 if(m_session->DefinesSolverInfo("PROJECTION"))
                 {
                     std::string ProjectStr =

@@ -103,6 +103,8 @@ ProcessInterpPoints::~ProcessInterpPoints()
 
 void ProcessInterpPoints::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     CreateFieldPts(vm);
 
     FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());

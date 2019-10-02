@@ -88,6 +88,11 @@ enum ModulePriority
     SIZE_ModulePriority
 };
 
+const char *const ModulePriorityMap[] = 
+	{"CreateGraph", "CreateFieldData", "ModifyFieldData", "CreateExp",
+		"FillExp", "ModifyExp", "BndExtraction", "CreatePts", 
+		"ConvertExpToPts", "ModifyPts", "Output"};
+
 /**
  * @brief Swap endian ordering of the input variable.
  */
@@ -205,12 +210,14 @@ public:
         LocalRegions::ExpansionSharedPtr &exp,
         const Array<OneD, const NekDouble> &infield,
         Array<OneD, NekDouble> &outfield);
+   
+    /// Field object
+    FieldSharedPtr m_f;
 
 protected:
     Module(){};
 
-    /// Field object
-    FieldSharedPtr m_f;
+
     /// List of configuration values.
     std::map<std::string, ConfigOption> m_config;;
 };
@@ -230,10 +237,10 @@ public:
     InputModule(FieldSharedPtr p_m);
     FIELD_UTILS_EXPORT void AddFile(std::string fileType, std::string fileName);
     FIELD_UTILS_EXPORT static std::string GuessFormat(std::string fileName);
+    void PrintSummary();
 
 protected:
     /// Print summary of elements.
-    void PrintSummary();
     std::set<std::string> m_allowedFiles;
 };
 

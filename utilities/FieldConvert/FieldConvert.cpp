@@ -252,7 +252,7 @@ int main(int argc, char* argv[])
         f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
                                                     "Serial", argc, argv);
     }
-
+	
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
     ModuleKey               module;
@@ -391,7 +391,6 @@ int main(int argc, char* argv[])
                 mod->RegisterConfig("writemultiplefiles");
             }
         }
-
         // Set options for this module.
         for (int j = offset; j < tmp1.size(); ++j)
         {
@@ -419,11 +418,11 @@ int main(int argc, char* argv[])
     }
 
     // Include dummy module to create m_exp
-    module.first  = eProcessModule;
-    module.second = string("createExp");
-    mod = GetModuleFactory().CreateInstance(module, f);
-    modules.push_back(mod);
-    mod->SetDefaults();
+    //module.first  = eProcessModule;
+    //module.second = string("createExp");
+    //mod = GetModuleFactory().CreateInstance(module, f);
+    //modules.push_back(mod);
+    //mod->SetDefaults();
 
     // Include equispacedoutput module if needed
     Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
@@ -484,11 +483,11 @@ int main(int argc, char* argv[])
             {
                 if(((priority == eCreateGraph)||(priority == eOutput)))
                 {
-                    f->m_comm = partComm;
+					f->m_comm = partComm;
                 }
                 else
                 {
-                    f->m_comm = defComm;
+					f->m_comm = defComm;
                 }
             }
 
@@ -502,7 +501,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    // write out Info file if required.
+    //write out Info file if required.
     if (nParts > 1)
     {
         int i;

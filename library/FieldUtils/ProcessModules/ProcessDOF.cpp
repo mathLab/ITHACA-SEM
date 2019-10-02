@@ -60,6 +60,8 @@ ProcessDOF::~ProcessDOF()
 
 void ProcessDOF::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     int nDOF = m_f->m_exp[0]->GetNcoeffs();
     m_f->m_comm->AllReduce(nDOF, LibUtilities::ReduceSum);
 

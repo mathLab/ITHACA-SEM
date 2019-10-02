@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSINTERPPOINTS
-#define FIELDUTILS_PROCESSINTERPPOINTS
+#ifndef FIELDUTILS_PROCESSINTERPPTSTOPTS
+#define FIELDUTILS_PROCESSINTERPPTSTOPTS
 
 #include "../Module.h"
 

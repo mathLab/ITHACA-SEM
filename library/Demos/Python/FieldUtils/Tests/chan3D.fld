@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/feature/svv-3D</GitBranch>
+            <GitSHA1>395b2a8633439916d4356ed9c0c28593008b0e6e</GitSHA1>
+            <Hostname>dyn1194-52.wlan.ic.ac.uk</Hostname>
+            <NektarVersion>3.3.0</NektarVersion>
+            <Timestamp>28-Aug-2013 13:52:01</Timestamp>
+        </Provenance>
+        <Kinvis>1</Kinvis>
+        <Time>0.20000000000000001</Time>
+    </Metadata>
+    <ELEMENTS FIELDS="u,v,w,p" SHAPE="Tetrahedron" BASIS="Modified_A,Modified_B,Modified_C" NUMMODESPERDIR="UNIORDER:4,4,4" ID="2,3,4">eJxjYEAFEWBSwKFtxe/bp27+38OAA4hA1YEpjvC990UZPXs5pfeim1NyvuSo0oJXexyg/LPT57Nk/4nay7BXm2mSVLMNTP2//yBgCtXvADeHVgDdn/j9I+DAxHDgz2eriL37/v8Pf7GZC+a+BkLmQkQP2KCrg5kLpk6E7wX7f/4GnOG9YRUIbILLG6/bvG+N38U96O4Dm7OemebhN0JAw0A7YBTQFDQMtAMIgSAwCS0ngMBuuknVkn5H2+lqh7sPrfiLs7xouziNe/sDA9vCR1UKE17Z7d0lvM7+6w4BW1LtF2BgWJHUpmorw8Bwxn699d4P//+L/lrjZgszj1z3gTVwhNlmuT/8Hu0as7cZVG4J6e2FmYduDi7/JG55ekjXIsb2F7j+sLc9vZvr4mOvz5ZZRns0em4Z7yXkvmKwPn4HmHtg7oCZe0G1V+7l4+y90886Xy9WNbHF5b4avcwvHvL2GOrR3SfQLXhpncN7mPtsAQL9ARcA</ELEMENTS>
+    <ELEMENTS FIELDS="u,v,w,p" SHAPE="Tetrahedron" BASIS="Modified_A,Modified_B,Modified_C" NUMMODESPERDIR="UNIORDER:4,4,4" ID="0,1,5">eJxjYEAFEWBSwKFtxe/bp27+3wMTd4CKM+zVZpok1WwDE+/hqd37R8F5L5oxDCJQ9fdFGT17OaXR5B3g/FVgcAhqTzBcfPbiGU3Lkq7aMKABmPtKzpccVVrwiqD7KlJevH7KLmiLyxx0f+Lyz7//IGCKIY4OsPv7AIY/GKDq9v3/H/5iM9desPnzN8Ddgd19AhBvngiHq0cPP7D4+s97oOG3h2EUDGfQMNAOGAU0BQ1BYAqa74HAbrpJ1ZJ+R9vpaoe7D634SyB/K0DKPYM0aDn0ZQ/MvLaL07i3PzCw3SW8zv7rDgFbAQaGFUltqrYf/v8X/bXGDS4O0Wew9xe4/LO3Pb2b6+Jjr8+W0fw+zTLnjTHKVUoBzH3Y/YnpH6B7w+dWatnKMDCcsV9vvffH//9ctWGwekRnL3r4ofsbJg9WwBFm2wzyppDe3sQtTw/pWsTA/ZtltEej55axLS73wdRfUO2Ve/k4e+/0s87Xi1VNMMJPoFvw0jqH97Dw2wsAPoH1/wAA</ELEMENTS>
+</NEKTAR>

@@ -39,6 +39,7 @@ void export_Basis();
 void export_Points();
 void export_SessionReader();
 void export_ShapeType();
+void export_Comm();
 
 template<typename T>
 void export_SharedArray();
@@ -56,4 +57,5 @@ BOOST_PYTHON_MODULE(_LibUtilities)
     export_ShapeType();
     export_SharedArray<double>();
     export_NekMatrix<double>();
+    export_Comm();
 }

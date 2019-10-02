@@ -64,6 +64,8 @@ ProcessVorticity::~ProcessVorticity()
 
 void ProcessVorticity::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     int i, s;
     int expdim   = m_f->m_graph->GetMeshDimension();
     m_spacedim = expdim;

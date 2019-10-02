@@ -115,6 +115,8 @@ ProcessIsoContour::~ProcessIsoContour(void)
 
 void ProcessIsoContour::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     bool verbose = (m_f->m_verbose && m_f->m_comm->TreatAsRankZero());
 
     vector<IsoSharedPtr> iso;

@@ -79,6 +79,8 @@ ProcessInterpPointDataToFld::~ProcessInterpPointDataToFld()
 
 void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     int i, j;
     LibUtilities::PtsFieldSharedPtr fieldPts;
     // Load pts file

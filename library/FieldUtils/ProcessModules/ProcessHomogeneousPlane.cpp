@@ -67,11 +67,14 @@ ProcessHomogeneousPlane::~ProcessHomogeneousPlane()
 
 void ProcessHomogeneousPlane::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     if ((m_f->m_numHomogeneousDir) != 1)
     {
         ASSERTL0(false,
                  "ProcessHomogeneousPlane only works for Homogeneous1D.");
     }
+    
     m_f->m_numHomogeneousDir = 0;
 
     // Skip in case of empty partition

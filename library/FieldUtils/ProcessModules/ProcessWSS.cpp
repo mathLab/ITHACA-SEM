@@ -297,6 +297,8 @@ void ProcessWSS::Process(po::variables_map &vm)
         m_f->m_variables[2] = "Shear_z";
         m_f->m_variables[3] = "Shear_mag";
     }
+    
+    //cout << "4" << endl;
 }
 
 void ProcessWSS::GetViscosity(

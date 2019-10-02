@@ -63,6 +63,8 @@ ProcessGrad::~ProcessGrad()
 
 void ProcessGrad::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     int i, j;
     int expdim    = m_f->m_graph->GetMeshDimension();
     int spacedim  = m_f->m_numHomogeneousDir + expdim;

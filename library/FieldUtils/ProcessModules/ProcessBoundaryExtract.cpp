@@ -72,6 +72,8 @@ ProcessBoundaryExtract::~ProcessBoundaryExtract()
 
 void ProcessBoundaryExtract::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     m_f->m_addNormals = m_config["addnormals"].as<bool>();
 
     // Set up Field options to output boundary fld
@@ -120,6 +122,7 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
     else
     {
         m_f->m_bndRegionsToWrite = bndRegions;
+    
 
         if (m_f->m_exp[0]->GetNumElmts() != 0)
         {

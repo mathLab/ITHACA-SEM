@@ -72,6 +72,8 @@ ProcessEquiSpacedOutput::~ProcessEquiSpacedOutput()
 
 void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     int nel = m_f->m_exp[0]->GetExpSize();
     if (!nel)
     {

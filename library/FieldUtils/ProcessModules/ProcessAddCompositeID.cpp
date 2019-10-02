@@ -65,6 +65,8 @@ ProcessAddCompositeID::~ProcessAddCompositeID()
 
 void ProcessAddCompositeID::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     int nfields           = m_f->m_variables.size();
     m_f->m_variables.push_back("compositeID");
     // Skip in case of empty partition

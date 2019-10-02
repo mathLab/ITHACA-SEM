@@ -60,6 +60,8 @@ ProcessStreamFunction::~ProcessStreamFunction()
 
 void ProcessStreamFunction::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     int nfields  = m_f->m_variables.size();
     // Append field name
     m_f->m_variables.push_back("StreamFunc");

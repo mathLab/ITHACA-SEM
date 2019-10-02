@@ -72,6 +72,8 @@ ProcessPointDataToFld::~ProcessPointDataToFld()
 
 void ProcessPointDataToFld::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     int i, j;
     bool setnantovalue = false;
     NekDouble defvalue=0.0;

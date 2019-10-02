@@ -69,6 +69,8 @@ ProcessHomogeneousStretch::~ProcessHomogeneousStretch()
 
 void ProcessHomogeneousStretch::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     // Skip in case of empty partition
     if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
@@ -92,6 +94,7 @@ void ProcessHomogeneousStretch::Process(po::variables_map &vm)
 
     int nstrips;
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
+    cout << nstrips << endl;
 
     for (int s = 0; s < nstrips; ++s)
     {

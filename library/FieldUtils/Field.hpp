@@ -37,7 +37,7 @@
 #define FIELDUTILS_FIELD
 
 #include <memory>
-
+#include <boost/program_options.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
@@ -53,6 +53,8 @@
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 
 #include "FieldUtilsDeclspec.h"
+
+namespace po = boost::program_options;
 
 namespace Nektar
 {
@@ -90,8 +92,13 @@ struct Field
     bool m_requireBoundaryExpansion;
 
     bool m_useFFT;
-
+    
     LibUtilities::CommSharedPtr m_comm;
+    LibUtilities::CommSharedPtr m_defComm;
+    LibUtilities::CommSharedPtr m_partComm;
+    int m_nParts = 1;
+    po::variables_map m_vm;
+    
     LibUtilities::SessionReaderSharedPtr m_session;
     SpatialDomains::MeshGraphSharedPtr m_graph;
     std::map<std::string, std::vector<std::string> > m_inputfiles;
@@ -103,7 +110,226 @@ struct Field
     LibUtilities::PtsFieldSharedPtr m_fieldPts;
 
     LibUtilities::FieldMetaDataMap m_fieldMetaDataMap;
+	
+	FIELD_UTILS_EXPORT void SetUpExp(boost::program_options::variables_map &vm) 
+	{
+		if (m_graph && !m_exp.size()) 
+		{
+			CreateExp(vm, true);
+		}
+		else if (m_graph && m_data.size())
+		{
+			CreateExp(vm, false);
+		}
+	}
+	
+	FIELD_UTILS_EXPORT void CreateExp(boost::program_options::variables_map &vm, bool newExp)
+	{
+	
+			bool fldfilegiven = (m_fielddef.size() != 0);
+			if (newExp)
+			{
+				LibUtilities::Timer timerpart;
+				if (m_verbose)
+				{
+					if (m_comm->TreatAsRankZero())
+					{
+						timerpart.Start();
+					}
+				}
+				// check to see if fld file defined so can use in
+				// expansion defintion if required
+				
+				bool expFromFld = fldfilegiven  && !vm.count("useSessionExpansion");
 
+				// load fielddef header if fld file is defined. This gives
+				// precedence to Homogeneous definition in fld file
+				m_numHomogeneousDir = 0;
+				if (expFromFld)
+				{
+					m_numHomogeneousDir = m_fielddef[0]->m_numHomogeneousDir;
+
+					// Set up Expansion information to use mode order from field
+					m_graph->SetExpansions(m_fielddef);
+				}
+				else
+				{
+					if (m_session->DefinesSolverInfo("HOMOGENEOUS"))
+					{
+						std::string HomoStr = 
+								m_session->GetSolverInfo("HOMOGENEOUS");
+
+						if ((HomoStr == "HOMOGENEOUS1D") ||
+							(HomoStr == "Homogeneous1D") ||
+							(HomoStr == "1D") || (HomoStr == "Homo1D"))
+						{
+							m_numHomogeneousDir = 1;
+						}
+						if ((HomoStr == "HOMOGENEOUS2D") ||
+							(HomoStr == "Homogeneous2D") ||
+							(HomoStr == "2D") || (HomoStr == "Homo2D"))
+						{
+							m_numHomogeneousDir = 2;
+						}
+					}
+				}
+
+				m_exp.resize(1);
+				// Check  if there are any elements to process
+				vector<int> IDs;
+				auto domain = m_graph->GetDomain();
+				for(int d = 0; d < domain.size(); ++d)
+				{
+					for (auto &compIter : domain[d])
+					{
+						for (auto &x : compIter.second->m_geomVec)
+						{
+							IDs.push_back(x->GetGlobalID());
+						}
+					}
+				}
+				// if Range has been specified it is possible to have a
+				// partition which is empty so check this and return with empty
+				// expansion if no elements present.
+				if (!IDs.size())
+				{
+					m_exp[0] = MemoryManager<MultiRegions::ExpList>::
+									AllocateSharedPtr();
+					return;
+				}
+
+				// Adjust number of quadrature points
+				if (vm.count("output-points"))
+				{
+					int nPointsNew = vm["output-points"].as<int>();
+					m_graph->SetExpansionsToPointOrder(nPointsNew);
+				}
+
+				if (m_verbose)
+				{
+					if (m_comm->TreatAsRankZero())
+					{
+						timerpart.Stop();
+						NekDouble cpuTime = timerpart.TimePerTest(1);
+
+						stringstream ss;
+						ss << cpuTime << "s";
+						cout << "\t CreateExp setexpansion CPU Time: "
+							 << setw(8) << left
+							 << ss.str() << endl;
+						timerpart.Start();
+					}
+				}
+				// Override number of planes with value from cmd line
+				if (m_numHomogeneousDir == 1 && vm.count("output-points-hom-z"))
+				{
+					int expdim = m_graph->GetMeshDimension();
+					m_fielddef[0]->m_numModes[expdim] = 
+						vm["output-points-hom-z"].as<int>();
+					
+				}
+				m_exp[0] = SetUpFirstExpList(m_numHomogeneousDir,
+														expFromFld);
+				if (m_verbose)
+				{
+					if (m_comm->TreatAsRankZero())
+					{
+						timerpart.Stop();
+						NekDouble cpuTime = timerpart.TimePerTest(1);
+
+						stringstream ss1;
+
+						ss1 << cpuTime << "s";
+						cout << "\t CreateExp set first exp CPU Time: "
+							 << setw(8)   << left
+							 << ss1.str() << endl;
+					}
+				}
+			}
+			
+			if (fldfilegiven) 
+			{
+				int i, j, nfields, nstrips;
+				m_session->LoadParameter("Strip_Z", nstrips, 1);
+				vector<string> vars = m_session->GetVariables();
+
+				if (vm.count("useSessionVariables"))
+				{
+					
+					m_variables = vars;
+				}
+				nfields = m_variables.size();
+
+				m_exp.resize(nfields * nstrips);
+				// declare other fields;
+				for (int s = 0; s < nstrips; ++s) // homogeneous strip varient
+				{
+					for (i = 0; i < nfields; ++i)
+					{
+						if (i < vars.size())
+						{
+							// check to see if field already defined
+							if (!m_exp[s * nfields + i])
+							{
+								m_exp[s * nfields + i] = AppendExpList(
+								m_numHomogeneousDir, vars[i]);
+							}
+							
+						}
+						else
+						{
+							if (vars.size())
+							{	
+								m_exp[s * nfields + i] = AppendExpList(
+								m_numHomogeneousDir, vars[0]);
+							}
+							else
+							{
+								m_exp[s * nfields + i] = AppendExpList(
+								m_numHomogeneousDir);
+							}
+							
+						}
+					}		
+				}
+
+				 // Extract data to coeffs and bwd transform
+				 for (int s = 0; s < nstrips; ++s) // homogeneous strip varient
+				 {
+					for (j = 0; j < nfields; ++j)
+					{
+						for (i = 0; i < m_data.size() / nstrips; ++i)
+						{
+							int n = i * nstrips + s;
+							// In case of multiple flds, we might not have a
+							//   variable in this m_data[n] -> skip in this case
+							auto it = find (m_fielddef[n]->m_fields.begin(),
+											m_fielddef[n]->m_fields.end(),
+											m_variables[j]);
+							if(it != m_fielddef[n]->m_fields.end())
+							{
+								m_exp[s * nfields + j]->ExtractDataToCoeffs(
+								m_fielddef[n],
+								m_data[n],
+								m_variables[j],
+								m_exp[s * nfields + j]->UpdateCoeffs());
+							}
+						}
+						m_exp[s * nfields + j]->BwdTrans(
+						m_exp[s * nfields + j]->GetCoeffs(),
+						m_exp[s * nfields + j]->UpdatePhys());
+					}
+				}
+				// Clear fielddef and data
+				//    (they should not be used after running this module)
+				m_fielddef = std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
+				m_data     = std::vector<std::vector<NekDouble> >();
+			}
+	
+	}
+
+	
+	
     FIELD_UTILS_EXPORT MultiRegions::ExpListSharedPtr SetUpFirstExpList(
         int NumHomogeneousDir, bool fldfilegiven = false)
     {
@@ -309,7 +535,6 @@ struct Field
                         m_session->LoadParameter("LZ", lz);
                         btype = LibUtilities::eFourier;
                     }
-
                     // Choose points to be at evenly spaced points at
                     // nplanes points
                     const LibUtilities::PointsKey Pkey(
@@ -326,6 +551,7 @@ struct Field
                                               m_session->GetVariable(0),
                                               Collections::eNoCollection);
                     }
+                    
                     else if (m_declareExpansionAsDisContField)
                     {
                         Exp3DH1 = MemoryManager<
@@ -335,6 +561,7 @@ struct Field
                                               m_session->GetVariable(0),
                                               Collections::eNoCollection);
                     }
+                    
                     else
                     {
                         Exp3DH1 = MemoryManager<
@@ -358,6 +585,7 @@ struct Field
                                               true,false,
                                               Collections::eNoCollection);
                     }
+ 
                     else if (m_declareExpansionAsDisContField)
                     {
                         Exp2D = MemoryManager<MultiRegions::DisContField2D>::
@@ -434,7 +662,8 @@ struct Field
     FIELD_UTILS_EXPORT LibUtilities::FieldIOSharedPtr FieldIOForFile(
         std::string filename)
     {
-        LibUtilities::CommSharedPtr c = m_comm;
+		LibUtilities::CommSharedPtr c = m_comm;
+		
         string fmt = LibUtilities::FieldIO::GetFileType(filename, c);
         auto it = m_fld.find(fmt);
 

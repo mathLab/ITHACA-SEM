@@ -62,6 +62,8 @@ ProcessQCriterion::~ProcessQCriterion()
 
 void ProcessQCriterion::Process(po::variables_map &vm)
 {
+	m_f->SetUpExp(vm);
+	
     int nfields = m_f->m_variables.size();
     m_f->m_variables.push_back("Q");
     // Skip in case of empty partition

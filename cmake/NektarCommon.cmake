@@ -77,6 +77,9 @@ MACRO(SET_COMMON_PROPERTIES name)
     ELSE ()
         # Enable all warnings
         TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wpedantic -Wall -Wextra)
+        IF ( NEKTAR_ERROR_ON_WARNINGS )
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -Werror)
+        ENDIF()
     ENDIF()
 
     IF (${CMAKE_COMPILER_IS_GNUCXX})

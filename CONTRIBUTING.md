@@ -52,8 +52,15 @@ project. It's a pretty simple process:
 - Did you add regression tests (for fixes) or unit tests and/or normal tests for
   new features?
 - Have you run your branch through buildbot and do all the tests pass?
-- Have you fixed any compiler warnings your code has introduced into the
-  compilation step on any of the Linux buildbots?
+- Have you fixed any new compiler warnings your code has introduced into the
+  compilation step for all of the Linux buildbots?
+  - **unused parameters**: if these are genuinely needed (e.g. virtual functions
+    in a derived class, please use `boost::ignore_unused()` to mark as such.
+  - **switch case may fall-through**: for switch statements which
+    *intentionally* exploit fall-through between cases, mark the end of such
+    cases with the comment `/* Falls through. */` to suppress the warning.
+  - Avoid `ASSERTL0(false, msg)`; instead use `NEKERROR(ErrorUtil:efatal, msg)`.
+  - Ensure variables are initialised with sensible default values.
 - Is there documentation in the user guide and/or developer guide?
 - Have you added a CHANGELOG entry, including the MR number?
 - Are there any massive files you might have added in the commit history? We try

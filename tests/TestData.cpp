@@ -43,7 +43,7 @@ using namespace std;
 namespace Nektar
 {
     TestData::TestData(const fs::path& pFilename, po::variables_map& pVm)
-            : m_cmdoptions(pVm), m_pythonTest(false)
+            : m_cmdoptions(pVm)
     {
         // Process test file format.
         m_doc = new TiXmlDocument(pFilename.string().c_str());
@@ -67,29 +67,16 @@ namespace Nektar
         return m_description;
     }
 
-    const fs::path& TestData::GetExecutable() const
+    const Command& TestData::GetCommand(unsigned int pId) const
     {
-        return m_executable;
+        ASSERTL0(pId < m_commands.size(),
+                 "Command ID '" + std::to_string(pId) + "' not found");
+        return m_commands[pId];
     }
 
-    const std::string& TestData::GetParameters() const
+    unsigned int TestData::GetNumCommands() const
     {
-        return m_parameters;
-    }
-
-    const std::string& TestData::GetCommand() const
-    {
-        return m_command;
-    }
-
-    const unsigned int& TestData::GetNProcesses() const
-    {
-        return m_processes;
-    }
-
-    bool TestData::IsPythonTest() const
-    {
-        return m_pythonTest;
+        return m_commands.size();
     }
 
     std::string TestData::GetMetricType(unsigned int pId) const
@@ -121,7 +108,7 @@ namespace Nektar
         ASSERTL0(id, "No ID found for metric!");
         return boost::lexical_cast<unsigned int>(id);
     }
-    
+
     DependentFile TestData::GetDependentFile(unsigned int pId) const
     {
         ASSERTL0(pId < m_files.size(), "File index out of range.");
@@ -131,6 +118,54 @@ namespace Nektar
     unsigned int TestData::GetNumDependentFiles() const
     {
         return m_files.size();
+    }
+
+    Command TestData::ParseCommand(TiXmlElement *elmt) const
+    {
+        Command cmd;
+        TiXmlElement *tmp;
+
+        cmd.m_pythonTest = false;
+
+        // Parse executable tag. Do not enforce a check because this might be
+        // overridden on the command line.
+        if (elmt->FirstChildElement("executable"))
+        {
+            tmp = elmt->FirstChildElement("executable");
+            cmd.m_executable = fs::path(tmp->GetText());
+
+            // Test to see if this test requires Python
+            std::string needsPython;
+            tmp->QueryStringAttribute("python", &needsPython);
+            cmd.m_pythonTest = needsPython == "true";
+
+#if defined(RELWITHDEBINFO)
+            cmd.m_executable += cmd.m_pythonTest ? "" : "-rg";
+#elif !defined(NDEBUG)
+            cmd.m_executable += cmd.m_pythonTest ? "" : "-g";
+#endif
+        }
+
+        // Find associated parameters.
+        tmp = elmt->FirstChildElement("parameters");
+        ASSERTL0(tmp, "Cannot find 'parameters' for test.");
+        if (tmp->GetText())
+        {
+            cmd.m_parameters = string(tmp->GetText());
+        }
+
+        // Find parallel processes tah.
+        tmp = elmt->FirstChildElement("processes");
+        if (tmp)
+        {
+            cmd.m_processes = atoi(tmp->GetText());
+        }
+        else
+        {
+            cmd.m_processes = 1;
+        }
+
+        return cmd;
     }
 
     void TestData::Parse(TiXmlDocument* pDoc)
@@ -145,58 +180,31 @@ namespace Nektar
         ASSERTL0(tmp, "Cannot find 'description' for test.");
         m_description = string(tmp->GetText());
 
-        // Find executable.
-        if (m_cmdoptions.count("executable"))
+        // Find command(s) to run.
+        if ((tmp = testElement->FirstChildElement("executable")))
         {
-            m_executable = fs::path(
-                            m_cmdoptions["executable"].as<std::string>());
+            m_commands.push_back(ParseCommand(testElement));
         }
-        else
+        else if (m_cmdoptions.count("executable"))
         {
-            tmp = testElement->FirstChildElement("executable");
-            ASSERTL0(tmp, "Cannot find 'executable' for test.");
-            m_executable = fs::path(tmp->GetText());
-
-            // Test to see if this test requires Python
-            std::string needsPython;
-            tmp->QueryStringAttribute("python", &needsPython);
-            m_pythonTest = needsPython == "true";
-
-#if defined(RELWITHDEBINFO)
-            m_executable += m_pythonTest ? "" : "-rg";
-#elif !defined(NDEBUG)
-            m_executable += m_pythonTest ? "" : "-g";
-#endif
+            m_commands.push_back(ParseCommand(testElement));
+            m_commands.back().m_executable = fs::path(
+                m_cmdoptions["executable"].as<std::string>());
         }
-
-        // Find parameters tag.
-        tmp = testElement->FirstChildElement("parameters");
-        ASSERTL0(tmp, "Cannot find 'parameters' for test.");
-        if (tmp->GetText())
+        else if ((tmp = testElement->FirstChildElement("segment")))
         {
-            m_parameters = string(tmp->GetText());
+            ASSERTL0(m_cmdoptions.count("executable") == 0,
+                     "Test files defining more than one command in segment "
+                     "blocks cannot use --executable.");
+
+            while (tmp)
+            {
+                m_commands.push_back(ParseCommand(tmp));
+                tmp = tmp->NextSiblingElement("segment");
+            }
         }
 
-        tmp = testElement->FirstChildElement("command");
-        if (tmp)
-        {
-            m_command = string(tmp->GetText());
-        }
-        else
-        {
-            m_command = "";
-        }
-
-        // Find parallel processes tah.
-        tmp = testElement->FirstChildElement("processes");
-        if (tmp)
-        {
-            m_processes = atoi(tmp->GetText());
-        }
-        else
-        {
-            m_processes = 1;
-        }
+        ASSERTL0(m_commands.size() > 0, "lol");
 
         // Extract metric tags
         metrics = testElement->FirstChildElement("metrics");
@@ -227,7 +235,7 @@ namespace Nektar
             }
         }
     }
-    
+
     void TestData::SaveFile()
     {
         m_doc->SaveFile();

@@ -28,6 +28,14 @@ IF (NEKTAR_USE_PETSC)
 
         FIND_PACKAGE(PythonInterp 2 REQUIRED)
 
+        UNSET(PATCH CACHE)
+        FIND_PROGRAM(PATCH patch)
+        IF(NOT PATCH)
+            MESSAGE(FATAL_ERROR
+                "'patch' tool for modifying files not found. Cannot build PETSc.")
+        ENDIF()
+        MARK_AS_ADVANCED(PATCH)
+
         SET(PETSC_C_COMPILER   "${CMAKE_C_COMPILER}")
         SET(PETSC_CXX_COMPILER "${CMAKE_CXX_COMPILER}")
         SET(PETSC_Fortran_COMPILER "${CMAKE_Fortran_COMPILER}")
@@ -83,17 +91,19 @@ IF (NEKTAR_USE_PETSC)
             TMP_DIR ${TPBUILD}/petsc-3.7.7-tmp
             INSTALL_DIR ${TPDIST}
             BINARY_DIR ${TPBUILD}/petsc-3.7.7
-            URL ${TPURL}/petsc-lite-3.7.7.tar.gz
-            URL_MD5 "7b476e38cfab4cddb26f73e5ef23538e"
+            URL https://www.mcs.anl.gov/petsc/mirror/release-snapshots/petsc-lite-3.11.4.tar.gz
+            URL_MD5 "33da4b6a430d5d9e13b19871d707af0f"
             CONFIGURE_COMMAND
                 OMPI_FC=${CMAKE_Fortran_COMPILER}
                 OMPI_CC=${CMAKE_C_COMPILER}
                 OMPI_CXX=${CMAKE_CXX_COMPILER}
                 ${PYTHON_EXECUTABLE} ./configure
+                MAKEFLAGS=$MAKEFLAGS
                 --with-fc=${PETSC_Fortran_COMPILER}
                 --with-cc=${PETSC_C_COMPILER}
                 --with-cxx=${PETSC_CXX_COMPILER}
                 --with-shared-libraries=1
+                --with-make-np=1
                 --with-pic=1
                 --with-x=0
                 --with-ssl=0
@@ -101,7 +111,7 @@ IF (NEKTAR_USE_PETSC)
                 --with-petsc-arch=c-opt
                 ${PETSC_MUMPS}
                 ${PETSC_NO_MPI}
-            BUILD_COMMAND MAKEFLAGS= make)
+            BUILD_COMMAND ${MAKE})
 
         THIRDPARTY_LIBRARY(PETSC_LIBRARIES SHARED petsc
             DESCRIPTION "PETSc library")

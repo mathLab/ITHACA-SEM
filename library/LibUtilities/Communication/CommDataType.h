@@ -51,6 +51,16 @@ typedef MPI_Datatype CommDataType;
 }
 }
 
+#elif NEKTAR_USING_PETSC
+
+namespace Nektar
+{
+namespace LibUtilities
+{
+typedef unsigned int CommDataType;
+}
+}
+
 #else
 
 namespace Nektar

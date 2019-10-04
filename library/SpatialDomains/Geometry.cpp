@@ -425,36 +425,30 @@ bool Geometry::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
              "Expects number of global coordinates supplied to be greater than "
              "or equal to the mesh dimension.");
 
-    // find min, max point and check if within twice this
-    // distance other false this is advisable since
-    // GetLocCoord is expensive for non regular elements.
-    if (GetMetricInfo()->GetGtype() != eRegular)
+    int i;
+    Array<OneD, NekDouble> mincoord(m_coordim), maxcoord(m_coordim);
+    NekDouble diff = 0.0;
+
+    v_FillGeom();
+
+    const int npts = m_xmap->GetTotPoints();
+    Array<OneD, NekDouble> pts(npts);
+
+    for (i = 0; i < m_coordim; ++i)
     {
-        int i;
-        Array<OneD, NekDouble> mincoord(m_coordim), maxcoord(m_coordim);
-        NekDouble diff = 0.0;
+        m_xmap->BwdTrans(m_coeffs[i], pts);
+        mincoord[i] = Vmath::Vmin(pts.num_elements(), pts, 1);
+        maxcoord[i] = Vmath::Vmax(pts.num_elements(), pts, 1);
 
-        v_FillGeom();
+        diff = std::max(maxcoord[i] - mincoord[i], diff);
+    }
 
-        const int npts = m_xmap->GetTotPoints();
-        Array<OneD, NekDouble> pts(npts);
-
-        for (i = 0; i < m_coordim; ++i)
+    for (i = 0; i < m_coordim; ++i)
+    {
+        if ((gloCoord[i] < mincoord[i] - 0.2 * diff) ||
+            (gloCoord[i] > maxcoord[i] + 0.2 * diff))
         {
-            m_xmap->BwdTrans(m_coeffs[i], pts);
-            mincoord[i] = Vmath::Vmin(pts.num_elements(), pts, 1);
-            maxcoord[i] = Vmath::Vmax(pts.num_elements(), pts, 1);
-
-            diff = std::max(maxcoord[i] - mincoord[i], diff);
-        }
-
-        for (i = 0; i < m_coordim; ++i)
-        {
-            if ((gloCoord[i] < mincoord[i] - 0.2 * diff) ||
-                (gloCoord[i] > maxcoord[i] + 0.2 * diff))
-            {
-                return false;
-            }
+            return false;
         }
     }
 

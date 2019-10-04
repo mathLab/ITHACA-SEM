@@ -548,9 +548,12 @@ bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                               NekDouble &resid)
 {
     //Rough check if within twice min/max point
-    if(!MinMaxCheck(gloCoord))
+    if (m_geomType != eRegular)
     {
-        return false;
+        if (!MinMaxCheck(gloCoord))
+        {
+            return false;
+        }
     }
 
     // Convert to the local (eta) coordinates.

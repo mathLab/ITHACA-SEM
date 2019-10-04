@@ -257,9 +257,12 @@ bool HexGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                               NekDouble &resid)
 {
     //Rough check if within twice min/max point
-    if(!MinMaxCheck(gloCoord))
+    if (m_geomType != eRegular)
     {
-        return false;
+        if (!MinMaxCheck(gloCoord))
+        {
+            return false;
+        }
     }
 
     // Convert to the local Cartesian coordinates.

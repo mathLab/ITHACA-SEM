@@ -483,7 +483,7 @@ bool QuadGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                NekDouble &resid)
 {
     //Rough check if within twice min/max point
-    if (m_geomType != eRegular)
+    if (GetMetricInfo()->GetGtype() != eRegular)
     {
         if (!MinMaxCheck(gloCoord))
         {

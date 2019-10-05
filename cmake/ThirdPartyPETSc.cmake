@@ -60,10 +60,12 @@ IF (NEKTAR_USE_PETSC)
             SET(PETSC_DEPS "")
 
             IF(NOT BLAS_LAPACK_BUILTIN )
-                LIST(GET BLAS_LAPACK 0 BLAS)
+                LIST(GET BLAS_LAPACK 0 LAPACK)
+                LIST(GET BLAS_LAPACK 1 BLAS)
                 GET_FILENAME_COMPONENT(BLAS_LAPACK_DIR ${BLAS} PATH)
                 IF( NEKTAR_USE_MKL OR NEKTAR_USE_SYSTEM_BLAS_LAPACK)
-                    SET(PETSC_MUMPS ${PETSC_MUMPS} --with-blas-lapack-dir=${BLAS_LAPACK_DIR})
+                    SET(PETSC_MUMPS ${PETSC_MUMPS} --with-blas-lib=${BLAS}
+                        --with-lapack-lib=${LAPACK})
                     IF(THIRDPARTY_BUILD_BLAS_LAPACK)
                         SET(PETSC_DEPS ${PETSC_DEPS} lapack-3.7.0)
                     ENDIF()
@@ -82,16 +84,16 @@ IF (NEKTAR_USE_PETSC)
         ENDIF()
 
         EXTERNALPROJECT_ADD(
-            petsc-3.7.7
+            petsc-3.11.4
             DEPENDS ${PETSC_DEPS}
             PREFIX ${TPSRC}
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            SOURCE_DIR ${TPBUILD}/petsc-3.7.7
-            TMP_DIR ${TPBUILD}/petsc-3.7.7-tmp
+            SOURCE_DIR ${TPBUILD}/petsc-3.11.4
+            TMP_DIR ${TPBUILD}/petsc-3.11.4-tmp
             INSTALL_DIR ${TPDIST}
-            BINARY_DIR ${TPBUILD}/petsc-3.7.7
-            URL https://www.mcs.anl.gov/petsc/mirror/release-snapshots/petsc-lite-3.11.4.tar.gz
+            BINARY_DIR ${TPBUILD}/petsc-3.11.4
+            URL https://www.nektar.info/thirdparty/petsc-lite-3.11.4.tar.gz
             URL_MD5 "33da4b6a430d5d9e13b19871d707af0f"
             CONFIGURE_COMMAND
                 OMPI_FC=${CMAKE_Fortran_COMPILER}
@@ -111,7 +113,8 @@ IF (NEKTAR_USE_PETSC)
                 --with-petsc-arch=c-opt
                 ${PETSC_MUMPS}
                 ${PETSC_NO_MPI}
-            BUILD_COMMAND ${MAKE})
+            BUILD_COMMAND ${MAKE}
+            TEST_COMMAND make PETSC_DIR=${TPDIST} PETSC_ARCH= test)
 
         THIRDPARTY_LIBRARY(PETSC_LIBRARIES SHARED petsc
             DESCRIPTION "PETSc library")

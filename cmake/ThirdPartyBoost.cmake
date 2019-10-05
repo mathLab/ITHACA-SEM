@@ -111,6 +111,7 @@ IF (THIRDPARTY_BUILD_BOOST)
                 variant=release
                 link=shared
                 include=${TPDIST}/include
+                cxxflags="-w"
                 linkflags="-L${TPDIST}/lib"
                 ${BOOST_FLAGS} ${BOOST_LIB_LIST}
                 --layout=system toolset=${TOOLSET} install

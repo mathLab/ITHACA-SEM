@@ -101,6 +101,8 @@ IF (NEKTAR_USE_PETSC)
                 OMPI_CXX=${CMAKE_CXX_COMPILER}
                 ${PYTHON_EXECUTABLE} ./configure
                 MAKEFLAGS=$MAKEFLAGS
+                CFLAGS="-w"
+                CXXFLAGS="-w"
                 --with-fc=${PETSC_Fortran_COMPILER}
                 --with-cc=${PETSC_C_COMPILER}
                 --with-cxx=${PETSC_CXX_COMPILER}
@@ -114,7 +116,7 @@ IF (NEKTAR_USE_PETSC)
                 ${PETSC_MUMPS}
                 ${PETSC_NO_MPI}
             BUILD_COMMAND ${MAKE}
-            TEST_COMMAND make PETSC_DIR=${TPDIST} PETSC_ARCH= test)
+            TEST_COMMAND ${MAKE} PETSC_DIR=${TPDIST} PETSC_ARCH=c-opt test)
 
         THIRDPARTY_LIBRARY(PETSC_LIBRARIES SHARED petsc
             DESCRIPTION "PETSc library")

@@ -115,8 +115,9 @@ IF (NEKTAR_USE_PETSC)
                 --with-petsc-arch=c-opt
                 ${PETSC_MUMPS}
                 ${PETSC_NO_MPI}
-            BUILD_COMMAND ${MAKE}
-            TEST_COMMAND ${MAKE} PETSC_DIR=${TPDIST} PETSC_ARCH=c-opt test)
+            BUILD_COMMAND ${CMAKE_MAKE_PROGRAM}
+            TEST_COMMAND ${CMAKE_MAKE_PROGRAM}
+                PETSC_DIR=${TPDIST} PETSC_ARCH=c-opt test)
 
         THIRDPARTY_LIBRARY(PETSC_LIBRARIES SHARED petsc
             DESCRIPTION "PETSc library")

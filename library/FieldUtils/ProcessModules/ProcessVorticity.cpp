@@ -36,11 +36,13 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
+
+#include <GlobalMapping/Mapping.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+
 #include "ProcessMapping.h"
 #include "ProcessVorticity.h"
-#include <GlobalMapping/Mapping.h>
-
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
@@ -63,6 +65,8 @@ ProcessVorticity::~ProcessVorticity()
 
 void ProcessVorticity::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int i, s;
     int expdim   = m_f->m_graph->GetMeshDimension();
     m_spacedim = expdim;
@@ -71,11 +75,8 @@ void ProcessVorticity::Process(po::variables_map &vm)
         m_spacedim = 3;
     }
     int nfields = m_f->m_variables.size();
-    if (m_spacedim == 1)
-    {
-        ASSERTL0(false, "Error: Vorticity for a 1D problem cannot "
-                        "be computed")
-    }
+    ASSERTL0(m_spacedim != 1,
+             "Error: Vorticity for a 1D problem cannot be computed");
     int addfields = (m_spacedim == 2) ? 1 : 3;
 
     // Append field names

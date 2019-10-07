@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/RiemannSolvers/UpwindSolver.h>
 
 namespace Nektar
@@ -87,6 +89,8 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                   Array<OneD,       Array<OneD, NekDouble> > &flux)
         {
+            boost::ignore_unused(nDim);
+
             ASSERTL1(CheckScalars("Vn"), "Vn not defined.");
             const Array<OneD, NekDouble> &traceVel = m_scalars["Vn"]();
             

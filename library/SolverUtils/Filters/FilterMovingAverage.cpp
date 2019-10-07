@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Filters/FilterMovingAverage.h>
 
 namespace Nektar
@@ -111,6 +113,8 @@ void FilterMovingAverage::v_ProcessSample(
           std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     const NekDouble &time)
 {
+    boost::ignore_unused(pFields, time);
+
     // Take first sample as initial vector
     NekDouble alpha = m_alpha;
     if (m_numSamples == 1)

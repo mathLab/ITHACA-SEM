@@ -35,6 +35,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_OPERATIONS_DECLARATIONS_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_OPERATIONS_DECLARATIONS_HPP
 
+#include <boost/core/ignore_unused.hpp>
+
 // Since this file defines all of the operations for all combination of matrix
 // types, we have to include all matrix specializations first.
 
@@ -141,6 +143,8 @@ void NekMultiplyFullMatrixFullMatrix(
         CanGetRawPtr<NekMatrix<RhsDataType, RhsMatrixType>>::value>::type *p =
         0)
 {
+    boost::ignore_unused(p);
+
     ASSERTL1(lhs.GetType() == eFULL && rhs.GetType() == eFULL,
              "Only full matrices are supported.");
 

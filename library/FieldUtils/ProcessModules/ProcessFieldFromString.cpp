@@ -35,10 +35,12 @@
 #include <string>
 using namespace std;
 
-#include "ProcessFieldFromString.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessFieldFromString.h"
 
 namespace Nektar
 {
@@ -70,6 +72,8 @@ ProcessFieldFromString::~ProcessFieldFromString(void)
 
 void ProcessFieldFromString::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     // Check if required parameter fieldstr was provided
     ASSERTL0(m_config["fieldstr"].m_beenSet, "fieldstr must be specified");
 

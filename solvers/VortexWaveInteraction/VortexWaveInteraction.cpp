@@ -1013,7 +1013,8 @@ namespace Nektar
         {
             // make directory and presume will fail if it already exists
             string mkdir = "mkdir " + dir;
-            system(mkdir.c_str());
+            ASSERTL0(system(mkdir.c_str()) == 0,
+                    "Failed to make directory '" + dir + "'");
 
             opendir[dir] = 1;
         }
@@ -1021,11 +1022,7 @@ namespace Nektar
         string savefile = dir + "/" + file + "." + boost::lexical_cast<std::string>(n);
         string syscall  = "cp -f "  + file + " " + savefile; 
 
-        if(system(syscall.c_str()))
-        {
-            ASSERTL0(false,syscall.c_str());
-        }
-
+        ASSERTL0(system(syscall.c_str()) == 0, syscall.c_str());
      }
 
 
@@ -1037,17 +1034,15 @@ namespace Nektar
         {
             // make directory and presume will fail if it already exists
             string mkdir = "mkdir " + dir;
-            system(mkdir.c_str());
+            ASSERTL0(system(mkdir.c_str()) == 0,
+                    "Failed to make directory '" + dir + "'");
             opendir[dir] = 1;
         }
         
         string savefile = dir + "/" + file + "." + boost::lexical_cast<std::string>(n);
         string syscall  = "mv -f "  + file + " " + savefile; 
 
-        if(system(syscall.c_str()))
-        {
-            ASSERTL0(false,syscall.c_str());
-        }
+        ASSERTL0(system(syscall.c_str()) == 0, syscall.c_str());
      }
 
      void VortexWaveInteraction::CopyFile(string file1end, string file2end)

@@ -36,9 +36,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessL2Criterion.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessL2Criterion.h"
 
 namespace Nektar
 {
@@ -127,6 +129,8 @@ void MatSymEVals(NekDouble d1, NekDouble d2, NekDouble d3, NekDouble a,
 
 void ProcessL2Criterion::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     auto nfields = m_f->m_variables.size();
     m_f->m_variables.push_back("L2");
 

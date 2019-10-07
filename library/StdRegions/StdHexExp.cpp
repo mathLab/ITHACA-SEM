@@ -61,15 +61,6 @@ namespace Nektar
         }
 
 
-        StdHexExp::StdHexExp(const  LibUtilities::BasisKey &Ba,
-                        const  LibUtilities::BasisKey &Bb,
-                        const  LibUtilities::BasisKey &Bc,
-                        NekDouble *coeffs,
-                        NekDouble *phys)
-        {
-        }
-
-
         StdHexExp::StdHexExp(const StdHexExp &T):
             StdExpansion(T),
             StdExpansion3D(T)
@@ -539,7 +530,7 @@ namespace Nektar
             ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
 
             int nq = GetTotPoints();
-            MatrixType mtype;
+            MatrixType mtype = eIProductWRTDerivBase0;
 
             switch (dir)
             {
@@ -696,7 +687,7 @@ namespace Nektar
         LibUtilities::ShapeType StdHexExp::v_DetShapeType() const
         {
             return LibUtilities::eHexahedron;
-        };
+        }
 
 
         int StdHexExp::v_NumBndryCoeffs() const
@@ -1086,12 +1077,13 @@ namespace Nektar
                         offset = (nummodes2-1)*nummodes0*nummodes1;
                         jump1 = nummodes0;
                     }
+                    BOOST_FALLTHROUGH;
                 }
                 case 0:
                 {
                     jump1 = nummodes0;
+                    break;
                 }
-                break;
                 case 3:
                 {
                     if (modified)
@@ -1103,12 +1095,13 @@ namespace Nektar
                         offset = nummodes0*(nummodes1-1);
                         jump1 = nummodes0*nummodes1;
                     }
+                    BOOST_FALLTHROUGH;
                 }
                 case 1:
                 {
                     jump1 = nummodes0*nummodes1;
-                }
                     break;
+                }
                 case 2:
                 {
                     if (modified)
@@ -1122,13 +1115,14 @@ namespace Nektar
                         jump2 = nummodes0;
 
                     }
+                    BOOST_FALLTHROUGH;
                 }
                 case 4:
                 {
                     jump1 = nummodes0*nummodes1;
                     jump2 = nummodes0;
-                }
                     break;
+                }
                 default:
                     ASSERTL0(false,"fid must be between 0 and 5");
             }

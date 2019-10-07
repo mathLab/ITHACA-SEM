@@ -72,7 +72,7 @@ inline int PrintProgressbar(
     if (ISTTY)
     {
         float progress = position / float(goal);
-        int  numeq = ceil(progress *49); 
+        int  numeq = static_cast<int>(ceil(progress *49));
         if(lastprogress == numeq)
         {
             return numeq;

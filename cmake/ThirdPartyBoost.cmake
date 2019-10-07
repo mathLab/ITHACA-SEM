@@ -111,6 +111,7 @@ IF (THIRDPARTY_BUILD_BOOST)
                 variant=release
                 link=shared
                 include=${TPDIST}/include
+                cxxflags="-w"
                 linkflags="-L${TPDIST}/lib"
                 ${BOOST_FLAGS} ${BOOST_LIB_LIST}
                 --layout=system toolset=${TOOLSET} install
@@ -176,7 +177,7 @@ IF (THIRDPARTY_BUILD_BOOST)
     SET(Boost_LIBRARY_DIRS ${TPSRC}/dist/lib)
     SET(Boost_CONFIG_LIBRARY_DIR ${TPLIB})
 
-    INCLUDE_DIRECTORIES(${TPDIST}/include)
+    INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include)
 
     STRING(REPLACE ";" ", " NEEDED_BOOST_LIBS_STRING "${NEEDED_BOOST_LIBS}")
     MESSAGE(STATUS "Build boost libs: ${NEEDED_BOOST_LIBS_STRING}")
@@ -189,4 +190,4 @@ ELSE (THIRDPARTY_BUILD_BOOST)
     SET(Boost_CONFIG_LIBRARY_DIR ${Boost_LIBRARY_DIRS})
 ENDIF (THIRDPARTY_BUILD_BOOST)
 
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})

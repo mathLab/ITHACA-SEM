@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Filters/FilterCheckpoint.h>
 
 namespace Nektar
@@ -87,6 +89,8 @@ void FilterCheckpoint::v_Update(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     if (m_index++ % m_outputFrequency > 0)
     {
         return;
@@ -119,7 +123,7 @@ void FilterCheckpoint::v_Finalise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
-
+    boost::ignore_unused(pFields, time);
 }
 
 bool FilterCheckpoint::v_IsTimeDependent()

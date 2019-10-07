@@ -47,7 +47,9 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-
+        bool NodalTriFekete::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eNodalTriFekete),       NodalTriFekete::Create)
+        };
 
         // ////////////////////////////////////////////////////////
         //  Coordinate the nodal trianlge Fekete points

@@ -108,8 +108,8 @@ namespace Nektar
         private:
         };
 
-    }; //end of namespace
-}; //end of namespace
+    } //end of namespace
+} //end of namespace
 
 #endif //NEKTAR_SPATIALDOMAINS_MESHCOMPONENTS_H
 

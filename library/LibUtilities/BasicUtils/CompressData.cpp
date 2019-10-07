@@ -118,6 +118,7 @@ namespace LibUtilities
             {
             case 1:
                 compressedDataString += '\0';
+                BOOST_FALLTHROUGH;
             case 2:
                 compressedDataString += '\0';
                 break;

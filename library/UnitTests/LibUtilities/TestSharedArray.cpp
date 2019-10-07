@@ -34,6 +34,7 @@
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -68,8 +69,8 @@ namespace Nektar
 
         void CheckAddresses(Array<TwoD, double>::reference d, double* expectedAddress)
         {
-            //BOOST_CHECK_EQUAL(d.num_elements(), 7);
-            //BOOST_CHECK_EQUAL(d.origin(), expectedAddress);
+            BOOST_CHECK_EQUAL(d.num_elements(), 7);
+            BOOST_CHECK_EQUAL(d.origin(), expectedAddress);
         }
 
         BOOST_AUTO_TEST_CASE(TestRowPointers)

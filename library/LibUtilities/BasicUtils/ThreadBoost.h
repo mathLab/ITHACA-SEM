@@ -71,7 +71,7 @@ class ThreadManagerBoost: public ThreadManager
         virtual void QueueJob(ThreadJob* job);
         virtual unsigned int GetNumWorkers();
         virtual unsigned int GetWorkerNum();
-        virtual void SetNumWorkers(unsigned int num);
+        virtual void SetNumWorkers(const unsigned int num);
         virtual void SetNumWorkers();
         virtual unsigned int GetMaxNumWorkers();
         virtual void Wait();

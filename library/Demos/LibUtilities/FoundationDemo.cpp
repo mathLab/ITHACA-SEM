@@ -5,6 +5,8 @@
 
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
@@ -70,6 +72,8 @@ long double derivativeFunction(long double x, int N, PointsType type)
 
 long double integrationFunction(int nPts, PointsType type)
 {
+    boost::ignore_unused(nPts);
+
    long double integral = 0;
    switch(type)
    {

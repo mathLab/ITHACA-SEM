@@ -114,7 +114,7 @@ namespace Nektar
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
             std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
-            bool vCG;
+            bool vCG = false;
             m_locToGloMap = pLocToGloMap;
 
             if (std::dynamic_pointer_cast<AssemblyMapCG>(pLocToGloMap))
@@ -127,7 +127,7 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(false, "Unknown map type");
+                NEKERROR(ErrorUtil::efatal, "Unknown map type");
             }
 
             bool dirForcCalculated = (bool) pDirForcing.num_elements();

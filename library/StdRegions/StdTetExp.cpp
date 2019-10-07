@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
+#include <boost/core/ignore_unused.hpp>
 
 #include <StdRegions/StdTetExp.h>
 
@@ -365,6 +365,9 @@ namespace Nektar
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1,
+                                 doCheckCollDir2);
+
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
@@ -590,6 +593,9 @@ namespace Nektar
                           bool                          doCheckCollDir1,
                           bool                          doCheckCollDir2)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1,
+                                 doCheckCollDir2);
+
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
@@ -682,7 +688,7 @@ namespace Nektar
             ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
 
             int nq = GetTotPoints();
-            MatrixType mtype;
+            MatrixType mtype = eIProductWRTDerivBase0;
 
             switch (dir)
             {
@@ -911,6 +917,8 @@ namespace Nektar
                     int &numModes0,
                     int &numModes1)
         {
+            boost::ignore_unused(faceOrient);
+
             int nummodes [3] = {m_base[0]->GetNumModes(),
                                 m_base[1]->GetNumModes(),
                                 m_base[2]->GetNumModes()};
@@ -1239,6 +1247,8 @@ namespace Nektar
             Array<OneD,          int>& signarray,
             int                        P)
         {
+            boost::ignore_unused(P);
+
             ASSERTL2(eid >= 0 && eid < 6, "Invalid edge");
             ASSERTL2(v_IsBoundaryInteriorExpansion(),
                      "Method only implemented for Modified_A BasisType (x "
@@ -2288,6 +2298,8 @@ namespace Nektar
             Array<OneD, int> &conn,
             bool              standard)
         {
+            boost::ignore_unused(standard);
+
             int np0 = m_base[0]->GetNumPoints();
             int np1 = m_base[1]->GetNumPoints();
             int np2 = m_base[2]->GetNumPoints();

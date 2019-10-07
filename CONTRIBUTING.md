@@ -52,6 +52,15 @@ project. It's a pretty simple process:
 - Did you add regression tests (for fixes) or unit tests and/or normal tests for
   new features?
 - Have you run your branch through buildbot and do all the tests pass?
+- Have you fixed any new compiler warnings your code has introduced into the
+  compilation step for all of the Linux buildbots?
+  - **unused parameters**: if these are genuinely needed (e.g. virtual functions
+    in a derived class, please use `boost::ignore_unused()` to mark as such.
+  - **switch case may fall-through**: for switch statements which
+    *intentionally* exploit fall-through between cases, mark the end of such
+    cases with the comment `/* Falls through. */` to suppress the warning.
+  - Avoid `ASSERTL0(false, msg)`; instead use `NEKERROR(ErrorUtil:efatal, msg)`.
+  - Ensure variables are initialised with sensible default values.
 - Is there documentation in the user guide and/or developer guide?
 - Have you added a CHANGELOG entry, including the MR number?
 - Are there any massive files you might have added in the commit history? We try
@@ -110,15 +119,23 @@ You should also test your branch on the
 the code against a number of Linux, Mac and Windows operating systems, both 32-
 and 64-bit. If your tests don't pass, we can't merge the code into master.
 
-Testing is presently manually executed. You should:
+When you submit a merge request testing on buildbot will happen automatically,
+unless you have marked the merge request as a work-in-progress (WIP: prefix).
+Each time you push commits to a non-WIP merge request branch, it will also
+trigger a build.
 
-1. Go to the buildbot site and navigate to the *Builders* page.
-2. Scroll to the bottom of the page in the section *Force all builds*
-3. Enter your details. If you're working on a fork, then the *Suffix to repo
-   url* box should be changed to `username/nektar`.
-4. Hit the *Force build* button.
-5. Check the output in the *Grid* page -- hopefully everything should be green!
-   Tests can take up to two hours to run.
+For WIP merge request branches, you can force a build on individual builders
+using the buildbot web interface:
+
+1. Go to the buildbot site and log in using the drop-down menu (top right).
+2. Go to the console display and select the builder from the column headings on
+   which you would like to force test.
+3. Select 'Force' from the top-right of the page.
+4. Enter the details as required. If you're working on a fork, then the *Fork*
+   box should be changed to `username/nektar`.
+5. Hit the *Start build* button.
+6. Return to the *console* display to see progress. You can click on the
+   flashing indicator for your active build to see progress and output.
 
 ## Documentation
 Nektar++ has a fairly comprehensive user guide and a developer guide that is

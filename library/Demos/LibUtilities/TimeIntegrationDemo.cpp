@@ -79,6 +79,7 @@
 #include <iostream>
 #include <iomanip>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -409,6 +410,8 @@ void OneDfinDiffAdvDiffSolver::HelmSolve(const Array<OneD, const Array<OneD, dou
                                          const NekDouble time,
                                          const NekDouble lambda) const
 {
+    boost::ignore_unused(time);
+
     // This function implements a 1D finite difference helmholtz solver.
     // The 1D Helmholtz equation leads to a cyclic triadiagonal matrix to be
     // solved.
@@ -450,6 +453,8 @@ void OneDfinDiffAdvDiffSolver::EvaluateAdvectionTerm(const Array<OneD, const  Ar
                                                            Array<OneD,        Array<OneD, double> >& outarray,
                                                      const NekDouble time) const
 {
+    boost::ignore_unused(time);
+
     // The advection term can be evaluated using central or upwind differences
     if(true)
     {
@@ -479,6 +484,8 @@ void OneDfinDiffAdvDiffSolver::Project(const Array<OneD, const  Array<OneD, doub
                                              Array<OneD,        Array<OneD, double> >& outarray,
                                        const NekDouble time) const
 {
+    boost::ignore_unused(time);
+
     // This is simply the identity operator for this case
     for(int i = 0; i < m_nPoints; i++)
     {

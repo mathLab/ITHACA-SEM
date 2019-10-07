@@ -39,6 +39,8 @@
 #include <string>
 #include <map>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Interpreter/Interpreter.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
@@ -70,7 +72,7 @@ namespace LibUtilities
 class Equation
 {
 public:
-    LIB_UTILITIES_EXPORT Equation(const Equation &src) = default;
+    LIB_UTILITIES_EXPORT Equation(const Equation &) = default;
     LIB_UTILITIES_EXPORT Equation(InterpreterSharedPtr evaluator,
                                   const std::string& expr = "",
                                   const std::string& vlist = "");

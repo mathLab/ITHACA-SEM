@@ -83,8 +83,8 @@ IF (NEKTAR_BUILD_PYTHON)
         EXTERNALPROJECT_ADD(
             boost-numpy
             PREFIX ${TPSRC}
-            URL ${TPURL}/boost-numpy_1.0.1.tar.bz2
-            URL_MD5 ae8c6f4d114a9c20dff72e915288a408
+            URL ${TPURL}/boost-numpy_1.0.2.tar.bz2
+            URL_MD5 250a517556e67f65c8837c73f419f773
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/boost-numpy

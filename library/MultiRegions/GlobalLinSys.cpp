@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
 #include <LocalRegions/MatrixKey.h>
@@ -201,6 +203,7 @@ namespace Nektar
             m_verbose(m_expList.lock()->GetSession()->
                       DefinesCmdLineArgument("verbose"))
         {
+            boost::ignore_unused(pLocToGloMap);
         }
 
         /**
@@ -431,13 +434,14 @@ namespace Nektar
         void GlobalLinSys::v_InitObject()
         {
             NEKERROR(ErrorUtil::efatal, "Method does not exist" );
-	}
+        }
 
         void GlobalLinSys::v_Initialise(
             const std::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
+            boost::ignore_unused(pLocToGloMap);
             NEKERROR(ErrorUtil::efatal, "Method does not exist" );
-	}
+        }
     } //end of namespace
 } //end of namespace
 

@@ -160,7 +160,8 @@ v5.0.0
 - Updated SVV to allow for the DGKernel extension (!851)
 - Pre-calculate Time invariant portion of Womersley Solution (!814)
 - Fix for independent setting of SVV in Homogeneous direction (!936)
-- Write flow field based on CFL treshold (!1025)
+- Write flow field based on CFL threshold (!1025)
+- Fix unsteady Stokes solver (!1074)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)

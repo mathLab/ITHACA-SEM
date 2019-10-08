@@ -431,6 +431,8 @@ void FieldIOXml::ImportMultiFldFileIDs(
     std::vector<std::vector<unsigned int> > &elementList,
     FieldMetaDataMap                        &fieldmetadatamap)
 {
+    boost::ignore_unused(fieldmetadatamap);
+
     TiXmlDocument doc(inFile);
     bool loadOkay = doc.LoadFile();
 
@@ -632,8 +634,9 @@ DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
             }
             else
             {
-                ASSERTL0(false, "PARAM not provided as an attribute in "
-                                "FIELDMETADATA section");
+                NEKERROR(ErrorUtil::efatal,
+                         "PARAM not provided as an attribute in "
+                         "FIELDMETADATA section");
             }
 
             // Now read body of param
@@ -698,18 +701,17 @@ void FieldIOXml::SetUpFieldMetaData(
 {
     ASSERTL0(!outname.empty(), "Empty path given to SetUpFieldMetaData()");
 
-    int nprocs = m_comm->GetSize();
-    int rank   = m_comm->GetRank();
+    unsigned int nprocs = m_comm->GetSize();
+    unsigned int rank   = m_comm->GetRank();
 
     fs::path specPath(outname);
 
     // Compute number of elements on this process and share with other
     // processes. Also construct list of elements on this process from
     // available vector of field definitions.
-    std::vector<unsigned int> elmtnums(nprocs, 0);
+    std::vector<size_t>       elmtnums(nprocs, 0);
     std::vector<unsigned int> idlist;
-    int i;
-    for (i = 0; i < fielddefs.size(); ++i)
+    for (size_t i = 0; i < fielddefs.size(); ++i)
     {
         elmtnums[rank] += fielddefs[i]->m_elementIDs.size();
         idlist.insert(idlist.end(),
@@ -726,7 +728,7 @@ void FieldIOXml::SetUpFieldMetaData(
 
         // Populate the list of element ID lists from all processes
         ElementIDs[0] = idlist;
-        for (i = 1; i < nprocs; ++i)
+        for (size_t i = 1; i < nprocs; ++i)
         {
             std::vector<unsigned int> tmp(elmtnums[i]);
             m_comm->Recv(i, tmp);
@@ -735,7 +737,7 @@ void FieldIOXml::SetUpFieldMetaData(
 
         // Set up output names
         std::vector<std::string> filenames;
-        for (int i = 0; i < nprocs; ++i)
+        for (unsigned int i = 0; i < nprocs; ++i)
         {
             boost::format pad("P%1$07d.%2$s");
             pad % i % GetFileEnding();
@@ -877,7 +879,7 @@ void FieldIOXml::ImportFieldDefs(
                 {
                     std::string errstr("Unknown attribute: ");
                     errstr += attrName;
-                    ASSERTL1(false, errstr.c_str());
+                    NEKERROR(ErrorUtil::ewarning, errstr.c_str());
                 }
 
                 // Get the next attribute.
@@ -919,7 +921,7 @@ void FieldIOXml::ImportFieldDefs(
             }
 
             // Get the geometrical shape
-            ShapeType shape;
+            ShapeType shape = (ShapeType)0;
             bool valid = false;
             for (unsigned int j = 0; j < SIZE_ShapeType; j++)
             {

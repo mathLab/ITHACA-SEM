@@ -35,6 +35,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLAS_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLAS_HPP
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/LinearAlgebra/TransF77.hpp>
 #include <LibUtilities/LinearAlgebra/BlasArray.hpp>
 
@@ -223,6 +225,7 @@ namespace Blas
           const double *A, const int ldA, const double * B, const int ldB,
           const double b, double *C, const int ldC)
     {
+        boost::ignore_unused(ldA, ldB, ldC);
         Dgemm('N','N',N,M,K,a,B,N,A,K,b,C,N) ;
     }
 }

@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Filters/FilterThresholdMin.h>
 
 using namespace std;
@@ -121,6 +123,8 @@ void FilterThresholdMin::v_Initialise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     m_threshold = Array<OneD, NekDouble> (
             pFields[m_thresholdVar]->GetNpoints(), m_initialValue);
 }
@@ -159,6 +163,8 @@ void FilterThresholdMin::v_Finalise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     std::stringstream vOutputFilename;
     vOutputFilename << m_outputFile << ".fld";
 

@@ -34,6 +34,7 @@
 
 #include <type_traits>
 #include <tinyxml.h>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
@@ -69,6 +70,8 @@ void MeshGraphHDF5::ReadGeometry(
     DomainRangeShPtr rng,
     bool fillGraph)
 {
+    boost::ignore_unused(rng);
+
     ReadComposites();
     ReadDomain();
     ReadExpansions();
@@ -112,30 +115,36 @@ std::pair<size_t, size_t> SplitWork(size_t vecsize, int rank, int nprocs)
 template<class T, typename std::enable_if<T::kDim == 0, int>::type = 0>
 inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap)
 {
+    boost::ignore_unused(geomMap);
     return 3;
 }
 
 template<class T, typename std::enable_if<T::kDim == 1, int>::type = 0>
 inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap)
 {
+    boost::ignore_unused(geomMap);
     return T::kNverts;
 }
 
 template<class T, typename std::enable_if<T::kDim == 2, int>::type = 0>
 inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap)
 {
+    boost::ignore_unused(geomMap);
     return T::kNedges;
 }
 
 template<class T, typename std::enable_if<T::kDim == 3, int>::type = 0>
 inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap)
 {
+    boost::ignore_unused(geomMap);
     return T::kNfaces;
 }
 
 template<class ...T>
 inline void UniqueValues(std::unordered_set<int> &unique)
-{}
+{
+    boost::ignore_unused(unique);
+}
 
 template<class ...T>
 inline void UniqueValues(std::unordered_set<int> &unique,
@@ -422,7 +431,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     MeshPartitionSharedPtr partitioner =
         GetMeshPartitionFactory().CreateInstance(
             partitionerName, session, m_meshDimension,
-            partElmts, CreateCompositeDescriptor(id2row, elmts));
+            partElmts, CreateCompositeDescriptor(id2row));
 
     partitioner->PartitionMesh(nproc, true, false, nLocal);
 
@@ -562,6 +571,7 @@ template<> void MeshGraphHDF5::ConstructGeomObject(
     std::map<int, std::shared_ptr<PointGeom>> &geomMap, int id,
     NekDouble *data, CurveSharedPtr curve)
 {
+    boost::ignore_unused(curve);
     geomMap[id] = MemoryManager<PointGeom>::AllocateSharedPtr(
         m_spaceDimension, id, data[0], data[1], data[2]);
 }
@@ -599,6 +609,7 @@ template<> void MeshGraphHDF5::ConstructGeomObject(
     std::map<int, std::shared_ptr<TetGeom>> &geomMap, int id, int *data,
     CurveSharedPtr curve)
 {
+    boost::ignore_unused(curve);
     TriGeomSharedPtr faces[4] = {
         std::static_pointer_cast<TriGeom>(GetGeometry2D(data[0])),
         std::static_pointer_cast<TriGeom>(GetGeometry2D(data[1])),
@@ -615,6 +626,7 @@ template<> void MeshGraphHDF5::ConstructGeomObject(
     std::map<int, std::shared_ptr<PyrGeom>> &geomMap, int id, int *data,
     CurveSharedPtr curve)
 {
+    boost::ignore_unused(curve);
     Geometry2DSharedPtr faces[5] = {
         GetGeometry2D(data[0]), GetGeometry2D(data[1]), GetGeometry2D(data[2]),
         GetGeometry2D(data[3]), GetGeometry2D(data[4])
@@ -629,6 +641,7 @@ template<> void MeshGraphHDF5::ConstructGeomObject(
     std::map<int, std::shared_ptr<PrismGeom>> &geomMap, int id, int *data,
     CurveSharedPtr curve)
 {
+    boost::ignore_unused(curve);
     Geometry2DSharedPtr faces[5] = {
         GetGeometry2D(data[0]), GetGeometry2D(data[1]), GetGeometry2D(data[2]),
         GetGeometry2D(data[3]), GetGeometry2D(data[4])
@@ -643,6 +656,7 @@ template<> void MeshGraphHDF5::ConstructGeomObject(
     std::map<int, std::shared_ptr<HexGeom>> &geomMap, int id, int *data,
     CurveSharedPtr curve)
 {
+    boost::ignore_unused(curve);
     QuadGeomSharedPtr faces[6] = {
         std::static_pointer_cast<QuadGeom>(GetGeometry2D(data[0])),
         std::static_pointer_cast<QuadGeom>(GetGeometry2D(data[1])),
@@ -1024,8 +1038,7 @@ void MeshGraphHDF5::ReadComposites()
 }
 
 CompositeDescriptor MeshGraphHDF5::CreateCompositeDescriptor(
-    std::unordered_map<int, int> &id2row,
-    std::vector<MeshEntity> &elmts)
+    std::unordered_map<int, int> &id2row)
 {
     CompositeDescriptor ret;
 
@@ -1276,7 +1289,7 @@ void MeshGraphHDF5::WriteComposites(CompositeMap &composites)
     H5::DataTypeSharedPtr tp  = H5::DataType::String();
     H5::DataSpaceSharedPtr ds = H5::DataSpace::OneD(comps.size());
     H5::DataSetSharedPtr dst  = m_mesh->CreateDataSet("COMPOSITE", tp, ds);
-    dst->WriteVectorString(comps, tp);
+    dst->WriteVectorString(comps, ds, tp);
 
     tp  = H5::DataType::OfObject(c_map[0]);
     ds  = H5::DataSpace::OneD(c_map.size());
@@ -1298,7 +1311,7 @@ void MeshGraphHDF5::WriteDomain(vector<CompositeMap> &domain)
     H5::DataTypeSharedPtr tp  = H5::DataType::String();
     H5::DataSpaceSharedPtr ds = H5::DataSpace::OneD(doms.size());
     H5::DataSetSharedPtr dst  = m_mesh->CreateDataSet("DOMAIN", tp, ds);
-    dst->WriteVectorString(doms, tp);
+    dst->WriteVectorString(doms, ds, tp);
 }
 
 void MeshGraphHDF5::WriteGeometry(
@@ -1306,6 +1319,8 @@ void MeshGraphHDF5::WriteGeometry(
     bool                                  defaultExp,
     const LibUtilities::FieldMetaDataMap &metadata)
 {
+    boost::ignore_unused(metadata);
+
     vector<string> tmp;
     boost::split(tmp, outfilename, boost::is_any_of("."));
     string filenameXml  = tmp[0] + ".xml";

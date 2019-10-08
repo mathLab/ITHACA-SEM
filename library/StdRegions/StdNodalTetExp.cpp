@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdNodalTetExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 
@@ -346,6 +348,7 @@ namespace Nektar
         int StdNodalTetExp::v_GetVertexMap(const int localVertexId,
                                            bool useCoeffPacking)
         {
+            boost::ignore_unused(useCoeffPacking);
             ASSERTL0(localVertexId >= 0 && localVertexId <= 3,
                      "Local Vertex ID must be between 0 and 3");                
             return localVertexId;

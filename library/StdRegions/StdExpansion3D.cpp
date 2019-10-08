@@ -34,6 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdExpansion3D.h>
 
 #ifdef max
@@ -352,6 +354,7 @@ namespace Nektar
             const int                     numpoints,
             const int                     nummodes)
         {
+            boost::ignore_unused(facedir);
 
             switch(faceDirBasisType)
             {
@@ -450,6 +453,7 @@ namespace Nektar
                             break;
                         }
                     }
+                    break;
                 }
 
                 case LibUtilities::eGLL_Lagrange:
@@ -478,6 +482,7 @@ namespace Nektar
                             break;
                         }
                     }
+                    break;
                 }
 
                 case LibUtilities::eOrtho_A:
@@ -509,6 +514,7 @@ namespace Nektar
                             break;
                         }
                     }
+                    break;
                 }
                 default:
                 {

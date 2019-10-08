@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/ExpList1DHomogeneous2D.h>
 #include <MultiRegions/DisContField3DHomogeneous2D.h>
 #include <MultiRegions/DisContField1D.h>
@@ -270,6 +272,7 @@ namespace Nektar
             const NekDouble   x2_in, 
             const NekDouble   x3_in)
         {
+            boost::ignore_unused(x2_in, x3_in);
             EvaluateBoundaryConditions(time, varName);
         }
 		

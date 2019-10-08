@@ -40,6 +40,7 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
@@ -75,6 +76,8 @@ bool ProcessProjectCAD::findAndProject(bgi::rtree<boxI, bgi::quadratic<16> > &rt
                                        Array<OneD, NekDouble> in,
                                        int &surf)
 {
+    boost::ignore_unused(surf);
+
     point q(in[0], in[1], in[2]);
     vector<boxI> result;
     rtree.query(bgi::intersects(q), back_inserter(result));

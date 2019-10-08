@@ -234,7 +234,7 @@ void MMFSystem::CheckMovingFrames(
     const Array<OneD, const Array<OneD, NekDouble>> &movingframes)
 {
     NekDouble t1x, t1y, t1z, t2x, t2y, t2z, t3x, t3y, t3z;
-    NekDouble dot12, dot23, dot31;
+    NekDouble dot12 = 0.0, dot23 = 0.0, dot31 = 0.0;
     NekDouble Tol = 0.0001;
 
     int nq = m_fields[0]->GetNpoints();
@@ -1681,7 +1681,7 @@ void MMFSystem::GetMaxwellFlux2D(
 {
     int nq = m_fields[0]->GetTotPoints();
 
-    NekDouble sign;
+    NekDouble sign = 1.0;
     switch (m_PolType)
     {
         // TransMagnetic

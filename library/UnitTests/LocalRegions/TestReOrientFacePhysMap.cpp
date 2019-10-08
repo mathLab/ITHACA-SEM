@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(TestReOrientQuadFacePhysMap)
     BOOST_CHECK_EQUAL(idmap[6], 6);
     BOOST_CHECK_EQUAL(idmap[7], 3);
     BOOST_CHECK_EQUAL(idmap[8], 0);
-};
+}
 
 } // namespace Expansion3DTests
 } // namespace Nektar

@@ -35,6 +35,8 @@
 #ifndef NEKTAR_SOLVERUTILS_ADVECTIONNONCONSERVATIVE
 #define NEKTAR_SOLVERUTILS_ADVECTIONNONCONSERVATIVE
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Advection/Advection.h>
 
 namespace Nektar
@@ -46,6 +48,7 @@ namespace Nektar
         public:
             static AdvectionSharedPtr create(std::string advType)
             {
+                boost::ignore_unused(advType);
                 return AdvectionSharedPtr(new AdvectionNonConservative());
             }
             

@@ -32,9 +32,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <boost/algorithm/string.hpp>
 #include <iomanip>
 #include <iostream>
+
+#include <boost/core/ignore_unused.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <ADRSolver/EquationSystems/MMFAdvection.h>
 #include <LibUtilities/BasicUtils/Timer.h>
@@ -394,6 +396,8 @@ void MMFAdvection::DoOdeRhs(
     const Array<OneD, const Array<OneD, NekDouble>> &inarray,
     Array<OneD, Array<OneD, NekDouble>> &outarray, const NekDouble time)
 {
+    boost::ignore_unused(time);
+
     int i;
     int nvariables = inarray.num_elements();
     int npoints    = GetNpoints();
@@ -871,7 +875,7 @@ NekDouble MMFAdvection::ComputeCirculatingArclength(const NekDouble zlevel,
     Array<OneD, NekDouble> xp(N + 1);
     Array<OneD, NekDouble> yp(N + 1);
 
-    NekDouble intval;
+    NekDouble intval = 0.0;
     switch (m_surfaceType)
     {
         case SolverUtils::eSphere:
@@ -999,6 +1003,8 @@ void MMFAdvection::v_SetInitialConditions(const NekDouble initialtime,
                                           bool dumpInitialConditions,
                                           const int domain)
 {
+    boost::ignore_unused(domain);
+
     int nq = m_fields[0]->GetNpoints();
 
     Array<OneD, NekDouble> u(nq);
@@ -1099,13 +1105,12 @@ void MMFAdvection::AdvectionBellPlane(Array<OneD, NekDouble> &outfield)
     // Sets of parameters
     m_radius_limit = 0.5;
 
-    NekDouble x0j, x1j, x2j;
+    NekDouble x0j, x1j;
     outfield = Array<OneD, NekDouble>(nq, 0.0);
     for (int j = 0; j < nq; ++j)
     {
         x0j = x[j];
         x1j = y[j];
-        x2j = z[j];
 
         dist = sqrt(x0j * x0j + x1j * x1j);
 
@@ -1301,6 +1306,8 @@ void MMFAdvection::v_EvaluateExactSolution(unsigned int field,
                                            Array<OneD, NekDouble> &outfield,
                                            const NekDouble time)
 {
+    boost::ignore_unused(field);
+
     switch (m_TestType)
     {
         case eAdvectionBell:

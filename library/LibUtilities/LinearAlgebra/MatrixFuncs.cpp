@@ -34,6 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/LinearAlgebra/MatrixFuncs.h>
 
 namespace Nektar
@@ -71,6 +73,7 @@ namespace Nektar
                                                         unsigned int row, unsigned int column,
                                                         unsigned int sub, unsigned int super)
     {
+        boost::ignore_unused(totalColumns);
         if( (column <= row && (row - column) <= CalculateNumberOfDiags(totalRows, sub)) ||
             (column > row && (column - row) <= CalculateNumberOfDiags(totalRows, super)) )
         {
@@ -90,6 +93,7 @@ namespace Nektar
     BandedMatrixFuncs::Advance(const unsigned int totalRows, const unsigned int totalColumns,
             const unsigned int curRow, const unsigned int curColumn)
     {
+        boost::ignore_unused(totalRows, totalColumns);
         unsigned int nextRow = curRow;
         unsigned int nextColumn = curColumn;
 
@@ -104,6 +108,7 @@ namespace Nektar
     
     unsigned int FullMatrixFuncs::CalculateIndex(unsigned int totalRows, unsigned int totalColumns, unsigned int curRow, unsigned int curColumn)
     {
+        boost::ignore_unused(totalColumns);
         return curColumn*totalRows + curRow;
     }
 
@@ -158,6 +163,8 @@ namespace Nektar
     UpperTriangularMatrixFuncs::Advance(const unsigned int totalRows, const unsigned int totalColumns,
             const unsigned int curRow, const unsigned int curColumn)
     {
+        boost::ignore_unused(totalRows);
+
         ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
         ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
             std::to_string(curRow) + " of a (" +
@@ -312,6 +319,8 @@ namespace Nektar
     DiagonalMatrixFuncs::Advance(const unsigned int totalRows, const unsigned int totalColumns,
             const unsigned int curRow, const unsigned int curColumn)
     {
+        boost::ignore_unused(totalColumns);
+
         ASSERTL0(curRow == curColumn, "Iteration of a diagonal matrix is only valid along the diagonal.");
 
         unsigned int nextRow = curRow;

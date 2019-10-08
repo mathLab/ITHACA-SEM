@@ -34,6 +34,7 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <iomanip>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
@@ -506,6 +507,8 @@ void FilterAeroForces::v_Finalise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
     const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     if (pFields[0]->GetComm()->GetRank() == 0)
     {
         m_outputStream.close();
@@ -772,7 +775,7 @@ void FilterAeroForces::CalculateForces(
                         // Dimension specific part for obtaining values
                         //   at boundary and normal vector
                         Array<OneD, Array<OneD, NekDouble> > normals;
-                        int nbc;
+                        int nbc = 0;
                         switch(expdim)
                         {
                             case 2:
@@ -951,6 +954,8 @@ void FilterAeroForces::CalculateForcesMapping(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     int i, j, k, n, cnt, elmtid, offset, boundary, plane;
     // Get number of quadrature points and dimensions
     int physTot = pFields[0]->GetNpoints();
@@ -1257,7 +1262,7 @@ void FilterAeroForces::CalculateForcesMapping(
                         // Dimension specific part for obtaining values
                         //   at boundary and normal vector
                         Array<OneD, Array<OneD, NekDouble> > normals;
-                        int nbc;
+                        int nbc = 0;
                         switch(expdim)
                         {
                             case 2:

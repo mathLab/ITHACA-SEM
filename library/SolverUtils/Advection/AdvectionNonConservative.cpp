@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Advection/AdvectionNonConservative.h>
 
 namespace Nektar
@@ -71,6 +73,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
+            boost::ignore_unused(time, pFwd, pBwd);
+
             int nDim       = advVel.num_elements();
             int nPointsTot = fields[0]->GetNpoints();
             Array<OneD, NekDouble> grad0,grad1,grad2;

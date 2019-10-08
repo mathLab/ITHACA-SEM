@@ -34,6 +34,7 @@
 #include <string>
 #include <iostream>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
@@ -114,6 +115,8 @@ ProcessIsoContour::~ProcessIsoContour(void)
 
 void ProcessIsoContour::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     bool verbose = (m_f->m_verbose && m_f->m_comm->TreatAsRankZero());
 
     vector<IsoSharedPtr> iso;

@@ -441,7 +441,7 @@ void PrismGeom::SetUpLocalEdges()
                 << (m_faces[3])->GetGlobalID();
         ASSERTL0(false, errstrm.str());
     }
-};
+}
 
 void PrismGeom::SetUpLocalVertices()
 {
@@ -510,7 +510,7 @@ void PrismGeom::SetUpLocalVertices()
         errstrm << m_edges[8]->GetGlobalID();
         ASSERTL0(false, errstrm.str());
     }
-};
+}
 
 void PrismGeom::SetUpEdgeOrientation()
 {
@@ -537,7 +537,7 @@ void PrismGeom::SetUpEdgeOrientation()
             ASSERTL0(false, "Could not find matching vertex for the edge");
         }
     }
-};
+}
 
 void PrismGeom::SetUpFaceOrientation()
 {

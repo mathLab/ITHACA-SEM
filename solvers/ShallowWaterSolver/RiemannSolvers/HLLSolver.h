@@ -55,9 +55,9 @@ namespace Nektar
         HLLSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_PointSolve(
-            double  hL, double  huL, double  hvL,
-            double  hR, double  huR, double  hvR,
-            double &hf, double &huf, double &hvf);
+            NekDouble  hL, NekDouble  huL, NekDouble  hvL,
+            NekDouble  hR, NekDouble  huR, NekDouble  hvR,
+            NekDouble &hf, NekDouble &huf, NekDouble &hvf);
     };
 }
 

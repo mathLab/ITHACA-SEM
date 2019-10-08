@@ -44,6 +44,9 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        bool NodalTriElec::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eNodalTriElec),         NodalTriElec::Create)
+        };
         void NodalTriElec::CalculatePoints()
         {
             // Allocate the storage for points

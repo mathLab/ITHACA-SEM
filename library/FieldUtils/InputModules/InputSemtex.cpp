@@ -38,8 +38,10 @@
 #include <vector>
 using namespace std;
 
-#include <LibUtilities/BasicUtils/CompressData.h>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <LibUtilities/BasicUtils/CompressData.h>
 
 #include "InputSemtex.h"
 
@@ -80,6 +82,8 @@ InputSemtex::~InputSemtex()
  */
 void InputSemtex::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     // Variables to be read from session file
     string sessionName, date, fields, endian;
     int nr, ns, nz, nelmt, step;

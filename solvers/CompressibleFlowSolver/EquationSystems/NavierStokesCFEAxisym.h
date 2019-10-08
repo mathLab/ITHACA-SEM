@@ -35,6 +35,8 @@
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NSCFEAXISYM_H
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NSCFEAXISYM_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <CompressibleFlowSolver/EquationSystems/NavierStokesCFE.h>
 
 namespace Nektar
@@ -88,7 +90,9 @@ namespace Nektar
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
-        ASSERTL0(false, "Dealiased flux not implemented for axisymmetric case");
+        boost::ignore_unused(physfield, derivatives, viscousTensor);
+        NEKERROR(ErrorUtil::efatal,
+                 "Dealiased flux not implemented for axisymmetric case");
     }
   };
 }

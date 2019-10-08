@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/BLPoints.h>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -41,6 +43,11 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
+        bool BLPoints::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eBoundaryLayerPoints),    BLPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eBoundaryLayerPointsRev), BLPoints::Create)
+        };
+
         void BLPoints::CalculatePoints()
         {
             // Allocate the storage for points.
@@ -150,7 +157,7 @@ namespace Nektar
 
         void BLPoints::CalculateInterpMatrix(unsigned int npts, const Array<OneD, const NekDouble>& xpoints, Array<OneD, NekDouble>& interp)
         {
-
+            boost::ignore_unused(npts, xpoints, interp);
         }
     } // end of namespace LibUtilities
 } // end of namespace Nektar

@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/DisContField2D.h>
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/Expansion2D.h>
@@ -1857,6 +1859,7 @@ namespace Nektar
                 const bool  PhysSpaceForcing)
 
         {
+            boost::ignore_unused(flags, varfactors, dirForcing);
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
 
@@ -2011,6 +2014,8 @@ namespace Nektar
                Array<OneD,      NekDouble> &outarray,
                CoeffState coeffstate)
         {
+            boost::ignore_unused(coeffstate);
+
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);
             DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);
@@ -2253,6 +2258,8 @@ namespace Nektar
             const NekDouble   x2_in,
             const NekDouble   x3_in)
         {
+            boost::ignore_unused(x3_in);
+
             int i;
             int npoints;
             int nbnd = m_bndCondExpansions.num_elements();

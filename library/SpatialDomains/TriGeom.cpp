@@ -83,6 +83,7 @@ TriGeom::TriGeom(const int id,
 }
 
 TriGeom::TriGeom(const TriGeom &in)
+    : Geometry2D(in)
 {
     // From Geometry
     m_shapeType = in.m_shapeType;

@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include "VanDerWaalsEoS.h"
 
 using namespace std;
@@ -93,6 +95,7 @@ NekDouble VanDerWaalsEoS::v_GetDPDrho_e(const NekDouble &rho,
 NekDouble VanDerWaalsEoS::v_GetDPDe_rho(const NekDouble &rho,
                                         const NekDouble &e)
 {
+    boost::ignore_unused(e);
     return (m_gamma - 1) / (1.0 / rho - m_b);
 }
 

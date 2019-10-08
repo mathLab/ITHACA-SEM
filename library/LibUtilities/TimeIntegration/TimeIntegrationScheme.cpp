@@ -1185,6 +1185,8 @@ namespace Nektar
                                     const Array<TwoD, const NekDouble>& U,
                                     const Array<TwoD, const NekDouble>& V) const
         {
+            boost::ignore_unused(B, U, V);
+
             int i;
             int j;
             int m;
@@ -1833,6 +1835,8 @@ namespace Nektar
                                                                        const Array<TwoD, const NekDouble>& U,
                                                                        const Array<TwoD, const NekDouble>& V) const
         {
+            boost::ignore_unused(B, V);
+
             int i,m;
             // First stage equals old solution if:
             // 1. the first row of the coefficient matrix A consists of zeros
@@ -1907,6 +1911,8 @@ namespace Nektar
                                                                       SingleArray                    &t_new  ,
                                                                 const TimeIntegrationSchemeOperators &op) const
         {
+            boost::ignore_unused(timestep, y_old, t_old, y_new, t_new, op);
+
             // Check if arrays are all of consistent size
             ASSERTL1(y_old.num_elements()==m_numsteps,"Non-matching number of steps.");    
             ASSERTL1(y_new.num_elements()==m_numsteps,"Non-matching number of steps."); 

@@ -44,6 +44,11 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
+bool NodalTetSPI::initPointsManager[] = {
+    PointsManager().RegisterCreator(PointsKey(0, eNodalTetSPI),          NodalTetSPI::Create)
+};
+
 void NodalTetSPI::CalculatePoints()
 {
     // Allocate the storage for points

@@ -256,6 +256,8 @@ bool HexGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                               NekDouble tol,
                               NekDouble &resid)
 {
+    boost::ignore_unused(resid);
+    
     //Rough check if within twice min/max point
     if (GetMetricInfo()->GetGtype() != eRegular)
     {

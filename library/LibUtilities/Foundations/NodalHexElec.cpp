@@ -43,6 +43,10 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+bool NodalHexElec::initPointsManager[] = {
+    PointsManager().RegisterCreator(PointsKey(0, eNodalHexElec),         NodalHexElec::Create)
+};
+
 void NodalHexElec::CalculatePoints()
 {
     // Allocate the storage for points

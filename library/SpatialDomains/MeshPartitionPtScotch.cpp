@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Communication/CommMpi.h>
 #include <SpatialDomains/MeshPartitionPtScotch.h>
 
@@ -80,6 +82,8 @@ void MeshPartitionPtScotch::PartitionGraphImpl(
     Nektar::Array<Nektar::OneD, int> &edgeWgt, int &nparts, int &volume,
     Nektar::Array<Nektar::OneD, int> &part)
 {
+    boost::ignore_unused(nVertConds, vertSize, edgeWgt, volume);
+
     LibUtilities::CommMpiSharedPtr mpiComm = std::dynamic_pointer_cast<
         LibUtilities::CommMpi>(m_comm->GetRowComm());
 

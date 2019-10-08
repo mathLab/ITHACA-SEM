@@ -32,11 +32,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Diffusion/Diffusion3DHomogeneous1D.h>
 #include <iostream>
 #include <iomanip>
-
 using namespace std;
+
+#include <boost/core/ignore_unused.hpp>
+
+#include <SolverUtils/Diffusion/Diffusion3DHomogeneous1D.h>
 
 namespace Nektar
 {
@@ -174,7 +176,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
-            
+            boost::ignore_unused(pFwd, pBwd);
+
             Array<OneD, NekDouble> tmp(m_numPoints), tmp2;
             Array<OneD, Array<OneD, NekDouble> > viscHComp;
             const int nPointsTot = fields[0]->GetNpoints();

@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include "IdealGasEoS.h"
 
 using namespace std;
@@ -53,6 +55,7 @@ IdealGasEoS::IdealGasEoS(const LibUtilities::SessionReaderSharedPtr& pSession)
 NekDouble IdealGasEoS::v_GetTemperature(
     const NekDouble &rho, const NekDouble &e)
 {
+    boost::ignore_unused(rho);
     return e*(m_gamma-1)/m_gasConstant;
 }
 
@@ -79,12 +82,14 @@ NekDouble IdealGasEoS::v_GetEntropy(
 NekDouble IdealGasEoS::v_GetDPDrho_e(
     const NekDouble &rho, const NekDouble &e)
 {
+    boost::ignore_unused(rho);
     return e*(m_gamma-1);
 }
 
 NekDouble IdealGasEoS::v_GetDPDe_rho(
     const NekDouble &rho, const NekDouble &e)
 {
+    boost::ignore_unused(e);
     return rho*(m_gamma-1);
 }
 

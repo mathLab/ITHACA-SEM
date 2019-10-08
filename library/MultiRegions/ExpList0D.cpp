@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/ExpList0D.h>
 
 using namespace std;
@@ -103,6 +105,8 @@ namespace Nektar
             const bool                                 DeclareCoeffPhysArrays)
             : ExpList()
         {
+            boost::ignore_unused(graph1D, periodicVerts);
+
             SetExpType(e0D);            
 
             int i, j, id, elmtid=0;

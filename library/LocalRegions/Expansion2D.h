@@ -35,6 +35,8 @@
 #ifndef EXPANSION2D_H
 #define EXPANSION2D_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/Expansion1D.h>
 #include <StdRegions/StdExpansion2D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
@@ -221,6 +223,7 @@ namespace Nektar
             int edge,
             bool SetUpNormal)
         {
+            boost::ignore_unused(SetUpNormal);
             ASSERTL1(edge < GetNedges(), "Edge out of range.");
             return m_edgeExp[edge].lock();
         }

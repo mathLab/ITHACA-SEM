@@ -34,6 +34,8 @@
 
 #include <iostream>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <ADRSolver/EquationSystems/UnsteadyAdvectionDiffusion.h>
 
 using namespace std;
@@ -429,6 +431,7 @@ namespace Nektar
               Array<OneD, Array<OneD, NekDouble> > &derivatives,
               Array<OneD, Array<OneD, NekDouble> > &flux)
     {
+        boost::ignore_unused(derivatives);
         for (int k = 0; k < flux.num_elements(); ++k)
         {
             Vmath::Zero(GetNpoints(), flux[k], 1);
@@ -640,6 +643,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray, 
         const NekDouble time)
     {
+        boost::ignore_unused(time);
+
         ASSERTL1(inarray.num_elements() == outarray.num_elements(),"Inarray and outarray of different sizes ");
 
         for(int i = 0; i < inarray.num_elements(); ++i)

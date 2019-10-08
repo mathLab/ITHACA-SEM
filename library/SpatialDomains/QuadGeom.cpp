@@ -86,6 +86,7 @@ QuadGeom::QuadGeom(const int id,
 }
 
 QuadGeom::QuadGeom(const QuadGeom &in)
+    : Geometry2D(in)
 {
     // From Geometry
     m_shapeType = in.m_shapeType;
@@ -540,5 +541,5 @@ void QuadGeom::v_Setup()
     }
 }
 
-}; // end of namespace
-}; // end of namespace
+} // end of namespace
+} // end of namespace

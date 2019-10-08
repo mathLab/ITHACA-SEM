@@ -34,6 +34,8 @@
 
 #include <iostream>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <ADRSolver/EquationSystems/UnsteadyViscousBurgers.h>
 #include <StdRegions/StdQuadExp.h>
 
@@ -418,6 +420,8 @@ namespace Nektar
               Array<OneD, Array<OneD, NekDouble> > &derivatives,
               Array<OneD, Array<OneD, NekDouble> > &flux)
     {
+        boost::ignore_unused(derivatives);
+
         for (int k = 0; k < flux.num_elements(); ++k)
         {
             Vmath::Zero(GetNpoints(), flux[k], 1);

@@ -211,7 +211,7 @@ protected:
     /// Field object
     FieldSharedPtr m_f;
     /// List of configuration values.
-    std::map<std::string, ConfigOption> m_config;;
+    std::map<std::string, ConfigOption> m_config;
 };
 
 /**

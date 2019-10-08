@@ -35,12 +35,13 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
-
 using namespace std;
 
-#include "ProcessAddCompositeID.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessAddCompositeID.h"
 
 namespace Nektar
 {
@@ -64,6 +65,8 @@ ProcessAddCompositeID::~ProcessAddCompositeID()
 
 void ProcessAddCompositeID::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nfields           = m_f->m_variables.size();
     m_f->m_variables.push_back("compositeID");
     // Skip in case of empty partition

@@ -31,6 +31,9 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
+
 #include "CADCurve.h"
 #include "CADSurf.h"
 
@@ -43,6 +46,8 @@ namespace NekMeshUtils
 
 Array<OneD, NekDouble> CADCurve::NormalWRT(NekDouble t, int surf)
 {
+    boost::ignore_unused(surf);
+
     Array<OneD, NekDouble> p = P(t);
     pair<CADSurfSharedPtr, CADOrientation::Orientation> surface;
     ASSERTL0(m_adjSurfs.size() == 1,

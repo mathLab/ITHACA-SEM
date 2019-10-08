@@ -35,6 +35,8 @@
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSSTATICCOND_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSSTATICCOND_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSysIterative.h>
 #include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
@@ -66,18 +68,19 @@ namespace Nektar
             virtual void v_PreSolve(int                   scLevel,
                                     Array<OneD,NekDouble> &F_bnd)
             {
+                boost::ignore_unused(scLevel, F_GlobBnd);
             }
 
             virtual void v_BasisFwdTransform(
                 Array<OneD, NekDouble>& pInOut)
             {
-
+                boost::ignore_unused(pInOut, offset);
             }
 
             virtual void v_CoeffsBwdTransform(
                 Array<OneD, NekDouble>& pInOut)
             {
-                
+                boost::ignore_unused(pInOut);
             }
 
             virtual void v_CoeffsFwdTransform(
@@ -90,7 +93,7 @@ namespace Nektar
             virtual void v_AssembleSchurComplement(
                 std::shared_ptr<AssemblyMap> pLoctoGloMap)
             {
-                
+                boost::ignore_unused(pLoctoGloMap);
             }
 
             virtual int v_GetNumBlocks();

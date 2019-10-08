@@ -183,7 +183,7 @@ private:
     std::shared_ptr<PtsRtree> m_rtree;
     /// Interpolation weights for each neighbour.
     /// Structure: m_weights[physPtIdx][neighbourIdx]
-    Array<TwoD, float> m_weights;
+    Array<TwoD, NekDouble> m_weights;
     /// Indices of the relevant neighbours for each physical point.
     /// Structure: m_neighInds[ptIdx][neighbourIdx]
     Array<TwoD, unsigned int> m_neighInds;

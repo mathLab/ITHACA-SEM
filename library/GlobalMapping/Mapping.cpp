@@ -32,7 +32,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <GlobalMapping/Mapping.h>
+
+#include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
 
@@ -97,6 +101,8 @@ void Mapping::v_InitObject(
         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const TiXmlElement                                *pMapping)
 {
+    boost::ignore_unused(pFields);
+
     int phystot         = m_fields[0]->GetTotPoints();
     m_fromFunction      = true;
     // Initialise variables

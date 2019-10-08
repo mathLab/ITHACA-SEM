@@ -96,8 +96,7 @@ protected:
     void SetUpBaseFields(
         SpatialDomains::MeshGraphSharedPtr        &mesh);
     void ImportFldBase(
-        std::string                               pInfile,
-        SpatialDomains::MeshGraphSharedPtr        pGraph);
+        std::string                               pInfile);
 
 private:
     enum MultiRegions::ProjectionType           m_projectionType;

@@ -65,6 +65,7 @@ SegGeom::SegGeom(int id,
 }
 
 SegGeom::SegGeom(const SegGeom &in)
+    : Geometry1D(in)
 {
     // From Geometry class
     m_shapeType = in.m_shapeType;

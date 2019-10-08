@@ -133,7 +133,8 @@ int main(int argc, char *argv[])
 
     // Temporary directory to create and in which to conduct test
     const fs::path tmpDir = fs::current_path()
-        / fs::path("tmp_" + specFileStem);
+        / fs::path("tmp_" + specFileStem + "_" 
+                          + fs::unique_path("%%%%%%").string());
 
     // The current directory
     const fs::path startDir = fs::current_path();
@@ -267,7 +268,12 @@ int main(int argc, char *argv[])
             if (std::string("@NEKTAR_TEST_USE_HOSTFILE@") == "ON")
             {
                 command += " -hostfile hostfile ";
-                system("echo 'localhost slots=12' > hostfile");
+                if (system("echo 'localhost slots=12' > hostfile"))
+                {
+                    cerr << "Unable to write 'hostfile' in path '"
+                         << fs::current_path() << endl;
+                    status = 1;
+                }
             }
         }
 

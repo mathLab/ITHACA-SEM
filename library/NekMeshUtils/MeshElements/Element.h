@@ -35,6 +35,8 @@
 #ifndef NEKMESHUTILS_MESHELEMENTS_ELEMENT
 #define NEKMESHUTILS_MESHELEMENTS_ELEMENT
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/PointsType.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
@@ -263,7 +265,8 @@ public:
     NEKMESHUTILS_EXPORT virtual void GetCurvedNodes(
         std::vector<NodeSharedPtr> &nodeList) const
     {
-        ASSERTL0(false,
+        boost::ignore_unused(nodeList);
+        NEKERROR(ErrorUtil::efatal,
                  "This function should be implemented at a shape level.");
     }
 
@@ -274,7 +277,8 @@ public:
     NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
         int coordDim)
     {
-        ASSERTL0(false,
+        boost::ignore_unused(coordDim);
+        NEKERROR(ErrorUtil::efatal,
                  "This function should be implemented at a shape level.");
         return std::shared_ptr<SpatialDomains::Geometry>();
     }
@@ -379,7 +383,8 @@ public:
         int                               &id,
         bool                               justConfig = false)
     {
-        ASSERTL0(false,
+        boost::ignore_unused(order, geom, edgeType, coordDim, id, justConfig);
+        NEKERROR(ErrorUtil::efatal,
                  "This function should be implemented at a shape level.");
     }
 
@@ -390,7 +395,8 @@ public:
     NEKMESHUTILS_EXPORT virtual StdRegions::Orientation GetEdgeOrient(
         int edgeId, EdgeSharedPtr edge)
     {
-        ASSERTL0(false,
+        boost::ignore_unused(edgeId, edge);
+        NEKERROR(ErrorUtil::efatal,
                  "This function should be implemented at a shape level.");
         return StdRegions::eNoOrientation;
     }
@@ -400,7 +406,8 @@ public:
      */
     NEKMESHUTILS_EXPORT virtual int GetFaceVertex(int i, int j)
     {
-        ASSERTL0(false,
+        boost::ignore_unused(i, j);
+        NEKERROR(ErrorUtil::efatal,
                  "This function should be implemented at a shape level.");
         return 0;
     }
@@ -438,7 +445,8 @@ public:
      */
     NEKMESHUTILS_EXPORT virtual Array<OneD, NekDouble> Normal(bool inward = false)
     {
-        ASSERTL0(false,
+        boost::ignore_unused(inward);
+        NEKERROR(ErrorUtil::efatal,
                  "This function should be implemented at a shape level.");
         return Array<OneD, NekDouble>();
     }

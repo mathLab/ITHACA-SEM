@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Advection/Advection.h>
 
 namespace Nektar
@@ -111,7 +113,8 @@ void Advection::v_InitObject(
         }
         else
         {
-            ASSERTL0(false, "Only 1D homogeneous dimension supported.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Only 1D homogeneous dimension supported.");
         }
     }
 }
@@ -121,10 +124,11 @@ void Advection::v_InitObject(
  *
  */
 void Advection::v_SetBaseFlow(
-        const Array<OneD, Array<OneD, NekDouble> >    &inarray,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
 {
-    ASSERTL0(false,
+    boost::ignore_unused(inarray, fields);
+    NEKERROR(ErrorUtil::efatal,
             "A baseflow is not appropriate for this advection type.");
 }
 

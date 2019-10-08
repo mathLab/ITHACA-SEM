@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 #include <Collections/IProduct.h>
@@ -128,7 +130,8 @@ class IProductWRTDerivBase_StdMat : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -300,7 +303,8 @@ class IProductWRTDerivBase_IterPerExp : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -392,6 +396,8 @@ class IProductWRTDerivBase_NoCollection : public Operator
                       Array<OneD, NekDouble> &entry3,
                       Array<OneD, NekDouble> &wsp)
         {
+            boost::ignore_unused(wsp);
+
             unsigned int nmodes = m_expList[0]->GetNcoeffs();
             unsigned int nPhys  = m_expList[0]->GetTotPoints();
             Array<OneD, NekDouble> tmp(nmodes),tmp1;
@@ -428,7 +434,8 @@ class IProductWRTDerivBase_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -513,6 +520,7 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
 
             Vmath::Vmul(m_numElmt*m_nquad0, m_jac, 1, input, 1, wsp, 1);
             Vmath::Vmul(m_numElmt*m_nquad0, &m_derivFac[0][0], 1,
@@ -532,7 +540,8 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -634,7 +643,8 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -793,7 +803,8 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -962,7 +973,8 @@ class IProductWRTDerivBase_SumFac_Hex : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -1174,7 +1186,8 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -1410,7 +1423,8 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
 
@@ -1653,7 +1667,8 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
 

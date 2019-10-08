@@ -401,7 +401,7 @@ void TetGeom::SetUpLocalEdges()
             ASSERTL0(false, errstrm.str());
         }
     }
-};
+}
 
 void TetGeom::SetUpLocalVertices()
 {
@@ -479,7 +479,7 @@ void TetGeom::SetUpLocalVertices()
                 << m_edges[2]->GetGlobalID();
         ASSERTL0(false, errstrm.str());
     }
-};
+}
 
 void TetGeom::SetUpEdgeOrientation()
 {
@@ -506,7 +506,7 @@ void TetGeom::SetUpEdgeOrientation()
             ASSERTL0(false, "Could not find matching vertex for the edge");
         }
     }
-};
+}
 
 void TetGeom::SetUpFaceOrientation()
 {

@@ -152,6 +152,8 @@ namespace Nektar
 
 
         private:
+            static bool initPointsManager[];
+
             /// These should not be called.  All creation is done
             /// using the constructor requiring the key, declared
             /// above.

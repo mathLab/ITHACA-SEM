@@ -136,7 +136,7 @@ namespace Nektar
             {
                 m_lines[n]->LocalToGlobal(useComm);
             }
-        };
+        }
 
 
         /**
@@ -148,7 +148,7 @@ namespace Nektar
             {
                 m_lines[n]->GlobalToLocal();
             }
-        };
+        }
 
 
         void ContField3DHomogeneous2D::v_HelmSolve(

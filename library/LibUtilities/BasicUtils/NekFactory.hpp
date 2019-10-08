@@ -170,7 +170,7 @@ public:
                     std::stringstream errstr;
                     errstr << "Unable to create module: " << idKey << "\n";
                     errstr << s;
-                    ASSERTL0(false, errstr.str());
+                    NEKERROR(ErrorUtil::efatal, errstr.str());
                 }
             }
         }
@@ -179,7 +179,7 @@ public:
         std::stringstream errstr;
         errstr << "No such module: " << idKey << std::endl;
         PrintAvailableClasses(errstr);
-        ASSERTL0(false, errstr.str());
+        NEKERROR(ErrorUtil::efatal, errstr.str());
         return tBaseSharedPtr();
     }
 

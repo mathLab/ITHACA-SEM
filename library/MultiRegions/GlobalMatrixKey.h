@@ -109,7 +109,7 @@ namespace Nektar
         MULTI_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const GlobalMatrixKey& rhs);
 
         /// A pointer to a GlobalMatrixKey.
-        typedef  boost::shared_ptr<GlobalMatrixKey> GlobalMatrixKeySharedPtr;
+        typedef std::shared_ptr<GlobalMatrixKey> GlobalMatrixKeySharedPtr;
 
         inline StdRegions::MatrixType
                         GlobalMatrixKey::GetMatrixType() const

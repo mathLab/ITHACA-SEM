@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/GlobalLinSysPETScStaticCond.h>
 
 #include <petscsys.h>
@@ -273,6 +275,8 @@ namespace Nektar
             int                     scLevel,
             Array<OneD, NekDouble>   &F_bnd)
         {
+            boost::ignore_unused(F_GlobBnd);
+
             if (scLevel == 0)
             {
                 // When matrices are supplied to the constructor at the top

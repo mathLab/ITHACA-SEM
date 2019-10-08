@@ -36,9 +36,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessScaleInFld.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessScaleInFld.h"
 
 namespace Nektar
 {
@@ -64,6 +66,8 @@ ProcessScaleInFld::~ProcessScaleInFld()
 
 void ProcessScaleInFld::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     string scalestr = m_config["scale"].as<string>();
     NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
 

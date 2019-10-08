@@ -71,13 +71,13 @@ protected:
         const int step,
         const NekDouble time,
         const Array<OneD, const Array<OneD, NekDouble> > &field,
-        vector<string> &varNames);
+        std::vector<std::string> &varNames);
 
     SOLVER_UTILS_EXPORT virtual void v_Receive(
         const int step,
         const NekDouble time,
         Array<OneD, Array<OneD, NekDouble> > &field,
-        vector<string> &varNames);
+        std::vector<std::string> &varNames);
 
 private:
     int m_lastSend;

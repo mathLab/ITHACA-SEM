@@ -70,6 +70,8 @@ namespace Nektar
             }
 
         private:
+            static bool initPointsManager[];
+
             /// Default constructor should not be called except by Create method.
             PolyEPoints():PointsBaseType(NullPointsKey)
             {

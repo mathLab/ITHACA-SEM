@@ -36,9 +36,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessMean.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessMean.h"
 
 namespace Nektar
 {
@@ -60,6 +62,8 @@ ProcessMean::~ProcessMean()
 
 void ProcessMean::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nfields  = m_f->m_variables.size();
     int spacedim = m_f->m_graph->GetMeshDimension() + m_f->m_numHomogeneousDir;
     int npoints  = m_f->m_exp[0]->GetNpoints();

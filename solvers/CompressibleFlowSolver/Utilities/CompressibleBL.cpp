@@ -40,6 +40,8 @@
 #include <iomanip>
 #include <cmath>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
@@ -143,6 +145,8 @@ void RK4(Array<OneD, NekDouble> y,
          NekDouble              h,
          Array<OneD, NekDouble> yout)
 {
+    boost::ignore_unused(x);
+
     int nmax = 5;
 
     Array<OneD, NekDouble> yt (nmax, 0.0);

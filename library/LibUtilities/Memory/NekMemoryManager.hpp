@@ -226,7 +226,10 @@ public:
 
     MemoryManager() {}
     template<typename T>
-    MemoryManager(const MemoryManager<T>& rhs) {}
+    MemoryManager(const MemoryManager<T>& rhs)
+    {
+        boost::ignore_unused(rhs);
+    }
     ~MemoryManager() {}
 
     pointer address(reference r) const { return &r; }
@@ -234,6 +237,7 @@ public:
 
     pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)//typename MemoryManager<void>::pointer hint = 0)
     {
+        boost::ignore_unused(hint);
         return RawAllocate(n);
     }
 
@@ -274,6 +278,7 @@ private:
 template<typename DataType>
 bool operator==(const MemoryManager<DataType>& lhs, const MemoryManager<DataType>& rhs)
 {
+    boost::ignore_unused(lhs,rhs);
     return true;
 }
 

@@ -146,6 +146,7 @@ template <> int NodeOpti::IsIndefinite<3>()
  */
 template <int DIM> void NodeOpti::MinEigen(NekDouble &val)
 {
+    boost::ignore_unused(val);
     ASSERTL0(false, "DIM error");
 }
 

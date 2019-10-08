@@ -76,7 +76,7 @@ MACRO(SET_COMMON_PROPERTIES name)
         TARGET_COMPILE_DEFINITIONS(${name} PRIVATE _WIN32_WINNT=0x0601)
     ELSE ()
         # Enable all warnings
-        TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wpedantic -Wall -Wextra)
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wpedantic -Wall -Wextra -Wno-sign-compare)
         IF ( NEKTAR_ERROR_ON_WARNINGS )
             TARGET_COMPILE_OPTIONS(${name} PRIVATE -Werror)
         ENDIF()

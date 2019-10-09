@@ -604,7 +604,7 @@ public:
 
         int w = coords[0].size();
 
-        hsize_t cds[coords.size() * w];
+        hsize_t *cds = new hsize_t[coords.size() * w];
         for(int i = 0; i < coords.size(); i++)
         {
             for(int j = 0; j < coords[i].size(); j++)
@@ -617,6 +617,8 @@ public:
                            H5S_SELECT_SET,
                            coords.size(),
                            cds);
+
+        delete[] cds;
 
         len = H5Sget_select_npoints(filespace->GetId());
         DataSpaceSharedPtr memspace = DataSpace::OneD(len);

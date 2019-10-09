@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <CompressibleFlowSolver/EquationSystems/IsentropicVortex.h>
 
 using namespace std;
@@ -75,6 +77,8 @@ namespace Nektar
         bool        dumpInitialConditions,
         const int   domain)
     {
+        boost::ignore_unused(domain);
+
         int nTotQuadPoints  = GetTotPoints();
         Array<OneD, NekDouble> x(nTotQuadPoints);
         Array<OneD, NekDouble> y(nTotQuadPoints);
@@ -141,6 +145,8 @@ namespace Nektar
         NekDouble                             time,
         const int                                   o)
     {
+        boost::ignore_unused(z);
+
         int nq = x.num_elements();
         
         // Flow parameters

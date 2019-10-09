@@ -43,6 +43,9 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        bool NodalTetElec::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eNodalTetElec),         NodalTetElec::Create)
+        };
 
         // ////////////////////////////////////////////////////////
         //  Coordinate the nodal tetrahedron electrostatic points

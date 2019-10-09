@@ -36,9 +36,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessJacobianEnergy.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessJacobianEnergy.h"
 
 namespace Nektar
 {
@@ -64,6 +66,8 @@ ProcessJacobianEnergy::~ProcessJacobianEnergy()
 
 void ProcessJacobianEnergy::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nfields           = m_f->m_variables.size();
     m_f->m_variables.push_back("jacenergy");
     // Skip in case of empty partition

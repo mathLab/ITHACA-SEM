@@ -53,7 +53,7 @@ ExpansionSharedPtr ExpList_GetExp(ExpListSharedPtr exp, int i)
 
 void ExpList_WriteVTK(ExpListSharedPtr exp, std::string filename)
 {
-    ofstream out(filename.c_str());
+    std::ofstream out(filename.c_str());
     exp->WriteVtkHeader(out);
     for (int i = 0; i < exp->GetExpSize(); ++i)
     {
@@ -160,7 +160,7 @@ py::tuple ExpList_GetCoords(ExpListSharedPtr exp)
     int nPhys = exp->GetNpoints();
     int coordim = exp->GetCoordim(0);
 
-    vector<Array<OneD, NekDouble> > coords(coordim);
+    std::vector<Array<OneD, NekDouble> > coords(coordim);
     for (int i = 0; i < coordim; ++i)
     {
         coords[i] = Array<OneD, NekDouble>(nPhys);

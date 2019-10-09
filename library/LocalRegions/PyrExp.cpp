@@ -697,7 +697,7 @@ namespace Nektar
                             outarray[k*nquad0+i] = nquad0*(nquad1-1) + (nquad0*nquad1*k)+i;
                         }
                     }
-                    
+                    break;
                 case 4:
                     nq0 = nquad1;
                     nq1 = nquad2;

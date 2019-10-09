@@ -43,6 +43,7 @@
 #include <boost/iostreams/filter/zlib.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <set>
 #include <cstdint>
@@ -117,6 +118,7 @@ namespace LibUtilities
             {
             case 1:
                 compressedDataString += '\0';
+                BOOST_FALLTHROUGH;
             case 2:
                 compressedDataString += '\0';
                 break;

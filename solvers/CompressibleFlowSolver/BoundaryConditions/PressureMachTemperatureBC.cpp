@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include "PressureMachTemperatureBC.h"
 
 using namespace std;
@@ -130,6 +132,8 @@ void PressureMachTemperatureBC::v_Apply(
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
 {
+    boost::ignore_unused(Fwd, physarray, time);
+
     int nvariables = m_fields.num_elements();
     int numBCPts = m_fields[0]->
         GetBndCondExpansions()[m_bcRegion]->GetNpoints();

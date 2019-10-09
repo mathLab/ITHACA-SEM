@@ -77,8 +77,7 @@ FilterReynoldsStresses::FilterReynoldsStresses(
     }
     else
     {
-        LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+        LibUtilities::Equation equ(m_session->GetInterpreter(), it->second);
         m_sampleFrequency = round(equ.Evaluate());
     }
 
@@ -112,8 +111,7 @@ FilterReynoldsStresses::FilterReynoldsStresses(
         else
         {
             // Load time constant
-            LibUtilities::Equation equ(
-                m_session->GetExpressionEvaluator(), it->second);
+            LibUtilities::Equation equ(m_session->GetInterpreter(), it->second);
             NekDouble tau = equ.Evaluate();
             // Load delta T between samples
             NekDouble dT;
@@ -125,8 +123,7 @@ FilterReynoldsStresses::FilterReynoldsStresses(
     }
     else
     {
-        LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+        LibUtilities::Equation equ(m_session->GetInterpreter(), it->second);
         m_alpha = equ.Evaluate();
         // Check if tau was also defined
         it = pParams.find("tau");

@@ -169,6 +169,9 @@ OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF
 OPTION(NEKTAR_TEST_USE_HOSTFILE "Use a hostfile to explicitly specify number of
 slots." OFF)
 
+OPTION(NEKTAR_ERROR_ON_WARNINGS "Use -Werror to make warnings stop compilation." ON)
+MARK_AS_ADVANCED(NEKTAR_ERROR_ON_WARNINGS)
+
 # Meshing utilities and library
 IF (NOT WIN32)
     OPTION(NEKTAR_USE_MESHGEN "Build mesh generation utilities." OFF)

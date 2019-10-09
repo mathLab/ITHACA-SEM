@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Forcing/ForcingAbsorption.h>
 
 #include <LibUtilities/BasicUtils/Equation.h>
@@ -232,6 +234,8 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
+        boost::ignore_unused(fields);
+
         int nq = m_Forcing[0].num_elements();
        
         std::string s_FieldStr;

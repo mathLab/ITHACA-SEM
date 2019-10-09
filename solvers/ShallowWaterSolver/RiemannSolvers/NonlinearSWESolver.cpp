@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <ShallowWaterSolver/RiemannSolvers/NonlinearSWESolver.h>
 
 namespace Nektar
@@ -49,6 +51,8 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
               Array<OneD,       Array<OneD, NekDouble> > &flux)
     {
+        boost::ignore_unused(nDim);
+
         if (m_pointSolve)
         {
             int expDim = Fwd.num_elements()-1;

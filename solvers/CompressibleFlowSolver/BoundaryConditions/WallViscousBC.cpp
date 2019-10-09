@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include "WallViscousBC.h"
 
 using namespace std;
@@ -64,6 +66,8 @@ void WallViscousBC::v_Apply(
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
 {
+    boost::ignore_unused(time);
+
     int i;
     int nVariables = physarray.num_elements();
 

@@ -37,6 +37,7 @@
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <UnitTests/CountedObject.h>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -51,12 +52,14 @@ namespace Nektar
         template<typename DataType, typename MatrixType>
         int foo(NekMatrix<DataType, MatrixType>& d)
         {
-           return 1;
+            boost::ignore_unused(d);
+            return 1;
         }
         
         template<typename DataType>
         int foo(NekMatrix<DataType, BlockMatrixTag>& d)
         {
+            boost::ignore_unused(d);
             return 2;
         }
             

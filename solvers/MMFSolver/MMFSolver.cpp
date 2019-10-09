@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr session;
     SpatialDomains::MeshGraphSharedPtr graph;
-    Gs::string vDriverModule;
+    std::string vDriverModule;
     DriverSharedPtr drv;
 
     try
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     }
     catch (const std::string &eStr)
     {
-        Gs::cout << "Error: " << eStr << Gs::endl;
+        std::cout << "Error: " << eStr << std::endl;
     }
 
     return 0;

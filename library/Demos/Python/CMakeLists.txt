@@ -7,6 +7,7 @@ ADD_NEKPY_EXECUTABLE(NekPy_MemoryTest_PythonToCpp_Address.py NekPy_MemoryTest_Py
 
 IF (NEKTAR_BUILD_TESTS)
     ADD_NEKTAR_TEST(StdIntegral2D)
+
     ADD_NEKTAR_TEST(CurvedGeom)
     ADD_NEKTAR_TEST(NekPy_ReferenceTest_CppDeleteFirst)
     ADD_NEKTAR_TEST(NekPy_ReferenceTest_PythonDeleteFirst)

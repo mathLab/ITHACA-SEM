@@ -40,7 +40,7 @@
 #include <NekMeshUtils/MeshElements/Mesh.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 /**
@@ -193,7 +193,7 @@ private:
     MeshSharedPtr m_mesh;
     /// ids of the mesh nodes
     std::vector<NodeSharedPtr> m_meshpoints;
-    LibUtilities::AnalyticExpressionEvaluator m_bl;
+    LibUtilities::Interpreter m_bl;
     int m_blID;
     /// offset of second point at each end
     std::map<unsigned, NekDouble> m_endoffset;

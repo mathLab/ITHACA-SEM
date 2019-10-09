@@ -70,6 +70,10 @@ MACRO(SET_COMMON_PROPERTIES name)
     IF (MSVC)
         # Enable production-level warnings
         TARGET_COMPILE_OPTIONS(${name} PRIVATE /W4)
+        # Temporarily disable signed/unsigned comparison warning
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE /wd4018)
+        # Temporarily disable narrowing warnings
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE /wd4244 /wd4267)
         # Enable source-level parallel builds
         TARGET_COMPILE_OPTIONS(${name} PRIVATE /MP)
         # Specify minimum Windows version (501=WinXP, 601=Windows 7)
@@ -77,6 +81,13 @@ MACRO(SET_COMMON_PROPERTIES name)
     ELSE ()
         # Enable all warnings
         TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wpedantic -Wall -Wextra)
+        # Temporarily disable warnings about comparing signed and unsigned
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wno-sign-compare)
+        # Temporarily disable warnings about narrowing of data types
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wno-narrowing -Wno-conversion)
+        IF (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -fpermissive)
+        ENDIF()
         IF ( NEKTAR_ERROR_ON_WARNINGS )
             TARGET_COMPILE_OPTIONS(${name} PRIVATE -Werror)
         ENDIF()
@@ -100,19 +111,6 @@ MACRO(SET_COMMON_PROPERTIES name)
                     "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_FULLDEBUG")
         ENDIF( NEKTAR_FULL_DEBUG)
    
-        IF(NOT MSVC)
-            SET(CMAKE_CXX_FLAGS_DEBUG 
-                "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wno-deprecated -Wno-sign-compare")
-            SET(CMAKE_CXX_FLAGS_RELEASE 
-                "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wno-deprecated -Wno-sign-compare")
-            SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO
-                "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -Wall -Wno-deprecated -Wno-sign-compare")
-            IF (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-                SET(CMAKE_CXX_FLAGS_DEBUG 
-                    "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive")
-            ENDIF()
-        ENDIF (NOT MSVC)
-
         # Define version
         SET_PROPERTY(TARGET ${name}
             APPEND PROPERTY COMPILE_DEFINITIONS

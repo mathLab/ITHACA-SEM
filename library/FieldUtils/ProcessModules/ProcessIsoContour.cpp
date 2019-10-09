@@ -671,7 +671,7 @@ void ProcessIsoContour::SetupIsoFromFieldPts(vector<IsoSharedPtr> &isovec)
 
 void Iso::Condense(void)
 {
-    register int i,j,cnt;
+    int i,j,cnt;
     IsoVertex v;
     vector<IsoVertex> vert;
 

@@ -492,6 +492,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
+	    boost::ignore_unused(flags);
             // Inner product of forcing
             Array<OneD,NekDouble> wsp(m_ncoeffs);
             if(PhysSpaceForcing)

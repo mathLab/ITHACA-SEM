@@ -2692,8 +2692,7 @@ namespace Nektar
                        const NekDouble lambda,
                        const Array<OneD, const NekDouble>&  dirForcing)
         {
-            boost::ignore_unused(velocity, inarray, outarray, lambda,
-                                 coeffstate, dirForcing);
+            boost::ignore_unused(velocity, inarray, outarray, lambda, dirForcing);
             NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
@@ -2705,8 +2704,7 @@ namespace Nektar
                        const NekDouble lambda,
                        const Array<OneD, const NekDouble>&  dirForcing)
         {
-            boost::ignore_unused(velocity, inarray, outarray, lambda,
-                                 coeffstate, dirForcing);
+            boost::ignore_unused(velocity, inarray, outarray, lambda, dirForcing);
             NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
@@ -2716,7 +2714,7 @@ namespace Nektar
                                             bool Shuff,
                                             bool UnShuff)
         {
-            boost::ignore_unused(inarray, outarray, coeffstate, Shuff, UnShuff);
+            boost::ignore_unused(inarray, outarray, Shuff, UnShuff);
             NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
@@ -2726,7 +2724,7 @@ namespace Nektar
                                             bool Shuff,
                                             bool UnShuff)
         {
-            boost::ignore_unused(inarray, outarray, coeffstate, Shuff, UnShuff);
+            boost::ignore_unused(inarray, outarray, Shuff, UnShuff);
             NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
@@ -2735,7 +2733,7 @@ namespace Nektar
                                       const Array<OneD, NekDouble> &inarray2,
                                       Array<OneD, NekDouble> &outarray)
         {
-            boost::ignore_unused(inarray1, inarray2, outarray, coeffstate);
+            boost::ignore_unused(inarray1, inarray2, outarray);
             NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
@@ -2745,7 +2743,7 @@ namespace Nektar
                         const Array<OneD, Array<OneD, NekDouble> > &inarray2,
                         Array<OneD, Array<OneD, NekDouble> > &outarray)
         {
-            boost::ignore_unused(inarray1, inarray2, outarray, coeffstate);
+            boost::ignore_unused(inarray1, inarray2, outarray);
             NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
@@ -2876,14 +2874,12 @@ namespace Nektar
         void ExpList::v_BwdTrans(const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,       NekDouble> &outarray)
         {
-            boost::ignore_unused(coeffstate);
             v_BwdTrans_IterPerExp(inarray,outarray);
         }
 
         void ExpList::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,       NekDouble> &outarray)
         {
-            boost::ignore_unused(coeffstate);
             v_FwdTrans_IterPerExp(inarray,outarray);
         }
 
@@ -2891,7 +2887,6 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD,       NekDouble> &outarray)
         {
-            boost::ignore_unused(coeffstate);
             Array<OneD,NekDouble>  tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
@@ -2907,7 +2902,6 @@ namespace Nektar
                                         const Array<OneD,const NekDouble> &inarray,
                                         Array<OneD,      NekDouble> &outarray)
         {
-            boost::ignore_unused(coeffstate);
             GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
         }
 

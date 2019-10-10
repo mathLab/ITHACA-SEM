@@ -215,6 +215,7 @@ namespace Nektar
         void GlobalLinSysIterativeStaticCond::v_AssembleSchurComplement(
             const AssemblyMapSharedPtr pLocToGloMap)
         {
+            boost::ignore_unused(pLocToGloMap);
             // Set up unique map
             v_UniqueMap();
 

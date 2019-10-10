@@ -840,6 +840,7 @@ namespace Nektar
                 const bool PhysSpaceForcing)
 
         {
+	    boost::ignore_unused(flags);
             int i,j;
 
             //----------------------------------

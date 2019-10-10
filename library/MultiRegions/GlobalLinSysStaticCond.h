@@ -68,13 +68,13 @@ namespace Nektar
             virtual void v_PreSolve(int                   scLevel,
                                     Array<OneD,NekDouble> &F_bnd)
             {
-                boost::ignore_unused(scLevel, F_GlobBnd);
+                boost::ignore_unused(scLevel, F_bnd);
             }
 
             virtual void v_BasisFwdTransform(
                 Array<OneD, NekDouble>& pInOut)
             {
-                boost::ignore_unused(pInOut, offset);
+                boost::ignore_unused(pInOut);
             }
 
             virtual void v_CoeffsBwdTransform(
@@ -87,7 +87,7 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                 Array<OneD, NekDouble>& pOutput)
             {
-                
+                boost::ignore_unused(pInput,pOutput);
             }
 
             virtual void v_AssembleSchurComplement(

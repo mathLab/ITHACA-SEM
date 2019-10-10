@@ -992,7 +992,6 @@ namespace Nektar
                     Array<OneD,       NekDouble>& global,
                     bool UseComm ) const
         {
-            boost::ignore_unused(useComm);
             LocalBndToGlobal(loc,global,UseComm);
         }
 

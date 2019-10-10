@@ -390,7 +390,6 @@ void LinearElasticSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
  */
 void LinearElasticSystem::v_DoSolve()
 {
-
     int i, j, k, l, nv;
     const int nVel = m_fields[0]->GetCoordim(0);
 
@@ -445,7 +444,6 @@ void LinearElasticSystem::v_DoSolve()
     linSys->Initialise(m_assemblyMap);
 
     const int nCoeffs = m_fields[0]->GetNcoeffs();
-    const int nGlobDofs = m_assemblyMap->GetNumGlobalCoeffs();
 
     //
     // -- Evaluate forcing functions

@@ -2390,8 +2390,6 @@ using namespace std;
                const Array<OneD,const NekDouble> &inarray,
                Array<OneD,      NekDouble> &outarray)
         {
-            boost::ignore_unused(coeffstate);
-
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);
             DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);

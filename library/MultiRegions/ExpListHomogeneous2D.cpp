@@ -275,8 +275,6 @@ namespace Nektar
                         const Array<OneD, Array<OneD, NekDouble> > &inarray2,
                         Array<OneD, Array<OneD, NekDouble> > &outarray)
         {
-            boost::ignore_unused(coeffstate);
-
             // TODO Proper implementation of this
             int ndim = inarray1.num_elements();
             ASSERTL1( inarray2.num_elements() % ndim == 0,
@@ -542,8 +540,6 @@ namespace Nektar
 
         DNekBlkMatSharedPtr ExpListHomogeneous2D::GenHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype) const
         {
-            boost::ignore_unused(coeffstate);
-
             int i;
             int n_exp = 0;
             

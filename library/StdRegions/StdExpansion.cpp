@@ -1322,7 +1322,7 @@ namespace Nektar
                                         const Array<OneD, NekDouble> &incoeffs,
                                         Array<OneD, NekDouble> &coeffs)
         {
-            boost::ignore_unused(edgeid, primCoeffs, coeffs);
+            boost::ignore_unused(edgeid, primCoeffs, incoeffs, coeffs);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                      "specific element types");
         }

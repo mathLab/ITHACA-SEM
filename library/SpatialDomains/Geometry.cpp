@@ -424,5 +424,82 @@ std::array<NekDouble, 6> Geometry::GetBoundingBox()
     return { min[0], min[1], min[2], max[0], max[1], max[2] };
 }
 
+/**
+ * @brief Check if given global coord is within twice the min/max distance
+ * of the element.
+ *
+ * @param coords   Input Cartesian global coordinates
+ *
+ * @return True if within distance or False otherwise.
+ */
+bool Geometry::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
+{
+    // Validation checks
+    ASSERTL1(gloCoord.num_elements() >= m_coordim,
+             "Expects number of global coordinates supplied to be greater than "
+             "or equal to the mesh dimension.");
+
+    int i;
+    Array<OneD, NekDouble> mincoord(m_coordim), maxcoord(m_coordim);
+    NekDouble diff = 0.0;
+
+    v_FillGeom();
+
+    const int npts = m_xmap->GetTotPoints();
+    Array<OneD, NekDouble> pts(npts);
+
+    for (i = 0; i < m_coordim; ++i)
+    {
+        m_xmap->BwdTrans(m_coeffs[i], pts);
+        mincoord[i] = Vmath::Vmin(pts.num_elements(), pts, 1);
+        maxcoord[i] = Vmath::Vmax(pts.num_elements(), pts, 1);
+
+        diff = std::max(maxcoord[i] - mincoord[i], diff);
+    }
+
+    for (i = 0; i < m_coordim; ++i)
+    {
+        if ((gloCoord[i] < mincoord[i] - 0.2 * diff) ||
+            (gloCoord[i] > maxcoord[i] + 0.2 * diff))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+/**
+ * @brief Clamp local coords to be within standard regions [-1, 1]^dim.
+ *
+ * @param Lcoords  Corresponding local coordinates
+ */
+void Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
+                                  NekDouble tol)
+{
+    // Validation checks
+    ASSERTL1(locCoord.num_elements() == GetShapeDim(),
+             "Expects same number of local coordinates as shape dimension.");
+
+    // If out of range clamp locCoord to be within [-1,1]^dim
+    // since any larger value will be very oscillatory if
+    // called by 'returnNearestElmt' option in
+    // ExpList::GetExpIndex
+    for (int i = 0; i < GetShapeDim(); ++i)
+    {
+        if (locCoord[i] < -(1 + tol))
+        {
+            locCoord[i] = -(1 + tol);
+        }
+
+        if (locCoord[i] > (1 + tol))
+        {
+            locCoord[i] = 1 + tol;
+        }
+    }
+}
+
+
 }
 }

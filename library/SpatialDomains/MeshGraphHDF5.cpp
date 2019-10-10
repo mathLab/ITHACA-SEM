@@ -565,6 +565,7 @@ template<class T, typename DataType> void MeshGraphHDF5::ConstructGeomObject(
     std::map<int, std::shared_ptr<T>> &geomMap, int id,
     DataType *data, CurveSharedPtr curve)
 {
+    boost::ignore_unused(geomMap, id, data, curve);
 }
 
 template<> void MeshGraphHDF5::ConstructGeomObject(

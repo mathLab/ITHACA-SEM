@@ -181,15 +181,15 @@ namespace Nektar
         m_description = string(tmp->GetText());
 
         // Find command(s) to run.
-        if ((tmp = testElement->FirstChildElement("executable")))
-        {
-            m_commands.push_back(ParseCommand(testElement));
-        }
-        else if (m_cmdoptions.count("executable"))
+        if (m_cmdoptions.count("executable"))
         {
             m_commands.push_back(ParseCommand(testElement));
             m_commands.back().m_executable = fs::path(
                 m_cmdoptions["executable"].as<std::string>());
+        }
+        else if (testElement->FirstChildElement("executable"))
+        {
+            m_commands.push_back(ParseCommand(testElement));
         }
         else if ((tmp = testElement->FirstChildElement("segment")))
         {
@@ -204,7 +204,8 @@ namespace Nektar
             }
         }
 
-        ASSERTL0(m_commands.size() > 0, "lol");
+        ASSERTL0(m_commands.size() > 0,
+                 "No executable / command segments specified for test.");
 
         // Extract metric tags
         metrics = testElement->FirstChildElement("metrics");

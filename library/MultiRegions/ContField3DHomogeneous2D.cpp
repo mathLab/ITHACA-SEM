@@ -182,7 +182,7 @@ namespace Nektar
             else
             {
                 // Fourier transform forcing function
-                HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
+                HomogeneousFwdTrans(inarray,fce); 
             }
 
             int l =0;

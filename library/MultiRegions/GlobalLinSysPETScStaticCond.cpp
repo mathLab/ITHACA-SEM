@@ -275,7 +275,7 @@ namespace Nektar
             int                     scLevel,
             Array<OneD, NekDouble>   &F_bnd)
         {
-            boost::ignore_unused(F_GlobBnd);
+            boost::ignore_unused(F_bnd);
 
             if (scLevel == 0)
             {

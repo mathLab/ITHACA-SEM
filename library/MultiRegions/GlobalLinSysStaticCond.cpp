@@ -108,6 +108,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &dirForcing)
         {
 
+            boost::ignore_unused(dirForcing);
             ASSERTL1( dirForcing.num_elements() == 0,
                       "GlobalLinSysStaticCond: Not setup for dirForcing");
 

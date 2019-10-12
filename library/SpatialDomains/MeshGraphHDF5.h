@@ -105,8 +105,7 @@ private:
         DataType *data, CurveSharedPtr curve);
 
     CompositeDescriptor CreateCompositeDescriptor(
-        std::unordered_map<int, int> &id2row,
-        std::vector<MeshEntity> &elmts);
+        std::unordered_map<int, int> &id2row);
 
     void WriteCurveMap(CurveMap &curves,
                        std::string dsName,

@@ -36,10 +36,12 @@
 #include <string>
 using namespace std;
 
-#include "ProcessC0Projection.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessC0Projection.h"
 
 namespace Nektar
 {
@@ -73,6 +75,8 @@ ProcessC0Projection::~ProcessC0Projection()
 
 void ProcessC0Projection::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     // Skip in case of empty partition
     if (m_f->m_exp[0]->GetNumElmts() == 0)
     {

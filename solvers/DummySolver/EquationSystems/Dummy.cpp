@@ -35,6 +35,8 @@
 
 #include <iostream>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <DummySolver/EquationSystems/Dummy.h>
 
@@ -235,6 +237,8 @@ void Dummy::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                      Array<OneD, Array<OneD, NekDouble> > &outarray,
                      const NekDouble time)
 {
+    boost::ignore_unused(time);
+
     int nVariables = inarray.num_elements();
     int nq         = GetTotPoints();
 
@@ -253,6 +257,8 @@ void Dummy::DoOdeProjection(
     Array<OneD, Array<OneD, NekDouble> > &outarray,
     const NekDouble time)
 {
+    boost::ignore_unused(time);
+
     int nvariables = inarray.num_elements();
     int nq         = m_fields[0]->GetNpoints();
 

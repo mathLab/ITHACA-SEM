@@ -37,10 +37,13 @@
 #include <string>
 using namespace std;
 
-#include "OutputPts.h"
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 #include <LibUtilities/BasicUtils/CsvIO.h>
+
+#include "OutputPts.h"
 
 namespace Nektar
 {
@@ -65,6 +68,8 @@ OutputPts::~OutputPts()
 
 void OutputPts::OutputFromPts(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 
@@ -123,18 +128,22 @@ void OutputPts::OutputFromExp(po::variables_map &vm)
 
 void OutputPts::OutputFromData(po::variables_map &vm)
 {
-    ASSERTL0(false, "OutputPts can't write using only FieldData.");
+    boost::ignore_unused(vm);
+    NEKERROR(ErrorUtil::efatal,
+             "OutputPts can't write using only FieldData.");
 }
 
 fs::path OutputPts::GetPath(std::string &filename,
                             po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
     return   fs::path(filename);
 }
 
 fs::path OutputPts::GetFullOutName(std::string &filename,
                                 po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
     return   fs::path(filename);
 }
 

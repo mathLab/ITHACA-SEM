@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdNodalPrismExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 
@@ -343,6 +345,7 @@ namespace Nektar
         int StdNodalPrismExp::v_GetVertexMap(const int localVertexId,
                                              bool useCoeffPacking)
         {
+            boost::ignore_unused(useCoeffPacking);
             ASSERTL0(false,"Needs setting up");
             return localVertexId;
         }

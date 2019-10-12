@@ -37,6 +37,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
+
 //#include <sstream>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList1D.h>
@@ -2022,6 +2025,8 @@ void Computestreakpositions(int npoints, MultiRegions::ExpListSharedPtr streak,
     	        Array<OneD, NekDouble> &xc,  Array<OneD, NekDouble> &yc, NekDouble cr,
                 bool verts)
 {
+    boost::ignore_unused(xold_up, xold_low);
+
 cout<<"Computestreakpositions"<<endl;
      int nq = streak->GetTotPoints();
      Array<OneD, NekDouble> coord(2);
@@ -2291,6 +2296,7 @@ void MappingEVids(Array<OneD, NekDouble> xoldup, Array<OneD, NekDouble> yoldup,
                  int & nlays,  Array<OneD, Array<OneD, int> >& Eids_lay,
                  Array<OneD, Array<OneD, int> >& Vids_lay)
 {
+    boost::ignore_unused(xoldup, xolddown);
 
       int nlay_Eids = xcold.num_elements()-1;
       int nlay_Vids = xcold.num_elements();
@@ -3278,6 +3284,8 @@ void MoveOutsidePointsfixedxpos(int npedge, SpatialDomains::MeshGraphSharedPtr m
 	         Array<OneD, NekDouble> ylaydown,Array<OneD, NekDouble> ylayup,
                  Array<OneD, NekDouble>& xnew,Array<OneD, NekDouble>& ynew)
 {
+    boost::ignore_unused(xolddown, xoldup);
+
      //update vertices coords outside layers region
      int nvertl = ycold.num_elements();
      int nVertTot =  mesh->GetNvertices();
@@ -3348,6 +3356,7 @@ void MoveOutsidePointsNnormpos(int npedge, SpatialDomains::MeshGraphSharedPtr me
 	         Array<OneD, NekDouble> nxPhys,Array<OneD, NekDouble> nyPhys,
                  Array<OneD, NekDouble>& xnew,Array<OneD, NekDouble>& ynew)
 {
+    boost::ignore_unused(xcold, ycold);
 /*
      int nq1D =bndfieldup->GetTotPoints();
      Array<OneD, NekDouble> xlayoldup(nq1D);
@@ -3635,7 +3644,7 @@ void CheckSingularQuads( MultiRegions::ExpListSharedPtr Exp,
       SpatialDomains::Geometry1DSharedPtr SegGeom;
       int idbef, idnext;
       NekDouble xV1, yV1, xV2,yV2;
-      NekDouble slopebef,slopenext,slopenew;
+      NekDouble slopebef = 0.0,slopenext = 0.0,slopenew = 0.0;
       Array<OneD, int> locEids(4);
       for(int i=0; i<nel; i++)
       {

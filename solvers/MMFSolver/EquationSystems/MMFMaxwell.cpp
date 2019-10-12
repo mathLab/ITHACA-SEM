@@ -34,6 +34,7 @@
 
 #include <MMFSolver/EquationSystems/MMFMaxwell.h>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <iomanip>
 #include <iostream>
@@ -501,7 +502,7 @@ void MMFMaxwell::v_DoSolve()
 
     int cntap = 0;
     Array<OneD, NekDouble> Ezantipod;
-    int indxantipod;
+    int indxantipod = 0;
 
     switch (m_SourceType)
     {
@@ -563,7 +564,7 @@ void MMFMaxwell::v_DoSolve()
     }
 
     int cntpml = 0;
-    int P1indx, P2indx, P3indx;
+    int P1indx = 0, P2indx = 0, P3indx = 0;
     Array<OneD, NekDouble> P1;
     Array<OneD, NekDouble> P2;
     Array<OneD, NekDouble> P3;
@@ -1323,6 +1324,8 @@ void MMFMaxwell::DoOdeProjection(
     const Array<OneD, const Array<OneD, NekDouble>> &inarray,
     Array<OneD, Array<OneD, NekDouble>> &outarray, const NekDouble time)
 {
+    boost::ignore_unused(time);
+
     int var = inarray.num_elements();
 
     // SetBoundaryConditions(time);
@@ -1338,6 +1341,8 @@ void MMFMaxwell::v_SetInitialConditions(const NekDouble initialtime,
                                         bool dumpInitialConditions,
                                         const int domain)
 {
+    boost::ignore_unused(domain);
+
     int nq   = GetTotPoints();
     int nvar = m_fields.num_elements();
 
@@ -2297,6 +2302,8 @@ void MMFMaxwell::ComputeMaterialOpticalCloak(
     Array<OneD, Array<OneD, NekDouble>> &epsvec,
     Array<OneD, Array<OneD, NekDouble>> &muvec, const bool Dispersion)
 {
+    boost::ignore_unused(muvec, Dispersion);
+
     int nq = GetNpoints();
 
     // Cloaking metamaterial
@@ -2680,6 +2687,8 @@ void MMFMaxwell::Checkpoint_EDFluxOutput(
     const int n, const NekDouble time,
     const Array<OneD, const Array<OneD, NekDouble>> &fieldphys)
 {
+    boost::ignore_unused(time);
+
     int nvar    = m_fields.num_elements();
     int nq      = m_fields[0]->GetTotPoints();
     int ncoeffs = m_fields[0]->GetNcoeffs();
@@ -2730,6 +2739,8 @@ void MMFMaxwell::Checkpoint_EnergyOutput(
     const int n, const NekDouble time,
     const Array<OneD, const Array<OneD, NekDouble>> &fieldphys)
 {
+    boost::ignore_unused(time);
+
     int nvar    = m_fields.num_elements();
     int nq      = m_fields[0]->GetTotPoints();
     int ncoeffs = m_fields[0]->GetNcoeffs();
@@ -3016,7 +3027,6 @@ Array<OneD, NekDouble> MMFMaxwell::ComputeRadCloak(const int CloakNlayer)
 
     Array<OneD, NekDouble> radvec(nq);
 
-    NekDouble Cloakradmin;
     for (int i = 0; i < nq; ++i)
     {
         switch (m_MMFdir)
@@ -3035,8 +3045,6 @@ Array<OneD, NekDouble> MMFMaxwell::ComputeRadCloak(const int CloakNlayer)
                     radvec[i] =
                         sqrt(x0[i] * x0[i] / la / la + x1[i] * x1[i] / lb / lb);
                 }
-
-                Cloakradmin = 1.0;
             }
             break;
 
@@ -3044,7 +3052,6 @@ Array<OneD, NekDouble> MMFMaxwell::ComputeRadCloak(const int CloakNlayer)
             {
                 radvec[i] = sqrt(2.0 * x0[i] * x0[i] +
                                  x1[i] * x1[i] * x1[i] * x1[i] + x1[i] * x1[i]);
-                Cloakradmin = 1.0;
             }
             break;
 
@@ -3052,7 +3059,6 @@ Array<OneD, NekDouble> MMFMaxwell::ComputeRadCloak(const int CloakNlayer)
             {
                 radvec[i] = sqrt(3.0 * x0[i] * x0[i] +
                                  x1[i] * x1[i] * x1[i] * x1[i] - x1[i] * x1[i]);
-                Cloakradmin = sqrt(2.0);
             }
             break;
 

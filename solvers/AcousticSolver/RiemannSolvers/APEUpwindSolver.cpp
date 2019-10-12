@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <AcousticSolver/RiemannSolvers/APEUpwindSolver.h>
 
 using namespace std;
@@ -90,6 +92,8 @@ void APEUpwindSolver::v_PointSolve(
     NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
     NekDouble &pF,    NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF)
 {
+    boost::ignore_unused(rhoL, rhoR, rhoF);
+
     // Speed of sound
     NekDouble c0L = sqrt(c0sqL);
     NekDouble c0R = sqrt(c0sqR);

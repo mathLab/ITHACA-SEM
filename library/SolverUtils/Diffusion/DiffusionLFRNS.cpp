@@ -36,6 +36,7 @@
 #include <LocalRegions/Expansion2D.h>
 #include <SolverUtils/Diffusion/DiffusionLFRNS.h>
 #include <LibUtilities/Polylib/Polylib.h>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/math/special_functions/gamma.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <iostream>
@@ -224,6 +225,8 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
+            boost::ignore_unused(pSession);
+
             int i, n;
             int nquad0, nquad1;
             int phys_offset;
@@ -373,7 +376,9 @@ namespace Nektar
         void DiffusionLFRNS::v_SetupCFunctions(
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
-        {        
+        {
+            boost::ignore_unused(pSession);
+
             int i, n;
             NekDouble c0 = 0.0;
             NekDouble c1 = 0.0;
@@ -905,7 +910,9 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >        &outarray,
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
-        {    
+        {
+            boost::ignore_unused(pFwd, pBwd);
+
             int i, j, n;
             int phys_offset;
             
@@ -1676,6 +1683,8 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &iFlux,
                   Array<OneD,       NekDouble>                &derCFlux)
         {
+            boost::ignore_unused(nConvectiveFields);
+
             int n;
             int nLocalSolutionPts, phys_offset;
             
@@ -1766,7 +1775,9 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &flux, 
             const Array<OneD,       NekDouble>                &iFlux,
                   Array<OneD,       NekDouble>                &derCFlux)
-        {                   
+        {
+            boost::ignore_unused(nConvectiveFields);
+
             int n, e, i, j, cnt;
             
             Array<OneD, const NekDouble> jac;
@@ -1987,7 +1998,9 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &fluxX2, 
             const Array<OneD, const NekDouble>                &numericalFlux,
                   Array<OneD,       NekDouble>                &divCFlux)
-        {                   
+        {
+            boost::ignore_unused(nConvectiveFields);
+
             int n, e, i, j, cnt;
             
             int nElements = fields[0]->GetExpSize();
@@ -2184,6 +2197,8 @@ namespace Nektar
             const Array<OneD, const NekDouble> &numericalFlux,
                   Array<OneD,       NekDouble> &divCFlux)
         {
+            boost::ignore_unused(nConvectiveFields);
+
             int n, e, i, j, cnt;
             
             int nElements   = fields[0]->GetExpSize();

@@ -44,6 +44,11 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
+bool NodalTriSPI::initPointsManager[] = {
+    PointsManager().RegisterCreator(PointsKey(0, eNodalTriSPI),          NodalTriSPI::Create)
+};
+
 void NodalTriSPI::CalculatePoints()
 {
     // Allocate the storage for points

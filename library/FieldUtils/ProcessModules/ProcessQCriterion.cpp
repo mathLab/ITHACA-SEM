@@ -36,9 +36,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessQCriterion.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessQCriterion.h"
 
 namespace Nektar
 {
@@ -61,6 +63,8 @@ ProcessQCriterion::~ProcessQCriterion()
 
 void ProcessQCriterion::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nfields = m_f->m_variables.size();
     m_f->m_variables.push_back("Q");
     // Skip in case of empty partition

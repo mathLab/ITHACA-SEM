@@ -89,6 +89,9 @@ v5.0.0
 - Fix issues related to leading factors, arithmetic order and associativity of
   exponential operator in expression evaluator (!1066)
 - Remove use of `using namespace std` in header files (!1066)
+- Add error messages for use of ARPACK in serial (!1079)
+- Generalise ContainsPoint routine (!1078)
+- Homogenized fallthrough to fix issues with gcc 7.4.0 (!1084)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

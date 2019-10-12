@@ -56,5 +56,5 @@ int Geometry0D::v_GetShapeDim() const
 	return 0;
 }
 
-}; // end of namespace
-}; // end of namespace
+} // end of namespace
+} // end of namespace

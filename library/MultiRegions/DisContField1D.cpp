@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/DisContField1D.h>
 #include <StdRegions/StdSegExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -701,6 +703,8 @@ namespace Nektar
             Array<OneD, SpatialDomains
                 ::BoundaryConditionShPtr> &bndConditions)
         {
+            boost::ignore_unused(graph1D);
+
             int k;
             int cnt  = 0;
 
@@ -1169,6 +1173,8 @@ namespace Nektar
             const Array<OneD, const NekDouble> &dirForcing,
             const bool PhysSpaceForcing)
         {
+            boost::ignore_unused(flags, varfactors, dirForcing);
+
             int i,n,cnt,nbndry;
             int nexp = GetExpSize();
             Array<OneD,NekDouble> f(m_ncoeffs);
@@ -1311,6 +1317,8 @@ namespace Nektar
             const NekDouble   x2_in,
             const NekDouble   x3_in)
         {
+            boost::ignore_unused(varName);
+
             int i;
 
             Array<OneD, NekDouble> x0(1);

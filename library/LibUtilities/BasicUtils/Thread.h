@@ -382,6 +382,7 @@ class ThreadStartupManager: public ThreadManager
 {
     public:
         ThreadStartupManager();
+        ThreadStartupManager(const ThreadStartupManager& src) = default;
         virtual ~ThreadStartupManager();
         virtual void QueueJobs(std::vector<ThreadJob*>& joblist);
         virtual void QueueJob(ThreadJob* job);
@@ -398,6 +399,9 @@ class ThreadStartupManager: public ThreadManager
         virtual bool IsInitialised();
         virtual const std::string& GetType() const;
     private:
+        // Do not allow assignment as m_type is const
+        ThreadStartupManager& operator=(const ThreadStartupManager& src);
+
         const std::string m_type;
 };
 

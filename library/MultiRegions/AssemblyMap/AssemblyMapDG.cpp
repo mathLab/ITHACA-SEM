@@ -46,6 +46,7 @@
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/cuthill_mckee_ordering.hpp>
@@ -78,6 +79,8 @@ namespace Nektar
             const std::string variable):
             AssemblyMap(pSession,variable)
         {
+            boost::ignore_unused(graph);
+
             int i, j, k, cnt, eid, id, id1, gid;
             int order_e   = 0;
             int nTraceExp = trace->GetExpSize();
@@ -979,6 +982,7 @@ namespace Nektar
                     Array<OneD,       NekDouble>& global,
                     bool useComm ) const
         {
+            boost::ignore_unused(useComm);
             AssembleBnd(loc,global);
         }
 
@@ -987,6 +991,7 @@ namespace Nektar
                     NekVector<      NekDouble>& global,
                     bool useComm) const
         {
+            boost::ignore_unused(useComm);
             AssembleBnd(loc,global);
         }
 

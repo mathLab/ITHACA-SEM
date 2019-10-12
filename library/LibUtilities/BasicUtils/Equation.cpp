@@ -69,7 +69,7 @@ Equation::Equation(InterpreterSharedPtr evaluator,
     {
         m_expr_id = -1;
         std::string msg(std::string("Equation::Equation() fails on expression [") + m_expr + std::string("]\n"));
-        ASSERTL0(false, msg);
+        NEKERROR(ErrorUtil::efatal, msg);
         throw e;
         return;
     }
@@ -77,7 +77,7 @@ Equation::Equation(InterpreterSharedPtr evaluator,
     {
         m_expr_id = -1;
         std::string msg(std::string("Equation::Equation() fails on expression [") + m_expr + std::string("]\n"));
-        ASSERTL0(false, msg);
+        NEKERROR(ErrorUtil::efatal, msg);
         throw e;
         return;
     }
@@ -85,6 +85,10 @@ Equation::Equation(InterpreterSharedPtr evaluator,
 
 Equation& Equation::operator=(const Equation &src)
 {
+    m_vlist     = src.m_vlist;
+    m_expr      = src.m_expr;
+    m_expr_id   = src.m_expr_id;
+    m_evaluator = src.m_evaluator;
     return *this;
 }
 
@@ -100,12 +104,12 @@ NekDouble Equation::Evaluate() const
     catch (const std::runtime_error& e)
     {
         std::string msg(std::string("Equation::Evaluate fails on expression [") + m_expr + std::string("]\n"));
-        ASSERTL0(false, msg + std::string("ERROR: ") + e.what());
+        NEKERROR(ErrorUtil::efatal, msg + std::string("ERROR: ") + e.what());
     }
     catch (const std::string& e)
     {
         std::string msg(std::string("Equation::Evaluate fails on expression [") + m_expr + std::string("]\n"));
-        ASSERTL0(false, msg + std::string("ERROR: ") + e);
+        NEKERROR(ErrorUtil::efatal, msg + std::string("ERROR: ") + e);
     }
     return 0;
 }
@@ -124,13 +128,13 @@ NekDouble Equation::Evaluate(
     {
         std::string msg =
             "Equation::Evaluate fails on expression [" + m_expr + "]\n";
-        ASSERTL0(false, msg + std::string("ERROR: ") + e.what());
+        NEKERROR(ErrorUtil::efatal, msg + std::string("ERROR: ") + e.what());
     }
     catch (const std::string& e)
     {
         std::string msg =
             "Equation::Evaluate fails on expression [" + m_expr + "]\n";
-        ASSERTL0(false, msg + std::string("ERROR: ") + e);
+        NEKERROR(ErrorUtil::efatal, msg + std::string("ERROR: ") + e);
     }
 
     return 0;
@@ -188,14 +192,14 @@ void Equation::Evaluate(
     {
         std::string msg =
             "Equation::Evaluate fails on expression [" + m_expr + "]\n";
-        ASSERTL0(false, msg + std::string("ERROR: ") + e.what());
+        NEKERROR(ErrorUtil::efatal, msg + std::string("ERROR: ") + e.what());
         return;
     }
     catch (const std::string& e)
     {
         std::string msg =
             "Equation::Evaluate fails on expression [" + m_expr + "]\n";
-        ASSERTL0(false, msg + std::string("ERROR: ") + e);
+        NEKERROR(ErrorUtil::efatal, msg + std::string("ERROR: ") + e);
         return;
     }
 }

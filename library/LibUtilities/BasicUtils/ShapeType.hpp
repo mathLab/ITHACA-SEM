@@ -36,6 +36,8 @@
 #include <algorithm>
 #include <vector>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #ifdef min
@@ -100,6 +102,7 @@ namespace Nektar
 
             inline int getNumberOfBndCoefficients(int Na)
             {
+                boost::ignore_unused(Na);
                 return 2;
             }
         }
@@ -334,7 +337,7 @@ namespace Nektar
                 returnval = modes[offset]*modes[offset+1]*modes[offset+2];
                 break;
             default:
-                ASSERTL0(false,"Unknown Shape Type");
+                NEKERROR(ErrorUtil::efatal,"Unknown Shape Type");
                 break;
             }
 
@@ -369,7 +372,7 @@ namespace Nektar
                 returnval = na*nb*nc;
                 break;
             default:
-                ASSERTL0(false,"Unknown Shape Type");
+                NEKERROR(ErrorUtil::efatal,"Unknown Shape Type");
                 break;
             }
 

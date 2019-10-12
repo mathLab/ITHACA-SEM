@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdExpansion.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for BasisManager, etc
 
@@ -69,12 +71,12 @@ namespace Nektar
                 ASSERTL2(Bc!=LibUtilities::NullBasisKey,
                     "NULL Basis attempting to be used.");
                 m_base[2] = LibUtilities::BasisManager()[Bc];
-
+                /* Falls through. */
             case 2:
                 ASSERTL2(Bb!=LibUtilities::NullBasisKey,
                     "NULL Basis attempting to be used.");
-
                 m_base[1] = LibUtilities::BasisManager()[Bb];
+                /* Falls through. */
             case 1:
                 ASSERTL2(Ba!=LibUtilities::NullBasisKey,
                     "NULL Basis attempting to be used.");
@@ -89,6 +91,7 @@ namespace Nektar
 
 
         StdExpansion::StdExpansion(const StdExpansion &T):
+            std::enable_shared_from_this<StdExpansion>(T),
             m_base(T.m_base),
             m_elmt_id(T.m_elmt_id),
             m_ncoeffs(T.m_ncoeffs),
@@ -832,6 +835,7 @@ namespace Nektar
                                                               Array<OneD,NekDouble> &outarray,
                                                               const StdMatrixKey &mkey)
         {
+            boost::ignore_unused(inarray, outarray, mkey);
             ///@todo fix this
             //          int nqtot = GetTotPoints();
             //          int matrixid = mkey.GetMatrixID();
@@ -987,27 +991,32 @@ namespace Nektar
 
         void StdExpansion::v_SetPhysNormals(Array<OneD, const NekDouble> &normal)
         {
+            boost::ignore_unused(normal);
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
 
         void StdExpansion::v_SetUpPhysNormals(const int edge)
         {
+            boost::ignore_unused(edge);
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
 
         int StdExpansion::v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset)
         {
+            boost::ignore_unused(nummodes, modes_offset);
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this class");
             return 0;
         }
 
         void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, Array< OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(Fx, outarray);
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
 
         void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(Fx, Fy, outarray);
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
 
@@ -1016,35 +1025,41 @@ namespace Nektar
                                                        const Array<OneD, const NekDouble> &Fz,
                                                        Array< OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(Fx, Fy, Fz, outarray);
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
 
         void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(Fvec, outarray);
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
 
 
         DNekScalBlkMatSharedPtr StdExpansion::v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
         {
+            boost::ignore_unused(mkey);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return NullDNekScalBlkMatSharedPtr;
         }
 
         void StdExpansion::v_DropLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
         {
+            boost::ignore_unused(mkey);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
         }
 
         StdRegions::Orientation StdExpansion::v_GetForient(int face)
 
         {
+            boost::ignore_unused(face);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for three-dimensional  LocalRegions");
             return eDir1FwdDir1_Dir2FwdDir2;
         }
 
         StdRegions::Orientation StdExpansion::v_GetEorient(int edge)
         {
+            boost::ignore_unused(edge);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
             return eForwards;
         }
@@ -1053,6 +1068,7 @@ namespace Nektar
                                                     Array<OneD, const NekDouble> &inarray,
                                                     Array<OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(dir, inarray, outarray);
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
         }
 
@@ -1060,6 +1076,7 @@ namespace Nektar
             Array<OneD, NekDouble> &coeffs,
             StdRegions::Orientation dir)
         {
+            boost::ignore_unused(coeffs, dir);
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
         }
 
@@ -1068,12 +1085,14 @@ namespace Nektar
                                                   const Array<OneD, const NekDouble> &physvals)
 
         {
+            boost::ignore_unused(Lcoord, physvals);
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             return 0;
         }
 
         void StdExpansion::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,Array<OneD, NekDouble>& eta)
         {
+            boost::ignore_unused(xi, eta);
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
         }
 
@@ -1103,6 +1122,7 @@ namespace Nektar
 
         int StdExpansion::v_GetEdgeNcoeffs(const int i) const
         {
+            boost::ignore_unused(i);
             ASSERTL0(false, "This function is not valid or not defined");
             return 0;
         }
@@ -1115,42 +1135,49 @@ namespace Nektar
 
         int StdExpansion::v_GetEdgeNumPoints(const int i) const
         {
+            boost::ignore_unused(i);
             ASSERTL0(false, "This function is not valid or not defined");
             return 0;
         }
 
         int StdExpansion::v_DetCartesianDirOfEdge(const int edge)
         {
+            boost::ignore_unused(edge);
             ASSERTL0(false, "This function is not valid or not defined");
             return 0;
         }
 
         const LibUtilities::BasisKey StdExpansion::v_DetEdgeBasisKey(const int i) const
         {
+            boost::ignore_unused(i);
             ASSERTL0(false, "This function is not valid or not defined");
             return LibUtilities::NullBasisKey;
         }
 
         const LibUtilities::BasisKey StdExpansion::v_DetFaceBasisKey(const int i, const int k) const
         {
+            boost::ignore_unused(i, k);
             ASSERTL0(false, "This function is not valid or not defined");
             return LibUtilities::NullBasisKey;
         }
 
         int StdExpansion::v_GetFaceNumPoints(const int i) const
         {
+            boost::ignore_unused(i);
             ASSERTL0(false, "This function is not valid or not defined");
             return 0;
         }
 
         int StdExpansion::v_GetFaceNcoeffs(const int i) const
         {
+            boost::ignore_unused(i);
             ASSERTL0(false, "This function is not valid or not defined");
             return 0;
         }
 
         int StdExpansion::v_GetFaceIntNcoeffs(const int i) const
         {
+            boost::ignore_unused(i);
             ASSERTL0(false, "This function is not valid or not defined");
             return 0;
         }
@@ -1163,6 +1190,7 @@ namespace Nektar
         
         int StdExpansion::v_GetTraceNcoeffs(const int i) const
         {
+            boost::ignore_unused(i);
             ASSERTL0(false, "This function is not valid or not defined");
             return 0;
         }
@@ -1170,12 +1198,14 @@ namespace Nektar
 
         LibUtilities::PointsKey StdExpansion::v_GetFacePointsKey(const int i, const int j) const
         {
+            boost::ignore_unused(i, j);
             ASSERTL0(false, "This function is not valid or not defined");
             return LibUtilities::NullPointsKey;
         }
 
         LibUtilities::BasisType StdExpansion::v_GetEdgeBasisType(const int i) const
         {
+            boost::ignore_unused(i);
             ASSERTL0(false, "This function is not valid or not defined");
             
             return LibUtilities::eNoBasisType;
@@ -1232,6 +1262,7 @@ namespace Nektar
                                                     const Array<OneD, const NekDouble>& inarray,
                                                     Array<OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(dir, inarray, outarray);
             NEKERROR(ErrorUtil::efatal, "This method has not been defined");
         }
 
@@ -1244,6 +1275,7 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(direction, inarray, outarray);
             NEKERROR(ErrorUtil::efatal, "This method has not been defined");
         }
 
@@ -1254,6 +1286,7 @@ namespace Nektar
         void StdExpansion::v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                                      Array<OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(inarray, outarray);
             NEKERROR(ErrorUtil::efatal, "This method has not been defined");
         }
 
@@ -1264,6 +1297,7 @@ namespace Nektar
          */
         NekDouble StdExpansion::v_Integral(const Array<OneD, const NekDouble>& inarray )
         {
+            boost::ignore_unused(inarray);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                      "local expansions");
             return 0;
@@ -1272,12 +1306,14 @@ namespace Nektar
 
         void StdExpansion::v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
         {
+            boost::ignore_unused(edgeid, primCoeffs, inoutmat);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                      "specific element types");
         }
 
         void StdExpansion::v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD, NekDouble> &coeffs)
         {
+            boost::ignore_unused(edgeid, primCoeffs, coeffs);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                      "specific element types");
         }
@@ -1291,6 +1327,7 @@ namespace Nektar
                                         Array<OneD, NekDouble> &out_d2,
                                         Array<OneD, NekDouble> &out_d3)
         {
+            boost::ignore_unused(inarray, out_d1, out_d2, out_d3);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                      "local expansions");
         }
@@ -1298,12 +1335,14 @@ namespace Nektar
         void StdExpansion::v_PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &out_ds)
         {
+            boost::ignore_unused(inarray, out_ds);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                      "local expansions");
         }
         void StdExpansion::v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble>& out_dn)
         {
+            boost::ignore_unused(inarray, out_dn);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                      "local expansions");
         }
@@ -1318,6 +1357,7 @@ namespace Nektar
                                        Array<OneD, NekDouble> &out_d0)
 
         {
+            boost::ignore_unused(dir, inarray, out_d0);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                      "specific element types");
         }
@@ -1330,6 +1370,7 @@ namespace Nektar
                                                   const Array<OneD, const NekDouble>& direction,
                                                   Array<OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(inarray, direction, outarray);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                      "specific element types");
         }
@@ -1339,6 +1380,7 @@ namespace Nektar
                                            Array<OneD, NekDouble> &out_d2,
                                            Array<OneD, NekDouble> &out_d3)
         {
+            boost::ignore_unused(inarray, out_d1, out_d2, out_d3);
             NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
         }
 
@@ -1346,12 +1388,14 @@ namespace Nektar
                                              const Array<OneD, const NekDouble>& inarray,
                                              Array<OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(dir, inarray, outarray);
             NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
         }
 
 
         NekDouble StdExpansion::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble>& physvals)
         {
+            boost::ignore_unused(coords, physvals);
             NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
             return 0;
         }
@@ -1359,6 +1403,7 @@ namespace Nektar
 
         NekDouble StdExpansion::v_PhysEvaluate(const Array<OneD, DNekMatSharedPtr > & I, const Array<OneD, const NekDouble>& physvals)
         {
+            boost::ignore_unused(I, physvals);
             NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
             return 0;
         }
@@ -1366,12 +1411,14 @@ namespace Nektar
 
         void StdExpansion::v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(mode, outarray);
             NEKERROR(ErrorUtil::efatal, "This function has not "
                      "been defined for this shape");
         }
 
         DNekMatSharedPtr StdExpansion::v_GenMatrix(const StdMatrixKey &mkey)
         {
+            boost::ignore_unused(mkey);
             NEKERROR(ErrorUtil::efatal, "This function has not "
                      "been defined for this element");
             DNekMatSharedPtr returnval;
@@ -1380,6 +1427,7 @@ namespace Nektar
 
         DNekMatSharedPtr StdExpansion::v_CreateStdMatrix(const StdMatrixKey &mkey)
         {
+            boost::ignore_unused(mkey);
             NEKERROR(ErrorUtil::efatal, "This function has not "
                      "been defined for this element");
             DNekMatSharedPtr returnval;
@@ -1390,12 +1438,14 @@ namespace Nektar
                                        Array<OneD, NekDouble> &coords_1,
                                        Array<OneD, NekDouble> &coords_2)
         {
+            boost::ignore_unused(coords_0, coords_1, coords_2);
             NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
         }
 
         void StdExpansion::v_GetCoord(const Array<OneD, const NekDouble>& Lcoord,
                                       Array<OneD, NekDouble> &coord)
         {
+            boost::ignore_unused(Lcoord, coord);
             NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
         }
 
@@ -1407,17 +1457,20 @@ namespace Nektar
 
             void StdExpansion::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
             {
+                boost::ignore_unused(outarray);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
             void StdExpansion::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
             {
+                boost::ignore_unused(outarray);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
             int StdExpansion::v_GetVertexMap(const int localVertexId,
                                          bool useCoeffPacking)
             {
+                boost::ignore_unused(localVertexId, useCoeffPacking);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
                 return 0;
             }
@@ -1426,6 +1479,7 @@ namespace Nektar
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int> &signarray)
             {
+                boost::ignore_unused(eid, edgeOrient, maparray, signarray);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
@@ -1435,6 +1489,7 @@ namespace Nektar
                                               int &numModes0,
                                               int &numModes1)
             {
+                boost::ignore_unused(fid, faceOrient, numModes0, numModes1);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
@@ -1442,6 +1497,7 @@ namespace Nektar
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int> &signarray)
             {
+                boost::ignore_unused(fid, faceOrient, maparray, signarray);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
@@ -1452,6 +1508,7 @@ namespace Nektar
                 Array<OneD, int>&          signarray,
                 int                        P)
             {
+                boost::ignore_unused(eid, edgeOrient, maparray, signarray, P);
                 NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
             }
 
@@ -1460,31 +1517,38 @@ namespace Nektar
                                                      Array<OneD, int> &signarray,
                                                      int nummodesA, int nummodesB)
             {
+                boost::ignore_unused(fid, faceOrient, maparray, signarray,
+                                     nummodesA, nummodesB);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
             void StdExpansion::v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
+                boost::ignore_unused(edge, inarray, outarray);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
             void StdExpansion::v_GetEdgePhysVals(const int edge,  const std::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
+                boost::ignore_unused(edge, EdgeExp, inarray, outarray);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
         void StdExpansion::v_GetTracePhysVals(const int edge,  const std::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray, StdRegions::Orientation  orient)
             {
+                boost::ignore_unused(edge, EdgeExp, inarray, outarray, orient);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
             void StdExpansion::v_GetVertexPhysVals(const int vertex, const Array<OneD, const NekDouble> &inarray, NekDouble &outarray)
             {
+                boost::ignore_unused(vertex, inarray, outarray);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
             void StdExpansion::v_GetEdgeInterpVals(const int edge,const Array<OneD, const NekDouble> &inarray,Array<OneD,NekDouble> &outarray)
             {
+                boost::ignore_unused(edge, inarray, outarray);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
@@ -1492,6 +1556,7 @@ namespace Nektar
                     const int edge,
                     Array<OneD, NekDouble> &outarray)
             {
+                boost::ignore_unused(edge, outarray);
                 NEKERROR(ErrorUtil::efatal,
                      "Method does not exist for this shape or library");
             }
@@ -1502,6 +1567,7 @@ namespace Nektar
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient)
             {
+                boost::ignore_unused(face, FaceExp, inarray, outarray, orient);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
         
@@ -1509,6 +1575,7 @@ namespace Nektar
                 const int  edge,
                 Array<OneD, int>   &outarray)
             {
+                boost::ignore_unused(edge, outarray);
                 NEKERROR(ErrorUtil::efatal,
                      "Method does not exist for this shape or library" );
             }
@@ -1516,6 +1583,7 @@ namespace Nektar
             void StdExpansion::v_GetFacePhysMap(const int  face,
                                                 Array<OneD, int>   &outarray)
             {
+                boost::ignore_unused(face, outarray);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
@@ -1523,6 +1591,7 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
             {
+                boost::ignore_unused(inarray, outarray);
                 v_MultiplyByStdQuadratureMetric(inarray,outarray);
             }
         
@@ -1530,12 +1599,14 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
             {
+                boost::ignore_unused(inarray, outarray);
                 NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape or library");
             }
 
             void StdExpansion::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
             {
+                boost::ignore_unused(inarray, outarray);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
@@ -1543,6 +1614,7 @@ namespace Nektar
                                                         Array<OneD, NekDouble> &outarray,
                                                         bool multiplybyweights)
             {
+                boost::ignore_unused(inarray, outarray, multiplybyweights);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
@@ -1554,6 +1626,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD, NekDouble> &outarray)
             {
+                boost::ignore_unused(direction, inarray, outarray);
                 NEKERROR(ErrorUtil::efatal,
                          "Method does not exist for this shape" );
             }
@@ -1562,6 +1635,7 @@ namespace Nektar
                                                        const Array<OneD, const NekDouble>& inarray,
                                                        Array<OneD, NekDouble> &outarray)
             {
+                boost::ignore_unused(dir, inarray, outarray);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
@@ -1587,6 +1661,7 @@ namespace Nektar
              void StdExpansion::v_SVVLaplacianFilter(Array<OneD,NekDouble> &array,
                                              const StdMatrixKey &mkey)
              {
+                 boost::ignore_unused(array, mkey);
                  ASSERTL0(false, "This function is not defined in StdExpansion.");
              }
 
@@ -1596,6 +1671,7 @@ namespace Nektar
                                     const NekDouble        exponent,
                                     const NekDouble        cutoff)
              {
+                 boost::ignore_unused(array, alpha, exponent, cutoff);
                  ASSERTL0(false, "This function is not defined in StdExpansion.");
              }
 
@@ -1603,6 +1679,7 @@ namespace Nektar
                                                    const Array<OneD, const NekDouble> &inarray,
                                                    Array<OneD, NekDouble> &outarray)
             {
+                boost::ignore_unused(numMin, inarray, outarray);
                 ASSERTL0(false, "This function is not defined in StdExpansion.");
             }
 
@@ -1680,6 +1757,7 @@ namespace Nektar
                                   Array<OneD,       NekDouble> &outarray,
                                   Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(inarray, outarray, wsp);
             ASSERTL0(false, "Not implemented.");
         }
 
@@ -1694,6 +1772,7 @@ namespace Nektar
 
         const NormalVector & StdExpansion::v_GetEdgeNormal(const int edge) const
         {
+            boost::ignore_unused(edge);
             ASSERTL0(false, "Cannot get edge normals for this expansion.");
             static NormalVector result;
             return result;
@@ -1701,54 +1780,64 @@ namespace Nektar
 
         void StdExpansion::v_ComputeEdgeNormal(const int edge)
         {
+            boost::ignore_unused(edge);
             ASSERTL0(false, "Cannot compute edge normal for this expansion.");
         }
 
         void StdExpansion::v_NegateEdgeNormal(const int edge)
         {
+            boost::ignore_unused(edge);
             ASSERTL0(false, "Not implemented.");
         }
 
         bool StdExpansion::v_EdgeNormalNegated(const int edge)
         {
+            boost::ignore_unused(edge);
             ASSERTL0(false, "Not implemented.");
             return false;
         }
 
         void StdExpansion::v_ComputeFaceNormal(const int face)
         {
+            boost::ignore_unused(face);
             ASSERTL0(false, "Cannot compute face normal for this expansion.");
         }
 
         void StdExpansion::v_NegateFaceNormal(const int face)
         {
+            boost::ignore_unused(face);
             ASSERTL0(false, "Not implemented.");
         }
 
         bool StdExpansion::v_FaceNormalNegated(const int face)
         {
+            boost::ignore_unused(face);
             ASSERTL0(false, "Not implemented.");
             return false;
         }
 
         void StdExpansion::v_ComputeVertexNormal(const int vertex)
         {
+            boost::ignore_unused(vertex);
             ASSERTL0(false, "Cannot compute vertex normal for this expansion.");
         }
 
         void StdExpansion::v_NegateVertexNormal(const int vertex)
         {
+            boost::ignore_unused(vertex);
             ASSERTL0(false, "Not implemented.");
         }
 
         bool StdExpansion::v_VertexNormalNegated(const int vertex)
         {
+            boost::ignore_unused(vertex);
             ASSERTL0(false, "Not implemented.");
             return false;
         }
 
         const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
         {
+            boost::ignore_unused(face);
             ASSERTL0(false, "Cannot get face normals for this expansion.");
             static NormalVector result;
             return result;
@@ -1756,6 +1845,7 @@ namespace Nektar
 
         const NormalVector & StdExpansion::v_GetVertexNormal(const int vertex) const
         {
+            boost::ignore_unused(vertex);
             ASSERTL0(false, "Cannot get vertex normals for this expansion.");
             static NormalVector result;
             return result;
@@ -1763,6 +1853,7 @@ namespace Nektar
 
         const NormalVector & StdExpansion::v_GetSurfaceNormal(const int id) const
         {
+            boost::ignore_unused(id);
             ASSERTL0(false, "Cannot get face normals for this expansion.");
             static NormalVector result;
             return result;
@@ -1771,6 +1862,7 @@ namespace Nektar
         Array<OneD, unsigned int>
         StdExpansion::v_GetEdgeInverseBoundaryMap(int eid)
         {
+            boost::ignore_unused(eid);
             ASSERTL0(false, "Not implemented.");
             Array<OneD, unsigned int> noinversemap(1);
             return noinversemap;
@@ -1782,6 +1874,7 @@ namespace Nektar
                                                   int P1,
                                                   int P2)
         {
+            boost::ignore_unused(fid, faceOrient, P1, P2);
             ASSERTL0(false, "Not implemented.");
             Array<OneD, unsigned int> noinversemap(1);
             return noinversemap;
@@ -1792,6 +1885,7 @@ namespace Nektar
                     Array<OneD, Array<OneD, unsigned int> > &emap,
                     Array<OneD, Array<OneD, unsigned int> > &fmap)
         {
+            boost::ignore_unused(vmap, emap, fmap);
             ASSERTL0(false, "Not implemented.");
         }
         
@@ -1799,6 +1893,7 @@ namespace Nektar
         StdExpansion::v_BuildInverseTransformationMatrix(
             const DNekScalMatSharedPtr & m_transformationmatrix)
         {
+            boost::ignore_unused(m_transformationmatrix);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return NullDNekMatSharedPtr;
         }
@@ -1845,6 +1940,7 @@ namespace Nektar
             Array<OneD, int> &conn,
             bool              standard)
         {
+            boost::ignore_unused(conn, standard);
             ASSERTL0(false, "Not implemented.");
         }
 

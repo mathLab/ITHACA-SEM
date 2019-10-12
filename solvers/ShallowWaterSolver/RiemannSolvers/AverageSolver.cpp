@@ -66,9 +66,9 @@ namespace Nektar
      * @param hvf     Computed Riemann flux for y-momentum component 
      */
     void AverageSolver::v_PointSolve(
-        double  hL, double  huL, double  hvL,
-        double  hR, double  huR, double  hvR,
-        double &hf, double &huf, double &hvf)
+        NekDouble  hL, NekDouble  huL, NekDouble  hvL,
+        NekDouble  hR, NekDouble  huR, NekDouble  hvR,
+        NekDouble &hf, NekDouble &huf, NekDouble &hvf)
     {        
         static NekDouble g = m_params["gravity"]();
         

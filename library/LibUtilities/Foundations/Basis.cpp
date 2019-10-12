@@ -44,6 +44,9 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        bool Basis::initBasisManager[] = {
+            BasisManager().RegisterGlobalCreator(Basis::Create)
+        };
 
         bool operator<(const BasisKey &lhs, const BasisKey &rhs)
         {
@@ -113,7 +116,7 @@ namespace Nektar
             ASSERTL0(GetTotNumPoints()>0, "Cannot call Basis initialisation with zero or negative numbers of points");
 
             GenBasis();
-        };
+        }
 
         /** \brief Calculate the interpolation Matrix for coefficient from
         *  one base (m_basisKey) to another (tbasis0)
@@ -819,7 +822,7 @@ namespace Nektar
                 }//end scope
                 break;
             default:
-                ASSERTL0(false, "Basis Type not known or "
+                NEKERROR(ErrorUtil::efatal, "Basis Type not known or "
                                 "not implemented at this time.");
             }
         }

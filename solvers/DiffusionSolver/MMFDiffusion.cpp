@@ -34,6 +34,8 @@
 
 #include <iostream>
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <SolverUtils/Driver.h>
@@ -456,6 +458,8 @@ namespace Nektar
                         bool dumpInitialConditions,
                         const int domain)
     {
+        boost::ignore_unused(domain);
+
       int nq  = GetTotPoints();
 
       switch(m_TestType)
@@ -849,7 +853,7 @@ namespace Nektar
 	  int nq  = GetTotPoints();
 	  outfield = Array<OneD, NekDouble>(nq, 0.0);
 	}
-
+        /* Falls through. */
       default:
         {
 	  EquationSystem::v_EvaluateExactSolution(field,outfield,time);

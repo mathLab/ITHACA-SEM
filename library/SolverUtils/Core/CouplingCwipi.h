@@ -144,8 +144,8 @@ protected:
 
     SOLVER_UTILS_EXPORT virtual void v_Finalize();
 
-    SOLVER_UTILS_EXPORT const NekDouble GetSendField(const int i,
-                                                     const int j) const
+    SOLVER_UTILS_EXPORT NekDouble GetSendField(const int i,
+                                               const int j) const
     {
         return m_sendField[i][j];
     }

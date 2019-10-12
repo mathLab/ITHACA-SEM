@@ -80,7 +80,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &y,
                 const Array<OneD, const NekDouble> &z)
             {
-                int          numpoints = x.num_elements();
+                size_t       numpoints = x.num_elements();
                 unsigned int np        = GetTotNumPoints();
 
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
@@ -92,6 +92,8 @@ namespace Nektar
             }
 
         private:
+            static bool initPointsManager[];
+
             std::shared_ptr<NodalUtilPrism> m_util;
 
             /// Default constructor should not be called except by Create matrix

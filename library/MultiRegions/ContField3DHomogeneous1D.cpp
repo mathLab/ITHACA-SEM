@@ -214,7 +214,7 @@ namespace Nektar
             {
                 m_planes[n]->LocalToGlobal(useComm);
             }
-        };
+        }
 
 
         /**
@@ -226,7 +226,7 @@ namespace Nektar
             {
                 m_planes[n]->GlobalToLocal();
             }
-        };
+        }
 
 
         /**

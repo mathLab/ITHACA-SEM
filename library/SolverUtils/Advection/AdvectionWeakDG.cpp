@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Advection/AdvectionWeakDG.h>
 #include <iostream>
 #include <iomanip>
@@ -82,6 +84,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
+            boost::ignore_unused(advVel, time);
+
             int nPointsTot      = fields[0]->GetTotPoints();
             int nCoeffs         = fields[0]->GetNcoeffs();
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();

@@ -115,7 +115,7 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     }
 
     OctantSharedPtr n = m_masteroct;
-    int quad;
+    int quad = 0;
 
     bool found = false;
 

@@ -72,8 +72,8 @@ void CsvIO::Write(const std::string &outFile,
                   const Nektar::LibUtilities::PtsFieldSharedPtr &ptsField,
                   const bool backup)
 {
-    int nTotvars = ptsField->GetNFields() + ptsField->GetDim();
-    int np = ptsField->GetNpoints();
+    size_t nTotvars = ptsField->GetNFields() + ptsField->GetDim();
+    size_t np = ptsField->GetNpoints();
 
     std::string filename = SetUpOutput(outFile, true, backup);
     SetUpFieldMetaData(outFile);
@@ -95,10 +95,10 @@ void CsvIO::Write(const std::string &outFile,
 
     Array<OneD, Array<OneD, NekDouble> > pts;
     ptsField->GetPts(pts);
-    for (int i = 0; i < np; ++i)
+    for (size_t i = 0; i < np; ++i)
     {
         ptsFile << pts[0][i];
-        for (int j = 1; j < nTotvars; ++j)
+        for (size_t j = 1; j < nTotvars; ++j)
         {
             ptsFile << "," << pts[j][i];
         }
@@ -133,7 +133,7 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
         }
     }
 
-    int totvars = fieldNames.size();
+    size_t totvars = fieldNames.size();
 
     std::vector<NekDouble> ptsSerial;
     typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
@@ -142,7 +142,8 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
     {
         tok.assign(line);
 
-        ASSERTL0(std::distance(tok.begin(), tok.end()) == totvars,
+        ASSERTL0(std::distance(tok.begin(), tok.end()) ==
+                    std::iterator_traits<Tokenizer::iterator>::difference_type(totvars),
                  "wrong number of columns in line: " + line);
 
         for (auto &it : tok)
@@ -155,22 +156,22 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
             }
             catch(const boost::bad_lexical_cast &)
             {
-                ASSERTL0(false, "could not convert line: " + line);
+                NEKERROR(ErrorUtil::efatal, "could not convert line: " + line);
             }
         }
     }
 
-    int npts = ptsSerial.size() / totvars;
+    size_t npts = ptsSerial.size() / totvars;
 
     Array<OneD, Array<OneD, NekDouble> > pts(totvars);
-    for (int i = 0; i < totvars; ++i)
+    for (size_t i = 0; i < totvars; ++i)
     {
         pts[i] = Array<OneD, NekDouble>(npts);
     }
 
-    for (int i = 0; i < npts; ++i)
+    for (size_t i = 0; i < npts; ++i)
     {
-        for (int j = 0; j < totvars; ++j)
+        for (size_t j = 0; j < totvars; ++j)
         {
             pts[j][i] = ptsSerial[i * totvars + j];
         }
@@ -183,7 +184,7 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
         auto p = std::find(fieldNames.begin(), fieldNames.end(), dimNames[i]);
         if (p != fieldNames.end())
         {
-            int j = std::distance(fieldNames.begin(), p);
+            auto j = std::distance(fieldNames.begin(), p);
 
             if (i == j)
             {

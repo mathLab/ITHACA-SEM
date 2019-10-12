@@ -53,6 +53,7 @@ using namespace std;
  */
 template <int DIM> inline NekDouble Determinant(NekDouble jac[][DIM])
 {
+    boost::ignore_unused(jac);
     return 0.0;
 }
 
@@ -79,6 +80,7 @@ template <> inline NekDouble Determinant<3>(NekDouble jac[][3])
 template <int DIM>
 inline void InvTrans(NekDouble in[][DIM], NekDouble out[][DIM])
 {
+    boost::ignore_unused(in,out);
 }
 
 template <> inline void InvTrans<2>(NekDouble in[][2], NekDouble out[][2])
@@ -130,6 +132,7 @@ template <> inline NekDouble ScalarProd<3>(NekDouble in1[3], NekDouble in2[3])
 template<int DIM>
 inline NekDouble ScalarProd(NekDouble (&in1)[DIM], NekDouble (&in2)[DIM])
 {
+    boost::ignore_unused(in1,in2);
     return 0.0;
 }
 
@@ -160,6 +163,7 @@ inline NekDouble ScalarProd<3>(NekDouble (&in1)[3], NekDouble (&in2)[3])
 template <int DIM>
 inline void EMatrix(NekDouble in[][DIM], NekDouble out[][DIM])
 {
+    boost::ignore_unused(in,out);
 }
 
 template <> inline void EMatrix<2>(NekDouble in[][2], NekDouble out[][2])
@@ -198,6 +202,7 @@ template<int DIM>
 inline NekDouble FrobProd(NekDouble in1[][DIM],
                           NekDouble in2[][DIM])
 {
+    boost::ignore_unused(in1,in2);
     return 0.0;
 }
 
@@ -232,6 +237,7 @@ inline NekDouble FrobProd<3>(NekDouble in1[][3], NekDouble in2[][3])
 template<int DIM>
 inline NekDouble FrobeniusNorm(NekDouble inarray[][DIM])
 {
+    boost::ignore_unused(inarray);
     return 0.0;
 }
 

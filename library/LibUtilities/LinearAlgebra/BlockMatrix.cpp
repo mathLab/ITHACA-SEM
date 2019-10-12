@@ -30,6 +30,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/LinearAlgebra/StandardMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/BlockMatrix.hpp>
@@ -396,6 +398,7 @@ namespace Nektar
     template<typename DataType, typename InnerMatrixType>
     unsigned int NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetNumberOfElementsInBlock(unsigned int block, unsigned int totalBlocks, const Array<OneD, unsigned int>& sizes)
     {
+        boost::ignore_unused(totalBlocks);
         ASSERTL2(block < totalBlocks, std::string("Block Element ") + std::to_string(block) +
             std::string(" requested in a matrix with a maximum of ") + std::to_string(totalBlocks) +
             std::string(" blocks."));

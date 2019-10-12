@@ -34,13 +34,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <iostream>
 #include <string>
-
 using namespace std;
 
-#include "ProcessPointDataToFld.h"
+#include <boost/core/ignore_unused.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessPointDataToFld.h"
 
 namespace Nektar
 {
@@ -71,6 +72,8 @@ ProcessPointDataToFld::~ProcessPointDataToFld()
 
 void ProcessPointDataToFld::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int i, j;
     bool setnantovalue = false;
     NekDouble defvalue=0.0;

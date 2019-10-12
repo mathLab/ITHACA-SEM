@@ -35,6 +35,8 @@
 #ifndef EXPANSION2D_H
 #define EXPANSION2D_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/Expansion1D.h>
 #include <StdRegions/StdExpansion2D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
@@ -198,6 +200,30 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble > > &vec);
         };
 
+<<<<<<< HEAD
+=======
+        inline Expansion1DSharedPtr Expansion2D::GetEdgeExp(
+            int edge,
+            bool SetUpNormal)
+        {
+            boost::ignore_unused(SetUpNormal);
+            ASSERTL1(edge < GetNedges(), "Edge out of range.");
+            return m_edgeExp[edge].lock();
+        }
+
+        inline void Expansion2D::SetEdgeExp(
+            const int           edge,
+            Expansion1DSharedPtr &e)
+        {
+            unsigned int nEdges = GetNedges();
+            ASSERTL1(edge < nEdges, "Edge out of range.");
+            if (m_edgeExp.size() < nEdges)
+            {
+                m_edgeExp.resize(nEdges);
+            }
+            m_edgeExp[edge] = e;
+        }
+>>>>>>> feature/GlobalLinSysSolveLocalCoeff
 
         inline SpatialDomains::Geometry2DSharedPtr
             Expansion2D::GetGeom2D() const

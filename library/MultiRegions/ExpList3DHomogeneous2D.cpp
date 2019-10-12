@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 #include <MultiRegions/ExpList.h>
 
@@ -59,6 +61,8 @@ namespace Nektar
                        const Collections::ImplementationType ImpType):
             ExpListHomogeneous2D(e3DH2D,pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
+            boost::ignore_unused(ImpType);
+            SetExpType(e3DH2D);
         }
 
         // Constructor for ExpList3DHomogeneous2D to act as a Explist field

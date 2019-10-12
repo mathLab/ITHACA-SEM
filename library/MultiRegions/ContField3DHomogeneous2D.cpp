@@ -136,7 +136,7 @@ namespace Nektar
             {
                 m_lines[n]->LocalToGlobal(useComm);
             }
-        };
+        }
 
 
         /**
@@ -148,7 +148,7 @@ namespace Nektar
             {
                 m_lines[n]->GlobalToLocal();
             }
-        };
+        }
 
 
         void ContField3DHomogeneous2D::v_HelmSolve(
@@ -182,7 +182,7 @@ namespace Nektar
             else
             {
                 // Fourier transform forcing function
-                HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
+                HomogeneousFwdTrans(inarray,fce); 
             }
 
             int l =0;

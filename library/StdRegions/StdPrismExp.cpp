@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdPrismExp.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 
@@ -293,6 +295,9 @@ namespace Nektar
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1,
+                                 doCheckCollDir2);
+
             int i, mode;
             int nquad0    = m_base[0]->GetNumPoints();
             int nquad1    = m_base[1]->GetNumPoints();
@@ -474,6 +479,9 @@ namespace Nektar
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1,
+                                 doCheckCollDir2);
+
             // Interior prism implementation based on Spen's book page
             // 119. and 608.
             const int nquad0 = m_base[0]->GetNumPoints();
@@ -547,8 +555,8 @@ namespace Nektar
         {
             ASSERTL0(dir >= 0 && dir <= 2, "input dir is out of range");
 
-            int nq = GetTotPoints();
-            MatrixType mtype;
+            int nq           = GetTotPoints();
+            MatrixType mtype = eIProductWRTDerivBase0;
 
             switch (dir)
             {

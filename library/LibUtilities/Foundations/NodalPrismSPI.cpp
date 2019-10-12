@@ -43,6 +43,10 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+bool NodalPrismSPI::initPointsManager[] = {
+    PointsManager().RegisterCreator(PointsKey(0, eNodalPrismSPI),          NodalPrismSPI::Create)
+};
+
 void NodalPrismSPI::CalculatePoints()
 {
     // Allocate the storage for points

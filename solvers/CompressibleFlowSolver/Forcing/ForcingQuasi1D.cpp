@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <CompressibleFlowSolver/Forcing/ForcingQuasi1D.h>
 
 using namespace std;
@@ -125,6 +127,8 @@ void ForcingQuasi1D::v_Apply(
               Array<OneD, Array<OneD, NekDouble> >&         outarray,
         const NekDouble&                                    time)
 {
+    boost::ignore_unused(time);
+
     int nPoints = pFields[0]->GetTotPoints();
 
     // Get (E+p)

@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/SegExp.h>
 #include <LibUtilities/Foundations/Interp.h>
@@ -407,7 +409,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             else
             {
                 int nInteriorDofs = m_ncoeffs-2;
-                int offset;
+                int offset        = 0;
 
                 switch (m_base[0]->GetBasisType())
                 {
@@ -744,6 +746,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         Array<OneD,       NekDouble> &outarray,
                         StdRegions::Orientation  orient)
         {
+            boost::ignore_unused(EdgeExp, orient);
+
             NekDouble result;
             v_GetVertexPhysVals(edge, inarray, result);
             outarray[0] = result;
@@ -848,6 +852,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 NekDouble *coeffs,
                 std::vector<LibUtilities::BasisType> &fromType)
         {
+            boost::ignore_unused(fromType);
+
             switch(m_base[0]->GetBasisType())
             { 
                 case LibUtilities::eModified_A:
@@ -961,6 +967,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                   Array<OneD,       NekDouble> &outarray,
             const StdRegions::StdMatrixKey     &mkey)
         {
+            boost::ignore_unused(mkey);
+
             int    nquad = m_base[0]->GetNumPoints();
             const Array<TwoD, const NekDouble>& gmat =
                                 m_metricinfo->GetDerivFactors(GetPointsKeys());

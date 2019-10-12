@@ -305,6 +305,7 @@ namespace Nektar
                                     const Array<OneD, const NekDouble> &dirForcing,
                                     const bool PhysSpaceForcing)
       {
+          boost::ignore_unused(flags);
           int i,j;
 
           //----------------------------------

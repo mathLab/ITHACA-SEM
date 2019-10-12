@@ -36,9 +36,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessConcatenateFld.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessConcatenateFld.h"
 
 namespace Nektar
 {
@@ -62,6 +64,8 @@ ProcessConcatenateFld::~ProcessConcatenateFld()
 
 void ProcessConcatenateFld::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     if(m_f->m_comm->TreatAsRankZero())
     {
         cout << "Concatenate module is not needed. Instead, use " << endl

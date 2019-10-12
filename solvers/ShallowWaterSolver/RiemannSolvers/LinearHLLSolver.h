@@ -55,9 +55,9 @@ namespace Nektar
         LinearHLLSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_PointSolve(
-	    double  etaL, double  uL, double  vL, double dL,
-    	    double  etaR, double  uR, double  vR, double dR,
-            double &etaf, double &uf, double &vf);
+            NekDouble  etaL, NekDouble  uL, NekDouble  vL, NekDouble dL,
+            NekDouble  etaR, NekDouble  uR, NekDouble  vR, NekDouble dR,
+            NekDouble &etaf, NekDouble &uf, NekDouble &vf);
     };
 }
 

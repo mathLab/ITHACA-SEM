@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Communication/Xxt.hpp>
 #include <MultiRegions/GlobalLinSysXxt.h>
 
@@ -69,6 +71,8 @@ namespace Nektar
                 const AssemblyMapSharedPtr &pLocToGloMap,
                 const int pNumDir)
         {
+            boost::ignore_unused(pNumRows, pLocToGloMap, pNumDir);
+
             int nLocal = m_map.num_elements();
             Array<OneD, NekDouble> vLocalIn(nLocal, 0.0);
             Array<OneD, NekDouble> vLocalOut(nLocal, 0.0);

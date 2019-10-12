@@ -91,8 +91,7 @@ FilterMovingBody::FilterMovingBody(
     }
     else
     {
-        LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+        LibUtilities::Equation equ(m_session->GetInterpreter(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
 

@@ -34,6 +34,8 @@
 
 #include <cstdlib>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
@@ -153,6 +155,8 @@ void Diffusion::DoImplicitSolve(
         const NekDouble time,
         const NekDouble lambda)
 {
+    boost::ignore_unused(time);
+
     StdRegions::ConstFactorMap factors;
     factors[StdRegions::eFactorLambda] = 1.0/lambda/epsilon;
 

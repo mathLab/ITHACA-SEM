@@ -37,10 +37,12 @@
 #include <string>
 using namespace std;
 
-#include "ProcessMultiShear.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
+
+#include "ProcessMultiShear.h"
 
 namespace Nektar
 {
@@ -67,6 +69,8 @@ ProcessMultiShear::~ProcessMultiShear()
 
 void ProcessMultiShear::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     // Skip in case of empty partition
     if (m_f->m_exp[0]->GetNumElmts() == 0)
     {

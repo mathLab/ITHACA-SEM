@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include "ExtrapOrder0BC.h"
 
 using namespace std;
@@ -59,6 +61,8 @@ void ExtrapOrder0BC::v_Apply(
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
 {
+    boost::ignore_unused(time);
+
     int i, j;
     int e, pnt;
     int id1, id2, nBCEdgePts;

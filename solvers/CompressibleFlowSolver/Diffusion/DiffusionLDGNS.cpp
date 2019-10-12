@@ -36,6 +36,9 @@
 #include <iostream>
 #include <iomanip>
 
+#include <boost/core/ignore_unused.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+
 #include <LocalRegions/Expansion2D.h>
 
 namespace Nektar
@@ -540,6 +543,8 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
               Array<OneD, Array<OneD, NekDouble> >               &qflux)
     {
+        boost::ignore_unused(ufield);
+
         int i, j;
         int nTracePts = fields[0]->GetTrace()->GetTotPoints();
         int nVariables   = fields.num_elements();
@@ -607,6 +612,8 @@ namespace Nektar
         const Array<OneD, const NekDouble>                &qtemp,
               Array<OneD,       NekDouble>                &penaltyflux)
     {
+        boost::ignore_unused(qfield);
+
         int cnt = 0;
         int nBndEdges, nBndEdgePts;
         int i, e; 

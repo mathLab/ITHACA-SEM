@@ -139,8 +139,8 @@ namespace Nektar
         if( h == eCopy )
         {
             ASSERTL0(size <= ptr.num_elements(), "Attempting to populate a vector of size " +
-                boost::lexical_cast<std::string>(size) + " but the incoming array only has " +
-                boost::lexical_cast<std::string>(ptr.num_elements()) + " elements.");
+                std::to_string(size) + " but the incoming array only has " +
+                std::to_string(ptr.num_elements()) + " elements.");
 
             m_data = Array<OneD, DataType>(size);
             std::copy(ptr.begin(), ptr.begin()+size, m_data.begin());
@@ -169,8 +169,8 @@ namespace Nektar
         if( h == eCopy )
         {
             ASSERTL0(size <= ptr.num_elements(), "Attempting to populate a vector of size " +
-                boost::lexical_cast<std::string>(size) + " but the incoming array only has " +
-                boost::lexical_cast<std::string>(ptr.num_elements()) + " elements.");
+                std::to_string(size) + " but the incoming array only has " +
+                std::to_string(ptr.num_elements()) + " elements.");
 
             m_data = Array<OneD, DataType>(size);
             std::copy(ptr.begin(), ptr.begin()+size, m_data.begin());

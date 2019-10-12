@@ -40,9 +40,10 @@
 #include <vector>
 #include <memory>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdRegionsDeclspec.h>
-#include <StdRegions/SpatialDomainsDeclarations.hpp>
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
@@ -1568,7 +1569,9 @@ namespace Nektar
                                   Array<OneD,       NekDouble>& outarray,
                                   int coll_check)
             {
-                ASSERTL0(false, "StdExpansion::v_IProductWRTBase has no (and should have no) implementation");
+                boost::ignore_unused(base, inarray, outarray, coll_check);
+                NEKERROR(ErrorUtil::efatal,
+                         "StdExpansion::v_IProductWRTBase has no (and should have no) implementation");
             }
 
             STD_REGIONS_EXPORT virtual void  v_IProductWRTDerivBase (const int dir,

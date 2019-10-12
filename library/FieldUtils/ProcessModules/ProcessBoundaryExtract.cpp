@@ -36,10 +36,12 @@
 #include <string>
 using namespace std;
 
-#include "ProcessBoundaryExtract.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessBoundaryExtract.h"
 
 namespace Nektar
 {
@@ -71,6 +73,8 @@ ProcessBoundaryExtract::~ProcessBoundaryExtract()
 
 void ProcessBoundaryExtract::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     m_f->m_addNormals = m_config["addnormals"].as<bool>();
 
     // Set up Field options to output boundary fld

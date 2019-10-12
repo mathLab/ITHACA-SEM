@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/ExpListHomogeneous2D.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 #include <StdRegions/StdSegExp.h>
@@ -408,6 +410,8 @@ namespace Nektar
                                                       bool Shuff,
                                                       bool UnShuff)        
         {
+            boost::ignore_unused(Shuff, UnShuff);
+
             if(m_useFFT)
             {
                 

@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 
@@ -391,6 +393,8 @@ class PhysDeriv_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(wsp);
+
             const int nPhys   = m_expList[0]->GetTotPoints();
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
 
@@ -438,6 +442,8 @@ class PhysDeriv_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(wsp);
+
             const int nPhys   = m_expList[0]->GetTotPoints();
             Array<OneD, NekDouble> tmp;
 

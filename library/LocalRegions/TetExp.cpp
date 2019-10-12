@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/TetExp.h>
 #include <SpatialDomains/SegGeom.h>
 #include <LibUtilities/Foundations/InterpCoeff.h>
@@ -69,7 +71,7 @@ namespace Nektar
                 LibUtilities::StdTetData::getNumberOfCoefficients(
                     Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),
                     Ba, Bb, Bc),
-            StdRegions::StdTetExp(Ba,Bb,Bc),
+            StdTetExp(Ba,Bb,Bc),
             Expansion     (geom),
             Expansion3D   (geom),
             m_matrixManager(
@@ -86,8 +88,8 @@ namespace Nektar
          * \brief Copy Constructor
          */
         TetExp::TetExp(const TetExp &T):
-            StdExpansion(T),
-            StdExpansion3D(T),
+            StdRegions::StdExpansion(T),
+            StdRegions::StdExpansion3D(T),
             StdRegions::StdTetExp(T),
             Expansion(T),
             Expansion3D(T),
@@ -584,6 +586,8 @@ namespace Nektar
                                            NekDouble * coeffs,
                                            std::vector<LibUtilities::BasisType> &fromType)
         {
+            boost::ignore_unused(fromType);
+
             int data_order0 = nummodes[mode_offset];
             int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
             int data_order1 = nummodes[mode_offset+1];

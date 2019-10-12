@@ -211,7 +211,7 @@ namespace Nektar
             {
                 m_planes[n]->LocalToGlobal(useComm);
             }
-        };
+        }
 
 
         /**
@@ -223,7 +223,7 @@ namespace Nektar
             {
                 m_planes[n]->GlobalToLocal();
             }
-        };
+        }
 
 
         /**
@@ -272,8 +272,7 @@ namespace Nektar
             }
             else 
             {
-                HomogeneousFwdTrans(inarray, fce,
-                                    (flags.isSet(eUseGlobal))?eGlobal:eLocal);
+                HomogeneousFwdTrans(inarray, fce);
             }
 			
             bool smode = false;

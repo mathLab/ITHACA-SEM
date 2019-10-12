@@ -50,7 +50,7 @@ struct DerivUtil
     NekMatrix<NekDouble> VdmDStd[3]; // deriv matrix without interp
     NekVector<NekDouble> quadW;
 
-    vector<vector<NekDouble> > basisDeriv;
+    std::vector<std::vector<NekDouble> > basisDeriv;
 
     int pts;
     int ptsStd;

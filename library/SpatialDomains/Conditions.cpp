@@ -36,6 +36,7 @@
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <SpatialDomains/Conditions.h>
 #include <tinyxml.h>
+#include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
 

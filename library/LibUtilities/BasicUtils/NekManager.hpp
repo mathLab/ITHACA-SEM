@@ -36,10 +36,9 @@
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_MANAGER_HPP
 
 #include <map>
+#include <sstream>
 #include <memory>
 #include <functional>
-
-#include <boost/lexical_cast.hpp>
 
 #ifdef NEKTAR_USE_THREAD_SAFETY
 #include <boost/thread/shared_mutex.hpp>
@@ -52,8 +51,6 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-        using namespace std;
-
 #ifdef NEKTAR_USE_THREAD_SAFETY
         typedef boost::unique_lock<boost::shared_mutex> WriteLock;
         typedef boost::shared_lock<boost::shared_mutex> ReadLock;
@@ -224,8 +221,9 @@ namespace Nektar
                         }
                         else
                         {
-                            std::string keyAsString = boost::lexical_cast<std::string>(key);
-                            std::string message = std::string("No create func found for key ") + keyAsString;
+                            std::stringstream ss;
+                            ss << key;
+                            std::string message = "No create func found for key " + ss.str();
                             NEKERROR(ErrorUtil::efatal, message.c_str());
                             static ValueType result;
                             return result;

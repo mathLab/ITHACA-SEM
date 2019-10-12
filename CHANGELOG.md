@@ -205,6 +205,7 @@ v5.0.0
 **Tester**
 - Fix build with boost 1.67 (!947)
 - Various change to tests to decrease test time (!1053)
+- Extend to support MPI tests with multiple executables (!1085)
 
 **Packaging:**
 - Add Dockerfiles and gitlab CI configuration for automatic builds (!1021)

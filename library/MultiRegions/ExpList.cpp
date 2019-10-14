@@ -200,7 +200,7 @@ namespace Nektar
             m_comm(pSession->GetComm()),
             m_session(pSession),
             m_graph(graph),
-a            m_physState(false),
+            m_physState(false),
             m_exp(MemoryManager<LocalRegions::ExpansionVector>
                   ::AllocateSharedPtr()),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
@@ -2348,29 +2348,6 @@ a            m_physState(false),
         }
 
 
-<<<<<<< HEAD
-=======
-        void ExpList::v_PhysInterp1DScaled(
-                const NekDouble scale,
-                const Array<OneD, NekDouble> &inarray,
-                      Array<OneD, NekDouble> &outarray)
-        {
-            boost::ignore_unused(scale, inarray, outarray);
-            NEKERROR(ErrorUtil::efatal,
-                     "This method is not defined or valid for this class type");
-        }
-
-        void ExpList::v_PhysGalerkinProjection1DScaled(
-                const NekDouble scale,
-                const Array<OneD, NekDouble> &inarray,
-                      Array<OneD, NekDouble> &outarray)
-        {
-            boost::ignore_unused(scale, inarray, outarray);
-            NEKERROR(ErrorUtil::efatal,
-                     "This method is not defined or valid for this class type");
-        }
-
->>>>>>> feature/GlobalLinSysSolveLocalCoeff
         void ExpList::v_ClearGlobalLinSysManager(void)
         {
             NEKERROR(ErrorUtil::efatal,
@@ -2857,8 +2834,6 @@ a            m_physState(false),
             const Array<OneD,                   const NekDouble>   &Bwd,
                   Array<OneD,                         NekDouble>   &Upwind)
         {
-<<<<<<< HEAD
-            
             switch(m_expType)
             {
             case  e1D:
@@ -2912,11 +2887,6 @@ a            m_physState(false),
                          "This method is not defined or valid for this class type");
                 break;
             }
-=======
-            boost::ignore_unused(Vec, Fwd, Bwd, Upwind);
-            NEKERROR(ErrorUtil::efatal,
-                     "This method is not defined or valid for this class type");
->>>>>>> feature/GlobalLinSysSolveLocalCoeff
         }
 
         /**
@@ -2938,7 +2908,6 @@ a            m_physState(false),
             const Array<OneD, const NekDouble> &Bwd,
                   Array<OneD,       NekDouble> &Upwind)
         {
-<<<<<<< HEAD
             ASSERTL1(Vn.num_elements() >= m_npoints,"Vn is not of sufficient length");
             ASSERTL1(Fwd.num_elements() >= m_npoints,"Fwd is not of sufficient length");
             ASSERTL1(Bwd.num_elements() >= m_npoints,"Bwd is not of sufficient length");
@@ -2958,11 +2927,6 @@ a            m_physState(false),
                     Upwind[j] = Bwd[j];
                 }
             }
-=======
-            boost::ignore_unused(Vn, Fwd, Bwd, Upwind);
-            NEKERROR(ErrorUtil::efatal,
-                     "This method is not defined or valid for this class type");
->>>>>>> feature/GlobalLinSysSolveLocalCoeff
         }
 
         std::shared_ptr<ExpList> &ExpList::v_GetTrace()
@@ -3064,15 +3028,8 @@ a            m_physState(false),
         void ExpList::v_GetNormals(
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
-<<<<<<< HEAD
             int i,j,k,e_npoints,offset;
             Array<OneD,Array<OneD,NekDouble> > locnormals;
-=======
-            boost::ignore_unused(normals);
-            NEKERROR(ErrorUtil::efatal,
-                     "This method is not defined or valid for this class type");
-        }
->>>>>>> feature/GlobalLinSysSolveLocalCoeff
 
             // Assume whole array is of same coordinate dimension
             int coordim = GetCoordim(0);
@@ -3668,7 +3625,6 @@ a            m_physState(false),
          */
         void ExpList::v_SetUpPhysNormals()
         {
-<<<<<<< HEAD
             for (int i = 0; i < m_exp->size(); ++i)
             {
                 for (int j = 0; j < (*m_exp)[i]->GetNtraces(); ++j)
@@ -3676,10 +3632,6 @@ a            m_physState(false),
                     (*m_exp)[i]->ComputeTraceNormal(j);
                 }
             }
-=======
-            NEKERROR(ErrorUtil::efatal,
-                     "This method is not defined or valid for this class type");
->>>>>>> feature/GlobalLinSysSolveLocalCoeff
         }
 
         /**

@@ -112,6 +112,7 @@ namespace MultiRegions
         m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
         m_WaveSpace(false)
     {
+        boost::ignore_unused(variable,ImpType);
         int i, j, id, elmtid = 0;
         set<int> tracesDone;
         

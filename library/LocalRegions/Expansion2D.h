@@ -68,10 +68,6 @@ namespace Nektar
                 Array<OneD, ExpansionSharedPtr> &EdgeExp,
                 Array<OneD, NekDouble>          &inout);
 
-            LOCAL_REGIONS_EXPORT Expansion1DSharedPtr GetEdgeExp(int edge, bool SetUpNormal = true);
-            
-            void SetEdgeExp(const int edge, Expansion1DSharedPtr &e);
-
             inline void AddNormTraceInt(
                 const int                             dir,
                 Array<OneD, ExpansionSharedPtr>      &EdgeExp,
@@ -200,30 +196,6 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble > > &vec);
         };
 
-<<<<<<< HEAD
-=======
-        inline Expansion1DSharedPtr Expansion2D::GetEdgeExp(
-            int edge,
-            bool SetUpNormal)
-        {
-            boost::ignore_unused(SetUpNormal);
-            ASSERTL1(edge < GetNedges(), "Edge out of range.");
-            return m_edgeExp[edge].lock();
-        }
-
-        inline void Expansion2D::SetEdgeExp(
-            const int           edge,
-            Expansion1DSharedPtr &e)
-        {
-            unsigned int nEdges = GetNedges();
-            ASSERTL1(edge < nEdges, "Edge out of range.");
-            if (m_edgeExp.size() < nEdges)
-            {
-                m_edgeExp.resize(nEdges);
-            }
-            m_edgeExp[edge] = e;
-        }
->>>>>>> feature/GlobalLinSysSolveLocalCoeff
 
         inline SpatialDomains::Geometry2DSharedPtr
             Expansion2D::GetGeom2D() const

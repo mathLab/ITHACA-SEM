@@ -43,6 +43,7 @@
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
+#include <boost/algorithm/string.hpp>
 
 namespace Nektar
 {

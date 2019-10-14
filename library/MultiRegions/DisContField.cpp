@@ -1696,7 +1696,7 @@ namespace Nektar
                             RotInfo.m_dir = (tmpstr[1] == "x")? 0:
                                 (tmpstr[1] == "y")? 1:2;
                             
-                            LibUtilities::AnalyticExpressionEvaluator strEval;
+                            LibUtilities::Interpreter strEval;
                             int ExprId = strEval.DefineFunction("", tmpstr[2]);
                             RotInfo.m_angle = strEval.Evaluate(ExprId);
                             
@@ -3352,14 +3352,15 @@ namespace Nektar
 
         void DisContField::v_HelmSolve
             (const Array<OneD, const NekDouble> &inarray,
-               Array<OneD,       NekDouble>       &outarray,
-               const FlagList                     &flags,
-               const StdRegions::ConstFactorMap   &factors,
-               const StdRegions::VarCoeffMap      &varcoeff,
-               const MultiRegions::VarFactorsMap  &varfactors,
-               const Array<OneD, const NekDouble> &dirForcing,
-               const bool                          PhysSpaceForcing)
+             Array<OneD,       NekDouble>       &outarray,
+             const FlagList                     &flags,
+             const StdRegions::ConstFactorMap   &factors,
+             const StdRegions::VarCoeffMap      &varcoeff,
+             const MultiRegions::VarFactorsMap  &varfactors,
+             const Array<OneD, const NekDouble> &dirForcing,
+             const bool                          PhysSpaceForcing)
         {
+            boost::ignore_unused(flags,varfactors,dirForcing);
             int i,n,cnt,nbndry;
             int nexp = GetExpSize();
 

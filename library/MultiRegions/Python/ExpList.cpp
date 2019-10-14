@@ -237,12 +237,10 @@ void export_ExpList()
                    "ExpList", py::init<
 		    const LibUtilities::SessionReaderSharedPtr &,
 		    const SpatialDomains::MeshGraphSharedPtr &>())
-        .def("GetNpoints", &ExpList::GetNpoints)
-        .def("GetNcoeffs", &ExpList_GetNcoeffs)
-        .def("GetExp", &ExpList_GetExp)
-        .def("GetExpSize", &ExpList::GetExpSize)
 
         // Query points and offset information
+        .def("GetExp",     &ExpList_GetExp)
+        .def("GetExpSize", &ExpList::GetExpSize)
         .def("GetNpoints", &ExpList::GetNpoints)
         .def("GetNcoeffs", GetNcoeffs)
         .def("GetCoords", &ExpList_GetCoords)

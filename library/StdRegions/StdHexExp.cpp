@@ -751,8 +751,8 @@ namespace Nektar
 
         int StdHexExp::v_GetTotalEdgeIntNcoeffs() const
         {
-	  return 4*(GetBasisNumModes(0)+GetBasisNumModes(1)+GetBasisNumModes(2));
-	}
+            return 4*(GetBasisNumModes(0)+GetBasisNumModes(1)+GetBasisNumModes(2));
+        }
 
 
         int StdHexExp::v_GetFaceNcoeffs(const int i) const
@@ -793,10 +793,10 @@ namespace Nektar
 
         int StdHexExp::v_GetTotalFaceIntNcoeffs() const
         {
-	    return 2*((GetBasisNumModes(0)-2)*(GetBasisNumModes(1)-2)+
-	              (GetBasisNumModes(0)-2)*(GetBasisNumModes(2)-2)+
-		      (GetBasisNumModes(1)-2)*(GetBasisNumModes(2)-2));
-	}
+            return 2*((GetBasisNumModes(0)-2)*(GetBasisNumModes(1)-2)+
+                      (GetBasisNumModes(0)-2)*(GetBasisNumModes(2)-2)+
+                (GetBasisNumModes(1)-2)*(GetBasisNumModes(2)-2));
+        }
 
         int StdHexExp::v_GetFaceNumPoints(const int i) const
         {
@@ -1077,8 +1077,8 @@ namespace Nektar
                         offset = (nummodes2-1)*nummodes0*nummodes1;
                         jump1 = nummodes0;
                     }
-                    BOOST_FALLTHROUGH;
                 }
+                /* Falls through. */
                 case 0:
                 {
                     jump1 = nummodes0;
@@ -1095,8 +1095,8 @@ namespace Nektar
                         offset = nummodes0*(nummodes1-1);
                         jump1 = nummodes0*nummodes1;
                     }
-                    BOOST_FALLTHROUGH;
                 }
+                /* Falls through. */
                 case 1:
                 {
                     jump1 = nummodes0*nummodes1;
@@ -1115,8 +1115,8 @@ namespace Nektar
                         jump2 = nummodes0;
 
                     }
-                    BOOST_FALLTHROUGH;
                 }
+                /* Falls through. */
                 case 4:
                 {
                     jump1 = nummodes0*nummodes1;

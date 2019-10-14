@@ -187,6 +187,7 @@ void MultiplyEqual(
         CanGetRawPtr<NekMatrix<RhsInnerType, RhsMatrixType>>::value>::type *t =
         0)
 {
+    boost::ignore_unused(t);
     ASSERTL0(result.GetType() == eFULL && rhs.GetType() == eFULL,
              "Only full matrices supported.");
     unsigned int M = result.GetRows();
@@ -224,6 +225,7 @@ void MultiplyEqual(
         !CanGetRawPtr<NekMatrix<RhsInnerType, RhsMatrixType>>::value>::type *t =
         0)
 {
+    boost::ignore_unused(t);
     ASSERTL1(result.GetColumns() == rhs.GetRows(),
              std::string("A left side matrix with column count ") +
                  std::to_string(result.GetColumns()) +

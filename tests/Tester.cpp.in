@@ -245,56 +245,89 @@ int main(int argc, char *argv[])
 
         // If we're Python, copy script too.
 
-        // Construct test command to run. If in debug mode, append "-g"
-        // Output from stdout and stderr are directed to the files output.out
-        // and output.err, respectively.
+        // Construct test command to run. Output from stdout and stderr are
+        // directed to the files output.out and output.err, respectively.
 
-        if (file.IsPythonTest())
+        bool pythonAdded = false, mpiAdded = false;
+        for (unsigned int i = 0; i < file.GetNumCommands(); ++i)
         {
-            command += "PYTHONPATH=\"@CMAKE_BINARY_DIR@\" ";
-        }
+            Command cmd = file.GetCommand(i);
+            if (cmd.m_pythonTest && !pythonAdded)
+            {
+                // Prepend Python to very start of command.
+                command = "PYTHONPATH=\"@CMAKE_BINARY_DIR@\" " + command;
+                pythonAdded = true;
+            }
 
 #ifdef NEKTAR_TEST_FORCEMPIEXEC
 #else
-        if (file.GetNProcesses() > 1)
+            if (cmd.m_processes > 1 || file.GetNumCommands() > 1)
 #endif
-        {
-            command += "@MPIEXEC@ @MPIEXEC_NUMPROC_FLAG@ "
-                    + boost::lexical_cast<string>(file.GetNProcesses())
-                    + " ";
-            if (std::string("@NEKTAR_TEST_USE_HOSTFILE@") == "ON")
             {
-                command += " -hostfile hostfile ";
-                if (system("echo 'localhost slots=12' > hostfile"))
+                if (mpiAdded)
                 {
-                    cerr << "Unable to write 'hostfile' in path '"
-                         << fs::current_path() << endl;
-                    status = 1;
+                    continue;
                 }
+
+                command += "@MPIEXEC@ ";
+                if (std::string("@NEKTAR_TEST_USE_HOSTFILE@") == "ON")
+                {
+                    command += "-hostfile hostfile ";
+                    if (system("echo 'localhost slots=12' > hostfile"))
+                    {
+                        cerr << "Unable to write 'hostfile' in path '"
+                             << fs::current_path() << endl;
+                        status = 1;
+                    }
+                }
+
+                if (file.GetNumCommands() > 1)
+                {
+                    command += "--tag-output ";
+                }
+
+                mpiAdded = true;
             }
         }
 
-        fs::path execPath = startDir / file.GetExecutable();
-        if (!fs::exists(execPath))
+        // Parse commands.
+        for (unsigned int i = 0; i < file.GetNumCommands(); ++i)
         {
-            ASSERTL0(!file.IsPythonTest(), "Python script not found.");
-            execPath = file.GetExecutable();
-        }
+            Command cmd = file.GetCommand(i);
 
-        if (file.IsPythonTest())
-        {
-            command += "@PYTHON_EXECUTABLE@ ";
-        }
+            // If running with multiple commands simultaneously, separate with
+            // colon.
+            if (i > 0)
+            {
+                command += " : ";
+            }
 
-        command += PortablePath(execPath);
-        command += " ";
-        command += file.GetParameters();
-        command += " 1>output.out 2>output.err";
+            // Add -n where appropriate.
+            if (file.GetNumCommands() > 1 || cmd.m_processes > 1)
+            {
+                command += "@MPIEXEC_NUMPROC_FLAG@ ";
+                command += std::to_string(cmd.m_processes) + " ";
+            }
 
-        // override command if specified
-        if (file.GetCommand() != "")
-        {
-            command = file.GetCommand();
+            // Look for executable or Python script.
+            fs::path execPath = startDir / cmd.m_executable;
+            if (!fs::exists(execPath))
+            {
+                ASSERTL0(!cmd.m_pythonTest, "Python script not found.");
+                execPath = cmd.m_executable;
+            }
+
+            // Prepend script name with Python executable path if this is a
+            // Python test.
+            if (cmd.m_pythonTest)
+            {
+                command += "@PYTHON_EXECUTABLE@ ";
+            }
+
+            command += PortablePath(execPath);
+            command += " ";
+            command += cmd.m_parameters;
+            command += " 1>output.out 2>output.err";
         }
 
         status = 0;

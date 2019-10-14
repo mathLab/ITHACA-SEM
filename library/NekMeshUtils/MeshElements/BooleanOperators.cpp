@@ -178,7 +178,7 @@ bool operator< (EdgeSharedPtr const &p1, EdgeSharedPtr const &p2)
  */
 bool operator==(FaceSharedPtr const &p1, FaceSharedPtr const &p2)
 {
-    std::vector<NodeSharedPtr>::iterator it1, it2;
+    std::vector<NodeSharedPtr>::iterator it1;
     for (it1 = p1->m_vertexList.begin(); it1 != p1->m_vertexList.end(); ++it1)
     {
         if (find(p2->m_vertexList.begin(), p2->m_vertexList.end(), *it1)

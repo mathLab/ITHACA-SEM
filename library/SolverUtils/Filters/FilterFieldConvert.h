@@ -124,6 +124,7 @@ protected:
     bool         m_phaseAverage;
     NekDouble    m_phaseAveragePeriod;
     NekDouble    m_phaseAveragePhase;
+    NekDouble    m_phaseTolerance;
     NekDouble    m_dt;
     vector<ModuleSharedPtr> m_modules;
     LibUtilities::FieldMetaDataMap m_fieldMetaData;

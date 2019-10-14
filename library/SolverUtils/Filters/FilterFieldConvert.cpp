@@ -50,6 +50,8 @@ FilterFieldConvert::FilterFieldConvert(
     const ParamMap &pParams)
     : Filter(pSession, pEquation)
 {
+    m_dt = m_session->GetParameter("TimeStep");
+
     // OutputFile
     auto it = pParams.find("OutputFile");
     if (it == pParams.end())
@@ -119,10 +121,6 @@ FilterFieldConvert::FilterFieldConvert(
     }
     else
     {
-        // LibUtilities::Equation equ(
-        //     m_session->GetExpressionEvaluator(), it->second);
-        // m_phaseAverage = round(equ.Evaluate());
-
         std::string sOption = it->second.c_str();
         m_phaseAverage = (boost::iequals(sOption, "true")) ||
                    (boost::iequals(sOption, "yes"));
@@ -149,12 +147,36 @@ FilterFieldConvert::FilterFieldConvert(
         // Check that phase is within required limits
         ASSERTL0(m_phaseAveragePhase>=0 && m_phaseAveragePhase<=1,
             "PhaseAveragePhase must be between 0 and 1.")
+
+        // Load sampling frequency, overriding the previous value
+        it = pParams.find("SampleFrequency");
+        if (it == pParams.end())
+        {
+            m_sampleFrequency = 1;
+        }
+        else
+        {
+            LibUtilities::Equation equ(
+                m_session->GetExpressionEvaluator(), it->second);
+            m_sampleFrequency = round(equ.Evaluate());
+        }
+
+        // Compute tolerance within which sampling occurs.
+        m_phaseTolerance = m_dt * m_sampleFrequency /
+            (m_phaseAveragePeriod * 2);
+
+        // Display worst case scenario sampling tolerance for exact phase.
+        if (m_session->GetComm()->GetRank() == 0)
+        {
+            cout << "Phase sampling feature is activated." << endl <<
+            "Sampling within " << setprecision(2) <<
+            m_phaseTolerance*100 << "% of the exact phase." << endl;
+        }
     }
     
     m_numSamples  = 0;
     m_index       = 0;
     m_outputIndex = 0;
-    m_dt          = m_session->GetParameter("TimeStep");
     
     //
     // FieldConvert modules
@@ -336,11 +358,9 @@ void FilterFieldConvert::v_Update(
         NekDouble currentPhase = time / m_phaseAveragePeriod - currentCycle;
 
         // Evaluate if the current time is closest to correct phase.
-        NekDouble tolerance = m_dt * m_sampleFrequency / 
-            (m_phaseAveragePeriod * 2);
         NekDouble relativePhase = abs(m_phaseAveragePhase - currentPhase);
 
-        if (relativePhase < tolerance)
+        if (relativePhase < m_phaseTolerance)
         {
             m_numSamples++;
             v_ProcessSample(pFields, coeffs, time);

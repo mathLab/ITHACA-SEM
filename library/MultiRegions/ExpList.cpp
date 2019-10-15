@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 //
 // File ExpList.cpp
 //
@@ -120,6 +120,7 @@ namespace Nektar
          * @param   in              Source expansion list.
          */
         ExpList::ExpList(const ExpList &in, const bool DeclareCoeffPhysArrays):
+	    std::enable_shared_from_this<ExpList>(in),
             m_expType(in.m_expType),
             m_comm(in.m_comm),
             m_session(in.m_session),
@@ -2075,7 +2076,7 @@ namespace Nektar
             outfile << "        <DataArray type=\"Int32\" "
                     << "Name=\"connectivity\" format=\"ascii\">" << endl;
 
-            int ns; // pow(2,dim) for later usage
+            int ns = 0; // pow(2,dim) for later usage
             string ostr;
             switch(m_expType)
             {

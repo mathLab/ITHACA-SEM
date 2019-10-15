@@ -73,7 +73,7 @@ v5.0.0
 - Combine and generalise demo code in StdRegions and LocalRegions (!993)
 - Fix for error output to allow for custom error streams (!944)
 - Fixed bug in ReOrientQuadFacePhysMap (!1003)
-- Add NekPy Python interface (!962, !990, !989, !1004)
+- Add NekPy Python interface (!962, !990, !989, !1004, !1014, !1061, !1070)
 - Fix edge case for ThirdPartyScotch and FindScoth (!1009)
 - Fix to populate m_elmtToExpId map if not already set up in GetExpIndex (!1019)
 - Added flag to skip periodic BCs while filling Dirichlet BCs in

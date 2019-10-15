@@ -2181,8 +2181,9 @@ namespace Nektar
                         // (check this).
                         StdRegions::Orientation o;
                         bool rotbnd = false;
-                        int  dir;
-                        NekDouble angle,sign;
+                        int  dir = 0;
+                        NekDouble angle = 0.0;
+                        NekDouble sign = 0.0;
                         NekDouble tol = 1e-8;
                         
                         // check to see if perioid boundary is rotated
@@ -2459,8 +2460,8 @@ namespace Nektar
                 for (cnt = i = 0; i < totFaces; ++i)
                 {
                     bool rotbnd = false;
-                    int dir;
-                    NekDouble angle;
+                    int dir = 0;
+                    NekDouble angle = 0.0;
                     NekDouble tol = 1e-8;
                     
                     int faceId    = faceIds[i];
@@ -2639,8 +2640,8 @@ namespace Nektar
                 for (auto &perIt : periodicEdges)
                 {
                     bool rotbnd = false;
-                    int dir;
-                    NekDouble angle;
+                    int dir = 0;
+                    NekDouble angle = 0.0;
                     NekDouble tol = 1e-8;
                     
                     
@@ -4120,8 +4121,8 @@ namespace Nektar
 
             int dim  = (m_expType == e2D)? 2:3;
 
-            int num_points[3];
-            int num_modes [3];
+            int num_points[] = {0,0,0};
+            int num_modes [] = {0,0,0};
             
             // Calculate Q using standard DG formulation.
             for(i = cnt = 0; i < GetExpSize(); ++i)

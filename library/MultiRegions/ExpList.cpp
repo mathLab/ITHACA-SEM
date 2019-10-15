@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <iomanip>
+
 #include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/ExpList.h>

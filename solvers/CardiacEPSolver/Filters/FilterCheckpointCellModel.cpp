@@ -61,8 +61,7 @@ FilterCheckpointCellModel::FilterCheckpointCellModel(
     // OutputFrequency
     it = pParams.find("OutputFrequency");
     ASSERTL0(it != pParams.end(), "Missing parameter 'OutputFrequency'.");
-    LibUtilities::Equation equ(
-        m_session->GetExpressionEvaluator(), it->second);
+    LibUtilities::Equation equ(m_session->GetInterpreter(), it->second);
     m_outputFrequency = floor(equ.Evaluate());
 
     m_outputIndex = 0;

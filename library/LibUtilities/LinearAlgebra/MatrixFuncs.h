@@ -39,7 +39,6 @@
 
 #include <limits>
 #include <tuple>
-#include <boost/lexical_cast.hpp>
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -99,12 +98,12 @@ namespace Nektar
 
                 if( info < 0 )
                 {
-                    std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrf";
+                    std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dgetrf";
                     ASSERTL0(false, message.c_str());
                 }
                 else if( info > 0 )
                 {
-                    std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
+                    std::string message = "ERROR: Element u_" + std::to_string(info) +   std::to_string(info) + " is 0 from dgetrf";
                     ASSERTL0(false, message.c_str());
                 }
 
@@ -113,12 +112,12 @@ namespace Nektar
 
                 if( info < 0 )
                 {
-                    std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetri";
+                    std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dgetri";
                     ASSERTL0(false, message.c_str());
                 }
                 else if( info > 0 )
                 {
-                    std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetri";
+                    std::string message = "ERROR: Element u_" + std::to_string(info) +   std::to_string(info) + " is 0 from dgetri";
                     ASSERTL0(false, message.c_str());
                 }
         }
@@ -210,12 +209,12 @@ namespace Nektar
 
             if( info < 0 )
             {
-                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dsptrf";
+                std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dsptrf";
                 ASSERTL0(false, message.c_str());
             }
             else if( info > 0 )
             {
-                std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dsptrf";
+                std::string message = "ERROR: Element u_" + std::to_string(info) +   std::to_string(info) + " is 0 from dsptrf";
                 ASSERTL0(false, message.c_str());
             }
 
@@ -224,12 +223,12 @@ namespace Nektar
 
             if( info < 0 )
             {
-                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dsptri";
+                std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dsptri";
                 ASSERTL0(false, message.c_str());
             }
             else if( info > 0 )
             {
-                std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dsptri";
+                std::string message = "ERROR: Element u_" + std::to_string(info) +   std::to_string(info) + " is 0 from dsptri";
                 ASSERTL0(false, message.c_str());
             }
         }

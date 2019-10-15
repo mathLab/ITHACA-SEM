@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
@@ -75,7 +77,7 @@ namespace Nektar
             const LibUtilities::SessionReaderSharedPtr& pSession)
             : m_requiresRotation(false), m_rotStorage (3)
         {
-            
+            boost::ignore_unused(pSession);
         }
         
         /**

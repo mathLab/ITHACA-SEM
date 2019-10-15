@@ -35,6 +35,8 @@
 #ifndef NEKMESHUTILS_OCTREE_SOURCEPOINT_H
 #define NEKMESHUTILS_OCTREE_SOURCEPOINT_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -81,9 +83,15 @@ public:
         return 0.0;
     }
 
-    virtual void SetDelta(NekDouble i){}
+    virtual void SetDelta(NekDouble i)
+    {
+        boost::ignore_unused(i);
+    }
 
-    virtual void GetCAD(int &surf, Array<OneD, NekDouble> &uv){}
+    virtual void GetCAD(int &surf, Array<OneD, NekDouble> &uv)
+    {
+        boost::ignore_unused(surf, uv);
+    }
 
     bool HasDelta()
     {
@@ -196,13 +204,14 @@ public:
 
     NekDouble GetDelta()
     {
-        ASSERTL0(false,"Cannot retrieve delta from this type");
+        NEKERROR(ErrorUtil::efatal, "Cannot retrieve delta from this type");
         return 0.0;
     }
 
     void SetDelta(NekDouble i)
     {
-        ASSERTL0(false,"Cannot retrieve delta from this type");
+        boost::ignore_unused(i);
+        NEKERROR(ErrorUtil::efatal, "Cannot retrieve delta from this type");
     }
 
     /**
@@ -264,7 +273,8 @@ public:
 
     void GetCAD(int &surf, Array<OneD, NekDouble> &uv)
     {
-        ASSERTL0(false,"Cannot retrieve CAD from this type")
+        boost::ignore_unused(surf, uv);
+        NEKERROR(ErrorUtil::efatal, "Cannot retrieve CAD from this type")
     }
 
 private:

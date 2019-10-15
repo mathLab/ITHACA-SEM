@@ -130,9 +130,8 @@ int main(int argc, char *argv[])
     {
         std::cerr
             << "Usage: FieldIOBenchmarker [options] inputfile [outputfile]"
-            << endl;
-        std::cout << desc;
-        std::cout << endl;
+            << std::endl;
+        std::cout << desc << std::endl;
         return 1;
     }
 
@@ -168,7 +167,7 @@ int main(int argc, char *argv[])
                 break;
             default:
                 std::cout << "Unrecognised mode: " << mode << std::endl;
-                std::cout << desc << endl;
+                std::cout << desc << std::endl;
                 return 1;
                 break;
         }
@@ -426,7 +425,7 @@ Results TestRead(Experiment &exp)
     const std::string ft = FieldIO::GetFileType(exp.dataSource, exp.comm);
     if (exp.verbose)
     {
-        std::cout << ft << endl;
+        std::cout << ft << std::endl;
     }
 
     Results res(exp.n, 0.0);
@@ -515,7 +514,7 @@ Results TestWrite(Experiment &exp)
         catch (fs::filesystem_error &e)
         {
             ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                     "Filesystem error: " + string(e.what()));
+                     "Filesystem error: " + std::string(e.what()));
         }
 
         // Synchronise to make sure we're all at the same point.

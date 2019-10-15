@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <CompressibleFlowSolver/Forcing/ForcingAxiSymmetric.h>
 
 using namespace std;
@@ -55,6 +57,8 @@ void ForcingAxiSymmetric::v_InitObject(
         const unsigned int& pNumForcingFields,
         const TiXmlElement* pForce)
 {
+    boost::ignore_unused(pForce);
+
     int spacedim = pFields[0]->GetGraph()->GetSpaceDimension();
     int nPoints  = pFields[0]->GetTotPoints();
 
@@ -102,6 +106,8 @@ void ForcingAxiSymmetric::v_Apply(
               Array<OneD, Array<OneD, NekDouble> >&         outarray,
         const NekDouble&                                    time)
 {
+    boost::ignore_unused(time);
+
     int nPoints = pFields[0]->GetTotPoints();
 
     // Get (E+p)

@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SpatialDomains/MeshPartitionScotch.h>
 
 namespace Nektar
@@ -75,6 +77,8 @@ namespace SpatialDomains
             int&                              volume,
             Nektar::Array<Nektar::OneD, int>& part)
     {
+        boost::ignore_unused(nVertConds, edgeWgt);
+
         int wgtflag = 0;
         int *vwgt = 0;
         int *vsize = 0;
@@ -89,12 +93,9 @@ namespace SpatialDomains
             vsize = &vertSize[0];
         }
         int numflag = 0;
-        // number of balancing conditions (size of vertex multi-weight)
-        int options[5];
-        options[0] = 0;
 
         PartGraphVKway(&nVerts, &xadj[0], &adjcy[0], vwgt, vsize,
-                            &wgtflag, &numflag, &nparts, options, &volume,
+                            &wgtflag, &numflag, &nparts, &volume,
                             &part[0]);
     }
 
@@ -108,7 +109,6 @@ namespace SpatialDomains
             const SCOTCH_Num * const    wgtflag,
             const SCOTCH_Num * const    numflag,
             const SCOTCH_Num * const    nparts,
-            const SCOTCH_Num * const    options,
             SCOTCH_Num * const          volume,
             SCOTCH_Num * const          part)
     {

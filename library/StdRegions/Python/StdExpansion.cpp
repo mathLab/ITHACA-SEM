@@ -93,7 +93,7 @@ py::tuple StdExpansion_GetCoords(StdExpansionSharedPtr exp)
     int nPhys = exp->GetTotPoints();
     int coordim = exp->GetCoordim();
 
-    vector<Array<OneD, NekDouble> > coords(coordim);
+    std::vector<Array<OneD, NekDouble> > coords(coordim);
     for (int i = 0; i < coordim; ++i)
     {
         coords[i] = Array<OneD, NekDouble>(nPhys);
@@ -124,7 +124,7 @@ py::tuple StdExpansion_PhysDeriv(StdExpansionSharedPtr exp,
     int nPhys = exp->GetTotPoints();
     int coordim = exp->GetCoordim();
 
-    vector<Array<OneD, NekDouble> > derivs(coordim);
+    std::vector<Array<OneD, NekDouble> > derivs(coordim);
     for (int i = 0; i < coordim; ++i)
     {
         derivs[i] = Array<OneD, NekDouble>(nPhys);

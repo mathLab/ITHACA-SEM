@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 #include <Collections/IProduct.h>
@@ -68,6 +70,8 @@ class IProductWRTBase_StdMat : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
+
             ASSERTL1(wsp.num_elements() == m_wspSize,
                      "Incorrect workspace size");
 
@@ -85,7 +89,8 @@ class IProductWRTBase_StdMat : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -163,6 +168,8 @@ class IProductWRTBase_IterPerExp : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
+
             ASSERTL1(wsp.num_elements() == m_wspSize,
                      "Incorrect workspace size");
 
@@ -186,7 +193,8 @@ class IProductWRTBase_IterPerExp : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -276,6 +284,7 @@ class IProductWRTBase_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2, wsp);
 
             const int nCoeffs = m_expList[0]->GetNcoeffs();
             const int nPhys   = m_expList[0]->GetTotPoints();
@@ -295,7 +304,8 @@ class IProductWRTBase_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -375,6 +385,7 @@ class IProductWRTBase_SumFac_Seg : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
 
             if(m_colldir0)
             {
@@ -398,7 +409,8 @@ class IProductWRTBase_SumFac_Seg : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -449,6 +461,8 @@ class IProductWRTBase_SumFac_Quad : public Operator
                                 Array<OneD,       NekDouble> &output2,
                                 Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
+
             ASSERTL1(wsp.num_elements() == m_wspSize,
                      "Incorrect workspace size");
 
@@ -465,7 +479,8 @@ class IProductWRTBase_SumFac_Quad : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -525,6 +540,8 @@ class IProductWRTBase_SumFac_Tri : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
+
             ASSERTL1(wsp.num_elements() == m_wspSize,
                      "Incorrect workspace size");
 
@@ -539,7 +556,8 @@ class IProductWRTBase_SumFac_Tri : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -605,6 +623,7 @@ class IProductWRTBase_SumFac_Hex : public Operator
                       Array<OneD, NekDouble> &output2,
                       Array<OneD, NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
 
             ASSERTL1(wsp.num_elements() == m_wspSize,
                      "Incorrect workspace size");
@@ -622,7 +641,8 @@ class IProductWRTBase_SumFac_Hex : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -692,6 +712,8 @@ class IProductWRTBase_SumFac_Tet : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
+
             ASSERTL1(wsp.num_elements() == m_wspSize,
                     "Incorrect workspace size");
 
@@ -709,7 +731,8 @@ class IProductWRTBase_SumFac_Tet : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -784,6 +807,7 @@ class IProductWRTBase_SumFac_Prism : public Operator
                       Array<OneD, NekDouble> &output2,
                       Array<OneD, NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
 
             ASSERTL1(wsp.num_elements() == m_wspSize,
                     "Incorrect workspace size");
@@ -801,7 +825,8 @@ class IProductWRTBase_SumFac_Prism : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:
@@ -877,6 +902,7 @@ class IProductWRTBase_SumFac_Pyr : public Operator
                       Array<OneD, NekDouble> &output2,
                       Array<OneD, NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
 
             ASSERTL1(wsp.num_elements() == m_wspSize,
                     "Incorrect workspace size");
@@ -894,7 +920,8 @@ class IProductWRTBase_SumFac_Pyr : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "Not valid for this operator.");
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     protected:

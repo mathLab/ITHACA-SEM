@@ -306,7 +306,7 @@ namespace Nektar
                 sparseStorage (1);
 
             BCOMatType partMat;
-            convertCooToBco(rows, cols, 1, gmat_coo, partMat);
+            convertCooToBco(1, gmat_coo, partMat);
 
             sparseStorage[0] =
                  MemoryManager<DNekSmvBsrDiagBlkMat::StorageType>::

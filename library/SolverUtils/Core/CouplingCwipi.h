@@ -134,18 +134,18 @@ protected:
         const int step,
         const NekDouble time,
         const Array<OneD, const Array<OneD, NekDouble> > &field,
-        vector<string> &varNames);
+        std::vector<std::string> &varNames);
 
     SOLVER_UTILS_EXPORT virtual void v_Receive(
         const int step,
         const NekDouble time,
         Array<OneD, Array<OneD, NekDouble> > &field,
-        vector<string> &varNames);
+        std::vector<std::string> &varNames);
 
     SOLVER_UTILS_EXPORT virtual void v_Finalize();
 
-    SOLVER_UTILS_EXPORT const NekDouble GetSendField(const int i,
-                                                     const int j) const
+    SOLVER_UTILS_EXPORT NekDouble GetSendField(const int i,
+                                               const int j) const
     {
         return m_sendField[i][j];
     }

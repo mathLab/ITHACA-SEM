@@ -35,6 +35,8 @@
 
 #include <iomanip>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/DriverModifiedArnoldi.h>
 
 using namespace std;
@@ -558,6 +560,8 @@ void DriverModifiedArnoldi::EV_big(
     Array<OneD, NekDouble>               &wr,
     Array<OneD, NekDouble>               &wi)
 {
+    boost::ignore_unused(wr);
+
     NekDouble wgt, norm;
 
     // Generate big eigenvectors

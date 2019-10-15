@@ -368,6 +368,8 @@ namespace Nektar
             int expansion,
             int istrip)
         {
+            boost::ignore_unused(istrip);
+
             // If there is only one plane (e.g. HalfMode), we write a 2D plane.
             if (m_planes.num_elements() == 1)
             {

@@ -36,6 +36,7 @@
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 
 #include <boost/thread.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <tinyxml.h>
 
@@ -69,7 +70,7 @@ void InputMCF::ParseFile(string nm)
     vector<string> filename;
     filename.push_back(nm);
 
-    char *prgname = "NekMesh";
+    char *prgname = (char*)"NekMesh";
     LibUtilities::SessionReaderSharedPtr pSession =
         LibUtilities::SessionReader::CreateInstance(1, &prgname, filename);
     pSession->InitSession();

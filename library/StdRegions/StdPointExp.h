@@ -35,6 +35,8 @@
 #ifndef NEKTAR_LIBS_STDREGIONS_STDPOINTEXP_H
 #define NEKTAR_LIBS_STDREGIONS_STDPOINTEXP_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdExpansion0D.h>
 #include <StdRegions/StdRegionsDeclspec.h>
 
@@ -120,6 +122,7 @@ namespace Nektar
             virtual int v_GetVertexMap(
                 int localVertexId, bool useCoeffPacking = false)
             {
+                boost::ignore_unused(localVertexId, useCoeffPacking);
                 ASSERTL2(localVertexId == 0,
                          "Only single point in StdPointExp!");
                 return 0;

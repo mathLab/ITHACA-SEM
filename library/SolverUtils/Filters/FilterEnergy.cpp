@@ -34,6 +34,8 @@
 
 #include <iomanip>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Filters/FilterEnergy.h>
 #include <SolverUtils/Filters/FilterInterfaces.hpp>
 
@@ -88,7 +90,7 @@ FilterEnergy::FilterEnergy(
     // OutputFrequency
     it = pParams.find("OutputFrequency");
     ASSERTL0(it != pParams.end(), "Missing parameter 'OutputFrequency'.");
-    LibUtilities::Equation equ(m_session->GetExpressionEvaluator(), it->second);
+    LibUtilities::Equation equ(m_session->GetInterpreter(), it->second);
     m_outputFrequency = round(equ.Evaluate());
 }
 
@@ -273,6 +275,7 @@ void FilterEnergy::v_Finalise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
+    boost::ignore_unused(pFields, time);
     m_outFile.close();
 }
 

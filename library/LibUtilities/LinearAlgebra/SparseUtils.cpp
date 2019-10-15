@@ -35,6 +35,8 @@
 #include <utility>
 #include <map>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
 #include <LibUtilities/LinearAlgebra/SparseUtils.hpp>
 #include <LibUtilities/LinearAlgebra/SparseMatrix.hpp>
@@ -45,8 +47,6 @@
 namespace Nektar{
 
     void convertCooToBco(
-                    const unsigned int  blkRows,
-                    const unsigned int  blkColumns,
                     const unsigned int  blkDim,
                     const COOMatType&   cooMat,
                           BCOMatType&   bcoMat)

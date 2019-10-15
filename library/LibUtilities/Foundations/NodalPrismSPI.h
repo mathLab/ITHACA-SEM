@@ -62,6 +62,8 @@ public:
     }
 
 private:
+    static bool initPointsManager[];
+
     NodalPrismSPI() : PointsBaseType(NullPointsKey)
     {
     }

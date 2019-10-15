@@ -32,9 +32,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Diffusion/DiffusionLDG.h>
 #include <iostream>
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
+
+#include <SolverUtils/Diffusion/DiffusionLDG.h>
 
 namespace Nektar
 {
@@ -129,11 +132,6 @@ namespace Nektar
                 m_ArtificialDiffusionVector(inarray, muvar);
 
                 int numConvFields = nConvectiveFields;
-
-                if (m_shockCaptureType == "Smooth")
-                {
-                    numConvFields = nConvectiveFields - 1;
-                }
 
                 for (j = 0; j < nDim; ++j)
                 {
@@ -306,6 +304,8 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &uplus,
                   Array<OneD,       NekDouble>                &penaltyflux)
         {
+            boost::ignore_unused(ufield);
+
             int i, e, id1, id2;
 
             // Number of boundary regions
@@ -483,6 +483,8 @@ namespace Nektar
                   Array<OneD,       NekDouble>                &penaltyflux,
             NekDouble                                          C11)
         {
+            boost::ignore_unused(qfield, C11);
+
             int i, e, id1, id2;
             int nBndEdges, nBndEdgePts;
             int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();

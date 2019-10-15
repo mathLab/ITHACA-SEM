@@ -68,6 +68,6 @@ namespace Nektar
     typedef NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag> DNekScalMat;
     typedef std::shared_ptr<DNekScalMat> DNekScalMatSharedPtr;
     
-};
+}
     
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP

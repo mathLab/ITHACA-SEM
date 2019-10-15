@@ -751,6 +751,8 @@ namespace Nektar
 
         DNekBlkMatSharedPtr ExpListHomogeneous1D::GenHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, CoeffState coeffstate) const
         {
+            boost::ignore_unused(coeffstate);
+
             DNekMatSharedPtr    loc_mat;
             DNekBlkMatSharedPtr BlkMatrix;
             int n_exp = 0;

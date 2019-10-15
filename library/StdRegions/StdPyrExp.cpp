@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdPyrExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <iomanip>
@@ -299,6 +301,9 @@ namespace Nektar
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1,
+                                 doCheckCollDir2);
+
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
@@ -484,6 +489,9 @@ namespace Nektar
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1,
+                                 doCheckCollDir2);
+
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();

@@ -43,6 +43,11 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
+bool NodalQuadElec::initPointsManager[] = {
+    PointsManager().RegisterCreator(PointsKey(0, eNodalQuadElec),         NodalQuadElec::Create)
+};
+
 void NodalQuadElec::CalculatePoints()
 {
     // Allocate the storage for points

@@ -54,6 +54,14 @@ namespace Nektar
         std::string m_filename;
     };
 
+    struct Command
+    {
+        fs::path     m_executable;
+        std::string  m_parameters;
+        unsigned int m_processes;
+        bool         m_pythonTest;
+    };
+
     class TestData
     {
     public:
@@ -61,11 +69,8 @@ namespace Nektar
         TestData(const TestData& pSrc);
 
         const std::string& GetDescription() const;
-        const fs::path&    GetExecutable() const;
-        const std::string& GetParameters() const;
-        const std::string& GetCommand() const;
-        const unsigned int& GetNProcesses() const;
-        bool IsPythonTest() const;
+        const Command &GetCommand(unsigned int pId) const;
+        unsigned int GetNumCommands() const;
 
         std::string GetMetricType(unsigned int pId) const;
         unsigned int GetNumMetrics() const;
@@ -80,16 +85,13 @@ namespace Nektar
     private:
         po::variables_map               m_cmdoptions;
         std::string                     m_description;
-        fs::path                        m_executable;
-        std::string                     m_parameters;
-        std::string                     m_command;
-        unsigned int                    m_processes;
+        std::vector<Command>            m_commands;
         TiXmlDocument*                  m_doc;
         std::vector<TiXmlElement*>      m_metrics;
         std::vector<DependentFile>      m_files;
-        bool                            m_pythonTest;
 
         void Parse(TiXmlDocument* pDoc);
+        Command ParseCommand(TiXmlElement *pElmt) const;
     };
 }
 

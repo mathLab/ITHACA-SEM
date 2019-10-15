@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include "IsentropicVortexBC.h"
 
 using namespace std;
@@ -101,6 +103,8 @@ void IsentropicVortexBC::EvaluateIsentropicVortex(
     NekDouble                                   time,
     const int                                   o)
 {
+    boost::ignore_unused(z);
+
     int nq = x.num_elements();
 
     // Flow parameters

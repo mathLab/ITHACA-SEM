@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <ImageWarpingSolver/EquationSystems/ImageWarpingSystem.h>
 #include <MultiRegions/ContField2D.h>
 
@@ -125,6 +127,8 @@ namespace Nektar
               Array<OneD,       Array<OneD,NekDouble> > &outarray,
         const NekDouble time)
     {
+        boost::ignore_unused(time);
+
         int npoints = GetNpoints();
         int ncoeffs = inarray[0].num_elements();
         StdRegions::ConstFactorMap factors;

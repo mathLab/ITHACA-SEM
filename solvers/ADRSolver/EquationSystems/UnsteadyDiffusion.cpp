@@ -36,6 +36,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include <boost/core/ignore_unused.hpp>
+
 using namespace std;
 
 namespace Nektar
@@ -160,6 +162,8 @@ namespace Nektar
               Array<OneD,        Array<OneD, NekDouble> > &outarray,
         const NekDouble time)
     {
+        boost::ignore_unused(time);
+
         // Number of fields (variables of the problem)
         int nVariables = inarray.num_elements();
         
@@ -228,6 +232,8 @@ namespace Nektar
         const NekDouble time,
         const NekDouble lambda)
     {
+        boost::ignore_unused(time);
+
         StdRegions::ConstFactorMap factors;
 
         int nvariables = inarray.num_elements();
@@ -277,6 +283,8 @@ namespace Nektar
               Array<OneD, Array<OneD, NekDouble> > &derivatives,
               Array<OneD, Array<OneD, NekDouble> > &flux)
     {
+        boost::ignore_unused(derivatives);
+
         for(int k = 0; k < flux.num_elements(); ++k)
         {
             Vmath::Zero(GetNpoints(), flux[k], 1);

@@ -30,6 +30,9 @@
 // Description: Expasion for triangular elements.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/SegExp.h>
@@ -761,6 +764,7 @@ namespace Nektar
                       Array<OneD,NekDouble> &outarray,
                       StdRegions::Orientation  orient)
         {
+            boost::ignore_unused(orient);
             v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
         }
 
@@ -877,6 +881,7 @@ namespace Nektar
                 const int edge,const Array<OneD, const NekDouble> &inarray,
                 Array<OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(edge, inarray, outarray);
             ASSERTL0(false,
                      "Routine not implemented for triangular elements");
         }
@@ -885,6 +890,7 @@ namespace Nektar
                 const int edge, 
                 Array<OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(edge, outarray);
             ASSERTL0(false, 
                      "Routine not implemented for triangular elements");
         }
@@ -1109,6 +1115,8 @@ namespace Nektar
             NekDouble * coeffs,
             std::vector<LibUtilities::BasisType> &fromType)
         {
+            boost::ignore_unused(fromType);
+
             int data_order0 = nummodes[mode_offset];
             int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
             int data_order1 = nummodes[mode_offset+1];

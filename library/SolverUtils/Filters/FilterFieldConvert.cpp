@@ -121,16 +121,16 @@ FilterFieldConvert::FilterFieldConvert(
     it = pParams.find("PhaseAverage");
     if (it == pParams.end())
     {
-        m_phaseAverage = false;
+        m_phaseSample = false;
     }
     else
     {
         std::string sOption = it->second.c_str();
-        m_phaseAverage = (boost::iequals(sOption, "true")) ||
+        m_phaseSample = (boost::iequals(sOption, "true")) ||
                    (boost::iequals(sOption, "yes"));
     }
 
-    if(m_phaseAverage)
+    if(m_phaseSample)
     {
         auto itPeriod = pParams.find("PhaseAveragePeriod");
         auto itPhase = pParams.find("PhaseAveragePhase");
@@ -141,15 +141,15 @@ FilterFieldConvert::FilterFieldConvert(
             "'PhaseAveragePhase' to be set.");
 
         LibUtilities::Equation equPeriod(
-            m_session->GetExpressionEvaluator(), itPeriod->second);
-        m_phaseAveragePeriod = equPeriod.Evaluate();
+            m_session->GetInterpreter(), itPeriod->second);
+        m_phaseSamplePeriod = equPeriod.Evaluate();
 
         LibUtilities::Equation equPhase(
-            m_session->GetExpressionEvaluator(), itPhase->second);
-        m_phaseAveragePhase = equPhase.Evaluate();
+            m_session->GetInterpreter(), itPhase->second);
+        m_phaseSamplePhase = equPhase.Evaluate();
 
         // Check that phase is within required limits
-        ASSERTL0(m_phaseAveragePhase>=0 && m_phaseAveragePhase<=1,
+        ASSERTL0(m_phaseSamplePhase>=0 && m_phaseSamplePhase<=1,
             "PhaseAveragePhase must be between 0 and 1.")
 
         // Load sampling frequency, overriding the previous value
@@ -161,22 +161,22 @@ FilterFieldConvert::FilterFieldConvert(
         else
         {
             LibUtilities::Equation equ(
-                m_session->GetExpressionEvaluator(), it->second);
+                m_session->GetInterpreter(), it->second);
             m_sampleFrequency = round(equ.Evaluate());
         }
 
         // Compute tolerance within which sampling occurs.
         m_phaseTolerance = m_dt * m_sampleFrequency /
-            (m_phaseAveragePeriod * 2);
+            (m_phaseSamplePeriod * 2);
 
         // Display worst case scenario sampling tolerance for exact phase, if
         // verbose option is active
         if (m_session->GetComm()->GetRank() == 0 &&
             m_session->DefinesCmdLineArgument("verbose"))
         {
-            cout << "Phase sampling feature is activated." << endl <<
-            "Sampling within " << setprecision(2) <<
-            m_phaseTolerance*100 << "% of the exact phase." << endl;
+            std::cout << "Phase sampling feature is activated." << std::endl <<
+            "Sampling within " << std::setprecision(2) <<
+            m_phaseTolerance*100 << "% of the exact phase." << std::endl;
         }
     }
     
@@ -354,17 +354,17 @@ void FilterFieldConvert::v_Update(
     ASSERTL0(equ, "Weak pointer expired");
     equ->ExtraFldOutput(coeffs, variables);
 
-    if(m_phaseAverage)
+    if(m_phaseSample)
     {
         // The sample is added to the filter only if the current time 
         // corresponds to the correct phase. Introducing M as number of 
         // cycles and N nondimensional phase (between 0 and 1):
-        // t = M * m_phaseAveragePeriod + N * m_phaseAveragePeriod
-        int currentCycle       = floor(time / m_phaseAveragePeriod);
-        NekDouble currentPhase = time / m_phaseAveragePeriod - currentCycle;
+        // t = M * m_phaseSamplePeriod + N * m_phaseSamplePeriod
+        int currentCycle       = floor(time / m_phaseSamplePeriod);
+        NekDouble currentPhase = time / m_phaseSamplePeriod - currentCycle;
 
         // Evaluate phase relative to the requested value.
-        NekDouble relativePhase = abs(m_phaseAveragePhase - currentPhase);
+        NekDouble relativePhase = abs(m_phaseSamplePhase - currentPhase);
 
         // Check if relative phase is within required tolerance and sample.
         if (relativePhase < m_phaseTolerance)

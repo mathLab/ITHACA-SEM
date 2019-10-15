@@ -165,8 +165,10 @@ FilterFieldConvert::FilterFieldConvert(
         m_phaseTolerance = m_dt * m_sampleFrequency /
             (m_phaseAveragePeriod * 2);
 
-        // Display worst case scenario sampling tolerance for exact phase.
-        if (m_session->GetComm()->GetRank() == 0)
+        // Display worst case scenario sampling tolerance for exact phase, if
+        // verbose option is active
+        if (m_session->GetComm()->GetRank() == 0 &&
+            m_session->DefinesCmdLineArgument("verbose"))
         {
             cout << "Phase sampling feature is activated." << endl <<
             "Sampling within " << setprecision(2) <<
@@ -357,9 +359,10 @@ void FilterFieldConvert::v_Update(
         int currentCycle       = floor(time / m_phaseAveragePeriod);
         NekDouble currentPhase = time / m_phaseAveragePeriod - currentCycle;
 
-        // Evaluate if the current time is closest to correct phase.
+        // Evaluate phase relative to the requested value.
         NekDouble relativePhase = abs(m_phaseAveragePhase - currentPhase);
 
+        // Check if relative phase is within required tolerance and sample.
         if (relativePhase < m_phaseTolerance)
         {
             m_numSamples++;

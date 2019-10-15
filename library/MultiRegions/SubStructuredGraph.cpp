@@ -708,6 +708,8 @@ namespace Nektar
             int                                  mdswitch)
         {
 #ifndef NEKTAR_USE_SCOTCH
+            boost::ignore_unused(graph, perm, iperm, substructgraph, partVerts,
+                                 mdswitch);
             ASSERTL0(false, "Multi-level static condensation requires Nektar++"
                             " to be built with SCOTCH.");
 #else

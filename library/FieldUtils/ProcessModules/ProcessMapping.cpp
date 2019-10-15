@@ -36,9 +36,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessMapping.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessMapping.h"
 
 namespace Nektar
 {
@@ -60,6 +62,8 @@ ProcessMapping::~ProcessMapping()
 
 void ProcessMapping::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     // Determine dimensions of mesh, solution, etc...
     int npoints  = m_f->m_exp[0]->GetNpoints();
     int expdim   = m_f->m_graph->GetMeshDimension();

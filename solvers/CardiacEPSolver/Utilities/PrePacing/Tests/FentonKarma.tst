@@ -14,15 +14,15 @@
             <matches>
                 <match>
                     <field>u</field>
-                    <field tolerance="1e-06">1.18454</field>
+                    <field tolerance="1e-04">33.1969</field>
                 </match>
                 <match>
                     <field>v</field>
-                    <field tolerance="1e-06">1.6656e-13</field>
+                    <field tolerance="1e-12">2.0307e-13</field>
                 </match>
                 <match>
                     <field>w</field>
-                    <field tolerance="1e-06">0.89349</field>
+                    <field tolerance="1e-05">0.894168</field>
                 </match>
             </matches>
         </metric>

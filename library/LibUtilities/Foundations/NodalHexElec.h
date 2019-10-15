@@ -63,6 +63,8 @@ public:
     }
 
 private:
+    static bool initPointsManager[];
+
     NodalHexElec() : PointsBaseType(NullPointsKey)
     {
     }

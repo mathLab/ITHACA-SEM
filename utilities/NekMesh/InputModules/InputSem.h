@@ -61,7 +61,7 @@ public:
     static NekMeshUtils::ModuleKey className;
 
 private:
-    stringstream m_fileStream;
+    std::stringstream m_fileStream;
     void insertEdge(int elmt, int side, int tagId);
 
     /// Maps Semtex sections to positions inside the input file.

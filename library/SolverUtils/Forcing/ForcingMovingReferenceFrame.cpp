@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Forcing/ForcingMovingReferenceFrame.h>
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/Vmath.hpp>
@@ -77,6 +79,8 @@ void ForcingMovingReferenceFrame::v_InitObject(
         const unsigned int &pNumForcingFields,
         const TiXmlElement *pForce)
 {
+    boost::ignore_unused(pNumForcingFields);
+
     int  npoints = pFields[0]->GetNpoints();
     int  expdim  = pFields[0]->GetGraph()->GetMeshDimension();
     bool isH1d;
@@ -243,6 +247,8 @@ void ForcingMovingReferenceFrame::Update(
         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     int npoints = pFields[0]->GetNpoints();
     Array<OneD, NekDouble> tmp(npoints, 0.0);
     
@@ -337,6 +343,8 @@ void ForcingMovingReferenceFrame::v_Apply(
               Array<OneD, Array<OneD, NekDouble> > &outarray,
         const NekDouble &time)
 {
+    boost::ignore_unused(inarray);
+
     Update(fields, time);
 
     for (int i = 0; i < m_spacedim; i++)

@@ -447,8 +447,7 @@ Under the two following sections it is possible to define the initial conditions
 
 \section{Examples}
 \subsection{Shock capturing}
-Compressible flows can be characterised by abrupt changes in density within the flow domain often referred to as shocks. These discontinuities lead to numerical instabilities (Gibbs phenomena). This problem is prevented by locally adding a diffusion term to the equations to damp the numerical oscillations.
-An artificial diffusion term is introduced locally to the Euler equations to deal with flow discontinuity and the consequential numerical oscillations. Two models are implemented, a non-smooth and a smooth artificial viscosity model.
+Compressible flows can be characterised by abrupt changes in density within the flow domain often referred to as shocks. These discontinuities can lead to numerical instabilities (Gibbs phenomena). This problem is prevented by locally adding a diffusion term to the equations to damp the numerical oscillations.
 
 \subsubsection{Non-smooth artificial viscosity model}
 For the non-smooth artificial viscosity model the added artificial viscosity is constant in each element and discontinuous between the elements. The Euler system is augmented by an added Laplacian term on right hand side of equation \ref{eq:euler} \cite{persson2006sub}.
@@ -483,9 +482,9 @@ where $s_0 = s_\kappa - 4.25\;log_{10}(p)$.
 
 To enable the non-smooth viscosity model, the following line has to be added to the \inltt{SOLVERINFO} section:
 \begin{lstlisting}[style=XmlStyle]
- <SOLVERINFO>
+<SOLVERINFO>
   <I PROPERTY="ShockCaptureType"      VALUE="NonSmooth" />
- <SOLVERINFO>
+<SOLVERINFO>
 \end{lstlisting}
 The diffusivity and the sensor can be controlled by the following parameters:
 \begin{lstlisting}[style=XmlStyle]
@@ -544,6 +543,8 @@ The following parameters can be set in the xml session file:
 </PARAMETERS>
 \end{lstlisting}
 where for now \inltt{FH} and \inltt{FL} are used to tune which range of the sensor is used as a forcing term and \inltt{C1} and \inltt{C2} are fixed constants which can be played around with to make the model more diffusive or not. However these constants are generally fixed.
+
+
 \subsection{Variable polynomial order}
 A sensor based $p$-adaptive algorithm is implemented to optimise the computational cost and accuracy.
 The DG scheme allows one to use different polynomial orders since the fluxes over the elements are determined using a Riemann solver and there is now further coupling between the elements. Furthermore, the initial $p$-adaptive algorithm uses the same sensor as the shock capturing algorithm to identify the smoothness of the local solution so it rather straightforward to implement both algorithms at the same time.\\

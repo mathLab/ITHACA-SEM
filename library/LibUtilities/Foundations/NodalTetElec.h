@@ -73,7 +73,7 @@ namespace Nektar
                const Array<OneD, const NekDouble>& y,
                const Array<OneD, const NekDouble>& z)
            {
-                int          numpoints = x.num_elements();
+                size_t       numpoints = x.num_elements();
                 unsigned int np        = GetTotNumPoints();
                 
                 Array<OneD, NekDouble> interp(np*numpoints);
@@ -90,6 +90,8 @@ namespace Nektar
             }
 
         private:
+            static bool initPointsManager[];
+
             std::shared_ptr<NodalUtilTetrahedron> m_util;
 
             NodalTetElec():PointsBaseType(NullPointsKey)

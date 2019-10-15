@@ -36,6 +36,8 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
@@ -256,6 +258,7 @@ namespace Nektar
                 PeriodicMap &periodicEdges,
                 PeriodicMap &periodicFaces)
             {
+                boost::ignore_unused(periodicFaces);
                 periodicVerts = m_periodicVerts;
                 periodicEdges = m_periodicEdges;
             }

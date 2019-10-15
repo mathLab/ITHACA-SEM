@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <CompressibleFlowSolver/EquationSystems/RinglebFlow.h>
 
 using namespace std;
@@ -76,6 +78,7 @@ namespace Nektar
         Array<OneD, NekDouble>              &outfield,
         const NekDouble                      time)
     {
+        boost::ignore_unused(time);
         GetExactRinglebFlow( field, outfield);
     }
 

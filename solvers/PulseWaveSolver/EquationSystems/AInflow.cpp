@@ -37,7 +37,7 @@
 namespace Nektar
 {
 
-string AInflow::className = GetBoundaryFactory().RegisterCreatorFunction(
+std::string AInflow::className = GetBoundaryFactory().RegisterCreatorFunction(
     "A-inflow", AInflow::create, "Area inflow boundary condition");
 
 /**
@@ -66,7 +66,6 @@ void AInflow::v_DoBoundary(
     int offset, int n)
 {
     NekDouble A;
-    NekDouble u;
     NekDouble A_r;
     NekDouble u_r;
     NekDouble A_l;
@@ -82,7 +81,6 @@ void AInflow::v_DoBoundary(
 
     // Read the BC values from the input file
     A = (vessel[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
-    u = (vessel[1]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
 
     // Initial conditions in the inlet vessel
     A_r = inarray[0][offset];

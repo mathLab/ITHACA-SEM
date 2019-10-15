@@ -38,7 +38,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/BLPoints.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 #include <LocalRegions/HexExp.h>
 #include <LocalRegions/PrismExp.h>
 #include <LocalRegions/QuadExp.h>
@@ -163,7 +163,7 @@ void ProcessBL::BoundaryLayer2D()
     int nq      = m_config["nq"].    as<int>();
 
     // determine if geometric ratio is string or a constant.
-    LibUtilities::AnalyticExpressionEvaluator rEval;
+    LibUtilities::Interpreter rEval;
     NekDouble r             =  1;
     int       rExprId       = -1;
     bool      ratioIsString = false;
@@ -408,7 +408,7 @@ void ProcessBL::BoundaryLayer2D()
                 else
                 {
                     // Create new interior nodes.
-                    int pos;
+                    int pos = 0;
                     for (int k = 1; k < nl; ++k)
                     {
                         switch (locEdge)
@@ -426,7 +426,8 @@ void ProcessBL::BoundaryLayer2D()
                                 pos = nq*nl - k*nq;
                                 break;
                             default:
-                                ASSERTL0(0,"Quad edge should be < 4.");
+                                NEKERROR(ErrorUtil::efatal,
+                                         "Quad edge should be < 4.");
                             break;
                         }
                         edgeNodes[j][k] = NodeSharedPtr(
@@ -510,7 +511,7 @@ void ProcessBL::BoundaryLayer2D()
                 int locEdge = (splitEls[el[i]->GetId()]+2*l)%4;
                 EdgeSharedPtr HOedge = elmt->GetEdge(
                     locEdge);
-                int pos;
+                int pos = 0;
                 for (int k = 1; k < nq-1; ++k)
                 {
                     switch (locEdge)
@@ -528,7 +529,8 @@ void ProcessBL::BoundaryLayer2D()
                             pos = (nl+1)*(nq-1) + j - k*(nl+1);
                             break;
                         default:
-                            ASSERTL0(0,"Quad edge should be < 4.");
+                            NEKERROR(ErrorUtil::efatal,
+                                     "Quad edge should be < 4.");
                             break;
                     }
                     HOedge->m_edgeNodes.push_back(
@@ -590,7 +592,7 @@ void ProcessBL::BoundaryLayer3D()
     int nq     = m_config["nq"].as<int>();
 
     // determine if geometric ratio is string or a constant.
-    LibUtilities::AnalyticExpressionEvaluator rEval;
+    LibUtilities::Interpreter rEval;
     NekDouble r        = 1;
     int rExprId        = -1;
     bool ratioIsString = false;

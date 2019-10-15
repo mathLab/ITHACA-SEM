@@ -34,15 +34,15 @@
 
 #include <iostream>
 #include <iomanip>
+using namespace std;
+
+#include <boost/core/ignore_unused.hpp>
+#include <boost/format.hpp>
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
-
-#include <boost/format.hpp>
-
-using namespace std;
 
 namespace Nektar
 {	
@@ -680,17 +680,20 @@ namespace Nektar
         NekDouble UnsteadySystem::v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray)
         {
-            ASSERTL0(false, "Not defined for this class");
+            boost::ignore_unused(inarray);
+            NEKERROR(ErrorUtil::efatal, "Not defined for this class");
             return 0.0;
         }
 
         bool UnsteadySystem::v_PreIntegrate(int step)
         {
+            boost::ignore_unused(step);
             return false;
         }
 
         bool UnsteadySystem::v_PostIntegrate(int step)
         {
+            boost::ignore_unused(step);
             return false;
         }
 

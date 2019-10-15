@@ -44,6 +44,9 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
+        bool FourierPoints::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eFourierEvenlySpaced),     FourierPoints::Create)
+        };
 
         void FourierPoints::CalculatePoints()
         {

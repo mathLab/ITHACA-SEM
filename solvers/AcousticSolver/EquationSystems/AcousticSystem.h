@@ -42,6 +42,7 @@
 #define BOOST_ALLOW_DEPRECATED_HEADERS
 #endif
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/random/mersenne_twister.hpp>
 
 #include <SolverUtils/Advection/Advection.h>
@@ -100,6 +101,7 @@ protected:
         const Array<OneD, const Array<OneD, NekDouble>> &inarray,
         Array<OneD, Array<OneD, NekDouble>> &outarray)
     {
+        boost::ignore_unused(inarray, outarray);
     }
 
     virtual bool v_PreIntegrate(int step);

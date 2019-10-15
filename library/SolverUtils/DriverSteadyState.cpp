@@ -35,6 +35,10 @@
 #include <SolverUtils/DriverSteadyState.h>
 #include <SolverUtils/AdvectionSystem.h>
 
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+
 using namespace std;
 
 namespace Nektar

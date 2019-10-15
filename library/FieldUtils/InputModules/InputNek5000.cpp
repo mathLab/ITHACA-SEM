@@ -38,6 +38,7 @@
 #include <vector>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include "InputNek5000.h"
@@ -82,6 +83,8 @@ InputNek5000::~InputNek5000()
  */
 void InputNek5000::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     ifstream file(m_config["infile"].as<string>().c_str(), ios::binary);
 
     // Header: 132 bytes for binary.

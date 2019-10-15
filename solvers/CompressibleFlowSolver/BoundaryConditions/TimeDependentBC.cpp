@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include "TimeDependentBC.h"
 
 using namespace std;
@@ -59,6 +61,8 @@ void TimeDependentBC::v_Apply(
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
 {
+    boost::ignore_unused(Fwd);
+
     int nvariables = physarray.num_elements();
     std::string varName;
     for (int i = 0; i < nvariables; ++i)

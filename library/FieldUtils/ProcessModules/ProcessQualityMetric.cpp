@@ -36,7 +36,7 @@
 #include <string>
 using namespace std;
 
-#include "ProcessQualityMetric.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/Interp.h>
@@ -45,6 +45,8 @@ using namespace std;
 #include <StdRegions/StdTetExp.h>
 #include <StdRegions/StdHexExp.h>
 #include <StdRegions/StdTriExp.h>
+
+#include "ProcessQualityMetric.h"
 
 namespace Nektar
 {
@@ -69,6 +71,8 @@ ProcessQualityMetric::~ProcessQualityMetric()
 
 void ProcessQualityMetric::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nfields           = m_f->m_variables.size();
     m_f->m_variables.push_back("qualitymetric");
     // Skip in case of empty partition
@@ -478,7 +482,7 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(
         }
 
         jacIdeal = jac * i2rm[k];
-        NekDouble jacDet;
+        NekDouble jacDet = 1.0;
 
         if (expDim == 2)
         {
@@ -496,7 +500,7 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(
         }
         else
         {
-            ASSERTL0(false, "silly exp dim");
+            NEKERROR(ErrorUtil::efatal, "invalid expansion dimension.");
         }
 
         if(s)

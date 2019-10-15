@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/GlobalLinSysDirect.h>
 
 namespace Nektar
@@ -71,6 +73,8 @@ namespace Nektar
                 const AssemblyMapSharedPtr &pLocToGloMap,
                 const int pNumDir)
         {
+            boost::ignore_unused(pLocToGloMap);
+
             const int nHomDofs = pNumRows - pNumDir;
 
             DNekVec Vin (nHomDofs, pInput  + pNumDir);

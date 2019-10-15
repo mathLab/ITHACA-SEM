@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Filters/FilterMovingAverage.h>
 
 namespace Nektar
@@ -58,7 +60,7 @@ FilterMovingAverage::FilterMovingAverage(
     else
     {
         LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+            m_session->GetInterpreter(), it->second);
         m_sampleFrequency = round(equ.Evaluate());
     }
 
@@ -75,7 +77,7 @@ FilterMovingAverage::FilterMovingAverage(
         {
             // Load time constant
             LibUtilities::Equation equ(
-                m_session->GetExpressionEvaluator(), it->second);
+                m_session->GetInterpreter(), it->second);
             NekDouble tau = equ.Evaluate();
             // Load delta T between samples
             NekDouble dT;
@@ -88,7 +90,7 @@ FilterMovingAverage::FilterMovingAverage(
     else
     {
         LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+            m_session->GetInterpreter(), it->second);
         m_alpha = equ.Evaluate();
         // Check if tau was also defined
         it = pParams.find("tau");
@@ -111,6 +113,8 @@ void FilterMovingAverage::v_ProcessSample(
           std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     const NekDouble &time)
 {
+    boost::ignore_unused(pFields, time);
+
     // Take first sample as initial vector
     NekDouble alpha = m_alpha;
     if (m_numSamples == 1)

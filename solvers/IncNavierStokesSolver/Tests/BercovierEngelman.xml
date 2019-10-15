@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx9zzsWgjAUAFFQQAH/8tsN++9cgiUlS7AicwKD6cjlJZMk+b/S6Oszrv2gzn9HPRXPdP8bPNd5vND5KfhJ5/Gzzs/BS53Hq52uZdXqvP+izjlXdfpv6vTdI582fQ91+p7q9L3UueetTl8T+bzpa9Xp69Tp69XpG9Tp+AF4aS5V</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1kEkSglAMBQEVZxxBHEARh/vf0I29oKvyN6l+FUI6STJ8aVCzoI6CyhurH54EnIuZN1U/fTMxfXMx8xbB90sx36+Ceet/5T7MLcTM3Yi5x1Y5/9uJ8d4rZ4+DGL+jcvYrxXhX2p+9T2L2rgOPs3J8LmI8rsrxvInxaJTj34rxu2t/7vIQc5dOjMdTOffqxXi8lHPHtxiPj3Lu+xXj9wOocAa/</EDGE>
+        <ELEMENT>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx10EcOwjAABdFQ0kkPvYTO/W/IZrxgJLx50kSyvxJFv2eGc1z86UuMMdH30FPMMNe9oRdY4krvVFhjo12xeoud7knUexy0N1Ufca29Yf8Gt7jT3lx9jwftLdSPeNLeUv2MF+0N/3HCK960t1K/40N7a/UnvrS3UX/jR3u/iOQFQAAA</Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> Q[0-15] </C>
+            <C ID="1"> E[0,13,22,31] </C>
+            <C ID="2"> E[32,34,36,38] </C>
+            <C ID="3"> E[11,21,30,39] </C>
+            <C ID="4"> E[3,6,9,12] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u,v,p" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyStokes" />
+            <I PROPERTY="Projection" VALUE="Galerkin" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> TimeStep = 0.01     </P>
+            <P> NumSteps = 100       </P>
+            <P> IO_CheckSteps = 1000       </P>
+            <P> IO_InfoSteps = 1000       </P>
+            <P> Kinvis = 1         </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> p </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1-4] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="p" VALUE="0" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="-256*y*(y-1)*(2*y-1)*x*x*(x-1)*(x-1)" />
+            <E VAR="v" VALUE="256*x*(x-1)*(2*x-1)*y*y*(y-1)*(y-1)" />
+            <E VAR="p" VALUE="0" />
+        </FUNCTION>
+
+        <FUNCTION NAME="BodyForce">
+            <E VAR="u" VALUE="256*(x*x*(x-1)*(x-1)*(12*y-6) + y*(y-1)*(2*y-1)*(12*x*x-12*x+2))" />
+            <E VAR="v" VALUE="-256*(y*y*(y-1)*(y-1)*(12*x-6) + x*(x-1)*(2*x-1)*(12*y*y-12*y+2))" />
+        </FUNCTION>
+
+    </CONDITIONS>
+    <FORCING>
+        <FORCE TYPE="Body">
+            <BODYFORCE> BodyForce </BODYFORCE>
+        </FORCE>
+    </FORCING>
+</NEKTAR>

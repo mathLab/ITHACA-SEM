@@ -63,7 +63,8 @@ v5.0.0
 - Fix missing metadata import from Hdf5 files (!971)
 - Fix missing flags for periodic BC in DiffusionLDG (!985)
 - Add the moving reference frame as a forcing (!987)
-- Added rtree for element bounding box lookup to accelerate interpolation (!996)
+- Added rtree for element bounding box lookup to accelerate interpolation (!996,
+  !1066)
 - Fix integration weights on prisms and pyramids if not using the default
   integration rule (!998)
 - Fix missing ContainsPoint in Pyramid expansion (!1000)
@@ -84,6 +85,13 @@ v5.0.0
 - Fix issue with HDF5 mesh input in serial (!1049)
 - Add estimate of filters CPU time (!1044)
 - Update CompressibleFlowSolver/Examples/Test_IsentropicVortex1.xml example (!1045)
+- Add error if HDG used with periodic BCs (!1071)
+- Fix issues related to leading factors, arithmetic order and associativity of
+  exponential operator in expression evaluator (!1066)
+- Remove use of `using namespace std` in header files (!1066)
+- Add error messages for use of ARPACK in serial (!1079)
+- Generalise ContainsPoint routine (!1078)
+- Homogenized fallthrough to fix issues with gcc 7.4.0 (!1084)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -154,7 +162,8 @@ v5.0.0
 - Updated SVV to allow for the DGKernel extension (!851)
 - Pre-calculate Time invariant portion of Womersley Solution (!814)
 - Fix for independent setting of SVV in Homogeneous direction (!936)
-- Write flow field based on CFL treshold (!1025)
+- Write flow field based on CFL threshold (!1025)
+- Fix unsteady Stokes solver (!1074)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
@@ -168,6 +177,7 @@ v5.0.0
 - Modified pressure outlet BCs to allow for the reference static pressure to be
   set from the VALUE fields (!981)
 - hp scaling for Laplacian AV (!1013)
+- Removed smooth AV (!1072)
 
 **AcousticSolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC
@@ -186,12 +196,16 @@ v5.0.0
 **PulseWaveSolver**
 - Added two new boundary conditions: AInflow and UInflow
 
+**CardiacEPSolver**
+- Converted FentonKarma model to dimensional form and added variants (!1011)
+
 **Documentation**:
 - Added an initial developer's guide (!1001)
 
 **Tester**
 - Fix build with boost 1.67 (!947)
 - Various change to tests to decrease test time (!1053)
+- Extend to support MPI tests with multiple executables (!1085)
 
 **Packaging:**
 - Add Dockerfiles and gitlab CI configuration for automatic builds (!1021)

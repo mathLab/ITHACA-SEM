@@ -117,9 +117,11 @@ namespace Nektar
                 {
                     linSolveType = ePETScFullMatrix;
 #ifndef NEKTAR_USING_PETSC
-                    ASSERTL0(false, "Nektar++ has not been compiled with "
-                                    "PETSc support.");
+                    NEKERROR(ErrorUtil::efatal,
+                             "Nektar++ has not been compiled with "
+                             "PETSc support.");
 #endif
+                    break;
                 }
                 case eLinearPreconXxt:
                 default:

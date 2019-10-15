@@ -63,21 +63,21 @@ namespace Nektar
      * @param hvf     Computed Riemann flux for y-momentum component 
      */
     void LaxFriedrichsSolver::v_PointSolve(
-        double  hL, double  huL, double  hvL, 
-        double  hR, double  huR, double  hvR, 
-        double &hf, double &huf, double &hvf)
+        NekDouble  hL, NekDouble  huL, NekDouble  hvL, 
+        NekDouble  hR, NekDouble  huR, NekDouble  hvR, 
+        NekDouble &hf, NekDouble &huf, NekDouble &hvf)
     {        
         static NekDouble g = m_params["gravity"]();
         
         // Left and right velocities
         NekDouble uL = huL / hL;
         NekDouble vL = hvL / hL;
-	NekDouble uR = huR / hR;
+        NekDouble uR = huR / hR;
         NekDouble vR = hvR / hR;
                 
-	// Left and right wave speeds
-       	NekDouble cL = sqrt(g * hL);
-	NekDouble cR = sqrt(g * hR);
+        // Left and right wave speeds
+        NekDouble cL = sqrt(g * hL);
+        NekDouble cR = sqrt(g * hR);
         
           // Square root of hL and hR.
         NekDouble srL  = sqrt(hL);
@@ -86,7 +86,7 @@ namespace Nektar
         
         // Velocity Roe averages
         NekDouble uRoe   = (srL * uL + srR * uR) / srLR;
-	NekDouble cRoe   = sqrt(0.5 * (cL * cL + cR * cR));
+        NekDouble cRoe   = sqrt(0.5 * (cL * cL + cR * cR));
         
         // Minimum and maximum wave speeds
         NekDouble S    = std::max(uRoe+cRoe, std::max(uR+cR, -(uL-cL)));
@@ -102,7 +102,7 @@ namespace Nektar
         
         // Lax-Friedrichs Riemann hu flux
         huf = 0.5 * ((hL * uL * uL + 0.5 * g * hL * hL  + 
-		      hR * uR * uR + 0.5 * g * hR * hR) - 
+                      hR * uR * uR + 0.5 * g * hR * hR) - 
                        sign * S * (huR - huL));
         
         // Lax-Friedrichs Riemann hv flux

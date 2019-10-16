@@ -986,7 +986,7 @@ Similarly in the \inltt{WOMPARAMS} section the key parameters of the boundary co
 
 
 \subsection{Forcing}
-\subsubsection{MovingBody}
+\subsubsection{MovingBody}\label{s:forcing:MovingBody}
 
 \begin{notebox}
 This force type is only supported for the Quasi-3D incompressible Navier-Stokes solver.
@@ -1078,6 +1078,19 @@ value of the aerodynamic forces on boundary 0, defined in the
 forces for each computational plane are projected along the Cartesian axes and the pressure and viscous contributions are computed in each direction.
 
 Also, to use this module a \inltt{MAPPING} needs to be specified, as described in section \ref{sec:mapping}. In the case of free and constrained motion presented here, the functions defined by the mapping act as initial conditions. Also, when using the MovingBody forcing, it is not necessary to set the \inltt{TIMEDEPENDENT} property of the mapping. 
+
+\subsection{Filters}
+The following filters are supported exclusively for the incompressible
+Navier-Stokes solver. Further filters from section \ref{filters} are also
+available for this solver.
+
+\begin{itemize}
+  \item \inltt{Aerodynamic forces} (section \ref{filters:AeroForces})
+  \item \inltt{Kinetic energy and enstrophy} (section \ref{filters:Energy})
+  \item \inltt{Modal energy} (section \ref{filters:ModalEnergy})
+  \item \inltt{Moving body} (section \ref{filters:MovingBody})
+  \item \inltt{Reynolds stresses} (section \ref{filters:ReynoldsStresses})
+\end{itemize}
 
 \section{Stability analysis Session file configuration}
 \label{SecStabFile}

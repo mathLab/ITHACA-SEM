@@ -175,7 +175,7 @@ FilterFieldConvert::FilterFieldConvert(
             m_session->DefinesCmdLineArgument("verbose"))
         {
             std::cout << "Phase sampling feature is activated." << std::endl <<
-            "Sampling within " << std::setprecision(2) <<
+            "Sampling within " << std::setprecision(6) <<
             m_phaseTolerance*100 << "% of the exact phase." << std::endl;
         }
     }
@@ -371,6 +371,13 @@ void FilterFieldConvert::v_Update(
         {
             m_numSamples++;
             v_ProcessSample(pFields, coeffs, time);
+            if (m_session->GetComm()->GetRank() == 0 &&
+                m_session->DefinesCmdLineArgument("verbose"))
+            {
+                std::cout << "Sample: " << std::setw(8) << std::left
+                          << m_numSamples << "Phase: " << std::setw(8)
+                          << std::left << currentPhase << std::endl;
+            }
         }
     }
     else

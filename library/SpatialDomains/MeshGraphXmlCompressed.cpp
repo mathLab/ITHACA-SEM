@@ -906,7 +906,7 @@ void MeshGraphXmlCompressed::ReadElements3D()
                         Nqfaces++;
                     }
                 }
-                ASSERTL0((Ntfaces == 4) && (Nqfaces = 1),
+                ASSERTL0((Ntfaces == 4) && (Nqfaces == 1),
                          "Did not identify the correct number of "
                          "triangular and quadrilateral faces for a "
                          "pyramid");
@@ -952,7 +952,7 @@ void MeshGraphXmlCompressed::ReadElements3D()
                         Nqfaces++;
                     }
                 }
-                ASSERTL0((Ntfaces == 2) && (Nqfaces = 3),
+                ASSERTL0((Ntfaces == 2) && (Nqfaces == 3),
                          "Did not identify the correct number of "
                          "triangular and quadrilateral faces for a "
                          "prism");

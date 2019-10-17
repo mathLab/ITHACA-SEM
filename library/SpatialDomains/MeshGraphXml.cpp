@@ -202,7 +202,7 @@ void MeshGraphXml::PartitionMesh(
 
                     vector<set<unsigned int>> elmtIDs;
                     vector<unsigned int> parts(nParts);
-                    for (int i = 0; i < nParts; ++i)
+                    for (i = 0; i < nParts; ++i)
                     {
                         vector<unsigned int> elIDs;
                         set<unsigned int> tmp;

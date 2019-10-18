@@ -364,7 +364,7 @@ void FilterFieldConvert::v_Update(
         NekDouble currentPhase = time / m_phaseSamplePeriod - currentCycle;
 
         // Evaluate phase relative to the requested value.
-        NekDouble relativePhase = abs(m_phaseSamplePhase - currentPhase);
+        NekDouble relativePhase = fabs(m_phaseSamplePhase - currentPhase);
 
         // Check if relative phase is within required tolerance and sample.
         if (relativePhase < m_phaseTolerance)

@@ -36,10 +36,12 @@
 #include <string>
 using namespace std;
 
-#include "ProcessNumModes.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <StdRegions/StdQuadExp.h>
+
+#include "ProcessNumModes.h"
 
 namespace Nektar
 {
@@ -62,6 +64,8 @@ ProcessNumModes::~ProcessNumModes()
 
 void ProcessNumModes::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int i, s;
     int expdim    = m_f->m_graph->GetMeshDimension();
     int nfields   = m_f->m_variables.size();

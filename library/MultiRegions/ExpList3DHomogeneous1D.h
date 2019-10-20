@@ -36,6 +36,8 @@
 #ifndef EXPLIST3DHOMO1D_H
 #define EXPLIST3DHOMO1D_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
 #include <MultiRegions/ExpListHomogeneous1D.h>
@@ -146,9 +148,9 @@ namespace Nektar
             virtual void v_GetPeriodicEntities(
                 PeriodicMap &periodicVerts,
                 PeriodicMap &periodicEdges,
-                PeriodicMap &periodicFaces)// default argument for dimension compatibility
-                                            
+                PeriodicMap &periodicFaces)
             {
+                boost::ignore_unused(periodicFaces);
                 m_planes[0]->GetPeriodicEntities(periodicVerts,periodicEdges);
             }
 

@@ -313,6 +313,7 @@ void CADSurfOCE::Test(Array<OneD, NekDouble> uv)
 
     error << " On Surface: " << GetId();
     ASSERTL1(passed, "Warning: " + error.str());
+    (void)passed; // suppress warning
 }
 } // namespace NekMeshUtils
 } // namespace Nektar

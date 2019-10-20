@@ -35,6 +35,8 @@
 #ifndef NEKTAR_SOLVERUTILS_DIFFUSIONWEAKDG
 #define NEKTAR_SOLVERUTILS_DIFFUSIONWEAKDG
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Diffusion/Diffusion.h>
 
 namespace Nektar
@@ -46,6 +48,7 @@ namespace Nektar
         public:
             static DiffusionSharedPtr create(std::string diffType)
             {
+                boost::ignore_unused(diffType);
                 return DiffusionSharedPtr(new DiffusionLDG());
             }
             

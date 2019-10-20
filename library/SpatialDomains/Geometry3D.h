@@ -118,7 +118,7 @@ protected:
     virtual int v_GetDir(const int faceidx, const int facedir) const = 0;
 };
 
-}; // end of namespace
-}; // end of namespace
+} // end of namespace
+} // end of namespace
 
 #endif // NEKTAR_SPATIALDOMAINS_GEOMETRY3D_H

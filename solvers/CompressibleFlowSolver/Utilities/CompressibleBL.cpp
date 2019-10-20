@@ -40,6 +40,8 @@
 #include <iomanip>
 #include <cmath>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
@@ -143,6 +145,8 @@ void RK4(Array<OneD, NekDouble> y,
          NekDouble              h,
          Array<OneD, NekDouble> yout)
 {
+    boost::ignore_unused(x);
+
     int nmax = 5;
 
     Array<OneD, NekDouble> yt (nmax, 0.0);
@@ -252,7 +256,7 @@ void OUTPUT(int                                  m_xpoints,
     Array <OneD, NekDouble > test    (m_xpoints, 0.0);
 
 
-    NekDouble dd, dm, scale, flg;
+    NekDouble dd, dm, scale;
     NekDouble xcher, ycher;
     int index = -1;
 
@@ -265,11 +269,6 @@ void OUTPUT(int                                  m_xpoints,
         dm   = ff[3][i-1] - ff[1][i-1];
         dd   = ff[3][i] - ff[1][i];
         sumd = sumd + 0.5 * (xx[i] - xx[i-1]) * (dd + dm);
-
-        if ((ff[1][i] > 0.999) && (flg < 1.0))
-        {
-            flg  = 2.0;
-        }
     }
 
     scale = sumd;

@@ -32,6 +32,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
@@ -433,7 +435,8 @@ protected:
     virtual NekVector<NekDouble> v_OrthoBasisDeriv(const int dir,
                                                    const int mode)
     {
-        ASSERTL0(false, "not supported");
+        boost::ignore_unused(dir, mode);
+        NEKERROR(ErrorUtil::efatal, "OrthoBasisDeriv: not supported");
         return NekVector<NekDouble>();
     }
 

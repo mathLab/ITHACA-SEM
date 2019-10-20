@@ -126,7 +126,8 @@ namespace Nektar
     void VelocityCorrectionScheme::SetUpExtrapolation()
     {
         // creation of the extrapolation object
-        if (m_equationType == eUnsteadyNavierStokes)
+        if (m_equationType == eUnsteadyNavierStokes ||
+            m_equationType == eUnsteadyStokes)
         {
             std::string vExtrapolation = v_GetExtrapolateStr();
             if (m_session->DefinesSolverInfo("Extrapolation"))

@@ -262,7 +262,6 @@ void ProcessExtrude::Process()
     toErase.clear();
 
     // Then copy surface to volume composites names
-    int nComposite = m_mesh->m_composite.size();
     for (auto &it2 : m_mesh->m_composite)
     {
         if (it2.second->m_tag == "H" || it2.second->m_tag == "R")

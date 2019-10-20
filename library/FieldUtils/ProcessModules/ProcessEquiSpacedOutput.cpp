@@ -35,13 +35,15 @@
 #include <string>
 using namespace std;
 
-#include "ProcessEquiSpacedOutput.h"
+#include <boost/core/ignore_unused.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/Interp.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdTriExp.h>
-#include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessEquiSpacedOutput.h"
 
 namespace Nektar
 {
@@ -71,6 +73,8 @@ ProcessEquiSpacedOutput::~ProcessEquiSpacedOutput()
 
 void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nel = m_f->m_exp[0]->GetExpSize();
     if (!nel)
     {

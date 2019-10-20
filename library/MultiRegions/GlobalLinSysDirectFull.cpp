@@ -169,7 +169,7 @@ namespace Nektar
 
             DNekMatSharedPtr Gmat;
             int bwidth = pLocToGloMap->GetFullSystemBandWidth();
-            MatrixStorage matStorage;
+            MatrixStorage matStorage = eFULL;
 
             switch(m_linSysKey.GetMatrixType())
             {

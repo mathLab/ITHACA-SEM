@@ -35,6 +35,8 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
 #define NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Communication/Transposition.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
@@ -1523,7 +1525,7 @@ namespace Nektar
             // Homogeneous direction wrapper functions. 
             virtual LibUtilities::BasisSharedPtr  v_GetHomogeneousBasis(void)
             {
-                ASSERTL0(false,
+                NEKERROR(ErrorUtil::efatal,
                     "This method is not defined or valid for this class type");
                 return LibUtilities::NullBasisSharedPtr; 
             }
@@ -1531,7 +1533,8 @@ namespace Nektar
             // wrapper function to set viscosity for Homo1D expansion
             virtual void v_SetHomo1DSpecVanVisc(Array<OneD, NekDouble> visc)
             {
-                ASSERTL0(false,
+                boost::ignore_unused(visc);
+                NEKERROR(ErrorUtil::efatal,
                     "This method is not defined or valid for this class type");
             }
 

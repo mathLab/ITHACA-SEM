@@ -36,9 +36,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessHomogeneousStretch.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessHomogeneousStretch.h"
 
 namespace Nektar
 {
@@ -68,17 +70,16 @@ ProcessHomogeneousStretch::~ProcessHomogeneousStretch()
 
 void ProcessHomogeneousStretch::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     // Skip in case of empty partition
     if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
         return;
     }
 
-    if ((m_f->m_numHomogeneousDir) != 1)
-    {
-        ASSERTL0(false,
-                 "ProcessHomogeneousStretch only works for Homogeneous1D.");
-    }
+    ASSERTL0(m_f->m_numHomogeneousDir == 1,
+             "ProcessHomogeneousStretch only works for Homogeneous1D.");
 
     ASSERTL0(m_config["factor"].m_beenSet,
              "Missing parameter factor for ProcessHomogeneousStretch");

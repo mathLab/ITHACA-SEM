@@ -104,7 +104,7 @@ namespace SolverUtils
 
             m_session->SubstituteExpressions(funcNameTime);
             m_timeFcnEqn = MemoryManager<LibUtilities::Equation>
-                ::AllocateSharedPtr(m_session->GetExpressionEvaluator(),funcNameTime);
+                ::AllocateSharedPtr(m_session->GetInterpreter(),funcNameTime);
 
             m_hasTimeFcnScaling = true;
         }

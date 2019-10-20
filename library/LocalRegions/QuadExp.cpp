@@ -31,6 +31,9 @@
 // Description: Expansion for quadrilateral elements.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/Expansion3D.h>
@@ -760,6 +763,7 @@ namespace Nektar
              Array<OneD,NekDouble> &outarray,
              StdRegions::Orientation  orient)
         {
+            boost::ignore_unused(orient);
             v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
         }
 

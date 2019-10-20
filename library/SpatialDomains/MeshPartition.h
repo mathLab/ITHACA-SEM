@@ -145,7 +145,7 @@ protected:
     std::map<int, MultiWeight> m_edgeWeights;
 
     BoostGraph m_graph;
-    std::vector<vector<unsigned int>> m_localPartition;
+    std::vector<std::vector<unsigned int>> m_localPartition;
 
     LibUtilities::CommSharedPtr m_comm;
 

@@ -335,6 +335,8 @@ namespace Nektar
                                     m_InterpManager;
 
         private:
+            static bool initBasisManager[];
+
             /// Private constructor with BasisKey.
             Basis(const BasisKey &bkey);
 

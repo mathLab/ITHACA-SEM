@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
 
@@ -154,8 +156,10 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
                 {
-                    int j,k,dir;
-                    int nbndry = NumDGBndryCoeffs();
+                    int j       = 0;
+                    int k       = 0;
+                    int dir     = 0;
+                    int nbndry  = NumDGBndryCoeffs();
                     int ncoeffs = GetNcoeffs();
 
                     Array<OneD,NekDouble> lambda(nbndry);
@@ -278,7 +282,8 @@ namespace Nektar
                                           Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray) 
         {
-            
+            boost::ignore_unused(dir);
+
             int k;
             int nbndry = NumBndryCoeffs();
             int nquad  = GetNumPoints(0);

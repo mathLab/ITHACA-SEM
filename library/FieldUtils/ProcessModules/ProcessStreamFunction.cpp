@@ -32,6 +32,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include "ProcessStreamFunction.h"
 
 using namespace std;
@@ -59,6 +61,8 @@ ProcessStreamFunction::~ProcessStreamFunction()
 
 void ProcessStreamFunction::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nfields  = m_f->m_variables.size();
     // Append field name
     m_f->m_variables.push_back("StreamFunc");

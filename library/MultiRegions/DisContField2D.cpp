@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/DisContField2D.h>
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/Expansion2D.h>
@@ -42,6 +44,8 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+
+#include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
 
@@ -1855,6 +1859,7 @@ namespace Nektar
                 const bool  PhysSpaceForcing)
 
         {
+            boost::ignore_unused(flags, varfactors, dirForcing);
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
 
@@ -1957,6 +1962,12 @@ namespace Nektar
                         BndRhs[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
                     }
                 }
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::ePeriodic)
+                {
+                    ASSERTL0(false, "HDG implementation does not support "
+                             "periodic boundary conditions at present.");
+                }
             }
 
             //----------------------------------
@@ -2003,6 +2014,8 @@ namespace Nektar
                Array<OneD,      NekDouble> &outarray,
                CoeffState coeffstate)
         {
+            boost::ignore_unused(coeffstate);
+
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);
             DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);
@@ -2245,6 +2258,8 @@ namespace Nektar
             const NekDouble   x2_in,
             const NekDouble   x3_in)
         {
+            boost::ignore_unused(x3_in);
+
             int i;
             int npoints;
             int nbnd = m_bndCondExpansions.num_elements();

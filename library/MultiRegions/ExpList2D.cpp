@@ -33,6 +33,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/NodalTriExp.h>
@@ -497,6 +500,8 @@ namespace Nektar
             const Collections::ImplementationType ImpType):            
             ExpList(pSession, graph3D)
         {
+            boost::ignore_unused(periodicFaces, variable);
+
             SetExpType(e2D);
 
             int i, j, id, elmtid=0;
@@ -1142,6 +1147,8 @@ namespace Nektar
             int expansion,
             int istrip)
         {
+            boost::ignore_unused(istrip);
+
             int i,j;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);

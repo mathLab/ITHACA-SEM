@@ -80,7 +80,11 @@ MACRO(SET_COMMON_PROPERTIES name)
         TARGET_COMPILE_DEFINITIONS(${name} PRIVATE _WIN32_WINNT=0x0601)
     ELSE ()
         # Enable all warnings
-        TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wpedantic -Wall -Wextra)
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wall -Wextra)
+        IF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            # For GNU compilers add pedantic warnings
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wpedantic)
+        ENDIF()
         # Temporarily disable warnings about comparing signed and unsigned
         TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wno-sign-compare)
         # Temporarily disable warnings about narrowing of data types
@@ -88,6 +92,12 @@ MACRO(SET_COMMON_PROPERTIES name)
         IF (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             TARGET_COMPILE_OPTIONS(${name} PRIVATE -fpermissive)
         ENDIF()
+        
+        # Disable dignostic about partially overloaded virtual functions
+        IF (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -diag-disable 654)
+        ENDIF()
+
         IF ( NEKTAR_ERROR_ON_WARNINGS )
             TARGET_COMPILE_OPTIONS(${name} PRIVATE -Werror)
         ENDIF()

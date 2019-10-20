@@ -256,7 +256,7 @@ void OUTPUT(int                                  m_xpoints,
     Array <OneD, NekDouble > test    (m_xpoints, 0.0);
 
 
-    NekDouble dd, dm, scale, flg;
+    NekDouble dd, dm, scale;
     NekDouble xcher, ycher;
     int index = -1;
 
@@ -269,11 +269,6 @@ void OUTPUT(int                                  m_xpoints,
         dm   = ff[3][i-1] - ff[1][i-1];
         dd   = ff[3][i] - ff[1][i];
         sumd = sumd + 0.5 * (xx[i] - xx[i-1]) * (dd + dm);
-
-        if ((ff[1][i] > 0.999) && (flg < 1.0))
-        {
-            flg  = 2.0;
-        }
     }
 
     scale = sumd;

@@ -226,16 +226,13 @@ Filter \inltt{Electrogram} computes virtual unipolar electrograms at a
 
 \subsection{FieldConvert checkpoints}
 
-\begin{notebox}
-  This filter is still at an experimental stage. Not all modules and options
-  from FieldConvert are supported.
-\end{notebox}
-
 This filter applies a sequence of FieldConvert modules to the solution, 
 writing an output file. An output is produced at the end of the simulation into
 \inltt{session\_fc.fld}, or alternatively every $M$ timesteps as defined by the
 user, into a sequence of files \inltt{session\_*\_fc.fld}, where \inltt{*} is
 replaced by a counter.
+
+Module options are specified as a colon-separated list, following the same syntax as the \inltt{FieldConvert} command-line utility (see Section~\ref{s:utilities:fieldconvert}).
 
 The following parameters are supported:
 
@@ -497,7 +494,7 @@ An example syntax is given below:
   This filter is only supported for the incompressible Navier-Stokes solver.
 \end{notebox}
 
-This filter is an extended version of the time-average filter. It outputs
+This filter is an extended version of the time-average fields filter (see Section~\ref{filters:TimeAveragedFields}). It outputs
 not only the time-average of the fields, but also the Reynolds stresses.
 The same parameters supported in the time-average case can be used,
 for example:
@@ -525,7 +522,7 @@ averages and the Reynolds stresses calculated based on them. For example:
   </FILTER>
 \end{lstlisting}
 
-\subsection{Time-averaged fields}
+\subsection{Time-averaged fields}\label{filters:TimeAveragedFields}
 
 This filter computes time-averaged fields for each variable defined in the
 session file. Time averages are computed by either taking a snapshot of the
@@ -569,7 +566,7 @@ instantaneous fields every 10 time steps. The averaged field is however only
 output every 100 time steps.
 
 
-\subsection {ThresholdMax}
+\subsection {ThresholdMax}\label{filters:ThresholdMax}
 
 The threshold value filter writes a field output containing a variable $m$,
 defined by the time at which the selected variable first exceeds a specified
@@ -612,7 +609,7 @@ An example is given below:
 
 which produces a field file \inlsh{threshold\_max.fld}.
 
-\subsection{ThresholdMin value}
+\subsection{ThresholdMin value}\label{filters:ThresholdMin}
 
-Performs the same function as the \inltt{ThresholdMax} filter but records the
+Performs the same function as the \inltt{ThresholdMax} filter (see Section~\ref{filters:thresholdmax}) but records the
 time at which the threshold variable drops below a prescribed value.

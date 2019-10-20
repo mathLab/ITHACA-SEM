@@ -294,8 +294,8 @@ namespace Nektar
                         SpatialDomains::DirichletBCShPtr bcPtr = std::static_pointer_cast<
                             SpatialDomains::DirichletBoundaryCondition>(
                                 m_bndConditions[i]);
-                        string filebcs = bcPtr->m_filename;
-                        string exprbcs = bcPtr->m_expr;
+			std::string filebcs = bcPtr->m_filename;
+			std::string exprbcs = bcPtr->m_expr;
 
                         if (filebcs != "")
                         {
@@ -329,7 +329,8 @@ namespace Nektar
                         SpatialDomains::NeumannBCShPtr bcPtr = std::static_pointer_cast<
                             SpatialDomains::NeumannBoundaryCondition>(
                                 m_bndConditions[i]);
-                        string filebcs = bcPtr->m_filename;
+			
+			std::string filebcs = bcPtr->m_filename;
 
                         if (filebcs != "")
                         {
@@ -337,7 +338,6 @@ namespace Nektar
                         }
                         else
                         {
-                            
                             LibUtilities::Equation condition = std::
                                 static_pointer_cast<SpatialDomains::
                                                     NeumannBoundaryCondition>(
@@ -356,7 +356,7 @@ namespace Nektar
                         SpatialDomains::RobinBCShPtr bcPtr = std::static_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition>(
                                 m_bndConditions[i]);
-                        string filebcs = bcPtr->m_filename;
+			std::string filebcs = bcPtr->m_filename;
 
                         if (filebcs != "")
                         {

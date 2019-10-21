@@ -300,7 +300,7 @@ of the form
 
 \subsubsection{Substepping/subcycling the Velocity Correction Scheme}
 
-It is possible to use difference time steps in the velocity correction
+It is possible to use different time steps in the velocity correction
 scheme using a substepping (also known as subcycling) \cite{Sh03} or
 auxiliary semi-Lagrangian approach \cite{XiShDoKa}. Originally the
 scheme was proposed by Maday, Patera and Ronquist who referred to as
@@ -332,12 +332,12 @@ explicit part is advanced using a DG scheme it is necessary to use a
 \inltt{Mixed\_CG\_Discontinuous} expansion with this option.
 
 \begin{notebox}
-Example of the substepping scheme can be found in the regression tests
+Some examples of the substepping scheme can be found in the regression tests
 directory under
-\texttt{\${NEKHOME}/Solver/IncNavierStokesSolver/Tests/} directory. For
-exmaple the test cases \texttt{KovaFlow\_SubStep\_2order.xml},
+\texttt{\${NEKHOME}/Solver/IncNavierStokesSolver/Tests/} directory:
+\texttt{KovaFlow\_SubStep\_2order.xml},
 \texttt{Hex\_Kovasnay\_SubStep.xml} and
-\texttt{Tet\_Kovasnay\_SubStep.xml}
+\texttt{Tet\_Kovasnay\_SubStep.xml}.
 \end{notebox}
 
 \subsubsection{Approximation spaces for the velocity correction scheme}
@@ -345,7 +345,7 @@ exmaple the test cases \texttt{KovaFlow\_SubStep\_2order.xml},
 For well resolved simulations it appears that often using the same
 polynomial space for the pressure and velocity does give suitable
 answer but this does not satisfy the so-called LBB or inf-sup
-condition. Therefore it is potentially better to specify an equivalent
+condition. Therefore, it is potentially better to specify an equivalent
 of the Taylor Hood approximation and use one higher polynomial order
 for velocity than the pressure with a continuous expansion. To specify
 this type of expansion you can use an expansion section of the form:
@@ -767,7 +767,7 @@ BDF Order 2 & \texttt{BDFImplicitOrder2} & all & US, UNS & CG-DG \\
 \end{center}
 
 \item \inltt{Extrapolation}: Specify the extrapolation method
-  (standard or substetping) to be used in velocity correction
+  (standard or substepping) to be used in velocity correction
   scheme. Essentially this activates the sub-stepping routine which
   requires the mixed CG-DG projection
   
@@ -1066,13 +1066,13 @@ To enable the filter, add the following to the \inltt{FORCE} tag::
 
 \begin{lstlisting}[style=XMLStyle]
   <FORCE TYPE="MovingBody">
-      <PARAM NAME="OutputFile">DragLift.frc</PARAM>
+      <PARAM NAME="OutputFile">DragLift</PARAM>
       <PARAM NAME="OutputFrequency">10</PARAM>
       <PARAM NAME="Boundary"> B[0] </PARAM>
   </FORCE>
 \end{lstlisting}
 
-During the execution a file named \inltt{DragLift.frc} will be created and the
+During the execution a file named \inltt{DragLift.fce} will be created and the
 value of the aerodynamic forces on boundary 0, defined in the
 \inltt{GEOMETRY} section, will be output every 10 time steps.evaluates the aerodynamic forces along the moving body surface. The
 forces for each computational plane are projected along the Cartesian axes and the pressure and viscous contributions are computed in each direction.

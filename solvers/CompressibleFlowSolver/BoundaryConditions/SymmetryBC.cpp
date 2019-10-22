@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include "SymmetryBC.h"
 
 using namespace std;
@@ -59,6 +61,8 @@ void SymmetryBC::v_Apply(
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
 {
+    boost::ignore_unused(time);
+
     int i;
     int nVariables = physarray.num_elements();
 

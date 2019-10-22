@@ -35,6 +35,8 @@
 #ifndef NODALTRIEXP_H
 #define NODALTRIEXP_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdNodalTriExp.h>
 #include <SpatialDomains/TriGeom.h>
 
@@ -251,6 +253,7 @@ namespace Nektar
                                      Array<OneD, NekDouble> &out_d1,
                                      Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
             {
+                boost::ignore_unused(out_d2);
                 PhysDeriv(inarray, out_d0, out_d1);
             }
 
@@ -326,6 +329,7 @@ namespace Nektar
                                                   Array<OneD, NekDouble> &outarray,
                                                   bool multiplybyweights = true)
             {
+                boost::ignore_unused(multiplybyweights);
                 IProductWRTBase_SumFac(inarray,outarray);
             }            
             

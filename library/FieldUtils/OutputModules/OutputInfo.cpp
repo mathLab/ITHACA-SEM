@@ -36,11 +36,13 @@
 #include <string>
 using namespace std;
 
-#include "OutputInfo.h"
+#include <boost/core/ignore_unused.hpp>
+#include <boost/format.hpp>
 
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
 #include <SpatialDomains/MeshPartition.h>
-#include <boost/format.hpp>
+
+#include "OutputInfo.h"
 
 namespace Nektar
 {
@@ -65,6 +67,8 @@ OutputInfo::~OutputInfo()
 
 void OutputInfo::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 
@@ -88,8 +92,9 @@ void OutputInfo::Process(po::variables_map &vm)
     {
         boost::format pad("P%1$07d.%2$s");
         pad % p % "fld";
+        std::string s = pad.str();
 
-        fs::path fullpath              = pinfilename / pad.str();
+        fs::path fullpath              = pinfilename / s;
         string fname                   = LibUtilities::PortablePath(fullpath);
         LibUtilities::DataSourceSharedPtr dataSource =
             LibUtilities::XmlDataSource::create(fname);
@@ -110,7 +115,7 @@ void OutputInfo::Process(po::variables_map &vm)
         }
 
         ElementIDs.push_back(PartElmtIDs);
-        filenames.push_back(pad.str());
+        filenames.push_back(s);
     }
 
     // Write the Info.xml file

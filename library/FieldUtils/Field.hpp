@@ -434,7 +434,7 @@ struct Field
         std::string filename)
     {
         LibUtilities::CommSharedPtr c = m_comm;
-        string fmt = LibUtilities::FieldIO::GetFileType(filename, c);
+        std::string fmt = LibUtilities::FieldIO::GetFileType(filename, c);
         auto it = m_fld.find(fmt);
 
         if (it == m_fld.end())

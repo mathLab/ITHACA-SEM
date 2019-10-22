@@ -225,7 +225,8 @@ namespace Nektar
             eVarCoeffMF3Mag,
             eVarCoeffMF,
             eVarCoeffMFDiv,
-            eVarCoeffGmat
+            eVarCoeffGmat,
+            SIZE_VarCoeffType
         };
 
         const char* const VarCoeffTypeMap[] = {
@@ -240,6 +241,7 @@ namespace Nektar
             "VarCoeffD12",
             "VarCoeffVelX",
             "VarCoeffVelY",
+            "VarCoeffVelZ",
             "VarCoeffMF1x",
             "VarCoeffMF1y",
             "VarCoeffMF1z",

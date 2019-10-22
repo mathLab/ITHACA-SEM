@@ -68,7 +68,7 @@ namespace Nektar
             stringstream name;
             name << "Forcing func [" << i << "]";
             SolverUtils::AddSummaryItem(s, name.str(),
-                    m_session->GetFunction("Forcing", i)->GetExpression());
+                    GetFunction("Forcing")->Describe(m_session->GetVariable(0)));
         }
     }
 

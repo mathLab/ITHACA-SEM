@@ -45,8 +45,6 @@
 #include <LibUtilities/LinearAlgebra/SparseMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 
-#include <boost/lexical_cast.hpp>
-
 using std::min;
 using std::max;
 
@@ -138,10 +136,7 @@ namespace Nektar
     template<typename SparseStorageType>
     size_t NekSparseMatrix<SparseStorageType>::GetMemoryFootprint() const
     {
-        return m_sparseStorage->GetMemoryUsage(
-                    m_sparseStorage->GetNumNonZeroEntries(),
-                    m_sparseStorage->GetRows()
-               ) +
+        return m_sparseStorage->GetMemoryUsage() +
                sizeof(SparseStorageSharedPtr) +
                sizeof(unsigned long); // mulCallsCounter
     }

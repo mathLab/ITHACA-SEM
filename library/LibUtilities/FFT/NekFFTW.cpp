@@ -40,7 +40,7 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-        string NekFFTW::className
+        std::string NekFFTW::className
             = GetNektarFFTFactory().RegisterCreatorFunction("NekFFTW",
                                                             NekFFTW::create);
 

@@ -42,6 +42,10 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        bool PolyEPoints::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, ePolyEvenlySpaced), PolyEPoints::Create)
+        };
+
         void PolyEPoints::CalculatePoints()
         {
             // Allocate the storage for points

@@ -70,7 +70,7 @@ IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 ENDIF()
 
 # Find default search paths for OS X; adapted from Stack Overflow question
-# 1487752
+# 1487752.
 IF (APPLE)
     EXECUTE_PROCESS(COMMAND which port
         RESULT_VARIABLE DETECT_MACPORTS
@@ -168,6 +168,9 @@ MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
 OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF)
 OPTION(NEKTAR_TEST_USE_HOSTFILE "Use a hostfile to explicitly specify number of
 slots." OFF)
+
+OPTION(NEKTAR_ERROR_ON_WARNINGS "Use -Werror to make warnings stop compilation." ON)
+MARK_AS_ADVANCED(NEKTAR_ERROR_ON_WARNINGS)
 
 # Meshing utilities and library
 IF (NOT WIN32)

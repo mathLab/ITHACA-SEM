@@ -98,8 +98,8 @@ namespace Nektar
             "LOCAL",
         };
 
-    }; // end of namespace
-}; // end of namespace
+    } // end of namespace
+} // end of namespace
 
 #endif //NEKTAR_SPATIALDOMAINS_SPATIALDOMAINS_H
 

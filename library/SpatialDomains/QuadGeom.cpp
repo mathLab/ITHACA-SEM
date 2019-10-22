@@ -86,6 +86,7 @@ QuadGeom::QuadGeom(const int id,
 }
 
 QuadGeom::QuadGeom(const QuadGeom &in)
+    : Geometry2D(in)
 {
     // From Geometry
     m_shapeType = in.m_shapeType;
@@ -482,15 +483,28 @@ bool QuadGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                NekDouble tol,
                                NekDouble &resid)
 {
-    ASSERTL1(gloCoord.num_elements() >= 2,
-             "Two dimensional geometry expects at least two coordinates.");
+    //Rough check if within twice min/max point
+    if (GetMetricInfo()->GetGtype() != eRegular)
+    {
+        if (!MinMaxCheck(gloCoord))
+        {
+            return false;
+        }
+    }
 
+    // Convert to the local (eta) coordinates.
     resid = GetLocCoords(gloCoord, stdCoord);
+
+    // Check local coordinate is within cartesian bounds.
     if (stdCoord[0] >= -(1 + tol) && stdCoord[1] >= -(1 + tol) &&
         stdCoord[0] <= (1 + tol) && stdCoord[1] <= (1 + tol))
     {
         return true;
     }
+
+    //Clamp local coords
+    ClampLocCoords(stdCoord, tol);
+
     return false;
 }
 
@@ -527,5 +541,5 @@ void QuadGeom::v_Setup()
     }
 }
 
-}; // end of namespace
-}; // end of namespace
+} // end of namespace
+} // end of namespace

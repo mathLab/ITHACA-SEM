@@ -293,20 +293,16 @@ void BidomainRoth::v_InitObject()
 
     // Search through the loaded filters and pass the cell model to any
     // CheckpointCellModel filters loaded.
-    int k = 0;
-    const LibUtilities::FilterMap& f = m_session->GetFilters();
-    for (auto &x : f)
+    for (auto &x : m_filters)
     {
         if (x.first == "CheckpointCellModel")
         {
             std::shared_ptr<FilterCheckpointCellModel> c
                 = std::dynamic_pointer_cast<FilterCheckpointCellModel>(
-                                                            m_filters[k]);
+                x.second);
             c->SetCellModel(m_cell);
         }
-        ++k;
     }
-
     // Load stimuli
     m_stimulus = Stimulus::LoadStimuli(m_session, m_fields[0]);
 

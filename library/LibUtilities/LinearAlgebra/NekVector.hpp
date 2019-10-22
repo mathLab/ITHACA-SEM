@@ -43,15 +43,12 @@
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 
-#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
-
 #include <functional>
 #include <algorithm>
 #include <math.h>
 
 #include <type_traits>
 #include <boost/call_traits.hpp>
-#include <boost/shared_array.hpp>
 
 namespace Nektar
 {

@@ -33,7 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/ParseUtils.h>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 
 #include "ProcessScalar.h"
@@ -84,7 +84,7 @@ void ProcessScalar::Process()
     const int nq = m_config["nq"].as<int>();
     string expr  = m_config["scalar"].as<string>();
 
-    LibUtilities::AnalyticExpressionEvaluator rEval;
+    LibUtilities::Interpreter rEval;
     int rExprId = rEval.DefineFunction("x y z", expr);
 
     // Make a copy of all existing elements of one dimension lower.

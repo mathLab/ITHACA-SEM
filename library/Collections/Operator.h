@@ -35,6 +35,8 @@
 #ifndef NEKTAR_LIBRARY_COLLECTIONS_OPERATOR_H
 #define NEKTAR_LIBRARY_COLLECTIONS_OPERATOR_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <StdRegions/StdExpansion.h>
 #include <SpatialDomains/Geometry.h>
@@ -115,6 +117,7 @@ class Operator
               m_numElmt(pCollExp.size()),
               m_wspSize(0)
         {
+            boost::ignore_unused(GeomData);
         }
 
         /// Perform operation

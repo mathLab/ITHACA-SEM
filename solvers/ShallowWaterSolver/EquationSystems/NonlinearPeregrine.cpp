@@ -35,6 +35,8 @@
 
 #include <iostream>
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
@@ -633,6 +635,7 @@ void NonlinearPeregrine::WallBoundary2D(
         Array<OneD, Array<OneD, NekDouble> > &Fwd,
         Array<OneD, Array<OneD, NekDouble> > &physarray)
 {
+    boost::ignore_unused(physarray);
 
     int i;
     int nvariables = 3;
@@ -960,6 +963,8 @@ void NonlinearPeregrine::SetBoundaryConditionsForcing(
         Array<OneD, Array<OneD, NekDouble> > &inarray,
         NekDouble time)
 {
+    boost::ignore_unused(time);
+
     int cnt = 0;
 
     // loop over Boundary Regions
@@ -1071,6 +1076,8 @@ void NonlinearPeregrine::SetBoundaryConditionsContVariables(
         Array<OneD, NekDouble> &inarray,
         NekDouble time)
 {
+    boost::ignore_unused(time);
+
     int cnt = 0;
 
     // loop over Boundary Regions
@@ -1212,6 +1219,7 @@ void NonlinearPeregrine::v_SetInitialConditions(
         bool dumpInitialConditions,
         const int domain)
 {
+    boost::ignore_unused(domain);
 
     switch (m_problemType)
     {

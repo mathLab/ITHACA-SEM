@@ -171,22 +171,27 @@ these as parameters and return arrays very easily. However bear in mind the
 following caveats:
 
 \begin{itemize}
-	\item NumPy arrays created from Array objects will share their memory, so that
-  		changing the C++ array changes the contents of the NumPy array.
+  \item Any NumPy \texttt{ndarray} created from an \texttt{Array<OneD, >} (and
+  vice versa) will share their memory. Although this avoids expensive memory
+  copies, it means that changing the C++ array changes the contents of the NumPy
+  array (and vice versa).
   \item Many functions in Nektar++ return Arrays through argument parameters. In
-  		Python this is a very unnatural way to write functions. For example:
-  		\begin{lstlisting}[language=Python]
-		# This is good
-		x, y, z = exp.GetCoords()
-		# This is bad
-		x, y, z = np.zeros(10), np.zeros(10), np.zeros(10)
-		exp.GetCoords(x,y,z)
-		\end{lstlisting}
-  		Use thin wrappers to overcome this problem. For examples of how to do this,
-  		particularly in returning tuples, consult the `StdRegions/StdExpansion.cpp`
-  		wrapper.
-	\item \texttt{TwoD} and \texttt{ThreeD} arrays are not supported.
+  Python this is a very unnatural way to write functions. For example:
+  \begin{lstlisting}[language=Python]
+    # This is good
+    x, y, z = exp.GetCoords()
+    # This is bad
+    x, y, z = np.zeros(10), np.zeros(10), np.zeros(10)
+    exp.GetCoords(x,y,z)
+  \end{lstlisting}
+  Use thin wrappers to overcome this problem. For examples of how to do this,
+  particularly in returning tuples, consult the
+  \texttt{StdRegions/StdExpansion.cpp} wrapper which contains numerous examples.
+  \item \texttt{TwoD} and \texttt{ThreeD} arrays are not supported.
 \end{itemize}
+
+More information on the memory management and how the memory is shared can be
+found in Section~\ref{sec:nekpy:memory}.
 
 \subsection{Inheritance}
 

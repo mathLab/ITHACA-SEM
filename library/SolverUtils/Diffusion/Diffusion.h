@@ -38,6 +38,8 @@
 #include <string>
 #include <functional>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
@@ -143,7 +145,7 @@ namespace Nektar
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
             {
-                
+                boost::ignore_unused(pSession, pFields);
             };
                         
             virtual void v_Diffuse(
@@ -157,7 +159,7 @@ namespace Nektar
             virtual void v_SetHomoDerivs(
                 Array<OneD, Array<OneD, NekDouble> > &deriv)
             {
-
+                boost::ignore_unused(deriv);
             }
             
             virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &v_GetFluxTensor()

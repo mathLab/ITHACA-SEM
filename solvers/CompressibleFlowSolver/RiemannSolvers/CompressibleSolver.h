@@ -35,6 +35,8 @@
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_COMPRESSIBLESOLVER
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_COMPRESSIBLESOLVER
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <CompressibleFlowSolver/Misc/EquationOfState.h>
 
@@ -63,7 +65,9 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                   Array<OneD,       Array<OneD, NekDouble> > &flux)
         {
-            ASSERTL0(false, "This function should be defined by subclasses.");
+            boost::ignore_unused(Fwd, Bwd, flux);
+            NEKERROR(ErrorUtil::efatal,
+                     "This function should be defined by subclasses.");
         }
         
         virtual void v_PointSolve(
@@ -71,7 +75,11 @@ namespace Nektar
             NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER,
             NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef)
         {
-            ASSERTL0(false, "This function should be defined by subclasses.");
+            boost::ignore_unused(rhoL, rhouL, rhovL, rhowL, EL,
+                                 rhoR, rhouR, rhovR, rhowR, ER,
+                                 rhof, rhouf, rhovf, rhowf, Ef);
+            NEKERROR(ErrorUtil::efatal,
+                     "This function should be defined by subclasses.");
         }
         
         virtual void v_PointSolveVisc(
@@ -79,7 +87,11 @@ namespace Nektar
             NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER, NekDouble EpsR,
             NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef, NekDouble &Epsf)
         {
-            ASSERTL0(false, "This function should be defined by subclasses.");
+            boost::ignore_unused(rhoL, rhouL, rhovL, rhowL, EL, EpsL,
+                                 rhoR, rhouR, rhovR, rhowR, ER, EpsR,
+                                 rhof, rhouf, rhovf, rhowf, Ef, Epsf);
+            NEKERROR(ErrorUtil::efatal,
+                     "This function should be defined by subclasses.");
         }
 
         NekDouble GetRoeSoundSpeed(

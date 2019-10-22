@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <FieldUtils/Interpolator.h>
 #include <SolverUtils/EquationSystem.h>
 
@@ -926,6 +928,8 @@ namespace Nektar
                                                     bool dumpInitialConditions,
                                                     const int domain)
         {
+            boost::ignore_unused(initialtime);
+
             if (m_session->GetComm()->GetRank() == 0)
             {
                 cout << "Initial Conditions:" << endl;
@@ -1479,6 +1483,7 @@ namespace Nektar
             std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
             std::vector<std::string>             &variables)
         {
+            boost::ignore_unused(fieldcoeffs, variables);
         }
 
     }

@@ -82,7 +82,7 @@ void NodeOpti2D2D::Optimise()
         NekDouble xc = m_node->m_x;
         NekDouble yc = m_node->m_y;
 
-        Array<OneD, NekDouble> sk(2);
+        vector<NekDouble> sk(2);
         NekDouble val;
 
         // Calculate minimum eigenvalue
@@ -174,7 +174,7 @@ void NodeOpti3D3D::Optimise()
         NekDouble yc = m_node->m_y;
         NekDouble zc = m_node->m_z;
 
-        Array<OneD, NekDouble> sk(3);
+        vector<NekDouble> sk(3);
         NekDouble val;
 
         // Calculate minimum eigenvalue

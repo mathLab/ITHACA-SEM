@@ -53,3 +53,7 @@ IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(chan3D_interppointsbox_par)
     ADD_NEKTAR_TEST(chan3D_vort_par)
 ENDIF (NEKTAR_USE_MPI)
+
+IF (NEKTAR_USE_HDF5)
+    ADD_NEKTAR_TEST(interpfield_hdf5)
+ENDIF()

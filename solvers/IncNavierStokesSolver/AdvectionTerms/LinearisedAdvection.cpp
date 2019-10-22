@@ -295,7 +295,7 @@ void LinearisedAdvection::v_Advect(
     }
 
     //Evaluate the linearised advection term
-    for( int i = 0; i < ndim; ++i)
+    for( int i = 0; i < nConvectiveFields; ++i)
     {
         // Calculate gradient
         switch(nDerivs)

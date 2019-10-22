@@ -137,7 +137,7 @@ namespace Nektar
         /// Area of the boundary through which we are measuring the flowrate
         NekDouble m_flowrateArea;
         // Bool to identify 3D1HD with forcing explicitly defined
-        bool m_Hom1DExplicit;
+        bool m_homd1DFlowinPlane;
         /// Flux of the Stokes function solution
         NekDouble m_greenFlux;
         /// Current flowrate correction

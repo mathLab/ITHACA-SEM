@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/NodalTriExp.h>
@@ -41,7 +43,6 @@
 #include <MultiRegions/ExpList2D.h>
 #include <LibUtilities/Foundations/Interp.h>
 #include <LibUtilities/Foundations/PhysGalerkinProject.h>
-#include <SpatialDomains/MeshGraph3D.h>
 
 using namespace std;
 
@@ -499,6 +500,8 @@ namespace Nektar
             const Collections::ImplementationType ImpType):            
             ExpList(pSession, graph3D)
         {
+            boost::ignore_unused(periodicFaces, variable);
+
             SetExpType(e2D);
 
             int i, j, id, elmtid=0;
@@ -535,7 +538,7 @@ namespace Nektar
                         {
                             FaceQuadExp = MemoryManager<LocalRegions::QuadExp>
                                 ::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
-                            facesDone.insert(FaceQuadGeom->GetFid());
+                            facesDone.insert(FaceQuadGeom->GetGlobalID());
                             FaceQuadExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceQuadExp);
                         }
@@ -545,7 +548,7 @@ namespace Nektar
                         {
                             FaceTriExp = MemoryManager<LocalRegions::TriExp>
                                 ::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
-                            facesDone.insert(FaceTriGeom->GetFid());
+                            facesDone.insert(FaceTriGeom->GetGlobalID());
                             FaceTriExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceTriExp);
                         }
@@ -567,7 +570,7 @@ namespace Nektar
                 for (j = 0; j < exp3D->GetNfaces(); ++j)
                 {
                     FaceGeom = exp3D->GetGeom3D()->GetFace(j);
-                    id       = FaceGeom->GetFid();
+                    id       = FaceGeom->GetGlobalID();
 
                     if(facesDone.count(id) != 0)
                     {
@@ -806,15 +809,16 @@ namespace Nektar
             const SpatialDomains::CompositeMap &domain,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
             const std::string variable,
-            const Collections::ImplementationType ImpType):
-            ExpList(pSession, graph3D)
+            const LibUtilities::CommSharedPtr comm,
+            const Collections::ImplementationType ImpType)
+            : ExpList(pSession, graph3D)
          {
-
              SetExpType(e2D);
 
-             ASSERTL0(std::dynamic_pointer_cast<
-                      SpatialDomains::MeshGraph3D>(graph3D),
-                     "Expected a MeshGraph3D object.");
+             if (comm)
+             {
+                 m_comm = comm;
+             }
 
              int j, elmtid=0;
              int nel = 0;
@@ -830,24 +834,20 @@ namespace Nektar
 
              for (auto &compIt : domain)
              {
-                 nel += compIt.second->size();
+                 nel += compIt.second->m_geomVec.size();
              }
 
              for (auto &compIt : domain)
              {
-                 for (j = 0; j < compIt.second->size(); ++j)
+                 for (j = 0; j < compIt.second->m_geomVec.size(); ++j)
                  {
                      if ((TriangleGeom = std::dynamic_pointer_cast<
-                             SpatialDomains::TriGeom>((*compIt.second)[j])))
+                             SpatialDomains::TriGeom>(compIt.second->m_geomVec[j])))
                      {
                          LibUtilities::BasisKey TriBa
-                             = std::dynamic_pointer_cast<
-                                SpatialDomains::MeshGraph3D>(graph3D)->
-                                    GetFaceBasisKey(TriangleGeom, 0, variable);
+                             = graph3D->GetFaceBasisKey(TriangleGeom, 0, variable);
                          LibUtilities::BasisKey TriBb
-                             = std::dynamic_pointer_cast<
-                                SpatialDomains::MeshGraph3D>(graph3D)->
-                                    GetFaceBasisKey(TriangleGeom,1,variable);
+                             = graph3D->GetFaceBasisKey(TriangleGeom,1,variable);
 
                          if (graph3D->GetExpansions().begin()->second->
                              m_basisKeyVector[0].GetBasisType() == 
@@ -878,18 +878,14 @@ namespace Nektar
                          m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                      }
                      else if ((QuadrilateralGeom = std::dynamic_pointer_cast<
-                              SpatialDomains::QuadGeom>((*compIt.second)[j])))
+                              SpatialDomains::QuadGeom>(compIt.second->m_geomVec[j])))
                      {
                          LibUtilities::BasisKey QuadBa
-                             = std::dynamic_pointer_cast<
-                                SpatialDomains::MeshGraph3D>(graph3D)->
-                                    GetFaceBasisKey(QuadrilateralGeom, 0, 
-                                                    variable);
+                             = graph3D->GetFaceBasisKey(QuadrilateralGeom, 0,
+                                                        variable);
                          LibUtilities::BasisKey QuadBb
-                             = std::dynamic_pointer_cast<
-                                SpatialDomains::MeshGraph3D>(graph3D)->
-                                    GetFaceBasisKey(QuadrilateralGeom, 1, 
-                                                    variable);
+                             = graph3D->GetFaceBasisKey(QuadrilateralGeom, 1,
+                                                        variable);
 
                          quad = MemoryManager<LocalRegions::QuadExp>
                              ::AllocateSharedPtr(QuadBa, QuadBb,
@@ -1151,6 +1147,8 @@ namespace Nektar
             int expansion,
             int istrip)
         {
+            boost::ignore_unused(istrip);
+
             int i,j;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);

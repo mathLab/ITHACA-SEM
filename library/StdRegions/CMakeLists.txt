@@ -20,7 +20,6 @@ IndexMapKey.cpp
 )
 
 SET(STD_REGIONS_HEADERS
-SpatialDomainsDeclarations.hpp
 StdExpansion0D.h
 StdExpansion1D.h
 StdExpansion2D.h
@@ -40,8 +39,6 @@ StdSegExp.h
 StdPointExp.h
 StdTetExp.h
 StdTriExp.h
-LocalRegionsDeclarations.hpp
-SpatialDomainsDeclarations.hpp
 StdRegions.hpp
 IndexMapKey.h
 )
@@ -54,6 +51,10 @@ ADD_NEKTAR_LIBRARY(StdRegions
     DEPENDS LibUtilities
     SUMMARY "Nektar++ StdRegions library"
     DESCRIPTION "This library provides construction of the reference expansions for the various 1D, 2D and 3D regions.")
+
+IF (NEKTAR_BUILD_PYTHON)
+    SUBDIRS(Python)
+ENDIF()
 
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/StdRegions COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 

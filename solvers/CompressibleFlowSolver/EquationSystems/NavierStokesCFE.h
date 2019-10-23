@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -51,10 +50,11 @@ namespace Nektar
 
     // Creates an instance of this class
     static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
     {
       SolverUtils::EquationSystemSharedPtr p =
-            MemoryManager<NavierStokesCFE>::AllocateSharedPtr(pSession);
+          MemoryManager<NavierStokesCFE>::AllocateSharedPtr(pSession, pGraph);
       p->InitObject();
       return p;
     }
@@ -64,7 +64,14 @@ namespace Nektar
     virtual ~NavierStokesCFE();
 
   protected:
-    NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
+    std::string                         m_ViscosityType;
+    NekDouble                           m_mu;
+    NekDouble                           m_thermalConductivity;
+    NekDouble                           m_Cp;
+    NekDouble                           m_Prandtl;
+
+    NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
+                    const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     virtual void v_InitObject();
 
@@ -74,11 +81,11 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
 
-    void GetViscousFluxVector(
+    virtual void v_GetViscousFluxVector(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
-    void GetViscousFluxVectorDeAlias(
+    virtual void v_GetViscousFluxVectorDeAlias(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);

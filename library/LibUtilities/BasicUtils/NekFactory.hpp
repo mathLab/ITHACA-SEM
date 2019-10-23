@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -39,10 +38,14 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <sstream>
 #include <memory>
 
+#ifdef NEKTAR_USE_THREAD_SAFETY
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>
+#endif
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
@@ -50,9 +53,11 @@ namespace Nektar
 namespace LibUtilities
 {
 
+#ifdef NEKTAR_USE_THREAD_SAFETY
 // Generate parameter typenames with default type of 'none'
 typedef boost::unique_lock<boost::shared_mutex> WriteLock;
 typedef boost::shared_lock<boost::shared_mutex> ReadLock;
+#endif
 
 /**
  * @class NekFactory
@@ -98,8 +103,6 @@ template <typename tKey,        // reference tag (e.g. string, int)
 class NekFactory
 {
 public:
-    /// Description datatype
-    typedef std::string tDescription;
     /// Comparison predicator of key
     typedef std::less<tKey> tPredicator;
     /// Shared pointer to an object of baseclass type.
@@ -111,7 +114,7 @@ public:
     /// Define a struct to hold the information about a module.
     struct ModuleEntry
     {
-        ModuleEntry(CreatorFunction pFunc, const tDescription pDesc)
+        ModuleEntry(CreatorFunction pFunc, const std::string pDesc)
             : m_func(pFunc),
               m_desc(pDesc)
         {
@@ -120,14 +123,14 @@ public:
         /// Function used to create instance of class.
         CreatorFunction m_func;
         /// Description of class for use in listing available classes.
-        tDescription m_desc;
+        std::string m_desc;
     };
 
     /// Factory map between key and module data.
     typedef std::map<tKey, ModuleEntry, tPredicator> TMapFactory;
 
 public:
-    NekFactory() : m_mutex() {}
+    NekFactory() = default;
 
     /**
      * @brief Create an instance of the class referred to by \c idKey.
@@ -140,7 +143,9 @@ public:
      */
     tBaseSharedPtr CreateInstance(tKey idKey, tParam... args)
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
         ReadLock vReadLock(m_mutex);
+#endif
 
         // Now try and find the key in the map.
         auto it = getMapFactory()->find(idKey);
@@ -150,7 +155,9 @@ public:
         if (it != getMapFactory()->end())
         {
             ModuleEntry *tmp = &(it->second);
+#ifdef NEKTAR_USE_THREAD_SAFETY
             vReadLock.unlock();
+#endif
 
             if (tmp->m_func)
             {
@@ -163,7 +170,7 @@ public:
                     std::stringstream errstr;
                     errstr << "Unable to create module: " << idKey << "\n";
                     errstr << s;
-                    ASSERTL0(false, errstr.str());
+                    NEKERROR(ErrorUtil::efatal, errstr.str());
                 }
             }
         }
@@ -172,7 +179,7 @@ public:
         std::stringstream errstr;
         errstr << "No such module: " << idKey << std::endl;
         PrintAvailableClasses(errstr);
-        ASSERTL0(false, errstr.str());
+        NEKERROR(ErrorUtil::efatal, errstr.str());
         return tBaseSharedPtr();
     }
 
@@ -190,9 +197,11 @@ public:
      * @returns                 The given key \c idKey.
      */
     tKey RegisterCreatorFunction(tKey idKey, CreatorFunction classCreator,
-                                 tDescription pDesc = "")
+                                 std::string pDesc = "")
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
         WriteLock vWriteLock(m_mutex);
+#endif
 
         ModuleEntry e(classCreator, pDesc);
         getMapFactory()->insert(std::pair<tKey,ModuleEntry>(idKey, e));
@@ -205,7 +214,9 @@ public:
      */
     bool ModuleExists(tKey idKey)
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
         ReadLock vReadLock(m_mutex);
+#endif
 
         // Now try and find the key in the map.
         auto it = getMapFactory()->find(idKey);
@@ -223,7 +234,9 @@ public:
      */
     void PrintAvailableClasses(std::ostream& pOut = std::cout)
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
         ReadLock vReadLock(m_mutex);
+#endif
 
         pOut << std::endl << "Available classes: " << std::endl;
         for (auto &it : *getMapFactory())
@@ -245,9 +258,11 @@ public:
     /**
      * @brief Retrieves a key, given a description
      */
-    tKey GetKey(tDescription pDesc)
+    tKey GetKey(std::string pDesc)
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
         ReadLock vReadLock(m_mutex);
+#endif
 
         for (auto &it : *getMapFactory())
         {
@@ -256,9 +271,7 @@ public:
                 return it.first;
             }
         }
-        std::string errstr = "Module '"
-            + boost::lexical_cast<std::string>(pDesc)
-            + "' is not known.";
+        std::string errstr = "Module '" + pDesc + "' is not known.";
         ASSERTL0(false, errstr);
     }
 
@@ -268,7 +281,9 @@ public:
      */
     std::string GetClassDescription(tKey idKey)
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
         ReadLock vReadLock(m_mutex);
+#endif
 
         // Now try and find the key in the map.
         auto it = getMapFactory()->find(idKey);
@@ -295,7 +310,9 @@ private:
 
     TMapFactory mMapFactory;
 
+#ifdef NEKTAR_USE_THREAD_SAFETY
     boost::shared_mutex m_mutex;
+#endif
 
 };
 

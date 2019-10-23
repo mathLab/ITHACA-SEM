@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -71,27 +70,34 @@ void InputNekpp::Process()
     vector<string> filename;
     filename.push_back(m_config["infile"].as<string>());
 
+    char *prgname = const_cast<char *>("NekMesh");
     LibUtilities::SessionReaderSharedPtr pSession =
-        LibUtilities::SessionReader::CreateInstance(0, NULL, filename);
+        LibUtilities::SessionReader::CreateInstance(1, &prgname, filename);
     SpatialDomains::MeshGraphSharedPtr graph =
         SpatialDomains::MeshGraph::Read(pSession);
+
+    auto comm = pSession->GetComm();
+    if (comm->GetType().find("MPI") != std::string::npos)
+    {
+        m_mesh->m_comm = comm;
+    }
 
     m_mesh->m_expDim   = graph->GetMeshDimension();
     m_mesh->m_spaceDim = graph->GetSpaceDimension();
 
     // Copy vertices.
     map<int, NodeSharedPtr> vIdMap;
-    for (auto &vit : graph->GetVertSet())
+    for (auto &vit : graph->GetAllPointGeoms())
     {
         SpatialDomains::PointGeomSharedPtr vert = vit.second;
-        NodeSharedPtr n(
-            new Node(vert->GetVid(), (*vert)(0), (*vert)(1), (*vert)(2)));
+        NodeSharedPtr n = std::make_shared<Node>(
+            vert->GetGlobalID(), (*vert)(0), (*vert)(1), (*vert)(2));
         m_mesh->m_vertexSet.insert(n);
         vIdMap[vert->GetVid()] = n;
     }
 
-    map<int, EdgeSharedPtr> eIdMap;
-    map<int, FaceSharedPtr> fIdMap;
+    std::unordered_map<int, EdgeSharedPtr> eIdMap;
+    std::unordered_map<int, FaceSharedPtr> fIdMap;
 
     // Load up all edges from graph
     {
@@ -107,13 +113,13 @@ void InputNekpp::Process()
             int id0 = it.second->GetVid(0);
             int id1 = it.second->GetVid(1);
             LibUtilities::PointsType ptype =
-                it.second->GetPointsKeys()[0].GetPointsType();
-            EdgeSharedPtr ed =
-                EdgeSharedPtr(new Edge(vIdMap[id0], vIdMap[id1], curve, ptype));
+                it.second->GetXmap()->GetPointsKeys()[0].GetPointsType();
+            EdgeSharedPtr ed = std::make_shared<Edge>(
+                vIdMap[id0], vIdMap[id1], curve, ptype);
 
             auto testIns = m_mesh->m_edgeSet.insert(ed);
-            (*(testIns.first))->m_id = it.second->GetEid();
-            eIdMap[it.second->GetEid()] = ed;
+            (*(testIns.first))->m_id = it.second->GetGlobalID();
+            eIdMap[it.second->GetGlobalID()] = ed;
         }
     }
 
@@ -136,14 +142,12 @@ void InputNekpp::Process()
                 faceEdges.push_back(eIdMap[it.second->GetEid(i)]);
             }
 
-            FaceSharedPtr fac =
-                FaceSharedPtr(new Face(faceVertices,
-                                       faceNodes,
-                                       faceEdges,
-                                       LibUtilities::ePolyEvenlySpaced));
+            FaceSharedPtr fac = std::make_shared<Face>(
+                faceVertices, faceNodes, faceEdges,
+                LibUtilities::ePolyEvenlySpaced);
             auto testIns = m_mesh->m_faceSet.insert(fac);
-            (*(testIns.first))->m_id = it.second->GetFid();
-            fIdMap[it.second->GetFid()] = fac;
+            (*(testIns.first))->m_id = it.second->GetGlobalID();
+            fIdMap[it.second->GetGlobalID()] = fac;
         }
 
         for (auto &it : graph->GetAllQuadGeoms())
@@ -163,14 +167,12 @@ void InputNekpp::Process()
                 faceEdges.push_back(eIdMap[it.second->GetEid(i)]);
             }
 
-            FaceSharedPtr fac =
-                FaceSharedPtr(new Face(faceVertices,
-                                       faceNodes,
-                                       faceEdges,
-                                       LibUtilities::ePolyEvenlySpaced));
+            FaceSharedPtr fac = std::make_shared<Face>(
+                faceVertices, faceNodes, faceEdges,
+                LibUtilities::ePolyEvenlySpaced);
             auto testIns = m_mesh->m_faceSet.insert(fac);
-            (*(testIns.first))->m_id = it.second->GetFid();
-            fIdMap[it.second->GetFid()] = fac;
+            (*(testIns.first))->m_id = it.second->GetGlobalID();
+            fIdMap[it.second->GetGlobalID()] = fac;
         }
     }
 
@@ -186,11 +188,12 @@ void InputNekpp::Process()
         edg->m_curveType = curve->m_ptype;
         for (int j = 0; j < curve->m_points.size() - 2; ++j)
         {
-            NodeSharedPtr n(new Node(j,
-                                     (*curve->m_points[j + 1])(0),
-                                     (*curve->m_points[j + 1])(1),
-                                     (*curve->m_points[j + 1])(2)));
-            edg->m_edgeNodes.push_back(n);
+            edg->m_edgeNodes.push_back(
+                std::make_shared<Node>(
+                    j,
+                    (*curve->m_points[j + 1])(0),
+                    (*curve->m_points[j + 1])(1),
+                    (*curve->m_points[j + 1])(2)));
         }
     }
 
@@ -211,11 +214,12 @@ void InputNekpp::Process()
             int N = ((int)sqrt(8.0 * Ntot + 1.0) - 1) / 2;
             for (int j = 3 + 3 * (N - 2); j < Ntot; ++j)
             {
-                NodeSharedPtr n(new Node(j,
-                                         (*curve->m_points[j])(0),
-                                         (*curve->m_points[j])(1),
-                                         (*curve->m_points[j])(2)));
-                fac->m_faceNodes.push_back(n);
+                fac->m_faceNodes.push_back(
+                    std::make_shared<Node>(
+                        j,
+                        (*curve->m_points[j])(0),
+                        (*curve->m_points[j])(1),
+                        (*curve->m_points[j])(2)));
             }
         }
         else // quad face.
@@ -226,11 +230,12 @@ void InputNekpp::Process()
             {
                 for (int k = 1; k < N - 1; ++k)
                 {
-                    NodeSharedPtr n(new Node((j - 1) * (N - 2) + k - 1,
-                                             (*curve->m_points[j * N + k])(0),
-                                             (*curve->m_points[j * N + k])(1),
-                                             (*curve->m_points[j * N + k])(2)));
-                    fac->m_faceNodes.push_back(n);
+                    fac->m_faceNodes.push_back(
+                        std::make_shared<Node>(
+                            (j - 1) * (N - 2) + k - 1,
+                            (*curve->m_points[j * N + k])(0),
+                            (*curve->m_points[j * N + k])(1),
+                            (*curve->m_points[j * N + k])(2)));
                 }
             }
         }
@@ -241,10 +246,10 @@ void InputNekpp::Process()
     for (auto &compIt : graph->GetComposites())
     {
         // Get hold of dimension
-        int dim = (*compIt.second)[0]->GetShapeDim();
+        int dim = compIt.second->m_geomVec[0]->GetShapeDim();
 
         // compIt->second is a GeometryVector
-        for (auto &geomIt : *compIt.second)
+        for (auto &geomIt : compIt.second->m_geomVec)
         {
             ElmtConfig conf(geomIt->GetShapeType(), 1, true, true, false);
 
@@ -268,6 +273,7 @@ void InputNekpp::Process()
             {
                 EdgeSharedPtr edg = eIdMap[geomIt->GetGlobalID()];
                 E->SetVolumeNodes(edg->m_edgeNodes);
+                E->SetCurveType(edg->m_curveType);
             }
 
             if (dim > 1)
@@ -285,6 +291,7 @@ void InputNekpp::Process()
                 {
                     FaceSharedPtr fac = fIdMap[geomIt->GetGlobalID()];
                     E->SetVolumeNodes(fac->m_faceNodes);
+                    E->SetCurveType(fac->m_curveType);
                 }
             }
 

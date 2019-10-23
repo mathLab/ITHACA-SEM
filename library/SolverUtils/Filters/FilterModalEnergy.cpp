@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #include <iomanip>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <SolverUtils/Filters/FilterModalEnergy.h>
 
@@ -52,8 +53,9 @@ std::string FilterModalEnergy::className = GetFilterFactory().
  */
 FilterModalEnergy::FilterModalEnergy(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams) :
-    Filter(pSession)
+    Filter(pSession, pEquation)
 {
     // OutputFile
     auto it = pParams.find("OutputFile");
@@ -80,7 +82,8 @@ FilterModalEnergy::FilterModalEnergy(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetInterpreter(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
 
@@ -104,7 +107,8 @@ FilterModalEnergy::FilterModalEnergy(
         }
         else
         {
-            LibUtilities::Equation equ(m_session, it->second);
+            LibUtilities::Equation equ(
+                m_session->GetInterpreter(), it->second);
             m_outputPlane = round(equ.Evaluate());
         }
     }
@@ -210,7 +214,7 @@ void FilterModalEnergy::v_Update(
                 SetUpBaseFields(graphShrPtr);
                 string file = m_session->
                     GetFunctionFilename("BaseFlow", 0);
-                ImportFldBase(file, graphShrPtr);
+                ImportFldBase(file);
 
                 for (int i = 0; i < pFields.num_elements()-1; ++i)
                 {
@@ -342,6 +346,8 @@ void FilterModalEnergy::v_Finalise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     if (pFields[0]->GetComm()->GetRank() == 0)
     {
         m_outputStream.close();
@@ -357,6 +363,8 @@ NekDouble FilterModalEnergy::L2Error(
     unsigned int field,
     const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     NekDouble L2error = -1.0;
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
 
@@ -584,7 +592,8 @@ void FilterModalEnergy::SetUpBaseFields(
             }
             break;
             default:
-                ASSERTL0(false, "Expansion dimension not recognised");
+                NEKERROR(ErrorUtil::efatal,
+                         "Expansion dimension not recognised");
                 break;
         }
     }
@@ -617,9 +626,11 @@ void FilterModalEnergy::SetUpBaseFields(
                 break;
             }
             case 3:
-                ASSERTL0(false, "3D not set up");
+                NEKERROR(ErrorUtil::efatal, "3D not set up");
+                break;
             default:
-                ASSERTL0(false, "Expansion dimension not recognised");
+                NEKERROR(ErrorUtil::efatal,
+                         "Expansion dimension not recognised");
                 break;
         }
     }
@@ -629,8 +640,7 @@ void FilterModalEnergy::SetUpBaseFields(
  *  Import the base flow fld file.
  */
 void FilterModalEnergy::ImportFldBase(
-    std::string pInfile,
-    SpatialDomains::MeshGraphSharedPtr pGraph)
+    std::string pInfile)
 {
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
     std::vector<std::vector<NekDouble> > FieldData;

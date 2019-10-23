@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,11 +32,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Diffusion/Diffusion3DHomogeneous1D.h>
 #include <iostream>
 #include <iomanip>
-
 using namespace std;
+
+#include <boost/core/ignore_unused.hpp>
+
+#include <SolverUtils/Diffusion/Diffusion3DHomogeneous1D.h>
 
 namespace Nektar
 {
@@ -175,7 +176,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
-            
+            boost::ignore_unused(pFwd, pBwd);
+
             Array<OneD, NekDouble> tmp(m_numPoints), tmp2;
             Array<OneD, Array<OneD, NekDouble> > viscHComp;
             const int nPointsTot = fields[0]->GetNpoints();

@@ -92,7 +92,14 @@ FieldConvert test.xml test.fld test.plt
 where \inltt{FieldConvert} is the executable associated to the utility
 FieldConvert, \inltt{test.xml} is the session file and
 \inltt{test.vtu}, \inltt{test.dat},  \inltt{test.plt} are the desired
-format outputs, either Paraview, VisIt or Tecplot formats.
+format outputs, either Paraview, VisIt or Tecplot formats. \\
+When converting to \inltt{.dat} or \inltt{plt} format, it is possible to
+enable output with double precision, which is more accurate but requires larger
+disk space. For example, double precision output in plt. format can be produced
+with the command:
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert test.xml test.fld test.plt:plt:double
+\end{lstlisting}
 %
 \begin{tipbox}
 Note that the session file is also supported
@@ -157,13 +164,16 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{QCriterion}: Computes the Q-Criterion for a given output file;
 \item \inltt{L2Criterion}: Computes the Lambda 2 Criterion for a given output file;
 \item \inltt{addcompositeid}: Adds the composite ID of an element as an additional field;
+\item \inltt{fieldfromstring}: Modifies or adds a new field from an expression involving the existing fields;
 \item \inltt{addFld}: Sum two .fld files;
 \item \inltt{combineAvg}: Combine two \nekpp binary output (.chk or .fld) field file containing averages of fields (and
 possibly also Reynolds stresses) into single file;
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file (deprecated);
+\item \inltt{dof}: Count the total number of DOF;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
 \item \inltt{gradient}: Computes gradient of fields;
+\item \inltt{halfmodetofourier}: Convert \inltt{HalfMode} expansion to \inltt{SingleMode} for further processing;
 \item \inltt{homplane}: Extract a plane from 3DH1D expansions;
 \item \inltt{homstretch}: Stretch a 3DH1D expansion by an integer factor;
 \item \inltt{innerproduct}: take the inner product between one or a series of fields with another field (or series of fields).
@@ -174,10 +184,12 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{isocontour}: Extract an isocontour of ``fieldid'' variable and at value ``fieldvalue''. Optionally ``fieldstr'' can be specified for a string definition or ``smooth'' for smoothing;
 \item \inltt{jacobianenergy}: Shows high frequency energy of Jacobian;
 \item \inltt{qualitymetric}: Evaluate a quality metric of the underlying mesh to show mesh quality;
+\item \inltt{mean}: Evaluate the mean of variables on the domain;
 \item \inltt{meanmode}: Extract mean mode (plane zero) of 3DH1D expansions;
 \item \inltt{pointdatatofld}: Given discrete data at quadrature points
   project them onto an expansion basis and output fld file;
 \item \inltt{printfldnorms}: Print L2 and LInf norms to stdout;
+\item \inltt{removefield}: Removes one or more fields from .fld files;
 \item \inltt{scalargrad}: Computes scalar gradient field;
 \item \inltt{scaleinputfld}: Rescale input field by a constant factor;
 \item \inltt{shear}: Computes time-averaged shear stress metrics: TAWSS, OSI, transWSS, TAAFI, TACFI, WSSG;
@@ -281,7 +293,28 @@ variable that contains the composite ID. To assist in boundary identification,
 the input file \inlsh{mesh.xml} should be a surface XML file that can be
 obtained through the \nm \inltt{extract} module (see section
 \ref{s:utilities:nekmesh:extract}).
-
+%
+%
+%
+\subsection{Add new field: \textit{fieldfromstring} module}
+To modify or create a new field using an expression involving the existing fields, one can
+use the \inltt{fieldfromstring} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m fieldfromstring:fieldstr="x+y+u":fieldname="result" \
+  file1.xml file2.fld file3.fld
+\end{lstlisting}
+%
+In this case \inltt{fieldstr} is a required parameter describing a function of
+the coordinates and the existing variables, and \inltt{fieldname} is an optional
+parameter defining the name of the new or modified field (the default is newfield).
+\inltt{file3.fld} is the output containing both the original and the new fields,
+and can be processed in a similar way as described
+in section \ref{s:utilities:fieldconvert:sub:convert} to visualise
+the result either in Tecplot, Paraview or VisIt.
+%
+%
+%
 \subsection{Sum two .fld files: \textit{addFld} module}
 To sum two .fld files one can use the \inltt{addFld} module of FieldConvert
 %
@@ -330,6 +363,16 @@ way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise the result either in Tecplot, Paraview or VisIt. The
 \inltt{concatenate} module previously used for this purpose is not
 required anymore, and will be removed in a future release.
+%
+%
+%
+\subsection{Count the number of DOF: \textit{dof} module}
+To count the number of DOF in a solution file,
+one can run the following command
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m dof file.xml file.fld out.stdout
+\end{lstlisting}
 %
 %
 %
@@ -405,6 +448,13 @@ to visualise the result either in Tecplot, Paraview or VisIt.
 %
 %
 
+\subsection{Convert HalfMode expansion to SingleMode for further processing: \textit{halfmodetofourier} module}
+
+To obtain full Fourier expansion form a \inltt{HalfMode} result, use the comand:
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m halfmodetofourier file.xml half_mode_file.fld single_mode_file.fld
+\end{lstlisting}
+
 \subsection{Extract a plane from 3DH1D expansion: \textit{homplane} module}
 
 To obtain a 2D expansion containing one of the planes of a
@@ -431,7 +481,7 @@ To stretch a 3DH1D expansion in the z-direction, use the command:
 FieldConvert -m homstretch:factor=value file.xml file.fld file-stretch.fld
 \end{lstlisting}
 The number of modes in the resulting field can be chosen using the command-line
-parameter \inltt{output-points-hom-z}.
+parameter \inltt{-{}-output-points-hom-z}.
 
 The output file \inltt{file-stretch.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
@@ -784,7 +834,20 @@ Two quality metrics are implemented that produce scalar fields $Q$:
 %
 %
 %
-
+\subsection{Evaluate the mean of variables on the domain: \textit{mean} module}
+To evaluate the mean of variables on the domain one can use the
+\inltt{mean} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m mean file1.xml file2.fld out.stdout
+\end{lstlisting}
+%
+This module does not create an output file which is reinforced by the
+out.stdout option. The integral and mean for each field variable are
+then printed to the stdout.
+%
+%
+%
 \subsection{Extract mean mode of 3DH1D expansion: \textit{meanmode} module}
 
 To obtain a 2D expansion containing the mean mode (plane zero in Fourier space) of a
@@ -876,6 +939,19 @@ FieldConvert -m printfldnorms test.xml test.fld out.stdout
 This module does not create an output file which is reinforced by the
 out.stdout option. The L2 and LInf norms for each field variable are
 then printed to the stdout.
+%
+%
+%
+
+\subsection{Removes one or more fields from .fld files: \textit{removefield} module}
+This module allows to remove one or more fields from a .fld file:
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m removefield:fieldname="u,v,p" test.xml test.fld test-removed.fld
+\end{lstlisting}
+where the file \inltt{test-removed.fld} can be processed in a similar
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise the result either in Tecplot, Paraview or VisIt. The lighter resulting
+file speeds up the postprocessing of large files when not all fields are required. 
 %
 %
 %
@@ -1092,63 +1168,13 @@ process each parallel partition in serial, for example when interpolating a
 solution field from one mesh to another or creating an output file for
 visualization.
 
-\subsection{Using the \textit{nparts} options}
-
-One option is to use the \inltt{nparts}  command line
-option. For example, the following command will create a
-\inltt{.vtu} file using 10 partitions of \inltt{file1.xml}:
-\begin{lstlisting}[style=BashInputStyle]
-FieldConvert --nparts 10  file1.xml file1.fld file1.vtu
-\end{lstlisting}
-Note this will create a parallel vtu file as it processes each partition. 
-
-
-Another example is to interpolate \inltt{file1.fld} from one mesh
-\inltt{file1.xml} to another \inltt{file2.xml}. If the mesh files are
-large we can do this by partitioning \inltt{file2.xml} into 10 (or more)
-partitions and interpolating each partition one by one using the
-command:
-\begin{lstlisting}[style=BashInputStyle]
-  FieldConvert --nparts 10 -m interpfield:fromxml=file1.xml:fromfld=file1.fld \
-  file2.xml file2.fld
-\end{lstlisting}
-Note that internally the routine uses the range option so that it
-only has to load the part of \inltt{file1.xml} that overlaps with each
-partition of \inltt{file2.xml}.
-The resulting output will lie in a directory called \inltt{file2.fld}, with each
-of the different parallel partitions in files with names \inltt{P0000000.fld},
-\inltt{P0000001.fld}, \dots, \inltt{P0000009.fld}. This is nearly a complete
-parallel field file. However, when the output file is in the .fld format,
-the \inltt{Info.xml} file, which contains the information about which elements
-lie in each partition, is not correct since it will only contain the information for one of the partitions. The correct \inltt{Info.xml} file  can be generated by using the command
-\begin{lstlisting}[style=BashInputStyle]
-FieldConvert file2.xml file2.fld/Info.xml:info:nparts=10
-\end{lstlisting}
-Note the \inltt{:info} extension on the last argument is necessary to tell
-FieldConvert that you wish to generate an info file, but with the extension
-\inltt{.xml}. This syntax allows the routine not to get confused with the
-input/output XML files.
-
-\subsection{Running in parallel with the \textit{ nparts} option}
-
-The examples above will process each partition serially which may now
-take a while for many partitions. You can however run this option in
-parallel using a smaller number of cores than the nparts.
-
-For the example of creating a vtu file above you can use 4 processor concurrently wiht the command line:
-\begin{lstlisting}[style=BashInputStyle]
-mpirun -n 4 FieldConvert --nparts 10   file1.xml file1.fld file1.vtu
-\end{lstlisting}
-
-Obviously the executable will have to have been compiled with the MPI option for this to work. 
 
 \subsection{Using the \textit{ part-only} and \textit{ part-only-overlapping} options}
 
-The options above will all load in the full \inltt{file1.xml}, partition
-it into \inltt{nparts} files in a director called \inltt{file1\_xml}.
-This can be expensive if the \inltt{file1.xml} is already large. So instead you can
-pre-partition the file using the using the  \inltt{--part-only}
-option. So the command
+Loading full \inltt{file1.xml} can be expensive if the
+\inltt{file1.xml} is already large. So instead you can pre-partition
+the file using the using the \inltt{--part-only} option. So the
+command
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert --part-only 10 file.xml file.fld
 \end{lstlisting}
@@ -1156,13 +1182,6 @@ will partition the mesh into 10 partitions and write each partition into a
 directory called \inltt{file\_xml}. If you enter this directory you will find
 partitioned XML files \inltt{P0000000.xml}, \inltt{P0000001.xml}, \dots,
 \inltt{P0000009.xml} which can then be processed individually as outlined above.
-
-If you have a partitioned directory either from a parallel run or using the \inltt{--part-only} option  you can now run the \inltt{FieldConvert} option using the command
-\begin{lstlisting}[style=BashInputStyle]
-mpirun -n 4 FieldConvert --nparts 10  file1\_xml:xml file1.fld file1.vtu
-\end{lstlisting}
-
-Note the form \inltt{file1\_xml:xml} option tells the code it is a parallel partition which should be treated as an \inltt{xml} type file. 
 
 There is also a \inltt{--part-only-overlapping} option, which can be run in the
 same fashion.
@@ -1179,6 +1198,58 @@ be a gap between partitions, as the smoother tends to shrink the isocontour
 within a partition. using the \inltt{--part-only-overlapping} option will still
 yield a shrinking isocontour, but the overlapping partitions help to overlap the
 partiiton boundaries.
+
+\subsection{Using the \textit{nparts} options}
+
+If you have a partitioned directory either from a parallel run or
+using the \inltt{--part-only} option you can now run the
+\inltt{FieldConvert} option using the \inltt{nparts}  command line
+option, that is
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert --nparts 10  file1\_xml:xml file1.fld file1.vtu
+\end{lstlisting}
+
+Note the form \inltt{file1\_xml:xml} option tells the code it is a
+parallel partition which should be treated as an \inltt{xml} type
+file. the argument of \inltt{nparts} should correpsond to the number
+of partitions used in generating the file1\_xml directory. This will
+create a parallel vtu file as it processes each partition.
+
+
+Another example is to interpolate \inltt{file1.fld} from one mesh
+\inltt{file1.xml} to another \inltt{file2.xml}. If the mesh files are
+large we can do this by partitioning \inltt{file2.xml} into 10 (or
+more) partitions to generate the \inltt{file\_xml} directory and
+interpolating each partition one by one using the command:
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert --nparts 10 -m interpfield:fromxml=file1.xml:fromfld=file1.fld \
+  file2_xml:xml file2.fld
+\end{lstlisting}
+Note that internally the routine uses the range option so that it only
+has to load the part of \inltt{file1.xml} that overlaps with each
+partition of \inltt{file2.xml}.  The resulting output will lie in a
+directory called \inltt{file2.fld}, with each of the different
+parallel partitions in files with names \inltt{P0000000.fld},
+\inltt{P0000001.fld}, \dots, \inltt{P0000009.fld}. In previous
+versions of FieldConvert it was necessary to generate an updated
+\inltt{Info.xml} file but in the current version it should
+automatically be updating this file.
+
+\subsection{Running in parallel with the \textit{ nparts} option}
+
+The examples above will process each partition serially which may now
+take a while for many partitions. You can however run this option in
+parallel using a smaller number of cores than the nparts.
+
+For the example of creating a vtu file above you can use 4 processor
+concurrently wiht the command line:
+\begin{lstlisting}[style=BashInputStyle]
+mpirun -n 4 FieldConvert --nparts 10   file1\_xml:xml file1.fld file1.vtu
+\end{lstlisting}
+
+Obviously the executable will have to have been compiled with the MPI
+option for this to work.
+
 
 %%% Local Variables:
 %%% mode: latex

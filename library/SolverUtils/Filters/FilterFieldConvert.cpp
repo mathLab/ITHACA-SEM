@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,7 +34,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/Filters/FilterFieldConvert.h>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace Nektar
 {
@@ -47,8 +50,9 @@ std::string FilterFieldConvert::className =
 
 FilterFieldConvert::FilterFieldConvert(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams)
-    : Filter(pSession)
+    : Filter(pSession, pEquation)
 {
     // OutputFile
     auto it = pParams.find("OutputFile");
@@ -61,7 +65,7 @@ FilterFieldConvert::FilterFieldConvert(
     else
     {
         ASSERTL0(it->second.length() > 0, "Missing parameter 'OutputFile'.");
-        if ( it->second.find_last_of('.') != string::npos)
+        if ( it->second.find_last_of('.') != std::string::npos)
         {
             m_outputFile = it->second;
         }
@@ -82,7 +86,7 @@ FilterFieldConvert::FilterFieldConvert(
     else
     {
         ASSERTL0(it->second.length() > 0, "Missing parameter 'RestartFile'.");
-        if ( it->second.find_last_of('.') != string::npos)
+        if ( it->second.find_last_of('.') != std::string::npos)
         {
             m_restartFile = it->second;
         }
@@ -94,18 +98,6 @@ FilterFieldConvert::FilterFieldConvert(
         }
     }
 
-    // SampleFrequency
-    it = pParams.find("SampleFrequency");
-    if (it == pParams.end())
-    {
-        m_sampleFrequency = 1;
-    }
-    else
-    {
-        LibUtilities::Equation equ(m_session, it->second);
-        m_sampleFrequency = round(equ.Evaluate());
-    }
-
     // OutputFrequency
     it = pParams.find("OutputFrequency");
     if (it == pParams.end())
@@ -114,9 +106,14 @@ FilterFieldConvert::FilterFieldConvert(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetInterpreter(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
+
+    // The base class can use SampleFrequency = OutputFrequency
+    //    (Derived classes need to override this if needed)
+    m_sampleFrequency = m_outputFrequency;
 
     m_numSamples  = 0;
     m_index       = 0;
@@ -126,7 +123,7 @@ FilterFieldConvert::FilterFieldConvert(
     // FieldConvert modules
     //
     m_f = std::shared_ptr<Field>(new Field());
-    vector<string>          modcmds;
+    std::vector<std::string> modcmds;
     // Process modules
     std::stringstream moduleStream;
     it = pParams.find("Modules");
@@ -148,7 +145,7 @@ FilterFieldConvert::FilterFieldConvert(
     // Create modules
     CreateModules(modcmds);
     // Strip options from m_outputFile
-    vector<string> tmp;
+    std::vector<std::string> tmp;
     boost::split(tmp, m_outputFile, boost::is_any_of(":"));
     m_outputFile = tmp[0];
 }
@@ -166,13 +163,14 @@ void FilterFieldConvert::v_Initialise(
     // m_variables need to be filled by a derived class
     m_outFields.resize(m_variables.size());
     int nfield;
-    
+
     for (int n = 0; n < m_variables.size(); ++n)
     {
         // if n >= pFields.num_elements() assum we have used n=0 field
         nfield = (n < pFields.num_elements())? n: 0;
 
-        m_outFields[n] = Array<OneD, NekDouble>(pFields[nfield]->GetNcoeffs(), 0.0);
+        m_outFields[n] =
+                Array<OneD, NekDouble>(pFields[nfield]->GetNcoeffs(), 0.0);
     }
     
     m_fieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);
@@ -256,6 +254,17 @@ void FilterFieldConvert::v_FillVariablesName(
     {
         m_variables[n] = pFields[n]->GetSession()->GetVariable(n);
     }
+
+    // Need to create a dummy coeffs vector to get extra variables names...
+    std::vector<Array<OneD, NekDouble> > coeffs(nfield);
+    for (int n = 0; n < nfield; ++n)
+    {
+        coeffs[n] = pFields[n]->GetCoeffs();
+    }
+    // Get extra variables
+    auto equ = m_equ.lock();
+    ASSERTL0(equ, "Weak pointer expired");
+    equ->ExtraFldOutput(coeffs, m_variables);
 }
 
 void FilterFieldConvert::v_Update(
@@ -268,8 +277,20 @@ void FilterFieldConvert::v_Update(
         return;
     }
 
+    // Append extra fields
+    int nfield = pFields.num_elements();
+    std::vector<Array<OneD, NekDouble> > coeffs(nfield);
+    for (int n = 0; n < nfield; ++n)
+    {
+        coeffs[n] = pFields[n]->GetCoeffs();
+    }
+    std::vector<std::string> variables = m_variables;
+    auto equ = m_equ.lock();
+    ASSERTL0(equ, "Weak pointer expired");
+    equ->ExtraFldOutput(coeffs, variables);
+
     m_numSamples++;
-    v_ProcessSample(pFields, time);
+    v_ProcessSample(pFields, coeffs, time);
 
     if (m_index % m_outputFrequency == 0)
     {
@@ -288,14 +309,17 @@ void FilterFieldConvert::v_Finalise(
     OutputField(pFields);
 }
 
-void FilterFieldConvert::v_PrepareOutput(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
+void FilterFieldConvert::v_ProcessSample(
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+          std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+    const NekDouble &time)
 {
-    for(int n = 0; n < pFields.num_elements(); ++n)
+    boost::ignore_unused(pFields, time);
+
+    for(int n = 0; n < m_outFields.size(); ++n)
     {
         Vmath::Vcopy(m_outFields[n].num_elements(),
-                    pFields[n]->GetCoeffs(),
+                    fieldcoeffs[n],
                     1,
                     m_outFields[n],
                     1);
@@ -320,9 +344,9 @@ void FilterFieldConvert::OutputField(
 
     // Determine new file name
     std::stringstream outname;
-    int    dot    = m_outputFile.find_last_of('.');
-    string name   = m_outputFile.substr(0, dot);
-    string ext    = m_outputFile.substr(dot, m_outputFile.length() - dot);
+    int         dot    = m_outputFile.find_last_of('.');
+    std::string name   = m_outputFile.substr(0, dot);
+    std::string ext    = m_outputFile.substr(dot, m_outputFile.length() - dot);
     std::string suffix = v_GetFileSuffix();
     if (dump == -1) // final dump
     {
@@ -377,12 +401,12 @@ bool FilterFieldConvert::v_IsTimeDependent()
     return true;
 }
 
-void FilterFieldConvert::CreateModules( vector<string> &modcmds)
+void FilterFieldConvert::CreateModules(std::vector<std::string> &modcmds)
 {
     for (int i = 0; i < modcmds.size(); ++i)
     {
         // First split each command by the colon separator.
-        vector<string> tmp1;
+        std::vector<std::string> tmp1;
         ModuleKey module;
         int offset = 1;
 
@@ -401,16 +425,16 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
             // filename.xml:vtk:opt1=arg1:opt2=arg2
             if (tmp1.size() == 1)
             {
-                int    dot    = tmp1[0].find_last_of('.') + 1;
-                string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
+                int         dot = tmp1[0].find_last_of('.') + 1;
+                std::string ext = tmp1[0].substr(dot, tmp1[0].length() - dot);
 
                 module.second = ext;
-                tmp1.push_back(string("outfile=") + tmp1[0]);
+                tmp1.push_back(std::string("outfile=") + tmp1[0]);
             }
             else
             {
                 module.second = tmp1[1];
-                tmp1.push_back(string("outfile=") + tmp1[0]);
+                tmp1.push_back(std::string("outfile=") + tmp1[0]);
                 offset++;
             }
         }
@@ -428,7 +452,7 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
         // Set options for this module.
         for (int j = offset; j < tmp1.size(); ++j)
         {
-            vector<string> tmp2;
+            std::vector<std::string> tmp2;
             boost::split(tmp2, tmp1[j], boost::is_any_of("="));
 
             if (tmp2.size() == 1)
@@ -441,8 +465,8 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
             }
             else
             {
-                cerr << "ERROR: Invalid module configuration: format is "
-                     << "either :arg or :arg=val" << endl;
+                std::cerr << "ERROR: Invalid module configuration: format is "
+                          << "either :arg or :arg=val" << std::endl;
                 abort();
             }
         }
@@ -464,7 +488,7 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
         ModuleKey               module;
         ModuleSharedPtr         mod;
         module.first  = eProcessModule;
-        module.second = string("equispacedoutput");
+        module.second = std::string("equispacedoutput");
         mod = GetModuleFactory().CreateInstance(module, m_f);
         m_modules.insert(m_modules.end()-1, mod);
         mod->SetDefaults();
@@ -520,7 +544,7 @@ void FilterFieldConvert::CreateFields(
 }
 
 // This function checks validity conditions for the list of modules provided
-void FilterFieldConvert::CheckModules(vector<ModuleSharedPtr> &modules)
+void FilterFieldConvert::CheckModules(std::vector<ModuleSharedPtr> &modules)
 {
     // Count number of modules by priority
     Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
@@ -538,7 +562,7 @@ void FilterFieldConvert::CheckModules(vector<ModuleSharedPtr> &modules)
         modulesCount[eFillExp] != 0         ||
         modulesCount[eCreatePts] != 0)
     {
-        stringstream ss;
+        std::stringstream ss;
         ss << "Module(s): ";
         for (int i = 0; i < modules.size(); ++i)
         {
@@ -560,7 +584,7 @@ void FilterFieldConvert::CheckModules(vector<ModuleSharedPtr> &modules)
     if( modulesCount[eConvertExpToPts] != 0 &&
         modulesCount[eBndExtraction]   != 0)
     {
-        stringstream ss;
+        std::stringstream ss;
         ss << "Module(s): ";
         for (int i = 0; i < modules.size(); ++i)
         {

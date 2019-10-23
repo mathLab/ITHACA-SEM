@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -323,7 +322,7 @@ void LocTraceToTraceMap::Setup2D(
             nedgepts  = exp2d->GetEdgeNumPoints(e);
             nedgepts1 = edge->GetTotPoints();
 
-            StdRegions::Orientation orient = exp2d->GetCartesianEorient(e);
+            StdRegions::Orientation orient = exp2d->GetEorient(e);
 
             // Account for eBackwards orientation
             exp2d->ReOrientEdgePhysMap(elmtToTrace[n][e]->GetNverts(),

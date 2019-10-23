@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -42,7 +41,13 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <NekMeshUtils/Triangle/Triangle.h>
+#define ANSI_DECLARATORS
+#define REAL double
+#define VOID void
+extern "C"
+{
+    #include <triangle.h>
+}
 
 namespace Nektar
 {
@@ -96,6 +101,16 @@ private:
      * @brief Clear memory
      */
     void SetUp();
+
+    struct DelaunayTriangle
+    {
+    public:
+        void Run(char* cmd)
+        {
+            triangulate(cmd, &in, &out, NULL);
+        }
+        struct triangulateio in, out;
+    };
 
     /// List of bounding nodes to the surface
     std::vector<std::vector<NodeSharedPtr> > m_boundingloops;

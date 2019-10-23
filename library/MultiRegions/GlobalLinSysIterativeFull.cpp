@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -115,20 +114,20 @@ namespace Nektar
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
             std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
-            bool vCG;
-            if ((m_locToGloMap = std::dynamic_pointer_cast<AssemblyMapCG>(
-                     pLocToGloMap)))
+            bool vCG = false;
+            m_locToGloMap = pLocToGloMap;
+
+            if (std::dynamic_pointer_cast<AssemblyMapCG>(pLocToGloMap))
             {
                 vCG = true;
             }
-            else if ((m_locToGloMap = std::dynamic_pointer_cast<
-                          AssemblyMapDG>(pLocToGloMap)))
+            else if (std::dynamic_pointer_cast<AssemblyMapDG>(pLocToGloMap))
             {
                 vCG = false;
             }
             else
             {
-                ASSERTL0(false, "Unknown map type");
+                NEKERROR(ErrorUtil::efatal, "Unknown map type");
             }
 
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
@@ -196,14 +195,16 @@ namespace Nektar
             expList->GeneralMatrixOp(m_linSysKey,
                                      pInput, pOutput, eGlobal);
 
+            AssemblyMapSharedPtr asmMap = m_locToGloMap.lock();
+
             // Apply robin boundary conditions to the solution.
             if(m_robinBCInfo.size() > 0)
             {
                 ASSERTL0(false,
                         "Robin boundaries not set up in IterativeFull solver.");
-                int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-                int nLocal  = m_locToGloMap->GetNumLocalCoeffs();
-                int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+                int nGlobal = asmMap->GetNumGlobalCoeffs();
+                int nLocal  = asmMap->GetNumLocalCoeffs();
+                int nDir    = asmMap->GetNumGlobalDirBndCoeffs();
                 int nNonDir = nGlobal - nDir;
                 Array<OneD, NekDouble> robin_A(nGlobal, 0.0);
                 Array<OneD, NekDouble> robin_l(nLocal,  0.0);
@@ -213,7 +214,7 @@ namespace Nektar
 
                 // Operation: p_A = A * d_A
                 // First map d_A to local solution
-                m_locToGloMap->GlobalToLocal(pInput, robin_l);
+                asmMap->GlobalToLocal(pInput, robin_l);
 
                 // Iterate over all the elements computing Robin BCs where
                 // necessary
@@ -242,7 +243,7 @@ namespace Nektar
                 }
 
                 // Map local Robin contribution back to global coefficients
-                m_locToGloMap->LocalToGlobal(robin_l, robin_A);
+                asmMap->LocalToGlobal(robin_l, robin_A);
                 // Add them to the output of the GeneralMatrixOp
                 Vmath::Vadd(nGlobal, pOutput, 1, robin_A, 1, pOutput, 1);
             }
@@ -254,7 +255,7 @@ namespace Nektar
          */
         void GlobalLinSysIterativeFull::v_UniqueMap()
         {
-            m_map = m_locToGloMap->GetGlobalToUniversalMapUnique();
+            m_map = m_locToGloMap.lock()->GetGlobalToUniversalMapUnique();
         }
 
     }

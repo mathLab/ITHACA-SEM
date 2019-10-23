@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -43,7 +42,9 @@ namespace Nektar
             AUSM3Solver::create,
             "AUSM3 Riemann solver");
 
-    AUSM3Solver::AUSM3Solver() : CompressibleSolver()
+    AUSM3Solver::AUSM3Solver(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+        : CompressibleSolver(pSession)
     {
 
     }
@@ -71,9 +72,7 @@ namespace Nektar
         double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
         double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
         double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
-    {        
-        static NekDouble gamma = m_params["gamma"]();
-        
+    {
         // Left and Right velocities
         NekDouble uL = rhouL / rhoL;
         NekDouble vL = rhovL / rhoL;
@@ -82,13 +81,17 @@ namespace Nektar
         NekDouble vR = rhovR / rhoR;
         NekDouble wR = rhowR / rhoR;
 
-        // Left and right pressures
-        NekDouble pL = (gamma - 1.0) *
-            (EL - 0.5 * (rhouL * uL + rhovL * vL + rhowL * wL));
-        NekDouble pR = (gamma - 1.0) *
-            (ER - 0.5 * (rhouR * uR + rhovR * vR + rhowR * wR));
-        NekDouble cL = sqrt(gamma * pL / rhoL);
-        NekDouble cR = sqrt(gamma * pR / rhoR);
+        // Internal energy (per unit mass)
+        NekDouble eL =
+                (EL - 0.5 * (rhouL * uL + rhovL * vL + rhowL * wL)) / rhoL;
+        NekDouble eR =
+                (ER - 0.5 * (rhouR * uR + rhovR * vR + rhowR * wR)) / rhoR;
+        // Pressure
+        NekDouble pL = m_eos->GetPressure(rhoL, eL);
+        NekDouble pR = m_eos->GetPressure(rhoR, eR);
+        // Speed of sound
+        NekDouble cL = m_eos->GetSoundSpeed(rhoL, eL);
+        NekDouble cR = m_eos->GetSoundSpeed(rhoR, eR);
         
         // Average speeds of sound
         NekDouble cA = 0.5 * (cL + cR);

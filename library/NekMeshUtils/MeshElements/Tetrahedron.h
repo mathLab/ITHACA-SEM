@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -55,8 +54,7 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        return std::shared_ptr<Element>(
-            new Tetrahedron(pConf, pNodeList, pTagList));
+        return std::make_shared<Tetrahedron>(pConf, pNodeList, pTagList);
     }
     /// Element type
     static LibUtilities::ShapeType m_type;
@@ -86,7 +84,7 @@ public:
     NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
     NEKMESHUTILS_EXPORT virtual int GetFaceVertex(int i, int j)
     {
-        return m_faceIds[i][j];
+        return m_faceVertMap[i][j];
     }
 
     int m_orientationMap[4];
@@ -96,7 +94,9 @@ protected:
     void OrientTet();
 
 private:
-    static int m_faceIds[4][3];
+    static int m_edgeVertMap[6][2];
+    static int m_faceVertMap[4][3];
+    static int m_faceEdgeMap[4][3];
 };
 }
 }

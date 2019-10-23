@@ -1,4 +1,6 @@
 SET(SOLVER_UTILS_SOURCES
+  Core/Coupling.cpp
+  Core/CouplingFile.cpp
   Core/Misc.cpp
   Core/SessionFunction.cpp
   AdvectionSystem.cpp
@@ -10,7 +12,6 @@ SET(SOLVER_UTILS_SOURCES
   Diffusion/Diffusion.cpp
   Diffusion/Diffusion3DHomogeneous1D.cpp
   Diffusion/DiffusionLDG.cpp
-  Diffusion/DiffusionLDGNS.cpp
   Diffusion/DiffusionLFR.cpp
   Diffusion/DiffusionLFRNS.cpp
   Driver.cpp
@@ -25,7 +26,7 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterAverageFields.cpp
   Filters/FilterCheckpoint.cpp
   Filters/FilterEnergy1D.cpp
-  Filters/FilterEnergyBase.cpp
+  Filters/FilterEnergy.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterModalEnergy.cpp
   Filters/FilterMovingAverage.cpp
@@ -36,14 +37,18 @@ SET(SOLVER_UTILS_SOURCES
   RiemannSolvers/UpwindSolver.cpp
   RiemannSolvers/UpwindLDGSolver.cpp
   UnsteadySystem.cpp
+  MMFSystem.cpp
   Forcing/Forcing.cpp
   Forcing/ForcingAbsorption.cpp
   Forcing/ForcingBody.cpp
+  Forcing/ForcingMovingReferenceFrame.cpp
   Forcing/ForcingNoise.cpp
   Forcing/ForcingProgrammatic.cpp
 )
 
 SET(SOLVER_UTILS_HEADERS
+  Core/Coupling.h
+  Core/CouplingFile.h
   Core/Misc.h
   Core/SessionFunction.h
   AdvectionSystem.h
@@ -55,7 +60,6 @@ SET(SOLVER_UTILS_HEADERS
   Diffusion/Diffusion.h
   Diffusion/Diffusion3DHomogeneous1D.h
   Diffusion/DiffusionLDG.h
-  Diffusion/DiffusionLDGNS.h
   Diffusion/DiffusionLFR.h
   Diffusion/DiffusionLFRNS.h
   Driver.h
@@ -70,7 +74,7 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterAverageFields.h
   Filters/FilterCheckpoint.h
   Filters/FilterEnergy1D.h
-  Filters/FilterEnergyBase.h
+  Filters/FilterEnergy.h
   Filters/FilterHistoryPoints.h
   Filters/FilterModalEnergy.h
   Filters/FilterMovingAverage.h
@@ -86,6 +90,7 @@ SET(SOLVER_UTILS_HEADERS
   Forcing/Forcing.h
   Forcing/ForcingAbsorption.h
   Forcing/ForcingBody.h
+  Forcing/ForcingMovingReferenceFrame.h
   Forcing/ForcingNoise.h
   Forcing/ForcingProgrammatic.h
 )
@@ -97,6 +102,13 @@ IF (NEKTAR_USE_ARPACK)
     DriverArpack.h)
 ENDIF (NEKTAR_USE_ARPACK)
 
+IF (NEKTAR_USE_CWIPI)
+  SET(SOLVER_UTILS_SOURCES ${SOLVER_UTILS_SOURCES}
+    Core/CouplingCwipi.cpp)
+  SET(SOLVER_UTILS_HEADERS ${SOLVER_UTILS_HEADERS}
+    Core/CouplingCwipi.h)
+ENDIF (NEKTAR_USE_CWIPI)
+
 ADD_DEFINITIONS(-DSOLVER_UTILS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(SolverUtils
@@ -105,3 +117,4 @@ ADD_NEKTAR_LIBRARY(SolverUtils
     DEPENDS FieldUtils
     SUMMARY "Nektar++ SolverUtils library"
     DESCRIPTION "This library provides support classes and routines for constructing complete spectral/hp element solvers.")
+

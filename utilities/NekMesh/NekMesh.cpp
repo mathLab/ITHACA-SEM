@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -34,8 +33,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <string>
+#include <chrono>
 #include <boost/algorithm/string.hpp>
+#include <LibUtilities/BasicConst/GitRevision.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <boost/program_options.hpp>
+#include <boost/asio/ip/host_name.hpp>
+#include <boost/format.hpp>
 
 #include <NekMeshUtils/Module/Module.h>
 
@@ -43,6 +47,7 @@ using namespace std;
 using namespace Nektar::NekMeshUtils;
 
 namespace po = boost::program_options;
+namespace ip    = boost::asio::ip;
 
 int main(int argc, char* argv[])
 {
@@ -158,6 +163,15 @@ int main(int argc, char* argv[])
      */
 
     MeshSharedPtr mesh = std::shared_ptr<Mesh>(new Mesh());
+
+    // Add provenance information to mesh.
+    stringstream ss;
+    for(int i = 1; i < argc; i++)
+    {
+        ss << argv[i] << " ";
+    }
+    mesh->m_metadata["NekMeshCommandLine"] = ss.str();
+
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
 
@@ -256,7 +270,15 @@ int main(int argc, char* argv[])
     // Run mesh process.
     for (int i = 0; i < modules.size(); ++i)
     {
+        Nektar::LibUtilities::Timer t;
+        t.Start();
         modules[i]->Process();
+        t.Stop();
+
+        if (mesh->m_verbose)
+        {
+            std::cout << "Module elapsed time: " << t.TimePerTest(1) << std::endl;
+        }
     }
 
     return 0;

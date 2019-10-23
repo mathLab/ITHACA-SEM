@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_FIELDIOXML_H
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_FIELDIOXML_H
+
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
@@ -127,9 +128,32 @@ public:
     /// Set an attribute key/value pair on this tag.
     virtual void SetAttr(const std::string &key, const std::string &val)
     {
-        TiXmlElement *child = new TiXmlElement(key.c_str());
-        child->LinkEndChild(new TiXmlText(val.c_str()));
-        m_El->LinkEndChild(child);
+        if (boost::starts_with(key, "XML_"))
+        {
+            // Auto-expand XML parameters.
+            std::string elmtName = key.substr(4);
+            TiXmlElement *child = new TiXmlElement(elmtName.c_str());
+
+            // Parse string we're given
+            TiXmlDocument doc;
+            doc.Parse(val.c_str());
+
+            TiXmlElement *e = doc.FirstChildElement();
+
+            while (e)
+            {
+                child->LinkEndChild(e->Clone());
+                e = e->NextSiblingElement();
+            }
+
+            m_El->LinkEndChild(child);
+        }
+        else
+        {
+            TiXmlElement *child = new TiXmlElement(key.c_str());
+            child->LinkEndChild(new TiXmlText(val.c_str()));
+            m_El->LinkEndChild(child);
+        }
     }
 
 private:

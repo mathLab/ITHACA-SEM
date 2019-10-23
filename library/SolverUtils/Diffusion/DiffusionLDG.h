@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 #ifndef NEKTAR_SOLVERUTILS_DIFFUSIONWEAKDG
 #define NEKTAR_SOLVERUTILS_DIFFUSIONWEAKDG
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Diffusion/Diffusion.h>
 
 namespace Nektar
@@ -47,6 +48,7 @@ namespace Nektar
         public:
             static DiffusionSharedPtr create(std::string diffType)
             {
+                boost::ignore_unused(diffType);
                 return DiffusionSharedPtr(new DiffusionLDG());
             }
             
@@ -83,6 +85,7 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const int                                          var,
                 const Array<OneD, const NekDouble>                &ufield,
+                const Array<OneD, const NekDouble>                &uplus,
                       Array<OneD,       NekDouble>                &penaltyflux);
             
             virtual void v_NumFluxforVector(
@@ -96,6 +99,7 @@ namespace Nektar
                 const int                                          var,
                 const int                                          dir,
                 const Array<OneD, const NekDouble>                &qfield,
+                const Array<OneD, const NekDouble>                &qtemp,
                       Array<OneD,       NekDouble>                &penaltyflux,
                 NekDouble                                          C11);
         }; 

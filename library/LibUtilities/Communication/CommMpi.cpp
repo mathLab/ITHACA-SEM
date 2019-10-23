@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -149,6 +148,21 @@ bool CommMpi::v_TreatAsRankZero(void)
 /**
  *
  */
+bool CommMpi::v_IsSerial(void)
+{
+    if(m_size == 1)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+/**
+ *
+ */
 void CommMpi::v_Block()
 {
     MPI_Barrier(m_comm);
@@ -270,6 +284,37 @@ void CommMpi::v_AlltoAllv(void *sendbuf, int sendcounts[], int sdispls[],
                                recvcounts, rdispls, recvtype, m_comm);
 
     ASSERTL0(retval == MPI_SUCCESS, "MPI error performing All-to-All-v.");
+}
+
+/**
+ *
+ */
+void CommMpi::v_AllGather(void *sendbuf, int sendcount, CommDataType sendtype,
+                          void *recvbuf, int recvcount, CommDataType recvtype)
+{
+    int retval = MPI_Allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                               recvtype, m_comm);
+
+    ASSERTL0(retval == MPI_SUCCESS, "MPI error performing Allgather.");
+}
+
+void CommMpi::v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
+                           void *recvbuf, int recvcounts[], int rdispls[],
+                           CommDataType recvtype)
+{
+    int retval = MPI_Allgatherv(sendbuf, sendcount, sendtype, recvbuf,
+                                recvcounts, rdispls, recvtype, m_comm);
+
+    ASSERTL0(retval == MPI_SUCCESS, "MPI error performing Allgather.");
+}
+
+void CommMpi::v_AllGatherv(void *recvbuf, int recvcounts[], int rdispls[],
+                           CommDataType recvtype)
+{
+    int retval = MPI_Allgatherv(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, recvbuf,
+                                recvcounts, rdispls, recvtype, m_comm);
+
+    ASSERTL0(retval == MPI_SUCCESS, "MPI error performing Allgatherv.");
 }
 
 void CommMpi::v_Bcast(void *buffer, int count, CommDataType dt, int root)

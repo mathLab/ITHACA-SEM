@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -35,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <sstream>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/spirit/include/qi_core.hpp>
 #include <boost/spirit/include/qi_auto.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
@@ -46,8 +46,8 @@ namespace Nektar
 {
 
 /**
- * @brief Helper functor for boost::spirit. This pushes back values onto a
- * std::vector.
+ * @brief Helper functors for holding a vector of numbers to be parsed by
+ * boost::spirit.
  *
  * @see ParseUtils::GenerateSeqVector
  */
@@ -56,38 +56,35 @@ struct PushBackFunctor
 {
     PushBackFunctor(std::vector<T> &in) : m_vec(in) {}
 
+    /**
+     * @brief Pushes back values onto #m_vec as given by @p num.
+     */
     void operator()(T num) const
     {
         m_vec.push_back(num);
     }
-private:
-    std::vector<T> &m_vec;
-};
-
-/**
- * @brief Helper functor for boost::spirit. This pushes back a range of values
- * onto a std::vector. Valid only for integer types.
- *
- * @see ParseUtils::GenerateSeqVector
- */
-template<typename T>
-struct SeqFunctor
-{
-    SeqFunctor(std::vector<T> &in) : m_vec(in) {}
 
     /**
      * @brief Pushes back values onto #m_vec between the range supplied by @p
-     * num.
+     * num. Valid for only integer types.
      */
     void operator()(fusion::vector<T, T> num) const
     {
         static_assert(std::is_integral<T>::value, "Integer type required.");
-        for (int i = fusion::at_c<0>(num); i <= fusion::at_c<1>(num); ++i)
+        for (T i = fusion::at_c<0>(num); i <= fusion::at_c<1>(num); ++i)
         {
             m_vec.push_back(i);
         }
     }
 private:
+    // Do not allow assignment
+    PushBackFunctor& operator=(const PushBackFunctor& src)
+    {
+        boost::ignore_unused(src);
+        return *this;
+    }
+
+    /// Storage vector that will hold parsed variables from boost::spirit.
     std::vector<T> &m_vec;
 };
 
@@ -111,8 +108,7 @@ private:
 bool ParseUtils::GenerateSeqVector(
     const std::string &str, std::vector<unsigned int> &out)
 {
-    PushBackFunctor<unsigned int> f1(out);
-    SeqFunctor<unsigned int> f2(out);
+    PushBackFunctor<unsigned int> f1(out), f2(out);
 
     auto it = str.begin();
     bool success = qi::phrase_parse(
@@ -167,7 +163,7 @@ bool ParseUtils::GenerateVector(const std::string &str,
 {
     auto it = str.begin();
     bool success = qi::phrase_parse(
-        it, str.end(), *~qi::char_(",") % ',', qi::ascii::space, out);
+        it, str.end(), +~qi::char_(",") % ',', qi::ascii::space, out);
     return success && it == str.end();
 }
 

@@ -3,8 +3,9 @@
 #include <sys/time.h>
 #include <iomanip>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/filesystem/path.hpp>
-#include <SpatialDomains/MeshGraph2D.h>
+#include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ContField2D.h>
 
 using namespace std;
@@ -173,7 +174,8 @@ int main(int argc, char *argv[])
             cerr << "Testing HELMHOLTZ" << endl;
             break;
         default:
-            cout << "Operator " << opToTest << " not defined." << endl;
+            NEKERROR(ErrorUtil::efatal,
+                     "Operator " + std::to_string(opToTest) + " not defined.");
     }
 
     LibUtilities::SessionReaderSharedPtr vSession
@@ -181,7 +183,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
+    SpatialDomains::MeshGraphSharedPtr graph2D = SpatialDomains::MeshGraph::Read(vSession);;
     //----------------------------------------------
 
     //----------------------------------------------
@@ -400,6 +402,8 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
                             int &NumCalls, 
                             NekDouble lambda)
 {
+    boost::ignore_unused(Fce);
+
         //----------------------------------------------
     // Do the timings
     int i;

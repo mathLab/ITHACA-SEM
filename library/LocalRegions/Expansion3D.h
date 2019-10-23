@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -66,7 +65,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT Expansion2DSharedPtr GetFaceExp(const int face);            
             LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout);
             LOCAL_REGIONS_EXPORT void SetFaceToGeomOrientation(const int face, Array<OneD, NekDouble> &inout);
-            
             inline void AddHDGHelmholtzFaceTerms(
                 const NekDouble                    tau,
                 const int                          edge,
@@ -92,8 +90,9 @@ namespace Nektar
                 ExpansionSharedPtr            &FaceExp,
                 Array<OneD, NekDouble>        &facePhys,
                 Array<OneD, NekDouble>        &outarray,
-                const StdRegions::VarCoeffMap &varcoeffs = StdRegions::NullVarCoeffMap);
-            
+                const StdRegions::VarCoeffMap &varcoeffs
+                        = StdRegions::NullVarCoeffMap);
+
             inline SpatialDomains::Geometry3DSharedPtr GetGeom3D() const;
 
             LOCAL_REGIONS_EXPORT void ReOrientFacePhysMap(const int nvert,
@@ -139,6 +138,19 @@ namespace Nektar
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
 
+            void GetPhysFaceVarCoeffsFromElement(
+                const int face,
+                ExpansionSharedPtr &FaceExp,
+                const Array<OneD, const NekDouble>  &varcoeff,
+                      Array<OneD,NekDouble> &outarray);
+
+            virtual Array<OneD, NekDouble> v_GetnFacecdotMF(
+                const int dir,
+                const int face,
+                ExpansionSharedPtr &FaceExp_f,
+                const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                const StdRegions::VarCoeffMap   &varcoeffs);
+
             //-----------------------------
             // Low Energy Basis functions
             //-----------------------------
@@ -147,14 +159,19 @@ namespace Nektar
                 v_GetEdgeInverseBoundaryMap(int eid);
 
             LOCAL_REGIONS_EXPORT virtual Array<OneD, unsigned int>
-                v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = StdRegions::eNoOrientation);
-
+                v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = StdRegions::eNoOrientation, int P1=-1, int P2=-1);
+            
+            LOCAL_REGIONS_EXPORT void v_GetInverseBoundaryMaps(
+                    Array<OneD, unsigned int> &vmap,
+                    Array<OneD, Array<OneD, unsigned int> > &emap,
+                    Array<OneD, Array<OneD, unsigned int> > &fmap );
+            
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildTransformationMatrix(
                 const DNekScalMatSharedPtr &r_bnd, 
                 const StdRegions::MatrixType matrixType);
 
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildInverseTransformationMatrix(
-                const DNekScalMatSharedPtr & m_transformationmatrix);
+                const DNekScalMatSharedPtr & transformationmatrix);
 
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildVertexMatrix(
                 const DNekScalMatSharedPtr &r_bnd); 

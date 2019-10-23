@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H
 #define NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/NekManager.hpp>
@@ -67,12 +68,14 @@ namespace Nektar
             eAdamsBashforthOrder1,            //!< Adams-Bashforth Forward multi-step scheme of order 1
             eAdamsBashforthOrder2,            //!< Adams-Bashforth Forward multi-step scheme of order 2
             eAdamsBashforthOrder3,            //!< Adams-Bashforth Forward multi-step scheme of order 3
+            eAdamsBashforthOrder4,            //!< Adams-Bashforth Forward multi-step scheme of order 4
             eAdamsMoultonOrder1,              //!< Adams-Moulton Forward multi-step scheme of order 1
             eAdamsMoultonOrder2,              //!< Adams-Moulton Forward multi-step scheme of order 2
             eBDFImplicitOrder1,               //!< BDF multi-step scheme of order 1 (implicit)
             eBDFImplicitOrder2,               //!< BDF multi-step scheme of order 2 (implicit)
             eClassicalRungeKutta4,            //!< Runge-Kutta multi-stage scheme 4th order explicit (old name)
             eRungeKutta4,                     //!< Classical RungeKutta4 method (new name for eClassicalRungeKutta4)
+            eRungeKutta5,                     //!< RungeKutta5 method
             eRungeKutta3_SSP,                 //!< Nonlinear SSP RungeKutta3 explicit
             eRungeKutta2_ImprovedEuler,       //!< Improved RungeKutta2 explicit (old name meaning Heun's method)
             eRungeKutta2_SSP,                 //!< Nonlinear SSP RungeKutta2 explicit (surrogate for eRungeKutta2_ImprovedEuler)
@@ -81,21 +84,22 @@ namespace Nektar
             eIMEXOrder1,                      //!< IMEX 1st order scheme using Euler Backwards/Euler Forwards
             eIMEXOrder2,                      //!< IMEX 2nd order scheme using Backward Different Formula & Extrapolation
             eIMEXOrder3,                      //!< IMEX 3rd order scheme using Backward Different Formula & Extrapolation
+            eIMEXOrder4,                      //!< IMEX 4th order scheme using Backward Different Formula & Extrapolation
             eMidpoint,                        //!< midpoint method (old name)
             eRungeKutta2,                     //!< Classical RungeKutta2 method (new name for eMidpoint)
-            eDIRKOrder2,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
+            eDIRKOrder2,                      //!< Diagonally Implicit Runge Kutta scheme of order 2
             eDIRKOrder3,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
-            eCNAB,		                      //!< Crank-Nicolson/Adams-Bashforth Order 2 (CNAB)
-            eIMEXGear,		                  //!< IMEX Gear Order 2
-            eMCNAB,		                      //!< Modified Crank-Nicolson/Adams-Bashforth Order 2 (MCNAB)
-            eIMEXdirk_1_1_1,		      	  //!< Forward-Backward Euler IMEX DIRK(1,1,1)
-            eIMEXdirk_1_2_1,		      	  //!< Forward-Backward Euler IMEX DIRK(1,2,1)
-            eIMEXdirk_1_2_2,		      	  //!< Implicit-Explicit Midpoint IMEX DIRK(1,2,2)
-            eIMEXdirk_2_2_2,		          //!< L-stable, two stage, second order IMEX DIRK(2,2,2)
+            eCNAB,                            //!< Crank-Nicolson/Adams-Bashforth Order 2 (CNAB)
+            eIMEXGear,                        //!< IMEX Gear Order 2
+            eMCNAB,                           //!< Modified Crank-Nicolson/Adams-Bashforth Order 2 (MCNAB)
+            eIMEXdirk_1_1_1,                  //!< Forward-Backward Euler IMEX DIRK(1,1,1)
+            eIMEXdirk_1_2_1,                  //!< Forward-Backward Euler IMEX DIRK(1,2,1)
+            eIMEXdirk_1_2_2,                  //!< Implicit-Explicit Midpoint IMEX DIRK(1,2,2)
+            eIMEXdirk_2_2_2,                  //!< L-stable, two stage, second order IMEX DIRK(2,2,2)
             eIMEXdirk_2_3_2,                  //!< L-stable, three stage, third order IMEX DIRK(3,4,3)
-            eIMEXdirk_2_3_3,		      	  //!< L-stable, two stage, third order IMEX DIRK(2,3,3)
+            eIMEXdirk_2_3_3,                  //!< L-stable, two stage, third order IMEX DIRK(2,3,3)
             eIMEXdirk_3_4_3,                  //!< L-stable, three stage, third order IMEX DIRK(3,4,3)
-            eIMEXdirk_4_4_3,		      	  //!< L-stable, four stage, third order IMEX DIRK(4,4,3)
+            eIMEXdirk_4_4_3,                  //!< L-stable, four stage, third order IMEX DIRK(4,4,3)
             SIZE_TimeIntegrationMethod        //!< Length of enum list
         };
 
@@ -105,12 +109,14 @@ namespace Nektar
             "AdamsBashforthOrder1",
             "AdamsBashforthOrder2",
             "AdamsBashforthOrder3",
+            "AdamsBashforthOrder4",
             "AdamsMoultonOrder1",
             "AdamsMoultonOrder2",
             "BDFImplicitOrder1",
             "BDFImplicitOrder2",
             "ClassicalRungeKutta4",
             "RungeKutta4",
+            "RungeKutta5",
             "RungeKutta3_SSP",
             "RungeKutta2_ImprovedEuler",
             "RungeKutta2_SSP",
@@ -119,6 +125,7 @@ namespace Nektar
             "IMEXOrder1",
             "IMEXOrder2",
             "IMEXOrder3",
+            "IMEXOrder4",
             "Midpoint",
             "RungeKutta2",
             "DIRKOrder2",
@@ -574,6 +581,7 @@ namespace Nektar
             
             TimeIntegrationScheme(const TimeIntegrationScheme &in):m_schemeKey(NullTimeIntegrationSchemeKey)
             {
+                boost::ignore_unused(in);
                 NEKERROR(ErrorUtil::efatal,"Copy Constructor for the TimeIntegrationScheme class should not be called");
             }
 
@@ -864,7 +872,7 @@ namespace Nektar
         
         // =========================================================================
 
-    }; // end of namespace
+    } // end of namespace
 } // end of namespace 
 
 #endif //NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -110,6 +109,12 @@ namespace Nektar
 
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
+                if (bndConditions[0][i]->GetBoundaryConditionType() ==
+                       SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 // Check to see if any value on boundary has Dirichlet value.
                 cnt = 0;
                 for(k = 0; k < bndConditions.num_elements(); ++k)
@@ -209,6 +214,13 @@ namespace Nektar
             int n = vComm->GetSize();
             int p = vComm->GetRank();
 
+            if(vComm->IsSerial())
+            {
+                // for FieldConvert Comm this is true and it resets
+                // parallel processing back to serial case
+                n = 1;
+                p = 0;
+            }
             // At this point, graph only contains information from Dirichlet
             // boundaries. Therefore make a global list of the vert and edge
             // information on all processors.
@@ -378,7 +390,7 @@ namespace Nektar
             // partitions
             for (i = 0; i < nTotVerts; ++i)
             {
-                if (vComm->GetRank() == vertprocs[i])
+                if (p == vertprocs[i]) // rank = vertproc[i]
                 {
                     extraDirVerts.insert(vertids[i]);
                 }
@@ -387,7 +399,7 @@ namespace Nektar
             // Set up list of edges that need to be shared to other partitions
             for (i = 0; i < nTotEdges; ++i)
             {
-                if (vComm->GetRank() == edgeprocs[i])
+                if (p == edgeprocs[i]) // rank = vertproc[i]
                 {
                     extraDirEdges.insert(edgeids[i]);
                 }
@@ -1524,6 +1536,7 @@ namespace Nektar
             int mdswitch;
             m_session->LoadParameter(
                 "MDSwitch", mdswitch, 10);
+
             int nGraphVerts =
                 CreateGraph(locExp, bndCondExp, bndCondVec,
                             checkIfSystemSingular, periodicVerts, periodicEdges,
@@ -1662,25 +1675,25 @@ namespace Nektar
                     exp->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
 
                     // Set the global DOF's for the interior modes of edge j
-                    for(k = 0; k < dofs[1][exp->GetGeom()->GetEid(j)]; ++k)
+                    for(k = 0; k < dofs[1][meshEdgeId]; ++k)
                     {
                         m_localToGlobalMap[cnt+edgeInteriorMap[k]] =
                             graphVertOffset[graph[1][meshEdgeId]]+k;
                     }
-                    for(k = dofs[1][exp->GetGeom()->GetEid(j)]; k < nEdgeInteriorCoeffs; ++k)
+                    for(k = dofs[1][meshEdgeId]; k < nEdgeInteriorCoeffs; ++k)
                     {
-                        m_localToGlobalMap[cnt+edgeInteriorMap[k]] =
-                            graphVertOffset[graph[1][meshEdgeId]];
+                        m_localToGlobalMap[cnt+edgeInteriorMap[k]] = 0;
                     }
-
+                    
                     // Fill the sign vector if required
                     if(m_signChange)
                     {
-                        for(k = 0; k < dofs[1][exp->GetGeom()->GetEid(j)]; ++k)
+                        for(k = 0; k < dofs[1][meshEdgeId]; ++k)
                         {
-                            m_localToGlobalSign[cnt+edgeInteriorMap[k]] = (NekDouble) edgeInteriorSign[k];
+                            m_localToGlobalSign[cnt+edgeInteriorMap[k]] =
+                                (NekDouble) edgeInteriorSign[k];
                         }
-                        for(k = dofs[1][exp->GetGeom()->GetEid(j)]; k < nEdgeInteriorCoeffs; ++k)
+                        for(k = dofs[1][meshEdgeId]; k < nEdgeInteriorCoeffs; ++k)
                         {
                             m_localToGlobalSign[cnt+edgeInteriorMap[k]] = 0.0;
                         }
@@ -1728,8 +1741,7 @@ namespace Nektar
                                 }
                                 else
                                 {
-                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =
-                                        graphVertOffset[graph[2][meshFaceId]];
+                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =  0; 
                                     if(m_signChange)
                                     {
                                         m_localToGlobalSign[cnt+faceInteriorMap[kLoc]] = 0.0;
@@ -1762,8 +1774,7 @@ namespace Nektar
                                 }
                                 else
                                 {
-                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =
-                                        graphVertOffset[graph[2][meshFaceId]];
+                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] = 0;
                                     if(m_signChange)
                                     {
                                         m_localToGlobalSign[cnt+faceInteriorMap[kLoc]] = 0.0;
@@ -1786,6 +1797,12 @@ namespace Nektar
             int offset = 0;
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
+                if (bndConditions[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 set<int> foundExtraVerts, foundExtraEdges;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {

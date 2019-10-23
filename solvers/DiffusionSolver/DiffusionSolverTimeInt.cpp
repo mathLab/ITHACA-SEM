@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <cstdlib>
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
@@ -86,6 +87,9 @@ Diffusion::Diffusion(int argc, char* argv[])
     // Create session reader.
     session     = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
+    // Read the geometry and the expansion information
+    graph       = SpatialDomains::MeshGraph::Read(session);
+
     // Create Field I/O object.
     fld         = LibUtilities::FieldIO::CreateDefault(session);
 
@@ -96,9 +100,6 @@ Diffusion::Diffusion(int argc, char* argv[])
     delta_t     = session->GetParameter("TimeStep");
     epsilon     = session->GetParameter("epsilon");
     lambda      = 1.0/delta_t/epsilon;
-
-    // Read the geometry and the expansion information
-    graph       = SpatialDomains::MeshGraph::Read(session);
 
     // Set up the field
     field       = MemoryManager<MultiRegions::ContField2D>::
@@ -154,6 +155,8 @@ void Diffusion::DoImplicitSolve(
         const NekDouble time,
         const NekDouble lambda)
 {
+    boost::ignore_unused(time);
+
     StdRegions::ConstFactorMap factors;
     factors[StdRegions::eFactorLambda] = 1.0/lambda/epsilon;
 

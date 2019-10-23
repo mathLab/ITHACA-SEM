@@ -21,7 +21,7 @@
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ContField2D.h>
-#include <SpatialDomains/MeshGraph2D.h>
+#include <SpatialDomains/MeshGraph.h>
 
 //! STL namespace
 using namespace std;
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 
     //! Read in mesh from input file and create an object of class MeshGraph2D
     SpatialDomains::MeshGraphSharedPtr graphShPt;
-    graphShPt = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
+    graphShPt = SpatialDomains::MeshGraph::Read(vSession);
 
     //!  Feed our spatial discretisation object
     MultiRegions::ContField2DSharedPtr Domain;

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -103,7 +102,12 @@ int main(int argc, char * argv[])
 #else
     mapper->SetInputData(data);
 #endif
+
+#if VTK_MAJOR_VERSION < 8 || (VTK_MAJOR_VERSION == 8 && VTK_MINOR_VERSION <= 1)
+    //deprecated as of vtk 8.1
     mapper->ImmediateModeRenderingOn();
+#endif
+    
     mapper->ScalarVisibilityOn();
     mapper->SetScalarModeToUsePointData();
     mapper->UseLookupTableScalarRangeOn();
@@ -140,7 +144,13 @@ int main(int argc, char * argv[])
     vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter =
             vtkSmartPointer<vtkWindowToImageFilter>::New();
     windowToImageFilter->SetInput(renderWindow);
+
+#if VTK_MAJOR_VERSION < 8 || (VTK_MAJOR_VERSION == 8 && VTK_MINOR_VERSION <= 1)
+    //deprecated as of vtk 8.1
     windowToImageFilter->SetMagnification(4);
+#else
+    windowToImageFilter->SetScale(4, 4);
+#endif
     windowToImageFilter->Update();
 
     // Write image to PNG

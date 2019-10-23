@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -155,17 +154,20 @@ void OutputGmsh::Process()
     }
 
     // Create ordered set of nodes - not required but looks nicer.
-    std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
-                                m_mesh->m_vertexSet.end());
+    map<int, NodeSharedPtr> tmp;
+    for (const auto &it : m_mesh->m_vertexSet)
+    {
+        tmp[it->GetID() + 1] = it;
+    }
 
     // Write out nodes section.
     m_mshFile << "$Nodes" << endl << m_mesh->m_vertexSet.size() << endl;
 
     for (auto &it : tmp)
     {
-        m_mshFile << it->m_id+1 << " " << scientific << setprecision(10)
-                  << it->m_x << " " << it->m_y << " " << it->m_z
-                  << endl;
+        m_mshFile << it.first << " " << scientific << setprecision(10)
+                  << it.second->m_x << " " << it.second->m_y << " "
+                  << it.second->m_z << endl;
     }
 
     m_mshFile << "$EndNodes" << endl;

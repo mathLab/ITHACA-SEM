@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -41,6 +40,8 @@
 #include <hdf5.h>
 #include <string>
 #include <vector>
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Communication/Comm.h>
@@ -84,6 +85,8 @@ class Object;
 typedef std::shared_ptr<Object> ObjectSharedPtr;
 class DataType;
 typedef std::shared_ptr<DataType> DataTypeSharedPtr;
+class CompoundDataType;
+typedef std::shared_ptr<CompoundDataType> CompoundDataTypeSharedPtr;
 class DataSpace;
 typedef std::shared_ptr<DataSpace> DataSpaceSharedPtr;
 class CanHaveAttributes;
@@ -196,6 +199,11 @@ public:
             return m_idx;
         }
 
+        inline std::string GetName()  const
+        {
+            return m_currentName;
+        }
+
     private:
         static herr_t helper(hid_t g_id,
                              const char *name,
@@ -241,6 +249,9 @@ public:
     DataSetSharedPtr OpenDataSet(
         const std::string &name,
         PListSharedPtr accessPL      = PList::Default()) const;
+
+    bool ContainsDataSet(std::string nm);
+
     virtual hsize_t GetNumElements() = 0;
     LinkIterator begin();
     LinkIterator end();
@@ -315,9 +326,22 @@ public:
     ~DataSpace();
 
     void Close();
+
     void SelectRange(const hsize_t start, const hsize_t count);
+    void AppendRange(const hsize_t start, const hsize_t count);
+
+    void SelectRange(const std::vector<hsize_t> start,
+                     const std::vector<hsize_t> count);
+    void AppendRange(const std::vector<hsize_t> start,
+                     const std::vector<hsize_t> count);
+
+    void SetSelection(const hsize_t num_elmt,
+                      const std::vector<hsize_t> &coords);
+
+    void ClearRange();
 
     hsize_t GetSize();
+    std::vector<hsize_t> GetDims();
 
 private:
     DataSpace(hid_t id);
@@ -376,6 +400,7 @@ public:
     static DataTypeSharedPtr String(size_t len = 0);
     template <class T> static DataTypeSharedPtr OfObject(const T &obj)
     {
+        boost::ignore_unused(obj);
         return DataTypeTraits<T>::GetType();
     }
     virtual void Close();
@@ -383,6 +408,26 @@ public:
 
 protected:
     DataType(hid_t id);
+};
+
+class CompoundDataType : public DataType
+{
+public:
+    static CompoundDataTypeSharedPtr Create(size_t sz);
+
+    void Add(std::string name, size_t offset, hid_t type)
+    {
+        H5Tinsert(m_Id, name.c_str(), offset, type);
+    }
+    void AddString(std::string name, size_t offset, size_t size)
+    {
+        hid_t strtype = H5Tcopy (H5T_C_S1);
+        H5Tset_size (strtype, size);
+        H5Tinsert(m_Id, name.c_str(), offset, strtype);
+    }
+    void Close();
+private:
+    CompoundDataType(hid_t);
 };
 
 /// Predefined HDF data types that must not be closed when done with.
@@ -443,6 +488,7 @@ public:
     ~Group();
     void Close();
     virtual hsize_t GetNumElements();
+    std::vector<std::string> GetElementNames();
     CanHaveAttributesSharedPtr operator[](hsize_t idx);
     CanHaveAttributesSharedPtr operator[](const std::string &key);
 
@@ -477,6 +523,46 @@ public:
                 (m_Id, mem_t->GetId(), memspace->GetId(), filespace->GetId(),
                  dxpl->GetId(), &data[0]) );
     }
+
+    template <class T>
+    void Write(const std::vector<T> &data,
+               DataSpaceSharedPtr filespace,
+               DataTypeSharedPtr dt,
+               PListSharedPtr dxpl = PList::Default())
+    {
+        DataSpaceSharedPtr memspace = DataSpace::OneD(data.size());
+
+        H5Dwrite(m_Id,
+                 dt->GetId(),
+                 memspace->GetId(),
+                 filespace->GetId(),
+                 dxpl->GetId(),
+                 &data[0]);
+    }
+
+    void WriteString(std::string s,
+                     DataSpaceSharedPtr filespace,
+                     DataTypeSharedPtr type,
+                     PListSharedPtr dxpl = PList::Default())
+    {
+        H5_CALL(
+            H5Dwrite,
+            (m_Id, type->GetId(), H5S_ALL, filespace->GetId(), dxpl->GetId(), s.c_str()));
+    }
+
+    void WriteVectorString(std::vector<std::string> s,
+                     DataSpaceSharedPtr filespace,
+                     DataTypeSharedPtr type,
+                     PListSharedPtr dxpl = PList::Default())
+    {
+        const char** ret;
+        ret = new const char*[s.size()];
+        for (size_t i = 0; i < s.size(); ++i) {
+            ret[i] = s[i].c_str();
+        }
+        H5Dwrite(m_Id, type->GetId(), H5S_ALL, filespace->GetId(), dxpl->GetId(), ret);
+    }
+
     template <class T> void Read(std::vector<T> &data)
     {
         DataTypeSharedPtr mem_t  = DataTypeTraits<T>::GetType();
@@ -506,6 +592,60 @@ public:
         DataSpaceSharedPtr memspace = DataSpace::OneD(len);
         H5_CALL(H5Dread, (m_Id, mem_t->GetId(), memspace->GetId(),
                           filespace->GetId(), dxpl->GetId(), &data[0]));
+    }
+    template <class T>
+    void Read(std::vector<T> &data,
+              DataSpaceSharedPtr filespace,
+              std::vector<std::vector<int> > &coords,
+              PListSharedPtr dxpl = PList::Default())
+    {
+        DataTypeSharedPtr mem_t = DataTypeTraits<T>::GetType();
+        hsize_t len;
+
+        int w = coords[0].size();
+
+        hsize_t *cds = new hsize_t[coords.size() * w];
+        for(int i = 0; i < coords.size(); i++)
+        {
+            for(int j = 0; j < coords[i].size(); j++)
+            {
+                cds[i * w + j] = hsize_t(coords[i][j]);
+            }
+        }
+
+        H5Sselect_elements(filespace->GetId(),
+                           H5S_SELECT_SET,
+                           coords.size(),
+                           cds);
+
+        delete[] cds;
+
+        len = H5Sget_select_npoints(filespace->GetId());
+        DataSpaceSharedPtr memspace = DataSpace::OneD(len);
+
+        data.resize(len);
+
+        H5_CALL(H5Dread, (m_Id, mem_t->GetId(), memspace->GetId(),
+                          filespace->GetId(), dxpl->GetId(), &data[0]));
+
+        H5Sselect_all(filespace->GetId());
+    }
+
+    void ReadVectorString(std::vector<std::string> &data,
+                          DataSpaceSharedPtr filespace,
+                          PListSharedPtr dxpl = PList::Default())
+    {
+        char **rdata;
+        DataTypeSharedPtr tp = DataType::String();
+        std::vector<hsize_t> dims = filespace->GetDims();
+        rdata = (char **) malloc (dims[0] * sizeof(char *));
+
+        H5_CALL(H5Dread, (m_Id, tp->GetId(), H5S_ALL, filespace->GetId(), dxpl->GetId(), rdata));
+
+        for(int i = 0; i < dims[0]; i++)
+        {
+            data.push_back(std::string(rdata[i]));
+        }
     }
 
 private:

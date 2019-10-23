@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Fast Fourier Transform base class in Nektar++
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/FFT/NektarFFT.h>
 
@@ -90,12 +91,12 @@ namespace Nektar
 		
 		void NektarFFT::v_FFTFwdTrans(Array<OneD,NekDouble> &phys, Array<OneD,NekDouble> &coef)
 		{
-			
+            boost::ignore_unused(phys, coef);
 		}
 		
 		void NektarFFT::v_FFTBwdTrans(Array<OneD,NekDouble> &coef, Array<OneD,NekDouble> &phys)
 		{
-			
+            boost::ignore_unused(coef, phys);
 		}
 		
 	}//end namespace LibUtilities

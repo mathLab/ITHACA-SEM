@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -51,8 +50,11 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession) {
-            EquationSystemSharedPtr p = MemoryManager<EigenValuesAdvection>::AllocateSharedPtr(pSession);
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        {
+            EquationSystemSharedPtr p = MemoryManager<EigenValuesAdvection>
+                ::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -67,12 +69,14 @@ namespace Nektar
         SolverUtils::AdvectionSharedPtr m_advObject;
         Array<OneD, NekDouble>               m_traceVn;
 
-        EigenValuesAdvection(const LibUtilities::SessionReaderSharedPtr& pSession);
-		
+        EigenValuesAdvection(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph);
+
         /// Get the normal velocity
         Array<OneD, NekDouble> &GetNormalVelocity();
 
-		virtual void v_InitObject();
+        virtual void v_InitObject();
         virtual void v_DoInitialise();
         virtual void v_DoSolve();
 

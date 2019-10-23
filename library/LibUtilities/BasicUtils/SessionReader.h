@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -41,11 +40,11 @@
 #include <memory>
 
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/program_options/variables_map.hpp>
 
 class TiXmlElement;
@@ -97,12 +96,6 @@ namespace Nektar
             "File"
         };
 
-        class Equation;
-        typedef std::shared_ptr<Equation> EquationSharedPtr;
-
-        typedef std::map<int, std::vector<unsigned int> > CompositeOrdering;
-        typedef std::map<int, std::vector<unsigned int> > BndRegionOrdering;
-
         struct FunctionVariableDefinition
         {
             enum FunctionType m_type;
@@ -120,7 +113,7 @@ namespace Nektar
         typedef std::shared_ptr<SessionReader> SessionReaderSharedPtr;
 
         /// Reads and parses information from a Nektar++ XML session file.
-        class SessionReader : public std::enable_shared_from_this<SessionReader>
+        class SessionReader
         {
         public:
             /// Support creation through MemoryManager.
@@ -141,7 +134,6 @@ namespace Nektar
             {
                 SessionReaderSharedPtr p = MemoryManager<
                     LibUtilities::SessionReader>::AllocateSharedPtr(argc, argv);
-                p->InitSession();
                 return p;
             }
 
@@ -164,7 +156,6 @@ namespace Nektar
                 SessionReaderSharedPtr p = MemoryManager<
                     LibUtilities::SessionReader>
                         ::AllocateSharedPtr(argc, argv, pFilenames, pComm);
-                p->InitSession();
                 return p;
             }
 
@@ -176,6 +167,10 @@ namespace Nektar
 
             /// Destructor
             LIB_UTILITIES_EXPORT ~SessionReader();
+
+            LIB_UTILITIES_EXPORT void InitSession(
+                const std::vector<std::string> &filenames =
+                    std::vector<std::string>());
 
             /// Provides direct access to the TiXmlDocument object.
             LIB_UTILITIES_EXPORT TiXmlDocument &GetDocument();
@@ -193,8 +188,8 @@ namespace Nektar
             /// Returns the session name with process rank
             LIB_UTILITIES_EXPORT const std::string  GetSessionNameRank() const;
             /// Returns the communication object.
-            LIB_UTILITIES_EXPORT CommSharedPtr &GetComm();
-            /// Returns the communication object.
+            LIB_UTILITIES_EXPORT CommSharedPtr GetComm();
+            /// Returns if file system shared
             LIB_UTILITIES_EXPORT bool GetSharedFilesystem();
             /// Finalises the session.
             LIB_UTILITIES_EXPORT void Finalise();
@@ -294,6 +289,7 @@ namespace Nektar
 
 
             /* ------ GEOMETRIC INFO ------ */
+            LIB_UTILITIES_EXPORT std::string GetGeometryType() const;
             /// Checks if a geometric info property is defined.
             LIB_UTILITIES_EXPORT bool DefinesGeometricInfo(
                 const std::string &name) const;
@@ -376,10 +372,9 @@ namespace Nektar
                 const std::string &variable,
                 const int pDomain = 0) const;
 
-            /// Returns the instance of AnalyticExpressionEvaluator specific to
-            /// this session.
-            LIB_UTILITIES_EXPORT AnalyticExpressionEvaluator&
-                GetExpressionEvaluator();
+            /// Returns the instance of the Interpreter specific to this
+            /// session.
+            LIB_UTILITIES_EXPORT InterpreterSharedPtr GetInterpreter();
 
             /* ------ TAGS ------ */
             /// Checks if a specified tag is defined.
@@ -422,8 +417,6 @@ namespace Nektar
 
             /// Substitutes expressions defined in the XML document.
             LIB_UTILITIES_EXPORT void SubstituteExpressions(std::string &expr);
-            LIB_UTILITIES_EXPORT CompositeOrdering GetCompositeOrdering() const;
-            LIB_UTILITIES_EXPORT BndRegionOrdering GetBndRegionOrdering() const;
 
             LIB_UTILITIES_EXPORT void SetUpXmlDoc();
 
@@ -446,8 +439,8 @@ namespace Nektar
             GeometricInfoMap                          m_geometricInfo;
             /// Expressions.
             ExpressionMap                             m_expressions;
-            /// Analytic expression evaluator instance.
-            AnalyticExpressionEvaluator               m_exprEvaluator;
+            /// Interpreter instance.
+            InterpreterSharedPtr                      m_interpreter;
             /// Functions.
             FunctionMap                               m_functions;
             /// Variables.
@@ -460,11 +453,6 @@ namespace Nektar
             bool                                      m_verbose;
             /// Running on a shared filesystem
             bool                                      m_sharedFilesystem;
-            /// Map of original composite ordering for parallel periodic bcs.
-            CompositeOrdering                         m_compOrder;
-            /// Map of original boundary region ordering for parallel periodic
-            /// bcs.
-            BndRegionOrdering                         m_bndRegOrder;
             /// String to enumeration map for Solver Info parameters.
             LIB_UTILITIES_EXPORT static EnumMapList&  GetSolverInfoEnums();
             /// Default solver info options.
@@ -478,11 +466,6 @@ namespace Nektar
             LIB_UTILITIES_EXPORT SessionReader(
                 int                             argc,
                 char                           *argv[]);
-
-            LIB_UTILITIES_EXPORT void InitSession();
-
-            /// Returns a shared pointer to the current object.
-            inline SessionReaderSharedPtr GetSharedThisPtr();
 
             LIB_UTILITIES_EXPORT void TestSharedFilesystem();
 
@@ -508,8 +491,6 @@ namespace Nektar
                 int               &argc,
                 char*              argv[]);
 
-            /// Partitions the mesh when running in parallel.
-            LIB_UTILITIES_EXPORT void PartitionMesh();
             /// Partitions the comm object based on session parameters.
             LIB_UTILITIES_EXPORT void PartitionComm();
 
@@ -702,16 +683,6 @@ namespace Nektar
             x.isFlag = true;
             GetCmdLineArgMap()[pName] = x;
             return pName;
-        }
-
-
-        /**
-         * This allows a member function to pass a shared pointer to itself
-         * during a call to another function.
-         */
-        inline SessionReaderSharedPtr SessionReader::GetSharedThisPtr()
-        {
-            return shared_from_this();
         }
     }
 }

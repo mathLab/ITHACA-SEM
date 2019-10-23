@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -137,8 +136,8 @@ void PtsIO::Write(const string &outFile,
                   const Nektar::LibUtilities::PtsFieldSharedPtr &ptsField,
                   const bool backup)
 {
-    int nTotvars = ptsField->GetNFields() + ptsField->GetDim();
-    int np = ptsField->GetNpoints();
+    size_t nTotvars = ptsField->GetNFields() + ptsField->GetDim();
+    size_t np       = ptsField->GetNpoints();
 
     std::string filename = SetUpOutput(outFile, true, backup);
     SetUpFieldMetaData(outFile);
@@ -157,11 +156,11 @@ void PtsIO::Write(const string &outFile,
 
     Array<OneD, Array<OneD, NekDouble> > pts;
     ptsField->GetPts(pts);
-    for (int i = 0; i < np; ++i)
+    for (size_t i = 0; i < np; ++i)
     {
         ptsFile << "    ";
         ptsFile << pts[0][i];
-        for (int j = 1; j < nTotvars; ++j)
+        for (size_t j = 1; j < nTotvars; ++j)
         {
             ptsFile << " " << pts[j][i];
         }
@@ -262,8 +261,8 @@ void PtsIO::v_ImportFieldData(const string inFile, PtsFieldSharedPtr &ptsField)
         ptsInfo[ePtsPerElmtEdge] = np; 
     }
 
-    int nfields = fieldNames.size();
-    int totvars = dim + nfields;
+    size_t nfields = fieldNames.size();
+    size_t totvars = dim + nfields;
 
     TiXmlNode *pointsBody = points->FirstChild();
 
@@ -284,19 +283,19 @@ void PtsIO::v_ImportFieldData(const string inFile, PtsFieldSharedPtr &ptsField)
     }
     catch (...)
     {
-        ASSERTL0(false, "Unable to read Points data.");
+        NEKERROR(ErrorUtil::efatal, "Unable to read Points data.");
     }
 
-    int npts = ptsSerial.size() / totvars;
+    size_t npts = ptsSerial.size() / totvars;
 
-    for (int i = 0; i < totvars; ++i)
+    for (size_t i = 0; i < totvars; ++i)
     {
         pts[i] = Array<OneD, NekDouble>(npts);
     }
 
-    for (int i = 0; i < npts; ++i)
+    for (size_t i = 0; i < npts; ++i)
     {
-        for (int j = 0; j < totvars; ++j)
+        for (size_t j = 0; j < totvars; ++j)
         {
             pts[j][i] = ptsSerial[i * totvars + j];
         }

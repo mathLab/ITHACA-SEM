@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -264,7 +263,7 @@ bool ProcessLinear::Invalid(ElementSharedPtr el, NekDouble thr)
     SpatialDomains::GeometrySharedPtr geomL = elL->GetGeom(m_mesh->m_spaceDim);
     SpatialDomains::GeomFactorsSharedPtr gfacL = geomL->GetGeomFactors();
 
-    LibUtilities::PointsKeyVector p = geom->GetPointsKeys();
+    LibUtilities::PointsKeyVector p = geom->GetXmap()->GetPointsKeys();
     SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
     SpatialDomains::DerivStorage derivL = gfacL->GetDeriv(p);
     const int pts = deriv[0][0].num_elements();

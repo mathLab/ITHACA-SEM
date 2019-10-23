@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -56,8 +55,10 @@ typedef std::shared_ptr<Driver> DriverSharedPtr;
 
 /// Datatype of the NekFactory used to instantiate classes derived from
 /// the Driver class.
-typedef LibUtilities::NekFactory<std::string, Driver,
-            const LibUtilities::SessionReaderSharedPtr&> DriverFactory;
+typedef LibUtilities::NekFactory<
+    std::string, Driver,
+    const LibUtilities::SessionReaderSharedPtr &,
+    const SpatialDomains::MeshGraphSharedPtr &> DriverFactory;
 
 SOLVER_UTILS_EXPORT DriverFactory& GetDriverFactory();
 
@@ -90,6 +91,9 @@ protected:
     /// I the Coupling between SFD and arnoldi
     LibUtilities::SessionReaderSharedPtr        session_LinNS;
 
+    /// MeshGraph object
+    SpatialDomains::MeshGraphSharedPtr          m_graph;
+
     /// Equation system to solve
     Array<OneD, EquationSystemSharedPtr>        m_equ;
 
@@ -100,7 +104,8 @@ protected:
     enum EvolutionOperatorType m_EvolutionOperator;
 
     /// Initialises EquationSystem class members.
-    Driver(const LibUtilities::SessionReaderSharedPtr pSession);
+    Driver(const LibUtilities::SessionReaderSharedPtr pSession,
+           const SpatialDomains::MeshGraphSharedPtr   pGraph);
 
     SOLVER_UTILS_EXPORT virtual void v_InitObject(std::ostream &out = std::cout);
 

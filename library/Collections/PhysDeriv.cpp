@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: PhysDeriv operator implementations
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
@@ -156,7 +157,7 @@ class PhysDeriv_StdMat : public Operator
             int nqtot = 1;
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
             m_dim = PtsKey.size();
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             for(int i = 0; i < m_dim; ++i)
             {
@@ -202,9 +203,6 @@ OperatorKey PhysDeriv_StdMat::m_typeArr[] =
         OperatorKey(eTetrahedron,   ePhysDeriv, eStdMat, false),
         PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Tet"),
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eTetrahedron,   ePhysDeriv, eStdMat, false),
-        PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Tet"),
-    GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eTetrahedron,   ePhysDeriv, eStdMat, true),
         PhysDeriv_StdMat::create, "PhysDeriv_StdMat_NodalTet"),
     GetOperatorFactory().RegisterCreatorFunction(
@@ -218,7 +216,10 @@ OperatorKey PhysDeriv_StdMat::m_typeArr[] =
         PhysDeriv_StdMat::create, "PhysDeriv_StdMat_NodalPrism"),
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eHexahedron,    ePhysDeriv, eStdMat, false),
-        PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Hex")
+        PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Hex"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(ePyramid, ePhysDeriv, eSumFac, false),
+        PhysDeriv_StdMat::create, "PhysDeriv_SumFac_Pyr")
 };
 
 
@@ -326,7 +327,7 @@ class PhysDeriv_IterPerExp : public Operator
             int nqtot = 1;
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
             m_dim = PtsKey.size();
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             for(int i = 0; i < m_dim; ++i)
             {
@@ -392,6 +393,8 @@ class PhysDeriv_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(wsp);
+
             const int nPhys   = m_expList[0]->GetTotPoints();
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
 
@@ -439,6 +442,8 @@ class PhysDeriv_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(wsp);
+
             const int nPhys   = m_expList[0]->GetTotPoints();
             Array<OneD, NekDouble> tmp;
 
@@ -582,7 +587,7 @@ class PhysDeriv_SumFac_Seg : public Operator
               m_nquad0 (m_stdExp->GetNumPoints(0))
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 
@@ -712,7 +717,7 @@ class PhysDeriv_SumFac_Quad : public Operator
               m_nquad1 (m_stdExp->GetNumPoints(1))
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 
@@ -864,7 +869,7 @@ class PhysDeriv_SumFac_Tri : public Operator
               m_nquad1 (m_stdExp->GetNumPoints(1))
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 
@@ -1046,7 +1051,7 @@ class PhysDeriv_SumFac_Hex : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
 
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 
@@ -1274,7 +1279,7 @@ class PhysDeriv_SumFac_Tet : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
 
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 
@@ -1488,7 +1493,7 @@ class PhysDeriv_SumFac_Prism : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
 
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 
@@ -1705,7 +1710,7 @@ class PhysDeriv_SumFac_Pyr : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
 
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 
@@ -1751,7 +1756,6 @@ OperatorKey PhysDeriv_SumFac_Pyr::m_typeArr[] = {
         OperatorKey(ePyramid, ePhysDeriv, eSumFac, false),
         PhysDeriv_SumFac_Pyr::create, "PhysDeriv_SumFac_Pyr")
 };
-
 
 }
 }

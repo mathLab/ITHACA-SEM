@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -120,7 +119,19 @@ namespace Nektar
             {
                 return false;
             }
-            
+
+            if( LibUtilities::ShapeTypeDimMap[lhs.m_shapeType] <
+                LibUtilities::ShapeTypeDimMap[rhs.m_shapeType])
+            {
+                return true;
+            }
+
+            if( LibUtilities::ShapeTypeDimMap[lhs.m_shapeType] >
+                LibUtilities::ShapeTypeDimMap[rhs.m_shapeType])
+            {
+                return false;
+            }
+
             for(unsigned int i = 0; i < LibUtilities::ShapeTypeDimMap[lhs.m_shapeType]; ++i)
             {
                 if(lhs.m_base[i].get() < rhs.m_base[i].get())

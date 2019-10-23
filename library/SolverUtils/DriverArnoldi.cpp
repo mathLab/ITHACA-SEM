@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -46,11 +45,13 @@ namespace SolverUtils
 /**
  * Constructor
  */
-DriverArnoldi::DriverArnoldi(const LibUtilities::SessionReaderSharedPtr pSession)
-    : Driver(pSession)
+DriverArnoldi::DriverArnoldi(
+    const LibUtilities::SessionReaderSharedPtr pSession,
+    const SpatialDomains::MeshGraphSharedPtr pGraph)
+    : Driver(pSession, pGraph)
 {
     m_session->LoadParameter("IO_InfoSteps", m_infosteps, 1);
-};
+}
 
 
 /**
@@ -58,7 +59,7 @@ DriverArnoldi::DriverArnoldi(const LibUtilities::SessionReaderSharedPtr pSession
  */
 DriverArnoldi::~DriverArnoldi()
 {
-};
+}
 
 
 /**
@@ -107,7 +108,21 @@ void DriverArnoldi::v_InitObject(ostream &out)
     m_session->LoadParameter("realShift", m_realShift, 0.0);
     m_equ[0]->SetLambda(m_realShift);
 
-    m_session->LoadParameter("imagShift", m_imagShift, 0.0);
+    m_session->LoadParameter("imagShift",m_imagShift,0.0);
+
+    // The imaginary shift is applied at system assembly
+    // Only if using HOMOGENEOUS expansion and ModeType set to SingleMode
+    if(m_imagShift != 0.0)
+    {
+        if(!m_session->DefinesSolverInfo("HOMOGENEOUS")&&!m_session->DefinesSolverInfo("ModeType"))
+        {
+            NEKERROR(ErrorUtil::efatal, "Imaginary shift only supported with HOMOGENEOUS expansion and ModeType set to SingleMode");
+        }
+        else if(!boost::iequals(m_session->GetSolverInfo("ModeType"),"SingleMode"))
+        {
+            NEKERROR(ErrorUtil::efatal, "Imaginary shift only supported with HOMOGENEOUS expansion and ModeType set to SingleMode");
+        }
+    }
 
 }
 
@@ -173,7 +188,7 @@ void DriverArnoldi::CopyArnoldiArrayToField(Array<OneD, NekDouble> &array)
         Vmath::Vcopy(nq, &array[k*nq], 1, &fields[k]->UpdateCoeffs()[0], 1);
         fields[k]->SetPhysState(false);
     }
-};
+}
 
 /**
  * Copy field variables which depend from either the m_fields
@@ -203,7 +218,7 @@ void DriverArnoldi::CopyFieldToArnoldiArray(Array<OneD, NekDouble> &array)
         fields[k]->SetPhysState(false);
 
     }
-};
+}
 
 
 /**
@@ -213,25 +228,19 @@ void DriverArnoldi::CopyFwdToAdj()
 {
     Array<OneD, MultiRegions::ExpListSharedPtr> fields;
 
-    if(m_timeSteppingAlgorithm)
+    ASSERTL0(m_timeSteppingAlgorithm,
+            "Transient Growth non available for Coupled Solver");
+
+    fields = m_equ[0]->UpdateFields();
+    int nq = fields[0]->GetNcoeffs();
+
+    for (int k=0 ; k < m_nfields; ++k)
     {
-        fields = m_equ[0]->UpdateFields();
-        int nq = fields[0]->GetNcoeffs();
-
-        for (int k=0 ; k < m_nfields; ++k)
-        {
-            Vmath::Vcopy(nq,
-                         &fields[k]->GetCoeffs()[0],                      1,
-                         &m_equ[1]->UpdateFields()[k]->UpdateCoeffs()[0], 1);
-
-        }
+        Vmath::Vcopy(nq,
+                     &fields[k]->GetCoeffs()[0],                      1,
+                     &m_equ[1]->UpdateFields()[k]->UpdateCoeffs()[0], 1);
     }
-    else
-    {
-        ASSERTL0(false,"Transient Growth non available for Coupled Solver");
-
-    }
-};
+}
 
 void DriverArnoldi::WriteFld(std::string file, std::vector<Array<OneD, NekDouble> > coeffs)
 {

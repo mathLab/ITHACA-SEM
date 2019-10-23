@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -61,8 +60,9 @@ string DriverAdaptive::driverLookupId =
  *
  */
 DriverAdaptive::DriverAdaptive(
-    const LibUtilities::SessionReaderSharedPtr pSession)
-    : Driver(pSession)
+    const LibUtilities::SessionReaderSharedPtr pSession,
+    const SpatialDomains::MeshGraphSharedPtr pGraph)
+    : Driver(pSession, pGraph)
 {
 }
 
@@ -347,8 +347,9 @@ void DriverAdaptive::v_Execute(ostream &out)
             }
         }
 
-        // Write new expansion section to the session reader
+        // Write new expansion section to the session reader and re-read graph.
         ReplaceExpansion(fields, deltaP);
+        m_graph->ReadExpansions();
 
         // Reset GlobalLinSys Manager to avoid using too much memory
         //

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Abstract base class for Riemann solvers with factory.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
@@ -72,10 +73,11 @@ namespace Nektar
          * which solvers for various Riemann problems can be implemented.
          */
         
-        RiemannSolver::RiemannSolver() : m_requiresRotation(false),
-                                         m_rotStorage      (3)
+        RiemannSolver::RiemannSolver(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
+            : m_requiresRotation(false), m_rotStorage (3)
         {
-            
+            boost::ignore_unused(pSession);
         }
         
         /**

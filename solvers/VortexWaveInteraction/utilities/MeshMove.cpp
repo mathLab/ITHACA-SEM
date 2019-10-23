@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -38,6 +37,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
+
 //#include <sstream>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList1D.h>
@@ -186,6 +188,7 @@ int main(int argc, char *argv[])
     //ATTEnTION !!! with argc=2 you impose that vSession refers to is argv[1]=meshfile!!!!!
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(2, argv);
+    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);
     //----------------------------------------------
 
     if( argc == 6 &&
@@ -195,11 +198,6 @@ int main(int argc, char *argv[])
         cr = boost::lexical_cast<NekDouble>(argv[argc-1]);
         argc=5;
     }
-
-    // Read in mesh from input file
-    string meshfile(argv[argc-4]);
-    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
-    //----------------------------------------------
 
     // Also read and store the boundary conditions
     SpatialDomains::BoundaryConditionsSharedPtr boundaryConditions;
@@ -504,7 +502,7 @@ int main(int argc, char *argv[])
 
          bndSegExp = bndfieldx[lastIregion]->GetExp(r)
                                            ->as<LocalRegions::SegExp>();
-         Eid = (bndSegExp->GetGeom1D())->GetEid();
+         Eid = (bndSegExp->GetGeom1D())->GetGlobalID();
          id1 = (bndSegExp->GetGeom1D())->GetVid(0);
          id2 = (bndSegExp->GetGeom1D())->GetVid(1);
          vertex1 = graphShPt->GetVertex(id1);
@@ -1946,7 +1944,7 @@ void OrderVertices (int nedges, SpatialDomains::MeshGraphSharedPtr graphShPt,
       {
           LocalRegions::SegExpSharedPtr  bndSegExplow =
                   bndfield->GetExp(j)->as<LocalRegions::SegExp>();
-          edge = (bndSegExplow->GetGeom1D())->GetEid();
+          edge = (bndSegExplow->GetGeom1D())->GetGlobalID();
 //cout<<" edge="<<edge<<endl;
           for(int k=0; k<2; k++)
           {
@@ -2027,6 +2025,8 @@ void Computestreakpositions(int npoints, MultiRegions::ExpListSharedPtr streak,
     	        Array<OneD, NekDouble> &xc,  Array<OneD, NekDouble> &yc, NekDouble cr,
                 bool verts)
 {
+    boost::ignore_unused(xold_up, xold_low);
+
 cout<<"Computestreakpositions"<<endl;
      int nq = streak->GetTotPoints();
      Array<OneD, NekDouble> coord(2);
@@ -2236,7 +2236,7 @@ void GenerateMapEidsv1v2(MultiRegions::ExpListSharedPtr field,
                 for(int j = 0; j < locQuadExp->GetNedges(); ++j)
                 {
                     SegGeom = (locQuadExp->GetGeom2D())->GetEdge(j);
-                    id = SegGeom->GetEid();
+                    id = SegGeom->GetGlobalID();
                     if( V1tmp[id] == 10000)
                     {
                          V1tmp[id]= SegGeom->GetVertex(0)->GetVid();
@@ -2252,7 +2252,7 @@ void GenerateMapEidsv1v2(MultiRegions::ExpListSharedPtr field,
                 for(int j = 0; j < locTriExp->GetNedges(); ++j)
                 {
                      SegGeom = (locTriExp->GetGeom2D())->GetEdge(j);
-                     id = SegGeom->GetEid();
+                     id = SegGeom->GetGlobalID();
 
                      if( V1tmp[id] == 10000)
                      {
@@ -2296,6 +2296,7 @@ void MappingEVids(Array<OneD, NekDouble> xoldup, Array<OneD, NekDouble> yoldup,
                  int & nlays,  Array<OneD, Array<OneD, int> >& Eids_lay,
                  Array<OneD, Array<OneD, int> >& Vids_lay)
 {
+    boost::ignore_unused(xoldup, xolddown);
 
       int nlay_Eids = xcold.num_elements()-1;
       int nlay_Vids = xcold.num_elements();
@@ -3283,6 +3284,8 @@ void MoveOutsidePointsfixedxpos(int npedge, SpatialDomains::MeshGraphSharedPtr m
 	         Array<OneD, NekDouble> ylaydown,Array<OneD, NekDouble> ylayup,
                  Array<OneD, NekDouble>& xnew,Array<OneD, NekDouble>& ynew)
 {
+    boost::ignore_unused(xolddown, xoldup);
+
      //update vertices coords outside layers region
      int nvertl = ycold.num_elements();
      int nVertTot =  mesh->GetNvertices();
@@ -3353,6 +3356,7 @@ void MoveOutsidePointsNnormpos(int npedge, SpatialDomains::MeshGraphSharedPtr me
 	         Array<OneD, NekDouble> nxPhys,Array<OneD, NekDouble> nyPhys,
                  Array<OneD, NekDouble>& xnew,Array<OneD, NekDouble>& ynew)
 {
+    boost::ignore_unused(xcold, ycold);
 /*
      int nq1D =bndfieldup->GetTotPoints();
      Array<OneD, NekDouble> xlayoldup(nq1D);
@@ -3640,14 +3644,14 @@ void CheckSingularQuads( MultiRegions::ExpListSharedPtr Exp,
       SpatialDomains::Geometry1DSharedPtr SegGeom;
       int idbef, idnext;
       NekDouble xV1, yV1, xV2,yV2;
-      NekDouble slopebef,slopenext,slopenew;
+      NekDouble slopebef = 0.0,slopenext = 0.0,slopenew = 0.0;
       Array<OneD, int> locEids(4);
       for(int i=0; i<nel; i++)
       {
            if((locQuadExp = (*exp2D)[i]->as<LocalRegions::QuadExp>()))
            {
                 SegGeom = (locQuadExp->GetGeom2D())->GetEdge(0);
-                idbef = SegGeom->GetEid();
+                idbef = SegGeom->GetGlobalID();
                 if(xnew[  V1[idbef] ]<= xnew[  V2[idbef] ])
                 {
                 xV1 = xnew[  V1[idbef] ];
@@ -3669,7 +3673,7 @@ void CheckSingularQuads( MultiRegions::ExpListSharedPtr Exp,
                 for(int j = 1; j < locQuadExp->GetNedges(); ++j)
                 {
                     SegGeom = (locQuadExp->GetGeom2D())->GetEdge(j);
-                    idnext = SegGeom->GetEid();
+                    idnext = SegGeom->GetGlobalID();
 //cout<<"id="<<idnext<<" locid="<<j<<endl;
 //cout<<" V1 x="<<xnew[  V1[idnext] ]<<"   y="<<ynew[  V1[idnext] ]<<endl;
 //cout<<" V2 x="<<xnew[  V2[idnext] ]<<"   y="<<ynew[  V2[idnext] ]<<endl;
@@ -3817,7 +3821,7 @@ void Replacevertices(string filename, Array<OneD, NekDouble> newx,
        TiXmlElement* mesh = master->FirstChildElement("GEOMETRY");
        TiXmlElement* element = mesh->FirstChildElement("VERTEX");
        NekDouble xscale = 1.0;
-       LibUtilities::AnalyticExpressionEvaluator expEvaluator;
+       LibUtilities::Interpreter expEvaluator;
        const char *xscal = element->Attribute("XSCALE");
        if(xscal)
        {

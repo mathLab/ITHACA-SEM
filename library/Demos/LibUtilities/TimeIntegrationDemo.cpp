@@ -10,7 +10,6 @@
 // University of Utah (USA) and Department of Aeronautics, Imperial
 // College London (UK).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -29,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:
+// Description: Example of using time-integration schemes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -80,6 +79,7 @@
 #include <iostream>
 #include <iomanip>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -181,20 +181,26 @@ int main(int argc, char *argv[])
 {
     po::options_description desc("Available options");
     desc.add_options()
-        ("help, h",         "Produce this help message.")
-        ("Npoints, np",     po::value<int>(),
-                            "the number of grid points to be used.")
-        ("Ntimesteps, nt",  po::value<int>(),
-                            "the number of timesteps to be used.")
-        ("NTimeIntegrationMethod, nm",  po::value<int>(),
-                            "TimeIntegrationMethod is a number in the range [1,5]."
-                            "and defines the time-integration method to be used, i.e"
-                            "- 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)"
-                            "- 2: 2nd order multi-step IMEX scheme"
-                            "- 3: 3rd order multi-step IMEX scheme"
-                            "- 4: 2nd order multi-stage DIRK IMEX scheme"
-                            "- 5: 3nd order multi-stage DIRK IMEX scheme"
-                            "- 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)");
+        ("help,h",      "Produce this help message.")
+        ("points,p",    po::value<int>(),
+                        "Number of grid points to be used.")
+        ("timesteps,t", po::value<int>(),
+                        "Number of timesteps to be used.")
+        ("method,m",    po::value<int>(),
+                    "TimeIntegrationMethod is a number in the range [1,8].\n"
+                    "It defines the time-integration method to be used:\n"
+                    "- 1: 1st order multi-step IMEX scheme\n"
+                    "     (Euler Backwards/Euler Forwards)\n"
+                    "- 2: 2nd order multi-step IMEX scheme\n"
+                    "- 3: 3rd order multi-step IMEX scheme\n"
+                    "- 4: 4th order multi-step IMEX scheme\n"
+                    "- 5: 2nd order multi-stage DIRK IMEX scheme\n"
+                    "- 6: 3nd order multi-stage DIRK IMEX scheme\n"
+                    "- 7: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
+                    "- 8: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
+                    "- 9: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
+                    "     (MCNAB)"
+        );
     po::variables_map vm;
     try
     {
@@ -209,29 +215,17 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (!vm.count("Npoints") || !vm.count("Ntimesteps") || !vm.count("NTimeIntegrationMethod"))
+    if (!vm.count("points") || !vm.count("timesteps") || !vm.count("method")
+            || vm.count("help"))
     {
-        cerr << "Usage: Project1D --Npoints nPoints --Ntimesteps nTimesteps --TimeIntegrationMethod nMethod" << endl;
-        cerr << "Where  - Npoints is the number of grid points to be used" << endl;
-        cerr << "         for the finite difference discretisation" << endl;
-        cerr << "       - Ntimesteps is the number of timesteps to be used" << endl;
-        cerr << "         for the time-integration method" << endl;
-        cerr << "       - TimeIntegrationMethod is a number in the range [1,8]" << endl;
-        cerr << "         and defines the time-integration method to be used, i.e." << endl;
-        cerr << "           - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)" << endl;
-        cerr << "           - 2: 2nd order multi-step IMEX scheme" << endl;
-        cerr << "           - 3: 3rd order multi-step IMEX scheme" << endl;
-        cerr << "           - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;
-        cerr << "           - 5: 3nd order multi-stage DIRK IMEX scheme" << endl;
-        cerr << "           - 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)" << endl;
-        cerr << "           - 7: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)" << endl;
-        cerr << "           - 8: 2nd order Modified Crank-Nicolson/Adams-Bashforth (MCNAB)" << endl;
+        cout << "Please specify points, timesteps and method." << endl << endl;
+        cout << desc;
         return 1;
     }
 
-    int nPoints = vm["Npoints"].as<int>();
-    int nTimesteps = vm["Ntimesteps"].as<int>();
-    int nMethod = vm["NTimeIntegrationMethod"].as<int>();
+    int nPoints = vm["points"].as<int>();
+    int nTimesteps = vm["timesteps"].as<int>();
+    int nMethod = vm["method"].as<int>();
 
     // Open a file for writing the solution
     ofstream outfile;
@@ -297,19 +291,29 @@ int main(int argc, char *argv[])
         break;
     case 4 :
         {
-            nSteps = 1;
+            nSteps = 4;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXdirk_2_3_2;
+            method[0] = eIMEXdirk_3_4_3; // the start-up method for step 1
+            method[1] = eIMEXdirk_3_4_3; // the start-up method for step 2
+            method[2] = eIMEXOrder3;     // the start-up method for step 3
+            method[3] = eIMEXOrder4;
         }
         break;
     case 5 :
         {
             nSteps = 1;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXdirk_3_4_3;
+            method[0] = eIMEXdirk_2_3_2;
         }
         break;
     case 6 :
+        {
+            nSteps = 1;
+            method = Array<OneD, TimeIntegrationMethod>(nSteps);
+            method[0] = eIMEXdirk_3_4_3;
+        }
+        break;
+    case 7 :
         {
             nSteps = 2;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);
@@ -318,7 +322,7 @@ int main(int argc, char *argv[])
 
         }
         break;
-    case 7 :
+    case 8 :
         {
             nSteps = 3;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);
@@ -328,7 +332,7 @@ int main(int argc, char *argv[])
 
         }
         break;
-    case 8 :
+    case 9 :
         {
             nSteps = 3;
             method = Array<OneD, TimeIntegrationMethod>(nSteps);
@@ -340,16 +344,8 @@ int main(int argc, char *argv[])
         break;
     default :
         {
-            cerr << "The third argument defines the time-integration method to be used" << endl;
-            cerr << "and should be a number in the range [1,6], i.e." << endl;
-            cerr << "  - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)" << endl;
-            cerr << "  - 2: 2nd order multi-step IMEX scheme" << endl;
-            cerr << "  - 3: 3rd order multi-step IMEX scheme" << endl;
-            cerr << "  - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;
-            cerr << "  - 5: 3rd order multi-stage DIRK IMEX scheme" << endl;
-            cerr << "  - 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)" << endl;
-            cerr << "  - 7: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)" << endl;
-            cerr << "  - 8: 2nd order Modified Crank-Nicolson/Adams-Bashforth (MCNAB)" << endl;
+            cout << "Invalid method." << endl << endl;
+            cout << desc;
             exit(1);
         }
     }
@@ -414,6 +410,8 @@ void OneDfinDiffAdvDiffSolver::HelmSolve(const Array<OneD, const Array<OneD, dou
                                          const NekDouble time,
                                          const NekDouble lambda) const
 {
+    boost::ignore_unused(time);
+
     // This function implements a 1D finite difference helmholtz solver.
     // The 1D Helmholtz equation leads to a cyclic triadiagonal matrix to be
     // solved.
@@ -455,6 +453,8 @@ void OneDfinDiffAdvDiffSolver::EvaluateAdvectionTerm(const Array<OneD, const  Ar
                                                            Array<OneD,        Array<OneD, double> >& outarray,
                                                      const NekDouble time) const
 {
+    boost::ignore_unused(time);
+
     // The advection term can be evaluated using central or upwind differences
     if(true)
     {
@@ -484,6 +484,8 @@ void OneDfinDiffAdvDiffSolver::Project(const Array<OneD, const  Array<OneD, doub
                                              Array<OneD,        Array<OneD, double> >& outarray,
                                        const NekDouble time) const
 {
+    boost::ignore_unused(time);
+
     // This is simply the identity operator for this case
     for(int i = 0; i < m_nPoints; i++)
     {

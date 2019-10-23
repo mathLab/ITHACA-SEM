@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,7 +35,10 @@
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_COMPRESSIBLESOLVER
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_COMPRESSIBLESOLVER
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <CompressibleFlowSolver/Misc/EquationOfState.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -46,9 +48,12 @@ namespace Nektar
     {
     protected:
         bool m_pointSolve;
+        EquationOfStateSharedPtr m_eos;
+        bool m_idealGas;
         
-        CompressibleSolver();
-        
+        CompressibleSolver(
+                const LibUtilities::SessionReaderSharedPtr& pSession);
+
         virtual void v_Solve(
             const int                                         nDim,
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
@@ -60,7 +65,9 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                   Array<OneD,       Array<OneD, NekDouble> > &flux)
         {
-            ASSERTL0(false, "This function should be defined by subclasses.");
+            boost::ignore_unused(Fwd, Bwd, flux);
+            NEKERROR(ErrorUtil::efatal,
+                     "This function should be defined by subclasses.");
         }
         
         virtual void v_PointSolve(
@@ -68,7 +75,11 @@ namespace Nektar
             NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER,
             NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef)
         {
-            ASSERTL0(false, "This function should be defined by subclasses.");
+            boost::ignore_unused(rhoL, rhouL, rhovL, rhowL, EL,
+                                 rhoR, rhouR, rhovR, rhowR, ER,
+                                 rhof, rhouf, rhovf, rhowf, Ef);
+            NEKERROR(ErrorUtil::efatal,
+                     "This function should be defined by subclasses.");
         }
         
         virtual void v_PointSolveVisc(
@@ -76,8 +87,17 @@ namespace Nektar
             NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER, NekDouble EpsR,
             NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef, NekDouble &Epsf)
         {
-            ASSERTL0(false, "This function should be defined by subclasses.");
+            boost::ignore_unused(rhoL, rhouL, rhovL, rhowL, EL, EpsL,
+                                 rhoR, rhouR, rhovR, rhowR, ER, EpsR,
+                                 rhof, rhouf, rhovf, rhowf, Ef, Epsf);
+            NEKERROR(ErrorUtil::efatal,
+                     "This function should be defined by subclasses.");
         }
+
+        NekDouble GetRoeSoundSpeed(
+            NekDouble rhoL, NekDouble pL, NekDouble eL, NekDouble HL, NekDouble srL,
+            NekDouble rhoR, NekDouble pR, NekDouble eR, NekDouble HR, NekDouble srR,
+            NekDouble HRoe, NekDouble URoe2, NekDouble srLR);
     };
 }
 

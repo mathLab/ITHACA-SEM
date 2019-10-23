@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MetricRegex.h>
+
+#include <boost/core/ignore_unused.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -117,6 +118,8 @@ namespace Nektar
      */
     bool MetricRegex::v_Test(std::istream& pStdout, std::istream& pStderr)
     {
+        boost::ignore_unused(pStdout, pStderr);
+
         ASSERTL0(m_matches.size(), "No test conditions defined for Regex.");
 
         std::vector<MetricRegexFieldValue> &okValues = m_matches[0];
@@ -266,6 +269,8 @@ namespace Nektar
      */
     void MetricRegex::v_Generate(std::istream& pStdout, std::istream& pStderr)
     {
+        boost::ignore_unused(pStderr);
+
         boost::cmatch matches;
 
         // Process output file line by line searching for regex matches

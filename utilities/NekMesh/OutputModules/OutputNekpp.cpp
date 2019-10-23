@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,58 +36,107 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/filesystem.hpp>
 namespace io = boost::iostreams;
 
 #include <tinyxml.h>
-#include <LibUtilities/BasicUtils/CompressData.h>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 #include <SpatialDomains/MeshGraph.h>
-
+#include <SpatialDomains/PointGeom.h>
 #include <NekMeshUtils/MeshElements/Element.h>
+
 #include "OutputNekpp.h"
 
 using namespace Nektar::NekMeshUtils;
+using namespace Nektar::SpatialDomains;
 
 namespace Nektar
 {
 namespace Utilities
 {
-ModuleKey OutputNekpp::className =
+ModuleKey OutputNekpp::className1 =
     GetModuleFactory().RegisterCreatorFunction(ModuleKey(eOutputModule, "xml"),
                                                OutputNekpp::create,
                                                "Writes a Nektar++ xml file.");
 
+ModuleKey OutputNekpp::className2 =
+    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eOutputModule, "nekg"),
+                                               OutputNekpp::create,
+                                               "Writes a Nektar++ file with hdf5.");
+
 OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
 {
-    m_config["z"] = ConfigOption(
-        true, "0", "Compress output file and append a .gz extension.");
     m_config["test"] = ConfigOption(
         true, "0", "Attempt to load resulting mesh and create meshgraph.");
+    m_config["stats"] = ConfigOption(
+        true, "0", "Print out basic mesh statistics.");
     m_config["uncompress"] = ConfigOption(true, "0", "Uncompress xml sections");
     m_config["order"] = ConfigOption(false, "-1", "Enforce a polynomial order");
+    m_config["testcond"] = ConfigOption(
+        false, "", "Test a condition.");
 }
 
 OutputNekpp::~OutputNekpp()
 {
 }
 
-template <typename T> void TestElmts(SpatialDomains::MeshGraphSharedPtr &graph)
+template <typename T> void TestElmts(
+    const std::map<int, std::shared_ptr<T> >  &geomMap,
+    SpatialDomains::MeshGraphSharedPtr        &graph,
+    LibUtilities::Interpreter                 &strEval,
+    int                                        exprId)
 {
-    const std::map<int, std::shared_ptr<T> > &tmp =
-        graph->GetAllElementsOfType<T>();
+    boost::ignore_unused(graph);
 
-    SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
-    SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
-
-    for (auto it1 = tmp.begin(), it2 = tmp.end(); it1 != it2; ++it1)
+    for (auto &geomIt : geomMap)
     {
-        SpatialDomains::GeometrySharedPtr geom = it1->second;
+        SpatialDomains::GeometrySharedPtr geom = geomIt.second;
+        geom->Setup();
         geom->FillGeom();
-        geom->Reset(curvedEdges, curvedFaces);
+
+        if (exprId != -1)
+        {
+            int nq = geom->GetXmap()->GetTotPoints();
+            int dim = geom->GetCoordim();
+
+            Array<OneD, Array<OneD, NekDouble>> coords(3);
+
+            for (int i = 0; i < 3; ++i)
+            {
+                coords[i] = Array<OneD, NekDouble>(nq, 0.0);
+            }
+
+            for (int i = 0; i < dim; ++i)
+            {
+                geom->GetXmap()->BwdTrans(geom->GetCoeffs(i), coords[i]);
+            }
+
+            for (int i = 0; i < nq; ++i)
+            {
+                NekDouble output = strEval.Evaluate(
+                    exprId, coords[0][i], coords[1][i], coords[2][i], 0.0);
+                ASSERTL0(output == 1.0, "Output mesh failed coordinate test");
+            }
+
+            // Also evaluate at mid-point to test for deformed vs. regular
+            // elements.
+            Array<OneD, NekDouble> eta(dim, 0.0), evalPt(3, 0.0);
+            for (int i = 0; i < dim; ++i)
+            {
+                evalPt[i] = geom->GetXmap()->PhysEvaluate(eta, coords[i]);
+            }
+
+            NekDouble output = strEval.Evaluate(
+                exprId, evalPt[0], evalPt[1], evalPt[2], 0.0);
+            ASSERTL0(output == 1.0,
+                     "Output mesh failed coordinate midpoint test");
+        }
     }
 }
 
@@ -106,1055 +154,553 @@ void OutputNekpp::Process()
         m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
     }
 
-    TiXmlDocument doc;
-    TiXmlDeclaration *decl = new TiXmlDeclaration("1.0", "utf-8", "");
-    doc.LinkEndChild(decl);
+    string file = m_config["outfile"].as<string>();
+    string ext = boost::filesystem::extension(file);
 
-    TiXmlElement *root = new TiXmlElement("NEKTAR");
-    doc.LinkEndChild(root);
+    if (m_config["stats"].beenSet)
+    {
+        m_mesh->PrintStats(std::cout);
+    }
 
-    // Begin <GEOMETRY> section
-    TiXmlElement *geomTag = new TiXmlElement("GEOMETRY");
-    geomTag->SetAttribute("DIM", m_mesh->m_expDim);
-    geomTag->SetAttribute("SPACE", m_mesh->m_spaceDim);
-    root->LinkEndChild(geomTag);
-
-    WriteXmlNodes(geomTag);
-    WriteXmlEdges(geomTag);
-    WriteXmlFaces(geomTag);
-    WriteXmlElements(geomTag);
-    WriteXmlCurves(geomTag);
-    WriteXmlComposites(geomTag);
-    WriteXmlDomain(geomTag);
-    WriteXmlExpansions(root);
-    WriteXmlConditions(root);
+    // Default to compressed XML output.
+    std::string type = "XmlCompressed";
 
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 
     // Compress output and append .gz extension
-    if (m_config["z"].beenSet)
+    if(boost::iequals(ext, ".xml") && m_config["uncompress"].beenSet)
     {
-        filename += ".gz";
-        ofstream fout(filename.c_str(),
-                      std::ios_base::out | std::ios_base::binary);
-
-        std::stringstream decompressed;
-        decompressed << doc;
-        io::filtering_streambuf<io::output> out;
-        out.push(io::gzip_compressor());
-        out.push(fout);
-        io::copy(decompressed, out);
-
-        fout.close();
+        type = "Xml";
     }
-    else
+    else if(boost::iequals(ext, ".nekg"))
     {
-        doc.SaveFile(filename);
+        type = "HDF5";
     }
+
+    SpatialDomains::MeshGraphSharedPtr graph =
+        SpatialDomains::GetMeshGraphFactory().CreateInstance(type);
+    graph->Empty(m_mesh->m_expDim, m_mesh->m_spaceDim);
+
+    TransferVertices(graph);
+
+    std::unordered_map<int, SegGeomSharedPtr> segMap;
+    TransferEdges(graph, segMap);
+    TransferFaces(graph, segMap);
+    TransferElements(graph);
+    TransferCurves(graph);
+    TransferComposites(graph);
+    TransferDomain(graph);
+
+    string out = m_config["outfile"].as<string>();
+    graph->WriteGeometry(out, true, m_mesh->m_metadata);
 
     // Test the resulting XML file (with a basic test) by loading it
     // with the session reader, generating the MeshGraph and testing if
     // each element is valid.
     if (m_config["test"].beenSet)
     {
-        vector<string> filenames(1);
-        filenames[0] = filename;
+        // Create an equation based on the test condition. Should evaluate to 1
+        // or 0 using boolean logic.
+        string testcond = m_config["testcond"].as<string>();
+        int exprId = -1;
 
+        if (testcond.length() > 0)
+        {
+            exprId = m_strEval.DefineFunction("x y z", testcond);
+        }
+
+        vector<string> filenames(1);
+
+        if (type == "HDF5")
+        {
+            vector<string> tmp;
+            boost::split(tmp, filename, boost::is_any_of("."));
+            filenames[0] = tmp[0] + ".xml";
+        }
+        else
+        {
+            filenames[0] = filename;
+        }
+
+        char *prgname = const_cast<char *>("NekMesh");
         LibUtilities::SessionReaderSharedPtr vSession =
-            LibUtilities::SessionReader::CreateInstance(0, NULL, filenames);
-        SpatialDomains::MeshGraphSharedPtr graphShPt =
+            LibUtilities::SessionReader::CreateInstance(1, &prgname, filenames,
+                                                        m_mesh->m_comm);
+        SpatialDomains::MeshGraphSharedPtr graph =
             SpatialDomains::MeshGraph::Read(vSession);
 
-        TestElmts<SpatialDomains::SegGeom>(graphShPt);
-        TestElmts<SpatialDomains::TriGeom>(graphShPt);
-        TestElmts<SpatialDomains::QuadGeom>(graphShPt);
-        TestElmts<SpatialDomains::TetGeom>(graphShPt);
-        TestElmts<SpatialDomains::PrismGeom>(graphShPt);
-        TestElmts<SpatialDomains::PyrGeom>(graphShPt);
-        TestElmts<SpatialDomains::HexGeom>(graphShPt);
+        TestElmts(graph->GetAllSegGeoms(),   graph, m_strEval, exprId);
+        TestElmts(graph->GetAllTriGeoms(),   graph, m_strEval, exprId);
+        TestElmts(graph->GetAllQuadGeoms(),  graph, m_strEval, exprId);
+        TestElmts(graph->GetAllTetGeoms(),   graph, m_strEval, exprId);
+        TestElmts(graph->GetAllPrismGeoms(), graph, m_strEval, exprId);
+        TestElmts(graph->GetAllPyrGeoms(),   graph, m_strEval, exprId);
+        TestElmts(graph->GetAllHexGeoms(),   graph, m_strEval, exprId);
     }
 }
 
-void OutputNekpp::WriteXmlNodes(TiXmlElement *pRoot)
+void OutputNekpp::TransferVertices(MeshGraphSharedPtr graph)
 {
-    bool UnCompressed = m_config["uncompress"].beenSet;
-
-    TiXmlElement *verTag = new TiXmlElement("VERTEX");
-
-    std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
-                                m_mesh->m_vertexSet.end());
-
-    if (UnCompressed)
+    PointGeomMap &pointMap = graph->GetAllPointGeoms();
+    for(auto &it : m_mesh->m_vertexSet)
     {
-        for (auto &n : tmp)
-        {
-            stringstream s;
-            s << scientific << setprecision(8) << n->m_x << " " << n->m_y << " "
-              << n->m_z;
-            TiXmlElement *v = new TiXmlElement("V");
-            v->SetAttribute("ID", n->m_id);
-            v->LinkEndChild(new TiXmlText(s.str()));
-            verTag->LinkEndChild(v);
-        }
+        PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr(
+                        m_mesh->m_spaceDim, it->m_id, it->m_x, it->m_y, it->m_z);
+        vert->SetGlobalID(it->m_id);
+        pointMap[it->m_id] = vert;
     }
-    else
-    {
-        std::vector<LibUtilities::MeshVertex> vertInfo;
-        for (auto &n : tmp)
-        {
-            LibUtilities::MeshVertex v;
-            v.id = n->m_id;
-            v.x  = n->m_x;
-            v.y  = n->m_y;
-            v.z  = n->m_z;
-            vertInfo.push_back(v);
-        }
-        std::string vertStr;
-        LibUtilities::CompressData::ZlibEncodeToBase64Str(vertInfo, vertStr);
-        verTag->SetAttribute("COMPRESSED",
-                             LibUtilities::CompressData::GetCompressString());
-        verTag->SetAttribute("BITSIZE",
-                             LibUtilities::CompressData::GetBitSizeStr());
-
-        verTag->LinkEndChild(new TiXmlText(vertStr));
-    }
-
-    pRoot->LinkEndChild(verTag);
 }
 
-void OutputNekpp::WriteXmlEdges(TiXmlElement *pRoot)
+void OutputNekpp::TransferEdges(
+    MeshGraphSharedPtr graph,
+    std::unordered_map<int, SegGeomSharedPtr> &edgeMap)
 {
-    bool UnCompressed = m_config["uncompress"].beenSet;
-
     if (m_mesh->m_expDim >= 2)
     {
-        TiXmlElement *verTag = new TiXmlElement("EDGE");
-
-        std::set<EdgeSharedPtr> tmp(m_mesh->m_edgeSet.begin(),
-                                    m_mesh->m_edgeSet.end());
-        if (UnCompressed)
+        SegGeomMap &segMap = graph->GetAllSegGeoms();
+        for(auto &it : m_mesh->m_edgeSet)
         {
-            for (auto &ed : tmp)
-            {
-                stringstream s;
-                s << setw(5) << ed->m_n1->m_id << "  " << ed->m_n2->m_id
-                  << "   ";
-                TiXmlElement *e = new TiXmlElement("E");
-                e->SetAttribute("ID", ed->m_id);
-                e->LinkEndChild(new TiXmlText(s.str()));
-                verTag->LinkEndChild(e);
-            }
+            PointGeomSharedPtr verts[2] = {graph->GetVertex(it->m_n1->m_id),
+                                           graph->GetVertex(it->m_n2->m_id)};
+            SegGeomSharedPtr edge = MemoryManager<SegGeom>::AllocateSharedPtr(
+                                it->m_id, m_mesh->m_spaceDim, verts);
+            segMap [it->m_id] = edge;
+            edgeMap[it->m_id] = edge;
         }
-        else
-        {
-            std::vector<LibUtilities::MeshEdge> edgeInfo;
-            for (auto &ed : tmp)
-            {
-                LibUtilities::MeshEdge e;
-                e.id = ed->m_id;
-                e.v0 = ed->m_n1->m_id;
-                e.v1 = ed->m_n2->m_id;
-
-                edgeInfo.push_back(e);
-            }
-            std::string edgeStr;
-            LibUtilities::CompressData::ZlibEncodeToBase64Str(edgeInfo,
-                                                              edgeStr);
-            verTag->SetAttribute(
-                "COMPRESSED", LibUtilities::CompressData::GetCompressString());
-            verTag->SetAttribute("BITSIZE",
-                                 LibUtilities::CompressData::GetBitSizeStr());
-            verTag->LinkEndChild(new TiXmlText(edgeStr));
-        }
-        pRoot->LinkEndChild(verTag);
     }
 }
 
-void OutputNekpp::WriteXmlFaces(TiXmlElement *pRoot)
+void OutputNekpp::TransferFaces(
+    MeshGraphSharedPtr graph,
+    std::unordered_map<int, SegGeomSharedPtr> &edgeMap)
 {
-    bool UnCompressed = m_config["uncompress"].beenSet;
-
-    if (m_mesh->m_expDim == 3)
+    if(m_mesh->m_expDim == 3)
     {
-        TiXmlElement *verTag = new TiXmlElement("FACE");
-        std::set<FaceSharedPtr> tmp(m_mesh->m_faceSet.begin(),
-                                    m_mesh->m_faceSet.end());
-
-        if (UnCompressed)
+        TriGeomMap &triMap = graph->GetAllTriGeoms();
+        QuadGeomMap &quadMap = graph->GetAllQuadGeoms();
+        for(auto &it : m_mesh->m_faceSet)
         {
-            for (auto &fa : tmp)
+            if(it->m_edgeList.size() == 3)
             {
-                stringstream s;
+                SegGeomSharedPtr edges[TriGeom::kNedges] =
+                {
+                    edgeMap[it->m_edgeList[0]->m_id],
+                    edgeMap[it->m_edgeList[1]->m_id],
+                    edgeMap[it->m_edgeList[2]->m_id]
+                };
 
-                for (int j = 0; j < fa->m_edgeList.size(); ++j)
+                TriGeomSharedPtr tri = MemoryManager<TriGeom>::AllocateSharedPtr(it->m_id, edges);
+                triMap[it->m_id] = tri;
+            }
+            else
+            {
+                SegGeomSharedPtr edges[QuadGeom::kNedges] =
                 {
-                    s << setw(10) << fa->m_edgeList[j]->m_id;
-                }
-                TiXmlElement *f;
-                switch (fa->m_vertexList.size())
-                {
-                    case 3:
-                        f = new TiXmlElement("T");
-                        break;
-                    case 4:
-                        f = new TiXmlElement("Q");
-                        break;
-                    default:
-                        abort();
-                }
-                f->SetAttribute("ID", fa->m_id);
-                f->LinkEndChild(new TiXmlText(s.str()));
-                verTag->LinkEndChild(f);
+                    edgeMap[it->m_edgeList[0]->m_id],
+                    edgeMap[it->m_edgeList[1]->m_id],
+                    edgeMap[it->m_edgeList[2]->m_id],
+                    edgeMap[it->m_edgeList[3]->m_id]
+                };
+
+                QuadGeomSharedPtr quad = MemoryManager<QuadGeom>::AllocateSharedPtr(it->m_id, edges);
+                quadMap[it->m_id] = quad;
             }
         }
-        else
-        {
-            std::vector<LibUtilities::MeshTri> TriFaceInfo;
-            std::vector<LibUtilities::MeshQuad> QuadFaceInfo;
-
-            for (auto &fa : tmp)
-            {
-                switch (fa->m_edgeList.size())
-                {
-                    case 3:
-                    {
-                        LibUtilities::MeshTri f;
-                        f.id = fa->m_id;
-                        for (int i = 0; i < 3; ++i)
-                        {
-                            f.e[i] = fa->m_edgeList[i]->m_id;
-                        }
-                        TriFaceInfo.push_back(f);
-                    }
-                    break;
-                    case 4:
-                    {
-                        LibUtilities::MeshQuad f;
-                        f.id = fa->m_id;
-                        for (int i = 0; i < 4; ++i)
-                        {
-                            f.e[i] = fa->m_edgeList[i]->m_id;
-                        }
-                        QuadFaceInfo.push_back(f);
-                    }
-                    break;
-                    default:
-                        ASSERTL0(false, "Unkonwn face type");
-                }
-            }
-
-            if (TriFaceInfo.size())
-            {
-                std::string vType("T");
-                TiXmlElement *x = new TiXmlElement(vType);
-                std::string faceStr;
-                LibUtilities::CompressData::ZlibEncodeToBase64Str(TriFaceInfo,
-                                                                  faceStr);
-                x->SetAttribute(
-                    "COMPRESSED",
-                    LibUtilities::CompressData::GetCompressString());
-                x->SetAttribute("BITSIZE",
-                                LibUtilities::CompressData::GetBitSizeStr());
-                x->LinkEndChild(new TiXmlText(faceStr));
-                verTag->LinkEndChild(x);
-            }
-
-            if (QuadFaceInfo.size())
-            {
-                std::string vType("Q");
-                TiXmlElement *x = new TiXmlElement(vType);
-                std::string faceStr;
-                LibUtilities::CompressData::ZlibEncodeToBase64Str(QuadFaceInfo,
-                                                                  faceStr);
-                x->SetAttribute(
-                    "COMPRESSED",
-                    LibUtilities::CompressData::GetCompressString());
-                x->SetAttribute("BITSIZE",
-                                LibUtilities::CompressData::GetBitSizeStr());
-                x->LinkEndChild(new TiXmlText(faceStr));
-                verTag->LinkEndChild(x);
-            }
-        }
-        pRoot->LinkEndChild(verTag);
     }
 }
 
-void OutputNekpp::WriteXmlElements(TiXmlElement *pRoot)
+void OutputNekpp::TransferElements(MeshGraphSharedPtr graph)
 {
-    bool UnCompressed = m_config["uncompress"].beenSet;
-
-    TiXmlElement *verTag           = new TiXmlElement("ELEMENT");
     vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
 
-    if (UnCompressed)
+    SegGeomMap &segMap = graph->GetAllSegGeoms();
+    TriGeomMap &triMap = graph->GetAllTriGeoms();
+    QuadGeomMap &quadMap = graph->GetAllQuadGeoms();
+    TetGeomMap &tetMap = graph->GetAllTetGeoms();
+    PyrGeomMap &pyrMap = graph->GetAllPyrGeoms();
+    PrismGeomMap &prismMap = graph->GetAllPrismGeoms();
+    HexGeomMap &hexMap = graph->GetAllHexGeoms();
+
+    for (int i = 0; i < elmt.size(); ++i)
     {
-        for (int i = 0; i < elmt.size(); ++i)
+        switch (elmt[i]->GetTag()[0])
         {
-            TiXmlElement *elm_tag = new TiXmlElement(elmt[i]->GetTag());
-            elm_tag->SetAttribute("ID", elmt[i]->GetId());
-            elm_tag->LinkEndChild(new TiXmlText(elmt[i]->GetXmlString()));
-            verTag->LinkEndChild(elm_tag);
+            case 'S':
+            {
+                int id = elmt[i]->GetId();
+                PointGeomSharedPtr vertices[2] = {
+                    graph->GetVertex(elmt[i]->GetVertex(0)->m_id),
+                    graph->GetVertex(elmt[i]->GetVertex(1)->m_id)};
+                segMap[id] = MemoryManager<SegGeom>::AllocateSharedPtr(id, m_mesh->m_spaceDim, vertices);
+            }
+            break;
+            case 'T':
+            {
+                int id = elmt[i]->GetId();
+                SegGeomSharedPtr edges[TriGeom::kNedges] = {
+                        graph->GetSegGeom(elmt[i]->GetEdge(0)->m_id),
+                        graph->GetSegGeom(elmt[i]->GetEdge(1)->m_id),
+                        graph->GetSegGeom(elmt[i]->GetEdge(2)->m_id)};
+
+                triMap[id] = MemoryManager<TriGeom>::AllocateSharedPtr(id, edges);
+            }
+            break;
+            case 'Q':
+            {
+                int id = elmt[i]->GetId();
+                SegGeomSharedPtr edges[QuadGeom::kNedges] = {
+                        graph->GetSegGeom(elmt[i]->GetEdge(0)->m_id),
+                        graph->GetSegGeom(elmt[i]->GetEdge(1)->m_id),
+                        graph->GetSegGeom(elmt[i]->GetEdge(2)->m_id),
+                        graph->GetSegGeom(elmt[i]->GetEdge(3)->m_id)};
+
+                quadMap[id] = MemoryManager<QuadGeom>::AllocateSharedPtr(id, edges);
+            }
+            break;
+            case 'A':
+            {
+                int id = elmt[i]->GetId();
+                TriGeomSharedPtr tfaces[4];
+                for(int j = 0; j < 4; ++j)
+                {
+                    Geometry2DSharedPtr face =
+                        graph->GetGeometry2D(elmt[i]->GetFace(j)->m_id);
+                    tfaces[j] = static_pointer_cast<TriGeom>(face);
+                }
+
+                tetMap[id] = MemoryManager<TetGeom>::AllocateSharedPtr(id, tfaces);
+            }
+            break;
+            case 'P':
+            {
+                Geometry2DSharedPtr faces[5];
+
+                int id = elmt[i]->GetId();
+                for(int j = 0; j < 5; ++j)
+                {
+                    Geometry2DSharedPtr face =
+                        graph->GetGeometry2D(elmt[i]->GetFace(j)->m_id);
+
+                    if (face->GetShapeType() ==
+                                LibUtilities::eTriangle)
+                    {
+                        faces[j] = static_pointer_cast<TriGeom>(face);
+                    }
+                    else if (face->GetShapeType() ==
+                                LibUtilities::eQuadrilateral)
+                    {
+                        faces[j] = static_pointer_cast<QuadGeom>(face);
+                    }
+                }
+                pyrMap[id] = MemoryManager<PyrGeom>::AllocateSharedPtr(id, faces);
+            }
+            break;
+            case 'R':
+            {
+                Geometry2DSharedPtr faces[5];
+
+                int id = elmt[i]->GetId();
+                for(int j = 0; j < 5; ++j)
+                {
+                    Geometry2DSharedPtr face =
+                        graph->GetGeometry2D(elmt[i]->GetFace(j)->m_id);
+
+                    if (face->GetShapeType() ==
+                                LibUtilities::eTriangle)
+                    {
+                        faces[j] = static_pointer_cast<TriGeom>(face);
+                    }
+                    else if (face->GetShapeType() ==
+                                LibUtilities::eQuadrilateral)
+                    {
+                        faces[j] = static_pointer_cast<QuadGeom>(face);
+                    }
+                }
+                prismMap[id] = MemoryManager<PrismGeom>::AllocateSharedPtr(id, faces);
+            }
+            break;
+            case 'H':
+            {
+                QuadGeomSharedPtr faces[6];
+
+                int id = elmt[i]->GetId();
+                for(int j = 0; j < 6; ++j)
+                {
+                    Geometry2DSharedPtr face =
+                        graph->GetGeometry2D(elmt[i]->GetFace(j)->m_id);
+                    faces[j] = static_pointer_cast<QuadGeom>(face);
+                }
+
+                hexMap[id] = MemoryManager<HexGeom>::AllocateSharedPtr(id, faces);
+            }
+            break;
+            default:
+                ASSERTL0(false, "Unknown element type");
         }
     }
-    else
-    {
-        std::vector<LibUtilities::MeshEdge> SegInfo;
-        std::vector<LibUtilities::MeshTri> TriInfo;
-        std::vector<LibUtilities::MeshQuad> QuadInfo;
-        std::vector<LibUtilities::MeshTet> TetInfo;
-        std::vector<LibUtilities::MeshPyr> PyrInfo;
-        std::vector<LibUtilities::MeshPrism> PrismInfo;
-        std::vector<LibUtilities::MeshHex> HexInfo;
+}
 
-        for (int i = 0; i < elmt.size(); ++i)
+void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
+{
+    CurveMap &edges = graph->GetCurvedEdges();
+
+    int edgecnt = 0;
+
+    for(auto &it : m_mesh->m_edgeSet)
+    {
+        if(it->m_edgeNodes.size() > 0)
         {
-            switch (elmt[i]->GetTag()[0])
+            CurveSharedPtr curve = MemoryManager<Curve>::AllocateSharedPtr(it->m_id,
+                                            it->m_curveType);
+            vector<NodeSharedPtr> ns;
+            it->GetCurvedNodes(ns);
+            for(int i = 0; i < ns.size(); i++)
             {
-                case 'S':
+                PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr(
+                    m_mesh->m_spaceDim, edgecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
+                curve->m_points.push_back(vert);
+            }
+
+            edges[it->m_id] = curve;
+            edgecnt++;
+        }
+    }
+
+    if(m_mesh->m_expDim == 1 && m_mesh->m_spaceDim > 1)
+    {
+        for(int e = 0; e < m_mesh->m_element[1].size(); e++)
+        {
+            ElementSharedPtr el = m_mesh->m_element[1][e];
+            vector<NodeSharedPtr> ns;
+            el->GetCurvedNodes(ns);
+            if(ns.size() > 2)
+            {
+                CurveSharedPtr curve = MemoryManager<Curve>::AllocateSharedPtr(
+                    el->GetId(), el->GetCurveType());
+
+                for(int i = 0; i < ns.size(); i++)
                 {
-                    LibUtilities::MeshEdge e;
-                    e.id = elmt[i]->GetId();
-                    e.v0 = elmt[i]->GetVertex(0)->m_id;
-                    e.v1 = elmt[i]->GetVertex(1)->m_id;
-                    SegInfo.push_back(e);
+                    PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr(
+                        m_mesh->m_spaceDim, edgecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
+                    curve->m_points.push_back(vert);
+                }
+
+                edges[el->GetId()] = curve;
+                edgecnt++;
+            }
+        }
+    }
+
+    CurveMap &faces = graph->GetCurvedFaces();
+
+    int facecnt = 0;
+
+    for(auto &it : m_mesh->m_faceSet)
+    {
+        if(it->m_faceNodes.size() > 0)
+        {
+            CurveSharedPtr curve =
+                MemoryManager<Curve>::AllocateSharedPtr(it->m_id,
+                                                        it->m_curveType);
+            vector<NodeSharedPtr> ns;
+            it->GetCurvedNodes(ns);
+            for(int i = 0; i < ns.size(); i++)
+            {
+                PointGeomSharedPtr vert =
+                    MemoryManager<PointGeom>::AllocateSharedPtr
+                    (m_mesh->m_spaceDim, facecnt, ns[i]->m_x, ns[i]->m_y,
+                     ns[i]->m_z);
+                curve->m_points.push_back(vert);
+            }
+
+            faces[it->m_id] = curve;
+            facecnt++;
+        }
+    }
+
+    /*
+    if(m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
+    {
+        //manifold case
+        for(int e = 0; e < m_mesh->m_element[2].size(); e++)
+        {
+            ElementSharedPtr el = m_mesh->m_element[2][e];
+
+            if(el->GetVolumeNodes().size() > 0) // needed for extract surf case
+            {
+                vector<NodeSharedPtr> ns;
+                el->GetCurvedNodes(ns);
+                if(ns.size() > 4)
+                {
+                    CurveSharedPtr curve =
+                        MemoryManager<Curve>::AllocateSharedPtr
+                        (el->GetId(), el->GetCurveType());
+
+                    for(int i = 0; i < ns.size(); i++)
+                    {
+                        PointGeomSharedPtr vert =
+                            MemoryManager<PointGeom>::AllocateSharedPtr
+                            (m_mesh->m_spaceDim, facecnt, ns[i]->m_x, ns[i]->m_y,
+                             ns[i]->m_z);
+                        curve->m_points.push_back(vert);
+                    }
+
+                    faces[el->GetId()] = curve;
+                    facecnt++;
+                }
+            }
+        }
+    }
+    */
+}
+
+void OutputNekpp::TransferComposites(MeshGraphSharedPtr graph)
+{
+    SpatialDomains::CompositeMap &comps = graph->GetComposites();
+    map<int, string> &compLabels = graph->GetCompositesLabels();
+
+    int j = 0;
+
+    for(auto &it : m_mesh->m_composite)
+    {
+        if(it.second->m_items.size() > 0)
+        {
+            int indx = it.second->m_id;
+            SpatialDomains::CompositeSharedPtr curVector =
+                            MemoryManager<SpatialDomains::Composite>::AllocateSharedPtr();
+
+            if(it.second->m_label.size())
+            {
+                compLabels[indx] = it.second->m_label;
+            }
+
+            switch (it.second->m_tag[0])
+            {
+                case 'V':
+                {
+                    PointGeomMap &pointMap = graph->GetAllPointGeoms();
+                    for(int i = 0; i < it.second->m_items.size(); i++)
+                    {
+                        curVector->m_geomVec.push_back(pointMap[it.second->m_items[i]->GetId()]);
+                    }
                 }
                 break;
-                case 'T':
+                case 'S':
+                case 'E':
                 {
-                    LibUtilities::MeshTri e;
-                    e.id = elmt[i]->GetId();
-                    for (int j = 0; j < 3; ++j)
+                    SegGeomMap &segMap = graph->GetAllSegGeoms();
+                    for(int i = 0; i < it.second->m_items.size(); i++)
                     {
-                        e.e[j] = elmt[i]->GetEdge(j)->m_id;
+                        curVector->m_geomVec.push_back(segMap[it.second->m_items[i]->GetId()]);
                     }
-                    TriInfo.push_back(e);
                 }
                 break;
                 case 'Q':
                 {
-                    LibUtilities::MeshQuad e;
-                    e.id = elmt[i]->GetId();
-                    for (int j = 0; j < 4; ++j)
+                    QuadGeomMap &quadMap = graph->GetAllQuadGeoms();
+                    for(int i = 0; i < it.second->m_items.size(); i++)
                     {
-                        e.e[j] = elmt[i]->GetEdge(j)->m_id;
+                        curVector->m_geomVec.push_back(quadMap[it.second->m_items[i]->GetId()]);
                     }
-                    QuadInfo.push_back(e);
+                }
+                break;
+                case 'T':
+                {
+                    TriGeomMap &triMap = graph->GetAllTriGeoms();
+                    for(int i = 0; i < it.second->m_items.size(); i++)
+                    {
+                        curVector->m_geomVec.push_back(triMap[it.second->m_items[i]->GetId()]);
+                    }
+                }
+                break;
+                case 'F':
+                {
+                    QuadGeomMap &quadMap = graph->GetAllQuadGeoms();
+                    TriGeomMap &triMap = graph->GetAllTriGeoms();
+                    for(int i = 0; i < it.second->m_items.size(); i++)
+                    {
+                        auto f = quadMap.find(it.second->m_items[i]->GetId());
+                        if(f != quadMap.end())
+                        {
+                            curVector->m_geomVec.push_back(f->second);
+                        }
+                        else
+                        {
+                            auto f2 = triMap.find(it.second->m_items[i]->GetId());
+                            curVector->m_geomVec.push_back(f2->second);
+                        }
+                    }
                 }
                 break;
                 case 'A':
                 {
-                    LibUtilities::MeshTet e;
-                    e.id = elmt[i]->GetId();
-                    for (int j = 0; j < 4; ++j)
+                    TetGeomMap &tetMap = graph->GetAllTetGeoms();
+                    for(int i = 0; i < it.second->m_items.size(); i++)
                     {
-                        e.f[j] = elmt[i]->GetFace(j)->m_id;
-                    }
-                    TetInfo.push_back(e);
+                        curVector->m_geomVec.push_back(tetMap[it.second->m_items[i]->GetId()]);
+                    };
                 }
                 break;
                 case 'P':
                 {
-                    LibUtilities::MeshPyr e;
-                    e.id = elmt[i]->GetId();
-                    for (int j = 0; j < 5; ++j)
+                    PyrGeomMap &pyrMap = graph->GetAllPyrGeoms();
+                    for(int i = 0; i < it.second->m_items.size(); i++)
                     {
-                        e.f[j] = elmt[i]->GetFace(j)->m_id;
+                        curVector->m_geomVec.push_back(pyrMap[it.second->m_items[i]->GetId()]);
                     }
-                    PyrInfo.push_back(e);
                 }
                 break;
                 case 'R':
                 {
-                    LibUtilities::MeshPrism e;
-                    e.id = elmt[i]->GetId();
-                    for (int j = 0; j < 5; ++j)
+                    PrismGeomMap &prismMap = graph->GetAllPrismGeoms();
+                    for(int i = 0; i < it.second->m_items.size(); i++)
                     {
-                        e.f[j] = elmt[i]->GetFace(j)->m_id;
+                        curVector->m_geomVec.push_back(prismMap[it.second->m_items[i]->GetId()]);
                     }
-                    PrismInfo.push_back(e);
                 }
                 break;
                 case 'H':
                 {
-                    LibUtilities::MeshHex e;
-                    e.id = elmt[i]->GetId();
-                    for (int j = 0; j < 6; ++j)
+                    HexGeomMap &hexMap = graph->GetAllHexGeoms();
+                    for(int i = 0; i < it.second->m_items.size(); i++)
                     {
-                        e.f[j] = elmt[i]->GetFace(j)->m_id;
+                        curVector->m_geomVec.push_back(hexMap[it.second->m_items[i]->GetId()]);
                     }
-                    HexInfo.push_back(e);
                 }
                 break;
                 default:
                     ASSERTL0(false, "Unknown element type");
             }
-        }
 
-        if (SegInfo.size())
-        {
-            std::string vType("S");
-            TiXmlElement *x = new TiXmlElement(vType);
-            std::string Str;
-            LibUtilities::CompressData::ZlibEncodeToBase64Str(SegInfo, Str);
-            x->SetAttribute("COMPRESSED",
-                            LibUtilities::CompressData::GetCompressString());
-            x->SetAttribute("BITSIZE",
-                            LibUtilities::CompressData::GetBitSizeStr());
-            x->LinkEndChild(new TiXmlText(Str));
-            verTag->LinkEndChild(x);
+            comps[indx] = curVector;
         }
-
-        if (TriInfo.size())
-        {
-            std::string vType("T");
-            TiXmlElement *x = new TiXmlElement(vType);
-            std::string Str;
-            LibUtilities::CompressData::ZlibEncodeToBase64Str(TriInfo, Str);
-            x->SetAttribute("COMPRESSED",
-                            LibUtilities::CompressData::GetCompressString());
-            x->SetAttribute("BITSIZE",
-                            LibUtilities::CompressData::GetBitSizeStr());
-            x->LinkEndChild(new TiXmlText(Str));
-            verTag->LinkEndChild(x);
-        }
-
-        if (QuadInfo.size())
-        {
-            std::string vType("Q");
-            TiXmlElement *x = new TiXmlElement(vType);
-            std::string Str;
-            LibUtilities::CompressData::ZlibEncodeToBase64Str(QuadInfo, Str);
-            x->SetAttribute("COMPRESSED",
-                            LibUtilities::CompressData::GetCompressString());
-            x->SetAttribute("BITSIZE",
-                            LibUtilities::CompressData::GetBitSizeStr());
-            x->LinkEndChild(new TiXmlText(Str));
-            verTag->LinkEndChild(x);
-        }
-
-        if (TetInfo.size())
-        {
-            std::string vType("A");
-            TiXmlElement *x = new TiXmlElement(vType);
-            std::string Str;
-            LibUtilities::CompressData::ZlibEncodeToBase64Str(TetInfo, Str);
-            x->SetAttribute("COMPRESSED",
-                            LibUtilities::CompressData::GetCompressString());
-            x->SetAttribute("BITSIZE",
-                            LibUtilities::CompressData::GetBitSizeStr());
-            x->LinkEndChild(new TiXmlText(Str));
-            verTag->LinkEndChild(x);
-        }
-
-        if (PyrInfo.size())
-        {
-            std::string vType("P");
-            TiXmlElement *x = new TiXmlElement(vType);
-            std::string Str;
-            LibUtilities::CompressData::ZlibEncodeToBase64Str(PyrInfo, Str);
-            x->SetAttribute("COMPRESSED",
-                            LibUtilities::CompressData::GetCompressString());
-            x->SetAttribute("BITSIZE",
-                            LibUtilities::CompressData::GetBitSizeStr());
-            x->LinkEndChild(new TiXmlText(Str));
-            verTag->LinkEndChild(x);
-        }
-
-        if (PrismInfo.size())
-        {
-            std::string vType("R");
-            TiXmlElement *x = new TiXmlElement(vType);
-            std::string Str;
-            LibUtilities::CompressData::ZlibEncodeToBase64Str(PrismInfo, Str);
-            x->SetAttribute("COMPRESSED",
-                            LibUtilities::CompressData::GetCompressString());
-            x->SetAttribute("BITSIZE",
-                            LibUtilities::CompressData::GetBitSizeStr());
-            x->LinkEndChild(new TiXmlText(Str));
-            verTag->LinkEndChild(x);
-        }
-
-        if (HexInfo.size())
-        {
-            std::string vType("H");
-            TiXmlElement *x = new TiXmlElement(vType);
-            std::string Str;
-            LibUtilities::CompressData::ZlibEncodeToBase64Str(HexInfo, Str);
-            x->SetAttribute("COMPRESSED",
-                            LibUtilities::CompressData::GetCompressString());
-            x->SetAttribute("BITSIZE",
-                            LibUtilities::CompressData::GetBitSizeStr());
-            x->LinkEndChild(new TiXmlText(Str));
-            verTag->LinkEndChild(x);
-        }
+        j++;
     }
-
-    pRoot->LinkEndChild(verTag);
 }
 
-void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
+void OutputNekpp::TransferDomain(MeshGraphSharedPtr graph)
 {
-    bool UnCompressed = m_config["uncompress"].beenSet;
+    vector<SpatialDomains::CompositeMap> &domain = graph->GetDomain();
 
-    int edgecnt = 0;
+    string list;
 
-    bool curve = false;
-    if (m_mesh->m_expDim > 1)
+    for(auto &it : m_mesh->m_composite)
     {
-        for (auto &edge : m_mesh->m_edgeSet)
+        if(it.second->m_items[0]->GetDim() == m_mesh->m_expDim)
         {
-            if (edge->m_edgeNodes.size() > 0)
-            {
-                curve = true;
-                break;
-            }
-        }
-    }
-    else if (m_mesh->m_expDim == 1)
-    {
-        for (int i = 0; i < m_mesh->m_element[1].size(); ++i)
-        {
-            if (m_mesh->m_element[1][i]->GetVolumeNodes().size() > 0)
-            {
-                curve = true;
-                break;
-            }
-        }
-    }
-
-    if (!curve)
-    {
-        return;
-    }
-
-    TiXmlElement *curved = new TiXmlElement("CURVED");
-
-    if (UnCompressed)
-    {
-        for (auto &edge : m_mesh->m_edgeSet)
-        {
-            if (edge->m_edgeNodes.size() > 0)
-            {
-                TiXmlElement *e = new TiXmlElement("E");
-                e->SetAttribute("ID", edgecnt++);
-                e->SetAttribute("EDGEID", edge->m_id);
-                e->SetAttribute("NUMPOINTS", edge->GetNodeCount());
-                e->SetAttribute(
-                    "TYPE", LibUtilities::kPointsTypeStr[edge->m_curveType]);
-                TiXmlText *t0 = new TiXmlText(edge->GetXmlCurveString());
-                e->LinkEndChild(t0);
-                curved->LinkEndChild(e);
-            }
-        }
-
-        int facecnt = 0;
-
-        if (m_mesh->m_expDim == 1 && m_mesh->m_spaceDim > 1)
-        {
-            for (auto &elmt : m_mesh->m_element[m_mesh->m_expDim])
-            {
-                // Only generate face curve if there are volume nodes
-                if (elmt->GetVolumeNodes().size() > 0)
-                {
-                    TiXmlElement *e = new TiXmlElement("E");
-                    e->SetAttribute("ID", facecnt++);
-                    e->SetAttribute("EDGEID", elmt->GetId());
-                    e->SetAttribute("NUMPOINTS", elmt->GetNodeCount());
-                    e->SetAttribute(
-                        "TYPE",
-                        LibUtilities::kPointsTypeStr[elmt->GetCurveType()]);
-
-                    TiXmlText *t0 = new TiXmlText(elmt->GetXmlCurveString());
-                    e->LinkEndChild(t0);
-                    curved->LinkEndChild(e);
-                }
-            }
-        }
-        // 2D elements in 3-space, output face curvature information
-        else if (m_mesh->m_expDim == 2 &&
-                 m_mesh->m_spaceDim >= 2)
-        {
-            for (auto &elmt : m_mesh->m_element[m_mesh->m_expDim])
-            {
-                // Only generate face curve if there are volume nodes
-                if (elmt->GetVolumeNodes().size() > 0)
-                {
-                    TiXmlElement *e = new TiXmlElement("F");
-                    e->SetAttribute("ID", facecnt++);
-                    e->SetAttribute("FACEID", elmt->GetId());
-                    e->SetAttribute("NUMPOINTS", elmt->GetNodeCount());
-                    e->SetAttribute(
-                        "TYPE",
-                        LibUtilities::kPointsTypeStr[elmt->GetCurveType()]);
-
-                    TiXmlText *t0 = new TiXmlText(elmt->GetXmlCurveString());
-                    e->LinkEndChild(t0);
-                    curved->LinkEndChild(e);
-                }
-            }
-        }
-        else if (m_mesh->m_expDim == 3)
-        {
-            for (auto &face : m_mesh->m_faceSet)
-            {
-                if (face->m_faceNodes.size() > 0)
-                {
-                    TiXmlElement *f = new TiXmlElement("F");
-                    f->SetAttribute("ID", facecnt++);
-                    f->SetAttribute("FACEID", face->m_id);
-                    f->SetAttribute("NUMPOINTS", face->GetNodeCount());
-                    f->SetAttribute(
-                        "TYPE",
-                        LibUtilities::kPointsTypeStr[face->m_curveType]);
-                    TiXmlText *t0 = new TiXmlText(face->GetXmlCurveString());
-                    f->LinkEndChild(t0);
-                    curved->LinkEndChild(f);
-                }
-            }
-        }
-    }
-    else
-    {
-        std::vector<LibUtilities::MeshCurvedInfo> edgeinfo;
-        std::vector<LibUtilities::MeshCurvedInfo> faceinfo;
-        LibUtilities::MeshCurvedPts curvedpts;
-        curvedpts.id = 0; // assume all points are going in here
-        int ptoffset = 0;
-        int newidx   = 0;
-        NodeSet cvertlist;
-
-        for (auto &edge : m_mesh->m_edgeSet)
-        {
-            if (edge->m_edgeNodes.size() > 0)
-            {
-                LibUtilities::MeshCurvedInfo cinfo;
-                cinfo.id       = edgecnt++;
-                cinfo.entityid = edge->m_id;
-                cinfo.npoints  = edge->m_edgeNodes.size() + 2;
-                cinfo.ptype    = edge->m_curveType;
-                cinfo.ptid     = 0; // set to just one point set
-                cinfo.ptoffset = ptoffset;
-
-                edgeinfo.push_back(cinfo);
-
-                std::vector<NodeSharedPtr> nodeList;
-                edge->GetCurvedNodes(nodeList);
-
-                // fill in points
-                for (int i = 0; i < nodeList.size(); ++i)
-                {
-                    auto testIns = cvertlist.insert(nodeList[i]);
-
-                    if (testIns.second) // have inserted node
-                    {
-                        (*(testIns.first))->m_id = newidx;
-
-                        LibUtilities::MeshVertex v;
-                        v.id = newidx;
-                        v.x  = nodeList[i]->m_x;
-                        v.y  = nodeList[i]->m_y;
-                        v.z = nodeList[i]->m_z;
-                        curvedpts.pts.push_back(v);
-                        newidx++;
-                    }
-
-                    curvedpts.index.push_back((*(testIns.first))->m_id);
-                }
-
-                ptoffset += cinfo.npoints;
-            }
-        }
-
-        int facecnt = 0;
-
-        // 1D element in 2 or 3 space
-        if (m_mesh->m_expDim == 1 && m_mesh->m_spaceDim > 1)
-        {
-            for (auto &elmt : m_mesh->m_element[m_mesh->m_expDim])
-            {
-                // Only generate face curve if there are volume nodes
-                if (elmt->GetVolumeNodes().size() > 0)
-                {
-                    LibUtilities::MeshCurvedInfo cinfo;
-                    cinfo.id       = facecnt++;
-                    cinfo.entityid = elmt->GetId();
-                    cinfo.npoints  = elmt->GetNodeCount();
-                    cinfo.ptype    = elmt->GetCurveType();
-                    cinfo.ptid     = 0; // set to just one point set
-                    cinfo.ptoffset = ptoffset;
-
-                    edgeinfo.push_back(cinfo);
-
-                    // fill in points
-                    vector<NodeSharedPtr> tmp;
-                    elmt->GetCurvedNodes(tmp);
-
-                    for (int i = 0; i < tmp.size(); ++i)
-                    {
-                        auto testIns = cvertlist.insert(tmp[i]);
-
-                        if (testIns.second) // have inserted node
-                        {
-                            (*(testIns.first))->m_id = newidx;
-
-                            LibUtilities::MeshVertex v;
-                            v.id = newidx;
-                            v.x  = tmp[i]->m_x;
-                            v.y  = tmp[i]->m_y;
-                            v.z = tmp[i]->m_z;
-                            curvedpts.pts.push_back(v);
-                            newidx++;
-                        }
-                        curvedpts.index.push_back((*(testIns.first))->m_id);
-                    }
-                    ptoffset += cinfo.npoints;
-                }
-            }
-        }
-        // 2D elements in 3-space, output face curvature information
-        else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
-        {
-            for (auto &elmt : m_mesh->m_element[m_mesh->m_expDim])
-            {
-                // Only generate face curve if there are volume nodes
-                if (elmt->GetVolumeNodes().size() > 0)
-                {
-                    LibUtilities::MeshCurvedInfo cinfo;
-                    cinfo.id       = facecnt++;
-                    cinfo.entityid = elmt->GetId();
-                    cinfo.npoints  = elmt->GetNodeCount();
-                    cinfo.ptype    = elmt->GetCurveType();
-                    cinfo.ptid     = 0; // set to just one point set
-                    cinfo.ptoffset = ptoffset;
-
-                    faceinfo.push_back(cinfo);
-
-                    // fill in points
-                    vector<NodeSharedPtr> tmp;
-                    elmt->GetCurvedNodes(tmp);
-
-                    for (int i = 0; i < tmp.size(); ++i)
-                    {
-                        auto testIns = cvertlist.insert(tmp[i]);
-
-                        if (testIns.second) // have inserted node
-                        {
-                            (*(testIns.first))->m_id = newidx;
-
-                            LibUtilities::MeshVertex v;
-                            v.id = newidx;
-                            v.x  = tmp[i]->m_x;
-                            v.y  = tmp[i]->m_y;
-                            v.z = tmp[i]->m_z;
-                            curvedpts.pts.push_back(v);
-                            newidx++;
-                        }
-                        curvedpts.index.push_back((*(testIns.first))->m_id);
-                    }
-                    ptoffset += cinfo.npoints;
-                }
-            }
-        }
-        else if (m_mesh->m_expDim == 3)
-        {
-            for (auto &face : m_mesh->m_faceSet)
-            {
-                if (face->m_faceNodes.size() > 0)
-                {
-                    vector<NodeSharedPtr> tmp;
-                    face->GetCurvedNodes(tmp);
-
-                    LibUtilities::MeshCurvedInfo cinfo;
-                    cinfo.id       = facecnt++;
-                    cinfo.entityid = face->m_id;
-                    cinfo.npoints  = tmp.size();
-                    cinfo.ptype    = face->m_curveType;
-                    cinfo.ptid     = 0; // set to just one point set
-                    cinfo.ptoffset = ptoffset;
-
-                    faceinfo.push_back(cinfo);
-
-                    for (int i = 0; i < tmp.size(); ++i)
-                    {
-                        auto testIns = cvertlist.insert(tmp[i]);
-
-                        if (testIns.second) // have inserted node
-                        {
-                            (*(testIns.first))->m_id = newidx;
-
-                            LibUtilities::MeshVertex v;
-                            v.id = newidx;
-                            v.x  = tmp[i]->m_x;
-                            v.y  = tmp[i]->m_y;
-                            v.z = tmp[i]->m_z;
-                            curvedpts.pts.push_back(v);
-                            newidx++;
-                        }
-                        curvedpts.index.push_back((*(testIns.first))->m_id);
-                    }
-                    ptoffset += cinfo.npoints;
-                }
-            }
-        }
-
-        // add xml information
-        if (edgeinfo.size())
-        {
-            curved->SetAttribute(
-                "COMPRESSED", LibUtilities::CompressData::GetCompressString());
-            curved->SetAttribute("BITSIZE",
-                                 LibUtilities::CompressData::GetBitSizeStr());
-
-            TiXmlElement *x = new TiXmlElement("E");
-            std::string dataStr;
-            LibUtilities::CompressData::ZlibEncodeToBase64Str(edgeinfo,
-                                                              dataStr);
-            x->LinkEndChild(new TiXmlText(dataStr));
-            curved->LinkEndChild(x);
-        }
-
-        if (faceinfo.size())
-        {
-            curved->SetAttribute(
-                "COMPRESSED", LibUtilities::CompressData::GetCompressString());
-            curved->SetAttribute("BITSIZE",
-                                 LibUtilities::CompressData::GetBitSizeStr());
-
-            TiXmlElement *x = new TiXmlElement("F");
-            std::string dataStr;
-            LibUtilities::CompressData::ZlibEncodeToBase64Str(faceinfo,
-                                                              dataStr);
-            x->LinkEndChild(new TiXmlText(dataStr));
-            curved->LinkEndChild(x);
-        }
-
-        if (edgeinfo.size() || faceinfo.size())
-        {
-            TiXmlElement *x = new TiXmlElement("DATAPOINTS");
-            x->SetAttribute("ID", curvedpts.id);
-
-            TiXmlElement *subx = new TiXmlElement("INDEX");
-            std::string dataStr;
-            LibUtilities::CompressData::ZlibEncodeToBase64Str(curvedpts.index,
-                                                              dataStr);
-            subx->LinkEndChild(new TiXmlText(dataStr));
-            x->LinkEndChild(subx);
-
-            subx = new TiXmlElement("POINTS");
-            LibUtilities::CompressData::ZlibEncodeToBase64Str(curvedpts.pts,
-                                                              dataStr);
-            subx->LinkEndChild(new TiXmlText(dataStr));
-            x->LinkEndChild(subx);
-
-            curved->LinkEndChild(x);
-        }
-    }
-    pRoot->LinkEndChild(curved);
-}
-
-void OutputNekpp::WriteXmlComposites(TiXmlElement *pRoot)
-{
-    TiXmlElement *verTag = new TiXmlElement("COMPOSITE");
-    int j = 0;
-
-    for (auto &it : m_mesh->m_composite)
-    {
-        if (it.second->m_items.size() > 0)
-        {
-            TiXmlElement *comp_tag = new TiXmlElement("C"); // Composite
-            bool doSort            = true;
-
-            // Ensure that this composite is not used for periodic BCs!
-            for (auto &it2 : m_mesh->m_condition)
-            {
-                ConditionSharedPtr c = it2.second;
-
-                // Ignore non-periodic boundary conditions.
-                if (find(c->type.begin(), c->type.end(), ePeriodic) ==
-                    c->type.end())
-                {
-                    continue;
-                }
-
-                for (int i = 0; i < c->m_composite.size(); ++i)
-                {
-                    if (c->m_composite[i] == j)
-                    {
-                        doSort = false;
-                    }
-                }
-            }
-
-            doSort = doSort && it.second->m_reorder;
-            comp_tag->SetAttribute("ID", it.second->m_id);
-            if (it.second->m_label.size())
-            {
-                comp_tag->SetAttribute("LABEL", it.second->m_label);
-            }
-            comp_tag->LinkEndChild(
-                new TiXmlText(it.second->GetXmlString(doSort)));
-            verTag->LinkEndChild(comp_tag);
-        }
-        else
-        {
-            cout << "Composite " << it.second->m_id << " "
-                 << "contains nothing." << endl;
-        }
-
-        ++j;
-    }
-
-    pRoot->LinkEndChild(verTag);
-}
-
-void OutputNekpp::WriteXmlDomain(TiXmlElement *pRoot)
-{
-    // Write the <DOMAIN> subsection.
-    TiXmlElement *domain = new TiXmlElement("DOMAIN");
-    std::string list;
-
-    for (auto &it : m_mesh->m_composite)
-    {
-        if (it.second->m_items[0]->GetDim() == m_mesh->m_expDim)
-        {
-            if (list.length() > 0)
+            if(list.length() > 0)
             {
                 list += ",";
             }
-            list += boost::lexical_cast<std::string>(it.second->m_id);
+            list += boost::lexical_cast<string>(it.second->m_id);
         }
     }
-    domain->LinkEndChild(new TiXmlText(" C[" + list + "] "));
-    pRoot->LinkEndChild(domain);
+
+    SpatialDomains::CompositeMap fullDomain;
+    graph->GetCompositeList(list, fullDomain);
+    domain.push_back(fullDomain);
 }
 
-void OutputNekpp::WriteXmlExpansions(TiXmlElement *pRoot)
-{
-    // Write a default <EXPANSIONS> section.
-    TiXmlElement *expansions = new TiXmlElement("EXPANSIONS");
-
-    for (auto &it : m_mesh->m_composite)
-    {
-        if (it.second->m_items[0]->GetDim() == m_mesh->m_expDim)
-        {
-            TiXmlElement *exp = new TiXmlElement("E");
-            exp->SetAttribute(
-                "COMPOSITE",
-                "C[" + boost::lexical_cast<std::string>(it.second->m_id) +
-                    "]");
-            exp->SetAttribute("NUMMODES", 4);
-            exp->SetAttribute("TYPE", "MODIFIED");
-
-            if (m_mesh->m_fields.size() == 0)
-            {
-                exp->SetAttribute("FIELDS", "u");
-            }
-            else
-            {
-                string fstr;
-                for (int i = 0; i < m_mesh->m_fields.size(); ++i)
-                {
-                    fstr += m_mesh->m_fields[i] + ",";
-                }
-                fstr = fstr.substr(0, fstr.length() - 1);
-                exp->SetAttribute("FIELDS", fstr);
-            }
-
-            expansions->LinkEndChild(exp);
-        }
-    }
-    pRoot->LinkEndChild(expansions);
-}
-
-void OutputNekpp::WriteXmlConditions(TiXmlElement *pRoot)
-{
-    TiXmlElement *conditions         = new TiXmlElement("CONDITIONS");
-    TiXmlElement *boundaryregions    = new TiXmlElement("BOUNDARYREGIONS");
-    TiXmlElement *boundaryconditions = new TiXmlElement("BOUNDARYCONDITIONS");
-    TiXmlElement *variables          = new TiXmlElement("VARIABLES");
-
-    for (auto &it : m_mesh->m_condition)
-    {
-        ConditionSharedPtr c = it.second;
-        string tmp;
-
-        // First set up boundary regions.
-        TiXmlElement *b = new TiXmlElement("B");
-        b->SetAttribute("ID", boost::lexical_cast<string>(it.first));
-
-        for (int i = 0; i < c->m_composite.size(); ++i)
-        {
-            tmp += boost::lexical_cast<string>(c->m_composite[i]) + ",";
-        }
-
-        tmp = tmp.substr(0, tmp.length() - 1);
-
-        TiXmlText *t0 = new TiXmlText("C[" + tmp + "]");
-        b->LinkEndChild(t0);
-        boundaryregions->LinkEndChild(b);
-
-        TiXmlElement *region = new TiXmlElement("REGION");
-        region->SetAttribute("REF", boost::lexical_cast<string>(it.first));
-
-        for (int i = 0; i < c->type.size(); ++i)
-        {
-            string tagId;
-
-            switch (c->type[i])
-            {
-                case eDirichlet:
-                    tagId = "D";
-                    break;
-                case eNeumann:
-                    tagId = "N";
-                    break;
-                case ePeriodic:
-                    tagId = "P";
-                    break;
-                case eHOPCondition:
-                    tagId = "N";
-                    break;
-                default:
-                    break;
-            }
-
-            TiXmlElement *tag = new TiXmlElement(tagId);
-            tag->SetAttribute("VAR", c->field[i]);
-            tag->SetAttribute("VALUE", c->value[i]);
-
-            if (c->type[i] == eHOPCondition)
-            {
-                tag->SetAttribute("USERDEFINEDTYPE", "H");
-            }
-
-            region->LinkEndChild(tag);
-        }
-
-        boundaryconditions->LinkEndChild(region);
-    }
-
-    for (int i = 0; i < m_mesh->m_fields.size(); ++i)
-    {
-        TiXmlElement *v = new TiXmlElement("V");
-        v->SetAttribute("ID", boost::lexical_cast<std::string>(i));
-        TiXmlText *t0 = new TiXmlText(m_mesh->m_fields[i]);
-        v->LinkEndChild(t0);
-        variables->LinkEndChild(v);
-    }
-
-    if (m_mesh->m_fields.size() > 0)
-    {
-        conditions->LinkEndChild(variables);
-    }
-
-    if (m_mesh->m_condition.size() > 0)
-    {
-        conditions->LinkEndChild(boundaryregions);
-        conditions->LinkEndChild(boundaryconditions);
-    }
-
-    pRoot->LinkEndChild(conditions);
-}
 }
 }

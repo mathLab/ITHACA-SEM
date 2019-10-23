@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -223,32 +222,8 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(b.num_dimensions(), 2);
             }
             CountedObject<double>::Check(150, 0, 150, 0, 0, 0);
-            
-            {
-                CountedObject<double>::ClearCounters();
-                
-                Array<ThreeD, const CountedObject<double> > a(1, 2, 3);
-                Array<ThreeD, CountedObject<double> > b(4, 5, 6);
-                CountedObject<double>::Check(126, 0, 0, 0, 0, 0);
-                
-                BOOST_CHECK(a.begin() != a.end());
-                BOOST_CHECK(b.begin() != b.end());
-                
-                BOOST_CHECK_EQUAL(a.num_elements(), 6);
-                BOOST_CHECK_EQUAL(b.num_elements(), 120);
-                BOOST_CHECK_EQUAL(a.shape()[0], 1);
-                BOOST_CHECK_EQUAL(a.shape()[1], 2);
-                BOOST_CHECK_EQUAL(a.shape()[2], 3);
-                BOOST_CHECK_EQUAL(b.shape()[0], 4);
-                BOOST_CHECK_EQUAL(b.shape()[1], 5);
-                BOOST_CHECK_EQUAL(b.shape()[2], 6);
-               
-                BOOST_CHECK_EQUAL(a.num_dimensions(), 3);
-                BOOST_CHECK_EQUAL(b.num_dimensions(), 3);
-            }
-            CountedObject<double>::Check(126, 0, 126, 0, 0, 0);
         }
-        
+
         BOOST_AUTO_TEST_CASE(TestSingleValueInitialization)
         {
             {
@@ -319,52 +294,6 @@ namespace Nektar
             }
             CountedObject<double>::Check(0, 0, 151, 150, 0, 0);
             
-            {
-                CountedObject<double> initValue(98);
-                CountedObject<double>::ClearCounters();
-                
-                Array<ThreeD, const CountedObject<double> > a(1, 2, 3, initValue);
-                Array<ThreeD, CountedObject<double> > b(4, 5, 6, initValue);
-                CountedObject<double>::Check(0, 0, 0, 126, 0, 0);
-                
-                BOOST_CHECK(a.begin() != a.end());
-                BOOST_CHECK(b.begin() != b.end());
-                
-                BOOST_CHECK_EQUAL(a.num_elements(), 6);
-                BOOST_CHECK_EQUAL(b.num_elements(), 120);
-                BOOST_CHECK_EQUAL(a.shape()[0], 1);
-                BOOST_CHECK_EQUAL(a.shape()[1], 2);
-                BOOST_CHECK_EQUAL(a.shape()[2], 3);
-                BOOST_CHECK_EQUAL(b.shape()[0], 4);
-                BOOST_CHECK_EQUAL(b.shape()[1], 5);
-                BOOST_CHECK_EQUAL(b.shape()[2], 6);
-               
-                BOOST_CHECK_EQUAL(a.num_dimensions(), 3);
-                BOOST_CHECK_EQUAL(b.num_dimensions(), 3);
-                    
-                for(unsigned int i = 0; i < a.shape()[0]; ++i)
-                {
-                    for(unsigned int j = 0; j < a.shape()[1]; ++j)
-                    {
-                        for(unsigned int k = 0; k < a.shape()[2]; ++k)
-                        {
-                            BOOST_CHECK(a[i][j][k] == initValue);
-                        }
-                    }
-                }
-                
-                for(unsigned int i = 0; i < b.shape()[0]; ++i)
-                {
-                    for(unsigned int j = 0; j < b.shape()[1]; ++j)
-                    {
-                        for(unsigned int k = 0; k < b.shape()[2]; ++k)
-                        {
-                            BOOST_CHECK(b[i][j][k] == initValue);
-                        }
-                    }
-                }
-            }
-            CountedObject<double>::Check(0, 0, 127, 126, 0, 0);
         }
         
         BOOST_AUTO_TEST_CASE(TestPopulationFromCArray)

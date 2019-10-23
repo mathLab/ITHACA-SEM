@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,28 +32,33 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <iomanip>
+using namespace std;
+
+#include <boost/core/ignore_unused.hpp>
+#include <boost/format.hpp>
+
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <SolverUtils/Filters/FilterHistoryPoints.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 
-#include <boost/format.hpp>
-
-using namespace std;
 
 namespace Nektar
 {
 namespace SolverUtils
 {
-std::string FilterHistoryPoints::className = GetFilterFactory().RegisterCreatorFunction("HistoryPoints", FilterHistoryPoints::create);
+std::string FilterHistoryPoints::className =
+        GetFilterFactory().RegisterCreatorFunction(
+                "HistoryPoints", FilterHistoryPoints::create);
 
 /**
  *
  */
 FilterHistoryPoints::FilterHistoryPoints(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams) :
-    Filter(pSession)
+    Filter(pSession, pEquation)
 {
     // OutputFile
     auto it = pParams.find("OutputFile");
@@ -81,7 +85,8 @@ FilterHistoryPoints::FilterHistoryPoints(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetInterpreter(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
 
@@ -96,7 +101,8 @@ FilterHistoryPoints::FilterHistoryPoints(
         }
         else
         {
-            LibUtilities::Equation equ(m_session, it->second);
+            LibUtilities::Equation equ(
+                m_session->GetInterpreter(), it->second);
             m_outputPlane = round(equ.Evaluate());
         }
 
@@ -277,7 +283,7 @@ void FilterHistoryPoints::v_Initialise(
         if (dist_loc[i] == dist[i])
         {
             // Set element id to Vid of m_history point for later use
-            m_historyPoints[i]->SetVid(idList[i]);
+            m_historyPoints[i]->SetGlobalID(idList[i]);
         }
         else
         {
@@ -454,9 +460,9 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
             for (auto &x : m_historyList)
             {
                 locCoord = x.second;
-                expId    = x.first->GetVid();
-                NekDouble value;
-                int plane = m_planeIDs[m_historyLocalPointMap[k]];
+                expId    = x.first->GetGlobalID();
+                NekDouble value = 0.0;
+                const int plane = m_planeIDs[m_historyLocalPointMap[k]];
 
                 if (m_waveSpace)
                 {
@@ -553,7 +559,7 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
             for (auto &x : m_historyList)
             {
                 locCoord = x.second;
-                expId    = x.first->GetVid();
+                expId    = x.first->GetGlobalID();
 
                 physvals = pFields[j]->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
 
@@ -597,6 +603,8 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
  */
 void FilterHistoryPoints::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     if (pFields[0]->GetComm()->GetRank() == 0)
     {
         m_outputStream.close();

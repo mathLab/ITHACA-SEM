@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <ShallowWaterSolver/RiemannSolvers/LinearAverageSolver.h>
 
 namespace Nektar
@@ -44,7 +45,9 @@ namespace Nektar
             LinearAverageSolver::create,
             "Average Value Riemann solver");
 
-    LinearAverageSolver::LinearAverageSolver() : LinearSWESolver()
+    LinearAverageSolver::LinearAverageSolver(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+        : LinearSWESolver(pSession)
     {
 
     }
@@ -66,14 +69,16 @@ namespace Nektar
      * @param vf     Computed Riemann flux for y-momentum component 
      */
     void LinearAverageSolver::v_PointSolve(
-	double  etaL, double  uL, double  vL, double dL,
-	double  etaR, double  uR, double  vR, double dR,
-        double &etaf, double &uf, double &vf)
-    {        
+        NekDouble  etaL, NekDouble  uL, NekDouble  vL, NekDouble dL,
+        NekDouble  etaR, NekDouble  uR, NekDouble  vR, NekDouble dR,
+        NekDouble &etaf, NekDouble &uf, NekDouble &vf)
+    {
+        boost::ignore_unused(vL, vR);
+
         static NekDouble g = m_params["gravity"]();
-	
-	etaf  = 0.5 * (dL * uL + dR * uR);
-	uf    = 0.5 * (g * etaL + g * etaR);
-	vf    = 0.0;
+
+        etaf  = 0.5 * (dL * uL + dR * uR);
+        uf    = 0.5 * (g * etaL + g * etaR);
+        vf    = 0.0;
     }
 }

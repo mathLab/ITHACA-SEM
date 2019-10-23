@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -141,7 +140,7 @@ namespace Nektar
         LIB_UTILITIES_EXPORT IndexType GetNumStoredDoubles() const;
         LIB_UTILITIES_EXPORT IndexType GetBlkSize() const;
         LIB_UTILITIES_EXPORT DataType  GetFillInRatio() const;
-        LIB_UTILITIES_EXPORT size_t GetMemoryUsage(IndexType nnz, IndexType nRows) const;
+        LIB_UTILITIES_EXPORT size_t GetMemoryUsage() const;
 
         LIB_UTILITIES_EXPORT const_iterator begin() const;
         LIB_UTILITIES_EXPORT const_iterator end() const;
@@ -163,28 +162,27 @@ namespace Nektar
         // to the internal zero-based BSR representation
         void processBcoInput(
                         const IndexType  blkRows,
-                        const IndexType  blkColumns,
                         const IndexType  blkDim,
                         const BCOMatType&   bcoMat);
 
 
-        void Multiply_1x1(const int mb, const int kb, const double* val,
+        void Multiply_1x1(const int mb, const double* val,
                     const int* bindx, const int* bpntrb, const int* bpntre,
                     const double* b, double* c);
 
-        void Multiply_2x2(const int mb, const int kb, const double* val,
+        void Multiply_2x2(const int mb, const double* val,
                     const int* bindx, const int* bpntrb, const int* bpntre,
                     const double* b, double* c);
 
-        void Multiply_3x3(const int mb, const int kb, const double* val,
+        void Multiply_3x3(const int mb, const double* val,
                     const int* bindx, const int* bpntrb, const int* bpntre,
                     const double* b, double* c);
 
-        void Multiply_4x4(const int mb, const int kb, const double* val,
+        void Multiply_4x4(const int mb, const double* val,
                     const int* bindx, const int* bpntrb, const int* bpntre,
                     const double* b, double* c);
 
-        void Multiply_generic(const int mb, const int kb, const double* val,
+        void Multiply_generic(const int mb, const double* val,
                     const int* bindx, const int* bpntrb, const int* bpntre,
                     const double* b, double* c);
 

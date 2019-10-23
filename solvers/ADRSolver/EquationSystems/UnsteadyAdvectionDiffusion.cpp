@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #include <iostream>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <ADRSolver/EquationSystems/UnsteadyAdvectionDiffusion.h>
 
 using namespace std;
@@ -47,9 +48,10 @@ namespace Nektar
                 UnsteadyAdvectionDiffusion::create);
     
     UnsteadyAdvectionDiffusion::UnsteadyAdvectionDiffusion(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          AdvectionSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph)
     {
         m_planeNumber = 0;
     }
@@ -107,7 +109,7 @@ namespace Nektar
                                            GetFluxVectorAdv, this);
                 m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
-                    CreateInstance(riemName);
+                    CreateInstance(riemName, m_session);
                 m_riemannSolver->SetScalar("Vn", &UnsteadyAdvectionDiffusion::
                                            GetNormalVelocity, this);
                 m_advObject->SetRiemannSolver(m_riemannSolver);
@@ -146,7 +148,7 @@ namespace Nektar
                     string riemName;
                     m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                     m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
-                        CreateInstance(riemName);
+                        CreateInstance(riemName, m_session);
                     m_riemannSolver->SetScalar("Vn",
                                                &UnsteadyAdvectionDiffusion::
                                                GetNormalVelocity, this);
@@ -429,6 +431,7 @@ namespace Nektar
               Array<OneD, Array<OneD, NekDouble> > &derivatives,
               Array<OneD, Array<OneD, NekDouble> > &flux)
     {
+        boost::ignore_unused(derivatives);
         for (int k = 0; k < flux.num_elements(); ++k)
         {
             Vmath::Zero(GetNpoints(), flux[k], 1);
@@ -640,6 +643,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray, 
         const NekDouble time)
     {
+        boost::ignore_unused(time);
+
         ASSERTL1(inarray.num_elements() == outarray.num_elements(),"Inarray and outarray of different sizes ");
 
         for(int i = 0; i < inarray.num_elements(); ++i)

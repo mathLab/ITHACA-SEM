@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -483,7 +482,8 @@ namespace Nektar
                       }
                   }
               }
-              else
+              else if (m_bndConditions[i]->GetBoundaryConditionType() !=
+                     SpatialDomains::ePeriodic)
               {
                   bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
               }
@@ -505,11 +505,19 @@ namespace Nektar
           // Now fill in all other Dirichlet coefficients.
           for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
           {
-              Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[i]->UpdateCoeffs();
+              Array<OneD, NekDouble>& coeffs =
+                  m_bndCondExpansions[i]->UpdateCoeffs();
 
+              if(m_bndConditions[i]->GetBoundaryConditionType()
+                 == SpatialDomains::ePeriodic)
+              {
+                  continue;
+              }
+              
               for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
               {
-                  sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                  sign = m_locToGloMap->
+                      GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
                   coeffs[j] = sign * tmp[bndMap[bndcnt++]];
               }
           }
@@ -530,10 +538,16 @@ namespace Nektar
                    "regions to not exist");
 
             // Now fill in all other Dirichlet coefficients.
-          Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[nreg]->UpdateCoeffs();
+          Array<OneD, NekDouble>& coeffs =
+              m_bndCondExpansions[nreg]->UpdateCoeffs();
           
           for(int j = 0; j < nreg; ++j)
           {
+              if(m_bndConditions[j]->GetBoundaryConditionType()
+                 == SpatialDomains::ePeriodic)
+              {
+                  continue;
+              }
               bndcnt += m_bndCondExpansions[j]->GetNcoeffs();
           }
           
@@ -580,6 +594,7 @@ namespace Nektar
                                     const FlagList &flags,
                                     const StdRegions::ConstFactorMap &factors,
                                     const StdRegions::VarCoeffMap &varcoeff,
+                                    const MultiRegions::VarFactorsMap &varfactors,
                                     const Array<OneD, const NekDouble> &dirForcing,
                                     const bool PhysSpaceForcing)
       {
@@ -606,7 +621,8 @@ namespace Nektar
           Array<OneD, NekDouble> gamma(contNcoeffs, 0.0);
           for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
           {
-              if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+              if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann ||
+                 m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
               {
                   for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                   {
@@ -615,7 +631,7 @@ namespace Nektar
                           sign * (m_bndCondExpansions[i]->GetCoeffs())[j];
                   }
               }
-              else
+              else if (m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
               {
                   bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
               }
@@ -626,7 +642,7 @@ namespace Nektar
           Vmath::Vadd(contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
           
           // Solve the system
-          GlobalLinSysKey key(StdRegions::eHelmholtz, m_locToGloMap, factors,varcoeff);
+          GlobalLinSysKey key(StdRegions::eHelmholtz, m_locToGloMap, factors,varcoeff,varfactors);
           
           if(flags.isSet(eUseGlobal))
           {

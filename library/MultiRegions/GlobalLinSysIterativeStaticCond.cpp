@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -153,19 +152,21 @@ namespace Nektar
 
         void GlobalLinSysIterativeStaticCond::v_InitObject()
         {
-            m_precon = CreatePrecon(m_locToGloMap);
+            auto asmMap = m_locToGloMap.lock();
+
+            m_precon = CreatePrecon(asmMap);
 
             // Allocate memory for top-level structure
-            SetupTopLevel(m_locToGloMap);
+            SetupTopLevel(asmMap);
 
             // Setup Block Matrix systems
             int n, n_exp = m_expList.lock()->GetNumElmts();
 
             MatrixStorage blkmatStorage = eDIAGONAL;
             const Array<OneD,const unsigned int>& nbdry_size
-                    = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
+                    = asmMap->GetNumLocalBndCoeffsPerPatch();
 
-            m_S1Blk      = MemoryManager<DNekScalBlkMat>
+            m_S1Blk = MemoryManager<DNekScalBlkMat>
                 ::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
 
             // Preserve original matrix in m_S1Blk
@@ -179,19 +180,22 @@ namespace Nektar
             m_precon->BuildPreconditioner();
 
             // Do transform of Schur complement matrix
+            int cnt = 0; 
             for (n = 0; n < n_exp; ++n)
             {
                 if (m_linSysKey.GetMatrixType() !=
                         StdRegions::eHybridDGHelmBndLam)
                 {
                     DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
-                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(n, mat);
+                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
+                                                n, cnt, mat);
                     m_schurCompl->SetBlock(n, n, t);
+                    cnt += mat->GetRows();
                 }
             }
 
             // Construct this level
-            Initialise(m_locToGloMap);
+            Initialise(asmMap);
         }
         
         /**
@@ -206,7 +210,7 @@ namespace Nektar
             v_GetStaticCondBlock(unsigned int n)
         {
             DNekScalBlkMatSharedPtr schurComplBlock;
-            int  scLevel           = m_locToGloMap->GetStaticCondLevel();
+            int  scLevel           = m_locToGloMap.lock()->GetStaticCondLevel();
             DNekScalBlkMatSharedPtr sc = scLevel == 0 ? m_S1Blk : m_schurCompl;
             DNekScalMatSharedPtr    localMat = sc->GetBlock(n,n);
             unsigned int nbdry    = localMat->GetRows();
@@ -242,7 +246,7 @@ namespace Nektar
             if (m_linSysKey.GetGlobalSysSolnType() ==
                     eIterativeMultiLevelStaticCond)
             {
-                m_precon = CreatePrecon(m_locToGloMap);
+                m_precon = CreatePrecon(m_locToGloMap.lock());
                 m_precon->BuildPreconditioner();
             }
 
@@ -302,7 +306,7 @@ namespace Nektar
                 sparseStorage (1);
 
             BCOMatType partMat;
-            convertCooToBco(rows, cols, 1, gmat_coo, partMat);
+            convertCooToBco(1, gmat_coo, partMat);
 
             sparseStorage[0] =
                  MemoryManager<DNekSmvBsrDiagBlkMat::StorageType>::
@@ -476,8 +480,10 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
-            int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            auto asmMap = m_locToGloMap.lock();
+
+            int nLocal = asmMap->GetNumLocalBndCoeffs();
+            int nDir = asmMap->GetNumGlobalDirBndCoeffs();
             bool doGlobalOp = m_expList.lock()->GetGlobalOptParam()->
                     DoGlobalMatOp(m_linSysKey.GetMatrixType());
 
@@ -488,21 +494,21 @@ namespace Nektar
                 Array<OneD, NekDouble> out = pOutput + nDir;
 
                 m_sparseSchurCompl->Multiply(in,out);
-                m_locToGloMap->UniversalAssembleBnd(pOutput, nDir);
+                asmMap->UniversalAssembleBnd(pOutput, nDir);
             }
             else if (m_sparseSchurCompl)
             {
                 // Do matrix multiply locally using block-diagonal sparse matrix
                 Array<OneD, NekDouble> tmp = m_wsp + nLocal;
 
-                m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
+                asmMap->GlobalToLocalBnd(pInput, m_wsp);
                 m_sparseSchurCompl->Multiply(m_wsp,tmp);
-                m_locToGloMap->AssembleBnd(tmp, pOutput);
+                asmMap->AssembleBnd(tmp, pOutput);
             }
             else
             {
                 // Do matrix multiply locally, using direct BLAS calls
-                m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
+                asmMap->GlobalToLocalBnd(pInput, m_wsp);
                 int i, cnt;
                 Array<OneD, NekDouble> tmpout = m_wsp + nLocal;
                 for (i = cnt = 0; i < m_denseBlocks.size(); cnt += m_rows[i], ++i)
@@ -513,13 +519,13 @@ namespace Nektar
                                 m_wsp.get()+cnt, 1,
                                 0.0, tmpout.get()+cnt, 1);
                 }
-                m_locToGloMap->AssembleBnd(tmpout, pOutput);
+                asmMap->AssembleBnd(tmpout, pOutput);
             }
         }
 
         void GlobalLinSysIterativeStaticCond::v_UniqueMap()
         {
-            m_map = m_locToGloMap->GetGlobalToUniversalBndMapUnique();
+            m_map = m_locToGloMap.lock()->GetGlobalToUniversalBndMapUnique();
         }
 
         DNekScalBlkMatSharedPtr GlobalLinSysIterativeStaticCond::v_PreSolve(
@@ -532,7 +538,7 @@ namespace Nektar
                 // level, the preconditioner is never set up.
                 if (!m_precon)
                 {
-                    m_precon = CreatePrecon(m_locToGloMap);
+                    m_precon = CreatePrecon(m_locToGloMap.lock());
                     m_precon->BuildPreconditioner();
                 }
                 
@@ -550,17 +556,17 @@ namespace Nektar
             }
         }
 
-        void GlobalLinSysIterativeStaticCond::v_BasisTransform(
+        void GlobalLinSysIterativeStaticCond::v_BasisFwdTransform(
             Array<OneD, NekDouble>& pInOut,
             int                     offset)
         {
-            m_precon->DoTransformToLowEnergy(pInOut, offset);
+            m_precon->DoTransformToLowEnergy(pInOut, offset);            
         }
 
-        void GlobalLinSysIterativeStaticCond::v_BasisInvTransform(
+        void GlobalLinSysIterativeStaticCond::v_BasisBwdTransform(
             Array<OneD, NekDouble>& pInOut)
         {
-            m_precon->DoTransformFromLowEnergy(pInOut);
+	    m_precon->DoTransformFromLowEnergy(pInOut);
         }
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysIterativeStaticCond::v_Recurse(

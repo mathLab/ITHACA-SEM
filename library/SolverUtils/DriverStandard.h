@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -49,8 +48,12 @@ namespace Nektar
             friend class MemoryManager<DriverStandard>;
 
             /// Creates an instance of this class
-            static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
-                DriverSharedPtr p = MemoryManager<DriverStandard>::AllocateSharedPtr(pSession);
+            static DriverSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const SpatialDomains::MeshGraphSharedPtr& pGraph)
+            {
+                DriverSharedPtr p = MemoryManager<DriverStandard>
+                    ::AllocateSharedPtr(pSession, pGraph);
                 p->InitObject();
                 return p;
             }
@@ -60,7 +63,9 @@ namespace Nektar
 	
         protected:
             /// Constructor
-            SOLVER_UTILS_EXPORT DriverStandard(const LibUtilities::SessionReaderSharedPtr pSession);
+            SOLVER_UTILS_EXPORT DriverStandard(
+                const LibUtilities::SessionReaderSharedPtr pSession,
+                const SpatialDomains::MeshGraphSharedPtr pGraph);
 
             /// Destructor
             SOLVER_UTILS_EXPORT virtual ~DriverStandard();

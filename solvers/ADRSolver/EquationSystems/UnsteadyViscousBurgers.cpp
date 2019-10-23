@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #include <iostream>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <ADRSolver/EquationSystems/UnsteadyViscousBurgers.h>
 #include <StdRegions/StdQuadExp.h>
 
@@ -48,9 +49,10 @@ namespace Nektar
                 UnsteadyViscousBurgers::create);
     
     UnsteadyViscousBurgers::UnsteadyViscousBurgers(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          AdvectionSystem(pSession),
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph),
           m_varCoeffLap(StdRegions::NullVarCoeffMap)
     {
         m_planeNumber = 0;
@@ -102,7 +104,7 @@ namespace Nektar
                                            GetFluxVectorAdv, this);
                 m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
-                    CreateInstance(riemName);
+                    CreateInstance(riemName, m_session);
                 m_advObject->SetRiemannSolver(m_riemannSolver);
                 m_advObject->InitObject      (m_session, m_fields);
                 
@@ -155,8 +157,8 @@ namespace Nektar
         }
         
         // Forcing terms
-        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
-                                               m_fields.num_elements());
+        m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
+                                    m_fields, m_fields.num_elements());
         
         m_ode.DefineImplicitSolve (&UnsteadyViscousBurgers::DoImplicitSolve, this);
         m_ode.DefineOdeRhs        (&UnsteadyViscousBurgers::DoOdeRhs,        this);
@@ -418,6 +420,8 @@ namespace Nektar
               Array<OneD, Array<OneD, NekDouble> > &derivatives,
               Array<OneD, Array<OneD, NekDouble> > &flux)
     {
+        boost::ignore_unused(derivatives);
+
         for (int k = 0; k < flux.num_elements(); ++k)
         {
             Vmath::Zero(GetNpoints(), flux[k], 1);

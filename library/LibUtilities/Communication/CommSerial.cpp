@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Serial (= no) communication implementation
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #ifdef NEKTAR_USING_PETSC
 #include "petscsys.h"
@@ -88,6 +89,14 @@ bool CommSerial::v_TreatAsRankZero(void)
 /**
  *
  */
+bool CommSerial::v_IsSerial(void)
+{
+    return true;
+}
+
+/**
+ *
+ */
 void CommSerial::v_Block()
 {
 }
@@ -105,6 +114,7 @@ NekDouble CommSerial::v_Wtime()
  */
 void CommSerial::v_Send(void *buf, int count, CommDataType dt, int dest)
 {
+    boost::ignore_unused(buf, count, dt, dest);
 }
 
 /**
@@ -112,6 +122,7 @@ void CommSerial::v_Send(void *buf, int count, CommDataType dt, int dest)
  */
 void CommSerial::v_Recv(void *buf, int count, CommDataType dt, int source)
 {
+    boost::ignore_unused(buf, count, dt, source);
 }
 
 /**
@@ -121,6 +132,8 @@ void CommSerial::v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype,
                             int dest, void *recvbuf, int recvcount,
                             CommDataType recvtype, int source)
 {
+    boost::ignore_unused(sendbuf, sendcount, sendtype, dest, recvbuf,
+                         recvcount, recvtype, source);
 }
 
 /**
@@ -129,6 +142,7 @@ void CommSerial::v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype,
 void CommSerial::v_SendRecvReplace(void *buf, int count, CommDataType dt,
                                    int pSendProc, int pRecvProc)
 {
+    boost::ignore_unused(buf, count, dt, pSendProc, pRecvProc);
 }
 
 /**
@@ -137,6 +151,7 @@ void CommSerial::v_SendRecvReplace(void *buf, int count, CommDataType dt,
 void CommSerial::v_AllReduce(void *buf, int count, CommDataType dt,
                              enum ReduceOperator pOp)
 {
+    boost::ignore_unused(buf, count, dt, pOp);
 }
 
 /**
@@ -145,32 +160,63 @@ void CommSerial::v_AllReduce(void *buf, int count, CommDataType dt,
 void CommSerial::v_AlltoAll(void *sendbuf, int sendcount, CommDataType sendtype,
                             void *recvbuf, int recvcount, CommDataType recvtype)
 {
+    boost::ignore_unused(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                         recvtype);
 }
 
 /**
  *
  */
-void CommSerial::v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[],
+void CommSerial::v_AlltoAllv(void *sendbuf, int sendcounts[], int senddispls[],
                              CommDataType sendtype, void *recvbuf,
                              int recvcounts[], int rdispls[],
                              CommDataType recvtype)
 {
+    boost::ignore_unused(sendbuf, sendcounts, senddispls, sendtype, recvbuf,
+                         recvcounts, rdispls, recvtype);
+}
+
+/**
+ *
+ */
+void CommSerial::v_AllGather(void *sendbuf, int sendcount, CommDataType sendtype,
+                             void *recvbuf, int recvcount, CommDataType recvtype)
+{
+    boost::ignore_unused(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                         recvtype);
+}
+
+void CommSerial::v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
+                              void *recvbuf, int recvcounts[], int rdispls[],
+                              CommDataType recvtype)
+{
+    boost::ignore_unused(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                         rdispls, recvtype);
+}
+
+void CommSerial::v_AllGatherv(void *recvbuf, int recvcounts[], int rdispls[],
+                              CommDataType recvtype)
+{
+    boost::ignore_unused(recvbuf, recvcounts, rdispls, recvtype);
 }
 
 void CommSerial::v_Bcast(void *buffer, int count, CommDataType dt, int root)
 {
+    boost::ignore_unused(buffer, count, dt, root);
 }
 
 void CommSerial::v_Exscan(Array<OneD, unsigned long long> &pData,
                           const enum ReduceOperator pOp,
                           Array<OneD, unsigned long long> &ans)
 {
+    boost::ignore_unused(pData, pOp, ans);
 }
 
 void CommSerial::v_Gather(void *sendbuf, int sendcount, CommDataType sendtype,
                           void *recvbuf, int recvcount, CommDataType recvtype,
                           int root)
 {
+    boost::ignore_unused(recvcount, recvtype, root);
     std::memcpy(recvbuf, sendbuf, sendcount * CommDataTypeGetSize(sendtype));
 }
 
@@ -178,6 +224,7 @@ void CommSerial::v_Scatter(void *sendbuf, int sendcount, CommDataType sendtype,
                            void *recvbuf, int recvcount, CommDataType recvtype,
                            int root)
 {
+    boost::ignore_unused(recvcount, recvtype, root);
     std::memcpy(recvbuf, sendbuf, sendcount * CommDataTypeGetSize(sendtype));
 }
 /**
@@ -185,6 +232,7 @@ void CommSerial::v_Scatter(void *sendbuf, int sendcount, CommDataType sendtype,
  */
 void CommSerial::v_SplitComm(int pRows, int pColumns)
 {
+    boost::ignore_unused(pRows, pColumns);
     ASSERTL0(false, "Cannot split a serial process.");
 }
 
@@ -193,8 +241,17 @@ void CommSerial::v_SplitComm(int pRows, int pColumns)
  */
 CommSharedPtr CommSerial::v_CommCreateIf(int flag)
 {
-    ASSERTL0(flag, "Serial process must always be split");
-    return shared_from_this();
+     if (flag == 0)
+    {
+        // flag == 0 => get back MPI_COMM_NULL, return a null ptr instead.
+        return std::shared_ptr<Comm>();
+    }
+    else
+    {
+        // Return a real communicator
+        return shared_from_this();
+    }
+
 }
 }
 }

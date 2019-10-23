@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -47,6 +46,7 @@
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/cuthill_mckee_ordering.hpp>
@@ -79,6 +79,8 @@ namespace Nektar
             const std::string variable):
             AssemblyMap(pSession,variable)
         {
+            boost::ignore_unused(graph);
+
             int i, j, k, cnt, eid, id, id1, gid;
             int order_e   = 0;
             int nTraceExp = trace->GetExpSize();
@@ -139,6 +141,11 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < nbnd; ++i)
             {
+                if (bndCond[i]->GetBoundaryConditionType() ==
+                        SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
                 cnt += bndCondExp[i]->GetExpSize();
             }
 
@@ -147,7 +154,6 @@ namespace Nektar
             m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys  = 0;
 
-            cnt = 0;
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
@@ -164,8 +170,6 @@ namespace Nektar
                         dirTrace.insert(id);
                     }
                 }
-
-                cnt += j;
             }
 
             // Set up integer mapping array and sign change for each degree of
@@ -445,6 +449,11 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < nbnd; ++i)
             {
+                if (bndCond[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
                 cnt += bndCondExp[i]->GetNcoeffs();
             }
 
@@ -454,6 +463,12 @@ namespace Nektar
             int nbndexp = 0, bndOffset, bndTotal = 0;
             for(cnt = i = 0; i < nbnd; ++i)
             {
+                if (bndCond[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     bndExp    = bndCondExp[i]->GetExp(j);
@@ -483,6 +498,12 @@ namespace Nektar
             m_bndCondTraceToGlobalTraceMap = Array<OneD, int>(nbndexp);
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
+                if (bndCond[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     bndExp    = bndCondExp[i]->GetExp(j);
@@ -611,7 +632,7 @@ namespace Nektar
                         LocalRegions::SegExpSharedPtr locSegExp =
                             m_elmtToTrace[eid][j]->as<LocalRegions::SegExp>();
 
-                        id  = locSegExp->GetGeom1D()->GetEid();
+                        id  = locSegExp->GetGeom()->GetGlobalID();
                         order_e = locExpansion->GetEdgeNcoeffs(j);
 
                         map<int,int> orientMap;
@@ -656,7 +677,7 @@ namespace Nektar
                                 m_elmtToTrace[eid][j]
                                            ->as<LocalRegions::Expansion2D>();
 
-                        id  = locFaceExp->GetGeom2D()->GetFid();
+                        id  = locFaceExp->GetGeom()->GetGlobalID();
                         order_e = locExpansion->GetFaceNcoeffs(j);
 
                         map<int,int> orientMap;
@@ -961,6 +982,7 @@ namespace Nektar
                     Array<OneD,       NekDouble>& global,
                     bool useComm ) const
         {
+            boost::ignore_unused(useComm);
             AssembleBnd(loc,global);
         }
 
@@ -969,6 +991,7 @@ namespace Nektar
                     NekVector<      NekDouble>& global,
                     bool useComm) const
         {
+            boost::ignore_unused(useComm);
             AssembleBnd(loc,global);
         }
 

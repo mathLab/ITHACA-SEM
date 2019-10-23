@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -42,7 +41,22 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-void CurveMesh::Mesh()
+void CurveMesh::ReMesh()
+{
+    m_meshpoints.clear();
+    m_dst.clear();
+    m_ps.clear();
+    meshsvalue.clear();
+    for(int i = 0; i < m_meshedges.size(); i++)
+    {
+        m_mesh->m_edgeSet.erase(m_meshedges[i]);
+    }
+    m_meshedges.clear();
+
+    Mesh(true);
+}
+
+void CurveMesh::Mesh(bool forceThree)
 {
     // this algorithm is mostly based on the work in chapter 19
 
@@ -89,6 +103,14 @@ void CurveMesh::Mesh()
         {
             meshsvalue[Ne - 1] = m_curvelength - m_endoffset[1];
         }
+    }
+    else if(Ne + 1 == 2 && forceThree)
+    {
+        Ne++;
+        meshsvalue.resize(Ne + 1);
+        meshsvalue[0] = 0.0;
+        meshsvalue[1] = m_curvelength/ 2.0;
+        meshsvalue[2] = m_curvelength;
     }
     else
     {
@@ -247,7 +269,7 @@ NekDouble CurveMesh::EvaluateDS(NekDouble s)
     int a = 0;
     int b = 0;
 
-    ASSERTL1(!(s < 0) && !(s > m_curvelength), "s out of bounds");
+    ASSERTL1(!(s < 0)&& !(s > m_curvelength), "s out of bounds");
 
     if (s == 0)
     {

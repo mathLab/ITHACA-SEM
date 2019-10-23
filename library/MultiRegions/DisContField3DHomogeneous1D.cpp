@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 // conditions using LDG flux and a 1D homogeneous direction
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
@@ -171,7 +172,7 @@ namespace Nektar
             SpatialDomains::BoundaryConditions &bcs,
             const std::string                   variable)
         {
-            int n;
+            int n, cnt = 0;
 
             // Setup an ExpList2DHomogeneous1D expansion for boundary
             // conditions and link to class declared in m_planes
@@ -180,47 +181,29 @@ namespace Nektar
             const SpatialDomains::BoundaryConditionCollection &bconditions =
                 bcs.GetBoundaryConditions();
 
-            // count the number of non-periodic boundary regions
-            int cnt = 0;
-            for (auto &it : bregions)
-            {
-                SpatialDomains::BoundaryConditionShPtr boundaryCondition =
-                    GetBoundaryCondition(bconditions, it.first, variable);
-                if (boundaryCondition->GetBoundaryConditionType()
-                        != SpatialDomains::ePeriodic)
-                {
-                    cnt++;
-                }
-            }
-
-            m_bndCondExpansions  = Array<OneD,MultiRegions::
-                ExpListSharedPtr>(cnt);
+            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(
+                bregions.size());
             m_bndConditions = m_planes[0]->UpdateBndConditions();
 
             int nplanes = m_planes.num_elements();
             Array<OneD, MultiRegions::ExpListSharedPtr>
                 PlanesBndCondExp(nplanes);
 
-            cnt = 0;
             for (auto &it : bregions)
             {
                 SpatialDomains::BoundaryConditionShPtr boundaryCondition =
                     GetBoundaryCondition(bconditions, it.first, variable);
-                if(boundaryCondition->GetBoundaryConditionType() !=
-                   SpatialDomains::ePeriodic)
+                for (n = 0; n < nplanes; ++n)
                 {
-                    for (n = 0; n < nplanes; ++n)
-                    {
-                        PlanesBndCondExp[n] = m_planes[n]->
-                            UpdateBndCondExpansion(cnt);
-                    }
-
-                    m_bndCondExpansions[cnt++] =
-                        MemoryManager<ExpList2DHomogeneous1D>::
-                            AllocateSharedPtr(m_session, HomoBasis, lhom,
-                                              m_useFFT, false,
-                                              PlanesBndCondExp);
+                    PlanesBndCondExp[n] = m_planes[n]->
+                        UpdateBndCondExpansion(cnt);
                 }
+
+                m_bndCondExpansions[cnt++] =
+                    MemoryManager<ExpList2DHomogeneous1D>::
+                    AllocateSharedPtr(m_session, HomoBasis, lhom,
+                                      m_useFFT, false,
+                                      PlanesBndCondExp);
             }
             EvaluateBoundaryConditions(0.0, variable);
         }
@@ -266,6 +249,7 @@ namespace Nektar
             const FlagList &flags,
             const StdRegions::ConstFactorMap &factors,
             const StdRegions::VarCoeffMap &varcoeff,
+            const MultiRegions::VarFactorsMap &varfactors,
             const Array<OneD, const NekDouble> &dirForcing,
             const bool PhysSpaceForcing)
         {
@@ -303,7 +287,8 @@ namespace Nektar
                     m_planes[n]->HelmSolve(
                         wfce,
                         e_out = outarray + cnt1,
-                        flags, new_factors, varcoeff, dirForcing,
+                        flags, new_factors, varcoeff, varfactors,
+                        dirForcing,
                         PhysSpaceForcing);
                 }
 
@@ -318,6 +303,8 @@ namespace Nektar
             const NekDouble   x2_in,
             const NekDouble   x3_in)
         {
+            boost::ignore_unused(x2_in, x3_in);
+
             EvaluateBoundaryConditions(time, varName);
         }
 
@@ -645,6 +632,12 @@ namespace Nektar
             {
                 int nExp      = m_bndCondExpansions[i]->GetExpSize();
                 int nPlaneExp = nExp / nPlanes;
+
+                if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
 
                 for (n = 0; n < nPlanes; ++n)
                 {

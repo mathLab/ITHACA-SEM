@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/NodalTetEvenlySpaced.h>
@@ -42,11 +43,14 @@
 #include <vector>
 
 
-
 namespace Nektar
 {
     namespace LibUtilities
     {
+        bool NodalTetEvenlySpaced::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eNodalTetEvenlySpaced), NodalTetEvenlySpaced::Create)
+        };
+
         namespace
         {
            // construct the geometory and set the coordinate of tetrahedron
@@ -57,6 +61,7 @@ namespace Nektar
             }
 
             bool isEdge_01(int x, int y, int z, int npts){  // edge 0
+                boost::ignore_unused(x, npts);
                 return y==0 && z==0;
             }
 
@@ -65,10 +70,12 @@ namespace Nektar
             }
 
             bool isEdge_20(int x, int y, int z, int npts){  // edge 2
+                boost::ignore_unused(y, npts);
                 return x==0 && z==0;
             }
 
             bool isEdge_03(int x, int y, int z, int npts){  // edge 3
+                boost::ignore_unused(z, npts);
                 return x==0 && y==0;
             }
 
@@ -86,10 +93,12 @@ namespace Nektar
             }
 
             bool isFace_012(int x, int y, int z, int npts){  // bottom face (face 0)
+                boost::ignore_unused(x, y, npts);
                 return z==0;
             }
 
             bool isFace_013(int x, int y, int z, int npts){  // face 1
+                boost::ignore_unused(x, z, npts);
                 return y==0;
             }
 
@@ -98,6 +107,7 @@ namespace Nektar
             }
 
             bool isFace_203(int x, int y, int z, int npts){  // face 3
+                boost::ignore_unused(y, z, npts);
                 return x==0;
             }
 
@@ -117,8 +127,8 @@ namespace Nektar
             unsigned int npts = GetNumPoints();
             NekDouble delta = 2.0/(npts - 1.0);
             for(unsigned int z=0, index=0; z<npts; ++z){
-                for(int y=0; y<npts-z; ++y){
-                    for(int x=0; x<npts-z-y; ++x, ++index){
+                for(unsigned int y=0; y<npts-z; ++y){
+                    for(unsigned int x=0; x<npts-z-y; ++x, ++index){
                         NekDouble xi = -1.0 + x*delta;
                         NekDouble yi = -1.0 + y*delta;
                         NekDouble zi = -1.0 + z*delta;

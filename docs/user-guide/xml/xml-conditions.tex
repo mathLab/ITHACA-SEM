@@ -423,6 +423,33 @@ size.
 faces which are intended to be periodic. The top (degenerate) vertex should be 
 aligned so that, if the faces were connected, it would lie at the same point on 
 both triangles.
+
+\item It is possible specify periodic boundaries that are related by a
+  rotation about a cartesian axis. In three-dimensions it is necessary
+  to specify the rotational arguments to allow the orientation of each
+  periodic face to be determined. This is not required in
+  two-dimensions. An example of how two periodic boundaries are
+  related by a rotation about the x-axis of $PI/6$ is shown below. The
+  last number specifies an optional tolerance to which the rotation is
+  considered as equivalent (default value is $1e-8$).
+  
+  \begin{lstlisting}[style=XMLStyle]
+<BOUNDARYREGIONS>
+  <B ID="0"> C[1] </B>
+  <B ID="1"> C[2] </B>
+</BOUNDARYREGIONS>
+
+<BOUNDARYCONDITIONS>
+  <REGION REF="0">
+    <P VAR="u" USERDEFINEDTYPE="Rotated:x:PI/6:1e-6"  VALUE="[1]" />
+  </REGION>
+  <REGION REF="1">
+    <P VAR="u" USERDEFINEDTYPE="Rotated:x:-PI/6:1e-6"  VALUE="[0]" />
+  </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+
 \end{itemize}
 
 \subsubsection{Time-dependent boundary conditions}
@@ -530,9 +557,9 @@ three-dimensional incompressible Navier-Stokes simulation, this produces an FLD
 file with the variables \inltt{u}, \inltt{v}, \inltt{w} and \inltt{p}. If we
 wanted to use this velocity field as input for an advection velocity, the
 advection-diffusion-reaction solver expects the variables \inltt{Vx}, \inltt{Vy}
-and \inltt{Vz}.
-
-We can manually specify this mapping by adding a colon to the
+and \inltt{Vz}. We can manually specify this mapping by adding a colon to the
+filename, indicating the variable names in the target file that align with the
+desired function variable names. This gives a definition such as:
 
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="AdvectionVelocity">
@@ -543,8 +570,9 @@ We can manually specify this mapping by adding a colon to the
 There are some caveats with this syntax:
 
 \begin{itemize}
-  \item You must specify the same number of fields for both the variable, and
-  after the colon. For example, the following is not valid.
+  \item The same number of fields must be defined for both the \inltt{VAR}
+  attribute and in the comma-separated list after the colon. For example, the
+  following is not valid:
   \begin{lstlisting}[style=XMLStyle,gobble=4]
     <FUNCTION NAME="AdvectionVelocity">
       <F VAR="Vx,Vy,Vz" FILE="file.fld:u" />

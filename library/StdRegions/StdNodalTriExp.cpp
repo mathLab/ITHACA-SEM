@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Nodal triangle routines built upon StdExpansion2D
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <StdRegions/StdNodalTriExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
@@ -307,7 +308,13 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get()+nEdgeCoeffs, 1);
             }
-            
+
+            Orientation orient = edgeOrient;
+            if (eid == 2)
+            {
+                orient = orient == eForwards ? eBackwards : eForwards;
+            }
+
             maparray[0] = eid;
             maparray[1] = eid == 2 ? 0 : eid+1;
             for (int i = 2; i < nEdgeCoeffs; i++)
@@ -315,7 +322,7 @@ namespace Nektar
                 maparray[i] = eid*(nEdgeCoeffs-2)+1+i; 
             }  
 
-            if (edgeOrient == eBackwards)
+            if (orient == eBackwards)
             {
                 reverse(maparray.get(), maparray.get()+nEdgeCoeffs);
             }
@@ -324,6 +331,7 @@ namespace Nektar
         int StdNodalTriExp::v_GetVertexMap(const int localVertexId,
                                            bool useCoeffPacking)
         {
+            boost::ignore_unused(useCoeffPacking);
             ASSERTL0(localVertexId >= 0 && localVertexId <= 2,
                      "Local Vertex ID must be between 0 and 2");                
             return localVertexId;
@@ -353,13 +361,19 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get()+nEdgeIntCoeffs, 1);
             }
-            
+
+            Orientation orient = edgeOrient;
+            if (eid == 2)
+            {
+                orient = orient == eForwards ? eBackwards : eForwards;
+            }
+
             for (int i = 0; i < nEdgeIntCoeffs; i++)
             {
                 maparray[i] = eid*nEdgeIntCoeffs+3+i; 
             }  
 
-            if (edgeOrient == eBackwards)
+            if (orient == eBackwards)
             {
                 reverse(maparray.get(), maparray.get()+nEdgeIntCoeffs);
             }

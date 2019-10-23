@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -42,8 +41,9 @@ namespace SolverUtils {
  *
  */
 AdvectionSystem::AdvectionSystem(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : UnsteadySystem(pSession)
+    const LibUtilities::SessionReaderSharedPtr& pSession,
+    const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : UnsteadySystem(pSession, pGraph)
 {
 }
 
@@ -64,6 +64,8 @@ void AdvectionSystem::v_InitObject()
 {
     UnsteadySystem::v_InitObject();
     m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
+    m_session->LoadParameter("IO_CFLWriteFld", m_cflWriteFld, 0);
+    m_session->LoadParameter("IO_CFLWriteFldWaitSteps", m_cflWriteFldWaitSteps, 0);
 }
 
 /**
@@ -73,22 +75,30 @@ bool AdvectionSystem::v_PostIntegrate(int step)
 {
     bool result = UnsteadySystem::v_PostIntegrate(step);
 
-    if(m_cflsteps && !((step+1)%m_cflsteps))
+    if((m_cflsteps && !((step+1)%m_cflsteps)) || m_cflWriteFld>0)
     {
         int elmtid;
         NekDouble cfl = GetCFLEstimate(elmtid);
 
-        if(m_comm->GetRank() == 0)
+        if(m_cflsteps && !((step+1)%m_cflsteps) && m_comm->GetRank() == 0)
         {
             if( m_HomogeneousType == eNotHomogeneous)
             {
-                cout << "CFL: ";
+                std::cout << "CFL: ";
             }
             else
             {
-                cout << "CFL (zero plane): ";
+                std::cout << "CFL (zero plane): ";
             }
-            cout << cfl << " (in elmt " << elmtid << ")" << endl;
+            std::cout << cfl << " (in elmt " << elmtid << ")" << std::endl;
+        }
+        
+        // At each timestep, if cflWriteFld is set check if cfl is above treshold
+        if(m_cflWriteFld>0 && cfl >= m_cflWriteFld && step >= m_cflWriteFldWaitSteps)
+        {
+            std::string outname =  m_sessionName +  "_CFLWriteFld";
+            WriteFld(outname + ".fld");
+            m_cflWriteFld = 0;            
         }
     }
 
@@ -110,10 +120,11 @@ Array<OneD, NekDouble>  AdvectionSystem::GetElmtCFLVals(void)
     stdVelocity = v_GetMaxStdVelocity();
 
     Array<OneD, NekDouble> cfl(nelmt, 0.0);
+    NekDouble order;
     for(int el = 0; el < nelmt; ++el)
     {
-        cfl[el] =  m_timestep*(stdVelocity[el] * cLambda *
-                               (expOrder[el]-1) * (expOrder[el]-1));
+        order = std::max(expOrder[el]-1, 1);
+        cfl[el] =  m_timestep*(stdVelocity[el] * cLambda * order * order);
     }
 
     return cfl;

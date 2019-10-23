@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,7 @@
 #ifndef NEKTAR_SOLVERUTILS_RIEMANNSOLVER
 #define NEKTAR_SOLVERUTILS_RIEMANNSOLVER
 
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <SolverUtils/SolverUtilsDeclspec.h>
@@ -156,7 +156,11 @@ namespace Nektar
             /// Rotation storage
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_rotStorage;
 
-            SOLVER_UTILS_EXPORT RiemannSolver();
+            SOLVER_UTILS_EXPORT RiemannSolver(
+                const LibUtilities::SessionReaderSharedPtr& pSession);
+
+            SOLVER_UTILS_EXPORT virtual ~RiemannSolver()
+            {};
 
             virtual void v_Solve(
                 const int                                         nDim,
@@ -191,7 +195,8 @@ namespace Nektar
         typedef std::shared_ptr<RiemannSolver> RiemannSolverSharedPtr;
         /// Datatype of the NekFactory used to instantiate classes derived
         /// from the RiemannSolver class.
-        typedef LibUtilities::NekFactory<std::string, RiemannSolver>
+        typedef LibUtilities::NekFactory<std::string, RiemannSolver,
+                                const LibUtilities::SessionReaderSharedPtr&>
             RiemannSolverFactory;
         SOLVER_UTILS_EXPORT RiemannSolverFactory& GetRiemannSolverFactory();
     }

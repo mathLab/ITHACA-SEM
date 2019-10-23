@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -51,9 +50,11 @@ class FilterHistoryPoints : public Filter
         /// Creates an instance of this class
         static FilterSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams) {
+            const std::weak_ptr<EquationSystem>      &pEquation,
+            const std::map<std::string, std::string>   &pParams)
+        {
             FilterSharedPtr p = MemoryManager<FilterHistoryPoints>
-                ::AllocateSharedPtr(pSession, pParams);
+                ::AllocateSharedPtr(pSession, pEquation, pParams);
             return p;
         }
 
@@ -62,6 +63,7 @@ class FilterHistoryPoints : public Filter
 
         SOLVER_UTILS_EXPORT FilterHistoryPoints(
             const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation,
             const ParamMap                             &pParams);
         SOLVER_UTILS_EXPORT ~FilterHistoryPoints();
 

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -258,16 +257,15 @@ public:
     LIB_UTILITIES_EXPORT static std::shared_ptr<FieldIO> CreateForFile(
         const LibUtilities::SessionReaderSharedPtr session,
         const std::string &filename);
+    LIB_UTILITIES_EXPORT static void AddInfoTag(
+        TagWriterSharedPtr      root,
+        const FieldMetaDataMap &fieldmetadatamap);
 
 protected:
     /// Communicator to use when writing parallel format
     LibUtilities::CommSharedPtr m_comm;
     /// Boolean dictating whether we are on a shared filesystem.
     bool                        m_sharedFilesystem;
-
-    LIB_UTILITIES_EXPORT void AddInfoTag(
-        TagWriterSharedPtr      root,
-        const FieldMetaDataMap &fieldmetadatamap);
 
     LIB_UTILITIES_EXPORT int CheckFieldDefinition(
         const FieldDefinitionsSharedPtr &fielddefs);

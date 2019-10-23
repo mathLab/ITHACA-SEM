@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 // conditions using LDG flux and a 2D homogeneous directions
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/ExpList1DHomogeneous2D.h>
 #include <MultiRegions/DisContField3DHomogeneous2D.h>
@@ -215,6 +216,7 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
+                const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
@@ -255,7 +257,7 @@ namespace Nektar
                     m_lines[n]->HelmSolve(wfce,
                                           e_out = outarray + cnt1,
                                           flags, new_factors,
-                                          varcoeff, dirForcing,
+                                          varcoeff, varfactors,dirForcing,
                                           PhysSpaceForcing);
                     
                     cnt  += m_lines[n]->GetTotPoints();
@@ -270,6 +272,7 @@ namespace Nektar
             const NekDouble   x2_in, 
             const NekDouble   x3_in)
         {
+            boost::ignore_unused(x2_in, x3_in);
             EvaluateBoundaryConditions(time, varName);
         }
 		

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -115,10 +114,11 @@ namespace Nektar
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const bool DeclareCoeffPhysArrays = true,
                 const std::string variable = "DefaultVar",
+                const LibUtilities::CommSharedPtr comm
+                                                = LibUtilities::CommSharedPtr(),
                 const Collections::ImplementationType ImpType
-                                             = Collections::eNoImpType);  
-			
-			
+                                                     = Collections::eNoImpType);
+
             MULTI_REGIONS_EXPORT ExpList1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::CompositeMap &domain,
@@ -197,9 +197,6 @@ namespace Nektar
 
             virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip);
 
-            int m_firstIntEl;
-            
-            Array<OneD, NekDouble> m_normSign;
         };
 
         /// Empty ExpList1D object.

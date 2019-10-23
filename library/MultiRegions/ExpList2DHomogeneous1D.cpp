@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -47,6 +46,7 @@ namespace Nektar
         ExpList2DHomogeneous1D::ExpList2DHomogeneous1D():
             ExpListHomogeneous1D()
         {
+            SetExpType(e2DH1D);
         }
 
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
@@ -59,6 +59,7 @@ namespace Nektar
             const Array<OneD, ExpListSharedPtr>        &planes)
             : ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
+            SetExpType(e2DH1D);
             int i, n, cnt, nel;
 
             ASSERTL1(m_planes.num_elements() == planes.num_elements(),
@@ -98,6 +99,7 @@ namespace Nektar
             const Collections::ImplementationType ImpType):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
+            SetExpType(e2DH1D);
             int n, j, nel;
             ExpList1DSharedPtr plane_zero;
 
@@ -140,6 +142,7 @@ namespace Nektar
             const ExpList2DHomogeneous1D &In):
             ExpListHomogeneous1D(In)
         {
+            SetExpType(e2DH1D);
             ExpList1DSharedPtr zero_plane =
                 std::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
 
@@ -365,6 +368,8 @@ namespace Nektar
             int expansion,
             int istrip)
         {
+            boost::ignore_unused(istrip);
+
             // If there is only one plane (e.g. HalfMode), we write a 2D plane.
             if (m_planes.num_elements() == 1)
             {
@@ -485,6 +490,22 @@ namespace Nektar
                                  &normals[i][n*nPtsPlane], 1);
                 }
             }
+        }
+
+        NekDouble ExpList2DHomogeneous1D::v_Integral(const Array<OneD, const NekDouble> &inarray)
+        {
+            NekDouble val = 0.0;
+            int       i   = 0;
+
+            for (i = 0; i < (*m_exp).size(); ++i)
+            {
+                val += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
+            }
+            val *= m_lhom/m_homogeneousBasis->GetNumModes();
+            
+            m_comm->GetColumnComm()->AllReduce(val, LibUtilities::ReduceSum);
+
+            return val;
         }
     } //end of namespace
 } //end of namespace

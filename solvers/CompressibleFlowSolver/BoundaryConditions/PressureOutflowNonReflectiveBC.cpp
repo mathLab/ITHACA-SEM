@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include "PressureOutflowNonReflectiveBC.h"
 
 using namespace std;
@@ -54,6 +55,14 @@ PressureOutflowNonReflectiveBC::PressureOutflowNonReflectiveBC(
            const int cnt)
     : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
+    int numBCPts = m_fields[0]->
+        GetBndCondExpansions()[m_bcRegion]->GetNpoints();
+    m_pressureStorage = Array<OneD, NekDouble>(numBCPts, 0.0);
+
+    // Get Pressure
+    Vmath::Vcopy(numBCPts,
+        m_fields[m_spacedim+1]->GetBndCondExpansions()[m_bcRegion]->GetPhys(), 1,
+        m_pressureStorage, 1);
 }
 
 void PressureOutflowNonReflectiveBC::v_Apply(
@@ -61,16 +70,14 @@ void PressureOutflowNonReflectiveBC::v_Apply(
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
 {
+    boost::ignore_unused(time);
+
     int i, j;
     int nTracePts = m_fields[0]->GetTrace()->GetNpoints();
     int nVariables = physarray.num_elements();
     int nDimensions = m_spacedim;
 
-    const Array<OneD, const int> &traceBndMap
-        = m_fields[0]->GetTraceBndMap();
-
-    NekDouble gammaMinusOne    = m_gamma - 1.0;
-    NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
+    const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
 
     // Computing the normal velocity for characteristics coming
     // from inside the computational domain
@@ -88,11 +95,8 @@ void PressureOutflowNonReflectiveBC::v_Apply(
     m_varConv->GetAbsoluteVelocity(Fwd, absVel);
 
     // Get speed of sound
-    Array<OneD, NekDouble > pressure  (nTracePts);
     Array<OneD, NekDouble > soundSpeed(nTracePts);
-
-    m_varConv->GetPressure(Fwd, pressure);
-    m_varConv->GetSoundSpeed(Fwd, pressure, soundSpeed);
+    m_varConv->GetSoundSpeed(Fwd, soundSpeed);
 
     // Get Mach
     Array<OneD, NekDouble > Mach(nTracePts, 0.0);
@@ -105,13 +109,19 @@ void PressureOutflowNonReflectiveBC::v_Apply(
 
     // Loop on the m_bcRegions
     for (e = 0; e < m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
-         GetExpSize(); ++e)
+            GetExpSize(); ++e)
     {
         npts = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
-           GetExp(e)->GetTotPoints();
+            GetExp(e)->GetTotPoints();
         id1 = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
-            GetPhys_Offset(e) ;
+            GetPhys_Offset(e);
         id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[m_offset+e]);
+
+        // Get internal energy
+        Array<OneD, NekDouble> pressure (npts, m_pressureStorage+id1);
+        Array<OneD, NekDouble> rho      (npts, Fwd[0]+id2);
+        Array<OneD, NekDouble> Ei(npts);
+        m_varConv->GetEFromRhoP(rho, pressure, Ei);
 
         // Loop on points of m_bcRegion 'e'
         for (i = 0; i < npts; i++)
@@ -128,17 +138,17 @@ void PressureOutflowNonReflectiveBC::v_Apply(
                     Ek += 0.5 * (Fwd[j][pnt] * Fwd[j][pnt]) / Fwd[0][pnt];
                 }
 
-                rhoeb = m_pInf * gammaMinusOneInv + Ek;
+                rhoeb = Fwd[0][pnt] * Ei[i] + Ek;
 
                 // Partial extrapolation for subsonic cases
                 for (j = 0; j < nVariables-1; ++j)
                 {
                     (m_fields[j]->GetBndCondExpansions()[m_bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[j][pnt];
+                        UpdatePhys())[id1+i] = Fwd[j][pnt];
                 }
 
                 (m_fields[nVariables-1]->GetBndCondExpansions()[m_bcRegion]->
-                 UpdatePhys())[id1+i] = 2.0 * rhoeb - Fwd[nVariables-1][pnt];
+                    UpdatePhys())[id1+i] = 2.0 * rhoeb - Fwd[nVariables-1][pnt];
             }
             // Supersonic flows
             else
@@ -147,7 +157,7 @@ void PressureOutflowNonReflectiveBC::v_Apply(
                 {
                     // Extrapolation for supersonic cases
                     (m_fields[j]->GetBndCondExpansions()[m_bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[j][pnt];
+                        UpdatePhys())[id1+i] = Fwd[j][pnt];
                 }
             }
         }

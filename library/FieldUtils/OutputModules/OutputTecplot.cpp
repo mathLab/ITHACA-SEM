@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,6 +36,8 @@
 #include <set>
 #include <string>
 using namespace std;
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
@@ -75,6 +76,10 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputFileBase(f),
                                                  m_oneOutputFile(false)
 {
     m_requireEquiSpaced = true;
+    m_config["double"] =
+        ConfigOption(true, "0", "Write double-precision format data:"
+                                "more accurate but more disk space"
+                                " required");
 }
 
 OutputTecplot::~OutputTecplot()
@@ -92,7 +97,7 @@ void OutputTecplot::Process(po::variables_map &vm)
     {
         m_oneOutputFile = (m_f->m_comm->GetSize()> 1);
     }
-    
+
     OutputFileBase::Process(vm);
 }
 
@@ -239,11 +244,10 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
 
     // Calculate coordinate dimension
     int nBases = m_f->m_exp[0]->GetExp(0)->GetNumBases();
-    MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
 
     m_coordim = m_f->m_exp[0]->GetExp(0)->GetCoordim();
 
-    if (HomoExpType == MultiRegions::e3DH1D)
+    if (m_f->m_numHomogeneousDir > 0)
     {
         int nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
         if (nPlanes == 1) // halfMode case
@@ -252,16 +256,11 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
         }
         else
         {
-            nBases += 1;
-            m_coordim += 1;
+            nBases += m_f->m_numHomogeneousDir;
+            m_coordim += m_f->m_numHomogeneousDir;
             NekDouble tmp = m_numBlocks * (nPlanes - 1);
             m_numBlocks   = (int)tmp;
         }
-    }
-    else if (HomoExpType == MultiRegions::e3DH2D)
-    {
-        nBases += 2;
-        m_coordim += 2;
     }
 
     m_zoneType = (TecplotZoneType)(2*(nBases-1) + 1);
@@ -305,12 +304,17 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
 
 void OutputTecplot::OutputFromData(po::variables_map &vm)
 {
-    ASSERTL0(false, "OutputTecplot can't write using only FieldData.");
+    boost::ignore_unused(vm);
+
+    NEKERROR(ErrorUtil::efatal,
+             "OutputTecplot can't write using only FieldData.");
 }
 
 fs::path OutputTecplot::GetPath(std::string &filename,
                                     po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nprocs = m_f->m_comm->GetSize();
     string       returnstr(filename);
 
@@ -459,6 +463,15 @@ void OutputTecplotBinary::WriteTecplotHeader(std::ofstream &outfile,
  */
 void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
 {
+    bool useDoubles = m_config["double"].as<bool>();
+
+    if (useDoubles)
+    {
+        int precision = std::numeric_limits<double>::max_digits10;
+        outfile << std::setprecision(precision);
+
+    }
+
     // Write either points or finite element block
     if (m_zoneType != eOrdered)
     {
@@ -935,18 +948,45 @@ void OutputTecplot::CalculateConnectivity()
 
         if (nbase == 1)
         {
-            int cnt2 = 0;
-            int np0  = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
+            int cnt2    = 0;
+            int np0     = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
+            int nPlanes = 1;
 
-            Array<OneD, int> conn(2 * (np0 - 1));
-
-            for (k = 1; k < np0; ++k)
+            if (m_f->m_exp[0]->GetExpType() == MultiRegions::e2DH1D)
             {
-                conn[cnt2++] = cnt + k;
-                conn[cnt2++] = cnt + k - 1;
+                nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
+
+                if (nPlanes > 1)
+                {
+                    int totPoints = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
+
+                    Array<OneD, int> conn(4 * (np0 - 1) * (nPlanes - 1));
+                    for (int n = 1; n < nPlanes; ++n)
+                    {
+                        for (k = 1; k < np0; ++k)
+                        {
+                            conn[cnt2++] = cnt + (n - 1) * totPoints + k;
+                            conn[cnt2++] = cnt + (n - 1) * totPoints + k - 1;
+                            conn[cnt2++] = cnt +  n      * totPoints + k - 1;
+                            conn[cnt2++] = cnt +  n      * totPoints + k;
+                        }
+                    }
+                    m_conn[i] = conn;
+                }
             }
 
-            m_conn[i] = conn;
+            if (nPlanes == 1)
+            {
+                Array<OneD, int> conn(2 * (np0 - 1));
+
+                for (k = 1; k < np0; ++k)
+                {
+                    conn[cnt2++] = cnt + k;
+                    conn[cnt2++] = cnt + k - 1;
+                }
+
+                m_conn[i] = conn;
+            }
         }
         else if (nbase == 2)
         {

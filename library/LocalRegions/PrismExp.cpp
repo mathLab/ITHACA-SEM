@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
 
 #include <LocalRegions/PrismExp.h>
 #include <SpatialDomains/SegGeom.h>
@@ -71,7 +71,7 @@ namespace Nektar
         PrismExp::PrismExp(const PrismExp &T):
             StdExpansion(T),
             StdExpansion3D(T),
-            StdRegions::StdPrismExp(T),
+            StdPrismExp(T),
             Expansion(T),
             Expansion3D(T),
             m_matrixManager(T.m_matrixManager),
@@ -541,6 +541,8 @@ namespace Nektar
                 NekDouble*                        coeffs,
                 std::vector<LibUtilities::BasisType> &fromType)
         {
+            boost::ignore_unused(fromType);
+
             int data_order0 = nummodes[mode_offset];
             int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
             int data_order1 = nummodes[mode_offset+1];
@@ -703,7 +705,18 @@ namespace Nektar
         {
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
                 GetGeom()->GetMetricInfo();
+
             LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
+            for(int i = 0; i < ptsKeys.size(); ++i)
+            {
+                // Need at least 2 points for computing normals
+                if (ptsKeys[i].GetNumPoints() == 1)
+                {
+                    LibUtilities::PointsKey pKey(2, ptsKeys[i].GetPointsType());
+                    ptsKeys[i] = pKey;
+                }
+            }
+
             SpatialDomains::GeomType type            = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> &df   = geomFactors->GetDerivFactors(ptsKeys);
             const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac(ptsKeys);
@@ -1374,33 +1387,7 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
                 }
                 break;
-            case StdRegions::ePreconRT:
-                {
-                    NekDouble one = 1.0;
-                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
-                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
-                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
-
-                    DNekScalMatSharedPtr Atmp;
-                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
-
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
-                }
-                break;
             case StdRegions::ePreconRMass:
-                {
-                    NekDouble one = 1.0;
-                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
-                    DNekScalBlkMatSharedPtr massStatCond = GetLocStaticCondMatrix(masskey);
-                    DNekScalMatSharedPtr A =massStatCond->GetBlock(0,0);
-
-                    DNekScalMatSharedPtr Atmp;
-                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
-
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
-                }
-                break;
-            case StdRegions::ePreconRTMass:
                 {
                     NekDouble one = 1.0;
                     MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
@@ -1717,6 +1704,8 @@ namespace Nektar
                 Array<OneD, int>    &conn,
                 bool                 oldstandard)
         {
+            boost::ignore_unused(oldstandard);
+
             int np0 = m_base[0]->GetNumPoints();
             int np1 = m_base[1]->GetNumPoints();
             int np2 = m_base[2]->GetNumPoints();

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -98,7 +97,7 @@ namespace Nektar
 
         void PreconditionerLinear::v_BuildPreconditioner()
         {
-            GlobalSysSolnType sType  = m_locToGloMap->GetGlobalSysSolnType();
+            GlobalSysSolnType sType  = m_locToGloMap.lock()->GetGlobalSysSolnType();
             ASSERTL0(sType == eIterativeStaticCond || sType == ePETScStaticCond,
                      "This type of preconditioning is not implemented "
                      "for this solver");
@@ -118,9 +117,11 @@ namespace Nektar
                 {
                     linSolveType = ePETScFullMatrix;
 #ifndef NEKTAR_USING_PETSC
-                    ASSERTL0(false, "Nektar++ has not been compiled with "
-                                    "PETSc support.");
+                    NEKERROR(ErrorUtil::efatal,
+                             "Nektar++ has not been compiled with "
+                             "PETSc support.");
 #endif
+                    break;
                 }
                 case eLinearPreconXxt:
                 default:
@@ -130,7 +131,7 @@ namespace Nektar
                 }
             }
 
-            m_vertLocToGloMap = m_locToGloMap->LinearSpaceMap(*expList, linSolveType);
+            m_vertLocToGloMap = m_locToGloMap.lock()->LinearSpaceMap(*expList, linSolveType);
 
             // Generate linear solve system.
             StdRegions::MatrixType mType =
@@ -181,7 +182,7 @@ namespace Nektar
             const Array<OneD, NekDouble>& pNonVertOutput,
             Array<OneD, NekDouble>& pVertForce)
             {
-            GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
+            GlobalSysSolnType solvertype=m_locToGloMap.lock()->GetGlobalSysSolnType();
             switch(solvertype)
             {
                 case MultiRegions::eIterativeStaticCond:
@@ -197,7 +198,7 @@ namespace Nektar
                     Array<OneD, int> LocToGlo = m_vertLocToGloMap->GetLocalToGlobalMap();
                     
                     // number of Dir coeffs in from full problem
-                    int nDirFull = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+                    int nDirFull = m_locToGloMap.lock()->GetNumGlobalDirBndCoeffs();
                     
                     Array<OneD,NekDouble> In(nglo,0.0);
                     Array<OneD,NekDouble> Out(nglo,0.0);

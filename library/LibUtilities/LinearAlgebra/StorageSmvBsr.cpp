@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -44,8 +43,6 @@
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 #include <LibUtilities/LinearAlgebra/NistSparseDescriptors.hpp>
-
-#include <boost/lexical_cast.hpp>
 
 namespace Nektar
 {
@@ -240,7 +237,7 @@ namespace Nektar
             throw 1;
         }
 
-        processBcoInput(blkRows,blkCols,blkDim,bcoMat);
+        processBcoInput(blkRows,blkDim,bcoMat);
     }
 
 
@@ -303,7 +300,7 @@ namespace Nektar
 
 
     template<typename DataType>
-    size_t StorageSmvBsr<DataType>::GetMemoryUsage(IndexType nnz, IndexType nRows) const
+    size_t StorageSmvBsr<DataType>::GetMemoryUsage() const
     {
         return sizeof(DataType) *m_val.capacity()   +
                sizeof(IndexType)*m_indx.capacity() +
@@ -369,15 +366,14 @@ namespace Nektar
         const int* bpntrb = (int*)&m_pntr[0];
         const int* bpntre = (int*)&m_pntr[0]+1;
         const int  mb = m_blkRows;
-        const int  kb = m_blkCols;
 
         switch(m_blkDim)
         {
-        case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-        case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+        case 1:  Multiply_1x1(mb,val,bindx,bpntrb,bpntre,b,c); return;
+        case 2:  Multiply_2x2(mb,val,bindx,bpntrb,bpntre,b,c); return;
         default:
             {
-                Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+                Multiply_generic(mb,val,bindx,bpntrb,bpntre,b,c); return;
             }
         }
     }
@@ -395,15 +391,14 @@ namespace Nektar
         const int* bpntrb = (int*)&m_pntr[0];
         const int* bpntre = (int*)&m_pntr[0]+1;
         const int  mb = m_blkRows;
-        const int  kb = m_blkCols;
 
         switch(m_blkDim)
         {
-        case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-        case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+        case 1:  Multiply_1x1(mb,val,bindx,bpntrb,bpntre,b,c); return;
+        case 2:  Multiply_2x2(mb,val,bindx,bpntrb,bpntre,b,c); return;
         default:
             {
-                Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+                Multiply_generic(mb,val,bindx,bpntrb,bpntre,b,c); return;
             }
         }
     }
@@ -423,15 +418,14 @@ namespace Nektar
         const int* bpntrb = (int*)&m_pntr[0];
         const int* bpntre = (int*)&m_pntr[0]+1;
         const int  mb = m_blkRows;
-        const int  kb = m_blkCols;
 
         switch(m_blkDim)
         {
-        case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-        case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+        case 1:  Multiply_1x1(mb,val,bindx,bpntrb,bpntre,b,c); return;
+        case 2:  Multiply_2x2(mb,val,bindx,bpntrb,bpntre,b,c); return;
         default:
             {
-                Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+                Multiply_generic(mb,val,bindx,bpntrb,bpntre,b,c); return;
             }
         }
     }
@@ -442,7 +436,6 @@ namespace Nektar
     template<typename DataType>
     void StorageSmvBsr<DataType>::Multiply_1x1(
             const int mb,
-            const int kb,
             const double* val,
             const int* bindx,
             const int* bpntrb,
@@ -469,7 +462,6 @@ namespace Nektar
     template<typename DataType>
     void StorageSmvBsr<DataType>::Multiply_2x2(
             const int mb,
-            const int kb,
             const double* val,
             const int* bindx,
             const int* bpntrb,
@@ -505,7 +497,6 @@ namespace Nektar
     template<typename DataType>
     void StorageSmvBsr<DataType>::Multiply_3x3(
             const int mb,
-            const int kb,
             const double* val,
             const int* bindx,
             const int* bpntrb,
@@ -543,7 +534,6 @@ namespace Nektar
     template<typename DataType>
     void StorageSmvBsr<DataType>::Multiply_4x4(
             const int mb,
-            const int kb,
             const double* val,
             const int* bindx,
             const int* bpntrb,
@@ -583,7 +573,6 @@ namespace Nektar
     template<typename DataType>
     void StorageSmvBsr<DataType>::Multiply_generic(
             const int mb,
-            const int kb,
             const double* val,
             const int* bindx,
             const int* bpntrb,
@@ -618,7 +607,6 @@ namespace Nektar
     template<typename DataType>
     void StorageSmvBsr<DataType>::processBcoInput(
                         const IndexType  blkRows,
-                        const IndexType  blkColumns,
                         const IndexType  blkDim,
                         const BCOMatType&   bcoMat)
     {

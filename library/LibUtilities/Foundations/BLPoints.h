@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -66,58 +65,60 @@ namespace Nektar
 
             BLPoints(const PointsKey &key):PointsBaseType(key)
             {
-                using namespace std::placeholders;
+                namespace pl = std::placeholders;
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eGaussGaussLegendre),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eGaussRadauMLegendre),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eGaussRadauPLegendre),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eGaussLobattoLegendre),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eGaussGaussChebyshev),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eGaussRadauMChebyshev),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eGaussRadauPChebyshev),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eGaussLobattoChebyshev),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eGaussRadauMAlpha0Beta1),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eGaussRadauMAlpha0Beta2),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eGaussRadauMAlpha1Beta0),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eGaussRadauMAlpha2Beta0),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, ePolyEvenlySpaced),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eFourierEvenlySpaced),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eBoundaryLayerPoints),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(
                     PointsKey(0, eBoundaryLayerPointsRev),
-                    std::bind(&BLPoints::CreateMatrix, this, _1));
+                    std::bind(&BLPoints::CreateMatrix, this, pl::_1));
             }
 
         private:
+            static bool initPointsManager[];
+
             /// Default constructor should not be called except by Create
             /// method.
             BLPoints();

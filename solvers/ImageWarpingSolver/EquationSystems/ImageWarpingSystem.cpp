@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <ImageWarpingSolver/EquationSystems/ImageWarpingSystem.h>
 #include <MultiRegions/ContField2D.h>
 
@@ -47,9 +48,10 @@ namespace Nektar
             "Image warping system.");
 
     ImageWarpingSystem::ImageWarpingSystem(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          AdvectionSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph)
     {
     }
 
@@ -97,7 +99,7 @@ namespace Nektar
         m_session->LoadSolverInfo(
             "UpwindType", riemName, "Upwind");
         m_riemannSolver = SolverUtils::
-            GetRiemannSolverFactory().CreateInstance(riemName);
+            GetRiemannSolverFactory().CreateInstance(riemName, m_session);
         m_riemannSolver->SetScalar(
             "Vn", &ImageWarpingSystem::GetNormalVelocity, this);
 
@@ -125,6 +127,8 @@ namespace Nektar
               Array<OneD,       Array<OneD,NekDouble> > &outarray,
         const NekDouble time)
     {
+        boost::ignore_unused(time);
+
         int npoints = GetNpoints();
         int ncoeffs = inarray[0].num_elements();
         StdRegions::ConstFactorMap factors;

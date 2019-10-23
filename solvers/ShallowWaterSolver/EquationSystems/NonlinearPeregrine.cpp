@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 
 #include <iostream>
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
@@ -52,8 +53,9 @@ string NonlinearPeregrine::className =
                 "Nonlinear Peregrine equations in conservative variables.");
 
 NonlinearPeregrine::NonlinearPeregrine(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : ShallowWaterSystem(pSession), m_factors()
+    const LibUtilities::SessionReaderSharedPtr& pSession,
+    const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : ShallowWaterSystem(pSession, pGraph), m_factors()
 {
     m_factors[StdRegions::eFactorLambda] = 0.0;
     m_factors[StdRegions::eFactorTau] = 1000000.0;
@@ -138,7 +140,7 @@ void NonlinearPeregrine::v_InitObject()
 
             m_riemannSolver =
                     SolverUtils::GetRiemannSolverFactory().CreateInstance(
-                            riemName);
+                            riemName, m_session);
 
             // Setting up parameters for advection operator Riemann solver
             m_riemannSolver->SetParam("gravity",
@@ -633,6 +635,7 @@ void NonlinearPeregrine::WallBoundary2D(
         Array<OneD, Array<OneD, NekDouble> > &Fwd,
         Array<OneD, Array<OneD, NekDouble> > &physarray)
 {
+    boost::ignore_unused(physarray);
 
     int i;
     int nvariables = 3;
@@ -960,6 +963,8 @@ void NonlinearPeregrine::SetBoundaryConditionsForcing(
         Array<OneD, Array<OneD, NekDouble> > &inarray,
         NekDouble time)
 {
+    boost::ignore_unused(time);
+
     int cnt = 0;
 
     // loop over Boundary Regions
@@ -1071,6 +1076,8 @@ void NonlinearPeregrine::SetBoundaryConditionsContVariables(
         Array<OneD, NekDouble> &inarray,
         NekDouble time)
 {
+    boost::ignore_unused(time);
+
     int cnt = 0;
 
     // loop over Boundary Regions
@@ -1212,6 +1219,7 @@ void NonlinearPeregrine::v_SetInitialConditions(
         bool dumpInitialConditions,
         const int domain)
 {
+    boost::ignore_unused(domain);
 
     switch (m_problemType)
     {

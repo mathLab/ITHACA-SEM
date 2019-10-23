@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,8 +35,6 @@
 #ifndef UTILITIES_NEKMESH_OUTPUTNEKPP
 #define UTILITIES_NEKMESH_OUTPUTNEKPP
 
-#include <tinyxml.h>
-
 #include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
@@ -54,7 +51,7 @@ public:
     {
         return MemoryManager<OutputNekpp>::AllocateSharedPtr(m);
     }
-    static NekMeshUtils::ModuleKey className;
+    static NekMeshUtils::ModuleKey className1, className2;
 
     OutputNekpp(NekMeshUtils::MeshSharedPtr m);
     virtual ~OutputNekpp();
@@ -63,24 +60,19 @@ public:
     virtual void Process();
 
 private:
-    /// Writes the <NODES> section of the XML file.
-    void WriteXmlNodes(TiXmlElement *pRoot);
-    /// Writes the <EDGES> section of the XML file.
-    void WriteXmlEdges(TiXmlElement *pRoot);
-    /// Writes the <FACES> section of the XML file if needed.
-    void WriteXmlFaces(TiXmlElement *pRoot);
-    /// Writes the <ELEMENTS> section of the XML file.
-    void WriteXmlElements(TiXmlElement *pRoot);
-    /// Writes the <CURVES> section of the XML file if needed.
-    void WriteXmlCurves(TiXmlElement *pRoot);
-    /// Writes the <COMPOSITES> section of the XML file.
-    void WriteXmlComposites(TiXmlElement *pRoot);
-    /// Writes the <DOMAIN> section of the XML file.
-    void WriteXmlDomain(TiXmlElement *pRoot);
-    /// Writes the <EXPANSIONS> section of the XML file.
-    void WriteXmlExpansions(TiXmlElement *pRoot);
-    /// Writes the <CONDITIONS> section of the XML file.
-    void WriteXmlConditions(TiXmlElement *pRoot);
+    LibUtilities::Interpreter m_strEval;
+
+    void TransferVertices(SpatialDomains::MeshGraphSharedPtr graph);
+    void TransferEdges(
+        SpatialDomains::MeshGraphSharedPtr graph,
+        std::unordered_map<int, SpatialDomains::SegGeomSharedPtr> &edgeMap);
+    void TransferFaces(
+        SpatialDomains::MeshGraphSharedPtr graph,
+        std::unordered_map<int, SpatialDomains::SegGeomSharedPtr> &edgeMap);
+    void TransferElements(SpatialDomains::MeshGraphSharedPtr graph);
+    void TransferCurves(SpatialDomains::MeshGraphSharedPtr graph);
+    void TransferComposites(SpatialDomains::MeshGraphSharedPtr graph);
+    void TransferDomain(SpatialDomains::MeshGraphSharedPtr graph);
 };
 }
 }

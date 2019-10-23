@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,7 +32,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/Expansion2D.h>
 
 using namespace std;
 
@@ -154,8 +156,10 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
                 {
-                    int j,k,dir;
-                    int nbndry = NumDGBndryCoeffs();
+                    int j       = 0;
+                    int k       = 0;
+                    int dir     = 0;
+                    int nbndry  = NumDGBndryCoeffs();
                     int ncoeffs = GetNcoeffs();
 
                     Array<OneD,NekDouble> lambda(nbndry);
@@ -278,7 +282,8 @@ namespace Nektar
                                           Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray) 
         {
-            
+            boost::ignore_unused(dir);
+
             int k;
             int nbndry = NumBndryCoeffs();
             int nquad  = GetNumPoints(0);
@@ -411,6 +416,21 @@ namespace Nektar
             int map = GetVertexMap(vert);
             Vmath::Zero(GetNcoeffs(), coeffs, 1);
             coeffs[map] = primCoeffs[0];
+        }
+
+        NekDouble Expansion1D::v_VectorFlux(
+            const Array<OneD, Array<OneD, NekDouble> > &vec)
+        {
+            const Array<OneD, const Array<OneD, NekDouble> >
+                &normals = GetLeftAdjacentElementExp()->
+                GetEdgeNormal(GetLeftAdjacentElementEdge());
+
+            int nq = m_base[0]->GetNumPoints();
+            Array<OneD, NekDouble > Fn(nq);
+            Vmath::Vmul (nq, &vec[0][0], 1, &normals[0][0], 1, &Fn[0], 1);
+            Vmath::Vvtvp(nq, &vec[1][0], 1, &normals[1][0], 1, &Fn[0], 1, &Fn[0], 1);
+
+            return Integral(Fn);
         }
     } //end of namespace
 } //end of namespace

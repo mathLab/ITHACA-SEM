@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLAS_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLAS_HPP
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/LinearAlgebra/TransF77.hpp>
 #include <LibUtilities/LinearAlgebra/BlasArray.hpp>
@@ -224,6 +225,7 @@ namespace Blas
           const double *A, const int ldA, const double * B, const int ldB,
           const double b, double *C, const int ldC)
     {
+        boost::ignore_unused(ldA, ldB, ldC);
         Dgemm('N','N',N,M,K,a,B,N,A,K,b,C,N) ;
     }
 }

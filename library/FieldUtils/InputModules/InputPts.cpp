@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 #include <iostream>
 #include <string>
 using namespace std;
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
@@ -83,16 +84,18 @@ InputPts::~InputPts()
  */
 void InputPts::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     string inFile = m_config["infile"].as<string>();
 
     // Determine appropriate field input
-    if (m_f->m_inputfiles.count("pts") != 0)
+    if (m_f->m_inputfiles.count("csv") != 0)
     {
         LibUtilities::CsvIOSharedPtr csvIO =
             MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(m_f->m_comm);
         csvIO->Import(inFile, m_f->m_fieldPts);
     }
-    else if (m_f->m_inputfiles.count("csv") != 0)
+    else if (m_f->m_inputfiles.count("pts") != 0)
     {
         LibUtilities::PtsIOSharedPtr ptsIO =
             MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);

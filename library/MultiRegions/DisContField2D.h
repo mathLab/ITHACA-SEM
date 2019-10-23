@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
@@ -232,6 +233,7 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap   &factors,
                 const StdRegions::VarCoeffMap      &varcoeff,
+                const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool  PhysSpaceForcing);
             virtual void v_GeneralMatrixOp(
@@ -256,6 +258,7 @@ namespace Nektar
                 PeriodicMap &periodicEdges,
                 PeriodicMap &periodicFaces)
             {
+                boost::ignore_unused(periodicFaces);
                 periodicVerts = m_periodicVerts;
                 periodicEdges = m_periodicEdges;
             }

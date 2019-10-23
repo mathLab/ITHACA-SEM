@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,9 @@
 // Description: Triangle routines built upon StdExpansion2D
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdNodalTriExp.h>
@@ -133,6 +135,8 @@ namespace Nektar
                   Array<OneD,       NekDouble>& out_d1,
                   Array<OneD,       NekDouble>& out_d2)
         {
+            boost::ignore_unused(out_d2);
+
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -222,6 +226,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>& out_d1,
                   Array<OneD,       NekDouble>& out_d2)
         {
+            boost::ignore_unused(out_d2);
             StdTriExp::v_PhysDeriv(inarray, out_d0, out_d1);
         }
 
@@ -272,6 +277,8 @@ namespace Nektar
                   bool                          doCheckCollDir0,
                   bool                          doCheckCollDir1)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1);
+
             int  i;
             int  mode;
             int  nquad0  = m_base[0]->GetNumPoints();
@@ -514,6 +521,8 @@ namespace Nektar
                   bool                          doCheckCollDir0,
                   bool                          doCheckCollDir1)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1);
+
             int i;
             int mode;
             int nquad0  = m_base[0]->GetNumPoints();
@@ -826,6 +835,8 @@ namespace Nektar
                                     Array<OneD, NekDouble> &coords_1,
                                     Array<OneD, NekDouble> &coords_2)
         {
+            boost::ignore_unused(coords_2);
+
             Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
             Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
             int nq0 = GetNumPoints(0);
@@ -885,12 +896,15 @@ namespace Nektar
                     }
 
                     default:
-                        ASSERTL0(false,"unexpected points distribution");
+                        NEKERROR(ErrorUtil::efatal,
+                                 "unexpected points distribution");
                         break;
                     }
+                    break;
                 }
                 default:
-                    ASSERTL0(false,"Information not available to set edge key");
+                    NEKERROR(ErrorUtil::efatal,
+                             "Information not available to set edge key");
                     break;
                 }
             }
@@ -1005,7 +1019,7 @@ namespace Nektar
                         maparray[i] = i;
                     }
 
-                    if(edgeOrient==eForwards)
+                    if(edgeOrient==eBackwards)
                     {
                         swap( maparray[0] , maparray[1] );
 
@@ -1167,7 +1181,7 @@ namespace Nektar
                         maparray[i] = 2+i;
                     }
 
-                    if(edgeOrient==eForwards)
+                    if(edgeOrient==eBackwards)
                     {
                         for(i = 1; i < nEdgeIntCoeffs; i+=2)
                         {
@@ -1390,7 +1404,6 @@ namespace Nektar
             int qb = m_base[1]->GetNumPoints();
             int nmodes_a = m_base[0]->GetNumModes();
             int nmodes_b = m_base[1]->GetNumModes();
-            int nmodes = min(nmodes_a,nmodes_b);
 
             // Declare orthogonal basis.
             LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
@@ -1399,61 +1412,72 @@ namespace Nektar
             LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
             LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B,nmodes_b,pb);
             StdTriExp OrthoExp(Ba,Bb);
-
-            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
-
+            
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
 
+            // project onto physical space.
+            OrthoExp.FwdTrans(array,orthocoeffs);
 
-            if(mkey.HasVarCoeff(eVarCoeffLaplacian)) // Rodrigo's svv mapping
+            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff)) // Rodrigo's power kern
             {
-                Array<OneD, NekDouble> sqrt_varcoeff(qa*qb);
-                Array<OneD, NekDouble> tmp(qa*qb);
-
-                Vmath::Vsqrt(qa * qb,
-                             mkey.GetVarCoeff(eVarCoeffLaplacian), 1,
-                             sqrt_varcoeff,                        1);
-
-                // multiply by sqrt(Variable Coefficient) containing h v /p
-                Vmath::Vmul(qa*qb,sqrt_varcoeff,1,array,1,tmp,1);
-
-                // project onto modal  space.
-                OrthoExp.FwdTrans(tmp,orthocoeffs);
+                NekDouble cutoff =  mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                NekDouble  SvvDiffCoeff  =
+                    mkey.GetConstFactor(eFactorSVVPowerKerDiffCoeff)*
+                    mkey.GetConstFactor(eFactorSVVDiffCoeff);
 
                 int cnt = 0;
                 for(int j = 0; j < nmodes_a; ++j)
                 {
                     for(int k = 0; k < nmodes_b-j; ++k, ++cnt)
                     {
-                        orthocoeffs[cnt] *=
-                            (1.0 + SvvDiffCoeff
-                                *pow(j/(nmodes_a-1)+k/(nmodes_b-1),0.5*nmodes));
+                        NekDouble fac = std::max(
+                                    pow((1.0*j)/(nmodes_a-1),cutoff*nmodes_a),
+                                    pow((1.0*k)/(nmodes_b-1),cutoff*nmodes_b));
+
+                        orthocoeffs[cnt] *= (SvvDiffCoeff *fac);
                     }
                 }
-
-                // backward transform to physical space
-                OrthoExp.BwdTrans(orthocoeffs,tmp);
-
-                // multiply by sqrt(Variable Coefficient) containing h v /p
-                // - split to keep symmetry
-                Vmath::Vmul(qa*qb,sqrt_varcoeff,1,tmp,1,array,1);
+            }
+            else if(mkey.ConstFactorExists(eFactorSVVDGKerDiffCoeff)) // Rodrigo/mansoor's DG kernel
+            {
+                NekDouble  SvvDiffCoeff  =
+                    mkey.GetConstFactor(eFactorSVVDGKerDiffCoeff)*
+                    mkey.GetConstFactor(eFactorSVVDiffCoeff);
+                int max_ab = max(nmodes_a-kSVVDGFiltermodesmin,
+                                 nmodes_b-kSVVDGFiltermodesmin);
+                max_ab = max(max_ab,0);
+                max_ab = min(max_ab,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
+                
+                int cnt = 0;
+                for(int j = 0; j < nmodes_a; ++j)
+                {
+                    for(int k = 0; k < nmodes_b-j; ++k, ++cnt)
+                    {
+                        int maxjk = max(j,k);
+                        maxjk = min(maxjk,kSVVDGFiltermodesmax-1);
+                        
+                        orthocoeffs[cnt] *= SvvDiffCoeff *
+                            kSVVDGFilter[max_ab][maxjk];
+                    }
+                }
             }
             else
             {
-                int j, k , cnt = 0;
+                NekDouble  SvvDiffCoeff =
+                    mkey.GetConstFactor(eFactorSVVDiffCoeff);
+
                 int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*
                                                         min(nmodes_a,nmodes_b));
-
+                
                 NekDouble epsilon = 1.0;
                 int nmodes = min(nmodes_a,nmodes_b);
 
-                // project onto physical space.
-                OrthoExp.FwdTrans(array,orthocoeffs);
+                int cnt = 0;
 
                 // apply SVV filter (JEL)
-                for(j = 0; j < nmodes_a; ++j)
+                for(int j = 0; j < nmodes_a; ++j)
                 {
-                    for(k = 0; k < nmodes_b-j; ++k)
+                    for(int k = 0; k < nmodes_b-j; ++k)
                     {
                         if(j + k >= cutoff)
                         {
@@ -1470,9 +1494,10 @@ namespace Nektar
                     }
                 }
 
-                // backward transform to physical space
-                OrthoExp.BwdTrans(orthocoeffs,array);
             }
+
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
         }
 
         void StdTriExp::v_ReduceOrderCoeffs(
@@ -1607,6 +1632,8 @@ namespace Nektar
             Array<OneD, int> &conn,
             bool              standard)
         {
+            boost::ignore_unused(standard);
+
             int np1 = m_base[0]->GetNumPoints();
             int np2 = m_base[1]->GetNumPoints();
             int np = max(np1,np2);

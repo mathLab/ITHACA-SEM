@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: FR advection class.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/Advection/AdvectionFR.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -117,6 +118,7 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
+            boost::ignore_unused(pSession);
             int i, n;
             int nquad0, nquad1;
             int phys_offset;
@@ -270,7 +272,9 @@ namespace Nektar
         void AdvectionFR::v_SetupCFunctions(
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
-        {        
+        {
+            boost::ignore_unused(pSession);
+
             int i, n;
             NekDouble c0 = 0.0;
             NekDouble c1 = 0.0;
@@ -808,6 +812,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
+            boost::ignore_unused(advVel, time, pFwd, pBwd);
+
             int i, j, n;
             int phys_offset;
             
@@ -1017,6 +1023,8 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &numericalFlux,
                   Array<OneD,       NekDouble>                &divCFlux)
         {
+            boost::ignore_unused(nConvectiveFields);
+
             int n;
             int nLocalSolutionPts, phys_offset, t_offset;
                         
@@ -1122,7 +1130,9 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &fluxX2, 
             const Array<OneD, const NekDouble>                &numericalFlux,
                   Array<OneD,       NekDouble>                &divCFlux)
-        {                   
+        {
+            boost::ignore_unused(nConvectiveFields);
+
             int n, e, i, j, cnt;
             
             int nElements = fields[0]->GetExpSize();
@@ -1255,7 +1265,7 @@ namespace Nektar
                                 
                                 for (j = 0; j < nquad1; ++j)
                                 {
-                                    cnt = (nquad0 - 1) + j*nquad0 - i;
+                                    cnt = j*nquad0 + i;
                                     divCFluxE2[cnt] = fluxJumps[i] * m_dGR_xi2[n][j];
                                 }
                             }
@@ -1267,7 +1277,7 @@ namespace Nektar
                                 fluxJumps[i] = -(m_Q2D_e3[n][i]) * fluxJumps[i];
                                 for (j = 0; j < nquad0; ++j)
                                 {
-                                    cnt = (nquad0*nquad1 - nquad0) + j - i*nquad0;
+                                    cnt = j + i*nquad0;
                                     divCFluxE3[cnt] = fluxJumps[i] * m_dGL_xi1[n][j];  
                                 }
                             }
@@ -1312,6 +1322,8 @@ namespace Nektar
             const Array<OneD, const NekDouble> &numericalFlux,
             Array<OneD,       NekDouble> &divCFlux)
         {
+            boost::ignore_unused(nConvectiveFields);
+
             int n, e, i, j, cnt;
             
             int nElements = fields[0]->GetExpSize();
@@ -1566,7 +1578,7 @@ namespace Nektar
                             {
                                 for (j = 0; j < nquad1; ++j)
                                 {
-                                    cnt = (nquad0 - 1) + j*nquad0 - i;
+                                    cnt = j*nquad0 + i;
                                     divCFluxE2[cnt] =
                                                 fluxJumps[i] * m_dGR_xi2[n][j];
                                 }
@@ -1635,8 +1647,7 @@ namespace Nektar
                             {
                                 for (j = 0; j < nquad0; ++j)
                                 {
-                                    cnt = (nquad0*nquad1 - nquad0) + j
-                                            - i*nquad0;
+                                    cnt = j + i*nquad0;
                                     divCFluxE3[cnt] =
                                                 -fluxJumps[i] * m_dGL_xi1[n][j];
                                 }
@@ -1684,7 +1695,8 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &numericalFlux,
                   Array<OneD,       NekDouble>                &divCFlux)
         {
-
+            boost::ignore_unused(nConvectiveFields, fields, fluxX1, fluxX2,
+                                 fluxX3, numericalFlux, divCFlux);
         }
         
     }

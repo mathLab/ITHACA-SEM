@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -70,8 +69,6 @@ namespace Nektar
             virtual ~PreconditionerLinearWithLowEnergy() {}
 
 	protected:
-            //const std::weak_ptr<GlobalLinSys>         m_linsys;
-
             PreconditionerSharedPtr m_linSpacePrecon;
             PreconditionerSharedPtr m_lowEnergyPrecon;
 
@@ -87,7 +84,8 @@ namespace Nektar
                 Array<OneD, NekDouble>& pInput);
 
             virtual DNekScalMatSharedPtr
-                v_TransformedSchurCompl(int offset, const std::shared_ptr<DNekScalMat > &loc_mat);
+                v_TransformedSchurCompl(int n, int offset,
+                                        const std::shared_ptr<DNekScalMat > &loc_mat);
 
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,

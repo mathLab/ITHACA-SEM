@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 // uses much of the functionality from a ExpList1D and its daughters
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 #include <MultiRegions/ExpList1D.h>
@@ -61,6 +62,7 @@ namespace Nektar
                        const Collections::ImplementationType ImpType):
             ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
+            boost::ignore_unused(ImpType);
             SetExpType(e3DH2D);
         }
 

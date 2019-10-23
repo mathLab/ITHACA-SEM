@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -131,15 +130,19 @@ namespace Vmath
     #undef EPS
     #undef RNMX
 
+#ifdef NEKTAR_USE_THREAD_SAFETY
     static boost::mutex mutex;
+#endif
     template LIB_UTILITIES_EXPORT Nektar::NekDouble ran2 (long* idum);
 
     /// \brief Fills a vector with white noise.
     template<class T>  void FillWhiteNoise( int n, const T eps, T *x,
                                       const int incx, int outseed)
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
         // Protect the static vars here and in ran2
         boost::mutex::scoped_lock l(mutex);
+#endif
 
         // Define static variables for generating random numbers
         static int     iset = 0;
@@ -1086,16 +1089,24 @@ namespace Vmath
     {
         int i;
         T store;
+
+        // Perform element by element swaps in case x and y reference the same
+        // array.
         int nloop = n/2;
 
         // copy value in case of n is odd number
         y[nloop] = x[nloop];
 
-        for(i = 0; i < nloop; ++i)
-        {
-            store = x[n-1-i];
-            y[n-1-i] = x[i];
-            y[i] = store;
+        const T* x_end = x + (n-1)*incx;
+        T*       y_end = y + (n-1)*incy;
+        for (i = 0; i < nloop; ++i) {
+            store  = *x_end;
+            *y_end = *x;
+            *y     = store;
+            x     += incx;
+            y     += incy;
+            x_end -= incx;
+            y_end -= incy;
         }
     }
 

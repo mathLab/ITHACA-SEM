@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -46,10 +45,12 @@ namespace Nektar
 
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession) {
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr &pGraph)
+        {
             SolverUtils::EquationSystemSharedPtr p =
-                                MemoryManager<VelocityCorrectionScheme>::
-                                            AllocateSharedPtr(pSession);
+                MemoryManager<VelocityCorrectionScheme>::AllocateSharedPtr(
+                    pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -58,7 +59,9 @@ namespace Nektar
         static std::string className;
 
         /// Constructor.
-        VelocityCorrectionScheme(const LibUtilities::SessionReaderSharedPtr& pSession);
+        VelocityCorrectionScheme(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
         virtual ~VelocityCorrectionScheme();
 
@@ -116,13 +119,49 @@ namespace Nektar
         NekDouble m_sVVCutoffRatio;
         /// Diffusion coefficient of SVV modes
         NekDouble m_sVVDiffCoeff;
+        NekDouble m_sVVCutoffRatioHomo1D;
+        /// Diffusion coefficient of SVV modes in homogeneous 1D Direction
+        NekDouble m_sVVDiffCoeffHomo1D;
+        /// Array of coefficient if power kernel is used in SVV
+        Array<OneD, NekDouble> m_svvVarDiffCoeff;
+        /// Identifier for Power Kernel otherwise DG kernel
+        bool m_IsSVVPowerKernel;
         /// Diffusion coefficients (will be kinvis for velocities)
         Array<OneD, NekDouble> m_diffCoeff;
 
         /// Variable Coefficient map for the Laplacian which can be activated as part of SVV or otherwise
-        StdRegions::VarCoeffMap m_varCoeffLap; 
+        StdRegions::VarCoeffMap m_varCoeffLap;
+
+        /// Desired volumetric flowrate
+        NekDouble m_flowrate;
+        /// Area of the boundary through which we are measuring the flowrate
+        NekDouble m_flowrateArea;
+        // Bool to identify 3D1HD with forcing explicitly defined
+        bool m_Hom1DExplicit;
+        /// Flux of the Stokes function solution
+        NekDouble m_greenFlux;
+        /// Current flowrate correction
+        NekDouble m_alpha;
+        /// Boundary ID of the flowrate reference surface
+        int m_flowrateBndID;
+        /// Flowrate reference surface
+        MultiRegions::ExpListSharedPtr m_flowrateBnd;
+        /// Stokes solution used to impose flowrate
+        Array<OneD, Array<OneD, NekDouble> > m_flowrateStokes;
+        /// Output stream to record flowrate
+        std::ofstream m_flowrateStream;
+        /// Interval at which to record flowrate data
+        int m_flowrateSteps;
+        /// Value of aii_dt used to compute Stokes flowrate solution.
+        NekDouble m_flowrateAiidt;
+
+        void SetupFlowrate(NekDouble aii_dt);
+        NekDouble MeasureFlowrate(
+            const Array<OneD, Array<OneD, NekDouble> > &inarray);
 
         // Virtual functions
+        virtual bool v_PostIntegrate(int step);
+
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
         virtual void v_TransCoeffToPhys(void);
@@ -159,7 +198,7 @@ namespace Nektar
 
         virtual bool v_RequireFwdTrans()
         {
-            return false;
+            return false || m_flowrate > 0.0;
         }
 
         virtual std::string v_GetExtrapolateStr(void)
@@ -175,6 +214,16 @@ namespace Nektar
         
         Array<OneD, Array< OneD, NekDouble> > m_F;
 
+        void SetUpSVV(void);
+        void SetUpExtrapolation(void);
+        
+        void SVVVarDiffCoeff(const NekDouble velmag, 
+                             Array<OneD, NekDouble> &diffcoeff,
+                             const Array<OneD, Array<OneD, NekDouble> >
+                             &vel = NullNekDoubleArrayofArray);
+        void AppendSVVFactors(
+                              StdRegions::ConstFactorMap &factors,
+                              MultiRegions::VarFactorsMap &varFactorsMap);
     private:
         
     };

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Main wrapper class for Advection Diffusion Reaction Solver
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <FieldUtils/Interpolator.h>
 #include <SolverUtils/EquationSystem.h>
@@ -91,9 +92,11 @@ namespace Nektar
          * @param   pSession The session reader holding problem parameters.
          */
         EquationSystem::EquationSystem(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
             : m_comm (pSession->GetComm()),
               m_session (pSession),
+              m_graph (pGraph),
               m_lambda (0),
               m_fieldMetaDataMap(LibUtilities::NullFieldMetaDataMap)
         {
@@ -121,9 +124,6 @@ namespace Nektar
 
             // Instantiate a field reader/writer
             m_fld = LibUtilities::FieldIO::CreateDefault(m_session);
-
-            // Read the geometry and the expansion information
-            m_graph = SpatialDomains::MeshGraph::Read(m_session);
 
             // Also read and store the boundary conditions
             m_boundaryConditions =
@@ -928,6 +928,8 @@ namespace Nektar
                                                     bool dumpInitialConditions,
                                                     const int domain)
         {
+            boost::ignore_unused(initialtime);
+
             if (m_session->GetComm()->GetRank() == 0)
             {
                 cout << "Initial Conditions:" << endl;
@@ -1140,7 +1142,7 @@ namespace Nektar
                 variables[i] = m_boundaryConditions->GetVariable(i);
             }
 
-            v_ExtraFldOutput(fieldcoeffs, variables);
+            ExtraFldOutput(fieldcoeffs, variables);
 
             WriteFld(outname, m_fields[0], fieldcoeffs, variables);
         }
@@ -1199,7 +1201,13 @@ namespace Nektar
             LibUtilities::FieldMetaDataMap fieldMetaDataMap(m_fieldMetaDataMap);
             mapping->Output( fieldMetaDataMap, outname);
 
-            m_fld->Write(outname, FieldDef, FieldData, fieldMetaDataMap, true);
+#ifdef NEKTAR_DISABLE_BACKUPS
+            bool backup = false;
+#else
+            bool backup = true;
+#endif
+
+            m_fld->Write(outname, FieldDef, FieldData, fieldMetaDataMap, backup);
         }
 
 
@@ -1475,6 +1483,7 @@ namespace Nektar
             std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
             std::vector<std::string>             &variables)
         {
+            boost::ignore_unused(fieldcoeffs, variables);
         }
 
     }

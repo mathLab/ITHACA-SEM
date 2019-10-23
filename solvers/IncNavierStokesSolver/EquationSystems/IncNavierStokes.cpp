@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -48,7 +47,6 @@
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 #include <algorithm>
-#include <complex>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -68,9 +66,10 @@ namespace Nektar
      * \param
      */
     IncNavierStokes::IncNavierStokes(
-        const LibUtilities::SessionReaderSharedPtr& pSession):
-        UnsteadySystem(pSession),
-        AdvectionSystem(pSession),
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph):
+        UnsteadySystem(pSession, pGraph),
+        AdvectionSystem(pSession, pGraph),
         m_SmoothAdvection(false)
     {
     }
@@ -167,8 +166,8 @@ namespace Nektar
         m_advObject->InitObject( m_session, m_fields);
 
         // Forcing terms
-        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
-                                               v_GetForceDimension());
+        m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
+                                            m_fields, v_GetForceDimension());
 
         // check to see if any Robin boundary conditions and if so set
         // up m_field to boundary condition maps;
@@ -256,33 +255,12 @@ namespace Nektar
             {
                 if(boost::istarts_with(m_fields[i]->GetBndConditions()[n]->GetUserDefined(),"Womersley"))
                 {
-
-                    m_womersleyParams[n] = MemoryManager<WomersleyParams>::AllocateSharedPtr(m_spacedim);
-
-
-#if 0
-                    m_session->LoadParameter("Period",m_womersleyParams[n]->m_period);
-                    m_session->LoadParameter("Radius",m_womersleyParams[n]->m_radius);
-
-                    NekDouble n0,n1,n2;
-                    m_session->LoadParameter("n0",n0);
-                    m_session->LoadParameter("n1",n1);
-                    m_session->LoadParameter("n2",n2);
-                    m_womersleyParams[n]->m_axisnormal[0] = n0;
-                    m_womersleyParams[n]->m_axisnormal[1] = n1;
-                    m_womersleyParams[n]->m_axisnormal[2] = n2;
-
-                    NekDouble x0,x1,x2;
-                    m_session->LoadParameter("x0",x0);
-                    m_session->LoadParameter("x1",x1);
-                    m_session->LoadParameter("x2",x2);
-                    m_womersleyParams[n]->m_axispoint[0] = x0;
-                    m_womersleyParams[n]->m_axispoint[1] = x1;
-                    m_womersleyParams[n]->m_axispoint[2] = x2;
-#endif
-
-                    // Read in fourier coeffs
-                    SetUpWomersley(n,
+                    // assumes that boundary condition is applied in normal direction
+                    // and is decomposed for each direction. There could be a
+                    // unique file for each direction
+                    m_womersleyParams[i][n] = MemoryManager<WomersleyParams>::AllocateSharedPtr(m_spacedim);
+                    // Read in fourier coeffs and precompute coefficients
+                    SetUpWomersley(i, n,
                                    m_fields[i]->GetBndConditions()[n]->GetUserDefined());
 
                     m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
@@ -515,108 +493,77 @@ namespace Nektar
         ASSERTL1(m_womersleyParams.count(bndid) == 1,
                 "Womersley parameters for this boundary have not been set up");
 
-        WomersleyParamsSharedPtr WomParam = m_womersleyParams[bndid];
-        std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
+        WomersleyParamsSharedPtr WomParam = m_womersleyParams[fldid][bndid];
+        NekComplexDouble zvel;
         int  i,j,k;
 
-        int M = WomParam->m_wom_vel_r.size();
+        int M_coeffs = WomParam->m_wom_vel.size();
 
-        NekDouble R = WomParam->m_radius;
         NekDouble T = WomParam->m_period;
-
-        Array<OneD, NekDouble > normals = WomParam->m_axisnormal;
-        Array<OneD, NekDouble > x0      = WomParam->m_axispoint;
+        NekDouble axis_normal = WomParam->m_axisnormal[fldid];
 
         // Womersley Number
-        NekDouble alpha = R*sqrt(2*M_PI/T/m_kinvis);
-        NekDouble r,kt;
+        NekComplexDouble omega_c (2.0*M_PI/T, 0.0);
+        NekComplexDouble k_c (0.0, 0.0);
+        NekComplexDouble m_time_c (m_time, 0.0);
+        NekComplexDouble zi (0.0,1.0);
+        NekComplexDouble i_pow_3q2 (-1.0/sqrt(2.0),1.0/sqrt(2.0));
 
-        std::complex<NekDouble> z1 (1.0,0.0);
-        std::complex<NekDouble> zi (0.0,1.0);
-        std::complex<NekDouble> comp_conj (-1.0,1.0); //complex conjugate
+        MultiRegions::ExpListSharedPtr  BndCondExp;
+        BndCondExp   = m_fields[fldid]->GetBndCondExpansions()[bndid];
 
-        Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
-
-        BndExp   = m_fields[fldid]->GetBndCondExpansions();
-
-        StdRegions::StdExpansionSharedPtr elmt;
         StdRegions::StdExpansionSharedPtr bc;
         int cnt=0;
-        int elmtid,offset, boundary,nfq;
+        int nfq;
+        Array<OneD, NekDouble> Bvals;
+        int exp_npts = BndCondExp->GetExpSize();
+        Array<OneD, NekDouble> wbc(exp_npts,0.0);
 
-        Array<OneD, NekDouble> Bvals,w;
+        Array<OneD, NekComplexDouble> zt(M_coeffs);
 
-        //Loop over all expansions
-        for(i = 0; i < BndExp[bndid]->GetExpSize(); ++i,cnt++)
+        // preallocate the exponent
+        for (k=1; k < M_coeffs; k++)
         {
-            // Get element id and offset
-            elmtid = m_fieldsBCToElmtID[fldid][cnt];
-            elmt   = m_fields[fldid]->GetExp(elmtid);
-            offset = m_fields[fldid]->GetPhys_Offset(elmtid);
+            k_c  = NekComplexDouble((NekDouble) k, 0.0);
+            zt[k] = std::exp(zi * omega_c * k_c * m_time_c);
+        }
 
+        // Loop over each element in an expansion
+        for(i = 0; i < exp_npts; ++i,cnt++)
+        {
             // Get Boundary and trace expansion
-            bc = BndExp[bndid]->GetExp(i);
-            boundary = m_fieldsBCToTraceID[fldid][cnt];
-
-            nfq=bc->GetTotPoints();
-            w = m_fields[fldid]->UpdatePhys() + offset;
-
-            Array<OneD, NekDouble> x(nfq,0.0);
-            Array<OneD, NekDouble> y(nfq,0.0);
-            Array<OneD, NekDouble> z(nfq,0.0);
+            bc = BndCondExp->GetExp(i);
+            nfq = bc->GetTotPoints();
             Array<OneD, NekDouble> wbc(nfq,0.0);
-            bc->GetCoords(x,y,z);
 
-            // Add edge values (trace) into the wbc
-            elmt->GetTracePhysVals(boundary,bc,w,wbc);
-
-            //Compute womersley solution
-            for (j=0;j<nfq;j++)
+            // Compute womersley solution
+            for (j=0; j < nfq; j++)
             {
-                //NOTE: only need to calculate these two once, could
-                //be stored or precomputed?
-                r = sqrt((x[j]-x0[0])*(x[j]-x0[0]) +
-                         (y[j]-x0[1])*(y[j]-x0[1]) +
-                         (z[j]-x0[2])*(z[j]-x0[2]))/R;
-
-                // Compute Poiseulle Flow
-                wbc[j] = WomParam->m_wom_vel_r[0]*(1. - r*r);
-
-                for (k=1; k<M; k++)
+                wbc[j] = WomParam->m_poiseuille[i][j];
+                for (k=1; k < M_coeffs; k++)
                 {
-                    kt = 2.0 * M_PI * k * m_time / T;
-                    za = alpha * sqrt((NekDouble)k/2.0) * comp_conj;
-                    zar = r * za;
-                    zJ0  = Polylib::ImagBesselComp(0,za);
-                    zJ0r = Polylib::ImagBesselComp(0,zar);
-                    zJ0rJ0 = zJ0r / zJ0;
-                    zq = std::exp(zi * kt) * std::complex<NekDouble>(
-                                                   WomParam->m_wom_vel_r[k],
-                                                   WomParam->m_wom_vel_i[k]);
-                    zvel = zq * (z1 - zJ0rJ0);
+                    zvel =  WomParam->m_zvel[i][j][k] * zt[k];
                     wbc[j] = wbc[j] + zvel.real();
                 }
             }
 
             // Multiply w by normal to get u,v,w component of velocity
-            Vmath::Smul(nfq,normals[fldid],wbc,1,wbc,1);
+            Vmath::Smul(nfq,axis_normal,wbc,1,wbc,1);
+            // get the offset
+            Bvals = BndCondExp->UpdateCoeffs()+
+                    BndCondExp->GetCoeff_Offset(i);
 
-            Bvals = BndExp[bndid]->UpdateCoeffs()+
-                    BndExp[bndid]->GetCoeff_Offset(i);
             // Push back to Coeff space
             bc->FwdTrans(wbc,Bvals);
         }
     }
 
 
-    void IncNavierStokes::SetUpWomersley(const int bndid, std::string womStr)
+    void IncNavierStokes::SetUpWomersley(const int fldid, const int bndid, std::string womStr)
     {
         std::string::size_type indxBeg = womStr.find_first_of(':') + 1;
         string filename = womStr.substr(indxBeg,string::npos);
 
-        std::complex<NekDouble> coef;
-
-#if 1
         TiXmlDocument doc(filename);
 
         bool loadOkay = doc.LoadFile();
@@ -664,6 +611,7 @@ namespace Nektar
 
             params = params->NextSiblingElement("W");
         }
+        bool parseGood;
 
         // Read parameters
 
@@ -671,33 +619,33 @@ namespace Nektar
           "Failed to find Radius parameter in Womersley boundary conditions");
         std::vector<NekDouble> rad;
         ParseUtils::GenerateVector(Wparams["RADIUS"],rad);
-        m_womersleyParams[bndid]->m_radius = rad[0];
+        m_womersleyParams[fldid][bndid]->m_radius = rad[0];
 
         ASSERTL0(Wparams.count("PERIOD") == 1,
           "Failed to find period parameter in Womersley boundary conditions");
         std::vector<NekDouble> period;
-        ParseUtils::GenerateVector(Wparams["PERIOD"],period);
-        m_womersleyParams[bndid]->m_period = period[0];
+        parseGood = ParseUtils::GenerateVector(Wparams["PERIOD"],period);
+        m_womersleyParams[fldid][bndid]->m_period = period[0];
 
 
         ASSERTL0(Wparams.count("AXISNORMAL") == 1,
           "Failed to find axisnormal parameter in Womersley boundary conditions");
         std::vector<NekDouble> anorm;
-        ParseUtils::GenerateVector(Wparams["AXISNORMAL"],anorm);
-        m_womersleyParams[bndid]->m_axisnormal[0] = anorm[0];
-        m_womersleyParams[bndid]->m_axisnormal[1] = anorm[1];
-        m_womersleyParams[bndid]->m_axisnormal[2] = anorm[2];
+        parseGood = ParseUtils::GenerateVector(Wparams["AXISNORMAL"],anorm);
+        m_womersleyParams[fldid][bndid]->m_axisnormal[0] = anorm[0];
+        m_womersleyParams[fldid][bndid]->m_axisnormal[1] = anorm[1];
+        m_womersleyParams[fldid][bndid]->m_axisnormal[2] = anorm[2];
 
 
         ASSERTL0(Wparams.count("AXISPOINT") == 1,
           "Failed to find axispoint parameter in Womersley boundary conditions");
         std::vector<NekDouble> apt;
-        ParseUtils::GenerateVector(Wparams["AXISPOINT"],apt);
-        m_womersleyParams[bndid]->m_axispoint[0] = apt[0];
-        m_womersleyParams[bndid]->m_axispoint[1] = apt[1];
-        m_womersleyParams[bndid]->m_axispoint[2] = apt[2];
+        parseGood = ParseUtils::GenerateVector(Wparams["AXISPOINT"],apt);
+        m_womersleyParams[fldid][bndid]->m_axispoint[0] = apt[0];
+        m_womersleyParams[fldid][bndid]->m_axispoint[1] = apt[1];
+        m_womersleyParams[fldid][bndid]->m_axispoint[2] = apt[2];
 
-        // Read Temporal Foruier Coefficients.
+        // Read Temporal Fourier Coefficients.
 
         // Find the FourierCoeff tag
         TiXmlElement *coeff = wombc->FirstChildElement("FOURIERCOEFFS");
@@ -724,8 +672,7 @@ namespace Nektar
             std::string coeffStr = fval->FirstChild()->ToText()->ValueStr();
             vector<NekDouble> coeffvals;
 
-            bool parseGood = ParseUtils::GenerateVector(coeffStr,
-                                                        coeffvals);
+            parseGood = ParseUtils::GenerateVector(coeffStr, coeffvals);
             ASSERTL0(parseGood,
                     (std::string("Problem reading value of fourier coefficient, ID=") +
                     boost::lexical_cast<string>(indx)).c_str());
@@ -733,29 +680,96 @@ namespace Nektar
                     (std::string("Have not read two entries of Fourier coefficicent from ID="+
                     boost::lexical_cast<string>(indx)).c_str()));
 
-            m_womersleyParams[bndid]->m_wom_vel_r.push_back(coeffvals[0]);
-            m_womersleyParams[bndid]->m_wom_vel_i.push_back(coeffvals[1]);
+            m_womersleyParams[fldid][bndid]->m_wom_vel.push_back(NekComplexDouble (coeffvals[0], coeffvals[1]));
 
             fval = fval->NextSiblingElement("F");
         }
 
-#else
-        std::ifstream file(filename);
-        std::string line;
+        // starting point of precalculation
+        int  i,j,k;
+        // M fourier coefficients
+        int M_coeffs = m_womersleyParams[fldid][bndid]->m_wom_vel.size();
+        NekDouble R = m_womersleyParams[fldid][bndid]->m_radius;
+        NekDouble T = m_womersleyParams[fldid][bndid]->m_period;
+        Array<OneD, NekDouble > x0 = m_womersleyParams[fldid][bndid]->m_axispoint;
 
-        ASSERTL1(file.is_open(),(std::string("Missing file ") + filename).c_str());
-        int count = 0;
-        while(std::getline(file,line))
+        NekComplexDouble rqR;
+        // Womersley Number
+        NekComplexDouble omega_c (2.0*M_PI/T, 0.0);
+        NekComplexDouble alpha_c (R*sqrt(omega_c.real()/m_kinvis), 0.0);
+        NekComplexDouble z1 (1.0,0.0);
+        NekComplexDouble i_pow_3q2 (-1.0/sqrt(2.0),1.0/sqrt(2.0));
+
+        MultiRegions::ExpListSharedPtr  BndCondExp;
+        BndCondExp   = m_fields[fldid]->GetBndCondExpansions()[bndid];
+
+        StdRegions::StdExpansionSharedPtr bc;
+        int cnt = 0;
+        int nfq;
+        Array<OneD, NekDouble> Bvals;
+
+        int exp_npts = BndCondExp->GetExpSize();
+        Array<OneD, NekDouble> wbc(exp_npts,0.0);
+
+        // allocate time indepedent variables
+        m_womersleyParams[fldid][bndid]->m_poiseuille = Array<OneD, Array<OneD, NekDouble> > (exp_npts);
+        m_womersleyParams[fldid][bndid]->m_zvel = Array<OneD, Array<OneD, Array<OneD, NekComplexDouble> > > (exp_npts);
+        // could use M_coeffs - 1 but need to avoid complicating things
+        Array<OneD, NekComplexDouble> zJ0(M_coeffs);
+        Array<OneD, NekComplexDouble> lamda_n(M_coeffs);
+        Array<OneD, NekComplexDouble> k_c(M_coeffs);
+        NekComplexDouble zJ0r;
+
+        for (k=1; k < M_coeffs; k++)
         {
-            std::stringstream stream(line);
-            while(stream>>coef)
+            k_c[k]  = NekComplexDouble((NekDouble) k, 0.0);
+            lamda_n[k] = i_pow_3q2 * alpha_c * sqrt(k_c[k]);
+            zJ0[k]  = Polylib::ImagBesselComp(0,lamda_n[k]);
+        }
+
+        // Loop over each element in an expansion
+        for(i = 0; i < exp_npts; ++i,cnt++)
+        {
+            // Get Boundary and trace expansion
+            bc = BndCondExp->GetExp(i);
+            nfq = bc->GetTotPoints();
+
+            Array<OneD, NekDouble> x(nfq,0.0);
+            Array<OneD, NekDouble> y(nfq,0.0);
+            Array<OneD, NekDouble> z(nfq,0.0);
+            bc->GetCoords(x,y,z);
+
+            m_womersleyParams[fldid][bndid]->m_poiseuille[i] =
+                    Array<OneD, NekDouble> (nfq);
+            m_womersleyParams[fldid][bndid]->m_zvel[i] =
+                    Array<OneD, Array<OneD, NekComplexDouble> > (nfq);
+
+            // Compute coefficients
+            for (j=0; j < nfq; j++)
             {
-                m_womersleyParams[bndid]->m_wom_vel_r.push_back(coef.real());
-                m_womersleyParams[bndid]->m_wom_vel_i.push_back(coef.imag());
-                count++;
+                rqR = NekComplexDouble (sqrt((x[j]-x0[0])*(x[j]-x0[0]) +
+                         (y[j]-x0[1])*(y[j]-x0[1]) +
+                         (z[j]-x0[2])*(z[j]-x0[2]))/R, 0.0);
+
+                // Compute Poiseulle Flow
+                m_womersleyParams[fldid][bndid]->m_poiseuille[i][j] =
+                        m_womersleyParams[fldid][bndid]->m_wom_vel[0].real() *
+                        (1. - rqR.real()*rqR.real());
+
+
+                m_womersleyParams[fldid][bndid]->m_zvel[i][j] =
+                        Array<OneD, NekComplexDouble> (M_coeffs);
+
+                // compute the velocity information
+                for (k=1; k < M_coeffs; k++)
+                {
+                    zJ0r = Polylib::ImagBesselComp(0,rqR * lamda_n[k]);
+                    m_womersleyParams[fldid][bndid]->m_zvel[i][j][k] =
+                            m_womersleyParams[fldid][bndid]->m_wom_vel[k] *
+                            (z1 - (zJ0r / zJ0[k]));
+                }
             }
         }
-#endif
     }
 
     /**
@@ -800,6 +814,40 @@ namespace Nektar
         stdVelocity = m_extrapolation->GetMaxStdVelocity(velfields);
 
         return stdVelocity;
+    }
+
+    /**
+     *
+     */
+    void IncNavierStokes::GetPressure(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &pressure)
+    {
+        pressure = physfield[m_nConvectiveFields];
+    }
+
+    /**
+     *
+     */
+    void IncNavierStokes::GetDensity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &density)
+    {
+        int nPts  = physfield[0].num_elements();
+        Vmath::Fill(nPts, 1.0, density, 1);
+    }
+
+    /**
+     *
+     */
+    void IncNavierStokes::GetVelocity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, Array<OneD, NekDouble> >       &velocity)
+    {
+        for(int i = 0; i < m_spacedim; ++i)
+        {
+            velocity[i] = physfield[i];
+        }
     }
 
     /**

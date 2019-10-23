@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -45,15 +44,16 @@ namespace Nektar
 class UpwindPulseSolver : public RiemannSolver
 {
 public:
-    static RiemannSolverSharedPtr create()
+    static RiemannSolverSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-        return RiemannSolverSharedPtr(new UpwindPulseSolver());
+        return RiemannSolverSharedPtr(new UpwindPulseSolver(pSession));
     }
 
     static std::string solverName;
 
 protected:
-    UpwindPulseSolver();
+    UpwindPulseSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
 
     virtual void v_Solve(const int nDim,
                          const Array<OneD, const Array<OneD, NekDouble>> &Fwd,

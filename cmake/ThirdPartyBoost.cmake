@@ -77,25 +77,47 @@ IF (THIRDPARTY_BUILD_BOOST)
         ENDIF ()
     ENDIF()
 
-    # Build Boost: first need to select toolset. 
+    # Build Boost: first need to select toolset. Some will have specific
+    # versions.
+    SET(TOOLSET_VERSION "")
     IF (APPLE)
+        # macOS should have the darwin toolset regardless of gcc/clang.
         SET(TOOLSET darwin)
-    ELSEIF (WIN32)
+    ELSEIF (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        SET(TOOLSET msvc)
         IF (MSVC_VERSION EQUAL 1600)
-            SET(TOOLSET msvc-10.0) # Visual Studio 2010
+            SET(TOOLSET_VERSION 10.0) # Visual Studio 2010
         ELSEIF (MSVC_VERSION EQUAL 1700)
-            SET(TOOLSET msvc-11.0) # Visual Studio 2012
+            SET(TOOLSET_VERSION 11.0) # Visual Studio 2012
         ELSEIF (MSVC_VERSION EQUAL 1800)
-            SET(TOOLSET msvc-12.0) # Visual Studio 2013
+            SET(TOOLSET_VERSION 12.0) # Visual Studio 2013
         ELSEIF (MSVC_VERSION EQUAL 1900)
-            SET(TOOLSET msvc-14.0) # Visual Studio 2015
+            SET(TOOLSET_VERSION 14.0) # Visual Studio 2015
         ELSEIF (MSVC_VERSION GREATER 1909 OR MSVC_VERSION LESS 1920)
-            SET(TOOLSET msvc-14.1) # Visual Studio 2017
+            SET(TOOLSET_VERSION 14.1) # Visual Studio 2017
+        ELSEIF (MSVC_VERSION GREATER 1919 OR MSVC_VERSION LESS 1930)
+            SET(TOOLSET_VERSION 14.2) # Visual Studio 2019
         ENDIF()
-    ELSEIF(${CMAKE_CXX_COMPILER_ID} STREQUAL "Cray")
+    ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Cray")
         SET(TOOLSET cray)
+    ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+        SET(TOOLSET intel)
+    ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        SET(TOOLSET gcc)
+        SET(TOOLSET_VERSION ${CMAKE_CXX_COMPILER_VERSION})
+    ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        SET(TOOLSET clang)
+        SET(TOOLSET_VERSION ${CMAKE_CXX_COMPILER_VERSION})
     ELSE()
-        SET(TOOLSET gcc-${CMAKE_CXX_COMPILER_VERSION})
+        MESSAGE(STATUS "Unknown compiler for boost build, assuming gcc toolset")
+        SET(TOOLSET gcc)
+        SET(TOOLSET_VERSION ${CMAKE_CXX_COMPILER_VERSION})
+    ENDIF()
+
+    IF (TOOLSET_VERSION STREQUAL "")
+        SET(TOOLSET_CMDLINE ${TOOLSET})
+    ELSE()
+        SET(TOOLSET_CMDLINE ${TOOLSET}-${TOOLSET_VERSION})
     ENDIF()
 
     IF (NOT WIN32)
@@ -119,7 +141,7 @@ IF (THIRDPARTY_BUILD_BOOST)
                 linkflags="-L${TPDIST}/lib"
                 ${BOOST_FLAGS} ${BOOST_LIB_LIST}
 		--prefix=${TPDIST}
-                --layout=system toolset=${TOOLSET} install
+                --layout=system toolset=${TOOLSET_CMDLINE} install
             INSTALL_COMMAND ""
             )
     ELSE ()
@@ -141,7 +163,7 @@ IF (THIRDPARTY_BUILD_BOOST)
             INSTALL_DIR ${TPDIST}
             CONFIGURE_COMMAND call bootstrap.bat
             BUILD_COMMAND b2 variant=release
-                toolset=${TOOLSET}
+                toolset=${TOOLSET_CMDLINE}
                 address-model=${ADDRESS_MODEL}
                 link=shared
                 runtime-link=shared
@@ -163,11 +185,11 @@ IF (THIRDPARTY_BUILD_BOOST)
             DEPENDEES download)
     ENDIF (APPLE)
 
-    SET(cmd_string "using gcc : ${CMAKE_CXX_COMPILER_VERSION} : ${CMAKE_CXX_COMPILER} \\\;")
-
+    # Write to jamfile to use appropriate toolset.
+    SET(cmd_string "using ${TOOLSET} : ${TOOLSET_VERSION} : ${CMAKE_CXX_COMPILER} \\\;")
     IF (UNIX)
 	EXTERNALPROJECT_ADD_STEP(boost conf-project-conf
-            COMMAND cmake -E echo "${cmd_string}" > ${TPBUILD}/boost/project-config.jam
+            COMMAND cmake -E echo "${cmd_string}" > ${TPBUILD}/boost/user-config.jam
             DEPENDERS build
             DEPENDEES configure)
     ENDIF()

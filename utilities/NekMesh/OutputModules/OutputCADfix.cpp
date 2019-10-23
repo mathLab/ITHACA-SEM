@@ -51,7 +51,6 @@ ModuleKey OutputCADfix::className = GetModuleFactory().RegisterCreatorFunction(
 
 OutputCADfix::OutputCADfix(MeshSharedPtr m) : OutputModule(m)
 {
-    m_config["from"]  = ConfigOption(false, "", "FBM file to load");
     m_config["order"] = ConfigOption(false, "1", "Enforce a polynomial order");
 }
 
@@ -61,28 +60,6 @@ OutputCADfix::~OutputCADfix()
 
 void OutputCADfix::Process()
 {
-    /*
-    if (!m_mesh->m_cad)
-    {
-        ModuleSharedPtr module = GetModuleFactory().CreateInstance(
-            ModuleKey(eProcessModule, "loadcad"), m_mesh);
-        module->RegisterConfig("CFIMesh", "");
-        if (m_mesh->m_verbose)
-        {
-            module->RegisterConfig("verbose", "");
-        }
-
-        // If no input file specified, load output file
-        module->RegisterConfig("filename",
-                               m_config["from"].beenSet
-                                   ? m_config["from"].as<string>()
-                                   : m_config["outfile"].as<string>());
-
-        module->SetDefaults();
-        module->Process();
-    }
-    */
-
     ASSERTL0(m_mesh->m_cad, "CFI system must be kept in memory")
 
     if (m_mesh->m_verbose)
@@ -99,31 +76,9 @@ void OutputCADfix::Process()
 
     int order = m_config["order"].as<int>();
 
-    if (order != -1)
-    {
-        if (m_mesh->m_verbose)
-        {
-            cout << "Making mesh of order " << order << endl;
-        }
-    }
-    else
-    {
-        // Do first pass over elements of expansion dimension to determine
-        // which elements need completion.
-        for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
-        {
-            ElementSharedPtr e = m_mesh->m_element[m_mesh->m_expDim][i];
-            if (e->GetMaxOrder() > order)
-            {
-                order = e->GetMaxOrder();
-            }
-        }
-    }
-
-    // Convert this mesh into a high-order mesh of uniform order.
     if (m_mesh->m_verbose)
     {
-        cout << "Mesh order of " << order << " detected" << endl;
+        cout << "Making mesh of order " << order << endl;
     }
 
     m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
@@ -187,137 +142,6 @@ void OutputCADfix::Process()
 
     // map of new nodes
     map<NodeSharedPtr, cfi::Node *> newMap;
-
-/*
-    // Write out nodes
-    for (auto &it : m_mesh->m_vertexSet)
-    {
-        // newMap[it] = m_model->createOrphanFenode(
-        //     0, it->m_x / scal, it->m_y / scal, it->m_z / scal);
-
-        cfi::MeshableEntity *parent = nullptr;
-
-        // Point parent
-        if (it->GetNumCadCurve() > 1)
-        {
-            map<cfi::Point *, int> allVerts;
-
-            for (auto &curve : it->GetCADCurves())
-            {
-                vector<cfi::Oriented<cfi::TopoEntity *>> *vertList =
-                    std::dynamic_pointer_cast<CADCurveCFI>(curve)
-                        ->GetCfiPointer()
-                        ->getChildList();
-
-                for (auto &vert : *vertList)
-                {
-                    cfi::Point *v = static_cast<cfi::Point *>(vert.entity);
-                    if (allVerts.count(v))
-                    {
-                        allVerts[v]++;
-                    }
-                    else
-                    {
-                        allVerts[v] = 1;
-                    }
-                }
-            }
-
-            // Search for most likely parent vertex
-            map<cfi::Point *, int>::iterator maxIt = allVerts.begin();
-            for (auto it = allVerts.begin(); it != allVerts.end(); ++it)
-            {
-                if (it->second > maxIt->second)
-                {
-                    maxIt = it;
-                }
-            }
-
-            // newMap[it]->setParent(maxIt->first);
-            parent = maxIt->first;
-        }
-        // Line parent
-        else if (it->GetNumCadCurve())
-        {
-            vector<CADCurveSharedPtr> curves = it->GetCADCurves();
-            cfi::Line *c = std::dynamic_pointer_cast<CADCurveCFI>(curves[0])
-                               ->GetCfiPointer();
-            // newMap[it]->setParent(c);
-            parent = c;
-        }
-        // Face parent
-        else if (it->GetNumCADSurf())
-        {
-            vector<CADSurfSharedPtr> surfs = it->GetCADSurfs();
-            cfi::Face *s = std::dynamic_pointer_cast<CADSurfCFI>(surfs[0])
-                               ->GetCfiPointer();
-            // newMap[it]->setParent(s);
-            parent = s;
-        }
-        else
-        {
-            for (auto &el : m_mesh->m_element[3])
-            {
-                vector<NodeSharedPtr> nodes = el->GetVertexList();
-                if (find(nodes.begin(), nodes.end(), it) != nodes.end())
-                {
-                    // newMap[it]->setParent(el->m_cfiParent);
-                    parent = el->m_cfiParent;
-                    break;
-                }
-
-                vector<EdgeSharedPtr> edges = el->GetEdgeList();
-                for (auto &edge : edges)
-                {
-                    nodes.clear();
-                    edge->GetCurvedNodes(nodes);
-                    if (find(nodes.begin(), nodes.end(), it) != nodes.end())
-                    {
-                        // newMap[it]->setParent(el->m_cfiParent);
-                        parent = el->m_cfiParent;
-                        break;
-                    }
-                }
-
-                if (parent)
-                {
-                    break;
-                }
-
-                vector<FaceSharedPtr> faces = el->GetFaceList();
-                for (auto &face : faces)
-                {
-                    nodes.clear();
-                    face->GetCurvedNodes(nodes);
-                    if (find(nodes.begin(), nodes.end(), it) != nodes.end())
-                    {
-                        // newMap[it]->setParent(el->m_cfiParent);
-                        parent = el->m_cfiParent;
-                        break;
-                    }
-                }
-
-                if (parent)
-                {
-                    break;
-                }
-
-                nodes = el->GetVolumeNodes();
-                if (find(nodes.begin(), nodes.end(), it) != nodes.end())
-                {
-                    // newMap[it]->setParent(el->m_cfiParent);
-                    parent = el->m_cfiParent;
-                    break;
-                }
-            }
-        }
-
-        ASSERTL0(parent, "Parent not found.");
-        
-        newMap[it] = parent->createFenode(
-            0, it->m_x / scal, it->m_y / scal, it->m_z / scal);
-    }
-*/
 
     // Write out nodes
     for (auto &el : m_mesh->m_element[3])

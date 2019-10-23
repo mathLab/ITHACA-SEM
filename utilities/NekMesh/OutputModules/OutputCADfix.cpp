@@ -83,45 +83,6 @@ void OutputCADfix::Process()
 
     m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
 
-    // Add edge- and face-interior nodes to vertex set.
-    for (auto &eIt : m_mesh->m_edgeSet)
-    {
-        m_mesh->m_vertexSet.insert(eIt->m_edgeNodes.begin(),
-                                   eIt->m_edgeNodes.end());
-    }
-
-    for (auto &fIt : m_mesh->m_faceSet)
-    {
-        m_mesh->m_vertexSet.insert(fIt->m_faceNodes.begin(),
-                                   fIt->m_faceNodes.end());
-    }
-
-    // Do second pass over elements for volume nodes.
-    for (int d = 1; d <= 3; ++d)
-    {
-        for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
-        {
-            ElementSharedPtr e            = m_mesh->m_element[d][i];
-            vector<NodeSharedPtr> volList = e->GetVolumeNodes();
-            m_mesh->m_vertexSet.insert(volList.begin(), volList.end());
-        }
-    }
-
-    // Find main body
-    cfi::Body *body;
-    vector<cfi::Entity *> *bds =
-        m_model->getEntityList(cfi::TYPE_BODY, cfi::SUBTYPE_ALL);
-
-    for (auto &i : *bds)
-    {
-        cfi::Body *b = static_cast<cfi::Body *>(i);
-        if (b->getTopoSubtype() != cfi::SUBTYPE_COMBINED)
-        {
-            body = b;
-            break;
-        }
-    }
-
     // Delete old nodes
     vector<cfi::NodeDefinition> *oldNodes = m_model->getFenodes();
     vector<cfi::Node *> nodesToDel;
@@ -170,6 +131,7 @@ void OutputCADfix::Process()
                 continue;
             }
 
+            // Default: volume parent
             cfi::MeshableEntity *parent = el->m_cfiParent;
 
             // Point parent

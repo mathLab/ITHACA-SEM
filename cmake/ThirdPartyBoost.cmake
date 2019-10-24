@@ -9,6 +9,20 @@
 #If the user has not set BOOST_ROOT, look in a couple common places first.
 MESSAGE(STATUS "Searching for Boost:")
 
+# Macro to parse major and minor version from version string, since boost
+# requires e.g. gcc-4.8 as a toolset.
+MACRO(MAJOR_MINOR_VERSION VAR VERSIONSTR)
+    STRING(REPLACE "." ";" VERLIST ${VERSIONSTR})
+    LIST(GET VERLIST 0 ${VAR}_MAJOR)
+    LIST(GET VERLIST 1 ${VAR}_MINOR)
+    LIST(GET VERLIST 2 ${VAR}_PATCH)
+    SET(${VAR} ${${VAR}_MAJOR}.${${VAR}_MINOR})
+    UNSET(VERLIST)
+    UNSET(${VAR}_MAJOR)
+    UNSET(${VAR}_MINOR)
+    UNSET(${VAR}_PATCH)
+ENDMACRO()
+
 # Minimum version and boost libraries required
 SET(MIN_VER "1.56.0")
 SET(NEEDED_BOOST_LIBS thread iostreams filesystem system program_options regex)
@@ -104,10 +118,10 @@ IF (THIRDPARTY_BUILD_BOOST)
         SET(TOOLSET intel)
     ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         SET(TOOLSET gcc)
-        SET(TOOLSET_VERSION ${CMAKE_CXX_COMPILER_VERSION})
+        MAJOR_MINOR_VERSION(TOOLSET_VERSION ${CMAKE_CXX_COMPILER_VERSION})
     ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         SET(TOOLSET clang)
-        SET(TOOLSET_VERSION ${CMAKE_CXX_COMPILER_VERSION})
+        MAJOR_MINOR_VERSION(TOOLSET_VERSION ${CMAKE_CXX_COMPILER_VERSION})
     ELSE()
         MESSAGE(STATUS "Unknown compiler for boost build, assuming gcc toolset")
         SET(TOOLSET gcc)
@@ -189,7 +203,7 @@ IF (THIRDPARTY_BUILD_BOOST)
     SET(cmd_string "using ${TOOLSET} : ${TOOLSET_VERSION} : ${CMAKE_CXX_COMPILER} \\\;")
     IF (UNIX)
 	EXTERNALPROJECT_ADD_STEP(boost conf-project-conf
-            COMMAND cmake -E echo "${cmd_string}" > ${TPBUILD}/boost/user-config.jam
+            COMMAND cmake -E echo "${cmd_string}" > ${TPBUILD}/boost/tools/build/src/user-config.jam
             DEPENDERS build
             DEPENDEES configure)
     ENDIF()

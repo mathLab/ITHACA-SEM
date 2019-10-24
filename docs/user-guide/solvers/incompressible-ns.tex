@@ -1092,88 +1092,65 @@ available for this solver.
   \item \inltt{Reynolds stresses} (section \ref{filters:ReynoldsStresses})
 \end{itemize}
 
-\section{Stability analysis Session file configuration}
+\section{Session file configuration: Linear stability analysis}
 \label{SecStabFile}
-The type of equation which is to be solved is specified through the \inltt
-{EqType} option in the session file. This can be set to any of the following:
-
-\begin{center}
-\footnotesize
-\begin{tabular}{lc}
-\toprule
-{Equation to solve}  \\
-\midrule
-$\frac{\partial\mathbf{u'}}{\partial t} +\mathcal{L}(\mathbf{U},\mathbf{u'})=-\nabla p+\nu \nabla^2 \mathbf{u'}$\\
-\bottomrule
-\end{tabular}
-\end{center}
-
-
-\begin{center}
-\footnotesize
-\begin{tabular}{lccccc}
-\toprule
-{Equation Type} & {Dimensions} &{Projections} &{Algorithms} \\
-\midrule
-UnsteadyNavierStokes & 2D, Quasi-3D& Continuous &VCS,DS\\
-\bottomrule
-\end{tabular}
-\end{center}
+Stability analyses of incompressible flow involves solving the linearised Navier-Stokes equations
+\begin{align*}
+    \frac{\partial\mathbf{u'}}{\partial t} +\mathcal{L}(\mathbf{U},\mathbf{u'})=-\nabla p+\nu \nabla^2 \mathbf{u'},
+\end{align*}
+where $\mathcal{L}$ is a linear operator, its adjoint form, or both. The evolution of the linearised Navier-Stokes operator, which evolves a solution from an initial state to a future time $t$, can be written as
+\begin{align*}
+u(t) = \mathcal{A}(t)u(0).
+\end{align*}
+The adjoint evolution operator is denoted as $\mathcal{A}^*$.
+This section details the additional configuration options, in addition to the standard configuration options described earlier, relating to performing this task.
 
 \subsection{Solver Info}
 \label{SectionIncNS_SolverInfo_Stab}
 
 \begin{itemize}
-\item \inltt{Eqtype}:  sets the type of equation to solve, according to the
-table above.
-\item \inltt{TimeIntegrationMethod}: the following types of time integration methods have been tested with each solver:
+\item \inltt{Eqtype}:  sets the type of equation to solve. For linear stability analysis this must be set to
 \begin{center}
-\footnotesize
-\begin{tabular}{lccccc}
-\toprule
-{} & {Explicit} &{Diagonally Implicit} &{IMEX} & {Implicit} \\
-\midrule
-\texttt{UnsteadyNavierStokes} & X & &X & \\
-\bottomrule
-\end{tabular}
+    \footnotesize
+    \begin{tabular}{lccccc}
+        \toprule
+        {Equation Type} & {Dimensions} &{Projections} &{Algorithms} \\
+        \midrule
+        UnsteadyNavierStokes & 2D, Quasi-3D& Continuous &VCS,DS\\
+        \bottomrule
+    \end{tabular}
 \end{center}
 
-\item \inltt{Projection}: the Galerkin projection used may be either
+\item \inltt{EvolutionOperator}: sets the choice of the evolution operator:
 \begin{itemize}
-\item \inltt{Continuous}: for a C0-continuous Galerkin (CG) projection;
-\item \inltt{Discontinuous}: for a discontinous Galerkin (DG) projection.
-\end{itemize}
-
-\item \inltt{EvolutionOperator}:
-\begin{itemize}
-\item \inltt{Nonlinear} (non-linear Navier-Stokes equations).
-\item \inltt{Direct} (linearised Navier-Stokes equations).
-\item \inltt{Adjoint} (adjoint Navier-Stokes equations).
-\item \inltt{TransientGrowth} ((transient growth evolution operator).
+    \item \inltt{Nonlinear} (standard non-linear Navier-Stokes equations).
+    \item \inltt{Direct} ($\mathcal{A}$ -- linearised Navier-Stokes equations).
+    \item \inltt{Adjoint} ($\mathcal{A}^*$ -- adjoint Navier-Stokes equations).
+    \item \inltt{TransientGrowth} ($\mathcal{A}^*\mathcal{A}$ -- transient growth evolution operator).
 \end{itemize}
 
 \item \inltt{Driver}: specifies  the type of problem to be solved:
    \begin{itemize}
-    \item \inltt{Standard} (time integration of the equations)
+    \item \inltt{Standard} (normal time integration of the equations)
     \item \inltt{ModifiedArnoldi} (computations of the leading eigenvalues and eigenmodes using modified Arnoldi method)
     \item \inltt{Arpack} (computations of eigenvalues/eigenmodes using Implicitly Restarted Arnoldi Method (ARPACK) ).
     \end{itemize}
 
 \item \inltt{ArpackProblemType}: types of eigenvalues to be computed (for Driver Arpack only)
 \begin{itemize}
-\item \inltt{LargestMag} (eigenvalues with largest magnitude).
-\item \inltt{SmallestMag} (eigenvalues with smallest magnitude).
-\item \inltt{LargestReal} (eigenvalues with largest real part).
-\item \inltt{SmallestReal} (eigenvalues with smallest real part).
-\item \inltt{LargestImag} (eigenvalues with largest imaginary part).
-\item \inltt{SmallestIma} (eigenvalues with smallest imaginary part ).
+    \item \inltt{LargestMag} (eigenvalues with largest magnitude).
+    \item \inltt{SmallestMag} (eigenvalues with smallest magnitude).
+    \item \inltt{LargestReal} (eigenvalues with largest real part).
+    \item \inltt{SmallestReal} (eigenvalues with smallest real part).
+    \item \inltt{LargestImag} (eigenvalues with largest imaginary part).
+    \item \inltt{SmallestIma} (eigenvalues with smallest imaginary part ).
 \end{itemize}
 
 \item \inltt{Homogeneous}: specifies the Fourier expansion in a third direction (optional)
 \begin{itemize}
-\item \inltt{1D} (Fourier spectral method in z-direction).
-\end{itemize}
-\item \inltt{ModeType}: this specifies the type of the quasi-3D problem to be solved.
+    \item \inltt{1D} (Fourier spectral method in z-direction).
+    \end{itemize}
+    \item \inltt{ModeType}: this specifies the type of the quasi-3D problem to be solved.
 \begin{itemize}
 \item \inltt{MultipleMode} (stability analysis with multiple modes, \inltt{HomModesZ} sets number of modes).
 \item \inltt{SingleMode} (BiGlobal Stability Analysis: full-complex mode. Overrides \inltt{HomModesZ} to 1.).
@@ -1190,17 +1167,16 @@ table above.
 The following parameters can be specified in the \texttt{PARAMETERS} section of the session file:
 
 \begin{itemize}
-\item \inltt{Kinvis}: sets the kinematic viscosity $\nu$.
-\item \inltt{kdim}: sets the dimension of the Krylov subspace $\kappa$. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 16.
-\item \inltt{evtol}: sets the tolerance of the eigenvalues. Can be used in: \item \inltt{imagShift}:
-provide an imaginary shift to the direct solver eigenvalue problem by the specified value.
-\inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $0.0$. Works only with \inltt{Homogeneous} set to \inltt{1D} and \inltt{ModeType} set to \inltt{SingleMode}.
-\item \inltt{nits}: sets the maximum number of iterations. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 500.
-\item \inltt{LZ}:  sets the length in the spanswise direction $L_z$. Can be used in \inltt{Homogeneous} set to \inltt{1D}. Default value: 1.
-\item \inltt{HomModesZ}: sets the number of planes in the homogeneous directions. Can be used in \inltt{Homogeneous} set to \inltt{1D} and \inltt{ModeType} set to \inltt{MultipleModes}.
+\item \inltt{kdim}: sets the dimension of the Krylov subspace $\kappa$. Can be used with: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 16.
+\item \inltt{evtol}: sets the tolerance of the iterative eigenvalue algorithm. Can be used with: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $1\times10^{-6}$.
+\item \inltt{nvec}: sets the number of converged eigenvalues sought. Can be used with: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $2$.
+\item \inltt{nits}: sets the maximum number of Arnoldi iterations to attempt. Can be used with: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $500$.
+\item \inltt{realShift}: provide a real shift to the direct solver eigenvalue problem by the specified value to improve convergence. Can be used with: \inltt{Arpack} only.
+\item \inltt{imagShift}: provide an imaginary shift to the direct solver eigenvalue problem by the specified value to improve convergence. Can be used with: \inltt{Arpack} only.
+\item \inltt{LZ}:  sets the length in the spanswise direction $L_z$. Can be used with \inltt{Homogeneous} set to \inltt{1D}. Default value: 1.
+\item \inltt{HomModesZ}: sets the number of planes in the homogeneous directions. Can be used with \inltt{Homogeneous} set to \inltt{1D} and \inltt{ModeType} set to \inltt{MultipleModes}.
 \item \inltt{N\_slices}: sets the number of temporal slices for Floquet stability analysis.
 \item \inltt{period}: sets the periodicity of the base flow.
-\item \inltt{realShift}: provide a real shift to the direct sovler eigenvalue problem by the specified value. 
 \end{itemize}
 
 \subsection{Functions}
@@ -1226,7 +1202,7 @@ regression test directory
 noting that some parameters are specified in the .tst files.
 \end{notebox}
 
-\section{Steady-state solver Session file configuration}
+\section{Session file configuration: Steady-state solver}
 \label{SectionSFD_XML}
 
 In this section, we detail how to use the steady-state solver (that
@@ -1294,7 +1270,8 @@ IncNavierStokesSolver Session.xml.gz Session.xml
 \end{lstlisting}
 
 
-\section{Coordinate transformations Session file configuration}\label{sec:mapping}
+\section{Session file configuration: Coordinate transformations}
+\label{sec:mapping}
 
 This section describes how to include a coordinate transformation
 to the solution of the incompressible Navier-Stokes equations.
@@ -1414,7 +1391,7 @@ Examples of the use of mappings can be found in the test directory
 \inlsh{KovaFlow\_3DH1D\_P8\_16modes\_Mapping-implicit.xml} and \inlsh{CylFlow\_Mov\_mapping.xml}.
 \end{notebox}
 
-\section{Adaptive polynomial order Session file configuration}
+\section{Session file configuration: Adaptive polynomial order}
 \label{SectionDriverAdaptive}
 
 An adaptive polynomial order procedure is available for 2D and

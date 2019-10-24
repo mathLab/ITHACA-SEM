@@ -300,13 +300,37 @@ namespace Nektar
         {
             Array<OneD, NekDouble> inArea(m_flowrateBnd->GetNpoints(), 1.0);
             m_flowrateArea = m_flowrateBnd->Integral(inArea);
-
-            if(m_homd1DFlowinPlane)
-            {
-                m_flowrateArea /= m_session->GetParameter("LZ");
-            }
         }
         m_comm->AllReduce(m_flowrateArea, LibUtilities::ReduceMax);
+
+        // In homogeneous case with forcing not aligned to the z-direction,
+        // redefine expansion so that m_flowrateBnd is a 1D expansion
+        if (m_HomogeneousType == eHomogeneous1D && m_homd1DFlowinPlane)
+        {
+            // For 3DH1D simulations with no force specified, find the mean
+            // (0th) plane.
+            Array<OneD, unsigned int> zIDs = m_fields[0]->GetZIDs();
+            int tmpId = -1;
+
+            for (int i = 0; i < zIDs.num_elements(); ++i)
+            {
+                if (zIDs[i] == 0)
+                {
+                    tmpId = i;
+                    break;
+                }
+            }
+
+            ASSERTL1(tmpId <= 0, "Should be either at location 0 or -1 if not "
+                                 "found");
+
+            if (tmpId != -1)
+            {
+                m_flowrateBnd = m_fields[0]
+                                    ->GetBndCondExpansions()[m_flowrateBndID]
+                                    ->GetPlane(tmpId);
+            }
+        }
 
         // Set up some storage for the Stokes solution (to be stored in
         // m_flowrateStokes) and its initial condition (inTmp), which holds the
@@ -390,11 +414,29 @@ namespace Nektar
 
             for (int i = 0; i < m_spacedim; ++i)
             {
+                // General case
+                if(!m_homd1DFlowinPlane)
+                {
                 m_fields[i]->ExtractPhysToBnd(
                     m_flowrateBndID, inarray[i], boundary[i]);
+                }
+                else //Homogeneous with forcing in plane
+                {
+                    m_fields[i]->GetPlane(0)->ExtractPhysToBnd(
+                    m_flowrateBndID, inarray[i], boundary[i]);
+                }
+
             }
 
             flowrate = m_flowrateBnd->VectorFlux(boundary);
+
+            // Homogeneous case with forcing in plane, the flowrate is
+            // calculated on the mean mode so it needs to be multiplied by
+            // LZ to be consistent with the general case.
+            if(m_homd1DFlowinPlane)
+            {
+                flowrate *= m_session->GetParameter("LZ");
+            }
         }
         else if (m_flowrateBnd && !m_homd1DFlowinPlane)
         {

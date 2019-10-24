@@ -199,14 +199,10 @@ namespace Nektar
                         UpdateBndCondExpansion(cnt);
                 }
 
+                // Initialise comm for the boundary regions
                 auto comm = boundaryCondition->GetComm();
                 int size = boundaryCondition->GetComm()->GetSize();
-
-                // It seems to work either way
-                // comm->SplitComm(1,size);
-                comm->SplitComm(m_StripZcomm->GetSize(),
-                    size/m_StripZcomm->GetSize());
-
+                comm->SplitComm(1,size);
 
                 m_bndCondExpansions[cnt++] =
                     MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::

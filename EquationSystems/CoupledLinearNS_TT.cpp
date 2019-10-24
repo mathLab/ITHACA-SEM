@@ -5266,7 +5266,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		Dh_curr_ele = Dh_curr_ele.inverse();
 		Bh_curr_ele = Bh_curr_ele * Dh_curr_ele;
 		Ah_elem[curr_elem] = Ah_elem[curr_elem] - Bh_curr_ele * Ch_curr_ele;
-		Bh_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_bndry_p1, nsize_bndry_p1 );
+		Bh_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_bndry_p1, nsize_p_m1  );
 		Bh_elem[curr_elem] = Bh_curr_ele;
 		Ch_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_p_m1, nsize_bndry_p1 );
 		Ch_elem[curr_elem] = Ch_curr_ele;
@@ -5617,15 +5617,23 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
 	{
 		int cnt = curr_elem*nsize_bndry_p1;
+//		cout << "test " << endl;
 		Eigen::MatrixXd loc_Ah = Ah_elem[curr_elem];
 		Eigen::MatrixXd loc_Bh = Bh_elem[curr_elem];
+//		cout << "test2 " << endl;
 		Eigen::VectorXd lds = loc_dbc.segment(cnt,nsize_bndry_p1);
 		Eigen::VectorXd loc_f_int_rhs_eigen = f_int_rhs_eigen.segment(curr_elem*nsize_int,nsize_int);
-//		cout << "lds sizes " << lds.rows() << " " << lds.cols() << endl;
-//		cout << "loc_Ah sizes " << loc_Ah.rows() << " " << loc_Ah.cols() << endl;	
-		loc_dbc.segment(cnt,nsize_bndry_p1) = loc_Bh * loc_f_int_rhs_eigen + loc_Ah * lds; // should not interfere with aliasing
+//		cout << "test3 " << endl;
+//		cout << "loc_f_int_rhs_eigen " << loc_f_int_rhs_eigen << endl;
+//		cout << "loc_f_int_rhs_eigen sizes " << loc_f_int_rhs_eigen.rows() << " " << loc_f_int_rhs_eigen.cols() << endl;
+//		cout << "loc_Bh sizes " << loc_Bh.rows() << " " << loc_Bh.cols() << endl;	
+//		loc_dbc.segment(cnt,nsize_bndry_p1) = loc_Bh * loc_f_int_rhs_eigen + loc_Ah * lds; // should not interfere with aliasing // something wrong with dims of loc_Bh * loc_f_int_rhs_eigen
+		loc_dbc.segment(cnt,nsize_bndry_p1) = loc_Ah * lds;
+/*		cout << "test4 " << endl;
 		loc_dbc_pt1.segment(cnt,nsize_bndry_p1) = loc_Bh * loc_f_int_rhs_eigen;
+		cout << "test5 " << endl;
 		loc_dbc_pt2.segment(cnt,nsize_bndry_p1) = loc_Ah * lds;
+		cout << "test6 " << endl; */
 	}
 
 //	cout << "loc_dbc_pt2.head(5) " << loc_dbc_pt2.head(5) << endl;

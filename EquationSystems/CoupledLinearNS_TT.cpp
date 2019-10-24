@@ -5594,10 +5594,15 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	// nGlobBndDofs defined??, si, si, si come nBndDofs
 	int nDirBndDofs = NumDirBCs;
 	Eigen::VectorXd loc_dbc = Eigen::VectorXd::Zero(nLocBndDofs);
+	Eigen::VectorXd loc_dbc_pt1 = Eigen::VectorXd::Zero(nLocBndDofs);
+	Eigen::VectorXd loc_dbc_pt2 = Eigen::VectorXd::Zero(nLocBndDofs);
 	Eigen::VectorXd V_GlobBnd = Eigen::VectorXd::Zero(nGlobBndDofs);
 
-//	cout << "bnd.num_elements() is the same as m_locToGloMap[0]->GetNumGlobalCoeffs() " << bnd.num_elements() << endl;
-//	cout << "nGlobBndDofs " << nGlobBndDofs << endl;
+	cout << "bnd.num_elements() is the same as m_locToGloMap[0]->GetNumGlobalCoeffs() " << bnd.num_elements() << endl;
+	cout << "nGlobBndDofs " << nGlobBndDofs << endl;
+	cout << "m_locToGloMap[0]->AtLastLevel() " << m_locToGloMap[0]->AtLastLevel() << endl;	
+	cout << "m_locToGloMap[0]->GetStaticCondLevel() " << m_locToGloMap[0]->GetStaticCondLevel() << endl;
+	cout << "m_locToGloMap[0]->GetLowestStaticCondLevel() " << m_locToGloMap[0]->GetLowestStaticCondLevel() << endl;
 
 	for (int i = 0; i < nGlobBndDofs; ++i)
 	{
@@ -5613,11 +5618,26 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		int cnt = curr_elem*nsize_bndry_p1;
 		Eigen::MatrixXd loc_Ah = Ah_elem[curr_elem];
+		Eigen::MatrixXd loc_Bh = Bh_elem[curr_elem];
 		Eigen::VectorXd lds = loc_dbc.segment(cnt,nsize_bndry_p1);
+		Eigen::VectorXd loc_f_int_rhs_eigen = f_int_rhs_eigen.segment(curr_elem*nsize_int,nsize_int);
 //		cout << "lds sizes " << lds.rows() << " " << lds.cols() << endl;
 //		cout << "loc_Ah sizes " << loc_Ah.rows() << " " << loc_Ah.cols() << endl;	
-		loc_dbc.segment(cnt,nsize_bndry_p1) = loc_Ah * lds; // should not interfere with aliasing
+		loc_dbc.segment(cnt,nsize_bndry_p1) = loc_Bh * loc_f_int_rhs_eigen + loc_Ah * lds; // should not interfere with aliasing
+		loc_dbc_pt1.segment(cnt,nsize_bndry_p1) = loc_Bh * loc_f_int_rhs_eigen;
+		loc_dbc_pt2.segment(cnt,nsize_bndry_p1) = loc_Ah * lds;
 	}
+
+//	cout << "loc_dbc_pt2.head(5) " << loc_dbc_pt2.head(5) << endl;
+
+	// have here in Nektar:  V_LocBnd = BinvD*F_Int + SchurCompl*V_LocBnd;
+	//  f_int(num_elem*nsize_int); is also same as f_int_rhs_eigen
+	cout << "f_int.num_elements() " << f_int.num_elements() << endl;
+	// and using Bh_elem
+	cout << "Bh_elem[0].cols() * num_elem " << Bh_elem[0].cols() * num_elem << endl;
+	cout << "Bh_elem[0].rows() * num_elem " << Bh_elem[0].rows() * num_elem << endl;
+	cout << "Ah_elem[0].cols() * num_elem " << Ah_elem[0].cols() * num_elem << endl;
+	cout << "Ah_elem[0].rows() * num_elem " << Ah_elem[0].rows() * num_elem << endl;
 
 	Eigen::VectorXd V_GlobHomBndTmp = Eigen::VectorXd::Zero(nGlobHomBndDofs);
 	Eigen::VectorXd tmp = Eigen::VectorXd::Zero(nGlobBndDofs);
@@ -5638,7 +5658,13 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	V_GlobHomBndTmp = -V_GlobHomBndTmp + fh_bnd_add1;
 	Eigen::VectorXd my_sys_in = V_GlobHomBndTmp;
 
+	/////////////////////// actual solve here ////////////////////////////////
 	Eigen::VectorXd my_Asolution = my_Gmat.colPivHouseholderQr().solve(my_sys_in);
+	//////////////////////////////////////////////////////////////////////////
+	cout << "my_Gmat.rows() " << my_Gmat.rows() << endl;
+	cout << "my_Gmat.cols() " << my_Gmat.cols() << endl;
+	cout << "my_sys_in.rows() " << my_sys_in.rows() << endl;
+	cout << "my_sys_in.cols() " << my_sys_in.cols() << endl;
 
 	Eigen::VectorXd my_bnd_after = Eigen::VectorXd::Zero(m_locToGloMap[0]->GetNumGlobalCoeffs());
 	for (int i = 0; i < m_locToGloMap[0]->GetNumGlobalCoeffs(); ++i)

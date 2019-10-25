@@ -311,25 +311,25 @@ namespace Nektar
             // For 3DH1D simulations with no force specified, find the mean
             // (0th) plane.
             Array<OneD, unsigned int> zIDs = m_fields[0]->GetZIDs();
-            int tmpId = -1;
+            m_planeID = -1;
 
             for (int i = 0; i < zIDs.num_elements(); ++i)
             {
                 if (zIDs[i] == 0)
                 {
-                    tmpId = i;
+                    m_planeID = i;
                     break;
                 }
             }
 
-            ASSERTL1(tmpId <= 0, "Should be either at location 0 or -1 if not "
+            ASSERTL1(m_planeID <= 0, "Should be either at location 0 or -1 if not "
                                  "found");
 
-            if (tmpId != -1)
+            if (m_planeID != -1)
             {
                 m_flowrateBnd = m_fields[0]
                                     ->GetBndCondExpansions()[m_flowrateBndID]
-                                    ->GetPlane(tmpId);
+                                    ->GetPlane(m_planeID);
             }
         }
 
@@ -423,45 +423,21 @@ namespace Nektar
                 }
                 flowrate = m_flowrateBnd->VectorFlux(boundary);
             }
-            else
+            else if(m_planeID == 0)
             {
                 //Homogeneous with forcing in plane. Calculate flux only on
                 // the meanmode - calculateFlux necessary for hybrid
                 // parallelisation.
-                bool calculateFlux = false;
                 for (int i = 0; i < m_spacedim; ++i)
                 {
-                    Array<OneD, unsigned int> zIDs = m_fields[0]->GetZIDs();
-                    int tmpId = -1;
-
-                    for (int j = 0; j < zIDs.num_elements(); ++j)
-                    {
-                        if (zIDs[j] == 0)
-                        {
-                            tmpId = j;
-                            break;
-                        }
-                    }
-
-                    ASSERTL1(tmpId <= 0,
-                             "Should be either at location 0 or -1 if not "
-                             "found");
-
-                    if (tmpId != -1)
-                    {
-                        m_fields[i]->GetPlane(tmpId)->ExtractPhysToBnd(
-                            m_flowrateBndID, inarray[i], boundary[i]);
-                        calculateFlux = true;
-                    }
+                    m_fields[i]->GetPlane(m_planeID)->ExtractPhysToBnd(
+                        m_flowrateBndID, inarray[i], boundary[i]);
                 }
-                if(calculateFlux)
-                {
-                    // the flowrate is calculated on the mean mode so it needs
-                    // to be multiplied by LZ to be consistent with the general
-                    // case.
-                    flowrate = m_flowrateBnd->VectorFlux(boundary) *
-                               m_session->GetParameter("LZ");
-                }
+
+                // the flowrate is calculated on the mean mode so it needs to be
+                // multiplied by LZ to be consistent with the general case.
+                flowrate = m_flowrateBnd->VectorFlux(boundary) *
+                           m_session->GetParameter("LZ");
             }
         }
         else if (m_flowrateBnd && !m_homd1DFlowinPlane)
@@ -480,7 +456,6 @@ namespace Nektar
         {
             m_comm->AllReduce(flowrate, LibUtilities::ReduceSum); 
         }
-
         return flowrate / m_flowrateArea;
     }
 

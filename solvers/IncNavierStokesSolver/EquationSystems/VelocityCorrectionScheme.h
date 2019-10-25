@@ -144,6 +144,8 @@ namespace Nektar
         NekDouble m_alpha;
         /// Boundary ID of the flowrate reference surface
         int m_flowrateBndID;
+        /// Plane ID for cases with homogeneous expansion
+        int m_planeID;
         /// Flowrate reference surface
         MultiRegions::ExpListSharedPtr m_flowrateBnd;
         /// Stokes solution used to impose flowrate

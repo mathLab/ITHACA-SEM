@@ -658,7 +658,7 @@ automatically built during the \nekpp build process. Below are the choices of X:
     Boost on your system, you can enable this to have Boost configured
     automatically.
 
-    \item \inlsh{CCMOI}
+    \item \inlsh{CCMIO}
     
     I/O library for the Star-CCM+ format.
     
@@ -727,5 +727,9 @@ There are also a number of additional options to fine-tune the build:
     
     \item \inlsh{NEKTAR\_TEST\_USE\_HOSTFILE}
     
-    
+    By default, MPI tests are run directly with the \inltt{mpiexec} command
+    together with the number of cores. If your MPI installation requires a
+    hostfile, enabling this option adds the command line argument
+    \inltt{-hostfile hostfile} to the command line arguments when tests are run
+    with \inltt{ctest} or the \inltt{Tester} executable.
 \end{itemize}

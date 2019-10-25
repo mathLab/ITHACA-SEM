@@ -304,8 +304,9 @@ namespace Nektar
         m_comm->AllReduce(m_flowrateArea, LibUtilities::ReduceMax);
 
         // In homogeneous case with forcing not aligned to the z-direction,
-        // redefine expansion so that m_flowrateBnd is a 1D expansion
-        if (m_HomogeneousType == eHomogeneous1D && m_homd1DFlowinPlane)
+        // redefine m_flowrateBnd so it is a 1D expansion
+        if (m_HomogeneousType == eHomogeneous1D && m_homd1DFlowinPlane &&
+            m_flowrateBnd)
         {
             // For 3DH1D simulations with no force specified, find the mean
             // (0th) plane.
@@ -412,30 +413,55 @@ namespace Nektar
             // the boundary.
             Array<OneD, Array<OneD, NekDouble> > boundary(m_spacedim);
 
-            for (int i = 0; i < m_spacedim; ++i)
+            if(!m_homd1DFlowinPlane)
             {
                 // General case
-                if(!m_homd1DFlowinPlane)
+                for (int i = 0; i < m_spacedim; ++i)
                 {
-                m_fields[i]->ExtractPhysToBnd(
-                    m_flowrateBndID, inarray[i], boundary[i]);
+                    m_fields[i]->ExtractPhysToBnd(m_flowrateBndID, inarray[i],
+                                                  boundary[i]);
                 }
-                else //Homogeneous with forcing in plane
-                {
-                    m_fields[i]->GetPlane(0)->ExtractPhysToBnd(
-                    m_flowrateBndID, inarray[i], boundary[i]);
-                }
-
+                flowrate = m_flowrateBnd->VectorFlux(boundary);
             }
-
-            flowrate = m_flowrateBnd->VectorFlux(boundary);
-
-            // Homogeneous case with forcing in plane, the flowrate is
-            // calculated on the mean mode so it needs to be multiplied by
-            // LZ to be consistent with the general case.
-            if(m_homd1DFlowinPlane)
+            else
             {
-                flowrate *= m_session->GetParameter("LZ");
+                //Homogeneous with forcing in plane. Calculate flux only on
+                // the meanmode - calculateFlux necessary for hybrid
+                // parallelisation.
+                bool calculateFlux = false;
+                for (int i = 0; i < m_spacedim; ++i)
+                {
+                    Array<OneD, unsigned int> zIDs = m_fields[0]->GetZIDs();
+                    int tmpId = -1;
+
+                    for (int j = 0; j < zIDs.num_elements(); ++j)
+                    {
+                        if (zIDs[j] == 0)
+                        {
+                            tmpId = j;
+                            break;
+                        }
+                    }
+
+                    ASSERTL1(tmpId <= 0,
+                             "Should be either at location 0 or -1 if not "
+                             "found");
+
+                    if (tmpId != -1)
+                    {
+                        m_fields[i]->GetPlane(tmpId)->ExtractPhysToBnd(
+                            m_flowrateBndID, inarray[i], boundary[i]);
+                        calculateFlux = true;
+                    }
+                }
+                if(calculateFlux)
+                {
+                    // the flowrate is calculated on the mean mode so it needs
+                    // to be multiplied by LZ to be consistent with the general
+                    // case.
+                    flowrate = m_flowrateBnd->VectorFlux(boundary) *
+                               m_session->GetParameter("LZ");
+                }
             }
         }
         else if (m_flowrateBnd && !m_homd1DFlowinPlane)

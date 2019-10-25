@@ -788,14 +788,14 @@ void ProcessBL::BoundaryLayer3D()
             }
 
             // Copy face CAD from interior surface.
-            if ((j == 0 && sMap.dir == 0) || (j == nl - 1 && sMap.dir == 1))
+            if (j == 0)
             {
                 elmt->GetFace(faceNum)->m_parentCAD =
                     el[i]->GetFace(faceNum)->m_parentCAD;
             }
 
             // Copy face CAD from exterior surface.
-            if ((j == 0 && sMap.dir == 1) || (j == nl - 1 && sMap.dir == 0))
+            if (j == nl - 1)
             {
                 elmt->GetFace(sMap.oppositeFace)->m_parentCAD =
                     el[i]->GetFace(sMap.oppositeFace)->m_parentCAD;
@@ -809,7 +809,7 @@ void ProcessBL::BoundaryLayer3D()
             }
 
             // For the first layer, copy CAD from interior curves.
-            if ((j == 0 && sMap.dir == 0) || (j == nl - 1 && sMap.dir == 1))
+            if (j == 0)
             {
                 for (int k = 0; k < sMap.nEdgeToCurve / 2; ++k)
                 {
@@ -828,7 +828,7 @@ void ProcessBL::BoundaryLayer3D()
             }
 
             // For the last layer, copy CAD from exterior curves.
-            if ((j == 0 && sMap.dir == 1) || (j == nl - 1 && sMap.dir == 0))
+            if (j == nl - 1)
             {
                 for (int k = 0; k < sMap.nEdgeToCurve / 2; ++k)
                 {

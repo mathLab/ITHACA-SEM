@@ -231,10 +231,10 @@ namespace Nektar
 
         // Define flag for case with homogeneous expansion and forcing not in the
         // z-direction
-        m_Hom1DExplicit = false;
+        m_homd1DFlowinPlane = false;
         if (defined && m_HomogeneousType == eHomogeneous1D)
         {
-            m_Hom1DExplicit = true;
+            m_homd1DFlowinPlane = true;
         }
 
         // For 3DH1D simulations, if force isn't defined then assume in
@@ -266,7 +266,7 @@ namespace Nektar
             // For a boundary, extract the boundary itself.
             m_flowrateBnd = m_fields[0]->GetBndCondExpansions()[m_flowrateBndID];
         }
-        else if (m_HomogeneousType == eHomogeneous1D && !m_Hom1DExplicit)
+        else if (m_HomogeneousType == eHomogeneous1D && !m_homd1DFlowinPlane)
         {
             // For 3DH1D simulations with no force specified, find the mean
             // (0th) plane.
@@ -302,6 +302,36 @@ namespace Nektar
             m_flowrateArea = m_flowrateBnd->Integral(inArea);
         }
         m_comm->AllReduce(m_flowrateArea, LibUtilities::ReduceMax);
+
+        // In homogeneous case with forcing not aligned to the z-direction,
+        // redefine m_flowrateBnd so it is a 1D expansion
+        if (m_HomogeneousType == eHomogeneous1D && m_homd1DFlowinPlane &&
+            m_flowrateBnd)
+        {
+            // For 3DH1D simulations with no force specified, find the mean
+            // (0th) plane.
+            Array<OneD, unsigned int> zIDs = m_fields[0]->GetZIDs();
+            m_planeID = -1;
+
+            for (int i = 0; i < zIDs.num_elements(); ++i)
+            {
+                if (zIDs[i] == 0)
+                {
+                    m_planeID = i;
+                    break;
+                }
+            }
+
+            ASSERTL1(m_planeID <= 0, "Should be either at location 0 or -1 if not "
+                                 "found");
+
+            if (m_planeID != -1)
+            {
+                m_flowrateBnd = m_fields[0]
+                                    ->GetBndCondExpansions()[m_flowrateBndID]
+                                    ->GetPlane(m_planeID);
+            }
+        }
 
         // Set up some storage for the Stokes solution (to be stored in
         // m_flowrateStokes) and its initial condition (inTmp), which holds the
@@ -383,23 +413,42 @@ namespace Nektar
             // the boundary.
             Array<OneD, Array<OneD, NekDouble> > boundary(m_spacedim);
 
-            for (int i = 0; i < m_spacedim; ++i)
+            if(!m_homd1DFlowinPlane)
             {
-                m_fields[i]->ExtractPhysToBnd(
-                    m_flowrateBndID, inarray[i], boundary[i]);
+                // General case
+                for (int i = 0; i < m_spacedim; ++i)
+                {
+                    m_fields[i]->ExtractPhysToBnd(m_flowrateBndID, inarray[i],
+                                                  boundary[i]);
+                }
+                flowrate = m_flowrateBnd->VectorFlux(boundary);
             }
+            else if(m_planeID == 0)
+            {
+                //Homogeneous with forcing in plane. Calculate flux only on
+                // the meanmode - calculateFlux necessary for hybrid
+                // parallelisation.
+                for (int i = 0; i < m_spacedim; ++i)
+                {
+                    m_fields[i]->GetPlane(m_planeID)->ExtractPhysToBnd(
+                        m_flowrateBndID, inarray[i], boundary[i]);
+                }
 
-            flowrate = m_flowrateBnd->VectorFlux(boundary);
+                // the flowrate is calculated on the mean mode so it needs to be
+                // multiplied by LZ to be consistent with the general case.
+                flowrate = m_flowrateBnd->VectorFlux(boundary) *
+                           m_session->GetParameter("LZ");
+            }
         }
-        else if (m_flowrateBnd && !m_Hom1DExplicit)
+        else if (m_flowrateBnd && !m_homd1DFlowinPlane)
         {
-            // 3DH1D case with no Flowrate boundary defined: compute flux through 
-            // the zero-th (mean) plane.
+            // 3DH1D case with no Flowrate boundary defined: compute flux
+            // through the zero-th (mean) plane.
             flowrate = m_flowrateBnd->Integral(inarray[2]);
         }
 
         // Communication to obtain the total flowrate
-        if(!m_Hom1DExplicit && m_HomogeneousType == eHomogeneous1D)
+        if(!m_homd1DFlowinPlane && m_HomogeneousType == eHomogeneous1D)
         {
             m_comm->GetColumnComm()->AllReduce(flowrate, LibUtilities::ReduceSum);
         }
@@ -407,7 +456,6 @@ namespace Nektar
         {
             m_comm->AllReduce(flowrate, LibUtilities::ReduceSum); 
         }
-
         return flowrate / m_flowrateArea;
     }
 

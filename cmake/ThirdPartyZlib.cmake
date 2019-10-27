@@ -6,13 +6,6 @@
 #
 ########################################################################
 
-# Attempt to identify Macports libraries, if they exist and we didn't override
-# ZLIB_ROOT on the command line or in ccmake. This prevents cmake warnings later
-# on.
-IF (NOT DEFINED ZLIB_ROOT)
-    SET(ZLIB_ROOT /opt/local/)
-ENDIF()
-
 # Find a system ZLIB library. If not found enable the THIRDPARTY_BUILD_ZLIB
 # option.
 FIND_PACKAGE(ZLIB QUIET)

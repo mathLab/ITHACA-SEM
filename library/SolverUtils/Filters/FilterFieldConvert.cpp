@@ -148,9 +148,11 @@ FilterFieldConvert::FilterFieldConvert(
             m_session->GetInterpreter(), itPhase->second);
         m_phaseSamplePhase = equPhase.Evaluate();
 
-        // Check that phase is within required limits
-        ASSERTL0(m_phaseSamplePhase>=0 && m_phaseSamplePhase<=1,
-            "PhaseAveragePhase must be between 0 and 1.")
+        // Check that phase and period are within required limits
+        ASSERTL0(m_phaseSamplePeriod > 0,
+                 "PhaseAveragePeriod must be greater than 0.");
+        ASSERTL0(m_phaseSamplePhase >= 0 && m_phaseSamplePhase <= 1,
+                 "PhaseAveragePhase must be between 0 and 1.");
 
         // Load sampling frequency, overriding the previous value
         it = pParams.find("SampleFrequency");
@@ -174,9 +176,12 @@ FilterFieldConvert::FilterFieldConvert(
         if (m_session->GetComm()->GetRank() == 0 &&
             m_session->DefinesCmdLineArgument("verbose"))
         {
-            std::cout << "Phase sampling feature is activated." << std::endl <<
-            "Sampling within " << std::setprecision(6) <<
-            m_phaseTolerance*100 << "% of the exact phase." << std::endl;
+            std::cout << "Phase sampling activated with period "
+                      << m_phaseSamplePeriod << " and phase "
+                      << m_phaseSamplePhase << "." << std::endl
+                      << "Sampling within " << std::setprecision(6)
+                      << m_phaseTolerance * 100 << "% of the exact phase."
+                      << std::endl;
         }
     }
     

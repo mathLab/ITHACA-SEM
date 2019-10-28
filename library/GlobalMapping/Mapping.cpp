@@ -1214,8 +1214,13 @@ void Mapping::v_UpdateBCs( const NekDouble time)
                 if( BndConds[n]->GetUserDefined() =="" ||
                     BndConds[n]->GetUserDefined() =="MovingBody")
                 {
-                    BndExp[n]->FwdTrans_BndConstrained(BndExp[n]->GetPhys(),
-                                                BndExp[n]->UpdateCoeffs());
+                    if (m_fields[i]->GetExpType() == MultiRegions::e3DH1D)
+                    {
+                        BndExp[n]->SetWaveSpace(false);
+                    }
+
+                    BndExp[n]->FwdTrans_BndConstrained(
+                        BndExp[n]->GetPhys(), BndExp[n]->UpdateCoeffs());
                 }
             }
         }

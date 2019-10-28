@@ -179,8 +179,8 @@ FilterFieldConvert::FilterFieldConvert(
             std::cout << "Phase sampling activated with period "
                       << m_phaseSamplePeriod << " and phase "
                       << m_phaseSamplePhase << "." << std::endl
-                      << "Sampling within " << std::setprecision(6)
-                      << m_phaseTolerance * 100 << "% of the exact phase."
+                      << "Sampling within a tolerance of "
+                      << std::setprecision(6) << m_phaseTolerance << "."
                       << std::endl;
         }
     }
@@ -372,7 +372,10 @@ void FilterFieldConvert::v_Update(
         NekDouble relativePhase = fabs(m_phaseSamplePhase - currentPhase);
 
         // Check if relative phase is within required tolerance and sample.
-        if (relativePhase < m_phaseTolerance)
+        // Care must be taken to handle the cases at phase 0 as the sample might
+        // have to be taken at the very end of the previous cycle instead.
+        if (relativePhase < m_phaseTolerance ||
+            fabs(relativePhase-1) < m_phaseTolerance)
         {
             m_numSamples++;
             v_ProcessSample(pFields, coeffs, time);

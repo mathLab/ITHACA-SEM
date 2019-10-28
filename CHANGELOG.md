@@ -202,6 +202,8 @@ v5.0.0
 
 **Documentation**:
 - Added an initial developer's guide (!1001)
+- Updated user guide to reflect current implementation (!1051)
+- Added manpages for key solvers and utilities (!1051)
 
 **Tester**
 - Fix build with boost 1.67 (!947)

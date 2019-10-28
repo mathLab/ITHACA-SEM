@@ -187,7 +187,7 @@ namespace Nektar
             // chiRoe and kappaRoe (eq 66)
             NekDouble chiRoe, kappaRoe;
             NekDouble fac = D - deltaP*deltaRho;
-            if( abs(fac) > NekConstants::kNekZeroTol)
+            if( std::abs(fac) > NekConstants::kNekZeroTol)
             {
                 chiRoe   = (D*avgChi + s*s*deltaRho*dP) / fac;
                 kappaRoe = D*avgKappa / fac;

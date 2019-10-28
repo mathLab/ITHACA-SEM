@@ -1,8 +1,8 @@
-\section{Analytic Expressions}
-\label{sec:xml:analytic-expressions}
+\section{Expressions}
+\label{sec:xml:expressions}
 
-This section discusses particulars related to analytic expressions appearing in
-Nektar++. Analytic expressions in Nektar++ are used to describe spatially or
+This section discusses particulars related to expressions appearing in
+Nektar++. Expressions in Nektar++ are used to describe spatially or
 temporally varying properties, for example
 \begin{itemize}
 \item velocity profiles on a boundary
@@ -10,16 +10,17 @@ temporally varying properties, for example
 \end{itemize}
 which can be retrieved in the solver code.
 
-Analytic expressions appear as the content of \inltt{VALUE} attribute of
+Expressions appear as the content of \inltt{VALUE} attribute of
 \begin{itemize}
+\item parameter values;
 \item boundary condition type tags within \inltt{<REGION>} subsection of
- \inltt{<BOUNDARYCONDITIONS>}, e.g. \inltt{<D>}, \inltt{<N>} etc. 
+ \inltt{<BOUNDARYCONDITIONS>}, e.g. \inltt{<D>}, \inltt{<N>} etc;
  %See [wiki:BoundaryConditionTypes] for details.
 \item expression declaration tag \inltt{<E>} within \inltt{<FUNCTION>}
 subsection.
 \end{itemize}
 
-The tags above declare analytic expressions as well as link them to one of the
+The tags above declare expressions as well as link them to one of the
 field variables declared in \inltt{<EXPANSIONS>} section. For example, the
 declaration 
 \begin{lstlisting}[style=XMLStyle]
@@ -29,9 +30,9 @@ registers expression $\sin(\pi x)\cos(\pi y)$ as a Dirichlet
 boundary constraint associated with field variable \inltt{u}.
 
 Enforcing the same velocity profile at multiple boundary regions and/or field
-variables results in repeated re-declarations of a corresponding analytic
+variables results in repeated re-declarations of a corresponding
 expression. Currently one cannot directly link a boundary condition declaration
-with an analytic expression uniquely specified somewhere else, e.g. in the
+with an expression uniquely specified somewhere else, e.g. in the
 \inltt{<FUNCTION>} subsection. However this duplication does not affect an
 overall computational performance.
 
@@ -42,16 +43,16 @@ overall computational performance.
 % is important for the user code. Not everything has a name for the solver code.
 
 \subsection{Variables and coordinate systems}
-Declarations of analytic expressions are formulated in terms of problem
+Declarations of expressions are formulated in terms of problem
 space-time coordinates. The library code makes a number of assumptions to
 variable names and their order of appearance in the declarations. This section
 describes these assumptions.
 
 Internally, the library uses 3D global coordinate space regardless of problem
 dimension. Internal global coordinate system has natural basis
-{{{(1,0,0),(0,1,0),(0,0,1)}}} with coordinates '''x''','''y''' and '''z'''. In
-other words, variables '''x''','''y''' and '''z''' are considered to be first,
-second and third coordinates of a point ('''x''','''y''','''z''').
+{{{(1,0,0),(0,1,0),(0,0,1)}}} with coordinates \inltt{x}, \inltt{y} and \inltt{z}. In
+other words, variables \inltt{x}, \inltt{y} and \inltt{z} are considered to be first,
+second and third coordinates of a point (\inltt{x}, \inltt{y}, \inltt{z}).
 
 Declarations of problem spatial variables do not exist in the current XML file
 format. Even though field variables are declarable as in the following code
@@ -73,7 +74,7 @@ presented in expression declaration should match space dimension declared via
 \inltt{<GEOMETRY>} section tag.
 
 The library assumes the problem space also has natural basis and spatial
-coordinates have names '''x''','''y''' and'''z'''.
+coordinates have names \inltt{x}, \inltt{y} and \inltt{z}.
 
 Problem space is naturally embedded into the global coordinate space: each point
 of
@@ -89,20 +90,19 @@ of
 Currently, there is no way to describe rotations and translations of problem
 space relative to the global coordinate system.
 
-The list of variables allowed in analytic expressions depends on the problem
+The list of variables allowed in expressions depends on the problem
 dimension:
 \begin{itemize}
-\item For 1D problem analytic expressions must make use of variable '''x'''
+\item For 1D problems, expressions must make use of variable \inltt{x}
 only;
-\item For 2D problem analytic expressions should make use of variables '''x'''
-and '''y'''.
-\item 3D problems may use variables '''x''', '''y''' and '''z''' in their
-analytic expressions.
+\item For 2D problems, expressions should make use of variables \inltt{x}
+and \inltt{y} only;
+\item For 3D problems, expressions may use any of variables \inltt{x}, \inltt{y} and \inltt{z}.
 \end{itemize}
 
 Violation of these constraints yields unpredictable results of expression
 evaluation. The current implementation assigns magic value -9999 to each
-dimensionally excessive spacial variable appearing in analytic expressions. For
+dimensionally excessive spacial variable appearing in expressions. For
 example, the following declaration 
 \begin{lstlisting}[style=XMLStyle]
   <GEOMETRY DIM="2" SPACE="2"> ...
@@ -138,25 +138,25 @@ variables:
   </CONDITIONS>
 \end{lstlisting}
 Here one declares 1D problem, so Nektar++ library assumes spacial variable
-is '''x'''. At the same time, an expression $sin(y)$ is perfectly
-valid on its own, but since it does not depend on '''x''', it will be evaluated
+is \inltt{x}. At the same time, an expression $sin(y)$ is perfectly
+valid on its own, but since it does not depend on \inltt{x}, it will be evaluated
 to constant $sin(-9999)$ regardless of degree of freedom under
 consideration.
 
 \subsubsection{Time dependence}
 
-Variable '''t''' represents time dependence within analytic expressions. The
+Variable \inltt{t} represents time dependence within expressions. The
 boundary condition declarations need to add an additional property
 \inltt{USERDEFINEDTYPE="TimeDependent"} in order to flag time dependency to
 the library.
 
 % TODO:
-%  * check there are no cases when the library evaluates analytic expressions with
+%  * check there are no cases when the library evaluates expressions with
 %  non-zero time values even though {{{TimeDependent}}} property is not defined *
 %  discuss time dependence of functions declared within {{{<FUNCTION>}}} section
 
-\subsubsection{Syntax of analytic expressions}
-
+\subsubsection{Syntax of expressions}
+\label{sec:xml:expressions:syntax}
 Analytic expressions are formed of
 \begin{itemize}
 \item brackets {{{()}}}. Bracketing structure must be balanced.
@@ -264,13 +264,13 @@ constants: \inltt{(LAMBDA/2/PI)*exp(LAMBDA*x)*sin(2*PI*y)}
 \end{itemize}
 
 \subsection{Performance considerations}
-Processing analytic expressions is split into two stages:
+Processing expressions is split into two stages:
 \begin{itemize}
 \item parsing with pre-evaluation of constant sub-expressions,
 \item evaluation to a number.
 \end{itemize}
-Parsing of analytic expressions with their partial evaluation take place at the
-time of setting the run up (reading an XML file). Each analytic expression,
+Parsing of expressions with their partial evaluation take place at the
+time of setting the run up (reading an XML file). Each expression,
 after being pre-processed, is stored internally and quickly retrieved when it
 turns to evaluation at given spatial-time point(s). This allows to perform
 evaluation of expressions at a large number of spacial points with minimal setup
@@ -307,7 +307,7 @@ Expression evaluator does not do any clever simplifications of input
 expressions, which is clear from example above (there is no point in double
 negation). The following subsection addresses the simplification strategy.
 
-\subsubsection{Preparing analytic expression}
+\subsubsection{Preparing expression}
 
 The total evaluation cost depends on the overall number of operations. Since
 evaluator is not making simplifications, it worth trying to minimise the total

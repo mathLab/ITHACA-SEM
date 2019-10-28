@@ -88,6 +88,13 @@ IF (NEKTAR_BUILD_PYTHON)
     # If we can't find it, pull it from git and compile it
     IF (NOT BOOST_NUMPY_LIB)
         INCLUDE(ExternalProject)
+        IF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            SET(WARNING_FLAGS "-Wno-cpp")
+        ENDIF()
+        IF (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+            SET(WARNING_FLAGS "-Wno-#warnings")
+        ENDIF()
+
         EXTERNALPROJECT_ADD(
             boost-numpy
             PREFIX ${TPSRC}
@@ -101,7 +108,7 @@ IF (NEKTAR_BUILD_PYTHON)
             INSTALL_DIR ${TPDIST}
             CONFIGURE_COMMAND ${CMAKE_COMMAND}
                 -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
-                -DCMAKE_CXX_FLAGS="-Wno-cpp"
+                -DCMAKE_CXX_FLAGS=${WARNING_FLAGS}
                 -DPYTHON_EXECUTABLE=${PYTHON_EXECUTABLE}
                 -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DLIBRARY_TYPE=STATIC
                 ${TPSRC}/boost-numpy

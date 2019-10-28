@@ -421,7 +421,7 @@ std::array<NekDouble, 6> Geometry::GetBoundingBox()
     }
 
     // Return bounding box
-    return { min[0], min[1], min[2], max[0], max[1], max[2] };
+    return {{ min[0], min[1], min[2], max[0], max[1], max[2] }};
 }
 
 /**

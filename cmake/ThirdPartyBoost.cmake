@@ -187,7 +187,7 @@ IF (THIRDPARTY_BUILD_BOOST)
 
     # Write to jamfile to use appropriate toolset.
     SET(cmd_string "using ${TOOLSET} : ${TOOLSET_VERSION}")
-    SET(cmd_string "${cmd_string} : {CMAKE_CXX_COMPILER} $<SEMICOLON>")
+    SET(cmd_string "${cmd_string} : ${CMAKE_CXX_COMPILER} $<SEMICOLON>")
 
     IF (UNIX)
 	EXTERNALPROJECT_ADD_STEP(boost conf-project-conf

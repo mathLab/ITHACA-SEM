@@ -64,7 +64,7 @@ v5.0.0
 - Fix ability to have periodic boundary conditions that are aligned by a
   rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
-  and a DummySolver to test the implementations (!853, !931, !950, !973)
+  and a DummySolver to test the implementations (!853, !931, !950, !973, !1017)
 - Fix compilation issue with newer Boost versions and clang (!940)
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
@@ -82,7 +82,7 @@ v5.0.0
 - Combine and generalise demo code in StdRegions and LocalRegions (!993)
 - Fix for error output to allow for custom error streams (!944)
 - Fixed bug in ReOrientQuadFacePhysMap (!1003)
-- Add NekPy Python interface (!962, !990, !989, !1004)
+- Add NekPy Python interface (!962, !990, !989, !1004, !1014, !1061, !1070)
 - Fix edge case for ThirdPartyScotch and FindScoth (!1009)
 - Fix to populate m_elmtToExpId map if not already set up in GetExpIndex (!1019)
 - Added flag to skip periodic BCs while filling Dirichlet BCs in
@@ -98,7 +98,9 @@ v5.0.0
 - Fix issues related to leading factors, arithmetic order and associativity of
   exponential operator in expression evaluator (!1066)
 - Remove use of `using namespace std` in header files (!1066)
+- Add error messages for use of ARPACK in serial (!1079)
 - Generalise ContainsPoint routine (!1078)
+- Homogenized fallthrough to fix issues with gcc 7.4.0 (!1084)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -208,10 +210,13 @@ v5.0.0
 
 **Documentation**:
 - Added an initial developer's guide (!1001)
+- Updated user guide to reflect current implementation (!1051)
+- Added manpages for key solvers and utilities (!1051)
 
 **Tester**
 - Fix build with boost 1.67 (!947)
 - Various change to tests to decrease test time (!1053)
+- Extend to support MPI tests with multiple executables (!1085)
 
 **Packaging:**
 - Add Dockerfiles and gitlab CI configuration for automatic builds (!1021)

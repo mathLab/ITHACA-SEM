@@ -1,0 +1,98 @@
+.\" Manpage for ADRSolver
+.\" Contact c.cantwell@imperial.ac.uk to correct errors or typos
+.TH man 1 "07 Aug 2019" "5.0" "NekMesh man page"
+.SH NAME
+NekMesh \- generates, converts and manipulates high-order meshes
+.SH SYNOPSIS
+.B NekMesh
+[option(s)] input output
+.SH DESCRIPTION
+.B NekMesh
+is a high-order finite element mesh generator and general pre-processing
+mesh utility, that can be used to either generate meshes directly from an
+underlying CAD representation of a geometry, or alternatively to import and
+process linear meshes from a range of other mesh generation tools to make them
+suitable for high-order simulations.
+
+.B NekMesh
+is designed around the concept of modules that run sequentially in a
+pipeline.
+.B Input modules
+read either a file from an external mesh generation utility, or a
+.B NekMesh
+.B .mcf
+mesh configuration file which can be used to read CAD geometry. The input module
+is selected based on the input filename.
+Optionally, one or more
+.B processing modules
+can be used to modify the mesh in some way, for e.g. the creation of boundary
+layers or the optimisation of the input mesh. Finally, a
+.B output module
+is used to write out the resulting mesh, depending on the extension of the
+filename. All modules typically support a number of options that can be defined
+on the command line.
+
+.SH OPTIONS
+.TP 4
+.B \-h [ \-\-help ]
+Prints a help message and program synopsys.
+.TP 4
+.B \-l [ \-\-modules-list ]
+Prints a list of all input, processing and output modules that can be used
+within NekMesh.
+.TP 4
+.B \-p [ \-\-modules-opt ] module
+Prints the list of options for a given module.
+.TP 4
+.B \-m [ \-\-module ] module
+Specifies a module to be used. Modules are run in the order that they are
+defined in the command line options.
+.TP 4
+.B \-v [ \-\-verbose ]
+Print additional debugging and mesh generation information to screen.
+.SH BUGS
+No known bugs.
+.SH EXAMPLE
+As an example, in the simplest case
+.B NekMesh
+can be used to simply convert files between one format and another; for example
+reading a Gmsh file and writing a Nektar++ format file can be achieved with the
+command
+
+.RS
+.B NekMesh input.msh output.xml
+.RE
+
+As a more complex example, the command below:
+
+.RS
+.B NekMesh -m varopti:hyperelastic:nq=4 -m jac:list input.gmsh:msh output.xml:xml:uncompress
+.RE
+
+runs the following pipeline:
+
+.RS
+.IP \(em 3
+Load the input.gmsh file as a Gmsh module;
+
+.IP \(em 3
+Run the varopti module with the boolean option 'hyperelastic' and setting the
+quadrature order to 4;
+
+.IP \(em 3
+List any elements that have negative Jacobian with the jac module;
+
+.IP \(em 3
+Finally output the mesh as a Nektar++ XML file in an uncompressed form.
+.RE
+
+For a list of modules and their options, the
+.B \-l
+and
+.B \-p
+options can be used respectively. More advanced usage of
+.B NekMesh
+can be found in the accompanying user guide.
+
+.SH AUTHOR
+David Moxey (d.moxey@exeter.ac.uk)

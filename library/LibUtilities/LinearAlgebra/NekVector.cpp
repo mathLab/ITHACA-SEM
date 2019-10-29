@@ -250,7 +250,8 @@ namespace Nektar
     template<typename DataType>
     typename boost::call_traits<DataType>::reference NekVector<DataType>::operator()(unsigned int i)
     {
-        ASSERTL1((i >= 0) && (i < this->GetDimension()), "Invalid access to m_data via parenthesis operator");
+        ASSERTL1(i < this->GetDimension(),
+                 "Invalid access to m_data via parenthesis operator");
         return this->GetData()[i];
     }
 
@@ -336,7 +337,8 @@ namespace Nektar
     template<typename DataType>
     typename boost::call_traits<DataType>::const_reference NekVector<DataType>::operator()(unsigned int i) const
     {
-        ASSERTL1(( i >= 0) && (i < GetDimension()), "Invalid access to m_data via parenthesis operator");
+        ASSERTL1(i < GetDimension(),
+                 "Invalid access to m_data via parenthesis operator");
         return m_data[i];
     }
 

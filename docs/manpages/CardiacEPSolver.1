@@ -1,0 +1,110 @@
+.\" Manpage for CardiacEPSolver
+.\" Contact c.cantwell@imperial.ac.uk to correct errors or typos
+.TH man 1 "07 Aug 2019" "5.0" "CardiacEPSolver man page"
+.SH NAME
+CardiacEPSolver \- solves models of action potential propagation
+.SH SYNOPSIS
+CardiacEPSolver [ option(s) ] [ [ session.xml ] ... ]
+.SH DESCRIPTION
+.B CardiacEPSolver
+solves models of action potential propagation in cardiac tissue using the spectral/hp element method. It is built on the
+.B Nektar++
+high-order spectral/hp element framework. These models are continuum models and
+represent the average of electrical activity over many cells. They are
+reaction-diffusion systems, where the reaction terms models the flow of ions in
+and out of a cell as a system of ordinary differential equations. 
+
+The
+.B CardiacEPSolver
+can solve the following models
+.RS
+.IP \(em 3
+Monodomain equation
+.IP \(em 3
+Bidomain equation
+.RE
+
+These are coupled to a model of the cardiac action potential. Available models
+include:
+.RS
+.IP \(em 3
+Aliev-Panfilov
+.IP \(em 3
+Courtemanche-Ramirez-Nattel
+.IP \(em 3
+Fenton-Karma
+.IP \(em 3
+Fitzhugh-Nagumo
+.IP \(em 3
+Luo-Rudy
+.IP \(em 3
+Ten-Tusscher
+.RE
+
+among others.
+
+.SS Further information
+For further details and specific configuration options, please consult the
+.B Nektar++ user guide
+available from the website \(la www.nektar.info \(ra.
+.SH OPTIONS
+.SS General Options
+.TP 4
+.B \-h [ \-\-help ]
+.TP 4
+.B \-I [ \-\-solverinfo ] arg
+Overrides a SOLVERINFO property in the XML input files.
+.TP 4
+.B \-P [ \-\-parameter ] arg
+Overrides a PARAMETER in the XML input files.
+.TP 4
+.B \-v [ \-\-verbose ]
+Displays additional diagnostic information during the solver execution.
+.TP 4
+.B \-V [ \-\-version ]
+Prints the version of the Nektar++.
+.SS Parallelisation Options
+.TP 4
+.B \-\-npx arg
+Specifies the number of processes in the x-direction.
+.TP 4
+.B \-\-npy arg
+Specifies the number of processes in the y-direction.
+.TP 4
+.B \-\-npz arg
+Specifies the number of processes in the z-direction.
+.TP 4
+.B \-\-part-info
+Output partition information.
+.TP 4
+.B \-\-part-only N
+Partitions the input mesh into N partitions and exits.
+.TP 4
+.B \-\-part-only-overlapping N
+Partitions mesh into N overlapping partitions and exits.
+.TP 4
+.B \-\-use-ptscotch
+Use PT-Scotch for parallel mesh partitioning.
+.TP 4
+.B \-\-use-scotch
+Use Scotch for mesh partitioning.
+
+.SH EXAMPLE
+To run the solver on a single input file which contains both the geometry and
+the solver parameter specifications
+
+.RS
+.B CardiacEPSolver session.xml
+.RE
+
+It is often helpful to separate the geometry specification from the remaining
+solver parameters. In this case multiple .xml files may be provided
+
+.RS
+.B CardiacEPSolver session.xml conditions.xml
+.RE
+
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Chris Cantwell (c.cantwell@imperial.ac.uk)

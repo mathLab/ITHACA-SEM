@@ -56,11 +56,17 @@ namespace Nektar
             const NekDouble                             lhom,
             const bool                                  useFFT,
             const bool                                  dealiasing,
-            const Array<OneD, ExpListSharedPtr>        &planes)
+            const Array<OneD, ExpListSharedPtr>        &planes,
+            const LibUtilities::CommSharedPtr comm)
             : ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
             SetExpType(e2DH1D);
             int i, n, cnt;
+
+            if (comm)
+            {
+                m_comm = comm;
+            }
 
             ASSERTL1(m_planes.num_elements() == planes.num_elements(),
                      "Size of basis number of points and number"
@@ -482,7 +488,8 @@ namespace Nektar
             }
         }
 
-        NekDouble ExpList2DHomogeneous1D::v_Integral(const Array<OneD, const NekDouble> &inarray)
+        NekDouble ExpList2DHomogeneous1D::v_Integral(const Array<OneD,
+            const NekDouble> &inarray)
         {
             NekDouble val = 0.0;
             int       i   = 0;
@@ -493,7 +500,7 @@ namespace Nektar
             }
             val *= m_lhom/m_homogeneousBasis->GetNumModes();
             
-            m_comm->GetColumnComm()->AllReduce(val, LibUtilities::ReduceSum);
+            m_comm->AllReduce(val, LibUtilities::ReduceSum);
 
             return val;
         }

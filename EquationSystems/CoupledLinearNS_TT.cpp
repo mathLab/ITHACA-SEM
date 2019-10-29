@@ -5568,17 +5568,17 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	////////////////////////////
 	// temporary debugging
-	cout << "fh_bnd.num_elements() " << fh_bnd.num_elements() << endl;
+//	cout << "fh_bnd.num_elements() " << fh_bnd.num_elements() << endl;
 	double temp_norm = 0;
 	for (int i = 0; i < fh_bnd.num_elements(); i++)
 		temp_norm += fh_bnd[i];
 //	temp_norm = sqrt(temp_norm);
-	cout << "fh_bnd norm " << temp_norm << endl;
+//	cout << "fh_bnd norm " << temp_norm << endl;
 	///////////////////////////
 
 	////////////////////////////
 	// temporary debugging
-	cout << "bnd.num_elements() " << bnd.num_elements() << endl;
+//	cout << "bnd.num_elements() " << bnd.num_elements() << endl;
 	temp_norm = 0;
 	for (int i = 0; i < bnd.num_elements(); i++)
 	{
@@ -5586,7 +5586,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //		cout << bnd[i] << " ";
 	}
 //	temp_norm = sqrt(temp_norm);
-	cout << "bnd norm " << temp_norm << endl;
+//	cout << "bnd norm " << temp_norm << endl;
 	///////////////////////////
 
 	int nLocBndDofs = num_elem * nsize_bndry_p1;
@@ -5598,12 +5598,12 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	Eigen::VectorXd loc_dbc_pt2 = Eigen::VectorXd::Zero(nLocBndDofs);
 	Eigen::VectorXd V_GlobBnd = Eigen::VectorXd::Zero(nGlobBndDofs);
 
-	cout << "bnd.num_elements() is the same as m_locToGloMap[0]->GetNumGlobalCoeffs() " << bnd.num_elements() << endl;
+/*	cout << "bnd.num_elements() is the same as m_locToGloMap[0]->GetNumGlobalCoeffs() " << bnd.num_elements() << endl;
 	cout << "nGlobBndDofs " << nGlobBndDofs << endl;
 	cout << "m_locToGloMap[0]->AtLastLevel() " << m_locToGloMap[0]->AtLastLevel() << endl;	
 	cout << "m_locToGloMap[0]->GetStaticCondLevel() " << m_locToGloMap[0]->GetStaticCondLevel() << endl;
 	cout << "m_locToGloMap[0]->GetLowestStaticCondLevel() " << m_locToGloMap[0]->GetLowestStaticCondLevel() << endl;
-
+*/
 	for (int i = 0; i < nGlobBndDofs; ++i)
 	{
 		V_GlobBnd(i) = bnd[i];
@@ -5640,13 +5640,13 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	// have here in Nektar:  V_LocBnd = BinvD*F_Int + SchurCompl*V_LocBnd;
 	//  f_int(num_elem*nsize_int); is also same as f_int_rhs_eigen
-	cout << "f_int.num_elements() " << f_int.num_elements() << endl;
+//	cout << "f_int.num_elements() " << f_int.num_elements() << endl;
 	// and using Bh_elem
-	cout << "Bh_elem[0].cols() * num_elem " << Bh_elem[0].cols() * num_elem << endl;
+/*	cout << "Bh_elem[0].cols() * num_elem " << Bh_elem[0].cols() * num_elem << endl;
 	cout << "Bh_elem[0].rows() * num_elem " << Bh_elem[0].rows() * num_elem << endl;
 	cout << "Ah_elem[0].cols() * num_elem " << Ah_elem[0].cols() * num_elem << endl;
 	cout << "Ah_elem[0].rows() * num_elem " << Ah_elem[0].rows() * num_elem << endl;
-
+*/
 	Eigen::VectorXd V_GlobHomBndTmp = Eigen::VectorXd::Zero(nGlobHomBndDofs);
 	Eigen::VectorXd tmp = Eigen::VectorXd::Zero(nGlobBndDofs);
 	
@@ -5669,11 +5669,11 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	/////////////////////// actual solve here ////////////////////////////////
 	Eigen::VectorXd my_Asolution = my_Gmat.colPivHouseholderQr().solve(my_sys_in);
 	//////////////////////////////////////////////////////////////////////////
-	cout << "my_Gmat.rows() " << my_Gmat.rows() << endl;
+/*	cout << "my_Gmat.rows() " << my_Gmat.rows() << endl;
 	cout << "my_Gmat.cols() " << my_Gmat.cols() << endl;
 	cout << "my_sys_in.rows() " << my_sys_in.rows() << endl;
 	cout << "my_sys_in.cols() " << my_sys_in.cols() << endl;
-
+*/
 	Eigen::VectorXd my_bnd_after = Eigen::VectorXd::Zero(m_locToGloMap[0]->GetNumGlobalCoeffs());
 	for (int i = 0; i < m_locToGloMap[0]->GetNumGlobalCoeffs(); ++i)
 	{
@@ -5726,7 +5726,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	////////////////////////////
 	// temporary debugging
-	cout << "bnd.num_elements() " << bnd.num_elements() << endl;
+//	cout << "bnd.num_elements() " << bnd.num_elements() << endl;
 	temp_norm = 0;
 	for (int i = 0; i < bnd.num_elements(); i++)
 	{
@@ -5734,7 +5734,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //		cout << bnd[i] << " ";
 	}
 	temp_norm = sqrt(temp_norm);
-	cout << "bnd norm " << temp_norm << endl;
+//	cout << "bnd norm " << temp_norm << endl;
 	///////////////////////////
 
 
@@ -6071,7 +6071,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	Array<OneD, NekDouble> collected_qoi = Array<OneD, NekDouble> (Nmax);
 
-        for(int i = Nmax-1; i < Nmax; ++i)
+        for(int i = 0; i < Nmax; ++i)
 	{
 //		cout << "general_param_vector[i][0] " << general_param_vector[i][0] << endl;
 //		cout << "general_param_vector[i][1] " << general_param_vector[i][1] << endl;
@@ -7007,6 +7007,52 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //				general_param_vector[i_all] = Array<OneD, NekDouble> (parameter_space_dimension);
 			}
 		}
+		// output sample grid as *.txt
+	        std::string sample_grid_txt = "sample_grid.txt";
+		const char* outname_sample_grid_txt = sample_grid_txt.c_str();
+		ofstream myfile_sample_grid_txt (outname_sample_grid_txt);
+		i_all = 0;
+		if (myfile_sample_grid_txt.is_open())
+		{
+			for(int i0 = 0; i0 < number_of_snapshots_dir0; ++i0)
+			{
+				for(int i1 = 0; i1 < number_of_snapshots_dir1; ++i1)
+				{
+					myfile_sample_grid_txt << std::setprecision(17) << general_param_vector[i_all][0] << "\t" << general_param_vector[i_all][1] << endl;
+					i_all++;
+				}
+			}
+			myfile_sample_grid_txt.close();
+		}
+		else cout << "Unable to open file"; 
+
+		// output sample grids as *.txt
+	        std::string sample_grid_d1_txt = "sample_grid_d1.txt";
+		const char* outname_sample_grid_d1_txt = sample_grid_d1_txt.c_str();
+		ofstream myfile_sample_grid_d1_txt (outname_sample_grid_d1_txt);
+		if (myfile_sample_grid_d1_txt.is_open())
+		{
+			for(int i0 = 0; i0 < number_of_snapshots_dir0; ++i0)
+			{
+				myfile_sample_grid_d1_txt << std::setprecision(17) << general_param_vector[i0*number_of_snapshots_dir1][0] << endl;
+			}
+			myfile_sample_grid_d1_txt.close();
+		}
+		else cout << "Unable to open file"; 
+
+	        std::string sample_grid_d2_txt = "sample_grid_d2.txt";
+		const char* outname_sample_grid_d2_txt = sample_grid_d2_txt.c_str();
+		ofstream myfile_sample_grid_d2_txt (outname_sample_grid_d2_txt);
+		if (myfile_sample_grid_d2_txt.is_open())
+		{
+			for(int i1 = 0; i1 < number_of_snapshots_dir1; ++i1)
+			{
+				myfile_sample_grid_d2_txt << std::setprecision(17) << general_param_vector[i1][1] << endl;
+			}
+			myfile_sample_grid_d2_txt.close();
+		}
+		else cout << "Unable to open file"; 
+
 		if (use_fine_grid_VV)
 		{
 		//	cout << "start_param_dir0 " << start_param_dir0 << endl;
@@ -7032,6 +7078,26 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //					cout << "p0 " << p0 << " p1 " << p1 << endl;
 				}
 			}
+
+			// output fine sample grid as *.txt
+		        std::string fine_sample_grid_txt = "fine_sample_grid.txt";
+			const char* outname_fine_sample_grid_txt = fine_sample_grid_txt.c_str();
+			ofstream myfile_fine_sample_grid_txt (outname_fine_sample_grid_txt);
+			i_all = 0;
+			if (myfile_fine_sample_grid_txt.is_open())
+			{
+				for(int i0 = 0; i0 < fine_grid_dir0; ++i0)
+				{
+					for(int i1 = 0; i1 < fine_grid_dir1; ++i1)
+					{
+						myfile_fine_sample_grid_txt << std::setprecision(17) << fine_general_param_vector[i_all][0] << "\t" << fine_general_param_vector[i_all][1] << endl;
+						i_all++;
+					}
+				}
+				myfile_fine_sample_grid_txt.close();
+			}
+			else cout << "Unable to open file"; 
+
 			// write to file the VV grid
 //				        std::string outname_txt = m_sessionName + ".txt";
 		        std::string VV_grid_txt = "VV_grid_d1.txt";
@@ -7238,11 +7304,11 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		if (debug_mode)
 		{
-			cout << "testing a proper L2 norm availability for LocROM" << endl; // e.g. by calling L2norm_ITHACA
+/*			cout << "testing a proper L2 norm availability for LocROM" << endl; // e.g. by calling L2norm_ITHACA
 			for (int i=0; i<Nmax; ++i)
 			{
 				cout << "L2norm of snapshot " << i << " "  << L2norm_ITHACA(snapshot_x_collection[i], snapshot_y_collection[i]) << endl;
-			}
+			} */
 		}
 		// in principle set the number of LocalClusters to use or determine a range of Clusters to consider
 		// Open Q: normalize, and if so with which norm ?
@@ -7370,6 +7436,68 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			}
 			cout << "optimal CVT_energy " << optimal_CVT_energy << endl;
 		}
+
+		// save the optimal final clustering
+		cout << "optimal final clustering" << endl;
+		for (int i = 0; i < no_clusters; ++i)
+		{
+			for (std::set<int>::iterator it=optimal_clusters[i].begin(); it!=optimal_clusters[i].end(); ++it)
+			{
+				std::cout << ' ' << *it;
+			}
+			cout << endl;
+		}
+		cout << "optimal CVT_energy " << optimal_CVT_energy << endl;
+
+	        std::string optimal_clustering_txt = "optimal_clustering.txt";
+		const char* optimal_clustering_txt_t = optimal_clustering_txt.c_str();
+		ofstream myfile_optimal_clustering_txt_t (optimal_clustering_txt_t);
+		if (myfile_optimal_clustering_txt_t.is_open())
+		{
+			for (int i = 0; i < no_clusters; ++i)
+			{
+				for (std::set<int>::iterator it=optimal_clusters[i].begin(); it!=optimal_clusters[i].end(); ++it)
+				{
+					myfile_optimal_clustering_txt_t << *it << "\t";
+				}
+				myfile_optimal_clustering_txt_t << endl;
+			}
+      			myfile_optimal_clustering_txt_t.close();
+		}
+		else cout << "Unable to open file"; 
+
+		Eigen::MatrixXd samples_cluster_association = Eigen::MatrixXd::Zero(number_of_snapshots_dir0, number_of_snapshots_dir1);
+		int moving_index = 0;
+		for (int i0 = 0; i0 < number_of_snapshots_dir0; i0++)
+		{
+			for (int i1 = 0; i1 < number_of_snapshots_dir1; i1++)
+			{
+				// identify cluster in which o_i is
+				for (int j = 0; j < no_clusters; ++j)
+				{
+					if (optimal_clusters[j].count(moving_index) == 1)
+						samples_cluster_association(i0, i1) = j;
+				}
+				moving_index++;
+			}
+		}
+	        std::string samples_optimal_clustering_txt = "samples_optimal_clustering.txt";
+		const char* samples_optimal_clustering_txt_t = samples_optimal_clustering_txt.c_str();
+		ofstream myfile_samples_optimal_clustering_txt_t (samples_optimal_clustering_txt_t);
+		if (myfile_samples_optimal_clustering_txt_t.is_open())
+		{
+			for (int i0 = 0; i0 < number_of_snapshots_dir0; i0++)
+			{
+				for (int i1 = 0; i1 < number_of_snapshots_dir1; i1++)
+				{
+					myfile_samples_optimal_clustering_txt_t << samples_cluster_association(i0, i1)  << "\t";
+				}
+				myfile_samples_optimal_clustering_txt_t << endl;
+			}
+      			myfile_samples_optimal_clustering_txt_t.close();
+		}
+		else cout << "Unable to open file"; 
+
 
 		// keep collect_f_all for later to continue regular execution, while a LocROM verification and validation module runs from here first
 		cout << "use_fine_grid_VV " << use_fine_grid_VV << endl;

@@ -71,9 +71,9 @@
             <P> qoi_dof = 1980       </P>
             <P> use_LocROM = 1       </P>
             <P> no_clusters = 8       </P>
-            <P> only_single_cluster = 1       </P>
+            <P> only_single_cluster = 0       </P>
             <P> which_single_cluster = 7       </P>
-            <P> use_overlap_p_space = 1       </P>
+            <P> use_overlap_p_space = 0       </P>
 	    <P> overlap_POD_part = 1       </P>	
 	    <P> type_para1 = 1        </P> <!-- 0=kin_visc, 1=geo   -->
 	    <P> type_para2 = 0   	</P>

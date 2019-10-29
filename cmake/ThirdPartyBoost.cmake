@@ -93,9 +93,9 @@ IF (THIRDPARTY_BUILD_BOOST)
             SET(TOOLSET_VERSION 12.0) # Visual Studio 2013
         ELSEIF (MSVC_VERSION EQUAL 1900)
             SET(TOOLSET_VERSION 14.0) # Visual Studio 2015
-        ELSEIF (MSVC_VERSION GREATER 1909 OR MSVC_VERSION LESS 1920)
+        ELSEIF (MSVC_VERSION GREATER 1909 AND MSVC_VERSION LESS 1920)
             SET(TOOLSET_VERSION 14.1) # Visual Studio 2017
-        ELSEIF (MSVC_VERSION GREATER 1919 OR MSVC_VERSION LESS 1930)
+        ELSEIF (MSVC_VERSION GREATER 1919 AND MSVC_VERSION LESS 1930)
             SET(TOOLSET_VERSION 14.2) # Visual Studio 2019
         ENDIF()
     ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Cray")
@@ -109,7 +109,7 @@ IF (THIRDPARTY_BUILD_BOOST)
         SET(TOOLSET clang)
         SET(TOOLSET_VERSION ${CMAKE_CXX_COMPILER_VERSION})
     ELSE()
-        MESSAGE(STATUS "Unknown compiler for boost build, assuming gcc toolset")
+        MESSAGE(STATUS "Unknown compiler for boost, assuming gcc toolset")
         SET(TOOLSET gcc)
     ENDIF()
 
@@ -179,16 +179,20 @@ IF (THIRDPARTY_BUILD_BOOST)
 
     IF (APPLE)
         EXTERNALPROJECT_ADD_STEP(boost patch-install-path
-            COMMAND sed -i ".bak" "s|-install_name \"|&${TPDIST}/lib/|" ${TPBUILD}/boost/tools/build/src/tools/darwin.jam
+            COMMAND sed -i ".bak" "s|-install_name \"|&${TPDIST}/lib/|"
+                ${TPBUILD}/boost/tools/build/src/tools/darwin.jam
             DEPENDERS build
             DEPENDEES download)
     ENDIF (APPLE)
 
     # Write to jamfile to use appropriate toolset.
-    SET(cmd_string "using ${TOOLSET} : ${TOOLSET_VERSION} : ${CMAKE_CXX_COMPILER} $<SEMICOLON>")
+    SET(cmd_string "using ${TOOLSET} : ${TOOLSET_VERSION}")
+    SET(cmd_string "${cmd_string} : {CMAKE_CXX_COMPILER} $<SEMICOLON>")
+
     IF (UNIX)
 	EXTERNALPROJECT_ADD_STEP(boost conf-project-conf
-            COMMAND cmake -E echo "${cmd_string}" > ${TPBUILD}/boost/tools/build/src/user-config.jam
+            COMMAND cmake -E echo "${cmd_string}" >
+                ${TPBUILD}/boost/tools/build/src/user-config.jam
             DEPENDERS build
             DEPENDEES configure)
     ENDIF()

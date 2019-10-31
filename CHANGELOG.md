@@ -48,6 +48,8 @@ v5.0.0
 - Fix minor bug in ARPACK thirdparty build cmake (!874)
 - Added in sum factorisation version for pyramid expnasions and orthogonal
   expansion in pyramids (!750)
+- Adjust boost third-party compilation to account for different toolset
+  choices (!886)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
   !904, !941)
 - Restructure the low energy preconditioner to handle pyramidic and variable

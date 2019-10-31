@@ -235,15 +235,15 @@ conditions are employed (i.e. $T_{w}$). Default value = 300.15$K$;
 Under this section it is possible to set the solver information.
 \begin{lstlisting}[style=XmlStyle]
 <SOLVERINFO>
-  <I PROPERTY="EQType"                VALUE="NavierStokesCFE"     />
-  <I PROPERTY="Projection"            VALUE="DisContinuous"       />
-  <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
-  <I PROPERTY="DiffusionType"         VALUE="LDGNS"               />
-  <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
-  <I PROPERTY="UpwindType"            VALUE="ExactToro"           />
-  <I PROPERTY="ProblemType"           VALUE="General"             />
-  <I PROPERTY="ViscosityType"         VALUE="Constant"            />
-  <I PROPERTY="EquationOfState"       VALUE="IdealGas"            />
+  <I PROPERTY="EQType"                VALUE="NavierStokesCFE"      />
+  <I PROPERTY="Projection"            VALUE="DisContinuous"        />
+  <I PROPERTY="AdvectionType"         VALUE="WeakDG"               />
+  <I PROPERTY="DiffusionType"         VALUE="LDGNS"                />
+  <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+  <I PROPERTY="UpwindType"            VALUE="ExactToro"            />
+  <I PROPERTY="ProblemType"           VALUE="General"              />
+  <I PROPERTY="ViscosityType"         VALUE="Constant"             />
+  <I PROPERTY="EquationOfState"       VALUE="IdealGas"             />
 </SOLVERINFO>
 \end{lstlisting}
 \begin{itemize}
@@ -259,7 +259,7 @@ Under this section it is possible to set the solver information.
 \item \inltt{DisContinuous}.\\
 Note that the Continuous projection is not supported in the Compressible Flow Solver.
 \end{itemize}
-\item \inltt{AdvectionType} is the advection operator we want to use:
+\item \inltt{AdvectionType} is the advection operator we want to use.
 \begin{itemize}
 \item \inltt{WeakDG} (classical DG in weak form);
 \item \inltt{FRDG} (Flux-Reconstruction recovering nodal DG scheme);
@@ -268,6 +268,7 @@ Note that the Continuous projection is not supported in the Compressible Flow So
 \item \inltt{FRcmin} (Flux-Reconstruction with $c = c_{min}$);
 \item \inltt{FRcinf} (Flux-Reconstruction with $c = \infty$).
 \end{itemize}
+Note that only \inltt{WeakDG} is fully supported, the other operators work only with quadrilateral elements ($2D$ or $2.5D$).
 \item \inltt{DiffusionType} is the diffusion operator we want to use
 for the Navier-Stokes equations:
 \begin{itemize}
@@ -278,11 +279,13 @@ for the Navier-Stokes equations:
 \item \inltt{LFRcminNS} (Flux-Reconstruction with $c = c_{min}$);
 \item \inltt{LFRcinfNS} (Flux-Reconstruction with $c = \infty$).
 \end{itemize}
+Note that only \inltt{LDGNS} is fully supported, the other operators work only with quadrilateral elements ($2D$ or $2.5D$).
 \item \inltt{TimeIntegrationMethod} is the time-integration scheme we want to use.
 Note that only an explicit discretisation is supported:
 \begin{itemize}
 \item \inltt{ForwardEuler};
-\item \inltt{RungeKutta2\_ImprovedEuler};
+\item \inltt{RungeKutta2\_SSP};
+\item \inltt{RungeKutta3\_SSP};
 \item \inltt{ClassicalRungeKutta4}.
 \end{itemize}
 \item \inltt{UpwindType} is the numerical interface flux (i.e. Riemann solver)
@@ -480,7 +483,7 @@ where $s_0 = s_\kappa - 4.25\;log_{10}(p)$.
 To enable the non-smooth viscosity model, the following line has to be added to the \inltt{SOLVERINFO} section:
 \begin{lstlisting}[style=XmlStyle]
 <SOLVERINFO>
-<I PROPERTY="ShockCaptureType"      VALUE="NonSmooth"               />
+  <I PROPERTY="ShockCaptureType"      VALUE="NonSmooth" />
 <SOLVERINFO>
 \end{lstlisting}
 The diffusivity and the sensor can be controlled by the following parameters:

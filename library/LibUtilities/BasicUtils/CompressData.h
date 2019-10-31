@@ -183,7 +183,7 @@ namespace LibUtilities
                 switch (ret) {
                     case Z_NEED_DICT:
                         ret = Z_DATA_ERROR;
-                        BOOST_FALLTHROUGH;      /* and fall through */
+                        /* Falls through. */
                     case Z_DATA_ERROR:
                     case Z_MEM_ERROR:
                         (void)inflateEnd(&strm);

@@ -81,6 +81,8 @@ protected:
         const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
         const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
 
+        static std::string navierStokesAdvectionTypeLookupIds[];
+
 private:
     bool m_specHP_dealiasing;
     bool m_homogen_dealiasing;

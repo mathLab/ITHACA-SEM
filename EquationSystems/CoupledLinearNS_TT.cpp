@@ -6389,12 +6389,13 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		// fine_general_param_vector is available already
 		// start sweeping 
 		Eigen::MatrixXd collected_qoi = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		Eigen::MatrixXd collected_relative_L2errors = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
 		int fine_grid_dir0_index = 0;
 		int fine_grid_dir1_index = 0;
 		double locROM_qoi;
 		for (int iter_index = 0; iter_index < fine_grid_dir0*fine_grid_dir1; ++iter_index)
 		{
-			cout << "fine_grid_iter_index " << iter_index << " of max " << fine_grid_dir0*fine_grid_dir1 << endl;
+//			cout << "fine_grid_iter_index " << iter_index << " of max " << fine_grid_dir0*fine_grid_dir1 << endl;
 			int current_index = iter_index;
 			double current_nu;
 			double w;
@@ -6419,6 +6420,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
 			double relative_change_error;
 			int no_iter=0;
+			Array<OneD, double> field_x;
+			Array<OneD, double> field_y;
 			// now start looping
 			do
 			{
@@ -6426,8 +6429,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				Eigen::VectorXd prev_solve_affine = solve_affine;
 				Eigen::VectorXd repro_solve_affine = RB * solve_affine;
 				Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
-				Array<OneD, double> field_x;
-				Array<OneD, double> field_y;
+
 				recover_snapshot_loop(reconstruct_solution, field_x, field_y);
 				if (use_Newton)
 				{
@@ -6458,6 +6460,10 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				locROM_qoi = recover_snapshot_data(reconstruct_solution, 0);
 			}
 			collected_qoi(fine_grid_dir0_index, fine_grid_dir1_index) = locROM_qoi;
+			if (use_fine_grid_VV_and_load_ref)
+			{
+				collected_relative_L2errors(fine_grid_dir0_index, fine_grid_dir1_index) = L2norm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
+			}
 			fine_grid_dir1_index++;
 			if (fine_grid_dir1_index == fine_grid_dir1)
 			{
@@ -6483,6 +6489,32 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			myfile.close();
 		}
 		else cout << "Unable to open file"; 
+
+		if (use_fine_grid_VV_and_load_ref)
+		{
+
+			std::stringstream sstm_VV;
+			sstm_VV << "LocROM_cluster_VV" << current_cluster_number << ".txt";
+			std::string LocROM_txt_VV = sstm_VV.str();
+			const char* outname_VV = LocROM_txt_VV.c_str();
+			ofstream myfile_VV (outname_VV);
+			if (myfile_VV.is_open())
+			{
+				for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+				{
+					for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+					{
+						myfile_VV << std::setprecision(17) << collected_relative_L2errors(i0,i1) << "\t";
+					}
+					myfile_VV << "\n";
+				}
+				myfile_VV.close();
+			}
+			else cout << "Unable to open file"; 
+
+
+		}
+
 	}
     }
 
@@ -6950,7 +6982,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		{
 			use_fine_grid_VV = 0;
 		} 
-
+		if (m_session->DefinesParameter("use_fine_grid_VV_and_load_ref")) 
+		{
+			use_fine_grid_VV_and_load_ref = m_session->GetParameter("use_fine_grid_VV_and_load_ref");
+		}
+		else
+		{
+			use_fine_grid_VV_and_load_ref = 0;
+		} 
 		if (m_session->DefinesParameter("fine_grid_dir0")) 
 		{
 			fine_grid_dir0 = m_session->GetParameter("fine_grid_dir0");
@@ -7130,8 +7169,6 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 
 
-
-
 		}
 		int type_para1 = m_session->GetParameter("type_para1");
 //		cout << "type para1 " << type_para1 << endl;
@@ -7245,7 +7282,46 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			{
 				load_snapshots_geometry_params_conv_Oseen(number_of_snapshots); 
 			}
+			if (use_fine_grid_VV_and_load_ref)
+			{
+				// load the refs -- maybe 	InitObject();   has to happen first
 
+				int nvelo = 2;
+			        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvelo); // for a 2D problem
+
+			        for(int i = 0; i < nvelo; ++i)
+			        {
+			            test_load_snapshot[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);  // number of phys points
+			        }
+
+				cout << "no of phys points " << GetNpoints() << endl;
+
+			        std::vector<std::string> fieldStr;
+			        for(int i = 0; i < nvelo; ++i)
+			        {
+			           fieldStr.push_back(m_session->GetVariable(i));
+			        }
+
+				snapshot_x_collection_VV = Array<OneD, Array<OneD, NekDouble> > (fine_grid_dir0*fine_grid_dir1);
+				snapshot_y_collection_VV = Array<OneD, Array<OneD, NekDouble> > (fine_grid_dir0*fine_grid_dir1);
+			        for(int i = 0; i < fine_grid_dir0*fine_grid_dir1; ++i)
+			        {
+					// generate the correct string
+					std::stringstream sstm;
+					sstm << "VV" << i+1;
+					std::string result = sstm.str();
+					const char* rr = result.c_str();
+
+				        EvaluateFunction(fieldStr, test_load_snapshot, result);
+					snapshot_x_collection_VV[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+					snapshot_y_collection_VV[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+					for (int j=0; j < GetNpoints(); ++j)
+					{
+						snapshot_x_collection_VV[i][j] = test_load_snapshot[0][j];
+						snapshot_y_collection_VV[i][j] = test_load_snapshot[1][j];
+					}
+			        }
+			}
 		}
 	}
 	else

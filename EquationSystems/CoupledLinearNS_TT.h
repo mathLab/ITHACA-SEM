@@ -107,6 +107,7 @@ namespace Nektar
 	double start_param_dir1;
 	double end_param_dir1;
 	int use_fine_grid_VV;
+	int use_fine_grid_VV_and_load_ref;
 
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
@@ -258,6 +259,9 @@ namespace Nektar
 
 	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection;
 	Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection;
+	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection_VV;
+	Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection_VV;
+
         
 	CoupledLinearNS_TT(const LibUtilities::SessionReaderSharedPtr &pSesssion);
 

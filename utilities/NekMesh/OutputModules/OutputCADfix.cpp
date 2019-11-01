@@ -58,6 +58,12 @@ OutputCADfix::~OutputCADfix()
 {
 }
 
+bool compareT(NodeSharedPtr n1, NodeSharedPtr n2)
+{
+    int id = n1->GetCADCurves()[0]->GetId();
+    return n1->GetCADCurveInfo(id) < n2->GetCADCurveInfo(id);
+}
+
 void OutputCADfix::Process()
 {
     ASSERTL0(m_mesh->m_cad, "CFI system must be kept in memory")
@@ -93,7 +99,8 @@ void OutputCADfix::Process()
     m_model->deleteNodes(nodesToDel);
 
     // Delete old elements
-    vector<cfi::ElementDefinition> *oldEls = m_model->getElements(cfi::SUBTYPE_ALL, 8);
+    vector<cfi::ElementDefinition> *oldEls =
+        m_model->getElements(cfi::SUBTYPE_ALL, 8);
     vector<cfi::Element *> elsToDel;
     for (int i = 0; i < oldEls->size(); ++i)
     {
@@ -104,7 +111,9 @@ void OutputCADfix::Process()
     // map of new nodes
     map<NodeSharedPtr, cfi::Node *> newMap;
 
-    // Write out nodes
+    // Make list of nodes to write out
+    // Nodes must be created contiguously for each parent entity
+    map<cfi::MeshableEntity *, vector<NodeSharedPtr>> mapParentNode;
     for (auto &el : m_mesh->m_element[3])
     {
         vector<NodeSharedPtr> nodes = el->GetVertexList();
@@ -177,17 +186,33 @@ void OutputCADfix::Process()
             {
                 vector<CADCurveSharedPtr> curves = node->GetCADCurves();
                 parent = std::dynamic_pointer_cast<CADCurveCFI>(curves[0])
-                                ->GetCfiPointer();
+                             ->GetCfiPointer();
             }
             // Face parent
             else if (node->GetNumCADSurf())
             {
                 vector<CADSurfSharedPtr> surfs = node->GetCADSurfs();
                 parent = std::dynamic_pointer_cast<CADSurfCFI>(surfs[0])
-                                ->GetCfiPointer();
+                             ->GetCfiPointer();
             }
-            
-            newMap[node] = parent->createFenode(
+
+            newMap[node] = NULL;
+            mapParentNode[parent].push_back(node);
+        }
+    }
+
+    // Write out nodes
+    for (auto &parent : mapParentNode)
+    {
+        // Order nodes by parametric coordinate on lines
+        if (dynamic_cast<cfi::Line *>(parent.first))
+        {
+            sort(parent.second.begin(), parent.second.end(), compareT);
+        }
+
+        for (auto &node : parent.second)
+        {
+            newMap[node] = parent.first->createFenode(
                 0, node->m_x / scal, node->m_y / scal, node->m_z / scal);
         }
     }
@@ -272,7 +297,8 @@ void OutputCADfix::Process()
         {
             for (auto &edge : nekEdges)
             {
-                cfiNodes.push_back(newMap.at(edge->m_edgeNodes[(order - 1) / 2]));
+                cfiNodes.push_back(
+                    newMap.at(edge->m_edgeNodes[(order - 1) / 2]));
             }
             for (auto &face : nekFaces)
             {

@@ -257,6 +257,7 @@ namespace Nektar
             Array<OneD, DNekMatSharedPtr>  mtxPerVarCoeff(ntotElmt);
             for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
             {
+                nElmtCoef   =   elmtcoef[nelmt];
                 mtxPerVarCoeff[nelmt]    =MemoryManager<DNekMat>
                                     ::AllocateSharedPtr(nElmtCoef, nElmtCoef);
             }

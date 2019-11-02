@@ -86,8 +86,8 @@ namespace Nektar
             }
 
             pFields[0]->GetTrace()->GetNormals(m_traceNormals);
-            Array<OneD, NekDouble>  lengthFwd(nTracePts,0.0);
-            Array<OneD, NekDouble>  lengthBwd(nTracePts,0.0);
+            Array<OneD, NekDouble>  lengthFwd(nTracePts,-1.0);
+            Array<OneD, NekDouble>  lengthBwd(nTracePts,-1.0);
             pFields[0]->GetTrace()->GetElmtNormalLength(lengthFwd,lengthBwd);
 
             const MultiRegions::AssemblyMapDGSharedPtr TraceMap=pFields[0]->GetTraceMap();
@@ -95,10 +95,21 @@ namespace Nektar
             TraceMap->UniversalTraceAssemble(lengthFwd);
             TraceMap->UniversalTraceAssemble(lengthBwd);
 
-            Vmath::Vadd(nTracePts,lengthBwd,1,lengthFwd,1,lengthFwd,1);
-            m_traceNormDirctnElmtLength = lengthFwd;
-            m_oIPPenaltyLength =   lengthBwd;
-            Vmath::Sdiv(nTracePts,1.0,m_traceNormDirctnElmtLength,1,m_oIPPenaltyLength,1);
+            for(int i=0;i<nTracePts;i++)
+            {
+                if(lengthBwd[i]<0.0)
+                {
+                    lengthBwd[i] = lengthFwd[i];
+                }
+            }
+            Array<OneD, NekDouble>  lengthsum(nTracePts,0.0);
+            Array<OneD, NekDouble>  lengthmul(nTracePts,0.0);
+            Vmath::Vadd(nTracePts,lengthBwd,1,lengthFwd,1,lengthsum,1);
+            Vmath::Vmul(nTracePts,lengthBwd,1,lengthFwd,1,lengthmul,1);
+            Vmath::Vdiv(nTracePts,lengthsum,1,lengthmul,1,lengthFwd,1);
+            m_traceNormDirctnElmtLength = lengthsum;
+            m_oIPPenaltyLength =   lengthFwd;
+            Vmath::Smul(nTracePts,0.25,m_oIPPenaltyLength,1,m_oIPPenaltyLength,1);
 
             m_tracBwdWeightAver  =   Array<OneD, NekDouble> (nTracePts,0.0);
             m_tracBwdWeightJump  =   Array<OneD, NekDouble> (nTracePts,0.0);

@@ -86,8 +86,8 @@ namespace Nektar
             }
 
             pFields[0]->GetTrace()->GetNormals(m_traceNormals);
-            Array<OneD, NekDouble>  lengthFwd(nTracePts,-1.0);
-            Array<OneD, NekDouble>  lengthBwd(nTracePts,-1.0);
+            Array<OneD, NekDouble>  lengthFwd(nTracePts,0.0);
+            Array<OneD, NekDouble>  lengthBwd(nTracePts,0.0);
             pFields[0]->GetTrace()->GetElmtNormalLength(lengthFwd,lengthBwd);
 
             const MultiRegions::AssemblyMapDGSharedPtr TraceMap=pFields[0]->GetTraceMap();
@@ -95,13 +95,13 @@ namespace Nektar
             TraceMap->UniversalTraceAssemble(lengthFwd);
             TraceMap->UniversalTraceAssemble(lengthBwd);
 
-            for(int i=0;i<nTracePts;i++)
-            {
-                if(lengthBwd[i]<0.0)
-                {
-                    lengthBwd[i] = lengthFwd[i];
-                }
-            }
+            // for(int i=0;i<nTracePts;i++)
+            // {
+            //     if(lengthBwd[i]<0.0)
+            //     {
+            //         lengthBwd[i] = lengthFwd[i];
+            //     }
+            // }
             Array<OneD, NekDouble>  lengthsum(nTracePts,0.0);
             Array<OneD, NekDouble>  lengthmul(nTracePts,0.0);
             Vmath::Vadd(nTracePts,lengthBwd,1,lengthFwd,1,lengthsum,1);

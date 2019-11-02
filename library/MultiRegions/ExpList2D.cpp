@@ -1127,6 +1127,8 @@ namespace Nektar
                 loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion2D>();
                 offset = m_phys_offset[i];
 
+                NekDouble factor =1.0;
+
                 LibUtilities::BasisKey traceBasis0
                     = loc_exp->GetBasis(0)->GetBasisKey();
                 LibUtilities::BasisKey traceBasis1
@@ -1193,12 +1195,13 @@ namespace Nektar
                         if(1==nlr)
                         {
                             Vmath::Vcopy(e_npoints,lengintp[0],1,lengintp[1],1);
+                            factor = 0.5;
                         }
                     }
                     
                     for (j = 0; j < e_npoints; ++j)
                     {
-                        lengLR[nlr][offset + j] = lengintp[nlr][j];
+                        lengLR[nlr][offset + j] = factor*lengintp[nlr][j];
                     }
                 }
             }

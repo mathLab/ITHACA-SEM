@@ -137,7 +137,7 @@ CouplingCwipi::CouplingCwipi(MultiRegions::ExpListSharedPtr field)
     m_config["OVERSAMPLE"]   = "0";
     m_config["FILTERWIDTH"]  = "-1";
     m_config["DUMPRAW"]      = "0";
-    m_config["SENDMETHOD"]   = "NEARESTNEIGHBOUR";
+    m_config["SENDMETHOD"]   = "EVALUATE";
     m_config["NOTLOCMETHOD"] = "KEEP";
 }
 

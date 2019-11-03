@@ -66,6 +66,13 @@ namespace Nektar
 {
     namespace SolverUtils
     {
+
+        std::string EquationSystem::equationSystemTypeLookupIds[2] = {
+            LibUtilities::SessionReader::RegisterEnumValue("DEALIASING",
+                "True", 0),
+            LibUtilities::SessionReader::RegisterEnumValue("DEALIASING",
+                "False", 1)};
+
         /**
          * @class EquationSystem
          *
@@ -216,11 +223,6 @@ namespace Nektar
             
                 m_session->MatchSolverInfo("DEALIASING", "True", 
                                            m_homogen_dealiasing, false);
-                if(m_homogen_dealiasing == false)
-                {
-                    m_session->MatchSolverInfo("DEALIASING", "On", 
-                                               m_homogen_dealiasing, false);
-                }
             }
             else
             {

@@ -39,6 +39,8 @@ v5.0.0
 - Fix minor bug in ARPACK thirdparty build cmake (!874)
 - Added in sum factorisation version for pyramid expnasions and orthogonal
   expansion in pyramids (!750)
+- Adjust boost third-party compilation to account for different toolset
+  choices (!886)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
   !904, !941)
 - Restructure the low energy preconditioner to handle pyramidic and variable
@@ -55,7 +57,7 @@ v5.0.0
 - Fix ability to have periodic boundary conditions that are aligned by a
   rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
-  and a DummySolver to test the implementations (!853, !931, !950, !973)
+  and a DummySolver to test the implementations (!853, !931, !950, !973, !1017)
 - Fix compilation issue with newer Boost versions and clang (!940)
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
@@ -201,6 +203,8 @@ v5.0.0
 
 **Documentation**:
 - Added an initial developer's guide (!1001)
+- Updated user guide to reflect current implementation (!1051)
+- Added manpages for key solvers and utilities (!1051)
 
 **Tester**
 - Fix build with boost 1.67 (!947)

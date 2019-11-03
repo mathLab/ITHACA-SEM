@@ -158,88 +158,15 @@ $\mathbf{\sigma}$ of the tissue.
 
 
 \subsection{Filters}
+The following filters are supported exclusively for the cardiac
+EP solver. Further filters from section \ref{filters} are also available
+for this solver.
 \begin{itemize}
-    \item \inltt{CellHistoryPoints} writes all cell model states over time at
-        fixed points. Can be used along with the \inltt{HistoryPoints} filter to
-        record all variables at specific points during a simulation.
-\begin{lstlisting}[style=XmlStyle]
-<FILTER TYPE="CellHistoryPoints">
-    <PARAM NAME="OutputFile">crn.his</PARAM>
-    <PARAM NAME="OutputFrequency">1</PARAM>
-    <PARAM NAME="Points">
-        0.00 0.0 0.0
-    </PARAM>
-</FILTER>
-\end{lstlisting}
-    \begin{itemize}
-        \item \inltt{OutputFile} specifies the filename to write history data to.
-        \item \inltt{OutputFrequency} specifies the number of steps between successive outputs.
-        \item \inltt{Points} lists coordinates at which history data is to be recorded.
-    \end{itemize}
-
-    \item \inltt{CheckpointCellModel} checkpoints the cell model. Can be
-    used along with the \inltt{Checkpoint} filter to record complete simulation
-    state and regular intervals.
-\begin{lstlisting}[style=XmlStyle]
-<FILTER TYPE="CheckpointCellModel">
-  <PARAM NAME="OutputFile"> session </PARAM>
-  <PARAM NAME="OutputFrequency"> 1 </PARAM>
-</FILTER>
-\end{lstlisting}
-    \begin{itemize}
-        \item \inltt{OutputFile} (optional) specifies the base filename to use.
-    If not specified, the session name is used. Checkpoint files are suffixed with the process ID and the extension `.chk`.
-        \item \inltt{OutputFrequency} specifies the number of timesteps between
-    checkpoints.
-    \end{itemize}
-    
-    \item \inltt{Electrogram} Computes virtual unipolar electrograms at a
-     prescribed set of points.
-\begin{lstlisting}[style=XmlStyle]
-<FILTER TYPE="Electrogram">
-  <PARAM NAME="OutputFile"> session </PARAM>
-  <PARAM NAME="OutputFrequency"> 1 </PARAM>
-  <PARAM NAME="Points">
-      0.0  0.5  0.7
-      1.0  0.5  0.7
-      2.0  0.5  0.7
-  </PARAM>
-</FILTER>
-\end{lstlisting}
-    \begin{itemize}
-    \item \inltt{OutputFile} (optional) specifies the base filename to use. If
-    not specified, the session name is used. The extension `.ecg` is appended if not already specified.
-    \item \inltt{OutputFrequency} specifies the number of resolution of the
-    electrogram data.
-    \item \inltt{Points} specifies a list of coordinates at which electrograms
-    are desired. \emph{They must not lie within the domain.}
-    \end{itemize}
-
-\item \inltt{Benchmark} Records spatially distributed event times for 
-    activation and repolarisation (recovert) during a simulation, for
-    undertaking benchmark test problems.
-\begin{lstlisting}[style=XmlStyle]
-<FILTER TYPE="Benchmark">
-  <PARAM NAME="ThresholdValue"> -40.0 </PARAM>
-  <PARAM NAME="InitialValue">     0.0 </PARAM>
-  <PARAM NAME="OutputFile"> benchmark </PARAM>
-  <PARAM NAME="StartTime">        0.0 </PARAM>
-</FILTER>
-\end{lstlisting}
-    \begin{itemize}
-        \item \inltt{ThresholdValue} specifies the value above which tissue is
-            considered to be depolarised and below which is considered
-            repolarised.
-        \item \inltt{InitialValue} specifies the initial value of the
-            activation or repolarisation time map.
-        \item \inltt{OutputFile} specifies the base filename of activation and
-            repolarisation maps output from the filter. This name is appended
-            with the index of the event and the suffix `.fld`.
-        \item \inltt{StartTime} (optional) specifies the simulation time at
-            which to start detecting events.
-    \end{itemize}
+    \item \inltt{Benchmark} (section \ref{filters:Benchmark})
+    \item \inltt{CellHistoryPoints} (section \ref{filters:CellHistoryPoints})
+    \item \inltt{CheckpointCellModel} (section \ref{filters:CheckpointCellModel})
+    \item \inltt{Electrogram} (section \ref{filters:Electrogram})
 \end{itemize}
-
 
 \subsection{Stimuli}
 Electrophysiological propagaion is initiated through the stimulus current 

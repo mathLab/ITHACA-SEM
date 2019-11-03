@@ -31,7 +31,7 @@ The attribute \inltt{PARTITION} may also appear in a partitioned mesh.
 However, this attribute should not be explicitly specified by the user.
 \end{notebox}
 
-Each of the \inltt{VERTEX}, \inltt{EDGE}, \inltt{FACE}, \inltt{ELEMENT}
+The contents of each of the \inltt{VERTEX}, \inltt{EDGE}, \inltt{FACE}, \inltt{ELEMENT}
 and \inltt{CURVED} sections may optionally be compressed and stored in
 base64-encoded gzipped binary form, using either little-endian or big-endian
 ordering, as specified by the \inltt{COMPRESSED} attribute to these sections.
@@ -42,13 +42,14 @@ Currently supported values are:
     \item \inltt{B64Z-BigEndian}: Base64 Gzip compressed using big-endian
         ordering.
 \end{itemize}
+When generating mesh input files for \nekpp using \inltt{NekMesh}, the binary compressed form will be used by default. To convert a compressed XML file into
+human-readable ASCII format use, for example:
+\begin{lstlisting}[style=BashInputStyle]
+NekMesh file.msh newfile.xml:xml:uncompress
+\end{lstlisting}
 
 \begin{notebox}
-The description below explains how the \inltt{GEOMETRY} section is laid out in
-uncompressed ascii format. From Jan 2016 the distribution uses the compressed
-format for each of the above sections. To convert a compressed xml file into
-ascii format use \\
-  \inltt{ NekMesh file.msh newfile.xml:xml:uncompress}
+The description in the remainder of this section explains how the \inltt{GEOMETRY} section is laid out in uncompressed ASCII format.
 \end{notebox}
 
 
@@ -149,10 +150,10 @@ For mesh elements with curved edges and/or curved faces, a separate entry is use
 \end{notebox}
 
 \subsection{Composites}
-Composites define collections of elements, faces or edges. Each has a unique composite ID associated with it. All components of a composite entry must be of the same type. The syntax allows components to be listed individually or using ranges. Examples include
+Composites define collections of elements, faces or edges. Each has a unique composite ID associated with it. All components of a composite entry must be of the same type. The syntax allows components to be listed individually, using ranges, or a mixture of the two. Examples include
 \begin{lstlisting}[style=XMLStyle]
 <C ID="0"> T[0-862] </C>
-<C ID="1"> E[68,69,70,71] </C>
+<C ID="1"> E[61-67,69,70,72-74] </C>
 \end{lstlisting}
 
 

@@ -1,0 +1,86 @@
+.\" Manpage for ShallowWaterSolver
+.\" Contact c.cantwell@imperial.ac.uk to correct errors or typos
+.TH man 1 "07 Aug 2019" "5.0" "ShallowWaterSolver man page"
+.SH NAME
+ShallowWaterSolver \- solves depth-integrated wave equations
+.SH SYNOPSIS
+ShallowWaterSolver [ option(s) ] [ [ session.xml ] ... ]
+.SH DESCRIPTION
+.B ShallowWaterSolver
+solves depth-integrated wave equations of the shallow water type using the spectral/hp element method. It is built on the
+.B Nektar++
+high-order spectral/hp element framework.
+
+The
+.B ShallowWaterSolver
+can solve two types of problems:
+.IP \(em 3
+Linear SWE in primative variables
+.IP \(em 3
+Non-linear SWE in conservative variables
+
+.SS Further information
+For further details and specific configuration options, please consult the
+.B Nektar++ user guide
+available from the website \(la www.nektar.info \(ra.
+.SH OPTIONS
+.SS General Options
+.TP 4
+.B \-h [ \-\-help ]
+.TP 4
+.B \-I [ \-\-solverinfo ] arg
+Overrides a SOLVERINFO property in the XML input files.
+.TP 4
+.B \-P [ \-\-parameter ] arg
+Overrides a PARAMETER in the XML input files.
+.TP 4
+.B \-v [ \-\-verbose ]
+Displays additional diagnostic information during the solver execution.
+.TP 4
+.B \-V [ \-\-version ]
+Prints the version of the Nektar++.
+.SS Parallelisation Options
+.TP 4
+.B \-\-npx arg
+Specifies the number of processes in the x-direction.
+.TP 4
+.B \-\-npy arg
+Specifies the number of processes in the y-direction.
+.TP 4
+.B \-\-npz arg
+Specifies the number of processes in the z-direction.
+.TP 4
+.B \-\-part-info
+Output partition information.
+.TP 4
+.B \-\-part-only N
+Partitions the input mesh into N partitions and exits.
+.TP 4
+.B \-\-part-only-overlapping N
+Partitions mesh into N overlapping partitions and exits.
+.TP 4
+.B \-\-use-ptscotch
+Use PT-Scotch for parallel mesh partitioning.
+.TP 4
+.B \-\-use-scotch
+Use Scotch for mesh partitioning.
+
+.SH EXAMPLE
+To run the solver on a single input file which contains both the geometry and
+the solver parameter specifications
+
+.RS
+.B ShallowWaterSolver session.xml
+.RE
+
+It is often helpful to separate the geometry specification from the remaining
+solver parameters. In this case multiple .xml files may be provided
+
+.RS
+.B ShallowWaterSolver session.xml conditions.xml
+.RE
+
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Chris Cantwell (c.cantwell@imperial.ac.uk)

@@ -12,7 +12,7 @@
         <I PROPERTY="NotLocMethod" VALUE="Extrapolate" />
         <I PROPERTY="SendSteps" VALUE="1" />
         <I PROPERTY="SendVariables" VALUE="u0S,v0S,F_0_u0S,F_0_v0S" />
-        <I PROPERTY="SendMethod" VALUE="NEARESTNEIGHBOUR" />
+        <I PROPERTY="SendMethod" VALUE="EVALUATE" />
     </COUPLING>
     <CONDITIONS>
         <SOLVERINFO>

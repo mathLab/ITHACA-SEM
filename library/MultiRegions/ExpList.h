@@ -1297,6 +1297,10 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray);
 
+            virtual void v_FwdTrans_BndConstrained(
+                const Array<OneD,const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray);
+            
             virtual void v_SmoothField(Array<OneD,NekDouble> &field);
 
             virtual void v_IProductWRTBase(
@@ -1746,6 +1750,17 @@ namespace Nektar
             v_FwdTrans_IterPerExp(inarray,outarray);
         }
 
+        /**
+         *
+         */
+        inline void ExpList::FwdTrans_BndConstrained (
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,NekDouble> &outarray)
+        {
+            v_FwdTrans_BndConstrained(inarray,outarray);
+        }
+
+        
         /**
          *
          */

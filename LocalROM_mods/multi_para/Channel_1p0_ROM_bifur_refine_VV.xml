@@ -66,7 +66,7 @@
             <P> param7_dir1 = 0.1875       </P>
             <P> param8_dir1 = 0.2       </P>
 	    <P> use_fine_grid_VV = 1       </P>
-	    <P> use_fine_grid_VV_and_load_ref = 0       </P>
+	    <P> use_fine_grid_VV_and_load_ref = 1       </P>
             <P> fine_grid_dir0 = 40       </P>
             <P> fine_grid_dir1 = 41       </P>
             <P> qoi_dof = 1980       </P>

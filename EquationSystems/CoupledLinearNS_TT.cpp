@@ -7285,7 +7285,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			if (use_fine_grid_VV_and_load_ref)
 			{
 				// load the refs -- maybe 	InitObject();   has to happen first
-
+				Array<OneD, NekDouble> collected_fine_grid_ref_qoi = Array<OneD, NekDouble> (fine_grid_dir0*fine_grid_dir1);
+				
 				int nvelo = 2;
 			        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvelo); // for a 2D problem
 
@@ -7320,7 +7321,26 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 						snapshot_x_collection_VV[i][j] = test_load_snapshot[0][j];
 						snapshot_y_collection_VV[i][j] = test_load_snapshot[1][j];
 					}
+					collected_fine_grid_ref_qoi[i] = snapshot_y_collection_VV[i][qoi_dof];
 			        }
+				// write the FOM_qoi
+
+				std::stringstream sstm;
+				sstm << "ref_FOM_qoi.txt";
+				std::string LocROM_txt = sstm.str();
+				const char* outname = LocROM_txt.c_str();
+				ofstream myfile (outname);
+				if (myfile.is_open())
+				{
+					for (int i0 = 0; i0 < fine_grid_dir0*fine_grid_dir1; i0++)
+					{
+						myfile << collected_fine_grid_ref_qoi[i0] << "\t";
+					}
+					myfile.close();
+				}
+				else cout << "Unable to open file"; 
+				
+
 			}
 		}
 	}

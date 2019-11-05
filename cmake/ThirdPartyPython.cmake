@@ -36,9 +36,7 @@ IF (NEKTAR_BUILD_PYTHON)
         # Find Python
         FIND_PACKAGE(PythonInterp  ${PYTHONVER} REQUIRED)
         FIND_PACKAGE(PythonLibsNew ${PYTHONVER} REQUIRED)
-        INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
 
-        ADD_DEFINITIONS(-DWITH_PYTHON)
         # Include headers from root directory for config file.
 
         # Now try to find Boost::Python. For now we are relying entirely on
@@ -87,6 +85,8 @@ IF (NEKTAR_BUILD_PYTHON)
 
         SET(NEKTAR_PYTHON3_STATUS ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "")
     ENDIF()
+    INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
+    ADD_DEFINITIONS(-DWITH_PYTHON)
 
     MESSAGE(STATUS "Found Python: ${PYTHON_EXECUTABLE}")
     MESSAGE(STATUS "Found Boost.Python: ${BOOST_PYTHON_LIB}")

@@ -1291,18 +1291,21 @@ namespace Nektar
         const MultiRegions::AssemblyMapDGSharedPtr  TraceMap=fields[0]->GetTraceMap();
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    qBwd(nDim);
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    qFwd(nDim);
-        for (int nd = 0; nd < nDim; ++nd)
+        if(m_DEBUG_VISCOUS_JAC_MAT)
         {
-            qBwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
-            qFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
-            for (int i = 0; i < nConvectiveFields; ++i)
+            for (int nd = 0; nd < nDim; ++nd)
             {
-                qBwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
-                qFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+                qBwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+                qFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+                for (int i = 0; i < nConvectiveFields; ++i)
+                {
+                    qBwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+                    qFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
 
-                fields[i]->GetFwdBwdTracePhysDeriv_serial(nd,qfield[nd][i], qFwd[nd][i], qBwd[nd][i]);
-                TraceMap->UniversalTraceAssemble(qBwd[nd][i]);
-                TraceMap->UniversalTraceAssemble(qFwd[nd][i]);
+                    fields[i]->GetFwdBwdTracePhysDeriv_serial(nd,qfield[nd][i], qFwd[nd][i], qBwd[nd][i]);
+                    TraceMap->UniversalTraceAssemble(qBwd[nd][i]);
+                    TraceMap->UniversalTraceAssemble(qFwd[nd][i]);
+                }
             }
         }
 

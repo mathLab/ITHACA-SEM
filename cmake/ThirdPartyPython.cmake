@@ -38,7 +38,7 @@ IF (NEKTAR_BUILD_PYTHON)
         FIND_PACKAGE(PythonLibsNew ${PYTHONVER} REQUIRED)
 
         # Save include dir in Cache for subsequent configures.
-        SET(PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS} CACHE INTERNAL "")
+        SET(PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS} CACHE INTERNAL "" FORCE)
 
         # Include headers from root directory for config file.
 

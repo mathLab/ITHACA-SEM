@@ -54,6 +54,8 @@ FilterFieldConvert::FilterFieldConvert(
     const ParamMap &pParams)
     : Filter(pSession, pEquation)
 {
+    m_dt = m_session->GetParameter("TimeStep");
+
     // OutputFile
     auto it = pParams.find("OutputFile");
     if (it == pParams.end())
@@ -115,10 +117,78 @@ FilterFieldConvert::FilterFieldConvert(
     //    (Derived classes need to override this if needed)
     m_sampleFrequency = m_outputFrequency;
 
+    // Phase sampling option
+    it = pParams.find("PhaseAverage");
+    if (it == pParams.end())
+    {
+        m_phaseSample = false;
+    }
+    else
+    {
+        std::string sOption = it->second.c_str();
+        m_phaseSample = (boost::iequals(sOption, "true")) ||
+                   (boost::iequals(sOption, "yes"));
+    }
+
+    if(m_phaseSample)
+    {
+        auto itPeriod = pParams.find("PhaseAveragePeriod");
+        auto itPhase = pParams.find("PhaseAveragePhase");
+    
+        // Error if only one of the required params for PhaseAverage is present
+        ASSERTL0((itPeriod != pParams.end() && itPhase != pParams.end()), 
+            "The phase sampling feature requires both 'PhaseAveragePeriod' and "
+            "'PhaseAveragePhase' to be set.");
+
+        LibUtilities::Equation equPeriod(
+            m_session->GetInterpreter(), itPeriod->second);
+        m_phaseSamplePeriod = equPeriod.Evaluate();
+
+        LibUtilities::Equation equPhase(
+            m_session->GetInterpreter(), itPhase->second);
+        m_phaseSamplePhase = equPhase.Evaluate();
+
+        // Check that phase and period are within required limits
+        ASSERTL0(m_phaseSamplePeriod > 0,
+                 "PhaseAveragePeriod must be greater than 0.");
+        ASSERTL0(m_phaseSamplePhase >= 0 && m_phaseSamplePhase <= 1,
+                 "PhaseAveragePhase must be between 0 and 1.");
+
+        // Load sampling frequency, overriding the previous value
+        it = pParams.find("SampleFrequency");
+        if (it == pParams.end())
+        {
+            m_sampleFrequency = 1;
+        }
+        else
+        {
+            LibUtilities::Equation equ(
+                m_session->GetInterpreter(), it->second);
+            m_sampleFrequency = round(equ.Evaluate());
+        }
+
+        // Compute tolerance within which sampling occurs.
+        m_phaseTolerance = m_dt * m_sampleFrequency /
+            (m_phaseSamplePeriod * 2);
+
+        // Display worst case scenario sampling tolerance for exact phase, if
+        // verbose option is active
+        if (m_session->GetComm()->GetRank() == 0 &&
+            m_session->DefinesCmdLineArgument("verbose"))
+        {
+            std::cout << "Phase sampling activated with period "
+                      << m_phaseSamplePeriod << " and phase "
+                      << m_phaseSamplePhase << "." << std::endl
+                      << "Sampling within a tolerance of "
+                      << std::setprecision(6) << m_phaseTolerance << "."
+                      << std::endl;
+        }
+    }
+    
     m_numSamples  = 0;
     m_index       = 0;
     m_outputIndex = 0;
-
+    
     //
     // FieldConvert modules
     //
@@ -289,9 +359,41 @@ void FilterFieldConvert::v_Update(
     ASSERTL0(equ, "Weak pointer expired");
     equ->ExtraFldOutput(coeffs, variables);
 
-    m_numSamples++;
-    v_ProcessSample(pFields, coeffs, time);
+    if(m_phaseSample)
+    {
+        // The sample is added to the filter only if the current time 
+        // corresponds to the correct phase. Introducing M as number of 
+        // cycles and N nondimensional phase (between 0 and 1):
+        // t = M * m_phaseSamplePeriod + N * m_phaseSamplePeriod
+        int currentCycle       = floor(time / m_phaseSamplePeriod);
+        NekDouble currentPhase = time / m_phaseSamplePeriod - currentCycle;
 
+        // Evaluate phase relative to the requested value.
+        NekDouble relativePhase = fabs(m_phaseSamplePhase - currentPhase);
+
+        // Check if relative phase is within required tolerance and sample.
+        // Care must be taken to handle the cases at phase 0 as the sample might
+        // have to be taken at the very end of the previous cycle instead.
+        if (relativePhase < m_phaseTolerance ||
+            fabs(relativePhase-1) < m_phaseTolerance)
+        {
+            m_numSamples++;
+            v_ProcessSample(pFields, coeffs, time);
+            if (m_session->GetComm()->GetRank() == 0 &&
+                m_session->DefinesCmdLineArgument("verbose"))
+            {
+                std::cout << "Sample: " << std::setw(8) << std::left
+                          << m_numSamples << "Phase: " << std::setw(8)
+                          << std::left << currentPhase << std::endl;
+            }
+        }
+    }
+    else
+    {
+        m_numSamples++;
+        v_ProcessSample(pFields, coeffs, time);
+    }
+    
     if (m_index % m_outputFrequency == 0)
     {
         m_fieldMetaData["FinalTime"] = boost::lexical_cast<std::string>(time);

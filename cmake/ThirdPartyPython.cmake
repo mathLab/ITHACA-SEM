@@ -37,6 +37,9 @@ IF (NEKTAR_BUILD_PYTHON)
         FIND_PACKAGE(PythonInterp  ${PYTHONVER} REQUIRED)
         FIND_PACKAGE(PythonLibsNew ${PYTHONVER} REQUIRED)
 
+        # Save include dir in Cache for subsequent configures.
+        SET(PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS} CACHE INTERNAL "")
+
         # Include headers from root directory for config file.
 
         # Now try to find Boost::Python. For now we are relying entirely on

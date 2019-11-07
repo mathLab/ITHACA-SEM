@@ -10,6 +10,12 @@ IF (NEKTAR_BUILD_PYTHON)
     CMAKE_DEPENDENT_OPTION(NEKTAR_USE_PYTHON3
         "If true, prefer to use Python 3." OFF "NEKTAR_BUILD_PYTHON" OFF)
 
+    # Set the Python3 status flag as the opposite of the Python3 flag by
+    # default on first run to ensure Python is searched for.
+    IF (NOT DEFINED NEKTAR_PYTHON3_STATUS)
+        SET(NEKTAR_PYTHON3_STATUS NOT ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "")
+    ENDIF()
+
     IF (NOT NEKTAR_PYTHON3_STATUS STREQUAL NEKTAR_USE_PYTHON3)
         # Unset any existing python executable/library settings so that we can
         # rediscover correct python version if v2/3 settings changed.
@@ -30,9 +36,10 @@ IF (NEKTAR_BUILD_PYTHON)
         # Find Python
         FIND_PACKAGE(PythonInterp  ${PYTHONVER} REQUIRED)
         FIND_PACKAGE(PythonLibsNew ${PYTHONVER} REQUIRED)
-        INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
 
-        ADD_DEFINITIONS(-DWITH_PYTHON)
+        # Save include dir in Cache for subsequent configures.
+        SET(PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS} CACHE INTERNAL "" FORCE)
+
         # Include headers from root directory for config file.
 
         # Now try to find Boost::Python. For now we are relying entirely on
@@ -81,6 +88,8 @@ IF (NEKTAR_BUILD_PYTHON)
 
         SET(NEKTAR_PYTHON3_STATUS ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "")
     ENDIF()
+    INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
+    ADD_DEFINITIONS(-DWITH_PYTHON)
 
     MESSAGE(STATUS "Found Python: ${PYTHON_EXECUTABLE}")
     MESSAGE(STATUS "Found Boost.Python: ${BOOST_PYTHON_LIB}")

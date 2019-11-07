@@ -111,6 +111,13 @@ class ArtificialDiffusion
             const Array<OneD, Array<OneD, NekDouble> > &physfield,
                   Array<OneD, NekDouble  >             &mu)=0;
 
+        void GetFluxVector(
+            const Array<OneD, Array<OneD, NekDouble> > &inarray,
+            const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                &viscousTensor);
+
+
 };
 }
 

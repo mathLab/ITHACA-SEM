@@ -132,6 +132,7 @@ v5.0.0
 - Fix surface extraction, added regression test (!994)
 - Fix 2D meshing running out of memory due to missing else (!1012)
 - Add support for .msh v4.1 file input (!1054)
+- Added penalty term to LDG and LDGNS, slight generalization of LDG (!1080)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

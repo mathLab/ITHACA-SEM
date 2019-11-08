@@ -214,7 +214,8 @@ v5.0.0
 - Extend to support MPI tests with multiple executables (!1085)
 
 **Packaging:**
-- Add Dockerfiles and gitlab CI configuration for automatic builds (!1021)
+- Add Dockerfiles and gitlab CI configuration for automatic builds (!1021,
+  !1092)
 
 v4.4.2
 ------

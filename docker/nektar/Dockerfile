@@ -46,7 +46,7 @@ ARG INSTALL_PREFIX=/usr/local
 COPY --from=build ${INSTALL_PREFIX} ${INSTALL_PREFIX}
 
 # Set up entrypoint for copying test files.
-COPY pkg/docker/nektar/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY docker/nektar/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
     ln -s /usr/local/bin/docker-entrypoint.sh /
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

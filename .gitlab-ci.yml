@@ -4,9 +4,6 @@ stages:
   - docker-build-dev
   - docker-test-image
 
-variables:
-  GIT_SUBMODULE_STRATEGY: normal
-
 .docker_build_template: &docker_build_template
   image: docker:stable
   stage: docker-build-image
@@ -48,6 +45,7 @@ docker-build-nektar:
   variables:
     image_name: nektarpp/nektar
     dockerfile: docker/nektar/Dockerfile
+    GIT_SUBMODULE_STRATEGY: normal
 
 docker-build-workbook:
   <<: *docker_build_template

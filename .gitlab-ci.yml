@@ -4,6 +4,9 @@ stages:
   - docker-build-dev
   - docker-test-image
 
+variables:
+  GIT_SUBMODULE_STRATEGY: normal
+
 .docker_build_template: &docker_build_template
   image: docker:stable
   stage: docker-build-image

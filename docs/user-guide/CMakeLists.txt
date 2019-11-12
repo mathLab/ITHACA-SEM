@@ -54,8 +54,12 @@ ADD_CUSTOM_TARGET(user-guide-pdf
 
 # Install output, if it is generated.
 INSTALL(CODE "IF (EXISTS ${USERGUIDE}/html)
-    FILE(INSTALL ${USERGUIDE}/html
-         DESTINATION \${CMAKE_INSTALL_PREFIX}/${NEKTAR_DOC_DIR}/user-guide)
+    FILE(GLOB UGHTML ${USERGUIDE}/html/*)
+    LIST(LENGTH UGHTML UGHTML_LEN)
+    IF(UGHTML_LEN GREATER 0)
+        FILE(INSTALL ${USERGUIDE}/html
+             DESTINATION \${CMAKE_INSTALL_PREFIX}/${NEKTAR_DOC_DIR}/user-guide)
+    ENDIF()
 ENDIF()
 IF (EXISTS ${USERGUIDE}/user-guide.pdf)
     FILE(INSTALL ${USERGUIDE}/user-guide.pdf

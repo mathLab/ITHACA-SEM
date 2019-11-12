@@ -27,18 +27,15 @@ IF (NEKTAR_BUILD_DOC)
     IF(NEKTAR_BUILD_DOC_ECLIPSE)
         SET(DOXYGEN_GENERATE_ECLIPSEHELP "YES")
     ENDIF()
-    INSTALL(DIRECTORY ${PROJECT_BINARY_DIR}/docs/doxygen/ 
-        DESTINATION ${NEKTAR_DOC_DIR})
 
-    CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/docs/doxygen/Doxyfile.in     
+    INSTALL(DIRECTORY ${PROJECT_BINARY_DIR}/docs/doxygen/html/
+        DESTINATION ${NEKTAR_DOC_DIR}/doxygen)
+
+    CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/docs/doxygen/Doxyfile.in
                    ${PROJECT_BINARY_DIR}/docs/doxygen/Doxyfile @ONLY IMMEDIATE)
 
     ADD_CUSTOM_TARGET(doc
-        COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_SOURCE_DIR}/docs/doxygen/doxygen-fixed-width.css
-            ${PROJECT_BINARY_DIR}/docs/doxygen/doxygen-fixed-width.css
-        COMMAND ${DOXYGEN_EXECUTABLE}
-            ${PROJECT_BINARY_DIR}/docs/doxygen/Doxyfile
+        COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/docs/doxygen/Doxyfile
         SOURCES ${PROJECT_BINARY_DIR}/docs/doxygen/Doxyfile)
 
 ENDIF (NEKTAR_BUILD_DOC)

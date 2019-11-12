@@ -26,10 +26,8 @@ RUN mkdir build && cd build &&                                  \
     -DNEKTAR_USE_CCM=ON                                         \
     .. &&                                                       \
     make -j$(nproc) &&                                          \
-    make -j$(nproc) user-guide-pdf user-guide-html &&           \
-    make -j$(nproc) developer-guide-pdf developer-guide-html && \
-    make -j$(nproc) tutorials &&                                \
-    make doc
+    make -j$(nproc) user-guide-pdf developer-guide-pdf          \
+        tutorials-pdf doc
 
 USER root
 RUN cd build && make install && make nekpy-install-system && cd ..

@@ -79,8 +79,10 @@ namespace Nektar
                                 .CreateInstance(eosType, m_session);
 
         // Viscosity
+        int nPts = m_fields[0]->GetNpoints();
         m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
-        m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
+        m_session->LoadParameter ("mu",            m_muRef,           1.78e-05);
+        m_mu = Array<OneD, NekDouble>(nPts, m_muRef);
 
         // Thermal conductivity or Prandtl
         if( m_session->DefinesParameter("thermalConductivity"))
@@ -89,16 +91,18 @@ namespace Nektar
                  "Cannot define both Pr and thermalConductivity.");
 
             m_session->LoadParameter ("thermalConductivity",
-                                        m_thermalConductivity);
-            m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
+                                        m_thermalConductivityRef);
+            m_Prandtl = m_Cp * m_muRef / m_thermalConductivityRef;
         }
         else
         {
             m_session->LoadParameter ("Pr", m_Prandtl, 0.72);
-            m_thermalConductivity = m_Cp * m_mu / m_Prandtl;
+            m_thermalConductivityRef = m_Cp * m_muRef / m_Prandtl;
         }
+        m_thermalConductivity =
+                Array<OneD, NekDouble>(nPts, m_thermalConductivityRef);
 
-        string diffName, advName;
+        string diffName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
 
         m_diffusion = SolverUtils::GetDiffusionFactory()
@@ -215,6 +219,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > inFwd(nvariables-1);
             Array<OneD, Array<OneD, NekDouble> > inBwd(nvariables-1);
 
+            
             for (i = 0; i < nvariables-1; ++i)
             {
                 inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
@@ -233,7 +238,7 @@ namespace Nektar
             m_varConv->GetVelocityVector(inarray, inarrayDiff);
 
             // Repeat calculation for trace space
-            if (pFwd == NullNekDoubleArrayofArray || 
+            if (pFwd == NullNekDoubleArrayofArray ||
                 pBwd == NullNekDoubleArrayofArray)
             {
                 inFwd = NullNekDoubleArrayofArray;
@@ -261,12 +266,6 @@ namespace Nektar
                             outarrayDiff[i], 1,
                             outarray[i], 1,
                             outarray[i], 1);
-            }
-            if (m_shockCaptureType != "Off")
-            {
-                // Get min h/p
-                m_artificialDiffusion->SetElmtHP(GetElmtMinHP());
-                m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
             }
         }
     }
@@ -314,6 +313,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > inFwd(nvariables-1);
             Array<OneD, Array<OneD, NekDouble> > inBwd(nvariables-1);
 
+            
             for (i = 0; i < nvariables-1; ++i)
             {
                 inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
@@ -332,7 +332,7 @@ namespace Nektar
             m_varConv->GetVelocityVector(inarray, inarrayDiff);
 
             // Repeat calculation for trace space
-            if (pFwd == NullNekDoubleArrayofArray || 
+            if (pFwd == NullNekDoubleArrayofArray ||
                 pBwd == NullNekDoubleArrayofArray)
             {
                 inFwd = NullNekDoubleArrayofArray;
@@ -351,12 +351,12 @@ namespace Nektar
             }
 
             // Diffusion term in physical rhs form
-            m_diffusion->Diffuse_coeff(nvariables, m_fields, inarrayDiff, outarrayDiff,
+            m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff,
                                 inFwd, inBwd);
 
             for (i = 0; i < nvariables; ++i)
             {
-                Vmath::Vadd(ncoeffs,
+                Vmath::Vadd(npoints,
                             outarrayDiff[i], 1,
                             outarray[i], 1,
                             outarray[i], 1);
@@ -1136,5 +1136,73 @@ namespace Nektar
         }
  
     }
+
+    /**
+     * @brief Return the penalty vector for the LDGNS diffusion problem.
+     */
+    void NavierStokesCFE::v_GetFluxPenalty(
+        const Array<OneD, Array<OneD, NekDouble> >  &uFwd,
+        const Array<OneD, Array<OneD, NekDouble> >  &uBwd,
+              Array<OneD, Array<OneD, NekDouble> >  &penaltyCoeff)
+    {
+        unsigned int nTracePts  = uFwd[0].num_elements();
+
+        // Compute average temperature
+        unsigned int nVariables = uFwd.num_elements();
+        Array<OneD, NekDouble> tAve{nTracePts, 0.0};
+        Vmath::Svtsvtp(nTracePts, 0.5, uFwd[nVariables-1], 1,
+            0.5, uBwd[nVariables-1], 1, tAve, 1);
+
+        // Get average viscosity and thermal conductivity
+        Array<OneD, NekDouble> muAve{nTracePts, 0.0};
+        Array<OneD, NekDouble> tcAve{nTracePts, 0.0};
+
+        GetViscosityAndThermalCondFromTemp(tAve, muAve, tcAve);
+
+        // Compute penalty term
+        for (int i = 0; i < nVariables; ++i)
+        {
+            // Get jump of u variables
+            Vmath::Vsub(nTracePts, uFwd[i], 1, uBwd[i], 1, penaltyCoeff[i], 1);
+            // Multiply by variable coefficient = {coeff} ( u^+ - u^- )
+            if ( i < nVariables-1 )
+            {
+                Vmath::Vmul(nTracePts, muAve, 1, penaltyCoeff[i], 1,
+                    penaltyCoeff[i], 1);
+            }
+            else
+            {
+                Vmath::Vmul(nTracePts, tcAve, 1, penaltyCoeff[i], 1,
+                    penaltyCoeff[i], 1);
+            }
+        }
+    }
+
+
+    /**
+     * @brief Update viscosity
+     * todo: add artificial viscosity here
+     */
+    void NavierStokesCFE::GetViscosityAndThermalCondFromTemp(
+        const Array<OneD, NekDouble> &temperature,
+        Array<OneD, NekDouble> &mu,
+        Array<OneD, NekDouble> &thermalCond)
+    {
+        int nPts       = temperature.num_elements();
+
+        // Variable viscosity through the Sutherland's law
+        if (m_ViscosityType == "Variable")
+        {
+            m_varConv->GetDynamicViscosity(temperature, mu);
+        }
+        else
+        {
+            Vmath::Fill(nPts, m_muRef, mu, 1);
+        }
+        NekDouble tRa = m_Cp / m_Prandtl;
+        Vmath::Smul(nPts, tRa, mu, 1, thermalCond, 1);
+
+    }
+    
 
 }

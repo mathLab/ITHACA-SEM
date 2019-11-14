@@ -6126,7 +6126,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //				cout << " L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]) " << L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]) << endl;
 //				cout << " L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]) " << L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]) << endl;
 			}
-			while ((L2error > 1e-9) && (!load_cO_snapshot_data_from_files));
+			while ((L2error > 2e-5) && (!load_cO_snapshot_data_from_files));
 		}
 
 //		snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_result_phys_velocity_x_y[0], snapshot_result_phys_velocity_x_y[1], general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);
@@ -6187,6 +6187,46 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	collect_f_all.block(collect_f_bnd.rows(),0,collect_f_p.rows(),collect_f_p.cols()) = collect_f_p;
 	collect_f_all.block(collect_f_bnd.rows()+collect_f_p.rows(),0,collect_f_int.rows(),collect_f_int.cols()) = collect_f_int;
 
+	// do the same for VV reference solutions
+
+	cout << "\n attempting trafo for VV reference solutions \n \n";
+
+        for(int i = fine_grid_dir0*fine_grid_dir1; i < fine_grid_dir0*fine_grid_dir1; ++i)
+	{
+		Eigen::VectorXd ref_f_bnd;
+		Eigen::VectorXd ref_f_p;
+		Eigen::VectorXd ref_f_int;
+//		Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection[0], snapshot_y_collection[0], fine_general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);
+		Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection_VV[i], snapshot_y_collection_VV[i], fine_general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);  
+
+		if (0)
+		{
+			double L2error = 1;
+			do
+			{
+				Array<OneD, Array<OneD, NekDouble> > prev_snapshot_result_phys_velocity_x_y = snapshot_result_phys_velocity_x_y;
+				snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_result_phys_velocity_x_y[0], snapshot_result_phys_velocity_x_y[1], fine_general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int); // setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
+
+
+				double L2error_x = L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]);
+				double L2error_y = L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]);
+				double L2error_x_ref = L2Error(0);
+				double L2error_y_ref = L2Error(1);
+				L2error = sqrt(L2error_x*L2error_x + L2error_y*L2error_y) / sqrt(L2error_x_ref*L2error_x_ref + L2error_y_ref*L2error_y_ref);
+				cout << "relative L2error w.r.t. current iterate " << L2error << endl;
+			}
+			while ((L2error > 1e-7));
+		}
+
+		std::stringstream sstm;
+		sstm << "Conv_ref_Oseen_param" << i << ".fld";
+		std::string filename = sstm.str();
+		if (1)
+		{
+			write_curr_field(filename);
+		}
+
+	}
 
     }
 
@@ -6390,6 +6430,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		// start sweeping 
 		Eigen::MatrixXd collected_qoi = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
 		Eigen::MatrixXd collected_relative_L2errors = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		Eigen::MatrixXd collected_relative_Linferrors = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
 		int fine_grid_dir0_index = 0;
 		int fine_grid_dir1_index = 0;
 		double locROM_qoi;
@@ -6463,6 +6504,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			if (use_fine_grid_VV_and_load_ref)
 			{
 				collected_relative_L2errors(fine_grid_dir0_index, fine_grid_dir1_index) = L2norm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
+				collected_relative_Linferrors(fine_grid_dir0_index, fine_grid_dir1_index) = Linfnorm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / Linfnorm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
 			}
 			fine_grid_dir1_index++;
 			if (fine_grid_dir1_index == fine_grid_dir1)
@@ -6512,6 +6554,25 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			}
 			else cout << "Unable to open file"; 
 
+			std::stringstream sstm_VV_Linf;
+			sstm_VV_Linf << "LocROM_cluster_VV_Linf" << current_cluster_number << ".txt";
+			std::string LocROM_txt_VV_Linf = sstm_VV_Linf.str();
+			const char* outname_VV_Linf = LocROM_txt_VV_Linf.c_str();
+			ofstream myfile_VV_Linf (outname_VV_Linf);
+			if (myfile_VV_Linf.is_open())
+			{
+				for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+				{
+					for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+					{
+						myfile_VV_Linf << std::setprecision(17) << collected_relative_Linferrors(i0,i1) << "\t";
+					}
+					myfile_VV_Linf << "\n";
+				}
+				myfile_VV_Linf.close();
+			}
+			else cout << "Unable to open file"; 
+
 
 		}
 
@@ -6520,6 +6581,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
     void CoupledLinearNS_TT::associate_VV_to_clusters(Array<OneD, std::set<int> > clusters)
     {
+	if (1)
+	{
 	// for each VV point identify the next closest cluster snapshot
 	Eigen::MatrixXd VV_cluster_association = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
 	int fine_general_param_vector_index = 0;
@@ -6557,6 +6620,87 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		myfile.close();
 	}
 	else cout << "Unable to open file"; 	
+	}
+	if (1)
+	{
+	// for each VV point identify the next closest cluster snapshot
+	Eigen::MatrixXd VV_cluster_association = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+	int fine_general_param_vector_index = 0;
+	int no_clusters = clusters.num_elements();
+	for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+	{
+		for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+		{
+			// find next snapshot location o_i
+			int general_param_vector_index = find_closest_snapshot_location_l1(fine_general_param_vector[fine_general_param_vector_index], general_param_vector);
+			fine_general_param_vector_index++;
+			// identify cluster in which o_i is
+			for (int j = 0; j < no_clusters; ++j)
+			{
+				if (clusters[j].count(general_param_vector_index) == 1)
+					VV_cluster_association(i0, i1) = j;
+			}
+		}
+	}
+	std::stringstream sstm;
+	sstm << "VV_cluster_association_l1.txt";
+	std::string LocROM_txt = sstm.str();
+	const char* outname = LocROM_txt.c_str();
+	ofstream myfile (outname);
+	if (myfile.is_open())
+	{
+		for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+		{
+			for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+			{
+				myfile << VV_cluster_association(i0,i1) << "\t";
+			}
+			myfile << "\n";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file"; 	
+	}
+	if (1)
+	{
+	// for each VV point identify the next closest cluster snapshot
+	Eigen::MatrixXd VV_cluster_association = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+	int fine_general_param_vector_index = 0;
+	int no_clusters = clusters.num_elements();
+	for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+	{
+		for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+		{
+			// find next snapshot location o_i
+			int general_param_vector_index = find_closest_snapshot_location_linf(fine_general_param_vector[fine_general_param_vector_index], general_param_vector);
+			fine_general_param_vector_index++;
+			// identify cluster in which o_i is
+			for (int j = 0; j < no_clusters; ++j)
+			{
+				if (clusters[j].count(general_param_vector_index) == 1)
+					VV_cluster_association(i0, i1) = j;
+			}
+		}
+	}
+	std::stringstream sstm;
+	sstm << "VV_cluster_association_linf.txt";
+	std::string LocROM_txt = sstm.str();
+	const char* outname = LocROM_txt.c_str();
+	ofstream myfile (outname);
+	if (myfile.is_open())
+	{
+		for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+		{
+			for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+			{
+				myfile << VV_cluster_association(i0,i1) << "\t";
+			}
+			myfile << "\n";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file"; 	
+	}
 
     }
 
@@ -6568,6 +6712,51 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		// elementary euclidean distances
 		double distance = sqrt( (VV_point[0] - general_param_vector[i][0])*(VV_point[0] - general_param_vector[i][0]) + (VV_point[1] - general_param_vector[i][1])*(VV_point[1] - general_param_vector[i][1]) );
+		if (i == 0)
+		{
+			min_distance = distance;
+			min_distance_index = 0;
+		}
+		else if (distance < min_distance)
+		{
+			min_distance = distance;
+			min_distance_index = i;
+		}
+	}
+	return min_distance_index;
+    }
+
+    int CoupledLinearNS_TT::find_closest_snapshot_location_l1(Array<OneD, NekDouble> VV_point, Array<OneD, Array<OneD, NekDouble> > general_param_vector)
+    {
+	double min_distance;
+	double min_distance_index;
+	for (int i = 0; i < general_param_vector.num_elements(); ++i)
+	{
+		double distance = abs(VV_point[0] - general_param_vector[i][0]) + abs(VV_point[1] - general_param_vector[i][1]);
+		if (i == 0)
+		{
+			min_distance = distance;
+			min_distance_index = 0;
+		}
+		else if (distance < min_distance)
+		{
+			min_distance = distance;
+			min_distance_index = i;
+		}
+	}
+	return min_distance_index;
+    }
+
+    int CoupledLinearNS_TT::find_closest_snapshot_location_linf(Array<OneD, NekDouble> VV_point, Array<OneD, Array<OneD, NekDouble> > general_param_vector)
+    {
+	double min_distance;
+	double min_distance_index;
+	for (int i = 0; i < general_param_vector.num_elements(); ++i)
+	{
+		std::vector<double> dist_vector = std::vector<double> (2);
+		dist_vector[0] = (VV_point[0] - general_param_vector[i][0]);
+		dist_vector[1] = (VV_point[1] - general_param_vector[i][1]);
+		double distance = max( dist_vector[0], dist_vector[1] );
 		if (i == 0)
 		{
 			min_distance = distance;
@@ -7428,6 +7617,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		{
 			which_single_cluster = -1;
 		}
+		if (m_session->DefinesParameter("load_predef_cluster")) 
+		{
+			load_predef_cluster = m_session->GetParameter("load_predef_cluster");	
+		}
+		else
+		{
+			load_predef_cluster = 0;
+		}
 
 
 		// Test range:
@@ -7438,7 +7635,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		Array<OneD, std::set<int> > optimal_clusters(no_clusters);
 		std::srand ( unsigned ( std::time(0) ) );
 
-		cout << "ATTENTION: using pre-def clustering!" << endl;
+//		cout << "ATTENTION: using pre-def clustering!" << endl;
 	// 7er
 /* 58 59 60 61 62 63 64 65 66 67 68 69 70 71
  35 38 39 40 41 42 43 44 46 47 48 49 50 51 52 53 54 55 56 57
@@ -7459,7 +7656,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
  28 36
  3 4 5 6 12 13
 */
-		optimal_clusters[0].insert(21);
+/*		optimal_clusters[0].insert(21);
 		optimal_clusters[0].insert(29);
 		optimal_clusters[0].insert(37);
 		optimal_clusters[0].insert(45);
@@ -7505,10 +7702,65 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		optimal_clusters[7].insert(6);
 		optimal_clusters[7].insert(12);
 		optimal_clusters[7].insert(13);
+*/
 
 
-//		for (int iter = 0; iter < 100; ++iter)
-		for (int iter = 0; iter < 0; ++iter)
+		if (load_predef_cluster)
+		{
+		        std::string optimal_clustering_txt = "optimal_clustering.txt";
+			const char* optimal_clustering_txt_t = optimal_clustering_txt.c_str();
+			ifstream myfile_optimal_clustering_txt_t (optimal_clustering_txt_t);
+			std::vector< std::vector<int> > all_integers;
+			if (myfile_optimal_clustering_txt_t.is_open())
+			{
+
+				std::string line;
+				std::vector< std::vector<int> > all_integers;
+				int counter = 0;
+				while ( getline( myfile_optimal_clustering_txt_t, line ) ) 
+				{
+				      cout << line << endl;
+      				      std::istringstream is( line );
+					std::vector<int> nn = std::vector<int>( std::istream_iterator<int>(is), std::istream_iterator<int>() );
+					cout << "nn.size() "  << nn.size() << endl;
+					for (int i = 0; i < nn.size(); ++i)
+					{
+						optimal_clusters[counter].insert(nn[i]);
+					}
+					++counter;
+//				      all_integers.push_back( std::vector<int>( std::istream_iterator<int>(is), std::istream_iterator<int>() ) );
+				}
+
+	/*			for (int i = 0; i < no_clusters; ++i)
+				{
+					for (std::set<int>::iterator it=optimal_clusters[i].begin(); it!=optimal_clusters[i].end(); ++it)
+					{
+						myfile_optimal_clustering_txt_t << *it << "\t";
+					}
+					myfile_optimal_clustering_txt_t << endl;
+				}
+	      			myfile_optimal_clustering_txt_t.close(); */
+			}
+			else cout << "Unable to open file"; 
+
+			cout << "the loaded clustering is: " << endl;
+			cout << optimal_clusters.num_elements() << endl;
+			for (int i1=0; i1 < optimal_clusters.num_elements(); ++i1)
+			{
+				for (std::set<int>::iterator it=optimal_clusters[i1].begin(); it!=optimal_clusters[i1].end(); ++it)
+				{
+					cout << *it << " ";
+				}
+				cout << endl;
+			}
+
+		}
+
+
+	if (!load_predef_cluster)
+	{
+		for (int iter = 0; iter < 100; ++iter)
+//		for (int iter = 0; iter < 0; ++iter)
 		{
 			Array<OneD, std::set<int> > clusters(no_clusters);
 			double CVT_energy = 0;
@@ -7561,6 +7813,9 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
       			myfile_optimal_clustering_txt_t.close();
 		}
 		else cout << "Unable to open file"; 
+
+	}
+
 
 		Eigen::MatrixXd samples_cluster_association = Eigen::MatrixXd::Zero(number_of_snapshots_dir0, number_of_snapshots_dir1);
 		int moving_index = 0;
@@ -8014,7 +8269,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		cout << "sum singular values " << singular_values.sum() << endl << endl;
 	}
 	rel_singular_values = singular_values / singular_values.sum();
-	int RBsize_c = 1; 
+       	int RBsize_c = 1; 
 	cum_rel_singular_values = Eigen::VectorXd::Zero(singular_values.rows());
 
 	double overlap_POD_part = m_session->GetParameter("overlap_POD_part");	
@@ -8281,6 +8536,19 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		y_difference[i] = component1_y[i] - component2_y[i];
 	}
 	double result = L2norm_ITHACA(x_difference, y_difference);
+	return result;
+    }
+
+    double CoupledLinearNS_TT::Linfnorm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y )
+    {
+	Array< OneD, NekDouble > x_difference(component1_x.num_elements());
+	Array< OneD, NekDouble > y_difference(component1_y.num_elements());
+	for (int i = 0; i < component1_y.num_elements(); ++i)
+	{
+		x_difference[i] = component1_x[i] - component2_x[i];
+		y_difference[i] = component1_y[i] - component2_y[i];
+	}
+	double result = Linfnorm_ITHACA(x_difference, y_difference);
 	return result;
     }
 
@@ -9595,6 +9863,21 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		L2norm = sqrt( L2norm_x*L2norm_x + L2norm_y*L2norm_y );
         }
 	return L2norm;
+    }
+
+    double CoupledLinearNS_TT::Linfnorm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y )
+    {
+	// the input comes in phys coords
+        NekDouble Linfnorm = -1.0;
+//	cout << "m_NumQuadPointsError " << m_NumQuadPointsError << endl; // should be 0
+//	cout << "component_x.num_elements() " << component_x.num_elements() << endl; // should be nphys
+        if (m_NumQuadPointsError == 0)
+        {
+		double Linfnorm_x = m_fields[0]->L2(component_x);
+		double Linfnorm_y = m_fields[1]->L2(component_y);
+		Linfnorm = max(Linfnorm_x, Linfnorm_y);
+        }
+	return Linfnorm;
     }
 
    void CoupledLinearNS_TT::DefineRBspace(Eigen::MatrixXd RB_in)

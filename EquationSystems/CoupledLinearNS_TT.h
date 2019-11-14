@@ -136,10 +136,13 @@ namespace Nektar
 	int use_LocROM;
 	int only_single_cluster;
 	int which_single_cluster;
+	int load_predef_cluster;
 	int fine_grid_dir0;
 	int fine_grid_dir1;
 	double L2norm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y );
+	double Linfnorm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y );
 	double L2norm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
+	double Linfnorm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
 	void k_means_ITHACA(int no_clusters, Array<OneD, std::set<int> > &clusters, double &CVT_energy);
 	void evaluate_local_clusters(Array<OneD, std::set<int> > optimal_clusters);
         void run_local_ROM_offline(Eigen::MatrixXd collect_f_all);
@@ -183,6 +186,8 @@ namespace Nektar
 	Array<OneD, Array<OneD, NekDouble> > general_param_vector;
 	Array<OneD, Array<OneD, NekDouble> > fine_general_param_vector;
 	int find_closest_snapshot_location(Array<OneD, NekDouble>, Array<OneD, Array<OneD, NekDouble> >);
+	int find_closest_snapshot_location_linf(Array<OneD, NekDouble>, Array<OneD, Array<OneD, NekDouble> >);
+	int find_closest_snapshot_location_l1(Array<OneD, NekDouble>, Array<OneD, Array<OneD, NekDouble> >);
 	Array<OneD, NekDouble> param_vector;
 	int Nmax;
 	int RBsize;

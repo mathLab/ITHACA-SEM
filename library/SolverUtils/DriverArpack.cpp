@@ -94,6 +94,9 @@ void DriverArpack::v_InitObject(ostream &out)
 
     m_equ[0]->PrintSummary(out);
 
+    ASSERTL0(m_comm->GetSize() == 1,
+             "ARPACK Arnoldi solver does not support execution in parallel.");
+
     // Print session parameters
     out << "\tArnoldi solver type    : Arpack" << endl;
 

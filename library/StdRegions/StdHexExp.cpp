@@ -61,15 +61,6 @@ namespace Nektar
         }
 
 
-        StdHexExp::StdHexExp(const  LibUtilities::BasisKey &Ba,
-                        const  LibUtilities::BasisKey &Bb,
-                        const  LibUtilities::BasisKey &Bc,
-                        NekDouble *coeffs,
-                        NekDouble *phys)
-        {
-        }
-
-
         StdHexExp::StdHexExp(const StdHexExp &T):
             StdExpansion(T),
             StdExpansion3D(T)
@@ -539,7 +530,7 @@ namespace Nektar
             ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
 
             int nq = GetTotPoints();
-            MatrixType mtype;
+            MatrixType mtype = eIProductWRTDerivBase0;
 
             switch (dir)
             {
@@ -696,7 +687,7 @@ namespace Nektar
         LibUtilities::ShapeType StdHexExp::v_DetShapeType() const
         {
             return LibUtilities::eHexahedron;
-        };
+        }
 
 
         int StdHexExp::v_NumBndryCoeffs() const
@@ -760,8 +751,8 @@ namespace Nektar
 
         int StdHexExp::v_GetTotalEdgeIntNcoeffs() const
         {
-	  return 4*(GetBasisNumModes(0)+GetBasisNumModes(1)+GetBasisNumModes(2));
-	}
+            return 4*(GetBasisNumModes(0)+GetBasisNumModes(1)+GetBasisNumModes(2));
+        }
 
 
         int StdHexExp::v_GetFaceNcoeffs(const int i) const
@@ -802,10 +793,10 @@ namespace Nektar
 
         int StdHexExp::v_GetTotalFaceIntNcoeffs() const
         {
-	    return 2*((GetBasisNumModes(0)-2)*(GetBasisNumModes(1)-2)+
-	              (GetBasisNumModes(0)-2)*(GetBasisNumModes(2)-2)+
-		      (GetBasisNumModes(1)-2)*(GetBasisNumModes(2)-2));
-	}
+            return 2*((GetBasisNumModes(0)-2)*(GetBasisNumModes(1)-2)+
+                      (GetBasisNumModes(0)-2)*(GetBasisNumModes(2)-2)+
+                (GetBasisNumModes(1)-2)*(GetBasisNumModes(2)-2));
+        }
 
         int StdHexExp::v_GetFaceNumPoints(const int i) const
         {
@@ -1087,11 +1078,12 @@ namespace Nektar
                         jump1 = nummodes0;
                     }
                 }
+                /* Falls through. */
                 case 0:
                 {
                     jump1 = nummodes0;
+                    break;
                 }
-                break;
                 case 3:
                 {
                     if (modified)
@@ -1104,11 +1096,12 @@ namespace Nektar
                         jump1 = nummodes0*nummodes1;
                     }
                 }
+                /* Falls through. */
                 case 1:
                 {
                     jump1 = nummodes0*nummodes1;
-                }
                     break;
+                }
                 case 2:
                 {
                     if (modified)
@@ -1123,12 +1116,13 @@ namespace Nektar
 
                     }
                 }
+                /* Falls through. */
                 case 4:
                 {
                     jump1 = nummodes0*nummodes1;
                     jump2 = nummodes0;
-                }
                     break;
+                }
                 default:
                     ASSERTL0(false,"fid must be between 0 and 5");
             }

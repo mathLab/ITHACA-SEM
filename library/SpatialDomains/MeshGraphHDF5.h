@@ -105,8 +105,7 @@ private:
         DataType *data, CurveSharedPtr curve);
 
     CompositeDescriptor CreateCompositeDescriptor(
-        std::unordered_map<int, int> &id2row,
-        std::vector<MeshEntity> &elmts);
+        std::unordered_map<int, int> &id2row);
 
     void WriteCurveMap(CurveMap &curves,
                        std::string dsName,
@@ -116,9 +115,9 @@ private:
     void WriteCurvePoints(MeshCurvedPts &curvedPts);
 
     void WriteComposites(CompositeMap &comps);
-    void WriteDomain(vector<CompositeMap> &domain);
+    void WriteDomain(std::vector<CompositeMap> &domain);
 
-    string m_hdf5Name;
+    std::string m_hdf5Name;
     LibUtilities::H5::FileSharedPtr m_file;
     LibUtilities::H5::PListSharedPtr m_readPL;
     LibUtilities::H5::GroupSharedPtr m_mesh;

@@ -202,11 +202,11 @@ namespace Nektar
     template<typename DataType>
     typename NekMatrix<DataType, StandardMatrixTag>::ConstGetValueType NekMatrix<DataType, StandardMatrixTag>::operator()(unsigned int row, unsigned int column) const
     {
-        ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
+        ASSERTL2(row < this->GetRows(), std::string("Row ") + std::to_string(row) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetRows()) +
             std::string(" rows"));
-        ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
+        ASSERTL2(column < this->GetColumns(), std::string("Column ") + std::to_string(column) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetColumns()) +
             std::string(" columns"));
 
         return this->GetValue(row, column, this->GetTransposeFlag());
@@ -239,11 +239,11 @@ namespace Nektar
     template<typename DataType>
     typename boost::call_traits<DataType>::const_reference NekMatrix<DataType, StandardMatrixTag>::GetValue(unsigned int row, unsigned int column) const
     {
-        ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
+        ASSERTL2(row < this->GetRows(), std::string("Row ") + std::to_string(row) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetRows()) +
             std::string(" rows"));
-        ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
+        ASSERTL2(column < this->GetColumns(), std::string("Column ") + std::to_string(column) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetColumns()) +
             std::string(" columns"));
 
         return GetValue(row, column, this->GetTransposeFlag());
@@ -584,11 +584,11 @@ namespace Nektar
     template<typename DataType>
     typename NekMatrix<DataType, StandardMatrixTag>::Proxy NekMatrix<DataType, StandardMatrixTag>::operator()(unsigned int row, unsigned int column)
     {
-        ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
+        ASSERTL2(row < this->GetRows(), std::string("Row ") + std::to_string(row) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetRows()) +
             std::string(" rows"));
-        ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
+        ASSERTL2(column < this->GetColumns(), std::string("Column ") + std::to_string(column) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetColumns()) +
             std::string(" columns"));
 
         return (*this)(row, column, this->GetTransposeFlag());
@@ -612,11 +612,11 @@ namespace Nektar
     template<typename DataType>
     void NekMatrix<DataType, StandardMatrixTag>::SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
     {
-        ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
+        ASSERTL2(row < this->GetRows(), std::string("Row ") + std::to_string(row) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetRows()) +
             std::string(" rows"));
-        ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
+        ASSERTL2(column < this->GetColumns(), std::string("Column ") + std::to_string(column) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetColumns()) +
             std::string(" columns"));
         SetValue(row, column, d, this->GetTransposeFlag());
     }

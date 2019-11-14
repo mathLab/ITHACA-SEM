@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <FieldUtils/Interpolator.h>
 #include <SolverUtils/EquationSystem.h>
 
@@ -64,6 +66,13 @@ namespace Nektar
 {
     namespace SolverUtils
     {
+
+        std::string EquationSystem::equationSystemTypeLookupIds[2] = {
+            LibUtilities::SessionReader::RegisterEnumValue("DEALIASING",
+                "True", 0),
+            LibUtilities::SessionReader::RegisterEnumValue("DEALIASING",
+                "False", 1)};
+
         /**
          * @class EquationSystem
          *
@@ -214,11 +223,6 @@ namespace Nektar
             
                 m_session->MatchSolverInfo("DEALIASING", "True", 
                                            m_homogen_dealiasing, false);
-                if(m_homogen_dealiasing == false)
-                {
-                    m_session->MatchSolverInfo("DEALIASING", "On", 
-                                               m_homogen_dealiasing, false);
-                }
             }
             else
             {
@@ -925,6 +929,8 @@ namespace Nektar
                                                     bool dumpInitialConditions,
                                                     const int domain)
         {
+            boost::ignore_unused(initialtime);
+
             if (m_session->GetComm()->GetRank() == 0)
             {
                 cout << "Initial Conditions:" << endl;
@@ -1478,6 +1484,7 @@ namespace Nektar
             std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
             std::vector<std::string>             &variables)
         {
+            boost::ignore_unused(fieldcoeffs, variables);
         }
 
     }

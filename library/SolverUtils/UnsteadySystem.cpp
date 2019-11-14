@@ -34,15 +34,15 @@
 
 #include <iostream>
 #include <iomanip>
+using namespace std;
+
+#include <boost/core/ignore_unused.hpp>
+#include <boost/format.hpp>
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
-
-#include <boost/format.hpp>
-
-using namespace std;
 
 namespace Nektar
 {	
@@ -91,7 +91,7 @@ namespace Nektar
             m_session->MatchSolverInfo("REACTIONADVANCEMENT", "Explicit",
                                        m_explicitReaction, true);
 
-            m_session->LoadParameter("CheckNanSteps", m_nanSteps, 1);
+            m_session->LoadParameter("CheckAbortSteps", m_abortSteps, 1);
             // Steady state tolerance
             m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 0.0);
             // Frequency for checking steady state
@@ -282,10 +282,17 @@ namespace Nektar
             NekDouble elapsed           = 0.0;
             NekDouble totFilterTime     = 0.0;
 
+            Array<OneD, int> abortFlags(2, 0);
+            string    abortFile     = "abort";
+            if (m_session->DefinesSolverInfo("CheckAbortFile"))
+            {
+                abortFile = m_session->GetSolverInfo("CheckAbortFile");
+            }
 
             m_timestepMax = m_timestep;
-            while (step   < m_steps ||
-                   m_time < m_fintime - NekConstants::kNekZeroTol)
+            while ((step   < m_steps ||
+                   m_time < m_fintime - NekConstants::kNekZeroTol) &&
+                   abortFlags[1] == 0)
             {
                 if(m_CFLGrowth > 1.0&&m_cflSafetyFactor<m_CFLEnd)
                 {
@@ -295,14 +302,14 @@ namespace Nektar
                 if (m_cflSafetyFactor)
                 {
                     m_timestep = GetTimeStep(fields);
-                    
+        
                     // Ensure that the final timestep finishes at the final
                     // time, or at a prescribed IO_CheckTime.
                     if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
                     {
                         m_timestep = m_fintime - m_time;
                     }
-                    else if (m_checktime && 
+                    else if (m_checktime &&
                              m_time + m_timestep - lastCheckTime >= m_checktime)
                     {
                         lastCheckTime += m_checktime;
@@ -310,7 +317,7 @@ namespace Nektar
                         doCheckTime    = true;
                     }
                 }
-                
+        
                 // Perform any solver-specific pre-integration steps
                 timer.Start();
                 if (v_PreIntegrate(step))
@@ -390,21 +397,34 @@ namespace Nektar
                     }
                 }
 
-                // search for NaN and quit if found
-                if (m_nanSteps && !((step+1) % m_nanSteps) )
+                // test for abort conditions (nan, or abort file)
+                if (m_abortSteps && !((step+1) % m_abortSteps) )
                 {
-                    int nanFound = 0;
+                    abortFlags[0] = 0;
                     for (i = 0; i < nvariables; ++i)
                     {
                         if (Vmath::Nnan(fields[i].num_elements(),
                                 fields[i], 1) > 0)
                         {
-                            nanFound = 1;
+                            abortFlags[0] = 1;
                         }
                     }
-                    m_session->GetComm()->AllReduce(nanFound,
+
+                    //rank zero looks for abort file and deltes it
+                    //if it exists. The communicates the abort
+                    if(m_session->GetComm()->GetRank() == 0)
+                    {
+                        if(boost::filesystem::exists(abortFile))
+                        {
+                            boost::filesystem::remove(abortFile);
+                            abortFlags[1] = 1;
+                        }
+                    }                    
+
+                    m_session->GetComm()->AllReduce(abortFlags,
                                 LibUtilities::ReduceMax);
-                    ASSERTL0 (!nanFound,
+
+                    ASSERTL0 (!abortFlags[0],
                                 "NaN found during time integration.");
                 }
 
@@ -506,7 +526,7 @@ namespace Nektar
                          << "Time-integration  : " << intTime  << "s"   << endl;
                 }
             }
-            
+        
             // If homogeneous, transform back into physical space if necessary.
             if(m_HomogeneousType != eNotHomogeneous)
             {
@@ -535,7 +555,7 @@ namespace Nektar
             {
                 x.second->Finalise(m_fields, m_time);
             }
-            
+        
             // Print for 1D problems
             if(m_spacedim == 1)
             {
@@ -692,17 +712,20 @@ namespace Nektar
         NekDouble UnsteadySystem::v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray)
         {
-            ASSERTL0(false, "Not defined for this class");
+            boost::ignore_unused(inarray);
+            NEKERROR(ErrorUtil::efatal, "Not defined for this class");
             return 0.0;
         }
 
         bool UnsteadySystem::v_PreIntegrate(int step)
         {
+            boost::ignore_unused(step);
             return false;
         }
 
         bool UnsteadySystem::v_PostIntegrate(int step)
         {
+            boost::ignore_unused(step);
             return false;
         }
 

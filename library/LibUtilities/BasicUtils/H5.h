@@ -41,6 +41,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Communication/Comm.h>
 
@@ -398,6 +400,7 @@ public:
     static DataTypeSharedPtr String(size_t len = 0);
     template <class T> static DataTypeSharedPtr OfObject(const T &obj)
     {
+        boost::ignore_unused(obj);
         return DataTypeTraits<T>::GetType();
     }
     virtual void Close();
@@ -544,10 +547,11 @@ public:
     {
         H5_CALL(
             H5Dwrite,
-            (m_Id, type->GetId(), H5S_ALL, H5S_ALL, H5P_DEFAULT, s.c_str()));
+            (m_Id, type->GetId(), H5S_ALL, filespace->GetId(), dxpl->GetId(), s.c_str()));
     }
 
     void WriteVectorString(std::vector<std::string> s,
+                     DataSpaceSharedPtr filespace,
                      DataTypeSharedPtr type,
                      PListSharedPtr dxpl = PList::Default())
     {
@@ -556,7 +560,7 @@ public:
         for (size_t i = 0; i < s.size(); ++i) {
             ret[i] = s[i].c_str();
         }
-        H5Dwrite(m_Id, type->GetId(), H5S_ALL, H5S_ALL, H5P_DEFAULT, ret);
+        H5Dwrite(m_Id, type->GetId(), H5S_ALL, filespace->GetId(), dxpl->GetId(), ret);
     }
 
     template <class T> void Read(std::vector<T> &data)
@@ -600,7 +604,7 @@ public:
 
         int w = coords[0].size();
 
-        hsize_t cds[coords.size() * w];
+        hsize_t *cds = new hsize_t[coords.size() * w];
         for(int i = 0; i < coords.size(); i++)
         {
             for(int j = 0; j < coords[i].size(); j++)
@@ -613,6 +617,8 @@ public:
                            H5S_SELECT_SET,
                            coords.size(),
                            cds);
+
+        delete[] cds;
 
         len = H5Sget_select_npoints(filespace->GetId());
         DataSpaceSharedPtr memspace = DataSpace::OneD(len);
@@ -634,7 +640,7 @@ public:
         std::vector<hsize_t> dims = filespace->GetDims();
         rdata = (char **) malloc (dims[0] * sizeof(char *));
 
-        H5_CALL(H5Dread, (m_Id, tp->GetId(), H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata));
+        H5_CALL(H5Dread, (m_Id, tp->GetId(), H5S_ALL, filespace->GetId(), dxpl->GetId(), rdata));
 
         for(int i = 0; i < dims[0]; i++)
         {

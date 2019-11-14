@@ -35,6 +35,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H
 #define NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/NekManager.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -581,6 +583,7 @@ namespace Nektar
             
             TimeIntegrationScheme(const TimeIntegrationScheme &in):m_schemeKey(NullTimeIntegrationSchemeKey)
             {
+                boost::ignore_unused(in);
                 NEKERROR(ErrorUtil::efatal,"Copy Constructor for the TimeIntegrationScheme class should not be called");
             }
 
@@ -871,7 +874,7 @@ namespace Nektar
         
         // =========================================================================
 
-    }; // end of namespace
+    } // end of namespace
 } // end of namespace 
 
 #endif //NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H

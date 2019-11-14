@@ -33,6 +33,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/ExpList3D.h>
 
 #include <LocalRegions/HexExp.h>
@@ -476,6 +479,8 @@ namespace Nektar
 
         void ExpList3D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip)
         {
+            boost::ignore_unused(istrip);
+
             int i,j,k;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);

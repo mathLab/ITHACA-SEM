@@ -33,6 +33,8 @@
  //
  ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/DisContField3D.h>
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion2D.h>
@@ -43,6 +45,10 @@
 #include <LibUtilities/Foundations/Interp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <tuple>
+
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
 
@@ -777,7 +783,7 @@ using namespace std;
                         RotInfo.m_dir = (tmpstr[1] == "x")? 0:
                             (tmpstr[1] == "y")? 1:2;
 
-                        LibUtilities::AnalyticExpressionEvaluator strEval;
+                        LibUtilities::Interpreter strEval;
                         int ExprId = strEval.DefineFunction("", tmpstr[2]);
                         RotInfo.m_angle = strEval.Evaluate(ExprId);
 
@@ -1263,10 +1269,11 @@ using namespace std;
                     // different going from face1->face2 instead of face2->face1
                     // (check this).
                     StdRegions::Orientation o;
-                    bool rotbnd = false;
-                    int  dir;
-                    NekDouble angle,sign;
-                    NekDouble tol = 1e-8;
+                    bool rotbnd     = false;
+                    int  dir        = 0;
+                    NekDouble angle = 0.0;
+                    NekDouble sign  = 1.0;
+                    NekDouble tol   = 1e-8;
 
                     // check to see if perioid boundary is rotated
                     if(rotComp.count(fIdToCompId[pIt.first]))
@@ -1543,10 +1550,10 @@ using namespace std;
             // processors.
             for (cnt = i = 0; i < totFaces; ++i)
             {
-                bool rotbnd = false;
-                int dir;
-                NekDouble angle;
-                NekDouble tol = 1e-8;
+                bool rotbnd     = false;
+                int dir         = 0;
+                NekDouble angle = 0.0;
+                NekDouble tol   = 1e-8;
                 
                 int faceId    = faceIds[i];
                 
@@ -1723,10 +1730,10 @@ using namespace std;
             // Loop over periodic edges to determine relative edge orientations.
             for (auto &perIt : periodicEdges)
             {
-                bool rotbnd = false;
-                int dir;
-                NekDouble angle;
-                NekDouble tol = 1e-8;
+                bool rotbnd     = false;
+                int dir         = 0;
+                NekDouble angle = 0.0;
+                NekDouble tol   = 1e-8;
                 
 
                 // Find edge coordinates
@@ -2396,6 +2403,8 @@ using namespace std;
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
+            boost::ignore_unused(flags, varfactors, dirForcing);
+
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
             StdRegions::StdExpansionSharedPtr BndExp;
@@ -2496,6 +2505,12 @@ using namespace std;
                         BndRhs[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
                     }
                 }
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::ePeriodic)
+                {
+                    ASSERTL0(false, "HDG implementation does not support "
+                             "periodic boundary conditions at present.");
+                }
             }
 
             //----------------------------------
@@ -2539,6 +2554,8 @@ using namespace std;
                      Array<OneD,      NekDouble> &outarray,
                CoeffState coeffstate)
         {
+            boost::ignore_unused(coeffstate);
+
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);
             DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);
@@ -2822,6 +2839,8 @@ using namespace std;
             const NekDouble   x2_in,
             const NekDouble   x3_in)
         {
+            boost::ignore_unused(x2_in, x3_in);
+
             int i;
             int npoints;
             int nbnd = m_bndCondExpansions.num_elements();

@@ -38,6 +38,8 @@
 #include <string>
 #include <functional>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
@@ -50,18 +52,23 @@ namespace Nektar
     namespace SolverUtils
     {
         typedef std::function<void (
-            const int, 
-            const int, 
-            const Array<OneD, Array<OneD, NekDouble> >&,
-                  Array<OneD, Array<OneD, NekDouble> >&,
-                  Array<OneD, Array<OneD, NekDouble> >&)> DiffusionFluxVecCB;
-        
+            const Array<OneD, Array<OneD, NekDouble> > &,
+            const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)>
+                                            DiffusionFluxVecCB;
+
         typedef std::function<void (
             const Array<OneD, Array<OneD, NekDouble> >&,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)> 
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)>
                                             DiffusionFluxVecCBNS;
-        
+
+        typedef std::function<void (
+            const Array<OneD, Array<OneD, NekDouble> >&,
+            const Array<OneD, Array<OneD, NekDouble> >&,
+                  Array<OneD, Array<OneD, NekDouble> >&)>
+                                            DiffusionFluxPenaltyNS;
+
         typedef std::function<void (
             const Array<OneD, Array<OneD, NekDouble> >&,
                   Array<OneD,             NekDouble  >&)>
@@ -146,9 +153,9 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
-                        
+
             SOLVER_UTILS_EXPORT void Diffuse(
-                const int nConvectiveFields,
+                const std::size_t                             nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
@@ -249,22 +256,21 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void FluxVec(
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                                                                 &fluxvector);
-            
-            template<typename FuncPointerT, typename ObjectPointerT> 
+
+            template<typename FuncPointerT, typename ObjectPointerT>
             void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
             {
                 m_fluxVector = std::bind(
                     func, obj, std::placeholders::_1, std::placeholders::_2,
-                    std::placeholders::_3, std::placeholders::_4,
-                    std::placeholders::_5);
+                    std::placeholders::_3);
             }
-            
-            void SetFluxVectorVec(DiffusionFluxVecCB fluxVector)
+
+            void SetFluxVector(DiffusionFluxVecCB fluxVector)
             {
                 m_fluxVector = fluxVector;
             }
-            
-            template<typename FuncPointerT, typename ObjectPointerT> 
+
+            template<typename FuncPointerT, typename ObjectPointerT>
             void SetFluxVectorNS(FuncPointerT func, ObjectPointerT obj)
             {
                 m_fluxVectorNS = std::bind(
@@ -272,16 +278,22 @@ namespace Nektar
                     std::placeholders::_3);
             }
 
-            template<typename FuncPointerT, typename ObjectPointerT>
-            void SetArtificialDiffusionVector(FuncPointerT func, ObjectPointerT obj)
-            {
-                m_ArtificialDiffusionVector = std::bind(
-                    func, obj, std::placeholders::_1, std::placeholders::_2);
-            }
-
             void SetFluxVectorNS(DiffusionFluxVecCBNS fluxVector)
             {
                 m_fluxVectorNS = fluxVector;
+            }
+
+            template<typename FuncPointerT, typename ObjectPointerT>
+            void SetFluxPenaltyNS(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_fluxPenaltyNS = std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3);
+            }
+
+            void SetFluxPenaltyNS(DiffusionFluxPenaltyNS flux)
+            {
+                m_fluxPenaltyNS = flux;
             }
 
             template<typename FuncPointerT, typename ObjectPointerT>
@@ -364,6 +376,7 @@ namespace Nektar
         protected:
             DiffusionFluxVecCB              m_fluxVector;
             DiffusionFluxVecCBNS            m_fluxVectorNS;
+            DiffusionFluxPenaltyNS          m_fluxPenaltyNS;
             DiffusionArtificialDiffusion    m_ArtificialDiffusionVector;
             DiffusionFluxCons               m_FunctorDiffusionfluxCons;
             FunctorDerivBndCond             m_FunctorDerivBndCond;
@@ -376,11 +389,11 @@ namespace Nektar
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
             {
-                
+                boost::ignore_unused(pSession, pFields);
             };
-                        
+
             virtual void v_Diffuse(
-                const int                                         nConvectiveFields,
+                const std::size_t                             nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
@@ -461,9 +474,9 @@ namespace Nektar
             virtual void v_SetHomoDerivs(
                 Array<OneD, Array<OneD, NekDouble> > &deriv)
             {
-
+                boost::ignore_unused(deriv);
             }
-            
+
             virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &v_GetFluxTensor()
             {
                 static Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmp;
@@ -476,7 +489,7 @@ namespace Nektar
         
         /// A shared pointer to an EquationSystem object
         typedef std::shared_ptr<Diffusion> DiffusionSharedPtr;
-        
+
         /// Datatype of the NekFactory used to instantiate classes derived
         /// from the Diffusion class.
         typedef LibUtilities::NekFactory<std::string, Diffusion, std::string> DiffusionFactory;

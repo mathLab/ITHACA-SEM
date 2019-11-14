@@ -108,7 +108,7 @@ private:
 
     void SetUpXmap();
 };
-}; // end of namespace
-}; // end of namespace
+} // end of namespace
+} // end of namespace
 
 #endif // NEKTAR_SPATIALDOMAINS_SEGGEOM_H

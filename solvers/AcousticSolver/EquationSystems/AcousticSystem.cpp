@@ -41,6 +41,7 @@
 #define BOOST_ALLOW_DEPRECATED_HEADERS
 #endif
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
 
@@ -364,6 +365,8 @@ void AcousticSystem::v_WhiteNoiseBC(
     Array<OneD, Array<OneD, NekDouble>> &BfFwd,
     Array<OneD, Array<OneD, NekDouble>> &physarray)
 {
+    boost::ignore_unused(Fwd);
+
     int id1, id2, nBCEdgePts;
     int nVariables = physarray.num_elements();
 

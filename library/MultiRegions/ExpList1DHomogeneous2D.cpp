@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/ExpList1DHomogeneous2D.h>
 
 using namespace std;
@@ -137,6 +139,8 @@ namespace Nektar
                                                Array<OneD, NekDouble> &xc1,
                                                Array<OneD, NekDouble> &xc2)
         {
+            boost::ignore_unused(eid);
+
             int n,m,j;
             Array<OneD, NekDouble> tmp_xc;
             int nylines = m_homogeneousBasis_y->GetNumPoints();
@@ -284,6 +288,8 @@ namespace Nektar
 
         void ExpList1DHomogeneous2D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip)
         {
+            boost::ignore_unused(istrip);
+
             int i,j;
             
             int nquad0 = 1;

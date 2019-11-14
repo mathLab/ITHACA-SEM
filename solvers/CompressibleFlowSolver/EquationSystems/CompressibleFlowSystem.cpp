@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 
 using namespace std;
@@ -724,6 +726,8 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD, NekDouble> &tstep)
     {
+        boost::ignore_unused(inarray);
+
         int n;
         int nElements = m_fields[0]->GetExpSize();
 
@@ -772,6 +776,8 @@ namespace Nektar
         bool      dumpInitialConditions,
         const int domain)
     {
+        boost::ignore_unused(domain);
+
         EquationSystem::v_SetInitialConditions(initialtime, false);
 
         // insert white noise in initial condition

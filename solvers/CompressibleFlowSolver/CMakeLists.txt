@@ -10,7 +10,6 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     SET(CompressibleFlowSolverSource
        ./ArtificialDiffusion/ArtificialDiffusion.cpp
        ./ArtificialDiffusion/NonSmoothShockCapture.cpp
-       ./ArtificialDiffusion/SmoothShockCapture.cpp
        ./BoundaryConditions/CFSBndCond.cpp
        ./BoundaryConditions/ExtrapOrder0BC.cpp
        ./BoundaryConditions/IsentropicVortexBC.cpp

@@ -35,6 +35,8 @@
 #include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <boost/core/ignore_unused.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace Nektar
 {
@@ -135,6 +137,8 @@ namespace Nektar
         NekDouble rhoR, NekDouble pR, NekDouble eR, NekDouble HR, NekDouble srR,
         NekDouble HRoe, NekDouble URoe2, NekDouble srLR)
     {
+        boost::ignore_unused(HL, srL, HR, srR, srLR);
+
         static NekDouble gamma = m_params["gamma"]();
         NekDouble cRoe;
         if(m_idealGas)
@@ -185,7 +189,7 @@ namespace Nektar
             // chiRoe and kappaRoe (eq 66)
             NekDouble chiRoe, kappaRoe;
             NekDouble fac = D - deltaP*deltaRho;
-            if( abs(fac) > NekConstants::kNekZeroTol)
+            if( std::abs(fac) > NekConstants::kNekZeroTol)
             {
                 chiRoe   = (D*avgChi + s*s*deltaRho*dP) / fac;
                 kappaRoe = D*avgKappa / fac;

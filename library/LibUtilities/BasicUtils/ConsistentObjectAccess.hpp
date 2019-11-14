@@ -36,6 +36,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_CONSISTENT_ACCESS_OBJECT_HPP
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_CONSISTENT_ACCESS_OBJECT_HPP
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <memory>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
@@ -49,7 +51,10 @@ namespace Nektar
         static DataType* pointer(DataType& o) { return &o; }
         static const DataType* const_pointer(const DataType& o) { return &o; }
         
-        static bool ReferencesObject(const DataType& o) { return true; }
+        static bool ReferencesObject(const DataType& o) {
+            boost::ignore_unused(o);
+            return true;
+        }
     };
     
     template<typename DataType>

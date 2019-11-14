@@ -36,11 +36,13 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
+
+#include <GlobalMapping/Mapping.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+
 #include "ProcessGrad.h"
 #include "ProcessMapping.h"
-#include <GlobalMapping/Mapping.h>
-
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
@@ -62,6 +64,8 @@ ProcessGrad::~ProcessGrad()
 
 void ProcessGrad::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int i, j;
     int expdim    = m_f->m_graph->GetMeshDimension();
     int spacedim  = m_f->m_numHomogeneousDir + expdim;

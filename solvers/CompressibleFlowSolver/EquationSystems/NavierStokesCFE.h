@@ -66,8 +66,6 @@ namespace Nektar
 
   protected:
     std::string                         m_ViscosityType;
-    NekDouble                           m_mu;
-    NekDouble                           m_thermalConductivity;
     NekDouble                           m_Cp;
     NekDouble                           m_Cv;
     NekDouble                           m_Prandtl;
@@ -75,6 +73,11 @@ namespace Nektar
     NekDouble                            m_Twall;
     /// Equation of system for computing temperature
     EquationOfStateSharedPtr             m_eos;
+    NekDouble                           m_muRef;
+    NekDouble                           m_thermalConductivityRef;
+    Array<OneD, NekDouble>              m_mu;
+    Array<OneD, NekDouble>              m_thermalConductivity;
+
 
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
                     const SpatialDomains::MeshGraphSharedPtr& pGraph);
@@ -149,6 +152,15 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
             Array< OneD, int >                                              &nonZeroIndex,    
             const Array<OneD, Array<OneD, NekDouble> >                      &normals);
+    virtual void v_GetFluxPenalty(
+        const Array<OneD, Array<OneD, NekDouble> > &uFwd,
+        const Array<OneD, Array<OneD, NekDouble> > &uBwd,
+              Array<OneD, Array<OneD, NekDouble> > &penaltyCoeff);
+
+    void GetViscosityAndThermalCondFromTemp(
+        const Array<OneD, NekDouble> &temperature,
+              Array<OneD, NekDouble> &mu,
+              Array<OneD, NekDouble> &thermalCond);
 
   };
 }

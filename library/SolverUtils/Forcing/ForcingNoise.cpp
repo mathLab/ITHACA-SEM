@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Forcing/ForcingNoise.h>
 #include <MultiRegions/ExpList.h>
 
@@ -116,6 +118,8 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
+        boost::ignore_unused(fields, inarray, time);
+
         // Do not apply forcing if exceeded m_numSteps
         if( m_numSteps && (m_index >= m_numSteps) )
         {

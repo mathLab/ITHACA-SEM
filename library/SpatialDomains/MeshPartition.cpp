@@ -37,6 +37,8 @@
 #define TIXML_USE_STL
 #endif
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SpatialDomains/MeshPartition.h>
 #include <SpatialDomains/Geometry.h>
 
@@ -105,6 +107,8 @@ MeshPartition::~MeshPartition()
 void MeshPartition::PartitionMesh(
     int nParts, bool shared, bool overlapping, int nLocal)
 {
+    boost::ignore_unused(nLocal);
+
     ASSERTL0(m_parallel || m_elements.size() >= nParts,
              "Too few elements for this many processes.");
     m_shared = shared;
@@ -607,7 +611,7 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
         int nWeight = ncon * nLocal;
 
         Array<OneD, int> xadj(nLocal + 1);
-        vector<int> adjncy_tmp, adjwgt_tmp;
+        std::vector<int> adjncy_tmp, adjwgt_tmp;
         Array<OneD, int> vwgt(nWeight, 1);
         Array<OneD, int> vsize(nLocal, 1);
 
@@ -745,7 +749,7 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
         m_comm->AlltoAll(numToSend, numToRecv);
 
         // Build offsets for all-to-all communication
-        vector<int> sendOffsetMap(nproc), recvOffsetMap(nproc);
+        std::vector<int> sendOffsetMap(nproc), recvOffsetMap(nproc);
 
         sendOffsetMap[0] = 0;
         recvOffsetMap[0] = 0;
@@ -759,7 +763,7 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
         int totalSend = Vmath::Vsum(nproc, &numToSend[0], 1);
         int totalRecv = Vmath::Vsum(nproc, &numToRecv[0], 1);
 
-        vector<int> sendData(totalSend), recvData(totalRecv);
+        std::vector<int> sendData(totalSend), recvData(totalRecv);
 
         int cnt = 0;
         for (auto &verts : procMap)

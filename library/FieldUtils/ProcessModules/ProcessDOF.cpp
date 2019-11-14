@@ -36,6 +36,8 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
+
 #include "ProcessDOF.h"
 
 namespace Nektar
@@ -59,6 +61,8 @@ ProcessDOF::~ProcessDOF()
 
 void ProcessDOF::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nDOF = m_f->m_exp[0]->GetNcoeffs();
     m_f->m_comm->AllReduce(nDOF, LibUtilities::ReduceSum);
 

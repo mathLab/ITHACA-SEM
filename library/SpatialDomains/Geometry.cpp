@@ -34,6 +34,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/Geometry1D.h>
 #include <SpatialDomains/Geometry2D.h>
@@ -117,14 +119,14 @@ GeomFactorsSharedPtr Geometry::ValidateRegGeomFactor(
     return returnval;
 }
 
-bool SortByGlobalId(const boost::shared_ptr<Geometry> &lhs,
-                    const boost::shared_ptr<Geometry> &rhs)
+bool SortByGlobalId(const std::shared_ptr<Geometry> &lhs,
+                    const std::shared_ptr<Geometry> &rhs)
 {
     return lhs->GetGlobalID() < rhs->GetGlobalID();
 }
 
-bool GlobalIdEquality(const boost::shared_ptr<Geometry> &lhs,
-                      const boost::shared_ptr<Geometry> &rhs)
+bool GlobalIdEquality(const std::shared_ptr<Geometry> &lhs,
+                      const std::shared_ptr<Geometry> &rhs)
 {
     return lhs->GetGlobalID() == rhs->GetGlobalID();
 }
@@ -158,6 +160,7 @@ int Geometry::GetFid(int i) const
  */
 Geometry1DSharedPtr Geometry::v_GetEdge(int i) const
 {
+    boost::ignore_unused(i);
     NEKERROR(ErrorUtil::efatal,
              "This function is only valid for shape type geometries");
     return Geometry1DSharedPtr();
@@ -168,6 +171,7 @@ Geometry1DSharedPtr Geometry::v_GetEdge(int i) const
  */
 Geometry2DSharedPtr Geometry::v_GetFace(int i) const
 {
+    boost::ignore_unused(i);
     NEKERROR(ErrorUtil::efatal,
              "This function is only valid for shape type geometries");
     return Geometry2DSharedPtr();
@@ -188,6 +192,7 @@ int Geometry::v_GetNumVerts() const
  */
 StdRegions::Orientation Geometry::v_GetEorient(const int i) const
 {
+    boost::ignore_unused(i);
     NEKERROR(ErrorUtil::efatal,
              "This function is not valid for this geometry.");
     return StdRegions::eForwards;
@@ -198,6 +203,7 @@ StdRegions::Orientation Geometry::v_GetEorient(const int i) const
  */
 StdRegions::Orientation Geometry::v_GetForient(const int i) const
 {
+    boost::ignore_unused(i);
     NEKERROR(ErrorUtil::efatal,
              "This function is not valid for this geometry.");
     return StdRegions::eFwd;
@@ -251,6 +257,7 @@ bool Geometry::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                NekDouble tol,
                                NekDouble &resid)
 {
+    boost::ignore_unused(gloCoord, locCoord, tol, resid);
     NEKERROR(ErrorUtil::efatal,
              "This function has not been defined for this geometry");
     return false;
@@ -261,6 +268,7 @@ bool Geometry::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
  */
 int Geometry::v_GetVertexEdgeMap(const int i, const int j) const
 {
+    boost::ignore_unused(i, j);
     NEKERROR(ErrorUtil::efatal,
              "This function has not been defined for this geometry");
     return 0;
@@ -271,6 +279,7 @@ int Geometry::v_GetVertexEdgeMap(const int i, const int j) const
  */
 int Geometry::v_GetVertexFaceMap(const int i, const int j) const
 {
+    boost::ignore_unused(i, j);
     NEKERROR(ErrorUtil::efatal,
              "This function has not been defined for this geometry");
     return 0;
@@ -281,6 +290,7 @@ int Geometry::v_GetVertexFaceMap(const int i, const int j) const
  */
 int Geometry::v_GetEdgeFaceMap(const int i, const int j) const
 {
+    boost::ignore_unused(i, j);
     NEKERROR(ErrorUtil::efatal,
              "This function has not been defined for this geometry");
     return 0;
@@ -292,6 +302,7 @@ int Geometry::v_GetEdgeFaceMap(const int i, const int j) const
 NekDouble Geometry::v_GetCoord(const int i,
                                const Array<OneD, const NekDouble> &Lcoord)
 {
+    boost::ignore_unused(i, Lcoord);
     NEKERROR(ErrorUtil::efatal,
              "This function is only valid for expansion type geometries");
     return 0.0;
@@ -303,6 +314,7 @@ NekDouble Geometry::v_GetCoord(const int i,
 NekDouble Geometry::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
                                    Array<OneD, NekDouble> &Lcoords)
 {
+    boost::ignore_unused(coords, Lcoords);
     NEKERROR(ErrorUtil::efatal,
              "This function is only valid for expansion type geometries");
     return 0.0;
@@ -322,6 +334,8 @@ void Geometry::v_FillGeom()
  */
 void Geometry::v_Reset(CurveMap &curvedEdges, CurveMap &curvedFaces)
 {
+    boost::ignore_unused(curvedEdges, curvedFaces);
+
     // Reset state
     m_state = eNotFilled;
     m_geomFactorsState = eNotFilled;
@@ -346,7 +360,7 @@ void Geometry::v_Setup()
  * region to account for convex hull elements where the true extent of the
  * element may extend slightly beyond the quadrature points.
  */
-void Geometry::GenBoundingBox()
+std::array<NekDouble, 6> Geometry::GetBoundingBox()
 {
     //NekDouble minx, miny, minz, maxx, maxy, maxz;
     Array<OneD, NekDouble> min(3), max(3);
@@ -405,11 +419,87 @@ void Geometry::GenBoundingBox()
         min[j] -= NekConstants::kGeomFactorsTol*len;
         max[j] += NekConstants::kGeomFactorsTol*len;
     }
-    // Save bounding box
-    BgPoint pmin(min[0], min[1], min[2]);
-    BgPoint pmax(max[0], max[1], max[2]);
-    m_boundingBox = BgBox(pmin, pmax);
+
+    // Return bounding box
+    return {{ min[0], min[1], min[2], max[0], max[1], max[2] }};
 }
+
+/**
+ * @brief Check if given global coord is within twice the min/max distance
+ * of the element.
+ *
+ * @param coords   Input Cartesian global coordinates
+ *
+ * @return True if within distance or False otherwise.
+ */
+bool Geometry::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
+{
+    // Validation checks
+    ASSERTL1(gloCoord.num_elements() >= m_coordim,
+             "Expects number of global coordinates supplied to be greater than "
+             "or equal to the mesh dimension.");
+
+    int i;
+    Array<OneD, NekDouble> mincoord(m_coordim), maxcoord(m_coordim);
+    NekDouble diff = 0.0;
+
+    v_FillGeom();
+
+    const int npts = m_xmap->GetTotPoints();
+    Array<OneD, NekDouble> pts(npts);
+
+    for (i = 0; i < m_coordim; ++i)
+    {
+        m_xmap->BwdTrans(m_coeffs[i], pts);
+        mincoord[i] = Vmath::Vmin(pts.num_elements(), pts, 1);
+        maxcoord[i] = Vmath::Vmax(pts.num_elements(), pts, 1);
+
+        diff = std::max(maxcoord[i] - mincoord[i], diff);
+    }
+
+    for (i = 0; i < m_coordim; ++i)
+    {
+        if ((gloCoord[i] < mincoord[i] - 0.2 * diff) ||
+            (gloCoord[i] > maxcoord[i] + 0.2 * diff))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+/**
+ * @brief Clamp local coords to be within standard regions [-1, 1]^dim.
+ *
+ * @param Lcoords  Corresponding local coordinates
+ */
+void Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
+                                  NekDouble tol)
+{
+    // Validation checks
+    ASSERTL1(locCoord.num_elements() == GetShapeDim(),
+             "Expects same number of local coordinates as shape dimension.");
+
+    // If out of range clamp locCoord to be within [-1,1]^dim
+    // since any larger value will be very oscillatory if
+    // called by 'returnNearestElmt' option in
+    // ExpList::GetExpIndex
+    for (int i = 0; i < GetShapeDim(); ++i)
+    {
+        if (locCoord[i] < -(1 + tol))
+        {
+            locCoord[i] = -(1 + tol);
+        }
+
+        if (locCoord[i] > (1 + tol))
+        {
+            locCoord[i] = 1 + tol;
+        }
+    }
+}
+
 
 }
 }

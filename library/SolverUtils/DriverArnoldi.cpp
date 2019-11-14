@@ -51,7 +51,7 @@ DriverArnoldi::DriverArnoldi(
     : Driver(pSession, pGraph)
 {
     m_session->LoadParameter("IO_InfoSteps", m_infosteps, 1);
-};
+}
 
 
 /**
@@ -59,7 +59,7 @@ DriverArnoldi::DriverArnoldi(
  */
 DriverArnoldi::~DriverArnoldi()
 {
-};
+}
 
 
 /**
@@ -188,7 +188,7 @@ void DriverArnoldi::CopyArnoldiArrayToField(Array<OneD, NekDouble> &array)
         Vmath::Vcopy(nq, &array[k*nq], 1, &fields[k]->UpdateCoeffs()[0], 1);
         fields[k]->SetPhysState(false);
     }
-};
+}
 
 /**
  * Copy field variables which depend from either the m_fields
@@ -218,7 +218,7 @@ void DriverArnoldi::CopyFieldToArnoldiArray(Array<OneD, NekDouble> &array)
         fields[k]->SetPhysState(false);
 
     }
-};
+}
 
 
 /**
@@ -228,25 +228,19 @@ void DriverArnoldi::CopyFwdToAdj()
 {
     Array<OneD, MultiRegions::ExpListSharedPtr> fields;
 
-    if(m_timeSteppingAlgorithm)
+    ASSERTL0(m_timeSteppingAlgorithm,
+            "Transient Growth non available for Coupled Solver");
+
+    fields = m_equ[0]->UpdateFields();
+    int nq = fields[0]->GetNcoeffs();
+
+    for (int k=0 ; k < m_nfields; ++k)
     {
-        fields = m_equ[0]->UpdateFields();
-        int nq = fields[0]->GetNcoeffs();
-
-        for (int k=0 ; k < m_nfields; ++k)
-        {
-            Vmath::Vcopy(nq,
-                         &fields[k]->GetCoeffs()[0],                      1,
-                         &m_equ[1]->UpdateFields()[k]->UpdateCoeffs()[0], 1);
-
-        }
+        Vmath::Vcopy(nq,
+                     &fields[k]->GetCoeffs()[0],                      1,
+                     &m_equ[1]->UpdateFields()[k]->UpdateCoeffs()[0], 1);
     }
-    else
-    {
-        ASSERTL0(false,"Transient Growth non available for Coupled Solver");
-
-    }
-};
+}
 
 void DriverArnoldi::WriteFld(std::string file, std::vector<Array<OneD, NekDouble> > coeffs)
 {

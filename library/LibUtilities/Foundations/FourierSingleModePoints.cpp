@@ -32,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/FourierSingleModePoints.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
@@ -41,6 +43,9 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
+        bool FourierSingleModePoints::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eFourierSingleModeSpaced), FourierSingleModePoints::Create)
+        };
 
         void FourierSingleModePoints::CalculatePoints()
         {
@@ -134,8 +139,7 @@ namespace Nektar
 
         void FourierSingleModePoints::CalculateInterpMatrix(unsigned int npts, const Array<OneD, const NekDouble>& xpoints, Array<OneD, NekDouble>& interp)
         {
-
-
+            boost::ignore_unused(npts, xpoints, interp);
         }
 
 

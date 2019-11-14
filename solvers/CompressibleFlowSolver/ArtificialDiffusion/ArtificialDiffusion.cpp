@@ -58,8 +58,7 @@ ArtificialDiffusion::ArtificialDiffusion(
 
     m_diffusion = SolverUtils::GetDiffusionFactory()
                                     .CreateInstance("LDG", "LDG");
-    m_diffusion->SetArtificialDiffusionVector(
-                        &ArtificialDiffusion::GetArtificialViscosity, this);
+    m_diffusion->SetFluxVector(&ArtificialDiffusion::GetFluxVector, this);
     m_diffusion->InitObject (m_session, m_fields);
 
     // Get constant scaling
@@ -223,5 +222,32 @@ void ArtificialDiffusion::SetElmtHP(const Array<OneD, NekDouble> &hOverP)
 {
     m_hOverP = hOverP;
 }
+
+/**
+ * @brief Return the flux vector for the artificial viscosity operator.
+ */
+void ArtificialDiffusion::GetFluxVector(
+    const Array<OneD, Array<OneD, NekDouble> > &inarray,
+    const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
+          Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&viscousTensor)
+{
+    unsigned int nDim = qfield.num_elements();
+    unsigned int nConvectiveFields = qfield[0].num_elements();
+    unsigned int nPts = qfield[0][0].num_elements();
+
+    // Get Artificial viscosity
+    Array<OneD, NekDouble> mu{nPts, 0.0};
+    GetArtificialViscosity(inarray, mu);
+
+    // Compute viscous tensor
+    for (unsigned int j = 0; j < nDim; ++j)
+    {
+        for (unsigned int i = 0; i < nConvectiveFields; ++i)
+        {
+            Vmath::Vmul(nPts, qfield[j][i], 1, mu , 1, viscousTensor[j][i], 1);
+        }
+    }
+}
+
 
 }

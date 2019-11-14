@@ -15,7 +15,7 @@
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
             <I PROPERTY="HOMOGENEOUS" VALUE="1D" />
             <I PROPERTY="USEFFT" VALUE="FFTW" />
-            <I PROPERTY="DEALIASING" VALUE="ON"/>
+            <I PROPERTY="DEALIASING" VALUE="True"/>
             <I PROPERTY="SpectralHPDealiasing" VALUE="True" />
         </SOLVERINFO>
 

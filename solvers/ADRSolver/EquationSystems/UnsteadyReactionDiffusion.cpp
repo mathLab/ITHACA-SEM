@@ -32,9 +32,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ADRSolver/EquationSystems/UnsteadyReactionDiffusion.h>
 #include <iostream>
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
+
+#include <ADRSolver/EquationSystems/UnsteadyReactionDiffusion.h>
 
 using namespace std;
 
@@ -145,6 +148,8 @@ void UnsteadyReactionDiffusion::DoImplicitSolve(
     const NekDouble time,
     const NekDouble lambda)
 {
+    boost::ignore_unused(time);
+
     StdRegions::ConstFactorMap factors;
 
     int nvariables = inarray.num_elements();

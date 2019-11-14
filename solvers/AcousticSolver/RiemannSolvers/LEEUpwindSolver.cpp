@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <AcousticSolver/RiemannSolvers/LEEUpwindSolver.h>
 
 using namespace std;
@@ -89,6 +91,8 @@ void LEEUpwindSolver::v_PointSolve(
     NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R,   NekDouble  v0R,   NekDouble  w0R,
     NekDouble &pF,    NekDouble &rhoF,  NekDouble &rhouF, NekDouble &rhovF, NekDouble &rhowF)
 {
+    boost::ignore_unused(rho0L, v0L, w0L, rho0R, v0R, w0R);
+
     // Speed of sound
     NekDouble c0L = sqrt(c0sqL);
     NekDouble c0R = sqrt(c0sqR);

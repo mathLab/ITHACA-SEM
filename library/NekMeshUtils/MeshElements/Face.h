@@ -35,6 +35,8 @@
 #ifndef NEKMESHUTILS_MESHELEMENTS_FACE
 #define NEKMESHUTILS_MESHELEMENTS_FACE
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/QuadGeom.h>
@@ -87,7 +89,7 @@ public:
     /// Equality is defined by matching all vertices.
     NEKMESHUTILS_EXPORT bool operator==(Face &pSrc)
     {
-        std::vector<NodeSharedPtr>::iterator it1, it2;
+        std::vector<NodeSharedPtr>::iterator it1;
         for (it1 = m_vertexList.begin(); it1 != m_vertexList.end(); ++it1)
         {
             if (find(pSrc.m_vertexList.begin(),

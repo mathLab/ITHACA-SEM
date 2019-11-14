@@ -114,5 +114,7 @@ void export_SessionReader()
         .def("GetVariable", &SessionReader::GetVariable,
              py::return_value_policy<py::copy_const_reference>())
 
+        .def("GetComm", &SessionReader::GetComm)
+
         ;
 }

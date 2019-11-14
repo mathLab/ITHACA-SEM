@@ -119,7 +119,7 @@ protected:
     virtual void WriteTets(TiXmlElement *elmtTag, TetGeomMap &tets);
     virtual void WriteCurves(TiXmlElement *geomTag, CurveMap &edges, CurveMap &faces);
     void WriteComposites(TiXmlElement *geomTag, CompositeMap &comps);
-    void WriteDomain(TiXmlElement *geomTag, vector<CompositeMap> &domain);
+    void WriteDomain(TiXmlElement *geomTag, std::vector<CompositeMap> &domain);
     void WriteDefaultExpansion(TiXmlElement *root);
 
     CompositeOrdering CreateCompositeOrdering();

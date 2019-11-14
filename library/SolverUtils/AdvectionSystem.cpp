@@ -84,13 +84,13 @@ bool AdvectionSystem::v_PostIntegrate(int step)
         {
             if( m_HomogeneousType == eNotHomogeneous)
             {
-                cout << "CFL: ";
+                std::cout << "CFL: ";
             }
             else
             {
-                cout << "CFL (zero plane): ";
+                std::cout << "CFL (zero plane): ";
             }
-            cout << cfl << " (in elmt " << elmtid << ")" << endl;
+            std::cout << cfl << " (in elmt " << elmtid << ")" << std::endl;
         }
         
         // At each timestep, if cflWriteFld is set check if cfl is above treshold
@@ -123,7 +123,7 @@ Array<OneD, NekDouble>  AdvectionSystem::GetElmtCFLVals(void)
     NekDouble order;
     for(int el = 0; el < nelmt; ++el)
     {
-        order = max(expOrder[el]-1, 1);
+        order = std::max(expOrder[el]-1, 1);
         cfl[el] =  m_timestep*(stdVelocity[el] * cLambda * order * order);
     }
 

@@ -1089,16 +1089,24 @@ namespace Vmath
     {
         int i;
         T store;
+
+        // Perform element by element swaps in case x and y reference the same
+        // array.
         int nloop = n/2;
 
         // copy value in case of n is odd number
         y[nloop] = x[nloop];
 
-        for(i = 0; i < nloop; ++i)
-        {
-            store = x[n-1-i];
-            y[n-1-i] = x[i];
-            y[i] = store;
+        const T* x_end = x + (n-1)*incx;
+        T*       y_end = y + (n-1)*incy;
+        for (i = 0; i < nloop; ++i) {
+            store  = *x_end;
+            *y_end = *x;
+            *y     = store;
+            x     += incx;
+            y     += incy;
+            x_end -= incx;
+            y_end -= incy;
         }
     }
 

@@ -32,6 +32,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <NekMeshUtils/MeshElements/Point.h>
 
 using namespace std;
@@ -64,6 +66,7 @@ Point::Point(ElmtConfig pConf,
  */
 unsigned int Point::GetNumNodes(ElmtConfig pConf)
 {
+    boost::ignore_unused(pConf);
     return 1;
 }
 }

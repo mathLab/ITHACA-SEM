@@ -62,6 +62,8 @@ public:
     }
 
 private:
+    static bool initPointsManager[];
+
     NodalTetSPI() : PointsBaseType(NullPointsKey)
     {
     }

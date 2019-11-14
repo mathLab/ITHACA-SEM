@@ -45,7 +45,7 @@ namespace Nektar
     NoSolver::NoSolver(const LibUtilities::SessionReaderSharedPtr& pSession)
         : LinearSWESolver(pSession)
     {
-      ASSERTL0(false,"No valid Riemann solver choosen");
+        NEKERROR(ErrorUtil::efatal, "No valid Riemann solver choosen");
     }
 
 }

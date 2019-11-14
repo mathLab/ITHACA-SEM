@@ -336,7 +336,7 @@ public:
         SetCADCurve(cu, t);
     }
 
-    void Rotate(string dir, NekDouble angle)
+    void Rotate(std::string dir, NekDouble angle)
     {
         if (dir == "x")
         {

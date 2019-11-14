@@ -36,9 +36,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessHomogeneousPlane.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessHomogeneousPlane.h"
 
 namespace Nektar
 {
@@ -66,11 +68,10 @@ ProcessHomogeneousPlane::~ProcessHomogeneousPlane()
 
 void ProcessHomogeneousPlane::Process(po::variables_map &vm)
 {
-    if ((m_f->m_numHomogeneousDir) != 1)
-    {
-        ASSERTL0(false,
-                 "ProcessHomogeneousPlane only works for Homogeneous1D.");
-    }
+    boost::ignore_unused(vm);
+
+    ASSERTL0(m_f->m_numHomogeneousDir == 1,
+             "ProcessHomogeneousPlane only works for Homogeneous1D.");
     m_f->m_numHomogeneousDir = 0;
 
     // Skip in case of empty partition

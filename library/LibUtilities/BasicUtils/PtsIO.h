@@ -53,7 +53,6 @@ namespace Nektar
 {
 namespace LibUtilities
 {
-using namespace std;
 
 typedef std::map<std::string, std::string> PtsMetaDataMap;
 static PtsMetaDataMap NullPtsMetaDataMap;
@@ -69,21 +68,22 @@ public:
     }
 
     LIB_UTILITIES_EXPORT void Import(
-        const string &inFile,
+        const std::string &inFile,
         PtsFieldSharedPtr &ptsField,
         FieldMetaDataMap &fieldmetadatamap = NullFieldMetaDataMap);
 
-    LIB_UTILITIES_EXPORT void Write(const string &outFile,
+    LIB_UTILITIES_EXPORT void Write(const std::string &outFile,
                                     const PtsFieldSharedPtr &ptsField,
                                     const bool backup = false);
 
-    LIB_UTILITIES_EXPORT void ImportFieldData(const string inFile,
+    LIB_UTILITIES_EXPORT void ImportFieldData(const std::string inFile,
                                               PtsFieldSharedPtr &ptsField);
 
 protected:
 
-    LIB_UTILITIES_EXPORT virtual void v_ImportFieldData(const string inFile,
-                                              PtsFieldSharedPtr &ptsField);
+    LIB_UTILITIES_EXPORT virtual void v_ImportFieldData(
+        const std::string inFile,
+        PtsFieldSharedPtr &ptsField);
 
     LIB_UTILITIES_EXPORT void SetUpFieldMetaData(const std::string outname);
 

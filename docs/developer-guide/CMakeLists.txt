@@ -13,11 +13,11 @@ FIND_PROGRAM(HTLATEX htlatex)
 MARK_AS_ADVANCED(HTLATEX)
 
 ADD_CUSTOM_TARGET(developer-guide-html
-    TEXINPUTS=${CMAKE_SOURCE_DIR}:${DEVGUIDESRC}//:
+    TEXINPUTS=${DEVGUIDESRC}//:
     ${HTLATEX} ${DEVGUIDESRC}/developers-guide.tex 
     "${DEVGUIDESRC}/styling.cfg,html,3,next,NoFonts"
     COMMAND BIBINPUTS=${DEVGUIDESRC} ${BIBTEX} developers-guide.aux
-    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}:${DEVGUIDESRC}//:
+    COMMAND TEXINPUTS=${DEVGUIDESRC}//:
     ${HTLATEX} ${DEVGUIDESRC}/developers-guide.tex 
     "${DEVGUIDESRC}/styling.cfg,html,3,next,NoFonts"
     WORKING_DIRECTORY ${DEVGUIDE}/html
@@ -43,13 +43,10 @@ FOREACH(pdf ${pdffiles})
 ENDFOREACH()
 
 ADD_CUSTOM_TARGET(developer-guide-pdf
-    export TEXINPUTS=${CMAKE_SOURCE_DIR}//: && 
     ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
     COMMAND TEXMFOUTPUT=${DEVGUIDE} ${BIBTEX} ${DEVGUIDE}/developers-guide.aux
     COMMAND TEXMFOUTPUT=${DEVGUIDE} ${MAKEINDEX} ${DEVGUIDE}/developers-guide.idx
-    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}//:  
-    ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
-    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}//:  
-    ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
+    COMMAND ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
+    COMMAND ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
     WORKING_DIRECTORY ${DEVGUIDESRC}
 )

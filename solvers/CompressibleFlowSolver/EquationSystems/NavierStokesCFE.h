@@ -83,7 +83,6 @@ namespace Nektar
                     const SpatialDomains::MeshGraphSharedPtr& pGraph);
     
     void GetViscousFluxVectorConservVar(
-        const int                                                       nConvectiveFields,
         const int                                                       nDim,
         const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
         const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
@@ -98,7 +97,6 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray);
     
     void SpecialBndTreat(
-        const int                                           nConvectiveFields,
               Array<OneD,       Array<OneD, NekDouble> >    &consvar);
 
     void GetArtificialViscosity(
@@ -106,7 +104,6 @@ namespace Nektar
               Array<OneD,             NekDouble  >  &muav);
 
     void GetViscousFluxBilinearForm(
-        const int                                                       nConvectiveFields,
         const int                                                       nSpaceDim,
         const int                                                       FluxDirection,
         const int                                                       DerivDirection,
@@ -145,7 +142,6 @@ namespace Nektar
 
     
     virtual void v_GetViscousSymmtrFluxConservVar(
-            const int                                                       nConvectiveFields,
             const int                                                       nSpaceDim,
             const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
             const Array<OneD, Array<OneD, NekDouble > >                     &inarray,

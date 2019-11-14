@@ -1077,7 +1077,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
 
             
-            MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetCoeffsToElmt() const
+            MULTI_REGIONS_EXPORT inline const Array<OneD,const std::pair<int,int> > &GetCoeffsToElmt() const
             {
                 return m_coeffsToElmt;
             }
@@ -1188,7 +1188,7 @@ namespace Nektar
             Array<OneD, int>  m_phys_offset;
 
             /// m_coeffs to elemental value map
-            Array<OneD,pair<int,int> >  m_coeffsToElmt;
+            Array<OneD,std::pair<int,int> >  m_coeffsToElmt;
 
             /// m_phys to elemental value map
             // Array<OneD,pair<int,int> >  m_pointsToElmt;

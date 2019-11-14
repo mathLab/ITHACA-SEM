@@ -271,10 +271,10 @@ namespace Nektar
             for(i = 0; i < m_exp->size(); ++i)
             {
                 int coeffs_offset   =   m_coeff_offset[i];
-                int points_offset   =   m_phys_offset [i];
+                // int points_offset   =   m_phys_offset [i];
 
                 int loccoeffs = (*m_exp)[i]->GetNcoeffs();
-                int locpoints = (*m_exp)[i]->GetTotPoints();
+                // int locpoints = (*m_exp)[i]->GetTotPoints();
                 
                 for(int j = 0; j < loccoeffs; ++j)
                 {
@@ -579,7 +579,6 @@ namespace Nektar
                 break;
             }
         }
- 
         /**
          * Given a function \f$f(\boldsymbol{x})\f$ evaluated at
          * the quadrature points, this function calculates the
@@ -1064,34 +1063,6 @@ namespace Nektar
 
             return BlkMatrix;
         }
-
-
-        // void ExpList::GetElmt_id(const GlobalMatrixKey &gkey,map<int,int> &elmt_id)
-        // {
-        //     int i;
-        //     int n_exp = 0;
-        //     LibUtilities::ShapeType ShapeType = gkey.GetShapeType();
-
-        //     if(ShapeType != LibUtilities::eNoShapeType)
-        //     {
-        //         for(i = 0 ; i < (*m_exp).size(); ++i)
-        //         {
-        //             if((*m_exp)[i]->DetShapeType()
-        //                == ShapeType)
-        //             {
-        //                 elmt_id[n_exp++] = i;
-        //             }
-        //         }
-        //     }
-        //     else
-        //     {
-        //         n_exp = (*m_exp).size();
-        //         for(i = 0; i < n_exp; ++i)
-        //         {
-        //             elmt_id[i] = i;
-        //         }
-        //     }
-        // }
 
         const DNekScalBlkMatSharedPtr& ExpList::GetBlockMatrix(
                                                                const GlobalMatrixKey &gkey)
@@ -2725,6 +2696,7 @@ namespace Nektar
             Array<OneD, NekDouble>  &lengthsFwd,
             Array<OneD, NekDouble>  &lengthsBwd)
         {
+            boost::ignore_unused(lengthsFwd, lengthsBwd);
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
@@ -2782,6 +2754,7 @@ namespace Nektar
                                       Array<OneD,NekDouble> &Fwd,
                                       Array<OneD,NekDouble> &Bwd)
         {
+            boost::ignore_unused(Dir, field,Fwd,Bwd);
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
@@ -2792,6 +2765,7 @@ namespace Nektar
                                       Array<OneD,NekDouble> &Fwd,
                                       Array<OneD,NekDouble> &Bwd)
         {
+            boost::ignore_unused(Dir, field,Fwd,Bwd);
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
@@ -2801,6 +2775,7 @@ namespace Nektar
                                       Array<OneD,NekDouble> &Fwd,
                                       Array<OneD,NekDouble> &Bwd)
         {
+            boost::ignore_unused(field,Fwd,Bwd);
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
@@ -2810,6 +2785,7 @@ namespace Nektar
                                       Array<OneD,NekDouble> &Fwd,
                                       Array<OneD,NekDouble> &Bwd)
         {
+            boost::ignore_unused(field,Fwd,Bwd);
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
@@ -2819,6 +2795,7 @@ namespace Nektar
                                       Array<OneD,NekDouble> &Fwd,
                                       Array<OneD,NekDouble> &Bwd)
         {
+            boost::ignore_unused(field,Fwd,Bwd);
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
@@ -2828,6 +2805,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &field)
         {
+            boost::ignore_unused(field,Fwd,Bwd);
             ASSERTL0(false,
                      "v_AddTraceQuadPhysToField is not defined or valid for this class type");
         }
@@ -2843,6 +2821,7 @@ namespace Nektar
 
         void ExpList::v_SetBndCondBwdWeight(const int index, const NekDouble value)
         {
+            boost::ignore_unused(index,value);
             ASSERTL0(false,
                      "v_setBndCondBwdWeight is not defined or valid for this class type");
         }
@@ -3408,6 +3387,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
+            boost::ignore_unused(Fwd, Bwd);
             ASSERTL0(false,"v_FillBwdWITHBound not defined");
         }
 
@@ -3416,6 +3396,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
+            boost::ignore_unused(Dir,Fwd, Bwd);
             ASSERTL0(false,"v_FillBwdWITHBoundDeriv not defined");
         }
 
@@ -3423,6 +3404,7 @@ namespace Nektar
             Array<OneD,       NekDouble> &weightave,
             Array<OneD,       NekDouble> &weightjmp)
         {
+            boost::ignore_unused(weightave, weightjmp);
             ASSERTL0(false,"v_FillBwdWITHBwdWeight not defined");
         }
 
@@ -3430,11 +3412,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd)
         {
+            boost::ignore_unused(Fwd, Bwd);
             ASSERTL0(false,"v_PeriodicBwdCopy not defined");
         }
-
-        
-            
 
         /**
          */
@@ -3672,8 +3652,7 @@ namespace Nektar
         const LocTraceToTraceMapSharedPtr &ExpList::v_GetlocTraceToTraceMap() const
         {
             ASSERTL0(false, "v_GetlocTraceToTraceMap not coded");
-            const LocTraceToTraceMapSharedPtr result;
-            return result;
+            return NullLocTraceToTraceMapSharedPtr;
         }
     } //end of namespace
 } //end of namespace

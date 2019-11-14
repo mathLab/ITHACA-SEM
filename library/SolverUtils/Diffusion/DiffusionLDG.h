@@ -77,6 +77,37 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
 
+            virtual void v_Diffuse_coeff(
+                const std::size_t                                  nConvective,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                      Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+            void v_DiffuseCalculateDerivative(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
+                const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
+
+            void v_DiffuseVolumeFlux(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+                const Array<OneD, Array<OneD, NekDouble>>           &inarray,
+                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                Array< OneD, int >                                  &nonZeroIndex) ;
+
+            void v_DiffuseTraceFlux(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+                const Array<OneD, Array<OneD, NekDouble>>           &inarray,
+                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
+                const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
+                const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
+                Array< OneD, int >                                  &nonZeroIndex);
+
             void NumFluxforScalar(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
                 const Array<OneD, Array<OneD, NekDouble> >              &ufield,

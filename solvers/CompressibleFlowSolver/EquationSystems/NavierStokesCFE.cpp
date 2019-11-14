@@ -164,6 +164,7 @@ namespace Nektar
         m_diffusion->InitObject         (m_session, m_fields);
         
         //Only NavierStokes equation and using weakDG,LDGNS can temparary use the codes
+        string advName;
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
 	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
         if(m_useUnifiedWeakIntegration)
@@ -405,9 +406,9 @@ namespace Nektar
                     inarrayDiffderivative[i][j]=Array<OneD, NekDouble>(npoints,0.0);
                 }
             }
-            m_diffusion->DiffuseCalculateDerivative(nvariables,m_fields,inarray,inarrayDiffderivative,pFwd,pBwd);
-            m_diffusion->DiffuseVolumeFlux(nvariables, m_fields, inarray,inarrayDiffderivative, VolumeFlux);
-            m_diffusion->DiffuseTraceFlux(nvariables, m_fields, inarray,inarrayDiffderivative,VolumeFlux,TraceFlux,pFwd,pBwd);
+            m_diffusion->DiffuseCalculateDerivative(m_fields,inarray,inarrayDiffderivative,pFwd,pBwd);
+            m_diffusion->DiffuseVolumeFlux(m_fields, inarray,inarrayDiffderivative, VolumeFlux);
+            m_diffusion->DiffuseTraceFlux(m_fields, inarray,inarrayDiffderivative,VolumeFlux,TraceFlux,pFwd,pBwd);
         }
         else
         {
@@ -468,9 +469,9 @@ namespace Nektar
 
             // Diffusion term in physical rhs form
             // To notice, needs to firstly calculate volumeflux, traceflux uses it.
-            m_diffusion->DiffuseCalculateDerivative(nvariables,m_fields,inarrayDiff,inarrayDiffderivative,inFwd,inBwd);
-            m_diffusion->DiffuseVolumeFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative, VolumeFlux);
-            m_diffusion->DiffuseTraceFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative,VolumeFlux,TraceFlux, inFwd, inBwd);
+            m_diffusion->DiffuseCalculateDerivative(m_fields,inarrayDiff,inarrayDiffderivative,inFwd,inBwd);
+            m_diffusion->DiffuseVolumeFlux(m_fields, inarrayDiff,inarrayDiffderivative, VolumeFlux);
+            m_diffusion->DiffuseTraceFlux(m_fields, inarrayDiff,inarrayDiffderivative,VolumeFlux,TraceFlux, inFwd, inBwd);
 
             //Artificial Diffusion need to implement
             if (m_shockCaptureType != "Off")
@@ -774,7 +775,6 @@ namespace Nektar
      * \todo Complete the viscous flux vector
      */
     void NavierStokesCFE::GetViscousFluxVectorConservVar(
-        const int                                                       nConvectiveFields,
         const int                                                       nDim,
         const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
         const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
@@ -783,6 +783,7 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >                      &normal,         
         const Array<OneD, NekDouble>                                    &ArtifDiffFactor)
     {
+        int nConvectiveFields   = inarray.num_elements();
         int nPts=inarray[0].num_elements();
         int n_nonZero   =   nConvectiveFields-1;
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxVec;
@@ -807,7 +808,7 @@ namespace Nektar
             {
                 for(int nderiv=0;nderiv<nDim;nderiv++)
                 {
-                    GetViscousFluxBilinearForm(nConvectiveFields,nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
+                    GetViscousFluxBilinearForm(nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
 
                     for(int j=0;j<nConvectiveFields;j++)
                     {
@@ -824,7 +825,7 @@ namespace Nektar
             {
                 for(int nderiv=0;nderiv<nDim;nderiv++)
                 {
-                    GetViscousFluxBilinearForm(nConvectiveFields,nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
+                    GetViscousFluxBilinearForm(nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
 
                     for(int j=0;j<nConvectiveFields;j++)
                     {
@@ -876,9 +877,9 @@ namespace Nektar
      *
      */
     void NavierStokesCFE::SpecialBndTreat(
-        const int                                           nConvectiveFields,
               Array<OneD,       Array<OneD, NekDouble> >    &consvar)
     {            
+        int nConvectiveFields   = consvar.num_elements();
         int ndens       = 0;
         int nengy       = nConvectiveFields-1;
         int nvelst      = ndens + 1;
@@ -957,7 +958,6 @@ namespace Nektar
     }
 
     void NavierStokesCFE::v_GetViscousSymmtrFluxConservVar(
-        const int                                                       nConvectiveFields,
         const int                                                       nSpaceDim,
         const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
         const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
@@ -965,6 +965,7 @@ namespace Nektar
         Array< OneD, int >                                              &nonZeroIndex,    
         const Array<OneD, Array<OneD, NekDouble> >                      &normals)
     {
+        int nConvectiveFields   = inarray.num_elements();
         int nPts                = inaverg[nConvectiveFields-1].num_elements();
         nonZeroIndex = Array<OneD, int>(nConvectiveFields-1,0);
         for(int i=0;i<nConvectiveFields-1;i++)
@@ -980,7 +981,7 @@ namespace Nektar
         {
             for(int nderiv =0; nderiv<nSpaceDim;nderiv++)
             {
-                GetViscousFluxBilinearForm(nConvectiveFields,nSpaceDim,nd,nderiv,inaverg,inarray,outtmp);
+                GetViscousFluxBilinearForm(nSpaceDim,nd,nderiv,inaverg,inarray,outtmp);
 
                 for(int i=0;i<nConvectiveFields;i++)
                 {
@@ -990,7 +991,6 @@ namespace Nektar
         }
     }
     void NavierStokesCFE::GetViscousFluxBilinearForm(
-        const int                                                       nConvectiveFields,
         const int                                                       nSpaceDim,
         const int                                                       FluxDirection,
         const int                                                       DerivDirection,
@@ -998,22 +998,27 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
               Array<OneD, Array<OneD, NekDouble> >                      &outarray)
     {
+        int nConvectiveFields   = inaverg.num_elements();
         int nPts                = inaverg[nConvectiveFields-1].num_elements();
-        int nDim=m_spacedim;
+        int nDim=nSpaceDim;
         // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, 0.0);
 
-        // Variable viscosity through the Sutherland's law
-        if (m_ViscosityType == "Variable")
-        {
-            Array<OneD, NekDouble > temperature        (nPts, 0.0);
-            m_varConv->GetTemperature(inaverg,temperature);
-            m_varConv->GetDynamicViscosity(temperature, mu);
-        }
-        else
-        {
-            Vmath::Fill(nPts, m_mu, mu, 1);
-        }
+        // // Variable viscosity through the Sutherland's law
+        // if (m_ViscosityType == "Variable")
+        // {
+        //     Array<OneD, NekDouble > temperature        (nPts, 0.0);
+        //     m_varConv->GetTemperature(inaverg,temperature);
+        //     m_varConv->GetDynamicViscosity(temperature, mu);
+        // }
+        // else
+        // {
+        //     Vmath::Fill(nPts, m_mu, mu, 1);
+        // }
+        Array<OneD, NekDouble > temperature        (nPts, 0.0);
+        Array<OneD, NekDouble > mu                 (nPts, 0.0);
+        Array<OneD, NekDouble > thermalConductivity        (nPts, 0.0);
+        m_varConv->GetTemperature(inaverg,temperature);
+        GetViscosityAndThermalCondFromTemp(temperature, mu, thermalConductivity);
 
         Array<OneD,Array<OneD, NekDouble>> outtmp = outarray;
         for(int i=0; i<nConvectiveFields;i++)

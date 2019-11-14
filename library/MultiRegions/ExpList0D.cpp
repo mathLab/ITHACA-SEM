@@ -262,7 +262,7 @@ namespace Nektar
             Array<OneD, NekDouble>  &lengthsFwd,
             Array<OneD, NekDouble>  &lengthsBwd)
         {
-            int i,j,k,e_npoints,offset;
+            int i,j,e_npoints,offset;
 
             Array<OneD,NekDouble> locLeng;
             Array<OneD,NekDouble> lengintp;
@@ -280,7 +280,6 @@ namespace Nektar
                 loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion0D>();
                 offset = m_phys_offset[i];
                 
-                int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
                 if(e_npoints0<e_npoints)
                 {

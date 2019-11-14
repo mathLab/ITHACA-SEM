@@ -278,6 +278,10 @@ public:
         return m_flagTracephysToLeftRightExpphysMap;
     }
 
+    MULTI_REGIONS_EXPORT void TracelocToElmtlocCoeffMap(
+        const ExpList &locExp,
+        const ExpListSharedPtr &trace);
+
 private:
     /// The number of forward trace points. A local trace element is `forward'
     /// if it is the side selected for the global trace.
@@ -345,12 +349,13 @@ private:
     Array<OneD, Array<OneD, Array<OneD, int > > >   m_TracephysToLeftRightExpphysMap;
     bool                                            m_flagTracephysToLeftRightExpphysMap;
 
-    void TracelocToElmtlocCoeffMap(
-        const ExpList &locExp,
-        const ExpListSharedPtr &trace);
+    
 };
 
 typedef std::shared_ptr<LocTraceToTraceMap> LocTraceToTraceMapSharedPtr;
+
+    static LocTraceToTraceMapSharedPtr NullLocTraceToTraceMapSharedPtr;
+
 
 }
 }

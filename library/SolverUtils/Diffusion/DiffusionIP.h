@@ -47,13 +47,14 @@ namespace Nektar
         public:
             static DiffusionSharedPtr create(std::string diffType)
             {
+                boost::ignore_unused(diffType);
                 return DiffusionSharedPtr(new DiffusionIP());
             }
             
             static std::string type;
 
             void ConsVarAve(
-                const int                                           nConvectiveFields,
+                const std::size_t                                                   nConvectiveFields,
                 const int                                           npnts,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
@@ -85,7 +86,7 @@ namespace Nektar
                 Array<OneD, NekDouble >                             &factor); 
 
             void AddSymmFluxIntegralToCoeff(
-                const int                                                           nConvectiveFields,
+                const std::size_t                                                   nConvectiveFields,
                 const int                                                           nDim,
                 const int                                                           nPts,
                 const int                                                           nTracePts,
@@ -95,7 +96,7 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >                          &outarray);
 
             void AddSymmFluxIntegralToPhys(
-                const int                                                           nConvectiveFields,
+                const std::size_t                                                   nConvectiveFields,
                 const int                                                           nDim,
                 const int                                                           nPts,
                 const int                                                           nTracePts,
@@ -105,7 +106,7 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >                          &outarray);
             
             void CalTraceSymFlux(
-                const int                                                           nConvectiveFields,
+                const std::size_t                                                   nConvectiveFields,
                 const int                                                           nDim,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
                 const Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
@@ -114,7 +115,7 @@ namespace Nektar
                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceSymflux);
             
             void DiffuseTraceSymmFlux(
-                const int                                           nConvectiveFields,
+                const std::size_t                                                   nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
                 Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
@@ -130,7 +131,7 @@ namespace Nektar
                 Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
             
             virtual void v_Diffuse(
-                const int                                          nConvective,
+                const std::size_t                                                   nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
@@ -138,7 +139,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
 
             virtual void v_Diffuse_coeff(
-                const int                                          nConvective,
+                const std::size_t                                                   nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
@@ -146,7 +147,6 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
             
             virtual void v_DiffuseVolumeFlux(
-                const int                                           nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
                 Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
@@ -154,7 +154,6 @@ namespace Nektar
                 Array< OneD, int >                                  &nonZeroIndex) ;
             
             virtual void v_DiffuseTraceFlux(
-                const int                                           nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
                 Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
@@ -164,7 +163,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
                 Array< OneD, int >                                  &nonZeroIndex);
             virtual void v_AddDiffusionSymmFluxToCoeff(
-                const int                                           nConvectiveFields,
+                const std::size_t                                                   nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble> >          &inarray,
                 Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
@@ -174,7 +173,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >          &pBwd);
 
             virtual void v_AddDiffusionSymmFluxToPhys(
-                const int                                           nConvectiveFields,
+                const std::size_t                                                   nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble> >          &inarray,
                 Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
@@ -184,7 +183,6 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >          &pBwd);
 
             virtual void v_DiffuseCalculateDerivative(
-                const int                                                   nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
                 const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &qfield,
@@ -193,7 +191,7 @@ namespace Nektar
 
             
             virtual void v_ConsVarAveJump(
-                const int                                           nConvectiveFields,
+                const std::size_t                                                   nConvectiveFields,
                 const int                                           npnts,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
@@ -206,7 +204,7 @@ namespace Nektar
             }
 
             void CalTraceNumFlux_ReduceComm(
-                const int                                                           nConvectiveFields,
+                const std::size_t                                                   nConvectiveFields,
                 const int                                                           nDim,
                 const int                                                           nPts,
                 const int                                                           nTracePts,
@@ -223,7 +221,7 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >                          &solution_jump);
             
            void AddSecondDerivTOTrace_ReduceComm(
-                const int                                                           nConvectiveFields,
+                const std::size_t                                                   nConvectiveFields,
                 const int                                                           nDim,
                 const int                                                           nPts,
                 const int                                                           nTracePts,

@@ -35,7 +35,7 @@
 
 #include <LibUtilities/LinearAlgebra/NekLinSysIterative.h>
 #include <LibUtilities/BasicUtils/Timer.h>
-
+#include <iomanip>
 using namespace std;
 
 namespace Nektar
@@ -131,7 +131,7 @@ namespace Nektar
         {
             pSession->LoadParameter("MaxHesband",
                                     m_maxhesband,
-                                    50000000000);
+                                    std::numeric_limits<int>::max());
         }
         /* if(pSession->DefinesGlobalSysSolnInfo(variable,"SuccessiveRHS"))
         {
@@ -671,6 +671,8 @@ namespace Nektar
         Array<OneD, NekDouble> &hsingle,
         Array<OneD, NekDouble> &eta)
     {
+        boost::ignore_unused(nGlobal,nDir);
+
         NekDouble temp_dbl, dd, hh;
         int idtem = endtem - 1;
         // The starttem and endtem are beginning and ending order of Givens rotation

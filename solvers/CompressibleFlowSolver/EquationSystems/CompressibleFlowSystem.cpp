@@ -249,7 +249,6 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
-        int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
         int nTracePts  = GetTraceTotPoints();
@@ -1085,6 +1084,7 @@ namespace Nektar
             Array< OneD, int >                                              &nonZeroIndex,    
             const Array<OneD, Array<OneD, NekDouble> >                      &normals)
     {
+        boost::ignore_unused(nConvectiveFields,nSpaceDim,inaverg,inarray,outarray,nonZeroIndex,normals);
         ASSERTL0(false, "v_GetViscousSymmtrFluxConservVar not coded");
     }
     /**

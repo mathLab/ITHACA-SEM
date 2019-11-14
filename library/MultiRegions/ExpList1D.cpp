@@ -1158,7 +1158,7 @@ namespace Nektar
             Array<OneD, NekDouble>  &lengthsFwd,
             Array<OneD, NekDouble>  &lengthsBwd)
         {
-            int i,j,k,e_npoints,offset;
+            int i,j,e_npoints,offset;
 
             Array<OneD,NekDouble> locLeng;
             Array<OneD,NekDouble> lengintp;

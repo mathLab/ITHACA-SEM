@@ -90,6 +90,7 @@ namespace Nektar
                 Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &VolumeFlux,
                 const NekDouble &time)
             {
+                boost::ignore_unused(nConvectiveFields,fields,advVel,inarray,VolumeFlux,time);
                 m_fluxVector(inarray, VolumeFlux);
             }
 

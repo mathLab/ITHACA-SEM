@@ -176,6 +176,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
             const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
         {
+            boost::ignore_unused(advVel,time);
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
 
             ASSERTL1(m_riemann, "Riemann solver must be provided for AdvectionWeakDG.");

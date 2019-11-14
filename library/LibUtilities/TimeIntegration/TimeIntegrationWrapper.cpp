@@ -341,7 +341,7 @@ namespace LibUtilities {
     // --------------
     // DIRKOrder4Stage6
     // --------------
-    string TimeIntegrationDIRKOrder4Stage6::className =
+    std::string TimeIntegrationDIRKOrder4Stage6::className =
         GetTimeIntegrationWrapperFactory().RegisterCreatorFunction(
             "DIRKOrder4Stage6", TimeIntegrationDIRKOrder4Stage6::create);
     void TimeIntegrationDIRKOrder4Stage6::v_InitObject()
@@ -349,7 +349,7 @@ namespace LibUtilities {
         TimeIntegrationSchemeKey IntKey0(eDIRKOrder4Stage6);
         m_method       = eDIRKOrder4Stage6;
         m_intSteps     = 1;
-        m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
+        m_intScheme    = std::vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
         m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
     }
 

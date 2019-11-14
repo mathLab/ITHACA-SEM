@@ -426,7 +426,7 @@ void LocTraceToTraceMap::Setup2D(
             }
         }
     }
-    TracelocToElmtlocCoeffMap(locExp,trace);
+    // TracelocToElmtlocCoeffMap(locExp,trace);
 }
 
 /**
@@ -839,7 +839,7 @@ void LocTraceToTraceMap::Setup3D(
         }
     }
 
-    TracelocToElmtlocCoeffMap(locExp,trace);
+    // TracelocToElmtlocCoeffMap(locExp,trace);
 }
 
 

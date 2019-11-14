@@ -567,7 +567,7 @@ namespace Nektar
             m_bndConditions
                     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
 
-            m_BndCondBwdWeight  =   Array<OneD, NekDouble>(bregions.size(),0.0);
+            m_BndCondBwdWeight  =   Array<OneD, NekDouble>(cnt,0.0);
 
             SetBoundaryConditionExpansion(graph1D,bcs,variable,
                                            m_bndCondExpansions,
@@ -905,7 +905,9 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            int cnt, n, e, npts;
+            boost::ignore_unused(Fwd,Bwd);
+
+            int cnt, n;
             // Fill boundary conditions into missing elements.
             int id = 0;
             
@@ -950,7 +952,8 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            int cnt, n, e, npts;
+            boost::ignore_unused(Dir);
+            int cnt, n;
             // Fill boundary conditions into missing elements.
             int id = 0;
             
@@ -995,7 +998,7 @@ namespace Nektar
                   Array<OneD,       NekDouble> &weightave,
                   Array<OneD,       NekDouble> &weightjmp)
         {
-            int cnt, n, e, npts;
+            int cnt, n;
             // Fill boundary conditions into missing elements.
             int id = 0;
             

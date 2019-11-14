@@ -106,6 +106,7 @@ using namespace std;
              if(SetUpJustDG)
              {
                  SetUpDG();
+                 m_locTraceToTraceMap->TracelocToElmtlocCoeffMap(*this, m_trace);
              }
              else
              {
@@ -162,6 +163,7 @@ using namespace std;
                  if (SetUpJustDG)
                  {
                      SetUpDG(variable);
+                    m_locTraceToTraceMap->TracelocToElmtlocCoeffMap(*this, m_trace);
                  }
                  else
                  {
@@ -625,8 +627,6 @@ using namespace std;
 
             m_BndCondBwdWeight  =   Array<OneD, NekDouble>(bregions.size(),0.0);
             
-            int spaceDim = graph3D->GetSpaceDimension();
-
             // list Dirichlet boundaries first
             for (auto &it : bregions)
             {
@@ -1976,7 +1976,7 @@ using namespace std;
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            int cnt, n, e, npts, phys_offset;
+            int cnt, n, e, npts;
             // Fill boundary conditions into missing elements
             int id1, id2 = 0;
             cnt = 0;
@@ -2044,9 +2044,10 @@ using namespace std;
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            int cnt, n, e, npts, phys_offset;
+            boost::ignore_unused(Dir);
+            int cnt, n, e, npts;
             // Fill boundary conditions into missing elements
-            int id1, id2 = 0;
+            int id2 = 0;
             cnt = 0;
             
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
@@ -2057,7 +2058,7 @@ using namespace std;
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
-                        id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        // id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                         // Vmath::Vcopy(npts,
@@ -2076,7 +2077,7 @@ using namespace std;
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
-                        id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        // id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                         
@@ -2112,9 +2113,9 @@ using namespace std;
                   Array<OneD,       NekDouble> &weightave,
                   Array<OneD,       NekDouble> &weightjmp)
         {
-            int cnt, n, e, npts, phys_offset;
+            int cnt, n, e, npts;
             // Fill boundary conditions into missing elements
-            int id1, id2 = 0;
+            int id2 = 0;
             cnt = 0;
             
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
@@ -2125,7 +2126,7 @@ using namespace std;
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
-                        id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        // id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                         // Vmath::Vcopy(npts,
@@ -2146,7 +2147,7 @@ using namespace std;
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
-                        id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        // id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                         

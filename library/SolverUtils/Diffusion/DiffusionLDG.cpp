@@ -74,51 +74,62 @@ void DiffusionLDG::v_InitObject(
 }
 
 void DiffusionLDG::v_Diffuse(
-    const std::size_t nConvectiveFields,
+    const std::size_t                                  nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-    const Array<OneD, Array<OneD, NekDouble>> &inarray,
-    Array<OneD, Array<OneD, NekDouble>> &outarray,
-    const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-    const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >        &outarray,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
-    std::size_t nDim      = fields[0]->GetCoordim(0);
-    std::size_t nPts      = fields[0]->GetTotPoints();
     std::size_t nCoeffs   = fields[0]->GetNcoeffs();
-    std::size_t nTracePts = fields[0]->GetTrace()->GetTotPoints();
-
-    Array<OneD, NekDouble> tmp{nCoeffs};
-    Array<OneD, Array<OneD, Array<OneD, NekDouble>>> flux{nDim};
-    Array<OneD, Array<OneD, Array<OneD, NekDouble>>> qfield{nDim};
-
-    for (std::size_t j = 0; j < nDim; ++j)
+    
+    Array<OneD, Array<OneD, NekDouble> >  tmp(nConvectiveFields);
+    for(int i=0; i< nConvectiveFields; i++)
     {
-        qfield[j] = Array<OneD, Array<OneD, NekDouble>>{nConvectiveFields};
-        flux[j]   = Array<OneD, Array<OneD, NekDouble>>{nConvectiveFields};
+        tmp[i] = Array<OneD, NekDouble>(nCoeffs,0.0);
+    }
 
-        for (std::size_t i = 0; i < nConvectiveFields; ++i)
+    DiffusionLDG::v_Diffuse_coeff(nConvectiveFields,fields,inarray,tmp,pFwd,pBwd);
+    
+    for (int i = 0; i < nConvectiveFields; ++i)
+    {
+        fields[i]->BwdTrans             (tmp[i], outarray[i]);
+    }
+}
+
+void DiffusionLDG::v_Diffuse_coeff(
+    const std::size_t                                  nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >        &outarray,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+{
+    int  i, j;
+    int nDim      = fields[0]->GetCoordim(0);
+    int nPts      = fields[0]->GetTotPoints();
+    int nCoeffs   = fields[0]->GetNcoeffs();
+    int nTracePts = fields[0]->GetTrace()->GetTotPoints();
+
+    Array<OneD, NekDouble>  tmp(nCoeffs);
+
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(nDim);
+    for (j = 0; j < nDim; ++j)
+    {
+        qfield[j] = Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+        for (i = 0; i < nConvectiveFields; ++i)
         {
-            qfield[j][i] = Array<OneD, NekDouble>{nPts, 0.0};
-            flux[j][i]   = Array<OneD, NekDouble>{nTracePts, 0.0};
+            qfield[j][i] = Array<OneD, NekDouble>(nPts, 0.0);
         }
     }
 
-    // Compute q_{\eta} and q_{\xi}
-    // Obtain numerical fluxes
-
-    NumFluxforScalar(fields, inarray, flux, pFwd, pBwd);
-
-    for (std::size_t j = 0; j < nDim; ++j)
+    Array<OneD, Array<OneD, NekDouble > > traceflux(nConvectiveFields);
+    for (int i = 0; i < nConvectiveFields; ++i)
     {
-        for (std::size_t i = 0; i < nConvectiveFields; ++i)
-        {
-            fields[i]->IProductWRTDerivBase(j, inarray[i], tmp);
-            Vmath::Neg(nCoeffs, tmp, 1);
-            fields[i]->AddTraceIntegral(flux[j][i], tmp);
-            fields[i]->SetPhysState(false);
-            fields[i]->MultiplyByElmtInvMass(tmp, tmp);
-            fields[i]->BwdTrans(tmp, qfield[j][i]);
-        }
+        traceflux[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
     }
+
+    DiffuseCalculateDerivative(fields,inarray,qfield,pFwd,pBwd);
 
     // Initialize viscous tensor
     Array<OneD, Array<OneD, Array<OneD, NekDouble>>> viscTensor{nDim};
@@ -130,29 +141,89 @@ void DiffusionLDG::v_Diffuse(
             viscTensor[j][i] = Array<OneD, NekDouble>{nPts, 0.0};
         }
     }
-    // Get viscous tensor
-    m_fluxVector(inarray, qfield, viscTensor);
+    DiffuseVolumeFlux(fields,inarray,qfield,viscTensor);
+    DiffuseTraceFlux(fields,inarray,qfield,viscTensor,traceflux,pFwd,pBwd);
 
-    // Compute u from q_{\eta} and q_{\xi}
-    // Obtain numerical fluxes
-    NumFluxforVector(fields, inarray, viscTensor, flux[0]);
+    Array<OneD, Array<OneD, NekDouble> > qdbase(nDim);
 
-    Array<OneD, Array<OneD, NekDouble>> qdbase{nDim};
-    for (std::size_t i = 0; i < nConvectiveFields; ++i)
+    for (i = 0; i < nConvectiveFields; ++i)
     {
-        for (std::size_t j = 0; j < nDim; ++j)
+        for (j = 0; j < nDim; ++j)
         {
             qdbase[j] = viscTensor[j][i];
         }
-        fields[i]->IProductWRTDerivBase(qdbase, tmp);
+        fields[i]->IProductWRTDerivBase(qdbase,tmp);
 
         // Evaulate  <\phi, \hat{F}\cdot n> - outarray[i]
-        Vmath::Neg(nCoeffs, tmp, 1);
-        fields[i]->AddTraceIntegral(flux[0][i], tmp);
-        fields[i]->SetPhysState(false);
-        fields[i]->MultiplyByElmtInvMass(tmp, tmp);
-        fields[i]->BwdTrans(tmp, outarray[i]);
+        Vmath::Neg                      (nCoeffs, tmp, 1);
+        fields[i]->AddTraceIntegral     (traceflux[i], tmp);
+        fields[i]->SetPhysState         (false);
+        fields[i]->MultiplyByElmtInvMass(tmp, outarray[i]);
     }
+}
+
+void DiffusionLDG::v_DiffuseCalculateDerivative(
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &qfield,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+{
+    std::size_t nConvectiveFields      = fields.num_elements();
+    std::size_t nDim      = fields[0]->GetCoordim(0);
+    // std::size_t nPts      = fields[0]->GetTotPoints();
+    std::size_t nCoeffs   = fields[0]->GetNcoeffs();
+    std::size_t nTracePts = fields[0]->GetTrace()->GetTotPoints();
+
+    Array<OneD, NekDouble>  tmp(nCoeffs);
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux  (nDim);
+    for (int j = 0; j < nDim; ++j)
+    {
+        flux[j]   = Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+        for (int i = 0; i < nConvectiveFields; ++i)
+        {
+            flux[j][i]   = Array<OneD, NekDouble>(nTracePts, 0.0);
+        }
+    }
+
+    NumFluxforScalar(fields, inarray, flux, pFwd, pBwd);
+
+    for (int j = 0; j < nDim; ++j)
+    {
+        for (int i = 0; i < nConvectiveFields; ++i)
+        {
+            fields[i]->IProductWRTDerivBase(j, inarray[i], tmp);
+            Vmath::Neg                      (nCoeffs, tmp, 1);
+            fields[i]->AddTraceIntegral     (flux[j][i], tmp);
+            fields[i]->SetPhysState         (false);
+            fields[i]->MultiplyByElmtInvMass(tmp, tmp);
+            fields[i]->BwdTrans             (tmp, qfield[j][i]);
+        }
+    }
+}
+
+void DiffusionLDG::v_DiffuseVolumeFlux(
+    const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+    const Array<OneD, Array<OneD, NekDouble>>           &inarray,
+    Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &viscTensor,
+    Array< OneD, int >                                  &nonZeroIndex) 
+{
+    boost::ignore_unused(fields,nonZeroIndex);
+    m_fluxVector(inarray, qfield, viscTensor);
+}
+void DiffusionLDG::v_DiffuseTraceFlux(
+    const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+    const Array<OneD, Array<OneD, NekDouble>>           &inarray,
+    Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &viscTensor,
+    Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
+    const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
+    const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
+    Array< OneD, int >                                  &nonZeroIndex)
+{
+    boost::ignore_unused(qfield,pFwd,pBwd,nonZeroIndex);
+    NumFluxforVector(fields, inarray, viscTensor, TraceFlux);
 }
 
 void DiffusionLDG::NumFluxforScalar(

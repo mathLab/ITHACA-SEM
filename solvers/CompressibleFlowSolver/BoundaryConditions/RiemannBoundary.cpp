@@ -77,6 +77,7 @@ void RiemannBoundary::v_Apply
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
 {
+    boost::ignore_unused(physarray,time);
 		int i, j;
 		int nTracePts = m_fields[0]->GetTrace()->GetNpoints();
 		int nDimensions = m_spacedim;

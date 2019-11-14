@@ -130,7 +130,7 @@ void ArtificialDiffusion::v_DoArtificialDiffusion_coeff(
 {
     int i;
     int nvariables = inarray.num_elements();
-    int npoints    = m_fields[0]->GetNpoints();
+    // int npoints    = m_fields[0]->GetNpoints();
     int ncoeffs    = m_fields[0]->GetNcoeffs();
 
     Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
@@ -186,9 +186,9 @@ void ArtificialDiffusion::v_DoArtificialDiffusionFlux(
 
     // Diffusion term in physical rhs form
     // To notice, needs to firstly calculate volumeflux, traceflux uses it.
-    m_diffusion->DiffuseCalculateDerivative(nvariables,m_fields,inarray,inarrayDiffderivative);
-    m_diffusion->DiffuseVolumeFlux(nvariables, m_fields, inarray,inarrayDiffderivative, VolumeFlux);
-    m_diffusion->DiffuseTraceFlux(nvariables, m_fields, inarray,inarrayDiffderivative,VolumeFlux,TraceFlux);
+    m_diffusion->DiffuseCalculateDerivative(m_fields,inarray,inarrayDiffderivative);
+    m_diffusion->DiffuseVolumeFlux( m_fields, inarray,inarrayDiffderivative, VolumeFlux);
+    m_diffusion->DiffuseTraceFlux(m_fields, inarray,inarrayDiffderivative,VolumeFlux,TraceFlux);
 
     for (int j = 0; j < nDim; ++j)
     {

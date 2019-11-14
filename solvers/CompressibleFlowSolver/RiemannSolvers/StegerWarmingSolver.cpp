@@ -183,7 +183,7 @@ namespace Nektar
                 (EL - 0.5 * (rhouL * vx + rhovL * vy + rhowL * vz)) / rhoL;
 
 
-        NekDouble   ps = m_eos->GetPressure(rhoL, eL);
+        // NekDouble   ps = m_eos->GetPressure(rhoL, eL);
         NekDouble   c  = m_eos->GetSoundSpeed(rhoL,eL);
         NekDouble   T  = m_eos->GetTemperature(rhoL, eL);
         NekDouble   h  = m_eos->GetEnthalpy(T);

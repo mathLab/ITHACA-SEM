@@ -121,6 +121,7 @@ void CFSBndCond::v_ApplyDeriv(
         const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
         NekDouble                                                           time)
 {
+    boost::ignore_unused(Fwd,dervarray,time);
     int i, j;
     int e, pnt;
     int id1, id2, nBCEdgePts;

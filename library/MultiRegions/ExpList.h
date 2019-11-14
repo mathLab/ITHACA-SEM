@@ -212,7 +212,7 @@ namespace Nektar
                 const NekDouble> &inarray);
 
             /// This function calculates the inner product of a function
-            /// \f$f(\boldsymbol{x})\f$ with respect to all \emph{local}
+            /// \f$f(\boldsymbol{x})\f$ with respect to all \em local
             /// expansion modes \f$\phi_n^e(\boldsymbol{x})\f$.
             inline void   IProductWRTBase_IterPerExp(
                 const Array<OneD, const NekDouble> &inarray,
@@ -226,7 +226,7 @@ namespace Nektar
 
             /// This function calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
-            /// direction \param dir) of all \emph{local} expansion modes
+            /// direction \param dir) of all \em local expansion modes
             /// \f$\phi_n^e(\boldsymbol{x})\f$.
             MULTI_REGIONS_EXPORT void   IProductWRTDerivBase(
                 const int dir,
@@ -240,7 +240,7 @@ namespace Nektar
 
             /// This function calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
-            /// direction \param dir) of all \emph{local} expansion modes
+            /// direction \param dir) of all \em local expansion modes
             /// \f$\phi_n^e(\boldsymbol{x})\f$.
             MULTI_REGIONS_EXPORT void   IProductWRTDerivBase
                 (const Array<OneD, const Array<OneD, NekDouble> > &inarray,

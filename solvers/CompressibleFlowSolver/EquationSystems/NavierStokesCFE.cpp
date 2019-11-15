@@ -1185,6 +1185,5 @@ namespace Nektar
         Vmath::Smul(nPts, tRa, mu, 1, thermalCond, 1);
 
     }
-    
 
 }

@@ -226,43 +226,6 @@ namespace Nektar
             v_EvaluateBoundaryConditions(0.0, variable);
         }
 
-        // void DisContField3DHomogeneous1D::EvaluateBoundaryConditions(
-        //     const NekDouble   time,
-        //     const std::string varName)
-        // {
-        //     int n;
-        //     const Array<OneD, const NekDouble> z = m_homogeneousBasis->GetZ();
-        //     Array<OneD, NekDouble> local_z(m_planes.num_elements());
-
-        //     for (n = 0; n < m_planes.num_elements(); n++)
-        //     {
-        //         local_z[n] = z[m_transposition->GetPlaneID(n)];
-        //     }
-
-        //     for (n = 0; n < m_planes.num_elements(); ++n)
-        //     {
-        //         m_planes[n]->EvaluateBoundaryConditions(
-        //             time, varName, 0.5*m_lhom*(1.0+local_z[n]));
-        //     }
-
-        //     // Fourier transform coefficient space boundary values
-        //     // This will only be undertaken for time dependent
-        //     // boundary conditions unless time == 0.0 which is the
-        //     // case when the method is called from the constructor.
-        //     for (n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-        //     {
-        //         if (time == 0.0 ||
-        //             m_bndConditions[n]->IsTimeDependent() )
-        //         {
-        //             m_BndCondBwdWeight[n]   =   1.0;
-        //             m_bndCondExpansions[n]->HomogeneousFwdTrans(
-        //                 m_bndCondExpansions[n]->GetCoeffs(),
-        //                 m_bndCondExpansions[n]->UpdateCoeffs());
-        //         }
-        //     }
-        //     v_EvaluateBoundaryConditions(0.0, varName);
-        // }
-
         void DisContField3DHomogeneous1D::v_HelmSolve(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,

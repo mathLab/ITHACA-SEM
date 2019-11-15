@@ -4,26 +4,30 @@ LABEL maintainer="David Moxey <d.moxey@exeter.ac.uk>"
 
 COPY --chown=nektar:nektar . /home/nektar
 
+ARG BUILD_DOCS=ON
 ARG BUILD_DEMOS=OFF
 ARG BUILD_SOLVERS=ON
 ARG INSTALL_PREFIX=/usr/local
 
-RUN mkdir build && cd build &&                \
-    cmake                                     \
-    -DNEKTAR_BUILD_DEMOS=${BUILD_DEMOS}       \
-    -DNEKTAR_BUILD_TESTS=OFF                  \
-    -DNEKTAR_BUILD_UNIT_TESTS=OFF             \
-    -DNEKTAR_BUILD_SOLVERS=${BUILD_SOLVERS}   \
-    -DNEKTAR_BUILD_PYTHON=ON                  \
-    -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}  \
-    -DNEKTAR_USE_MESHGEN=ON                   \
-    -DNEKTAR_USE_MPI=ON                       \
-    -DNEKTAR_USE_ARPACK=ON                    \
-    -DNEKTAR_USE_FFTW=ON                      \
-    -DNEKTAR_USE_HDF5=ON                      \
-    -DNEKTAR_USE_CCM=ON                       \
-    .. &&                                     \
-    make -j$(nproc)
+RUN mkdir build && cd build &&                                  \
+    cmake                                                       \
+    -DNEKTAR_BUILD_DEMOS=${BUILD_DEMOS}                         \
+    -DNEKTAR_BUILD_DOC=${BUILD_DOCS}                            \
+    -DNEKTAR_BUILD_TESTS=OFF                                    \
+    -DNEKTAR_BUILD_UNIT_TESTS=OFF                               \
+    -DNEKTAR_BUILD_SOLVERS=${BUILD_SOLVERS}                     \
+    -DNEKTAR_BUILD_PYTHON=ON                                    \
+    -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}                    \
+    -DNEKTAR_USE_MESHGEN=ON                                     \
+    -DNEKTAR_USE_MPI=ON                                         \
+    -DNEKTAR_USE_ARPACK=ON                                      \
+    -DNEKTAR_USE_FFTW=ON                                        \
+    -DNEKTAR_USE_HDF5=ON                                        \
+    -DNEKTAR_USE_CCM=ON                                         \
+    .. &&                                                       \
+    make -j$(nproc) &&                                          \
+    make -j$(nproc) user-guide-pdf developer-guide-pdf          \
+        tutorials-pdf doc
 
 USER root
 RUN cd build && make install && make nekpy-install-system && cd ..

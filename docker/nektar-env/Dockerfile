@@ -12,7 +12,9 @@ RUN DEBIAN_RELEASE=buster && \
     libfftw3-dev libhdf5-dev libhdf5-mpi-dev liblapack-dev liboce-foundation-dev \
     liboce-modeling-dev liboce-ocaf-dev libtet1.5-dev libtriangle-dev \
     libtinyxml-dev mpi-default-dev petsc-dev zlib1g-dev python-numpy libptscotch-dev \
-    libarpack2-dev
+    libarpack2-dev \
+    texlive-base texlive-latex-extra texlive-science texlive-fonts-recommended texlive-pstricks \
+    doxygen graphviz imagemagick
 
 RUN groupadd nektar && useradd -m -g nektar nektar
 USER nektar:nektar

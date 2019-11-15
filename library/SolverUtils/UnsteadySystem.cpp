@@ -510,6 +510,7 @@ namespace Nektar
                 ++step;
                 ++stepCounter;
             }
+        
             // Print out summary statistics
             if (m_session->GetComm()->GetRank() == 0)
             {

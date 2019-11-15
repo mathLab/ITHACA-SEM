@@ -17,21 +17,23 @@ IF (NEKTAR_BUILD_PYTHON)
     ENDIF()
 
     IF (NOT NEKTAR_PYTHON3_STATUS STREQUAL NEKTAR_USE_PYTHON3)
-        # Unset any existing python executable/library settings so that we can
-        # rediscover correct python version if v2/3 settings changed.
-        IF (DEFINED NEKTAR_PYTHON3_STATUS)
-            unset(PYTHON_EXECUTABLE CACHE)
-            unset(PYTHON_INCLUDE_DIR CACHE)
-            unset(PYTHON_LIBRARY CACHE)
-            unset(PYTHON_LIBRARY_DEBUG CACHE)
-            unset(BOOST_PYTHON_LIB CACHE)
-            unset(BOOST_NUMPY_LIB CACHE)
-        ENDIF()
+        unset(PYTHON_EXECUTABLE CACHE)
+        unset(PYTHON_INCLUDE_DIR CACHE)
+        unset(PYTHON_LIBRARY CACHE)
+        unset(PYTHON_LIBRARY_DEBUG CACHE)
+        unset(BOOST_PYTHON_LIB CACHE)
+        unset(BOOST_NUMPY_LIB CACHE)
+        SET(NEKTAR_PYTHON3_STATUS ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "")
+    ENDIF()
 
-        SET(PYTHONVER 2.7)
-        IF (NEKTAR_USE_PYTHON3)
-            SET(PYTHONVER 3.0)
-        ENDIF()
+    SET(PYTHONVER 2.7)
+    IF (NEKTAR_USE_PYTHON3)
+        SET(PYTHONVER 3.0)
+    ENDIF()
+
+    # Find Python
+    FIND_PACKAGE(PythonInterp  ${PYTHONVER} REQUIRED)
+    FIND_PACKAGE(PythonLibsNew ${PYTHONVER} REQUIRED)
 
         # Find Python
         FIND_PACKAGE(PythonInterp  ${PYTHONVER} REQUIRED)
@@ -88,6 +90,18 @@ IF (NEKTAR_BUILD_PYTHON)
 
         SET(NEKTAR_PYTHON3_STATUS ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "")
     ENDIF()
+    INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
+    ADD_DEFINITIONS(-DWITH_PYTHON)
+
+    # Try to find Boost.NumPy
+    FIND_LIBRARY(BOOST_NUMPY_LIB
+        NAMES boost_numpy-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}${BOOST_LIB_SUFFIX}
+        boost_numpy${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}${BOOST_LIB_SUFFIX}
+        boost_numpy-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_LIB_SUFFIX}
+        boost_numpy${BOOST_PYTHON_VERSION_MAJOR}${BOOST_LIB_SUFFIX}
+        boost_numpy${BOOST_LIB_SUFFIX}
+        PATHS ${Boost_LIBRARY_DIRS})
+
     INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
     ADD_DEFINITIONS(-DWITH_PYTHON)
 

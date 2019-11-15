@@ -137,7 +137,10 @@ void DiffusionLDGNS::v_InitObject(
             {
                 ASSERTL0(false,"Dimension out of bound.")
             }
-        }
+            case 1:
+            {
+                LocalRegions::Expansion1DSharedPtr exp1D;
+                exp1D = pFields[0]->GetExp(e)->as<LocalRegions::Expansion1D>();
 
         // Store scaling
         hEle[e] = h;
@@ -278,6 +281,41 @@ void DiffusionLDGNS::v_Diffuse_coeff(
             m_viscTensor[j][i] = Array<OneD, NekDouble>(nPts, 0.0);
         }
     }
+    // Get average of traces
+    Array<OneD, NekDouble> traceH{nTracePts, 1.0};
+    m_traceOneOverH = Array<OneD, NekDouble> {nTracePts, 1.0};
+    Vmath::Svtsvtp(nTracePts, 0.5, Fwd, 1, 0.5, Bwd, 1, traceH, 1);
+    // Multiply by coefficient = - C11 / h
+    m_session->LoadParameter ("LDGNSc11", m_C11, 1.0);
+    Vmath::Sdiv(nTracePts, -m_C11, traceH, 1, m_traceOneOverH, 1);
+}
+
+/**
+ * @brief Calculate weak DG Diffusion in the LDG form for the
+ * Navier-Stokes (NS) equations:
+ *
+ * \f$ \langle\psi, \hat{u}\cdot n\rangle
+ *   - \langle\nabla\psi \cdot u\rangle
+ *     \langle\phi, \hat{q}\cdot n\rangle -
+ *     (\nabla \phi \cdot q) \rangle \f$
+ *
+ * The equations that need a diffusion operator are those related
+ * with the velocities and with the energy.
+ *
+ */
+void DiffusionLDGNS::v_Diffuse(
+    const std::size_t                                  nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+          Array<OneD, Array<OneD, NekDouble> >        &outarray,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+{
+    std::size_t nDim      = fields[0]->GetCoordim(0);
+    std::size_t nPts      = fields[0]->GetTotPoints();
+    std::size_t nCoeffs   = fields[0]->GetNcoeffs();
+    std::size_t nScalars  = inarray.num_elements();
+    std::size_t nTracePts = fields[0]->GetTrace()->GetTotPoints();
 
     for (i = 0; i < nConvectiveFields; ++i)
     {
@@ -300,6 +338,7 @@ void DiffusionLDGNS::v_Diffuse_coeff(
             fields[i]->IProductWRTDerivBase(j, m_viscTensor[j][i], tmp1);
             Vmath::Vadd(nCoeffs, tmp1, 1, tmp2[i], 1, tmp2[i], 1);
         }
+    }
 
         // Evaulate  <\phi, \hat{F}\cdot n> - outarray[i]
         Vmath::Neg                      (nCoeffs, tmp2[i], 1);
@@ -358,6 +397,13 @@ void DiffusionLDGNS::v_DiffuseCalculateDerivative(
         {
             inarrayderivative[2][i] = m_homoDerivs[i];
         }
+
+        // Evaulate  <\phi, \hat{F}\cdot n> - outarray[i]
+        Vmath::Neg                      (nCoeffs, tmp2[i], 1);
+        fields[i]->AddTraceIntegral     (viscousFlux[i], tmp2[i]);
+        fields[i]->SetPhysState         (false);
+        fields[i]->MultiplyByElmtInvMass(tmp2[i], tmp2[i]);
+        fields[i]->BwdTrans             (tmp2[i], outarray[i]);
     }
 }
 

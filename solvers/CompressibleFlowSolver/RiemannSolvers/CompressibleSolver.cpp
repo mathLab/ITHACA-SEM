@@ -33,8 +33,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 

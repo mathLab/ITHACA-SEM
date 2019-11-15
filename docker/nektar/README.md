@@ -20,6 +20,8 @@ path to the Nektar++ source tree. It supports three additional build arguments:
   default;
 - `BUILD_SOLVERS` can be set to `OFF` to disable build of solvers, which are
   enabled by default;
+- `BUILD_ARGS` can be set to `ON` to build doxygen documentation, which are
+  enabled by default;
 - `INSTALL_PREFIX` can be set to adjust the install prefix, which is
   `/usr/local` by default.
   

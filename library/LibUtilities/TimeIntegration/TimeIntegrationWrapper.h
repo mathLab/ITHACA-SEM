@@ -730,6 +730,31 @@ namespace LibUtilities {
         virtual void v_InitObject();
     };
 
+
+    class TimeIntegrationAdamsBashforthOrder2 : public TimeIntegrationWrapper
+    {
+    public:
+        friend class MemoryManager<TimeIntegrationAdamsBashforthOrder2>;
+
+        /// Creates an instance of this class
+        static TimeIntegrationWrapperSharedPtr create()
+        {
+            TimeIntegrationWrapperSharedPtr p =
+                MemoryManager<TimeIntegrationAdamsBashforthOrder2>
+                    ::AllocateSharedPtr();
+            p->InitObject();
+            return p;
+        }
+        /// Name of class
+        static std::string className;
+
+        virtual ~TimeIntegrationAdamsBashforthOrder2() {}
+
+    protected:
+        virtual void v_InitObject();
+    };
+
+
     class TimeIntegrationAdamsBashforthOrder3 : public TimeIntegrationWrapper
     {
     public:

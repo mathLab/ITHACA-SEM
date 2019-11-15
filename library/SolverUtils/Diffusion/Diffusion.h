@@ -311,11 +311,10 @@ namespace Nektar
             }
 
             template<typename FuncPointerT, typename ObjectPointerT>
-            void SetFluxPenaltyNS(FuncPointerT func, ObjectPointerT obj)
+            void SetArtificialDiffusionVector(FuncPointerT func, ObjectPointerT obj)
             {
-                m_fluxPenaltyNS = std::bind(
-                    func, obj, std::placeholders::_1, std::placeholders::_2,
-                    std::placeholders::_3);
+                m_ArtificialDiffusionVector = std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT>

@@ -67,16 +67,6 @@ namespace Nektar
                 const AssemblyMapSharedPtr &locToGloMap,
                 const int pNumDir);
 
-            /// A seperated version is placed in LinearAlgebra/NekLinSysIterative
-            /// which is much easier to call seperately
-            /// TODO: to replace GMRES with LinearAlgebra/NekLinSysIterative
-            void DoGMRES(
-                const int pNumRows,
-                const Array<OneD, const NekDouble> &pInput,
-                Array<OneD,      NekDouble> &pOutput,
-                const AssemblyMapSharedPtr &locToGloMap,
-                const int pNumDir);
-
         protected:
             /// Global to universal unique map
             Array<OneD, int>                            m_map;

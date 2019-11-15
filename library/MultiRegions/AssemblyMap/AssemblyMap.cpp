@@ -113,7 +113,7 @@ namespace Nektar
                                                             "GlobalSysSoln");
             m_preconType = pSession->GetSolverInfoAsEnum<PreconditionerType>(
                                                             "Preconditioner");
-            
+                                                            
             m_IteraterType = pSession->GetSolverInfoAsEnum<IterativeMethodType>(
                                                             "IterativeMethod");
 

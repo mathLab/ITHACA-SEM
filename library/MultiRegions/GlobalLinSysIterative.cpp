@@ -45,8 +45,6 @@ namespace Nektar
         {
             LibUtilities::SessionReader::RegisterEnumValue(
                 "IterativeMethod", "ConjugateGradient", eConjugateGradient),
-            LibUtilities::SessionReader::RegisterEnumValue(
-                "IterativeMethod", "GMRES", eGMRES),
         };
         std::string GlobalLinSysIterative::def =
             LibUtilities::SessionReader::RegisterDefaultSolverInfo(
@@ -112,9 +110,6 @@ namespace Nektar
             IterativeMethodType pType = plocToGloMap->GetIteraterType();
             switch(pType)
             {
-            case eGMRES:
-                DoGMRES(nGlobal, pInput, pOutput, plocToGloMap, nDir);
-                break;
             case eConjugateGradient:
                 if (m_useProjection)
                 {
@@ -930,104 +925,6 @@ namespace Nektar
                 Vmath::Svtvp(nNonDir, beta, &V_total[i][0] + nDir, 1, &pOutput[0] + nDir, 1, &pOutput[0] + nDir, 1);
             }
             return eps;
-        }
-
-        /**  
-        * Solve a global linear system using the Gmres 
-        * We solve only for the non-Dirichlet modes. The operator is evaluated  
-        * using an auxiliary function v_DoMatrixMultiply defined by the  
-        * specific solver. Distributed math routines are used to support  
-        * parallel execution of the solver.  
-        *  
-        * The implemented algorithm uses a reduced-communication reordering of  
-        * the standard PCG method (Demmel, Heath and Vorst, 1993)  
-        *  
-        * @param       pInput      Input residual  of all DOFs.  
-        * @param       pOutput     Solution vector of all DOFs.  
-        */
-
-        void GlobalLinSysIterative::DoGMRES(
-            const int                          nGlobal,
-            const Array<OneD, const NekDouble> &pInput,
-            Array<OneD,      NekDouble> &pOutput,
-            const AssemblyMapSharedPtr &plocToGloMap,
-            const int                          nDir)
-        {
-            m_prec_factor = NekConstants::kNekUnsetDouble;
-            if (!m_precon)
-            {
-                v_UniqueMap();
-                m_precon = CreatePrecon(plocToGloMap);
-                m_precon->BuildPreconditioner();
-            }
-
-            if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
-            {
-                NekVector<NekDouble> inGlob (nGlobal, pInput, eWrapper);
-                Set_Rhs_Magnitude(inGlob);
-            }
-
-            // Get vector sizes
-            NekDouble eps = 0.0;
-            int nNonDir = nGlobal - nDir;
-
-            // zero homogeneous out array ready for solution updates
-            // Should not be earlier in case input vector is same as
-            // output and above copy has been peformed
-            Vmath::Zero(nNonDir, &pOutput[nDir], 1);
-            //Vmath::Zero(nGlobal, &qk_a[iqk0],1);
-
-            m_totalIterations = 0;
-            m_converged       = false;
-
-            bool restarted = false;
-            bool truncted = false;
-
-            // m_maxstorage = 5;
-            m_maxrestart = m_maxiter / m_maxstorage + 1;
-            // default truncted Gmres(m) closed
-            // m_maxhesband = 0;
-            if(m_maxhesband > 0)
-            {
-                truncted = true;
-            }
-
-            for(int nrestart = 0; nrestart < m_maxrestart; ++nrestart)
-            {
-                eps = DoGmresRestart(restarted,
-                                     truncted,
-                                     nGlobal,
-                                     pInput,
-                                     pOutput,
-                                     nDir);
-                if(m_converged)
-                {
-                    if (m_verbose && m_root)
-                    {
-
-                        cout << "Gmres(" << m_maxstorage << "), bandwidth(" << m_maxhesband << "): " << endl;
-                        cout << "GMRES iterations made = " << m_totalIterations
-                             << " using tolerance of "  << m_tolerance
-                             // << " (error = " << sqrt(eps / m_rhs_magnitude)
-                             << " (error = " << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")" 
-                             << ", rhs_mag = " << sqrt(m_rhs_magnitude) << ")"<<endl;
-                    }
-                    return;
-                }
-                restarted = true;
-            }
-
-            if(m_root)
-            {
-                        cout << "Gmres(" << m_maxstorage << "), bandwidth(" << m_maxhesband << "): " << endl;
-                        cout << "GMRES iterations made = " << m_totalIterations
-                             << " using tolerance of "  << m_tolerance
-                             // << " (error = " << sqrt(eps / m_rhs_magnitude)
-                             << " (error = " << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")" 
-                             << ", rhs_mag = " << sqrt(m_rhs_magnitude) << ")"<<endl;
-            }
-            ROOTONLY_NEKERROR(ErrorUtil::efatal,
-                              "Exceeded maximum number of iterations");
         }
 
         void GlobalLinSysIterative::Set_Rhs_Magnitude(

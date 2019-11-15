@@ -167,20 +167,7 @@ namespace Nektar
         string advName;
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
 	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if(m_useUnifiedWeakIntegration)
-        {
-            if(advName=="WeakDG" && ((diffName=="LDGNS")||(diffName=="InteriorPenalty")))
-            {
-            }
-            else
-            {
-                m_useUnifiedWeakIntegration=false;
-                if(m_session->DefinesCmdLineArgument("verbose"))
-                {
-                    WARNINGL0(false, "useUnifiedWeakIntegration not coded for these parameters of Diffusion");
-                }
-            }
-        }
+        
     }
 
     void NavierStokesCFE::v_DoDiffusion(

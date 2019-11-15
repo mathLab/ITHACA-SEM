@@ -328,8 +328,6 @@ class Interpolator;
             SOLVER_UTILS_EXPORT virtual bool v_NegatedOp();
 
         protected:
-            /// Temparary factor to determine whether strong/weak
-            bool                                        m_useUnifiedWeakIntegration  =   false;
             /// Communicator
             LibUtilities::CommSharedPtr                 m_comm;
             /// The session reader

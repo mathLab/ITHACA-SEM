@@ -6,6 +6,7 @@
 !.dockerignore
 # Ignore builds and ThirdParty directories
 build
+buildDebug
 builds
 ThirdParty
 # Ignore .DS_Store sometimes created by OS X.

@@ -739,64 +739,6 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
-            case eDIRKOrder4Stage6:
-                {
-                    // See Kennedey&Carpenter 2016, Table 16
-                    m_numsteps = 1;
-                    m_numstages = 6;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-
-                    NekDouble lambda = 1.0/4.0;
-                    const NekDouble ConstSqrt2  = sqrt(2.0);
-
-                    m_A[0][0][0] = 0.0;
-                    m_A[0][1][0] = lambda;
-                    m_A[0][2][0] = (1.0-ConstSqrt2)/8.0;
-                    m_A[0][3][0] = (5.0-7.0*ConstSqrt2)/64.0;
-                    m_A[0][4][0] = (-13796.0-54539*ConstSqrt2)/125000.0;
-                    m_A[0][5][0] = (1181.0-987.0*ConstSqrt2)/ 13782.0;
-
-                    m_A[0][1][1] = m_A[0][1][0];
-                    m_A[0][2][1] = m_A[0][2][0];
-                    m_A[0][3][1] = m_A[0][3][0];
-                    m_A[0][4][1] = m_A[0][4][0];
-                    m_A[0][5][1] = m_A[0][5][0];
-
-                    m_A[0][2][2] = lambda;
-                    m_A[0][3][2] = 7.0*(1.0+ConstSqrt2)/32.0;
-                    m_A[0][4][2] = (506605.0+132109.0*ConstSqrt2)/437500.0;
-                    m_A[0][5][2] = 47.0*(-267.0+1783.0*ConstSqrt2)/273343.0;
-
-                    m_A[0][3][3] = lambda;
-                    m_A[0][4][3] = 166.0*(-97.0+376.0*ConstSqrt2)/109375.0;
-                    m_A[0][5][3] = -16.0*(-22922.0+3525.0*ConstSqrt2)/571953.0;
-
-                    m_A[0][4][4] = lambda;
-                    m_A[0][5][4] = -15625.0*(97.0+376.0*ConstSqrt2)/90749876.0;
-
-                    m_A[0][5][5] = lambda;
-
-                    m_B[0][0][0] = m_A[0][5][0];
-                    m_B[0][0][1] = m_A[0][5][1];
-                    m_B[0][0][2] = m_A[0][5][2];
-                    m_B[0][0][3] = m_A[0][5][3];
-                    m_B[0][0][4] = m_A[0][5][4];
-                    m_B[0][0][5] = m_A[0][5][5];
-
-                    m_schemeType = eDiagonallyImplicit;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                }
-                break;
             case eIMEXdirk_2_3_2:
                 {
                     m_numsteps  = 1;

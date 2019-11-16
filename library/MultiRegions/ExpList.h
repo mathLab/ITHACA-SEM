@@ -799,7 +799,7 @@ namespace Nektar
                 Array<OneD, NekDouble>  &lengthsFwd,
                 Array<OneD, NekDouble>  &lengthsBwd);
 
-            void GetBwdWeight(
+            MULTI_REGIONS_EXPORT void GetBwdWeight(
                 Array<OneD, NekDouble>  &weightAver,
                 Array<OneD, NekDouble>  &weightJump);
 

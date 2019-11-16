@@ -234,8 +234,8 @@ namespace Nektar
             if (DeclareCoeffPhysArrays)
             {
                 // Set up m_coeffs, m_phys.
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-                m_phys   = Array<OneD, NekDouble>(m_npoints);
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
+                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
              }
 
             ReadGlobalOptimizationParameters();
@@ -350,8 +350,8 @@ namespace Nektar
             if (DeclareCoeffPhysArrays)
             {
                 // Set up m_coeffs, m_phys.
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-                m_phys   = Array<OneD, NekDouble>(m_npoints);
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
+                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
              }
 
             ReadGlobalOptimizationParameters();
@@ -465,8 +465,8 @@ namespace Nektar
 
             // Set up m_coeffs, m_phys and offset arrays.
             SetCoeffPhysOffsets();
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
+            m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
 
             ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
@@ -786,8 +786,8 @@ namespace Nektar
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-                m_phys   = Array<OneD, NekDouble>(m_npoints);
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
+                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
             }
 
             CreateCollections(ImpType);
@@ -913,8 +913,8 @@ namespace Nektar
 
              // Set up m_coeffs, m_phys and offset arrays.
             SetCoeffPhysOffsets();
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
+            m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
 
             ReadGlobalOptimizationParameters(); 
             CreateCollections(ImpType);
@@ -1102,6 +1102,99 @@ namespace Nektar
                         traceBasis0.GetPointsKey(),
                         traceBasis1.GetPointsKey(),
                         tmp = normals[j]+offset);
+                }
+            }
+        }
+
+        /**
+         * For each local element, copy the element length in boundary normal direction stored in the element list
+         * into the array \a normals.
+         */
+        void ExpList2D::v_GetElmtNormalLength(
+            Array<OneD, NekDouble>  &lengthsFwd,
+            Array<OneD, NekDouble>  &lengthsBwd)
+        {
+            int i,j,e_npoints,offset;
+
+            Array<OneD,NekDouble> locLeng;
+            Array<OneD,NekDouble> lengintp;
+            Array<OneD,int      > LRbndnumbs(2);
+            Array<OneD, Array<OneD,NekDouble> > lengLR(2);
+            lengLR[0]   =   lengthsFwd;
+            lengLR[1]   =   lengthsBwd;
+            Array<OneD,LocalRegions::Expansion3DSharedPtr> LRelmts(2);
+            LocalRegions::Expansion3DSharedPtr loc_elmt;
+            LocalRegions::Expansion2DSharedPtr loc_exp;
+            int e_npoints0  =   -1; 
+            for (i = 0; i < m_exp->size(); ++i)
+            {
+                loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion2D>();
+                offset = m_phys_offset[i];
+
+                LibUtilities::BasisKey traceBasis0
+                    = loc_exp->GetBasis(0)->GetBasisKey();
+                LibUtilities::BasisKey traceBasis1
+                    = loc_exp->GetBasis(1)->GetBasisKey();
+                const int TraceNq0 = traceBasis0.GetNumPoints();
+                const int TraceNq1 = traceBasis1.GetNumPoints();
+                e_npoints  =   TraceNq0*TraceNq1;
+                if(e_npoints0<e_npoints)
+                {
+                    lengintp = Array<OneD, NekDouble>(e_npoints,0.0);
+                    e_npoints0 = e_npoints;
+                }
+                
+                LRelmts[0] = loc_exp->GetLeftAdjacentElementExp();
+                LRelmts[1] = loc_exp->GetRightAdjacentElementExp();
+
+                LRbndnumbs[0]   =   loc_exp->GetLeftAdjacentElementFace();
+                LRbndnumbs[1]   =   loc_exp->GetRightAdjacentElementFace();
+                for(int nlr=0;nlr<2;nlr++)
+                {
+                    Vmath::Zero(e_npoints0,lengintp,1);
+                    int bndNumber = LRbndnumbs[nlr];
+                    loc_elmt = LRelmts[nlr];
+                    if(bndNumber>=0)
+                    {
+                        locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
+                        // Project normals from 3D element onto the same orientation as
+                        // the trace expansion.
+                        StdRegions::Orientation orient = loc_elmt->GetForient(bndNumber);
+
+                        int fromid0,fromid1;
+                        if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+                        {
+                            fromid0 = 0;
+                            fromid1 = 1;
+                        }
+                        else
+                        {
+                            fromid0 = 1;
+                            fromid1 = 0;
+                        }
+
+                        LibUtilities::BasisKey faceBasis0 
+                            = loc_elmt->DetFaceBasisKey(bndNumber, fromid0);
+                        LibUtilities::BasisKey faceBasis1 
+                            = loc_elmt->DetFaceBasisKey(bndNumber, fromid1);
+                        const int faceNq0 = faceBasis0.GetNumPoints();
+                        const int faceNq1 = faceBasis1.GetNumPoints();
+                        Array<OneD, NekDouble> alignedLeng(faceNq0 * faceNq1);
+                        
+                        AlignFace(orient, faceNq0, faceNq1,
+                                locLeng, alignedLeng);
+                        LibUtilities::Interp2D(
+                            faceBasis0.GetPointsKey(),
+                            faceBasis1.GetPointsKey(),
+                            alignedLeng,
+                            traceBasis0.GetPointsKey(),
+                            traceBasis1.GetPointsKey(),
+                            lengintp);
+                    }
+                    for (j = 0; j < e_npoints; ++j)
+                    {
+                        lengLR[nlr][offset + j] = lengintp[j];
+                    }
                 }
             }
         }

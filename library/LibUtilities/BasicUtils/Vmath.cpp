@@ -211,7 +211,7 @@ namespace Vmath
     template  LIB_UTILITIES_EXPORT void Vmul( int n, const Nektar::NekDouble *x, const int incx, const Nektar::NekDouble *y,
                               const int incy,  Nektar::NekDouble*z, const int incz);
 
-    /// \brief Scalar multiply  y = alpha*y
+    /// \brief Scalar multiply  y = alpha*x
 
     template<class T>  void Smul( int n, const T alpha, const T *x, const int incx,
                                   T *y, const int incy)

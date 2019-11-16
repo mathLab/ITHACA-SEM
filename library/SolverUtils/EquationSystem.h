@@ -351,10 +351,14 @@ class Interpolator;
             NekDouble                                   m_fintime;
             /// Time step size
             NekDouble                                   m_timestep;
+            /// Time step size
+            NekDouble                                   m_timestepMax=-1.0;
+            
             /// Lambda constant in real system if one required.
             NekDouble                                   m_lambda;
             /// Time between checkpoints.
             NekDouble                                   m_checktime;
+
             /// Number of checkpoints written so far
             int                                         m_nchk;
             /// Number of steps to take.
@@ -391,6 +395,7 @@ class Interpolator;
             Array<OneD, bool>                           m_checkIfSystemSingular;
             /// Map to identify relevant solver info to dump in output fields
             LibUtilities::FieldMetaDataMap              m_fieldMetaDataMap;
+
 
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;

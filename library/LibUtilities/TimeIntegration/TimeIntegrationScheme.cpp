@@ -1664,25 +1664,34 @@ namespace Nektar
                 // Calculate the stage derivative based upon the stage value
                 if(type == eDiagonallyImplicit)
                 {
-                    if(m_numstages==1)
+                    if( (i==0) && m_firstStageEqualsOldSolution )
                     {
-                        m_T= t_old[0]+timestep;
+                        // cout << "(i==0) && m_firstStageEqualsOldSolution "<<i<<endl;
+                        op.DoProjection(m_Y,m_Y,m_T);
+                        op.DoOdeRhs(m_Y, m_F[i], m_T);        
                     }
-                    else 
+                    else
                     {
-                        m_T= t_old[0];
-                        for(int j=0; j<=i; ++j)
+                        if(m_numstages==1)
                         {
-                            m_T += A(i,j)*timestep;
+                            m_T= t_old[0]+timestep;
                         }
-                    }
-                    
-                    op.DoImplicitSolve(m_tmp, m_Y, m_T, A(i,i)*timestep);
-                    
-                    for(k = 0; k < m_nvar; k++)
-                    {
-                        Vmath::Vsub(m_npoints,m_Y[k],1,m_tmp[k],1,m_F[i][k],1);
-                        Vmath::Smul(m_npoints,1.0/(A(i,i)*timestep),m_F[i][k],1,m_F[i][k],1);
+                        else 
+                        {
+                            m_T= t_old[0];
+                            for(int j=0; j<=i; ++j)
+                            {
+                                m_T += A(i,j)*timestep;
+                            }
+                        }
+                        
+                        op.DoImplicitSolve(m_tmp, m_Y, m_T, A(i,i)*timestep);
+
+                        for(k = 0; k < m_nvar; k++)
+                        {
+                            Vmath::Vsub(m_npoints,m_Y[k],1,m_tmp[k],1,m_F[i][k],1);
+                            Vmath::Smul(m_npoints,1.0/(A(i,i)*timestep),m_F[i][k],1,m_F[i][k],1);
+                        }
                     }
                 }
                 else if(type == eIMEX)
@@ -1724,7 +1733,7 @@ namespace Nektar
                     op.DoOdeRhs(m_Y, m_F[i], m_T);        
                 }
             }
-            
+
             // Next, the solution vector y at the new time level will
             // be calculated.
             //

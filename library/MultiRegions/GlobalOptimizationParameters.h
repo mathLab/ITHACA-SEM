@@ -109,7 +109,13 @@ namespace Nektar
             /// shapes within the space dimension, indicating if
             /// different matrices should be evaluated using a block
             /// matrix
-            Array<OneD, Array<OneD,bool> > m_doBlockMatOp; 
+            Array<OneD, Array<OneD,bool> > m_doBlockMatOp;
+            /// Array to return if the  optimize parameters are 
+            /// not defined for the specific matrix type
+            /// always false
+            /// if DoBlockMatOp returns array not array& , this 
+            /// parameter can be local instead of a class member
+            Array<OneD,bool>  m_doBlockMatOp_false; 
 
             /// A list ExpansionTypes indicating the order in which
             /// shapes are listed to call the appropriate key for the
@@ -175,8 +181,9 @@ namespace Nektar
                 break;
             default:
                 {
-                    ASSERTL0(false,"Optimisation suite not set up for this type"
-                                   " of matrix");
+                    return false;
+                    WARNINGL0(false,"Optimisation suite not set up for this type"
+                                   " of matrix, false is used");
                 }
             }
             return m_doGlobalMatOp[type];
@@ -231,8 +238,9 @@ namespace Nektar
                 break;
             default:
                 {
-                    ASSERTL0(false,"Optimisation suite not set up for this type"
-                                   " of matrix");
+                    return m_doBlockMatOp_false;
+                    WARNINGL0(false,"Optimisation suite not set up for this type"
+                                   " of matrix, false is used");
                 }
             }
 

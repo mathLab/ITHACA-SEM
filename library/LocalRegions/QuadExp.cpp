@@ -436,7 +436,7 @@ namespace Nektar
             IProductWRTDerivBase_SumFac(dir,inarray,outarray);
         }
 
-
+        
         void QuadExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray,
@@ -537,7 +537,6 @@ namespace Nektar
                 tmp2, outarray, tmp4, true, false);
             Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);
         }
-
 
         void QuadExp::v_IProductWRTDerivBase_MatOp(
             const int dir,
@@ -1236,6 +1235,11 @@ namespace Nektar
                 normal[i] = Array<OneD, NekDouble>(nqe);
             }
 
+            int nqb = nqe;
+            int nbnd= edge;
+            m_ElmtBndNormalDirctnElmtLength[nbnd] = Array<OneD, NekDouble>(nqb,0.0);
+            Array<OneD, NekDouble>  &length = m_ElmtBndNormalDirctnElmtLength[nbnd];
+
             // Regular geometry case
             if ((type == SpatialDomains::eRegular)||
                (type == SpatialDomains::eMovingRegular))
@@ -1279,6 +1283,9 @@ namespace Nektar
                     fac += normal[i][0]*normal[i][0];
                 }
                 fac = 1.0/sqrt(fac);
+
+                Vmath::Fill(nqb,fac,length,1);
+
                 for (i = 0; i < vCoordDim; ++i)
                 {
                     Vmath::Smul(nqe, fac, normal[i], 1,normal[i], 1);
@@ -1470,7 +1477,9 @@ namespace Nektar
                 
                 Vmath::Vsqrt(nqe,work,1,work,1);
                 Vmath::Sdiv(nqe,1.0,work,1,work,1);
-                
+
+                Vmath::Vcopy(nqb,work,1,length,1);
+
                 for (i = 0; i < GetCoordim(); ++i)
                 {
                     Vmath::Vmul(nqe, normal[i], 1, work, 1, normal[i], 1);

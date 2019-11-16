@@ -132,6 +132,9 @@ namespace Nektar
             
             virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray);
 
+            // virtual void v_GetElmtNormalLength(
+            //     Array<OneD, NekDouble>  &lengths);
+            
         private:
         };
 

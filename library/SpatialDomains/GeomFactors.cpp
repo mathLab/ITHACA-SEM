@@ -196,7 +196,7 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp(nqtot_map);
                 // Transform from coefficient space to physical space
                 m_xmap->BwdTrans(m_coords[i], tmp);
-
+                
                 // Allocate storage and take the derivative (calculated at the
                 // points as specified in 'Coords')
                 for (j = 0; j < m_expDim; ++j)
@@ -211,7 +211,7 @@ namespace Nektar
             {
                 // Interpolate the derivatives:
                 // - from the points as defined in the mapping ('Coords')
-                // - to the points we at which we want to know the metrics
+                // - to the points at which we want to know the metrics
                 //   ('tbasis')
                 bool same = true;
                 for (j = 0; j < m_expDim; ++j)
@@ -391,6 +391,7 @@ namespace Nektar
 
         /**
          * @param   keyTgt      Target point distributions.
+         * FOR 1D: Jac =(partial x/ partial xi); factor = Jac =(partial xi/ partial x)
          * @returns             Derivative factors evaluated at the target
          *                      point distributions.
          */

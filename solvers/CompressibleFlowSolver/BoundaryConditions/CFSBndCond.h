@@ -78,6 +78,17 @@ class CFSBndCond
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time = 0);
 
+        void ApplyDeriv(
+            const Array<OneD, const Array<OneD, NekDouble> >                    &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
+            NekDouble                                                           time = 0);
+        void ApplyBwdWeight()
+        {
+            v_ApplyBwdWeight();
+        }
+
     protected:
         /// Session reader
         LibUtilities::SessionReaderSharedPtr m_session;
@@ -90,10 +101,14 @@ class CFSBndCond
         /// Auxiliary object to convert variables
         VariableConverterSharedPtr           m_varConv;
 
+        //
+        NekDouble m_diffusionAveWeight;
+
         /// Parameters of the flow
         NekDouble m_gamma;
         NekDouble m_rhoInf;
         NekDouble m_pInf;
+        NekDouble m_pOut;
         Array<OneD, NekDouble> m_velInf;
 
         /// Id of the boundary region
@@ -114,6 +129,14 @@ class CFSBndCond
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time)=0;
 
+        virtual void v_ApplyDeriv(
+            const Array<OneD, const Array<OneD, NekDouble> >                    &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
+            NekDouble                                                           time);
+
+        virtual void v_ApplyBwdWeight();
 };
 }
 

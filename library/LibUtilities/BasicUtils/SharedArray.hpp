@@ -212,6 +212,8 @@ namespace Nektar
                 *m_count += 1;
             }
 
+             /// TODO: BEST TO DEFINE A DERIVED 2D array, which share the same memory with 1D array
+            
             ~Array()
             {
                 if( m_count == nullptr )
@@ -786,6 +788,7 @@ namespace Nektar
     static Array<OneD, int> NullInt1DArray;
     static Array<OneD, NekDouble> NullNekDouble1DArray;
     static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayofArray;
+    static Array<OneD, Array<OneD, Array<OneD, NekDouble> > > NullNekDoubleArrayofArrayofArray;
 
     LIB_UTILITIES_EXPORT bool IsEqual(const Array<TwoD, const NekDouble>& lhs,
                  const Array<TwoD, const NekDouble>& rhs,

@@ -124,14 +124,15 @@ void VariableConverter::GetEnthalpy(
  * @param velocity   Velocity field.
  */
 void VariableConverter::GetVelocityVector(
-    const Array<OneD, Array<OneD, NekDouble>> &physfield,
-    Array<OneD, Array<OneD, NekDouble>> &velocity)
+    const Array<OneD, Array<OneD, NekDouble> >  &physfield,
+    const int                                   noffset,
+          Array<OneD, Array<OneD, NekDouble> >  &velocity)
 {
     const int nPts = physfield[0].num_elements();
 
     for (int i = 0; i < m_spacedim; ++i)
     {
-        Vmath::Vdiv(nPts, physfield[1 + i], 1, physfield[0], 1, velocity[i], 1);
+        Vmath::Vdiv(nPts, physfield[1 + i], 1, physfield[0], 1, velocity[noffset+i], 1);
     }
 }
 
@@ -189,6 +190,30 @@ void VariableConverter::GetDynamicViscosity(
     {
         ratio = temperature[i] / T_star;
         mu[i] = mu_star * ratio * sqrt(ratio) * (1 + C) / (ratio + C);
+    }
+}
+
+/**
+ * @brief Compute the dynamic viscosity using the Sutherland's law
+ * \f$ \mu = \mu_star * (T / T_star)^3/2 * (T_star + 110) / (T + 110) \f$,
+ * where:   \mu_star = 1.7894 * 10^-5 Kg / (m * s)
+ *          T_star   = 288.15 K
+ *
+ * @param physfield    Input physical field.
+ * @param mu           The resulting dynamic viscosity.
+ */
+void VariableConverter::GetDmuDT(
+    const Array<OneD, const NekDouble>  &temperature, 
+    const Array<OneD, const NekDouble>  &mu, 
+          Array<OneD, NekDouble>        &DmuDT)
+{
+    const int nPts      = temperature.num_elements();
+    NekDouble tmp       = 0.0;
+
+    for (int i = 0; i < nPts; ++i)
+    {
+        tmp         = 110.0/(temperature[i]*(temperature[i]+110.0));
+        DmuDT[i]    = mu[i]*tmp;
     }
 }
 
@@ -431,5 +456,10 @@ void VariableConverter::GetRhoFromPT(const Array<OneD, NekDouble> &pressure,
     {
         rho[i] = m_eos->GetRhoFromPT(pressure[i], temperature[i]);
     }
+}
+
+NekDouble VariableConverter::GetGasconstant()
+{
+    return m_gasConstant;
 }
 }

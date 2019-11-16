@@ -190,6 +190,8 @@ namespace Nektar
 
             Array<OneD, MultiRegions::ExpListSharedPtr>  m_bndCondExpansions;
 
+            Array<OneD, NekDouble >                      m_BndCondBwdWeight;
+
             ExpListSharedPtr m_trace;
 
             Array<OneD, int> m_traceBndMap;
@@ -296,6 +298,11 @@ namespace Nektar
             {
                 return m_traceBndMap;
             }
+            virtual void v_SetBndCondBwdWeight(const int index, const NekDouble value)
+            {
+                m_BndCondBwdWeight[index]   =   value;
+            }
+
         };
 
         typedef std::shared_ptr<DisContField3DHomogeneous1D>

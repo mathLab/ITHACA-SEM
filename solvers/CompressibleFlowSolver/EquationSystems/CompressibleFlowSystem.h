@@ -118,6 +118,9 @@ namespace Nektar
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
 
+        NekDouble                           m_BndEvaluateTime;
+
+
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession,
             const SpatialDomains::MeshGraphSharedPtr& pGraph);
@@ -149,6 +152,11 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
+        void DoDiffusion_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
 
         void GetFluxVector(
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
@@ -160,10 +168,31 @@ namespace Nektar
         void SetBoundaryConditions(
             Array<OneD, Array<OneD, NekDouble> >             &physarray,
             NekDouble                                         time);
+        
+        void SetBoundaryConditionsBwdWeight();
+
+        void SetBoundaryConditionsDeriv(
+            const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
+            NekDouble                                                           time,
+            const Array<OneD, const Array<OneD, NekDouble> >                    &pFwd       = NullNekDoubleArrayofArray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &pDervFwd   = NullNekDoubleArrayofArrayofArray);
 
         void GetElmtTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD, NekDouble> &tstep);
+
+        void GetViscousSymmtrFluxConservVar(
+            const int                                                       nConvectiveFields,
+            const int                                                       nSpaceDim,
+            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
+            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
+            Array< OneD, int >                                              &nonZeroIndex,    
+            const Array<OneD, Array<OneD, NekDouble> >                      &normals)
+        {
+            v_GetViscousSymmtrFluxConservVar(nConvectiveFields,nSpaceDim,inaverg,inarray,outarray,nonZeroIndex,normals);
+        }
 
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
@@ -198,10 +227,47 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
         {
             boost::ignore_unused(inarray, outarray, pFwd, pBwd);
+            if (m_shockCaptureType != "Off")
+            {
+                m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
+            }
+        }
+
+        virtual void v_DoDiffusion_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+        {
+            boost::ignore_unused(inarray,outarray,pFwd,pBwd);
             // Do nothing by default
         }
 
+        virtual void v_DoDiffusionFlux(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
+            Array<OneD, Array<OneD, NekDouble>>              &TraceFlux,
+            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+        {
+            boost::ignore_unused(inarray,VolumeFlux,TraceFlux,pFwd,pBwd);
+            //Artificial Diffusion need to implement
+            if (m_shockCaptureType != "Off")
+            {
+                m_artificialDiffusion->DoArtificialDiffusionFlux(inarray, VolumeFlux,TraceFlux);
+            }
+        }
+
         virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
+
+        virtual void v_GetViscousSymmtrFluxConservVar(
+            const int                                                       nConvectiveFields,
+            const int                                                       nSpaceDim,
+            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
+            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
+            Array< OneD, int >                                              &nonZeroIndex,    
+            const Array<OneD, Array<OneD, NekDouble> >                      &normals);
 
     };
 }

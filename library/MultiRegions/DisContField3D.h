@@ -105,6 +105,8 @@ namespace Nektar
              */
             Array<OneD,MultiRegions::ExpListSharedPtr> m_bndCondExpansions;
 
+            Array<OneD,NekDouble> m_BndCondBwdWeight;
+
             /**
              * @brief An array which contains the information about
              * the boundary condition on the different boundary regions.
@@ -164,13 +166,6 @@ namespace Nektar
 
             bool IsLeftAdjacentFace(const int n, const int e);
 
-            virtual void v_GetFwdBwdTracePhys(
-                Array<OneD,NekDouble> &Fwd,
-                Array<OneD,NekDouble> &Bwd);
-            virtual void v_GetFwdBwdTracePhys(
-                const Array<OneD,const NekDouble> &field,
-                      Array<OneD,      NekDouble> &Fwd,
-                      Array<OneD,      NekDouble> &Bwd);
             virtual const std::vector<bool> &v_GetLeftAdjacentFaces(void) const;
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
@@ -226,6 +221,8 @@ namespace Nektar
                 if(m_trace == NullExpListSharedPtr)
                 {
                     SetUpDG();
+                    // m_locTraceToTraceMap->TracelocToElmtlocCoeffMap(*this, m_trace);
+
                 }
 
                 return m_trace;
@@ -268,6 +265,111 @@ namespace Nektar
                 const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
 
             virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
+
+            virtual void v_FillBwdWITHBound(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_FillBwdWITHBoundDeriv(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_FillBwdWITHBwdWeight(
+                Array<OneD,       NekDouble> &weightave,
+                Array<OneD,       NekDouble> &weightjmp);
+            
+            virtual void v_GetFwdBwdTracePhys(
+                Array<OneD, NekDouble> &Fwd,
+                Array<OneD, NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
+            }
+            
+            virtual void v_GetFwdBwdTracePhys(
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhys_serial(field, Fwd, Bwd);
+                m_traceMap->UniversalTraceAssemble(Fwd);
+                m_traceMap->UniversalTraceAssemble(Bwd);
+            }
+
+            virtual void v_GetFwdBwdTracePhysNoBndFill(
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
+                m_traceMap->UniversalTraceAssemble(Fwd);
+                m_traceMap->UniversalTraceAssemble(Bwd);
+            }
+
+            virtual void v_GetFwdBwdTracePhysDeriv(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhysDeriv_serial(Dir,field, Fwd, Bwd);
+                
+                m_traceMap->UniversalTraceAssemble(Fwd);
+                m_traceMap->UniversalTraceAssemble(Bwd);
+            }
+
+            virtual void v_GetFwdBwdTracePhysDeriv_serial(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
+                v_FillBwdWITHBoundDeriv(Dir,Fwd,Bwd);
+            }
+
+            virtual void v_GetFwdBwdTracePhys_serial(
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
+                v_FillBwdWITHBound(Fwd,Bwd);
+            }
+
+            virtual void v_GetFwdBwdTracePhysInterior(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD,       NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            
+            virtual void v_AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble> &Fwd,
+                const Array<OneD, const NekDouble> &Bwd,
+                    Array<OneD,       NekDouble> &field);
+
+            virtual void v_PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd)
+            {
+                for (int n = 0; n < m_periodicFwdCopy.size(); ++n)
+                {
+                    Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
+                }
+            }
+
+            virtual const Array<OneD,const NekDouble>
+                &v_GetBndCondBwdWeight()
+            {
+                return m_BndCondBwdWeight;
+            }
+
+            virtual void v_SetBndCondBwdWeight(const int index, const NekDouble value)
+            {
+                m_BndCondBwdWeight[index]   =   value;
+            }
+
+            virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap() const
+            {
+                return m_locTraceToTraceMap;
+            }
         };
 
         typedef std::shared_ptr<DisContField3D> DisContField3DSharedPtr;

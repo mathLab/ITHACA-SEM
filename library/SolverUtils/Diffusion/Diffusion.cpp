@@ -61,5 +61,133 @@ namespace Nektar
         {
             v_Diffuse(nConvectiveFields, fields, inarray, outarray, pFwd, pBwd);
         }
+
+        void Diffusion::Diffuse_coeff(
+            const std::size_t                                 nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+        {
+            v_Diffuse_coeff(nConvectiveFields, fields, inarray, outarray, pFwd, pBwd);
+        }
+
+        void Diffusion::Diffuse(
+                const std::size_t                                 nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            NekDouble                                         time,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+        {
+            m_time  =    time;
+            v_Diffuse(nConvectiveFields, fields, inarray, outarray, pFwd, pBwd);
+        }
+
+        void Diffusion::Diffuse_coeff(
+                const std::size_t                                 nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            NekDouble                                         time,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+        {
+            m_time  =    time;
+            v_Diffuse_coeff(nConvectiveFields, fields, inarray, outarray, pFwd, pBwd);
+        }
+        void Diffusion::GetAVmu(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
+            const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
+                  Array<OneD, NekDouble >                               &muvar,
+                  Array<OneD, NekDouble >                               &MuVarTrace)
+        {
+            int nTracePts = fields[0]->GetTrace()->GetTotPoints();
+
+            Array<OneD, NekDouble> Fwd(nTracePts,0.0);
+            Array<OneD, NekDouble> Bwd(nTracePts,0.0);
+            
+            m_ArtificialDiffusionVector(inarray, muvar);
+
+            // BwdMuvar is left to be 0.0 according to DiffusionLDG.cpp
+            fields[0]->GetFwdBwdTracePhysNoBndFill(muvar,Fwd,Bwd);
+
+            for(int k = 0; k < nTracePts; ++k)
+            {
+                MuVarTrace[k] = 0.5 * (Fwd[k] + Bwd[k]) ;
+            }
+        }
+        
+        void Diffusion::v_Diffuse_coeff(
+            const std::size_t                                 nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            const Array<OneD, Array<OneD, NekDouble> > &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> > &pBwd)
+        {
+            boost::ignore_unused(nConvectiveFields,fields,inarray,outarray,pFwd,pBwd);
+            ASSERTL0(false,"v_Diffuse_coeff not defined");
+        }
+
+        const Array<OneD, const Array<OneD, NekDouble> > &Diffusion::v_GetTraceNormal()
+        {
+            ASSERTL0(false," not defined");
+            return NullNekDoubleArrayofArray;
+        }
+
+        void Diffusion::v_ConsVarAveJump(
+                const std::size_t                                 nConvectiveFields,
+                const int                                           npnts,
+                const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
+                const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
+                      Array<OneD,       Array<OneD, NekDouble> >    &aver,
+                      Array<OneD,       Array<OneD, NekDouble> >    &jump)
+        {
+            boost::ignore_unused(nConvectiveFields,npnts,vFwd,vBwd,aver,jump);
+            ASSERTL0(false," not defined");
+        }
+        
+        // No multiply(check if diffsionVolume difined)
+        void Diffusion::v_DiffuseCalculateDerivative(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
+            const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
+        {
+            boost::ignore_unused(fields,inarray,inarrayderivative,pFwd,pBwd);
+            ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
+        }
+
+        // No multiply(check if diffsionVolume difined)
+        void Diffusion::v_DiffuseVolumeFlux(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+            const Array<OneD, Array<OneD, NekDouble>>           &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+            Array< OneD, int >                                  &nonZeroIndex)       
+        {
+            boost::ignore_unused(fields,inarray,inarrayderivative,VolumeFlux,nonZeroIndex);
+            ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
+        }
+
+        // No multiply(check if diffsionTraceFlux difined)
+        void Diffusion::v_DiffuseTraceFlux(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+            const Array<OneD, Array<OneD, NekDouble>>           &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+            Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
+            const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
+            Array< OneD, int >                                  &nonZeroIndex)     
+        {
+            boost::ignore_unused(fields,inarray,inarrayderivative,VolumeFlux,TraceFlux,pFwd,pBwd,nonZeroIndex);
+            ASSERTL0(false, "Not defined function DiffuseTraceFLux.");
+        }
+
     }
 }

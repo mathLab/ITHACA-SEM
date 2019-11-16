@@ -104,6 +104,7 @@ namespace Nektar
             {
                 m_doBlockMatOp[i] = Array<OneD, bool> (numShapes,false);
             }
+            m_doBlockMatOp_false = Array<OneD, bool> (numShapes,false);
 
             TiXmlHandle docHandle(&doc);
             TiXmlElement* master

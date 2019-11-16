@@ -85,7 +85,7 @@ void DriverSteadyState::v_Execute(ostream &out)
 
 {
     // With a loop over "DoSolve", this Driver implements the
-    // "encaplulated" Selective Frequency Damping method
+    // "encapsulated" Selective Frequency Damping method(SFD)
     // to find the steady state of a flow above the critical Reynolds
     // number.
     m_equ[m_nequ - 1]->PrintSummary(out);
@@ -305,6 +305,8 @@ void DriverSteadyState::v_Execute(ostream &out)
     ///We save the final solution into a .fld file
     m_equ[m_nequ - 1]->Output();
 
+    int nwidthcolm = 7+6; // the second value determines the number of sigificant digits
+
     for(int j = 0; j < m_equ[m_nequ - 1]->GetNvariables(); ++j)
     {
         NekDouble vL2Error = m_equ[m_nequ - 1]->L2Error(j,false);
@@ -312,9 +314,14 @@ void DriverSteadyState::v_Execute(ostream &out)
         if (m_comm->GetRank() == 0)
         {
             out << "L 2 error (variable " << m_equ[m_nequ - 1]->GetVariable(j)
-                << ") : " << vL2Error << endl;
+                << ") : ";
+            out <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
+                << vL2Error << endl;    
             out << "L inf error (variable " << m_equ[m_nequ - 1]->GetVariable(j)
-                << ") : " << vLinfError << endl;
+                << ") : ";
+            out <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
+                << vLinfError << endl;
+            
         }
     }
 }

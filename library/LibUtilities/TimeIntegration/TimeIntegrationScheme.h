@@ -226,8 +226,8 @@ namespace Nektar
                     func, obj, std::placeholders::_1, std::placeholders::_2,
                     std::placeholders::_3, std::placeholders::_4);
             }
-
             
+
             inline void DoOdeRhs(InArrayType     &inarray, 
                                  OutArrayType    &outarray, 
                                  const NekDouble time) const

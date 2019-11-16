@@ -151,6 +151,11 @@ namespace Nektar
                     const int vertex,
                     const Array<OneD, const NekDouble> &inarray,
                           NekDouble &outarray);
+
+            LOCAL_REGIONS_EXPORT virtual void v_AddVertexPhysVals(
+                        const int                 vertex,
+                        const NekDouble           &inarray,
+                        Array<OneD, NekDouble>   &outarray);
             
             LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
                         const int edge,

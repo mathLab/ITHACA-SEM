@@ -160,8 +160,8 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                     Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                const Array<OneD, Array<OneD, NekDouble> >        &pFwd= NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> >        &pBwd= NullNekDoubleArrayofArray);
+                const Array<OneD, Array<OneD, NekDouble> >        &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> >        &pBwd = NullNekDoubleArrayofArray);
 
             SOLVER_UTILS_EXPORT void Diffuse(
                 const std::size_t                                 nConvectiveFields,
@@ -178,8 +178,8 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                     Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 NekDouble                                           time,
-                const Array<OneD, Array<OneD, NekDouble> >        &pFwd= NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> >        &pBwd= NullNekDoubleArrayofArray);
+                const Array<OneD, Array<OneD, NekDouble> >        &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> >        &pBwd = NullNekDoubleArrayofArray);
             
             // Diffusion Calculate the physical derivatives
             SOLVER_UTILS_EXPORT void DiffuseCalculateDerivative(
@@ -393,16 +393,16 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd);
             
             virtual void v_Diffuse_coeff(
                 const std::size_t                                   nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd);
         
             virtual void v_ConsVarAveJump(
                 const std::size_t                                   nConvectiveFields,
@@ -417,8 +417,8 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
-                const Array<OneD, Array<OneD, NekDouble> >        &pFwd = NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> >        &pBwd = NullNekDoubleArrayofArray);
+                const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
 
             // Diffusion Volume Flux
             virtual void v_DiffuseVolumeFlux(

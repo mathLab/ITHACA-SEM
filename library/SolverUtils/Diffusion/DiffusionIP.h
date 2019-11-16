@@ -135,16 +135,16 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd);
 
             virtual void v_Diffuse_coeff(
                 const std::size_t                                                   nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd);
             
             virtual void v_DiffuseVolumeFlux(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,

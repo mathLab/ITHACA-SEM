@@ -105,11 +105,11 @@ void DiffusionLDG::v_Diffuse_coeff(
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
-    int  i, j;
-    int nDim      = fields[0]->GetCoordim(0);
-    int nPts      = fields[0]->GetTotPoints();
-    int nCoeffs   = fields[0]->GetNcoeffs();
-    int nTracePts = fields[0]->GetTrace()->GetTotPoints();
+    std::size_t  i, j;
+    std::size_t nDim      = fields[0]->GetCoordim(0);
+    std::size_t nPts      = fields[0]->GetTotPoints();
+    std::size_t nCoeffs   = fields[0]->GetNcoeffs();
+    std::size_t nTracePts = fields[0]->GetTrace()->GetTotPoints();
 
     Array<OneD, NekDouble>  tmp(nCoeffs);
 
@@ -124,7 +124,7 @@ void DiffusionLDG::v_Diffuse_coeff(
     }
 
     Array<OneD, Array<OneD, NekDouble > > traceflux(nConvectiveFields);
-    for (int i = 0; i < nConvectiveFields; ++i)
+    for (std::size_t i = 0; i < nConvectiveFields; ++i)
     {
         traceflux[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
     }

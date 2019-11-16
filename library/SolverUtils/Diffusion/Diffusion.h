@@ -255,7 +255,7 @@ namespace Nektar
                     std::placeholders::_3);
             }
 
-            void SetFluxVector(DiffusionFluxVecCB fluxVector)
+            SOLVER_UTILS_EXPORT void SetFluxVector(DiffusionFluxVecCB fluxVector)
             {
                 m_fluxVector = fluxVector;
             }
@@ -333,27 +333,27 @@ namespace Nektar
                                std::placeholders::_5, std::placeholders::_6);
             }
 
-            void SetFunctorDerivBndCond(FunctorDerivBndCond DerivBndCond)
+            SOLVER_UTILS_EXPORT void SetFunctorDerivBndCond(FunctorDerivBndCond DerivBndCond)
             {
                 m_FunctorDerivBndCond = DerivBndCond;
             }
 
-            inline void SetHomoDerivs(Array<OneD, Array<OneD, NekDouble> > &deriv)
+            SOLVER_UTILS_EXPORT inline void SetHomoDerivs(Array<OneD, Array<OneD, NekDouble> > &deriv)
             {
                 v_SetHomoDerivs(deriv);
             }
 
-            virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &GetFluxTensor()
+            SOLVER_UTILS_EXPORT virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &GetFluxTensor()
             {
                 return v_GetFluxTensor();
             }
-            void GetAVmu(
+            SOLVER_UTILS_EXPORT void GetAVmu(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
                 const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
                       Array<OneD, NekDouble >                               &muvar,
                       Array<OneD, NekDouble >                               &MuVarTrace);
 
-            void ConsVarAveJump(
+            SOLVER_UTILS_EXPORT void ConsVarAveJump(
                 const std::size_t                                   nConvectiveFields,
                 const int                                           npnts,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
@@ -364,7 +364,7 @@ namespace Nektar
                 v_ConsVarAveJump(nConvectiveFields,npnts,vFwd,vBwd,aver,jump);
             }
 
-            const Array<OneD, const Array<OneD, NekDouble> > &GetTraceNormal()
+            SOLVER_UTILS_EXPORT const Array<OneD, const Array<OneD, NekDouble> > &GetTraceNormal()
             {
                 return v_GetTraceNormal();
             }
@@ -394,7 +394,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray)=0;
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
             
             virtual void v_Diffuse_coeff(
                 const std::size_t                                   nConvectiveFields,

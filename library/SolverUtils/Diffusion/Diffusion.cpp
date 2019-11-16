@@ -119,6 +119,18 @@ namespace Nektar
                 MuVarTrace[k] = 0.5 * (Fwd[k] + Bwd[k]) ;
             }
         }
+
+        void Diffusion::v_Diffuse(
+            const std::size_t                             nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                    Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            const Array<OneD, Array<OneD, NekDouble> > &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> > &pBwd)
+        {
+            boost::ignore_unused(nConvectiveFields,fields,inarray,outarray,pFwd,pBwd);
+            ASSERTL0(false,"v_Diffuse_coeff not defined");
+        }
         
         void Diffusion::v_Diffuse_coeff(
             const std::size_t                                 nConvectiveFields,

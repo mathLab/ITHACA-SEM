@@ -381,14 +381,14 @@ namespace Nektar
 
             NekDouble                       m_time=0.0;
 
-            virtual void v_InitObject(
+            SOLVER_UTILS_EXPORT virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
             {
                 boost::ignore_unused(pSession, pFields);
             };
 
-            virtual void v_Diffuse(
+            SOLVER_UTILS_EXPORT virtual void v_Diffuse(
                 const std::size_t                             nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
@@ -396,7 +396,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd);
             
-            virtual void v_Diffuse_coeff(
+            SOLVER_UTILS_EXPORT virtual void v_Diffuse_coeff(
                 const std::size_t                                   nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
@@ -404,7 +404,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd);
         
-            virtual void v_ConsVarAveJump(
+            SOLVER_UTILS_EXPORT virtual void v_ConsVarAveJump(
                 const std::size_t                                   nConvectiveFields,
                 const int                                           npnts,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
@@ -413,7 +413,7 @@ namespace Nektar
                       Array<OneD,       Array<OneD, NekDouble> >    &jump);
 
             // Diffusion Flux, calculate the physical derivatives
-            virtual void v_DiffuseCalculateDerivative(
+            SOLVER_UTILS_EXPORT virtual void v_DiffuseCalculateDerivative(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
@@ -421,7 +421,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
 
             // Diffusion Volume Flux
-            virtual void v_DiffuseVolumeFlux(
+            SOLVER_UTILS_EXPORT virtual void v_DiffuseVolumeFlux(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
                 Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
@@ -429,7 +429,7 @@ namespace Nektar
                 Array< OneD, int >                                  &nonZeroIndex) ;
             
              // Diffusion term Trace Flux
-            virtual void v_DiffuseTraceFlux(
+            SOLVER_UTILS_EXPORT virtual void v_DiffuseTraceFlux(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
                 Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
@@ -439,7 +439,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
                 Array< OneD, int >                                  &nonZeroIndex);
 
-            virtual void v_AddDiffusionSymmFluxToCoeff(
+            SOLVER_UTILS_EXPORT virtual void v_AddDiffusionSymmFluxToCoeff(
                 const std::size_t                                   nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble> >          &inarray,
@@ -452,7 +452,7 @@ namespace Nektar
                 boost::ignore_unused(nConvectiveFields,fields,inarray,qfield,VolumeFlux,outarray,pFwd,pBwd);
 
             }
-            virtual void v_AddDiffusionSymmFluxToPhys(
+            SOLVER_UTILS_EXPORT virtual void v_AddDiffusionSymmFluxToPhys(
                 const std::size_t                                   nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble> >          &inarray,
@@ -466,19 +466,19 @@ namespace Nektar
 
             }
             
-            virtual void v_SetHomoDerivs(
+            SOLVER_UTILS_EXPORT virtual void v_SetHomoDerivs(
                 Array<OneD, Array<OneD, NekDouble> > &deriv)
             {
                 boost::ignore_unused(deriv);
             }
 
-            virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &v_GetFluxTensor()
+            SOLVER_UTILS_EXPORT virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &v_GetFluxTensor()
             {
                 static Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmp;
                 return tmp;
             }
 
-            virtual const Array<OneD, const Array<OneD, NekDouble> > &v_GetTraceNormal();
+            SOLVER_UTILS_EXPORT virtual const Array<OneD, const Array<OneD, NekDouble> > &v_GetTraceNormal();
 
         }; 
         

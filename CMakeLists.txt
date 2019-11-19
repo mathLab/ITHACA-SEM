@@ -163,6 +163,7 @@ OPTION(NEKTAR_BUILD_TESTS      "Build regression tests."        ON)
 OPTION(NEKTAR_BUILD_TIMINGS    "Build benchmark timing codes."  OFF)
 OPTION(NEKTAR_BUILD_PYTHON     "Build Nektar++ Python bindings" OFF)
 OPTION(NEKTAR_BUILD_PACKAGES   "Build Nektar++ binary packages" OFF)
+OPTION(NEKTAR_BUILD_AVX        "Build Nektar++ AVX operators" OFF)
 MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
 
 OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF)

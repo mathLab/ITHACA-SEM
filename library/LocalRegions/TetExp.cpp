@@ -470,6 +470,42 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs, tmp6, 1, outarray, 1, outarray, 1);
         }
 
+        void TetExp::v_ProjectVectorintoStandardExp(
+                const int                               dir, 
+                const Array<OneD, const NekDouble>      &inarray, 
+                Array<OneD, Array<OneD, NekDouble> >    &outarray)
+        {
+            const int nquad0 = m_base[0]->GetNumPoints();
+            const int nquad1 = m_base[1]->GetNumPoints();
+            const int nquad2 = m_base[2]->GetNumPoints();
+            const int nqtot  = nquad0*nquad1*nquad2;
+
+            Array<OneD, NekDouble> tmp1 (nqtot);
+            
+            const Array<TwoD, const NekDouble>& df =
+                m_metricinfo->GetDerivFactors(GetPointsKeys());
+
+            MultiplyByQuadratureMetric(inarray,tmp1);
+
+            Array<OneD, NekDouble> tmp2 = outarray[0];        // Dir1 metric
+            Array<OneD, NekDouble> tmp3 = outarray[1];        // Dir2 metric
+            Array<OneD, NekDouble> tmp4 = outarray[2];   
+            
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vmul(nqtot,&df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
+                Vmath::Vmul(nqtot,&df[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
+                Vmath::Vmul(nqtot,&df[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
+            }
+            else
+            {
+                Vmath::Smul(nqtot, df[3*dir  ][0],tmp1.get(),1,tmp2.get(), 1);
+                Vmath::Smul(nqtot, df[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
+                Vmath::Smul(nqtot, df[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
+            }
+            
+        }
+
 
         //-----------------------------
         // Evaluation functions

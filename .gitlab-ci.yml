@@ -10,6 +10,7 @@ stages:
   only:
     - master
     - /^docker\/.*$/
+    - tags
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
@@ -26,6 +27,7 @@ stages:
   only:
     - master
     - /^docker\/.*$/
+    - tags
 
 docker-build-env:
   <<: *docker_build_template
@@ -37,6 +39,7 @@ docker-build-env:
     refs:
       - master
       - /^docker\/.*$/
+      - tags
     changes:
       - docker/nektar-env/Dockerfile
 

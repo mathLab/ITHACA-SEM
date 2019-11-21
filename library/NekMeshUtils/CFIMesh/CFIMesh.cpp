@@ -345,7 +345,7 @@ void CFIMesh::Process()
 
             FaceSharedPtr mf = *fnd;
 
-            if (true) //(mf->m_elLink.size() == 1)
+            if (mf->m_elLink.size() == 1)
             {
                 E->m_parentCAD = m_mesh->m_cad->GetSurf(f->second);
                 m_mesh->m_element[2].push_back(E);
@@ -394,7 +394,7 @@ void CFIMesh::Process()
 
             FaceSharedPtr mf = *fnd;
 
-            if (true) //(mf->m_elLink.size() == 1)
+            if (mf->m_elLink.size() == 1)
             {
                 E->m_parentCAD = m_mesh->m_cad->GetSurf(f->second);
                 m_mesh->m_element[2].push_back(E);

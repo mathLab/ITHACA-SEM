@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -54,7 +53,6 @@ namespace Nektar
 {
 namespace LibUtilities
 {
-using namespace std;
 
 typedef std::map<std::string, std::string> PtsMetaDataMap;
 static PtsMetaDataMap NullPtsMetaDataMap;
@@ -70,21 +68,22 @@ public:
     }
 
     LIB_UTILITIES_EXPORT void Import(
-        const string &inFile,
+        const std::string &inFile,
         PtsFieldSharedPtr &ptsField,
         FieldMetaDataMap &fieldmetadatamap = NullFieldMetaDataMap);
 
-    LIB_UTILITIES_EXPORT void Write(const string &outFile,
+    LIB_UTILITIES_EXPORT void Write(const std::string &outFile,
                                     const PtsFieldSharedPtr &ptsField,
                                     const bool backup = false);
 
-    LIB_UTILITIES_EXPORT void ImportFieldData(const string inFile,
+    LIB_UTILITIES_EXPORT void ImportFieldData(const std::string inFile,
                                               PtsFieldSharedPtr &ptsField);
 
 protected:
 
-    LIB_UTILITIES_EXPORT virtual void v_ImportFieldData(const string inFile,
-                                              PtsFieldSharedPtr &ptsField);
+    LIB_UTILITIES_EXPORT virtual void v_ImportFieldData(
+        const std::string inFile,
+        PtsFieldSharedPtr &ptsField);
 
     LIB_UTILITIES_EXPORT void SetUpFieldMetaData(const std::string outname);
 

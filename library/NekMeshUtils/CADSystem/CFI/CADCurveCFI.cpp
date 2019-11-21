@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -88,8 +87,7 @@ NekDouble CADCurveCFI::loct(Array<OneD, NekDouble> xyz, NekDouble &t)
     p.y = xyz[1] / m_scal;
     p.z = xyz[2] / m_scal;
 
-    boost::optional<cfi::Projected<double> > pj =
-        m_cfiEdge->calcTFromXYZ(p, -1);
+    boost::optional<cfi::Projected<double>> pj = m_cfiEdge->calcTFromXYZ(p, -1);
 
     t = pj.value().parameters;
 
@@ -135,6 +133,15 @@ Array<OneD, NekDouble> CADCurveCFI::P(NekDouble t)
     return out;
 }
 
+void CADCurveCFI::P(NekDouble t, NekDouble &x, NekDouble &y, NekDouble &z)
+{
+    cfi::Position p = m_cfiEdge->calcXYZAtT(t);
+
+    x = p.x * m_scal;
+    y = p.y * m_scal;
+    z = p.z * m_scal;
+}
+
 Array<OneD, NekDouble> CADCurveCFI::D2(NekDouble t)
 {
     vector<cfi::DerivativeList> *d = m_cfiEdge->calcDerivAtT(t);
@@ -166,6 +173,12 @@ Array<OneD, NekDouble> CADCurveCFI::GetBounds()
     t[1] = 1.0;
 
     return t;
+}
+
+void CADCurveCFI::GetBounds(NekDouble &tmin, NekDouble &tmax)
+{
+    tmin = 0.0;
+    tmax = 1.0;
 }
 
 Array<OneD, NekDouble> CADCurveCFI::GetMinMax()

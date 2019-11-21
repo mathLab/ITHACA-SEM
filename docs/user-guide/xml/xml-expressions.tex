@@ -1,0 +1,355 @@
+\section{Expressions}
+\label{sec:xml:expressions}
+
+This section discusses particulars related to expressions appearing in
+Nektar++. Expressions in Nektar++ are used to describe spatially or
+temporally varying properties, for example
+\begin{itemize}
+\item velocity profiles on a boundary
+\item some reference functions (e.g. exact solutions)
+\end{itemize}
+which can be retrieved in the solver code.
+
+Expressions appear as the content of \inltt{VALUE} attribute of
+\begin{itemize}
+\item parameter values;
+\item boundary condition type tags within \inltt{<REGION>} subsection of
+ \inltt{<BOUNDARYCONDITIONS>}, e.g. \inltt{<D>}, \inltt{<N>} etc;
+ %See [wiki:BoundaryConditionTypes] for details.
+\item expression declaration tag \inltt{<E>} within \inltt{<FUNCTION>}
+subsection.
+\end{itemize}
+
+The tags above declare expressions as well as link them to one of the
+field variables declared in \inltt{<EXPANSIONS>} section. For example, the
+declaration 
+\begin{lstlisting}[style=XMLStyle]
+  <D VAR="u" VALUE="sin(PI*x)*cos(PI*y)" />
+\end{lstlisting}
+registers expression $\sin(\pi x)\cos(\pi y)$ as a Dirichlet
+boundary constraint associated with field variable \inltt{u}.
+
+Enforcing the same velocity profile at multiple boundary regions and/or field
+variables results in repeated re-declarations of a corresponding
+expression. Currently one cannot directly link a boundary condition declaration
+with an expression uniquely specified somewhere else, e.g. in the
+\inltt{<FUNCTION>} subsection. However this duplication does not affect an
+overall computational performance.
+
+% \subsection{Ordering of tags}
+% 
+% TODO Here one should describe the constraints of internal !SessionReader API for
+% expression retrieval via function name and its ordering number. Ordering of tags
+% is important for the user code. Not everything has a name for the solver code.
+
+\subsection{Variables and coordinate systems}
+Declarations of expressions are formulated in terms of problem
+space-time coordinates. The library code makes a number of assumptions to
+variable names and their order of appearance in the declarations. This section
+describes these assumptions.
+
+Internally, the library uses 3D global coordinate space regardless of problem
+dimension. Internal global coordinate system has natural basis
+{{{(1,0,0),(0,1,0),(0,0,1)}}} with coordinates \inltt{x}, \inltt{y} and \inltt{z}. In
+other words, variables \inltt{x}, \inltt{y} and \inltt{z} are considered to be first,
+second and third coordinates of a point (\inltt{x}, \inltt{y}, \inltt{z}).
+
+Declarations of problem spatial variables do not exist in the current XML file
+format. Even though field variables are declarable as in the following code
+snippet, 
+\begin{lstlisting}[style=XMLStyle]
+   <VARIABLES>
+     <V ID="0"> u </V>
+     <V ID="1"> v </V>
+   </VARIABLES>
+\end{lstlisting} 
+there are no analogous tags for space variables. However an attribute
+\inlsh{SPACE} of \inlsh{<GEOMETRY>} section tag declares the dimension of
+problem space. For example, \begin{lstlisting}[style=XMLStyle]
+  <GEOMETRY DIM="1" SPACE="2"> ...
+  </GEOMETRY>
+\end{lstlisting}
+specifies 1D flow within 2D problem space. The number of spatial variables
+presented in expression declaration should match space dimension declared via
+\inltt{<GEOMETRY>} section tag.
+
+The library assumes the problem space also has natural basis and spatial
+coordinates have names \inltt{x}, \inltt{y} and \inltt{z}.
+
+Problem space is naturally embedded into the global coordinate space: each point
+of
+\begin{itemize}
+\item 1D problem space with coordinate {{{x}}} is represented by 3D point
+ {{{(x,0,0)}}} in the global coordinate system;
+\item 2D problem space with coordinates {{{(x,y)}}} is represented by 3D point 
+ {{{(x,y,0)}}} in the global coordinate system;
+\item 3D problem space with coordinates {{{(x,y,z)}}} has the
+ same coordinates in the global space coordinates.
+\end{itemize}
+
+Currently, there is no way to describe rotations and translations of problem
+space relative to the global coordinate system.
+
+The list of variables allowed in expressions depends on the problem
+dimension:
+\begin{itemize}
+\item For 1D problems, expressions must make use of variable \inltt{x}
+only;
+\item For 2D problems, expressions should make use of variables \inltt{x}
+and \inltt{y} only;
+\item For 3D problems, expressions may use any of variables \inltt{x}, \inltt{y} and \inltt{z}.
+\end{itemize}
+
+Violation of these constraints yields unpredictable results of expression
+evaluation. The current implementation assigns magic value -9999 to each
+dimensionally excessive spacial variable appearing in expressions. For
+example, the following declaration 
+\begin{lstlisting}[style=XMLStyle]
+  <GEOMETRY DIM="2" SPACE="2"> ...
+  </GEOMETRY> ...
+  <CONDITIONS> ...
+    <BOUNDARYCONDITIONS>
+       <REGION REF="0">
+         <D VAR="u" VALUE="x+y+z" /> <D VAR="v" VALUE="sin(PI*x)*cos(PI*y)" />
+       </REGION>
+     </BOUNDARYCONDITIONS>
+  ...
+  </CONDITIONS>
+\end{lstlisting}
+results in expression $x+y+z$ being evaluated at spatial points
+$(x_i,y_i, -9999)$ where $x_i$ and $y_i$ are
+the spacial coordinates of boundary degrees of freedom. However, the library
+behaviour under this constraint violation may change at later stages of
+development (e.g., magic constant 0 may be chosen) and should be considered
+unpredictable.
+
+Another example of unpredictable behaviour corresponds to wrong ordering of
+variables:
+\begin{lstlisting}[style=XMLStyle]
+  <GEOMETRY DIM="1" SPACE="1"> ...
+  </GEOMETRY> ...
+  <CONDITIONS> ...
+    <BOUNDARYCONDITIONS>
+       <REGION REF="0">
+         <D VAR="u" VALUE="sin(y)" />
+       </REGION>
+     </BOUNDARYCONDITIONS>
+  ...
+  </CONDITIONS>
+\end{lstlisting}
+Here one declares 1D problem, so Nektar++ library assumes spacial variable
+is \inltt{x}. At the same time, an expression $sin(y)$ is perfectly
+valid on its own, but since it does not depend on \inltt{x}, it will be evaluated
+to constant $sin(-9999)$ regardless of degree of freedom under
+consideration.
+
+\subsubsection{Time dependence}
+
+Variable \inltt{t} represents time dependence within expressions. The
+boundary condition declarations need to add an additional property
+\inltt{USERDEFINEDTYPE="TimeDependent"} in order to flag time dependency to
+the library.
+
+% TODO:
+%  * check there are no cases when the library evaluates expressions with
+%  non-zero time values even though {{{TimeDependent}}} property is not defined *
+%  discuss time dependence of functions declared within {{{<FUNCTION>}}} section
+
+\subsubsection{Syntax of expressions}
+\label{sec:xml:expressions:syntax}
+Analytic expressions are formed of
+\begin{itemize}
+\item brackets {{{()}}}. Bracketing structure must be balanced.
+\item real numbers: every representation is allowed that is correct for
+\inlsh{boost::lexical\_cast<double>()}, e.g.
+\begin{lstlisting}[style=XMLStyle]
+   1.2, 1.2e-5, .02
+\end{lstlisting}
+\item mathematical constants
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Identifier & Meaning & Real Value \\
+\midrule
+\multicolumn{3}{c}{\textbf{Fundamental constants}} \\
+E           & Natural Logarithm     & 2.71828182845904523536 \\
+PI          & $\pi$                 & 3.14159265358979323846 \\
+GAMMA       & Euler Gamma           & 0.57721566490153286060 \\
+DEG         & deg/radian            & 57.2957795130823208768 \\
+PHI         & golden ratio          & 1.61803398874989484820 \\
+\multicolumn{3}{c}{\textbf{Derived constants}} \\
+LOG2E       & $\log_2 e$            & 1.44269504088896340740 \\
+LOG10E      & $\log_{10} e$         & 0.43429448190325182765 \\
+LN2         & $\log_e 2$            & 0.69314718055994530942 \\
+PI\_2       & $\frac{\pi}{2}$       & 1.57079632679489661923 \\
+PI\_4       & $\frac{\pi}{4}$       & 0.78539816339744830962 \\
+1\_PI       & $\frac{1}{\pi}$       & 0.31830988618379067154 \\
+2\_PI       & $\frac{2}{\pi}$       & 0.63661977236758134308 \\
+2\_SQRTPI   & $\frac{2}{\sqrt{\pi}}$& 1.12837916709551257390 \\
+SQRT2       & $\sqrt{2}$            & 1.41421356237309504880 \\
+SQRT1\_2    & $\frac{1}{\sqrt{2}}$  & 0.70710678118654752440 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\item parameters: alphanumeric names with underscores, e.g. \inltt{GAMMA\_123},
+\inltt{GaM123\_45a\_}, \inltt{\_gamma123} are perfectly acceptable parameter
+names. However parameter name cannot start with a numeral. Parameters must be
+defined with \inltt{<PARAMETERS>...</PARAMETERS>}. Parameters play the role of
+constants that may change their values in between of expression evaluations.
+
+\item variables (i.e., \inlsh{x, y, z} and \inlsh{t})
+\item unary minus operator (e.g. \inltt{-x})
+\item binary arithmetic operators \inltt{+, -, *, /, \^{}}
+   Powering operator allows using real exponents (it is implemented with
+   \inlsh{std::pow()} function)
+\item boolean comparison operations \inlsh{<, <=, >, >=, ==} evaluate their
+sub-expressions to real values 0.0 or 1.0.
+\item mathematical functions of one or two arguments:
+\begin{center}
+\begin{tabular}{ll}
+  \toprule
+  \textbf{Identifier} & \textbf{Meaning} \\
+  \midrule
+  \texttt{abs(x)}     & absolute value $|x|$ \\
+  \texttt{asin(x)}    & inverse sine $\arcsin x$ \\
+  \texttt{acos(x)}    & inverse cosine $\arccos x$ \\
+  \texttt{ang(x,y)}   & computes polar coordinate $\theta=\arctan(y/x)$ from $(x,y)$\\
+  \texttt{atan(x)}    & inverse tangent $\arctan x$ \\
+  \texttt{atan2(y,x)} & inverse tangent function (used in polar transformations) \\
+  \texttt{ceil(x)}    & round up to nearest integer $\lceil x\rceil$ \\
+  \texttt{cos(x)}     & cosine $\cos x$ \\
+  \texttt{cosh(x)}    & hyperbolic cosine $\cosh x$ \\
+  \texttt{exp(x)}     & exponential $e^x$ \\
+  \texttt{fabs(x)}    & absolute value (equivalent to \texttt{abs}) \\
+  \texttt{floor(x)}   & rounding down $\lfloor x\rfloor$ \\
+  \texttt{log(x)}     & logarithm base $e$, $\ln x = \log x$ \\
+  \texttt{log10(x)}   & logarithm base 10, $\log_{10} x$ \\
+  \texttt{rad(x,y)}   & computes polar coordinate $r=\sqrt{x^2+y^2}$ from $(x,y)$\\
+  \texttt{sin(x)}     & sine $\sin x$ \\
+  \texttt{sinh(x)}    & hyperbolic sine $\sinh x$ \\
+  \texttt{sqrt(x)}    & square root $\sqrt{x}$ \\
+  \texttt{tan(x)}     & tangent $\tan x$ \\
+  \texttt{tanh(x)}    & hyperbolic tangent $\tanh x$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+These functions are implemented by means of the cmath library:
+\url{http://www.cplusplus.com/reference/clibrary/cmath/}. Underlying data type
+is \inltt{double} at each stage of expression evaluation. As consequence,
+complex-valued expressions (e.g. $(-2)^0.123$) get value \inlsh{nan} (not a
+number). The operator \inlsh{\^{}} is implemented via call to \inlsh{std::pow()}
+function and accepts arbitrary real exponents.
+
+\item random noise generation functions. Currently implemented is
+\inltt{awgn(sigma)} - Gaussian Noise generator, where $\sigma$ is the variance
+of normal distribution with zero mean. Implemented using the
+\texttt{boost::mt19937} random number generator with boost variate generators
+(see \url{http://www.boost.org/libs/random})
+\end{itemize}
+
+
+\subsubsection{Examples}
+Some straightforward examples include
+\begin{itemize}
+\item Basic arithmetic operators: \inltt{0.5*0.3164/(3000\^{}0.25)}
+\item Simple polynomial functions: \inltt{y*(1-y)}
+\item Use of values defined in \inltt{PARAMETERS} section:
+\inltt{-2*Kinvis*(x-1)}
+\item More complex expressions involving trigonometric functions, parameters and
+constants: \inltt{(LAMBDA/2/PI)*exp(LAMBDA*x)*sin(2*PI*y)}
+\item Boolean operators for multi-domain functions:
+\inltt{(y<0)*sin(y) + (y>=0)*y}
+\end{itemize}
+
+\subsection{Performance considerations}
+Processing expressions is split into two stages:
+\begin{itemize}
+\item parsing with pre-evaluation of constant sub-expressions,
+\item evaluation to a number.
+\end{itemize}
+Parsing of expressions with their partial evaluation take place at the
+time of setting the run up (reading an XML file). Each expression,
+after being pre-processed, is stored internally and quickly retrieved when it
+turns to evaluation at given spatial-time point(s). This allows to perform
+evaluation of expressions at a large number of spacial points with minimal setup
+costs.
+
+\subsubsection{Pre-evaluation details}
+Partial evaluation of all constant sub-expressions makes no sense in using
+derived constants from table above. This means, either make use of pre-defined
+constant \inlsh{LN10\^{}2} or straightforward expression \inlsh{log10(2)\^{}2}
+results in constant \inlsh{5.3018981104783980105} being stored internally after
+pre-processing. The rules of pre-evaluation are as follows:
+\begin{itemize}
+\item constants, numbers and their combinations with arithmetic, analytic and
+ comparison operators are pre-evaluated,
+\item appearance of a variable or parameter
+ at any recursion level stops pre-evaluation of all upper level operations (but
+ doesn't stop pre-evaluation of independent parallel sub-expressions).
+\end{itemize}
+
+For example, declaration 
+\begin{lstlisting}[style=XMLStyle]
+     <D VAR="u" VALUE="exp(-x*sin(PI*(sqrt(2)+sqrt(3))/2)*y )" />
+\end{lstlisting}
+results in expression \inlsh{exp(-x*(-0.97372300937516503167)*y )} being
+stored internally: sub-expression \inlsh{sin(PI*(sqrt(2)+sqrt(3))/2)} is
+evaluated to constant but appearance of \inlsh{x} and \inlsh{y} variables
+stops further pre-evaluation.
+
+Grouping predefined constants and numbers together helps. Its useful to put
+brackets to be sure your constants do not run out and become factors of some
+variables or parameters.
+
+Expression evaluator does not do any clever simplifications of input
+expressions, which is clear from example above (there is no point in double
+negation). The following subsection addresses the simplification strategy.
+
+\subsubsection{Preparing expression}
+
+The total evaluation cost depends on the overall number of operations. Since
+evaluator is not making simplifications, it worth trying to minimise the total
+number of operations in input expressions manually.
+
+Some operations are more computationally expensive than others. In an order of
+increasing complexity:
+\begin{itemize}
+\item \inlsh{+, -, <, >, <=, >=, ==, }
+\item \inlsh{*, /, abs, fabs, ceil, floor,}
+\item \inlsh{\^{}, sqrt, exp, log, log10, sin, cos, tan, sinh, cosh, tanh, asin,
+acos, atan}.
+\end{itemize}
+
+For example,
+\begin{itemize}
+\item \inlsh{x*x} is faster than \inlsh{x\^{}2} --- it is one double
+multiplication vs generic calculation of arbitrary power with real exponents.
+\item \inlsh{(x+sin(y))\^{}2} is faster than \inlsh{(x+sin(y))*(x+sin(y))} -
+sine is an expensive operation. It is cheaper to square complicated expression rather than
+ compute it twice and add one multiplication.
+\item An expression
+\inltt{exp(-41*( (x+(0.3*cos(2*PI*t)))\^{}2 + (0.3*sin(2*PI*t))\^{}2 ))}
+ makes use of 5 expensive operations (\inlsh{exp}, \inlsh{sin}, \inlsh{cos}
+ and power \inlsh{\^{}} twice) while an equivalent expression
+\inltt{exp(-41*( x*x+0.6*x*cos(2*PI*t) + 0.09 ))}
+ uses only 2 expensive operations.
+\end{itemize}
+
+If any simplifying identity applies to input expression, it may worth applying
+it, provided it minimises the complexity of evaluation. Computer algebra systems
+may help.
+
+\subsubsection{Vectorized evaluation}
+
+Expression evaluator is able to calculate an expression for either given point
+(its space-time coordinates) or given array of points (arrays of their
+space-time coordinates, it uses SoA). Vectorized evaluation is faster then
+sequential due to a better data access pattern. Some expressions give measurable
+speedup factor $4.6$. Therefore, if you are creating your own solver, it
+worth making vectorized calls.
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../user-guide"
+%%% End: 

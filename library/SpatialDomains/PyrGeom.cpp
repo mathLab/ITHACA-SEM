@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -82,45 +81,17 @@ bool PyrGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                 NekDouble tol,
                                 NekDouble &resid)
 {
-    // Validation checks
-    ASSERTL1(gloCoord.num_elements() == 3,
-             "Three dimensional geometry expects three coordinates.");
-
-    // find min, max point and check if within twice this
-    // distance other false this is advisable since
-    // GetLocCoord is expensive for non regular elements.
+    //Rough check if within twice min/max point
     if (GetMetricInfo()->GetGtype() != eRegular)
     {
-        int i;
-        Array<OneD, NekDouble> mincoord(3), maxcoord(3);
-        NekDouble diff = 0.0;
-
-        v_FillGeom();
-
-        const int npts = m_xmap->GetTotPoints();
-        Array<OneD, NekDouble> pts(npts);
-
-        for (i = 0; i < 3; ++i)
+        if (!MinMaxCheck(gloCoord))
         {
-            m_xmap->BwdTrans(m_coeffs[i], pts);
-            mincoord[i] = Vmath::Vmin(pts.num_elements(), pts, 1);
-            maxcoord[i] = Vmath::Vmax(pts.num_elements(), pts, 1);
-
-            diff = max(maxcoord[i] - mincoord[i], diff);
-        }
-
-        for (i = 0; i < 3; ++i)
-        {
-            if ((gloCoord[i] < mincoord[i] - 0.2 * diff) ||
-                (gloCoord[i] > maxcoord[i] + 0.2 * diff))
-            {
-                return false;
-            }
+            return false;
         }
     }
 
     // Convert to the local Cartesian coordinates.
-    resid = v_GetLocCoords(gloCoord, locCoord);
+    resid = GetLocCoords(gloCoord, locCoord);
 
     // Check local coordinate is within std region bounds.
     if (locCoord[0] >= -(1 + tol) && locCoord[1] >= -(1 + tol) &&
@@ -130,22 +101,8 @@ bool PyrGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
         return true;
     }
 
-    // If out of range clamp locCoord to be within [-1,1]^3
-    // since any larger value will be very oscillatory if
-    // called by 'returnNearestElmt' option in
-    // ExpList::GetExpIndex
-    for (int i = 0; i < 3; ++i)
-    {
-        if (locCoord[i] < -(1 + tol))
-        {
-            locCoord[i] = -(1 + tol);
-        }
-
-        if (locCoord[i] > (1 + tol))
-        {
-            locCoord[i] = 1 + tol;
-        }
-    }
+    //Clamp local coords
+    ClampLocCoords(locCoord, tol);
 
     return false;
 }

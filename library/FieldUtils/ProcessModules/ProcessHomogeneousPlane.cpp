@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,9 +36,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessHomogeneousPlane.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessHomogeneousPlane.h"
 
 namespace Nektar
 {
@@ -67,11 +68,10 @@ ProcessHomogeneousPlane::~ProcessHomogeneousPlane()
 
 void ProcessHomogeneousPlane::Process(po::variables_map &vm)
 {
-    if ((m_f->m_numHomogeneousDir) != 1)
-    {
-        ASSERTL0(false,
-                 "ProcessHomogeneousPlane only works for Homogeneous1D.");
-    }
+    boost::ignore_unused(vm);
+
+    ASSERTL0(m_f->m_numHomogeneousDir == 1,
+             "ProcessHomogeneousPlane only works for Homogeneous1D.");
     m_f->m_numHomogeneousDir = 0;
 
     // Skip in case of empty partition

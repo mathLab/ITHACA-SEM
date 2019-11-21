@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Data manager for homogeneous transpositions
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/Communication/Transposition.h>
 
@@ -148,6 +149,8 @@ Transposition::Transposition(const LibUtilities::BasisKey &HomoBasis0,
                              const LibUtilities::BasisKey &HomoBasis2,
                              LibUtilities::CommSharedPtr hcomm)
 {
+    boost::ignore_unused(HomoBasis0, HomoBasis1, HomoBasis2);
+
     m_hcomm                      = hcomm;
     m_num_homogeneous_directions = 3;
 
@@ -560,6 +563,8 @@ void Transposition::TransposeYZtoZY(const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD, NekDouble> &outarray,
                                     bool UseNumMode)
 {
+    boost::ignore_unused(UseNumMode);
+
     if (m_num_processes[0] > 1 || m_num_processes[1] > 1)
     {
         ASSERTL0(false, "Parallel transposition not implemented yet for "
@@ -589,6 +594,8 @@ void Transposition::TransposeZYtoYZ(const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD, NekDouble> &outarray,
                                     bool UseNumMode)
 {
+    boost::ignore_unused(UseNumMode);
+
     if (m_num_processes[0] > 1 || m_num_processes[1] > 1)
     {
         ASSERTL0(false, "Parallel transposition not implemented yet for "

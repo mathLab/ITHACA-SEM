@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -93,7 +92,7 @@ namespace LibUtilities
 
             ASSERTL0(ret == Z_OK, "Error initializing Zlib.");
 
-            strm.avail_in = in.size() * sizeof(T) / sizeof(char);
+            strm.avail_in = (unsigned int)in.size() * sizeof(T) / sizeof(char);
             strm.next_in = input;
 
             // Deflate input until output buffer is no longer full.
@@ -170,7 +169,7 @@ namespace LibUtilities
             ret = inflateInit(&strm);
             ASSERTL0(ret == Z_OK, "Error initializing zlib decompression.");
 
-            strm.avail_in = in.size();
+            strm.avail_in = (unsigned int)in.size();
             strm.next_in = (unsigned char*)(&in[0]);
 
             do {
@@ -183,7 +182,8 @@ namespace LibUtilities
 
                 switch (ret) {
                     case Z_NEED_DICT:
-                        ret = Z_DATA_ERROR;     /* and fall through */
+                        ret = Z_DATA_ERROR;
+                        /* Falls through. */
                     case Z_DATA_ERROR:
                     case Z_MEM_ERROR:
                         (void)inflateEnd(&strm);
@@ -200,7 +200,7 @@ namespace LibUtilities
             if (ret == Z_STREAM_END)
             {
                 T* readFieldData = (T*) output.c_str();
-                unsigned int len = output.size() * sizeof(*output.c_str())
+                unsigned int len = (unsigned int)output.size() * sizeof(*output.c_str())
                                                  / sizeof(T);
                 out.assign( readFieldData, readFieldData + len);
                 return Z_OK;

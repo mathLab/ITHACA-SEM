@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+	<EXPANSIONS>
+        <E COMPOSITE="C[1]" NUMMODES="4" TYPE="MODIFIED" FIELDS="u,v,p" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+    	<SOLVERINFO>
+            <I PROPERTY="SolverType"                VALUE="VelocityCorrectionScheme"/>
+            <I PROPERTY="EQTYPE"                    VALUE="UnsteadyNavierStokes"    />
+            <I PROPERTY="EvolutionOperator"         VALUE="Nonlinear"               />
+            <I PROPERTY="Projection"                VALUE="Galerkin"                />
+            <I PROPERTY="GlobalSysSoln"				VALUE="DirectStaticCond" 		/>
+            <I PROPERTY="TimeIntegrationMethod"     VALUE="IMEXOrder2"              />
+            <I PROPERTY="Driver"                    VALUE="Standard"                />
+       </SOLVERINFO>
+
+       <PARAMETERS>
+            <P> TimeStep       = 1e-2		</P>
+            <P> NumSteps       = 100		</P>
+            <P> IO_CheckSteps  = 1000		</P>
+            <P> IO_InfoSteps   = 1000		</P>
+            <P> Re             = 10			</P>
+            <P> Kinvis         = 1/Re		</P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0">u</V>
+            <V ID="1">v</V>
+            <V ID="2">p</V>
+		</VARIABLES>
+
+        <BOUNDARYREGIONS>
+        	<B ID="0"> C[2]   </B>   <!-- Inflow    -->
+        	<B ID="1"> C[3]   </B>   <!-- Outflow    -->
+        	<B ID="2"> C[4]   </B>   <!-- Top    -->
+        	<B ID="3"> C[5]   </B>   <!-- Bottom    -->
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="2">
+                <P VAR="u" VALUE="[3]" />
+                <P VAR="v" VALUE="[3]" />
+                <P VAR="p" VALUE="[3]" />
+            </REGION>
+            <REGION REF="3">
+                <P VAR="u" VALUE="[2]" />
+                <P VAR="v" VALUE="[2]" />
+                <P VAR="p" VALUE="[2]" />
+            </REGION>
+            <REGION REF="0">
+                <D VAR="u" VALUE="1" />
+                <D VAR="v" VALUE="0" />
+                <N VAR="p" VALUE="0" USERDEFINEDTYPE="H" />
+            </REGION>
+            <REGION REF="1">
+                <N VAR="u" USERDEFINEDTYPE="HOutflow" VALUE="0" />
+                <N VAR="v" USERDEFINEDTYPE="HOutflow" VALUE="0" />
+                <D VAR="p" USERDEFINEDTYPE="HOutflow" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+        	<E VAR="u" VALUE="1" />
+        	<E VAR="v,p" VALUE="0" />
+		</FUNCTION>
+    </CONDITIONS>
+
+	<FILTERS>
+    	<FILTER TYPE="AverageFields">
+      		<PARAM NAME="OutputFile">Phase</PARAM>
+			<PARAM NAME="OutputFrequency">10000</PARAM>
+			<PARAM NAME="SampleFrequency"> 1 </PARAM>
+			<PARAM NAME="PhaseAverage"> True </PARAM>
+			<PARAM NAME="PhaseAveragePeriod"> 1 </PARAM>
+			<PARAM NAME="PhaseAveragePhase"> 0.584 </PARAM>
+		</FILTER>
+	</FILTERS>
+
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxt1blPFGEAxuERQV0VRUQR8cITFLzwAA9YBRXPVQTvW1HBC49YGCOVFv4htia0xMLGWku6jYkFsUEqiTGajTObzPO53e6Td3bm+22yUfT/1+C3rrLXQ1E0JX6ffd/U0v0x366X4M87Ont+1Y22Jz6V6+qlqf14cP0y3P202PNvCp9PBvvpuPsZqetHWfcZ3P3M2CtqWz+9+1Ea7Gfh7men7i8T7Mtx93NiH57Ifc11lwf7ubj7itTzVQT7ebj7ytjr+5qHXo5WBvv5uPuq1PlUBfsFuPuFsf/83Fb+JVMd7Ktx94tS51sT7Gtw94tT55Nvb80WfKzotVH6pS9J7ceD/dLU908Gviy1j7L68tT5lQa+InX9TOB1sSe/H30lvw99Ff311fTV19BPX0sffR19XjUW7mOi6PX00Rvoo6+nj76BPnojffQm+ugb6aNvoo++mT76FvroW+mjN9NH30aft83/zjHx7fTRd9BH30kfvYU+eit99F300XfTR99DH30vffQ2+ujJH2LSR8/SR99Hn3x/b8OLgT9F308fvYM+eid99AP00Q/SRz9EH72LPvph+uhH6KMfpY9+jD76cfroJ+jzIVe4j5Js4jn66Cfpo5+ij95NH/00ffQe+ui99NHP0Ec/Sx/9HH308/TRL9BHv0if3PeRsZHfZUW/RB/9Mn30K/TRr9JHv0Yf/Tp99Bv00W/SR79FH72PPvpt+uh36KPfpU/ynIn300cfoI9+jz76ffroD+ijP+S+9Ef00Qfpoz+mj/6EPvpT+ujP6KP/BaSxOfsA</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx11lV3pFUYROHA4K4jDBI8uAaHCcE1uAYIzuDuM7i7u7u7u7v/IS6o54JaK7nZq9eu093pU+e838DAf3/zDPz/z+t5J3k9ZZLXA/V6vqL3mb/IL1Dvyy9YXn6hSfzCk6xfpNbJL1rr+MVqPb/4JO+3RL0fv2St55eqz5Ffuj6HX6bW88vW58svV5/PL1/r+an1veSn1ffip9d6fkZ9X/kV6vvyM2s9v2L9H/Ir1f/Br1zr+VXCqZUfDKeVX7XW86uF0yu/ejij/Bq1nl8z9Hvo+1rhzPJrh1PKD4V+J31fp9bz64Z+P71er3L8+qHfVX83qBy/Yej31tONKsdvHA6G+rhJ5fhNQ/ujd5tVjt88tG/6NVw5fovQfurRlpXjtwrts75sXTl+m9D+68W2leO3C/VCf7avHL9DqC/2f1Y4VH4k7D7tGOqRXozWen6nsPu1c+X4XUK904tdK8fvFuqjXuxeOX6PUE8Hwz0rx+8V6q9e7F05fp9Qr/Vi38rxY6G+68V+leP3D50DvTigcvyBofOhFwdVjj84dG7055DK8YeGzpP9PywcLn94OFT+iNA504sjaz0/Hjp/enFU5fijQ+dSL46pHD8ROq96cWzl+ONC51gvjq8cf0LofOvFiZXjTwqde704uXL8KaH7QC9mV44/NXRP6MVpleNPD90fenFG5fgzw5FQf86qHH926L6x/+eEo+XPDYfLnxe6h/Ti/FrPXxC6n/TiwsrxF4XuLb24uHL8JaH7TC8urRx/Weie04vLK8fPCd1/ejG3cvwVoXtRL66sHH9V6L7Ui6srx18Tukf14trK8deF7le9uL5y/A2he3ckvLFy/E2h+9j+3xyOlb8lHC1/a+ie1ovbaj1/e+j+1os7KsffGbrX9eKuyvF3h+57vbincvy9oTmgF/dVjr8/NB/04oHK8Q+G5oZePFQ5/uHQPNGLRyrHPxqaM3rxWOX4x0PzRy+eqBz/ZGgu6c9TleOfDs0r+/9MOF7+2XCs/HOhOaYXz9d6/oXQfNOLFyvHvxSae3rxcuX4V8KJUC9erRz/WmhO6sXrlePfCM1PvXizcvxbobmqF29Xjn8nNG/14t3K8e+F5rBevF85/oPQfNaLDyvHfxSa2/rzceX4T0Lz3P5/Gs4u/1k4Xv7z0JzXiy9qPf9laP7rxVeV478OPRfoxTeV478NPS9MhN9Vjv8+9ByhFz9Ujv8x9HyhFz9Vjv859NyhF79Ujv819DyiF79Vjv899JyiF39Ujv8z9PyiF39Vjv879FyjP/9Ujv8XZYS3GQAA</EDGE>
+        <ELEMENT>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1lvfbznUcR0VkZZSVlVlm9ghJSApJmSF7S7aK9Eg2kVmUvTchK1tGUviH/HLOD17X5fnlXNfDee77/p7P5/2+CxV69ucFWBgWid+/CIvCYs/xXoLFYYnw/LslYSlYOjxf72VYBpYNz79bDpaHr4Tn+30VVoAVw/P9V4KVYZXwfJ+vwaqwWnh+/uqwBqwZns/jdVgL1g7Pz10H1oX1wvN52qU+fAO+CX2+Pp8GsGF4Pkc/TyPYODz7+PpNYNPwysX/fws2Cy97NoctwvPf7dkStgrP/vZsDduEZ2d7toXtwvP17Nkevh2e58meHWDH8Dw39uwE3wnP92/PzvBd2AV6Pu35HuwanufQnt1g9/B8HvZ8H/YIz/Nuzw9gz/A81/b8EH4Uns/Xnr1g7/C8P/bsAz8Orxa0Z1/4SXj2smc/+Gl43kd7fgb7h+d9tecAODA8+9tzEBwMh0Dvpz0/h0PD85zYcxgcHp5zwZ5fwBHhed/tORKOCs9zZ8/RcEx4zgV7joXjwvN82nM8nBCe88OeE+Gk8DzH9pwMp4TnnLHnVPhleJ53e06DX4XnPLLndDgDzoTeC3vOgrPDc27Zcw6cG573x57z4NfhOd/s+Q38NjzvmT3nwwXhOQft+R1cGJ730Z7fw4LwnJf2XAR/CM97a8/F8MfwnKv2XAKXhuf9tucyuDw857Y9V8CVcBV0DthzNVwTnnPanj/BteE5L+y5Dv4cXhdoz/VwQ3jOfXtuhJvCc/7YczPcEp77oQD+An8Nzzllz61wW3juEXv+Bn8Pz3lmz+1wR3juG3vuhLvCc+7ZczfcA/dC95I998H94Tkf7XkAHgzP/WXPQ/BweM5Rex6BR8Nzz9nzGDwenvPWnifgyfDch/Y8BU+H51y25x/wTHjuTXuehefCc37b8094Pjz3qz0vwIvhOefteQlehn9B97c9r8Cr4bkP7HkNXg/PfW3PG/BmeO4Ne96Ct8Pze4I9/4Z3wnP/2/MuvBeee8ie9+E/4fk9wZ4P4L/hua/s+RD+F57fJ+z5P3wUnnvNno/hk/CeAnThr2gA</Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="1"> Q[0-95] </C>
+            <C ID="2"> E[3,39,64,89,114,139,164,189] </C>
+            <C ID="3"> E[35,60,85,110,135,160,185,210] </C>
+            <C ID="4"> E[188,191,193,195,197,199,201,203,205,207,209,211] </C>
+            <C ID="5"> E[0,4,7,10,13,16,19,22,25,28,31,34] </C>
+        </COMPOSITE>
+        <DOMAIN> C[1] </DOMAIN>
+    </GEOMETRY>
+    <Metadata>   
+</NEKTAR>

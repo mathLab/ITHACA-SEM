@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,13 @@
 
 #include <iostream>
 
+// Define variable to avoid deprecated warning in Boost 1.69.
+#include <boost/version.hpp>
+#if BOOST_VERSION >= 106900 && BOOST_VERSION < 107000
+#define BOOST_ALLOW_DEPRECATED_HEADERS
+#endif
+
+#include <boost/core/ignore_unused.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
 
@@ -149,7 +155,7 @@ bool AcousticSystem::v_PreIntegrate(int step)
         {
             for (int i = 0; i < x->GetForces().num_elements(); ++i)
             {
-                phys[m_fields.num_elements() + m_bfNames.size() + f] =
+                phys[m_fields.num_elements() + m_bfNames.size() + f + i] =
                     x->GetForces()[i];
                 varNames.push_back("F_" + boost::lexical_cast<string>(f) + "_" +
                                    m_session->GetVariable(i));
@@ -359,6 +365,8 @@ void AcousticSystem::v_WhiteNoiseBC(
     Array<OneD, Array<OneD, NekDouble>> &BfFwd,
     Array<OneD, Array<OneD, NekDouble>> &physarray)
 {
+    boost::ignore_unused(Fwd);
+
     int id1, id2, nBCEdgePts;
     int nVariables = physarray.num_elements();
 

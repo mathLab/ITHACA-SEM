@@ -1,0 +1,779 @@
+
+\chapter{Preliminaries}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Summary of Development Tools and Best Practices}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{General Resources}
+
+\subsubsection{Mailing List}
+
+Please make sure that you sign up to the {\nek} mailing list. This can be done at the following URL:
+
+\url{https://mailman.ic.ac.uk/mailman/listinfo/nektar-users}
+
+While the name suggests it is for \textit{users} of Nektar++, this list is also used to ask questions about {\nek} development.
+
+\subsubsection{Blog}
+
+The {\nek} blog (\url{https://www.nektar.info/cat/community})
+provides a broad range of posts on topics such as compiling the code
+on specific machines, to discussions of {\nek} in specific
+application areas, to recently published papers which have made use of
+the code.
+
+Contributing to this resource is a valuable way to support the project, as well as promoting your own work.
+
+\subsubsection{Annual Workshop}
+
+In 2015, we held the first {\nek} workshop, which was a great
+success and followed by a similar event in 2016. It is now an annual
+event and allows first-hand access to the core {\nek} development
+team as well as a range of other {\nek} users.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Version Control (git)}
+\lstset{style=BashInputStyle}
+
+The {\nek} code is managed in a distributed version control system called {\GIT}. To obtain the code directly from the repository and add new content to the repository requires the \texttt{git} command-line tool (or a suitable GUI equivalent). This is available for Linux, Mac OSX and Windows.
+
+If you plan to work with the {\nek} community, you will
+need to have a reasonable understanding of the {\GIT}
+software.  While it is beyond the scope of this document to discuss
+how to use {\GIT}, it is important for someone new to {\GIT} to spend
+time understanding how the tool works.  For this purpose, we highly
+recommend familiarizing yourself with it using any of the many online
+resources (such as \texttt{https://git-scm.com}).
+
+\subsubsection{Anonymous Access}
+
+{\nek} may be cloned anonymously using the following command:
+
+\code{git clone http://gitlab.nektar.info/clone/nektar/nektar.git nektar++}
+
+Your local copy of the code can be updated to include the latest changes in the repository using the command:
+
+\code{git pull}
+
+The \emph{Anonymous Access} approach will provide you with a complete copy of the code, but you will be unable to push changes or new developments back to the repository. For this, you should use \emph{Collaborative Access}.
+
+
+\subsubsection{Collaborative Access}
+
+Once you are familiar with {\GIT}, have introduced yourself to the
+development community (see the mailing list information above), and
+are ready to become a contributing developer, you will need to register
+an account on the {\nek} Gitlab website:
+
+\url{https://gitlab.nektar.info}.
+
+To use use authenticated access, using your new account, you must first upload the \textbf{public} part of your SSH key to your Gitlab profile. Generating and managing SSH keys is beyond the scope of this document. However, on Linux and OSX, one generally finds these keys in the \lstinline{\$HOME/.ssh} directory.
+
+To upload the key, visit: \url{https://gitlab.nektar.info/profile}, select \emph{SSH keys} from the menu on the left and follow the instructions.
+
+Registering for an account and uploading your SSH key need only be done once.
+
+To clone {\nek}, use the {\GIT} command:
+
+\code{git clone git@gitlab.nektar.info:nektar/nektar.git nektar++}
+
+Note the different URL to use authenticated access, in comparison to the anonymous access.
+
+
+\subsubsection{Managing and Contributing code}
+Code contribution then follows three basic steps:
+\begin{enumerate}
+    \item Create an \emph{issue} to describe the code updates you are making;
+    \item Branch the {\nek} master branch and make your changes on that branch; and 
+    \item Submit a merge request on the {\nek} Gitlab website that your updates are ready to be merged into the master branch.
+\end{enumerate}
+
+More details regarding the concepts mentioned above is found below. The information is also available in the \texttt{CONTRIBUTING.md} file in the root directory of the code, or online at:
+\url{https://gitlab.nektar.info/nektar/nektar/blob/master/CONTRIBUTING.md}
+
+\begin{itemize}
+  \item Issues - The initial step for those who wish to add code to the
+  master repository is to create an \emph{issue} ticket that describes the
+  defect, bug, proposed additions, changes, updates, etc.  This is done on the Gitlab website at:
+  
+  \url{https://gitlab.nektar.info/nektar/nektar/issues}
+
+  Please ensure you provide sufficient detail when creating the issue to cover
+  all of the following (as required): Describe what is being
+  requested, why it is important / necessary, an initial list of files
+  that may be effected, any potential problems the change/addition may
+  cause, and any other information that will help the development team
+  understand the request and alert others to your work to avoid duplication of effort.
+  
+  \item Branches - The second step is to create a {\GIT} branch in which to do
+  the actual code development. In your local copy of the {\nek} repository, run the command:
+  \begin{lstlisting}  
+  git branch <branch-name>
+  \end{lstlisting}
+  replacing \lstinline{<branch-name>} with a suitable name for your branch. The naming convention used for branches reflects the nature of the change and is composed of a prefix and descriptor, separated by a forward slash. Prefixes are one of:
+  \begin{itemize}
+      \item \texttt{feature}: used for developments which constitute a new capability in the code;
+      \item \texttt{fix}: used for changes to fix a bug in the code;
+      \item \texttt{tidy}: used for changes which improve the quality or readability of the code but do not change its function;
+      \item \texttt{ticket}: can be used to reference changes which address a specific issue.
+  \end{itemize}
+  Please choose concise descriptors in all-lowercase, using hyphens to separate words. An example \lstinline{<branch-name>} might therefore be: \lstinline{feature/low-energy-preconditioner}
+  
+  Now make your new branch active by running the command:
+  \begin{lstlisting}
+  git checkout <branch-name>
+  \end{lstlisting}
+  Confirm you are on the correct branch by running:
+  \begin{lstlisting}
+  git status
+  \end{lstlisting}
+  which should print something similar to
+  \begin{lstlisting}
+  On branch <branch-name>
+  \end{lstlisting}
+
+  At this point you are all set to make the required modifications to the 
+  code in your branch.  As you modify your branch, you can use {\GIT} to
+  save and track your changes.
+
+  The following examples show how you can add a file to the list of local
+  files that are being tracked, display differences between the current
+  file and the original file, and commit the file.  
+  \begin{lstlisting}
+  git add library/LibUtilities/BasicUtils/my_new_file.cpp
+  git diff --cached
+  \end{lstlisting}
+
+  Note \lstinline{--cached} is necessary because \lstinline{my\_new\_file.cpp} was staged using
+  the \lstinline{git add} command above.  Note, before you add (stage) the
+  file, you can just use \lstinline{git diff}.
+  
+  To actually create the commit from the staged files, run:
+  \begin{lstlisting}
+  git commit -m "Added X, Y, Z..."
+  \end{lstlisting}
+  This commits the file to your local repository. The first line of the log message should be a concise summary of the changes. You can use subsequent lines to provide more details if needed. Use \lstinline{git log} to see the list of previous commits and their messages.
+  
+  These changes are still local to your computer. To push them up to the main {\nek} repository, use the command
+  \begin{lstlisting}
+  git push origin
+  \end{lstlisting}
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Building (CMake)}
+
+{\nek} uses the \emph{CMake} tool to manage the build process for
+the three supported operating systems: Linux, Windows, and OSX.  For
+detailed instructions on how to use \emph{CMake} to build {\nek},
+including a list of required software dependencies and \emph{CMake}
+option flags, please refer to the {\nek} User Guide section 1.3.
+
+\subsection{Testing (CTest)}
+Before you are ready to have your code merged into the {\nek}
+trunk, you should make sure that it passes the built-in test suite -
+in addition to any new tests that you have added for your
+updates. To run the test suite, on the command line type:
+\begin{lstlisting}  
+ctest [-j#]
+\end{lstlisting}
+  
+The \lstinline{-j#} optional argument will run \lstinline{#} tests in parallel
+taking advantage of multiple cores on your machine.  It is highly
+recommended that your use all available cores to minimize the amount
+of time spent waiting for the tests to complete. There are currently
+several hundred built-in unit tests for {\nek}.
+
+For more information on testing, see ``Software Testing Approaches'' below.
+
+\subsection{Merge Requests (Gitlab)}
+The final step in contributing your code to the
+Nektar master repository is to submit a merge request to the
+development team using the {\nek} gitlab website:
+  
+\url{https://gitlab.nektar.info/nektar/nektar/merge\_requests}
+  
+Submitting a merge request will automatically trigger the continuous integration (CI) system, which will build and test your code on a range of platforms. You can monitor the progress of these tests from the merge request page. Selecting individual workers will take you to the buildbot website from which you can examine any failures which have occurred.
+  
+
+\section{Documentation and Tutorials}
+
+Documentation for Nektar++ is provided in a number of forms:
+\begin{itemize}
+    \item User Guide (LaTeX, compiled to pdf or html)
+    \item Source code documentation (Doxygen compiled to html)
+\end{itemize}
+
+\subsection{Dependencies}
+To build the User Guide and Developer's Guide, the following dependencies are required:
+\begin{itemize}
+    \item texlive-base
+    \item texlive-latex-extra
+    \item texlive-science
+    \item texlive-fonts-recommended
+    \item texlive-pstricks
+    \item imagemagick
+\end{itemize}
+
+\subsection{Compiling the User Guide}
+To compile the User Guide:
+\begin{enumerate}
+    \item Configure the Nektar++ build tree as normal.
+    \item Run
+    \begin{lstlisting}[style=BashInputStyle]
+    make user-guide-pdf
+    \end{lstlisting}
+    to make the PDF version, or run
+    \begin{lstlisting}[style=BashInputStyle]
+    make user-guide-html
+    \end{lstlisting}
+    to make the HTML version.
+\end{enumerate}
+
+
+\subsection{Developers Guide}
+To compile the Developer's Guide:
+\begin{enumerate}
+    \item Configure the Nektar++ build tree as normal.
+    \item Run
+    \begin{lstlisting}[style=BashInputStyle]
+    make developers-guide-pdf
+    \end{lstlisting}
+    to make the PDF version, or run
+    \begin{lstlisting}[style=BashInputStyle]
+    make developers-guide-html
+    \end{lstlisting}
+    to make the HTML version.
+\end{enumerate}
+
+\subsection{Compiling the code documentation}
+To build the Doxygen documentation, the following dependencies are required:
+\begin{itemize}
+    \item doxygen
+    \item graphviz
+\end{itemize}
+
+To compile the code documentation enable the \inltt{NEKTAR\_BUILD\_DOC} option
+in the \inlsh{ccmake} configuration tool.
+
+You can then compile the HTML code documentation using:
+\begin{lstlisting}[style=BashInputStyle]
+make doc
+\end{lstlisting}
+
+
+\section{Compiling Tutorials}
+If you are using a clone of the \nekpp git repository, you can also download
+the source for the \nekpp tutorials which is available as a \emph{git submodule}.
+
+\begin{enumerate}
+    \item From a \nekpp working directory (e.g. \inlsh{\$NEKPP}):
+    \begin{lstlisting}[style=BashInputStyle]
+    git submodule init
+    git submodule update --remote
+    \end{lstlisting}
+    \item From your build directory (e.g. \inlsh{\$NEKPP/build}), re-run \inlsh{cmake} to update the build system to include the tutorials
+    \begin{lstlisting}[style=BashInputStyle]
+    cmake ../
+    \end{lstlisting}
+    \item Compile each required tutorial, for example
+    \begin{lstlisting}[style=BashInputStyle]
+    make flow-stability-channel
+    \end{lstlisting}
+\end{enumerate}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Core Nektar++ Programming Concepts}
+\lstset{style=C++Style}
+
+This section highlights some of the programming features that are used
+extensively within {\nek}. While much of the code consists of
+standard C++ practices, in some of the core infrastructure there are
+several practices that may be only familiar to programmers who have
+developed code using more advanced C++ features.  Below we give a
+short summary of these entities in order to provide a starting point
+when working with these features. We begin with more well known
+features and end with some advanced techniques.  Note, it is not the
+purpose of the following sections to cover in detail each of these
+important concepts, but instead to give a brief overview of them such that the developer may look to other, more in-depth, sources if
+they require further guidance.
+
+\subsection{Namespaces}
+Many C++ software projects place their code in a namespace so as to avoid conflicts with other code when included in larger applications.  It is important to note that {\nek} uses a hierarchy of namespaces for most of the defined data structures.  The top level namespace is always ``Nektar'', with the second level usually corresponding to the name of the library to which the code belongs. For example:
+\begin{lstlisting}
+namespace Nektar
+{
+namespace StdRegions
+{
+    ...
+}
+}
+\end{lstlisting}
+
+With this in mind, when you see something like \lstinline{Nektar::SpatialDomains::...}, you can usually assume that the second item (in this case \lstinline{SpatialDomains}) is a namespace, and not a class.
+
+\textbf{Note:} To make better use of the 80 character width, generally enforced across the {\nek} source code, we choose not to indent the contents of \lstinline|namespace| blocks.
+
+
+\subsection{C++ Standard Template Library (STL) }
+{\nek} uses of the C++ STL extensively.  This consists of common data structures and algorithms, such as map and vector, as well as many of the extensions once found in the Boost library that have become part of the C++ standard and are now used directly.
+
+One of the most important of these features is
+the use of Shared Pointers (\lstinline|std::shared_ptr|).  Most developers are
+somewhat familiar with ``smart pointers'' (pointers used to track
+memory allocation and to automatically deallocate the memory when it
+is no longer being used) for data blocks that are shared by multiple
+objects. These smart pointers are used extensively in {\nek} and
+one should be familiar with the \lstinline|dynamic_pointer_cast| function
+and the concept of the \lstinline|weak_ptr|.  Dynamic casting allows for safely
+converting one type of variable into its base type (or vice
+versa). For example:
+\begin{lstlisting}
+std::shared_ptr<FilterCheckpoint> sptr =
+        std::dynamic_pointer_cast<FilterCheckpoint>( m_filters[k] );
+if( sptr != nullptr ) 
+{ 
+   // Cast succeeded!
+}
+\end{lstlisting}
+
+The advantage of using the dynamic cast, in comparison to the C style
+cast, is that you can check the return value at run time to verify
+that the casting was valid.  A \lstinline|weak_ptr| is a pointer to shared
+data with the explicit contract that the weak pointer does not own
+the data (and thus will not be responsible for deallocating it).
+Weak pointers are used mostly for short-term access to shared data.
+
+Another modern code utility used by {\nek} to support shared
+pointers can be seen in {\nek} classes which inherit from
+\lstinline|std::enable_shared_from_this|. This allows a class member function to return a shared pointer to itself. Specifically, it makes available the function \lstinline|shared_from_this()| which returns a shard pointer to the object in the given context.
+
+While C++ shared pointers are a powerful resource, there are a
+number of intricacies that must be understood and followed when
+creating classes and using objects that will be managed by them.
+For those not familiar with the C++11 (or previously Boost)
+implementation, it is highly recommended that you study them in more
+detail then presented here.
+  
+\subsection{typedefs}
+Like most other large codes, {\nek} uses
+\lstinline{typedefs} to create short names for new variable types.  You will
+see examples of this throughout the code and taking a few minutes to
+look at the definitions will help make it easier to follow the code.
+In the following example, we create (and explicitly name) the type
+\lstinline{ExpansionSharedPtr} to make the code that uses this type easier
+to follow. This is particularly true of nested STL data structures where repeated template declarations would make the code harder to follow. A couple of examples are shown below:
+\begin{lstlisting}
+typedef std::shared_ptr<Expansion> ExpansionSharedPtr;
+typedef std::shared_ptr<std::vector<std::pair<GeometrySharedPtr, int>>>
+GeometryLinkSharedPtr;
+\end{lstlisting}
+If you are not familiar with the use of typedefs, you should take
+time to read about them (there are many short summaries
+available on the web).
+
+\subsection{Forward Declarations}
+There are two ways that an existing class
+type can be specified when declaring a new class in a header file.  The
+existing class can either be declared in name only, or declared in its entirety, before being used. In the latter case, one typically includes the header file declaring the full class. If the new class declaration only references the existing class in the form of a pointer or reference then the entire class declaration is not needed and the compiler only needs an assurance that the class exists. For this case, we can use a \emph{forward declaration} which tells the compiler the name of the existing class. 
+However, if functions of the existing class are called (within the new header file) or the class is used by value, then the full declaration is needed.
+
+Forward declaring a class is achieved as shown in the following example:
+\begin{lstlisting}
+class LinearSystem;
+\end{lstlisting}
+This statement tells the compiler the class \lstinline{LinearSystem} exists and, as long as we only make reference to it as a pointer (\lstinline{LinearSystem* l}) or by reference (\lstinline{const LinearSystem & l}), then the compiler does not require any further information.
+
+An advantage to using forward declarations where possible is that the header file does not need to \lstinline{#include} the entire existing class and any header files referenced within.  This allows for a
+cleaner header files and faster compilation as the compiler can process (often significantly) fewer lines of code.
+
+\textbf{Note}: The full class declaration is most likely needed in the new class implementation file (.cpp) as reference to the existing class's members will presumably be made.
+  
+\subsection{Templated Classes and Specialization}
+Most C++ developers are
+familiar with basic class templating.  However, many have not needed
+to use explicit template specialization.  This is the process of
+implementing customised behaviour for one or more of the specific instances of a template when
+the compiler will not be able to instantiate a generic version for
+the class, or when different code is needed based on different
+versions of the class.  For example:
+\begin{lstlisting}
+  template<typename Dim, typename DataType> 
+  class Array;
+  
+  template<typename DataType>
+  class Array<OneD, const DataType> {
+    // Explicit coding of class methods and variables specific to
+    // this version of Array are found here.
+  };
+\end{lstlisting}
+
+In the above example, on the first line the generic templated
+\lstinline{Array} class is declared. There are two template parameters: the dimension and the element type. The second line shows an explicit
+template specialisation of the \lstinline{Array} class for a one-dimensional (version of) \lstinline{Array}.  When explicitly specialising a class, the programmer
+will write code that is specific to the datatype used in specifying
+the class.  This includes explicitly writing code for one, some, or
+all of the methods of the class.
+
+It is important to understand template specialization when dealing
+with the {\nek} core libraries so that the developer can
+determine which (specialized version of the) class is being used,
+and to know that when updating classes with varied specializations,
+that it may be required to update code in several places (ie, for
+each of the specializations).
+
+\subsection{Multiple Inheritance and the \lstinline{virtual} Keyword}
+When diving into many {\nek} classes, you will see the use of multiple
+inheritance (where a class inherits from more than one parent
+class).  When the parent class does not inherit from other classes,
+then the inheritance is straightforward and should not cause any
+confusion.  However, when a class has grandparents, many times that
+grandparent class is the same class but is inherited through multiple
+parents.  To account for this, class inheritance should use the
+\lstinline{virtual} keyword.  This specifies that if a class has multiple
+grandparents (that happen to be the same class), that only one copy of
+the grandparent class members should actually be instantiated. For example:
+\begin{lstlisting}
+class Expansion2D : virtual public Expansion,
+                    virtual public StdRegions::StdExpansion2D
+{...}
+\end{lstlisting}
+
+
+\subsection{Virtual Functions and Inheritance}
+Within {\nek}, classes
+that inherit from a parent class and override one of the parent
+class methods, use the concept of virtual functions. The function is prefixed with a \lstinline{v_}, such as \lstinline{v_Function()}, as a naming convention.  This is a visual reminder that the function overrides a parent class function. For example:
+\begin{lstlisting}
+NekDouble TriExp::v_Integral(const Array<OneD, const NekDouble> &inarray)}
+\end{lstlisting}
+
+\subsection{Const keyword}
+While the \lstinline{const} keyword is known to most C++
+developers, it is used (as it should be) liberally in {\nek} for functions,
+function parameters, returning pointers to class data, and variable
+constants within functions.  It is easy to neglect using \emph{const}
+to mark all cases where a variable should be considered constant.
+However, its use can substantially reduce accidental errors and
+allow for accelerated debugging. The \lstinline{const} qualifier should be used wherever a variable does not change including 1) parameters passed to
+functions, 2) variables in functions (or classes) that do not change
+value during their lifetime, 3) on the return type of functions that return pointers to data that should not be changed, and 4) on methods that do not
+change data within the class. The compiler will then produce an error if we (accidentally) attempt to make a change which violates a \lstinline{const}.
+
+\subsection{Function pointers and bind}
+Function pointers
+  (\lstinline{std::function}) are similar to pointers to data, except that
+  they point to functions - and thus allow a function to be invoked
+  indirectly (in other words, without explicitly writing the function
+  call (name) directly in code).  This technique is used by {\nek}
+  in a number of places, with \lstinline{NekManager} being a prime example.
+  The \lstinline{NekManager} class is used to create objects of a specific
+  type during the execution of the program.  When a \lstinline{NekManager} is
+  created (constructed), it is provided with a pointer to a function
+  that will (later) be called to generate the objects to be managed when required.  While
+  the \emph{creation} function that is provided to the \lstinline{NekManager}
+  takes a number of parameters, in many cases some of the values to
+  those parameters will be fixed.  To handle this situation, {\nek}
+  uses the \lstinline{std::bind( f )} function, which creates a new function
+  based on supplied original function \lstinline{f}, but specifies that one
+  or more parameters of \lstinline{f} are fixed at the time that \lstinline{f} is created and only those bound parameter values will be used when
+  \lstinline{f} is later invoked.  
+
+
+\subsection{Memory Pools and NekArray}
+An Array is a thin wrapper around native arrays. Arrays provide all the
+functionality of native arrays, with the additional benefits of automatic use of
+the Nektar++ memory pool, automatic memory allocation and deallocation, bounds
+checking in debug mode, and easier to use multi-dimensional arrays.
+
+Arrays are templated to allow compile-time customization of its dimensionality
+and data type.
+
+Parameters:
+\begin{itemize}
+    \item \lstinline{Dim} Must be a type with a static unsigned integer called
+    \lstinline{Value} that specifies the array's dimensionality. For example
+    \begin{lstlisting}
+    struct TenD {
+        static unsigned int Value = 10;
+    };
+    \end{lstlisting}
+    \item \lstinline{DataType} The type of data to store in the array.
+\end{itemize}
+
+It is often useful to create a class member Array that is shared with users of
+the object without letting the users modify the array. To allow this behavior,
+\lstinline{Array<Dim, DataType>} inherits from 
+\lstinline{Array<Dim, const DataType>}. The following
+example shows what is possible using this approach:
+\begin{lstlisting}
+class Sample {
+public:
+    Array<OneD, const double>& getData() const { return m_data; }
+    void getData(Array<OneD, const double>& out) const { out = m_data; }
+
+private:
+    Array<OneD, double> m_data;
+};
+\end{lstlisting}
+In this example, each instance of Sample contains an array. The getData
+method gives the user access to the array values, but does not allow
+modification of those values.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Design Patterns}
+\subsection{Template pattern}
+\label{s:template-pattern}
+The template pattern is used frequently within {\nek} to provide a common interface to a range of related classes. The base class declares common functionality or algorithms, in the form of public functions, deferring to protected virtual functions where a specific implementation is required for each derived class. This ensures code external to the class hierarchy sees a common interface.
+
+In the top level parent class you will find the interface functions, such as
+\lstinline{Function()}, declared as public members. In some cases, these may implement a generic algorithm common to all classes. In the limit that the function is entirely dependent on the derived class, it may call through to a virtual counterpart, usually named \lstinline{v_Function()}. These functions are usually protected to allow them to be called directly by other classes in the inheritance hierarchy, without exposing them to external classes.
+
+As an example of this, let us consider a triangle
+element (\lstinline{TriExp}).  The \lstinline{TriExp} class (eventually) inherits from the \lstinline{StdExpansion} class.  The \lstinline{StdExpansion} defines the \lstinline{Integral()} function which is used to provide integration over an element.  However, in this case, the implementation is shape-specific. Therefore \lstinline{StdExpansion::Integral()} calls the (in this case) \lstinline{TriExp::v_Integral()} function.  We should also note that while \lstinline{TriExp::v_Integral()} does setup work, it then makes use of its parent's \lstinline{StdExpansion2D::v_Integral()} function to calculate the final value. This is only possible if the \lstinline{v_Integral()} function was declared as protected.
+
+\subsection{Abstract Factory Pattern}
+
+{\nek} makes extensive use of the \emph{Factory Pattern}.
+Factories are used to create (allocate) instances of classes using class-specific creator functions. More
+specifically, a factory will create a new object of some
+sub-class type but return a base class pointer to the new
+object. In general, there are two ways that a factory knows what
+specific type of object to generate: 1) The Factory's build
+function (\lstinline{CreateInstance()}) is
+passed a key that details what to build; or 2) The factory may
+have some intrinsic knowledge detailing what objects to create. The first case is almost exclusively used throughout {\nek}.
+The factory pattern provides the following benefits:
+\begin{itemize}
+\item Encourages modularisation of code such that conceptually related
+algorithms are grouped together;
+\item Structuring of code such that different implementations of the same
+concept are encapsulated and share a common interface;
+\item Users of a factory-instantiated modules need only be concerned with the
+ interface and not the details of underlying implementations;
+\item Simplifies debugging since code relating to a specific implementation
+ resides in a single class;
+\item The code is naturally decoupled to reduce header-file dependencies and
+ improves compile times;
+\item Enables implementations (e.g. relating to third-party libraries) to be
+ disabled through the build process (CMake) by not compiling a specific 
+ implementation, rather than scattering preprocessing statements throughout the
+ code.
+\end{itemize}
+
+
+\subsubsection{Implementing the factory pattern}
+The \lstinline{NekFactory} class implements the factory pattern in Nektar++.
+There are two distinct aspects to creating a factory-instantiated collection of
+classes: defining the public interface, and; registering specific
+implementations. Both of these tasks involve adding mostly standard boilerplate code.
+
+It is assumed that we are writing a code which implements a particular \emph{concept} or
+\emph{capability} within the code, for which there are (potentially) multiple implementations. The
+reasons for multiple implementations may be low level, such as alternative
+algorithms for solving a linear system, or high level, such as selecting from a
+range of PDEs to solve. The \lstinline{NekFactory} can be used in both cases and applied in exactly the same way.
+
+\subsubsection{Creating a concept (base class)}
+A base class must be defined which prescribes an implementation-independent
+interface. In Nektar++, the template method pattern (see Section~\ref{s:template-pattern} above) is used, requiring public
+interface functions to be defined which call through to protected virtual implementation methods. This is because the factory returns the newly created object via a base-class pointer and the objects will almost always be used via this base class pointer. Without a public interface in the base class, much of the benefits and generalisation of code offered by the factory pattern would be lost.
+The virtual functions will be overridden in the specific implementation classes.
+In the base class these virtual methods should normally be defined as pure virtual, since there is typically no implementation and we will never be explicitly instantiating this base class.
+
+As an example we will create a factory for instantiating different
+implementations of some concept \inlsh{MyConcept}, defined in
+\inlsh{MyConcept.h} and \inlsh{MyConcept.cpp}.
+
+First in \inlsh{MyConcept.h}, we need to include the NekFactory header
+\begin{lstlisting}
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+\end{lstlisting}
+
+The following code should then be included just before the base class
+declaration (within the same namespace as the class):
+\begin{lstlisting}
+class MyConcept
+
+// Datatype for the MyConcept factory
+typedef LibUtilities::NekFactory< std::string, MyConcept, 
+            ParamType1,
+            ParamType2 > MyConceptFactory;
+MyConceptFactory& GetMyConceptFactory();
+\end{lstlisting}
+
+The template parameters to the \lstinline{NekFactory} define the datatype of the key used to retrieve a
+particular implementation (usually a string, enum or custom class such as
+\lstinline{MyConceptKey}), the base class datatype (in our case \lstinline{MyConcept} and a list
+of zero or more parameters which are taken by the constructors of all
+implementations of the type \lstinline{MyConcept} (in our case we have two). Note
+that all implementations must take the same parameter list in their constructors. Since we have not yet declared the base class type \lstinline{MyConcept}, we have forward-declared it above the \lstinline{NekFactory} type definition.
+
+The normal definition of our base class then follows:
+\begin{lstlisting}
+class MyConcept 
+{
+    public:
+        MyConcept(ParamType1 p1, ParamType2 p2);
+        ...
+};
+\end{lstlisting}
+
+We must also define a shared pointer for our base class, which should be declared outside the base class declaration.
+\begin{lstlisting}
+typedef boost::shared_ptr<MyConcept> MyConceptShPtr;
+\end{lstlisting}
+
+
+\subsubsection{Creating a specific implementation (derived class)}
+A new class, derived from the base class above, is defined for each specific implementations of a concept. It is these
+specific implementations which are instantiated by the factory.
+
+In our example we will have an implementations called \lstinline{MyConceptImpl1}
+defined in \inlsh{MyConceptImpl1.h} and \inlsh{MyConceptImpl1.cpp}. In the
+header file we include the base class header file
+\begin{lstlisting}
+#include <MyConcept.h>
+\end{lstlisting}
+
+We then define the derived class as one would normally:
+\begin{lstlisting}
+class MyConceptImpl1 : public MyConcept
+{
+...
+};
+\end{lstlisting}
+
+In order for the factory to work, it must know two things:
+\begin{itemize}
+\item that \lstinline{MyConceptImpl1} exists; and
+\item how to create an instance of it.
+\end{itemize}
+
+To allow the factory to create instances of our class we define a \emph{creator} function in our class, which may have arbitrary name, but is usually called \lstinline{create} out of convention:
+\begin{lstlisting}
+/// Creates an instance of this class
+static MyConceptSharedPtr create(
+            ParamType1 p1,
+            ParamType2 p2)
+{
+    return MemoryManager<MyConceptImpl1>::AllocateSharedPtr(p1, p2);
+}
+\end{lstlisting}
+The example above the \lstinline{create} function simply creates an instance of \inlsh{MyConceptImpl1} using the {\nek} memory manager and the
+supplied parameters. It must be a \lstinline{static} function because we are not operating on any existing instance and it should return a shared pointer to a base class object (rather than a \lstinline{MyConceptImpl1} shared pointer), since the point of the factory is that the calling code does not know about specific implementations. An advantage of having each class providing a creator function is that it allows for \emph{two-stage initialisation} -- for example, initialising base-class variables based on the derived type.
+
+The final task is to register each of our implementations with the factory. This is done 
+using the \lstinline{RegisterCreatorFunction} member function of the \lstinline{NekFactory}.
+However, we wish this to happen as early on as possible (so we can use the 
+factory straight away) and without needing to explicitly call the function for 
+every implementation at the beginning of our program (since this would again 
+defeat the point of a factory)! One solution is to use the function to 
+initialise a static variable: it will force the function to be executed prior to the start of the \lstinline{main()} routine, and can be located within the class it is registering, satisfying our code decoupling requirements.
+
+In \inlsh{MyConceptImpl1.h} we define a static class member variable with the same datatype as the key used in our factory (in our case \lstinline{std::string}) 
+\begin{lstlisting}
+static std::string className;
+\end{lstlisting}
+The above variable can be private since it is typically never actually
+used within the code. We then initialise it in \inlsh{MyConceptImpl1.cpp}
+\begin{lstlisting}
+string MyConceptImpl1::className
+        = GetMyConceptFactory().RegisterCreatorFunction(
+                                "Impl1", 
+                                MyConceptImpl1::create, 
+                                "First implementation of my concept.");
+\end{lstlisting}
+The first parameter specifies the value of the key which should be used to
+select this implementation. The second parameter is a function pointer to the
+static function which should be used by the factory to instantiate our class. The third parameter provides a description which can be printed when listing the available \lstinline{MyConcept} implementations. A specific implementation can be registered with the factory multiple times if there are multiple keys which should instantiate an object of this class.
+
+
+\subsubsection{Instantiating classes}
+To create instances of MyConcept implementations elsewhere in the code, we must
+first include the ''base class'' header file
+\begin{lstlisting}
+#include <MyConcept.h>
+\end{lstlisting}
+Note we do not include the header files for the specific MyConcept 
+implementations anywhere in the code (apart from \inlsh{MyConceptImpl1.cpp}).
+If we modify the implementation, only the implementation itself requires 
+recompilation and the executable relinking.
+
+We create an instance by retrieving the \lstinline{MyConceptFactory} and calling the \lstinline{CreateInstance} member function of the factory, for example,
+\begin{lstlisting}
+ParamType p1 = ...;
+ParamType p2 = ...;
+MyConceptShPtr p = GetMyConceptFactory().CreateInstance( "Impl1", p1, p2 );
+\end{lstlisting}
+
+Note that the instance of the specific implementation is used through the pointer \lstinline{p}, which is of type \lstinline{MyConceptShPtr}, allowing the use of any of the public interface functions in the base class (and therefore the specific implementations behind them) to be
+called, but not directly any functions declared solely in a specific
+implementation.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Software Testing Approaches}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Unit Tests}
+
+Unit testing, sometimes called ``module testing'' or ``element testing'', is a
+software testing method by which individual ``units'' of source code
+are tested to determine whether they are fit for use
+\cite{KFN-testing}.  Unit tests are added to {\nek} through the
+CMake system, and implemented using the Boost test framework.
+As an example, the set of linear algebra unit tests is
+listed in this file:
+
+\inlsh{.../library/UnitTests/LibUtilities/LinearAlgebra/CMakeLists.txt}
+
+and the actual tests are implemented in this file:
+
+\inlsh{.../library/UnitTests/LibUtilities/LinearAlgebra/TestBandedMatrixOperations.cpp}
+
+To register a new test, you use \lstinline{BOOST_AUTO_TEST_CASE( TestName )},
+implement the unit test, and test the result using
+\lstinline{BOOST_CHECK_CLOSE(...)}, \lstinline{BOOST_CHECK_EQUAL(...)}, etc. Unit
+tests are invaluable in maintaining the integrity of the code base and
+for localizing, finding, and debugging errors entered into the code. It is
+important to remember a unit test should test very specific
+functionality of the code - in the best case, a single function should be
+tested per unit test.
+
+While it is beyond the scope of this document to go into more detail
+on writing unit tests, a good summary of the Boost test system can be
+found here:
+
+\url{http://www.boost.org/doc/libs/1\_63\_0/libs/test/doc/html/}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Integration, System and Regression Tests}
+Integration testing involves testing ecosystems of components and their interoperability. System testing tests complete applications and regression testing focuses on ensuring previously fixed bugs do not resurface. In {\nek} all of these are often colloquially referred to as {\em regression testing}. It is not \emph{white-box} in that it does not examine how the
+code arrives at a particular answer, but rather in a \emph{black-box}
+fashion tests to see if code when operating on certain data yields the
+predicted response \cite{KFN-testing}.
+
+\subsection{Continuous Integration}
+{\nek} uses the \emph{buildbot} continuous integration to perform testing of the code across multiple operating systems.  Builds are automatically instigated when merge requests are opened and subsequently when the associated branches receive additional commits.
+
+For more information, go to:
+
+\url{http://buildbot.nektar.info}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\input{prelims/coding-standard.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+

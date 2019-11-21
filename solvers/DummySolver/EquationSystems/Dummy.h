@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -38,6 +37,7 @@
 #define NEKTAR_SOLVERS_DummySOLVER_EQUATIONSYSTEMS_DUMMY_H
 
 #include <SolverUtils/Core/Coupling.h>
+#include <SolverUtils/Forcing/Forcing.h>
 #include <SolverUtils/UnsteadySystem.h>
 
 using namespace Nektar::SolverUtils;
@@ -68,6 +68,7 @@ public:
 
 protected:
     SolverUtils::CouplingSharedPtr m_coupling;
+    std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
 
     /// Initialises UnsteadySystem class members.
     Dummy(const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -95,6 +96,6 @@ protected:
         return false;
     }
 };
-}
+} // namespace Nektar
 
 #endif

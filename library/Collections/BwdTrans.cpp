@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: BwdTrans operator implementations
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
@@ -68,6 +69,7 @@ class BwdTrans_StdMat : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2, wsp);
             Blas::Dgemm('N', 'N', m_mat->GetRows(), m_numElmt,
                         m_mat->GetColumns(), 1.0, m_mat->GetRawPtr(),
                         m_mat->GetRows(), input.get(), m_stdExp->GetNcoeffs(),
@@ -80,6 +82,7 @@ class BwdTrans_StdMat : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(dir, input, output, wsp);
             ASSERTL0(false, "Not valid for this operator.");
         }
 
@@ -156,6 +159,8 @@ class BwdTrans_IterPerExp : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2, wsp);
+
             const int nCoeffs = m_stdExp->GetNcoeffs();
             const int nPhys   = m_stdExp->GetTotPoints();
             Array<OneD, NekDouble> tmp;
@@ -172,6 +177,7 @@ class BwdTrans_IterPerExp : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(dir, input, output, wsp);
             ASSERTL0(false, "Not valid for this operator.");
         }
 
@@ -238,6 +244,8 @@ class BwdTrans_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2, wsp);
+
             const int nCoeffs = m_expList[0]->GetNcoeffs();
             const int nPhys   = m_expList[0]->GetTotPoints();
             Array<OneD, NekDouble> tmp;
@@ -255,6 +263,7 @@ class BwdTrans_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(dir, input, output, wsp);
             ASSERTL0(false, "Not valid for this operator.");
         }
 
@@ -325,6 +334,7 @@ class BwdTrans_SumFac_Seg : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2, wsp);
             if(m_colldir0)
             {
                 Vmath::Vcopy(m_numElmt*m_nmodes0,input.get(),1,output.get(),1);
@@ -345,6 +355,7 @@ class BwdTrans_SumFac_Seg : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(dir, input, output, wsp);
             ASSERTL0(false, "Not valid for this operator.");
         }
 
@@ -396,6 +407,8 @@ class BwdTrans_SumFac_Quad : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
+
             int i = 0;
             if(m_colldir0 && m_colldir1)
             {
@@ -450,6 +463,7 @@ class BwdTrans_SumFac_Quad : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(dir, input, output, wsp);
             ASSERTL0(false, "Not valid for this operator.");
         }
 
@@ -507,6 +521,7 @@ class BwdTrans_SumFac_Tri : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
 
             ASSERTL1(wsp.num_elements() == m_wspSize,
                      "Incorrect workspace size");
@@ -548,6 +563,7 @@ class BwdTrans_SumFac_Tri : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(dir, input, output, wsp);
             ASSERTL0(false, "Not valid for this operator.");
         }
 
@@ -611,6 +627,7 @@ class BwdTrans_SumFac_Hex : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
 
             if(m_colldir0 && m_colldir1 && m_colldir2)
             {
@@ -658,6 +675,7 @@ class BwdTrans_SumFac_Hex : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(dir, input, output, wsp);
             ASSERTL0(false, "Not valid for this operator.");
         }
 
@@ -724,6 +742,8 @@ class BwdTrans_SumFac_Tet : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
+
             ASSERTL1(wsp.num_elements() == m_wspSize,
                      "Incorrect workspace size");
 
@@ -826,6 +846,7 @@ class BwdTrans_SumFac_Tet : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(dir, input, output, wsp);
             ASSERTL0(false, "Not valid for this operator.");
         }
 
@@ -898,6 +919,8 @@ class BwdTrans_SumFac_Prism : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
+
             ASSERTL1(wsp.num_elements() == m_wspSize,
                     "Incorrect workspace size");
 
@@ -967,6 +990,7 @@ class BwdTrans_SumFac_Prism : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(dir, input, output, wsp);
             ASSERTL0(false, "Not valid for this operator.");
         }
 
@@ -1039,6 +1063,8 @@ class BwdTrans_SumFac_Pyr : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(output1, output2);
+
             ASSERTL1(wsp.num_elements() == m_wspSize,
                     "Incorrect workspace size");
 
@@ -1130,6 +1156,7 @@ class BwdTrans_SumFac_Pyr : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(dir, input, output, wsp);
             ASSERTL0(false, "Not valid for this operator.");
         }
 

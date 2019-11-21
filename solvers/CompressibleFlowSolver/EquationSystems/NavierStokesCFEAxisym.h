@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NSCFEAXISYM_H
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NSCFEAXISYM_H
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <CompressibleFlowSolver/EquationSystems/NavierStokesCFE.h>
 
@@ -89,7 +90,9 @@ namespace Nektar
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
-        ASSERTL0(false, "Dealiased flux not implemented for axisymmetric case");
+        boost::ignore_unused(physfield, derivatives, viscousTensor);
+        NEKERROR(ErrorUtil::efatal,
+                 "Dealiased flux not implemented for axisymmetric case");
     }
   };
 }

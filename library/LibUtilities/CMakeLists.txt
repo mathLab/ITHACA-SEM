@@ -19,7 +19,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/HashUtils.hpp
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
-    ./BasicUtils/OperatorGenerators.hpp
     ./BasicUtils/ParseUtils.h
     ./BasicUtils/Progressbar.hpp
     ./BasicUtils/PtsField.h
@@ -42,6 +41,7 @@ SET(BasicUtilsSources
     ./BasicUtils/CompressData.cpp
     ./BasicUtils/CsvIO.cpp
     ./BasicUtils/Equation.cpp
+    ./BasicUtils/ErrorUtil.cpp
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FieldIOXml.cpp
     ./BasicUtils/FileSystem.cpp
@@ -176,11 +176,11 @@ SET(FoundationSources
 )
 
 SET(InterpreterHeaders
-      ./Interpreter/AnalyticExpressionEvaluator.hpp
+    ./Interpreter/Interpreter.h
 )
 
 SET(InterpreterSources
-        ./Interpreter/AnalyticExpressionEvaluator.cpp
+    ./Interpreter/Interpreter.cpp
 )
 
 SET(KernelHeaders
@@ -417,7 +417,7 @@ ENDIF()
 IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${PETSC_LIBRARIES})
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${CMAKE_DL_LIBS})
-    ADD_DEPENDENCIES(LibUtilities petsc-3.7.7)
+    ADD_DEPENDENCIES(LibUtilities petsc-3.11.4)
 ENDIF( NEKTAR_USE_PETSC )
 
 IF (NEKTAR_BUILD_PYTHON)

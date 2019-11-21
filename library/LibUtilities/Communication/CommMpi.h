@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -90,6 +89,7 @@ protected:
     virtual void v_Block();
     virtual double v_Wtime();
     virtual bool v_TreatAsRankZero(void);
+    virtual bool v_IsSerial(void);
     virtual void v_Send(void *buf, int count, CommDataType dt, int dest);
     virtual void v_Recv(void *buf, int count, CommDataType dt, int source);
     virtual void v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype,

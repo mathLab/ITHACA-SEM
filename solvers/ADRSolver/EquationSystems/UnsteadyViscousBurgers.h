@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -78,7 +77,7 @@ namespace Nektar
         Array<OneD, NekDouble>              m_traceVn;
 
         /// Variable Coefficient map for the Laplacian which can be activated as part of SVV or otherwise
-        StdRegions::VarCoeffMap m_varCoeffLap; 
+        StdRegions::VarCoeffMap m_varCoeffLap;
 
         // Plane (used only for Discontinous projection with 3DHomogenoeus1D expansion)
         int  m_planeNumber;
@@ -98,11 +97,9 @@ namespace Nektar
 
         /// Evaluate the flux at each solution point for the diffusion part
         void GetFluxVectorDiff(
-            const int i, 
-            const int j,
-            const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, Array<OneD, NekDouble> > &derivatives,
-                  Array<OneD, Array<OneD, NekDouble> > &flux);
+            const Array<OneD, Array<OneD, NekDouble> > &inarray,
+            const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&viscousTensor);
 
         /// Compute the RHS
         virtual void DoOdeRhs(

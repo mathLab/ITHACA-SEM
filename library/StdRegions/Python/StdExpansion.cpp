@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -94,7 +93,7 @@ py::tuple StdExpansion_GetCoords(StdExpansionSharedPtr exp)
     int nPhys = exp->GetTotPoints();
     int coordim = exp->GetCoordim();
 
-    vector<Array<OneD, NekDouble> > coords(coordim);
+    std::vector<Array<OneD, NekDouble> > coords(coordim);
     for (int i = 0; i < coordim; ++i)
     {
         coords[i] = Array<OneD, NekDouble>(nPhys);
@@ -113,6 +112,37 @@ py::tuple StdExpansion_GetCoords(StdExpansionSharedPtr exp)
         case 3:
             exp->GetCoords(coords[0], coords[1], coords[2]);
             return py::make_tuple(coords[0], coords[1], coords[2]);
+            break;
+    }
+
+    return py::tuple();
+}
+
+py::tuple StdExpansion_PhysDeriv(StdExpansionSharedPtr exp,
+                                 const Array<OneD, const NekDouble> &inarray)
+{
+    int nPhys = exp->GetTotPoints();
+    int coordim = exp->GetCoordim();
+
+    std::vector<Array<OneD, NekDouble> > derivs(coordim);
+    for (int i = 0; i < coordim; ++i)
+    {
+        derivs[i] = Array<OneD, NekDouble>(nPhys);
+    }
+
+    switch (coordim)
+    {
+        case 1:
+            exp->PhysDeriv(inarray, derivs[0]);
+            return py::make_tuple(derivs[0]);
+            break;
+        case 2:
+            exp->PhysDeriv(inarray, derivs[0], derivs[1]);
+            return py::make_tuple(derivs[0], derivs[1]);
+            break;
+        case 3:
+            exp->PhysDeriv(inarray, derivs[0], derivs[1], derivs[2]);
+            return py::make_tuple(derivs[0], derivs[1], derivs[2]);
             break;
     }
 
@@ -141,6 +171,7 @@ void export_StdExpansion()
              py::return_value_policy<py::copy_const_reference>())
 
         .def("GenMatrix", &StdExpansion::GenMatrix)
+        .def("GetStdMatrix", &StdExpansion::GetStdMatrix)
 
         .def("FwdTrans", &StdExpansion_FwdTrans)
         .def("BwdTrans", &StdExpansion_BwdTrans)
@@ -151,5 +182,7 @@ void export_StdExpansion()
         .def("L2", &StdExpansion_L2_Error)
 
         .def("GetCoords", &StdExpansion_GetCoords)
+
+        .def("PhysDeriv", &StdExpansion_PhysDeriv)
         ;
 }

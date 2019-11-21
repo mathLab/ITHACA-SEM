@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -38,6 +37,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
+
 //#include <sstream>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList1D.h>
@@ -2023,6 +2025,8 @@ void Computestreakpositions(int npoints, MultiRegions::ExpListSharedPtr streak,
     	        Array<OneD, NekDouble> &xc,  Array<OneD, NekDouble> &yc, NekDouble cr,
                 bool verts)
 {
+    boost::ignore_unused(xold_up, xold_low);
+
 cout<<"Computestreakpositions"<<endl;
      int nq = streak->GetTotPoints();
      Array<OneD, NekDouble> coord(2);
@@ -2292,6 +2296,7 @@ void MappingEVids(Array<OneD, NekDouble> xoldup, Array<OneD, NekDouble> yoldup,
                  int & nlays,  Array<OneD, Array<OneD, int> >& Eids_lay,
                  Array<OneD, Array<OneD, int> >& Vids_lay)
 {
+    boost::ignore_unused(xoldup, xolddown);
 
       int nlay_Eids = xcold.num_elements()-1;
       int nlay_Vids = xcold.num_elements();
@@ -3279,6 +3284,8 @@ void MoveOutsidePointsfixedxpos(int npedge, SpatialDomains::MeshGraphSharedPtr m
 	         Array<OneD, NekDouble> ylaydown,Array<OneD, NekDouble> ylayup,
                  Array<OneD, NekDouble>& xnew,Array<OneD, NekDouble>& ynew)
 {
+    boost::ignore_unused(xolddown, xoldup);
+
      //update vertices coords outside layers region
      int nvertl = ycold.num_elements();
      int nVertTot =  mesh->GetNvertices();
@@ -3349,6 +3356,7 @@ void MoveOutsidePointsNnormpos(int npedge, SpatialDomains::MeshGraphSharedPtr me
 	         Array<OneD, NekDouble> nxPhys,Array<OneD, NekDouble> nyPhys,
                  Array<OneD, NekDouble>& xnew,Array<OneD, NekDouble>& ynew)
 {
+    boost::ignore_unused(xcold, ycold);
 /*
      int nq1D =bndfieldup->GetTotPoints();
      Array<OneD, NekDouble> xlayoldup(nq1D);
@@ -3636,7 +3644,7 @@ void CheckSingularQuads( MultiRegions::ExpListSharedPtr Exp,
       SpatialDomains::Geometry1DSharedPtr SegGeom;
       int idbef, idnext;
       NekDouble xV1, yV1, xV2,yV2;
-      NekDouble slopebef,slopenext,slopenew;
+      NekDouble slopebef = 0.0,slopenext = 0.0,slopenew = 0.0;
       Array<OneD, int> locEids(4);
       for(int i=0; i<nel; i++)
       {
@@ -3813,7 +3821,7 @@ void Replacevertices(string filename, Array<OneD, NekDouble> newx,
        TiXmlElement* mesh = master->FirstChildElement("GEOMETRY");
        TiXmlElement* element = mesh->FirstChildElement("VERTEX");
        NekDouble xscale = 1.0;
-       LibUtilities::AnalyticExpressionEvaluator expEvaluator;
+       LibUtilities::Interpreter expEvaluator;
        const char *xscal = element->Attribute("XSCALE");
        if(xscal)
        {

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //              during time-stepping.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/Filters/FilterMovingAverage.h>
 
@@ -59,7 +60,7 @@ FilterMovingAverage::FilterMovingAverage(
     else
     {
         LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+            m_session->GetInterpreter(), it->second);
         m_sampleFrequency = round(equ.Evaluate());
     }
 
@@ -76,7 +77,7 @@ FilterMovingAverage::FilterMovingAverage(
         {
             // Load time constant
             LibUtilities::Equation equ(
-                m_session->GetExpressionEvaluator(), it->second);
+                m_session->GetInterpreter(), it->second);
             NekDouble tau = equ.Evaluate();
             // Load delta T between samples
             NekDouble dT;
@@ -89,7 +90,7 @@ FilterMovingAverage::FilterMovingAverage(
     else
     {
         LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+            m_session->GetInterpreter(), it->second);
         m_alpha = equ.Evaluate();
         // Check if tau was also defined
         it = pParams.find("tau");
@@ -112,6 +113,8 @@ void FilterMovingAverage::v_ProcessSample(
           std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     const NekDouble &time)
 {
+    boost::ignore_unused(pFields, time);
+
     // Take first sample as initial vector
     NekDouble alpha = m_alpha;
     if (m_numSamples == 1)

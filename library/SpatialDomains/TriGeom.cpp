@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -84,6 +83,7 @@ TriGeom::TriGeom(const int id,
 }
 
 TriGeom::TriGeom(const TriGeom &in)
+    : Geometry2D(in)
 {
     // From Geometry
     m_shapeType = in.m_shapeType;
@@ -548,15 +548,27 @@ bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                               NekDouble tol,
                               NekDouble &resid)
 {
-    ASSERTL1(gloCoord.num_elements() >= 2,
-             "Two dimensional geometry expects at least two coordinates.");
+    //Rough check if within twice min/max point
+    if (GetMetricInfo()->GetGtype() != eRegular)
+    {
+        if (!MinMaxCheck(gloCoord))
+        {
+            return false;
+        }
+    }
 
+    // Convert to the local (eta) coordinates.
     resid = GetLocCoords(gloCoord, stdCoord);
+
     if (stdCoord[0] >= -(1 + tol) && stdCoord[1] >= -(1 + tol) &&
         stdCoord[0] + stdCoord[1] <= tol)
     {
         return true;
     }
+
+    //Clamp local coords
+    ClampLocCoords(stdCoord, tol);
+
     return false;
 }
 

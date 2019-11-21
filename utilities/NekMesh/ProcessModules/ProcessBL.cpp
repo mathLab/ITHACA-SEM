@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -39,7 +38,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/BLPoints.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 #include <LocalRegions/HexExp.h>
 #include <LocalRegions/PrismExp.h>
 #include <LocalRegions/QuadExp.h>
@@ -184,10 +183,10 @@ void ProcessBL::BoundaryLayer3D()
     //m_mesh->MakeOrder(nq-1, LibUtilities::eGaussLobattoLegendre);
 
     // determine if geometric ratio is string or a constant.
-    LibUtilities::AnalyticExpressionEvaluator rEval;
-    NekDouble r             =  1;
-    int       rExprId       = -1;
-    bool      ratioIsString = false;
+    LibUtilities::Interpreter rEval;
+    NekDouble r        = 1;
+    int rExprId        = -1;
+    bool ratioIsString = false;
 
     if (m_config["r"].isType<NekDouble>())
     {
@@ -778,7 +777,7 @@ void ProcessBL::BoundaryLayer3D()
             ElmtConfig conf(elType, 1, false, false, false);
             ElementSharedPtr elmt = GetElementFactory().CreateInstance(
                 elType, conf, nodeList, el[i]->GetTagList());
-#if NEKTAR_USE_CFI
+#ifdef NEKTAR_USE_CFI
             elmt->m_cfiParent = el[i]->m_cfiParent;
 #endif
 

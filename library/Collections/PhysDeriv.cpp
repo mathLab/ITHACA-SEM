@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: PhysDeriv operator implementations
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
@@ -392,6 +393,8 @@ class PhysDeriv_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(wsp);
+
             const int nPhys   = m_expList[0]->GetTotPoints();
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
 
@@ -439,6 +442,8 @@ class PhysDeriv_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(wsp);
+
             const int nPhys   = m_expList[0]->GetTotPoints();
             Array<OneD, NekDouble> tmp;
 

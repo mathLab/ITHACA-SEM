@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -54,6 +53,7 @@ using namespace std;
  */
 template <int DIM> inline NekDouble Determinant(NekDouble jac[][DIM])
 {
+    boost::ignore_unused(jac);
     return 0.0;
 }
 
@@ -80,6 +80,7 @@ template <> inline NekDouble Determinant<3>(NekDouble jac[][3])
 template <int DIM>
 inline void InvTrans(NekDouble in[][DIM], NekDouble out[][DIM])
 {
+    boost::ignore_unused(in,out);
 }
 
 template <> inline void InvTrans<2>(NekDouble in[][2], NekDouble out[][2])
@@ -131,6 +132,7 @@ template <> inline NekDouble ScalarProd<3>(NekDouble in1[3], NekDouble in2[3])
 template<int DIM>
 inline NekDouble ScalarProd(NekDouble (&in1)[DIM], NekDouble (&in2)[DIM])
 {
+    boost::ignore_unused(in1,in2);
     return 0.0;
 }
 
@@ -161,6 +163,7 @@ inline NekDouble ScalarProd<3>(NekDouble (&in1)[3], NekDouble (&in2)[3])
 template <int DIM>
 inline void EMatrix(NekDouble in[][DIM], NekDouble out[][DIM])
 {
+    boost::ignore_unused(in,out);
 }
 
 template <> inline void EMatrix<2>(NekDouble in[][2], NekDouble out[][2])
@@ -199,6 +202,7 @@ template<int DIM>
 inline NekDouble FrobProd(NekDouble in1[][DIM],
                           NekDouble in2[][DIM])
 {
+    boost::ignore_unused(in1,in2);
     return 0.0;
 }
 
@@ -233,6 +237,7 @@ inline NekDouble FrobProd<3>(NekDouble in1[][3], NekDouble in2[][3])
 template<int DIM>
 inline NekDouble FrobeniusNorm(NekDouble inarray[][DIM])
 {
+    boost::ignore_unused(inarray);
     return 0.0;
 }
 
@@ -311,7 +316,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
     NekDouble ep =
         m_minJac < 0.0 ? sqrt(1e-8 + 0.04 * m_minJac * m_minJac) : 1e-4;
     NekDouble jacIdeal[DIM][DIM], jacDet;
-    m_grad = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
+    m_grad = vector<NekDouble>(DIM == 2 ? 5 : 9, 0.0);
 
     switch (m_opti)
     {

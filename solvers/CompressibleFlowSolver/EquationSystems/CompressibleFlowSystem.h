@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_COMPRESSIBLEFLOWSYSTEM_H
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_COMPRESSIBLEFLOWSYSTEM_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <CompressibleFlowSolver/ArtificialDiffusion/ArtificialDiffusion.h>
 #include <CompressibleFlowSolver/Misc/VariableConverter.h>
 #include <CompressibleFlowSolver/BoundaryConditions/CFSBndCond.h>
@@ -46,6 +47,9 @@
 #include <SolverUtils/Diffusion/Diffusion.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <SolverUtils/Filters/FilterInterfaces.hpp>
+#include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/Expansion2D.h>
+
 
 namespace Nektar
 {
@@ -68,6 +72,9 @@ namespace Nektar
         /// (a vector of them).
         Array<OneD, NekDouble> GetStabilityLimitVector(
             const Array<OneD,int> &ExpOrder);
+
+        /// Function to get estimate of min h/p factor per element
+        Array<OneD, NekDouble>  GetElmtMinHP(void);
 
         virtual void GetPressure(
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,
@@ -190,6 +197,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
         {
+            boost::ignore_unused(inarray, outarray, pFwd, pBwd);
             // Do nothing by default
         }
 

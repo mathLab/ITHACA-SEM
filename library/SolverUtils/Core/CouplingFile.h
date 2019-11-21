@@ -8,7 +8,6 @@
 //
 // Copyright (c) 2017 Kilian Lackhove
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -72,13 +71,13 @@ protected:
         const int step,
         const NekDouble time,
         const Array<OneD, const Array<OneD, NekDouble> > &field,
-        vector<string> &varNames);
+        std::vector<std::string> &varNames);
 
     SOLVER_UTILS_EXPORT virtual void v_Receive(
         const int step,
         const NekDouble time,
         Array<OneD, Array<OneD, NekDouble> > &field,
-        vector<string> &varNames);
+        std::vector<std::string> &varNames);
 
 private:
     int m_lastSend;

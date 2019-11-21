@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERFIELDCONVERT_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERFIELDCONVERT_H
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/Filters/Filter.h>
 #include <FieldUtils/Module.h>
@@ -91,6 +92,7 @@ protected:
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
     {
+        boost::ignore_unused(pFields, time);
         // Do nothing by default
     }
     SOLVER_UTILS_EXPORT virtual NekDouble v_GetScale()
@@ -108,12 +110,12 @@ protected:
 
     SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent();
     
-    void CreateModules( vector<string> &modcmds);
+    void CreateModules(std::vector<std::string> &modcmds);
 
     void CreateFields(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
 
-    void CheckModules(vector<ModuleSharedPtr> &modules);
+    void CheckModules(std::vector<ModuleSharedPtr> &modules);
 
     unsigned int m_numSamples;
     unsigned int m_outputFrequency;
@@ -122,7 +124,15 @@ protected:
     std::string  m_restartFile;
     unsigned int m_index;
     unsigned int m_outputIndex;
-    vector<ModuleSharedPtr> m_modules;
+
+    // Phase sample parameters
+    bool         m_phaseSample;
+    NekDouble    m_phaseSamplePeriod;
+    NekDouble    m_phaseSamplePhase;
+    NekDouble    m_phaseTolerance;
+    NekDouble    m_dt;
+
+    std::vector<ModuleSharedPtr> m_modules;
     LibUtilities::FieldMetaDataMap m_fieldMetaData;
     std::vector<Array<OneD, NekDouble> > m_outFields;
     std::vector<std::string> m_variables;

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: SegExp routines
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/SegExp.h>
@@ -408,7 +409,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             else
             {
                 int nInteriorDofs = m_ncoeffs-2;
-                int offset;
+                int offset        = 0;
 
                 switch (m_base[0]->GetBasisType())
                 {
@@ -746,6 +747,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         Array<OneD,       NekDouble> &outarray,
                         StdRegions::Orientation  orient)
         {
+            boost::ignore_unused(EdgeExp, orient);
+
             NekDouble result;
             v_GetVertexPhysVals(edge, inarray, result);
             outarray[0] = result;
@@ -850,6 +853,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 NekDouble *coeffs,
                 std::vector<LibUtilities::BasisType> &fromType)
         {
+            boost::ignore_unused(fromType);
+
             switch(m_base[0]->GetBasisType())
             { 
                 case LibUtilities::eModified_A:
@@ -963,6 +968,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                   Array<OneD,       NekDouble> &outarray,
             const StdRegions::StdMatrixKey     &mkey)
         {
+            boost::ignore_unused(mkey);
+
             int    nquad = m_base[0]->GetNumPoints();
             const Array<TwoD, const NekDouble>& gmat =
                                 m_metricinfo->GetDerivFactors(GetPointsKeys());

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -75,7 +74,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& x, 
                 const Array<OneD, const NekDouble>& y)
             {
-                int numpoints = x.num_elements();
+                size_t numpoints = x.num_elements();
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
                 CalculateInterpMatrix(x, y, interp);
                 
@@ -90,6 +89,8 @@ namespace Nektar
             }
 
         private:
+            static bool initPointsManager[];
+
             std::shared_ptr<NodalUtilTriangle> m_util;
 
             NodalTriElec():PointsBaseType(NullPointsKey)

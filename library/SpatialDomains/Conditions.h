@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -126,7 +125,7 @@ namespace Nektar
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
                     BoundaryConditionBase(eDirichlet, userDefined, comm),
-                    m_dirichletCondition(pSession->GetExpressionEvaluator(), eqn),
+                    m_dirichletCondition(pSession->GetInterpreter(), eqn),
                     m_expr(eqn),
                     m_filename(filename)
             {
@@ -146,7 +145,7 @@ namespace Nektar
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
                     BoundaryConditionBase(eNeumann, userDefined, comm),
-                    m_neumannCondition(pSession->GetExpressionEvaluator(), eqn),
+                    m_neumannCondition(pSession->GetInterpreter(), eqn),
                     m_filename(filename)
             {
             }
@@ -165,8 +164,8 @@ namespace Nektar
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
                     BoundaryConditionBase(eRobin, userDefined, comm),
-                    m_robinFunction(pSession->GetExpressionEvaluator(), a),
-                    m_robinPrimitiveCoeff(pSession->GetExpressionEvaluator(), b),
+                    m_robinFunction(pSession->GetInterpreter(), a),
+                    m_robinPrimitiveCoeff(pSession->GetInterpreter(), b),
                     m_filename(filename)
             {
             }
@@ -202,7 +201,7 @@ namespace Nektar
                     const std::string& filename=std::string(""),
                     const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr())
                    : BoundaryConditionBase(eNotDefined, userDefined, comm),
-                     m_notDefinedCondition(pSession->GetExpressionEvaluator(), eqn),
+                     m_notDefinedCondition(pSession->GetInterpreter(), eqn),
                      m_filename(filename)
                 {
                 }
@@ -260,6 +259,11 @@ namespace Nektar
             const std::string GetVariable(unsigned int indx)
             {
                 return m_session->GetVariable(indx);
+            }
+
+            std::map<int, LibUtilities::CommSharedPtr> GetBoundaryCommunicators() const
+            {
+                return m_boundaryCommunicators;
             }
 
         protected:

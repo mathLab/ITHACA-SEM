@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,7 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
 #define NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
 
-#include <boost/thread/tss.hpp>
 #include <boost/pool/pool.hpp>
 #include <memory>
 #include <map>
@@ -201,7 +199,7 @@ namespace Nektar
                 {
                     PoolMapType::iterator iter = m_pools.lower_bound(bytes);
                     ASSERTL1(iter != m_pools.end(), "The memory manager is mishandling a memory request for " +
-                        boost::lexical_cast<std::string>(bytes) + " bytes of memory.");
+                             std::to_string(bytes) + " bytes of memory.");
                     
                     return (*iter).second->Allocate();
                 }
@@ -225,7 +223,7 @@ namespace Nektar
                 {
                     PoolMapType::iterator iter = m_pools.lower_bound(bytes);
                     ASSERTL1(iter != m_pools.end(), "The memory manager is mishandling a memory request for " +
-                        boost::lexical_cast<std::string>(bytes) + " bytes of memory.");
+                             std::to_string(bytes) + " bytes of memory.");
                     
                     (*iter).second->Deallocate(p);
                 }
@@ -238,7 +236,6 @@ namespace Nektar
     };
 
     LIB_UTILITIES_EXPORT MemPool& GetMemoryPool();
-
 }
 
 

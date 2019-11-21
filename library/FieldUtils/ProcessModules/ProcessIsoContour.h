@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -48,8 +47,8 @@ class Iso
 {
     public:
         void  Condense(void);
-        void  GlobalCondense(vector<std::shared_ptr<Iso> > &iso, bool verbose);
-        void  SeparateRegions(vector<std::shared_ptr<Iso> > &iso, int minsize, bool verbose);
+        void  GlobalCondense(std::vector<std::shared_ptr<Iso> > &iso, bool verbose);
+        void  SeparateRegions(std::vector<std::shared_ptr<Iso> > &iso, int minsize, bool verbose);
 
         void  Smooth(int n_iter, NekDouble lambda, NekDouble mu);
 
@@ -173,14 +172,14 @@ class Iso
         }
 
     private:
-        bool                       m_condensed;
-        int                        m_nvert;           // number of vertices
-        int                        m_ntris;           // number of triangles introduced.
-        vector<NekDouble>          m_x;
-        vector<NekDouble>          m_y;
-        vector<NekDouble>          m_z;
-        vector<vector<NekDouble> > m_fields;
-        Array<OneD, int>           m_vid; // used when condensing field
+        bool                                 m_condensed;
+        int                                  m_nvert;           // number of vertices
+        int                                  m_ntris;           // number of triangles introduced.
+        std::vector<NekDouble>               m_x;
+        std::vector<NekDouble>               m_y;
+        std::vector<NekDouble>               m_z;
+        std::vector<std::vector<NekDouble> > m_fields;
+        Array<OneD, int>                     m_vid; // used when condensing field
 
 };
 
@@ -213,11 +212,11 @@ class IsoVertex
         friend bool operator != (const IsoVertex& x, const IsoVertex& y);
 
     private:
-        int                 m_id;
-        int                 m_iso_id;
-        int                 m_iso_vert_id;
-        NekDouble           m_x, m_y, m_z;
-        vector<NekDouble >  m_fields;
+        int                      m_id;
+        int                      m_iso_id;
+        int                      m_iso_vert_id;
+        NekDouble                m_x, m_y, m_z;
+        std::vector<NekDouble >  m_fields;
 
 };
 
@@ -257,12 +256,12 @@ class ProcessIsoContour : public ProcessModule
 
     protected:
         ProcessIsoContour(){};
-        void ResetFieldPts(vector<IsoSharedPtr> &iso);
-        void SetupIsoFromFieldPts(vector<IsoSharedPtr> &isovec);
+        void ResetFieldPts(std::vector<IsoSharedPtr> &iso);
+        void SetupIsoFromFieldPts(std::vector<IsoSharedPtr> &isovec);
 
     private:
 
-        vector<IsoSharedPtr> ExtractContour(
+        std::vector<IsoSharedPtr> ExtractContour(
             const int fieldid,
             const NekDouble val);
 };

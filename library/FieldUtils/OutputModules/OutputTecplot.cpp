@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,6 +36,8 @@
 #include <set>
 #include <string>
 using namespace std;
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
@@ -75,6 +76,10 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputFileBase(f),
                                                  m_oneOutputFile(false)
 {
     m_requireEquiSpaced = true;
+    m_config["double"] =
+        ConfigOption(true, "0", "Write double-precision format data:"
+                                "more accurate but more disk space"
+                                " required");
 }
 
 OutputTecplot::~OutputTecplot()
@@ -92,7 +97,7 @@ void OutputTecplot::Process(po::variables_map &vm)
     {
         m_oneOutputFile = (m_f->m_comm->GetSize()> 1);
     }
-    
+
     OutputFileBase::Process(vm);
 }
 
@@ -299,12 +304,17 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
 
 void OutputTecplot::OutputFromData(po::variables_map &vm)
 {
-    ASSERTL0(false, "OutputTecplot can't write using only FieldData.");
+    boost::ignore_unused(vm);
+
+    NEKERROR(ErrorUtil::efatal,
+             "OutputTecplot can't write using only FieldData.");
 }
 
 fs::path OutputTecplot::GetPath(std::string &filename,
                                     po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nprocs = m_f->m_comm->GetSize();
     string       returnstr(filename);
 
@@ -453,6 +463,15 @@ void OutputTecplotBinary::WriteTecplotHeader(std::ofstream &outfile,
  */
 void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
 {
+    bool useDoubles = m_config["double"].as<bool>();
+
+    if (useDoubles)
+    {
+        int precision = std::numeric_limits<double>::max_digits10;
+        outfile << std::setprecision(precision);
+
+    }
+
     // Write either points or finite element block
     if (m_zoneType != eOrdered)
     {

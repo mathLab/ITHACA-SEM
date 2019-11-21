@@ -38,6 +38,7 @@
 #include "NekMeshUtils/CADSystem/CFI/CADCurveCFI.h"
 #include "NekMeshUtils/CADSystem/CFI/CADSurfCFI.h"
 
+using namespace std;
 using namespace Nektar::NekMeshUtils;
 using namespace Nektar::SpatialDomains;
 

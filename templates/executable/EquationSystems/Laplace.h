@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -38,43 +37,42 @@
 
 #include <SolverUtils/EquationSystem.h>
 
+using namespace Nektar;
 using namespace Nektar::SolverUtils;
 
-namespace Nektar
+class Laplace : public SolverUtils::EquationSystem
 {
-    class Laplace : public EquationSystem
+public:
+    /// Class may only be instantiated through the MemoryManager.
+    friend class MemoryManager<Laplace>;
+
+    /// Creates an instance of this class
+    static EquationSystemSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
     {
-    public:
-        /// Class may only be instantiated through the MemoryManager.
-        friend class MemoryManager<Laplace>;
+        auto p = MemoryManager<Laplace>::AllocateSharedPtr(pSession, pGraph);
+        p->InitObject();
+        return p;
+    }
 
-        /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            EquationSystemSharedPtr p = MemoryManager<Laplace>::AllocateSharedPtr(pSession);
-            p->InitObject();
-            return p;
-        }
+    /// Name of class
+    static std::string className;
 
-        /// Name of class
-        static std::string className;
+protected:
+    StdRegions::ConstFactorMap m_factors;
 
-    protected:
-        StdRegions::ConstFactorMap m_factors;
+    Laplace(const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
-        Laplace(const LibUtilities::SessionReaderSharedPtr& pSession);
+    virtual ~Laplace();
 
-        virtual ~Laplace();
+    virtual void v_InitObject();
+    virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
+    virtual void v_DoSolve();
 
-        virtual void v_InitObject();
-        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-        virtual void v_DoSolve();
-
-    private:
-        virtual Array<OneD, bool> v_GetSystemSingularChecks();
-
-    };
-}
+private:
+    virtual Array<OneD, bool> v_GetSystemSingularChecks();
+};
 
 #endif

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -32,6 +31,9 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
+
 #include "CADCurve.h"
 #include "CADSurf.h"
 
@@ -44,6 +46,8 @@ namespace NekMeshUtils
 
 Array<OneD, NekDouble> CADCurve::NormalWRT(NekDouble t, int surf)
 {
+    boost::ignore_unused(surf);
+
     Array<OneD, NekDouble> p = P(t);
     pair<CADSurfSharedPtr, CADOrientation::Orientation> surface;
     ASSERTL0(m_adjSurfs.size() == 1,

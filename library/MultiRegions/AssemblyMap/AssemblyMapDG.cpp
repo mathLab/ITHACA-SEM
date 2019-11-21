@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -47,6 +46,7 @@
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/cuthill_mckee_ordering.hpp>
@@ -79,6 +79,8 @@ namespace Nektar
             const std::string variable):
             AssemblyMap(pSession,variable)
         {
+            boost::ignore_unused(graph);
+
             int i, j, k, cnt, eid, id, id1, gid;
             int order_e   = 0;
             int nTraceExp = trace->GetExpSize();
@@ -980,6 +982,7 @@ namespace Nektar
                     Array<OneD,       NekDouble>& global,
                     bool useComm ) const
         {
+            boost::ignore_unused(useComm);
             AssembleBnd(loc,global);
         }
 
@@ -988,6 +991,7 @@ namespace Nektar
                     NekVector<      NekDouble>& global,
                     bool useComm) const
         {
+            boost::ignore_unused(useComm);
             AssembleBnd(loc,global);
         }
 

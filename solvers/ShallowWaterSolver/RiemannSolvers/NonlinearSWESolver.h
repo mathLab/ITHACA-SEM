@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #ifndef NEKTAR_SOLVERS_SHALLOWWATERSOLVER_RIEMANNSOLVER_NONLINEARSWESOLVER
 #define NEKTAR_SOLVERS_SHALLOWWATERSOLVER_RIEMANNSOLVER_NONLINEARSWESOLVER
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
@@ -61,7 +62,9 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                   Array<OneD,       Array<OneD, NekDouble> > &flux)
         {
-            ASSERTL0(false, "This function should be defined by subclasses.");
+            boost::ignore_unused(Fwd, Bwd, flux);
+            NEKERROR(ErrorUtil::efatal,
+                     "This function should be defined by subclasses.");
         }
 
         virtual void v_PointSolve(
@@ -69,7 +72,9 @@ namespace Nektar
             NekDouble  hR, NekDouble  huR, NekDouble  hvR,
             NekDouble &hf, NekDouble &huf, NekDouble &hvf)
         {
-            ASSERTL0(false, "This function should be defined by subclasses.");
+            boost::ignore_unused(hL, huL, hvL, hR, huR, hvR, hf, huf, hvf);
+            NEKERROR(ErrorUtil::efatal,
+                     "This function should be defined by subclasses.");
         }
     };
 }

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -107,7 +106,7 @@ protected:
     NodeSharedPtr m_node;
     std::mutex mtx;
     std::map<LibUtilities::ShapeType, std::vector<ElUtilSharedPtr> > m_data;
-    Array<OneD, NekDouble> m_grad;
+    std::vector<NekDouble> m_grad;
     std::vector<NekDouble> m_tmpStore;
     std::unordered_map<LibUtilities::ShapeType, DerivArray, EnumHash> m_derivs;
 

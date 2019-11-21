@@ -23,7 +23,7 @@ IF (NEKTAR_USE_SCOTCH)
     ELSE()
         SET(BUILD_SCOTCH ON)
     ENDIF ()
-    
+
     CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_SCOTCH
         "Build Scotch library from ThirdParty" ${BUILD_SCOTCH}
         "NEKTAR_USE_SCOTCH" OFF)
@@ -48,23 +48,30 @@ IF (NEKTAR_USE_SCOTCH)
         IF (APPLE)
             SET(SCOTCH_MAKE Makefile.inc.i686_mac_darwin8)
             SET(SCOTCH_LDFLAGS "")
-            SET(SCOTCH_CFLAGS "-O3 -Drestrict=__restrict -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DCOMMON_TIMING_OLD -DSCOTCH_RENAME -DCOMMON_PTHREAD_BARRIER")
+            SET(SCOTCH_CFLAGS "-w -O3 -Drestrict=__restrict -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DCOMMON_TIMING_OLD -DSCOTCH_RENAME -DCOMMON_PTHREAD_BARRIER")
         ELSE ()
             IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
                 SET(SCOTCH_MAKE Makefile.inc.x86-64_pc_linux2)
-                SET(SCOTCH_CFLAGS "-O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -Drestrict=__restrict -DIDXSIZE64")
+                SET(SCOTCH_CFLAGS "-w -O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -Drestrict=__restrict -DIDXSIZE64")
             ELSE ()
                 SET(SCOTCH_MAKE Makefile.inc.i686_pc_linux2)
-                SET(SCOTCH_CFLAGS "-O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -Drestrict=__restrict")
+                SET(SCOTCH_CFLAGS "-w -O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -Drestrict=__restrict")
             ENDIF ()
             SET(SCOTCH_LDFLAGS "-lz -lm -lrt -lpthread")
         ENDIF ()
-        
-        SET(SCOTCH_BUILD_TARGET "scotch")
-        SET(SCOTCH_C_COMPILER ${CMAKE_C_COMPILER})
+
+        # Determine the build target and compiler to use for scotch.
+        # We use the normal C compiler by default. If MPI is being used and is
+        # not built into the normal compiler, we use the MPI-specified compiler.
         IF (NEKTAR_USE_MPI)
             SET(SCOTCH_BUILD_TARGET "ptscotch")
+        ELSE ()
+            SET(SCOTCH_BUILD_TARGET "scotch")
+        ENDIF ()
+        IF (NEKTAR_USE_MPI AND NOT MPI_BUILTIN)
             SET(SCOTCH_C_COMPILER ${MPI_C_COMPILER})
+        ELSE ()
+            SET(SCOTCH_C_COMPILER ${CMAKE_C_COMPILER})
         ENDIF ()
 
         INCLUDE(ExternalProject)
@@ -117,7 +124,7 @@ IF (NEKTAR_USE_SCOTCH)
         SET(SCOTCH_CONFIG_INCLUDE_DIR ${SCOTCH_INCLUDE_DIR})
     ENDIF (THIRDPARTY_BUILD_SCOTCH)
 
-    INCLUDE_DIRECTORIES(${SCOTCH_INCLUDE_DIR} ${PTSCOTCH_INCLUDE_DIR})
+    INCLUDE_DIRECTORIES(SYSTEM ${SCOTCH_INCLUDE_DIR} ${PTSCOTCH_INCLUDE_DIR})
     LINK_DIRECTORIES(${SCOTCH_LIBRARY_DIR} ${PTSCOTCH_LIBRARY_DIR})
 
     MARK_AS_ADVANCED(SCOTCH_LIBRARY)

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,14 +36,16 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
+
 #include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 #include <LibUtilities/BasicUtils/CsvIO.h>
-#include <boost/lexical_cast.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
 
 #include "ProcessInterpPtsToPts.h"
 
@@ -128,6 +129,8 @@ void ProcessInterpPtsToPts::Process(po::variables_map &vm)
 
 void ProcessInterpPtsToPts::CreateFieldPts(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int rank   = m_f->m_comm->GetRank();
     int nprocs = m_f->m_comm->GetSize();
     // Check for command line point specification
@@ -201,7 +204,7 @@ void ProcessInterpPtsToPts::CreateFieldPts(po::variables_map &vm)
             }
         }
 
-        vector<int> ppe;
+        vector<size_t> ppe;
         ppe.push_back(npts);
         m_f->m_fieldPts =
             MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim,
@@ -271,7 +274,7 @@ void ProcessInterpPtsToPts::CreateFieldPts(po::variables_map &vm)
             }
         }
 
-        vector<int> ppe;
+        vector<size_t> ppe;
         ppe.push_back(npts[0]);
         ppe.push_back(npts[1]);
         m_f->m_fieldPts =
@@ -334,7 +337,7 @@ void ProcessInterpPtsToPts::CreateFieldPts(po::variables_map &vm)
             }
         }
 
-        vector<int> ppe;
+        vector<size_t> ppe;
         ppe.push_back(npts[0]);
         ppe.push_back(npts[1]);
         ppe.push_back(npts[2]);
@@ -361,6 +364,8 @@ void ProcessInterpPtsToPts::InterpolatePtsToPts(
         NekDouble clamp_up,
         NekDouble def_value)
 {
+    boost::ignore_unused(def_value);
+
     ASSERTL0(toPts->GetNFields() >= fromPts->GetNFields(),
             "ptField has too few fields");
 

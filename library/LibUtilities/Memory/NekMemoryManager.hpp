@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -40,6 +39,8 @@
 
 #include <memory>
 #include <type_traits>
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/Memory/ThreadSpecificPool.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -159,7 +160,7 @@ public:
     template<typename... Args>
     static std::shared_ptr<DataType> AllocateSharedPtr(const Args &...args)
     {
-        return AllocateSharedPtrD([](DataType *ptr){}, args...);
+        return AllocateSharedPtrD( [](DataType *){}, args...);
     }
 
     template<typename DeallocatorType, typename... Args>
@@ -184,7 +185,7 @@ public:
     /// instead.  Any memory allocated from this method must be returned to the
     /// memory pool via RawDeallocate.  Failure to do so will result in memory
     /// leaks and undefined behavior.
-    static DataType* RawAllocate(unsigned int NumberOfElements)
+    static DataType* RawAllocate(size_t NumberOfElements)
     {
 #ifdef NEKTAR_MEMORY_POOL_ENABLED
         return static_cast<DataType*>(GetMemoryPool().Allocate(sizeof(DataType)*NumberOfElements));
@@ -200,7 +201,7 @@ public:
     ///
     /// This method is not meant to be called by client code.  Use Array instead.
     /// Only memory allocated via RawAllocate should be returned to the pool here.
-    static void RawDeallocate(DataType* array, unsigned int NumberOfElements)
+    static void RawDeallocate(DataType* array, size_t NumberOfElements)
     {
 #ifdef NEKTAR_MEMORY_POOL_ENABLED
         GetMemoryPool().Deallocate(array, sizeof(DataType)*NumberOfElements);
@@ -225,7 +226,10 @@ public:
 
     MemoryManager() {}
     template<typename T>
-    MemoryManager(const MemoryManager<T>& rhs) {}
+    MemoryManager(const MemoryManager<T>& rhs)
+    {
+        boost::ignore_unused(rhs);
+    }
     ~MemoryManager() {}
 
     pointer address(reference r) const { return &r; }
@@ -233,6 +237,7 @@ public:
 
     pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)//typename MemoryManager<void>::pointer hint = 0)
     {
+        boost::ignore_unused(hint);
         return RawAllocate(n);
     }
 
@@ -273,6 +278,7 @@ private:
 template<typename DataType>
 bool operator==(const MemoryManager<DataType>& lhs, const MemoryManager<DataType>& rhs)
 {
+    boost::ignore_unused(lhs,rhs);
     return true;
 }
 

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/BLPoints.h>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -42,6 +43,11 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
+        bool BLPoints::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eBoundaryLayerPoints),    BLPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eBoundaryLayerPointsRev), BLPoints::Create)
+        };
+
         void BLPoints::CalculatePoints()
         {
             // Allocate the storage for points.
@@ -76,7 +82,7 @@ namespace Nektar
             
             if (m_pointsKey.GetPointsType() == eBoundaryLayerPointsRev)
             {
-                vector<NekDouble> tmp(npts);
+                std::vector<NekDouble> tmp(npts);
                 for (unsigned int i = 0; i < npts; ++i)
                 {
                     tmp[i] = - m_points[0][npts-1-i];
@@ -151,7 +157,7 @@ namespace Nektar
 
         void BLPoints::CalculateInterpMatrix(unsigned int npts, const Array<OneD, const NekDouble>& xpoints, Array<OneD, NekDouble>& interp)
         {
-
+            boost::ignore_unused(npts, xpoints, interp);
         }
     } // end of namespace LibUtilities
 } // end of namespace Nektar

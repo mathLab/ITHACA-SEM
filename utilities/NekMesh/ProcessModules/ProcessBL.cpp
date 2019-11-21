@@ -778,7 +778,9 @@ void ProcessBL::BoundaryLayer3D()
             ElmtConfig conf(elType, 1, false, false, false);
             ElementSharedPtr elmt = GetElementFactory().CreateInstance(
                 elType, conf, nodeList, el[i]->GetTagList());
+#if NEKTAR_USE_CFI
             elmt->m_cfiParent = el[i]->m_cfiParent;
+#endif
 
             // Always copy CAD parency from any side faces that are split.
             for (int k = 0; k < sMap.bfacesSize; ++k)

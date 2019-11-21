@@ -44,7 +44,9 @@
 #include <NekMeshUtils/MeshElements/Face.h>
 #include <NekMeshUtils/MeshElements/ElementConfig.h>
 
+#if NEKTAR_USE_CFI
 #include <NekMeshUtils/CADSystem/CFI/CADSystemCFI.h>
+#endif
 
 namespace Nektar
 {
@@ -378,7 +380,9 @@ public:
 
     CADObjectSharedPtr m_parentCAD;
 
+#if NEKTAR_USE_CFI
     cfi::MeshableEntity *m_cfiParent;
+#endif
 
 protected:
     /// ID of the element.

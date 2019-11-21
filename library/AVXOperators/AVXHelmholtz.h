@@ -12,15 +12,15 @@
 #include "AVXBwdTrans.h"
 #include "AVXPhysDeriv.h"
 #include "AVXIProductKernels.hpp"
-#include "AVXBwdTransKernel.hpp"
-#include "AVXPhysDerivKernel.hpp"
+#include "AVXBwdTransKernels.hpp"
+#include "AVXPhysDerivKernels.hpp"
 
 template<int VW, bool DEFORMED=false>
-struct AVXHelmholtzGlobalQuad : public HelmholtzGlobal<VW>, public AVXHelper<VW, 2, DEFORMED>
+struct AVXHelmholtzQuad : public Helmholtz, public AVXHelper<VW, 2, DEFORMED>
 {
-    AVXHelmholtzGlobalQuad(std::vector<LibUtilities::BasisSharedPtr> basis,
-            int nElmt)
-    : HelmholtzGlobal<VW>(basis, nElmt),
+    AVXHelmholtzQuad(std::vector<LibUtilities::BasisSharedPtr> basis,
+                     int nElmt)
+    : Helmholtz(basis, nElmt),
       AVXHelper<VW, 2, DEFORMED>(basis, nElmt),
       m_nmTot(LibUtilities::StdQuadData::getNumberOfCoefficients(
                   this->m_nm[0], this->m_nm[1])),
@@ -32,7 +32,7 @@ struct AVXHelmholtzGlobalQuad : public HelmholtzGlobal<VW>, public AVXHelper<VW,
         std::vector<LibUtilities::BasisSharedPtr> basis,
         int nElmt)
     {
-        return std::make_shared<AVXHelmholtzGlobalQuad<VW, DEFORMED>>(basis, nElmt);
+        return std::make_shared<AVXHelmholtzQuad<VW, DEFORMED>>(basis, nElmt);
     }
 
     static NekDouble FlopsPerElement(
@@ -56,20 +56,20 @@ struct AVXHelmholtzGlobalQuad : public HelmholtzGlobal<VW>, public AVXHelper<VW,
             metrics = metric_calc + metrics_x0 + metrics_x1;
         }
 
-        const double iprod2 = AVXIProductQuad<VW>::FlopsPerElement(nm,nq0,nq1); 
+        const double iprod2 = AVXIProductQuad<VW>::FlopsPerElement(nm,nq0,nq1);
         const double iprod3 = AVXIProductQuad<VW>::FlopsPerElement(nm, nq0, nq1);
 
-        return bwdTrans + iprod1 + physDeriv + 
+        return bwdTrans + iprod1 + physDeriv +
             metrics + iprod2 + iprod3;
     }
 
     virtual double GFlops() override
     {
-        const int nm = this->m_basis[0]->GetNumModes();
-        const int nq0 = this->m_basis[0]->GetNumPoints();
-        const int nq1 = this->m_basis[1]->GetNumPoints();
+        const int nm = m_basis[0]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
 
-        const double flops = this->m_nElmt * AVXHelmholtzGlobalQuad::FlopsPerElement(nm, nq0, nq1);
+        const double flops = m_nElmt * AVXHelmholtzQuad::FlopsPerElement(nm, nq0, nq1);
         return flops * 1e-9;
     }
 
@@ -78,45 +78,39 @@ struct AVXHelmholtzGlobalQuad : public HelmholtzGlobal<VW>, public AVXHelper<VW,
         return m_nmTot * this->m_nElmt;
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &globalIn,
-                                  Array<OneD,       NekDouble> &globalOut,
-                                  AVXAssembly<VW>              &l2g) override
+    virtual void operator()(const Array<OneD, const NekDouble> &in,
+                                  Array<OneD,       NekDouble> &out) override
     {
-        switch(this->m_basis[0]->GetNumModes())
+        switch(m_basis[0]->GetNumModes())
         {
-            case 2:  AVXHelmholtzGlobalQuadImpl<2 ,2 ,3 ,3 >(globalIn, globalOut, l2g); break;
-            case 3:  AVXHelmholtzGlobalQuadImpl<3 ,3 ,4 ,4 >(globalIn, globalOut, l2g); break;
-            case 4:  AVXHelmholtzGlobalQuadImpl<4 ,4 ,5 ,5 >(globalIn, globalOut, l2g); break;
-            case 5:  AVXHelmholtzGlobalQuadImpl<5 ,5 ,6 ,6 >(globalIn, globalOut, l2g); break;
-            case 6:  AVXHelmholtzGlobalQuadImpl<6 ,6 ,7 ,7 >(globalIn, globalOut, l2g); break;
-            case 7:  AVXHelmholtzGlobalQuadImpl<7 ,7 ,8 ,8 >(globalIn, globalOut, l2g); break;
-            case 8:  AVXHelmholtzGlobalQuadImpl<8 ,8 ,9 ,9 >(globalIn, globalOut, l2g); break;
-            case 9:  AVXHelmholtzGlobalQuadImpl<9 ,9 ,10,10>(globalIn, globalOut, l2g); break;
-            case 10: AVXHelmholtzGlobalQuadImpl<10,10,11,11>(globalIn, globalOut, l2g); break;
-            case 11: AVXHelmholtzGlobalQuadImpl<11,11,12,12>(globalIn, globalOut, l2g); break;
+            case 2:  AVXHelmholtzQuadImpl<2 ,2 ,3 ,3 >(in, out); break;
+            case 3:  AVXHelmholtzQuadImpl<3 ,3 ,4 ,4 >(in, out); break;
+            case 4:  AVXHelmholtzQuadImpl<4 ,4 ,5 ,5 >(in, out); break;
+            case 5:  AVXHelmholtzQuadImpl<5 ,5 ,6 ,6 >(in, out); break;
+            case 6:  AVXHelmholtzQuadImpl<6 ,6 ,7 ,7 >(in, out); break;
+            case 7:  AVXHelmholtzQuadImpl<7 ,7 ,8 ,8 >(in, out); break;
+            case 8:  AVXHelmholtzQuadImpl<8 ,8 ,9 ,9 >(in, out); break;
+            case 9:  AVXHelmholtzQuadImpl<9 ,9 ,10,10>(in, out); break;
+            case 10: AVXHelmholtzQuadImpl<10,10,11,11>(in, out); break;
+            case 11: AVXHelmholtzQuadImpl<11,11,12,12>(in, out); break;
         }
     }
 
     template<int NM0, int NM1, int NQ0, int NQ1>
-    void AVXHelmholtzGlobalQuadImpl(
-        const Array<OneD, const NekDouble> &globalIn,
-              Array<OneD,       NekDouble> &globalOut,
-              AVXAssembly<VW>              &l2g)
+    void AVXHelmholtzQuadImpl(
+        const Array<OneD, const NekDouble> &input,
+              Array<OneD,       NekDouble> &out)
     {
         using T = VecData<double, VW>;
 
         // Pointers for input/output across blocks
-        const NekDouble *globalInPtr = &globalIn[0];
-        NekDouble *globalOutPtr = &globalOut[0];
+        const NekDouble *inptr = &input[0];
+        NekDouble *outptr = &out[0];
 
-        constexpr int nm = NM0 * NM1;
-        constexpr int nq = NQ0 * NQ1;
-        constexpr int nqBlocks = nq * VW;
-        constexpr int nmBlocks = nm * VW;
+        constexpr int nqBlocks = NQ0 * NQ1 * VW;
+        constexpr int nmBlocks = NM0 * NM1 * VW;
         constexpr int ndf = 4;
-
-        //Zero this out since all gather operations are +=
-        memset(globalOutPtr, 0, l2g.GetNGlobal()*sizeof(double));
+        constexpr int nq = NQ0 * NQ1;
 
         // Allocate sufficient workspace for backwards transform and inner
         // product kernels.
@@ -132,16 +126,9 @@ struct AVXHelmholtzGlobalQuad : public HelmholtzGlobal<VW>, public AVXHelper<VW,
         std::aligned_storage<sizeof(double), 64>::type bwd_storage[nqBlocks];
         std::aligned_storage<sizeof(double), 64>::type deriv0_storage[nqBlocks];
         std::aligned_storage<sizeof(double), 64>::type deriv1_storage[nqBlocks];
-        std::aligned_storage<sizeof(double), 64>::type localIn_storage[nmBlocks];
-        std::aligned_storage<sizeof(double), 64>::type localOut_storage[nmBlocks];
         double *bwd = reinterpret_cast<double *>(&bwd_storage[0]);
         double *deriv0 = reinterpret_cast<double *>(&deriv0_storage[0]);
         double *deriv1 = reinterpret_cast<double *>(&deriv1_storage[0]);
-        //Memory to replace certain uses of inptr and outptr now that we're combinging it with assembly.
-        double *localIn = reinterpret_cast<double *>(&localIn_storage[0]);
-        double *localOut = reinterpret_cast<double *>(&localOut_storage[0]);
-
-        int map_index = 0; //Index into the local2global map
 
         for (int e = 0; e < this->m_nBlocks; e++)
         {
@@ -161,21 +148,15 @@ struct AVXHelmholtzGlobalQuad : public HelmholtzGlobal<VW>, public AVXHelper<VW,
                 jac_ptr = &(this->m_jac[e*nq]);
             }
 
-            //Zero out the local storage
-            memset(localIn, 0, nmBlocks*sizeof(double));
-            memset(localOut, 0, nmBlocks*sizeof(double));
-
-            //Scatter
-            l2g.template ScatterBlock<nm>(globalInPtr, localIn, map_index);
 
             // Step 1: BwdTrans
             AVXBwdTransQuadKernel<NM0, NM1, NQ0, NQ1, VW>(
-                localIn, this->m_bdata[0], this->m_bdata[1], wsp, bwd);
+                inptr, this->m_bdata[0], this->m_bdata[1], wsp, bwd);
 
             // Step 2: inner product for mass matrix operation
             AVXIProductQuadKernel<NM0, NM1, NQ0, NQ1, VW, true, false, DEFORMED>(
                 bwd, this->m_bdata[0], this->m_bdata[1], this->m_w[0],
-                this->m_w[1], jac_ptr, wsp, localOut, m_lambda);
+                this->m_w[1], jac_ptr, wsp, outptr, m_lambda);
 
             // Step 3: take derivatives in standard space
             AVXPhysDerivTensor2DKernel<NQ0, NQ1, VW>(
@@ -212,11 +193,11 @@ struct AVXHelmholtzGlobalQuad : public HelmholtzGlobal<VW>, public AVXHelper<VW,
 
                 AVXIProductQuadKernel<NM0, NM1, NQ0, NQ1, VW, false, true, true>(
                     bwd, this->m_dbdata[0], this->m_bdata[1], this->m_w[0],
-                    this->m_w[1], jac_ptr, wsp, localOut);
+                    this->m_w[1], jac_ptr, wsp, outptr);
 
                 AVXIProductQuadKernel<NM0, NM1, NQ0, NQ1, VW, false, true, true>(
                     deriv0, this->m_bdata[0], this->m_dbdata[1], this->m_w[0],
-                    this->m_w[1], jac_ptr, wsp, localOut);
+                    this->m_w[1], jac_ptr, wsp, outptr);
             }
             else{
                 // Direction 1
@@ -229,7 +210,7 @@ struct AVXHelmholtzGlobalQuad : public HelmholtzGlobal<VW>, public AVXHelper<VW,
 
                 AVXIProductQuadKernel<NM0, NM1, NQ0, NQ1, VW, false, true, false>(
                     bwd, this->m_dbdata[0], this->m_bdata[1], this->m_w[0],
-                    this->m_w[1], jac_ptr, wsp, localOut);
+                    this->m_w[1], jac_ptr, wsp, outptr);
 
                 // Direction 2
                 for (int i = 0; i < nqBlocks; i += VW)
@@ -241,13 +222,12 @@ struct AVXHelmholtzGlobalQuad : public HelmholtzGlobal<VW>, public AVXHelper<VW,
 
                 AVXIProductQuadKernel<NM0, NM1, NQ0, NQ1, VW, false, true, false>(
                     bwd, this->m_bdata[0], this->m_dbdata[1], this->m_w[0],
-                    this->m_w[1], jac_ptr, wsp, localOut);
+                    this->m_w[1], jac_ptr, wsp, outptr);
             }
 
-            map_index = l2g.template AssembleBlock<nm>(localOut, globalOutPtr, map_index);
+            inptr += nmBlocks;
+            outptr += nmBlocks;
         }
-
-        l2g.GetAssemblyMap()->UniversalAssemble(globalOut);
 
     }
 
@@ -257,11 +237,11 @@ private:
 };
 
 template<int VW, bool DEFORMED = false>
-struct AVXHelmholtzGlobalTri : public HelmholtzGlobal<VW>, public AVXHelper<VW, 2, DEFORMED>
+struct AVXHelmholtzTri : public Helmholtz, public AVXHelper<VW, 2, DEFORMED>
 {
-    AVXHelmholtzGlobalTri(std::vector<LibUtilities::BasisSharedPtr> basis,
+    AVXHelmholtzTri(std::vector<LibUtilities::BasisSharedPtr> basis,
                      int nElmt)
-    : HelmholtzGlobal<VW>(basis, nElmt),
+    : Helmholtz(basis, nElmt),
       AVXHelper<VW, 2, DEFORMED>(basis, nElmt),
       m_nmTot(LibUtilities::StdTriData::getNumberOfCoefficients(
                   this->m_nm[0], this->m_nm[1])),
@@ -290,7 +270,7 @@ struct AVXHelmholtzGlobalTri : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
         std::vector<LibUtilities::BasisSharedPtr> basis,
         int nElmt)
     {
-        return std::make_shared<AVXHelmholtzGlobalTri<VW,DEFORMED>>(basis, nElmt);
+        return std::make_shared<AVXHelmholtzTri<VW,DEFORMED>>(basis, nElmt);
     }
 
     static NekDouble FlopsPerElement(
@@ -311,11 +291,11 @@ struct AVXHelmholtzGlobalTri : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
 
     virtual double GFlops() override
     {
-        const int nm = this->m_basis[0]->GetNumModes();
-        const int nq0 = this->m_basis[0]->GetNumPoints();
-        const int nq1 = this->m_basis[1]->GetNumPoints();
+        const int nm = m_basis[0]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
 
-        const double flops = this->m_nElmt * AVXHelmholtzGlobalTri::FlopsPerElement(nm, nq0, nq1);
+        const double flops = m_nElmt * AVXHelmholtzTri::FlopsPerElement(nm, nq0, nq1);
         return flops * 1e-9;
     }
 
@@ -324,65 +304,58 @@ struct AVXHelmholtzGlobalTri : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
         return m_nmTot * this->m_nElmt;
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &globalIn,
-                                  Array<OneD,       NekDouble> &globalOut, 
-                                  AVXAssembly<VW>              &l2g) override
+    virtual void operator()(const Array<OneD, const NekDouble> &in,
+                                  Array<OneD,       NekDouble> &out) override
     {
-        if (this->m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
+        if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
         {
-            switch(this->m_basis[0]->GetNumModes())
+            switch(m_basis[0]->GetNumModes())
             {
-                case 2:  AVXHelmholtzGlobalTriImpl<2 ,2 ,3 ,2 ,true>(globalIn, globalOut, l2g); break;
-                case 3:  AVXHelmholtzGlobalTriImpl<3 ,3 ,4 ,3 ,true>(globalIn, globalOut, l2g); break;
-                case 4:  AVXHelmholtzGlobalTriImpl<4 ,4 ,5 ,4 ,true>(globalIn, globalOut, l2g); break;
-                case 5:  AVXHelmholtzGlobalTriImpl<5 ,5 ,6 ,5 ,true>(globalIn, globalOut, l2g); break;
-                case 6:  AVXHelmholtzGlobalTriImpl<6 ,6 ,7 ,6 ,true>(globalIn, globalOut, l2g); break;
-                case 7:  AVXHelmholtzGlobalTriImpl<7 ,7 ,8 ,7 ,true>(globalIn, globalOut, l2g); break;
-                case 8:  AVXHelmholtzGlobalTriImpl<8 ,8 ,9 ,8 ,true>(globalIn, globalOut, l2g); break;
-                case 9:  AVXHelmholtzGlobalTriImpl<9 ,9 ,10,9 ,true>(globalIn, globalOut, l2g); break;
-                case 10: AVXHelmholtzGlobalTriImpl<10,10,11,10,true>(globalIn, globalOut, l2g); break;
-                case 11: AVXHelmholtzGlobalTriImpl<11,11,12,11,true>(globalIn, globalOut, l2g); break;
+                case 2:  AVXHelmholtzTriImpl<2 ,2 ,3 ,2 ,true>(in, out); break;
+                case 3:  AVXHelmholtzTriImpl<3 ,3 ,4 ,3 ,true>(in, out); break;
+                case 4:  AVXHelmholtzTriImpl<4 ,4 ,5 ,4 ,true>(in, out); break;
+                case 5:  AVXHelmholtzTriImpl<5 ,5 ,6 ,5 ,true>(in, out); break;
+                case 6:  AVXHelmholtzTriImpl<6 ,6 ,7 ,6 ,true>(in, out); break;
+                case 7:  AVXHelmholtzTriImpl<7 ,7 ,8 ,7 ,true>(in, out); break;
+                case 8:  AVXHelmholtzTriImpl<8 ,8 ,9 ,8 ,true>(in, out); break;
+                case 9:  AVXHelmholtzTriImpl<9 ,9 ,10,9 ,true>(in, out); break;
+                case 10: AVXHelmholtzTriImpl<10,10,11,10,true>(in, out); break;
+                case 11: AVXHelmholtzTriImpl<11,11,12,11,true>(in, out); break;
             }
         }
         else
         {
-            switch(this->m_basis[0]->GetNumModes())
+            switch(m_basis[0]->GetNumModes())
             {
-                case 2:  AVXHelmholtzGlobalTriImpl<2 ,2 ,3 ,2 ,false>(globalIn, globalOut, l2g); break;
-                case 3:  AVXHelmholtzGlobalTriImpl<3 ,3 ,4 ,3 ,false>(globalIn, globalOut, l2g); break;
-                case 4:  AVXHelmholtzGlobalTriImpl<4 ,4 ,5 ,4 ,false>(globalIn, globalOut, l2g); break;
-                case 5:  AVXHelmholtzGlobalTriImpl<5 ,5 ,6 ,5 ,false>(globalIn, globalOut, l2g); break;
-                case 6:  AVXHelmholtzGlobalTriImpl<6 ,6 ,7 ,6 ,false>(globalIn, globalOut, l2g); break;
-                case 7:  AVXHelmholtzGlobalTriImpl<7 ,7 ,8 ,7 ,false>(globalIn, globalOut, l2g); break;
-                case 8:  AVXHelmholtzGlobalTriImpl<8 ,8 ,9 ,8 ,false>(globalIn, globalOut, l2g); break;
-                case 9:  AVXHelmholtzGlobalTriImpl<9 ,9 ,10,9 ,false>(globalIn, globalOut, l2g); break;
-                case 10: AVXHelmholtzGlobalTriImpl<10,10,11,10,false>(globalIn, globalOut, l2g); break;
-                case 11: AVXHelmholtzGlobalTriImpl<11,11,12,11,false>(globalIn, globalOut, l2g); break;
+                case 2:  AVXHelmholtzTriImpl<2 ,2 ,3 ,2 ,false>(in, out); break;
+                case 3:  AVXHelmholtzTriImpl<3 ,3 ,4 ,3 ,false>(in, out); break;
+                case 4:  AVXHelmholtzTriImpl<4 ,4 ,5 ,4 ,false>(in, out); break;
+                case 5:  AVXHelmholtzTriImpl<5 ,5 ,6 ,5 ,false>(in, out); break;
+                case 6:  AVXHelmholtzTriImpl<6 ,6 ,7 ,6 ,false>(in, out); break;
+                case 7:  AVXHelmholtzTriImpl<7 ,7 ,8 ,7 ,false>(in, out); break;
+                case 8:  AVXHelmholtzTriImpl<8 ,8 ,9 ,8 ,false>(in, out); break;
+                case 9:  AVXHelmholtzTriImpl<9 ,9 ,10,9 ,false>(in, out); break;
+                case 10: AVXHelmholtzTriImpl<10,10,11,10,false>(in, out); break;
+                case 11: AVXHelmholtzTriImpl<11,11,12,11,false>(in, out); break;
             }
         }
     }
 
     template<int NM0, int NM1, int NQ0, int NQ1, bool CORRECT>
-    void AVXHelmholtzGlobalTriImpl(
-        const Array<OneD, const NekDouble> &globalIn,
-              Array<OneD,       NekDouble> &globalOut,
-              AVXAssembly<VW>              &l2g)
+    void AVXHelmholtzTriImpl(
+        const Array<OneD, const NekDouble> &input,
+              Array<OneD,       NekDouble> &out)
     {
         using T = VecData<double, VW>;
 
         // Pointers for input/output across blocks
-        const NekDouble *globalInPtr = &globalIn[0];
-        NekDouble *globalOutPtr = &globalOut[0];
+        const NekDouble *inptr = &input[0];
+        NekDouble *outptr = &out[0];
 
-        constexpr int nm = NM0*(NM1+1) / 2; //Assumes nm0==nm1
-        assert(nm == m_nmTot);
         constexpr int nqBlocks = NQ0 * NQ1 * VW;
         const int nmBlocks = m_nmTot * VW;
         constexpr int ndf = 4;
         constexpr int nq = NQ0*NQ1;
-
-        //Zero out to accomedate gather operations.
-        memset(globalOutPtr, 0, l2g.GetNGlobal()*sizeof(double));
 
         // Allocate sufficient workspace for backwards transform and inner
         // product kernels.
@@ -399,19 +372,13 @@ struct AVXHelmholtzGlobalTri : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
         std::aligned_storage<sizeof(double), 64>::type deriv0_storage[nqBlocks];
         std::aligned_storage<sizeof(double), 64>::type deriv1_storage[nqBlocks];
         std::aligned_storage<sizeof(double), 64>::type metric_storage[nqBlocks];
-        std::aligned_storage<sizeof(double), 64>::type localIn_storage[nmBlocks];
-        std::aligned_storage<sizeof(double), 64>::type localOut_storage[nmBlocks];
         double *bwd = reinterpret_cast<double *>(&bwd_storage[0]);
-        double *metric = reinterpret_cast<double *>(&metric_storage[0]);
         double *deriv0 = reinterpret_cast<double *>(&deriv0_storage[0]);
         double *deriv1 = reinterpret_cast<double *>(&deriv1_storage[0]);
-
-        double *localIn = reinterpret_cast<double *>(&localIn_storage[0]);
-        double *localOut = reinterpret_cast<double *>(&localOut_storage[0]);
-
-        int map_index = 0; //Start index for the local to global map for each block.
+        double *metric = reinterpret_cast<double *>(&metric_storage[0]);
 
         T df0, df1, df2, df3;
+
         for (int e = 0; e < this->m_nBlocks; e++)
         {
             const VecData<double, VW> *jac_ptr;
@@ -422,19 +389,14 @@ struct AVXHelmholtzGlobalTri : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
                 jac_ptr = &(this->m_jac[e]);
             }
 
-            memset(localIn, 0, nmBlocks*sizeof(double));
-            memset(localOut, 0, nmBlocks*sizeof(double));
-
-            l2g.template ScatterBlock<nm>(globalInPtr, localIn, map_index);
-
             // Step 1: BwdTrans
             AVXBwdTransTriKernel<NM0, NM1, NQ0, NQ1, VW, CORRECT>(
-                localIn, this->m_bdata[0], this->m_bdata[1], wsp, bwd);
+                inptr, this->m_bdata[0], this->m_bdata[1], wsp, bwd);
 
             // Step 2: inner product for mass matrix operation
             AVXIProductTriKernel<NM0, NM1, NQ0, NQ1, VW, CORRECT, true, false, DEFORMED>(
                 bwd, this->m_bdata[0], this->m_bdata[1], this->m_w[0],
-                this->m_w[1], jac_ptr, wsp, localOut, m_lambda);
+                this->m_w[1], jac_ptr, wsp, outptr, m_lambda);
 
             // Step 3: take derivatives in collapsed coordinate space
             AVXPhysDerivTensor2DKernel<NQ0, NQ1, VW>(
@@ -488,17 +450,15 @@ struct AVXHelmholtzGlobalTri : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
             // Step 4b: Take inner products
             AVXIProductTriKernel<NM0, NM1, NQ0, NQ1, VW, CORRECT, false, true, DEFORMED>(
                 bwd, this->m_dbdata[0], this->m_bdata[1], this->m_w[0],
-                this->m_w[1], jac_ptr, wsp, localOut);
+                this->m_w[1], jac_ptr, wsp, outptr);
 
             AVXIProductTriKernel<NM0, NM1, NQ0, NQ1, VW, CORRECT, false, true, DEFORMED>(
                 deriv0, this->m_bdata[0], this->m_dbdata[1], this->m_w[0],
-                this->m_w[1], jac_ptr, wsp, localOut);
+                this->m_w[1], jac_ptr, wsp, outptr);
 
-
-            map_index = l2g.template AssembleBlock<nm>(localOut, globalOutPtr, map_index);
+            inptr += nmBlocks;
+            outptr += nmBlocks;
         }
-
-        l2g.GetAssemblyMap()->UniversalAssemble(globalOut);
 
     }
 
@@ -510,11 +470,11 @@ private:
 };
 
 template<int VW, bool DEFORMED = false>
-struct AVXHelmholtzGlobalPrism : public HelmholtzGlobal<VW>, public AVXHelper<VW, 3, DEFORMED>
+struct AVXHelmholtzPrism : public Helmholtz, public AVXHelper<VW, 3, DEFORMED>
 {
-    AVXHelmholtzGlobalPrism(std::vector<LibUtilities::BasisSharedPtr> basis,
+    AVXHelmholtzPrism(std::vector<LibUtilities::BasisSharedPtr> basis,
                       int nElmt)
-    : HelmholtzGlobal<VW>(basis, nElmt),
+    : Helmholtz(basis, nElmt),
       AVXHelper<VW, 3, DEFORMED>(basis, nElmt),
       m_nmTot(LibUtilities::StdPrismData::getNumberOfCoefficients(
                   this->m_nm[0], this->m_nm[1], this->m_nm[2])),
@@ -543,7 +503,7 @@ struct AVXHelmholtzGlobalPrism : public HelmholtzGlobal<VW>, public AVXHelper<VW
         std::vector<LibUtilities::BasisSharedPtr> basis,
         int nElmt)
     {
-        return std::make_shared<AVXHelmholtzGlobalPrism<VW, DEFORMED>>(basis, nElmt);
+        return std::make_shared<AVXHelmholtzPrism<VW, DEFORMED>>(basis, nElmt);
     }
 
     static NekDouble FlopsPerElement(
@@ -566,12 +526,12 @@ struct AVXHelmholtzGlobalPrism : public HelmholtzGlobal<VW>, public AVXHelper<VW
 
     virtual double GFlops() override
     {
-        const int nm = this->m_basis[0]->GetNumModes();
-        const int nq0 = this->m_basis[0]->GetNumPoints();
-        const int nq1 = this->m_basis[1]->GetNumPoints();
-        const int nq2 = this->m_basis[2]->GetNumPoints();
+        const int nm = m_basis[0]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
+        const int nq2 = m_basis[2]->GetNumPoints();
 
-        const double flops = this->m_nElmt * AVXHelmholtzGlobalPrism::FlopsPerElement(nm, nq0, nq1, nq2);
+        const double flops = m_nElmt * AVXHelmholtzPrism::FlopsPerElement(nm, nq0, nq1, nq2);
         return flops * 1e-9;
     }
 
@@ -580,65 +540,58 @@ struct AVXHelmholtzGlobalPrism : public HelmholtzGlobal<VW>, public AVXHelper<VW
         return m_nmTot * this->m_nElmt;
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &globalIn,
-                                  Array<OneD,       NekDouble> &globalOut,
-                                  AVXAssembly<VW>              &l2g) override
+    virtual void operator()(const Array<OneD, const NekDouble> &in,
+                                  Array<OneD,       NekDouble> &out) override
     {
-        if (this->m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
+        if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
         {
-            switch(this->m_basis[0]->GetNumModes())
+            switch(m_basis[0]->GetNumModes())
             {
-                case 2:  AVXHelmholtzGlobalPrismImpl<2 ,2 ,2 ,3 ,3 ,2 ,true>(globalIn, globalOut, l2g); break;
-                case 3:  AVXHelmholtzGlobalPrismImpl<3 ,3 ,3 ,4 ,4 ,3 ,true>(globalIn, globalOut, l2g); break;
-                case 4:  AVXHelmholtzGlobalPrismImpl<4 ,4 ,4 ,5 ,5 ,4 ,true>(globalIn, globalOut, l2g); break;
-                case 5:  AVXHelmholtzGlobalPrismImpl<5 ,5 ,5 ,6 ,6 ,5 ,true>(globalIn, globalOut, l2g); break;
-                case 6:  AVXHelmholtzGlobalPrismImpl<6 ,6 ,6 ,7 ,7 ,6 ,true>(globalIn, globalOut, l2g); break;
-                case 7:  AVXHelmholtzGlobalPrismImpl<7 ,7 ,7 ,8 ,8 ,7 ,true>(globalIn, globalOut, l2g); break;
-                case 8:  AVXHelmholtzGlobalPrismImpl<8 ,8 ,8 ,9 ,9 ,8 ,true>(globalIn, globalOut, l2g); break;
-                case 9:  AVXHelmholtzGlobalPrismImpl<9 ,9 ,9 ,10,10,9 ,true>(globalIn, globalOut, l2g); break;
-                case 10: AVXHelmholtzGlobalPrismImpl<10,10,10,11,11,10,true>(globalIn, globalOut, l2g); break;
-                case 11: AVXHelmholtzGlobalPrismImpl<11,11,11,12,12,11,true>(globalIn, globalOut, l2g); break;
+                case 2:  AVXHelmholtzPrismImpl<2 ,2 ,2 ,3 ,3 ,2 ,true>(in, out); break;
+                case 3:  AVXHelmholtzPrismImpl<3 ,3 ,3 ,4 ,4 ,3 ,true>(in, out); break;
+                case 4:  AVXHelmholtzPrismImpl<4 ,4 ,4 ,5 ,5 ,4 ,true>(in, out); break;
+                case 5:  AVXHelmholtzPrismImpl<5 ,5 ,5 ,6 ,6 ,5 ,true>(in, out); break;
+                case 6:  AVXHelmholtzPrismImpl<6 ,6 ,6 ,7 ,7 ,6 ,true>(in, out); break;
+                case 7:  AVXHelmholtzPrismImpl<7 ,7 ,7 ,8 ,8 ,7 ,true>(in, out); break;
+                case 8:  AVXHelmholtzPrismImpl<8 ,8 ,8 ,9 ,9 ,8 ,true>(in, out); break;
+                case 9:  AVXHelmholtzPrismImpl<9 ,9 ,9 ,10,10,9 ,true>(in, out); break;
+                case 10: AVXHelmholtzPrismImpl<10,10,10,11,11,10,true>(in, out); break;
+                case 11: AVXHelmholtzPrismImpl<11,11,11,12,12,11,true>(in, out); break;
             }
         }
         else
         {
-            switch(this->m_basis[0]->GetNumModes())
+            switch(m_basis[0]->GetNumModes())
             {
-                case 2:  AVXHelmholtzGlobalPrismImpl<2 ,2 ,2 ,3 ,3 ,2 ,false>(globalIn, globalOut, l2g); break;
-                case 3:  AVXHelmholtzGlobalPrismImpl<3 ,3 ,3 ,4 ,4 ,3 ,false>(globalIn, globalOut, l2g); break;
-                case 4:  AVXHelmholtzGlobalPrismImpl<4 ,4 ,4 ,5 ,5 ,4 ,false>(globalIn, globalOut, l2g); break;
-                case 5:  AVXHelmholtzGlobalPrismImpl<5 ,5 ,5 ,6 ,6 ,5 ,false>(globalIn, globalOut, l2g); break;
-                case 6:  AVXHelmholtzGlobalPrismImpl<6 ,6 ,6 ,7 ,7 ,6 ,false>(globalIn, globalOut, l2g); break;
-                case 7:  AVXHelmholtzGlobalPrismImpl<7 ,7 ,7 ,8 ,8 ,7 ,false>(globalIn, globalOut, l2g); break;
-                case 8:  AVXHelmholtzGlobalPrismImpl<8 ,8 ,8 ,9 ,9 ,8 ,false>(globalIn, globalOut, l2g); break;
-                case 9:  AVXHelmholtzGlobalPrismImpl<9 ,9 ,9 ,10,10,9 ,false>(globalIn, globalOut, l2g); break;
-                case 10: AVXHelmholtzGlobalPrismImpl<10,10,10,11,11,10,false>(globalIn, globalOut, l2g); break;
-                case 11: AVXHelmholtzGlobalPrismImpl<11,11,11,12,12,11,false>(globalIn, globalOut, l2g); break;
+                case 2:  AVXHelmholtzPrismImpl<2 ,2 ,2 ,3 ,3 ,2 ,false>(in, out); break;
+                case 3:  AVXHelmholtzPrismImpl<3 ,3 ,3 ,4 ,4 ,3 ,false>(in, out); break;
+                case 4:  AVXHelmholtzPrismImpl<4 ,4 ,4 ,5 ,5 ,4 ,false>(in, out); break;
+                case 5:  AVXHelmholtzPrismImpl<5 ,5 ,5 ,6 ,6 ,5 ,false>(in, out); break;
+                case 6:  AVXHelmholtzPrismImpl<6 ,6 ,6 ,7 ,7 ,6 ,false>(in, out); break;
+                case 7:  AVXHelmholtzPrismImpl<7 ,7 ,7 ,8 ,8 ,7 ,false>(in, out); break;
+                case 8:  AVXHelmholtzPrismImpl<8 ,8 ,8 ,9 ,9 ,8 ,false>(in, out); break;
+                case 9:  AVXHelmholtzPrismImpl<9 ,9 ,9 ,10,10,9 ,false>(in, out); break;
+                case 10: AVXHelmholtzPrismImpl<10,10,10,11,11,10,false>(in, out); break;
+                case 11: AVXHelmholtzPrismImpl<11,11,11,12,12,11,false>(in, out); break;
             }
         }
     }
 
     template<int NM0, int NM1, int NM2, int NQ0, int NQ1, int NQ2, bool CORRECT>
-    void AVXHelmholtzGlobalPrismImpl(
-        const Array<OneD, const NekDouble> &globalIn,
-              Array<OneD,       NekDouble> &globalOut,
-              AVXAssembly<VW>              &l2g)
+    void AVXHelmholtzPrismImpl(
+        const Array<OneD, const NekDouble> &input,
+              Array<OneD,       NekDouble> &out)
     {
         using T = VecData<double, VW>;
 
         // Pointers for input/output across blocks
-        const NekDouble *globalInPtr = &globalIn[0];
-        NekDouble *globalOutPtr = &globalOut[0];
+        const NekDouble *inptr = &input[0];
+        NekDouble *outptr = &out[0];
 
-        constexpr int nm = NM0*NM1*(NM2-1) / 2;
-        assert(nm == m_nmTot);
         constexpr int nqBlocks = NQ0 * NQ1 * NQ2 * VW;
         const int nmBlocks = m_nmTot * VW;
         constexpr int ndf = 9;
         constexpr int nq = NQ0 * NQ1 * NQ2;
-
-        //Zero out to accomedate gather operations.
-        memset(globalOutPtr, 0, l2g.GetNGlobal()*sizeof(double));
 
         // Workspace for kernels
         T wsp1[NQ1 * NQ2], wsp2[NQ2], wsp3[NM1];
@@ -648,17 +601,10 @@ struct AVXHelmholtzGlobalPrism : public HelmholtzGlobal<VW>, public AVXHelper<VW
         std::aligned_storage<sizeof(double), 64>::type deriv0_storage[nqBlocks];
         std::aligned_storage<sizeof(double), 64>::type deriv1_storage[nqBlocks];
         std::aligned_storage<sizeof(double), 64>::type deriv2_storage[nqBlocks];
-        std::aligned_storage<sizeof(double), 64>::type localIn_storage[nmBlocks];
-        std::aligned_storage<sizeof(double), 64>::type localOut_storage[nmBlocks];
         double *bwd    = reinterpret_cast<double *>(&bwd_storage[0]);
         double *deriv0 = reinterpret_cast<double *>(&deriv0_storage[0]);
         double *deriv1 = reinterpret_cast<double *>(&deriv1_storage[0]);
         double *deriv2 = reinterpret_cast<double *>(&deriv2_storage[0]);
-
-        double *localIn = reinterpret_cast<double *>(&localIn_storage[0]);
-        double *localOut = reinterpret_cast<double *>(&localOut_storage[0]);
-
-        int map_index = 0; //Index into the local2global map
 
         for (int e = 0; e < this->m_nBlocks; e++)
         {
@@ -683,23 +629,16 @@ struct AVXHelmholtzGlobalPrism : public HelmholtzGlobal<VW>, public AVXHelper<VW
                 df8 = this->m_df[e*ndf + 8];
             }
 
-            //Zero out the local storage
-            memset(localIn, 0, nmBlocks*sizeof(double));
-            memset(localOut, 0, nmBlocks*sizeof(double));
-
-            //Scatter
-            l2g.template ScatterBlock<nm>(globalInPtr, localIn, map_index);
-
             // Step 1: BwdTrans
             AVXBwdTransPrismKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, CORRECT>(
-                localIn, this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
+                inptr, this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
                 wsp1, wsp2, bwd);
 
             // Step 2: inner product for mass matrix operation
             AVXIProductPrismKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, CORRECT, true, false, DEFORMED>(
                 bwd, this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
                 this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-                wsp1, wsp2, wsp3, localOut, m_lambda);
+                wsp1, wsp2, wsp3, outptr, m_lambda);
 
             // Step 3: take derivatives in standard space
             AVXPhysDerivTensor3DKernel<NQ0, NQ1, NQ2, VW>(
@@ -790,22 +729,21 @@ struct AVXHelmholtzGlobalPrism : public HelmholtzGlobal<VW>, public AVXHelper<VW
             AVXIProductPrismKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, CORRECT, false, true, DEFORMED>(
                 deriv0, this->m_dbdata[0], this->m_bdata[1], this->m_bdata[2],
                 this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-                wsp1, wsp2, wsp3, localOut);
+                wsp1, wsp2, wsp3, outptr);
 
             AVXIProductPrismKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, CORRECT, false, true, DEFORMED>(
                 deriv1, this->m_bdata[0], this->m_dbdata[1], this->m_bdata[2],
                 this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-                wsp1, wsp2, wsp3, localOut);
+                wsp1, wsp2, wsp3, outptr);
 
             AVXIProductPrismKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, CORRECT, false, true, DEFORMED>(
                 deriv2, this->m_bdata[0], this->m_bdata[1], this->m_dbdata[2],
                 this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-                wsp1, wsp2, wsp3, localOut);
+                wsp1, wsp2, wsp3, outptr);
 
-            map_index = l2g.template AssembleBlock<nm>(localOut, globalOutPtr, map_index);
+            inptr += nmBlocks;
+            outptr += nmBlocks;
         }
-
-        l2g.GetAssemblyMap()->UniversalAssemble(globalOut);
     }
 
 private:
@@ -816,11 +754,11 @@ private:
 };
 
 template<int VW, bool DEFORMED = false>
-struct AVXHelmholtzGlobalTet : public HelmholtzGlobal<VW>, public AVXHelper<VW, 3, DEFORMED>
+struct AVXHelmholtzTet : public Helmholtz, public AVXHelper<VW, 3, DEFORMED>
 {
-    AVXHelmholtzGlobalTet(std::vector<LibUtilities::BasisSharedPtr> basis,
+    AVXHelmholtzTet(std::vector<LibUtilities::BasisSharedPtr> basis,
                     int nElmt)
-    : HelmholtzGlobal<VW>(basis, nElmt),
+    : Helmholtz(basis, nElmt),
       AVXHelper<VW, 3, DEFORMED>(basis, nElmt),
       m_nmTot(LibUtilities::StdTetData::getNumberOfCoefficients(
                   this->m_nm[0], this->m_nm[1], this->m_nm[2])),
@@ -859,7 +797,7 @@ struct AVXHelmholtzGlobalTet : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
         std::vector<LibUtilities::BasisSharedPtr> basis,
         int nElmt)
     {
-        return std::make_shared<AVXHelmholtzGlobalTet<VW, DEFORMED>>(basis, nElmt);
+        return std::make_shared<AVXHelmholtzTet<VW, DEFORMED>>(basis, nElmt);
     }
 
     static NekDouble FlopsPerElement(
@@ -882,12 +820,12 @@ struct AVXHelmholtzGlobalTet : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
 
     virtual double GFlops() override
     {
-        const int nm = this->m_basis[0]->GetNumModes();
-        const int nq0 = this->m_basis[0]->GetNumPoints();
-        const int nq1 = this->m_basis[1]->GetNumPoints();
-        const int nq2 = this->m_basis[2]->GetNumPoints();
+        const int nm = m_basis[0]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
+        const int nq2 = m_basis[2]->GetNumPoints();
 
-        const double flops = this->m_nElmt * AVXHelmholtzGlobalTet::FlopsPerElement(nm, nq0, nq1, nq2);
+        const double flops = m_nElmt * AVXHelmholtzTet::FlopsPerElement(nm, nq0, nq1, nq2);
         return flops * 1e-9;
     }
 
@@ -896,58 +834,54 @@ struct AVXHelmholtzGlobalTet : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
         return m_nmTot * this->m_nElmt;
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &globalIn,
-                                  Array<OneD,       NekDouble> &globalOut,
-                                  AVXAssembly<VW>              &l2g) override
+    virtual void operator()(const Array<OneD, const NekDouble> &in,
+                                  Array<OneD,       NekDouble> &out) override
     {
-        if (this->m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
+        if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
         {
-            switch(this->m_basis[0]->GetNumModes())
+            switch(m_basis[0]->GetNumModes())
             {
-                case 2:  AVXHelmholtzGlobalTetImpl<2 ,2 ,2 ,3 ,2 ,2 ,true>(globalIn, globalOut, l2g); break;
-                case 3:  AVXHelmholtzGlobalTetImpl<3 ,3 ,3 ,4 ,3 ,3 ,true>(globalIn, globalOut, l2g); break;
-                case 4:  AVXHelmholtzGlobalTetImpl<4 ,4 ,4 ,5 ,4 ,4 ,true>(globalIn, globalOut, l2g); break;
-                case 5:  AVXHelmholtzGlobalTetImpl<5 ,5 ,5 ,6 ,5 ,5 ,true>(globalIn, globalOut, l2g); break;
-                case 6:  AVXHelmholtzGlobalTetImpl<6 ,6 ,6 ,7 ,6 ,6 ,true>(globalIn, globalOut, l2g); break;
-                case 7:  AVXHelmholtzGlobalTetImpl<7 ,7 ,7 ,8 ,7 ,7 ,true>(globalIn, globalOut, l2g); break;
-                case 8:  AVXHelmholtzGlobalTetImpl<8 ,8 ,8 ,9 ,8 ,8 ,true>(globalIn, globalOut, l2g); break;
-                case 9:  AVXHelmholtzGlobalTetImpl<9 ,9 ,9 ,10,9 ,9 ,true>(globalIn, globalOut, l2g); break;
-                case 10: AVXHelmholtzGlobalTetImpl<10,10,10,11,10,10,true>(globalIn, globalOut, l2g); break;
-                case 11: AVXHelmholtzGlobalTetImpl<11,11,11,12,11,11,true>(globalIn, globalOut, l2g); break;
+                case 2:  AVXHelmholtzTetImpl<2 ,2 ,2 ,3 ,2 ,2 ,true>(in, out); break;
+                case 3:  AVXHelmholtzTetImpl<3 ,3 ,3 ,4 ,3 ,3 ,true>(in, out); break;
+                case 4:  AVXHelmholtzTetImpl<4 ,4 ,4 ,5 ,4 ,4 ,true>(in, out); break;
+                case 5:  AVXHelmholtzTetImpl<5 ,5 ,5 ,6 ,5 ,5 ,true>(in, out); break;
+                case 6:  AVXHelmholtzTetImpl<6 ,6 ,6 ,7 ,6 ,6 ,true>(in, out); break;
+                case 7:  AVXHelmholtzTetImpl<7 ,7 ,7 ,8 ,7 ,7 ,true>(in, out); break;
+                case 8:  AVXHelmholtzTetImpl<8 ,8 ,8 ,9 ,8 ,8 ,true>(in, out); break;
+                case 9:  AVXHelmholtzTetImpl<9 ,9 ,9 ,10,9 ,9 ,true>(in, out); break;
+                case 10: AVXHelmholtzTetImpl<10,10,10,11,10,10,true>(in, out); break;
+                case 11: AVXHelmholtzTetImpl<11,11,11,12,11,11,true>(in, out); break;
             }
         }
         else
         {
-            switch(this->m_basis[0]->GetNumModes())
+            switch(m_basis[0]->GetNumModes())
             {
-                case 2:  AVXHelmholtzGlobalTetImpl<2 ,2 ,2 ,3 ,2 ,2 ,false>(globalIn, globalOut, l2g); break;
-                case 3:  AVXHelmholtzGlobalTetImpl<3 ,3 ,3 ,4 ,3 ,3 ,false>(globalIn, globalOut, l2g); break;
-                case 4:  AVXHelmholtzGlobalTetImpl<4 ,4 ,4 ,5 ,4 ,4 ,false>(globalIn, globalOut, l2g); break;
-                case 5:  AVXHelmholtzGlobalTetImpl<5 ,5 ,5 ,6 ,5 ,5 ,false>(globalIn, globalOut, l2g); break;
-                case 6:  AVXHelmholtzGlobalTetImpl<6 ,6 ,6 ,7 ,6 ,6 ,false>(globalIn, globalOut, l2g); break;
-                case 7:  AVXHelmholtzGlobalTetImpl<7 ,7 ,7 ,8 ,7 ,7 ,false>(globalIn, globalOut, l2g); break;
-                case 8:  AVXHelmholtzGlobalTetImpl<8 ,8 ,8 ,9 ,8 ,8 ,false>(globalIn, globalOut, l2g); break;
-                case 9:  AVXHelmholtzGlobalTetImpl<9 ,9 ,9 ,10,9 ,9 ,false>(globalIn, globalOut, l2g); break;
-                case 10: AVXHelmholtzGlobalTetImpl<10,10,10,11,10,10,false>(globalIn, globalOut, l2g); break;
-                case 11: AVXHelmholtzGlobalTetImpl<11,11,11,12,11,11,false>(globalIn, globalOut, l2g); break;
+                case 2:  AVXHelmholtzTetImpl<2 ,2 ,2 ,3 ,2 ,2 ,false>(in, out); break;
+                case 3:  AVXHelmholtzTetImpl<3 ,3 ,3 ,4 ,3 ,3 ,false>(in, out); break;
+                case 4:  AVXHelmholtzTetImpl<4 ,4 ,4 ,5 ,4 ,4 ,false>(in, out); break;
+                case 5:  AVXHelmholtzTetImpl<5 ,5 ,5 ,6 ,5 ,5 ,false>(in, out); break;
+                case 6:  AVXHelmholtzTetImpl<6 ,6 ,6 ,7 ,6 ,6 ,false>(in, out); break;
+                case 7:  AVXHelmholtzTetImpl<7 ,7 ,7 ,8 ,7 ,7 ,false>(in, out); break;
+                case 8:  AVXHelmholtzTetImpl<8 ,8 ,8 ,9 ,8 ,8 ,false>(in, out); break;
+                case 9:  AVXHelmholtzTetImpl<9 ,9 ,9 ,10,9 ,9 ,false>(in, out); break;
+                case 10: AVXHelmholtzTetImpl<10,10,10,11,10,10,false>(in, out); break;
+                case 11: AVXHelmholtzTetImpl<11,11,11,12,11,11,false>(in, out); break;
             }
         }
     }
 
     template<int NM0, int NM1, int NM2, int NQ0, int NQ1, int NQ2, bool CORRECT>
-    void AVXHelmholtzGlobalTetImpl(
-        const Array<OneD, const NekDouble> &globalIn,
-              Array<OneD,       NekDouble> &globalOut,
-              AVXAssembly<VW>              &l2g)
+    void AVXHelmholtzTetImpl(
+        const Array<OneD, const NekDouble> &input,
+              Array<OneD,       NekDouble> &out)
     {
         using T = VecData<double, VW>;
 
         // Pointers for input/output across blocks
-        const NekDouble *globalInPtr = &globalIn[0];
-        NekDouble *globalOutPtr = &globalOut[0];
+        const NekDouble *inptr = &input[0];
+        NekDouble *outptr = &out[0];
 
-        constexpr int nm = NM0 * (NM1+1) * (NM2+2) / 6;
-        assert(nm == m_nmTot);
         constexpr int nqBlocks = NQ0 * NQ1 * NQ2 * VW;
         constexpr int ndf = 9;
         constexpr int nq = NQ0 * NQ1 * NQ2;
@@ -961,17 +895,10 @@ struct AVXHelmholtzGlobalTet : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
         std::aligned_storage<sizeof(double), 64>::type deriv0_storage[nqBlocks];
         std::aligned_storage<sizeof(double), 64>::type deriv1_storage[nqBlocks];
         std::aligned_storage<sizeof(double), 64>::type deriv2_storage[nqBlocks];
-        std::aligned_storage<sizeof(double), 64>::type localIn_storage[nmBlocks];
-        std::aligned_storage<sizeof(double), 64>::type localOut_storage[nmBlocks];
         double *bwd    = reinterpret_cast<double *>(&bwd_storage[0]);
         double *deriv0 = reinterpret_cast<double *>(&deriv0_storage[0]);
         double *deriv1 = reinterpret_cast<double *>(&deriv1_storage[0]);
         double *deriv2 = reinterpret_cast<double *>(&deriv2_storage[0]);
-
-        double *localIn = reinterpret_cast<double *>(&localIn_storage[0]);
-        double *localOut = reinterpret_cast<double *>(&localOut_storage[0]);
-
-        int map_index = 0; //Index into the local2global map
 
         for (int e = 0; e < this->m_nBlocks; e++)
         {
@@ -996,23 +923,16 @@ struct AVXHelmholtzGlobalTet : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
                 df8 = this->m_df[e*ndf + 8];
             }
 
-            //Zero out the local storage
-            memset(localIn, 0, nmBlocks*sizeof(double));
-            memset(localOut, 0, nmBlocks*sizeof(double));
-
-            //Scatter
-            l2g.template ScatterBlock<nm>(globalInPtr, localIn, map_index);
-
             // Step 1: BwdTrans
             AVXBwdTransTetKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, CORRECT>(
-                localIn, this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
+                inptr, this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
                 wsp1, wsp2, bwd);
 
             // Step 2: inner product for mass matrix operation
             AVXIProductTetKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, CORRECT, true, false, DEFORMED>(
                 bwd, this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
                 this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-                wsp1, localOut, m_lambda);
+                wsp1, outptr, m_lambda);
 
             // Step 3: take derivatives in standard space
             AVXPhysDerivTensor3DKernel<NQ0, NQ1, NQ2, VW>(
@@ -1119,22 +1039,21 @@ struct AVXHelmholtzGlobalTet : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
             AVXIProductTetKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, CORRECT, false, true, DEFORMED>(
                 deriv0, this->m_dbdata[0], this->m_bdata[1], this->m_bdata[2],
                 this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-                wsp1, localOut);
+                wsp1, outptr);
 
             AVXIProductTetKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, CORRECT, false, true, DEFORMED>(
                 deriv1, this->m_bdata[0], this->m_dbdata[1], this->m_bdata[2],
                 this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-                wsp1, localOut);
+                wsp1, outptr);
 
             AVXIProductTetKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, CORRECT, false, true, DEFORMED>(
                 deriv2, this->m_bdata[0], this->m_bdata[1], this->m_dbdata[2],
                 this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-                wsp1, localOut);
+                wsp1, outptr);
 
-            map_index = l2g.template AssembleBlock<nm>(localOut, globalOutPtr, map_index);
+            inptr += nmBlocks;
+            outptr += nmBlocks;
         }
-
-        l2g.GetAssemblyMap()->UniversalAssemble(globalOut);
     }
 
 private:
@@ -1144,11 +1063,11 @@ private:
 };
 
 template<int VW, bool DEFORMED = false>
-struct AVXHelmholtzGlobalHex : public HelmholtzGlobal<VW>, public AVXHelper<VW, 3, DEFORMED>
+struct AVXHelmholtzHex : public Helmholtz, public AVXHelper<VW, 3, DEFORMED>
 {
-    AVXHelmholtzGlobalHex(std::vector<LibUtilities::BasisSharedPtr> basis,
+    AVXHelmholtzHex(std::vector<LibUtilities::BasisSharedPtr> basis,
                     int nElmt)
-    : HelmholtzGlobal<VW>(basis, nElmt),
+    : Helmholtz(basis, nElmt),
       AVXHelper<VW, 3, DEFORMED>(basis, nElmt),
       m_nmTot(LibUtilities::StdHexData::getNumberOfCoefficients(
                   this->m_nm[0], this->m_nm[1], this->m_nm[2])),
@@ -1160,7 +1079,7 @@ struct AVXHelmholtzGlobalHex : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
         std::vector<LibUtilities::BasisSharedPtr> basis,
         int nElmt)
     {
-        return std::make_shared<AVXHelmholtzGlobalHex<VW, DEFORMED>>(basis, nElmt);
+        return std::make_shared<AVXHelmholtzHex<VW, DEFORMED>>(basis, nElmt);
     }
 
     static NekDouble FlopsPerElement(
@@ -1173,7 +1092,7 @@ struct AVXHelmholtzGlobalHex : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
         const double bwdTrans = AVXBwdTransHex<VW>::FlopsPerElement(nm,nq0,nq1, nq2);
         const double iprod1 = AVXIProductHex<VW>::FlopsPerElement(nm, nq0, nq1, nq2);
         const double physDeriv = AVXPhysDerivHex<VW>::FlopsPerElement(nq0,nq1, nq2);
-        
+
         const double metric_calc = 30;
         double metric;
         if(DEFORMED){
@@ -1192,12 +1111,12 @@ struct AVXHelmholtzGlobalHex : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
 
     virtual double GFlops() override
     {
-        const int nm = this->m_basis[0]->GetNumModes();
-        const int nq0 = this->m_basis[0]->GetNumPoints();
-        const int nq1 = this->m_basis[1]->GetNumPoints();
-        const int nq2 = this->m_basis[2]->GetNumPoints();
+        const int nm = m_basis[0]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
+        const int nq2 = m_basis[2]->GetNumPoints();
 
-        const double flops = this->m_nElmt * AVXHelmholtzGlobalHex::FlopsPerElement(nm, nq0, nq1, nq2);
+        const double flops = m_nElmt * AVXHelmholtzHex::FlopsPerElement(nm, nq0, nq1, nq2);
         return flops * 1e-9;
     }
 
@@ -1206,69 +1125,62 @@ struct AVXHelmholtzGlobalHex : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
         return m_nmTot * this->m_nElmt;
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &globalIn,
-                                  Array<OneD,       NekDouble> &globalOut,
-                                  AVXAssembly<VW>              &l2g) override
+    virtual void operator()(const Array<OneD, const NekDouble> &in,
+                                  Array<OneD,       NekDouble> &out) override
     {
-        switch(this->m_basis[0]->GetNumModes())
+        switch(m_basis[0]->GetNumModes())
         {
-            case 2:  AVXHelmholtzGlobalHexImpl<2 ,2 ,2 ,3 ,3 ,3 >(globalIn, globalOut, l2g); break;
-            case 3:  AVXHelmholtzGlobalHexImpl<3 ,3 ,3 ,4 ,4 ,4 >(globalIn, globalOut, l2g); break;
-            case 4:  AVXHelmholtzGlobalHexImpl<4 ,4 ,4 ,5 ,5 ,5 >(globalIn, globalOut, l2g); break;
-            case 5:  AVXHelmholtzGlobalHexImpl<5 ,5 ,5 ,6 ,6 ,6 >(globalIn, globalOut, l2g); break;
-            case 6:  AVXHelmholtzGlobalHexImpl<6 ,6 ,6 ,7 ,7 ,7 >(globalIn, globalOut, l2g); break;
-            case 7:  AVXHelmholtzGlobalHexImpl<7 ,7 ,7 ,8 ,8 ,8 >(globalIn, globalOut, l2g); break;
-            case 8:  AVXHelmholtzGlobalHexImpl<8 ,8 ,8 ,9 ,9 ,9 >(globalIn, globalOut, l2g); break;
-            case 9:  AVXHelmholtzGlobalHexImpl<9 ,9 ,9 ,10,10,10>(globalIn, globalOut, l2g); break;
-            case 10: AVXHelmholtzGlobalHexImpl<10,10,10,11,11,11>(globalIn, globalOut, l2g); break;
-            case 11: AVXHelmholtzGlobalHexImpl<11,11,11,12,12,12>(globalIn, globalOut, l2g); break;
+            case 2:  AVXHelmholtzHexImpl<2 ,2 ,2 ,3 ,3 ,3 >(in, out); break;
+            case 3:  AVXHelmholtzHexImpl<3 ,3 ,3 ,4 ,4 ,4 >(in, out); break;
+            case 4:  AVXHelmholtzHexImpl<4 ,4 ,4 ,5 ,5 ,5 >(in, out); break;
+            case 5:  AVXHelmholtzHexImpl<5 ,5 ,5 ,6 ,6 ,6 >(in, out); break;
+            case 6:  AVXHelmholtzHexImpl<6 ,6 ,6 ,7 ,7 ,7 >(in, out); break;
+            case 7:  AVXHelmholtzHexImpl<7 ,7 ,7 ,8 ,8 ,8 >(in, out); break;
+            case 8:  AVXHelmholtzHexImpl<8 ,8 ,8 ,9 ,9 ,9 >(in, out); break;
+            case 9:  AVXHelmholtzHexImpl<9 ,9 ,9 ,10,10,10>(in, out); break;
+            case 10: AVXHelmholtzHexImpl<10,10,10,11,11,11>(in, out); break;
+            case 11: AVXHelmholtzHexImpl<11,11,11,12,12,12>(in, out); break;
         }
     }
 
 #if 0
     template<int NM0, int NM1, int NM2, int NQ0, int NQ1, int NQ2>
-    void AVXHelmholtzGlobalHexImpl(
-        const Array<OneD, const NekDouble> &globalIn,
-              Array<OneD,       NekDouble> &globalOut,
-              AVXAssembly<VW>              &l2g)
+    void AVXHelmholtzHexImpl(
+        const Array<OneD, const NekDouble> &input,
+              Array<OneD,       NekDouble> &out)
     {
         using T = VecData<double, VW>;
 
         // Pointers for input/output across blocks
-        const NekDouble *globalInPtr = &globalIn[0];
-        NekDouble *globalOutPtr = &globalOut[0];
+        const NekDouble *inptr = &input[0];
+        NekDouble *outptr = &out[0];
 
-        constexpr int nm = NM0 * NM1 * NM2;
         constexpr int nqBlocks = NQ0 * NQ1 * NQ2 * VW;
         constexpr int nmBlocks = NM0 * NM1 * NM2 * VW;
         constexpr int ndf = 9;
         constexpr int nq = NQ0 * NQ1 * NQ2;
 
-        //Zero this out since all gather operations are +=
-        memset(globalOutPtr, 0, l2g.GetNGlobal()*sizeof(double));
-
         // Workspace for kernels
+        //T wsp1_0[NM2 * NQ0 * NM1];//, wsp1_1[NM2 * NQ0 * NM1];
+        //T wsp2_0[NM2 * NQ1 * NQ0];//, wsp2_1[NM2 * NQ1 * NQ0], wsp2_2[NM2 * NQ1 * NQ0];
         T wsp1[NQ0 * NQ1 * NQ2], wsp2[NQ0 * NQ1 * NQ2];
 
         // Aligned stack storage
         std::aligned_storage<sizeof(double), 64>::type bwd_storage[nqBlocks];
+        std::aligned_storage<sizeof(double), 64>::type out_storage[nmBlocks];
         std::aligned_storage<sizeof(double), 64>::type deriv0_storage[nqBlocks];
         std::aligned_storage<sizeof(double), 64>::type deriv1_storage[nqBlocks];
         std::aligned_storage<sizeof(double), 64>::type deriv2_storage[nqBlocks];
-        std::aligned_storage<sizeof(double), 64>::type localIn_storage[nmBlocks];
-        std::aligned_storage<sizeof(double), 64>::type localOut_storage[nmBlocks];
-        double *bwd      = reinterpret_cast<double *>(&bwd_storage[0]);
-        double *deriv0   = reinterpret_cast<double *>(&deriv0_storage[0]);
-        double *deriv1   = reinterpret_cast<double *>(&deriv1_storage[0]);
-        double *deriv2   = reinterpret_cast<double *>(&deriv2_storage[0]);
-        double *localIn  = reinterpret_cast<double *>(&localIn_storage[0]);
-        double *localOut = reinterpret_cast<double *>(&localOut_storage[0]);
-
-        int map_index = 0; //Index into the local2global map
+        double *bwd    = reinterpret_cast<double *>(&bwd_storage[0]);
+        double *outtmp = reinterpret_cast<double *>(&out_storage[0]);
+        double *deriv0 = reinterpret_cast<double *>(&deriv0_storage[0]);
+        double *deriv1 = reinterpret_cast<double *>(&deriv1_storage[0]);
+        double *deriv2 = reinterpret_cast<double *>(&deriv2_storage[0]);
 
         VecData<double, VW> *jac_ptr = &this->m_jac[0];
         VecData<double, VW> *df_ptr = &this->m_df[0];
 
+        // Precompute Laplacian metrics
         T metric00, metric01, metric02, metric11, metric12, metric22;
         metric00 = df_ptr[0] * df_ptr[0];
         metric00.fma(df_ptr[3], df_ptr[3]);
@@ -1296,18 +1208,13 @@ struct AVXHelmholtzGlobalHex : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
 
         for (int e = 0; e < this->m_nBlocks; e++)
         {
-            // Precompute Laplacian metrics
-
-            //Scatter
-            l2g.template ScatterBlock<nm>(globalInPtr, localIn, map_index);
-
             // x-gradient
-            TensorContractDealII<VW, 3, 0, NM0, NQ0, true, false>(this->m_bdata[0], (T *)localIn, wsp1);
+            TensorContractDealII<VW, 3, 0, NM0, NQ0, true, false>(this->m_bdata[0], (T *)inptr, wsp1);
             TensorContractDealII<VW, 3, 1, NM0, NQ0, true, false>(this->m_dbdata[0], wsp1, wsp2);
             TensorContractDealII<VW, 3, 2, NM0, NQ0, true, false>(this->m_dbdata[0], wsp2, (T *)deriv0);
 
             // y-gradient
-            TensorContractDealII<VW, 3, 0, NM0, NQ0, true, false>(this->m_bdata[0], (T *)localIn, wsp1);
+            TensorContractDealII<VW, 3, 0, NM0, NQ0, true, false>(this->m_bdata[0], (T *)inptr, wsp1);
             TensorContractDealII<VW, 3, 1, NM0, NQ0, true, false>(this->m_dbdata[0], wsp1, wsp2);
             TensorContractDealII<VW, 3, 2, NM0, NQ0, true, false>(this->m_bdata[0], wsp2, (T *)deriv1);
 
@@ -1319,142 +1226,198 @@ struct AVXHelmholtzGlobalHex : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
             TensorContractDealII<VW, 3, 2, NM0, NQ0, true, false>(this->m_bdata[0], wsp2, (T *)bwd);
 
             // Step 4: Apply Laplacian metrics & inner product
-
-            for (int i = 0; i < nqBlocks; i += VW)
+            if (DEFORMED)
             {
-                T deriv0i(deriv0 + i);
-                T deriv1i(deriv1 + i);
-                T deriv2i(deriv2 + i);
+                int cnt = 0;
+                for (int k = 0; k < NQ2; k++)
+                {
+                    for (int j = 0; j < NQ1; j++)
+                    {
+                        for (int i = 0; i < NQ0; i++, cnt += VW, df_ptr += 9)
+                        {
+                            metric00 = df_ptr[0] * df_ptr[0];
+                            metric00.fma(df_ptr[3], df_ptr[3]);
+                            metric00.fma(df_ptr[6], df_ptr[6]);
 
-                T *d0new = (T *)(deriv0 + i);
-                T *d1new = (T *)(deriv1 + i);
-                T *d2new = (T *)(deriv2 + i);
+                            metric01 = df_ptr[0] * df_ptr[1];
+                            metric01.fma(df_ptr[3], df_ptr[4]);
+                            metric01.fma(df_ptr[6], df_ptr[7]);
 
-                *d0new = metric00 * deriv0i;
-                d0new->fma(metric01, deriv1i);
-                d0new->fma(metric02, deriv2i);
+                            metric02 = df_ptr[0] * df_ptr[2];
+                            metric02.fma(df_ptr[3], df_ptr[5]);
+                            metric02.fma(df_ptr[6], df_ptr[8]);
 
-                *d1new = metric01 * deriv0i;
-                d1new->fma(metric11, deriv1i);
-                d1new->fma(metric12, deriv2i);
+                            metric11 = df_ptr[1] * df_ptr[1];
+                            metric11.fma(df_ptr[4], df_ptr[4]);
+                            metric11.fma(df_ptr[7], df_ptr[7]);
 
-                *d2new = metric02 * deriv0i;
-                d2new->fma(metric12, deriv1i);
-                d2new->fma(metric22, deriv2i);
+                            metric12 = df_ptr[1] * df_ptr[2];
+                            metric12.fma(df_ptr[4], df_ptr[5]);
+                            metric12.fma(df_ptr[7], df_ptr[8]);
+
+                            metric22 = df_ptr[2] * df_ptr[2];
+                            metric22.fma(df_ptr[5], df_ptr[5]);
+                            metric22.fma(df_ptr[8], df_ptr[8]);
+
+                            T d0 = T(deriv0 + cnt), d1 = T(deriv1 + cnt), d2 = T(deriv2 + cnt);
+
+                            T tmp = metric00 * d0;
+                            tmp.fma(metric01, d1);
+                            tmp.fma(metric02, d2);
+                            tmp.store(deriv0 + cnt);
+
+                            tmp = metric01 * d0;
+                            tmp.fma(metric11, d1);
+                            tmp.fma(metric12, d2);
+                            tmp.store(deriv1 + cnt);
+
+                            tmp = metric02 * d0;
+                            tmp.fma(metric12, d1);
+                            tmp.fma(metric22, d2);
+                            tmp.store(deriv2 + cnt);
+                        }
+                    }
+                }
+
+                AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, true>(
+                    deriv0, this->m_dbdata[0], this->m_bdata[1], this->m_bdata[2],
+                    this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                    wsp1, wsp2, outtmp);
+
+                AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, true>(
+                    deriv1, this->m_bdata[0], this->m_dbdata[1], this->m_bdata[2],
+                    this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                    wsp1, wsp2, outtmp);
+
+                AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, true>(
+                    deriv2, this->m_bdata[0], this->m_bdata[1], this->m_dbdata[2],
+                    this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                    wsp1, wsp2, outtmp);
+
+                // Increment Jacobian pointer
+                jac_ptr += nq;
+            }
+            else
+            {
+                // Direction 1
+                for (int i = 0; i < nqBlocks; i += VW)
+                {
+                    T deriv0i(deriv0 + i);
+                    T deriv1i(deriv1 + i);
+                    T deriv2i(deriv2 + i);
+
+                    T *d0new = (T *)(deriv0 + i);
+                    T *d1new = (T *)(deriv1 + i);
+                    T *d2new = (T *)(deriv2 + i);
+
+                    *d0new = metric00 * deriv0i;
+                    d0new->fma(metric01, deriv1i);
+                    d0new->fma(metric02, deriv2i);
+
+                    *d1new = metric01 * deriv0i;
+                    d1new->fma(metric11, deriv1i);
+                    d1new->fma(metric12, deriv2i);
+
+                    *d2new = metric02 * deriv0i;
+                    d2new->fma(metric12, deriv1i);
+                    d2new->fma(metric22, deriv2i);
+                }
+
+                TensorContractDealII<VW, 3, 2, NM0, NQ0, false, false>(this->m_dbdata[0], (T *)deriv2, wsp1);
+                TensorContractDealII<VW, 3, 2, NM0, NQ0, false, true>(this->m_bdata[0], (T *)bwd, wsp1);
+                TensorContractDealII<VW, 3, 1, NM0, NQ0, false, false>(this->m_bdata[0], wsp1, wsp2);
+                TensorContractDealII<VW, 3, 2, NM0, NQ0, false, false>(this->m_bdata[0], (T *)deriv1, wsp1);
+
+                TensorContractDealII<VW, 3, 1, NM0, NQ0, false, true>(this->m_dbdata[0], wsp1, wsp2);
+                TensorContractDealII<VW, 3, 0, NM0, NQ0, false, true>(this->m_bdata[0], wsp2, (T *)outptr);
+
+                TensorContractDealII<VW, 3, 2, NM0, NQ0, false, false>(this->m_bdata[0], (T *)deriv0, wsp1);
+                TensorContractDealII<VW, 3, 1, NM0, NQ0, false, false>(this->m_bdata[0], wsp1, wsp2);
+                TensorContractDealII<VW, 3, 0, NM0, NQ0, false, true>(this->m_dbdata[0], wsp1, (T *)outptr);
+
+                /*
+                AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, false>(
+                    bwd, this->m_dbdata[0], this->m_bdata[0], this->m_bdata[0],
+                    this->m_w[0], this->m_w[0], this->m_w[0], jac_ptr,
+                    wsp1, wsp2, outtmp);
+
+                AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, false>(
+                    bwd, this->m_bdata[0], this->m_dbdata[0], this->m_bdata[0],
+                    this->m_w[0], this->m_w[0], this->m_w[0], jac_ptr,
+                    wsp1, wsp2, outtmp);
+
+                AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, false>(
+                    bwd, this->m_bdata[0], this->m_bdata[0], this->m_dbdata[0],
+                    this->m_w[0], this->m_w[0], this->m_w[0], jac_ptr,
+                    wsp1, wsp2, outtmp);
+
+                  /*
+                df_ptr += 9;
+                jac_ptr++;
+                */
             }
 
-            TensorContractDealII<VW, 3, 2, NM0, NQ0, false, false>(this->m_dbdata[0], (T *)deriv2, wsp1);
-            TensorContractDealII<VW, 3, 2, NM0, NQ0, false, true>(this->m_bdata[0], (T *)bwd, wsp1);
-            TensorContractDealII<VW, 3, 1, NM0, NQ0, false, false>(this->m_bdata[0], wsp1, wsp2);
-            TensorContractDealII<VW, 3, 2, NM0, NQ0, false, false>(this->m_bdata[0], (T *)deriv1, wsp1);
+            for (int i = 0; i < NM0 * NM1 * NM2; ++i)
+            {
+                T outxmm(outtmp + i * VW);
+                outxmm.store(outptr + i * VW);
+            }
 
-            TensorContractDealII<VW, 3, 1, NM0, NQ0, false, true>(this->m_dbdata[0], wsp1, wsp2);
-            TensorContractDealII<VW, 3, 0, NM0, NQ0, false, true>(this->m_bdata[0], wsp2, (T *)localOut);
-
-            TensorContractDealII<VW, 3, 2, NM0, NQ0, false, false>(this->m_bdata[0], (T *)deriv0, wsp1);
-            TensorContractDealII<VW, 3, 1, NM0, NQ0, false, false>(this->m_bdata[0], wsp1, wsp2);
-            TensorContractDealII<VW, 3, 0, NM0, NQ0, false, true>(this->m_dbdata[0], wsp1, (T *)localOut);
-
-            map_index = l2g.template AssembleBlock<nm>(localOut, globalOutPtr, map_index);
+            inptr += nmBlocks;
+            outptr += nmBlocks;
         }
-
-        l2g.GetAssemblyMap()->UniversalAssemble(globalOut);
     }
 #else
     template<int NM0, int NM1, int NM2, int NQ0, int NQ1, int NQ2>
-    void AVXHelmholtzGlobalHexImpl(
-        const Array<OneD, const NekDouble> &globalIn,
-              Array<OneD,       NekDouble> &globalOut,
-              AVXAssembly<VW>              &l2g)
+    void AVXHelmholtzHexImpl(
+        const Array<OneD, const NekDouble> &input,
+              Array<OneD,       NekDouble> &out)
     {
         using T = VecData<double, VW>;
 
         // Pointers for input/output across blocks
-        const NekDouble *globalInPtr = &globalIn[0];
-        NekDouble *globalOutPtr = &globalOut[0];
+        const NekDouble *inptr = &input[0];
+        NekDouble *outptr = &out[0];
 
-        constexpr int nm = NM0 * NM1 * NM2;
         constexpr int nqBlocks = NQ0 * NQ1 * NQ2 * VW;
         constexpr int nmBlocks = NM0 * NM1 * NM2 * VW;
         constexpr int ndf = 9;
         constexpr int nq = NQ0 * NQ1 * NQ2;
 
-        //Zero this out since all gather operations are +=
-        memset(globalOutPtr, 0, l2g.GetNGlobal()*sizeof(double));
-
         // Workspace for kernels
-        T wsp1[NM2 * NQ0 * NM1], wsp2[NM2 * NQ1 * NQ0];
+        T wsp1[NQ0 * NQ1 * NQ2], wsp2[NQ0 * NQ1 * NQ2];
 
         // Aligned stack storage
         std::aligned_storage<sizeof(double), 64>::type bwd_storage[nqBlocks];
+        std::aligned_storage<sizeof(double), 64>::type out_storage[nmBlocks];
         std::aligned_storage<sizeof(double), 64>::type deriv0_storage[nqBlocks];
         std::aligned_storage<sizeof(double), 64>::type deriv1_storage[nqBlocks];
         std::aligned_storage<sizeof(double), 64>::type deriv2_storage[nqBlocks];
-        std::aligned_storage<sizeof(double), 64>::type localIn_storage[nmBlocks];
-        std::aligned_storage<sizeof(double), 64>::type localOut_storage[nmBlocks];
-        double *bwd      = reinterpret_cast<double *>(&bwd_storage[0]);
-        double *deriv0   = reinterpret_cast<double *>(&deriv0_storage[0]);
-        double *deriv1   = reinterpret_cast<double *>(&deriv1_storage[0]);
-        double *deriv2   = reinterpret_cast<double *>(&deriv2_storage[0]);
-        double *localIn  = reinterpret_cast<double *>(&localIn_storage[0]);
-        double *localOut = reinterpret_cast<double *>(&localOut_storage[0]);
-
-        /*
-        double bwd[nqBlocks], deriv0[nqBlocks], deriv1[nqBlocks], deriv2[nqBlocks];
-        double localIn[nmBlocks], localOut[nmBlocks];
-        */
-
-        int map_index = 0; //Index into the local2global map
+        double *bwd    = reinterpret_cast<double *>(&bwd_storage[0]);
+        double *outtmp = reinterpret_cast<double *>(&out_storage[0]);
+        double *deriv0 = reinterpret_cast<double *>(&deriv0_storage[0]);
+        double *deriv1 = reinterpret_cast<double *>(&deriv1_storage[0]);
+        double *deriv2 = reinterpret_cast<double *>(&deriv2_storage[0]);
 
         VecData<double, VW> *jac_ptr = &this->m_jac[0];
         VecData<double, VW> *df_ptr = &this->m_df[0];
 
         T metric00, metric01, metric02, metric11, metric12, metric22;
-        metric00 = df_ptr[0] * df_ptr[0];
-        metric00.fma(df_ptr[3], df_ptr[3]);
-        metric00.fma(df_ptr[6], df_ptr[6]);
-
-        metric01 = df_ptr[0] * df_ptr[1];
-        metric01.fma(df_ptr[3], df_ptr[4]);
-        metric01.fma(df_ptr[6], df_ptr[7]);
-
-        metric02 = df_ptr[0] * df_ptr[2];
-        metric02.fma(df_ptr[3], df_ptr[5]);
-        metric02.fma(df_ptr[6], df_ptr[8]);
-
-        metric11 = df_ptr[1] * df_ptr[1];
-        metric11.fma(df_ptr[4], df_ptr[4]);
-        metric11.fma(df_ptr[7], df_ptr[7]);
-
-        metric12 = df_ptr[1] * df_ptr[2];
-        metric12.fma(df_ptr[4], df_ptr[5]);
-        metric12.fma(df_ptr[7], df_ptr[8]);
-
-        metric22 = df_ptr[2] * df_ptr[2];
-        metric22.fma(df_ptr[5], df_ptr[5]);
-        metric22.fma(df_ptr[8], df_ptr[8]);
 
         for (int e = 0; e < this->m_nBlocks; e++)
         {
             // Precompute Laplacian metrics
 
-            //Scatter
-            //l2g.template ScatterBlock<nm>(globalInPtr, localIn, map_index);
-            for (int i = 0; i < nmBlocks; ++i)
-            {
-                localIn[i] = globalInPtr[l2g.m_l2g[map_index + i]];
-            }
-
             // Step 1: BwdTrans
             AVXBwdTransHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW>(
-                localIn, this->m_bdata[0], this->m_bdata[0], this->m_bdata[0],
-                wsp1, wsp2, bwd);
+               inptr, this->m_bdata[0], this->m_bdata[0], this->m_bdata[0],
+               wsp1, wsp2, bwd);
 
             // Step 2: inner product for mass matrix operation
             AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, true, false, DEFORMED>(
                 bwd, this->m_bdata[0], this->m_bdata[0], this->m_bdata[0],
                 this->m_w[0], this->m_w[0], this->m_w[0], jac_ptr,
-                wsp1, wsp2, localOut, m_lambda);
+                wsp1, wsp2, outtmp, m_lambda);
 
             // Step 3: take derivatives in standard space
             AVXPhysDerivTensor3DKernel<NQ0, NQ1, NQ2, VW>(
@@ -1518,75 +1481,101 @@ struct AVXHelmholtzGlobalHex : public HelmholtzGlobal<VW>, public AVXHelper<VW, 
                 AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, true>(
                     deriv0, this->m_dbdata[0], this->m_bdata[1], this->m_bdata[2],
                     this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-                    wsp1, wsp2, localOut);
+                    wsp1, wsp2, outtmp);
 
                 AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, true>(
                     deriv1, this->m_bdata[0], this->m_dbdata[1], this->m_bdata[2],
                     this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-                    wsp1, wsp2, localOut);
+                    wsp1, wsp2, outtmp);
 
                 AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, true>(
                     deriv2, this->m_bdata[0], this->m_bdata[1], this->m_dbdata[2],
                     this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-                    wsp1, wsp2, localOut);
+                    wsp1, wsp2, outtmp);
 
                 // Increment Jacobian pointer
                 jac_ptr += nq;
             }
             else
             {
-                // Direction 1
+                metric00 = df_ptr[0] * df_ptr[0];
+                metric00.fma(df_ptr[3], df_ptr[3]);
+                metric00.fma(df_ptr[6], df_ptr[6]);
+
+                metric01 = df_ptr[0] * df_ptr[1];
+                metric01.fma(df_ptr[3], df_ptr[4]);
+                metric01.fma(df_ptr[6], df_ptr[7]);
+
+                metric02 = df_ptr[0] * df_ptr[2];
+                metric02.fma(df_ptr[3], df_ptr[5]);
+                metric02.fma(df_ptr[6], df_ptr[8]);
+
+                metric11 = df_ptr[1] * df_ptr[1];
+                metric11.fma(df_ptr[4], df_ptr[4]);
+                metric11.fma(df_ptr[7], df_ptr[7]);
+
+                metric12 = df_ptr[1] * df_ptr[2];
+                metric12.fma(df_ptr[4], df_ptr[5]);
+                metric12.fma(df_ptr[7], df_ptr[8]);
+
+                metric22 = df_ptr[2] * df_ptr[2];
+                metric22.fma(df_ptr[5], df_ptr[5]);
+                metric22.fma(df_ptr[8], df_ptr[8]);
+
                 for (int i = 0; i < nqBlocks; i += VW)
                 {
-                    T tmp = metric00 * T(deriv0 + i);
-                    tmp.fma(metric01, T(deriv1 + i));
-                    tmp.fma(metric02, T(deriv2 + i));
-                    tmp.store(bwd + i);
+                    T deriv0i(deriv0 + i);
+                    T deriv1i(deriv1 + i);
+                    T deriv2i(deriv2 + i);
+
+                    T *d0new = (T *)(deriv0 + i);
+                    T *d1new = (T *)(deriv1 + i);
+                    T *d2new = (T *)(deriv2 + i);
+
+                    *d0new = metric00 * deriv0i;
+                    d0new->fma(metric01, deriv1i);
+                    d0new->fma(metric02, deriv2i);
+
+                    *d1new = metric01 * deriv0i;
+                    d1new->fma(metric11, deriv1i);
+                    d1new->fma(metric12, deriv2i);
+
+                    *d2new = metric02 * deriv0i;
+                    d2new->fma(metric12, deriv1i);
+                    d2new->fma(metric22, deriv2i);
                 }
 
                 AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, false>(
-                    bwd, this->m_dbdata[0], this->m_bdata[0], this->m_bdata[0],
+                    deriv0, this->m_dbdata[0], this->m_bdata[0], this->m_bdata[0],
                     this->m_w[0], this->m_w[0], this->m_w[0], jac_ptr,
-                    wsp1, wsp2, localOut);
-
-                // Direction 2
-                for (int i = 0; i < nqBlocks; i += VW)
-                {
-                    T tmp = metric01 * T(deriv0 + i);
-                    tmp.fma(metric11, T(deriv1 + i));
-                    tmp.fma(metric12, T(deriv2 + i));
-                    tmp.store(bwd + i);
-                }
+                    wsp1, wsp2, outtmp);
 
                 AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, false>(
-                    bwd, this->m_bdata[0], this->m_dbdata[0], this->m_bdata[0],
+                    deriv1, this->m_bdata[0], this->m_dbdata[0], this->m_bdata[0],
                     this->m_w[0], this->m_w[0], this->m_w[0], jac_ptr,
-                    wsp1, wsp2, localOut);
-
-                // Direction 3
-                for (int i = 0; i < nqBlocks; i += VW)
-                {
-                    T tmp = metric02 * T(deriv0 + i);
-                    tmp.fma(metric12, T(deriv1 + i));
-                    tmp.fma(metric22, T(deriv2 + i));
-                    tmp.store(bwd + i);
-                }
+                    wsp1, wsp2, outtmp);
 
                 AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, false>(
-                    bwd, this->m_bdata[0], this->m_bdata[0], this->m_dbdata[0],
+                    deriv2, this->m_bdata[0], this->m_bdata[0], this->m_dbdata[0],
                     this->m_w[0], this->m_w[0], this->m_w[0], jac_ptr,
-                    wsp1, wsp2, localOut);
+                    wsp1, wsp2, outtmp);
 
                 df_ptr += 9;
                 jac_ptr++;
             }
 
-            map_index = l2g.template AssembleBlock<nm>(localOut, globalOutPtr, map_index);
-        }
+            for (int i = 0; i < NM0 * NM1 * NM2; ++i)
+            {
+                T outxmm(outtmp + i * VW);
+                outxmm.store(outptr + i * VW);
+            }
 
-        l2g.GetAssemblyMap()->UniversalAssemble(globalOut);
+            inptr += nmBlocks;
+            outptr += nmBlocks;
+        }
     }
 #endif
+
 private:
     int m_nmTot;
     double m_lambda;

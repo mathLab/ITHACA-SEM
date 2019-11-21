@@ -1,9 +1,7 @@
 #ifndef AVXASSEMBLY_H
 #define AVXASSEMBLY_H
 
-#include <MultiRegions/ContField1D.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/ContField.h>
 #include <Collections/Collection.h>
 #include <iostream>
 #include "VecData.hpp"

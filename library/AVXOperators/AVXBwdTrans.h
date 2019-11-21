@@ -7,7 +7,7 @@
 
 #include "VecData.hpp"
 #include "Operator.hpp"
-#include "AVXBwdTransKernel.hpp"
+#include "AVXBwdTransKernels.hpp"
 
 template<int VW>
 struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
@@ -18,7 +18,7 @@ struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
           AVXHelper<VW, 2>(basis, nElmt),
           m_nmTot(LibUtilities::StdQuadData::getNumberOfCoefficients(
                       this->m_nm[0], this->m_nm[1]))
-    { 
+    {
     }
 
     static std::shared_ptr<Operator> Create(
@@ -141,7 +141,7 @@ struct AVXBwdTransTri : public BwdTrans, public AVXHelper<VW, 2>
           AVXHelper<VW, 2>(basis, nElmt),
           m_nmTot(LibUtilities::StdTriData::getNumberOfCoefficients(
                       this->m_nm[0], this->m_nm[1]))
-    { 
+    {
     }
 
     static std::shared_ptr<Operator> Create(
@@ -266,7 +266,7 @@ struct AVXBwdTransTri : public BwdTrans, public AVXHelper<VW, 2>
                 this->m_bdata[0], this->m_bdata[1],
                 q_sums,
                 outptr);
-            
+
             inptr += nmBlocks;
             outptr += nqBlocks;
         }
@@ -393,7 +393,7 @@ struct AVXBwdTransHex : public BwdTrans, public AVXHelper<VW, 3>
 
         for(int e = 0; e < this->m_nBlocks; e++){
             AVXBwdTransHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW>(
-                inptr, 
+                inptr,
                 this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
                 sum_irq, sum_jir,
                 outptr);
@@ -543,7 +543,7 @@ struct AVXBwdTransTet : public BwdTrans, public AVXHelper<VW, 3>
 
         for(int e = 0; e < this->m_nBlocks; e++){
             AVXBwdTransTetKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, CORRECT>(
-                inptr, 
+                inptr,
                 this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
                 fpq, fp,
                 outptr);
@@ -601,7 +601,7 @@ struct AVXBwdTransPrism : public BwdTrans, public AVXHelper<VW, 3>
         return flops * 1e-9;
 
     }
-        
+
     virtual NekDouble Ndof() override
     {
         return m_nmTot * this->m_nElmt;
@@ -695,7 +695,7 @@ struct AVXBwdTransPrism : public BwdTrans, public AVXHelper<VW, 3>
 
         for(int e = 0; e < this->m_nBlocks; e++){
             AVXBwdTransPrismKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, CORRECT>(
-                inptr, 
+                inptr,
                 this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
                 fpq, fp,
                 outptr);

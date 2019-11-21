@@ -7,7 +7,7 @@
 
 #include "VecData.hpp"
 #include "Operator.hpp"
-#include "AVXPhysDerivKernel.hpp"
+#include "AVXPhysDerivKernels.hpp"
 
 template<int VW, bool DEFORMED = false>
 struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
@@ -70,7 +70,7 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
     {
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
-        
+
         int physDerivTensor = nq0*nq1*2;
         int physDeriv = nq0 * nq1 * 2;
 
@@ -170,7 +170,7 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
                 this->m_D[0], this->m_D[1],
                 df_ptr,
                 outptr_d0, outptr_d1);
-            
+
             inptr += nqBlocks;
             outptr_d0 += nqBlocks;
             outptr_d1 += nqBlocks;
@@ -248,7 +248,7 @@ struct AVXPhysDerivTri : public PhysDeriv, public AVXHelper<VW,2,DEFORMED>
     {
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
-        
+
         int physDerivTensor = nq0*nq1*2;
         int physDeriv = nq1*nq0*2;
 
@@ -348,7 +348,7 @@ struct AVXPhysDerivTri : public PhysDeriv, public AVXHelper<VW,2,DEFORMED>
                 this->m_D[0], this->m_D[1],
                 df_ptr,
                 outptr_d0, outptr_d1);
-            
+
             inptr += nqBlocks;
             outptr_d0 += nqBlocks;
             outptr_d1 += nqBlocks;
@@ -522,7 +522,7 @@ struct AVXPhysDerivHex : public PhysDeriv, public AVXHelper<VW,3,DEFORMED>
         const VecData<double, VW> *df_ptr;
 
         for(int e = 0; e < this->m_nBlocks; e++){
-            
+
             if(DEFORMED){
                 df_ptr = &(this->m_df[e*ndf*nq]);
             }
@@ -822,7 +822,7 @@ struct AVXPhysDerivTet : public PhysDeriv, public AVXHelper<VW,3, DEFORMED>
         int physDerivTensor = store_d0 + store_d1 + store_d2;
 
         int store_dd = nq2 * nq1 * nq0 * 2;
-        int store_coef = nq2 * nq1 *nq0 * 3; 
+        int store_coef = nq2 * nq1 *nq0 * 3;
         int physDeriv = store_dd * 3 + store_coef;
 
         return m_nElmt * (physDeriv + physDerivTensor);

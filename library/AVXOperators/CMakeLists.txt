@@ -11,9 +11,9 @@ SET(AVXOPERATORS_HEADERS
     AVXIProduct.h
     AVXIProductKernels.hpp
     AVXBwdTrans.h
-    AVXBwdTransKernel.hpp
+    AVXBwdTransKernels.hpp
     AVXPhysDeriv.h
-    AVXPhysDerivKernel.hpp
+    AVXPhysDerivKernels.hpp
     AVXHelmholtz.h
     AVXHelmholtzGlobal.h
     AVXUtil.hpp
@@ -21,7 +21,7 @@ SET(AVXOPERATORS_HEADERS
     Operator.hpp
 )
 
-ADD_NEKTAR_LIBRARY(AVXoperators
+ADD_NEKTAR_LIBRARY(AVXOperators
     SOURCES ${AVXOPERATORS_SOURCES}
     HEADERS ${AVXOPERATORS_HEADERS}
     DEPENDS LibUtilities
@@ -29,6 +29,6 @@ ADD_NEKTAR_LIBRARY(AVXoperators
     DESCRIPTION "This library provides key operators with AVX vector instructions.")
 
 INSTALL(DIRECTORY ./
-    DESTINATION ${NEKTAR_INCLUDE_DIR}/AVXoperators
+    DESTINATION ${NEKTAR_INCLUDE_DIR}/AVXOperators
     COMPONENT dev
     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

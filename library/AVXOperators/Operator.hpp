@@ -5,9 +5,7 @@
 
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/ExpList3D.h>
+#include <MultiRegions/ExpList.h>
 #include "VecData.hpp"
 #include "AVXAssembly.h"
 
@@ -81,7 +79,7 @@ public:
     ///
     /// In 2D this is taken as \f$ \sin x \cos y \f$, and in 3D \f$ \sin x \cos
     /// y \sin z \f$.
-    static void RefFn(MultiRegions::ExpListSharedPtr expList, 
+    static void RefFn(MultiRegions::ExpListSharedPtr expList,
                       Array<OneD, NekDouble> &in)
     {
         const int nq = expList->GetNpoints();
@@ -127,8 +125,8 @@ public:
         const Array<OneD, const NekDouble> &input,
         Array<OneD, NekDouble> &output) = 0; //Abstract Method
 
-    void Ref(MultiRegions::ExpListSharedPtr expList, 
-             Array<OneD, NekDouble> &ref_exp, 
+    void Ref(MultiRegions::ExpListSharedPtr expList,
+             Array<OneD, NekDouble> &ref_exp,
              Array<OneD, NekDouble> &ref_bwd)
     {
         Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
@@ -164,8 +162,8 @@ public:
         const Array<OneD, const NekDouble> &input,
         Array<OneD, NekDouble> &output) = 0;
 
-    void Ref(MultiRegions::ExpListSharedPtr expList, 
-                Array<OneD, NekDouble> &ref_fn, 
+    void Ref(MultiRegions::ExpListSharedPtr expList,
+                Array<OneD, NekDouble> &ref_fn,
                 Array<OneD, NekDouble> &ref_iprod)
     {
         this->RefFn(expList, ref_fn);
@@ -206,9 +204,9 @@ public:
         Array<OneD, NekDouble> &output1,
         Array<OneD, NekDouble> &output2) = 0;
 
-    void Ref(MultiRegions::ExpListSharedPtr expList, 
-                Array<OneD, NekDouble> &ref_fn, 
-                Array<OneD, NekDouble> &d0, 
+    void Ref(MultiRegions::ExpListSharedPtr expList,
+                Array<OneD, NekDouble> &ref_fn,
+                Array<OneD, NekDouble> &d0,
                 Array<OneD, NekDouble> &d1,
                 Array<OneD, NekDouble> &d2 = NullNekDouble1DArray)
     {
@@ -309,7 +307,7 @@ class HelmholtzGlobal : virtual public Operator
         Array<OneD,       NekDouble> &globalOut,
         AVXAssembly<VW>              &l2g) = 0;
 
-    
+
     void Ref(MultiRegions::ExpListSharedPtr expList,
              Array<OneD, NekDouble> &ref_exp,
              Array<OneD, NekDouble> &ref_helm)
@@ -356,7 +354,7 @@ class HelmholtzGlobal : virtual public Operator
 protected:
     std::vector<LibUtilities::BasisSharedPtr> m_basis;
     int m_nElmt;
-    
+
 };
 
 template <int VW, int DIM, bool DEFORMED = false>

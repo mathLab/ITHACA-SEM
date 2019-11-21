@@ -39,23 +39,28 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <SpatialDomains/MeshPartition.h>
 
+#ifdef NEKTAR_USE_MPI
+#include <ptscotch.h>
+#else
 #include <scotch.h>
+#endif
 
 namespace Nektar
 {
 namespace SpatialDomains
 {
-
     class MeshPartitionScotch : public MeshPartition
     {
         public:
             /// Creates an instance of this class
             static MeshPartitionSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr session,
-                const MeshGraphSharedPtr meshGraph)
+                int                                        meshDim,
+                std::map<int, MeshEntity>                  element,
+                CompositeDescriptor                        compMap)
             {
                 return MemoryManager<MeshPartitionScotch>
-                    ::AllocateSharedPtr(session, meshGraph);
+                    ::AllocateSharedPtr(session, meshDim, element, compMap);
             }
 
             /// Name of class
@@ -64,7 +69,9 @@ namespace SpatialDomains
 
             MeshPartitionScotch(
                 const LibUtilities::SessionReaderSharedPtr session,
-                const MeshGraphSharedPtr meshGraph);
+                int                                        meshDim,
+                std::map<int, MeshEntity>                  element,
+                CompositeDescriptor                        compMap);
             virtual ~MeshPartitionScotch();
 
         private:

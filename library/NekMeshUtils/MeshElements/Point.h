@@ -54,8 +54,7 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        return std::shared_ptr<Element>(
-            new Point(pConf, pNodeList, pTagList));
+        return std::make_shared<Point>(pConf, pNodeList, pTagList);
     }
     /// Element type
     static LibUtilities::ShapeType m_type;

@@ -66,6 +66,7 @@ namespace Nektar
         const std::string& GetParameters() const;
         const std::string& GetCommand() const;
         const unsigned int& GetNProcesses() const;
+        bool IsPythonTest() const;
 
         std::string GetMetricType(unsigned int pId) const;
         unsigned int GetNumMetrics() const;
@@ -87,6 +88,7 @@ namespace Nektar
         TiXmlDocument*                  m_doc;
         std::vector<TiXmlElement*>      m_metrics;
         std::vector<DependentFile>      m_files;
+        bool                            m_pythonTest;
 
         void Parse(TiXmlDocument* pDoc);
     };

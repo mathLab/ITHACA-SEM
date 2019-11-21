@@ -1,0 +1,11 @@
+IF(NEKTAR_BUILD_PYTHON)
+    ADD_NEKPY_EXECUTABLE(StdIntegral2D.py StdIntegral2D.py)
+    ADD_NEKPY_EXECUTABLE(NekPy_ReferenceTest_CppDeleteFirst.py NekPy_ReferenceTest_CppDeleteFirst.py)
+    ADD_NEKPY_EXECUTABLE(NekPy_ReferenceTest_PythonDeleteFirst.py NekPy_ReferenceTest_PythonDeleteFirst.py)
+    ADD_NEKPY_EXECUTABLE(NekPy_MemoryTest_PythonToCpp_Address.py NekPy_MemoryTest_PythonToCpp_Address.py)
+
+    ADD_NEKTAR_TEST(StdIntegral2D)
+    ADD_NEKTAR_TEST(NekPy_ReferenceTest_CppDeleteFirst)
+    ADD_NEKTAR_TEST(NekPy_ReferenceTest_PythonDeleteFirst)
+    ADD_NEKTAR_TEST(NekPy_MemoryTest_PythonToCpp_Address)
+ENDIF()

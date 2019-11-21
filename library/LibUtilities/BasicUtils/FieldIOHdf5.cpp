@@ -1063,6 +1063,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
         }
     }
 
+    ImportHDF5FieldMetaData(dataSource, fieldinfomap);
     m_comm->Block();
 }
 

@@ -7,7 +7,15 @@
 ########################################################################
 
 IF(NEKTAR_USE_MESHGEN)
-    SET(BUILD_TRIANGLE ON)
+    # Search for system-installed Triangle installation
+    FIND_LIBRARY(TRIANGLE_LIBRARY NAMES triangle)
+    FIND_PATH(TRIANGLE_INCLUDE_DIR triangle.h)
+
+    IF(TRIANGLE_LIBRARY AND TRIANGLE_INCLUDE_DIR)
+        SET(BUILD_TRIANGLE OFF)
+    ELSE()
+        SET(BUILD_TRIANGLE ON)
+    ENDIF()
 
     OPTION(THIRDPARTY_BUILD_TRIANGLE
     "Build Triangle library from ThirdParty." ${BUILD_TRIANGLE})

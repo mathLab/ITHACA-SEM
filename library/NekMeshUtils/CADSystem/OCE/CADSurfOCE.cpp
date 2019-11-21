@@ -93,6 +93,12 @@ Array<OneD, NekDouble> CADSurfOCE::BoundingBox()
     B.Enlarge(e);
     Array<OneD, NekDouble> ret(6);
     B.Get(ret[0], ret[1], ret[2], ret[3], ret[4], ret[5]);
+    ret[0] /= 1000.0;
+    ret[1] /= 1000.0;
+    ret[2] /= 1000.0;
+    ret[3] /= 1000.0;
+    ret[4] /= 1000.0;
+    ret[5] /= 1000.0;
     return ret;
 }
 

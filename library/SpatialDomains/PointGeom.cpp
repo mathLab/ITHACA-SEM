@@ -57,10 +57,6 @@ PointGeom::PointGeom(
     m_shapeType = LibUtilities::ePoint;
     m_coordim = coordim;
     m_globalID = vid;
-
-    (*this)(0) = x;
-    (*this)(1) = y;
-    (*this)(2) = z;
 }
 
 // copy constructor
@@ -128,7 +124,7 @@ void PointGeom::Sub(PointGeom &a, PointGeom &b)
     m_coordim = std::max(a.GetCoordim(), b.GetCoordim());
 }
 
-// _this = a x b
+/// \brief _this = a x b
 void PointGeom::Mult(PointGeom &a, PointGeom &b)
 {
     (*this)(0) = a[1] * b[2] - a[2] * b[1];
@@ -137,14 +133,52 @@ void PointGeom::Mult(PointGeom &a, PointGeom &b)
     m_coordim = 3;
 }
 
-// _output = this.a
+/// \brief _this  = rotation of a by angle 'angle' around axis dir
+void PointGeom::Rotate(PointGeom& a, int dir, NekDouble angle)
+{
+    switch(dir)
+    {
+    case 0:
+        {
+            NekDouble yrot = cos(angle)*a.y() - sin(angle)*a.z();
+            NekDouble zrot = sin(angle)*a.y() + cos(angle)*a.z();
+            
+            (*this)(0) = a.x();
+            (*this)(1) = yrot;
+            (*this)(2) = zrot;
+        }
+        break;
+    case 1:
+        {
+            NekDouble zrot = cos(angle)*a.z() - sin(angle)*a.x();
+            NekDouble xrot = sin(angle)*a.z() + cos(angle)*a.x();
+            
+            (*this)(0) = xrot;
+            (*this)(1) = a.y(); 
+            (*this)(2) = zrot;
+        }
+        break;
+    case 2:
+        {
+            NekDouble xrot = cos(angle)*a.x() - sin(angle)*a.y();
+            NekDouble yrot = sin(angle)*a.x() + cos(angle)*a.y();
+            
+            (*this)(0) = xrot;
+            (*this)(1) = yrot;
+            (*this)(2) = a.z(); 
+        }
+        break;
+    }
+}
+    
+///  \brief return distance between this and input a
 NekDouble PointGeom::dist(PointGeom &a)
 {
     return sqrt((x() - a.x()) * (x() - a.x()) + (y() - a.y()) * (y() - a.y()) +
                 (z() - a.z()) * (z() - a.z()));
 }
 
-// _output = this.a
+/// \brief retun the dot product between this and input a 
 NekDouble PointGeom::dot(PointGeom &a)
 {
     return (x() * a.x() + y() * a.y() + z() * a.z());

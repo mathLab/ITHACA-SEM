@@ -283,7 +283,10 @@ namespace Nektar
                                     "once!");
 
                     m_meshGraph->GetCompositeList(indxStr, *boundaryRegion);
-                    m_boundaryRegions[indx] = boundaryRegion;
+                    if (boundaryRegion->size() > 0)
+                    {
+                        m_boundaryRegions[indx] = boundaryRegion;
+                    }
                 }
 
                 boundaryRegionsElement =
@@ -333,6 +336,12 @@ namespace Nektar
                 std::string boundaryRegionIDStr;
                 std::ostringstream boundaryRegionIDStrm(boundaryRegionIDStr);
                 boundaryRegionIDStrm << boundaryRegionID;
+
+                if (m_boundaryRegions.count(boundaryRegionID) == 0)
+                {
+                    regionElement = regionElement->NextSiblingElement("REGION");
+                    continue;
+                }
 
                 ASSERTL0(m_boundaryRegions.count(boundaryRegionID) == 1,
                         "Boundary region " + boost::lexical_cast < string
@@ -679,12 +688,12 @@ namespace Nektar
                     {
                         if (attrData.empty())
                         {
-                            ASSERTL0(false, "Periodic boundary conditions should be explicitely defined");
+                            ASSERTL0(false,
+                                     "Periodic boundary conditions should "
+                                     "be explicitely defined");
                         }
                         else
                         {
-                            // Use the iterator from above, which must point to the variable.
-                            // Read the VALUE attribute.  It is the next and only other attribute.
                             attr = attr->Next();
 
                             if (attr)
@@ -727,7 +736,8 @@ namespace Nektar
                             else
                             {
                                 ASSERTL0(false,
-                                        "Periodic boundary conditions should be explicitely defined");
+                                        "Periodic boundary conditions should "
+                                         "be explicitely defined");
                             }
                         }
                     }

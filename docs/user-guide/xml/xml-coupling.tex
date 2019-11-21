@@ -82,7 +82,7 @@ The coupling waits for the file given in the receive function to appear.
     The Cwipi coupling is only available when Nektar++ is compiled with OpenMPI and CWIPI
 \end{notebox}
 The Cwipi coupling uses CWIPI\footnote{http://sites.onera.fr/cwipi/} to facilitate real time data exchange over MPI.
-See \cite{LaSaJa17} for details.
+See \cite{La18} for details.
 All data transfers are non-blocking to minimize the computational overhead.
 The interface must be enabled with the command line option \inltt{--cwipi} and a unique application name, e.g:\begin{lstlisting}[style=BashInputStyle] 
 DummySolver --cwipi 'Dummy1' Dummy_3DCubeCwipi_1.xml

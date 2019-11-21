@@ -162,6 +162,7 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{combineAvg}: Combine two \nekpp binary output (.chk or .fld) field file containing averages of fields (and
 possibly also Reynolds stresses) into single file;
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file (deprecated);
+\item \inltt{dof}: Count the total number of DOF;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
 \item \inltt{gradient}: Computes gradient of fields;
@@ -180,6 +181,7 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{pointdatatofld}: Given discrete data at quadrature points
   project them onto an expansion basis and output fld file;
 \item \inltt{printfldnorms}: Print L2 and LInf norms to stdout;
+\item \inltt{removefield}: Removes one or more fields from .fld files;
 \item \inltt{scalargrad}: Computes scalar gradient field;
 \item \inltt{scaleinputfld}: Rescale input field by a constant factor;
 \item \inltt{shear}: Computes time-averaged shear stress metrics: TAWSS, OSI, transWSS, TAAFI, TACFI, WSSG;
@@ -353,6 +355,16 @@ way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise the result either in Tecplot, Paraview or VisIt. The
 \inltt{concatenate} module previously used for this purpose is not
 required anymore, and will be removed in a future release.
+%
+%
+%
+\subsection{Count the number of DOF: \textit{dof} module}
+To count the number of DOF in a solution file,
+one can run the following command
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m dof file.xml file.fld out.stdout
+\end{lstlisting}
 %
 %
 %
@@ -912,6 +924,19 @@ FieldConvert -m printfldnorms test.xml test.fld out.stdout
 This module does not create an output file which is reinforced by the
 out.stdout option. The L2 and LInf norms for each field variable are
 then printed to the stdout.
+%
+%
+%
+
+\subsection{Removes one or more fields from .fld files: \textit{removefield} module}
+This module allows to remove one or more fields from a .fld file:
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m removefield:fieldname="u,v,p" test.xml test.fld test-removed.fld
+\end{lstlisting}
+where the file \inltt{test-removed.fld} can be processed in a similar
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise the result either in Tecplot, Paraview or VisIt. The lighter resulting
+file speeds up the postprocessing of large files when not all fields are required. 
 %
 %
 %

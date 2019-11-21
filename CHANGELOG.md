@@ -12,6 +12,7 @@ v5.0.0
 - Use chrono in Timer (!807)
 - Fix caching of FUNCTION tags that read from file and provide the same
   functionality in FUNCTIONs defined for forcings (!759)
+- Transition to C++11 (!795, !847)
 - Add patch to tinyxml to fix size_t vs int bug (!820)
 - Add ARPACK thirdparty build capabilities (!828)
 - Added native support for csv files in addititon to pts (!760, !835, !906)
@@ -38,7 +39,7 @@ v5.0.0
 - Added in sum factorisation version for pyramid expnasions and orthogonal
   expansion in pyramids (!750)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
-  !904)
+  !904, !941)
 - Restructure the low energy preconditioner to handle pyramidic and variable
   p expansions (!920)
 - Remove requirement for modmetis, switch to SCOTCH by default (!899)
@@ -48,10 +49,25 @@ v5.0.0
   WeightPartitions was used in parallel (!923)
 - Removed instance count from beginning of Array storage to improve memory
   alignment (!921)
-- Fix naming issue of duplicate Unit tests (!924) 
+- Fix naming issue of duplicate Unit tests (!924)
 - Fix warnings about missing virtual destructors in abstract classes (!932)
+- Fix ability to have periodic boundary conditions that are aligned by a
+  rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
-  and a DummySolver to test the implementations (!853 !931)
+  and a DummySolver to test the implementations (!853, !931 !973)
+- Fix compilation issue with newer Boost versions and clang (!940)
+- If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
+  `MultiRegions` will be built by default (!945)
+- Fix missing metadata import from Hdf5 files (!971)
+- Fix missing flags for periodic BC in DiffusionLDG (!985)
+- Add the moving reference frame as a forcing (!987)
+- Added rtree for element bounding box lookup to accelerate interpolation (!996)
+- Fix integration weights on prisms and pyramids if not using the default
+  integration rule (!998)
+- Fix missing ContainsPoint in Pyramid expansion (!1000)
+- Added path prefixes to find packaged Scotch (!979)
+- Add HDF5 geometry format (!977)
+- Combine and generalise demo code in StdRegions and LocalRegions (!993)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -82,6 +98,11 @@ v5.0.0
 - Order nodes in Gmsh output (!912)
 - Fix manifold face curvature nodes (!913)
 - Fix writing 1D surfaces (!930)
+- Fix surface string parsin in BL splitting (!937)
+- Enable use of distributed packages for triangle and TetGen (!953)
+- Fix issue with MLSC after Scotch conversion (!943)
+- Add support for Gmsh 4.0 mesh file format (!964)
+- Fix surface extraction, added regression test (!994)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -97,6 +118,11 @@ v5.0.0
 - Add Lambda 2 vortex detection criteria (!882)
 - Add module for modifying/adding fields from expressions (!889, !903)
 - Add module for evaluating the mean of variables on the domain (!894)
+- Add module for counting the total number of DOF (!948)
+- Fixed wss module for compressible flows (!958)
+- Add module for removing fields from .fld files (!978)
+- Added if statement to fix case of 1D/2D manifold interpolation in 1D/2D space,
+  added check on dimensions for interpolation, fixed seg interp (!999)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
@@ -113,13 +139,28 @@ v5.0.0
   seg, quad and hex elements (!771, !862)
 - Fix compressible solver with NUMMODES=1 (!868)
 - Introduce equations of state to account for real gas effects (!880)
+- Modified pressure outlet BCs to allow for the reference static pressure to be
+  set from the VALUE fields (!981)
 
-**APESolver:**
+**AcousticSolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC
   and WhiteNoise (!782)
+- Store base flow fields in a discontinuous projection (!918)
+- Enabled 1D cases (!918)
+- The APE system now uses u_i, c^2 and rho as base flow fields (!918)
+- Added the Linearized Euler Equations (LEE) (!918)
+
+**APESolver:**
+- APESolver was replaced with AcousticSolver (!918)
+
+**PulseWaveSolver**
+- Added two new boundary conditions: AInflow and UInflow
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
+
+**Tester**
+- Fix build with boost 1.67 (!947)
 
 v4.4.2
 ------
@@ -134,7 +175,9 @@ v4.4.2
 - Fix deadlock in DiffusionLDG (!885)
 - Fix uninitialised coefficients in DirectFull solver (!898)
 - Updated PETSc to 3.7.7 (!916)
-- Fix typcase to an integer which set Lz < 1 to zero when postprocess hdf5 output (!9922)
+- Fix typecast to an integer which set Lz < 1 to zero when postprocess hdf5 output (!922)
+- Fix program options errors on Windows in debug mode (!986)
+- Fix potential clobbered output of ModArnoldi EVs when run in parallel (!983)
 
 **IncNavierStokesSolver**
 - Add a test for imaginary shift to be only used with Homogenous and SingleMode on. (!928)
@@ -152,6 +195,7 @@ v4.4.2
 
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)
+- Fix the interpcoord option  of the interppointdatatofld module (!952)
 
 **Utilities**
 - Fix VtkToPng to account for deprecated VTK API for VTK version > 8.1 (!925)

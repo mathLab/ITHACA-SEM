@@ -54,7 +54,7 @@
 #include <LibUtilities/Communication/Comm.h>
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/ContField.h>
 #include <SpatialDomains/MeshGraph.h>
 
 #include <SolverUtils/SolverUtilsDeclspec.h>

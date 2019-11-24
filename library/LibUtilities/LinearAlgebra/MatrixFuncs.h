@@ -96,7 +96,25 @@ namespace Nektar
                 Array<OneD, int> ipivot(n);
                 Array<OneD, DataType> work(n);
 
-                Lapack::Dgetrf(m, n, data.get(), m, ipivot.get(), info);
+                if(std::is_floating_point<DataType>::value)
+                {
+                    switch ( sizeof(DataType) )
+                    {
+                    case sizeof(NekDouble):
+                        break;
+                    case sizeof(NekSingle):
+                        break;
+                    default:
+                        ASSERTL0(false, "FullMatrixFuncs::Invert DataType is neither NekDouble nor NekSingle");
+                        break;
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false, "FullMatrixFuncs::Invert DataType is not floating point");
+                }
+                
+                Lapack::DoSgetrf(m, n, data.get(), m, ipivot.get(), info);
 
                 if( info < 0 )
                 {
@@ -109,7 +127,7 @@ namespace Nektar
                     ASSERTL0(false, message.c_str());
                 }
 
-                Lapack::Dgetri(n, data.get(), n, ipivot.get(),
+                Lapack::DoSgetri(n, data.get(), n, ipivot.get(),
                                work.get(), n, info);
 
                 if( info < 0 )

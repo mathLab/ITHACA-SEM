@@ -78,11 +78,16 @@ namespace Lapack
                   const int& ldb, int& info);
         void F77NAME(dgetrf) (const int& m, const int& n, double* a,
                   const int& lda, int* ipiv, int& info);
+        void F77NAME(sgetrf) (const int& m, const int& n, float* a,
+                  const int& lda, int* ipiv, int& info);
         void F77NAME(dgetrs) (const char& trans, const int& n, const int& nrhs,
                   const double* a,   const int& lda, int* ipiv,
                   double* b, const int& ldb, int& info);
         void F77NAME(dgetri) (const int& n, double *a, const int& lda,
                 const int *ipiv, double *wk,  const int& lwk,
+                  int& info);
+        void F77NAME(sgetri) (const int& n, float *a, const int& lda,
+                const int *ipiv, float *wk,  const int& lwk,
                   int& info);
         void F77NAME(dsterf) (const int& n, double *d, double *e, int& info);
         void F77NAME(dgeev)  (const char& uplo, const char& lrev, const int& n,
@@ -181,6 +186,20 @@ namespace Lapack
     }
 
     /// \brief General matrix LU factorisation
+    static inline void DoSgetrf (const int& m, const int& n, double *a,
+              const int& lda, int *ipiv, int& info)
+    {
+        F77NAME(dgetrf) (m,n,a,lda,ipiv,info);
+    }
+
+    /// \brief General matrix LU factorisation
+    static inline void DoSgetrf (const int& m, const int& n, float *a,
+              const int& lda, int *ipiv, int& info)
+    {
+        F77NAME(sgetrf) (m,n,a,lda,ipiv,info);
+    }
+
+    /// \brief General matrix LU factorisation
     static inline void Dgetrf (const int& m, const int& n, double *a,
               const int& lda, int *ipiv, int& info)
     {
@@ -193,6 +212,20 @@ namespace Lapack
               double* b, const int& ldb, int& info)
     {
         F77NAME(dgetrs) (trans,n,nrhs,a,lda,ipiv,b,ldb,info);
+    }
+
+    /// \brief Generate matrix inverse
+    static inline void DoSgetri (const int& n, double *a, const int& lda,
+           const int *ipiv, double *wk,  const int& lwk, int& info)
+    {
+        F77NAME(dgetri) (n, a, lda, ipiv, wk, lwk,info);
+    }
+
+    /// \brief Generate matrix inverse
+    static inline void DoSgetri (const int& n, float *a, const int& lda,
+           const int *ipiv, float *wk,  const int& lwk, int& info)
+    {
+        F77NAME(sgetri) (n, a, lda, ipiv, wk, lwk,info);
     }
 
     /// \brief Generate matrix inverse

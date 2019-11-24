@@ -583,6 +583,41 @@ namespace Nektar
         }
     }
 
+    // void CompressibleFlowSystem::preconditioner_BlkDiagSingle(
+    //                                              const Array<OneD, NekDouble> &inarray,
+    //                                              Array<OneD, NekDouble >&outarray)
+    // {
+    //     unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+    //     unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
+    //     Array<OneD, NekSingle > Sinarray(npoints);
+    //     Array<OneD, NekSingle > Soutarray(npoints);
+
+
+    //     PointerWrapper pwrapp = eWrapper;
+    //     if(inarray.get() == outarray.get())
+    //     {
+    //         pwrapp = eCopy;
+    //     }
+      
+    //     for(int m = 0; m < nvariables; m++)
+    //     {
+    //         int moffset = m*npoints;
+    //         tmparray[m] =  NekVector<NekDouble> (npoints,inarray+moffset,pwrapp);
+    //     }
+
+    //     Vmath::Fill(outarray.num_elements(),0.0,outarray,1);
+
+    //     for(int m = 0; m < nvariables; m++)
+    //     {
+    //         int moffset = m*npoints;
+    //         NekVector<NekDouble> out(npoints,outarray+moffset,eWrapper);
+    //         for(int n = 0; n < nvariables; n++)
+    //         {
+    //             out += (*m_PrecMatVars[m][n])*tmparray[n];
+    //         }
+    //     }
+    // }
+
     void CompressibleFlowSystem::preconditioner_BlkSOR_coeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,

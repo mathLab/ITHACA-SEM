@@ -145,6 +145,10 @@ namespace Nektar
         void preconditioner_BlkDiag(
             const Array<OneD, NekDouble> &inarray,
             Array<OneD, NekDouble >&outarray);
+            
+        void preconditioner_BlkDiagSingle(
+            const Array<OneD, NekDouble> &inarray,
+            Array<OneD, NekDouble >&outarray);
 
         void preconditioner_BlkSOR_coeff(
             const Array<OneD, NekDouble> &inarray,

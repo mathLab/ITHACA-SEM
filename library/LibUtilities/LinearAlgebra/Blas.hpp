@@ -68,6 +68,12 @@ namespace Blas
                  const double* a,    const int& lda,
                  const double* x,    const int& incx,
                  const double& beta, double* y, const int& incy);
+        // -- BLAS level 2
+        void F77NAME(sgemv) (const char& trans,  const int& m,
+                 const int& n,       const float& alpha,
+                 const float* a,    const int& lda,
+                 const float* x,    const int& incx,
+                 const float& beta, float* y, const int& incy);
 
         void F77NAME(dgbmv) (const char& trans,  const int& m,
                  const int& n, const int& kl, const int& ku,
@@ -161,6 +167,24 @@ namespace Blas
     static inline int Idamax (const int& n, const double *x,  const int& incx)
     {
         return F77NAME(idamax)(n,x,incx) -1;
+    }
+
+    /// \brief BLAS level 2: Matrix vector multiply y = A \e x where A[m x n]
+    static inline void DoSgemv (const char& trans,   const int& m,    const int& n,
+             const double& alpha, const double* a, const int& lda,
+             const double* x,     const int& incx, const double& beta,
+             double* y,     const int& incy)
+    {
+        F77NAME(dgemv) (trans,m,n,alpha,a,lda,x,incx,beta,y,incy);
+    }
+
+    /// \brief BLAS level 2: Matrix vector multiply y = A \e x where A[m x n]
+    static inline void DoSgemv (const char& trans,   const int& m,    const int& n,
+             const float& alpha, const float* a, const int& lda,
+             const float* x,     const int& incx, const float& beta,
+             float* y,     const int& incy)
+    {
+        F77NAME(sgemv) (trans,m,n,alpha,a,lda,x,incx,beta,y,incy);
     }
 
     /// \brief BLAS level 2: Matrix vector multiply y = A \e x where A[m x n]

@@ -304,7 +304,7 @@ namespace Nektar
 
             // Multiply
             const unsigned int* size = block->GetSize();
-            Blas::Dgemv('N', size[0], size[1], block->Scale(),
+            Blas::DoSgemv('N', size[0], size[1], block->Scale(),
                         block->GetRawPtr(), size[0], rhsWrapper, 1,
                         0.0, resultWrapper, 1);
         }
@@ -440,7 +440,7 @@ namespace Nektar
         double* y = result;
         int incy = 1;
         
-        Blas::Dgemv(t, size[0], size[1], alpha, a, lda, x, incx, beta, y, incy);
+        Blas::DoSgemv(t, size[0], size[1], alpha, a, lda, x, incx, beta, y, incy);
     }
 
     template<typename InnerMatrixType, typename MatrixTag>

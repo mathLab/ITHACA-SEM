@@ -583,40 +583,51 @@ namespace Nektar
         }
     }
 
-    // void CompressibleFlowSystem::preconditioner_BlkDiagSingle(
-    //                                              const Array<OneD, NekDouble> &inarray,
-    //                                              Array<OneD, NekDouble >&outarray)
-    // {
-    //     unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
-    //     unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
-    //     Array<OneD, NekSingle > Sinarray(npoints);
-    //     Array<OneD, NekSingle > Soutarray(npoints);
+    void CompressibleFlowSystem::preconditioner_BlkDiagSingle(
+                                                 const Array<OneD, NekDouble> &inarray,
+                                                 Array<OneD, NekDouble >&outarray)
+    {
+        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
+        Array<OneD, Array<OneD, NekSingle > >Sinarray(nvariables);
+        Array<OneD, NekVector<NekSingle> >tmpVect(nvariables);
+        Array<OneD, NekSingle > Soutarray(npoints);
+        NekVector<NekSingle> outVect(npoints,Soutarray,eWrapper);
 
-
-    //     PointerWrapper pwrapp = eWrapper;
-    //     if(inarray.get() == outarray.get())
-    //     {
-    //         pwrapp = eCopy;
-    //     }
+        PointerWrapper pwrapp = eWrapper;
+        if(inarray.get() == outarray.get())
+        {
+            pwrapp = eCopy;
+        }
       
-    //     for(int m = 0; m < nvariables; m++)
-    //     {
-    //         int moffset = m*npoints;
-    //         tmparray[m] =  NekVector<NekDouble> (npoints,inarray+moffset,pwrapp);
-    //     }
+        for(int m = 0; m < nvariables; m++)
+        {
+            int moffset = m*npoints;
+            Sinarray[m] = Array<OneD, NekSingle > (npoints);
+            for(int i=0;i<npoints;i++)
+            {
+                Sinarray[m][i]  =  NekSingle(inarray[moffset+i]);
+            }
+            tmpVect[m] =  NekVector<NekSingle> (npoints,Sinarray[m],eWrapper);
+        }
 
-    //     Vmath::Fill(outarray.num_elements(),0.0,outarray,1);
+        Vmath::Fill(outarray.num_elements(),0.0,outarray,1);
 
-    //     for(int m = 0; m < nvariables; m++)
-    //     {
-    //         int moffset = m*npoints;
-    //         NekVector<NekDouble> out(npoints,outarray+moffset,eWrapper);
-    //         for(int n = 0; n < nvariables; n++)
-    //         {
-    //             out += (*m_PrecMatVars[m][n])*tmparray[n];
-    //         }
-    //     }
-    // }
+        for(int m = 0; m < nvariables; m++)
+        {
+            Vmath::Zero(npoints,Soutarray,1);
+            int moffset = m*npoints;
+            for(int n = 0; n < nvariables; n++)
+            {
+                // outVect += (*m_PrecMatVars[m][n])*tmpVect[n];
+            }
+
+            for(int i=0;i<npoints;i++)
+            {
+                outarray[moffset+i]  =  NekDouble(Soutarray[i]);
+            }
+        }
+    }
 
     void CompressibleFlowSystem::preconditioner_BlkSOR_coeff(
             const Array<OneD, NekDouble> &inarray,

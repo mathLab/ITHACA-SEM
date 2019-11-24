@@ -5,7 +5,7 @@
     <parameters>--Npoints 100 --Ntimesteps 100 --TimeIntegrationMethod 2</parameters>
     <metrics>
         <metric type="L2" id="1">
-            <value tolerance="1e-12">0.0798986</value>
+            <value tolerance="1e-12">0.0789181</value>
         </metric>
     </metrics>
 </test>

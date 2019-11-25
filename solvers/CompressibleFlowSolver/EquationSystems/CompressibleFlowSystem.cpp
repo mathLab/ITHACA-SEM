@@ -1100,11 +1100,14 @@ namespace Nektar
                 {
                     qfield[i]   =   NullNekDoubleArrayofArray;
                 }
-                // m_advObject->AddTraceJacToMat(nvariables,m_spacedim,m_fields, TraceJac,gmtxarray,TraceJacDeriv,TraceJacDerivSign);
+                m_advObject->AddTraceJacToMat(nvariables,m_spacedim,m_fields, TraceJac,gmtxarray,TraceJacDeriv,TraceJacDerivSign);
         }
         else
         {
-            // m_advObject->AddTraceJacToMat(nvariables,m_spacedim,m_fields, TraceJac,gmtxarray);
+            Array<OneD, TypeNekBlkMatSharedPtr > tmpJac;
+            Array<OneD, Array<OneD, DataType> >  tmpSign;
+
+            m_advObject->AddTraceJacToMat(nvariables,m_spacedim,m_fields, TraceJac,gmtxarray,tmpJac,tmpSign);
         }
     }
 
@@ -1125,11 +1128,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > Bwd    (nvariables);
 
         TypeNekBlkMatSharedPtr FJac,BJac;
-        Array<OneD, unsigned int> n_blks1(nTracePts);
-        for(int i=0;i<nTracePts;i++)
-        {
-            n_blks1[i]    = nvariables;
-        }
+        Array<OneD, unsigned int> n_blks1(nTracePts, nvariables);
+
         if(TraceJac.num_elements()>0)
         {
             FJac = TraceJac[0];
@@ -1173,11 +1173,7 @@ namespace Nektar
             if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
             {
                 int nDeriv = m_spacedim *nvariables; 
-                Array<OneD, unsigned int> n_blks2(nTracePts);
-                for(int i=0;i<nTracePts;i++)
-                {
-                    n_blks2[i]    = nDeriv;
-                }
+                Array<OneD, unsigned int> n_blks2(nTracePts,nDeriv);
 
                 TypeNekBlkMatSharedPtr DerivJac;
                 if(TraceJacDeriv.num_elements()>0)

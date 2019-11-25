@@ -230,6 +230,17 @@ void Advection::v_Advect_coeff(
         return;
     }
 
+    void Advection::v_AddVolumJacToMat( 
+        const Array<OneD, MultiRegions::ExpListSharedPtr>                       &pFields,
+        const int                                                               &nConvectiveFields,
+        const Array<OneD, const Array<OneD,  Array<OneD, 
+              Array<OneD,  Array<OneD,  NekDouble> > > > >                      &ElmtJacArray,
+        Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >                          &gmtxarray)
+    {
+        ASSERTL0(false,"v_AddVolumJacToMat NOT SPECIFIED");
+        return;
+    }
+
     void Advection::CalcTraceJac(
         const int                                          nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

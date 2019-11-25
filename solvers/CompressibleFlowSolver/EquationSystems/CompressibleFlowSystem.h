@@ -170,6 +170,10 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qfield,
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                  &gmtxarray);
+        void AddMatNSBlkDiag_volume(
+            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+            Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >                  &gmtxarray);
 
         void AddMatNSBlkDiag_boundary(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
@@ -257,10 +261,16 @@ namespace Nektar
         void Fill2DArrayOfBlkDiagonalMat(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
             const NekDouble valu);
+        void Fill2DArrayOfBlkDiagonalMat(
+            Array<OneD, Array<OneD, SNekBlkMatSharedPtr> > &gmtxarray,
+            const NekSingle valu);
 
         void Fill1DArrayOfBlkDiagonalMat(
             Array<OneD, DNekBlkMatSharedPtr> &gmtxarray,
             const NekDouble valu);
+        void Fill1DArrayOfBlkDiagonalMat(
+            Array<OneD, SNekBlkMatSharedPtr> &gmtxarray,
+            const NekSingle valu);
 
         void DoImplicitSolve_phy2coeff(
             const Array<OneD, const Array<OneD, NekDouble> >&inarray,
@@ -279,12 +289,18 @@ namespace Nektar
         void AllocatePrecondBlkDiag_coeff(Array<OneD, Array<OneD, SNekBlkMatSharedPtr> > &gmtxarray);
 
 
-         void GetpreconditionerNSBlkDiag_coeff(
+        void GetpreconditionerNSBlkDiag_coeff(
             const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >      &gmtxarray,
             Array<OneD, DNekBlkMatSharedPtr >                   &TraceJac,
             Array<OneD, DNekBlkMatSharedPtr >                   &TraceJacDeriv,
             Array<OneD, Array<OneD, NekDouble> >                &TraceJacDerivSign);
+        void GetpreconditionerNSBlkDiag_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
+            Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >      &gmtxarray,
+            Array<OneD, SNekBlkMatSharedPtr >                   &TraceJac,
+            Array<OneD, SNekBlkMatSharedPtr >                   &TraceJacDeriv,
+            Array<OneD, Array<OneD, NekSingle> >                &TraceJacDerivSign);
 
         void MatrixMultiply_MatrixFree_coeff(
             const  Array<OneD, NekDouble> &inarray,
@@ -317,6 +333,8 @@ namespace Nektar
 
         void MultiplyElmtInvMass_PlusSource(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
+        void MultiplyElmtInvMass_PlusSource(
+            Array<OneD, Array<OneD, SNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
 
         void GetFluxVectorJacDirctn(
             const int                                           nDirctn,

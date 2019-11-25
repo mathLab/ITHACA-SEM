@@ -1053,6 +1053,88 @@ namespace Nektar
             }
         }
 
+        void DiffusionIP::v_MinusVolumDerivJacToMat( 
+            const int                                                   nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>           &pFields,
+            const Array<OneD, const Array<OneD,  Array<OneD, 
+                Array<OneD,  Array<OneD,  NekDouble> > > > >            &ElmtJacArray,
+            const int                                                   nDervDir, 
+            Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >              &gmtxarray)
+        {
+            MultiRegions::ExpListSharedPtr explist = pFields[0];
+                std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
+            int ntotElmt            = (*pexp).size();
+            int nElmtPnt,nElmtCoef;
+
+            NekDouble tmp;
+            SNekMatSharedPtr        tmpGmtx;
+            DNekMatSharedPtr        ElmtMat;
+
+            Array<OneD, NekSingle>  GlobMat_data;
+            Array<OneD, NekDouble>  ElmtMat_data;
+            Array<OneD,NekSingle> Elmt_dataSingle;
+
+            Array<OneD, DNekMatSharedPtr>  mtxPerVar(ntotElmt);
+            Array<OneD, DNekMatSharedPtr>  mtxPerVarCoeff(ntotElmt);
+            Array<OneD, Array<OneD, NekDouble> > JacArray(ntotElmt);
+            Array<OneD, int > elmtpnts(ntotElmt);
+            Array<OneD, int > elmtcoef(ntotElmt);
+            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            {
+                nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
+                nElmtPnt            = (*pexp)[nelmt]->GetTotPoints();
+                elmtpnts[nelmt]     =   nElmtPnt;
+                elmtcoef[nelmt]     =   nElmtCoef;
+                mtxPerVar[nelmt]    =MemoryManager<DNekMat>
+                                    ::AllocateSharedPtr(nElmtCoef, nElmtPnt);
+                (*mtxPerVar[nelmt])    = 0.0;       
+                mtxPerVarCoeff[nelmt]    =MemoryManager<DNekMat>
+                                    ::AllocateSharedPtr(nElmtCoef, nElmtCoef);
+                (*mtxPerVarCoeff[nelmt])   =   0.0;
+            }
+
+            for(int m = 0; m < nConvectiveFields; m++)
+            {
+                for(int n = 0; n < nConvectiveFields; n++)
+                {
+
+                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                    {
+                        (*mtxPerVarCoeff[nelmt])   =   0.0;
+                        (*mtxPerVar[nelmt])   =   0.0;
+                    }
+                    explist->GetMatIpwrtDeriveBase(ElmtJacArray[m][n],mtxPerVar);
+                    //TODO: To check whether it is ok to reuse ElmtJacQuad as output
+                    explist->AddRightIPTPhysDerivBase(nDervDir,mtxPerVar,mtxPerVarCoeff);
+
+                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                    {
+                        nElmtCoef       = elmtcoef[nelmt];
+                        nElmtPnt        = elmtpnts[nelmt];
+                        int ntotDofs    = nElmtCoef*nElmtCoef;
+
+                        if(Elmt_dataSingle.num_elements()<ntotDofs)
+                        {
+                            Elmt_dataSingle = Array<OneD, NekSingle> (ntotDofs);
+                        }
+
+                        tmpGmtx         = gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+                        ElmtMat         = mtxPerVarCoeff[nelmt];
+
+                        GlobMat_data    = tmpGmtx->GetPtr();
+                        ElmtMat_data    = ElmtMat->GetPtr();
+
+                        for(int i=0;i<ntotDofs;i++)
+                        {
+                            Elmt_dataSingle[i]  =   NekSingle( ElmtMat_data[i] );
+                        }
+
+                        Vmath::Vsub(ntotDofs,GlobMat_data,1,Elmt_dataSingle,1,GlobMat_data,1);
+                    }
+                }
+            }
+        }
+
         // void DiffusionIP::v_DiffuseTraceFlux(
         //     const int                                           nConvectiveFields,
         //     const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,

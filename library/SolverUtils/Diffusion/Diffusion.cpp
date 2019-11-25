@@ -229,6 +229,17 @@ namespace Nektar
         {
             ASSERTL0(false," not defined");
         }
+
+        void Diffusion::v_MinusVolumDerivJacToMat( 
+            const int                                                   nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>           &pFields,
+            const Array<OneD, const Array<OneD,  Array<OneD, 
+                Array<OneD,  Array<OneD,  NekDouble> > > > >            &ElmtJacArray,
+            const int                                                   nDervDir, 
+            Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >              &gmtxarray)
+        {
+            ASSERTL0(false," not defined");
+        }
 #endif
     }
 }

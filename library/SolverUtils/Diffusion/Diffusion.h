@@ -417,6 +417,16 @@ namespace Nektar
             {
                 v_MinusVolumDerivJacToMat(nConvectiveFields,pFields,ElmtJacArray,nDervDir,gmtxarray);
             }
+            void MinusVolumDerivJacToMat( 
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &pFields,
+                const Array<OneD, const Array<OneD,  Array<OneD, 
+                    Array<OneD,  Array<OneD,  NekDouble> > > > >            &ElmtJacArray,
+                const int                                                   nDervDir, 
+                Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >              &gmtxarray)
+            {
+                v_MinusVolumDerivJacToMat(nConvectiveFields,pFields,ElmtJacArray,nDervDir,gmtxarray);
+            }
 #endif
             
         protected:
@@ -564,6 +574,13 @@ namespace Nektar
                     Array<OneD,  Array<OneD,  NekDouble> > > > >            &ElmtJacArray,
                 const int                                                   nDervDir, 
                 Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >              &gmtxarray);
+            virtual void v_MinusVolumDerivJacToMat( 
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &pFields,
+                const Array<OneD, const Array<OneD,  Array<OneD, 
+                    Array<OneD,  Array<OneD,  NekDouble> > > > >            &ElmtJacArray,
+                const int                                                   nDervDir, 
+                Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >              &gmtxarray);
 #endif
         }; 
         

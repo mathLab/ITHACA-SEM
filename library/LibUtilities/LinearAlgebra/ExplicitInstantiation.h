@@ -58,6 +58,10 @@
 #define NEKTAR_BLOCK_MATRIX_TYPES (4, (const DNekBlkMat&, const BlkMatDNekBlkMat&, const DNekScalBlkMat&, const BlkMatDNekScalBlkMat&))
 #define NEKTAR_STANDARD_AND_SCALED_MATRICES (2, (const DNekMat&, const DNekScalMat&))
 
+#define NEKTAR_ALL_MATRIX_TYPES_SINGLE (6, (const SNekMat&, const SNekScalMat&, const SNekBlkMat&, const BlkMatSNekBlkMat&, const SNekScalBlkMat&, const BlkMatSNekScalBlkMat&))
+#define NEKTAR_BLOCK_MATRIX_TYPES_SINGLE (4, (const SNekBlkMat&, const BlkMatSNekBlkMat&, const SNekScalBlkMat&, const BlkMatSNekScalBlkMat&))
+#define NEKTAR_STANDARD_AND_SCALED_MATRICES_SINGLE (2, (const SNekMat&, const SNekScalMat&))
+
 #define NEKTAR_PRINT_ARRAY(z, n, data) \
     BOOST_PP_ARRAY_ELEM(n, data) \
     BOOST_PP_COMMA_IF(BOOST_PP_LESS(n, BOOST_PP_SUB(BOOST_PP_ARRAY_SIZE(data), 1)))

@@ -628,7 +628,7 @@ namespace Nektar
             int moffset = m*npoints;
             for(int n = 0; n < nvariables; n++)
             {
-                // outVect += (*m_PrecMatVars[m][n])*tmpVect[n];
+                outVect += (*m_PrecMatVarsSingle[m][n])*tmpVect[n];
             }
 
             for(int i=0;i<npoints;i++)
@@ -726,6 +726,7 @@ namespace Nektar
                 MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace);
 
                 Vmath::Zero(ntotpnt,outTmp,1);
+                // preconditioner_BlkDiag(outarray,outTmp);
                 for(int m = 0; m < nvariables; m++)
                 {
                     int moffset = m*npoints;
@@ -961,6 +962,88 @@ namespace Nektar
                 nElmtCoef0 = nElmtCoef;
                 nElmtCoefVAr = nElmtCoef0*nConvectiveFields;
                 tmpGmtx = MemoryManager<DNekMat>
+                    ::AllocateSharedPtr(nElmtCoefVAr, nElmtCoefVAr,0.0);
+                GMatData = tmpGmtx->GetPtr();
+
+            }
+
+            for(int n = 0; n < nConvectiveFields; n++)
+            {
+                for(int m = 0; m < nConvectiveFields; m++)
+                {
+                    ElmtMat =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+                    ElmtMatData = ElmtMat->GetPtr();
+
+                    for(int ncl = 0; ncl < nElmtCoef; ncl++)
+                    {
+                        int Goffset = (n*nElmtCoef+ncl)*nConvectiveFields*nElmtCoef+m*nElmtCoef;
+                        int Eoffset = ncl*nElmtCoef;
+
+                        Vmath::Vcopy(nElmtCoef,&ElmtMatData[0]+Eoffset,1, &GMatData[0]+Goffset,1);
+                    }
+                }
+            }
+
+            tmpGmtx->Invert();
+
+            for(int m = 0; m < nConvectiveFields; m++)
+            {
+                for(int n = 0; n < nConvectiveFields; n++)
+                {
+                    ElmtMat =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+                    ElmtMatData = ElmtMat->GetPtr();
+
+                    for(int ncl = 0; ncl < nElmtCoef; ncl++)
+                    {
+                        int Goffset = (n*nElmtCoef+ncl)*nConvectiveFields*nElmtCoef+m*nElmtCoef;
+                        int Eoffset = ncl*nElmtCoef;
+
+                        Vmath::Vcopy(nElmtCoef, &GMatData[0]+Goffset,1,&ElmtMatData[0]+Eoffset,1);
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    void CompressibleFlowSystem::ElmtVarInvMtrx(Array<OneD, Array<OneD, SNekBlkMatSharedPtr> > &gmtxarray)
+    {
+        int n1d = gmtxarray.num_elements();
+        int n2d = gmtxarray[0].num_elements();
+        int nConvectiveFields = n1d;
+
+        ASSERTL0(n1d==n2d,"ElmtVarInvMtrx requires n1d==n2d");
+
+        Array<OneD, unsigned int> rowSizes;
+        Array<OneD, unsigned int> colSizes;
+
+        gmtxarray[0][0]->GetBlockSizes(rowSizes,colSizes);
+        int ntotElmt  = rowSizes.num_elements();
+        int nElmtCoef   =    rowSizes[0]-1;
+        int nElmtCoef0  =    nElmtCoef;
+
+        int nElmtCoefVAr = nElmtCoef0*nConvectiveFields;
+        SNekMatSharedPtr    tmpGmtx = MemoryManager<SNekMat>
+                    ::AllocateSharedPtr(nElmtCoefVAr, nElmtCoefVAr,0.0);
+
+        SNekMatSharedPtr        ElmtMat;
+        Array<OneD, NekSingle>    GMatData,ElmtMatData;
+
+        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        {
+            ElmtMat =   gmtxarray[0][0]->GetBlock(nelmt,nelmt);
+
+            int nrows = ElmtMat->GetRows();
+            int ncols = ElmtMat->GetColumns();
+            ASSERTL0(nrows==ncols,"ElmtVarInvMtrx requires nrows==ncols");
+
+            nElmtCoef            = nrows;
+            
+            if (nElmtCoef0!=nElmtCoef) 
+            {
+                nElmtCoef0 = nElmtCoef;
+                nElmtCoefVAr = nElmtCoef0*nConvectiveFields;
+                tmpGmtx = MemoryManager<SNekMat>
                     ::AllocateSharedPtr(nElmtCoefVAr, nElmtCoefVAr,0.0);
                 GMatData = tmpGmtx->GetPtr();
 

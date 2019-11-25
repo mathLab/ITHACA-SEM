@@ -180,6 +180,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >                            &TraceJacDerivSign);
 
         void ElmtVarInvMtrx(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+        void ElmtVarInvMtrx(Array<OneD, Array<OneD, SNekBlkMatSharedPtr> > &gmtxarray);
         
         void GetTraceJac(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,

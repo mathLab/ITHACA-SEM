@@ -44,6 +44,8 @@ namespace Lapack
         // Matrix factorisation and solves
         void F77NAME(dsptrf) (const char& uplo, const int& n,
                   double* ap, int *ipiv, int& info);
+        void F77NAME(ssptrf) (const char& uplo, const int& n,
+                  float* ap, int *ipiv, int& info);
         void F77NAME(dsptrs) (const char& uplo, const int& n,
                   const int& nrhs, const double* ap,
                   const int  *ipiv, double* b,
@@ -51,6 +53,10 @@ namespace Lapack
         void F77NAME(dsptri) (const char& uplo, const int& n,
                   const double* ap,
                   const int  *ipiv, double* work,
+                  int& info);
+        void F77NAME(ssptri) (const char& uplo, const int& n,
+                  const float* ap,
+                  const int  *ipiv, float* work,
                   int& info);
         void F77NAME(dtrtrs) (const char& uplo, const char& trans, const char& diag,
                               const int& n, const int& nrhs, const double* a,
@@ -95,6 +101,11 @@ namespace Lapack
                               double* rev,  const int& ldr,
                               double* lev,  const int& ldv,
                               double* work, const int& lwork, int& info);
+        void F77NAME(sgeev)  (const char& uplo, const char& lrev, const int& n,
+                              const float* a, const int& lda, float* wr, float* wi,
+                              float* rev,  const int& ldr,
+                              float* lev,  const int& ldv,
+                              float* work, const int& lwork, int& info);
 
         void F77NAME(dspev)  (const char& jobz, const char& uplo, const int& n,
                   double* ap, double* w, double* z, const int& ldz,
@@ -108,6 +119,21 @@ namespace Lapack
     // Non-standard versions.
     void dgetrs(char trans, int matrixRows, int matrixColumns, const double* A, double* x);
 
+    /// \brief factor a real packed-symmetric matrix using Bunch-Kaufman
+    /// pivoting.
+    static inline void DoSsptrf (const char& uplo, const int& n,
+              double* ap, int *ipiv, int& info)
+    {
+        F77NAME(dsptrf) (uplo,n,ap,ipiv,info);
+    }
+    /// \brief factor a real packed-symmetric matrix using Bunch-Kaufman
+    /// pivoting.
+    static inline void DoSsptrf (const char& uplo, const int& n,
+              float* ap, int *ipiv, int& info)
+    {
+        F77NAME(ssptrf) (uplo,n,ap,ipiv,info);
+    }
+    
     /// \brief factor a real packed-symmetric matrix using Bunch-Kaufman
     /// pivoting.
     static inline void Dsptrf (const char& uplo, const int& n,
@@ -125,6 +151,20 @@ namespace Lapack
         F77NAME(dsptrs) (uplo,n,nrhs,ap,ipiv,b,ldb,info);
     }
 
+    /// \brief Invert a real symmetric matrix problem
+    static inline void DoSsptri (const char& uplo, const int& n,
+              const double* ap, const int  *ipiv, double* work,
+              int& info)
+    {
+        F77NAME(dsptri) (uplo,n,ap,ipiv,work,info);
+    }
+    /// \brief Invert a real symmetric matrix problem
+    static inline void DoSsptri (const char& uplo, const int& n,
+              const float* ap, const int  *ipiv, float* work,
+              int& info)
+    {
+        F77NAME(ssptri) (uplo,n,ap,ipiv,work,info);
+    }
     /// \brief Invert a real symmetric matrix problem
     static inline void Dsptri (const char& uplo, const int& n,
               const double* ap, const int  *ipiv, double* work,
@@ -240,6 +280,29 @@ namespace Lapack
     {
         F77NAME(dsterf)(n,d,e,info);
     }
+
+    /// \brief Solve general real matrix eigenproblem.
+    static inline void DoSgeev (const char& uplo, const char& lrev, const int& n,
+                              const double* a, const int& lda, double* wr, double* wi,
+             double* rev,  const int& ldr,
+             double* lev,  const int& ldv,
+             double* work, const int& lwork, int& info)
+    {
+        F77NAME(dgeev) (uplo, lrev, n, a, lda, wr, wi, rev,
+            ldr, lev, ldv, work, lwork, info);
+    }
+
+/// \brief Solve general real matrix eigenproblem.
+    static inline void DoSgeev (const char& uplo, const char& lrev, const int& n,
+                              const float* a, const int& lda, float* wr, float* wi,
+             float* rev,  const int& ldr,
+             float* lev,  const int& ldv,
+             float* work, const int& lwork, int& info)
+    {
+        F77NAME(sgeev) (uplo, lrev, n, a, lda, wr, wi, rev,
+            ldr, lev, ldv, work, lwork, info);
+    }
+
 
     /// \brief Solve general real matrix eigenproblem.
     static inline void Dgeev (const char& uplo, const char& lrev, const int& n,

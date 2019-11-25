@@ -132,6 +132,7 @@ namespace Nektar
             Array<OneD,       Array<OneD, NekDouble> >      m_SysEquatResid_k;
 
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >  m_PrecMatVars;
+            Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >  m_PrecMatVarsSingle;
 
             Array<OneD, DNekBlkMatSharedPtr >               m_TraceJac;
 

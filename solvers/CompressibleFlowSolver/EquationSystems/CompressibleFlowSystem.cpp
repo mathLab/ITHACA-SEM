@@ -177,13 +177,28 @@ namespace Nektar
                 int nvariables  =   m_fields.num_elements();
                 m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
                 m_PrecMatStorage    =   eDiagonal;
-            
-                m_PrecMatVars = Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >(nvariables);
-                for(int i = 0; i < nvariables; i++)
+
+                bool  PrecondMatDataSingle;
+                m_session->MatchSolverInfo("PrecondMatDataSingle","True",
+                                   PrecondMatDataSingle, false);
+                if(PrecondMatDataSingle)
                 {
-                    m_PrecMatVars[i] =  Array<OneD, DNekBlkMatSharedPtr> (nvariables);
+                    m_PrecMatVarsSingle = Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >(nvariables);
+                    for(int i = 0; i < nvariables; i++)
+                    {
+                        m_PrecMatVarsSingle[i] =  Array<OneD, SNekBlkMatSharedPtr> (nvariables);
+                    }
+                    AllocatePrecondBlkDiag_coeff(m_PrecMatVarsSingle);
                 }
-                AllocatePrecondBlkDiag_coeff(m_PrecMatVars);
+                else
+                {
+                    m_PrecMatVars = Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >(nvariables);
+                    for(int i = 0; i < nvariables; i++)
+                    {
+                        m_PrecMatVars[i] =  Array<OneD, DNekBlkMatSharedPtr> (nvariables);
+                    }
+                    AllocatePrecondBlkDiag_coeff(m_PrecMatVars);
+                }
             }
 
             int nvariables  =   m_fields.num_elements();
@@ -592,14 +607,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekSingle > >Sinarray(nvariables);
         Array<OneD, NekVector<NekSingle> >tmpVect(nvariables);
         Array<OneD, NekSingle > Soutarray(npoints);
-        NekVector<NekSingle> outVect(npoints,Soutarray,eWrapper);
+        SNekVec outVect(npoints,Soutarray,eWrapper);
 
-        PointerWrapper pwrapp = eWrapper;
-        if(inarray.get() == outarray.get())
-        {
-            pwrapp = eCopy;
-        }
-      
         for(int m = 0; m < nvariables; m++)
         {
             int moffset = m*npoints;
@@ -1904,6 +1913,42 @@ namespace Nektar
                     ncolsVars = nrowsVars;
                     
                     loc_matNvar = MemoryManager<DNekMat>::AllocateSharedPtr(nrowsVars,ncolsVars,0.0);
+                    gmtxarray[i][j]->SetBlock(nelm,nelm,loc_matNvar);
+                }
+                
+            }
+        }
+    }
+
+    void CompressibleFlowSystem::AllocatePrecondBlkDiag_coeff(Array<OneD, Array<OneD, SNekBlkMatSharedPtr> > &gmtxarray)
+    {
+
+        int nvars = m_fields.num_elements();
+        int nelmts  = m_fields[0]->GetNumElmts();
+        int nrowsVars,ncolsVars;
+        int nelmtcoef;
+        SNekMatSharedPtr loc_matNvar;
+        Array<OneD, unsigned int > nelmtmatdim(nelmts);
+        for(int i = 0; i < nelmts; i++)
+        {
+            nelmtcoef   =   m_fields[0]->GetExp(i)->GetNcoeffs();
+            nelmtmatdim[i]  =   nelmtcoef;
+        }
+
+        NekSingle Singlezero = 0.0;
+
+        for(int i = 0; i < nvars; i++)
+        {
+            for(int j = 0; j < nvars; j++)
+            {
+                gmtxarray[i][j] = MemoryManager<SNekBlkMat>
+                    ::AllocateSharedPtr(nelmtmatdim, nelmtmatdim, eDIAGONAL);
+                for(int nelm = 0; nelm < nelmts; ++nelm)
+                {
+                    nrowsVars = nelmtmatdim[nelm];
+                    ncolsVars = nrowsVars;
+                    
+                    loc_matNvar = MemoryManager<SNekMat>::AllocateSharedPtr(nrowsVars,ncolsVars,Singlezero);
                     gmtxarray[i][j]->SetBlock(nelm,nelm,loc_matNvar);
                 }
                 

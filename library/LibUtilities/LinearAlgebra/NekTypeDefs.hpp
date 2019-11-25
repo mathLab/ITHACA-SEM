@@ -50,8 +50,6 @@ namespace Nektar
 
     typedef NekMatrix<NekDouble, StandardMatrixTag>
             DNekMat;
-    typedef NekMatrix<NekSingle, StandardMatrixTag>
-            SNekMat;
     typedef NekMatrix<NekDouble, StandardMatrixTag> DenseMatrix;
 
     typedef NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>

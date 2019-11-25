@@ -275,6 +275,8 @@ namespace Nektar
             const NekDouble lambda);
 
         void AllocatePrecondBlkDiag_coeff(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+        void AllocatePrecondBlkDiag_coeff(Array<OneD, Array<OneD, SNekBlkMatSharedPtr> > &gmtxarray);
+
 
          void GetpreconditionerNSBlkDiag_coeff(
             const Array<OneD, const Array<OneD, NekDouble> >    &inarray,

@@ -134,11 +134,19 @@ namespace Nektar
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >  m_PrecMatVars;
             Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >  m_PrecMatVarsSingle;
 
+            bool                                            m_flagPrecMatVarsSingle;
+
             Array<OneD, DNekBlkMatSharedPtr >               m_TraceJac;
 
             Array<OneD, DNekBlkMatSharedPtr >               m_TraceJacDeriv;
 
             Array<OneD,       Array<OneD, NekDouble> >      m_TraceJacDerivSign;
+
+            Array<OneD, SNekBlkMatSharedPtr >               m_TraceJacSingle;
+
+            Array<OneD, SNekBlkMatSharedPtr >               m_TraceJacDerivSingle;
+
+            Array<OneD,       Array<OneD, NekSingle> >      m_TraceJacDerivSignSingle;
 
             /// estimate the magnitude of each conserved varibles
             Array<OneD, NekDouble>                          m_magnitdEstimat;

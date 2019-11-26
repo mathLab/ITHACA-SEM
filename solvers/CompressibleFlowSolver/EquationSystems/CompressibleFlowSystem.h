@@ -142,9 +142,15 @@ namespace Nektar
         void preconditioner(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&out);
+        template<typename DataType, typename TypeNekBlkMatSharedPtr>
         void preconditioner_BlkDiag(
-            const Array<OneD, NekDouble> &inarray,
-            Array<OneD, NekDouble >&outarray);
+            const Array<OneD, NekDouble>                        &inarray,
+            Array<OneD, NekDouble >                             &outarray,
+            Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >   &PrecMatVars,
+            const DataType                                      &tmpDataType);
+        // void preconditioner_BlkDiag(
+        //     const Array<OneD, NekDouble> &inarray,
+        //     Array<OneD, NekDouble >&outarray);
             
         void preconditioner_BlkDiagSingle(
             const Array<OneD, NekDouble> &inarray,
@@ -155,16 +161,31 @@ namespace Nektar
                   Array<OneD, NekDouble >&outarray,
             const bool                   &flag);
 
+        // void MinusOffDiag2Rhs(
+        //     const int nvariables,
+        //     const int nCoeffs,
+        //     const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
+        //           Array<OneD,       Array<OneD, NekDouble> >    &outarray,
+        //     bool                                                flagUpdateDervFlux,
+        //           Array<OneD,       Array<OneD, NekDouble> >    &FwdFluxDeriv,
+        //           Array<OneD,       Array<OneD, NekDouble> >    &BwdFluxDeriv,
+        //     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+        //     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &tmpTrace);
+
+        template<typename DataType, typename TypeNekBlkMatSharedPtr>
         void MinusOffDiag2Rhs(
-            const int nvariables,
-            const int nCoeffs,
-            const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> >    &outarray,
-            bool                                                flagUpdateDervFlux,
-                  Array<OneD,       Array<OneD, NekDouble> >    &FwdFluxDeriv,
-                  Array<OneD,       Array<OneD, NekDouble> >    &BwdFluxDeriv,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &tmpTrace);
+                const int nvariables,
+                const int nCoeffs,
+                const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
+                    Array<OneD,       Array<OneD, NekDouble> >    &outarray,
+                bool                                                flagUpdateDervFlux,
+                    Array<OneD,       Array<OneD, NekDouble> >    &FwdFluxDeriv,
+                    Array<OneD,       Array<OneD, NekDouble> >    &BwdFluxDeriv,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &tmpTrace,
+                Array<OneD, TypeNekBlkMatSharedPtr >                &TraceJac,
+                Array<OneD, TypeNekBlkMatSharedPtr >                &TraceJacDeriv,
+                Array<OneD, Array<OneD, DataType> >                 &TraceJacDerivSign);
 
         template<typename TypeNekBlkMatSharedPtr>
         void AddMatNSBlkDiag_volume(

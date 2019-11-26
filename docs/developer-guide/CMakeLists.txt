@@ -13,11 +13,11 @@ FIND_PROGRAM(HTLATEX htlatex)
 MARK_AS_ADVANCED(HTLATEX)
 
 ADD_CUSTOM_TARGET(developer-guide-html
-    TEXINPUTS=${CMAKE_SOURCE_DIR}:${DEVGUIDESRC}//:
+    TEXINPUTS=${DEVGUIDESRC}//:
     ${HTLATEX} ${DEVGUIDESRC}/developers-guide.tex 
     "${DEVGUIDESRC}/styling.cfg,html,3,next,NoFonts"
     COMMAND BIBINPUTS=${DEVGUIDESRC} ${BIBTEX} developers-guide.aux
-    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}:${DEVGUIDESRC}//:
+    COMMAND TEXINPUTS=${DEVGUIDESRC}//:
     ${HTLATEX} ${DEVGUIDESRC}/developers-guide.tex 
     "${DEVGUIDESRC}/styling.cfg,html,3,next,NoFonts"
     WORKING_DIRECTORY ${DEVGUIDE}/html
@@ -43,13 +43,24 @@ FOREACH(pdf ${pdffiles})
 ENDFOREACH()
 
 ADD_CUSTOM_TARGET(developer-guide-pdf
-    export TEXINPUTS=${CMAKE_SOURCE_DIR}//: && 
     ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
     COMMAND TEXMFOUTPUT=${DEVGUIDE} ${BIBTEX} ${DEVGUIDE}/developers-guide.aux
     COMMAND TEXMFOUTPUT=${DEVGUIDE} ${MAKEINDEX} ${DEVGUIDE}/developers-guide.idx
-    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}//:  
-    ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
-    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}//:  
-    ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
+    COMMAND ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
+    COMMAND ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
     WORKING_DIRECTORY ${DEVGUIDESRC}
 )
+
+# Install output, if it is generated.
+INSTALL(CODE "IF (EXISTS ${DEVGUIDE}/html)
+    FILE(GLOB DGHTML ${DEVGUIDE}/html/*)
+    LIST(LENGTH DGHTML DGHTML_LEN)
+    IF(DGHTML_LEN GREATER 0)
+        FILE(INSTALL ${DEVGUIDE}/html
+             DESTINATION \${CMAKE_INSTALL_PREFIX}/${NEKTAR_DOC_DIR}/developers-guide)
+    ENDIF()
+ENDIF()
+IF (EXISTS ${DEVGUIDE}/developers-guide.pdf)
+    FILE(INSTALL ${DEVGUIDE}/developers-guide.pdf
+         DESTINATION \${CMAKE_INSTALL_PREFIX}/${NEKTAR_DOC_DIR}/developers-guide)
+ENDIF()")

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,14 +32,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <iomanip>
+using namespace std;
+
+#include <boost/core/ignore_unused.hpp>
+#include <boost/format.hpp>
+
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <SolverUtils/Filters/FilterHistoryPoints.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 
-#include <boost/format.hpp>
-
-using namespace std;
 
 namespace Nektar
 {
@@ -85,7 +86,7 @@ FilterHistoryPoints::FilterHistoryPoints(
     else
     {
         LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+            m_session->GetInterpreter(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
 
@@ -101,7 +102,7 @@ FilterHistoryPoints::FilterHistoryPoints(
         else
         {
             LibUtilities::Equation equ(
-                m_session->GetExpressionEvaluator(), it->second);
+                m_session->GetInterpreter(), it->second);
             m_outputPlane = round(equ.Evaluate());
         }
 
@@ -460,8 +461,8 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
             {
                 locCoord = x.second;
                 expId    = x.first->GetGlobalID();
-                NekDouble value;
-                int plane = m_planeIDs[m_historyLocalPointMap[k]];
+                NekDouble value = 0.0;
+                const int plane = m_planeIDs[m_historyLocalPointMap[k]];
 
                 if (m_waveSpace)
                 {
@@ -602,6 +603,8 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
  */
 void FilterHistoryPoints::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     if (pFields[0]->GetComm()->GetRank() == 0)
     {
         m_outputStream.close();

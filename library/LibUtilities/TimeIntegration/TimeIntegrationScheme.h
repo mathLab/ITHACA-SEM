@@ -12,7 +12,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,11 @@
 // Description: Header file of time integration scheme base class
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#ifndef NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H
+#define NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
@@ -307,10 +311,7 @@ namespace Nektar
           // NOTE: FIXME: It seems to me that it doesn't make sense to ask a (multi-phase) Scheme what its type is... as
           //              each phase can have a different type... Ask Chris/Mike about this.
           //              For now, returning type of last phase... 
-//          TimeIntegrationSchemeType GetIntegrationSchemeType() const { 
-//              ASSERTL0(m_integration_phases.empty(), "No scheme")
-//              return m_integration_phases[m_integration_phases.size() - 1]->m_schemeType;
-//          }
+          TimeIntegrationSchemeType GetIntegrationSchemeType() const;
 
         protected:// <- Dd: Now going to use as a base class, so igore -> Dd: don't think anything is inheriting from this, so don't need protected...
           // private:
@@ -389,7 +390,10 @@ namespace Nektar
             
             // These should never be called
           // TimeIntegrationScheme() : m_method( eNoTimeIntegrationMethod ) { NEKERROR(ErrorUtil::efatal,"Default Constructor for the TimeIntegrationScheme class should not be called"); }
-          TimeIntegrationScheme( const TimeIntegrationScheme & in ) { NEKERROR(ErrorUtil::efatal,"Copy Constructor for the TimeIntegrationScheme class should not be called"); }
+          TimeIntegrationScheme( const TimeIntegrationScheme & in ) {
+              boost::ignore_unused(in);
+              NEKERROR(ErrorUtil::efatal,"Copy Constructor for the TimeIntegrationScheme class should not be called");
+          }
 
             inline int GetFirstDim(ConstTripleArray &y) const
             {
@@ -424,3 +428,4 @@ namespace Nektar
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 
+#endif

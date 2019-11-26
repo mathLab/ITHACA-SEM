@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -111,7 +110,7 @@ void swap_endian(T &u)
 }
 
 template <typename T>
-void swap_endian(vector<T> &u)
+void swap_endian(std::vector<T> &u)
 {
     size_t vecSize = u.size();
     for (int i = 0; i < vecSize; ++i)
@@ -152,9 +151,9 @@ struct ConfigOption
         {
             return boost::lexical_cast<T>(m_value);
         }
-        catch (const exception &e)
+        catch (const std::exception &e)
         {
-            cerr << e.what() << endl;
+            std::cerr << e.what() << std::endl;
             abort();
         }
     }
@@ -212,7 +211,7 @@ protected:
     /// Field object
     FieldSharedPtr m_f;
     /// List of configuration values.
-    std::map<std::string, ConfigOption> m_config;;
+    std::map<std::string, ConfigOption> m_config;
 };
 
 /**
@@ -269,8 +268,9 @@ protected:
     std::ofstream m_fldFile;
 };
 
-typedef pair<ModuleType, std::string> ModuleKey;
-FIELD_UTILS_EXPORT std::ostream &operator<<(ostream &os, const ModuleKey &rhs);
+typedef std::pair<ModuleType, std::string> ModuleKey;
+FIELD_UTILS_EXPORT std::ostream &operator<<(
+    std::ostream &os, const ModuleKey &rhs);
 
 typedef std::shared_ptr<Module> ModuleSharedPtr;
 typedef LibUtilities::NekFactory<ModuleKey, Module, FieldSharedPtr>

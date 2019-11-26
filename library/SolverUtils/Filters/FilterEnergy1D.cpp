@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Outputs orthogonal expansion of 1D elements.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <SolverUtils/Filters/FilterEnergy1D.h>
@@ -86,7 +87,7 @@ FilterEnergy1D::FilterEnergy1D(
     else
     {
         LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+            m_session->GetInterpreter(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
 }
@@ -106,6 +107,7 @@ void FilterEnergy1D::v_Initialise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
+    boost::ignore_unused(time);
     ASSERTL0(pFields[0]->GetExp(0)->GetNumBases() == 1,
              "The Energy 1D filter is only valid in 1D.");
 }
@@ -173,6 +175,7 @@ void FilterEnergy1D::v_Finalise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
+    boost::ignore_unused(pFields, time);
     m_out.close();
 }
 

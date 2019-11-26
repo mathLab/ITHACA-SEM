@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -45,9 +44,6 @@
 #include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
-
-#include <boost/lexical_cast.hpp>
-
 
 namespace Nektar
 {
@@ -232,10 +228,7 @@ namespace Nektar
                        sizeof(SparseStorageSharedPtr)*m_submatrix.capacity();
         for (int i = 0; i < m_submatrix.num_elements(); i++)
         {
-            bytes += m_submatrix[i]->GetMemoryUsage(
-                        m_submatrix[i]->GetNumNonZeroEntries(),
-                        m_submatrix[i]->GetRows()
-                     );
+            bytes += m_submatrix[i]->GetMemoryUsage();
         }
         return bytes;
     }
@@ -243,10 +236,7 @@ namespace Nektar
     template<typename SparseStorageType>
     size_t NekSparseDiagBlkMatrix<SparseStorageType>::GetMemoryFootprint(IndexType i) const
     {
-        return m_submatrix[i]->GetMemoryUsage(
-                        m_submatrix[i]->GetNumNonZeroEntries(),
-                        m_submatrix[i]->GetRows()
-               );
+        return m_submatrix[i]->GetMemoryUsage();
     }
 
     template<typename SparseStorageType>

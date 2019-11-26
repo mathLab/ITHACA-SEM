@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -39,6 +38,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
 
+#include <vector>
 #include <fstream>
 
 #include <boost/format.hpp>
@@ -50,8 +50,6 @@
 #include "ErrorUtil.hpp"
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
-
-using namespace std;
 
 namespace Nektar
 {
@@ -70,12 +68,12 @@ CsvIO::CsvIO(CommSharedPtr pComm, bool sharedFilesystem)
  * @param outFile    filename of the file
  * @param ptsField  the pts field
  */
-void CsvIO::Write(const string &outFile,
+void CsvIO::Write(const std::string &outFile,
                   const Nektar::LibUtilities::PtsFieldSharedPtr &ptsField,
                   const bool backup)
 {
-    int nTotvars = ptsField->GetNFields() + ptsField->GetDim();
-    int np = ptsField->GetNpoints();
+    size_t nTotvars = ptsField->GetNFields() + ptsField->GetDim();
+    size_t np = ptsField->GetNpoints();
 
     std::string filename = SetUpOutput(outFile, true, backup);
     SetUpFieldMetaData(outFile);
@@ -83,28 +81,28 @@ void CsvIO::Write(const string &outFile,
     std::ofstream ptsFile;
     ptsFile.open(filename.c_str());
 
-    vector<string> xyz;
+    std::vector<std::string> xyz;
     xyz.push_back("x");
     xyz.push_back("y");
     xyz.push_back("z");
     xyz.resize(ptsField->GetDim());
 
-    string fn = boost::algorithm::join(xyz, ",");
+    std::string fn = boost::algorithm::join(xyz, ",");
     ptsFile << "# " << fn << ",";
     fn = boost::algorithm::join(ptsField->GetFieldNames(), ",");
     ptsFile << fn;
-    ptsFile << endl;
+    ptsFile << std::endl;
 
     Array<OneD, Array<OneD, NekDouble> > pts;
     ptsField->GetPts(pts);
-    for (int i = 0; i < np; ++i)
+    for (size_t i = 0; i < np; ++i)
     {
         ptsFile << pts[0][i];
-        for (int j = 1; j < nTotvars; ++j)
+        for (size_t j = 1; j < nTotvars; ++j)
         {
             ptsFile << "," << pts[j][i];
         }
-        ptsFile << endl;
+        ptsFile << std::endl;
     }
 
     ptsFile.close();
@@ -115,14 +113,14 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
 {
     std::stringstream errstr;
     errstr << "Unable to load file: " << inFile << std::endl;
-    ifstream in(inFile.c_str());
+    std::ifstream in(inFile.c_str());
     ASSERTL0(in.is_open(), errstr.str());
 
-    string line;
-    getline(in, line);
+    std::string line;
+    std::getline(in, line);
     boost::erase_first(line, "#");
 
-    vector<string> fieldNames;
+    std::vector<std::string> fieldNames;
     bool valid = ParseUtils::GenerateVector(line, fieldNames);
     ASSERTL0(valid, "Unable to process list of fields from line: " + line);
 
@@ -135,16 +133,17 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
         }
     }
 
-    int totvars = fieldNames.size();
+    size_t totvars = fieldNames.size();
 
-    vector<NekDouble> ptsSerial;
+    std::vector<NekDouble> ptsSerial;
     typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
     Tokenizer tok(line);
     while (getline(in, line))
     {
         tok.assign(line);
 
-        ASSERTL0(std::distance(tok.begin(), tok.end()) == totvars,
+        ASSERTL0(std::distance(tok.begin(), tok.end()) ==
+                    std::iterator_traits<Tokenizer::iterator>::difference_type(totvars),
                  "wrong number of columns in line: " + line);
 
         for (auto &it : tok)
@@ -153,39 +152,39 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
             {
                 ptsSerial.push_back(
                     boost::lexical_cast<NekDouble>(
-                        boost::trim_copy(string(it))));
+                        boost::trim_copy(std::string(it))));
             }
             catch(const boost::bad_lexical_cast &)
             {
-                ASSERTL0(false, "could not convert line: " + line);
+                NEKERROR(ErrorUtil::efatal, "could not convert line: " + line);
             }
         }
     }
 
-    int npts = ptsSerial.size() / totvars;
+    size_t npts = ptsSerial.size() / totvars;
 
     Array<OneD, Array<OneD, NekDouble> > pts(totvars);
-    for (int i = 0; i < totvars; ++i)
+    for (size_t i = 0; i < totvars; ++i)
     {
         pts[i] = Array<OneD, NekDouble>(npts);
     }
 
-    for (int i = 0; i < npts; ++i)
+    for (size_t i = 0; i < npts; ++i)
     {
-        for (int j = 0; j < totvars; ++j)
+        for (size_t j = 0; j < totvars; ++j)
         {
             pts[j][i] = ptsSerial[i * totvars + j];
         }
     }
 
     // reorder pts to make x,y,z the first columns
-    vector<string> dimNames = {"x", "y", "z"};
+    std::vector<std::string> dimNames = {"x", "y", "z"};
     for (int i = 0; i < dim; ++i)
     {
-        auto p = find(fieldNames.begin(), fieldNames.end(), dimNames[i]);
+        auto p = std::find(fieldNames.begin(), fieldNames.end(), dimNames[i]);
         if (p != fieldNames.end())
         {
-            int j = distance(fieldNames.begin(), p);
+            auto j = std::distance(fieldNames.begin(), p);
 
             if (i == j)
             {
@@ -196,7 +195,7 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
             pts[i] = pts[j];
             pts[j] = tmp;
 
-            string tmp2 = fieldNames[i];
+            std::string tmp2 = fieldNames[i];
             fieldNames[i] = fieldNames[j];
             fieldNames[j] = tmp2;
         }

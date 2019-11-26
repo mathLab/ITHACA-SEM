@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Compressible flow system base class with auxiliary functions
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 
@@ -556,6 +557,8 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD, NekDouble> &tstep)
     {
+        boost::ignore_unused(inarray);
+
         int n;
         int nElements = m_fields[0]->GetExpSize();
 
@@ -604,6 +607,8 @@ namespace Nektar
         bool      dumpInitialConditions,
         const int domain)
     {
+        boost::ignore_unused(domain);
+
         EquationSystem::v_SetInitialConditions(initialtime, false);
 
         // insert white noise in initial condition

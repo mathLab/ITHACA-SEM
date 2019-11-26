@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: white noise forcing
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/Forcing/ForcingNoise.h>
 #include <MultiRegions/ExpList.h>
@@ -117,6 +118,8 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
+        boost::ignore_unused(fields, inarray, time);
+
         // Do not apply forcing if exceeded m_numSteps
         if( m_numSteps && (m_index >= m_numSteps) )
         {

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Assembly (e.g. local to global) base mapping routines
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
 
@@ -492,52 +493,64 @@ namespace Nektar
 
         int AssemblyMap::v_GetLocalToGlobalMap(const int i) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(i);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetGlobalToUniversalMap(const int i) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(i);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetGlobalToUniversalMapUnique(const int i) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(i);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         const Array<OneD,const int>&  AssemblyMap::v_GetLocalToGlobalMap()
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             static Array<OneD,const int> result;
             return result;
         }
 
         const Array<OneD, const int>& AssemblyMap::v_GetGlobalToUniversalMap()
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             static Array<OneD, const int> result;
             return result;
         }
 
         const Array<OneD, const int>& AssemblyMap::v_GetGlobalToUniversalMapUnique()
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             static Array<OneD, const int> result;
             return result;
         }
 
         NekDouble AssemblyMap::v_GetLocalToGlobalSign(const int i) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(i);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0.0;
         }
 
         const Array<OneD, NekDouble>& AssemblyMap::v_GetLocalToGlobalSign() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             static Array<OneD, NekDouble> result;
             return result;
         }
@@ -547,7 +560,9 @@ namespace Nektar
                 Array<OneD,       NekDouble>& global,
                 bool useComm) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(loc, global, useComm);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
         }
 
         void AssemblyMap::v_LocalToGlobal(
@@ -555,40 +570,51 @@ namespace Nektar
                 NekVector<      NekDouble>& global,
                 bool useComm) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(loc, global, useComm);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
         }
 
         void AssemblyMap::v_GlobalToLocal(
                 const Array<OneD, const NekDouble>& global,
                       Array<OneD,       NekDouble>& loc) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(loc, global);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
         }
 
         void AssemblyMap::v_GlobalToLocal(
                 const NekVector<NekDouble>& global,
                       NekVector<      NekDouble>& loc) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(loc, global);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
         }
 
         void AssemblyMap::v_Assemble(
                 const Array<OneD, const NekDouble> &loc,
                       Array<OneD,       NekDouble> &global) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(loc, global);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
         }
 
         void AssemblyMap::v_Assemble(
                 const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(loc, global);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
         }
 
         void AssemblyMap::v_UniversalAssemble(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
+            boost::ignore_unused(pGlobal);
             // Do nothing here since multi-level static condensation uses a
             // AssemblyMap and thus will call this routine in serial.
         }
@@ -596,6 +622,7 @@ namespace Nektar
         void AssemblyMap::v_UniversalAssemble(
                       NekVector<      NekDouble>& pGlobal) const
         {
+            boost::ignore_unused(pGlobal);
             // Do nothing here since multi-level static condensation uses a
             // AssemblyMap and thus will call this routine in serial.
         }
@@ -604,61 +631,71 @@ namespace Nektar
                       Array<OneD,     NekDouble>& pGlobal,
                       int                         offset) const
         {
+            boost::ignore_unused(pGlobal, offset);
             // Do nothing here since multi-level static condensation uses a
             // AssemblyMap and thus will call this routine in serial.
         }
 
         int AssemblyMap::v_GetFullSystemBandWidth() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumNonDirVertexModes() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumNonDirEdgeModes() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumNonDirFaceModes() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumDirEdges() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumDirFaces() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumNonDirEdges() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumNonDirFaces() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         const Array<OneD, const int>& AssemblyMap::v_GetExtraDirEdges()
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             static Array<OneD, const int> result;
             return result;
         }
@@ -666,7 +703,9 @@ namespace Nektar
         std::shared_ptr<AssemblyMap> AssemblyMap::v_LinearSpaceMap(
             const ExpList &locexp, GlobalSysSolnType solnType)
         {
-            ASSERTL0(false, "Not defined for this sub class");
+            boost::ignore_unused(locexp, solnType);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             static std::shared_ptr<AssemblyMap> result;
             return result;
         }

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
 #define NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/Communication/Transposition.h>
 #include <LibUtilities/Communication/Comm.h>
@@ -211,7 +212,7 @@ namespace Nektar
                 const NekDouble> &inarray);
 
             /// This function calculates the inner product of a function
-            /// \f$f(\boldsymbol{x})\f$ with respect to all \emph{local}
+            /// \f$f(\boldsymbol{x})\f$ with respect to all \em local
             /// expansion modes \f$\phi_n^e(\boldsymbol{x})\f$.
             inline void   IProductWRTBase_IterPerExp(
                 const Array<OneD, const NekDouble> &inarray,
@@ -225,7 +226,7 @@ namespace Nektar
 
             /// This function calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
-            /// direction \param dir) of all \emph{local} expansion modes
+            /// direction \param dir) of all \em local expansion modes
             /// \f$\phi_n^e(\boldsymbol{x})\f$.
             MULTI_REGIONS_EXPORT void   IProductWRTDerivBase(
                 const int dir,
@@ -239,7 +240,7 @@ namespace Nektar
 
             /// This function calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
-            /// direction \param dir) of all \emph{local} expansion modes
+            /// direction \param dir) of all \em local expansion modes
             /// \f$\phi_n^e(\boldsymbol{x})\f$.
             MULTI_REGIONS_EXPORT void   IProductWRTDerivBase
                 (const Array<OneD, const Array<OneD, NekDouble> > &inarray,
@@ -687,6 +688,13 @@ namespace Nektar
                 Array<OneD, NekDouble>       &locCoords,
                 NekDouble tol = 0.0,
                 bool returnNearestElmt = false);
+            
+            /** This function return the expansion field value
+             * at the coordinates given as input.
+             **/
+            MULTI_REGIONS_EXPORT NekDouble PhysEvaluate(
+                const Array<OneD, const NekDouble> &coords,
+                const Array<OneD, const NekDouble> &phys);
 
             /// Get the start offset position for a global list of #m_coeffs
             /// correspoinding to element n.
@@ -1289,6 +1297,10 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray);
 
+            virtual void v_FwdTrans_BndConstrained(
+                const Array<OneD,const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray);
+            
             virtual void v_SmoothField(Array<OneD,NekDouble> &field);
 
             virtual void v_IProductWRTBase(
@@ -1513,7 +1525,7 @@ namespace Nektar
             // Homogeneous direction wrapper functions. 
             virtual LibUtilities::BasisSharedPtr  v_GetHomogeneousBasis(void)
             {
-                ASSERTL0(false,
+                NEKERROR(ErrorUtil::efatal,
                     "This method is not defined or valid for this class type");
                 return LibUtilities::NullBasisSharedPtr; 
             }
@@ -1521,7 +1533,8 @@ namespace Nektar
             // wrapper function to set viscosity for Homo1D expansion
             virtual void v_SetHomo1DSpecVanVisc(Array<OneD, NekDouble> visc)
             {
-                ASSERTL0(false,
+                boost::ignore_unused(visc);
+                NEKERROR(ErrorUtil::efatal,
                     "This method is not defined or valid for this class type");
             }
 
@@ -1737,6 +1750,17 @@ namespace Nektar
             v_FwdTrans_IterPerExp(inarray,outarray);
         }
 
+        /**
+         *
+         */
+        inline void ExpList::FwdTrans_BndConstrained (
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,NekDouble> &outarray)
+        {
+            v_FwdTrans_BndConstrained(inarray,outarray);
+        }
+
+        
         /**
          *
          */

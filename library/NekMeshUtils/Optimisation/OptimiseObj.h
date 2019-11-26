@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 #ifndef NEKTAR_MESHUTILS_OPTIMISATION_OPTIMISEOBJ_H
 #define NEKTAR_MESHUTILS_OPTIMISATION_OPTIMISEOBJ_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 
 namespace Nektar
@@ -47,44 +48,57 @@ class OptiObj
 {
     public:
 
-        OptiObj(){};
+        OptiObj()
+        {
+        }
 
-        virtual ~OptiObj(){};
+        virtual ~OptiObj()
+        {
+        }
 
         virtual NekDouble F(Array<OneD, NekDouble> xitst)
         {
-            ASSERTL0(false,"should be implemented in inheriting class");
+            boost::ignore_unused(xitst);
+            NEKERROR(ErrorUtil::efatal,
+                     "F() should be implemented in inheriting class");
             return 0.0;
-        };
+        }
 
         virtual DNekMat dF(Array<OneD, NekDouble> xitst)
         {
-            ASSERTL0(false,"should be implemented in inheriting class");
+            boost::ignore_unused(xitst);
+            NEKERROR(ErrorUtil::efatal,
+                     "dF() should be implemented in inheriting class");
             return DNekMat(1,1,0.0);
-        };
+        }
 
         virtual Array<OneD, NekDouble> Getxi()
         {
-            ASSERTL0(false,"should be implemented in inheriting class");
+            NEKERROR(ErrorUtil::efatal,
+                     "Getxi() should be implemented in inheriting class");
             return Array<OneD,NekDouble>();
-        };
+        }
 
         virtual Array<OneD, NekDouble> Getli()
         {
-            ASSERTL0(false,"should be implemented in inheriting class");
+            NEKERROR(ErrorUtil::efatal,
+                     "Getli() should be implemented in inheriting class");
             return Array<OneD,NekDouble>();
-        };
+        }
 
         virtual Array<OneD, NekDouble> Getui()
         {
-            ASSERTL0(false,"should be implemented in inheriting class");
+            NEKERROR(ErrorUtil::efatal,
+                     "Getui() should be implemented in inheriting class");
             return Array<OneD,NekDouble>();
-        };
+        }
 
         virtual void Update(Array<OneD, NekDouble> xinew)
         {
-            ASSERTL0(false,"should be implemented in inheriting class");
-        };
+            boost::ignore_unused(xinew);
+            NEKERROR(ErrorUtil::efatal,
+                     "Update() should be implemented in inheriting class");
+        }
 
 };
 typedef std::shared_ptr<OptiObj> OptiObjSharedPtr;

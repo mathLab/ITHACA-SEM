@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 // uses much of the functionality from a ExpList2D and its daughters
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/ExpList1DHomogeneous2D.h>
 
@@ -138,6 +139,8 @@ namespace Nektar
                                                Array<OneD, NekDouble> &xc1,
                                                Array<OneD, NekDouble> &xc2)
         {
+            boost::ignore_unused(eid);
+
             int n,m,j;
             Array<OneD, NekDouble> tmp_xc;
             int nylines = m_homogeneousBasis_y->GetNumPoints();
@@ -285,6 +288,8 @@ namespace Nektar
 
         void ExpList1DHomogeneous2D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip)
         {
+            boost::ignore_unused(istrip);
+
             int i,j;
             
             int nquad0 = 1;

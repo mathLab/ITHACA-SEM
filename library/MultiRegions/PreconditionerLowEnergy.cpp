@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -129,7 +128,7 @@ namespace Nektar
             int i, j, k;
             int nVerts, nEdges,nFaces; 
             int eid, fid, n, cnt, nmodes, nedgemodes, nfacemodes;
-            int nedgemodesloc, nfacemodesloc;
+            int nedgemodesloc;
             NekDouble zero = 0.0;
 
             int vMap1, vMap2, sign1, sign2;
@@ -788,7 +787,6 @@ namespace Nektar
                     nfacemodes   = FaceSize[meshFaceId];
                     if(nfacemodes > 0)
                     {
-                        nfacemodesloc = locExpansion->GetFaceIntNcoeffs(fid);
                         DNekMatSharedPtr m_locMat = 
                             MemoryManager<DNekMat>::AllocateSharedPtr
                             (nfacemodes,nfacemodes,zero,storage);
@@ -2200,6 +2198,8 @@ namespace Nektar
                              std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
                              std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR)
         {
+            boost::ignore_unused(faceMapMaxR);
+
             int nRows = TetExp->NumBndryCoeffs();
             NekDouble val; 
             NekDouble zero = 0.0;

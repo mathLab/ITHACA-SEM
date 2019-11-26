@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,7 +32,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <GlobalMapping/Mapping.h>
+
+#include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
 
@@ -98,6 +101,8 @@ void Mapping::v_InitObject(
         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const TiXmlElement                                *pMapping)
 {
+    boost::ignore_unused(pFields);
+
     int phystot         = m_fields[0]->GetTotPoints();
     m_fromFunction      = true;
     // Initialise variables
@@ -1209,13 +1214,13 @@ void Mapping::v_UpdateBCs( const NekDouble time)
                 if( BndConds[n]->GetUserDefined() =="" ||
                     BndConds[n]->GetUserDefined() =="MovingBody")
                 {
-                    BndExp[n]->FwdTrans_BndConstrained(BndExp[n]->GetPhys(),
-                                                BndExp[n]->UpdateCoeffs());
                     if (m_fields[i]->GetExpType() == MultiRegions::e3DH1D)
                     {
-                        BndExp[n]->HomogeneousFwdTrans(BndExp[n]->GetCoeffs(),
-                                                BndExp[n]->UpdateCoeffs());
+                        BndExp[n]->SetWaveSpace(false);
                     }
+
+                    BndExp[n]->FwdTrans_BndConstrained(
+                        BndExp[n]->GetPhys(), BndExp[n]->UpdateCoeffs());
                 }
             }
         }

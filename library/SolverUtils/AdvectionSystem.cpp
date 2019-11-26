@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -85,13 +84,13 @@ bool AdvectionSystem::v_PostIntegrate(int step)
         {
             if( m_HomogeneousType == eNotHomogeneous)
             {
-                cout << "CFL: ";
+                std::cout << "CFL: ";
             }
             else
             {
-                cout << "CFL (zero plane): ";
+                std::cout << "CFL (zero plane): ";
             }
-            cout << cfl << " (in elmt " << elmtid << ")" << endl;
+            std::cout << cfl << " (in elmt " << elmtid << ")" << std::endl;
         }
         
         // At each timestep, if cflWriteFld is set check if cfl is above treshold
@@ -124,7 +123,7 @@ Array<OneD, NekDouble>  AdvectionSystem::GetElmtCFLVals(void)
     NekDouble order;
     for(int el = 0; el < nelmt; ++el)
     {
-        order = max(expOrder[el]-1, 1);
+        order = std::max(expOrder[el]-1, 1);
         cfl[el] =  m_timestep*(stdVelocity[el] * cLambda * order * order);
     }
 

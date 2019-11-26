@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -179,7 +178,7 @@ bool operator< (EdgeSharedPtr const &p1, EdgeSharedPtr const &p2)
  */
 bool operator==(FaceSharedPtr const &p1, FaceSharedPtr const &p2)
 {
-    std::vector<NodeSharedPtr>::iterator it1, it2;
+    std::vector<NodeSharedPtr>::iterator it1;
     for (it1 = p1->m_vertexList.begin(); it1 != p1->m_vertexList.end(); ++it1)
     {
         if (find(p2->m_vertexList.begin(), p2->m_vertexList.end(), *it1)

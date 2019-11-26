@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Time dependent boundary condition
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include "TimeDependentBC.h"
 
@@ -60,6 +61,8 @@ void TimeDependentBC::v_Apply(
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
 {
+    boost::ignore_unused(Fwd);
+
     int nvariables = physarray.num_elements();
     std::string varName;
     for (int i = 0; i < nvariables; ++i)

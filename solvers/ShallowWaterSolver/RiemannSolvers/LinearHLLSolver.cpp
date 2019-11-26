@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -67,43 +66,40 @@ namespace Nektar
      * @param vf     Computed Riemann flux for y-momentum component 
      */
     void LinearHLLSolver::v_PointSolve(
-         double  etaL, double  uL, double  vL, double dL,
-      	double  etaR, double  uR, double  vR, double dR,
-        double &etaf, double &uf, double &vf)
+        NekDouble  etaL, NekDouble  uL, NekDouble  vL, NekDouble dL,
+        NekDouble  etaR, NekDouble  uR, NekDouble  vR, NekDouble dR,
+        NekDouble &etaf, NekDouble &uf, NekDouble &vf)
     {        
         static NekDouble g = m_params["gravity"]();
 
-	if (dL != dR)
-	  {
-	    ASSERTL0(false,"not constant depth in LinearHLL");
-	  }
+        ASSERTL0(dL == dR, "not constant depth in LinearHLL");
         
-	// Left and right wave speeds
-	NekDouble cL = sqrt(g * dL);
-	NekDouble cR = sqrt(g * dR);
+        // Left and right wave speeds
+        NekDouble cL = sqrt(g * dL);
+        NekDouble cR = sqrt(g * dR);
     
-	NekDouble SL = uL - cL;
-	NekDouble SR = uR + cR;
+        NekDouble SL = uL - cL;
+        NekDouble SR = uR + cR;
     
-	if (SL >= 0)
-	  {
-	    etaf = dL * uL;
-	    uf   = g * etaL;
-	    vf   = 0.0;
-	  }
-	else if (SR <= 0)
-	  {
-	    etaf = dR * uR;
-	    uf   = g * etaR;
-	    vf   = 0.0;
-	  }
-	else 
-	  {
-	    etaf = (SR * dL * uL - SL * dR * uR + 
-		  SL * SR * (etaR - etaL)) / (SR - SL);
-	    uf  = (SR * g * etaL - SL * g * etaR + 
-	           SL * SR * (uR - uL)) / (SR - SL);
-	    vf  = (SL * SR * (vR - vL)) / (SR - SL);
-	  }
+        if (SL >= 0)
+          {
+            etaf = dL * uL;
+            uf   = g * etaL;
+            vf   = 0.0;
+          }
+        else if (SR <= 0)
+          {
+            etaf = dR * uR;
+            uf   = g * etaR;
+            vf   = 0.0;
+          }
+        else 
+          {
+            etaf = (SR * dL * uL - SL * dR * uR + 
+                  SL * SR * (etaR - etaL)) / (SR - SL);
+            uf  = (SR * g * etaL - SL * g * etaR + 
+                   SL * SR * (uR - uL)) / (SR - SL);
+            vf  = (SL * SR * (vR - vL)) / (SR - SL);
+          }
     }
 }

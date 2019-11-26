@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 #ifndef NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
 #define NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Advection/Advection.h>
 
 namespace Nektar
@@ -47,6 +48,7 @@ namespace Nektar
         public:
             static AdvectionSharedPtr create(std::string advType)
             {
+                boost::ignore_unused(advType);
                 return AdvectionSharedPtr(new AdvectionWeakDG());
             }
 

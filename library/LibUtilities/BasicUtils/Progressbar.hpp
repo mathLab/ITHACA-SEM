@@ -8,7 +8,6 @@
 //
 // Copyright (c) 2015 Kilian Lackhove
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -52,7 +51,6 @@ namespace Nektar
 {
 namespace LibUtilities
 {
-using namespace std;
 
 /**
  * @brief Prints a progressbar
@@ -66,14 +64,15 @@ using namespace std;
  * calling this routine. Ideally, this should be called only when the
  * percentage is increased by an integer.
  */
-inline int PrintProgressbar(const int position, const int goal, const string message,
-                                 int lastprogress = -1)
+inline int PrintProgressbar(
+    const int position, const int goal, const std::string message,
+    int lastprogress = -1)
 {
     std::cout.unsetf ( std::ios::floatfield );
     if (ISTTY)
     {
         float progress = position / float(goal);
-        int  numeq = ceil(progress *49); 
+        int  numeq = static_cast<int>(ceil(progress *49));
         if(lastprogress == numeq)
         {
             return numeq;
@@ -81,20 +80,20 @@ inline int PrintProgressbar(const int position, const int goal, const string mes
         else
         {
             // carriage return
-            cout << "\r";
+            std::cout << "\r";
 
-            cout << message << ": ";
+            std::cout << message << ": ";
 
-            cout << setw(3) << ceil(100 * progress) << "% [";
+            std::cout << std::setw(3) << ceil(100 * progress) << "% [";
             for (int j = 0; j < numeq; j++)
             {
-                cout << "=";
+                std::cout << "=";
             }
             for (int j = numeq; j < 49; j++)
             {
-                cout << " ";
+                std::cout << " ";
             }
-            cout << "]" << flush;
+            std::cout << "]" << std::flush;
             return numeq;
         }
     }
@@ -103,7 +102,7 @@ inline int PrintProgressbar(const int position, const int goal, const string mes
         // print only every 2 percent
         if (int(ceil(double(100 * position / goal))) % 2 ==  0)
         {
-            cout << "." <<  flush;
+            std::cout << "." <<  std::flush;
         }
         return -1;
     }

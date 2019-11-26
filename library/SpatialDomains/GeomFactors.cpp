@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -999,5 +998,5 @@ namespace Nektar
             Vmath::Vvtvm(nq, v1[0], 1, v2[1], 1, temp, 1, v3[2], 1);
         }
 
-    }; //end of namespace
-}; //end of namespace
+    } //end of namespace
+} //end of namespace

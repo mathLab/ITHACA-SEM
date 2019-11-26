@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 // Description: Lax-Friedrichs solver for the LEE equations.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <AcousticSolver/RiemannSolvers/LEELaxFriedrichsSolver.h>
 
@@ -91,6 +92,8 @@ void LEELaxFriedrichsSolver::v_PointSolve(
     NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R,   NekDouble  v0R,   NekDouble  w0R,
     NekDouble &pF,    NekDouble &rhoF,  NekDouble &rhouF, NekDouble &rhovF, NekDouble &rhowF)
 {
+    boost::ignore_unused(rho0L, v0L, w0L, rho0R, v0R, w0R);
+
     // Speed of sound
     NekDouble cL = sqrt(c0sqL);
     NekDouble cR = sqrt(c0sqR);

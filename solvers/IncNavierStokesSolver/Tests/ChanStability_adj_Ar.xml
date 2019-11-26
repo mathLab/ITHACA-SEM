@@ -253,13 +253,13 @@
         </SOLVERINFO>
 
         <PARAMETERS>
-            <P> TimeStep      = 0.002  </P>
-            <P> NumSteps      = 70     </P>
+            <P> TimeStep      = 0.007  </P>
+            <P> NumSteps      = 20     </P>
             <P> IO_CheckSteps = 1000   </P>
             <P> IO_InfoSteps  = 20     </P>
             <P> Re            = 7500   </P>
             <P> Kinvis        = 1.0/Re </P>
-            <P> kdim          = 16      </P>
+            <P> kdim          = 16  </P>
             <P> nvec           =2      </P>
             <P> evtol           =1e-6      </P>
 

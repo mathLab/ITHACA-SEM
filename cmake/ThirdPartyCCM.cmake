@@ -25,11 +25,19 @@ ENDIF ()
 OPTION(THIRDPARTY_BUILD_CCMIO "Build CCMIO library from ThirdParty." ${BUILD_CCMIO})
 
 IF (THIRDPARTY_BUILD_CCMIO)
+    UNSET(PATCH CACHE)
+    FIND_PROGRAM(PATCH patch)
+    IF(NOT PATCH)
+        MESSAGE(FATAL_ERROR
+            "'patch' tool for modifying files not found. Cannot build CCM.")
+    ENDIF()
+    MARK_AS_ADVANCED(PATCH)
+
     INCLUDE(ExternalProject)
     EXTERNALPROJECT_ADD(
         libccmio-2.6.1
         PREFIX ${TPSRC}
-        URL http://portal.nersc.gov/svn/visit/trunk/third_party/libccmio-2.6.1.tar.gz
+        URL http://visit.ilight.com/svn/visit/trunk/third_party/libccmio-2.6.1.tar.gz
         URL_MD5 f81fbdfb960b1a4f3bcc7feee491efe4
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
@@ -37,6 +45,7 @@ IF (THIRDPARTY_BUILD_CCMIO)
         BINARY_DIR ${TPBUILD}/libccmio-2.6.1
         TMP_DIR ${TPBUILD}/libccmio-2.6.1-tmp
         PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/thirdparty-patches/CMakeLists_CCM.txt ${TPSRC}/libccmio-2.6.1/CMakeLists.txt
+        COMMAND ${PATCH} -p 0 < ${CMAKE_SOURCE_DIR}/cmake/thirdparty-patches/ccmio-warning.patch
         INSTALL_DIR ${TPDIST}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
             -G ${CMAKE_GENERATOR}
@@ -51,14 +60,14 @@ IF (THIRDPARTY_BUILD_CCMIO)
     THIRDPARTY_LIBRARY(
         CCMIO_ADF_LIBRARY STATIC adf DESCRIPTION "CCMIO ADF library")
 
-    INCLUDE_DIRECTORIES(NekMesh ${TPDIST}/include)
+    INCLUDE_DIRECTORIES(SYSTEM NekMesh ${TPDIST}/include)
     MESSAGE(STATUS "Build CCMIO: ${CCMIO_LIBRARY}")
     SET(CCMIO_CONFIG_INCLUDE_DIR ${TPINC})
 ELSE()
     ADD_CUSTOM_TARGET(libccmio-2.6.1 ALL)
     MESSAGE(STATUS "Found CCMIO: ${CCMIO_LIBRARY}")
     SET(CCMIO_CONFIG_INCLUDE_DIR ${CCMIO_INCLUDE_DIR})
-    INCLUDE_DIRECTORIES(NekMesh ${CCMIO_INCLUDE_DIR})
+    INCLUDE_DIRECTORIES(SYSTEM NekMesh ${CCMIO_INCLUDE_DIR})
     LINK_DIRECTORIES(${CCMIO_LIBRARY_DIR})
 ENDIF (THIRDPARTY_BUILD_CCMIO)
 

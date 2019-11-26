@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,14 +35,16 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/geometry.hpp>
-#include "ProcessInterpField.h"
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessInterpField.h"
 
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
@@ -82,6 +83,8 @@ ProcessInterpField::~ProcessInterpField()
 
 void ProcessInterpField::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
 
     std::vector<std::string> files;
@@ -121,17 +124,19 @@ void ProcessInterpField::Process(po::variables_map &vm)
             rng->m_doZrange = true;
             rng->m_zmin     = Vmath::Vmin(npts, coords[2], 1);
             rng->m_zmax     = Vmath::Vmax(npts, coords[2], 1);
+            /* Falls through. */
         case 2:
             rng->m_doYrange = true;
             rng->m_ymin     = Vmath::Vmin(npts, coords[1], 1);
             rng->m_ymax     = Vmath::Vmax(npts, coords[1], 1);
+            /* Falls through. */
         case 1:
             rng->m_doXrange = true;
             rng->m_xmin     = Vmath::Vmin(npts, coords[0], 1);
             rng->m_xmax     = Vmath::Vmax(npts, coords[0], 1);
             break;
         default:
-            ASSERTL0(false, "coordim should be <= 3");
+            NEKERROR(ErrorUtil::efatal, "coordim should be <= 3");
     }
 
     // setup rng parameters.

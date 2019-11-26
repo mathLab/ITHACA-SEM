@@ -41,6 +41,8 @@
 
 #include <iostream>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <math.h>
 
 using namespace std;
@@ -57,6 +59,8 @@ namespace Nektar
                                      const Array<TwoD, const NekDouble>& U,
                                      const Array<TwoD, const NekDouble>& V )
         {
+            boost::ignore_unused(U, V);
+
             int IMEXdim = A.num_elements();
             int dim     = A[0].GetRows();
 
@@ -701,6 +705,8 @@ namespace Nektar
                                                                             const Array<TwoD, const NekDouble>               & U,
                                                                             const Array<TwoD, const NekDouble>               & V ) const
         {
+            boost::ignore_unused(B, V);
+
             // First stage equals old solution if:
             // 1. the first row of the coefficient matrix A consists of zeros
             // 2. U[0][0] is equal to one and all other first row entries of U are zero
@@ -776,6 +782,8 @@ namespace Nektar
                                                                            SingleArray                    & t_new,
                                                                      const TimeIntegrationSchemeOperators & op ) const
         {
+            boost::ignore_unused(op);
+
             // Check if arrays are all of consistent size
 
             ASSERTL1( y_old.num_elements() == m_numsteps, "Non-matching number of steps." );

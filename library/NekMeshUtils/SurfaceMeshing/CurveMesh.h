@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -41,21 +40,20 @@
 #include <NekMeshUtils/MeshElements/Mesh.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-/**
- * @brief class for meshing individual curves (1d meshing)
- */
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-//forward
 class CurveMesh;
 typedef std::shared_ptr<CurveMesh> CurveMeshSharedPtr;
 
+/**
+ * @brief class for meshing individual curves (1d meshing)
+ */
 class CurveMesh
 {
 public:
@@ -194,7 +192,7 @@ private:
     MeshSharedPtr m_mesh;
     /// ids of the mesh nodes
     std::vector<NodeSharedPtr> m_meshpoints;
-    LibUtilities::AnalyticExpressionEvaluator m_bl;
+    LibUtilities::Interpreter m_bl;
     int m_blID;
     /// offset of second point at each end
     std::map<unsigned, NekDouble> m_endoffset;

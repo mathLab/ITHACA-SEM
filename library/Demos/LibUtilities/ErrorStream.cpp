@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and laimitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -39,10 +38,14 @@
 #include <sstream>
 #include <vector>
 
+#include <boost/core/ignore_unused.hpp>
+
 using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
+    boost::ignore_unused(argc, argv);
+
     // Set up a stringstream to catch any error output.
     std::stringstream ss;
     ErrorUtil::SetErrorStream(ss);

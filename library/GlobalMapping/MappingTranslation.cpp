@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Trivial mapping for translation transformation
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <GlobalMapping/MappingTranslation.h>
 #include <MultiRegions/ExpList.h>
@@ -162,6 +163,8 @@ void MappingTranslation::v_DotGradJacobian(
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
     Array<OneD, NekDouble>                            &outarray)
 {
+    boost::ignore_unused(inarray);
+
     int physTot = m_fields[0]->GetTotPoints();
 
     Vmath::Zero(physTot, outarray, 1);   
@@ -243,6 +246,8 @@ void MappingTranslation::v_ApplyChristoffelContravar(
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
     Array<OneD, Array<OneD, NekDouble> >              &outarray)
 {
+    boost::ignore_unused(inarray);
+
     int physTot = m_fields[0]->GetTotPoints();
     int nvel = m_nConvectiveFields;
 
@@ -259,6 +264,8 @@ void MappingTranslation::v_ApplyChristoffelCovar(
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
     Array<OneD, Array<OneD, NekDouble> >              &outarray)
 {
+    boost::ignore_unused(inarray);
+
     int physTot = m_fields[0]->GetTotPoints();
     int nvel = m_nConvectiveFields;
 

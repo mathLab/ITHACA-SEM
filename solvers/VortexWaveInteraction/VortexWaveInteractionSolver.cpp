@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -110,7 +109,8 @@ void Mvdir(string dir, NekDouble dir_ending)
     
     // make new directory
     syscall = "mkdir " + dir;
-    system(syscall.c_str());
+    ASSERTL0(system(syscall.c_str()) == 0,
+             "Failed to make directory '" + dir + "'");
 }
 
 void DoFixedForcingIteration(VortexWaveInteraction &vwi)
@@ -167,8 +167,8 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                     exit_iteration = true;
                 }
             }
-
         }
+        break;
     case eFixedWaveForcing:
         {
             int i;

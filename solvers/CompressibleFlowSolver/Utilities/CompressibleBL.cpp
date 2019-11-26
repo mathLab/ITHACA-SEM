@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -40,6 +39,8 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList1D.h>
@@ -144,6 +145,8 @@ void RK4(Array<OneD, NekDouble> y,
          NekDouble              h,
          Array<OneD, NekDouble> yout)
 {
+    boost::ignore_unused(x);
+
     int nmax = 5;
 
     Array<OneD, NekDouble> yt (nmax, 0.0);
@@ -253,7 +256,7 @@ void OUTPUT(int                                  m_xpoints,
     Array <OneD, NekDouble > test    (m_xpoints, 0.0);
 
 
-    NekDouble dd, dm, scale, flg;
+    NekDouble dd, dm, scale;
     NekDouble xcher, ycher;
     int index = -1;
 
@@ -266,11 +269,6 @@ void OUTPUT(int                                  m_xpoints,
         dm   = ff[3][i-1] - ff[1][i-1];
         dd   = ff[3][i] - ff[1][i];
         sumd = sumd + 0.5 * (xx[i] - xx[i-1]) * (dd + dm);
-
-        if ((ff[1][i] > 0.999) && (flg < 1.0))
-        {
-            flg  = 2.0;
-        }
     }
 
     scale = sumd;

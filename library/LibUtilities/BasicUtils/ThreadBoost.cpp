@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -276,11 +275,12 @@ void ThreadManagerBoost::SetNumWorkersImpl(const unsigned int num)
 /**
  *
  */
-void ThreadManagerBoost::SetNumWorkers(unsigned int num)
+void ThreadManagerBoost::SetNumWorkers(const unsigned int num)
 {
-    num = std::min(num, m_numThreads);
-    num = std::max(num, static_cast<unsigned int>(0));
-    SetNumWorkersImpl(num);
+    unsigned int n;
+    n = std::min(num, m_numThreads);
+    n = std::max(n,   static_cast<unsigned int>(0));
+    SetNumWorkersImpl(n);
 }
 
 
@@ -393,7 +393,7 @@ void ThreadWorkerBoost::LoadJobs()
  */
 unsigned int ThreadWorkerBoost::GetNumToLoad()
 {
-    unsigned int numToLoad;
+    unsigned int numToLoad = 0;
     switch (m_threadManager->m_schedType)
     {
         case e_guided:
@@ -409,7 +409,7 @@ unsigned int ThreadWorkerBoost::GetNumToLoad()
             break;
 
         default:
-            ASSERTL0(0, "Invalid value for SchedType.");
+            NEKERROR(ErrorUtil::efatal, "Invalid value for SchedType.");
             break;
     }
     return numToLoad;

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -45,6 +44,9 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        bool Basis::initBasisManager[] = {
+            BasisManager().RegisterGlobalCreator(Basis::Create)
+        };
 
         bool operator<(const BasisKey &lhs, const BasisKey &rhs)
         {
@@ -114,7 +116,7 @@ namespace Nektar
             ASSERTL0(GetTotNumPoints()>0, "Cannot call Basis initialisation with zero or negative numbers of points");
 
             GenBasis();
-        };
+        }
 
         /** \brief Calculate the interpolation Matrix for coefficient from
         *  one base (m_basisKey) to another (tbasis0)
@@ -356,7 +358,7 @@ namespace Nektar
                     {
                         for( int q = 0; q <= Q; ++q )
                         {
-                            for( int r = 0; r <= R - max(p,q); ++r, mode += numPoints )
+                            for( int r = 0; r <= R - std::max(p,q); ++r, mode += numPoints )
                             {
                                 // this offset allows for orthogonal
                                 // expansion to span linear FE space
@@ -365,7 +367,7 @@ namespace Nektar
                                 // spanned by the expansion is one
                                 // order lower.
                                 //int pq = max(p + q -1,0);
-                                int pq = max(p + q,0);
+                                int pq = std::max(p + q,0);
                                 
                                 Polylib::jacobfd(numPoints, z.data(), mode, NULL, r, 2*pq + 2.0, 0.0);
                                 for( int k = 0; k < numPoints; ++k )
@@ -648,7 +650,7 @@ namespace Nektar
                             mode        += numPoints;
                             
                             // interior 
-                            for(int r = 1; r < numModes-max(p,q); ++r)
+                            for(int r = 1; r < numModes-std::max(p,q); ++r)
                             {
                                 Polylib::jacobfd(numPoints,z.data(),mode,NULL,r-1,2*p+2*q-3,1.0);
                                 
@@ -820,7 +822,7 @@ namespace Nektar
                 }//end scope
                 break;
             default:
-                ASSERTL0(false, "Basis Type not known or "
+                NEKERROR(ErrorUtil::efatal, "Basis Type not known or "
                                 "not implemented at this time.");
             }
         }

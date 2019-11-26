@@ -10,7 +10,6 @@
 // University of Utah (USA) and Department of Aeronautics, Imperial
 // College London (UK).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -79,6 +78,7 @@
 #include <iostream>
 #include <iomanip>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -361,6 +361,8 @@ void OneDfinDiffAdvDiffSolver::HelmSolve( const Array<OneD, const Array<OneD, do
                                           const NekDouble                                 time,
                                           const NekDouble                                 lambda ) const
 {
+    boost::ignore_unused(time);
+
     // This function implements a 1D finite difference helmholtz solver.
     // The 1D Helmholtz equation leads to a cyclic triadiagonal matrix to be
     // solved.
@@ -402,6 +404,8 @@ void OneDfinDiffAdvDiffSolver::EvaluateAdvectionTerm( const Array<OneD, const  A
                                                             Array<OneD,        Array<OneD, double> > & outarray,
                                                       const NekDouble                                  time ) const
 {
+    boost::ignore_unused(time);
+
     // The advection term can be evaluated using central or upwind differences
     if( true )
     {
@@ -436,6 +440,8 @@ void OneDfinDiffAdvDiffSolver::Project(const Array<OneD, const  Array<OneD, doub
                                              Array<OneD,        Array<OneD, double> >& outarray,
                                        const NekDouble time) const
 {
+    boost::ignore_unused(time);
+
     // This is simply the identity operator for this case
     for(int i = 0; i < m_nPoints; i++)
     {

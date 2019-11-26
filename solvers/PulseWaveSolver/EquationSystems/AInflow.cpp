@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -38,7 +37,7 @@
 namespace Nektar
 {
 
-string AInflow::className = GetBoundaryFactory().RegisterCreatorFunction(
+std::string AInflow::className = GetBoundaryFactory().RegisterCreatorFunction(
     "A-inflow", AInflow::create, "Area inflow boundary condition");
 
 /**
@@ -67,7 +66,6 @@ void AInflow::v_DoBoundary(
     int offset, int n)
 {
     NekDouble A;
-    NekDouble u;
     NekDouble A_r;
     NekDouble u_r;
     NekDouble A_l;
@@ -83,7 +81,6 @@ void AInflow::v_DoBoundary(
 
     // Read the BC values from the input file
     A = (vessel[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
-    u = (vessel[1]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
 
     // Initial conditions in the inlet vessel
     A_r = inarray[0][offset];

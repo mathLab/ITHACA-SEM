@@ -1,7 +1,9 @@
 .*
 !.gitignore
+!.gitlab-ci.yml
 !.gitattributes
 !.clang-format
+!.dockerignore
 # Ignore builds and ThirdParty directories
 build
 builds
@@ -12,3 +14,6 @@ ThirdParty
 *.pdf
 # Kdevelop project files
 *.kdev4
+# Sublime project files
+*.sublime-project
+*.sublime-workspace

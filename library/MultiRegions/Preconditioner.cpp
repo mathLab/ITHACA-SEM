@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Preconditioner definition
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/GlobalMatrixKey.h>
@@ -101,10 +102,11 @@ namespace Nektar
          */ 
         void Preconditioner::v_DoPreconditioner(
             const Array<OneD, NekDouble>& pInput,
-		  Array<OneD, NekDouble>& pOutput)
+                  Array<OneD, NekDouble>& pOutput)
         {
+            boost::ignore_unused(pInput, pOutput);
             NEKERROR(ErrorUtil::efatal,"Method does not exist" );
-	}
+        }
 
         /**
          * \brief Apply a preconditioner to the conjugate gradient method with
@@ -116,8 +118,9 @@ namespace Nektar
             const Array<OneD, NekDouble> &pNonVertOutput,
                   Array<OneD, NekDouble>& pVertForce)
         {
+            boost::ignore_unused(pInput, pOutput, pNonVertOutput, pVertForce);
             NEKERROR(ErrorUtil::efatal, "Method does not exist");
-	}
+        }
 
         /**
          * \brief Transform from original basis to low energy basis
@@ -126,7 +129,8 @@ namespace Nektar
             Array<OneD, NekDouble>& pInOut,
             int offset)
         {
-	}
+            boost::ignore_unused(pInOut, offset);
+        }
 
         /**
          * \brief Transform from original basis to low energy basis
@@ -135,7 +139,8 @@ namespace Nektar
             const Array<OneD, NekDouble> &pInOut,
                   Array<OneD, NekDouble> &pOutput)
         {
-	}
+            boost::ignore_unused(pInOut, pOutput);
+        }
 
         /**
          * \brief Transform from low energy basis to orignal basis
@@ -144,7 +149,7 @@ namespace Nektar
             Array<OneD, NekDouble>& pInput)
         {
             Vmath::Smul(pInput.num_elements(), 1.0, pInput, 1, pInput, 1);
-	}
+        }
 
         /**
          * \brief Multiply by the block inverse transformation matrix
@@ -153,8 +158,9 @@ namespace Nektar
             const Array<OneD, NekDouble> &pInput,
                   Array<OneD, NekDouble> &pOutput)
         {
+            boost::ignore_unused(pInput, pOutput);
             NEKERROR(ErrorUtil::efatal,"Method does not exist" );
-	}
+        }
 
         /**
          * \brief Multiply by the block transposed inverse transformation matrix
@@ -163,12 +169,13 @@ namespace Nektar
             const Array<OneD, NekDouble> &pInput,
                   Array<OneD, NekDouble> &pOutput)
         {
+            boost::ignore_unused(pInput, pOutput);
             NEKERROR(ErrorUtil::efatal,"Method does not exist" );
-	}
+        }
 
         void Preconditioner::v_BuildPreconditioner()
         {
-	}
+        }
 
         /**
          * \brief Get block elemental transposed transformation matrix
@@ -177,9 +184,10 @@ namespace Nektar
         DNekScalMatSharedPtr Preconditioner::v_TransformedSchurCompl(
                        int offset, int bnd_offset,
                        const std::shared_ptr<DNekScalMat> &loc_mat)
-	{
-	    return loc_mat;
-	}
+        {
+            boost::ignore_unused(offset, bnd_offset);
+            return loc_mat;
+        }
 
         /**
          * @brief Performs global assembly of diagonal entries to global Schur

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 // space operations.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <StdRegions/StdExpansion3D.h>
 
@@ -353,6 +354,7 @@ namespace Nektar
             const int                     numpoints,
             const int                     nummodes)
         {
+            boost::ignore_unused(facedir);
 
             switch(faceDirBasisType)
             {
@@ -451,6 +453,7 @@ namespace Nektar
                             break;
                         }
                     }
+                    break;
                 }
 
                 case LibUtilities::eGLL_Lagrange:
@@ -479,6 +482,7 @@ namespace Nektar
                             break;
                         }
                     }
+                    break;
                 }
 
                 case LibUtilities::eOrtho_A:
@@ -510,6 +514,7 @@ namespace Nektar
                             break;
                         }
                     }
+                    break;
                 }
                 default:
                 {

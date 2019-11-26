@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
+#include <boost/core/ignore_unused.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace Nektar
 {
@@ -134,6 +135,8 @@ namespace Nektar
         NekDouble rhoR, NekDouble pR, NekDouble eR, NekDouble HR, NekDouble srR,
         NekDouble HRoe, NekDouble URoe2, NekDouble srLR)
     {
+        boost::ignore_unused(HL, srL, HR, srR, srLR);
+
         static NekDouble gamma = m_params["gamma"]();
         NekDouble cRoe;
         if(m_idealGas)
@@ -184,7 +187,7 @@ namespace Nektar
             // chiRoe and kappaRoe (eq 66)
             NekDouble chiRoe, kappaRoe;
             NekDouble fac = D - deltaP*deltaRho;
-            if( abs(fac) > NekConstants::kNekZeroTol)
+            if( std::abs(fac) > NekConstants::kNekZeroTol)
             {
                 chiRoe   = (D*avgChi + s*s*deltaRho*dP) / fac;
                 kappaRoe = D*avgKappa / fac;

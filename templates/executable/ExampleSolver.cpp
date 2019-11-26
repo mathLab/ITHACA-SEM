@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File IncNavierStokesSolver.cpp
+// File: ExampleSolver.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,23 +34,30 @@
 
 #include <SolverUtils/Driver.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <SpatialDomains/MeshGraph.h>
 
-
+using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    Nektar::LibUtilities::SessionReaderSharedPtr session;
-    string vDriverModule;
-    Nektar::SolverUtils::DriverSharedPtr drv;
+    LibUtilities::SessionReaderSharedPtr session;
+    SpatialDomains::MeshGraphSharedPtr graph;
+    SolverUtils::DriverSharedPtr drv;
+
+    std::string vDriverModule;
 
     try
     {
         // Create session reader.
-        session = Nektar::LibUtilities::SessionReader::CreateInstance(argc, argv);
-        
+        session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
+        // Create MeshGraph
+        graph = SpatialDomains::MeshGraph::Read(session);
+
         // Create driver
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");
-        drv = Nektar::SolverUtils::GetDriverFactory().CreateInstance(vDriverModule, session);
+        drv = SolverUtils::GetDriverFactory().CreateInstance(
+            vDriverModule, session, graph);
 
         // Execute driver
         drv->Execute();
@@ -65,8 +71,8 @@ int main(int argc, char *argv[])
     }
     catch (const std::string& eStr)
     {
-        cout << "Error: " << eStr << endl;
+        std::cout << "Error: " << eStr << std::endl;
     }
-    
+
     return 0;
 }

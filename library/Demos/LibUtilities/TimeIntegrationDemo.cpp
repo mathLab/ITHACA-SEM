@@ -84,6 +84,7 @@
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////

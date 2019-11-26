@@ -36,6 +36,7 @@
 #define NEKTAR_SOLVERUTILS_UNSTEADYSYSTEM_H
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
 #include <SolverUtils/EquationSystem.h>
 #include <SolverUtils/Filters/Filter.h>
 

@@ -38,6 +38,7 @@
 using namespace std;
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>

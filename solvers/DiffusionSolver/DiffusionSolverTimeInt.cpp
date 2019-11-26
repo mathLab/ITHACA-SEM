@@ -39,6 +39,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
 
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ContField2D.h>

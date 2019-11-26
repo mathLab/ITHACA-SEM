@@ -38,6 +38,7 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
 
 #include <iostream>
 

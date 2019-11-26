@@ -1070,7 +1070,7 @@ namespace Nektar
 #ifdef CFS_DEBUGMODE
         if(2==m_DebugAdvDiffSwitch&&2==m_DebugConsDerivSwitch)
         {
-            DataType tmp;
+            DataType tmp=0.0;
             Fill1DArrayOfBlkDiagonalMat(TraceJac,tmp);
         }
 #endif        
@@ -1887,7 +1887,7 @@ namespace Nektar
             CalphysDeriv(inarray,qfield);
         }
 
-        DataType tmp;
+        DataType tmp =0.0;
         Fill2DArrayOfBlkDiagonalMat(gmtxarray,tmp);
 #ifdef CFS_DEBUGMODE
         if(2!=m_DebugVolTraceSwitch)

@@ -1020,7 +1020,6 @@ namespace Vmath
 
     template LIB_UTILITIES_EXPORT int Nnan(int n, const Nektar::NekDouble *x, const int incx);
     template LIB_UTILITIES_EXPORT int Nnan(int n, const Nektar::NekSingle *x, const int incx);
-    template LIB_UTILITIES_EXPORT int Nnan(int n, const float *x, const int incx);
     template LIB_UTILITIES_EXPORT int Nnan(int n, const int *x, const int incx);
 
     /// \brief  vvtvp (vector times vector times vector): z = w*x*y

@@ -8,7 +8,7 @@ stages:
   image: docker:stable
   stage: docker-build-image
   only:
-    - master
+    - feature/gitlab_ci
     - /^docker\/.*$/
     - tags
   before_script:
@@ -25,7 +25,7 @@ stages:
   image: ${image_name}
   stage: docker-test-image
   only:
-    - master
+    - feature/gitlab_ci
     - /^docker\/.*$/
     - tags
 
@@ -37,7 +37,7 @@ docker-build-env:
     dockerfile: docker/nektar-env/Dockerfile
   only:
     refs:
-      - master
+      - feature/gitlab_ci
       - /^docker\/.*$/
       - tags
     changes:

@@ -30,8 +30,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: Combined header file for all Adams Moulton based time integration schemes.
+//
+// Description: Combined header file for all Adams Moulton based time
+// integration schemes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -39,118 +40,133 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/EulerTimeIntegrationSchemes.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace Nektar {
-  namespace LibUtilities {
+namespace Nektar
+{
+namespace LibUtilities
+{
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // Adams Bashforth Order 2
+///////////////////////////////////////////////////////////////////////////////
+// Adams Bashforth Order 2
 
-    class AdamsMoultonOrder1TimeIntegrationScheme : public TimeIntegrationScheme
+class AdamsMoultonOrder1TimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    AdamsMoultonOrder1TimeIntegrationScheme() : TimeIntegrationScheme()
     {
-    public:
-  
-      AdamsMoultonOrder1TimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 1 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
 
-          AdamsMoultonOrder1TimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] );
-      }
+        AdamsMoultonOrder1TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+    }
 
-      virtual ~AdamsMoultonOrder1TimeIntegrationScheme()
-      {
-      }
-
-      /////////////
-
-      static TimeIntegrationSchemeSharedPtr create()
-      {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<AdamsMoultonOrder1TimeIntegrationScheme>::AllocateSharedPtr();
-        return p;
-      }
-
-      static std::string className; // Is set to "AdamsMoultonOrder1" in SchemeInitializor.cpp during program start up.
-
-      //////////////
-
-
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eAdamsMoultonOrder1; }
-
-      //////////////
-
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
-          // FIXME: Is this the way we want to initialize this scheme?
-          BackwardEulerTimeIntegrationScheme::SetupSchemeData( phase );
-      }
-
-    }; // end class AdamsMoultonOrder1TimeIntegrationScheme
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // Adams Bashforth Order 2
-
-    class AdamsMoultonOrder2TimeIntegrationScheme : public TimeIntegrationScheme
+    virtual ~AdamsMoultonOrder1TimeIntegrationScheme()
     {
-    public:
-  
-      AdamsMoultonOrder2TimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 2 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
-          m_integration_phases[ 1 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+    }
 
-          ForwardEulerTimeIntegrationScheme::SetupSchemeData(       m_integration_phases[0] );
-          AdamsMoultonOrder2TimeIntegrationScheme::SetupSchemeData( m_integration_phases[1] );
-      }
+    /////////////
 
-      virtual ~AdamsMoultonOrder2TimeIntegrationScheme()
-      {
-      }
-
-      /////////////
-
-      static TimeIntegrationSchemeSharedPtr create()
-      {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<AdamsMoultonOrder2TimeIntegrationScheme>::AllocateSharedPtr();
+    static TimeIntegrationSchemeSharedPtr create()
+    {
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            AdamsMoultonOrder1TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
-      }
+    }
 
-      static std::string className; // Is set to "AdamsMoultonOrder2" in SchemeInitializor.cpp during program start up.
+    static std::string className; // Is set to "AdamsMoultonOrder1" in
+                                  // SchemeInitializor.cpp during program start
+                                  // up.
 
-      //////////////
+    //////////////
 
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eAdamsMoultonOrder1;
+    }
 
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eAdamsMoultonOrder2; }
+    //////////////
 
-      //////////////
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
+        // FIXME: Is this the way we want to initialize this scheme?
+        BackwardEulerTimeIntegrationScheme::SetupSchemeData(phase);
+    }
 
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
+}; // end class AdamsMoultonOrder1TimeIntegrationScheme
+
+///////////////////////////////////////////////////////////////////////////////
+// Adams Bashforth Order 2
+
+class AdamsMoultonOrder2TimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    AdamsMoultonOrder2TimeIntegrationScheme() : TimeIntegrationScheme()
+    {
+        m_integration_phases    = TimeIntegrationSchemeDataVector(2);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
+        m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
+
+        ForwardEulerTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+        AdamsMoultonOrder2TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[1]);
+    }
+
+    virtual ~AdamsMoultonOrder2TimeIntegrationScheme()
+    {
+    }
+
+    /////////////
+
+    static TimeIntegrationSchemeSharedPtr create()
+    {
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            AdamsMoultonOrder2TimeIntegrationScheme>::AllocateSharedPtr();
+        return p;
+    }
+
+    static std::string className; // Is set to "AdamsMoultonOrder2" in
+                                  // SchemeInitializor.cpp during program start
+                                  // up.
+
+    //////////////
+
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eAdamsMoultonOrder2;
+    }
+
+    //////////////
+
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
         phase->m_schemeType = eDiagonallyImplicit;
-        phase->m_method = TimeIntegrationMethod::eAdamsMoultonOrder2;
+        phase->m_method     = TimeIntegrationMethod::eAdamsMoultonOrder2;
 
         phase->m_numsteps  = 2;
         phase->m_numstages = 1;
 
-        phase->m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-        phase->m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
+        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
 
-        phase->m_A[0] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 0.5 );
-        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 ); // Dd: In original line, 0.0 was not explicit...
-        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  0.0 );
-        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  0.0 );
-                    
+        phase->m_A[0] =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.5);
+        phase->m_B[0] = Array<TwoD, NekDouble>(
+            phase->m_numsteps, phase->m_numstages,
+            0.0); // Dd: In original line, 0.0 was not explicit...
+        phase->m_U =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
+        phase->m_V =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
+
         phase->m_B[0][0][0] = 0.5;
         phase->m_B[0][1][0] = 1.0;
 
@@ -162,18 +178,24 @@ namespace Nektar {
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 1;
-        phase->m_timeLevelOffset = Array<OneD,unsigned int>( phase->m_numsteps );
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
         phase->m_timeLevelOffset[1] = 0;
 
-        phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
-        phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );
+        phase->m_firstStageEqualsOldSolution =
+            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
+                                                      phase->m_U, phase->m_V);
+        phase->m_lastStageEqualsNewSolution =
+            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
+                                                     phase->m_U, phase->m_V);
 
-        ASSERTL1( phase->VerifyIntegrationSchemeType( phase->m_schemeType, phase->m_A, phase->m_B, phase->m_U, phase->m_V ),
-                  "Time integration scheme coefficients do not match its type" );
-      }
+        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
+                                                    phase->m_A, phase->m_B,
+                                                    phase->m_U, phase->m_V),
+                 "Time integration scheme coefficients do not match its type");
+    }
 
-    }; // end class AdamsMoultonOrder2TimeIntegrationScheme
+}; // end class AdamsMoultonOrder2TimeIntegrationScheme
 
-  } // end namespace LibUtilities
+} // end namespace LibUtilities
 } // end namespace Nektar

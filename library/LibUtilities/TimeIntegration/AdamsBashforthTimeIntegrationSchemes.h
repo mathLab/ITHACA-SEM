@@ -30,8 +30,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: Combined header file for all Adams Bashforth based time integration schemes.
+//
+// Description: Combined header file for all Adams Bashforth based time
+// integration schemes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -49,57 +50,70 @@
 // For debugging:
 #include <iostream>
 
-namespace Nektar {
-  namespace LibUtilities {
+namespace Nektar
+{
+namespace LibUtilities
+{
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // Adams Bashforth Order 2
+///////////////////////////////////////////////////////////////////////////////
+// Adams Bashforth Order 2
 
-    class AdamsBashforthOrder2TimeIntegrationScheme : public TimeIntegrationScheme
+class AdamsBashforthOrder2TimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    AdamsBashforthOrder2TimeIntegrationScheme() : TimeIntegrationScheme()
     {
-    public:
-  
-      AdamsBashforthOrder2TimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-        std::cout << "AdamsBashforthOrder2TimeIntegrationScheme Construtor: this is " << this << "\n";
+        std::cout
+            << "AdamsBashforthOrder2TimeIntegrationScheme Construtor: this is "
+            << this << "\n";
 
-          m_integration_phases = TimeIntegrationSchemeDataVector( 2 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
-          m_integration_phases[ 1 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+        m_integration_phases    = TimeIntegrationSchemeDataVector(2);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
+        m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
 
-          ForwardEulerTimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] );// FIXME... need the correct initial phase.... (eForwardEuler)
-          AdamsBashforthOrder2TimeIntegrationScheme::SetupSchemeData( m_integration_phases[1] ); 
-      }
+        ForwardEulerTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]); // FIXME... need the correct initial
+                                      // phase.... (eForwardEuler)
+        AdamsBashforthOrder2TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[1]);
+    }
 
-      virtual ~AdamsBashforthOrder2TimeIntegrationScheme()
-      {
-      }
+    virtual ~AdamsBashforthOrder2TimeIntegrationScheme()
+    {
+    }
 
-      /////////////
+    /////////////
 
-      static TimeIntegrationSchemeSharedPtr create() // FYI, the create() function is called by the Factory.
-      {
+    static TimeIntegrationSchemeSharedPtr create() // FYI, the create() function
+                                                   // is called by the Factory.
+    {
         std::cout << "AdamsBashforthOrder2TimeIntegrationScheme::create()\n";
-        TimeIntegrationSchemeSharedPtr p = MemoryManager< AdamsBashforthOrder2TimeIntegrationScheme >::AllocateSharedPtr();
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            AdamsBashforthOrder2TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
-      }
+    }
 
-      static std::string className; // Is set to "AdamsBashforthOrder2" in SchemeInitializor.cpp during program start up.
+    static std::string className; // Is set to "AdamsBashforthOrder2" in
+                                  // SchemeInitializor.cpp during program start
+                                  // up.
 
-      //////////////
+    //////////////
 
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eAdamsBashforthOrder2; }
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eAdamsBashforthOrder2;
+    }
 
-      //////////////
+    //////////////
 
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
-        std::cout << "AdamsBashforthOrder2TimeIntegrationScheme::SetupSchemeData()\n";
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
+        std::cout
+            << "AdamsBashforthOrder2TimeIntegrationScheme::SetupSchemeData()\n";
 
-        phase->m_method = TimeIntegrationMethod::eAdamsBashforthOrder2;
+        phase->m_method     = TimeIntegrationMethod::eAdamsBashforthOrder2;
         phase->m_schemeType = eExplicit;
 
         phase->m_numstages = 1;
@@ -108,218 +122,264 @@ namespace Nektar {
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 1;
 
-        phase->m_timeLevelOffset = Array<OneD,unsigned int>( phase->m_numsteps );
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
         phase->m_timeLevelOffset[1] = 1;
 
-        phase->m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-        phase->m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
+        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
 
-        phase->m_A[0] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 0.0 );
-        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
-        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  0.0 );
-        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  0.0 );
-                    
-        phase->m_B[0][0][0] = 3.0/2.0;
+        phase->m_A[0] =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
+        phase->m_B[0] =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+        phase->m_U =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
+        phase->m_V =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
+
+        phase->m_B[0][0][0] = 3.0 / 2.0;
         phase->m_B[0][1][0] = 1.0;
 
         phase->m_U[0][0] = 1.0;
 
-        phase->m_V[0][0] =  1.0;
+        phase->m_V[0][0] = 1.0;
         phase->m_V[0][1] = -0.5;
 
-        phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
-        phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );
+        phase->m_firstStageEqualsOldSolution =
+            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
+                                                      phase->m_U, phase->m_V);
+        phase->m_lastStageEqualsNewSolution =
+            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
+                                                     phase->m_U, phase->m_V);
 
-        ASSERTL1( phase->VerifyIntegrationSchemeType( phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B, phase->m_U, phase->m_V ),
-                  "Time integration scheme coefficients do not match its type" );
-      }
+        ASSERTL1(phase->VerifyIntegrationSchemeType(
+                     phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B,
+                     phase->m_U, phase->m_V),
+                 "Time integration scheme coefficients do not match its type");
+    }
 
-    }; // end class AdamsBashforthOrder2TimeIntegrationScheme
-    
-    ///////////////////////////////////////////////////////////////////////////////
-    // Adams Bashforth Order 3
+}; // end class AdamsBashforthOrder2TimeIntegrationScheme
 
-    class AdamsBashforthOrder3TimeIntegrationScheme : public TimeIntegrationScheme
+///////////////////////////////////////////////////////////////////////////////
+// Adams Bashforth Order 3
+
+class AdamsBashforthOrder3TimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    AdamsBashforthOrder3TimeIntegrationScheme() : TimeIntegrationScheme()
     {
-    public:
-  
-      AdamsBashforthOrder3TimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 3 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
-          m_integration_phases[ 1 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
-          m_integration_phases[ 2 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+        m_integration_phases    = TimeIntegrationSchemeDataVector(3);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
+        m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
+        m_integration_phases[2] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
 
-          RungeKutta2TimeIntegrationScheme::SetupSchemeData(          m_integration_phases[0] );
-          AdamsBashforthOrder2TimeIntegrationScheme::SetupSchemeData( m_integration_phases[1] );
-          AdamsBashforthOrder3TimeIntegrationScheme::SetupSchemeData( m_integration_phases[2] );
-      }
+        RungeKutta2TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+        AdamsBashforthOrder2TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[1]);
+        AdamsBashforthOrder3TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[2]);
+    }
 
-      virtual ~AdamsBashforthOrder3TimeIntegrationScheme()
-      {
-      }
+    virtual ~AdamsBashforthOrder3TimeIntegrationScheme()
+    {
+    }
 
-      /////////////
+    /////////////
 
-      static TimeIntegrationSchemeSharedPtr create()
-      {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<AdamsBashforthOrder3TimeIntegrationScheme>::AllocateSharedPtr();
+    static TimeIntegrationSchemeSharedPtr create()
+    {
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            AdamsBashforthOrder3TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
-      }
+    }
 
-      static std::string className; // Is set in SchemeInitializor.cpp during program start up.
+    static std::string
+        className; // Is set in SchemeInitializor.cpp during program start up.
 
-      //////////////
+    //////////////
 
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eAdamsBashforthOrder3; }
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eAdamsBashforthOrder3;
+    }
 
-      //////////////
+    //////////////
 
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
-        phase->m_method = TimeIntegrationMethod::eAdamsBashforthOrder3;
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
+        phase->m_method     = TimeIntegrationMethod::eAdamsBashforthOrder3;
         phase->m_schemeType = eExplicit;
 
         phase->m_numsteps  = 4;
         phase->m_numstages = 1;
 
-        phase->m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-        phase->m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
+        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
 
-        phase->m_A[0] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 0.0 );
-        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
-        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  0.0 );
-        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  0.0 );
-                    
+        phase->m_A[0] =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
+        phase->m_B[0] =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+        phase->m_U =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
+        phase->m_V =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
+
         phase->m_B[0][1][0] = 1.0;
 
         phase->m_U[0][0] = 1.0;
-        phase->m_U[0][1] = 23.0/12.0;
-        phase->m_U[0][2] = -4.0/3.0;
-        phase->m_U[0][3] = 5.0/12.0;
+        phase->m_U[0][1] = 23.0 / 12.0;
+        phase->m_U[0][2] = -4.0 / 3.0;
+        phase->m_U[0][3] = 5.0 / 12.0;
 
         phase->m_V[0][0] = 1.0;
-        phase->m_V[0][1] = 23.0/12.0;
-        phase->m_V[0][2] = -4.0/3.0;
-        phase->m_V[0][3] = 5.0/12.0;
+        phase->m_V[0][1] = 23.0 / 12.0;
+        phase->m_V[0][2] = -4.0 / 3.0;
+        phase->m_V[0][3] = 5.0 / 12.0;
         phase->m_V[2][1] = 1.0;
         phase->m_V[3][2] = 1.0;
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 3;
-        phase->m_timeLevelOffset = Array<OneD,unsigned int>( phase->m_numsteps );
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
         phase->m_timeLevelOffset[1] = 1;
         phase->m_timeLevelOffset[2] = 2;
         phase->m_timeLevelOffset[3] = 3;
 
-        phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
-        phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );
+        phase->m_firstStageEqualsOldSolution =
+            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
+                                                      phase->m_U, phase->m_V);
+        phase->m_lastStageEqualsNewSolution =
+            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
+                                                     phase->m_U, phase->m_V);
 
-        ASSERTL1( phase->VerifyIntegrationSchemeType( phase->m_schemeType, phase->m_A, phase->m_B, phase->m_U, phase->m_V ),
-                  "Time integration scheme coefficients do not match its type" );
-      }
+        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
+                                                    phase->m_A, phase->m_B,
+                                                    phase->m_U, phase->m_V),
+                 "Time integration scheme coefficients do not match its type");
+    }
 
-    }; // end class AdamsBashforthOrder3TimeIntegrationScheme
+}; // end class AdamsBashforthOrder3TimeIntegrationScheme
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // Adams Bashforth Order 4
+///////////////////////////////////////////////////////////////////////////////
+// Adams Bashforth Order 4
 
-    class AdamsBashforthOrder4TimeIntegrationScheme : public TimeIntegrationScheme
+class AdamsBashforthOrder4TimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    AdamsBashforthOrder4TimeIntegrationScheme() : TimeIntegrationScheme()
     {
-    public:
-  
-      AdamsBashforthOrder4TimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 4 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
-          m_integration_phases[ 1 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
-          m_integration_phases[ 2 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
-          m_integration_phases[ 3 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+        m_integration_phases    = TimeIntegrationSchemeDataVector(4);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
+        m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
+        m_integration_phases[2] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
+        m_integration_phases[3] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
 
-          RungeKutta3_SSPTimeIntegrationScheme::SetupSchemeData(      m_integration_phases[0] );
-          RungeKutta3_SSPTimeIntegrationScheme::SetupSchemeData(      m_integration_phases[1] );
-          AdamsBashforthOrder3TimeIntegrationScheme::SetupSchemeData( m_integration_phases[2] );
-          AdamsBashforthOrder4TimeIntegrationScheme::SetupSchemeData( m_integration_phases[3] );
-      }
+        RungeKutta3_SSPTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+        RungeKutta3_SSPTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[1]);
+        AdamsBashforthOrder3TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[2]);
+        AdamsBashforthOrder4TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[3]);
+    }
 
-      virtual ~AdamsBashforthOrder4TimeIntegrationScheme()
-      {
-      }
+    virtual ~AdamsBashforthOrder4TimeIntegrationScheme()
+    {
+    }
 
-      /////////////
+    /////////////
 
-      static TimeIntegrationSchemeSharedPtr create()
-      {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<AdamsBashforthOrder4TimeIntegrationScheme>::AllocateSharedPtr();
+    static TimeIntegrationSchemeSharedPtr create()
+    {
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            AdamsBashforthOrder4TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
-      }
+    }
 
-      static std::string className; // Is set in SchemeInitializor.cpp during program start up.
+    static std::string
+        className; // Is set in SchemeInitializor.cpp during program start up.
 
-      //////////////
+    //////////////
 
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eAdamsBashforthOrder4; }
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eAdamsBashforthOrder4;
+    }
 
-      //////////////
+    //////////////
 
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
-        phase->m_method = TimeIntegrationMethod::eAdamsBashforthOrder4;
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
+        phase->m_method     = TimeIntegrationMethod::eAdamsBashforthOrder4;
         phase->m_schemeType = eExplicit;
 
         phase->m_numsteps  = 5;
         phase->m_numstages = 1;
 
-        phase->m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-        phase->m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
+        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
 
-        phase->m_A[0] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 0.0 );
-        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
-        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  0.0 );
-        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  0.0 );
-                    
+        phase->m_A[0] =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
+        phase->m_B[0] =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+        phase->m_U =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
+        phase->m_V =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
+
         phase->m_B[0][1][0] = 1.0;
 
-        phase->m_U[0][0] =  1.0;
-        phase->m_U[0][1] =  55.0/24.0;
-        phase->m_U[0][2] = -59.0/24.0;
-        phase->m_U[0][3] =  37.0/24.0;
-        phase->m_U[0][4] = -9.0/24.0;
+        phase->m_U[0][0] = 1.0;
+        phase->m_U[0][1] = 55.0 / 24.0;
+        phase->m_U[0][2] = -59.0 / 24.0;
+        phase->m_U[0][3] = 37.0 / 24.0;
+        phase->m_U[0][4] = -9.0 / 24.0;
 
-        phase->m_V[0][0] =  1.0;
-        phase->m_V[0][1] =  55.0/24.0;
-        phase->m_V[0][2] = -59.0/24.0;
-        phase->m_V[0][3] =  37.0/24.0;
-        phase->m_V[0][4] = -9.0/24.0;
-        phase->m_V[2][1] =  1.0;
-        phase->m_V[3][2] =  1.0;
-        phase->m_V[4][3] =  1.0;
+        phase->m_V[0][0] = 1.0;
+        phase->m_V[0][1] = 55.0 / 24.0;
+        phase->m_V[0][2] = -59.0 / 24.0;
+        phase->m_V[0][3] = 37.0 / 24.0;
+        phase->m_V[0][4] = -9.0 / 24.0;
+        phase->m_V[2][1] = 1.0;
+        phase->m_V[3][2] = 1.0;
+        phase->m_V[4][3] = 1.0;
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 4;
-        phase->m_timeLevelOffset = Array<OneD,unsigned int>( phase->m_numsteps );
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
         phase->m_timeLevelOffset[1] = 1;
         phase->m_timeLevelOffset[2] = 2;
         phase->m_timeLevelOffset[3] = 3;
         phase->m_timeLevelOffset[4] = 4;
 
-        phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
-        phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );
+        phase->m_firstStageEqualsOldSolution =
+            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
+                                                      phase->m_U, phase->m_V);
+        phase->m_lastStageEqualsNewSolution =
+            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
+                                                     phase->m_U, phase->m_V);
 
-        ASSERTL1( phase->VerifyIntegrationSchemeType( phase->m_schemeType, phase->m_A, phase->m_B, phase->m_U, phase->m_V ),
-                  "Time integration scheme coefficients do not match its type" );
-      }
+        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
+                                                    phase->m_A, phase->m_B,
+                                                    phase->m_U, phase->m_V),
+                 "Time integration scheme coefficients do not match its type");
+    }
 
-    }; // end class AdamsBashforthOrder4TimeIntegrationScheme
+}; // end class AdamsBashforthOrder4TimeIntegrationScheme
 
-  } // end namespace LibUtilities
+} // end namespace LibUtilities
 } // end namespace Nektar

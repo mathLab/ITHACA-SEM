@@ -30,8 +30,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: Combined header file for all BDF Implicit based time integration schemes.
+//
+// Description: Combined header file for all BDF Implicit based time integration
+// schemes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -39,145 +40,171 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/EulerTimeIntegrationSchemes.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace Nektar {
-  namespace LibUtilities {
+namespace Nektar
+{
+namespace LibUtilities
+{
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // BDF Implicit Order 1
+///////////////////////////////////////////////////////////////////////////////
+// BDF Implicit Order 1
 
-    class BDFImplicitOrder1TimeIntegrationScheme : public TimeIntegrationScheme
+class BDFImplicitOrder1TimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    BDFImplicitOrder1TimeIntegrationScheme() : TimeIntegrationScheme()
     {
-    public:
-  
-      BDFImplicitOrder1TimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 1 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
 
-          BDFImplicitOrder1TimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] );
-      }
+        BDFImplicitOrder1TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+    }
 
-      virtual ~BDFImplicitOrder1TimeIntegrationScheme()
-      {
-      }
+    virtual ~BDFImplicitOrder1TimeIntegrationScheme()
+    {
+    }
 
-      /////////////
+    /////////////
 
-      static TimeIntegrationSchemeSharedPtr create()
-      {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<BDFImplicitOrder1TimeIntegrationScheme>::AllocateSharedPtr();
+    static TimeIntegrationSchemeSharedPtr create()
+    {
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            BDFImplicitOrder1TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
-      }
+    }
 
-      static std::string className; // Is set to "BDFImplicitOrder1" in SchemeInitializor.cpp during program start up.
+    static std::string className; // Is set to "BDFImplicitOrder1" in
+                                  // SchemeInitializor.cpp during program start
+                                  // up.
 
-      //////////////
+    //////////////
 
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eBDFImplicitOrder1; }
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eBDFImplicitOrder1;
+    }
 
-      //////////////
+    //////////////
 
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
         // FIXME: Dd? Correct way to do this?
-        BackwardEulerTimeIntegrationScheme::SetupSchemeData( phase );
-      }
+        BackwardEulerTimeIntegrationScheme::SetupSchemeData(phase);
+    }
 
-    }; // end class BDFImplicitOrder1TimeIntegrationScheme
+}; // end class BDFImplicitOrder1TimeIntegrationScheme
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // BDF Implicit Order 2
+///////////////////////////////////////////////////////////////////////////////
+// BDF Implicit Order 2
 
-    class BDFImplicitOrder2TimeIntegrationScheme: public TimeIntegrationScheme
+class BDFImplicitOrder2TimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    BDFImplicitOrder2TimeIntegrationScheme() : TimeIntegrationScheme()
     {
-    public:
-  
-      BDFImplicitOrder2TimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 2 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
-          m_integration_phases[ 1 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+        m_integration_phases    = TimeIntegrationSchemeDataVector(2);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
+        m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
 
-          BackwardEulerTimeIntegrationScheme::SetupSchemeData(     m_integration_phases[0] );
-          BDFImplicitOrder2TimeIntegrationScheme::SetupSchemeData( m_integration_phases[1] );
-      }
+        BackwardEulerTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+        BDFImplicitOrder2TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[1]);
+    }
 
-      virtual ~BDFImplicitOrder2TimeIntegrationScheme()
-      {
-      }
+    virtual ~BDFImplicitOrder2TimeIntegrationScheme()
+    {
+    }
 
-      /////////////
+    /////////////
 
-      static TimeIntegrationSchemeSharedPtr create()
-      {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<BDFImplicitOrder2TimeIntegrationScheme>::AllocateSharedPtr();
+    static TimeIntegrationSchemeSharedPtr create()
+    {
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            BDFImplicitOrder2TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
-      }
+    }
 
-      static std::string className; // Is set to "BDFImplicitOrder2" in SchemeInitializor.cpp during program start up.
+    static std::string className; // Is set to "BDFImplicitOrder2" in
+                                  // SchemeInitializor.cpp during program start
+                                  // up.
 
-      //////////////
+    //////////////
 
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eBDFImplicitOrder2; }
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eBDFImplicitOrder2;
+    }
 
-      //////////////
+    //////////////
 
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
-        phase->m_method = TimeIntegrationMethod::eBDFImplicitOrder2;
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
+        phase->m_method     = TimeIntegrationMethod::eBDFImplicitOrder2;
         phase->m_schemeType = eDiagonallyImplicit;
 
         phase->m_numsteps  = 2;
         phase->m_numstages = 1;
-                    
-        phase->m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-        phase->m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
 
-        NekDouble third = 1.0/3.0;
-                    
-        phase->m_A[0] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 2*third );
-        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
-        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  0.0 );
-        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  0.0 );
-                    
-        phase->m_B[0][0][0] = 2*third;
+        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
+        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
+
+        NekDouble third = 1.0 / 3.0;
+
+        phase->m_A[0] = Array<TwoD, NekDouble>(phase->m_numstages,
+                                               phase->m_numstages, 2 * third);
+        phase->m_B[0] =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+        phase->m_U =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
+        phase->m_V =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
+
+        phase->m_B[0][0][0] = 2 * third;
         phase->m_B[0][1][0] = 0.0;
-                    
-        phase->m_U[0][0] = 4*third;
+
+        phase->m_U[0][0] = 4 * third;
         phase->m_U[0][1] = -third;
-                    
-        phase->m_V[0][0] = 4*third;
+
+        phase->m_V[0][0] = 4 * third;
         phase->m_V[0][1] = -third;
         phase->m_V[1][0] = 1.0;
-                    
+
         phase->m_numMultiStepValues = 2;
         phase->m_numMultiStepDerivs = 0;
-        phase->m_timeLevelOffset = Array<OneD,unsigned int>( phase->m_numsteps );
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
         phase->m_timeLevelOffset[1] = 1;
 
-        phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
-        phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );
+        phase->m_firstStageEqualsOldSolution =
+            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
+                                                      phase->m_U, phase->m_V);
+        phase->m_lastStageEqualsNewSolution =
+            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
+                                                     phase->m_U, phase->m_V);
 
-        phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
-        phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );
+        phase->m_firstStageEqualsOldSolution =
+            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
+                                                      phase->m_U, phase->m_V);
+        phase->m_lastStageEqualsNewSolution =
+            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
+                                                     phase->m_U, phase->m_V);
 
-        ASSERTL1( phase->VerifyIntegrationSchemeType( phase->m_schemeType, phase->m_A, phase->m_B, phase->m_U, phase->m_V ),
-                  "Time integration scheme coefficients do not match its type" );
-      }
+        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
+                                                    phase->m_A, phase->m_B,
+                                                    phase->m_U, phase->m_V),
+                 "Time integration scheme coefficients do not match its type");
+    }
 
-    }; // end class BDFImplicitOrder2TimeIntegrator
+}; // end class BDFImplicitOrder2TimeIntegrator
 
-  } // end namespace LibUtilities
+} // end namespace LibUtilities
 } // end namespace Nektar

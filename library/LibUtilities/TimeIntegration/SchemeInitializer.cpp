@@ -41,70 +41,72 @@
 
 #include <LibUtilities/TimeIntegration/CNABTimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/DIRKTimeIntegrationSchemes.h>
-#include <LibUtilities/TimeIntegration/IMEXdirkTimeIntegrationSchemes.h>
 #include <LibUtilities/TimeIntegration/IMEXGearTimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/IMEXTimeIntegrationSchemes.h>
+#include <LibUtilities/TimeIntegration/IMEXdirkTimeIntegrationSchemes.h>
 #include <LibUtilities/TimeIntegration/MCNABTimeIntegrationScheme.h>
 
 #include <LibUtilities/TimeIntegration/RungeKuttaTimeIntegrationSchemes.h>
 
 namespace Nektar
 {
-    namespace LibUtilities 
-    {  
+namespace LibUtilities
+{
 
-      // Register all the schemes with the Time Integration Scheme Facatory...
-      //
-#     define REGISTER( scheme ) \
-        std::string scheme##TimeIntegrationScheme::className = GetTimeIntegrationSchemeFactory().RegisterCreatorFunction( #scheme, scheme##TimeIntegrationScheme::create )
+// Register all the schemes with the Time Integration Scheme Facatory...
+//
+#define REGISTER(scheme)                                                       \
+    std::string scheme##TimeIntegrationScheme::className =                     \
+        GetTimeIntegrationSchemeFactory().RegisterCreatorFunction(             \
+            #scheme, scheme##TimeIntegrationScheme::create)
 
-      // AdamsBashforthTimeIntegrationSchemes.h
-      REGISTER( AdamsBashforthOrder2 );
-      REGISTER( AdamsBashforthOrder3 );
-      REGISTER( AdamsBashforthOrder4 );
-      REGISTER( AdamsMoultonOrder1 );
-      REGISTER( AdamsMoultonOrder2 );
+// AdamsBashforthTimeIntegrationSchemes.h
+REGISTER(AdamsBashforthOrder2);
+REGISTER(AdamsBashforthOrder3);
+REGISTER(AdamsBashforthOrder4);
+REGISTER(AdamsMoultonOrder1);
+REGISTER(AdamsMoultonOrder2);
 
-      // BDFImplicitTimeIntegrationSchemes.h
-      REGISTER( BDFImplicitOrder1 );
-      REGISTER( BDFImplicitOrder2 );
+// BDFImplicitTimeIntegrationSchemes.h
+REGISTER(BDFImplicitOrder1);
+REGISTER(BDFImplicitOrder2);
 
-      // EulerTimeIntegrationSchemes.h
-      REGISTER( BackwardEuler );
-      REGISTER( ForwardEuler );
+// EulerTimeIntegrationSchemes.h
+REGISTER(BackwardEuler);
+REGISTER(ForwardEuler);
 
-      REGISTER( CNAB );
+REGISTER(CNAB);
 
-      // DIRKTimeIntegrationSchemes.h
-      REGISTER( DIRKOrder2 );
-      REGISTER( DIRKOrder3 );
+// DIRKTimeIntegrationSchemes.h
+REGISTER(DIRKOrder2);
+REGISTER(DIRKOrder3);
 
-      // IMEXdirkTimeIntegrationSchemes.h
-      REGISTER( IMEXdirk_1_2_1 );
-      REGISTER( IMEXdirk_1_2_2 );
-      REGISTER( IMEXdirk_2_2_2 );
-      REGISTER( IMEXdirk_2_3_2 );
-      REGISTER( IMEXdirk_2_3_3 );
-      REGISTER( IMEXdirk_3_4_3 );
-      REGISTER( IMEXdirk_4_4_3 );
+// IMEXdirkTimeIntegrationSchemes.h
+REGISTER(IMEXdirk_1_2_1);
+REGISTER(IMEXdirk_1_2_2);
+REGISTER(IMEXdirk_2_2_2);
+REGISTER(IMEXdirk_2_3_2);
+REGISTER(IMEXdirk_2_3_3);
+REGISTER(IMEXdirk_3_4_3);
+REGISTER(IMEXdirk_4_4_3);
 
-      REGISTER( IMEXGear );
+REGISTER(IMEXGear);
 
-      // IMEXTimeIntegrationSchemes.h
-      REGISTER( IMEXOrder1 );
-      REGISTER( IMEXOrder2 );
-      REGISTER( IMEXOrder3 );
-      REGISTER( IMEXOrder4 );
+// IMEXTimeIntegrationSchemes.h
+REGISTER(IMEXOrder1);
+REGISTER(IMEXOrder2);
+REGISTER(IMEXOrder3);
+REGISTER(IMEXOrder4);
 
-      REGISTER( MCNAB );
+REGISTER(MCNAB);
 
-      // RungeKuttaTimeIntegrationSchemes.h
-      REGISTER( ClassicalRungeKutta4 );
-      REGISTER( RungeKutta2 );
-      REGISTER( RungeKutta2_ImprovedEuler );
-      REGISTER( RungeKutta2_SSP );
-      REGISTER( RungeKutta3_SSP );
-      REGISTER( RungeKutta5 );
+// RungeKuttaTimeIntegrationSchemes.h
+REGISTER(ClassicalRungeKutta4);
+REGISTER(RungeKutta2);
+REGISTER(RungeKutta2_ImprovedEuler);
+REGISTER(RungeKutta2_SSP);
+REGISTER(RungeKutta3_SSP);
+REGISTER(RungeKutta5);
 
-    } // end namespace LibUtilities
+} // end namespace LibUtilities
 } // end namespace NekTar

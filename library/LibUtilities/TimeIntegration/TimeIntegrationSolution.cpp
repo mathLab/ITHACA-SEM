@@ -36,83 +36,87 @@
 
 namespace Nektar
 {
-    namespace LibUtilities 
-    {  
-        TimeIntegrationSolution::TimeIntegrationSolution( const TimeIntegrationSchemeData * schemeData, 
-                                                          const DoubleArray               & y, 
-                                                          const NekDouble                   time, 
-                                                          const NekDouble                   timestep ):
-            m_schemeData( schemeData ),
-            m_solVector( m_schemeData->m_numsteps ),
-            m_t( m_schemeData->m_numsteps )
+namespace LibUtilities
+{
+TimeIntegrationSolution::TimeIntegrationSolution(
+    const TimeIntegrationSchemeData *schemeData, const DoubleArray &y,
+    const NekDouble time, const NekDouble timestep)
+    : m_schemeData(schemeData), m_solVector(m_schemeData->m_numsteps),
+      m_t(m_schemeData->m_numsteps)
+{
+    m_solVector[0] = y;
+    m_t[0]         = time;
+
+    int nsteps = m_schemeData->m_numsteps;
+
+    int nvar           = y.num_elements();
+    int npoints        = y[0].num_elements();
+    int nMultiStepVals = m_schemeData->GetNmultiStepValues();
+    const Array<OneD, const unsigned int> &timeLevels = GetTimeLevelOffset();
+    for (int i = 1; i < nsteps; i++)
+    {
+        m_solVector[i] = Array<OneD, Array<OneD, NekDouble>>(nvar);
+        for (int j = 0; j < nvar; j++)
         {
-            m_solVector[0] = y;
-            m_t[0] = time;
-
-            int nsteps         = m_schemeData->m_numsteps;
-
-            int nvar           = y.num_elements();
-            int npoints        = y[0].num_elements();
-            int nMultiStepVals = m_schemeData->GetNmultiStepValues();
-            const Array<OneD, const unsigned int>& timeLevels = GetTimeLevelOffset(); 
-            for(int i = 1; i < nsteps; i++)
-            {
-                m_solVector[i] = Array<OneD, Array<OneD, NekDouble> >(nvar);
-                for(int j = 0; j < nvar; j++)
-                {
-                    m_solVector[i][j] = Array<OneD,NekDouble>(npoints,0.0);
-                }
-                if(i < nMultiStepVals)
-                {
-                    m_t[i] = time - i*timestep*timeLevels[i];
-                }
-                else
-                {
-                    m_t[i] = timestep;
-                }
-            }
+            m_solVector[i][j] = Array<OneD, NekDouble>(npoints, 0.0);
         }
-
-        TimeIntegrationSolution::TimeIntegrationSolution( const TimeIntegrationSchemeData * schemeData, 
-                                                          const TripleArray               & y, 
-                                                          const Array<OneD, NekDouble>    & t ) :
-            m_schemeData( schemeData ),
-            m_solVector( y ),
-            m_t( t )
+        if (i < nMultiStepVals)
         {
-            ASSERTL1( y.num_elements() == m_schemeData->m_numsteps, "Amount of Entries does not match number of (multi-) steps" );
+            m_t[i] = time - i * timestep * timeLevels[i];
         }
-
-        TimeIntegrationSolution::TimeIntegrationSolution( const TimeIntegrationSchemeData * schemeData, 
-                                                          const unsigned int                nvar,
-                                                          const unsigned int                npoints ) :
-            m_schemeData( schemeData ),
-            m_solVector( schemeData->m_numsteps ),  // FIXME <- direct use of m_numsteps seems bad...
-            m_t( schemeData->m_numsteps )
+        else
         {
-            for( int i = 0; i < m_schemeData->m_numsteps; i++ )
-            {
-                m_solVector[i] = Array<OneD, Array<OneD, NekDouble> >( nvar );
-                for(int j = 0; j < nvar; j++)
-                {
-                    m_solVector[i][j] = Array<OneD, NekDouble>( npoints );
-                }
-            }         
+            m_t[i] = timestep;
         }
+    }
+}
 
-        TimeIntegrationSolution::TimeIntegrationSolution( const TimeIntegrationSchemeData * schemeData ):
-            m_schemeData( schemeData ),
-            m_solVector( m_schemeData->m_numsteps ),
-            m_t( m_schemeData->m_numsteps )
+TimeIntegrationSolution::TimeIntegrationSolution(
+    const TimeIntegrationSchemeData *schemeData, const TripleArray &y,
+    const Array<OneD, NekDouble> &t)
+    : m_schemeData(schemeData), m_solVector(y), m_t(t)
+{
+    ASSERTL1(y.num_elements() == m_schemeData->m_numsteps,
+             "Amount of Entries does not match number of (multi-) steps");
+}
+
+TimeIntegrationSolution::TimeIntegrationSolution(
+    const TimeIntegrationSchemeData *schemeData, const unsigned int nvar,
+    const unsigned int npoints)
+    : m_schemeData(schemeData),
+      m_solVector(
+          schemeData
+              ->m_numsteps), // FIXME <- direct use of m_numsteps seems bad...
+      m_t(schemeData->m_numsteps)
+{
+    for (int i = 0; i < m_schemeData->m_numsteps; i++)
+    {
+        m_solVector[i] = Array<OneD, Array<OneD, NekDouble>>(nvar);
+        for (int j = 0; j < nvar; j++)
         {
-          // FIXME: Dd: does this constructor really have no code?
+            m_solVector[i][j] = Array<OneD, NekDouble>(npoints);
         }
-        
-        // FIMXE: is this right, should it be the parent's method, or the data's method?
-        TimeIntegrationMethod TimeIntegrationSolution::GetIntegrationMethod() const { return m_schemeData->m_parent->GetIntegrationMethod(); }
+    }
+}
 
-        int                   TimeIntegrationSolution::GetNsteps() { return m_schemeData->m_numsteps; } // FIXME should this be in .h file?  ...  GetNumIntegrationSteps(); }
+TimeIntegrationSolution::TimeIntegrationSolution(
+    const TimeIntegrationSchemeData *schemeData)
+    : m_schemeData(schemeData), m_solVector(m_schemeData->m_numsteps),
+      m_t(m_schemeData->m_numsteps)
+{
+    // FIXME: Dd: does this constructor really have no code?
+}
 
+// FIMXE: is this right, should it be the parent's method, or the data's method?
+TimeIntegrationMethod TimeIntegrationSolution::GetIntegrationMethod() const
+{
+    return m_schemeData->m_parent->GetIntegrationMethod();
+}
 
-    } // end namespace LibUtilities
+int TimeIntegrationSolution::GetNsteps()
+{
+    return m_schemeData->m_numsteps;
+} // FIXME should this be in .h file?  ...  GetNumIntegrationSteps(); }
+
+} // end namespace LibUtilities
 } // end namespace NekTar

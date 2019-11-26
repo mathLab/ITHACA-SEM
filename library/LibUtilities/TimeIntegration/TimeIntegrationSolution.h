@@ -30,7 +30,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Header file of time integration solution class
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,190 +48,239 @@
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+// FIXME: Dd: Find a better way to do these typedefs as they happen all over the
+// place...
+
+//        typedef std::shared_ptr<TimeIntegrationScheme>
+//        TimeIntegrationSchemeSharedPtr;
+
+// =========================================================================
+// ==== DEFINITION OF THE CLASS TimeIntegrationSolution
+// =========================================================================
+class TimeIntegrationSolution
+{
+public:
+    typedef Array<OneD, Array<OneD, Array<OneD, NekDouble>>> TripleArray;
+    typedef Array<OneD, Array<OneD, NekDouble>> DoubleArray;
+
+    // Constructor for single step methods
+    LUE TimeIntegrationSolution(const TimeIntegrationSchemeData *schemeData,
+                                const DoubleArray &y, const NekDouble time,
+                                const NekDouble timestep);
+
+    // Constructor for multi-step methods
+    LUE TimeIntegrationSolution(const TimeIntegrationSchemeData *schemeData,
+                                const TripleArray &y,
+                                const Array<OneD, NekDouble> &t);
+
+    LUE TimeIntegrationSolution(const TimeIntegrationSchemeData *schemeData,
+                                const unsigned int nvar,
+                                const unsigned int npoints);
+
+    LUE TimeIntegrationSolution(const TimeIntegrationSchemeData *schemeData);
+
+    inline const TimeIntegrationSchemeData *GetIntegrationSchemeData() const
     {
-      // FIXME: Dd: Find a better way to do these typedefs as they happen all over the place...
-      
-      //        typedef std::shared_ptr<TimeIntegrationScheme> TimeIntegrationSchemeSharedPtr;
+        return m_schemeData;
+    }
+    // inline const TimeIntegrationSchemeKey &       GetIntegrationSchemeKey()
+    // const { return m_scheme->GetIntegrationSchemeKey(); }
 
-        // =========================================================================
-        // ==== DEFINITION OF THE CLASS TimeIntegrationSolution
-        // =========================================================================
-        class TimeIntegrationSolution
+    TimeIntegrationMethod GetIntegrationMethod() const;
+
+    inline const TripleArray &GetSolutionVector() const
+    {
+        return m_solVector;
+    }
+    inline TripleArray &UpdateSolutionVector()
+    {
+        return m_solVector;
+    }
+
+    inline const DoubleArray &GetSolution() const
+    {
+        return m_solVector[0];
+    }
+    inline DoubleArray &UpdateSolution()
+    {
+        return m_solVector[0];
+    }
+
+    inline const Array<OneD, const NekDouble> &GetTimeVector() const
+    {
+        return m_t;
+    }
+    inline Array<OneD, NekDouble> &UpdateTimeVector()
+    {
+        return m_t;
+    }
+
+    inline NekDouble GetTime() const
+    {
+        return m_t[0];
+    }
+    int GetNsteps(); // { return m_schemeData->m_numIntSteps; } // FIXME
+                     // GetNumIntegrationSteps(); }
+    inline int GetFirstDim() const
+    {
+        return m_solVector[0].num_elements();
+    }
+    inline int GetSecondDim() const
+    {
+        return m_solVector[0][0].num_elements();
+    }
+
+    // Return the number of entries in the solution vector that correspond to
+    // (multi-step) values.
+    inline unsigned int GetNvalues() const
+    {
+        return m_schemeData->GetNmultiStepValues();
+    }
+
+    // Return the number of entries in the solution vector that correspond to
+    // (multi-step) derivatives.
+    inline unsigned int GetNderivs() const
+    {
+        return m_schemeData->GetNmultiStepDerivs();
+    }
+
+    // Returns an array which indicates to which time-level the entries in the
+    // solution vector correspond.
+    inline const Array<OneD, const unsigned int> &GetTimeLevelOffset()
+    {
+        return m_schemeData->GetTimeLevelOffset();
+    }
+
+    // returns the entry in the solution vector which corresponds to the
+    // (multi-step) value at the time-level with specified offset
+    inline DoubleArray &GetValue(const unsigned int timeLevelOffset)
+    {
+        int nMultiStepVals = m_schemeData->GetNmultiStepValues();
+        const Array<OneD, const unsigned int> &offsetvec = GetTimeLevelOffset();
+
+        for (int i = 0; i < nMultiStepVals; i++)
         {
-        public:
-            typedef Array<OneD, Array<OneD, Array<OneD, NekDouble> > > TripleArray;
-            typedef Array<OneD, Array<OneD, NekDouble> >               DoubleArray;
-            
-            // Constructor for single step methods
-            LUE TimeIntegrationSolution( const TimeIntegrationSchemeData * schemeData, 
-                                         const DoubleArray               & y, 
-                                         const NekDouble                   time, 
-                                         const NekDouble                   timestep );
-
-            // Constructor for multi-step methods
-            LUE TimeIntegrationSolution( const TimeIntegrationSchemeData * schemeData, 
-                                         const TripleArray               & y, 
-                                         const Array<OneD, NekDouble>    & t );
-
-            LUE TimeIntegrationSolution( const TimeIntegrationSchemeData * schemeData,
-                                         const unsigned int                nvar,
-                                         const unsigned int                npoints );
-
-            LUE TimeIntegrationSolution( const TimeIntegrationSchemeData * schemeData );
-
-            inline const TimeIntegrationSchemeData * GetIntegrationSchemeData() const { return m_schemeData; }
-            // inline const TimeIntegrationSchemeKey &       GetIntegrationSchemeKey() const { return m_scheme->GetIntegrationSchemeKey(); }
-            
-            TimeIntegrationMethod GetIntegrationMethod() const;
-
-            inline const TripleArray& GetSolutionVector() const { return m_solVector; }
-            inline       TripleArray& UpdateSolutionVector() { return m_solVector; }
-
-            inline const DoubleArray& GetSolution() const { return m_solVector[0]; }
-            inline       DoubleArray& UpdateSolution() { return m_solVector[0]; }
-
-            inline const Array<OneD, const NekDouble> & GetTimeVector() const { return m_t; }
-            inline       Array<OneD, NekDouble> &       UpdateTimeVector() { return m_t; }
-
-            inline NekDouble GetTime() const { return m_t[0]; }
-                   int       GetNsteps();// { return m_schemeData->m_numIntSteps; } // FIXME GetNumIntegrationSteps(); }
-            inline int       GetFirstDim() const { return m_solVector[0].num_elements(); }
-            inline int       GetSecondDim() const { return m_solVector[0][0].num_elements(); }
-
-            // Return the number of entries in the solution vector that correspond to (multi-step) values.
-            inline unsigned int GetNvalues() const { return m_schemeData->GetNmultiStepValues(); }
-
-            // Return the number of entries in the solution vector that correspond to (multi-step) derivatives.
-            inline unsigned int GetNderivs() const { return m_schemeData->GetNmultiStepDerivs(); }
-
-            // Returns an array which indicates to which time-level the entries in the solution vector correspond.
-            inline const Array<OneD, const unsigned int>& GetTimeLevelOffset() { return m_schemeData->GetTimeLevelOffset(); }
-
-            // returns the entry in the solution vector which corresponds to the (multi-step) value at the time-level with specified offset
-            inline DoubleArray& GetValue(const unsigned int timeLevelOffset)
+            if (timeLevelOffset == offsetvec[i])
             {
-                int nMultiStepVals = m_schemeData->GetNmultiStepValues();
-                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
-
-                for(int i = 0; i < nMultiStepVals; i++)
-                {
-                    if( timeLevelOffset == offsetvec[i] )
-                    {
-                        return m_solVector[i];
-                    }
-                }
-                ASSERTL1(false,"The solution vector of this scheme does not contain a value at the requested time-level");
-                return m_solVector[0];
+                return m_solVector[i];
             }
+        }
+        ASSERTL1(false, "The solution vector of this scheme does not contain a "
+                        "value at the requested time-level");
+        return m_solVector[0];
+    }
 
-            // returns the entry in the solution vector which corresponds to the (multi-step) derivative at the time-level with specified offset
-            inline DoubleArray& GetDerivative( const unsigned int timeLevelOffset )
+    // returns the entry in the solution vector which corresponds to the
+    // (multi-step) derivative at the time-level with specified offset
+    inline DoubleArray &GetDerivative(const unsigned int timeLevelOffset)
+    {
+        int nMultiStepVals = m_schemeData->GetNmultiStepValues();
+        int size           = m_schemeData->m_numsteps;
+        const Array<OneD, const unsigned int> &offsetvec = GetTimeLevelOffset();
+
+        for (int i = nMultiStepVals; i < size; i++)
+        {
+            if (timeLevelOffset == offsetvec[i])
             {
-                int nMultiStepVals = m_schemeData->GetNmultiStepValues();
-                int size           = m_schemeData->m_numsteps;
-                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
-
-                for( int i = nMultiStepVals; i < size; i++ )
-                {
-                    if( timeLevelOffset == offsetvec[i] )
-                    {
-                        return m_solVector[i];
-                    }
-                }
-                ASSERTL1(false,"The solution vector of this scheme does not contain a derivative at the requested time-level");
-                return m_solVector[0];
+                return m_solVector[i];
             }
+        }
+        ASSERTL1(false, "The solution vector of this scheme does not contain a "
+                        "derivative at the requested time-level");
+        return m_solVector[0];
+    }
 
-            // returns the time associated with the (multi-step) value at the time-level with the given offset
-            inline NekDouble GetValueTime( const unsigned int timeLevelOffset )
+    // returns the time associated with the (multi-step) value at the time-level
+    // with the given offset
+    inline NekDouble GetValueTime(const unsigned int timeLevelOffset)
+    {
+        int nMultiStepVals = m_schemeData->GetNmultiStepValues();
+        const Array<OneD, const unsigned int> &offsetvec = GetTimeLevelOffset();
+
+        for (int i = 0; i < nMultiStepVals; i++)
+        {
+            if (timeLevelOffset == offsetvec[i])
             {
-                int nMultiStepVals = m_schemeData->GetNmultiStepValues();
-                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
-
-                for(int i = 0; i < nMultiStepVals; i++)
-                {
-                    if( timeLevelOffset == offsetvec[i] )
-                    {
-                        return m_t[i];
-                    }
-                }
-                ASSERTL1(false,"The solution vector of this scheme does not contain a value at the requested time-level");
-                return m_t[0];
+                return m_t[i];
             }
+        }
+        ASSERTL1(false, "The solution vector of this scheme does not contain a "
+                        "value at the requested time-level");
+        return m_t[0];
+    }
 
-            // sets the (multi-step) value and time in the solution
-            // vector which corresponds to
-            // the value at the time-level with specified offset
-            inline void SetValue( const unsigned int timeLevelOffset, const DoubleArray& y, const NekDouble t )
+    // sets the (multi-step) value and time in the solution
+    // vector which corresponds to
+    // the value at the time-level with specified offset
+    inline void SetValue(const unsigned int timeLevelOffset,
+                         const DoubleArray &y, const NekDouble t)
+    {
+        int nMultiStepVals = m_schemeData->GetNmultiStepValues();
+        const Array<OneD, const unsigned int> &offsetvec = GetTimeLevelOffset();
+
+        for (int i = 0; i < nMultiStepVals; i++)
+        {
+            if (timeLevelOffset == offsetvec[i])
             {
-                int nMultiStepVals = m_schemeData->GetNmultiStepValues();
-                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
-
-                for(int i = 0; i < nMultiStepVals; i++)
-                {
-                    if( timeLevelOffset == offsetvec[i] )
-                    {
-                        m_solVector[i] = y;
-                        m_t[i] = t;
-                        return;
-                    }
-                }
+                m_solVector[i] = y;
+                m_t[i]         = t;
+                return;
             }
+        }
+    }
 
-            // sets the (multi-step) derivative and time in the
-            // solution vector which corresponds to
-            // the derivative at the time-level with specified offset
-            inline void SetDerivative( const unsigned int timeLevelOffset, const DoubleArray& y, const NekDouble timestep )
+    // sets the (multi-step) derivative and time in the
+    // solution vector which corresponds to
+    // the derivative at the time-level with specified offset
+    inline void SetDerivative(const unsigned int timeLevelOffset,
+                              const DoubleArray &y, const NekDouble timestep)
+    {
+        int nMultiStepVals = m_schemeData->GetNmultiStepValues();
+        int size           = m_schemeData->m_numsteps;
+        const Array<OneD, const unsigned int> &offsetvec = GetTimeLevelOffset();
+
+        for (int i = nMultiStepVals; i < size; i++)
+        {
+            if (timeLevelOffset == offsetvec[i])
             {
-                int nMultiStepVals = m_schemeData->GetNmultiStepValues();
-                int size           = m_schemeData->m_numsteps;
-                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
-
-                for(int i = nMultiStepVals; i < size; i++)
-                {
-                    if( timeLevelOffset == offsetvec[i] )
-                    {
-                        m_solVector[i] = y;
-                        m_t[i] = timestep;
-                        return;
-                    }
-                }
+                m_solVector[i] = y;
+                m_t[i]         = timestep;
+                return;
             }
+        }
+    }
 
-            // sets the soln Vector 
-            inline void SetSolVector(const  int Offset, const DoubleArray& y)
-            {
-                m_solVector[Offset] = y;
-            }
+    // sets the soln Vector
+    inline void SetSolVector(const int Offset, const DoubleArray &y)
+    {
+        m_solVector[Offset] = y;
+    }
 
-            // Rotate the solution vector 
-            // (i.e. updating without calculating/inserting new values)
-            inline void RotateSolutionVector()
-            {
-                int nMultiStepVals = m_schemeData->GetNmultiStepValues();
-                int size           = m_schemeData->m_numsteps;
-                for( int i = (nMultiStepVals-1); i > 0; i-- )
-                {
-                    m_solVector[i] = m_solVector[i-1];
-                }
+    // Rotate the solution vector
+    // (i.e. updating without calculating/inserting new values)
+    inline void RotateSolutionVector()
+    {
+        int nMultiStepVals = m_schemeData->GetNmultiStepValues();
+        int size           = m_schemeData->m_numsteps;
+        for (int i = (nMultiStepVals - 1); i > 0; i--)
+        {
+            m_solVector[i] = m_solVector[i - 1];
+        }
 
-                for( int i = (size-1); i > nMultiStepVals; i-- )
-                {
-                    m_solVector[i] = m_solVector[i-1];
-                }
-            }
+        for (int i = (size - 1); i > nMultiStepVals; i--)
+        {
+            m_solVector[i] = m_solVector[i - 1];
+        }
+    }
 
+private:
+    const TimeIntegrationSchemeData *m_schemeData;
+    TripleArray m_solVector;
+    Array<OneD, NekDouble> m_t;
 
-        private:
+}; // end class TimeIntegrationSolution
 
-            const TimeIntegrationSchemeData * m_schemeData;
-            TripleArray                       m_solVector;
-            Array<OneD,NekDouble>             m_t;
-
-        }; // end class TimeIntegrationSolution
-
-
-    } // end of namespace LibUtilities
+} // end of namespace LibUtilities
 } // end of namespace Nektar
-

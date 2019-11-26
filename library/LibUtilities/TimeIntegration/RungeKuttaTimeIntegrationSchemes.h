@@ -30,8 +30,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: Combined header file for all Runge Kutta based time integration schemes.
+//
+// Description: Combined header file for all Runge Kutta based time integration
+// schemes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -43,134 +44,159 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace Nektar {
-  namespace LibUtilities {
+namespace Nektar
+{
+namespace LibUtilities
+{
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // Runge Kutta 2
+////////////////////////////////////////////////////////////////////////////////
+// Runge Kutta 2
 
-    class RungeKutta2TimeIntegrationScheme : public TimeIntegrationScheme
+class RungeKutta2TimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    RungeKutta2TimeIntegrationScheme() : TimeIntegrationScheme()
     {
-    public:
-  
-      RungeKutta2TimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 1 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
 
-          RungeKutta2TimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] );
-      }
+        RungeKutta2TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+    }
 
-      virtual ~RungeKutta2TimeIntegrationScheme()
-      {
-      }
+    virtual ~RungeKutta2TimeIntegrationScheme()
+    {
+    }
 
-      /////////////
+    /////////////
 
-      static TimeIntegrationSchemeSharedPtr create()
-      {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<RungeKutta2TimeIntegrationScheme>::AllocateSharedPtr();
+    static TimeIntegrationSchemeSharedPtr create()
+    {
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            RungeKutta2TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
-      }
+    }
 
-      static std::string className; // Is set to "RungeKutta2" in SchemeInitializor.cpp during program start up.
+    static std::string className; // Is set to "RungeKutta2" in
+                                  // SchemeInitializor.cpp during program start
+                                  // up.
 
-      //////////////
+    //////////////
 
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eRungeKutta2; }
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eRungeKutta2;
+    }
 
-      //////////////
+    //////////////
 
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
-        phase->m_method = TimeIntegrationMethod::eRungeKutta2;
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
+        phase->m_method     = TimeIntegrationMethod::eRungeKutta2;
         phase->m_schemeType = eExplicit;
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 2;
 
-        phase->m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-        phase->m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
+        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
 
-        phase->m_A[0] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 0.0 );
-        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
-        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  1.0 );
-        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  1.0 );
-                    
+        phase->m_A[0] =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
+        phase->m_B[0] =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+        phase->m_U =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+        phase->m_V =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+
         phase->m_A[0][1][0] = 0.5;
         phase->m_B[0][0][1] = 1.0;
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 0;
-        phase->m_timeLevelOffset = Array<OneD,unsigned int>( phase->m_numsteps );
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
-        phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );
+        phase->m_firstStageEqualsOldSolution =
+            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
+                                                      phase->m_U, phase->m_V);
+        phase->m_lastStageEqualsNewSolution =
+            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
+                                                     phase->m_U, phase->m_V);
 
-        ASSERTL1( phase->VerifyIntegrationSchemeType( phase->m_schemeType, phase->m_A, phase->m_B, phase->m_U, phase->m_V ),
-                  "Time integration scheme coefficients do not match its type" );
-      }
+        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
+                                                    phase->m_A, phase->m_B,
+                                                    phase->m_U, phase->m_V),
+                 "Time integration scheme coefficients do not match its type");
+    }
 
-    }; // end class RungeKutta2TimeIntegrator
+}; // end class RungeKutta2TimeIntegrator
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // Runge Kutta 2 Improved Euler
+////////////////////////////////////////////////////////////////////////////////
+// Runge Kutta 2 Improved Euler
 
-    class RungeKutta2_ImprovedEulerTimeIntegrationScheme : public TimeIntegrationScheme
+class RungeKutta2_ImprovedEulerTimeIntegrationScheme
+    : public TimeIntegrationScheme
+{
+public:
+    RungeKutta2_ImprovedEulerTimeIntegrationScheme() : TimeIntegrationScheme()
     {
-    public:
-  
-      RungeKutta2_ImprovedEulerTimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 1 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
 
-          RungeKutta2_ImprovedEulerTimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] );
-      }
+        RungeKutta2_ImprovedEulerTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+    }
 
-      virtual ~RungeKutta2_ImprovedEulerTimeIntegrationScheme()
-      {
-      }
+    virtual ~RungeKutta2_ImprovedEulerTimeIntegrationScheme()
+    {
+    }
 
-      /////////////
+    /////////////
 
-      static TimeIntegrationSchemeSharedPtr create()
-      {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<RungeKutta2_ImprovedEulerTimeIntegrationScheme>::AllocateSharedPtr();
+    static TimeIntegrationSchemeSharedPtr create()
+    {
+        TimeIntegrationSchemeSharedPtr p =
+            MemoryManager<RungeKutta2_ImprovedEulerTimeIntegrationScheme>::
+                AllocateSharedPtr();
         return p;
-      }
+    }
 
-      static std::string className; // Is set in SchemeInitializor.cpp during program start up.
+    static std::string
+        className; // Is set in SchemeInitializor.cpp during program start up.
 
-      //////////////
+    //////////////
 
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eRungeKutta2_ImprovedEuler; }
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eRungeKutta2_ImprovedEuler;
+    }
 
-      //////////////
+    //////////////
 
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
-        phase->m_method = TimeIntegrationMethod::eRungeKutta2_ImprovedEuler;
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
+        phase->m_method     = TimeIntegrationMethod::eRungeKutta2_ImprovedEuler;
         phase->m_schemeType = eExplicit;
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 2;
 
-        phase->m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-        phase->m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
+        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
 
-        phase->m_A[0] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 0.0 );
-        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
-        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  1.0 );
-        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  1.0 );
-                    
+        phase->m_A[0] =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
+        phase->m_B[0] =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+        phase->m_U =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+        phase->m_V =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+
         phase->m_A[0][1][0] = 1.0;
 
         phase->m_B[0][0][0] = 0.5;
@@ -178,308 +204,357 @@ namespace Nektar {
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 0;
-        phase->m_timeLevelOffset = Array<OneD,unsigned int>( phase->m_numsteps );
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
-        phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );
+        phase->m_firstStageEqualsOldSolution =
+            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
+                                                      phase->m_U, phase->m_V);
+        phase->m_lastStageEqualsNewSolution =
+            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
+                                                     phase->m_U, phase->m_V);
 
-        ASSERTL1( phase->VerifyIntegrationSchemeType( phase->m_schemeType, phase->m_A, phase->m_B, phase->m_U, phase->m_V ),
-                  "Time integration phase coefficients do not match its type" );
-      }
+        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
+                                                    phase->m_A, phase->m_B,
+                                                    phase->m_U, phase->m_V),
+                 "Time integration phase coefficients do not match its type");
+    }
 
-    }; // end class RungeKutta2_ImprovedEulerTimeIntegrationScheme
+}; // end class RungeKutta2_ImprovedEulerTimeIntegrationScheme
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // Runge Kutta 2 SSP
+////////////////////////////////////////////////////////////////////////////////
+// Runge Kutta 2 SSP
 
-    class RungeKutta2_SSPTimeIntegrationScheme : public TimeIntegrationScheme
+class RungeKutta2_SSPTimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    RungeKutta2_SSPTimeIntegrationScheme() : TimeIntegrationScheme()
     {
-    public:
-  
-      RungeKutta2_SSPTimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 1 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
 
-          RungeKutta2_SSPTimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] );
-      }
+        RungeKutta2_SSPTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+    }
 
-      virtual ~RungeKutta2_SSPTimeIntegrationScheme()
-      {
-      }
+    virtual ~RungeKutta2_SSPTimeIntegrationScheme()
+    {
+    }
 
-      /////////////
+    /////////////
 
-      static TimeIntegrationSchemeSharedPtr create()
-      {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<RungeKutta2_SSPTimeIntegrationScheme>::AllocateSharedPtr();
+    static TimeIntegrationSchemeSharedPtr create()
+    {
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            RungeKutta2_SSPTimeIntegrationScheme>::AllocateSharedPtr();
         return p;
-      }
+    }
 
-      static std::string className; // Is set in SchemeInitializor.cpp during program start up.
+    static std::string
+        className; // Is set in SchemeInitializor.cpp during program start up.
 
-      //////////////
+    //////////////
 
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eRungeKutta2_SSP; }
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eRungeKutta2_SSP;
+    }
 
-      //////////////
+    //////////////
 
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
-        // FIXME: Dd: Do it like this?  Note, this is never (currently) called anyway because of the switch statement in
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
+        // FIXME: Dd: Do it like this?  Note, this is never (currently) called
+        // anyway because of the switch statement in
         // TimeIntegrationScheme::TimeIntegrationScheme()...
         // FIXME: are these the same things?
-        RungeKutta2_ImprovedEulerTimeIntegrationScheme::SetupSchemeData( phase );
-      }
+        RungeKutta2_ImprovedEulerTimeIntegrationScheme::SetupSchemeData(phase);
+    }
 
-    }; // end class RungeKutta2_SSPTimeIntegrator
+}; // end class RungeKutta2_SSPTimeIntegrator
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // Runge Kutta 3 SSP
+////////////////////////////////////////////////////////////////////////////////
+// Runge Kutta 3 SSP
 
-    class RungeKutta3_SSPTimeIntegrationScheme : public TimeIntegrationScheme
+class RungeKutta3_SSPTimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    RungeKutta3_SSPTimeIntegrationScheme() : TimeIntegrationScheme()
     {
-    public:
-  
-      RungeKutta3_SSPTimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 1 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
 
-          RungeKutta3_SSPTimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] );
-      }
+        RungeKutta3_SSPTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+    }
 
-      virtual ~RungeKutta3_SSPTimeIntegrationScheme()
-      {
-      }
+    virtual ~RungeKutta3_SSPTimeIntegrationScheme()
+    {
+    }
 
-      /////////////
+    /////////////
 
-      static TimeIntegrationSchemeSharedPtr create()
-      {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<RungeKutta3_SSPTimeIntegrationScheme>::AllocateSharedPtr();
+    static TimeIntegrationSchemeSharedPtr create()
+    {
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            RungeKutta3_SSPTimeIntegrationScheme>::AllocateSharedPtr();
         return p;
-      }
+    }
 
-      static std::string className; // Is set in SchemeInitializor.cpp during program start up.
+    static std::string
+        className; // Is set in SchemeInitializor.cpp during program start up.
 
-      //////////////
+    //////////////
 
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eRungeKutta3_SSP; }
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eRungeKutta3_SSP;
+    }
 
-      //////////////
+    //////////////
 
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
-        phase->m_method = TimeIntegrationMethod::eRungeKutta3_SSP;
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
+        phase->m_method     = TimeIntegrationMethod::eRungeKutta3_SSP;
         phase->m_schemeType = eExplicit;
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 3;
 
-        phase->m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-        phase->m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
+        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
 
-        phase->m_A[0] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 0.0 );
-        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
-        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  1.0 );
-        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  1.0 );
-                    
+        phase->m_A[0] =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
+        phase->m_B[0] =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+        phase->m_U =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+        phase->m_V =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+
         phase->m_A[0][1][0] = 1.0;
         phase->m_A[0][2][0] = 0.25;
         phase->m_A[0][2][1] = 0.25;
 
-        phase->m_B[0][0][0] = 1.0/6.0;
-        phase->m_B[0][0][1] = 1.0/6.0;
-        phase->m_B[0][0][2] = 2.0/3.0;
+        phase->m_B[0][0][0] = 1.0 / 6.0;
+        phase->m_B[0][0][1] = 1.0 / 6.0;
+        phase->m_B[0][0][2] = 2.0 / 3.0;
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 0;
-        phase->m_timeLevelOffset = Array<OneD,unsigned int>( phase->m_numsteps );
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
-        phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );
+        phase->m_firstStageEqualsOldSolution =
+            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
+                                                      phase->m_U, phase->m_V);
+        phase->m_lastStageEqualsNewSolution =
+            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
+                                                     phase->m_U, phase->m_V);
 
-        ASSERTL1( phase->VerifyIntegrationSchemeType( phase->m_schemeType, phase->m_A, phase->m_B, phase->m_U, phase->m_V ),
-                  "Time integration phase coefficients do not match its type" );
-      }
+        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
+                                                    phase->m_A, phase->m_B,
+                                                    phase->m_U, phase->m_V),
+                 "Time integration phase coefficients do not match its type");
+    }
 
-    }; // end class RungeKutta3_SSPTimeIntegrator
+}; // end class RungeKutta3_SSPTimeIntegrator
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // Runge Kutta 5
+////////////////////////////////////////////////////////////////////////////////
+// Runge Kutta 5
 
-    class RungeKutta5TimeIntegrationScheme : public TimeIntegrationScheme
+class RungeKutta5TimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    RungeKutta5TimeIntegrationScheme() : TimeIntegrationScheme()
     {
-    public:
-  
-      RungeKutta5TimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 1 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
 
-          RungeKutta5TimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] );
-      }
+        RungeKutta5TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+    }
 
-      virtual ~RungeKutta5TimeIntegrationScheme()
-      {
-      }
+    virtual ~RungeKutta5TimeIntegrationScheme()
+    {
+    }
 
-      /////////////
+    /////////////
 
-      static TimeIntegrationSchemeSharedPtr create()
-      {
+    static TimeIntegrationSchemeSharedPtr create()
+    {
         std::cout << "RungeKutta5TimeIntegrationScheme::create()\n";
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<RungeKutta5TimeIntegrationScheme>::AllocateSharedPtr();
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            RungeKutta5TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
-      }
+    }
 
-      static std::string className; // Is set in SchemeInitializor.cpp during program start up.
+    static std::string
+        className; // Is set in SchemeInitializor.cpp during program start up.
 
-      //////////////
+    //////////////
 
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eRungeKutta5; }
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eRungeKutta5;
+    }
 
-      //////////////
+    //////////////
 
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
-        phase->m_method = TimeIntegrationMethod::eRungeKutta5;
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
+        phase->m_method     = TimeIntegrationMethod::eRungeKutta5;
         phase->m_schemeType = eExplicit;
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 6;
 
-        phase->m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-        phase->m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
+        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
 
-        phase->m_A[0] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 0.0 );
-        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
-        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  1.0 );
-        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  1.0 );
+        phase->m_A[0] =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
+        phase->m_B[0] =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+        phase->m_U =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+        phase->m_V =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
 
-        phase->m_A[0][1][0] = 1.0/4.0;
-        phase->m_A[0][2][0] = 1.0/8.0;
-        phase->m_A[0][2][1] = 1.0/8.0;
-        phase->m_A[0][3][2] = 1.0/2.0;
-        phase->m_A[0][4][0] = 3.0/16.0;
-        phase->m_A[0][4][1] = -3.0/8.0;
-        phase->m_A[0][4][2] = 3.0/8.0;
-        phase->m_A[0][4][3] = 9.0/16.0;
-        phase->m_A[0][5][0] = -3.0/7.0;
-        phase->m_A[0][5][1] = 8.0/7.0;
-        phase->m_A[0][5][2] = 6.0/7.0;
-        phase->m_A[0][5][3] = -12.0/7.0;
-        phase->m_A[0][5][4] = 8.0/7.0;
-        
-        phase->m_B[0][0][0] = 7.0/90.0;
-        phase->m_B[0][0][1] = 32.0/90.0;
-        phase->m_B[0][0][2] = 12.0/90.0;
-        phase->m_B[0][0][3] = 32.0/90.0;
-        phase->m_B[0][0][4] = 7.0/90.0;
+        phase->m_A[0][1][0] = 1.0 / 4.0;
+        phase->m_A[0][2][0] = 1.0 / 8.0;
+        phase->m_A[0][2][1] = 1.0 / 8.0;
+        phase->m_A[0][3][2] = 1.0 / 2.0;
+        phase->m_A[0][4][0] = 3.0 / 16.0;
+        phase->m_A[0][4][1] = -3.0 / 8.0;
+        phase->m_A[0][4][2] = 3.0 / 8.0;
+        phase->m_A[0][4][3] = 9.0 / 16.0;
+        phase->m_A[0][5][0] = -3.0 / 7.0;
+        phase->m_A[0][5][1] = 8.0 / 7.0;
+        phase->m_A[0][5][2] = 6.0 / 7.0;
+        phase->m_A[0][5][3] = -12.0 / 7.0;
+        phase->m_A[0][5][4] = 8.0 / 7.0;
+
+        phase->m_B[0][0][0] = 7.0 / 90.0;
+        phase->m_B[0][0][1] = 32.0 / 90.0;
+        phase->m_B[0][0][2] = 12.0 / 90.0;
+        phase->m_B[0][0][3] = 32.0 / 90.0;
+        phase->m_B[0][0][4] = 7.0 / 90.0;
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 0;
-        phase->m_timeLevelOffset = Array<OneD,unsigned int>( phase->m_numsteps );
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
-        phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );
+        phase->m_firstStageEqualsOldSolution =
+            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
+                                                      phase->m_U, phase->m_V);
+        phase->m_lastStageEqualsNewSolution =
+            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
+                                                     phase->m_U, phase->m_V);
 
-        ASSERTL1( phase->VerifyIntegrationSchemeType( phase->m_schemeType, phase->m_A, phase->m_B, phase->m_U, phase->m_V ),
-                  "Time integration phase coefficients do not match its type" );
-      }
+        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
+                                                    phase->m_A, phase->m_B,
+                                                    phase->m_U, phase->m_V),
+                 "Time integration phase coefficients do not match its type");
+    }
 
-    }; // end class RungeKutta5TimeIntegrator
+}; // end class RungeKutta5TimeIntegrator
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // Classic RungeKutta 4
+////////////////////////////////////////////////////////////////////////////////
+// Classic RungeKutta 4
 
-    class ClassicalRungeKutta4TimeIntegrationScheme : public TimeIntegrationScheme
+class ClassicalRungeKutta4TimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    ClassicalRungeKutta4TimeIntegrationScheme() : TimeIntegrationScheme()
     {
-    public:
-  
-      ClassicalRungeKutta4TimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 1 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
 
-          ClassicalRungeKutta4TimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] );
-      }
+        ClassicalRungeKutta4TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+    }
 
-      virtual ~ClassicalRungeKutta4TimeIntegrationScheme()
-      {
-      }
+    virtual ~ClassicalRungeKutta4TimeIntegrationScheme()
+    {
+    }
 
-      /////////////
+    /////////////
 
-      static TimeIntegrationSchemeSharedPtr create()
-      {
+    static TimeIntegrationSchemeSharedPtr create()
+    {
         std::cout << "ClassicalRungeKutta4TimeIntegrationScheme::create()\n";
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<ClassicalRungeKutta4TimeIntegrationScheme>::AllocateSharedPtr();
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            ClassicalRungeKutta4TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
-      }
+    }
 
-      static std::string className; // Is set in SchemeInitializor.cpp during program start up.
+    static std::string
+        className; // Is set in SchemeInitializor.cpp during program start up.
 
-      //////////////
+    //////////////
 
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eClassicalRungeKutta4; }
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eClassicalRungeKutta4;
+    }
 
-      //////////////
+    //////////////
 
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
-        phase->m_method = TimeIntegrationMethod::eClassicalRungeKutta4;
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
+        phase->m_method     = TimeIntegrationMethod::eClassicalRungeKutta4;
         phase->m_schemeType = eExplicit;
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 4;
 
-        phase->m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-        phase->m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
+        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
 
-        phase->m_A[0] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 0.0 );
-        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
-        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  1.0 );
-        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  1.0 );
-                    
+        phase->m_A[0] =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
+        phase->m_B[0] =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+        phase->m_U =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+        phase->m_V =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+
         phase->m_A[0][1][0] = 0.5;
         phase->m_A[0][2][1] = 0.5;
         phase->m_A[0][3][2] = 1.0;
 
-        phase->m_B[0][0][0] = 1.0/6.0;
-        phase->m_B[0][0][1] = 1.0/3.0;
-        phase->m_B[0][0][2] = 1.0/3.0;
-        phase->m_B[0][0][3] = 1.0/6.0;
+        phase->m_B[0][0][0] = 1.0 / 6.0;
+        phase->m_B[0][0][1] = 1.0 / 3.0;
+        phase->m_B[0][0][2] = 1.0 / 3.0;
+        phase->m_B[0][0][3] = 1.0 / 6.0;
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 0;
-        phase->m_timeLevelOffset = Array<OneD,unsigned int>( phase->m_numsteps );
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
-        phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );
+        phase->m_firstStageEqualsOldSolution =
+            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
+                                                      phase->m_U, phase->m_V);
+        phase->m_lastStageEqualsNewSolution =
+            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
+                                                     phase->m_U, phase->m_V);
 
-        ASSERTL1( phase->VerifyIntegrationSchemeType( phase->m_schemeType, phase->m_A, phase->m_B, phase->m_U, phase->m_V ),
-                  "Time integration phase coefficients do not match its type" );
-      }
+        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
+                                                    phase->m_A, phase->m_B,
+                                                    phase->m_U, phase->m_V),
+                 "Time integration phase coefficients do not match its type");
+    }
 
-    }; // end class ClassicalRungeKutta4TimeIntegrator
+}; // end class ClassicalRungeKutta4TimeIntegrator
 
-  } // end namespace LibUtilities
+} // end namespace LibUtilities
 } // end namespace Nektar

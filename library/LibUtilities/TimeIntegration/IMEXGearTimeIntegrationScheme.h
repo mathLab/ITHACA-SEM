@@ -30,7 +30,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Header file of time integration scheme wrappers
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,92 +45,111 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace Nektar {
-  namespace LibUtilities {
+namespace Nektar
+{
+namespace LibUtilities
+{
 
-    class IMEXGearTimeIntegrationScheme : public TimeIntegrationScheme
+class IMEXGearTimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    IMEXGearTimeIntegrationScheme() : TimeIntegrationScheme()
     {
-    public:
-  
-      IMEXGearTimeIntegrationScheme() : TimeIntegrationScheme() 
-      {
-          m_integration_phases = TimeIntegrationSchemeDataVector( 2 );
-          m_integration_phases[ 0 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
-          m_integration_phases[ 1 ] = TimeIntegrationSchemeDataSharedPtr( new TimeIntegrationSchemeData( this ) );
+        m_integration_phases    = TimeIntegrationSchemeDataVector(2);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
+        m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
 
-          IMEXdirk_2_2_2TimeIntegrationScheme::SetupSchemeData( m_integration_phases[0] );
-          IMEXGearTimeIntegrationScheme::SetupSchemeData(       m_integration_phases[1] );
-      }
+        IMEXdirk_2_2_2TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+        IMEXGearTimeIntegrationScheme::SetupSchemeData(m_integration_phases[1]);
+    }
 
-      virtual ~IMEXGearTimeIntegrationScheme()
-      {
-      }
+    virtual ~IMEXGearTimeIntegrationScheme()
+    {
+    }
 
-      /////////////
+    /////////////
 
-      static TimeIntegrationSchemeSharedPtr create()
-      {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<IMEXGearTimeIntegrationScheme>::AllocateSharedPtr();
+    static TimeIntegrationSchemeSharedPtr create()
+    {
+        TimeIntegrationSchemeSharedPtr p =
+            MemoryManager<IMEXGearTimeIntegrationScheme>::AllocateSharedPtr();
         return p;
-      }
+    }
 
-      static std::string className; // FIXME: Will be set in TimeIntegratorBase.cpp during program start up.
+    static std::string className; // FIXME: Will be set in
+                                  // TimeIntegratorBase.cpp during program start
+                                  // up.
 
-      //////////////
+    //////////////
 
-      LUE virtual
-          TimeIntegrationMethod GetIntegrationMethod() const { return TimeIntegrationMethod::eIMEXGear; }
+    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    {
+        return TimeIntegrationMethod::eIMEXGear;
+    }
 
-      //////////////
+    //////////////
 
-      LUE
-      static
-      void SetupSchemeData( TimeIntegrationSchemeDataSharedPtr & phase )
-      {
-        phase->m_method = TimeIntegrationMethod::eIMEXGear;
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
+        phase->m_method     = TimeIntegrationMethod::eIMEXGear;
         phase->m_schemeType = eIMEX;
 
         phase->m_numsteps  = 3;
         phase->m_numstages = 1;
 
-        phase->m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-        phase->m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(2);
+        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(2);
 
-        NekDouble twothirds = 2.0/3.0;
+        NekDouble twothirds = 2.0 / 3.0;
 
-        phase->m_A[0] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, twothirds );
-        phase->m_B[0] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
-        phase->m_A[1] = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numstages, 0.0 );
-        phase->m_B[1] = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numstages, 0.0 );
-        phase->m_U    = Array<TwoD,NekDouble>( phase->m_numstages, phase->m_numsteps,  0.0 );
-        phase->m_V    = Array<TwoD,NekDouble>( phase->m_numsteps,  phase->m_numsteps,  0.0 );
-                    
+        phase->m_A[0] = Array<TwoD, NekDouble>(phase->m_numstages,
+                                               phase->m_numstages, twothirds);
+        phase->m_B[0] =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+        phase->m_A[1] =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
+        phase->m_B[1] =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+        phase->m_U =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
+        phase->m_V =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
+
         phase->m_B[0][0][0] = twothirds;
         phase->m_B[1][2][0] = 1.0;
-        phase->m_U[0][0]    =  2.0 * twothirds;
+        phase->m_U[0][0]    = 2.0 * twothirds;
         phase->m_U[0][1]    = -0.5 * twothirds;
         phase->m_U[0][2]    = twothirds;
 
-        phase->m_V[0][0] =  2.0 * twothirds;
+        phase->m_V[0][0] = 2.0 * twothirds;
         phase->m_V[0][1] = -0.5 * twothirds;
-        phase->m_V[0][2] =  twothirds;
-        phase->m_V[1][0] =  1.0;
+        phase->m_V[0][2] = twothirds;
+        phase->m_V[1][0] = 1.0;
 
         phase->m_numMultiStepValues = 2;
         phase->m_numMultiStepDerivs = 1;
-        phase->m_timeLevelOffset = Array<OneD,unsigned int>( phase->m_numsteps );
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
         phase->m_timeLevelOffset[1] = 1;
         phase->m_timeLevelOffset[2] = 0;
 
-        phase->m_firstStageEqualsOldSolution = phase->CheckIfFirstStageEqualsOldSolution( phase->m_A, phase->m_B, phase->m_U, phase->m_V );
-        phase->m_lastStageEqualsNewSolution  = phase->CheckIfLastStageEqualsNewSolution(  phase->m_A, phase->m_B, phase->m_U, phase->m_V );
+        phase->m_firstStageEqualsOldSolution =
+            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
+                                                      phase->m_U, phase->m_V);
+        phase->m_lastStageEqualsNewSolution =
+            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
+                                                     phase->m_U, phase->m_V);
 
-        ASSERTL1( phase->VerifyIntegrationSchemeType( phase->m_schemeType, phase->m_A, phase->m_B, phase->m_U, phase->m_V ),
-                  "Time integration phase coefficients do not match its type" );
-      }
-      
-    }; // end class IMEXGearTimeIntegrationScheme
+        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
+                                                    phase->m_A, phase->m_B,
+                                                    phase->m_U, phase->m_V),
+                 "Time integration phase coefficients do not match its type");
+    }
 
-  } // end namespace LibUtilities
+}; // end class IMEXGearTimeIntegrationScheme
+
+} // end namespace LibUtilities
 } // end namespace Nektar

@@ -4087,11 +4087,11 @@ namespace Nektar
             }
             else
             {
-TODO::
-TODO::
-TODO::
-TODO::
-TODO:: FURTHER OPTIMIZATION!!!!
+//TODO::
+//TODO::
+//TODO::
+//TODO::
+//TODO:: FURTHER OPTIMIZATION!!!!
                 int nTracePntsTtl     = tracelist->GetTotPoints();
                 int nlocTracePts      = locTraceToTraceMap->GetNLocTracePts();
                 int nlocTracePtsFwd   = locTraceToTraceMap->GetNFwdLocTracePts();

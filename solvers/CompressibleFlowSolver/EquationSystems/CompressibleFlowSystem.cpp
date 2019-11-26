@@ -730,7 +730,7 @@ namespace Nektar
             }
         }
     }
-    
+
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::MinusOffDiag2Rhs(
             const int nvariables,
@@ -789,34 +789,50 @@ namespace Nektar
             m_fields[i]->GetFwdBwdTracePhys(outpnts[i], Fwd[i], Bwd[i]);
         }
 
-        NekVector<DataType> VFwd(nvariables),VBwd(nvariables);
-        NekVector<DataType> VFlux(nvariables);
-
 #ifdef CFS_DEBUGMODE
         if(1!=m_DebugVolTraceSwitch)
         {
 #endif
+        int nTracePtsVars = nTracePts*nvariables;
+        Array<OneD, DataType> Fwdarray (nTracePtsVars);
+        Array<OneD, DataType> Fwdreslt (nTracePtsVars);
+        NekVector<DataType> VFwdarray(nTracePtsVars,Fwdarray,eWrapper);
+        NekVector<DataType> VFwdreslt(nTracePtsVars,Fwdreslt,eWrapper);
+
         for(int n = 0; n < nTracePts; ++n)
         {
+            int noffset = n*nvariables; 
             for(int i = 0; i < nvariables; ++i)
             {
-                VFwd[i] =   DataType(Fwd[i][n]);
-                VBwd[i] =   DataType(Bwd[i][n]);
-            }   
-
-            VFlux   =   (*TraceJac[0]->GetBlock(n,n))*VFwd;
-
+                Fwdarray[noffset+i] =  DataType( Fwd[i][n] );
+            }
+        }
+        VFwdreslt = (*TraceJac[0])*VFwdarray;
+        for(int n = 0; n < nTracePts; ++n)
+        {
+            int noffset = n*nvariables; 
             for(int i = 0; i < nvariables; ++i)
             {
-                FwdFlux[i][n] =   NekDouble(VFlux[i]);
-            }  
+                FwdFlux[i][n] = NekDouble( Fwdarray[noffset+i] );
+            }
+        }
 
-            VFlux   =   (*TraceJac[1]->GetBlock(n,n))*VBwd;
-
+        for(int n = 0; n < nTracePts; ++n)
+        {
+            int noffset = n*nvariables; 
             for(int i = 0; i < nvariables; ++i)
             {
-                BwdFlux[i][n] =   NekDouble( VFlux[i]);
-            }  
+                Fwdarray[noffset+i] =  DataType( Bwd[i][n] );
+            }
+        }
+        VFwdreslt = (*TraceJac[1])*VFwdarray;
+        for(int n = 0; n < nTracePts; ++n)
+        {
+            int noffset = n*nvariables; 
+            for(int i = 0; i < nvariables; ++i)
+            {
+                BwdFlux[i][n] = NekDouble( Fwdarray[noffset+i] );
+            }
         }
 
         if(m_DEBUG_VISCOUS_JAC_MAT&&m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
@@ -855,6 +871,7 @@ namespace Nektar
                     Vmath::Zero(nTracePts,BwdFluxDeriv[i],1);
                 }  
 
+                NekVector<DataType> VFlux(nvariables);
                 for(int n = 0; n < nTracePts; ++n)
                 {
                     

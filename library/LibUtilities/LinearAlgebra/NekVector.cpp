@@ -1150,7 +1150,7 @@ namespace Nektar
         const unsigned int vdim = v.GetDimension();
         for(unsigned int i = 0; i < vdim; ++i)
         {
-            result = std::max(fabs(v[i]), result);
+            result = std::max(DataType(fabs(v[i])), result);
         }
         return result;
     }

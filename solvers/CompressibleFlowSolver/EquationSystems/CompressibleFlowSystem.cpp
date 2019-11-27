@@ -813,7 +813,7 @@ namespace Nektar
             int noffset = n*nvariables; 
             for(int i = 0; i < nvariables; ++i)
             {
-                FwdFlux[i][n] = NekDouble( Fwdarray[noffset+i] );
+                FwdFlux[i][n] = NekDouble( Fwdreslt[noffset+i] );
             }
         }
 
@@ -831,7 +831,7 @@ namespace Nektar
             int noffset = n*nvariables; 
             for(int i = 0; i < nvariables; ++i)
             {
-                BwdFlux[i][n] = NekDouble( Fwdarray[noffset+i] );
+                BwdFlux[i][n] = NekDouble( Fwdreslt[noffset+i] );
             }
         }
 

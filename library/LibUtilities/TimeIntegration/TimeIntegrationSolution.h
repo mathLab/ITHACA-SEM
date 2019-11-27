@@ -50,15 +50,7 @@ namespace Nektar
 {
 namespace LibUtilities
 {
-// FIXME: Dd: Find a better way to do these typedefs as they happen all over the
-// place...
 
-//        typedef std::shared_ptr<TimeIntegrationScheme>
-//        TimeIntegrationSchemeSharedPtr;
-
-// =========================================================================
-// ==== DEFINITION OF THE CLASS TimeIntegrationSolution
-// =========================================================================
 class TimeIntegrationSolution
 {
 public:
@@ -85,8 +77,6 @@ public:
     {
         return m_schemeData;
     }
-    // inline const TimeIntegrationSchemeKey &       GetIntegrationSchemeKey()
-    // const { return m_scheme->GetIntegrationSchemeKey(); }
 
     TimeIntegrationMethod GetIntegrationMethod() const;
 
@@ -121,8 +111,11 @@ public:
     {
         return m_t[0];
     }
-    int GetNsteps(); // { return m_schemeData->m_numIntSteps; } // FIXME
-                     // GetNumIntegrationSteps(); }
+    int GetNsteps()
+    {
+        return m_schemeData->m_numsteps;
+    }
+
     inline int GetFirstDim() const
     {
         return m_solVector[0].num_elements();

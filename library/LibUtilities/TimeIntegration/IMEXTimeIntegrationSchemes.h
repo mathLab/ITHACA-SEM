@@ -34,17 +34,10 @@
 // Description: Combined header file for all basic IMEX time integration
 // schemes.
 //
-///////////////////////////////////////////////////////////////////////////////
-
 #define LUE LIB_UTILITIES_EXPORT
 
-///////////////////////////////////////////////////////////////////////////////
-
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-
 #include <LibUtilities/TimeIntegration/IMEXdirkTimeIntegrationSchemes.h>
-
-///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar
 {
@@ -71,9 +64,6 @@ public:
     {
     }
 
-    /////////////
-
-    // The create() function is called by the Factory.
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p =
@@ -81,18 +71,12 @@ public:
         return p;
     }
 
-    static std::string className; // Will be set to "IMEXOrder1" in
-                                  // SchemeInitializor.cpp during program start
-                                  // up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eIMEXOrder1;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
@@ -153,55 +137,38 @@ class IMEXOrder2TimeIntegrationScheme : public TimeIntegrationScheme
 public:
     IMEXOrder2TimeIntegrationScheme() : TimeIntegrationScheme()
     {
-        std::cout << "IMEXOrder2TimeIntegrationScheme Construtor: this is "
-                  << this << "\n";
-
         m_integration_phases    = TimeIntegrationSchemeDataVector(2);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
         m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
 
-        // IMEXdirk_2_3_2TimeIntegrationScheme::SetupSchemeData(
-        // m_integration_phases[0] ); // Setup 1st part using ???? FIXME...
-        // should be dirk or imex order 1?
         IMEXOrder1TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]); // Setup 1st part using ???? FIXME...
-                                      // should be dirk or imex order 1?
+            m_integration_phases[0]);
         IMEXOrder2TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[1]); // Setup 2nd part using IMEX Order 2
+            m_integration_phases[1]);
     }
 
     virtual ~IMEXOrder2TimeIntegrationScheme()
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
-        std::cout << "IMEXOrder2TimeIntegrationScheme::create()\n";
         TimeIntegrationSchemeSharedPtr p =
             MemoryManager<IMEXOrder2TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
     }
 
-    static std::string className; // Will be set in SchemeInitializor.cpp during
-                                  // program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eIMEXOrder2;
     }
 
-    //////////////
-
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        std::cout << "IMEXOrder2TimeIntegrationScheme::SetupSchemeData()\n";
-
         phase->m_method     = TimeIntegrationMethod::eIMEXOrder2;
         phase->m_schemeType = eIMEX;
 
@@ -271,9 +238,6 @@ class IMEXOrder3TimeIntegrationScheme : public TimeIntegrationScheme
 public:
     IMEXOrder3TimeIntegrationScheme() : TimeIntegrationScheme()
     {
-        std::cout << "IMEXOrder3TimeIntegrationScheme Construtor: this is "
-                  << this << "\n";
-
         m_integration_phases    = TimeIntegrationSchemeDataVector(3);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -288,35 +252,25 @@ public:
             m_integration_phases[1]);
         IMEXOrder3TimeIntegrationScheme::SetupSchemeData(
             m_integration_phases[2]);
-
-        std::cout << "done with IMEXOrder3TimeIntegrationScheme constructor\n";
     }
 
     virtual ~IMEXOrder3TimeIntegrationScheme()
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
-        std::cout << "IMEXOrder3TimeIntegrationScheme::create()\n";
         TimeIntegrationSchemeSharedPtr p =
             MemoryManager<IMEXOrder3TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
     }
 
-    static std::string className; // Will be set in SchemeInitializor.cpp during
-                                  // program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eIMEXOrder3;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
@@ -397,9 +351,6 @@ class IMEXOrder4TimeIntegrationScheme : public TimeIntegrationScheme
 public:
     IMEXOrder4TimeIntegrationScheme() : TimeIntegrationScheme()
     {
-        std::cout << "IMEXOrder4TimeIntegrationScheme Construtor: this is "
-                  << this << "\n";
-
         m_integration_phases    = TimeIntegrationSchemeDataVector(4);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -418,35 +369,25 @@ public:
             m_integration_phases[2]);
         IMEXOrder4TimeIntegrationScheme::SetupSchemeData(
             m_integration_phases[3]);
-
-        std::cout << "done with IMEXOrder4TimeIntegrationScheme constructor\n";
     }
 
     virtual ~IMEXOrder4TimeIntegrationScheme()
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
-        std::cout << "IMEXOrder4TimeIntegrationScheme::create()\n";
         TimeIntegrationSchemeSharedPtr p =
             MemoryManager<IMEXOrder4TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
     }
 
-    static std::string className; // Will be set in SchemeInitializor.cpp during
-                                  // program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eIMEXOrder4;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {

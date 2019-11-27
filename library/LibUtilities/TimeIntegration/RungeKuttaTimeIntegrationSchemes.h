@@ -1,5 +1,3 @@
-#pragma once
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: RungeKuttaTimeIntegrationSchemes.h
@@ -36,13 +34,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#pragma once
+
 #define LUE LIB_UTILITIES_EXPORT
 
-///////////////////////////////////////////////////////////////////////////////
-
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-
-///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar
 {
@@ -69,8 +65,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -78,18 +72,12 @@ public:
         return p;
     }
 
-    static std::string className; // Is set to "RungeKutta2" in
-                                  // SchemeInitializor.cpp during program start
-                                  // up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eRungeKutta2;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
@@ -155,8 +143,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p =
@@ -165,17 +151,12 @@ public:
         return p;
     }
 
-    static std::string
-        className; // Is set in SchemeInitializor.cpp during program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eRungeKutta2_ImprovedEuler;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
@@ -242,8 +223,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -251,24 +230,15 @@ public:
         return p;
     }
 
-    static std::string
-        className; // Is set in SchemeInitializor.cpp during program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eRungeKutta2_SSP;
     }
 
-    //////////////
-
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        // FIXME: Dd: Do it like this?  Note, this is never (currently) called
-        // anyway because of the switch statement in
-        // TimeIntegrationScheme::TimeIntegrationScheme()...
-        // FIXME: are these the same things?
         RungeKutta2_ImprovedEulerTimeIntegrationScheme::SetupSchemeData(phase);
     }
 
@@ -294,8 +264,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -303,17 +271,12 @@ public:
         return p;
     }
 
-    static std::string
-        className; // Is set in SchemeInitializor.cpp during program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eRungeKutta3_SSP;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
@@ -383,27 +346,19 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
-        std::cout << "RungeKutta5TimeIntegrationScheme::create()\n";
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
             RungeKutta5TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
     }
 
-    static std::string
-        className; // Is set in SchemeInitializor.cpp during program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eRungeKutta5;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
@@ -485,27 +440,19 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
-        std::cout << "ClassicalRungeKutta4TimeIntegrationScheme::create()\n";
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
             ClassicalRungeKutta4TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
     }
 
-    static std::string
-        className; // Is set in SchemeInitializor.cpp during program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eClassicalRungeKutta4;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {

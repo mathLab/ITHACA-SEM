@@ -1,5 +1,3 @@
-#pragma once
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: EulerTimeIntegrationSchemes.h
@@ -36,14 +34,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define LUE LIB_UTILITIES_EXPORT
+#pragma once
 
-///////////////////////////////////////////////////////////////////////////////
+#define LUE LIB_UTILITIES_EXPORT
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
-
-///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar
 {
@@ -70,28 +66,19 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
-        std::cout << "BackwardEulerTimeIntegrationScheme::create()\n";
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
             BackwardEulerTimeIntegrationScheme>::AllocateSharedPtr();
         return p;
     }
 
-    static std::string className; // Is set to "BackwardEuler" in
-                                  // SchemeInitializor.cpp during program start
-                                  // up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eBackwardEuler;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
@@ -153,33 +140,22 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
-        std::cout << "ForwardEulerTimeIntegrationScheme::create()\n";
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
             ForwardEulerTimeIntegrationScheme>::AllocateSharedPtr();
         return p;
     }
 
-    static std::string className; // Is set to "ForwardEuler" in
-                                  // SchemeInitializor.cpp during program start
-                                  // up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eForwardEuler;
     }
 
-    //////////////
-
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        std::cout << "ForwardEulerTimeIntegrationScheme::SetupSchemeData()\n";
-
         phase->m_method     = TimeIntegrationMethod::eForwardEuler;
         phase->m_schemeType = eExplicit;
 

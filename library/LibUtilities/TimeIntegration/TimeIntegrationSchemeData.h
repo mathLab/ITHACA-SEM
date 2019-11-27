@@ -40,19 +40,13 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
-///////////////////////////////////////////////////////////////////////////////
-
 #define LUE LIB_UTILITIES_EXPORT
-
-///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar
 {
 namespace LibUtilities
 {
-// =====================================================================
-// ==== DEFINITION OF THE CLASS TimeIntegrationScheme
-// =====================================================================
+
 class TimeIntegrationSchemeData
 {
 public:
@@ -64,10 +58,6 @@ public:
     {
     }
 
-private: // Note: All functions are private as they should only be used by their
-         // friend
-         // classes TimeIntegrationScheme and TimeIntegrationSolution
-
     friend std::ostream &operator<<(std::ostream &os,
                                     const TimeIntegrationScheme &rhs);
     friend std::ostream &operator<<(std::ostream &os,
@@ -78,45 +68,6 @@ private: // Note: All functions are private as they should only be used by their
     friend std::ostream &operator<<(
         std::ostream &os,
         const TimeIntegrationScheme::TimeIntegrationSchemeDataSharedPtr &rhs);
-
-    friend class TimeIntegrationScheme;
-    friend class TimeIntegrationSolution;
-
-    friend class AdamsBashforthOrder2TimeIntegrationScheme;
-    friend class AdamsBashforthOrder3TimeIntegrationScheme;
-    friend class AdamsBashforthOrder4TimeIntegrationScheme;
-    friend class AdamsMoultonOrder1TimeIntegrationScheme;
-    friend class AdamsMoultonOrder2TimeIntegrationScheme;
-    friend class BackwardEulerTimeIntegrationScheme;
-    friend class BDFImplicitOrder2TimeIntegrationScheme;
-    friend class ClassicalRungeKutta4TimeIntegrationScheme;
-    friend class RungeKutta5TimeIntegrationScheme;
-    friend class CNABTimeIntegrationScheme;
-    friend class DIRKOrder2TimeIntegrationScheme;
-    friend class DIRKOrder3TimeIntegrationScheme;
-    friend class ForwardEulerTimeIntegrationScheme;
-    friend class IMEXdirk_1_2_1TimeIntegrationScheme;
-    friend class IMEXdirk_1_2_2TimeIntegrationScheme;
-    friend class IMEXdirk_2_2_2TimeIntegrationScheme;
-    friend class IMEXdirk_2_3_2TimeIntegrationScheme;
-    friend class IMEXdirk_2_3_3TimeIntegrationScheme;
-    friend class IMEXdirk_3_4_3TimeIntegrationScheme;
-    friend class IMEXdirk_4_4_3TimeIntegrationScheme;
-    friend class IMEXGearTimeIntegrationScheme;
-    friend class IMEXOrder1TimeIntegrationScheme;
-    friend class IMEXOrder2TimeIntegrationScheme;
-    friend class IMEXOrder3TimeIntegrationScheme;
-    friend class IMEXOrder4TimeIntegrationScheme;
-    friend class MCNABTimeIntegrationScheme;
-    friend class RungeKutta2TimeIntegrationScheme;
-    friend class RungeKutta2_ImprovedEulerTimeIntegrationScheme;
-    friend class RungeKutta2_SSPTimeIntegrationScheme;
-    friend class RungeKutta3_SSPTimeIntegrationScheme;
-
-    //////////////////////////////////////////////////////////////
-
-    // FIXME: Dd: move to the right spot:
-    const TimeIntegrationScheme *m_parent;
 
     inline TimeIntegrationMethod GetIntegrationMethod() const
     {
@@ -254,6 +205,8 @@ private: // Note: All functions are private as they should only be used by their
         const NekDouble deltaT, TimeIntegrationSolutionSharedPtr &y,
         const TimeIntegrationSchemeOperators &op);
 
+    const TimeIntegrationScheme *m_parent;
+
     TimeIntegrationMethod m_method;
     TimeIntegrationSchemeType m_schemeType;
 
@@ -297,30 +250,6 @@ private: // Note: All functions are private as they should only be used by their
                           /// IMEX schemes
 
     NekDouble m_T; ///  Time at the different stages
-
-    // template <typename> friend class Nektar::MemoryManager;
-
-    // LUE friend TimeIntegrationSchemeManagerT &
-    // GetTimeIntegrationSchemeManager();
-
-    // LUE static TimeIntegrationSchemeDataSharedPtr Create( const
-    // TimeIntegrationSchemeKey & key );
-
-    // TimeIntegrationSchemeData( const TimeIntegrationSchemeKey & key );
-
-    // These should never be called
-    // TimeIntegrationSchemeData() : m_schemeKey( NullTimeIntegrationSchemeKey )
-    // {
-    //     NEKERROR(ErrorUtil::efatal,"Default Constructor for the
-    //     TimeIntegrationScheme class should not be called");
-    // }
-
-    // TimeIntegrationSchemeData( const TimeIntegrationScheme & in ) :
-    // m_schemeKey( NullTimeIntegrationSchemeKey )
-    // {
-    //     NEKERROR(ErrorUtil::efatal,"Copy Constructor for the
-    //     TimeIntegrationScheme class should not be called");
-    // }
 
     static LUE bool VerifyIntegrationSchemeType(
         TimeIntegrationSchemeType type,

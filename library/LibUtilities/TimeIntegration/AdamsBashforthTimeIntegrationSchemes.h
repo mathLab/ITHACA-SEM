@@ -1,5 +1,3 @@
-#pragma once
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: AdamsBashforthTimeIntegrationSchemes.h
@@ -36,19 +34,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#pragma once
+
 #define LUE LIB_UTILITIES_EXPORT
 
-///////////////////////////////////////////////////////////////////////////////
-
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-
 #include <LibUtilities/TimeIntegration/EulerTimeIntegrationSchemes.h>
 #include <LibUtilities/TimeIntegration/RungeKuttaTimeIntegrationSchemes.h>
-
-///////////////////////////////////////////////////////////////////////////////
-
-// For debugging:
-#include <iostream>
 
 namespace Nektar
 {
@@ -63,10 +55,6 @@ class AdamsBashforthOrder2TimeIntegrationScheme : public TimeIntegrationScheme
 public:
     AdamsBashforthOrder2TimeIntegrationScheme() : TimeIntegrationScheme()
     {
-        std::cout
-            << "AdamsBashforthOrder2TimeIntegrationScheme Construtor: this is "
-            << this << "\n";
-
         m_integration_phases    = TimeIntegrationSchemeDataVector(2);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -74,8 +62,7 @@ public:
             new TimeIntegrationSchemeData(this));
 
         ForwardEulerTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]); // FIXME... need the correct initial
-                                      // phase.... (eForwardEuler)
+            m_integration_phases[0]);
         AdamsBashforthOrder2TimeIntegrationScheme::SetupSchemeData(
             m_integration_phases[1]);
     }
@@ -84,35 +71,22 @@ public:
     {
     }
 
-    /////////////
-
-    static TimeIntegrationSchemeSharedPtr create() // FYI, the create() function
-                                                   // is called by the Factory.
+    static TimeIntegrationSchemeSharedPtr create()
     {
-        std::cout << "AdamsBashforthOrder2TimeIntegrationScheme::create()\n";
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
             AdamsBashforthOrder2TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
     }
 
-    static std::string className; // Is set to "AdamsBashforthOrder2" in
-                                  // SchemeInitializor.cpp during program start
-                                  // up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eAdamsBashforthOrder2;
     }
 
-    //////////////
-
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        std::cout
-            << "AdamsBashforthOrder2TimeIntegrationScheme::SetupSchemeData()\n";
-
         phase->m_method     = TimeIntegrationMethod::eAdamsBashforthOrder2;
         phase->m_schemeType = eExplicit;
 
@@ -189,8 +163,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -198,17 +170,12 @@ public:
         return p;
     }
 
-    static std::string
-        className; // Is set in SchemeInitializor.cpp during program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eAdamsBashforthOrder3;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
@@ -299,8 +266,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -308,17 +273,12 @@ public:
         return p;
     }
 
-    static std::string
-        className; // Is set in SchemeInitializor.cpp during program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eAdamsBashforthOrder4;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {

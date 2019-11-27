@@ -1,5 +1,3 @@
-#pragma once
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: IMEXdirkTimeIntegrationSchemes.h
@@ -36,13 +34,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#pragma once
+
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
-///////////////////////////////////////////////////////////////////////////////
-
 #define LUE LIB_UTILITIES_EXPORT
-
-///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar
 {
@@ -69,8 +65,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -78,18 +72,12 @@ public:
         return p;
     }
 
-    static std::string className; // Is set to "IMEXdirk_1_2_1" in
-                                  // SchemeInitializor.cpp during program start
-                                  // up.
-
-    //////////////
+    static std::string className;
 
     LUE TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eIMEXdirk_1_2_1;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
@@ -163,8 +151,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -172,17 +158,12 @@ public:
         return p;
     }
 
-    static std::string
-        className; // Is set in SchemeInitializor.cpp during program start up.
-
-    //////////////
+    static std::string className;
 
     LUE TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eIMEXdirk_1_2_2;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
@@ -256,8 +237,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -265,17 +244,12 @@ public:
         return p;
     }
 
-    static std::string
-        className; // Is set in SchemeInitializor.cpp during program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eIMEXdirk_2_2_2;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
@@ -359,8 +333,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -368,22 +340,15 @@ public:
         return p;
     }
 
-    static std::string
-        className; // Is set in SchemeInitializor.cpp during program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eIMEXdirk_2_3_2;
     }
 
-    //////////////
-
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        std::cout << "IMEXdirk_2_3_2TimeIntegrationScheme::SetupSchemeData()\n";
-
         phase->m_method     = TimeIntegrationMethod::eIMEXdirk_2_3_2;
         phase->m_schemeType = eIMEX;
 
@@ -464,8 +429,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -473,22 +436,15 @@ public:
         return p;
     }
 
-    static std::string
-        className; // Is set in SchemeInitializor.cpp during program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eIMEXdirk_2_3_3;
     }
 
-    //////////////
-
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        std::cout << "IMEXdirk_2_3_3TimeIntegrationScheme::SetupSchemeData()\n";
-
         phase->m_method     = TimeIntegrationMethod::eIMEXdirk_2_3_3;
         phase->m_schemeType = eIMEX;
 
@@ -568,8 +524,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -577,22 +531,15 @@ public:
         return p;
     }
 
-    static std::string
-        className; // Is set in SchemeInitializor.cpp during program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eIMEXdirk_3_4_3;
     }
 
-    //////////////
-
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        std::cout
-            << "SetupSchemeData for IMEXdirk_3_4_3TimeIntegrationScheme\n";
         phase->m_method     = TimeIntegrationMethod::eIMEXdirk_3_4_3;
         phase->m_schemeType = eIMEX;
 
@@ -686,8 +633,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -695,22 +640,15 @@ public:
         return p;
     }
 
-    static std::string
-        className; // Is set in SchemeInitializor.cpp during program start up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eIMEXdirk_4_4_3;
     }
 
-    //////////////
-
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        std::cout
-            << "SetupSchemeData for IMEXdirk_4_4_3TimeIntegrationScheme\n";
         phase->m_method     = TimeIntegrationMethod::eIMEXdirk_4_4_3;
         phase->m_schemeType = eIMEX;
 

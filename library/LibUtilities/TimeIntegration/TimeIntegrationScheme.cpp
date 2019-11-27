@@ -235,10 +235,8 @@ TimeIntegrationMethod TimeIntegrationScheme::methodFromName(const string &name)
             "'" + name +
             "' is not a known TimeIntegrationMethod. (Check spelling?)";
         NEKERROR(ErrorUtil::efatal, msg);
-        // return eNoTimeIntegrationMethod;
+        return eNoTimeIntegrationMethod;
     }
-    return eNoTimeIntegrationMethod; // Note: This line should never be reached,
-                                     // but it does remove a compiler warning.
 }
 
 string TimeIntegrationScheme::nameFromMethod(const TimeIntegrationMethod method)

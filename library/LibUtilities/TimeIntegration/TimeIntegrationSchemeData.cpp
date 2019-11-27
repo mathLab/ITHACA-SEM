@@ -109,9 +109,7 @@ bool TimeIntegrationSchemeData::VerifyIntegrationSchemeType(
     return (vertype[0] == type);
 }
 
-TimeIntegrationSchemeData:: // FIXME: Dd: <- this qualifier should not be
-                            // necessary...
-    TimeIntegrationSolutionSharedPtr
+TimeIntegrationSchemeData::TimeIntegrationSolutionSharedPtr
     TimeIntegrationSchemeData::InitializeData(
         const NekDouble deltaT, ConstDoubleArray &y_0, const NekDouble time,
         const TimeIntegrationSchemeOperators &op)
@@ -119,9 +117,6 @@ TimeIntegrationSchemeData:: // FIXME: Dd: <- this qualifier should not be
     // create a TimeIntegrationSolution object based upon the
     // initial value. Initialise all other multi-step values
     // and derivatives to zero
-
-    // FIXME: Dd: figure out what the following allocation does and do it
-    // without the memory manager... or not...
 
     TimeIntegrationSolutionSharedPtr y_out =
         MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(this, y_0,

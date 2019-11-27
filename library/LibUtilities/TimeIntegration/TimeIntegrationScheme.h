@@ -47,11 +47,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
-///////////////////////////////////////////////////////////////////////////////
-
 #define LUE LIB_UTILITIES_EXPORT
-
-///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar
 {
@@ -199,9 +195,13 @@ public:
 
     TimeIntegrationSchemeType GetIntegrationSchemeType() const;
 
+    static const char *const TimeIntegrationMethodMap[36];
+
 protected:
-    friend class TimeIntegrationSolution;
-    friend class TimeIntegrationSchemeData;
+
+    TimeIntegrationSchemeDataVector m_integration_phases;
+    bool m_firstStageEqualsOldSolution; //< Optimisation flag
+    bool m_lastStageEqualsNewSolution;  //< Optimisation flag
 
     virtual ~TimeIntegrationScheme()
     {
@@ -212,8 +212,8 @@ protected:
     friend std::ostream &operator<<(std::ostream &os,
                                     const TimeIntegrationSchemeSharedPtr &rhs);
 
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationSchemeData &rhs);
+//    friend std::ostream &operator<<(std::ostream &os,
+//                                    const TimeIntegrationSchemeData &rhs);
 
     /**
      * \brief Explicit integration of an ODE.
@@ -243,20 +243,6 @@ protected:
         const NekDouble timestep, TimeIntegrationSolutionSharedPtr &y,
         const TimeIntegrationSchemeOperators &op);
 
-    // TimeIntegrationSchemeKey  m_schemeKey;
-    // TimeIntegrationSchemeType m_schemeType;
-    // unsigned int              m_numsteps;   //< Number of steps in multi-step
-    // component.
-    // unsigned int              m_numstages;  //< Number of stages in
-    // multi-stage component.
-
-public: // FIXME m_integration_phases should not be public...
-    TimeIntegrationSchemeDataVector
-        m_integration_phases;           // Was called m_intSchemes
-protected:                              // FIXME
-    bool m_firstStageEqualsOldSolution; //< Optimisation-flag
-    bool m_lastStageEqualsNewSolution;  //< Optimisation-flag
-
     // This should never be used directly... only used by child classes...
     TimeIntegrationScheme()
     {
@@ -285,9 +271,7 @@ protected:                              // FIXME
         ConstSingleArray &t_old, TripleArray &y_new, SingleArray &t_new,
         const TimeIntegrationSchemeOperators &op) const;
 
-    // !!! Always make sure that this matches TimeIntegrationMethod enum... !!!
-    //
-    static const char *const TimeIntegrationMethodMap[36];
+
 
 }; // end class TimeIntegrationScheme
 

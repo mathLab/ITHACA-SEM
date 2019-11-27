@@ -1,5 +1,3 @@
-#pragma once
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: DIRKTimeIntegrationSchemes.h
@@ -36,13 +34,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#pragma once
+
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
-///////////////////////////////////////////////////////////////////////////////
-
 #define LUE LIB_UTILITIES_EXPORT
-
-///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar
 {
@@ -69,29 +65,19 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
-        std::cout << "DIRKOrder2TimeIntegrationScheme::create()\n";
-
         TimeIntegrationSchemeSharedPtr p =
             MemoryManager<DIRKOrder2TimeIntegrationScheme>::AllocateSharedPtr();
         return p;
     }
 
-    static std::string className; // Is set to "DIRKOrder2" in
-                                  // SchemeInitializor.cpp during program start
-                                  // up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eIMEXdirk_3_4_3;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
@@ -161,8 +147,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p =
@@ -170,18 +154,12 @@ public:
         return p;
     }
 
-    static std::string className; // Is set to "DIRKOrder3" in
-                                  // SchemeInitializor.cpp during program start
-                                  // up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eDIRKOrder3;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {

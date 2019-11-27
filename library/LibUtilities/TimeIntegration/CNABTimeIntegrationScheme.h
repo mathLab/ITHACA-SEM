@@ -1,5 +1,3 @@
-#pragma once
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: CNABTimeIntegrationScheme.h
@@ -35,17 +33,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#pragma once
 
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/IMEXdirkTimeIntegrationSchemes.h>
 
-#include <iostream>
-
-///////////////////////////////////////////////////////////////////////////////
-
 #define LUE LIB_UTILITIES_EXPORT
-
-///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar
 {
@@ -57,7 +50,6 @@ class CNABTimeIntegrationScheme : public TimeIntegrationScheme
 public:
     CNABTimeIntegrationScheme() : TimeIntegrationScheme()
     {
-        std::cout << "creating a CNABTimeIntegrationScheme\n";
         m_integration_phases    = TimeIntegrationSchemeDataVector(3);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -78,11 +70,8 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
-        std::cout << "CNABTimeIntegrationScheme::create()\n";
         TimeIntegrationSchemeSharedPtr p =
             MemoryManager<CNABTimeIntegrationScheme>::AllocateSharedPtr();
         return p;
@@ -90,19 +79,13 @@ public:
 
     static std::string className;
 
-    //////////////
-
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eCNAB;
     }
 
-    //////////////
-
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        std::cout << "SetupSchemeData for CNABTimeIntegrationScheme\n";
-
         phase->m_method     = TimeIntegrationMethod::eCNAB;
         phase->m_schemeType = eIMEX;
 

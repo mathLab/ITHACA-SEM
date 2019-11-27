@@ -26,21 +26,21 @@ docker-build:
       - /^docker\/.*$/
       - tags
   script:
-    - mkdir build && cd build &&                                \
-      cmake                                                     \
-      -DNEKTAR_BUILD_DEMOS=OFF                                  \
-      -DNEKTAR_BUILD_DOC=OFF                                    \
-      -DNEKTAR_BUILD_TESTS=OFF                                  \
-      -DNEKTAR_BUILD_UNIT_TESTS=OFF                             \
-      -DNEKTAR_BUILD_SOLVERS=ON                                 \
-      -DNEKTAR_BUILD_PYTHON=ON                                  \
-      -DCMAKE_INSTALL_PREFIX=/usr/local                         \
-      -DNEKTAR_USE_MESHGEN=ON                                   \
-      -DNEKTAR_USE_MPI=ON                                       \
-      -DNEKTAR_USE_ARPACK=ON                                    \
-      -DNEKTAR_USE_FFTW=ON                                      \
-      -DNEKTAR_USE_HDF5=ON                                      \
-      -DNEKTAR_USE_CCM=ON                                       \
-      .. &&                                                     \
+    - mkdir build && cd build &&
+      cmake
+      -DNEKTAR_BUILD_DEMOS=OFF
+      -DNEKTAR_BUILD_DOC=OFF
+      -DNEKTAR_BUILD_TESTS=OFF
+      -DNEKTAR_BUILD_UNIT_TESTS=OFF
+      -DNEKTAR_BUILD_SOLVERS=ON
+      -DNEKTAR_BUILD_PYTHON=ON
+      -DCMAKE_INSTALL_PREFIX=/usr/local
+      -DNEKTAR_USE_MESHGEN=ON
+      -DNEKTAR_USE_MPI=ON
+      -DNEKTAR_USE_ARPACK=ON
+      -DNEKTAR_USE_FFTW=ON
+      -DNEKTAR_USE_HDF5=ON
+      -DNEKTAR_USE_CCM=ON
+      .. &&
       make -j 2
     - cd build && make install

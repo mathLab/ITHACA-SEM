@@ -148,14 +148,13 @@ namespace Nektar
             Array<OneD, NekDouble >                             &outarray,
             Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >   &PrecMatVars,
             const DataType                                      &tmpDataType);
-        // void preconditioner_BlkDiag(
-        //     const Array<OneD, NekDouble> &inarray,
-        //     Array<OneD, NekDouble >&outarray);
+        template<typename DataType, typename TypeNekBlkMatSharedPtr>
+        void preconditioner_BlkDiag(
+            const Array<OneD, NekDouble>                        &inarray,
+            Array<OneD, NekDouble >                             &outarray,
+            TypeNekBlkMatSharedPtr                              &PrecMatVars,
+            const DataType                                      &tmpDataType);
             
-        void preconditioner_BlkDiagSingle(
-            const Array<OneD, NekDouble> &inarray,
-            Array<OneD, NekDouble >&outarray);
-
         void preconditioner_BlkSOR_coeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,
@@ -205,6 +204,7 @@ namespace Nektar
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
         void ElmtVarInvMtrx(
             Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> > &gmtxarray,
+            TypeNekBlkMatSharedPtr                            &gmtVar,
             const DataType                                    &tmpDatatype);
         
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
@@ -307,7 +307,8 @@ namespace Nektar
 
         template<typename TypeNekBlkMatSharedPtr>
         void AllocatePrecondBlkDiag_coeff(
-            Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> > &gmtxarray);
+            Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> > &gmtxarray,
+            const int                                          &nscale=1 );
 
         inline void AllocateNekBlkMatDig(
             SNekBlkMatSharedPtr                         &mat,
@@ -350,6 +351,7 @@ namespace Nektar
         void GetpreconditionerNSBlkDiag_coeff(
             const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
             Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >   &gmtxarray,
+            TypeNekBlkMatSharedPtr                              &gmtxVars,
             Array<OneD, TypeNekBlkMatSharedPtr >                &TraceJac,
             Array<OneD, TypeNekBlkMatSharedPtr >                &TraceJacDeriv,
             Array<OneD, Array<OneD, DataType> >                 &TraceJacDerivSign);

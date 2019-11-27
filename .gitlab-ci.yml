@@ -1,79 +1,17 @@
 stages:
   - docker-build-env
-  - docker-build-image
-  - docker-build-dev
-  - docker-test-image
-
-.docker_build_template: &docker_build_template
-  image: docker:stable
-  stage: docker-build-image
-  only:
-    - feature/gitlab_ci
-    - /^docker\/.*$/
-    - tags
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-  script:
-    - docker pull ${image_name} || true
-    - DOCKER_BUILDKIT=1 docker build -t ${image_name} -f ${dockerfile} .
-    - docker tag ${image_name} ${image_name}:$CI_COMMIT_SHORT_SHA
-    - docker push ${image_name}:$CI_COMMIT_SHORT_SHA
-    - if [ ! -z $CI_COMMIT_TAG ]; then docker tag ${image_name} ${image_name}:$CI_COMMIT_TAG; docker push ${image_name}:$CI_COMMIT_TAG; fi
-    - docker push ${image_name}:latest
-
-.docker-test-template: &docker_test_template
-  image: ${image_name}
-  stage: docker-test-image
-  only:
-    - feature/gitlab_ci
-    - /^docker\/.*$/
-    - tags
 
 docker-build-env:
-  <<: *docker_build_template
   stage: docker-build-env
   variables:
-    image_name: nektarpp/nektar-env
     dockerfile: docker/nektar-env/Dockerfile
+    image_name: nektarpp/nektar-env
+  tags:
+    - shell
   only:
     refs:
       - feature/gitlab_ci
       - /^docker\/.*$/
       - tags
-    changes:
-      - docker/nektar-env/Dockerfile
-
-docker-build-nektar:
-  <<: *docker_build_template
-  variables:
-    image_name: nektarpp/nektar
-    dockerfile: docker/nektar/Dockerfile
-    GIT_SUBMODULE_STRATEGY: normal
-
-docker-build-workbook:
-  <<: *docker_build_template
-  variables:
-    image_name: nektarpp/nektar-workbook
-    dockerfile: docker/nektar-workbook/Dockerfile
-
-docker-build-dev:
-  <<: *docker_build_template
-  stage: docker-build-dev
-  variables:
-    image_name: nektarpp/nektar-dev
-    dockerfile: docker/nektar-dev/Dockerfile
-
-docker-test-nektar:
-  <<: *docker_test_template
-  variables:
-    image_name: nektarpp/nektar
   script:
-    - mpirun -n 3 IncNavierStokesSolver $CI_PROJECT_DIR/solvers/IncNavierStokesSolver/Tests/ChanFlow_m3_par.xml
-
-docker-test-nektar-dev:
-  <<: *docker_test_template
-  variables:
-    image_name: nektarpp/nektar-dev
-  script:
-    - cd $CI_PROJECT_DIR/templates/executable
-    - ./test.sh /usr/local/lib64/nektar++/cmake 3
+    - docker build --cpu-period 100000 --cpu-quota 200000 -t ${image_name} -f ${dockerfile} .

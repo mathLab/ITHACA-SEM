@@ -1,5 +1,3 @@
-#pragma once
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: AdamsMoultonTimeIntegrationSchemes.h
@@ -36,14 +34,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define LUE LIB_UTILITIES_EXPORT
+#pragma once
 
-///////////////////////////////////////////////////////////////////////////////
+#define LUE LIB_UTILITIES_EXPORT
 
 #include <LibUtilities/TimeIntegration/EulerTimeIntegrationSchemes.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-
-///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar
 {
@@ -70,8 +66,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -79,22 +73,15 @@ public:
         return p;
     }
 
-    static std::string className; // Is set to "AdamsMoultonOrder1" in
-                                  // SchemeInitializor.cpp during program start
-                                  // up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eAdamsMoultonOrder1;
     }
 
-    //////////////
-
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        // FIXME: Is this the way we want to initialize this scheme?
         BackwardEulerTimeIntegrationScheme::SetupSchemeData(phase);
     }
 
@@ -124,8 +111,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -133,18 +118,12 @@ public:
         return p;
     }
 
-    static std::string className; // Is set to "AdamsMoultonOrder2" in
-                                  // SchemeInitializor.cpp during program start
-                                  // up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eAdamsMoultonOrder2;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
@@ -159,9 +138,8 @@ public:
 
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.5);
-        phase->m_B[0] = Array<TwoD, NekDouble>(
-            phase->m_numsteps, phase->m_numstages,
-            0.0); // Dd: In original line, 0.0 was not explicit...
+        phase->m_B[0] =
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
         phase->m_U =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
         phase->m_V =

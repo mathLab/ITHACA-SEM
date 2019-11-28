@@ -1,5 +1,3 @@
-#pragma once
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: MCNABTimeIntegrationScheme.h
@@ -35,13 +33,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#pragma once
+
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
-///////////////////////////////////////////////////////////////////////////////
-
 #define LUE LIB_UTILITIES_EXPORT
-
-///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar
 {
@@ -72,8 +68,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p =
@@ -81,20 +75,12 @@ public:
         return p;
     }
 
-    static std::string className; // FIXME:  Will be set in
-                                  // TimeIntegratorBase.cpp during program start
-                                  // up.
+    static std::string className;
 
-    //////////////
-
-    // Replaces (from TimeIntegrationScheme.h): return
-    // m_schemeKey.GetIntegrationMethod();
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eMCNAB;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {

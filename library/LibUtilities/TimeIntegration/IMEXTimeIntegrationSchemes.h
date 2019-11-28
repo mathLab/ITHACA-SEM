@@ -1,5 +1,3 @@
-#pragma once
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: IMEXTimeIntegrationSchemes.h
@@ -34,6 +32,10 @@
 // Description: Combined header file for all basic IMEX time integration
 // schemes.
 //
+///////////////////////////////////////////////////////////////////////////////
+
+#pragma once
+
 #define LUE LIB_UTILITIES_EXPORT
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>

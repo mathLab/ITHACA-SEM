@@ -101,8 +101,10 @@ namespace Nektar
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
             {
-                std::string methodName = m_session->GetSolverInfo( "TIMEINTEGRATIONMETHOD" );
-                m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( methodName );
+                std::string methodName = m_session->GetSolverInfo(
+                                                "TIMEINTEGRATIONMETHOD" );
+                m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory()
+                                                .CreateInstance( methodName );
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
@@ -111,7 +113,8 @@ namespace Nektar
                 m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
 
                 // Time tolerance between filter update time and time integration
-                m_session->LoadParameter("FilterTimeWarning", m_filterTimeWarning, 1);
+                m_session->LoadParameter("FilterTimeWarning",
+                                         m_filterTimeWarning, 1);
 
                 // Ensure that there is no conflict of parameters
                 if(m_cflSafetyFactor > 0.0)
@@ -240,9 +243,10 @@ namespace Nektar
                 fields[i] = m_fields[m_intVariables[i]]->GetPhys();
                 m_fields[m_intVariables[i]]->SetPhysState(false);
             }
-            
+
             // Initialise time integration scheme
-            m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields, m_time, m_ode );
+            m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields,
+                                                       m_time, m_ode );
 
             // Initialise filters
             for( auto &x : m_filters )
@@ -569,7 +573,9 @@ namespace Nektar
             AddSummaryItem( s, "Time Step", m_timestep );
             AddSummaryItem( s, "No. of Steps", m_steps );
             AddSummaryItem( s, "Checkpoints (steps)", m_checksteps );
-            AddSummaryItem( s, "Integration Type", LibUtilities::TimeIntegrationScheme::nameFromMethod( m_intScheme->GetIntegrationMethod() ) );
+            AddSummaryItem( s, "Integration Type", 
+                    LibUtilities::TimeIntegrationScheme::nameFromMethod(
+                                    m_intScheme->GetIntegrationMethod() ) );
         }
         
         /**

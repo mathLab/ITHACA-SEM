@@ -158,8 +158,9 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis)=0;
 
-       virtual void v_SubSteppingTimeIntegration(       int                                            intMethod,        
-                                                  const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme ) = 0;
+       virtual void v_SubSteppingTimeIntegration(
+                  int                                            intMethod,
+            const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme ) = 0;
 
         virtual void v_SubStepSaveFields(
             int nstep)=0;
@@ -169,9 +170,10 @@ namespace Nektar
             NekDouble Aii_DT,
             NekDouble kinvis)=0;
 
-        virtual void v_SubStepAdvance( const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr & integrationSoln, 
-                                             int                                                                     nstep, 
-                                             NekDouble                                                               time ) = 0;
+        virtual void v_SubStepAdvance(
+            const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr & integrationSoln, 
+                  int                                                                     nstep, 
+                  NekDouble                                                               time ) = 0;
 
         virtual void v_MountHOPBCs(
             int HBCdata, 

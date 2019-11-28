@@ -470,9 +470,9 @@ namespace Nektar
      *
      */
     void UnsteadyAdvectionDiffusion::SubStepAdvance(
-                       const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln,
-                       int nstep,
-                       NekDouble time)
+        const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln,
+        int nstep,
+        NekDouble time)
     {
         int n;
         int nsubsteps;
@@ -518,7 +518,9 @@ namespace Nektar
 
             for(n = 0; n < nsubsteps; ++n)
             {
-                fields = m_subStepIntegrationScheme->TimeIntegrate( n, dt, SubIntegrationSoln, m_subStepIntegrationOps );
+                fields = m_subStepIntegrationScheme->TimeIntegrate(
+                                                n, dt, SubIntegrationSoln,
+                                                m_subStepIntegrationOps );
             }
 
             // Reset time integrated solution in m_integrationSoln
@@ -558,8 +560,8 @@ namespace Nektar
     }
 
     void UnsteadyAdvectionDiffusion::SetUpSubSteppingTimeIntegration(
-                                                                     int intMethod,
-                                                                     const LibUtilities::TimeIntegrationSchemeSharedPtr &IntegrationScheme)
+        int intMethod,
+        const LibUtilities::TimeIntegrationSchemeSharedPtr &IntegrationScheme)
     {
         // Set to 1 for first step and it will then be increased in
         // time advance routines
@@ -568,16 +570,21 @@ namespace Nektar
         case LibUtilities::eBackwardEuler:
         case LibUtilities::eBDFImplicitOrder1:
             {
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( "ForwardEuler" );
+                m_subStepIntegrationScheme =
+                    LibUtilities::GetTimeIntegrationSchemeFactory()
+                                .CreateInstance( "ForwardEuler" );
             }
             break;
         case LibUtilities::eBDFImplicitOrder2:
             {
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( "RungeKutta2_ImprovedEuler" );
+                m_subStepIntegrationScheme =
+                    LibUtilities::GetTimeIntegrationSchemeFactory()
+                                .CreateInstance( "RungeKutta2_ImprovedEuler" );
             }
             break;
         default:
-            ASSERTL0(0,"Integration method not suitable: Options include BackwardEuler or BDFImplicitOrder1");
+            NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "
+                    "Options include BackwardEuler or BDFImplicitOrder1");
             break;
         }
         m_intSteps = IntegrationScheme->GetNumIntegrationPhases();

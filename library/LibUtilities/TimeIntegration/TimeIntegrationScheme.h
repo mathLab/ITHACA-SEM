@@ -1,5 +1,3 @@
-#pragma once
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: TimeIntegrationScheme.h
@@ -34,8 +32,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H
-#define NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H
+#pragma once
 
 #include <string>
 
@@ -280,4 +277,3 @@ LUE std::ostream &operator<<(std::ostream &os,
 } // end of namespace LibUtilities
 } // end of namespace Nektar
 
-#endif

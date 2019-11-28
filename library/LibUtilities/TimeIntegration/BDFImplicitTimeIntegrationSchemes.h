@@ -1,5 +1,3 @@
-#pragma once
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: BDFImplicitTimeIntegrationSchemes.h
@@ -36,14 +34,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define LUE LIB_UTILITIES_EXPORT
+#pragma once
 
-///////////////////////////////////////////////////////////////////////////////
+#define LUE LIB_UTILITIES_EXPORT
 
 #include <LibUtilities/TimeIntegration/EulerTimeIntegrationSchemes.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-
-///////////////////////////////////////////////////////////////////////////////
 
 namespace Nektar
 {
@@ -70,8 +66,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -79,22 +73,15 @@ public:
         return p;
     }
 
-    static std::string className; // Is set to "BDFImplicitOrder1" in
-                                  // SchemeInitializor.cpp during program start
-                                  // up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eBDFImplicitOrder1;
     }
 
-    //////////////
-
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        // FIXME: Dd? Correct way to do this?
         BackwardEulerTimeIntegrationScheme::SetupSchemeData(phase);
     }
 
@@ -124,8 +111,6 @@ public:
     {
     }
 
-    /////////////
-
     static TimeIntegrationSchemeSharedPtr create()
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -133,18 +118,12 @@ public:
         return p;
     }
 
-    static std::string className; // Is set to "BDFImplicitOrder2" in
-                                  // SchemeInitializor.cpp during program start
-                                  // up.
-
-    //////////////
+    static std::string className;
 
     LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
     {
         return TimeIntegrationMethod::eBDFImplicitOrder2;
     }
-
-    //////////////
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {

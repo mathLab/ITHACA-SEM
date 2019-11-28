@@ -84,8 +84,9 @@ namespace Nektar
     }
 
 
-    void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(       int                                            intMethod,
-                                                               const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme )
+    void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(
+              int                                            intMethod,
+        const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme )
     {
         // Set to 1 for first step and it will then be increased in
         // time advance routines
@@ -312,9 +313,10 @@ namespace Nektar
     /**
      *
      */
-    void SubSteppingExtrapolate::v_SubStepAdvance( const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln,
-                                                   int nstep,
-                                                   NekDouble time )
+    void SubSteppingExtrapolate::v_SubStepAdvance(
+        const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln,
+        int nstep,
+        NekDouble time )
     {
         int n;
         int nsubsteps;

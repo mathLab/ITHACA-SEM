@@ -32,8 +32,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEMEOPERATORS_H
-#define NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEMEOPERATORS_H
+#pragma once
 
 #include <string>
 
@@ -170,4 +169,3 @@ private:
 }
 }
 
-#endif

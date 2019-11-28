@@ -88,8 +88,9 @@ namespace Nektar
                                            const Array<OneD, const Array<OneD, NekDouble> >  &N,
                                            NekDouble kinvis);
 
-        virtual void v_SubSteppingTimeIntegration(       int                                            intMethod,
-                                                   const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme );
+        virtual void v_SubSteppingTimeIntegration(
+                  int                                            intMethod,
+            const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme );
  
         virtual void v_SubStepSaveFields(
             int nstep);

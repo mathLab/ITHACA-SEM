@@ -40,7 +40,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <SolverUtils/AdvectionSystem.h>
 
 
@@ -89,7 +89,7 @@ namespace Nektar
 
         inline void SubSteppingTimeIntegration(
             const int intMethod,
-            const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme);
+            const LibUtilities::TimeIntegrationSchemeSharedPtr &IntegrationScheme);
 
         inline void SubStepSaveFields(
             const int nstep);
@@ -100,7 +100,7 @@ namespace Nektar
             NekDouble kinvis);
 
         inline void SubStepAdvance(
-            const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
+            const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln, 
             const int nstep, 
             NekDouble time);
 
@@ -159,8 +159,8 @@ namespace Nektar
             NekDouble kinvis)=0;
 
        virtual void v_SubSteppingTimeIntegration(
-            int intMethod,        
-            const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)=0;
+                  int                                            intMethod,
+            const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme ) = 0;
 
         virtual void v_SubStepSaveFields(
             int nstep)=0;
@@ -171,9 +171,9 @@ namespace Nektar
             NekDouble kinvis)=0;
 
         virtual void v_SubStepAdvance(
-            const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-            int nstep, 
-            NekDouble time)=0;
+            const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr & integrationSoln, 
+                  int                                                                     nstep, 
+                  NekDouble                                                               time ) = 0;
 
         virtual void v_MountHOPBCs(
             int HBCdata, 
@@ -349,7 +349,7 @@ namespace Nektar
      */
     inline void Extrapolate::SubSteppingTimeIntegration(
         int intMethod,
-        const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
+        const LibUtilities::TimeIntegrationSchemeSharedPtr &IntegrationScheme)
     {
         v_SubSteppingTimeIntegration(intMethod, IntegrationScheme);
     }
@@ -378,7 +378,7 @@ namespace Nektar
      *
      */
     inline void Extrapolate::SubStepAdvance(
-        const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
+        const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln, 
         int nstep, 
         NekDouble time)
     {

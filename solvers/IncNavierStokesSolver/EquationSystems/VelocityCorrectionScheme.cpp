@@ -490,12 +490,10 @@ namespace Nektar
         SolverUtils::AddSummaryItem(s,
                 "Splitting Scheme", "Velocity correction (strong press. form)");
 
-        if (m_extrapolation->GetSubStepIntegrationMethod() !=
-            LibUtilities::eNoTimeIntegrationMethod)
+        if( m_extrapolation->GetSubStepIntegrationMethod() != LibUtilities::eNoTimeIntegrationMethod )
         {
-            SolverUtils::AddSummaryItem(s, "Substepping",
-                             LibUtilities::TimeIntegrationMethodMap[
-                              m_extrapolation->GetSubStepIntegrationMethod()]);
+            SolverUtils::AddSummaryItem( s, "Substepping",
+                                         LibUtilities::TimeIntegrationScheme::nameFromMethod( m_extrapolation->GetSubStepIntegrationMethod() ) );
         }
 
         string dealias = m_homogen_dealiasing ? "Homogeneous1D" : "";

@@ -33,7 +33,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.h>
+
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 
 using namespace std;
 
@@ -83,26 +85,24 @@ namespace Nektar
 
 
     void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(
-        int intMethod,
-        const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
+              int                                            intMethod,
+        const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme )
     {
-        int i;
-
         // Set to 1 for first step and it will then be increased in
         // time advance routines
-        switch(intMethod)
+        switch( intMethod )
         {
             case LibUtilities::eBackwardEuler:
             case LibUtilities::eBDFImplicitOrder1:
             {
                 std::string vSubStepIntScheme = "ForwardEuler";
 
-                if(m_session->DefinesSolverInfo("SubStepIntScheme"))
+                if( m_session->DefinesSolverInfo( "SubStepIntScheme" ) )
                 {
-                    vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
+                    vSubStepIntScheme = m_session->GetSolverInfo( "SubStepIntScheme" );
                 }
 
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(vSubStepIntScheme);
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( vSubStepIntScheme );
 
                 int nvel = m_velocity.num_elements();
 
@@ -110,7 +110,7 @@ namespace Nektar
                 m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*nvel);
                 int ntotpts  = m_fields[0]->GetTotPoints();
                 m_previousVelFields[0] = Array<OneD, NekDouble>(2*nvel*ntotpts);
-                for(i = 1; i < 2*nvel; ++i)
+                for( int i = 1; i < 2*nvel; ++i )
                 {
                     m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts;
                 }
@@ -126,7 +126,7 @@ namespace Nektar
                     vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
                 }
 
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(vSubStepIntScheme);
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( vSubStepIntScheme );
 
                 int nvel = m_velocity.num_elements();
 
@@ -135,7 +135,7 @@ namespace Nektar
 
                 int ntotpts  = m_fields[0]->GetTotPoints();
                 m_previousVelFields[0] = Array<OneD, NekDouble>(3*nvel*ntotpts);
-                for(i = 1; i < 3*nvel; ++i)
+                for( int i = 1; i < 3*nvel; ++i )
                 {
                     m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts;
                 }
@@ -147,7 +147,7 @@ namespace Nektar
                 break;
         }
 
-        m_intSteps = IntegrationScheme->GetIntegrationSteps();
+        m_intSteps = IntegrationScheme->GetNumIntegrationPhases();
 
         // set explicit time-integration class operators
         m_subStepIntegrationOps.DefineOdeRhs(&SubSteppingExtrapolate::SubStepAdvection, this);
@@ -314,9 +314,9 @@ namespace Nektar
      *
      */
     void SubSteppingExtrapolate::v_SubStepAdvance(
-                                                  const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln,
-                                                  int nstep,
-                                                  NekDouble time)
+        const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln,
+        int nstep,
+        NekDouble time )
     {
         int n;
         int nsubsteps;
@@ -356,9 +356,8 @@ namespace Nektar
             // Initialise NS solver which is set up to use a GLM method
             // with calls to EvaluateAdvection_SetPressureBCs and
             // SolveUnsteadyStokesSystem
-            LibUtilities::TimeIntegrationSolutionSharedPtr
-                SubIntegrationSoln = m_subStepIntegrationScheme->
-                InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
+            LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr
+                SubIntegrationSoln = m_subStepIntegrationScheme->InitializeScheme( dt, fields, time, m_subStepIntegrationOps );
 
             for(n = 0; n < nsubsteps; ++n)
             {

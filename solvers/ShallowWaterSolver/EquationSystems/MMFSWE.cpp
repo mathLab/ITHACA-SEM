@@ -279,8 +279,7 @@ void MMFSWE::v_DoSolve()
     }
 
     // Initialise time integration scheme
-    m_intSoln =
-        m_intScheme->InitializeScheme(m_timestep, fields, m_time, m_ode);
+    m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields, m_time, m_ode );
 
     // Check uniqueness of checkpoint output
     ASSERTL0((m_checktime == 0.0 && m_checksteps == 0) ||
@@ -3302,4 +3301,5 @@ void MMFSWE::v_GenerateSummary(SolverUtils::SummaryList &s)
             break;
     }
 }
-}
+
+} // end namespace Nektar

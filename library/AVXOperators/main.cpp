@@ -50,7 +50,7 @@ std::pair<MultiRegions::ExpListSharedPtr, MultiRegions::AssemblyMapSharedPtr> Se
 
     if (useOrtho)
     {
-        SpatialDomains::ExpansionMap expMap = graph->GetExpansions();
+        SpatialDomains::ExpansionInfoMap expMap = graph->GetExpansions();
         for (auto &expIt : expMap)
         {
             auto exp = expIt.second;
@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
 
     libxsmm_init();
 
-    MultiRegions::VECTOR_WIDTH_GLOBAL = 4;
+    // MultiRegions::AVX_VECTOR_SIZE = 4;
 
     // Read in mesh
     SpatialDomains::MeshGraphSharedPtr graph =

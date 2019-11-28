@@ -343,6 +343,15 @@ INSTALL(DIRECTORY ${TPDIST}/include/
     OPTIONAL
     )
 
+# Install ThirdParty libraries into ${NEKTAR_LIB_DIR}. These are shipped with
+# the LibUtilities library.
+IF (EXISTS ${TPDIST}/lib)
+    INSTALL(DIRECTORY ${TPDIST}/lib/
+        DESTINATION ${NEKTAR_LIB_DIR}
+        COMPONENT libutilities
+        )
+ENDIF()
+
 ADD_SUBDIRECTORY(docs)
 
 IF(NEKTAR_BUILD_PACKAGES)

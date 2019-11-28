@@ -206,14 +206,14 @@ void ConjugateGradient(
             if (k == maxiter)
             {
                 std::cout << "failed to converge" << std::endl;
-            }   
+            }
         }
         else
         {
             std::cout << dof / elapsed << std::endl;
         }
     }
-    
+
 }
 
 std::pair<MultiRegions::ExpListSharedPtr, MultiRegions::AssemblyMapSharedPtr> SetupExpList(
@@ -343,8 +343,8 @@ int main(int argc, char *argv[])
 
     libxsmm_init();
 
-    MultiRegions::VECTOR_WIDTH_GLOBAL = 4;
-    
+    MultiRegions::AVX_VECTOR_SIZE = 4;
+
     // Read in mesh
     SpatialDomains::MeshGraphSharedPtr graph =
         SpatialDomains::MeshGraph::Read(session);

@@ -137,16 +137,21 @@ namespace Nektar
             SNekBlkMatSharedPtr                             m_PrecMatSingle;
 
             bool                                            m_flagPrecMatVarsSingle;
+            bool                                            m_flagPrecondCacheOptmis;
 
             Array<OneD, DNekBlkMatSharedPtr >               m_TraceJac;
+            Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble >>>>  m_TraceJacArray;
 
             Array<OneD, DNekBlkMatSharedPtr >               m_TraceJacDeriv;
+            Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble >>>>  m_TraceJacDerivArray;
 
             Array<OneD,       Array<OneD, NekDouble> >      m_TraceJacDerivSign;
 
             Array<OneD, SNekBlkMatSharedPtr >               m_TraceJacSingle;
+            Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle >>>>  m_TraceJacArraySingle;
 
             Array<OneD, SNekBlkMatSharedPtr >               m_TraceJacDerivSingle;
+            Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle >>>>  m_TraceJacDerivArraySingle;
 
             Array<OneD,       Array<OneD, NekSingle> >      m_TraceJacDerivSignSingle;
 

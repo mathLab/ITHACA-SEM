@@ -6,7 +6,7 @@ docker-build-env:
   stage: docker-build-env
   variables:
     dockerfile: docker/nektar-env/Dockerfile
-    image_name: nektarpp/nektar-env
+    image_name: nektar-env
   tags:
     - shell
   only:
@@ -19,13 +19,14 @@ docker-build-env:
 
 docker-build:
   stage: docker-build
-  image: nektarpp/nektar-env
+  image: nektar-env
   only:
     refs:
       - feature/gitlab_ci
       - /^docker\/.*$/
       - tags
   script:
+    - mkdir ~/.ccache && echo "cache_dir = /cache/nektar" >> ~/.ccache/ccache.conf
     - mkdir build && cd build &&
       cmake
       -DNEKTAR_BUILD_DEMOS=OFF
@@ -43,4 +44,3 @@ docker-build:
       -DNEKTAR_USE_CCM=ON
       .. &&
       make -j 2
-    - cd build && make install

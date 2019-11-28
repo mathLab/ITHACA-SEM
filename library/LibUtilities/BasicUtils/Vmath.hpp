@@ -142,9 +142,6 @@ namespace Vmath
     
     /********** Triad  routines  ***********************/
 
-    // Note: For de-coding of the following function names, see Reverse Polish Notation (RPN)
-    //       discussion at top of file.
-
     /// \brief  vvtvp (vector times vector plus vector): z = w*x + y
     template<class T> LIB_UTILITIES_EXPORT void Vvtvp( int n, 
                                                        const T *w, const int incw, 

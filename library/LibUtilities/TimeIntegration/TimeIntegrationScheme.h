@@ -175,8 +175,8 @@ public:
                                const NekDouble, const NekDouble)>
         FunctorType2;
 
-    static TimeIntegrationMethod methodFromName(const std::string &name);
-    static std::string nameFromMethod(const TimeIntegrationMethod method);
+    LUE static TimeIntegrationMethod methodFromName(const std::string &name);
+    LUE static std::string nameFromMethod(const TimeIntegrationMethod method);
 
     unsigned int GetNumIntegrationPhases() const
     {
@@ -193,7 +193,7 @@ public:
 
     virtual TimeIntegrationMethod GetIntegrationMethod() const = 0;
 
-    TimeIntegrationSchemeType GetIntegrationSchemeType() const;
+    LUE TimeIntegrationSchemeType GetIntegrationSchemeType() const;
 
     static const char *const TimeIntegrationMethodMap[36];
 
@@ -241,11 +241,11 @@ protected:
         const TimeIntegrationSchemeOperators &op);
 
     // This should never be used directly... only used by child classes...
-    TimeIntegrationScheme()
+    LUE TimeIntegrationScheme()
     {
     }
 
-    TimeIntegrationScheme(const TimeIntegrationScheme &in)
+    LUE TimeIntegrationScheme(const TimeIntegrationScheme &in)
     {
         boost::ignore_unused(in);
         NEKERROR(ErrorUtil::efatal, "Copy Constructor for the "

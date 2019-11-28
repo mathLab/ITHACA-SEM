@@ -193,12 +193,12 @@ int main( int argc, char *argv[] )
     po::options_description desc("Usage:");
     desc.add_options()
         ("help,h",      "Produce this help message.")
-        ("Npoints,p",    po::value<int>(),
+        ("points,p",     po::value<int>(),
                         "Number of grid points to be used.")
-        ("Ntimesteps,t", po::value<int>(),
+        ("timesteps,t",  po::value<int>(),
                         "Number of timesteps to be used.")
-        ("TimeIntegrationMethod,m",    po::value<int>(),
-                    "TimeIntegrationMethod is a number in the range [1,8].\n"
+        ("method,m",     po::value<int>(),
+                    "TimeIntegrationMethod is a number in the range [1,9].\n"
                     "It defines the time-integration method to be used:\n"
                     "- 1: 1st order multi-step IMEX scheme\n"
                     "     (Euler Backwards/Euler Forwards)\n"
@@ -226,16 +226,16 @@ int main( int argc, char *argv[] )
         return 1;
     }
 
-    if( !vm.count("Npoints") || !vm.count("Ntimesteps") || !vm.count("TimeIntegrationMethod") || vm.count("help") )
+    if( !vm.count("points") || !vm.count("timesteps") || !vm.count("method") || vm.count("help") )
     {
         cout << "Please specify points, timesteps and method.\n\n";
         cout << desc;
         return 1;
     }
 
-    int nPoints    = vm["Npoints"].as<int>();
-    int nTimesteps = vm["Ntimesteps"].as<int>();
-    int nMethod    = vm["TimeIntegrationMethod"].as<int>();
+    int nPoints    = vm["points"].as<int>();
+    int nTimesteps = vm["timesteps"].as<int>();
+    int nMethod    = vm["method"].as<int>();
 
     // Open a file for writing the solution
     ofstream outfile;

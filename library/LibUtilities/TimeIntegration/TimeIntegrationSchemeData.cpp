@@ -52,7 +52,7 @@ namespace Nektar
 {
 namespace LibUtilities
 {
-// FIXME: Dd: this probably should be in Scheme, not SchemeData...
+
 bool TimeIntegrationSchemeData::VerifyIntegrationSchemeType(
     TimeIntegrationSchemeType type,
     const Array<OneD, const Array<TwoD, NekDouble>> &A,
@@ -60,7 +60,7 @@ bool TimeIntegrationSchemeData::VerifyIntegrationSchemeType(
     const Array<TwoD, const NekDouble> &U,
     const Array<TwoD, const NekDouble> &V)
 {
-    boost::ignore_unused(U, V);
+    boost::ignore_unused(B, U, V);
 
     int IMEXdim = A.num_elements();
     int dim     = A[0].GetRows();
@@ -815,11 +815,16 @@ bool TimeIntegrationSchemeData::CheckIfLastStageEqualsNewSolution(
     return true;
 }
 
-bool TimeIntegrationSchemeData::CheckTimeIntegrateArguments( // const NekDouble
-                                                             // timestep,
-    ConstTripleArray &y_old, ConstSingleArray &t_old, TripleArray &y_new,
-    SingleArray &t_new, const TimeIntegrationSchemeOperators &op) const
+bool TimeIntegrationSchemeData::CheckTimeIntegrateArguments(
+          ConstTripleArray &y_old,
+          ConstSingleArray &t_old,
+          TripleArray &y_new,
+          SingleArray &t_new,
+    const TimeIntegrationSchemeOperators &op) const
 {
+#ifndef DEBUG
+    boost::ignore_unused(y_old, t_old, y_new, t_new, op);
+#endif
     boost::ignore_unused(op);
 
     // Check if arrays are all of consistent size

@@ -28,7 +28,7 @@ docker-build:
       - tags
   script:
     - mkdir ~/.ccache && echo "cache_dir = /cache/nektar" >> ~/.ccache/ccache.conf
-    - mkdir build && cd build &&
+    - mkdir build && (cd build &&
       cmake
       -DCMAKE_BUILD_TYPE:STRING=Debug
       -DNEKTAR_FULL_DEBUG:BOOL=ON
@@ -46,7 +46,7 @@ docker-build:
       -DNEKTAR_TEST_USE_HOSTFILE=ON
       -DNEKTAR_ERROR_ON_WARNINGS=OFF
       .. &&
-      make -j 2
+      make -j 2)
     - tar -czf build.tar.gz --exclude="*.o" build
   artifacts:
     untracked: true

@@ -1,6 +1,7 @@
 stages:
   - docker-build-env
   - docker-build
+  - docker-test
 
 docker-build-env:
   stage: docker-build-env
@@ -46,3 +47,15 @@ docker-build:
       -DNEKTAR_ERROR_ON_WARNINGS=OFF
       .. &&
       make -j 2
+    - tar -czf build.tar.gz --exclude="*.o" build
+  artifacts:
+    untracked: true
+
+docker-test:
+  stage: docker-test
+  image: nektar-environment
+  dependencies:
+    - docker-build
+  script:
+    - tar xf build.tar.gz
+    - cd build && ctest -j 2

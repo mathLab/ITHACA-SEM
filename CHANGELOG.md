@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v5.1.0
+------
+**Library**
+- Refactored time integration code using factory pattern (!1034)
+
 v5.0.0
 ------
 **Library**

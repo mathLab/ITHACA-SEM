@@ -54,7 +54,7 @@ docker-build:
 
 docker-test:
   stage: docker-test
-  image: nektar-environment
+  image: nektar-env
   dependencies:
     - docker-build
   script:

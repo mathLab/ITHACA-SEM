@@ -58,14 +58,14 @@ public:
     {
     }
 
-    friend std::ostream &operator<<(std::ostream &os,
+    LUE friend std::ostream &operator<<(std::ostream &os,
                                     const TimeIntegrationScheme &rhs);
-    friend std::ostream &operator<<(std::ostream &os,
+    LUE friend std::ostream &operator<<(std::ostream &os,
                                     const TimeIntegrationSchemeSharedPtr &rhs);
 
-    friend std::ostream &operator<<(std::ostream &os,
+    LUE friend std::ostream &operator<<(std::ostream &os,
                                     const TimeIntegrationSchemeData &rhs);
-    friend std::ostream &operator<<(
+    LUE friend std::ostream &operator<<(
         std::ostream &os,
         const TimeIntegrationScheme::TimeIntegrationSchemeDataSharedPtr &rhs);
 

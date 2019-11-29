@@ -711,13 +711,13 @@ namespace Nektar
             ASSERTL0(nvariables*npoints==ntotpnt,"nvariables*npoints==ntotpnt not satisfied in preconditioner_BlkSOR");
 
 
-            Array<OneD, NekDouble> rhs(ntotpnt,0.0);
+            Array<OneD, NekDouble> rhs(ntotpnt);
             // Vmath::Vcopy(ntotpnt,inarray,1,rhs,1);
 
             PointerWrapper pwrapp = eWrapper;
 
-            Array<OneD, NekDouble>  outN(ntotpnt,0.0);
-            Array<OneD, NekDouble>  outTmp(ntotpnt,0.0);
+            Array<OneD, NekDouble>  outN(ntotpnt);
+            Array<OneD, NekDouble>  outTmp(ntotpnt);
             Array<OneD, Array<OneD, NekDouble> >rhs2d(nvariables);
             Array<OneD, Array<OneD, NekDouble> >out_2d(nvariables);
             Array<OneD, Array<OneD, NekDouble> >outTmp_2d(nvariables);
@@ -738,7 +738,7 @@ namespace Nektar
                 qfield[i]   =   Array<OneD, Array<OneD, NekDouble> >(nvariables);
                 for(int j = 0; j< nvariables; j++)
                 {
-                    qfield[i][j]   =   Array<OneD, NekDouble>(nphysic,0.0);
+                    qfield[i][j]   =   Array<OneD, NekDouble>(nphysic);
                 }
             }
             int ntmpTrace = 4+2*m_spacedim;
@@ -748,15 +748,15 @@ namespace Nektar
                 tmpTrace[i]   =   Array<OneD, Array<OneD, NekDouble> >(nvariables);
                 for(int j = 0; j< nvariables; j++)
                 {
-                    tmpTrace[i][j]   =   Array<OneD, NekDouble>(nTracePts,0.0);
+                    tmpTrace[i][j]   =   Array<OneD, NekDouble>(nTracePts);
                 }
             }
             Array<OneD, Array<OneD, NekDouble> > FwdFluxDeriv(nvariables);
             Array<OneD, Array<OneD, NekDouble> > BwdFluxDeriv(nvariables);
             for(int j = 0; j< nvariables; j++)
             {
-                FwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts,0.0);
-                BwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts,0.0);
+                FwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts);
+                BwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts);
             }
 
             bool flagUpdateDervFlux = false;
@@ -766,43 +766,56 @@ namespace Nektar
                 flagUpdateDervFlux = false;
             }
 
+            const int nwspTraceDataType = nvariables+1;
             if(m_flagPrecMatVarsSingle)
             {
                 NekSingle tmpSingle;
                 if(m_flagPrecondCacheOptmis)
                 {
+                    Array<OneD, Array<OneD, NekSingle> > wspTraceDataType(nwspTraceDataType);
+                    for(int m=0;m<nwspTraceDataType;m++)
+                    {
+                        wspTraceDataType[m] =   Array<OneD, NekSingle>(nTracePts);
+                    }
+
                     preconditioner_BlkDiag(rhs,outarray,m_PrecMatSingle,tmpSingle);
+
+                    for(int nsor = 0; nsor < nSORTot-1; nsor++)
+                    {
+                        Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
+                        
+                        MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
+                                        wspTraceDataType,m_TraceJacArraySingle, m_TraceJacDerivArraySingle, m_TraceJacDerivSignSingle);
+
+                        // Vmath::Zero(ntotpnt,outTmp,1);
+                        preconditioner_BlkDiag(outarray,outTmp,m_PrecMatSingle,tmpSingle);
+                        Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
+                        if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+                        {
+                            flagUpdateDervFlux = true;
+                            flagUpdateDervFlux = false;
+                        }
+                    }
                 }
                 else
                 {
                     preconditioner_BlkDiag(rhs,outarray,m_PrecMatVarsSingle,tmpSingle);
-                }
 
-                for(int nsor = 0; nsor < nSORTot-1; nsor++)
-                {
-                    Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
-                    
-                    if(m_flagPrecondCacheOptmis)
+                    for(int nsor = 0; nsor < nSORTot-1; nsor++)
                     {
-                        MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
-                                        m_TraceJacArraySingle, m_TraceJacDerivArraySingle, m_TraceJacDerivSignSingle);
-
-                        Vmath::Zero(ntotpnt,outTmp,1);
-                        preconditioner_BlkDiag(outarray,outTmp,m_PrecMatSingle,tmpSingle);
-                    }
-                    else
-                    {
+                        Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
+                        
                         MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
                                         m_TraceJacSingle, m_TraceJacDerivSingle, m_TraceJacDerivSignSingle);
 
-                        Vmath::Zero(ntotpnt,outTmp,1);
+                        // Vmath::Zero(ntotpnt,outTmp,1);
                         preconditioner_BlkDiag(outarray,outTmp,m_PrecMatVarsSingle,tmpSingle);
-                    }
-                    Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
-                    if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
-                    {
-                        flagUpdateDervFlux = true;
-                        flagUpdateDervFlux = false;
+                        Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
+                        if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+                        {
+                            flagUpdateDervFlux = true;
+                            flagUpdateDervFlux = false;
+                        }
                     }
                 }
             }
@@ -811,37 +824,50 @@ namespace Nektar
                 NekDouble tmpDouble;
                 if(m_flagPrecondCacheOptmis)
                 {
+                    Array<OneD, Array<OneD, NekDouble> > wspTraceDataType(nwspTraceDataType);
+                    for(int m=0;m<nwspTraceDataType;m++)
+                    {
+                        wspTraceDataType[m] =   Array<OneD, NekDouble>(nTracePts);
+                    }
+
                     preconditioner_BlkDiag(rhs,outarray,m_PrecMat,tmpDouble);
+
+                    for(int nsor = 0; nsor < nSORTot-1; nsor++)
+                    {
+                        Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
+                        
+                        MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
+                                        wspTraceDataType, m_TraceJacArray, m_TraceJacDerivArray, m_TraceJacDerivSign);
+
+                        // Vmath::Zero(ntotpnt,outTmp,1);
+                        preconditioner_BlkDiag(outarray,outTmp,m_PrecMat,tmpDouble);
+                        Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
+                        if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+                        {
+                            flagUpdateDervFlux = true;
+                            flagUpdateDervFlux = false;
+                        }
+                    }
                 }
                 else
                 {
                     preconditioner_BlkDiag(rhs,outarray,m_PrecMatVars,tmpDouble);
-                }
-                for(int nsor = 0; nsor < nSORTot-1; nsor++)
-                {
-                    Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
-                    
-                    if(m_flagPrecondCacheOptmis)
-                    {
-                        MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
-                                        m_TraceJacArray, m_TraceJacDerivArray, m_TraceJacDerivSign);
 
-                        Vmath::Zero(ntotpnt,outTmp,1);
-                        preconditioner_BlkDiag(outarray,outTmp,m_PrecMat,tmpDouble);
-                    }
-                    else
+                    for(int nsor = 0; nsor < nSORTot-1; nsor++)
                     {
+                        Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
+                        
                         MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
                                         m_TraceJac, m_TraceJacDeriv, m_TraceJacDerivSign);
 
-                        Vmath::Zero(ntotpnt,outTmp,1);
+                        // Vmath::Zero(ntotpnt,outTmp,1);
                         preconditioner_BlkDiag(outarray,outTmp,m_PrecMatVars,tmpDouble);
-                    }
-                    Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
-                    if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
-                    {
-                        flagUpdateDervFlux = true;
-                        flagUpdateDervFlux = false;
+                        Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
+                        if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+                        {
+                            flagUpdateDervFlux = true;
+                            flagUpdateDervFlux = false;
+                        }
                     }
                 }
             }
@@ -1048,7 +1074,8 @@ namespace Nektar
             Array<OneD,       Array<OneD, NekDouble> >                          &FwdFluxDeriv,
             Array<OneD,       Array<OneD, NekDouble> >                          &BwdFluxDeriv,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &qfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &tmpTrace,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &wspTrace,
+            Array<OneD, Array<OneD, DataType > >                                &wspTraceDataType,
             const Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>     &TraceJacArray,
             const Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>     &TraceJacDerivArray,
             const Array<OneD, Array<OneD, DataType> >                           &TraceJacDerivSign)
@@ -1064,32 +1091,24 @@ namespace Nektar
             outpnts[i]  =  Array<OneD, NekDouble> (npoints,0.0);
             m_fields[i]->BwdTrans(outarray[i],outpnts[i]);
         }
-
-        for(int i = 0; i< m_spacedim; i++)
-        {
-            for(int j = 0; j< nConvectiveFields; j++)
-            {
-                Vmath::Zero(npoints,qfield[i][j],1);
-            }
-        }
-        for(int i = 0; i< tmpTrace.num_elements(); i++)
-        {
-            for(int j = 0; j< nConvectiveFields; j++)
-            {
-                Vmath::Zero(nTracePts,tmpTrace[i][j],1);
-            }
-        }
+        // for(int i = 0; i< tmpTrace.num_elements(); i++)
+        // {
+        //     for(int j = 0; j< nConvectiveFields; j++)
+        //     {
+        //         Vmath::Zero(nTracePts,tmpTrace[i][j],1);
+        //     }
+        // }
 
         // Store forwards/backwards space along trace space
         Array<OneD, Array<OneD, NekDouble> > Fwd    ;
         Array<OneD, Array<OneD, NekDouble> > Bwd    ;
         Array<OneD, Array<OneD, NekDouble> > FwdFlux;
         Array<OneD, Array<OneD, NekDouble> > BwdFlux;
-        int indextmpTrace = 0;
-        Fwd     =   tmpTrace[indextmpTrace], indextmpTrace++;
-        Bwd     =   tmpTrace[indextmpTrace], indextmpTrace++;
-        FwdFlux =   tmpTrace[indextmpTrace], indextmpTrace++;
-        BwdFlux =   tmpTrace[indextmpTrace], indextmpTrace++;
+        int indexwspTrace = 0;
+        Fwd     =   wspTrace[indexwspTrace], indexwspTrace++;
+        Bwd     =   wspTrace[indexwspTrace], indexwspTrace++;
+        FwdFlux =   wspTrace[indexwspTrace], indexwspTrace++;
+        BwdFlux =   wspTrace[indexwspTrace], indexwspTrace++;
        
         for(int i = 0; i < nvariables; ++i)
         {
@@ -1100,13 +1119,15 @@ namespace Nektar
         if(1!=m_DebugVolTraceSwitch)
         {
 #endif
+        int indexwspTraceDataType = 0;
         Array<OneD, Array<OneD, DataType> > Fwdarray (nvariables);
         for(int m = 0; m < nvariables; ++m)
         {
-            Fwdarray[m] = Array<OneD, DataType> (nTracePts);
+            Fwdarray[m] = wspTraceDataType[indexwspTraceDataType], indexwspTraceDataType++;
         }
-        Array<OneD, DataType> Fwdreslt (nTracePts);
-        Array<OneD, DataType> Tmpreslt (nTracePts);
+        Array<OneD, DataType> Fwdreslt;
+        Fwdreslt = wspTraceDataType[indexwspTraceDataType], indexwspTraceDataType++;
+        // Array<OneD, DataType> Tmpreslt (nTracePts);
 
         for(int m = 0; m < nvariables; ++m)
         {
@@ -1153,6 +1174,83 @@ namespace Nektar
             {
                 BwdFlux[m][i] =  NekDouble( Fwdreslt[i] );
             }
+        }
+
+        if(m_DEBUG_VISCOUS_JAC_MAT&&m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+        {
+            for(int i = 0; i< m_spacedim; i++)
+            {
+                for(int j = 0; j< nConvectiveFields; j++)
+                {
+                    Vmath::Zero(npoints,qfield[i][j],1);
+                }
+            }
+            // const MultiRegions::AssemblyMapDGSharedPtr      TraceMap=m_fields[0]->GetTraceMap();
+            
+            // if(flagUpdateDervFlux)
+            // {
+            //     CalphysDeriv(outpnts,qfield);
+
+            //     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivBwd(nDim);
+            //     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivFwd(nDim);
+            //     for (int nd = 0; nd < nDim; ++nd)
+            //     {
+            //         numDerivBwd[nd] =   wspTrace[indexwspTrace], indexwspTrace++;
+            //         numDerivFwd[nd] =   wspTrace[indexwspTrace], indexwspTrace++;
+            //     }
+
+            //     for (int nd = 0; nd < nDim; ++nd)
+            //     {
+            //         for (int i = 0; i < nConvectiveFields; ++i)
+            //         {
+            //             Vmath::Zero(nTracePts, Bwd[i],1);
+            //             Vmath::Zero(nTracePts, Fwd[i],1);
+            //             m_fields[i]->GetFwdBwdTracePhysNoBndFill(qfield[nd][i], numDerivFwd[nd][i], numDerivBwd[nd][i]);
+            //             TraceMap->UniversalTraceAssemble(numDerivBwd[nd][i]);
+            //             TraceMap->UniversalTraceAssemble(numDerivFwd[nd][i]);
+            //         }
+            //     }
+
+            //     NekVector<DataType> qFwd(nvariables*nDim),qBwd(nvariables*nDim);
+
+            //     for(int i = 0; i < nvariables; ++i)
+            //     {
+            //         Vmath::Zero(nTracePts,FwdFluxDeriv[i],1);
+            //         Vmath::Zero(nTracePts,BwdFluxDeriv[i],1);
+            //     }  
+
+            //     NekVector<DataType> VFlux(nvariables);
+            //     for(int n = 0; n < nTracePts; ++n)
+            //     {
+                    
+            //         for (int nd = 0; nd < nDim; ++nd)
+            //         {
+            //             for(int j = 0; j< nvariables;j++)
+            //             {
+            //                 qFwd[j*nDim+nd] =   DataType(numDerivFwd[nd][j][n]);
+            //                 qBwd[j*nDim+nd] =   DataType(numDerivBwd[nd][j][n]);
+            //             }
+            //         }
+                
+            //         VFlux   =   (*TraceJacDeriv[0]->GetBlock(n,n))*qFwd;
+            //         for(int i = 0; i < nvariables; ++i)
+            //         {
+            //             FwdFluxDeriv[i][n] +=  NekDouble( TraceJacDerivSign[0][n]*VFlux[i]);
+            //         }  
+
+            //         VFlux   =   (*TraceJacDeriv[1]->GetBlock(n,n))*qBwd;
+            //         for(int i = 0; i < nvariables; ++i)
+            //         {
+            //             BwdFluxDeriv[i][n] +=  NekDouble( TraceJacDerivSign[1][n]*VFlux[i]);
+            //         }  
+            //     }
+            // }
+
+            // for(int i = 0; i < nvariables; ++i)
+            // {
+            //     Vmath::Vadd(nTracePts,FwdFluxDeriv[i],1,FwdFlux[i],1,FwdFlux[i],1);
+            //     Vmath::Vadd(nTracePts,BwdFluxDeriv[i],1,BwdFlux[i],1,BwdFlux[i],1);
+            // }  
         }
 
 #ifdef CFS_DEBUGMODE

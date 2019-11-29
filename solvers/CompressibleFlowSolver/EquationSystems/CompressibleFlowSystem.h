@@ -196,7 +196,8 @@ namespace Nektar
             Array<OneD,       Array<OneD, NekDouble> >                          &FwdFluxDeriv,
             Array<OneD,       Array<OneD, NekDouble> >                          &BwdFluxDeriv,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &qfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &tmpTrace,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &wspTrace,
+            Array<OneD, Array<OneD, DataType > >                                &wspTraceDataType,
             const Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>     &TraceJacArray,
             const Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>     &TraceJacDerivArray,
             const Array<OneD, Array<OneD, DataType> >                           &TraceJacDerivSign);

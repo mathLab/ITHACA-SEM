@@ -61,5 +61,4 @@ docker-test:
     - tar xf build.tar.gz
     - cd build
     - for i in $(find $(pwd)/library/ -maxdepth 1 -mindepth 1 -type d); do export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$i; done
-    - echo $LD_LIBRARY_PATH$
     - ctest -j 2

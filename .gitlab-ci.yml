@@ -2,6 +2,7 @@ stages:
   - docker-build-env
   - docker-build
   - docker-test
+  - publish
 
 docker-build-env:
   stage: docker-build-env
@@ -62,3 +63,18 @@ docker-test:
     - cd build
     - for i in $(find $(pwd)/library/ -maxdepth 1 -mindepth 1 -type d); do export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$i; done
     - ctest -j 2
+
+publish:
+  image: debian:buster-slim
+  stage: publish
+  variables:
+    GIT_STRATEGY: none 
+  only:
+    refs:
+      - master
+      - tags
+  dependencies:
+    - docker-build
+  script:
+    - mv build.tar.gz ${CI_COMMIT_TAG}-build.tar.gz
+    # - # scp to a web server somewhere

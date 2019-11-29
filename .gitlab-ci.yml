@@ -46,7 +46,7 @@ docker-build:
       -DNEKTAR_TEST_USE_HOSTFILE=ON
       -DNEKTAR_ERROR_ON_WARNINGS=OFF
       .. &&
-      make -j 2 all)
+      make -j 2 all; make -j 2 install)
     - tar -czf build.tar.gz --exclude="*.o" build
   artifacts:
     paths:
@@ -60,5 +60,6 @@ docker-test:
   script:
     - tar xf build.tar.gz
     - cd build
-    - make install -j 2
+    - for i in $(find $(pwd)/library/ -maxdepth 1 -mindepth 1 -type d); do export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$i; done
+    - echo $LD_LIBRARY_PATH$
     - ctest -j 2

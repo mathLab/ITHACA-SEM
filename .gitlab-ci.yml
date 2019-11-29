@@ -22,6 +22,8 @@ docker-build-env:
 docker-build:
   stage: docker-build
   image: nektar-env
+  tags:
+    - docker
   only:
     refs:
       - feature/gitlab_ci
@@ -56,6 +58,8 @@ docker-build:
 docker-test:
   stage: docker-test
   image: nektar-env
+  tags:
+    - docker
   dependencies:
     - docker-build
   script:
@@ -67,6 +71,8 @@ docker-test:
 publish:
   image: debian:buster-slim
   stage: publish
+  tags:
+    - docker
   variables:
     GIT_STRATEGY: none 
   only:

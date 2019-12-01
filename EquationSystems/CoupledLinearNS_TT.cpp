@@ -6193,13 +6193,15 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
         for(int i = fine_grid_dir0*fine_grid_dir1; i < fine_grid_dir0*fine_grid_dir1; ++i)
 	{
+		double err_threshold = 1e-9;
+		int num_iter = 0;
 		Eigen::VectorXd ref_f_bnd;
 		Eigen::VectorXd ref_f_p;
 		Eigen::VectorXd ref_f_int;
 //		Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection[0], snapshot_y_collection[0], fine_general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);
 		Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection_VV[i], snapshot_y_collection_VV[i], fine_general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);  
 
-		if (0)
+		if (1)
 		{
 			double L2error = 1;
 			do
@@ -6214,8 +6216,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				double L2error_y_ref = L2Error(1);
 				L2error = sqrt(L2error_x*L2error_x + L2error_y*L2error_y) / sqrt(L2error_x_ref*L2error_x_ref + L2error_y_ref*L2error_y_ref);
 				cout << "relative L2error w.r.t. current iterate " << L2error << endl;
+				num_iter++;
+				if (num_iter == 100)
+				{
+					num_iter = 0;
+					err_threshold = err_threshold*10;
+				}
 			}
-			while ((L2error > 1e-7));
+			while ((L2error > err_threshold));
 		}
 
 		std::stringstream sstm;
@@ -6300,6 +6308,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
 	// start sweeping 
+	Eigen::MatrixXd collected_relative_L2errors_snaps = Eigen::VectorXd::Zero(Nmax);
 	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
 	{
 		int current_index = iter_index;
@@ -6382,7 +6391,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //			cout << "relative_change_error " << relative_change_error << endl;
 			no_iter++;
 		} 
-		while( ((relative_change_error > 1e-3) && (no_iter < 100)) );
+		while( ((relative_change_error > 1e-6) && (no_iter < 500)) );
 		if (debug_mode)
 			cout << " no_iterations " << no_iter << endl;
 //		cout << "solve_affine " << solve_affine << endl;
@@ -6420,9 +6429,37 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 		if (write_ROM_field || (qoi_dof >= 0))
 		{
-			recover_snapshot_data(reconstruct_solution, current_index);
+			recover_snapshot_data(reconstruct_solution, current_index);  // this is setting the fields
 		}
+
+		Array<OneD, double> field_x;
+		Array<OneD, double> field_y;
+		recover_snapshot_loop(reconstruct_solution, field_x, field_y);
+		double rel_ITHACA_L2error = L2norm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection[current_index], snapshot_y_collection[current_index]) / L2norm_ITHACA(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+		cout << "relative L2 error : " << rel_ITHACA_L2error << " of snapshot number " << iter_index << endl;
+		collected_relative_L2errors_snaps(current_index) = rel_ITHACA_L2error;
+
+
+
 	} // for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+	if (1)
+	{
+		std::stringstream sstm_VV;
+		sstm_VV << "LocROM_cluster_snap" << current_cluster_number << ".txt";
+		std::string LocROM_txt_VV = sstm_VV.str();
+		const char* outname_VV = LocROM_txt_VV.c_str();
+		ofstream myfile_VV (outname_VV);
+		if (myfile_VV.is_open())
+		{
+			for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+			{
+				myfile_VV << std::setprecision(17) << collected_relative_L2errors_snaps(iter_index) << "\t";
+			}
+			myfile_VV.close();
+		}
+		else cout << "Unable to open file"; 
+
+	}
 	if (use_fine_grid_VV)
 	{
 		// repeat the evaluation without the accuracy check
@@ -6858,7 +6895,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 		if (write_ROM_field || (qoi_dof >= 0))
 		{
-			recover_snapshot_data(reconstruct_solution, current_index);
+			recover_snapshot_data(reconstruct_solution, current_index); // this is setting the fields
 		}
 
 

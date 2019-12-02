@@ -2183,7 +2183,7 @@ namespace Nektar
                 pointmu     = locmu[npnt];
                 pointDmuDT  = locDmuDT[npnt];
 
-                GetDiffusionFluxJacPoint(nelmt,pointVar,pointDerv,pointmu,pointDmuDT,normals,PointFJac);
+                GetDiffusionFluxJacPoint(pointVar,pointDerv,pointmu,pointDmuDT,normals,PointFJac);
                 for (int j =0; j < nConvectiveFields; j++)
                 {
                     int noffset = j*(nConvectiveFields-1);
@@ -2196,8 +2196,60 @@ namespace Nektar
         }
     }
 
+    void NavierStokesCFE::v_MinusDiffusionFluxJacDirctnElmt(
+        const int                                                       nConvectiveFields,
+        const int                                                       nElmtPnt,
+        const Array<OneD, Array<OneD, NekDouble> >                      &locVars,
+        const Array<OneD, Array<OneD,  Array<OneD, NekDouble> > >       &locDerv,
+        const Array<OneD, NekDouble>                                    &locmu,
+        const Array<OneD, NekDouble>                                    &locDmuDT,
+        const Array<OneD, NekDouble>                                    &normals,
+        DNekMatSharedPtr                                                &wspMat,
+        Array<OneD, Array<OneD, NekDouble> >                            &PntJacArray)
+    {
+        int nSpaceDim           = m_graph->GetSpaceDimension();  
+
+        NekDouble pointmu       = 0.0;
+        NekDouble pointDmuDT    = 0.0;
+        Array<OneD, NekDouble> pointVar(nConvectiveFields,0.0);
+        Array<OneD, Array<OneD, NekDouble> > pointDerv(nSpaceDim);
+        for(int j = 0; j < nSpaceDim; j++)
+        {   
+            pointDerv[j] = Array<OneD, NekDouble>(nConvectiveFields,0.0);
+        }
+
+        Array<OneD, NekDouble > wspMatData = wspMat->GetPtr();
+
+        for(int npnt = 0; npnt < nElmtPnt; npnt++)
+        {
+            for(int j = 0; j < nConvectiveFields; j++)
+            {
+                pointVar[j] = locVars[j][npnt];
+            }
+            for(int j = 0; j < nSpaceDim; j++)
+            {   
+                for(int k = 0; k < nConvectiveFields; k++)
+                {
+                    pointDerv[j][k] = locDerv[j][k][npnt];
+                }
+            }
+
+            pointmu     = locmu[npnt];
+            pointDmuDT  = locDmuDT[npnt];
+
+            GetDiffusionFluxJacPoint(pointVar,pointDerv,pointmu,pointDmuDT,normals,wspMat);
+            for (int j =0; j < nConvectiveFields; j++)
+            {
+                int noffset = j*nConvectiveFields;
+
+                Vmath::Vsub(nConvectiveFields-1,&PntJacArray[npnt][noffset+1],1,
+                                                &wspMatData[noffset-j],1,
+                                                &PntJacArray[npnt][noffset+1],1);
+            }
+        }
+    }
+
     void NavierStokesCFE::v_GetDiffusionFluxJacPoint(
-            const int                                           nelmt,
             const Array<OneD, NekDouble>                        &conservVar, 
             const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
             const NekDouble                                     mu,
@@ -2306,6 +2358,47 @@ namespace Nektar
                         ElmtJacArray[i+1][j][nfluxDir][nelmt][npnt] = PointFJac_data[noffset+i];
                     }
                 }
+            }
+        }
+    }
+
+    void NavierStokesCFE::v_GetFluxDerivJacDirctnElmt(
+        const int                                                       nConvectiveFields,
+        const int                                                       nElmtPnt,
+        const int                                                       nDervDir,
+        const Array<OneD, Array<OneD, NekDouble> >                      &locVars,
+        const Array<OneD, NekDouble>                                    &locmu,
+        const Array<OneD, Array<OneD, NekDouble> >                      &locnormal,
+        DNekMatSharedPtr                                                &wspMat,
+        Array<OneD, Array<OneD, NekDouble> >                            &PntJacArray)
+    {
+        int nSpaceDim           = m_graph->GetSpaceDimension();  
+        
+        NekDouble pointmu       = 0.0;
+        Array<OneD, NekDouble> pointVar(nConvectiveFields,0.0);
+        Array<OneD, NekDouble> pointnormals(nSpaceDim,0.0);
+
+        Array<OneD, NekDouble > wspMatData = wspMat->GetPtr();
+                
+        for(int npnt = 0; npnt < nElmtPnt; npnt++)
+        {
+            for(int j = 0; j < nConvectiveFields; j++)
+            {
+                pointVar[j] = locVars[j][npnt];
+            }
+            for(int j = 0; j < nSpaceDim; j++)
+            {   
+                pointnormals[j] = locnormal[j][npnt];
+            }
+
+            pointmu     = locmu[npnt];
+
+            m_GetdFlux_dDeriv_Array[nDervDir](pointnormals,pointmu,pointVar,wspMat);
+            Vmath::Zero(nConvectiveFields,&PntJacArray[npnt][0],nConvectiveFields);
+            for (int j =0; j < nConvectiveFields; j++)
+            {
+                int noffset = j*(nConvectiveFields-1);
+                Vmath::Vcopy((nConvectiveFields-1),&wspMatData[noffset],1,&PntJacArray[npnt][noffset+j],1);
             }
         }
     }
@@ -2444,6 +2537,32 @@ namespace Nektar
         }
         m_diffusion->DiffuseCalculateDerivative(nConvectiveFields,m_fields,inarray,qfield,pFwd,pBwd);
     }
+
 #endif
+    void NavierStokesCFE::v_CalcMuDmuDT(
+        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+        Array<OneD, NekDouble>                                          &mu,
+        Array<OneD, NekDouble>                                          &DmuDT)
+    {
+        int npoints = mu.num_elements();
+        if (m_ViscosityType == "Variable")
+        {
+            Array<OneD, NekDouble > temperature        (npoints, 0.0);
+            m_varConv->GetTemperature(inarray,temperature);
+            m_varConv->GetDynamicViscosity(temperature, mu);
+            if(DmuDT.num_elements()>0)
+            {
+                m_varConv->GetDmuDT(temperature,mu,DmuDT);
+            }
+        }
+        else
+        {
+            Vmath::Fill(npoints, m_mu, mu, 1);
+            if(DmuDT.num_elements()>0)
+            {
+                Vmath::Zero(npoints, DmuDT, 1);
+            }
+        }
+    }
 
 }

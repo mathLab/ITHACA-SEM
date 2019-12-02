@@ -176,6 +176,16 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
         const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray);
+    virtual void v_MinusDiffusionFluxJacDirctnElmt(
+            const int                                                       nConvectiveFields,
+            const int                                                       nElmtPnt,
+            const Array<OneD, Array<OneD, NekDouble> >                      &locVars,
+            const Array<OneD, Array<OneD,  Array<OneD, NekDouble> > >       &locDerv,
+            const Array<OneD, NekDouble>                                    &locmu,
+            const Array<OneD, NekDouble>                                    &locDmuDT,
+            const Array<OneD, NekDouble>                                    &normals,
+            DNekMatSharedPtr                                                &wspMat,
+            Array<OneD, Array<OneD, NekDouble> >                            &PntJacArray);
 
     virtual void v_GetFluxDerivJacDirctn(
         const MultiRegions::ExpListSharedPtr                            &explist,
@@ -184,6 +194,15 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray,
         const int                                                       nfluxDir);
+    virtual void v_GetFluxDerivJacDirctnElmt(
+        const int                                                       nConvectiveFields,
+        const int                                                       nElmtPnt,
+        const int                                                       nDervDir,
+        const Array<OneD, Array<OneD, NekDouble> >                      &locVars,
+        const Array<OneD, NekDouble>                                    &locmu,
+        const Array<OneD, Array<OneD, NekDouble> >                      &locnormal,
+        DNekMatSharedPtr                                                &wspMat,
+        Array<OneD, Array<OneD, NekDouble> >                            &PntJacArray);
     
     virtual void v_GetFluxDerivJacDirctn(
         const MultiRegions::ExpListSharedPtr                            &explist,
@@ -193,7 +212,6 @@ namespace Nektar
               Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
     
     virtual void v_GetDiffusionFluxJacPoint(
-            const int                                           nelmt,
             const Array<OneD, NekDouble>                        &conservVar, 
             const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
             const NekDouble                                     mu,
@@ -204,6 +222,11 @@ namespace Nektar
     virtual void v_CalphysDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
                   Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield);
+
+    virtual void v_CalcMuDmuDT(
+            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+            Array<OneD, NekDouble>                                          &mu,
+            Array<OneD, NekDouble>                                          &DmuDT);
       
     /**
      * @brief return part of viscous Jacobian: 

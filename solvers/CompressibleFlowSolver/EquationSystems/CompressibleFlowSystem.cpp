@@ -2566,6 +2566,8 @@ namespace Nektar
         {
 #endif
             AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray,zero);
+Cout2DArrayBlkMat(gmtxarray);
+ASSERTL0(false,"debugStop");
 #ifdef CFS_DEBUGMODE
         }
         if(1!=m_DebugVolTraceSwitch)
@@ -3355,7 +3357,6 @@ namespace Nektar
         }
     }
     
-    
     void CompressibleFlowSystem::Cout2DArrayBlkMat(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const unsigned int nwidthcolm)
     {
         int nvar1 = gmtxarray.num_elements();
@@ -3375,6 +3376,42 @@ namespace Nektar
     void CompressibleFlowSystem::CoutBlkMat(DNekBlkMatSharedPtr &gmtx,const unsigned int nwidthcolm)
     {
         DNekMatSharedPtr    loc_matNvar;
+
+        Array<OneD, unsigned int> rowSizes;
+        Array<OneD, unsigned int> colSizes;
+        gmtx->GetBlockSizes(rowSizes,colSizes);
+
+        int nelmts  = rowSizes.num_elements();
+        
+        // int noffset = 0;
+        for(int i = 0; i < nelmts; ++i)
+        {
+            loc_matNvar =   gmtx->GetBlock(i,i);
+            std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<i<<std::endl;
+            CoutStandardMat(loc_matNvar,nwidthcolm);
+        }
+        return;
+    }
+
+    void CompressibleFlowSystem::Cout2DArrayBlkMat(Array<OneD, Array<OneD, SNekBlkMatSharedPtr> > &gmtxarray,const unsigned int nwidthcolm)
+    {
+        int nvar1 = gmtxarray.num_elements();
+        int nvar2 = gmtxarray[0].num_elements();
+
+        
+        for(int i = 0; i < nvar1; i++)
+        {
+            for(int j = 0; j < nvar2; j++)
+            {
+                cout<<endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<endl<< "Cout2DArrayBlkMat i= "<<i<<" j=  "<<j<<endl;
+                CoutBlkMat(gmtxarray[i][j],nwidthcolm);
+            }
+        }
+    }
+    
+    void CompressibleFlowSystem::CoutBlkMat(SNekBlkMatSharedPtr &gmtx,const unsigned int nwidthcolm)
+    {
+        SNekMatSharedPtr    loc_matNvar;
 
         Array<OneD, unsigned int> rowSizes;
         Array<OneD, unsigned int> colSizes;
@@ -3413,6 +3450,30 @@ namespace Nektar
         int nrows = loc_matNvar->GetRows();
         int ncols = loc_matNvar->GetColumns();
         NekDouble tmp=0.0;
+        std::cout   <<"ROW="<<std::setw(3)<<-1<<" ";
+        for(int k = 0; k < ncols; k++)
+        {
+            std::cout   <<"   COL="<<std::setw(nwidthcolm-7)<<k;
+        }
+        std::cout   << endl;
+
+        for(int j = 0; j < nrows; j++)
+        {
+            std::cout   <<"ROW="<<std::setw(3)<<j<<" ";
+            for(int k = 0; k < ncols; k++)
+            {
+                tmp =   (*loc_matNvar)(j,k);
+                std::cout   <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<<tmp;
+            }
+            std::cout   << endl;
+        }
+    }
+
+    void CompressibleFlowSystem::CoutStandardMat(SNekMatSharedPtr &loc_matNvar,const unsigned int nwidthcolm)
+    {
+        int nrows = loc_matNvar->GetRows();
+        int ncols = loc_matNvar->GetColumns();
+        NekSingle tmp=0.0;
         std::cout   <<"ROW="<<std::setw(3)<<-1<<" ";
         for(int k = 0; k < ncols; k++)
         {

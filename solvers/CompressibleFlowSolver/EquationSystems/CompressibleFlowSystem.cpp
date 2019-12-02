@@ -1577,7 +1577,7 @@ namespace Nektar
                             }
                         }
 
-                        Vmath::Zero(nElmtCoef2,&MatData[0],1);
+                        // Vmath::Zero(nElmtCoef2,&MatData[0],1);
                         for(int nd0 =0;nd0<m_spacedim;nd0++)
                         {
                             for(int nd1 =0;nd1<m_spacedim;nd1++)

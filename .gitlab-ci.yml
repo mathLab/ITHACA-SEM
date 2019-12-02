@@ -14,7 +14,6 @@ docker-build-env:
   only:
     refs:
       - feature/gitlab_ci
-      - /^docker\/.*$/
       - tags
   script:
     - docker build --cpu-period 100000 --cpu-quota 200000 -t ${image_name} -f ${dockerfile} .
@@ -27,7 +26,6 @@ docker-build:
   only:
     refs:
       - feature/gitlab_ci
-      - /^docker\/.*$/
       - tags
   script:
     - mkdir ~/.ccache && echo "cache_dir = /cache/nektar" >> ~/.ccache/ccache.conf
@@ -62,6 +60,10 @@ docker-test:
     - docker
   dependencies:
     - docker-build
+  only:
+    refs:
+      - feature/gitlab_ci
+      - tags
   script:
     - tar xf build.tar.gz
     - cd build
@@ -77,10 +79,10 @@ publish:
     GIT_STRATEGY: none 
   only:
     refs:
-      - master
+      - feature/gitlab_ci
       - tags
   dependencies:
     - docker-build
   script:
-    - mv build.tar.gz ${CI_COMMIT_TAG}-build.tar.gz
+    - mv build.tar.gz ${CI_COMMIT_SHORT_SHA}-build.tar.gz
     # - # scp to a web server somewhere

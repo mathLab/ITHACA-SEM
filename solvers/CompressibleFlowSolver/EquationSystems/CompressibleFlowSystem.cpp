@@ -1671,7 +1671,7 @@ namespace Nektar
                                         stdExp->DetShapeType(), *stdExp);
                 DNekMatSharedPtr BwdMat =  stdExp->GetStdMatrix(matkey);
                 Array<OneD, NekDouble> BwdMatData = BwdMat->GetPtr();
-                
+
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                 tmpStdDBB (m_spacedim);
                 Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >   tmpStdDBDB(m_spacedim);
 
@@ -1686,7 +1686,7 @@ namespace Nektar
                             int noffset = nc1*nElmtCoef;
                             for(int nc0=0;nc0<nElmtCoef;nc0++)
                             {
-                                tmpStdDBB[nd0][i][nc0+noffset] = ArrayStdMatData[nd0][i+nc0*nElmtPnt]*BwdMatData[i+nc1*nElmtPnt];
+                                tmpStdDBB[nd0][i][nc0+noffset] = ArrayStdMatData[nd0][i*nElmtCoef+nc0]*BwdMatData[i*nElmtCoef+nc1];
                             }
                         }
                     }
@@ -1703,7 +1703,7 @@ namespace Nektar
                                 int noffset = nc1*nElmtCoef;
                                 for(int nc0=0;nc0<nElmtCoef;nc0++)
                                 {
-                                    tmpStdDBDB[nd0][nd1][i][nc0+noffset] = ArrayStdMatData[nd0][i+nc0*nElmtPnt]*ArrayStdMatData[nd1][i+nc1*nElmtPnt];
+                                    tmpStdDBDB[nd0][nd1][i][nc0+noffset] = ArrayStdMatData[nd0][i*nElmtCoef+nc0]*ArrayStdMatData[nd1][i*nElmtCoef+nc1];
                                 }
                             }
                         }
@@ -2566,8 +2566,6 @@ namespace Nektar
         {
 #endif
             AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray,zero);
-Cout2DArrayBlkMat(gmtxarray);
-ASSERTL0(false,"debugStop");
 #ifdef CFS_DEBUGMODE
         }
         if(1!=m_DebugVolTraceSwitch)

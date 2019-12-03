@@ -2398,7 +2398,7 @@ namespace Nektar
             for (int j =0; j < nConvectiveFields; j++)
             {
                 int noffset = j*(nConvectiveFields-1);
-                Vmath::Vcopy((nConvectiveFields-1),&wspMatData[noffset],1,&PntJacArray[npnt][noffset+j],1);
+                Vmath::Vcopy((nConvectiveFields-1),&wspMatData[noffset],1,&PntJacArray[npnt][noffset+j+1],1);
             }
         }
     }

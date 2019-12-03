@@ -104,6 +104,7 @@ namespace Nektar
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >                m_DervBase_BaseMatData;
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > >  m_DervBase_DervBaseMatData;
+        const int                           m_nPadding = 1;
 #endif
 
         // Auxiliary object to convert variables

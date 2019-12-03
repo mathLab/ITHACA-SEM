@@ -1606,6 +1606,7 @@ namespace Nektar
 
     void CompressibleFlowSystem::CalcVolJacStdMat()
     {
+        
         int nSpaceDim = m_graph->GetSpaceDimension();
         int nvariable = m_fields.num_elements();
         int npoints   = m_fields[0]->GetTotPoints();
@@ -1624,10 +1625,6 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> >    ArrayStdMatData(m_spacedim);
         for(int ne=0; ne<ntotElmt;ne++)
         {
-            int nElmtCoef           = (*expvect)[ne]->GetNcoeffs();
-            int nElmtCoef2          = nElmtCoef*nElmtCoef;
-            int nElmtPnt            = (*expvect)[ne]->GetTotPoints();
-
             StdRegions::StdExpansionSharedPtr stdExp;
             stdExp = (*expvect)[ne]->GetStdExp();
             StdRegions::StdMatrixKey  matkey(StdRegions::eDerivBase0,
@@ -1650,6 +1647,19 @@ namespace Nektar
             }
             else
             {
+                int nElmtCoef           = (*expvect)[ne]->GetNcoeffs();
+                int nElmtCoef2          = nElmtCoef*nElmtCoef;
+                int nElmtPnt            = (*expvect)[ne]->GetTotPoints();
+
+                int nQuot = nElmtCoef2/m_nPadding;
+                int nRemd = nElmtCoef2- nQuot*m_nPadding;
+                int nQuotPlus=nQuot;
+                if(nRemd>0)
+                {
+                    nQuotPlus++;
+                }
+                int nPaded = nQuotPlus*m_nPadding;
+
                 ArrayStdMat[0] = MatStdDerivBase0;
                 if(m_spacedim>1)
                 {
@@ -1682,7 +1692,7 @@ namespace Nektar
                     tmpStdDBB[nd0]  =   Array<OneD, Array<OneD, NekDouble> > (nElmtPnt);
                     for(int i=0;i<nElmtPnt;i++)
                     {
-                        tmpStdDBB[nd0][i]   =   Array<OneD, NekDouble> (nElmtCoef2);
+                        tmpStdDBB[nd0][i]   =   Array<OneD, NekDouble> (nPaded,0.0);
                         for(int nc1=0;nc1<nElmtCoef;nc1++)
                         {
                             int noffset = nc1*nElmtCoef;
@@ -1699,7 +1709,7 @@ namespace Nektar
                         tmpStdDBDB[nd0][nd1]  =   Array<OneD, Array<OneD, NekDouble> > (nElmtPnt);
                         for(int i=0;i<nElmtPnt;i++)
                         {
-                            tmpStdDBDB[nd0][nd1][i]   =   Array<OneD, NekDouble> (nElmtCoef2);
+                            tmpStdDBDB[nd0][nd1][i]   =   Array<OneD, NekDouble> (nPaded,0.0);
                             for(int nc1=0;nc1<nElmtCoef;nc1++)
                             {
                                 int noffset = nc1*nElmtCoef;

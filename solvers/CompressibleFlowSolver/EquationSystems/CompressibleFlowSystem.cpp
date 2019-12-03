@@ -1539,7 +1539,8 @@ namespace Nektar
                         (*expvect)[ne]->MultiplyByQuadratureMetric(ConsStdd[ndir],ConsStdd[ndir]); // weight with metric
                         for(int i=0;i<nElmtPnt;i++)
                         {
-                            Vmath::Svtvp(nElmtCoef2,ConsStdd[ndir][i],&m_DervBase_BaseMatData[ne][ndir][i][0],1,&MatData[0],1,&MatData[0],1);
+                            // Vmath::Svtvp(nElmtCoef2,ConsStdd[ndir][i],&m_DervBase_BaseMatData[ne][ndir][i][0],1,&MatData[0],1,&MatData[0],1);
+                            Blas::Daxpy (nElmtCoef2,ConsStdd[ndir][i],&m_DervBase_BaseMatData[ne][ndir][i][0],1,&MatData[0],1);
                         }
                     }
 
@@ -1585,7 +1586,8 @@ namespace Nektar
                                 (*expvect)[ne]->MultiplyByQuadratureMetric(DervStdd[nd0][nd1],DervStdd[nd0][nd1]); // weight with metric
                                 for(int i=0;i<nElmtPnt;i++)
                                 {
-                                    Vmath::Svtvp(nElmtCoef2,-DervStdd[nd0][nd1][i],&m_DervBase_DervBaseMatData[ne][nd0][nd1][i][0],1,&MatData[0],1,&MatData[0],1);
+                                    // Vmath::Svtvp(nElmtCoef2,-DervStdd[nd0][nd1][i],&m_DervBase_DervBaseMatData[ne][nd0][nd1][i][0],1,&MatData[0],1,&MatData[0],1);
+                                    Blas::Daxpy (nElmtCoef2,-DervStdd[nd0][nd1][i],&m_DervBase_DervBaseMatData[ne][nd0][nd1][i][0],1,&MatData[0],1);
                                 }
                             }
                         }

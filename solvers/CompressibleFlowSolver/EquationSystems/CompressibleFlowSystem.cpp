@@ -335,6 +335,8 @@ namespace Nektar
         {
             m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT = true;
         }
+
+        m_session->LoadParameter("nPadding",     m_nPadding      ,    1);
         
 #ifdef CFS_DEBUGMODE
         m_session->LoadParameter("DebugAdvDiffSwitch",                 m_DebugAdvDiffSwitch      ,    0);
@@ -1362,14 +1364,15 @@ namespace Nektar
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::AddMatNSBlkDiag_volume(
-        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-        Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >               &gmtxarray,
-        const DataType                                                  &tmpDatatype)
+        const Array<OneD, const Array<OneD, NekDouble> >                                &inarray,
+        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >                  &qfield,
+        Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >                               &gmtxarray,
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > >                 &StdMatDataDBB,
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > >   &StdMatDataDBDB)
     {
-        if(m_DervBase_BaseMatData.num_elements()==0)
+        if(StdMatDataDBB.num_elements()==0)
         {
-            CalcVolJacStdMat();
+            CalcVolJacStdMat(StdMatDataDBB,StdMatDataDBDB);
         }
         
         int nSpaceDim = m_graph->GetSpaceDimension();
@@ -1401,18 +1404,21 @@ namespace Nektar
         DNekMatSharedPtr wspMatDrv  = MemoryManager<DNekMat>::AllocateSharedPtr(nvariable-1,nvariable,0.0);
 
         Array<OneD, DataType> GmatxData;
-        Array<OneD, NekDouble> MatData;
+        Array<OneD, DataType> MatData;
 
         Array<OneD, NekDouble> tmppnts;
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > PntJacCons(m_spacedim); // Nvar*Nvar*Ndir*Nelmt*Npnt
+        Array<OneD, Array<OneD, Array<OneD, DataType> > > PntJacConsStd(m_spacedim); // Nvar*Nvar*Ndir*Nelmt*Npnt
         Array<OneD, Array<OneD, NekDouble> >    ConsStdd(m_spacedim);
         Array<OneD, Array<OneD, NekDouble> >    ConsCurv(m_spacedim);
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > PntJacDerv(m_spacedim); // Nvar*Nvar*Ndir*Nelmt*Npnt
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > PntJacDervStd(m_spacedim); // Nvar*Nvar*Ndir*Nelmt*Npnt
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > DervStdd(m_spacedim); // Nvar*Nvar*Ndir*Nelmt*Npnt
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > DervCurv(m_spacedim); // Nvar*Nvar*Ndir*Nelmt*Npnt
         for(int ndir=0; ndir<m_spacedim;ndir++)
         {
             PntJacDerv[ndir]  =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_spacedim);
+            PntJacDervStd[ndir]  =   Array<OneD, Array<OneD, Array<OneD, DataType> > >(m_spacedim);
             DervStdd[ndir]    =   Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
             DervCurv[ndir]    =   Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         }
@@ -1426,37 +1432,53 @@ namespace Nektar
             locDerv[ndir]   =   Array<OneD, Array<OneD, NekDouble> >(nvariable);
         }
 
+        int nElmtCoefOld = -1;
         for(int ne=0; ne<ntotElmt;ne++)
         {
             int nElmtCoef           = (*expvect)[ne]->GetNcoeffs();
             int nElmtCoef2          = nElmtCoef*nElmtCoef;
             int nElmtPnt            = (*expvect)[ne]->GetTotPoints();
-            if(nElmtPnt>PntJacCons[0].num_elements())
+
+            int nQuot = nElmtCoef2/m_nPadding;
+            int nRemd = nElmtCoef2- nQuot*m_nPadding;
+            int nQuotPlus=nQuot;
+            if(nRemd>0)
             {
+                nQuotPlus++;
+            }
+            int nElmtCoef2Paded = nQuotPlus*m_nPadding;
+
+            if(nElmtPnt>PntJacCons[0].num_elements()||nElmtCoef>nElmtCoefOld)
+            {
+                nElmtCoefOld = nElmtCoef;
                 for(int ndir=0; ndir<3;ndir++)
                 {
                     normalPnt[ndir]        = Array<OneD, NekDouble>(npoints,0.0);
                 }
                 tmppnts = Array<OneD, NekDouble>  (nElmtPnt);
-                MatData = Array<OneD, NekDouble>  (nElmtCoef2);
+                MatData = Array<OneD, DataType>  (nElmtCoef2Paded*nVar2);
                 for(int ndir=0; ndir<m_spacedim;ndir++)
                 {
                     ConsCurv[ndir]      =   Array<OneD, NekDouble> (nElmtPnt);
                     ConsStdd[ndir]      =   Array<OneD, NekDouble> (nElmtPnt);
                     PntJacCons[ndir]    =   Array<OneD, Array<OneD, NekDouble> > (nElmtPnt);
+                    PntJacConsStd[ndir] =   Array<OneD, Array<OneD, DataType> > (nElmtPnt);
                     for(int i=0; i<nElmtPnt;i++)
                     {
-                        PntJacCons[ndir][i]   =   Array<OneD, NekDouble>(nVar2);
+                        PntJacCons[ndir][i]     =   Array<OneD, NekDouble>(nVar2);
+                        PntJacConsStd[ndir][i]  =   Array<OneD, DataType>(nVar2);
                     }
                     
                     for(int ndir1=0; ndir1<m_spacedim;ndir1++)
                     {
                         PntJacDerv[ndir][ndir1]   =   Array<OneD, Array<OneD, NekDouble> > (nElmtPnt);
+                        PntJacDervStd[ndir][ndir1]   =   Array<OneD, Array<OneD, DataType> > (nElmtPnt);
                         DervStdd[ndir][ndir1]       =   Array<OneD, NekDouble> (nElmtPnt);
                         DervCurv[ndir][ndir1]       =   Array<OneD, NekDouble> (nElmtPnt);
                         for(int i=0; i<nElmtPnt;i++)
                         {
                             PntJacDerv[ndir][ndir1][i]   =   Array<OneD, NekDouble>(nVar2);
+                            PntJacDervStd[ndir][ndir1][i]   =   Array<OneD, DataType>(nVar2);
                         }
                     }
                 }
@@ -1508,13 +1530,13 @@ namespace Nektar
                     Vmath::Fill(npoints,0.0,normalPnt[nfluxDir],1);
                 }
             }
-            
+
             for(int n=0; n<nvariable;n++)
             {
                 for(int m=0; m<nvariable;m++)
                 {
-                    GmatxData = gmtxarray[m][n]->GetBlock(ne,ne)->GetPtr();
                     int nvarOffset = m+n*nvariable;
+                    GmatxData = gmtxarray[m][n]->GetBlock(ne,ne)->GetPtr();
 
                     for(int ndStd0 =0;ndStd0<m_spacedim;ndStd0++)
                     {
@@ -1533,19 +1555,24 @@ namespace Nektar
                         }
                     }
 
-                    Vmath::Zero(nElmtCoef2,&MatData[0],1);
                     for(int ndir =0;ndir<m_spacedim;ndir++)
                     {
                         (*expvect)[ne]->MultiplyByQuadratureMetric(ConsStdd[ndir],ConsStdd[ndir]); // weight with metric
-                        for(int i=0;i<nElmtPnt;i++)
+                        for(int i=0; i<nElmtPnt;i++)
                         {
-                            // Vmath::Svtvp(nElmtCoef2,ConsStdd[ndir][i],&m_DervBase_BaseMatData[ne][ndir][i][0],1,&MatData[0],1,&MatData[0],1);
-                            Blas::Daxpy (nElmtCoef2,ConsStdd[ndir][i],&m_DervBase_BaseMatData[ne][ndir][i][0],1,&MatData[0],1);
+                            PntJacConsStd[ndir][i][nvarOffset] = DataType(ConsStdd[ndir][i]);
                         }
                     }
+                }
+            }
 
-                    if(m_DEBUG_VISCOUS_JAC_MAT)
+            if(m_DEBUG_VISCOUS_JAC_MAT)
+            {
+                for(int m=0; m<nvariable;m++)
+                {
+                    for(int n=0; n<nvariable;n++)
                     {
+                        int nvarOffset = m+n*nvariable;
                         for(int ndStd0 =0;ndStd0<m_spacedim;ndStd0++)
                         {
                             for(int ndStd1 =0;ndStd1<m_spacedim;ndStd1++)
@@ -1577,36 +1604,68 @@ namespace Nektar
                                 }
                             }
                         }
-
-                        // Vmath::Zero(nElmtCoef2,&MatData[0],1);
                         for(int nd0 =0;nd0<m_spacedim;nd0++)
                         {
                             for(int nd1 =0;nd1<m_spacedim;nd1++)
                             {
                                 (*expvect)[ne]->MultiplyByQuadratureMetric(DervStdd[nd0][nd1],DervStdd[nd0][nd1]); // weight with metric
-                                for(int i=0;i<nElmtPnt;i++)
+                                for(int i=0; i<nElmtPnt;i++)
                                 {
-                                    // Vmath::Svtvp(nElmtCoef2,-DervStdd[nd0][nd1][i],&m_DervBase_DervBaseMatData[ne][nd0][nd1][i][0],1,&MatData[0],1,&MatData[0],1);
-                                    Blas::Daxpy (nElmtCoef2,-DervStdd[nd0][nd1][i],&m_DervBase_DervBaseMatData[ne][nd0][nd1][i][0],1,&MatData[0],1);
+                                    PntJacDervStd[nd0][nd1][i][nvarOffset]   =   -DataType(DervStdd[nd0][nd1][i]);
                                 }
                             }
                         }
                     }
+                }
+            }
+            
+            Vmath::Zero(nElmtCoef2Paded*nVar2,&MatData[0],1);
+            DataType one = 1.0;
+            for(int ndir =0;ndir<m_spacedim;ndir++)
+            {
+                for(int i=0;i<nElmtPnt;i++)
+                {
+                    Blas::DoSger (nElmtCoef2Paded,nVar2,one,
+                                &StdMatDataDBB[ne][ndir][i][0],1,
+                                &PntJacConsStd[ndir][i][0],1,
+                                &MatData[0],nElmtCoef2Paded);
+                }
+            }
 
-                    for(int i=0;i< nElmtCoef2;i++)
+            if(m_DEBUG_VISCOUS_JAC_MAT)
+            {
+                for(int nd0 =0;nd0<m_spacedim;nd0++)
+                {
+                    for(int nd1 =0;nd1<m_spacedim;nd1++)
                     {
-                        GmatxData[i]    =   DataType( MatData[i] );
+                        for(int i=0;i<nElmtPnt;i++)
+                        {
+                            Blas::DoSger (nElmtCoef2Paded,nVar2,one,
+                                        &StdMatDataDBDB[ne][nd0][nd1][i][0],1,
+                                        &PntJacDervStd[nd0][nd1][i][0],1,
+                                        &MatData[0],nElmtCoef2Paded);
+                        }
                     }
+                }
+            }
 
-                    // Vmath::Vcopy(nElmtCoef2,&MatData[0],1,&GmatxData[0],1); 
+            for(int n=0; n<nvariable;n++)
+            {
+                for(int m=0; m<nvariable;m++)
+                {
+                    int nvarOffset = m+n*nvariable;
+                    GmatxData = gmtxarray[m][n]->GetBlock(ne,ne)->GetPtr();
+                    Vmath::Vcopy(nElmtCoef2,&MatData[nvarOffset*nElmtCoef2Paded],1,&GmatxData[0],1);
                 }
             }
         }
     }
 
-    void CompressibleFlowSystem::CalcVolJacStdMat()
+    template<typename DataType>
+    void CompressibleFlowSystem::CalcVolJacStdMat(
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > >                   &StdMatDataDBB,
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > >     &StdMatDataDBDB)
     {
-        
         int nSpaceDim = m_graph->GetSpaceDimension();
         int nvariable = m_fields.num_elements();
         int npoints   = m_fields[0]->GetTotPoints();
@@ -1614,12 +1673,12 @@ namespace Nektar
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =    m_fields[0]->GetExp();
         int ntotElmt            = (*expvect).size();
 
-        m_DervBase_BaseMatData      = Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > (ntotElmt);
-        m_DervBase_DervBaseMatData  = Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > (ntotElmt);
+        StdMatDataDBB      = Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > (ntotElmt);
+        StdMatDataDBDB  = Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > > (ntotElmt);
 
         vector<DNekMatSharedPtr> VectStdDerivBase0;
-        vector< Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > VectStdDerivBase_Base;
-        vector< Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > VectStdDervBase_DervBase;
+        vector< Array<OneD, Array<OneD, Array<OneD, DataType> > > > VectStdDerivBase_Base;
+        vector< Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > > VectStdDervBase_DervBase;
         DNekMatSharedPtr MatStdDerivBase0;
         Array<OneD, DNekMatSharedPtr>           ArrayStdMat(m_spacedim);
         Array<OneD, Array<OneD, NekDouble> >    ArrayStdMatData(m_spacedim);
@@ -1642,8 +1701,8 @@ namespace Nektar
             }
             if(nfoundStdExp>=0)
             {
-                m_DervBase_BaseMatData[ne] = VectStdDerivBase_Base[nfoundStdExp];
-                m_DervBase_DervBaseMatData[ne] = VectStdDervBase_DervBase[nfoundStdExp];
+                StdMatDataDBB[ne] = VectStdDerivBase_Base[nfoundStdExp];
+                StdMatDataDBDB[ne] = VectStdDervBase_DervBase[nfoundStdExp];
             }
             else
             {
@@ -1684,38 +1743,38 @@ namespace Nektar
                 DNekMatSharedPtr BwdMat =  stdExp->GetStdMatrix(matkey);
                 Array<OneD, NekDouble> BwdMatData = BwdMat->GetPtr();
 
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                 tmpStdDBB (m_spacedim);
-                Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >   tmpStdDBDB(m_spacedim);
+                Array<OneD, Array<OneD, Array<OneD, DataType> > >                 tmpStdDBB (m_spacedim);
+                Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > >   tmpStdDBDB(m_spacedim);
 
                 for(int nd0=0;nd0<m_spacedim;nd0++)
                 {
-                    tmpStdDBB[nd0]  =   Array<OneD, Array<OneD, NekDouble> > (nElmtPnt);
+                    tmpStdDBB[nd0]  =   Array<OneD, Array<OneD, DataType> > (nElmtPnt);
                     for(int i=0;i<nElmtPnt;i++)
                     {
-                        tmpStdDBB[nd0][i]   =   Array<OneD, NekDouble> (nPaded,0.0);
+                        tmpStdDBB[nd0][i]   =   Array<OneD, DataType> (nPaded,0.0);
                         for(int nc1=0;nc1<nElmtCoef;nc1++)
                         {
                             int noffset = nc1*nElmtCoef;
                             for(int nc0=0;nc0<nElmtCoef;nc0++)
                             {
-                                tmpStdDBB[nd0][i][nc0+noffset] = ArrayStdMatData[nd0][i*nElmtCoef+nc0]*BwdMatData[i*nElmtCoef+nc1];
+                                tmpStdDBB[nd0][i][nc0+noffset] = DataType (ArrayStdMatData[nd0][i*nElmtCoef+nc0]*BwdMatData[i*nElmtCoef+nc1]);
                             }
                         }
                     }
 
-                    tmpStdDBDB[nd0]  =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_spacedim);
+                    tmpStdDBDB[nd0]  =   Array<OneD, Array<OneD, Array<OneD, DataType> > > (m_spacedim);
                     for(int nd1=0;nd1<m_spacedim;nd1++)
                     {
-                        tmpStdDBDB[nd0][nd1]  =   Array<OneD, Array<OneD, NekDouble> > (nElmtPnt);
+                        tmpStdDBDB[nd0][nd1]  =   Array<OneD, Array<OneD, DataType> > (nElmtPnt);
                         for(int i=0;i<nElmtPnt;i++)
                         {
-                            tmpStdDBDB[nd0][nd1][i]   =   Array<OneD, NekDouble> (nPaded,0.0);
+                            tmpStdDBDB[nd0][nd1][i]   =   Array<OneD, DataType> (nPaded,0.0);
                             for(int nc1=0;nc1<nElmtCoef;nc1++)
                             {
                                 int noffset = nc1*nElmtCoef;
                                 for(int nc0=0;nc0<nElmtCoef;nc0++)
                                 {
-                                    tmpStdDBDB[nd0][nd1][i][nc0+noffset] = ArrayStdMatData[nd0][i*nElmtCoef+nc0]*ArrayStdMatData[nd1][i*nElmtCoef+nc1];
+                                    tmpStdDBDB[nd0][nd1][i][nc0+noffset] = DataType(ArrayStdMatData[nd0][i*nElmtCoef+nc0]*ArrayStdMatData[nd1][i*nElmtCoef+nc1]);
                                 }
                             }
                         }
@@ -1725,8 +1784,8 @@ namespace Nektar
                 VectStdDerivBase_Base.push_back(tmpStdDBB);
                 VectStdDervBase_DervBase.push_back(tmpStdDBDB);
 
-                m_DervBase_BaseMatData[ne] = tmpStdDBB;
-                m_DervBase_DervBaseMatData[ne] = tmpStdDBDB;
+                StdMatDataDBB[ne]  = tmpStdDBB;
+                StdMatDataDBDB[ne] = tmpStdDBDB;
             }
         }
     }
@@ -2366,12 +2425,12 @@ namespace Nektar
                 {
                     GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVarsSingle,m_PrecMatSingle,
                                                     m_TraceJacSingle,m_TraceJacDerivSingle,m_TraceJacDerivSignSingle,
-                                                    m_TraceJacArraySingle,m_TraceJacDerivArraySingle);
+                                                    m_TraceJacArraySingle,m_TraceJacDerivArraySingle,m_StdSMatDataDBB,m_StdSMatDataDBDB);
                 }
                 else
                 {
                     GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_PrecMat,m_TraceJac,m_TraceJacDeriv,m_TraceJacDerivSign,
-                                                    m_TraceJacArray,m_TraceJacDerivArray);
+                                                    m_TraceJacArray,m_TraceJacDerivArray,m_StdDMatDataDBB,m_StdDMatDataDBDB);
                 }
             
                 // cout << "GetpreconditionerNSBlkDiag_coeff"<<endl;
@@ -2555,14 +2614,16 @@ namespace Nektar
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::GetpreconditionerNSBlkDiag_coeff(
-        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-        Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >               &gmtxarray,
-        TypeNekBlkMatSharedPtr                                          &gmtVar,
-        Array<OneD, TypeNekBlkMatSharedPtr >                            &TraceJac,
-        Array<OneD, TypeNekBlkMatSharedPtr >                            &TraceJacDeriv,
-        Array<OneD, Array<OneD, DataType> >                             &TraceJacDerivSign,
-        Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>       &TraceJacArray,
-        Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>       &TraceJacDerivArray)
+        const Array<OneD, const Array<OneD, NekDouble> >                                &inarray,
+        Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >                               &gmtxarray,
+        TypeNekBlkMatSharedPtr                                                          &gmtVar,
+        Array<OneD, TypeNekBlkMatSharedPtr >                                            &TraceJac,
+        Array<OneD, TypeNekBlkMatSharedPtr >                                            &TraceJacDeriv,
+        Array<OneD, Array<OneD, DataType> >                                             &TraceJacDerivSign,
+        Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>                       &TraceJacArray,
+        Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>                       &TraceJacDerivArray,
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > >                 &StdMatDataDBB,
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > >   &StdMatDataDBDB)
     {
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield;
 
@@ -2577,7 +2638,7 @@ namespace Nektar
         if(2!=m_DebugVolTraceSwitch)
         {
 #endif
-            AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray,zero);
+            AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray,StdMatDataDBB,StdMatDataDBDB);
 #ifdef CFS_DEBUGMODE
         }
         if(1!=m_DebugVolTraceSwitch)

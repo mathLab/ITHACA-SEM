@@ -126,6 +126,17 @@ namespace Blas
                  const float* a,    const int& lda,
                  const float* x,    const int& incx,
                  const float& beta, float* y, const int& incy);
+        
+        void F77NAME(dger) (const int& m,
+                 const int& n,       const double& alpha,
+                 const double* x,    const int& incx,
+                 const double* y,    const int& incy,
+                 double* a,    const int& lda);
+        void F77NAME(sger) (const int& m,
+                 const int& n,       const float& alpha,
+                 const float* x,    const int& incx,
+                 const float* y,    const int& incy,
+                 float* a,    const int& lda);
 
         // -- BLAS level 3:
         void F77NAME(dgemm) (const char& trans,   const char& transb,
@@ -206,6 +217,26 @@ namespace Blas
     static inline int Idamax (const int& n, const double *x,  const int& incx)
     {
         return F77NAME(idamax)(n,x,incx) -1;
+    }
+
+    /// \brief BLAS level 2: Matrix vector multiply A = A := alpha*x*y**T + A where A[m x n]
+    static inline void DoSger (const int& m,
+                 const int& n,       const double& alpha,
+                 const double* x,    const int& incx,
+                 const double* y,    const int& incy,
+                 double* a,    const int& lda)
+    {
+        F77NAME(dger) (m,n,alpha,x,incx,y,incy,a,lda);
+    }
+
+    /// \brief BLAS level 2: Matrix vector multiply A = A := alpha*x*y**T + A where A[m x n]
+    static inline void DoSger (const int& m,
+                 const int& n,       const float& alpha,
+                 const float* x,    const int& incx,
+                 const float* y,    const int& incy,
+                 float* a,    const int& lda)
+    {
+        F77NAME(sger) (m,n,alpha,x,incx,y,incy,a,lda);
     }
 
     /// \brief BLAS level 2: Matrix vector multiply y = A \e x where A[m x n]

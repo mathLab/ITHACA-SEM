@@ -102,9 +102,12 @@ namespace Nektar
 #endif
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >                m_DervBase_BaseMatData;
-        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > >  m_DervBase_DervBaseMatData;
-        const int                           m_nPadding = 1;
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >                m_StdDMatDataDBB;
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > >  m_StdDMatDataDBDB;
+
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekSingle> > > >                m_StdSMatDataDBB;
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekSingle> > > > >  m_StdSMatDataDBDB;
+        int                                 m_nPadding = 1;
 #endif
 
         // Auxiliary object to convert variables
@@ -210,12 +213,16 @@ namespace Nektar
 
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
         void AddMatNSBlkDiag_volume(
-            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-            Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >               &gmtxarray,
-            const DataType                                                  &tmpDatatype);
+            const Array<OneD, const Array<OneD, NekDouble> >                                &inarray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >                  &qfield,
+            Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >                               &gmtxarray,
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > >                 &StdMatDataDBB,
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > >   &StdMatDataDBDB);
 
-        void CalcVolJacStdMat();
+        template<typename DataType>
+        void CalcVolJacStdMat(
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > >                   &StdMatDataDBB,
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > >     &StdMatDataDBDB);
 
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
         void AddMatNSBlkDiag_boundary(
@@ -394,14 +401,16 @@ namespace Nektar
 
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
         void GetpreconditionerNSBlkDiag_coeff(
-            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-            Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >               &gmtxarray,
-            TypeNekBlkMatSharedPtr                                          &gmtVar,
-            Array<OneD, TypeNekBlkMatSharedPtr >                            &TraceJac,
-            Array<OneD, TypeNekBlkMatSharedPtr >                            &TraceJacDeriv,
-            Array<OneD, Array<OneD, DataType> >                             &TraceJacDerivSign,
-            Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>      &TraceJacArray,
-            Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>      &TraceJacDerivArray);
+            const Array<OneD, const Array<OneD, NekDouble> >                                &inarray,
+            Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >                               &gmtxarray,
+            TypeNekBlkMatSharedPtr                                                          &gmtVar,
+            Array<OneD, TypeNekBlkMatSharedPtr >                                            &TraceJac,
+            Array<OneD, TypeNekBlkMatSharedPtr >                                            &TraceJacDeriv,
+            Array<OneD, Array<OneD, DataType> >                                             &TraceJacDerivSign,
+            Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>                       &TraceJacArray,
+            Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>                       &TraceJacDerivArray,
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > >                 &StdMatDataDBB,
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > >   &StdMatDataDBDB);
 
         void MatrixMultiply_MatrixFree_coeff(
             const  Array<OneD, NekDouble> &inarray,

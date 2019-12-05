@@ -293,33 +293,29 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &inarray,
                 Array<OneD, Array<OneD, NekDouble> > &out);
 
+        template<typename TypeNekBlkMatSharedPtr>
         void CoutBlkMat(
-            DNekBlkMatSharedPtr &gmtx, 
-            const unsigned int nwidthcolm=12);
-        void CoutBlkMat(
-            SNekBlkMatSharedPtr &gmtx, 
+            TypeNekBlkMatSharedPtr &gmtx, 
             const unsigned int nwidthcolm=12);
 
+        template<typename TypeNekBlkMatSharedPtr>
         void CoutStandardMat(
-            DNekMatSharedPtr &loc_matNvar,
-            const unsigned int nwidthcolm=12);
-        void CoutStandardMat(
-            SNekMatSharedPtr &loc_matNvar,
+            TypeNekBlkMatSharedPtr &loc_matNvar,
             const unsigned int nwidthcolm=12);
 
+        template<typename TypeNekBlkMatSharedPtr>
         void Cout1DArrayBlkMat(
-            Array<OneD, DNekBlkMatSharedPtr> &gmtxarray,
+            Array<OneD, TypeNekBlkMatSharedPtr> &gmtxarray,
             const unsigned int nwidthcolm=12);
         
+        template<typename TypeNekBlkMatSharedPtr>
         void Cout2DArrayBlkMat(
-            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
-            const unsigned int nwidthcolm=12);
-        void Cout2DArrayBlkMat(
-            Array<OneD, Array<OneD, SNekBlkMatSharedPtr> > &gmtxarray,
+            Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> > &gmtxarray,
             const unsigned int nwidthcolm=12);
 
+        template<typename TypeNekBlkMatSharedPtr>
         void Cout2DArrayStdMat(
-            Array<OneD, Array<OneD, DNekMatSharedPtr> > &gmtxarray,
+            Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> > &gmtxarray,
             const unsigned int nwidthcolm=12);
 #endif
         template<typename DataType, typename TypeNekBlkMatSharedPtr>

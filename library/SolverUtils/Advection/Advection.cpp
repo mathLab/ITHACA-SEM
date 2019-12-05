@@ -125,6 +125,8 @@ void Advection::AddTraceJacToMat(
     Array<OneD, DNekMatSharedPtr>  ElmtJacQuad(ntotElmt);
     Array<OneD, DNekMatSharedPtr>  ElmtJacCoef(ntotElmt);
 
+    Array<OneD, NekDouble> SymmMatData;
+    
     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
     {
         nElmtCoef          = (*fieldExp)[nelmt]->GetNcoeffs();
@@ -179,10 +181,18 @@ void Advection::AddTraceJacToMat(
                 }
                 for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                 {
-                    MatData2 =  Transpose((*ElmtJacCoef[nelmt])).GetPtr();
+                    nElmtCoef          = (*fieldExp)[nelmt]->GetNcoeffs();
+                    if(SymmMatData.num_elements()<nElmtCoef)
+                    {
+                        SymmMatData = Array<OneD, NekDouble> (nElmtCoef*nElmtCoef);
+                    }
                     MatData1 =  ElmtJacCoef[nelmt]->GetPtr();
-                    Vmath::Vadd(nElmtCoef*nElmtCoef,MatData2,1,MatData1,1,MatData1,1);
-                    Vmath::Smul(nElmtCoef*nElmtCoef,0.5,MatData1,1,MatData1,1);
+                    for(int i=0;i<nElmtCoef;i++)
+                    {
+                        Vmath::Vcopy(nElmtCoef,&MatData1[i*nElmtCoef],1,&SymmMatData[i],nElmtCoef);
+                    }
+                    Vmath::Vadd(nElmtCoef*nElmtCoef,SymmMatData,1,MatData1,1,MatData1,1);
+                    // Vmath::Smul(nElmtCoef*nElmtCoef,0.5,MatData1,1,MatData1,1);
                 }
             }
 

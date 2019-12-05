@@ -99,6 +99,13 @@ namespace Nektar
         int                                 m_DebugVolTraceSwitch; 
        // 1: Con; 2: Deriv; Default: all
         int                                 m_DebugConsDerivSwitch; 
+
+
+        int                                 m_DebugNumJacMatSwitch;
+        int                                 m_DebugOutputJacMatSwitch;
+
+        int                                 m_DebugInvMassSwitch   ; 
+        int                                 m_DebugPlusSourceSwitch; 
 #endif
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF

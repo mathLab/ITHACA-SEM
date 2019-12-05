@@ -340,9 +340,12 @@ namespace Nektar
         
 #ifdef CFS_DEBUGMODE
         m_session->LoadParameter("DebugAdvDiffSwitch",                 m_DebugAdvDiffSwitch      ,    0);
-        m_session->LoadParameter("DebugVolTraceSwitch",                m_DebugVolTraceSwitch      ,    0);
-        m_session->LoadParameter("DebugConsDerivSwitch",               m_DebugConsDerivSwitch      ,    0);
-
+        m_session->LoadParameter("DebugVolTraceSwitch",                m_DebugVolTraceSwitch     ,    0);
+        m_session->LoadParameter("DebugConsDerivSwitch",               m_DebugConsDerivSwitch    ,    0);
+        m_session->LoadParameter("DebugNumJacMatSwitch",               m_DebugNumJacMatSwitch    ,    0);
+        m_session->LoadParameter("DebugOutputJacMatSwitch",            m_DebugOutputJacMatSwitch ,    0);
+        m_session->LoadParameter("DebugInvMassSwitch",                 m_DebugInvMassSwitch      ,    1);
+        m_session->LoadParameter("DebugPlusSourceSwitch",              m_DebugPlusSourceSwitch   ,    1);
 #endif
     }
 
@@ -2423,7 +2426,17 @@ namespace Nektar
                 }
 
 #ifdef CFS_DEBUGMODE
-                // DebugCheckJac(0,0);
+                if(m_DebugNumJacMatSwitch)
+                {
+                    NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
+                    Fill2DArrayOfBlkDiagonalMat(m_PrecMatVars,0.0);
+                    DebugNumCalJac_coeff(m_PrecMatVars);
+
+                    if(m_DebugOutputJacMatSwitch)
+                    {
+                        Cout2DArrayBlkMat(m_PrecMatVars);
+                    }
+                }
 #endif
             }
         }
@@ -2463,7 +2476,7 @@ namespace Nektar
                     ratioSteps         = m_Res0PreviousStep/resnorm0;
                     m_Res0PreviousStep = resnorm0;
                 }
-                
+
             }
             else
             {

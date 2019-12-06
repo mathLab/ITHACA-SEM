@@ -796,6 +796,36 @@ namespace Nektar
         }
 
         /**
+         * The coefficients of the function to be acted upon
+         * should be contained in the \param inarray. The
+         * resulting coefficients are stored in \param outarray
+         *
+         * @param   inarray         An array of size \f$N_{\mathrm{eof}}\f$
+         *                          containing the inner product.
+         */
+        void ExpList::RightMultiplyByElmtInvMassOnDiag(
+                                            const DNekBlkMatSharedPtr   &inmat,
+                                            DNekBlkMatSharedPtr         &outmat)
+        {
+            std::shared_ptr<LocalRegions::ExpansionVector> pexp = GetExp();
+            int ntotElmt            = (*pexp).size();
+            GlobalMatrixKey mkey(StdRegions::eInvMass);
+            const DNekScalBlkMatSharedPtr& InvMass = GetBlockMatrix(mkey);
+            DNekMatSharedPtr outtmp; 
+            DNekMatSharedPtr intmp; 
+            DNekScalMatSharedPtr Invtmp;
+
+            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            {
+                outtmp  =   outmat->GetBlock(nelmt,nelmt);
+                intmp   =   inmat->GetBlock(nelmt,nelmt);
+                Invtmp  =   InvMass->GetBlock(nelmt,nelmt);
+
+                (*outtmp) = (*intmp)*(*Invtmp);
+            }
+        }
+
+        /**
          * Given a function \f$u(\boldsymbol{x})\f$ defined at the
          * quadrature points, this function determines the
          * transformed elemental coefficients \f$\hat{u}_n^e\f$
@@ -2801,6 +2831,15 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "v_AddTraceQuadPhysToField is not defined or valid for this class type");
+        }
+
+        void ExpList::v_AddTraceQuadPhysToOffDiag(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &field)
+        {
+            ASSERTL0(false,
+                     "v_AddTraceQuadPhysToOffDiag is not defined or valid for this class type");
         }
 
         void ExpList::v_GetLocTraceFromTracePts(

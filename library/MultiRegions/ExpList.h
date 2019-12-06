@@ -283,6 +283,9 @@ namespace Nektar
                 const DNekBlkMatSharedPtr   &inmat,
                 DNekBlkMatSharedPtr         &outmat);
 
+            MULTI_REGIONS_EXPORT void RightMultiplyByElmtInvMassOnDiag(
+                const DNekBlkMatSharedPtr   &inmat,
+                DNekBlkMatSharedPtr         &outmat);
             ///
             inline void MultiplyByInvMassMatrix(
                 const Array<OneD,const NekDouble> &inarray,
@@ -844,6 +847,14 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &field);
+
+            inline void AddTraceQuadPhysToOffDiag(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &field)
+            {
+                v_AddTraceQuadPhysToOffDiag(Fwd,Bwd,field);
+            }    
             
             inline void GetLocTraceFromTracePts(
                 const Array<OneD, const NekDouble>  &Fwd,
@@ -1400,6 +1411,11 @@ namespace Nektar
                       Array<OneD,NekDouble> &Bwd);
             
             virtual void v_AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &field);
+
+            virtual void v_AddTraceQuadPhysToOffDiag(
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &field);

@@ -258,6 +258,23 @@ namespace Nektar
                 v_DiffuseTraceFlux(nConvectiveFields, fields, inarray,qfield,TraceFlux,pFwd, pBwd,qFwd,qBwd,MuAVTrace,nonZeroIndex,Aver,Jump);
             }
 
+            SOLVER_UTILS_EXPORT void DiffuseTraceSymmFlux(
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
+                const Array<OneD, Array<OneD, NekDouble>>                   &inarray,
+                const Array<OneD,Array<OneD, Array<OneD, NekDouble> > >     &qfield,
+                const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &VolumeFlux,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &SymmFlux,
+                const Array<OneD, Array<OneD, NekDouble>>                   &pFwd,
+                const Array<OneD, Array<OneD, NekDouble>>                   &pBwd,
+                Array< OneD, int >                                          &nonZeroIndex,
+                Array<OneD, Array<OneD, NekDouble> >                        &solution_Aver = NullNekDoubleArrayofArray,
+                Array<OneD, Array<OneD, NekDouble> >                        &solution_jump = NullNekDoubleArrayofArray)
+            {
+                v_DiffuseTraceSymmFlux(nConvectiveFields,fields,inarray,qfield,
+                            VolumeFlux,SymmFlux,pFwd,pBwd,nonZeroIndex,solution_Aver,solution_jump);
+            }
+
             SOLVER_UTILS_EXPORT void AddDiffusionSymmFluxToCoeff(
                 const int                                           nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
@@ -283,6 +300,17 @@ namespace Nektar
             {
                 v_AddDiffusionSymmFluxToPhys(nConvectiveFields,fields,inarray,qfield,VolumeFlux,outarray,pFwd,pBwd);
             }
+
+            SOLVER_UTILS_EXPORT void AddSymmFluxIntegralToOffDiag(
+                const int                                                           nConvectiveFields,
+                const int                                                           nDim,
+                const int                                                           nPts,
+                const int                                                           nTracePts,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+                const Array<OneD, const int >                                       &nonZeroIndex,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &Fwdflux,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &Bwdflux,
+                Array<OneD, Array<OneD, NekDouble> >                                &outarray);
 
             SOLVER_UTILS_EXPORT void FluxVec(
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
@@ -526,6 +554,22 @@ namespace Nektar
                 Array< OneD, int >                                              &nonZeroIndex  ,
                 const Array<OneD, Array<OneD, NekDouble>>                       &Aver          ,
                 const Array<OneD, Array<OneD, NekDouble>>                       &Jump          );
+
+            virtual void v_DiffuseTraceSymmFlux(
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
+                const Array<OneD, Array<OneD, NekDouble>>                   &inarray,
+                const Array<OneD,Array<OneD, Array<OneD, NekDouble> > >     &qfield,
+                const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &VolumeFlux,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &SymmFlux,
+                const Array<OneD, Array<OneD, NekDouble>>                   &pFwd,
+                const Array<OneD, Array<OneD, NekDouble>>                   &pBwd,
+                Array< OneD, int >                                          &nonZeroIndex,
+                Array<OneD, Array<OneD, NekDouble> >                        &solution_Aver,
+                Array<OneD, Array<OneD, NekDouble> >                        &solution_jump)
+            {
+                ASSERTL0(false, "Not defined function v_DiffuseTraceSymmFlux.");
+            }
 
             virtual void v_AddDiffusionSymmFluxToCoeff(
                 const int                                           nConvectiveFields,

@@ -1720,6 +1720,23 @@ using namespace std;
             m_locTraceToTraceMap->AddLocTracesToField(facevals,field);
         }
 
+        void DisContField3D::v_AddTraceQuadPhysToOffDiag(
+            const Array<OneD, const NekDouble>  &Fwd,
+            const Array<OneD, const NekDouble>  &Bwd,
+            Array<OneD,       NekDouble>        &field)
+        {
+            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->
+                                            GetNLocTracePts(),0.0);
+
+            Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->
+                                                    GetNFwdLocTracePts();
+            m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(1, Fwd, invals);
+            
+            m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(0, Bwd, facevals);
+
+            m_locTraceToTraceMap->AddLocTracesToField(facevals,field);
+        }
+
         void DisContField3D::v_GetLocTraceFromTracePts(
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,

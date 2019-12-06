@@ -120,6 +120,44 @@ namespace Nektar
                 MuVarTrace[k] = 0.5 * (Fwd[k] + Bwd[k]) ;
             }
         }
+
+        void Diffusion::AddSymmFluxIntegralToOffDiag(
+            const int                                                           nConvectiveFields,
+            const int                                                           nDim,
+            const int                                                           nPts,
+            const int                                                           nTracePts,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+            const Array<OneD, const int >                                       &nonZeroIndex,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &Fwdflux,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &Bwdflux,
+            Array<OneD, Array<OneD, NekDouble> >                                &outarray)
+        {
+            int nCoeffs =   outarray[nConvectiveFields-1].num_elements();
+            Array<OneD, NekDouble > tmpCoeff(nCoeffs,0.0);
+            Array<OneD, Array<OneD, NekDouble> > tmpfield(nDim);
+            for(int i = 0;i<nDim;i++)
+            {
+                tmpfield[i]    =   Array<OneD, NekDouble>(nPts,0.0);
+            }
+            int nv = 0;
+            for(int j=0;j<nonZeroIndex.num_elements();j++)
+            {
+                nv  =   nonZeroIndex[j];
+                MultiRegions::ExpListSharedPtr tracelist = fields[nv]->GetTrace();
+                for(int nd=0;nd<nDim;nd++)
+                {
+                    Vmath::Zero(nPts,tmpfield[nd],1);
+
+                    tracelist->MultiplyByQuadratureMetric(Fwdflux[nd][nv],Fwdflux[nd][nv]);
+                    tracelist->MultiplyByQuadratureMetric(Bwdflux[nd][nv],Bwdflux[nd][nv]);
+
+                    fields[nv]->AddTraceQuadPhysToOffDiag(Fwdflux[nd][nv],Bwdflux[nd][nv],tmpfield[nd]);
+                    fields[nv]->DividByQuadratureMetric(tmpfield[nd],tmpfield[nd]);
+                }
+                fields[nv]->IProductWRTDerivBase(tmpfield,tmpCoeff);
+                Vmath::Vadd(nCoeffs,tmpCoeff,1,outarray[nv],1,outarray[nv],1);
+            }
+        }
         
         void Diffusion::v_Diffuse_coeff(
             const int nConvectiveFields,

@@ -1430,6 +1430,34 @@ namespace Nektar
             }
         }
 
+        void DisContField2D::v_AddTraceQuadPhysToOffDiag(
+            const Array<OneD, const NekDouble>  &Fwd,
+            const Array<OneD, const NekDouble>  &Bwd,
+            Array<OneD,       NekDouble>        &field)
+        {
+            int cnt, n, e, npts, phys_offset;
+
+            // Basis definition on each element
+            LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+            if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
+            {
+                Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
+                                               GetNLocTracePts(),0.0);
+
+                Array<OneD, NekDouble> invals = edgevals + m_locTraceToTraceMap->
+                                                        GetNFwdLocTracePts();
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(1, Fwd, invals);
+                
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(0, Bwd, edgevals);
+
+                m_locTraceToTraceMap->AddLocTracesToField(edgevals,field);
+            }
+            else
+            {
+                ASSERTL0(false, "v_AddTraceQuadPhysToOffDiag not coded for eGauss_Lagrange");                
+            }
+        }
+
         void DisContField2D::v_GetLocTraceFromTracePts(
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,

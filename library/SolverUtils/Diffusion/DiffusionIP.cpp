@@ -476,16 +476,9 @@ namespace Nektar
                     }
                 }
                 Array< OneD, int >  nonZeroIndex;
-                DiffuseTraceSymmFlux(nConvectiveFields,fields,inarray,qfield,VolumeFlux,traceSymflux,pFwd,pBwd,nonZeroIndex);
-
-                for (int nd = 0; nd < nDim; ++nd)
-                {
-                    for (int j = 0; j < nonZeroIndex.num_elements(); ++j)
-                    {
-                        int i = nonZeroIndex[j];
-                        Vmath::Smul(nTracePts,-0.5*m_IPSymmFtluxCoeff,traceSymflux[nd][i],1,traceSymflux[nd][i],1);
-                    }
-                }
+                DiffuseTraceSymmFlux(nConvectiveFields,fields,inarray,qfield,VolumeFlux,
+                                        traceSymflux,pFwd,pBwd,nonZeroIndex,m_traceAver,m_traceJump);
+              
                 AddSymmFluxIntegralToCoeff(nConvectiveFields,nDim,nPts,nTracePts,fields,nonZeroIndex,traceSymflux,outarray);
             }
         }
@@ -522,22 +515,50 @@ namespace Nektar
         //     }
         // }
         
-        void DiffusionIP::DiffuseTraceSymmFlux(
-            const int                                           nConvectiveFields,
-            const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
-            const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &SymmFlux,
-            const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
-            const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
-            Array< OneD, int >                                  &nonZeroIndex)
+        void DiffusionIP::v_DiffuseTraceSymmFlux(
+            const int                                                   nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
+            const Array<OneD, Array<OneD, NekDouble>>                   &inarray,
+            const Array<OneD,Array<OneD, Array<OneD, NekDouble> > >     &qfield,
+            const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &VolumeFlux,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &SymmFlux,
+            const Array<OneD, Array<OneD, NekDouble>>                   &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>                   &pBwd,
+            Array< OneD, int >                                          &nonZeroIndex,
+            Array<OneD, Array<OneD, NekDouble> >                        &solution_Aver,
+            Array<OneD, Array<OneD, NekDouble> >                        &solution_jump)
         {
             int nDim      = fields[0]->GetCoordim(0);
             int nTracePts = fields[0]->GetTrace()->GetTotPoints();
 
-            CalTraceSymFlux(nConvectiveFields,nDim,fields,m_traceAver,m_traceJump,
+            Array<OneD, Array<OneD, NekDouble> >                pAver;
+            Array<OneD, Array<OneD, NekDouble> >                pjump;
+            if(0==solution_jump.num_elements())
+            {
+                pAver = Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+                pjump = Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+                for(int m=0;m<nConvectiveFields;m++)
+                {
+                    pAver[m] = Array<OneD, NekDouble>(nTracePts);
+                    pjump[m] = Array<OneD, NekDouble>(nTracePts);
+                }
+            }
+            else
+            {
+                pAver   =   solution_Aver;
+                pjump   =   solution_jump;
+            }
+
+            CalTraceSymFlux(nConvectiveFields,nDim,fields,pAver,pjump,
                         nonZeroIndex,SymmFlux);
+            for (int nd = 0; nd < nDim; ++nd)
+            {
+                for (int j = 0; j < nonZeroIndex.num_elements(); ++j)
+                {
+                    int i = nonZeroIndex[j];
+                    Vmath::Smul(nTracePts,-0.5*m_IPSymmFtluxCoeff,SymmFlux[nd][i],1,SymmFlux[nd][i],1);
+                }
+            }
         }
 
         void DiffusionIP::CalTraceSymFlux(

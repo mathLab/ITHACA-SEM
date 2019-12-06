@@ -132,6 +132,9 @@ namespace Nektar
             Array<OneD,       Array<OneD, NekDouble> >      m_SysEquatResid_k;
 
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >  m_PrecMatVars;
+
+            Array<OneD, Array<OneD, NekDouble> >            m_PrecMatVarsOffDiag;
+
             DNekBlkMatSharedPtr                             m_PrecMat;
             Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >  m_PrecMatVarsSingle;
             SNekBlkMatSharedPtr                             m_PrecMatSingle;
@@ -154,6 +157,9 @@ namespace Nektar
             Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle >>>>  m_TraceJacDerivArraySingle;
 
             Array<OneD,       Array<OneD, NekSingle> >      m_TraceJacDerivSignSingle;
+            
+            Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle >>>>>  m_TraceIPSymJacArraySingle;
+            Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble >>>>>  m_TraceIPSymJacArray;
 
             /// estimate the magnitude of each conserved varibles
             Array<OneD, NekDouble>                          m_magnitdEstimat;

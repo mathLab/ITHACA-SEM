@@ -225,6 +225,17 @@ namespace Nektar
                         }
                         AllocateNekBlkMatDig(m_PrecMat,nelmtmatdim,nelmtmatdim);
                     }
+#ifdef CFS_DEBUGMODE
+                    if(m_DebugNumJacBSOR)
+                    {
+                        int nTotCoeff = GetNcoeffs();
+                        m_PrecMatVarsOffDiag = Array<OneD, Array<OneD, NekDouble> >(nvariables*nTotCoeff);
+                        for(int m = 0; m < nvariables*nTotCoeff; m++)
+                        {
+                            m_PrecMatVarsOffDiag[m] =  Array<OneD, NekDouble> (nvariables*nTotCoeff,0.0);
+                        }
+                    }
+#endif
                 }
             }
 
@@ -346,6 +357,10 @@ namespace Nektar
         m_session->LoadParameter("DebugOutputJacMatSwitch",            m_DebugOutputJacMatSwitch ,    0);
         m_session->LoadParameter("DebugInvMassSwitch",                 m_DebugInvMassSwitch      ,    1);
         m_session->LoadParameter("DebugPlusSourceSwitch",              m_DebugPlusSourceSwitch   ,    1);
+
+        m_session->LoadParameter("DebugIPSymmFluxJacSwitch",           m_DebugIPSymmFluxJacSwitch,    0);
+
+        m_session->LoadParameter("DebugNumJacBSOR",           m_DebugNumJacBSOR,    0);
 #endif
     }
 
@@ -599,10 +614,10 @@ namespace Nektar
     
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::preconditioner_BlkDiag(
-        const Array<OneD, NekDouble>                        &inarray,
-        Array<OneD, NekDouble >                             &outarray,
-        Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >   &PrecMatVars,
-        const DataType                                      &tmpDataType)
+        const Array<OneD, NekDouble>                                &inarray,
+        Array<OneD, NekDouble >                                     &outarray,
+        const Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >     &PrecMatVars,
+        const DataType                                              &tmpDataType)
     {
         unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
         unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
@@ -644,7 +659,7 @@ namespace Nektar
     void CompressibleFlowSystem::preconditioner_BlkDiag(
         const Array<OneD, NekDouble>                        &inarray,
         Array<OneD, NekDouble >                             &outarray,
-        TypeNekBlkMatSharedPtr                              &PrecMatVars,
+        const TypeNekBlkMatSharedPtr                        &PrecMatVars,
         const DataType                                      &tmpDataType)
     {
         unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
@@ -693,6 +708,67 @@ namespace Nektar
         }
     }
 
+    void CompressibleFlowSystem::preconditioner_NumJac(
+        const Array<OneD, NekDouble>                                                &inarray,
+        Array<OneD, NekDouble >                                                     &outarray,
+        const Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                        &PrecMatVars,
+        const Array<OneD, Array<OneD, NekDouble > >                                 &PrecMatVarsOffDiag)
+    {
+        const NekDouble SORParam        =   m_SORRelaxParam;
+        const NekDouble OmSORParam      =   1.0-SORParam;
+
+        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
+        unsigned int ntotpnt    = inarray.num_elements();
+        
+        ASSERTL0(nvariables*npoints==ntotpnt,"nvariables*npoints==ntotpnt not satisfied in preconditioner_BlkSOR");
+
+        Array<OneD, NekDouble> rhs(ntotpnt);
+
+        Array<OneD, NekDouble>  outN(ntotpnt);
+        Array<OneD, NekDouble>  outTmp(ntotpnt);
+        Vmath::Vcopy(ntotpnt,&inarray[0],1,&rhs[0],1);
+
+        NekDouble tmpDouble = 0.0;
+        preconditioner_BlkDiag(rhs,outarray,PrecMatVars,tmpDouble);
+
+        int nSORTot   =   m_JFNKPrecondStep;
+        for(int nsor = 0; nsor < nSORTot-1; nsor++)
+        {
+            Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
+            
+            MinusOffDiag2RhsNumJac(nvariables,npoints,rhs,outarray,PrecMatVarsOffDiag);
+
+            preconditioner_BlkDiag(outarray,outTmp,PrecMatVars,tmpDouble);
+            Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
+        }
+    }
+
+    void CompressibleFlowSystem::MinusOffDiag2RhsNumJac(
+        const int                                                                   nvariables,
+        const int                                                                   nCoeffs,
+        const Array<OneD, NekDouble>                                                &rhs,
+        Array<OneD, NekDouble>                                                      &outarray,
+        const Array<OneD, Array<OneD, NekDouble > >                                 &PrecMatVarsOffDiag)
+    {
+        int nTotCoef = nvariables*nCoeffs;
+        Array<OneD, NekDouble> tmp (nTotCoef,0.0);
+        for(int i=0;i<nTotCoef;i++)
+        {
+            Vmath::Svtvp(nTotCoef,outarray[i],&PrecMatVarsOffDiag[i][0],1,&tmp[0],1,&tmp[0],1);
+        }
+
+        // for(int i=0;i<nTotCoef;i++)
+        // {
+        //     for(int j=0;j<nTotCoef;j++)
+        //     {
+        //         tmp[j] += outarray[i]*PrecMatVarsOffDiag[j][i];
+        //     }
+        // }
+
+        Vmath::Vsub(nTotCoef,&rhs[0],1,&tmp[0],1,&outarray[0],1);
+    }
+
     void CompressibleFlowSystem::preconditioner_BlkSOR_coeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,
@@ -700,178 +776,202 @@ namespace Nektar
 
     {
         int nSORTot   =   m_JFNKPrecondStep;
-        if (0==nSORTot)
+#ifdef CFS_DEBUGMODE
+        if(m_DebugNumJacBSOR)
         {
-            preconditioner(inarray,outarray);
+
+// int nwidthcolm=10;
+// int nTotCoef = inarray.num_elements();
+// for(int m = 0; m < nTotCoef; m++)
+// {
+//     for(int n = 0; n < nTotCoef; n++)
+//     {
+//         cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-6) 
+//              <<" "<< m_PrecMatVarsOffDiag[m][n];
+//     }
+//     cout <<endl;
+// }
+// ASSERTL0(false, "debugStop");
+            preconditioner_NumJac(inarray,outarray,m_PrecMatVars,m_PrecMatVarsOffDiag);
         }
         else
         {
-            const NekDouble SORParam        =   m_SORRelaxParam;
-            const NekDouble OmSORParam      =   1.0-SORParam;
-
-            unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
-            unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
-            unsigned int ntotpnt    = inarray.num_elements();
-            
-            ASSERTL0(nvariables*npoints==ntotpnt,"nvariables*npoints==ntotpnt not satisfied in preconditioner_BlkSOR");
-
-
-            Array<OneD, NekDouble> rhs(ntotpnt);
-            // Vmath::Vcopy(ntotpnt,inarray,1,rhs,1);
-
-            PointerWrapper pwrapp = eWrapper;
-
-            Array<OneD, NekDouble>  outN(ntotpnt);
-            Array<OneD, NekDouble>  outTmp(ntotpnt);
-            Array<OneD, Array<OneD, NekDouble> >rhs2d(nvariables);
-            Array<OneD, Array<OneD, NekDouble> >out_2d(nvariables);
-            Array<OneD, Array<OneD, NekDouble> >outTmp_2d(nvariables);
-            for(int m = 0; m < nvariables; m++)
+#endif
+            if (0==nSORTot)
             {
-                int moffset     = m*npoints;
-                rhs2d[m]        = rhs       + moffset;
-                out_2d[m]       = outarray  + moffset;
-                outTmp_2d[m]    = outTmp    + moffset;
-                m_fields[m]->MultiplyByMassMatrix(inarray+moffset,rhs2d[m]);
-            }
-
-            int nphysic    = GetNpoints();
-            int nTracePts  = GetTraceTotPoints();
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(m_spacedim);
-            for(int i = 0; i< m_spacedim; i++)
-            {
-                qfield[i]   =   Array<OneD, Array<OneD, NekDouble> >(nvariables);
-                for(int j = 0; j< nvariables; j++)
-                {
-                    qfield[i][j]   =   Array<OneD, NekDouble>(nphysic);
-                }
-            }
-            int ntmpTrace = 4+2*m_spacedim;
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmpTrace(ntmpTrace);
-            for(int i = 0; i< ntmpTrace; i++)
-            {
-                tmpTrace[i]   =   Array<OneD, Array<OneD, NekDouble> >(nvariables);
-                for(int j = 0; j< nvariables; j++)
-                {
-                    tmpTrace[i][j]   =   Array<OneD, NekDouble>(nTracePts);
-                }
-            }
-            Array<OneD, Array<OneD, NekDouble> > FwdFluxDeriv(nvariables);
-            Array<OneD, Array<OneD, NekDouble> > BwdFluxDeriv(nvariables);
-            for(int j = 0; j< nvariables; j++)
-            {
-                FwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts);
-                BwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts);
-            }
-
-            bool flagUpdateDervFlux = false;
-            if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
-            {
-                flagUpdateDervFlux = true;
-            }
-
-            const int nwspTraceDataType = nvariables+1;
-            if(m_flagPrecMatVarsSingle)
-            {
-                NekSingle tmpSingle;
-                if(m_flagPrecondCacheOptmis)
-                {
-                    Array<OneD, Array<OneD, NekSingle> > wspTraceDataType(nwspTraceDataType);
-                    for(int m=0;m<nwspTraceDataType;m++)
-                    {
-                        wspTraceDataType[m] =   Array<OneD, NekSingle>(nTracePts);
-                    }
-
-                    preconditioner_BlkDiag(rhs,outarray,m_PrecMatSingle,tmpSingle);
-
-                    for(int nsor = 0; nsor < nSORTot-1; nsor++)
-                    {
-                        Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
-                        
-                        MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
-                                        wspTraceDataType,m_TraceJacArraySingle, m_TraceJacDerivArraySingle, m_TraceJacDerivSignSingle);
-
-                        // Vmath::Zero(ntotpnt,outTmp,1);
-                        preconditioner_BlkDiag(outarray,outTmp,m_PrecMatSingle,tmpSingle);
-                        Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
-                        if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
-                        {
-                            flagUpdateDervFlux = true;
-                        }
-                    }
-                }
-                else
-                {
-                    preconditioner_BlkDiag(rhs,outarray,m_PrecMatVarsSingle,tmpSingle);
-
-                    for(int nsor = 0; nsor < nSORTot-1; nsor++)
-                    {
-                        Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
-                        
-                        MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
-                                        m_TraceJacSingle, m_TraceJacDerivSingle, m_TraceJacDerivSignSingle);
-
-                        // Vmath::Zero(ntotpnt,outTmp,1);
-                        preconditioner_BlkDiag(outarray,outTmp,m_PrecMatVarsSingle,tmpSingle);
-                        Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
-                        if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
-                        {
-                            flagUpdateDervFlux = true;
-                        }
-                    }
-                }
+                preconditioner(inarray,outarray);
             }
             else
             {
-                NekDouble tmpDouble;
-                if(m_flagPrecondCacheOptmis)
+                const NekDouble SORParam        =   m_SORRelaxParam;
+                const NekDouble OmSORParam      =   1.0-SORParam;
+
+                unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+                unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
+                unsigned int ntotpnt    = inarray.num_elements();
+                
+                ASSERTL0(nvariables*npoints==ntotpnt,"nvariables*npoints==ntotpnt not satisfied in preconditioner_BlkSOR");
+
+
+                Array<OneD, NekDouble> rhs(ntotpnt);
+                // Vmath::Vcopy(ntotpnt,inarray,1,rhs,1);
+
+                PointerWrapper pwrapp = eWrapper;
+
+                Array<OneD, NekDouble>  outN(ntotpnt);
+                Array<OneD, NekDouble>  outTmp(ntotpnt);
+                Array<OneD, Array<OneD, NekDouble> >rhs2d(nvariables);
+                Array<OneD, Array<OneD, NekDouble> >out_2d(nvariables);
+                Array<OneD, Array<OneD, NekDouble> >outTmp_2d(nvariables);
+                for(int m = 0; m < nvariables; m++)
                 {
-                    Array<OneD, Array<OneD, NekDouble> > wspTraceDataType(nwspTraceDataType);
-                    for(int m=0;m<nwspTraceDataType;m++)
+                    int moffset     = m*npoints;
+                    rhs2d[m]        = rhs       + moffset;
+                    out_2d[m]       = outarray  + moffset;
+                    outTmp_2d[m]    = outTmp    + moffset;
+                    m_fields[m]->MultiplyByMassMatrix(inarray+moffset,rhs2d[m]);
+                }
+
+                int nphysic    = GetNpoints();
+                int nTracePts  = GetTraceTotPoints();
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(m_spacedim);
+                for(int i = 0; i< m_spacedim; i++)
+                {
+                    qfield[i]   =   Array<OneD, Array<OneD, NekDouble> >(nvariables);
+                    for(int j = 0; j< nvariables; j++)
                     {
-                        wspTraceDataType[m] =   Array<OneD, NekDouble>(nTracePts);
+                        qfield[i][j]   =   Array<OneD, NekDouble>(nphysic);
                     }
-
-                    preconditioner_BlkDiag(rhs,outarray,m_PrecMat,tmpDouble);
-
-                    for(int nsor = 0; nsor < nSORTot-1; nsor++)
+                }
+                int ntmpTrace = 4+2*m_spacedim;
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmpTrace(ntmpTrace);
+                for(int i = 0; i< ntmpTrace; i++)
+                {
+                    tmpTrace[i]   =   Array<OneD, Array<OneD, NekDouble> >(nvariables);
+                    for(int j = 0; j< nvariables; j++)
                     {
-                        Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
-                        
-                        MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
-                                        wspTraceDataType, m_TraceJacArray, m_TraceJacDerivArray, m_TraceJacDerivSign);
+                        tmpTrace[i][j]   =   Array<OneD, NekDouble>(nTracePts);
+                    }
+                }
+                Array<OneD, Array<OneD, NekDouble> > FwdFluxDeriv(nvariables);
+                Array<OneD, Array<OneD, NekDouble> > BwdFluxDeriv(nvariables);
+                for(int j = 0; j< nvariables; j++)
+                {
+                    FwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts);
+                    BwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts);
+                }
 
-                        // Vmath::Zero(ntotpnt,outTmp,1);
-                        preconditioner_BlkDiag(outarray,outTmp,m_PrecMat,tmpDouble);
-                        Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
-                        if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+                bool flagUpdateDervFlux = false;
+                if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+                {
+                    flagUpdateDervFlux = true;
+                }
+
+                const int nwspTraceDataType = nvariables+1;
+                if(m_flagPrecMatVarsSingle)
+                {
+                    NekSingle tmpSingle;
+                    if(m_flagPrecondCacheOptmis)
+                    {
+                        Array<OneD, Array<OneD, NekSingle> > wspTraceDataType(nwspTraceDataType);
+                        for(int m=0;m<nwspTraceDataType;m++)
                         {
-                            flagUpdateDervFlux = true;
+                            wspTraceDataType[m] =   Array<OneD, NekSingle>(nTracePts);
+                        }
+
+                        preconditioner_BlkDiag(rhs,outarray,m_PrecMatSingle,tmpSingle);
+
+                        for(int nsor = 0; nsor < nSORTot-1; nsor++)
+                        {
+                            Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
+                            
+                            MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
+                                            wspTraceDataType,m_TraceJacArraySingle, m_TraceJacDerivArraySingle, m_TraceJacDerivSignSingle,m_TraceIPSymJacArraySingle);
+
+                            // Vmath::Zero(ntotpnt,outTmp,1);
+                            preconditioner_BlkDiag(outarray,outTmp,m_PrecMatSingle,tmpSingle);
+                            Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
+                            if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+                            {
+                                flagUpdateDervFlux = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        preconditioner_BlkDiag(rhs,outarray,m_PrecMatVarsSingle,tmpSingle);
+
+                        for(int nsor = 0; nsor < nSORTot-1; nsor++)
+                        {
+                            Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
+                            
+                            MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
+                                            m_TraceJacSingle, m_TraceJacDerivSingle, m_TraceJacDerivSignSingle);
+
+                            // Vmath::Zero(ntotpnt,outTmp,1);
+                            preconditioner_BlkDiag(outarray,outTmp,m_PrecMatVarsSingle,tmpSingle);
+                            Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
+                            if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+                            {
+                                flagUpdateDervFlux = true;
+                            }
                         }
                     }
                 }
                 else
                 {
-                    preconditioner_BlkDiag(rhs,outarray,m_PrecMatVars,tmpDouble);
-
-                    for(int nsor = 0; nsor < nSORTot-1; nsor++)
+                    NekDouble tmpDouble;
+                    if(m_flagPrecondCacheOptmis)
                     {
-                        Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
-                        
-                        MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
-                                        m_TraceJac, m_TraceJacDeriv, m_TraceJacDerivSign);
-
-                        // Vmath::Zero(ntotpnt,outTmp,1);
-                        preconditioner_BlkDiag(outarray,outTmp,m_PrecMatVars,tmpDouble);
-                        Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
-                        if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+                        Array<OneD, Array<OneD, NekDouble> > wspTraceDataType(nwspTraceDataType);
+                        for(int m=0;m<nwspTraceDataType;m++)
                         {
-                            flagUpdateDervFlux = true;
+                            wspTraceDataType[m] =   Array<OneD, NekDouble>(nTracePts);
+                        }
+
+                        preconditioner_BlkDiag(rhs,outarray,m_PrecMat,tmpDouble);
+
+                        for(int nsor = 0; nsor < nSORTot-1; nsor++)
+                        {
+                            Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
+                            
+                            MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
+                                            wspTraceDataType, m_TraceJacArray, m_TraceJacDerivArray, m_TraceJacDerivSign,m_TraceIPSymJacArray);
+
+                            // Vmath::Zero(ntotpnt,outTmp,1);
+                            preconditioner_BlkDiag(outarray,outTmp,m_PrecMat,tmpDouble);
+                            Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
+                            if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+                            {
+                                flagUpdateDervFlux = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        preconditioner_BlkDiag(rhs,outarray,m_PrecMatVars,tmpDouble);
+
+                        for(int nsor = 0; nsor < nSORTot-1; nsor++)
+                        {
+                            Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
+                            
+                            MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,tmpTrace,
+                                            m_TraceJac, m_TraceJacDeriv, m_TraceJacDerivSign);
+
+                            // Vmath::Zero(ntotpnt,outTmp,1);
+                            preconditioner_BlkDiag(outarray,outTmp,m_PrecMatVars,tmpDouble);
+                            Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
+                            if(m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
+                            {
+                                flagUpdateDervFlux = true;
+                            }
                         }
                     }
                 }
             }
+#ifdef CFS_DEBUGMODE
         }
+#endif
     }
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
@@ -1066,19 +1166,20 @@ namespace Nektar
 
     template<typename DataType>
     void CompressibleFlowSystem::MinusOffDiag2Rhs(
-            const int                                                           nvariables,
-            const int                                                           nCoeffs,
-            const Array<OneD, const Array<OneD, NekDouble> >                    &inarray,
-            Array<OneD,       Array<OneD, NekDouble> >                          &outarray,
-            bool                                                                flagUpdateDervFlux,
-            Array<OneD,       Array<OneD, NekDouble> >                          &FwdFluxDeriv,
-            Array<OneD,       Array<OneD, NekDouble> >                          &BwdFluxDeriv,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &qfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &wspTrace,
-            Array<OneD, Array<OneD, DataType > >                                &wspTraceDataType,
-            const Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>     &TraceJacArray,
-            const Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>     &TraceJacDerivArray,
-            const Array<OneD, Array<OneD, DataType> >                           &TraceJacDerivSign)
+        const int                                                                       nvariables,
+        const int                                                                       nCoeffs,
+        const Array<OneD, const Array<OneD, NekDouble> >                                &inarray,
+        Array<OneD,       Array<OneD, NekDouble> >                                      &outarray,
+        bool                                                                            flagUpdateDervFlux,
+        Array<OneD,       Array<OneD, NekDouble> >                                      &FwdFluxDeriv,
+        Array<OneD,       Array<OneD, NekDouble> >                                      &BwdFluxDeriv,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                              &qfield,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                              &wspTrace,
+        Array<OneD, Array<OneD, DataType > >                                            &wspTraceDataType,
+        const Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>                 &TraceJacArray,
+        const Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>                 &TraceJacDerivArray,
+        const Array<OneD, Array<OneD, DataType> >                                       &TraceJacDerivSign,
+        const Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>>     &TraceIPSymJacArray)
     {
         int nTracePts  = GetTraceTotPoints();
         int npoints    = GetNpoints();
@@ -1097,6 +1198,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > Bwd    ;
         Array<OneD, Array<OneD, NekDouble> > FwdFlux;
         Array<OneD, Array<OneD, NekDouble> > BwdFlux;
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivBwd(nDim);
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivFwd(nDim);
         int indexwspTrace = 0;
         Fwd     =   wspTrace[indexwspTrace], indexwspTrace++;
         Bwd     =   wspTrace[indexwspTrace], indexwspTrace++;
@@ -1175,8 +1278,6 @@ namespace Nektar
         // }
                 CalphysDeriv(outpnts,qfield);
 
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivBwd(nDim);
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivFwd(nDim);
                 for (int nd = 0; nd < nDim; ++nd)
                 {
                     numDerivBwd[nd] =   wspTrace[indexwspTrace], indexwspTrace++;
@@ -1235,6 +1336,59 @@ namespace Nektar
                         BwdFlux[m][i] +=  NekDouble( TraceJacDerivSign[1][i]*Fwdreslt[i] );
                     }
                 }
+
+#ifdef CFS_DEBUGMODE
+                if(m_DebugIPSymmFluxJacSwitch)
+                {
+                    for(int m = 0; m < nvariables; ++m)
+                    {
+                        for(int i = 0; i < nTracePts; ++i)
+                        {
+                            Fwdarray[m][i] =  DataType( Fwd[m][i] );
+                        }
+                    }
+                    for(int nd = 0; nd < m_spacedim; ++nd)
+                    {
+                        for(int m = 0; m < nvariables; ++m)
+                        {
+                            Vmath::Zero(nTracePts, &Fwdreslt[0],1);
+                            for(int n = 0; n < nvariables; ++n)
+                            {
+                                Vmath::Vvtvp(nTracePts,&TraceIPSymJacArray[0][nd][m][n][0],1,&Fwdarray[n][0],1,&Fwdreslt[0],1,&Fwdreslt[0],1);
+                            }
+
+                            for(int i = 0; i < nTracePts; ++i)
+                            {
+                                numDerivFwd[nd][m][i] =  NekDouble( TraceJacDerivSign[0][i]*Fwdreslt[i] );
+                            }
+                        }
+                    }
+
+                    for(int m = 0; m < nvariables; ++m)
+                    {
+                        for(int i = 0; i < nTracePts; ++i)
+                        {
+                            Fwdarray[m][i] =  DataType( Bwd[m][i] );
+                        }
+                    }
+                    for(int nd = 0; nd < m_spacedim; ++nd)
+                    {
+                        for(int m = 0; m < nvariables; ++m)
+                        {
+                            Vmath::Zero(nTracePts, &Fwdreslt[0],1);
+                            for(int n = 0; n < nvariables; ++n)
+                            {
+                                Vmath::Vvtvp(nTracePts,&TraceIPSymJacArray[1][nd][m][n][0],1,&Fwdarray[n][0],1,&Fwdreslt[0],1,&Fwdreslt[0],1);
+                            }
+
+                            for(int i = 0; i < nTracePts; ++i)
+                            {
+                                numDerivBwd[nd][m][i] =  NekDouble( TraceJacDerivSign[1][i]*Fwdreslt[i] );
+                            }
+                        }
+                    }
+                }
+#endif
             }
         }
 
@@ -1247,6 +1401,16 @@ namespace Nektar
             m_fields[i]->AddTraceIntegralToOffDiag       (FwdFlux[i],BwdFlux[i], outarray[i]);
         }
 
+#ifdef CFS_DEBUGMODE
+        Array<OneD, int > nonZeroIndex;
+        if(m_DEBUG_VISCOUS_JAC_MAT&&m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT&&m_DebugIPSymmFluxJacSwitch)
+        {
+            for(int i = 0; i < nvariables; ++i)
+            {
+                m_diffusion->AddSymmFluxIntegralToOffDiag(nConvectiveFields,nDim,npoints,nTracePts,m_fields,nonZeroIndex,numDerivFwd,numDerivBwd,outarray);
+            }
+        }
+#endif
         for(int i = 0; i < nvariables; ++i)
         {
             Vmath::Svtvp(nCoeffs,-m_TimeIntegLambda,outarray[i],1,inarray[i],1,outarray[i],1);
@@ -1333,7 +1497,7 @@ namespace Nektar
                     }
                 }
             }
-            if(m_flagPrecondCacheOptmis)
+            if(m_flagPrecondCacheOptmis&&gmtVar->GetRows())
             {
                 ElmtMatData = gmtVar->GetBlock(nelmt,nelmt)->GetPtr();
                 Vmath::Vcopy(blocksize, &GMatData[0],1,&ElmtMatData[0],1);
@@ -1773,15 +1937,16 @@ namespace Nektar
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::AddMatNSBlkDiag_boundary(
-        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &qfield,
-        Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >               &gmtxarray,
-        Array<OneD, TypeNekBlkMatSharedPtr >                            &TraceJac,
-        Array<OneD, TypeNekBlkMatSharedPtr >                            &TraceJacDeriv,
-        Array<OneD, Array<OneD, DataType> >                             &TraceJacDerivSign)
+        const Array<OneD, const Array<OneD, NekDouble> >                        &inarray,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                      &qfield,
+        Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >                       &gmtxarray,
+        Array<OneD, TypeNekBlkMatSharedPtr >                                    &TraceJac,
+        Array<OneD, TypeNekBlkMatSharedPtr >                                    &TraceJacDeriv,
+        Array<OneD, Array<OneD, DataType> >                                     &TraceJacDerivSign,
+        Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>>   &TraceIPSymJacArray)
     {
         int nvariables = inarray.num_elements();
-        GetTraceJac(inarray,qfield,TraceJac,TraceJacDeriv,TraceJacDerivSign);
+        GetTraceJac(inarray,qfield,TraceJac,TraceJacDeriv,TraceJacDerivSign,TraceIPSymJacArray);
 
 #ifdef CFS_DEBUGMODE
         if(2==m_DebugAdvDiffSwitch&&2==m_DebugConsDerivSwitch)
@@ -1811,11 +1976,12 @@ namespace Nektar
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::GetTraceJac(
-        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-        Array<OneD, TypeNekBlkMatSharedPtr >                            &TraceJac,
-        Array<OneD, TypeNekBlkMatSharedPtr >                            &TraceJacDeriv,
-        Array<OneD, Array<OneD, DataType> >                             &TraceJacDerivSign)
+        const Array<OneD, const Array<OneD, NekDouble> >                        &inarray,
+        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >          &qfield,
+        Array<OneD, TypeNekBlkMatSharedPtr >                                    &TraceJac,
+        Array<OneD, TypeNekBlkMatSharedPtr >                                    &TraceJacDeriv,
+        Array<OneD, Array<OneD, DataType> >                                     &TraceJacDerivSign,
+        Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>>   &TraceIPSymJacArray)
     {
         int nvariables = inarray.num_elements();
         // int npoints    = GetNpoints();
@@ -1859,9 +2025,33 @@ namespace Nektar
 
         Array<OneD, Array<OneD, NekDouble> > AdvVel(m_spacedim);
         DataType tmp;
+#ifdef CFS_DEBUGMODE
+        if(m_DebugIPSymmFluxJacSwitch&&(0==TraceIPSymJacArray.num_elements()))
+        {
+            int nTracePts   = GetTraceTotPoints();
+            int nlrTot = 2;
+            TraceIPSymJacArray = Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>> (nlrTot);
+            for(int nlr = 0; nlr < nlrTot; ++nlr)
+            {
+                TraceIPSymJacArray[nlr]   =   Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>(m_spacedim);
+                for(int nd = 0; nd < m_spacedim; ++nd)
+                {
+                    TraceIPSymJacArray[nlr][nd]   =   Array<OneD, Array<OneD, Array<OneD, DataType> > >(nvariables);
+                    for(int i = 0; i < nvariables; ++i)
+                    {
+                        TraceIPSymJacArray[nlr][nd][i]   =   Array<OneD, Array<OneD, DataType> >(nvariables);
+                        for(int j = 0; j < nvariables; ++j)
+                        {
+                            TraceIPSymJacArray[nlr][nd][i][j]   =   Array<OneD, DataType>(nTracePts);
+                        }
+                    }
+                }
+            }
+        }
+#endif
 
         NumCalRiemFluxJac(nvariables, m_fields, AdvVel, inarray,qfield,
-                            m_BndEvaluateTime, Fwd, Bwd, FJac, BJac,tmp);
+                            m_BndEvaluateTime, Fwd, Bwd, FJac, BJac,TraceIPSymJacArray);
 
         TraceJac[0] = FJac;
         TraceJac[1] = BJac;
@@ -1985,17 +2175,17 @@ namespace Nektar
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::NumCalRiemFluxJac(
-        const int                                                       nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr>               &fields,
-        const Array<OneD, Array<OneD, NekDouble> >                      &AdvVel,
-        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-        const NekDouble                                                 &time,
-        const Array<OneD, Array<OneD, NekDouble> >                      &Fwd,
-        const Array<OneD, Array<OneD, NekDouble> >                      &Bwd,
-        TypeNekBlkMatSharedPtr                                          &FJac,
-        TypeNekBlkMatSharedPtr                                          &BJac,
-        DataType                                                        &tmpDatatype)
+        const int                                                               nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>                       &fields,
+        const Array<OneD, Array<OneD, NekDouble> >                              &AdvVel,
+        const Array<OneD, Array<OneD, NekDouble> >                              &inarray,
+        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >          &qfield,
+        const NekDouble                                                         &time,
+        const Array<OneD, Array<OneD, NekDouble> >                              &Fwd,
+        const Array<OneD, Array<OneD, NekDouble> >                              &Bwd,
+        TypeNekBlkMatSharedPtr                                                  &FJac,
+        TypeNekBlkMatSharedPtr                                                  &BJac,
+        Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>>   &TraceIPSymJacArray)
     {
         const NekDouble     PenaltyFactor2  =   0.0;
         int nvariables  = nConvectiveFields;
@@ -2054,6 +2244,26 @@ namespace Nektar
 
         CalTraceNumericalFlux(nConvectiveFields,nDim,npoints,nTracePts,PenaltyFactor2,
                         fields,AdvVel,inarray,time,qfield,Fwd,Bwd,qFwd,qBwd,MuVarTrace,nonZeroIndex,numflux);
+#ifdef CFS_DEBUGMODE
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > IPSymmFlux(m_spacedim);
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > IPFluxPlus(m_spacedim);
+        if(m_DebugIPSymmFluxJacSwitch)
+        {
+            for(int nd = 0; nd < m_spacedim; ++nd)
+            {
+                IPSymmFlux[nd] = Array<OneD, Array<OneD, NekDouble> >(nvariables);
+                IPFluxPlus[nd] = Array<OneD, Array<OneD, NekDouble> >(nvariables);
+                for(int i = 0; i < nvariables; ++i)
+                {
+                    IPSymmFlux[nd][i] = Array<OneD, NekDouble>(nTracePts, 0.0);
+                    IPFluxPlus[nd][i] = Array<OneD, NekDouble>(nTracePts, 0.0);
+                }
+
+            }
+            
+            CalTraceIPSymmFlux(nConvectiveFields,nTracePts,fields,inarray,time,qfield,Fwd,Bwd,MuVarTrace,nonZeroIndex,IPSymmFlux);
+        }
+#endif
 
         int nFields = nvariables;
         // int nPts    = nTracePts;
@@ -2122,6 +2332,24 @@ namespace Nektar
                     tmpMatData[n+i*nFields] = DataType(Jacvect[n][j]);
                 }
             }
+#ifdef CFS_DEBUGMODE
+            if(m_DebugIPSymmFluxJacSwitch)
+            {
+                CalTraceIPSymmFlux(nConvectiveFields,nTracePts,fields,inarray,time,qfield,plusFwd,plusBwd,MuVarTrace,nonZeroIndex,IPFluxPlus);
+                for(int nd = 0; nd < m_spacedim; ++nd)
+                {
+                    for (int n = 0; n < nFields; n++)
+                    {
+                        Vmath::Vsub(nTracePts,&IPFluxPlus[nd][n][0],1,&IPSymmFlux[nd][n][0],1,&Jacvect[n][0],1);
+                        Vmath::Smul(nTracePts, oepsvar ,&Jacvect[n][0],1,&Jacvect[n][0],1);
+                        for(int np=0;np<nTracePts;np++)
+                        {
+                            TraceIPSymJacArray[0][nd][n][i][np] = DataType( Jacvect[n][np] );
+                        }
+                    }
+                }
+            }
+#endif
             
             Vmath::Vcopy(nTracePts, Fwd[i],1,plusFwd[i],1);
         }
@@ -2173,6 +2401,24 @@ namespace Nektar
                     tmpMatData[n+i*nFields] = DataType(Jacvect[n][j]);
                 }
             }
+#ifdef CFS_DEBUGMODE
+            if(m_DebugIPSymmFluxJacSwitch)
+            {
+                CalTraceIPSymmFlux(nConvectiveFields,nTracePts,fields,inarray,time,qfield,Fwd,plusBwd,MuVarTrace,nonZeroIndex,IPFluxPlus);
+                for(int nd = 0; nd < m_spacedim; ++nd)
+                {
+                    for (int n = 0; n < nFields; n++)
+                    {
+                        Vmath::Vsub(nTracePts,&IPFluxPlus[nd][n][0],1,&IPSymmFlux[nd][n][0],1,&Jacvect[n][0],1);
+                        Vmath::Smul(nTracePts, oepsvar ,&Jacvect[n][0],1,&Jacvect[n][0],1);
+                        for(int np=0;np<nTracePts;np++)
+                        {
+                            TraceIPSymJacArray[1][nd][n][i][np] = DataType( Jacvect[n][np] );
+                        }
+                    }
+                }
+            }
+#endif
             
             Vmath::Vcopy(nTracePts, Bwd[i],1,plusBwd[i],1);
         }
@@ -2225,6 +2471,34 @@ namespace Nektar
         }
     }
 
+    void CompressibleFlowSystem::CalTraceIPSymmFlux(
+            const int                                                           nConvectiveFields,
+            const int                                                           nTracePts,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+            const Array<OneD, Array<OneD, NekDouble> >                          &inarray,
+            const NekDouble                                                     time,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
+            const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
+            const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
+            const Array<OneD, NekDouble >                                       &MuVarTrace,
+            Array<OneD, int >                                                   &nonZeroIndex,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &traceflux)
+    {
+        if(m_DEBUG_VISCOUS_JAC_MAT)
+        {
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  VolumeFlux;
+            m_diffusion->DiffuseTraceSymmFlux(nConvectiveFields,fields,inarray,qfield,VolumeFlux,
+                                        traceflux,vFwd,vBwd,nonZeroIndex);
+            for(int nd = 0; nd < m_spacedim; nd++)
+            {
+                for(int i = 0; i < nConvectiveFields; i++)
+                {
+                    Vmath::Ssub(nTracePts,0.0,traceflux[nd][i],1,traceflux[nd][i],1);
+                }
+            }
+            
+        }
+    }
 
     void CompressibleFlowSystem::DoImplicitSolve_phy2coeff(
                                                  const Array<OneD, const Array<OneD, NekDouble> >&inpnts,
@@ -2393,6 +2667,20 @@ namespace Nektar
         {
             if(0!=m_JFNKPrecondStep)
             {
+#ifdef CFS_DEBUGMODE
+                if(m_DebugNumJacBSOR)
+                {
+                    NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
+                    Fill2DArrayOfBlkDiagonalMat(m_PrecMatVars,0.0);
+                    DebugNumCalJac_coeff(m_PrecMatVars,m_PrecMatVarsOffDiag);
+
+                    DNekBlkMatSharedPtr tmpVar;
+                    NekDouble zero=0.0;
+                    ElmtVarInvMtrx(m_PrecMatVars,tmpVar,zero);
+                }
+                else
+                {
+#endif
                 int nphspnt = inpnts[0].num_elements();
                 Array<OneD, Array<OneD, NekDouble> > intmp(nvariables);
                 for(int i = 0; i < nvariables; i++)
@@ -2405,12 +2693,14 @@ namespace Nektar
                 {
                     GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVarsSingle,m_PrecMatSingle,
                                                     m_TraceJacSingle,m_TraceJacDerivSingle,m_TraceJacDerivSignSingle,
-                                                    m_TraceJacArraySingle,m_TraceJacDerivArraySingle,m_StdSMatDataDBB,m_StdSMatDataDBDB);
+                                                    m_TraceJacArraySingle,m_TraceJacDerivArraySingle,m_TraceIPSymJacArraySingle,
+                                                    m_StdSMatDataDBB,m_StdSMatDataDBDB);
                 }
                 else
                 {
                     GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_PrecMat,m_TraceJac,m_TraceJacDeriv,m_TraceJacDerivSign,
-                                                    m_TraceJacArray,m_TraceJacDerivArray,m_StdDMatDataDBB,m_StdDMatDataDBDB);
+                                                    m_TraceJacArray,m_TraceJacDerivArray,m_TraceIPSymJacArray,
+                                                    m_StdDMatDataDBB,m_StdDMatDataDBDB);
                 }
             
                 // cout << "GetpreconditionerNSBlkDiag_coeff"<<endl;
@@ -2428,14 +2718,27 @@ namespace Nektar
 #ifdef CFS_DEBUGMODE
                 if(m_DebugNumJacMatSwitch)
                 {
+                    cout <<" m_DebugNumJacMatSwitch "<<endl;
                     NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
                     Fill2DArrayOfBlkDiagonalMat(m_PrecMatVars,0.0);
                     DebugNumCalJac_coeff(m_PrecMatVars);
 
-                    if(m_DebugOutputJacMatSwitch)
+                    DNekBlkMatSharedPtr tmpVar;
+                    NekDouble zero=0.0;
+                    ElmtVarInvMtrx(m_PrecMatVars,tmpVar,zero);
+
+                    for(int m = 0; m < nvariables; m++)
                     {
-                        Cout2DArrayBlkMat(m_PrecMatVars);
+                        for(int n = 0; n < nvariables; n++)
+                        {
+                            m_fields[0]->RightMultiplyByElmtInvMassOnDiag(m_PrecMatVars[m][n], m_PrecMatVars[m][n]);
+                        }
                     }
+                }
+                if(m_DebugOutputJacMatSwitch)
+                {
+                    Cout2DArrayBlkMat(m_PrecMatVars);
+                }
                 }
 #endif
             }
@@ -2612,6 +2915,7 @@ namespace Nektar
         Array<OneD, Array<OneD, DataType> >                                             &TraceJacDerivSign,
         Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>                       &TraceJacArray,
         Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>                       &TraceJacDerivArray,
+        Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>>           &TraceIPSymJacArray,
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > >                 &StdMatDataDBB,
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > >   &StdMatDataDBDB)
     {
@@ -2634,7 +2938,7 @@ namespace Nektar
         if(1!=m_DebugVolTraceSwitch)
         {
 #endif
-            AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv,TraceJacDerivSign);
+            AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv,TraceJacDerivSign,TraceIPSymJacArray);
 #ifdef CFS_DEBUGMODE
         }
 #endif
@@ -2678,7 +2982,6 @@ namespace Nektar
         {
             for(int n = 0; n < nConvectiveFields; n++)
             {
-                // explist->MultiplyByElmtInvMassOnDiag(gmtxarray[m][n], gmtxarray[m][n]);
                 for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                 {
                     GMatData        = gmtxarray[m][n]->GetBlock(nelmt,nelmt)->GetPtr();
@@ -2903,6 +3206,77 @@ namespace Nektar
         return;
     }
 
+    void CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff_FourthCentral(
+                                                 const  Array<OneD, NekDouble> &inarray,
+                                                        Array<OneD, NekDouble >&out)
+    {
+        NekDouble eps = m_JFEps;
+        NekDouble magnitdEstimatMax =0.0;
+        for(int i = 0; i < m_magnitdEstimat.num_elements(); i++)
+        {
+            magnitdEstimatMax = max(magnitdEstimatMax,m_magnitdEstimat[i]);
+        }
+        eps *= magnitdEstimatMax;
+        NekDouble oeps = 1.0/eps;
+        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
+        Array<OneD, NekDouble > tmp;
+        Array<OneD,       Array<OneD, NekDouble> > solplus(nvariables);
+        Array<OneD,       Array<OneD, NekDouble> > resplus(nvariables);
+        Array<OneD,       Array<OneD, NekDouble> > resPPls(nvariables);
+        Array<OneD,       Array<OneD, NekDouble> > resminus(nvariables);
+        Array<OneD,       Array<OneD, NekDouble> > resMMmns(nvariables);
+        for(int i = 0; i < nvariables; i++)
+        {
+            solplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
+            resplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
+            resPPls[i] =  Array<OneD, NekDouble>(npoints,0.0);
+            resminus[i] =  Array<OneD, NekDouble>(npoints,0.0);
+            resMMmns[i] =  Array<OneD, NekDouble>(npoints,0.0);
+        }
+
+        for (int i = 0; i < nvariables; i++)
+        {
+            tmp = inarray + i*npoints;
+            Vmath::Svtvp(npoints,eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
+        }
+        NonlinSysEvaluator_coeff(solplus,resplus);
+
+        for (int i = 0; i < nvariables; i++)
+        {
+            tmp = inarray + i*npoints;
+            Vmath::Svtvp(npoints,-eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
+        }
+        NonlinSysEvaluator_coeff(solplus,resminus);
+
+        for (int i = 0; i < nvariables; i++)
+        {
+            tmp = inarray + i*npoints;
+            Vmath::Svtvp(npoints,2.0*eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
+        }
+        NonlinSysEvaluator_coeff(solplus,resPPls);
+
+        for (int i = 0; i < nvariables; i++)
+        {
+            tmp = inarray + i*npoints;
+            Vmath::Svtvp(npoints,-2.0*eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
+        }
+        NonlinSysEvaluator_coeff(solplus,resMMmns);
+
+        Vmath::Zero(out.num_elements(),out,1);
+        for (int i = 0; i < nvariables; i++)
+        {
+            tmp = out + i*npoints;
+            Vmath::Svtvp(npoints, 1.0/12.0,&resMMmns[i][0],1,&tmp[0],1,&tmp[0],1);
+            Vmath::Svtvp(npoints,-8.0/12.0,&resminus[i][0],1,&tmp[0],1,&tmp[0],1);
+            Vmath::Svtvp(npoints, 8.0/12.0, &resplus[i][0],1,&tmp[0],1,&tmp[0],1);
+            Vmath::Svtvp(npoints,-1.0/12.0, &resPPls[i][0],1,&tmp[0],1,&tmp[0],1);
+            Vmath::Smul(npoints, oeps ,&tmp[0],1,&tmp[0],1);
+        }
+       
+        return;
+    }
+
     void CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff_dualtimestep(
                                                  const  Array<OneD, NekDouble> &inarray,
                                                         Array<OneD, NekDouble >&out,
@@ -3091,7 +3465,9 @@ namespace Nektar
 
 #ifdef CFS_DEBUGMODE
 
-    void CompressibleFlowSystem::DebugNumCalJac_coeff(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
+    void CompressibleFlowSystem::DebugNumCalJac_coeff(
+        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                      &gmtxarray,
+        Array<OneD, Array<OneD, NekDouble > >                               &JacOffDiagArray)
     {
         MultiRegions::ExpListSharedPtr explist = m_fields[0];
             std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
@@ -3103,25 +3479,110 @@ namespace Nektar
         {
             ElmtPrecMatVars[i]  =   Array<OneD, DNekMatSharedPtr>(nvariables);
         }
-        for(int i = 0; i < nElmts; i++)
+        if(JacOffDiagArray.num_elements()>0)
         {
-            DebugNumCalElmtJac_coeff(ElmtPrecMatVars,i);
-            for(int m = 0; m < nvariables; m++)
+            for(int i = 0; i < nElmts; i++)
             {
-                for(int n = 0; n < nvariables; n++)
+                DebugNumCalElmtJac_coeff(ElmtPrecMatVars,i,JacOffDiagArray);
+                for(int m = 0; m < nvariables; m++)
                 {
-                    gmtxarray[m][n]->SetBlock(i,i,ElmtPrecMatVars[m][n]);
+                    for(int n = 0; n < nvariables; n++)
+                    {
+                        gmtxarray[m][n]->SetBlock(i,i,ElmtPrecMatVars[m][n]);
+                    }
                 }
+            }
+        }
+        else
+        {
+            for(int i = 0; i < nElmts; i++)
+            {
+                DebugNumCalElmtJac_coeff(ElmtPrecMatVars,i);
+                for(int m = 0; m < nvariables; m++)
+                {
+                    for(int n = 0; n < nvariables; n++)
+                    {
+                        gmtxarray[m][n]->SetBlock(i,i,ElmtPrecMatVars[m][n]);
+                    }
+                }
+            }
+        }
+        
+        
+    }
+
+    void CompressibleFlowSystem::DebugNumCalElmtJac_coeff(
+        Array<OneD, Array<OneD, DNekMatSharedPtr> >                         &ElmtPrecMatVars ,
+        const int                                                           nelmt,
+        Array<OneD, Array<OneD, NekDouble > >                               &JacOffDiagArray)
+    {
+        MultiRegions::ExpListSharedPtr explist = m_fields[0];
+            std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
+        int nElmtcoef   = (*pexp)[nelmt]->GetNcoeffs();
+        int nElmtOffset = explist->GetCoeff_Offset(nelmt);
+        int nTotCoef    = GetNcoeffs();
+        
+        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
+        unsigned int ntotpnt    = nvariables*npoints;
+        Array<OneD, NekDouble > tmpinn_1d(ntotpnt,0.0);
+        Array<OneD, NekDouble > tmpout_1d(ntotpnt,0.0);
+        Array<OneD,       Array<OneD, NekDouble> > tmpinn(nvariables);
+        Array<OneD,       Array<OneD, NekDouble> > tmpout(nvariables);
+        for(int i = 0; i < nvariables; i++)
+        {
+            int noffset = i*npoints;
+            tmpinn[i] = tmpinn_1d+noffset;
+            tmpout[i] = tmpout_1d+noffset;
+        }
+
+
+        for(int i = 0; i < nvariables; i++)
+        {
+            for(int j = 0; j < nvariables; j++)
+            {
+                ElmtPrecMatVars[i][j] =  MemoryManager<DNekMat>
+                    ::AllocateSharedPtr(nElmtcoef, nElmtcoef, 0.0);
+            }
+        }
+
+        DNekMatSharedPtr    tmpStdMat;
+        for (int i = 0; i < nvariables; i++)
+        {
+            for (int npnt = 0; npnt < nElmtcoef; npnt++)
+            {
+                tmpinn[i][nElmtOffset+npnt] = 1.0;
+                // MatrixMultiply_MatrixFree_coeff_central(tmpinn_1d,tmpout_1d);
+                MatrixMultiply_MatrixFree_coeff_FourthCentral(tmpinn_1d,tmpout_1d);
+
+                Vmath::Vcopy(nvariables*nElmtcoef,&tmpout_1d[0],1,&JacOffDiagArray[i*nTotCoef+nElmtOffset+npnt][0],1);
+                
+                for (int j = 0; j < nvariables; j++)
+                {
+                    for (int npntf = 0; npntf < nElmtcoef; npntf++)
+                    {
+                        tmpStdMat = ElmtPrecMatVars[j][i];
+                        // NekDouble tmp = tmpout[j][nElmtOffset+npntf];
+                        (*tmpStdMat)(npntf,npnt) = tmpout[j][nElmtOffset+npntf];
+
+                        JacOffDiagArray[i*nTotCoef+nElmtOffset+npnt][j*nTotCoef+nElmtOffset+npntf] = 0.0;
+                    }
+                }
+
+                tmpinn[i][nElmtOffset+npnt] = 0.0;
             }
         }
     }
 
-    void CompressibleFlowSystem::DebugNumCalElmtJac_coeff(Array<OneD, Array<OneD, DNekMatSharedPtr> > &ElmtPrecMatVars ,const int nelmt)
+    void CompressibleFlowSystem::DebugNumCalElmtJac_coeff(
+        Array<OneD, Array<OneD, DNekMatSharedPtr> >                         &ElmtPrecMatVars ,
+        const int                                                           nelmt)
     {
         MultiRegions::ExpListSharedPtr explist = m_fields[0];
             std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
-        int nElmtcoef    = (*pexp)[nelmt]->GetNcoeffs();
+        int nElmtcoef   = (*pexp)[nelmt]->GetNcoeffs();
         int nElmtOffset = explist->GetCoeff_Offset(nelmt);
+        int nTotCoef    = GetNcoeffs();
         
         unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
         unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
@@ -3164,6 +3625,7 @@ namespace Nektar
                         (*tmpStdMat)(npntf,npnt) = tmpout[j][nElmtOffset+npntf];
                     }
                 }
+
                 tmpinn[i][nElmtOffset+npnt] = 0.0;
             }
         }

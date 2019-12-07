@@ -177,12 +177,29 @@ namespace Nektar
                 int nvariables  =   m_fields.num_elements();
                 m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
                 m_PrecMatStorage    =   eDiagonal;
+                m_session->LoadParameter("nPadding",     m_nPadding      ,    4);
+                
+                int ntmp=0;
+                m_session->LoadParameter("PrecondMatDataSingle",                 ntmp      ,    1);
+                m_flagPrecMatVarsSingle             = true;
+                if(0==ntmp)
+                {
+                    m_flagPrecMatVarsSingle = false;
+                }
+                if(m_DebugNumJacBSOR)
+                {
+                    m_flagPrecMatVarsSingle = false;
+                }
 
-                m_session->MatchSolverInfo("PrecondMatDataSingle","True",
-                                   m_flagPrecMatVarsSingle, false);
-                m_session->MatchSolverInfo("flagPrecondCacheOptmis","True",
-                                   m_flagPrecondCacheOptmis, false);
+                m_session->LoadParameter("flagPrecondCacheOptmis",                 ntmp      ,    1);
+                m_flagPrecondCacheOptmis             = true;
+                if(0==ntmp)
+                {
+                    m_flagPrecondCacheOptmis = false;
+                }
 
+                cout << " flagPrecondCacheOptmis= "<<m_flagPrecondCacheOptmis<<endl;
+                
                 if(m_flagPrecMatVarsSingle)
                 {
                     m_PrecMatVarsSingle = Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >(nvariables);
@@ -347,7 +364,6 @@ namespace Nektar
             m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT = true;
         }
 
-        m_session->LoadParameter("nPadding",     m_nPadding      ,    1);
         
 #ifdef CFS_DEBUGMODE
         m_session->LoadParameter("DebugAdvDiffSwitch",                 m_DebugAdvDiffSwitch      ,    0);
@@ -2760,16 +2776,16 @@ namespace Nektar
                 {
                     if(m_flagPrecondCacheOptmis)
                     {
-                        GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVarsSingle,
+                        GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVarsSingle,m_PrecMatSingle,
                                                     m_TraceJacSingle,m_TraceJacDerivSingle,m_TraceJacDerivSignSingle,
-                                                    m_TraceIPSymJacArraySingle,
+                                                    m_TraceJacArraySingle,m_TraceJacDerivArraySingle,m_TraceIPSymJacArraySingle,
                                                     m_StdSMatDataDBB,m_StdSMatDataDBDB);
                     }
                     else
                     {
-                        GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVarsSingle,m_PrecMatSingle,
+                        GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVarsSingle,
                                                     m_TraceJacSingle,m_TraceJacDerivSingle,m_TraceJacDerivSignSingle,
-                                                    m_TraceJacArraySingle,m_TraceJacDerivArraySingle,m_TraceIPSymJacArraySingle,
+                                                    m_TraceIPSymJacArraySingle,
                                                     m_StdSMatDataDBB,m_StdSMatDataDBDB);
                     }
                 }
@@ -2777,14 +2793,14 @@ namespace Nektar
                 {
                     if(m_flagPrecondCacheOptmis)
                     {
-                        GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_TraceJac,m_TraceJacDeriv,m_TraceJacDerivSign,
-                                                        m_TraceIPSymJacArray,
+                        GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_PrecMat,m_TraceJac,m_TraceJacDeriv,m_TraceJacDerivSign,
+                                                        m_TraceJacArray,m_TraceJacDerivArray,m_TraceIPSymJacArray,
                                                         m_StdDMatDataDBB,m_StdDMatDataDBDB);
                     }
                     else
                     {
-                        GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_PrecMat,m_TraceJac,m_TraceJacDeriv,m_TraceJacDerivSign,
-                                                        m_TraceJacArray,m_TraceJacDerivArray,m_TraceIPSymJacArray,
+                        GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_TraceJac,m_TraceJacDeriv,m_TraceJacDerivSign,
+                                                        m_TraceIPSymJacArray,
                                                         m_StdDMatDataDBB,m_StdDMatDataDBDB);
                     }
                 }

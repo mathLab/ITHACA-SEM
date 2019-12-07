@@ -780,18 +780,6 @@ namespace Nektar
         if(m_DebugNumJacBSOR)
         {
 
-// int nwidthcolm=10;
-// int nTotCoef = inarray.num_elements();
-// for(int m = 0; m < nTotCoef; m++)
-// {
-//     for(int n = 0; n < nTotCoef; n++)
-//     {
-//         cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-6) 
-//              <<" "<< m_PrecMatVarsOffDiag[m][n];
-//     }
-//     cout <<endl;
-// }
-// ASSERTL0(false, "debugStop");
             preconditioner_NumJac(inarray,outarray,m_PrecMatVars,m_PrecMatVarsOffDiag);
         }
         else
@@ -1497,10 +1485,90 @@ namespace Nektar
                     }
                 }
             }
-            if(m_flagPrecondCacheOptmis&&gmtVar->GetRows())
+            ElmtMatData = gmtVar->GetBlock(nelmt,nelmt)->GetPtr();
+            Vmath::Vcopy(blocksize, &GMatData[0],1,&ElmtMatData[0],1);
+        }
+        return;
+    }
+
+    template<typename DataType, typename TypeNekBlkMatSharedPtr>
+    void CompressibleFlowSystem::ElmtVarInvMtrx(
+        Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> > &gmtxarray,
+        const DataType                                    &tmpDatatype)
+    {
+        int n1d = gmtxarray.num_elements();
+        int n2d = gmtxarray[0].num_elements();
+        int nConvectiveFields = n1d;
+
+        ASSERTL0(n1d==n2d,"ElmtVarInvMtrx requires n1d==n2d");
+
+        Array<OneD, unsigned int> rowSizes;
+        Array<OneD, unsigned int> colSizes;
+
+        gmtxarray[0][0]->GetBlockSizes(rowSizes,colSizes);
+        int ntotElmt  = rowSizes.num_elements();
+        int nElmtCoef   =    rowSizes[0]-1;
+        int nElmtCoef0  =    -1;
+        int blocksize = -1;
+
+        Array<OneD, unsigned int> tmprow(1);
+        TypeNekBlkMatSharedPtr tmpGmtx;
+
+        Array<OneD, DataType>    GMatData,ElmtMatData;
+
+        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        {
+            int nrows = gmtxarray[0][0]->GetBlock(nelmt,nelmt)->GetRows();
+            int ncols = gmtxarray[0][0]->GetBlock(nelmt,nelmt)->GetColumns();
+            ASSERTL0(nrows==ncols,"ElmtVarInvMtrx requires nrows==ncols");
+
+            nElmtCoef            = nrows;
+            
+            if (nElmtCoef0!=nElmtCoef) 
             {
-                ElmtMatData = gmtVar->GetBlock(nelmt,nelmt)->GetPtr();
-                Vmath::Vcopy(blocksize, &GMatData[0],1,&ElmtMatData[0],1);
+                nElmtCoef0 = nElmtCoef;
+                int nElmtCoefVAr = nElmtCoef0*nConvectiveFields;
+                blocksize = nElmtCoefVAr*nElmtCoefVAr;
+                tmprow[0] = nElmtCoefVAr;
+                AllocateNekBlkMatDig(tmpGmtx,tmprow,tmprow);
+                // tmpGmtx = MemoryManager<SNekMat>
+                //     ::AllocateSharedPtr(nElmtCoefVAr, nElmtCoefVAr,0.0);
+                GMatData = tmpGmtx->GetBlock(0,0)->GetPtr();
+
+            }
+
+            for(int n = 0; n < nConvectiveFields; n++)
+            {
+                for(int m = 0; m < nConvectiveFields; m++)
+                {
+                    ElmtMatData = gmtxarray[m][n]->GetBlock(nelmt,nelmt)->GetPtr();
+
+                    for(int ncl = 0; ncl < nElmtCoef; ncl++)
+                    {
+                        int Goffset = (n*nElmtCoef+ncl)*nConvectiveFields*nElmtCoef+m*nElmtCoef;
+                        int Eoffset = ncl*nElmtCoef;
+
+                        Vmath::Vcopy(nElmtCoef,&ElmtMatData[0]+Eoffset,1, &GMatData[0]+Goffset,1);
+                    }
+                }
+            }
+
+            tmpGmtx->GetBlock(0,0)->Invert();
+
+            for(int m = 0; m < nConvectiveFields; m++)
+            {
+                for(int n = 0; n < nConvectiveFields; n++)
+                {
+                    ElmtMatData = gmtxarray[m][n]->GetBlock(nelmt,nelmt)->GetPtr();
+
+                    for(int ncl = 0; ncl < nElmtCoef; ncl++)
+                    {
+                        int Goffset = (n*nElmtCoef+ncl)*nConvectiveFields*nElmtCoef+m*nElmtCoef;
+                        int Eoffset = ncl*nElmtCoef;
+
+                        Vmath::Vcopy(nElmtCoef, &GMatData[0]+Goffset,1,&ElmtMatData[0]+Eoffset,1);
+                    }
+                }
             }
         }
         return;
@@ -2674,9 +2742,8 @@ namespace Nektar
                     Fill2DArrayOfBlkDiagonalMat(m_PrecMatVars,0.0);
                     DebugNumCalJac_coeff(m_PrecMatVars,m_PrecMatVarsOffDiag);
 
-                    DNekBlkMatSharedPtr tmpVar;
                     NekDouble zero=0.0;
-                    ElmtVarInvMtrx(m_PrecMatVars,tmpVar,zero);
+                    ElmtVarInvMtrx(m_PrecMatVars,zero);
                 }
                 else
                 {
@@ -2691,16 +2758,35 @@ namespace Nektar
                 DoOdeProjection(inpnts,intmp,m_BndEvaluateTime);
                 if(m_flagPrecMatVarsSingle)
                 {
-                    GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVarsSingle,m_PrecMatSingle,
+                    if(m_flagPrecondCacheOptmis)
+                    {
+                        GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVarsSingle,
+                                                    m_TraceJacSingle,m_TraceJacDerivSingle,m_TraceJacDerivSignSingle,
+                                                    m_TraceIPSymJacArraySingle,
+                                                    m_StdSMatDataDBB,m_StdSMatDataDBDB);
+                    }
+                    else
+                    {
+                        GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVarsSingle,m_PrecMatSingle,
                                                     m_TraceJacSingle,m_TraceJacDerivSingle,m_TraceJacDerivSignSingle,
                                                     m_TraceJacArraySingle,m_TraceJacDerivArraySingle,m_TraceIPSymJacArraySingle,
                                                     m_StdSMatDataDBB,m_StdSMatDataDBDB);
+                    }
                 }
                 else
                 {
-                    GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_PrecMat,m_TraceJac,m_TraceJacDeriv,m_TraceJacDerivSign,
-                                                    m_TraceJacArray,m_TraceJacDerivArray,m_TraceIPSymJacArray,
-                                                    m_StdDMatDataDBB,m_StdDMatDataDBDB);
+                    if(m_flagPrecondCacheOptmis)
+                    {
+                        GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_TraceJac,m_TraceJacDeriv,m_TraceJacDerivSign,
+                                                        m_TraceIPSymJacArray,
+                                                        m_StdDMatDataDBB,m_StdDMatDataDBDB);
+                    }
+                    else
+                    {
+                        GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_PrecMat,m_TraceJac,m_TraceJacDeriv,m_TraceJacDerivSign,
+                                                        m_TraceJacArray,m_TraceJacDerivArray,m_TraceIPSymJacArray,
+                                                        m_StdDMatDataDBB,m_StdDMatDataDBDB);
+                    }
                 }
             
                 // cout << "GetpreconditionerNSBlkDiag_coeff"<<endl;
@@ -2723,9 +2809,8 @@ namespace Nektar
                     Fill2DArrayOfBlkDiagonalMat(m_PrecMatVars,0.0);
                     DebugNumCalJac_coeff(m_PrecMatVars);
 
-                    DNekBlkMatSharedPtr tmpVar;
                     NekDouble zero=0.0;
-                    ElmtVarInvMtrx(m_PrecMatVars,tmpVar,zero);
+                    ElmtVarInvMtrx(m_PrecMatVars,zero);
 
                     for(int m = 0; m < nvariables; m++)
                     {
@@ -2946,10 +3031,46 @@ namespace Nektar
 
         ElmtVarInvMtrx(gmtxarray,gmtVar,zero);
         
-        if(m_flagPrecondCacheOptmis)
+        TransTraceJacMatToArray(TraceJac,TraceJacDeriv,TraceJacArray, TraceJacDerivArray);
+    }
+
+    template<typename DataType, typename TypeNekBlkMatSharedPtr>
+    void CompressibleFlowSystem::GetpreconditionerNSBlkDiag_coeff(
+        const Array<OneD, const Array<OneD, NekDouble> >                                &inarray,
+        Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >                               &gmtxarray,
+        Array<OneD, TypeNekBlkMatSharedPtr >                                            &TraceJac,
+        Array<OneD, TypeNekBlkMatSharedPtr >                                            &TraceJacDeriv,
+        Array<OneD, Array<OneD, DataType> >                                             &TraceJacDerivSign,
+        Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>>           &TraceIPSymJacArray,
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > >                 &StdMatDataDBB,
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > >   &StdMatDataDBDB)
+    {
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield;
+
+        if(m_DEBUG_VISCOUS_JAC_MAT)
         {
-            TransTraceJacMatToArray(TraceJac,TraceJacDeriv,TraceJacArray, TraceJacDerivArray);
+            CalphysDeriv(inarray,qfield);
         }
+
+        DataType zero =0.0;
+        Fill2DArrayOfBlkDiagonalMat(gmtxarray,zero);
+#ifdef CFS_DEBUGMODE
+        if(2!=m_DebugVolTraceSwitch)
+        {
+#endif
+            AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray,StdMatDataDBB,StdMatDataDBDB);
+#ifdef CFS_DEBUGMODE
+        }
+        if(1!=m_DebugVolTraceSwitch)
+        {
+#endif
+            AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv,TraceJacDerivSign,TraceIPSymJacArray);
+#ifdef CFS_DEBUGMODE
+        }
+#endif
+        MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda,zero);
+
+        ElmtVarInvMtrx(gmtxarray,zero);
     }
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
@@ -3555,7 +3676,7 @@ namespace Nektar
                 // MatrixMultiply_MatrixFree_coeff_central(tmpinn_1d,tmpout_1d);
                 MatrixMultiply_MatrixFree_coeff_FourthCentral(tmpinn_1d,tmpout_1d);
 
-                Vmath::Vcopy(nvariables*nElmtcoef,&tmpout_1d[0],1,&JacOffDiagArray[i*nTotCoef+nElmtOffset+npnt][0],1);
+                Vmath::Vcopy(ntotpnt,&tmpout_1d[0],1,&JacOffDiagArray[i*nTotCoef+nElmtOffset+npnt][0],1);
                 
                 for (int j = 0; j < nvariables; j++)
                 {

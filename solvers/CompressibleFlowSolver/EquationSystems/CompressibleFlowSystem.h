@@ -263,6 +263,10 @@ namespace Nektar
             Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> > &gmtxarray,
             TypeNekBlkMatSharedPtr                            &gmtVar,
             const DataType                                    &tmpDatatype);
+        template<typename DataType, typename TypeNekBlkMatSharedPtr>
+        void ElmtVarInvMtrx(
+            Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> > &gmtxarray,
+            const DataType                                    &tmpDatatype);
         
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
         void GetTraceJac(
@@ -436,6 +440,16 @@ namespace Nektar
             Array<OneD, Array<OneD, DataType> >                                             &TraceJacDerivSign,
             Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>                       &TraceJacArray,
             Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>                       &TraceJacDerivArray,
+            Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>>           &TraceIPSymJacArray,
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > >                 &StdMatDataDBB,
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > >   &StdMatDataDBDB);
+        template<typename DataType, typename TypeNekBlkMatSharedPtr>
+        void GetpreconditionerNSBlkDiag_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> >                                &inarray,
+            Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >                               &gmtxarray,
+            Array<OneD, TypeNekBlkMatSharedPtr >                                            &TraceJac,
+            Array<OneD, TypeNekBlkMatSharedPtr >                                            &TraceJacDeriv,
+            Array<OneD, Array<OneD, DataType> >                                             &TraceJacDerivSign,
             Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>>           &TraceIPSymJacArray,
             Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > >                 &StdMatDataDBB,
             Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > >   &StdMatDataDBDB);

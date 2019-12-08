@@ -141,6 +141,7 @@ namespace Nektar
 
             bool                                            m_flagPrecMatVarsSingle;
             bool                                            m_flagPrecondCacheOptmis;
+            bool                                            m_flagImplItsStatistcs;
 
             Array<OneD, DNekBlkMatSharedPtr >               m_TraceJac;
             Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble >>>>  m_TraceJacArray;
@@ -176,6 +177,11 @@ namespace Nektar
             int m_StagesPerStep=1;
 
             int m_maxLinItePerNewton;
+
+            int m_TotNewtonIts  =0;
+            int m_TotGMRESIts   =0;
+            int m_TotOdeRHS     =0;
+            int m_TotImpStages  =0;
 
 #endif
             /// Initialises UnsteadySystem class members.

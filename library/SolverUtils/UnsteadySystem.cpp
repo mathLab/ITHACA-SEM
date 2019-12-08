@@ -281,6 +281,11 @@ namespace Nektar
             NekDouble cpuTime       = 0.0;
             NekDouble elapsed       = 0.0;
 
+            m_TotNewtonIts  = 0;
+            m_TotGMRESIts   = 0;
+            m_TotOdeRHS     = 0;
+            m_TotImpStages  = 0;
+
             NekDouble tmp_cflSafetyFactor = m_cflSafetyFactor;
             m_CalcuPrecMatCounter = m_PrcdMatFreezNumb;
             bool flagFreezeCFL = false;
@@ -426,6 +431,18 @@ namespace Nektar
 
                     cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
                          <<" INT Time: "<< intTime<<"s"<<endl;
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+                    if(m_flagImplItsStatistcs)
+                    {
+                        cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                             << "       &&" 
+                             << " TotImpStages= " << m_TotImpStages 
+                             << " TotNewtonIts= " << m_TotNewtonIts
+                             << " TotGMRESIts = " << m_TotGMRESIts  
+                             << " TotOdeRHS   = " << m_TotOdeRHS    
+                             <<endl;
+                    }
+#endif
                     
                     cpuTime = 0.0;
                 }

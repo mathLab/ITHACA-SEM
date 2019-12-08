@@ -377,6 +377,13 @@ namespace Nektar
         m_session->LoadParameter("DebugIPSymmFluxJacSwitch",           m_DebugIPSymmFluxJacSwitch,    0);
 
         m_session->LoadParameter("DebugNumJacBSOR",           m_DebugNumJacBSOR,    0);
+
+        m_session->LoadParameter("flagImplItsStatistcs",     ntmp      ,    0);
+        m_flagImplItsStatistcs = false;
+        if(1==ntmp)
+        {
+            m_flagImplItsStatistcs = true;
+        }
 #endif
     }
 
@@ -2849,6 +2856,7 @@ namespace Nektar
         bool steady_state    = false;
         int nwidthcolm = 8;
         int NtotDoOdeRHS = 0;
+        int NtotGMRESIts = 0;
         NekDouble resnorm0 = 0.0;
         NekDouble resnorm  = 0.0;
         NekDouble resmaxm  = 0.0;
@@ -2942,7 +2950,9 @@ namespace Nektar
             // LinSysTol = sqrt(0.01*sqrt(ratioTol)*resnorm);
             LinSysTol = m_GMRESRelativeIteTol*sqrt(resnorm);
             // LinSysTol = 0.005*sqrt(resnorm)*(k+1);
-            NtotDoOdeRHS  +=   m_linsol->SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0,LinSysTol);
+            int ntmpGMRESIts =  m_linsol->SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0,LinSysTol);
+            NtotDoOdeRHS  +=  ntmpGMRESIts;
+            NtotGMRESIts  +=  ntmpGMRESIts;
             // cout << "NtotDoOdeRHS    = "<<NtotDoOdeRHS<<endl;
 
             // LinSysEPS  =   m_linsol->SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0);
@@ -2951,8 +2961,12 @@ namespace Nektar
                 Vmath::Vsub(npoints,m_TimeIntegtSol_k[i],1,dsol[i],1,m_TimeIntegtSol_k[i],1);
             }
             NttlNonlinIte ++;
-
         }
+
+        m_TotNewtonIts  +=  NttlNonlinIte;
+        m_TotGMRESIts   +=  NtotGMRESIts;
+        m_TotOdeRHS     +=  NtotDoOdeRHS;
+        m_TotImpStages++;
 
         m_TotLinItePerStep += NtotDoOdeRHS;
         m_StagesPerStep++;

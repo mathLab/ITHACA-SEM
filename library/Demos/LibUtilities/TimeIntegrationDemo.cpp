@@ -338,8 +338,7 @@ int main(int argc, char *argv[])
                "step).\n";
     outfile << "#\n";
     outfile << "# Delta T: " << dt << "\n";
-    outfile << "# Method:  " << TimeIntegrationScheme::nameFromMethod(
-                                    tiScheme->GetIntegrationMethod())
+    outfile << "# Method:  " << tiScheme->GetName()
             << "\n";
     outfile << "#\n";
     outfile << "# There are 3 columns with the following headers:\n";
@@ -372,8 +371,7 @@ int main(int argc, char *argv[])
          << "\n";
 
     // Some more writing out the results
-    solver->GenerateGnuplotScript(TimeIntegrationScheme::nameFromMethod(
-        tiScheme->GetIntegrationMethod()));
+    solver->GenerateGnuplotScript(tiScheme->GetName());
     outfile.close();
 
     delete solver;

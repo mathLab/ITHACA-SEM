@@ -74,7 +74,7 @@ public:
         return m_schemeData;
     }
 
-    TimeIntegrationMethod GetIntegrationMethod() const;
+    std::string GetName() const;
 
     inline const TripleArray &GetSolutionVector() const
     {

@@ -88,7 +88,6 @@ namespace Nektar
         void UpdateRobinPrimCoeff(void);
 
         inline void SubSteppingTimeIntegration(
-            const int intMethod,
             const LibUtilities::TimeIntegrationSchemeSharedPtr &IntegrationScheme);
 
         inline void SubStepSaveFields(
@@ -134,7 +133,7 @@ namespace Nektar
         
         void IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IprodVn);
         
-        LibUtilities::TimeIntegrationMethod GetSubStepIntegrationMethod(void); 
+        std::string GetSubStepName(void); 
 
         void ExtrapolateArray( Array<OneD, Array<OneD, NekDouble> > &array);
 
@@ -159,7 +158,6 @@ namespace Nektar
             NekDouble kinvis)=0;
 
        virtual void v_SubSteppingTimeIntegration(
-                  int                                            intMethod,
             const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme ) = 0;
 
         virtual void v_SubStepSaveFields(
@@ -181,8 +179,7 @@ namespace Nektar
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection)=0;
         
-        virtual LibUtilities::TimeIntegrationMethod 
-            v_GetSubStepIntegrationMethod(void);
+        virtual std::string v_GetSubStepName(void);
 
         void CalcNeumannPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
@@ -348,10 +345,9 @@ namespace Nektar
      *
      */
     inline void Extrapolate::SubSteppingTimeIntegration(
-        int intMethod,
         const LibUtilities::TimeIntegrationSchemeSharedPtr &IntegrationScheme)
     {
-        v_SubSteppingTimeIntegration(intMethod, IntegrationScheme);
+        v_SubSteppingTimeIntegration(IntegrationScheme);
     }
     
     /**
@@ -400,10 +396,9 @@ namespace Nektar
     /**
      *
      */
-    inline LibUtilities::TimeIntegrationMethod 
-        Extrapolate::GetSubStepIntegrationMethod(void)
+    inline std::string Extrapolate::GetSubStepName(void)
     {
-        return v_GetSubStepIntegrationMethod();
+        return v_GetSubStepName();
     }
 
     /**

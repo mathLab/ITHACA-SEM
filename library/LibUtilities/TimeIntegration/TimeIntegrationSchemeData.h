@@ -69,11 +69,7 @@ public:
         std::ostream &os,
         const TimeIntegrationScheme::TimeIntegrationSchemeDataSharedPtr &rhs);
 
-    inline TimeIntegrationMethod GetIntegrationMethod() const
-    {
-        return m_method;
-    }
-    inline TimeIntegrationSchemeType GetIntegrationSchemeType() const
+     inline TimeIntegrationSchemeType GetIntegrationSchemeType() const
     {
         return m_schemeType;
     }
@@ -207,7 +203,6 @@ public:
 
     const TimeIntegrationScheme *m_parent;
 
-    TimeIntegrationMethod m_method;
     TimeIntegrationSchemeType m_schemeType;
 
     unsigned int m_numMultiStepValues; // number of entries in input and output

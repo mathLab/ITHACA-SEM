@@ -967,9 +967,9 @@ namespace Nektar
     }
 
 
-    LibUtilities::TimeIntegrationMethod Extrapolate::v_GetSubStepIntegrationMethod(void)
+    std::string Extrapolate::v_GetSubStepName(void)
     {
-        return LibUtilities::eNoTimeIntegrationMethod;
+        return "";
     }
 
     /**

@@ -104,9 +104,9 @@ TimeIntegrationSolution::TimeIntegrationSolution(
 {
 }
 
-TimeIntegrationMethod TimeIntegrationSolution::GetIntegrationMethod() const
+std::string TimeIntegrationSolution::GetName() const
 {
-    return m_schemeData->m_parent->GetIntegrationMethod();
+    return m_schemeData->m_parent->GetName();
 }
 
 } // end namespace LibUtilities

@@ -379,14 +379,14 @@ namespace Nektar
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             void MinusVolumDerivJacToMat(
-                const int                                               nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
-                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
-                const int                                               nfluxDir,
-                const int                                               nDervDir,
-                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray)
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &pFields,
+                const Array<OneD, const Array<OneD,  Array<OneD,
+                    Array<OneD,  Array<OneD,  NekDouble> > > > >            &ElmtJacArray,
+                const int                                                   nDervDir,
+                Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >              &gmtxarray)
             {
-                v_MinusVolumDerivJacToMat(nConvectiveFields,pFields,ElmtJac,nfluxDir,nDervDir,gmtxarray);
+                v_MinusVolumDerivJacToMat(nConvectiveFields,pFields,ElmtJacArray,nDervDir,gmtxarray);
             }
 #endif
 
@@ -516,13 +516,14 @@ namespace Nektar
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             virtual void v_MinusVolumDerivJacToMat(
-                const int                                               nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
-                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
-                const int                                               nfluxDir,
-                const int                                               nDervDir,
-                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray);
-#endif,
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &pFields,
+                const Array<OneD, const Array<OneD,  Array<OneD,
+                    Array<OneD,  Array<OneD,  NekDouble> > > > >            &ElmtJacArray,
+                const int                                                   nDervDir,
+                Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >              &gmtxarray);
+#endif
+
 
             /// Compute primary derivatives
             virtual void v_GetPrimVar(
@@ -536,6 +537,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &pVarDer);
 
         };
+
 
         /// A shared pointer to an EquationSystem object
         typedef std::shared_ptr<Diffusion> DiffusionSharedPtr;

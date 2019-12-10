@@ -69,6 +69,12 @@ namespace Nektar
 
     virtual ~NavierStokesCFE();
 
+    typedef std::function<void (
+            const Array<OneD, NekDouble>    &,
+            const NekDouble                 &,
+            const Array<OneD, NekDouble>    &,
+                DNekMatSharedPtr            &)> GetdFlux_dDeriv;
+
   protected:
     std::string                         m_ViscosityType;
     NekDouble                           m_mu;
@@ -85,6 +91,8 @@ namespace Nektar
 
     /// Equation of system for computing temperature
     EquationOfStateSharedPtr            m_eos;
+
+    Array<OneD, GetdFlux_dDeriv>        m_GetdFlux_dDeriv_Array;
 
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
                     const SpatialDomains::MeshGraphSharedPtr& pGraph);
@@ -117,12 +125,19 @@ namespace Nektar
 
     void GetViscousFluxBilinearForm(
         const int                                                       nConvectiveFields,
-        const int                                                       nSpaceDim,
         const int                                                       FluxDirection,
         const int                                                       DerivDirection,
         const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
         const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
+        const Array<OneD, NekDouble>                                    &mu,
+        const Array<OneD, const Array<OneD, NekDouble> >                &auxVars,
               Array<OneD, Array<OneD, NekDouble> >                      &outarray);
+
+    void CalcAuxiVarForBilinearFom(
+        const int                                                       nConvectiveFields,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
+        Array<OneD, NekDouble>                                          &mu,
+        Array<OneD, Array<OneD, NekDouble> >                            &auxVars);
 
     virtual void v_InitObject();
 
@@ -179,7 +194,16 @@ namespace Nektar
         const int                                                       nDirctn,
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
         const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
-              Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray);
+
+    virtual void v_GetFluxDerivJacDirctn(
+        const MultiRegions::ExpListSharedPtr                            &explist,
+        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
+        const int                                                       nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray,
+        const int                                                       nfluxDir);
 
     virtual void v_GetFluxDerivJacDirctn(
         const MultiRegions::ExpListSharedPtr                            &explist,
@@ -188,12 +212,6 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
               Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
 
-    // virtual void v_GetFluxDerivJacDirctn(
-    //     const MultiRegions::ExpListSharedPtr                            &explist,
-    //     const int                                                       nFluxDir,
-    //     const int                                                       nDervDir,
-    //     const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-    //           Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
 
     virtual void v_GetDiffusionFluxJacPoint(
             const int                                           nelmt,
@@ -303,6 +321,25 @@ namespace Nektar
         const Array<OneD, NekDouble>                        &U,
         const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
               DNekMatSharedPtr                              &OutputMatrix);
+
+    /**
+     * @brief return part of viscous Jacobian
+     * Input:
+     * normals:Point normals
+     * mu: dynamicviscosity
+     * dmu_dT: mu's derivative with T using Sutherland's law
+     * U=[rho,rhou,rhov,rhow,rhoE]
+     * Output: 4*5 Matrix (the flux about rho is zero)
+     * OutputMatrix dFLux_dU,  the matrix sign is consistent with SIPG
+    */
+    void GetdFlux_dU_3D(
+        const Array<OneD, NekDouble>                        &normals,
+        const NekDouble                                     mu,
+        const NekDouble                                     dmu_dT,
+        const Array<OneD, NekDouble>                        &U,
+        const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
+              DNekMatSharedPtr                              &OutputMatrix);
+
 #endif
 
   };

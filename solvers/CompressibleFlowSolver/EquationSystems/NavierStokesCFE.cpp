@@ -201,6 +201,49 @@ namespace Nektar
                 }
             }
         }
+
+        m_GetdFlux_dDeriv_Array = Array<OneD, GetdFlux_dDeriv> (m_spacedim);
+        switch (m_spacedim)
+        {
+        case 2:
+            /* code */
+            m_GetdFlux_dDeriv_Array[0] = std::bind(
+            &NavierStokesCFE::GetdFlux_dQx_2D, this, std::placeholders::_1,
+                                                     std::placeholders::_2,
+                                                     std::placeholders::_3,
+                                                     std::placeholders::_4);
+
+            m_GetdFlux_dDeriv_Array[1] = std::bind(
+            &NavierStokesCFE::GetdFlux_dQy_2D, this, std::placeholders::_1,
+                                                     std::placeholders::_2,
+                                                     std::placeholders::_3,
+                                                     std::placeholders::_4);
+            break;
+        case 3:
+            /* code */
+            m_GetdFlux_dDeriv_Array[0] = std::bind(
+            &NavierStokesCFE::GetdFlux_dQx_3D, this, std::placeholders::_1,
+                                                     std::placeholders::_2,
+                                                     std::placeholders::_3,
+                                                     std::placeholders::_4);
+
+            m_GetdFlux_dDeriv_Array[1] = std::bind(
+            &NavierStokesCFE::GetdFlux_dQy_3D, this, std::placeholders::_1,
+                                                     std::placeholders::_2,
+                                                     std::placeholders::_3,
+                                                     std::placeholders::_4);
+            m_GetdFlux_dDeriv_Array[2] = std::bind(
+            &NavierStokesCFE::GetdFlux_dQz_3D, this, std::placeholders::_1,
+                                                     std::placeholders::_2,
+                                                     std::placeholders::_3,
+                                                     std::placeholders::_4);
+
+            break;
+
+        default:
+
+            break;
+        }
     }
 
     void NavierStokesCFE::v_ExtraFldOutput(
@@ -1044,6 +1087,17 @@ namespace Nektar
             }
         }
 
+
+        int nwspD1 = 2*m_spacedim+4;
+        Array<OneD, Array<OneD, NekDouble > > auxVars (nwspD1);
+        for(int i=0; i<nwspD1;i++)
+        {
+            auxVars[i]  =   Array<OneD, NekDouble > (nPts,0.0);
+        }
+        Array<OneD, NekDouble > mu(nPts,0.0);
+
+        CalcAuxiVarForBilinearFom(nConvectiveFields,inarray,mu,auxVars);
+
         if(normal.num_elements())
         {
             fluxVec =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nDim);
@@ -1062,7 +1116,7 @@ namespace Nektar
             {
                 for(int nderiv=0;nderiv<nDim;nderiv++)
                 {
-                    GetViscousFluxBilinearForm(nConvectiveFields,nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
+                    GetViscousFluxBilinearForm(nConvectiveFields,nd,nderiv,inarray,qfields[nderiv],mu,auxVars,outtmp);
 
                     for(int j=0;j<nConvectiveFields;j++)
                     {
@@ -1085,7 +1139,7 @@ namespace Nektar
             {
                 for(int nderiv=0;nderiv<nDim;nderiv++)
                 {
-                    GetViscousFluxBilinearForm(nConvectiveFields,nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
+                    GetViscousFluxBilinearForm(nConvectiveFields,nd,nderiv,inarray,qfields[nderiv],mu,auxVars,outtmp);
 
                     for(int j=0;j<nConvectiveFields;j++)
                     {
@@ -1294,11 +1348,22 @@ namespace Nektar
         {
             outtmp[i] =   Array<OneD, NekDouble> (nPts, 0.0);
         }
+
+        int nwspD1 = 2*m_spacedim+4;
+        Array<OneD, Array<OneD, NekDouble > > auxVars (nwspD1);
+        for(int i=0; i<nwspD1;i++)
+        {
+            auxVars[i]  =   Array<OneD, NekDouble > (nPts,0.0);
+        }
+        Array<OneD, NekDouble > mu(nPts,0.0);
+
+        CalcAuxiVarForBilinearFom(nConvectiveFields,inaverg,mu,auxVars);
+
         for(int nd = 0; nd< nSpaceDim; nd++)
         {
             for(int nderiv =0; nderiv<nSpaceDim;nderiv++)
             {
-                GetViscousFluxBilinearForm(nConvectiveFields,nSpaceDim,nd,nderiv,inaverg,inarray,outtmp);
+                GetViscousFluxBilinearForm(nConvectiveFields,nd,nderiv,inaverg,inarray,mu,auxVars,outtmp);
 
                 for(int i=0;i<nConvectiveFields;i++)
                 {
@@ -1307,26 +1372,20 @@ namespace Nektar
             }
         }
     }
-    void NavierStokesCFE::GetViscousFluxBilinearForm(
+
+    void NavierStokesCFE::CalcAuxiVarForBilinearFom(
         const int                                                       nConvectiveFields,
-        const int                                                       nSpaceDim,
-        const int                                                       FluxDirection,
-        const int                                                       DerivDirection,
         const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
-        const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
-              Array<OneD, Array<OneD, NekDouble> >                      &outarray)
+        Array<OneD, NekDouble>                                          &mu,
+        Array<OneD, Array<OneD, NekDouble> >                            &auxVars)
     {
         int nPts                = inaverg[nConvectiveFields-1].num_elements();
         int nDim=m_spacedim;
-        // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, m_mu);
 
-        // Variable viscosity through the Sutherland's law
         if (m_ViscosityType == "Variable")
         {
-            Array<OneD, NekDouble > temperature        (nPts, 0.0);
-            m_varConv->GetTemperature(inaverg,temperature);
-            m_varConv->GetDynamicViscosity(temperature, mu);
+            m_varConv->GetTemperature(inaverg,auxVars[0]);
+            m_varConv->GetDynamicViscosity(auxVars[0], mu);
         }
 
         // Add artificial viscosity if wanted
@@ -1344,27 +1403,88 @@ namespace Nektar
             Vmath::Vadd(nPts, mu, 1, muav, 1, mu, 1);
         }
 
-        // What about thermal conductivity?
-
-        Array<OneD,Array<OneD, NekDouble>> outtmp = outarray;
-        for(int i=0; i<nConvectiveFields;i++)
-        {
-            Vmath::Zero(nPts,&outarray[i][0],1);
-            // outtmp[i]=Array<OneD,NekDouble> (nPts,0.0);
-        }
+        int nAuxVars_count = 0;
 
         //TODO: to get primary variable outside.(even in the beginning of DoODERhs)
         Array<OneD,Array<OneD,NekDouble>> u(nDim);
         Array<OneD,Array<OneD,NekDouble>> u2(nDim);
         for(int i=0;i<nDim;i++)
         {
-            u[i]=Array<OneD,NekDouble> (nPts,0.0);
-            u2[i]=Array<OneD,NekDouble> (nPts,0.0);
+            u[i]    =   auxVars[nAuxVars_count];
+            nAuxVars_count++;
         }
-        Array<OneD,NekDouble> q2(nPts,0.0);
-        Array<OneD,NekDouble> E_minus_q2(nPts,0.0);
-        Array<OneD,NekDouble> orho(nPts,0.0);
-        Array<OneD,NekDouble>tmp(nPts,0.0);
+
+        for(int i=0;i<nDim;i++)
+        {
+            u2[i]   =   auxVars[nAuxVars_count];
+            nAuxVars_count++;
+        }
+        Array<OneD,NekDouble> q2    =   auxVars[nAuxVars_count];
+        nAuxVars_count++;
+        Array<OneD,NekDouble> E_minus_q2=   auxVars[nAuxVars_count];
+        nAuxVars_count++;
+        Array<OneD,NekDouble> orho=   auxVars[nAuxVars_count];
+        nAuxVars_count++;
+        Array<OneD,NekDouble>tmp=   auxVars[nAuxVars_count];
+        nAuxVars_count++;
+
+        int nDim_plus_one=nDim+1;
+        Vmath::Zero(nPts,&q2[0],1);
+        Vmath::Sdiv(nPts,1.0,&inaverg[0][0],1,&orho[0],1);
+        for(int i=0;i<nDim;i++)
+        {
+            Vmath::Vmul(nPts,&inaverg[i+1][0],1,&orho[0],1,&u[i][0],1);
+            Vmath::Vmul(nPts,&u[i][0],1,&u[i][0],1,&u2[i][0],1);
+            Vmath::Vadd(nPts,&q2[0],1,&u2[i][0],1,&q2[0],1);
+        }
+        Vmath::Vmul(nPts,&inaverg[nDim_plus_one][0],1,&orho[0],1,&E_minus_q2[0],1);
+        Vmath::Vsub(nPts,&E_minus_q2[0],1,&q2[0],1,&E_minus_q2[0],1);
+        Vmath::Vmul(nPts,&mu[0],1,&orho[0],1,&tmp[0],1);
+    }
+
+    void NavierStokesCFE::GetViscousFluxBilinearForm(
+        const int                                                       nConvectiveFields,
+        const int                                                       FluxDirection,
+        const int                                                       DerivDirection,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
+        const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
+        const Array<OneD, NekDouble>                                    &mu,
+        const Array<OneD, const Array<OneD, NekDouble> >                &auxVars,
+              Array<OneD, Array<OneD, NekDouble> >                      &outarray)
+    {
+        int nPts                = inaverg[nConvectiveFields-1].num_elements();
+        int nDim=m_spacedim;
+
+        Array<OneD,Array<OneD, NekDouble>> outtmp = outarray;
+        for(int i=0; i<nConvectiveFields;i++)
+        {
+            Vmath::Zero(nPts,&outarray[i][0],1);
+        }
+
+        int nAuxVars_count =0;
+
+        Array<OneD,Array<OneD,NekDouble>> u(nDim);
+        Array<OneD,Array<OneD,NekDouble>> u2(nDim);
+        for(int i=0;i<nDim;i++)
+        {
+            u[i]    =   auxVars[nAuxVars_count];
+            nAuxVars_count++;
+        }
+
+        for(int i=0;i<nDim;i++)
+        {
+            u2[i]   =   auxVars[nAuxVars_count];
+            nAuxVars_count++;
+        }
+        Array<OneD,NekDouble> q2    =   auxVars[nAuxVars_count];
+        nAuxVars_count++;
+        Array<OneD,NekDouble> E_minus_q2=   auxVars[nAuxVars_count];
+        nAuxVars_count++;
+        Array<OneD,NekDouble> orho=   auxVars[nAuxVars_count];
+        nAuxVars_count++;
+        Array<OneD,NekDouble>tmp=   auxVars[nAuxVars_count];
+        nAuxVars_count++;
+
         Array<OneD,NekDouble>tmp1(nPts,0.0);
 
         //Constants
@@ -1377,17 +1497,6 @@ namespace Nektar
         const NekDouble OneThird=1./3.;
         const NekDouble TwoThird=2.*OneThird;
         const NekDouble FourThird=4.*OneThird;
-
-        Vmath::Sdiv(nPts,1.0,&inaverg[0][0],1,&orho[0],1);
-        for(int i=0;i<nDim;i++)
-        {
-            Vmath::Vmul(nPts,&inaverg[i+1][0],1,&orho[0],1,&u[i][0],1);
-            Vmath::Vmul(nPts,&u[i][0],1,&u[i][0],1,&u2[i][0],1);
-            Vmath::Vadd(nPts,&q2[0],1,&u2[i][0],1,&q2[0],1);
-        }
-        Vmath::Vmul(nPts,&inaverg[nDim_plus_one][0],1,&orho[0],1,&E_minus_q2[0],1);
-        Vmath::Vsub(nPts,&E_minus_q2[0],1,&q2[0],1,&E_minus_q2[0],1);
-        Vmath::Vmul(nPts,&mu[0],1,&orho[0],1,&tmp[0],1);
 
         int DerivDirection_plus_one=DerivDirection+1;
         if(DerivDirection==FluxDirection)
@@ -1624,40 +1733,46 @@ namespace Nektar
         NekDouble nx=normals[0];
         NekDouble ny=normals[1];
         NekDouble rho=U[0];
-        NekDouble u=U[1]/U[0];
-        NekDouble v=U[2]/U[0];
-        NekDouble E=U[3]/U[0];
+        NekDouble orho=1.0/rho;
+        NekDouble u=U[1]*orho;
+        NekDouble v=U[2]*orho;
+        NekDouble E=U[3]*orho;
         NekDouble q2=u*u+v*v;
         NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
+        NekDouble Cp=m_Cp;
+        NekDouble Cv=m_Cv;
         NekDouble T=e/Cv;
         //q_x=-kappa*dT_dx;
-        NekDouble kappa=m_thermalConductivity;
-        NekDouble Pr= Cp *mu / kappa;
+        NekDouble Pr=  m_Prandtl;
+        NekDouble oPr=  1.0/Pr;
+        NekDouble tRa = m_Cp *oPr;
+        NekDouble kappa=mu*tRa;
         //To notice, here is positive, which is consistent with
         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
         //But opposite to "I Do like CFD"
-        NekDouble tmp=mu/rho;
+        NekDouble tmp=mu*orho;
+        NekDouble tmp2=gamma*oPr;
+        NekDouble OneThird,TwoThird,FourThird;
+        OneThird=1.0/3.0;
+        TwoThird=2.0*OneThird;
+        FourThird=4.0*OneThird;
 
-        // TODO: replace repeated divid by multiply
-        (*OutputMatrix)(0,0)=tmp*(-4.0/3.0*u*nx-v*ny);
-        (*OutputMatrix)(0,1)=tmp*(4.0/3.0*nx);
+        (*OutputMatrix)(0,0)=tmp*(-FourThird*u*nx-v*ny);
+        (*OutputMatrix)(0,1)=tmp*(FourThird*nx);
         (*OutputMatrix)(0,2)=tmp*ny;
         (*OutputMatrix)(0,3)=0.0;
-        (*OutputMatrix)(1,0)=tmp*(-v*nx+2.0/3.0*u*ny);
-        (*OutputMatrix)(1,1)=tmp*(-2.0/3.0*ny);
+        (*OutputMatrix)(1,0)=tmp*(-v*nx+TwoThird*u*ny);
+        (*OutputMatrix)(1,1)=tmp*(-TwoThird*ny);
         (*OutputMatrix)(1,2)=tmp*nx;
         (*OutputMatrix)(1,3)=0.0;
-        (*OutputMatrix)(2,0)=(4.0/3.0*u*u+v*v+gamma/Pr*(E-q2))*nx+1.0/3.0*u*v*ny;
+        (*OutputMatrix)(2,0)=(FourThird*u*u+v*v+tmp2*(E-q2))*nx+OneThird*u*v*ny;
         (*OutputMatrix)(2,0)=-tmp*(*OutputMatrix)(2,0);
-        (*OutputMatrix)(2,1)=(4.0/3.0-gamma/Pr)*u*nx-2.0/3.0*v*ny;
+        (*OutputMatrix)(2,1)=(FourThird-tmp2)*u*nx-TwoThird*v*ny;
         (*OutputMatrix)(2,1)=tmp*(*OutputMatrix)(2,1);
-        (*OutputMatrix)(2,2)=(1-gamma/Pr)*v*nx+u*ny;
+        (*OutputMatrix)(2,2)=(1-tmp2)*v*nx+u*ny;
         (*OutputMatrix)(2,2)=tmp*(*OutputMatrix)(2,2);
-        (*OutputMatrix)(2,3)=tmp*gamma/Pr*nx;
+        (*OutputMatrix)(2,3)=tmp*tmp2*nx;
     }
 
      /**
@@ -1677,39 +1792,46 @@ namespace Nektar
         NekDouble nx=normals[0];
         NekDouble ny=normals[1];
         NekDouble rho=U[0];
-        NekDouble u=U[1]/U[0];
-        NekDouble v=U[2]/U[0];
-        NekDouble E=U[3]/U[0];
+        NekDouble orho=1.0/rho;
+        NekDouble u=U[1]*orho;
+        NekDouble v=U[2]*orho;
+        NekDouble E=U[3]*orho;
         NekDouble q2=u*u+v*v;
         NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
+        NekDouble Cp=m_Cp;
+        NekDouble Cv=m_Cv;
         NekDouble T=e/Cv;
         //q_x=-kappa*dT_dx;
-        NekDouble kappa=m_thermalConductivity;
-        NekDouble Pr= Cp *mu / kappa;
+        NekDouble Pr=  m_Prandtl;
+        NekDouble oPr=  1.0/Pr;
+        NekDouble tRa = m_Cp *oPr;
+        NekDouble kappa=mu*tRa;
         //To notice, here is positive, which is consistent with
         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
         //But opposite to "I Do like CFD"
-        NekDouble tmp=mu/rho;
+        NekDouble tmp=mu*orho;
+        NekDouble tmp2=gamma*oPr;
+        NekDouble OneThird,TwoThird,FourThird;
+        OneThird=1.0/3.0;
+        TwoThird=2.0*OneThird;
+        FourThird=4.0*OneThird;
 
-        (*OutputMatrix)(0,0)=tmp*(2.0/3.0*v*nx-u*ny);
+        (*OutputMatrix)(0,0)=tmp*(TwoThird*v*nx-u*ny);
         (*OutputMatrix)(0,1)=tmp*ny;
-        (*OutputMatrix)(0,2)=tmp*(-2.0/3.0)*nx;
+        (*OutputMatrix)(0,2)=tmp*(-TwoThird)*nx;
         (*OutputMatrix)(0,3)=0.0;
-        (*OutputMatrix)(1,0)=tmp*(-u*nx-4.0/3.0*v*ny);
+        (*OutputMatrix)(1,0)=tmp*(-u*nx-FourThird*v*ny);
         (*OutputMatrix)(1,1)=tmp*nx;
-        (*OutputMatrix)(1,2)=tmp*(4.0/3.0*ny);
+        (*OutputMatrix)(1,2)=tmp*(FourThird*ny);
         (*OutputMatrix)(1,3)=0.0;
-        (*OutputMatrix)(2,0)=1.0/3.0*u*v*nx+(4.0/3.0*v*v+u*u+gamma/Pr*(E-q2))*ny;
+        (*OutputMatrix)(2,0)=OneThird*u*v*nx+(FourThird*v*v+u*u+tmp2*(E-q2))*ny;
         (*OutputMatrix)(2,0)=-tmp*(*OutputMatrix)(2,0);
-        (*OutputMatrix)(2,1)=(1-gamma/Pr)*u*ny+v*nx;
+        (*OutputMatrix)(2,1)=(1-tmp2)*u*ny+v*nx;
         (*OutputMatrix)(2,1)=tmp*(*OutputMatrix)(2,1);
-        (*OutputMatrix)(2,2)=(4.0/3.0-gamma/Pr)*v*ny-2.0/3.0*u*nx;
+        (*OutputMatrix)(2,2)=(FourThird-tmp2)*v*ny-TwoThird*u*nx;
         (*OutputMatrix)(2,2)=tmp*(*OutputMatrix)(2,2);
-        (*OutputMatrix)(2,3)=tmp*gamma/Pr*ny;
+        (*OutputMatrix)(2,3)=tmp*tmp2*ny;
     }
 
     /**
@@ -1732,48 +1854,55 @@ namespace Nektar
         NekDouble ny=normals[1];
         NekDouble nz=normals[2];
         NekDouble rho=U[0];
-        NekDouble u=U[1]/U[0];
-        NekDouble v=U[2]/U[0];
-        NekDouble w=U[3]/U[0];
-        NekDouble E=U[4]/U[0];
+        NekDouble orho=1.0/rho;
+        NekDouble u=U[1]*orho;
+        NekDouble v=U[2]*orho;
+        NekDouble w=U[3]*orho;
+        NekDouble E=U[4]*orho;
         NekDouble q2=u*u+v*v+w*w;
         NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
+        NekDouble Cp=m_Cp;
+        NekDouble Cv=m_Cv;
         NekDouble T=e/Cv;
         //q_x=-kappa*dT_dx;
-        NekDouble kappa=m_thermalConductivity;
-        NekDouble Pr= Cp *mu / kappa;
+        NekDouble Pr=  m_Prandtl;
+        NekDouble oPr = 1.0/Pr;
+        NekDouble tRa = m_Cp *oPr;
+        NekDouble kappa=mu*tRa;
         //To notice, here is positive, which is consistent with
         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
         //But opposite to "I do like CFD"
-        NekDouble tmp=mu/rho;
+        NekDouble tmp=mu*orho;
         NekDouble tmpx=tmp*nx;
         NekDouble tmpy=tmp*ny;
         NekDouble tmpz=tmp*nz;
+        NekDouble tmp2=gamma*oPr;
+        NekDouble OneThird,TwoThird,FourThird;
+        OneThird=1.0/3.0;
+        TwoThird=2.0*OneThird;
+        FourThird=4.0*OneThird;
 
-        (*OutputMatrix)(0,0)=tmpx*(-4.0/3.0*u)+tmpy*(-v)+tmpz*(-w);
-        (*OutputMatrix)(0,1)=tmpx*(4.0/3.0);
+        (*OutputMatrix)(0,0)=tmpx*(-FourThird*u)+tmpy*(-v)+tmpz*(-w);
+        (*OutputMatrix)(0,1)=tmpx*FourThird;
         (*OutputMatrix)(0,2)=tmpy;
         (*OutputMatrix)(0,3)=tmpz;
         (*OutputMatrix)(0,4)=0.0;
-        (*OutputMatrix)(1,0)=tmpx*(-v)+tmpy*(2./3.*u);
-        (*OutputMatrix)(1,1)=tmpy*(-2./3.);
+        (*OutputMatrix)(1,0)=tmpx*(-v)+tmpy*(TwoThird*u);
+        (*OutputMatrix)(1,1)=tmpy*(-TwoThird);
         (*OutputMatrix)(1,2)=tmpx;
         (*OutputMatrix)(1,3)=0.0;
         (*OutputMatrix)(1,4)=0.0;
-        (*OutputMatrix)(2,0)=tmpx*(-w)+tmpz*(2./3.*u);
-        (*OutputMatrix)(2,1)=tmpz*(-2./3);
+        (*OutputMatrix)(2,0)=tmpx*(-w)+tmpz*(TwoThird*u);
+        (*OutputMatrix)(2,1)=tmpz*(-TwoThird);
         (*OutputMatrix)(2,2)=0.0;
         (*OutputMatrix)(2,3)=tmpx;
         (*OutputMatrix)(2,4)=0.0;
-        (*OutputMatrix)(3,0)=-tmpx*(4./3.*u*u+v*v+w*w+gamma/Pr*(E-q2))+tmpy*(-1./3.*u*v)+tmpz*(-1./3.*u*w);
-        (*OutputMatrix)(3,1)=tmpx*(4./3.-gamma/Pr)*u+tmpy*(-2./3.*v)+tmpz*(-2./3.*w);
-        (*OutputMatrix)(3,2)=tmpx*(1.0-gamma/Pr)*v+tmpy*u;
-        (*OutputMatrix)(3,3)=tmpx*(1.0-gamma/Pr)*w+tmpz*u;
-        (*OutputMatrix)(3,4)=tmpx*gamma/Pr;
+        (*OutputMatrix)(3,0)=-tmpx*(FourThird*u*u+v*v+w*w+tmp2*(E-q2))+tmpy*(-OneThird*u*v)+tmpz*(-OneThird*u*w);
+        (*OutputMatrix)(3,1)=tmpx*(FourThird-tmp2)*u+tmpy*(-TwoThird*v)+tmpz*(-TwoThird*w);
+        (*OutputMatrix)(3,2)=tmpx*(1.0-tmp2)*v+tmpy*u;
+        (*OutputMatrix)(3,3)=tmpx*(1.0-tmp2)*w+tmpz*u;
+        (*OutputMatrix)(3,4)=tmpx*tmp2;
     }
 
     /**
@@ -1796,48 +1925,55 @@ namespace Nektar
         NekDouble ny=normals[1];
         NekDouble nz=normals[2];
         NekDouble rho=U[0];
-        NekDouble u=U[1]/U[0];
-        NekDouble v=U[2]/U[0];
-        NekDouble w=U[3]/U[0];
-        NekDouble E=U[4]/U[0];
+        NekDouble orho=1.0/rho;
+        NekDouble u=U[1]*orho;
+        NekDouble v=U[2]*orho;
+        NekDouble w=U[3]*orho;
+        NekDouble E=U[4]*orho;
         NekDouble q2=u*u+v*v+w*w;
         NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
+        NekDouble Cp=m_Cp;
+        NekDouble Cv=m_Cv;
         NekDouble T=e/Cv;
         //q_x=-kappa*dT_dx;
-        NekDouble kappa=m_thermalConductivity;
-        NekDouble Pr= Cp *mu / kappa;
+        NekDouble Pr=  m_Prandtl;
+        NekDouble oPr = 1.0/Pr;
+        NekDouble tRa = m_Cp *oPr;
+        NekDouble kappa=mu*tRa;
         //To notice, here is positive, which is consistent with
         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
         //But opposite to "I do like CFD"
-        NekDouble tmp=mu/rho;
+        NekDouble tmp=mu*orho;
         NekDouble tmpx=tmp*nx;
         NekDouble tmpy=tmp*ny;
         NekDouble tmpz=tmp*nz;
+        NekDouble tmp2=gamma*oPr;
+        NekDouble OneThird,TwoThird,FourThird;
+        OneThird=1.0/3.0;
+        TwoThird=2.0*OneThird;
+        FourThird=4.0*OneThird;
 
-        (*OutputMatrix)(0,0)=tmpx*(2./3.*v)+tmpy*(-u);
+        (*OutputMatrix)(0,0)=tmpx*(TwoThird*v)+tmpy*(-u);
         (*OutputMatrix)(0,1)=tmpy;
-        (*OutputMatrix)(0,2)=tmpx*(-2./3.);
+        (*OutputMatrix)(0,2)=tmpx*(-TwoThird);
         (*OutputMatrix)(0,3)=0.0;
         (*OutputMatrix)(0,4)=0.0;
-        (*OutputMatrix)(1,0)=tmpx*(-u)+tmpy*(-4./3.*v)+tmpz*(-w);
+        (*OutputMatrix)(1,0)=tmpx*(-u)+tmpy*(-FourThird*v)+tmpz*(-w);
         (*OutputMatrix)(1,1)=tmpx;
-        (*OutputMatrix)(1,2)=tmpy*(4./3.);
+        (*OutputMatrix)(1,2)=tmpy*FourThird;
         (*OutputMatrix)(1,3)=tmpz;
         (*OutputMatrix)(1,4)=0.0;
-        (*OutputMatrix)(2,0)=tmpy*(-w)+tmpz*(2./3.*v);
+        (*OutputMatrix)(2,0)=tmpy*(-w)+tmpz*(TwoThird*v);
         (*OutputMatrix)(2,1)=0.0;
-        (*OutputMatrix)(2,2)=tmpz*(-2./3.);
+        (*OutputMatrix)(2,2)=tmpz*(-TwoThird);
         (*OutputMatrix)(2,3)=tmpy;
         (*OutputMatrix)(2,4)=0.0;
-        (*OutputMatrix)(3,0)=tmpx*(-1./3.*u*v)-tmpy*(u*u+4./3.*v*v+w*w+gamma/Pr*(E-q2))+tmpz*(-1./3.*v*w);
-        (*OutputMatrix)(3,1)=tmpx*v+tmpy*(1-gamma/Pr)*u;
-        (*OutputMatrix)(3,2)=tmpx*(-2./3.*u)+tmpy*(4./3.-gamma/Pr)*v+tmpz*(-2./3.*w);
-        (*OutputMatrix)(3,3)=tmpy*(1-gamma/Pr)*w+tmpz*v;
-        (*OutputMatrix)(3,4)=tmpy*gamma/Pr;
+        (*OutputMatrix)(3,0)=tmpx*(-OneThird*u*v)-tmpy*(u*u+FourThird*v*v+w*w+tmp2*(E-q2))+tmpz*(-OneThird*v*w);
+        (*OutputMatrix)(3,1)=tmpx*v+tmpy*(1-tmp2)*u;
+        (*OutputMatrix)(3,2)=tmpx*(-TwoThird*u)+tmpy*(FourThird-tmp2)*v+tmpz*(-TwoThird*w);
+        (*OutputMatrix)(3,3)=tmpy*(1-tmp2)*w+tmpz*v;
+        (*OutputMatrix)(3,4)=tmpy*tmp2;
     }
 
     /**
@@ -1860,48 +1996,55 @@ namespace Nektar
         NekDouble ny=normals[1];
         NekDouble nz=normals[2];
         NekDouble rho=U[0];
-        NekDouble u=U[1]/U[0];
-        NekDouble v=U[2]/U[0];
-        NekDouble w=U[3]/U[0];
-        NekDouble E=U[4]/U[0];
+        NekDouble orho=1.0/rho;
+        NekDouble u=U[1]*orho;
+        NekDouble v=U[2]*orho;
+        NekDouble w=U[3]*orho;
+        NekDouble E=U[4]*orho;
         NekDouble q2=u*u+v*v+w*w;
         NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
+        NekDouble Cp=m_Cp;
+        NekDouble Cv=m_Cv;
         NekDouble T=e/Cv;
         //q_x=-kappa*dT_dx;
-        NekDouble kappa=m_thermalConductivity;
-        NekDouble Pr= Cp *mu / kappa;
+        NekDouble Pr=  m_Prandtl;
+        NekDouble oPr = 1.0/Pr;
+        NekDouble tRa = m_Cp *oPr;
+        NekDouble kappa=mu*tRa;
         //To notice, here is positive, which is consistent with
         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
         //But opposite to "I do like CFD"
-        NekDouble tmp=mu/rho;
+        NekDouble tmp=mu*orho;
         NekDouble tmpx=tmp*nx;
         NekDouble tmpy=tmp*ny;
         NekDouble tmpz=tmp*nz;
+        NekDouble tmp2=gamma*oPr;
+        NekDouble OneThird,TwoThird,FourThird;
+        OneThird=1.0/3.0;
+        TwoThird=2.0*OneThird;
+        FourThird=4.0*OneThird;
 
-        (*OutputMatrix)(0,0)=tmpx*(2./3.*w)+tmpz*(-u);
+        (*OutputMatrix)(0,0)=tmpx*(TwoThird*w)+tmpz*(-u);
         (*OutputMatrix)(0,1)=tmpz;
         (*OutputMatrix)(0,2)=0.0;
-        (*OutputMatrix)(0,3)=tmpx*(-2./3.);
+        (*OutputMatrix)(0,3)=tmpx*(-TwoThird);
         (*OutputMatrix)(0,4)=0.0;
-        (*OutputMatrix)(1,0)=tmpy*(2./3.*w)+tmpz*(-v);
+        (*OutputMatrix)(1,0)=tmpy*(TwoThird*w)+tmpz*(-v);
         (*OutputMatrix)(1,1)=0.0;
         (*OutputMatrix)(1,2)=tmpz;
-        (*OutputMatrix)(1,3)=tmpy*(-2./3.);
+        (*OutputMatrix)(1,3)=tmpy*(-TwoThird);
         (*OutputMatrix)(1,4)=0.0;
-        (*OutputMatrix)(2,0)=tmpx*(-u)+tmpy*(-v)+tmpz*(-4./3.*w);
+        (*OutputMatrix)(2,0)=tmpx*(-u)+tmpy*(-v)+tmpz*(-FourThird*w);
         (*OutputMatrix)(2,1)=tmpx;
         (*OutputMatrix)(2,2)=tmpy;
-        (*OutputMatrix)(2,3)=tmpz*(4./3.);
+        (*OutputMatrix)(2,3)=tmpz*FourThird;
         (*OutputMatrix)(2,4)=0.0;
-        (*OutputMatrix)(3,0)=tmpx*(-1./3.*u*w)+tmpy*(-1./3.*v*w)-tmpz*(u*u+v*v+4./3.*w*w+gamma/Pr*(E-q2));
-        (*OutputMatrix)(3,1)=tmpx*w+tmpz*(1-gamma/Pr)*u;
-        (*OutputMatrix)(3,2)=tmpy*w+tmpz*(1-gamma/Pr)*v;
-        (*OutputMatrix)(3,3)=tmpx*(-2./3.*u)+tmpy*(-2./3.*v)+tmpz*(4./3.-gamma/Pr)*w;
-        (*OutputMatrix)(3,4)=tmpz*gamma/Pr;
+        (*OutputMatrix)(3,0)=tmpx*(-OneThird*u*w)+tmpy*(-OneThird*v*w)-tmpz*(u*u+v*v+FourThird*w*w+tmp2*(E-q2));
+        (*OutputMatrix)(3,1)=tmpx*w+tmpz*(1-tmp2)*u;
+        (*OutputMatrix)(3,2)=tmpy*w+tmpz*(1-tmp2)*v;
+        (*OutputMatrix)(3,3)=tmpx*(-TwoThird*u)+tmpy*(-TwoThird*v)+tmpz*(FourThird-tmp2)*w;
+        (*OutputMatrix)(3,4)=tmpz*tmp2;
     }
 
     /**
@@ -1936,40 +2079,41 @@ namespace Nektar
         NekDouble dU2_dy=qfield[1][1];
         NekDouble dU3_dy=qfield[1][2];
         NekDouble dU4_dy=qfield[1][3];
-        NekDouble R =m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble kappa=m_thermalConductivity;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
-        NekDouble Pr= Cp *mu / kappa;
+        NekDouble Cv=m_Cv;
+        NekDouble Pr=  m_Prandtl;
+        NekDouble oPr = 1.0/Pr;
 
         NekDouble orho1,orho2,orho3,orho4;
         NekDouble oCv=1./Cv;
         orho1=1.0/U1;
-        orho2=1.0/(U1*U1);
+        orho2=orho1*orho1;
         orho3=orho1*orho2;
         orho4=orho2*orho2;
 
         //Assume Fn=mu*Sn
         //Sn=Sx*nx+Sy*ny
 
-        //Term1 mu's derivative with U: dmu_dU*Sn
-        NekDouble u=U2/U1;
-        NekDouble v=U3/U1;
+        NekDouble TwoThrid=2./3.;
+        NekDouble FourThird=2.0*TwoThrid;
+        NekDouble u=U2*orho1;
+        NekDouble v=U3*orho1;
         NekDouble du_dx=orho1*(dU2_dx-u*dU1_dx);
-        NekDouble dv_dy=orho1*(dU3_dy-v*dU1_dy);
-        NekDouble du_dy=orho1*(dU2_dy-u*dU1_dy);
         NekDouble dv_dx=orho1*(dU3_dx-v*dU1_dx);
-        NekDouble s12=4./3.*du_dx-2./3.*dv_dy;
+        NekDouble du_dy=orho1*(dU2_dy-u*dU1_dy);
+        NekDouble dv_dy=orho1*(dU3_dy-v*dU1_dy);
+        NekDouble s12=FourThird*du_dx-TwoThrid*dv_dy;
         NekDouble s13=du_dy+dv_dx;
         NekDouble s22=s13;
-        NekDouble s23=4./3.*dv_dy-2./3.*du_dx;
+        NekDouble s23=FourThird*dv_dy-TwoThrid*du_dx;
         NekDouble snx=s12*nx+s22*ny;
         NekDouble sny=s13*nx+s23*ny;
         NekDouble snv=snx*u+sny*v;
-        NekDouble qx=-gamma*mu/Pr*(orho1*dU4_dx-U[3]*orho2*dU1_dx-u*(orho1*dU2_dx-U[1]*orho2*dU1_dx)-v*(orho1*dU3_dx-U[2]*orho2*dU1_dx));
-        NekDouble qy=-gamma*mu/Pr*(orho1*dU4_dy-U[3]*orho2*dU1_dy-u*(orho1*dU2_dy-U[1]*orho2*dU1_dy)-v*(orho1*dU3_dy-U[2]*orho2*dU1_dy));
+        NekDouble qx=-gamma*mu*oPr*(orho1*dU4_dx-U[3]*orho2*dU1_dx-u*(orho1*dU2_dx-U[1]*orho2*dU1_dx)-v*(orho1*dU3_dx-U[2]*orho2*dU1_dx));
+        NekDouble qy=-gamma*mu*oPr*(orho1*dU4_dy-U[3]*orho2*dU1_dy-u*(orho1*dU2_dy-U[1]*orho2*dU1_dy)-v*(orho1*dU3_dy-U[2]*orho2*dU1_dy));
         NekDouble qn=qx*nx+qy*ny;
+
+        //Term1 mu's derivative with U: dmu_dU*Sn
         Array<OneD,NekDouble> tmp(3,0.0);
         tmp[0]=snx;
         tmp[1]=sny;
@@ -2008,18 +2152,18 @@ namespace Nektar
         dv_dx_dU3=du_dx_dU2;
         dv_dy_dU1=-orho2*dU3_dy+2*orho3*U3*dU1_dy;
         dv_dy_dU3=du_dy_dU2;
-        ds12_dU1=4./3.*du_dx_dU1-2./3.*dv_dy_dU1;
-        ds12_dU2=4./3.*du_dx_dU2;
-        ds12_dU3=-2./3.*dv_dy_dU3;
+        ds12_dU1=FourThird*du_dx_dU1-TwoThrid*dv_dy_dU1;
+        ds12_dU2=FourThird*du_dx_dU2;
+        ds12_dU3=-TwoThrid*dv_dy_dU3;
         ds13_dU1=du_dy_dU1+dv_dx_dU1;
         ds13_dU2=du_dy_dU2;
         ds13_dU3=dv_dx_dU3;
         ds22_dU1=ds13_dU1;
         ds22_dU2=ds13_dU2;
         ds22_dU3=ds13_dU3;
-        ds23_dU1=4./3.*dv_dy_dU1-2./3.*du_dx_dU1;
-        ds23_dU2=-2./3.*du_dx_dU2;
-        ds23_dU3=4./3.*dv_dy_dU3;
+        ds23_dU1=FourThird*dv_dy_dU1-TwoThrid*du_dx_dU1;
+        ds23_dU2=-TwoThrid*du_dx_dU2;
+        ds23_dU3=FourThird*dv_dy_dU3;
         dsnx_dU1=ds12_dU1*nx+ds22_dU1*ny;
         dsnx_dU2=ds12_dU2*nx+ds22_dU2*ny;
         dsnx_dU3=ds12_dU3*nx+ds22_dU3*ny;
@@ -2039,15 +2183,15 @@ namespace Nektar
         (*OutputMatrix)(2,1)=(*OutputMatrix)(2,1)+mu*dsnv_dU2;
         (*OutputMatrix)(2,2)=(*OutputMatrix)(2,2)+mu*dsnv_dU3;
 
-        //Consider qn's effect (does not include mu's effect)
+        //Consider +qn's effect (does not include mu's effect)
         NekDouble dqx_dU1,dqx_dU2,dqx_dU3,dqx_dU4;
         NekDouble dqy_dU1,dqy_dU2,dqy_dU3,dqy_dU4;
-        NekDouble tmpx=-nx*mu*gamma/Pr;
+        NekDouble tmpx=-nx*mu*gamma*oPr;
         dqx_dU1=tmpx*(-orho2*dU4_dx+2*orho3*U4*dU1_dx+2*orho3*U2*dU2_dx-3*orho4*U2*U2*dU1_dx+2*orho3*U3*dU3_dx-3*orho4*U3*U3*dU1_dx);
         dqx_dU2=tmpx*(-orho2*dU2_dx+2*orho3*U2*dU1_dx);
         dqx_dU3=tmpx*(-orho2*dU3_dx+2*orho3*U3*dU1_dx);
         dqx_dU4=-tmpx*orho2*dU1_dx;
-        NekDouble tmpy=-ny*mu*gamma/Pr;
+        NekDouble tmpy=-ny*mu*gamma*oPr;
         dqy_dU1=tmpy*(-orho2*dU4_dy+2*orho3*U4*dU1_dy+2*orho3*U2*dU2_dy-3*orho4*U2*U2*dU1_dy+2*orho3*U3*dU3_dy-3*orho4*U3*U3*dU1_dy);
         dqy_dU2=tmpy*(-orho2*dU2_dy+2*orho3*U2*dU1_dy);
         dqy_dU3=tmpy*(-orho2*dU3_dy+2*orho3*U3*dU1_dy);
@@ -2058,11 +2202,254 @@ namespace Nektar
         (*OutputMatrix)(2,3)=(*OutputMatrix)(2,3)-dqx_dU4-dqy_dU4;
     }
 
+     /**
+     * @brief return part of viscous Jacobian
+     * Input:
+     * normals:Point normals
+     * mu: dynamicviscosity
+     * dmu_dT: mu's derivative with T using Sutherland's law
+     * U=[rho,rhou,rhov,rhow,rhoE]
+     * Output: 4*5 Matrix (the flux about rho is zero)
+     * OutputMatrix dFLux_dU,  the matrix sign is consistent with SIPG
+     */
+    void NavierStokesCFE::GetdFlux_dU_3D(
+        const Array<OneD, NekDouble>                        &normals,
+        const NekDouble                                     mu,
+        const NekDouble                                     dmu_dT,
+        const Array<OneD, NekDouble>                        &U,
+        const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
+              DNekMatSharedPtr                              &OutputMatrix)
+    {
+        NekDouble nx=normals[0];
+        NekDouble ny=normals[1];
+        NekDouble nz=normals[2];
+        NekDouble U1=U[0];
+        NekDouble U2=U[1];
+        NekDouble U3=U[2];
+        NekDouble U4=U[3];
+        NekDouble U5=U[4];
+        NekDouble dU1_dx=qfield[0][0];
+        NekDouble dU2_dx=qfield[0][1];
+        NekDouble dU3_dx=qfield[0][2];
+        NekDouble dU4_dx=qfield[0][3];
+        NekDouble dU5_dx=qfield[0][4];
+        NekDouble dU1_dy=qfield[1][0];
+        NekDouble dU2_dy=qfield[1][1];
+        NekDouble dU3_dy=qfield[1][2];
+        NekDouble dU4_dy=qfield[1][3];
+        NekDouble dU5_dy=qfield[1][4];
+        NekDouble dU1_dz=qfield[2][0];
+        NekDouble dU2_dz=qfield[2][1];
+        NekDouble dU3_dz=qfield[2][2];
+        NekDouble dU4_dz=qfield[2][3];
+        NekDouble dU5_dz=qfield[2][4];
+        NekDouble gamma=m_gamma;
+        NekDouble Cv=m_Cv;
+        NekDouble Pr=  m_Prandtl;
+        NekDouble oPr = 1.0/Pr;
+
+        NekDouble orho1,orho2,orho3,orho4;
+        NekDouble oCv=1./Cv;
+        orho1=1.0/U1;
+        orho2=orho1*orho1;
+        orho3=orho1*orho2;
+        orho4=orho2*orho2;
+
+        //Assume Fn=mu*Sn
+        //Sn=Sx*nx+Sy*ny+Sz*nz
+        NekDouble TwoThrid=2./3.;
+        NekDouble FourThird=2.0*TwoThrid;
+        NekDouble tmp2=gamma*mu*oPr;
+        NekDouble u=U2*orho1;
+        NekDouble v=U3*orho1;
+        NekDouble w=U4*orho1;
+        NekDouble du_dx=orho1*(dU2_dx-u*dU1_dx);
+        NekDouble dv_dx=orho1*(dU3_dx-v*dU1_dx);
+        NekDouble dw_dx=orho1*(dU4_dx-w*dU1_dx);
+        NekDouble du_dy=orho1*(dU2_dy-u*dU1_dy);
+        NekDouble dv_dy=orho1*(dU3_dy-v*dU1_dy);
+        NekDouble dw_dy=orho1*(dU4_dy-w*dU1_dy);
+        NekDouble du_dz=orho1*(dU2_dz-u*dU1_dz);
+        NekDouble dv_dz=orho1*(dU3_dz-v*dU1_dz);
+        NekDouble dw_dz=orho1*(dU4_dz-w*dU1_dz);
+        NekDouble s12=FourThird*du_dx-TwoThrid*dv_dy-TwoThrid*dw_dz;
+        NekDouble s13=du_dy+dv_dx;
+        NekDouble s14=dw_dx+du_dz;
+        NekDouble s22=s13;
+        NekDouble s23=FourThird*dv_dy-TwoThrid*du_dx-TwoThrid*dw_dz;
+        NekDouble s24=dv_dz+dw_dy;
+        NekDouble s32=s14;
+        NekDouble s33=s24;
+        NekDouble s34=FourThird*dw_dz-TwoThrid*du_dx-TwoThrid*dv_dy;
+        NekDouble snx=s12*nx+s22*ny+s32*nz;
+        NekDouble sny=s13*nx+s23*ny+s33*nz;
+        NekDouble snz=s14*nz+s24*ny+s34*nz;
+        NekDouble snv=snx*u+sny*v+snz*w;
+        NekDouble qx=-tmp2*(orho1*dU5_dx-U5*orho2*dU1_dx-u*(orho1*dU2_dx-U2*orho2*dU1_dx)-v*(orho1*dU3_dx-U3*orho2*dU1_dx)-w*(orho1*dU4_dx-U4*orho2*dU1_dx));
+        NekDouble qy=-tmp2*(orho1*dU5_dy-U5*orho2*dU1_dy-u*(orho1*dU2_dy-U2*orho2*dU1_dy)-v*(orho1*dU3_dy-U3*orho2*dU1_dy)-w*(orho1*dU4_dy-U4*orho2*dU1_dy));
+        NekDouble qz=-tmp2*(orho1*dU5_dz-U5*orho2*dU1_dz-u*(orho1*dU2_dz-U2*orho2*dU1_dz)-v*(orho1*dU3_dz-U3*orho2*dU1_dz)-w*(orho1*dU4_dz-U4*orho2*dU1_dz));
+        NekDouble qn=qx*nx+qy*ny+qz*nz;
+
+        //Term1 mu's derivative with U: dmu_dU*Sn
+        Array<OneD,NekDouble> tmp(4,0.0);
+        tmp[0]=snx;
+        tmp[1]=sny;
+        tmp[2]=snz;
+        tmp[3]=snv-qn/mu;
+        Array<OneD,NekDouble> dT_dU (5,0.0);
+        dT_dU[0]=oCv*(-orho2*U5+orho3*U2*U2+orho3*U3*U3+orho3*U4*U4);
+        dT_dU[1]=-oCv*orho2*U2;
+        dT_dU[2]=-oCv*orho2*U3;
+        dT_dU[3]=-oCv*orho2*U4;
+        dT_dU[4]=oCv*orho1;
+        for(int i=0;i<4;i++)
+        {
+            for(int j=0;j<5;j++)
+            {
+                (*OutputMatrix)(i,j)=dmu_dT*dT_dU[j]*tmp[i];
+            }
+        }
+
+        //Term 2 +mu*dSn_dU
+        NekDouble du_dx_dU1,du_dx_dU2;
+        NekDouble du_dy_dU1,du_dy_dU2;
+        NekDouble du_dz_dU1,du_dz_dU2;
+        NekDouble dv_dx_dU1,dv_dx_dU3;
+        NekDouble dv_dy_dU1,dv_dy_dU3;
+        NekDouble dv_dz_dU1,dv_dz_dU3;
+        NekDouble dw_dx_dU1,dw_dx_dU4;
+        NekDouble dw_dy_dU1,dw_dy_dU4;
+        NekDouble dw_dz_dU1,dw_dz_dU4;
+        NekDouble ds12_dU1,ds12_dU2,ds12_dU3,ds12_dU4;
+        NekDouble ds13_dU1,ds13_dU2,ds13_dU3;
+        NekDouble ds14_dU1,ds14_dU2,ds14_dU4;
+        NekDouble ds22_dU1,ds22_dU2,ds22_dU3;
+        NekDouble ds23_dU1,ds23_dU2,ds23_dU3,ds23_dU4;
+        NekDouble ds24_dU1,ds24_dU3,ds24_dU4;
+        NekDouble ds32_dU1,ds32_dU2,ds32_dU4;
+        NekDouble ds33_dU1,ds33_dU3,ds33_dU4;
+        NekDouble ds34_dU1,ds34_dU2,ds34_dU3,ds34_dU4;
+        NekDouble dsnx_dU1,dsnx_dU2,dsnx_dU3,dsnx_dU4;
+        NekDouble dsny_dU1,dsny_dU2,dsny_dU3,dsny_dU4;
+        NekDouble dsnz_dU1,dsnz_dU2,dsnz_dU3,dsnz_dU4;
+        NekDouble dsnv_dU1,dsnv_dU2,dsnv_dU3,dsnv_dU4;
+
+        du_dx_dU1=-orho2*dU2_dx+2*orho3*U2*dU1_dx;
+        du_dx_dU2=-orho2*dU1_dx;
+        du_dy_dU1=-orho2*dU2_dy+2*orho3*U2*dU1_dy;
+        du_dy_dU2=-orho2*dU1_dy;
+        du_dz_dU1=-orho2*dU2_dz+2*orho3*U2*dU1_dz;
+        du_dz_dU2=-orho2*dU1_dz;
+        dv_dx_dU1=-orho2*dU3_dx+2*orho3*U3*dU1_dx;
+        dv_dx_dU3=-orho2*dU1_dx;
+        dv_dy_dU1=-orho2*dU3_dy+2*orho3*U3*dU1_dy;
+        dv_dy_dU3=-orho2*dU1_dy;
+        dv_dz_dU1=-orho2*dU3_dz+2*orho3*U3*dU1_dz;
+        dv_dz_dU3=-orho2*dU1_dz;
+        dw_dx_dU1=-orho2*dU4_dx+2*orho3*U4*dU1_dx;
+        dw_dx_dU4=-orho2*dU1_dx;
+        dw_dy_dU1=-orho2*dU4_dy+2*orho3*U4*dU1_dy;
+        dw_dy_dU4=-orho2*dU1_dy;
+        dw_dz_dU1=-orho2*dU4_dz+2*orho3*U4*dU1_dz;
+        dw_dz_dU4=-orho2*dU1_dz;
+        ds12_dU1=FourThird*du_dx_dU1-TwoThrid*dv_dy_dU1-TwoThrid*dw_dz_dU1;
+        ds12_dU2=FourThird*du_dx_dU2;
+        ds12_dU3=-TwoThrid*dv_dy_dU3;
+        ds12_dU4=-TwoThrid*dw_dz_dU4;
+        ds13_dU1=du_dy_dU1+dv_dx_dU1;
+        ds13_dU2=du_dy_dU2;
+        ds13_dU3=dv_dx_dU3;
+        ds14_dU1=dw_dx_dU1+du_dz_dU1;
+        ds14_dU2=du_dz_dU2;
+        ds14_dU4=dw_dx_dU4;
+        ds22_dU1=du_dy_dU1+dv_dx_dU1;
+        ds22_dU2=du_dy_dU2;
+        ds22_dU3=dv_dx_dU3;
+        ds23_dU1=FourThird*dv_dy_dU1-TwoThrid*du_dx_dU1-TwoThrid*dw_dz_dU1;
+        ds23_dU2=-TwoThrid*du_dx_dU2;
+        ds23_dU3=FourThird*dv_dy_dU3;
+        ds23_dU4=-TwoThrid*dw_dz_dU4;
+        ds24_dU1=dv_dz_dU1+dw_dy_dU1;
+        ds24_dU3=dv_dz_dU3;
+        ds24_dU4=dw_dy_dU4;
+        ds32_dU1=dw_dx_dU1+du_dz_dU1;
+        ds32_dU2=du_dz_dU2;
+        ds32_dU4=dw_dx_dU4;
+        ds33_dU1=dv_dz_dU1+dw_dy_dU1;
+        ds33_dU3=dv_dz_dU3;
+        ds33_dU4=dw_dy_dU4;
+        ds34_dU1=FourThird*dw_dz_dU1-TwoThrid*du_dx_dU1-TwoThrid*dv_dy_dU1;
+        ds34_dU2=-TwoThrid*du_dx_dU2;
+        ds34_dU3=-TwoThrid*dv_dy_dU3;
+        ds34_dU4=FourThird*dw_dz_dU4;
+        dsnx_dU1=ds12_dU1*nx+ds22_dU1*ny+ds32_dU1*nz;
+        dsnx_dU2=ds12_dU2*nx+ds22_dU2*ny+ds32_dU2*nz;
+        dsnx_dU3=ds12_dU3*nx+ds22_dU3*ny;
+        dsnx_dU4=ds12_dU4*nx+ds32_dU4*nz;
+        dsny_dU1=ds13_dU1*nx+ds23_dU1*ny+ds33_dU1*nz;
+        dsny_dU2=ds13_dU2*nx+ds23_dU2*ny;
+        dsny_dU3=ds13_dU3*nx+ds23_dU3*ny+ds33_dU3*nz;
+        dsny_dU4=ds23_dU4*ny+ds33_dU4*nz;
+        dsnz_dU1=ds14_dU1*nx+ds24_dU1*ny+ds34_dU1*nz;
+        dsnz_dU2=ds14_dU2*nx+ds34_dU2*nz;
+        dsnz_dU3=ds24_dU3*ny+ds34_dU3*nz;
+        //? why there is value if 2D
+        dsnz_dU4=ds14_dU4*nx+ds24_dU4*ny+ds34_dU4*nz;
+        dsnv_dU1=u*dsnx_dU1+v*dsny_dU1+w*dsnz_dU1-orho2*U2*snx-orho2*U3*sny-orho2*U4*snz;
+        dsnv_dU2=u*dsnx_dU2+v*dsny_dU2+w*dsnz_dU2+orho1*snx;
+        dsnv_dU3=u*dsnx_dU3+v*dsny_dU3+w*dsnz_dU3+orho1*sny;
+        dsnv_dU4=u*dsnx_dU4+v*dsny_dU4+w*dsnz_dU4+orho1*snz;
+        (*OutputMatrix)(0,0)=(*OutputMatrix)(0,0)+mu*dsnx_dU1;
+        (*OutputMatrix)(0,1)=(*OutputMatrix)(0,1)+mu*dsnx_dU2;
+        (*OutputMatrix)(0,2)=(*OutputMatrix)(0,2)+mu*dsnx_dU3;
+        (*OutputMatrix)(0,3)=(*OutputMatrix)(0,3)+mu*dsnx_dU4;
+        (*OutputMatrix)(1,0)=(*OutputMatrix)(1,0)+mu*dsny_dU1;
+        (*OutputMatrix)(1,1)=(*OutputMatrix)(1,1)+mu*dsny_dU2;
+        (*OutputMatrix)(1,2)=(*OutputMatrix)(1,2)+mu*dsny_dU3;
+        (*OutputMatrix)(1,3)=(*OutputMatrix)(1,3)+mu*dsny_dU4;
+        (*OutputMatrix)(2,0)=(*OutputMatrix)(2,0)+mu*dsnz_dU1;
+        (*OutputMatrix)(2,1)=(*OutputMatrix)(2,1)+mu*dsnz_dU2;
+        (*OutputMatrix)(2,2)=(*OutputMatrix)(2,2)+mu*dsnz_dU3;
+        (*OutputMatrix)(2,3)=(*OutputMatrix)(2,3)+mu*dsnz_dU4;
+        (*OutputMatrix)(3,0)=(*OutputMatrix)(3,0)+mu*dsnv_dU1;
+        (*OutputMatrix)(3,1)=(*OutputMatrix)(3,1)+mu*dsnv_dU2;
+        (*OutputMatrix)(3,2)=(*OutputMatrix)(3,2)+mu*dsnv_dU3;
+        (*OutputMatrix)(3,3)=(*OutputMatrix)(3,3)+mu*dsnv_dU4;
+
+        //Consider heat flux qn's effect (does not include mu's effect)
+        NekDouble dqx_dU1,dqx_dU2,dqx_dU3,dqx_dU4,dqx_dU5;
+        NekDouble dqy_dU1,dqy_dU2,dqy_dU3,dqy_dU4,dqy_dU5;
+        NekDouble dqz_dU1,dqz_dU2,dqz_dU3,dqz_dU4,dqz_dU5;
+        NekDouble tmpx=-nx*tmp2;
+        dqx_dU1=tmpx*(-orho2*dU5_dx+2*orho3*U5*dU1_dx+2*orho3*U2*dU2_dx-3*orho4*U2*U2*dU1_dx+2*orho3*U3*dU3_dx-3*orho4*U3*U3*dU1_dx+2*orho3*U4*dU4_dx-3*orho4*U4*U4*dU1_dx);
+        dqx_dU2=tmpx*(-orho2*dU2_dx+2*orho3*U2*dU1_dx);
+        dqx_dU3=tmpx*(-orho2*dU3_dx+2*orho3*U3*dU1_dx);
+        dqx_dU4=tmpx*(-orho2*dU4_dx+2*orho3*U4*dU1_dx);
+        dqx_dU5=-tmpx*orho2*dU1_dx;
+        NekDouble tmpy=-ny*tmp2;
+        dqy_dU1=tmpy*(-orho2*dU5_dy+2*orho3*U5*dU1_dy+2*orho3*U2*dU2_dy-3*orho4*U2*U2*dU1_dy+2*orho3*U3*dU3_dy-3*orho4*U3*U3*dU1_dy+2*orho3*U4*dU4_dy-3*orho4*U4*U4*dU1_dy);
+        dqy_dU2=tmpy*(-orho2*dU2_dy+2*orho3*U2*dU1_dy);
+        dqy_dU3=tmpy*(-orho2*dU3_dy+2*orho3*U3*dU1_dy);
+        dqy_dU4=tmpy*(-orho2*dU4_dy+2*orho3*U4*dU1_dy);
+        dqy_dU5=-tmpy*orho2*dU1_dy;
+        NekDouble tmpz=-nz*tmp2;
+        dqz_dU1=tmpz*(-orho2*dU5_dz+2*orho3*U5*dU1_dz+2*orho3*U2*dU2_dz-3*orho4*U2*U2*dU1_dz+2*orho3*U3*dU3_dz-3*orho4*U3*U3*dU1_dz+2*orho3*U4*dU4_dz-3*orho4*U4*U4*dU1_dz);
+        dqz_dU2=tmpz*(-orho2*dU2_dz+2*orho3*U2*dU1_dz);
+        dqz_dU3=tmpz*(-orho2*dU3_dz+2*orho3*U3*dU1_dz);
+        dqz_dU4=tmpz*(-orho2*dU4_dz+2*orho3*U4*dU1_dz);
+        dqz_dU5=-tmpz*orho2*dU1_dz;
+        (*OutputMatrix)(3,0)=(*OutputMatrix)(3,0)-dqx_dU1-dqy_dU1-dqz_dU1;
+        (*OutputMatrix)(3,1)=(*OutputMatrix)(3,1)-dqx_dU2-dqy_dU2-dqz_dU2;
+        (*OutputMatrix)(3,2)=(*OutputMatrix)(3,2)-dqx_dU3-dqy_dU3-dqz_dU3;
+        (*OutputMatrix)(3,3)=(*OutputMatrix)(3,3)-dqx_dU4-dqy_dU4-dqz_dU4;
+        (*OutputMatrix)(3,4)=(*OutputMatrix)(3,4)-dqx_dU5-dqy_dU5-dqz_dU5;
+    }
+
     void NavierStokesCFE::v_MinusDiffusionFluxJacDirctn(
         const int                                                       nDirctn,
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
         const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
-              Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray)
     {
         int nConvectiveFields   = inarray.num_elements();
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =    m_fields[0]->GetExp();
@@ -2117,7 +2504,8 @@ namespace Nektar
         }
 
         DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
+                                ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields,0.0);
+        Array<OneD, NekDouble > PointFJac_data = PointFJac->GetPtr();
 
         for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
         {
@@ -2156,18 +2544,18 @@ namespace Nektar
                 pointDmuDT  = locDmuDT[npnt];
 
                 GetDiffusionFluxJacPoint(nelmt,pointVar,pointDerv,pointmu,pointDmuDT,normals,PointFJac);
-                for (int i =0; i < nConvectiveFields-1; i++)
+                for (int j =0; j < nConvectiveFields; j++)
                 {
-                    for (int j =0; j < nConvectiveFields; j++)
+                    int noffset = j*(nConvectiveFields-1);
+                    for (int i =0; i < nConvectiveFields-1; i++)
                     {
-                        (*ElmtJac[nelmt][npnt])(i+1,j) -=  (*PointFJac)(i,j);
+                        ElmtJacArray[i+1][j][nDirctn][nelmt][npnt] -= PointFJac_data[noffset+i];
                     }
                 }
             }
         }
     }
 
-    // TODO: currently only for 2D
     void NavierStokesCFE::v_GetDiffusionFluxJacPoint(
             const int                                           nelmt,
             const Array<OneD, NekDouble>                        &conservVar,
@@ -2177,10 +2565,112 @@ namespace Nektar
             const Array<OneD, NekDouble>                        &normals,
                  DNekMatSharedPtr                               &fluxJac)
     {
-        GetdFlux_dU_2D(normals,mu,DmuDT,conservVar,conseDeriv,fluxJac);
+        switch (m_spacedim)
+        {
+        case 2:
+            GetdFlux_dU_2D(normals,mu,DmuDT,conservVar,conseDeriv,fluxJac);
+            break;
+
+        case 3:
+            GetdFlux_dU_3D(normals,mu,DmuDT,conservVar,conseDeriv,fluxJac);
+            break;
+
+        default:
+            ASSERTL0(false, "v_GetDiffusionFluxJacPoint not coded");
+            break;
+        }
     }
 
     void NavierStokesCFE::v_GetFluxDerivJacDirctn(
+        const MultiRegions::ExpListSharedPtr                            &explist,
+        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
+        const int                                                       nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray,
+        const int                                                       nfluxDir)
+    {
+        int nConvectiveFields   = inarray.num_elements();
+        std::shared_ptr<LocalRegions::ExpansionVector> expvect =    explist->GetExp();
+        int ntotElmt            = (*expvect).size();
+        int nPts                = explist->GetTotPoints();
+        int nSpaceDim           = m_graph->GetSpaceDimension();
+
+        // Auxiliary variables
+        Array<OneD, NekDouble > mu                 (nPts, 0.0);
+
+        // Variable viscosity through the Sutherland's law
+        if (m_ViscosityType == "Variable")
+        {
+            Array<OneD, NekDouble > temperature        (nPts, 0.0);
+            m_varConv->GetTemperature(inarray,temperature);
+            m_varConv->GetDynamicViscosity(temperature, mu);
+        }
+        else
+        {
+            Vmath::Fill(nPts, m_mu, mu, 1);
+        }
+
+        NekDouble pointmu       = 0.0;
+        Array<OneD, NekDouble> locmu;
+        Array<OneD, NekDouble> pointVar(nConvectiveFields,0.0);
+        Array<OneD, Array<OneD, NekDouble> > locVars(nConvectiveFields);
+        Array<OneD, NekDouble> pointnormals(nSpaceDim,0.0);
+        Array<OneD, Array<OneD, NekDouble> > locnormal(nSpaceDim);
+
+        DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
+                                ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
+        Array<OneD, NekDouble > PointFJac_data = PointFJac->GetPtr();
+
+        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        {
+            int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
+            int noffest             = explist->GetPhys_Offset(nelmt);
+
+            for(int j = 0; j < nConvectiveFields; j++)
+            {
+                locVars[j] = inarray[j]+noffest;
+            }
+
+            for(int j = 0; j < nSpaceDim; j++)
+            {
+                locnormal[j] = normals[j]+noffest;
+            }
+
+            locmu       =   mu      + noffest;
+            for(int npnt = 0; npnt < nElmtPnt; npnt++)
+            {
+                for(int j = 0; j < nConvectiveFields; j++)
+                {
+                    pointVar[j] = locVars[j][npnt];
+                }
+                for(int j = 0; j < nSpaceDim; j++)
+                {
+                    pointnormals[j] = locnormal[j][npnt];
+                }
+
+                pointmu     = locmu[npnt];
+
+                // GetdFlux_dQx_2D(pointnormals,pointmu,pointVar,PointFJac);
+                // functor(pointnormals,pointmu,pointVar,PointFJac);
+                m_GetdFlux_dDeriv_Array[nDervDir](pointnormals,pointmu,pointVar,PointFJac);
+                for (int j =0; j < nConvectiveFields; j++)
+                {
+                    // (*ElmtJac[nelmt][npnt])(0,j) =  0.0;
+                    ElmtJacArray[0][j][nfluxDir][nelmt][npnt] = 0.0;
+                }
+                for (int j =0; j < nConvectiveFields; j++)
+                {
+                    int noffset = j*(nConvectiveFields-1);
+                    for (int i =0; i < nConvectiveFields-1; i++)
+                    {
+                        ElmtJacArray[i+1][j][nfluxDir][nelmt][npnt] = PointFJac_data[noffset+i];
+                    }
+                }
+            }
+        }
+    }
+
+        void NavierStokesCFE::v_GetFluxDerivJacDirctn(
         const MultiRegions::ExpListSharedPtr                            &explist,
         const Array<OneD, const Array<OneD, NekDouble> >                &normals,
         const int                                                       nDervDir,
@@ -2245,11 +2735,20 @@ namespace Nektar
 
         DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
                                 ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
+        // GetdFlux_dDeriv functor = NavierStokesCFE::GetdFlux_dQx_2D;
 
-        switch (nDervDir)
-        {
-            case 0:
-            {
+        // // store a free function
+        // std::function<void(int)> f_display;
+
+        // f_display = std::bind(
+        //     &NavierStokesCFE::print_num, this, std::placeholders::_1);
+        // f_display(-9);
+
+        // switch (nDervDir)
+        // {
+        //     case 0:
+        //     {
+
                 for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                 {
                     int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
@@ -2279,7 +2778,9 @@ namespace Nektar
 
                         pointmu     = locmu[npnt];
 
-                        GetdFlux_dQx_2D(pointnormals,pointmu,pointVar,PointFJac);
+                        // GetdFlux_dQx_2D(pointnormals,pointmu,pointVar,PointFJac);
+                        // functor(pointnormals,pointmu,pointVar,PointFJac);
+                        m_GetdFlux_dDeriv_Array[nDervDir](pointnormals,pointmu,pointVar,PointFJac);
                         for (int j =0; j < nConvectiveFields; j++)
                         {
                             (*ElmtJac[nelmt][npnt])(0,j) =  0.0;
@@ -2294,128 +2795,7 @@ namespace Nektar
                         // (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
                     }
                 }
-                break;
-            }
-            case 1:
-            {
-                for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-                {
-                    int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
-                    int noffest             = explist->GetPhys_Offset(nelmt);
-
-                    for(int j = 0; j < nConvectiveFields; j++)
-                    {
-                        locVars[j] = inarray[j]+noffest;
-                    }
-
-                    for(int j = 0; j < nSpaceDim; j++)
-                    {
-                        locnormal[j] = normals[j]+noffest;
-                    }
-
-                    locmu       =   mu      + noffest;
-                    for(int npnt = 0; npnt < nElmtPnt; npnt++)
-                    {
-                        for(int j = 0; j < nConvectiveFields; j++)
-                        {
-                            pointVar[j] = locVars[j][npnt];
-                        }
-                        for(int j = 0; j < nSpaceDim; j++)
-                        {
-                            pointnormals[j] = locnormal[j][npnt];
-                        }
-
-                        pointmu     = locmu[npnt];
-
-                        GetdFlux_dQy_2D(pointnormals,pointmu,pointVar,PointFJac);
-                        for (int j =0; j < nConvectiveFields; j++)
-                        {
-                            (*ElmtJac[nelmt][npnt])(0,j) =  0.0;
-                        }
-                        for (int i =0; i < nConvectiveFields-1; i++)
-                        {
-                            for (int j =0; j < nConvectiveFields; j++)
-                            {
-                                (*ElmtJac[nelmt][npnt])(i+1,j) =  (*PointFJac)(i,j);
-                            }
-                        }
-                        // (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
-                    }
-                }
-                break;
-            }
-            default:
-            {
-                ASSERTL0(false, "only for 2D");
-                break;
-            }
-        }
-        return;
     }
-
-    // void NavierStokesCFE::v_GetFluxDerivJacDirctn(
-    //     const MultiRegions::ExpListSharedPtr                            &explist,
-    //     const int                                                       nFluxDir,
-    //     const int                                                       nDervDir,
-    //     const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-    //           Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
-    // {
-    //     int nConvectiveFields   = inarray.num_elements();
-    //     std::shared_ptr<LocalRegions::ExpansionVector> expvect =    explist->GetExp();
-    //     int ntotElmt            = (*expvect).size();
-    //     int nPts                = explist->GetTotPoints();
-    //     int nSpaceDim           = m_graph->GetSpaceDimension();
-
-    //     int nDim                = nSpaceDim;
-
-    //     //Debug
-    //     if(!ElmtJac.num_elements())
-    //     {
-    //         ElmtJac =   Array<OneD, Array<OneD, DNekMatSharedPtr> > (ntotElmt);
-    //         for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-    //         {
-    //             int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
-    //             ElmtJac[nelmt] =   Array<OneD, DNekMatSharedPtr>(nElmtPnt);
-    //             for(int npnt = 0; npnt < nElmtPnt; npnt++)
-    //             {
-    //                 ElmtJac[nelmt][npnt] = MemoryManager<DNekMat>
-    //                     ::AllocateSharedPtr(nConvectiveFields, nConvectiveFields);
-    //             }
-    //         }
-    //     }
-
-    //     Array<OneD, Array<OneD, NekDouble> > qfields_dirctn(nConvectiveFields);
-    //     Array<OneD, Array<OneD, NekDouble> > fluxVec(nConvectiveFields);
-    //     for(int i=0; i< nConvectiveFields; i++)
-    //     {
-    //         qfields_dirctn[i]   =   Array<OneD, NekDouble>(nPts,0.0);
-    //         fluxVec[i]          =   Array<OneD, NekDouble>(nPts,0.0);
-    //     }
-
-    //     for(int nv=0; nv<nConvectiveFields;nv++)
-    //     {
-    //         Vmath::Fill(nPts,1.0,qfields_dirctn[nv],1);
-    //         GetViscousFluxBilinearForm(nConvectiveFields,nDim,nFluxDir,nDervDir,inarray,qfields_dirctn,fluxVec);
-
-    //         for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-    //         {
-    //             int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
-    //             int noffest             = explist->GetPhys_Offset(nelmt);
-
-    //             for(int npnt = 0; npnt < nElmtPnt; npnt++)
-    //             {
-    //                 for (int i =0; i < nConvectiveFields; i++)
-    //                 {
-    //                     (*ElmtJac[nelmt][npnt])(i,nv) =  fluxVec[i][noffest+npnt];
-    //                 }
-    //             }
-    //         }
-
-    //         Vmath::Fill(nPts,0.0,qfields_dirctn[nv],1);
-    //     }
-
-    //     return;
-    // }
 
     void NavierStokesCFE::v_CalphysDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,

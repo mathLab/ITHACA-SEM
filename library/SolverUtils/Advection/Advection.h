@@ -193,13 +193,13 @@ public:
     }
 
     SOLVER_UTILS_EXPORT void AddVolumJacToMat( 
-        const int                                                           nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr>                   &pFields,
-        const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >          &ElmtJac,
-        const int                                                           nDirctn,
-              Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                &gmtxarray)
+        const Array<OneD, MultiRegions::ExpListSharedPtr>                       &pFields,
+        const int                                                               &nConvectiveFields,
+        const Array<OneD, const Array<OneD,  Array<OneD, 
+            Array<OneD,  Array<OneD,  NekDouble> > > > >                        &ElmtJacArray,
+        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                          &gmtxarray)
     {
-        v_AddVolumJacToMat(nConvectiveFields,pFields,ElmtJac,nDirctn,gmtxarray);
+        v_AddVolumJacToMat(pFields,nConvectiveFields,ElmtJacArray,gmtxarray);
     }
 
     SOLVER_UTILS_EXPORT void NumCalRiemFluxJac( 
@@ -214,6 +214,31 @@ public:
     {
         v_NumCalRiemFluxJac(nConvectiveFields,fields,AdvVel,inarray,pFwd,pBwd,FJac,BJac);
     }
+
+    void CoutBlkMat(
+        DNekBlkMatSharedPtr &gmtx, 
+        const unsigned int nwidthcolm=12);
+
+    void CoutStandardMat(
+        DNekMatSharedPtr &loc_matNvar,
+        const unsigned int nwidthcolm=12);
+
+    void Cout1DArrayBlkMat(
+        Array<OneD, DNekBlkMatSharedPtr> &gmtxarray,
+        const unsigned int nwidthcolm=12);
+
+    void Cout2DArrayBlkMat(
+        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
+        const unsigned int nwidthcolm=12);
+
+    void Cout1DArrayStdMat(
+        Array<OneD, DNekMatSharedPtr> &gmtxarray,
+        const unsigned int nwidthcolm=12);
+
+    void Cout2DArrayStdMat(
+        Array<OneD, Array<OneD, DNekMatSharedPtr> > &gmtxarray,
+        const unsigned int nwidthcolm=12);
+
 #endif
 
 protected:
@@ -280,12 +305,12 @@ protected:
     
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
     SOLVER_UTILS_EXPORT virtual void v_AddVolumJacToMat( 
-        const int nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
-        const int nDirctn, 
-        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
-    
+        const Array<OneD, MultiRegions::ExpListSharedPtr>                       &pFields,
+        const int                                                               &nConvectiveFields,
+        const Array<OneD, const Array<OneD,  Array<OneD, 
+            Array<OneD,  Array<OneD,  NekDouble> > > > >                        &ElmtJacArray,
+        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                          &gmtxarray);
+
     SOLVER_UTILS_EXPORT virtual void v_AddTraceJacToMat(
         const int                                           nConvectiveFields,
         const int                                           nSpaceDim,

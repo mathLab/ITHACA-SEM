@@ -822,6 +822,12 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &field);
+            
+            inline void GetLocTraceFromTracePts(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &locTraceFwd,
+                Array<OneD,       NekDouble>        &locTraceBwd);
 
             inline void FillBwdWITHBound(
                 const Array<OneD, const NekDouble> &Fwd,
@@ -1056,6 +1062,8 @@ namespace Nektar
                 return v_GetlocTraceToTraceMap();
             }
 
+            MULTI_REGIONS_EXPORT void CoutStandardMat(DNekMatSharedPtr &loc_matNvar,const unsigned int nwidthcolm);
+
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             void CalcuTracephysToLeftRightExpphysMap(
                     bool                                            &flag,
@@ -1076,12 +1084,16 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void GetMatIpwrtbWeightBwd(
                 const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                 Array<OneD, DNekMatSharedPtr> &mtxPerVar);
-
+            
             MULTI_REGIONS_EXPORT void GetMatIpwrtDeriveBase(
                 const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                 const int nDirctn, Array<OneD, DNekMatSharedPtr> &mtxPerVar);
 
-            MULTI_REGIONS_EXPORT void GetMatIpwrtBase(
+            MULTI_REGIONS_EXPORT void GetMatIpwrtDeriveBase(
+                const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >   &inarray,
+                Array<OneD, DNekMatSharedPtr> &mtxPerVar);
+
+            MULTI_REGIONS_EXPORT void GetDiagMatIpwrtBase(
                 const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                 Array<OneD, DNekMatSharedPtr> &mtxPerVar);
 
@@ -1367,6 +1379,12 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &field);
+            
+            virtual void v_GetLocTraceFromTracePts(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &locTraceFwd,
+                Array<OneD,       NekDouble>        &locTraceBwd);
                       
             virtual void v_FillBwdWITHBound(
                 const Array<OneD, const NekDouble> &Fwd,
@@ -2504,6 +2522,15 @@ namespace Nektar
                 Array<OneD,       NekDouble>        &field)
         {
             v_AddTraceQuadPhysToField(Fwd,Bwd,field);
+        }
+
+        inline void ExpList::GetLocTraceFromTracePts(
+            const Array<OneD, const NekDouble>  &Fwd,
+            const Array<OneD, const NekDouble>  &Bwd,
+            Array<OneD,       NekDouble>        &locTraceFwd,
+            Array<OneD,       NekDouble>        &locTraceBwd)
+        {
+            v_GetLocTraceFromTracePts(Fwd,Bwd,locTraceFwd,locTraceBwd);
         }
 
         inline void ExpList::FillBwdWITHBound(

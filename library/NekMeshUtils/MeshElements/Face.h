@@ -145,7 +145,7 @@ public:
     /// Distribution of points in this face.
     LibUtilities::PointsType             m_curveType;
     /// Element(s) which are linked to this face.
-    std::vector<std::pair<ElementSharedPtr, int> > m_elLink;
+    std::vector<std::pair<std::weak_ptr<Element>, int> > m_elLink;
     /// Nektar++ representation of geometry
     SpatialDomains::Geometry2DSharedPtr  m_geom;
 

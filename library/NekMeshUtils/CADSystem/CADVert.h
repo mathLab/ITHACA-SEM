@@ -40,6 +40,8 @@
 
 #include <NekMeshUtils/CADSystem/CADObject.h>
 
+#include <NekMeshUtils/MeshElements/Node.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils

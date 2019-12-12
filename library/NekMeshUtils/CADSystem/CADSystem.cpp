@@ -32,10 +32,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/CADSystem/CADCurve.h>
-#include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>
-#include <NekMeshUtils/CADSystem/CADVert.h>
 
 using namespace std;
 

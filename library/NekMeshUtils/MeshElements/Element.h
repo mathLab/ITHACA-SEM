@@ -46,7 +46,7 @@
 #include <NekMeshUtils/MeshElements/ElementConfig.h>
 
 #ifdef NEKTAR_USE_CFI
-#include <NekMeshUtils/CADSystem/CFI/CADSystemCFI.h>
+#include "cadfixapi.hxx"
 #endif
 
 namespace Nektar

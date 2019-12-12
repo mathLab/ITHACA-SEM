@@ -119,11 +119,11 @@ void VolumeMesh::Process()
                 vector<EdgeSharedPtr> es = els[i]->GetEdgeList();
                 for (int j = 0; j < es.size(); j++)
                 {
-                    vector<pair<ElementSharedPtr, int> > lk = es[j]->m_elLink;
+		    vector<pair<weak_ptr<Element>, int> > lk = es[j]->m_elLink;
                     es[j]->m_elLink.clear();
                     for (int k = 0; k < lk.size(); k++)
                     {
-                        if (lk[k].first == els[i])
+                        if (lk[k].first.lock() == els[i])
                         {
                             continue;
                         }

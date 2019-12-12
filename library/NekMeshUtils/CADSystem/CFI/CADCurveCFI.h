@@ -36,7 +36,8 @@
 #define NEKMESHUTILS_CADSYSTEM_CFI_CADCURVECFI
 
 #include "../CADCurve.h"
-#include "CADSystemCFI.h"
+
+#include "cadfixapi.hxx"
 
 namespace Nektar
 {

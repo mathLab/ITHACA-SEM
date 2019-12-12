@@ -32,10 +32,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CADSystemCFI.h"
 #include "CADVertCFI.h"
-
-#include <NekMeshUtils/MeshElements/Node.h>
 
 using namespace std;
 

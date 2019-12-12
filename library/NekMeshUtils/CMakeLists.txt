@@ -105,14 +105,12 @@ IF(NEKTAR_USE_CFI)
         CADSystem/CFI/CADVertCFI.h
         CADSystem/CFI/CADCurveCFI.h
         CADSystem/CFI/CADSurfCFI.h
-        CFIMesh/CFIMesh.h
     )
     SET(NEKMESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
         CADSystem/CFI/CADSystemCFI.cpp
         CADSystem/CFI/CADVertCFI.cpp
         CADSystem/CFI/CADCurveCFI.cpp
         CADSystem/CFI/CADSurfCFI.cpp
-        CFIMesh/CFIMesh.cpp
     )
 ENDIF()
 

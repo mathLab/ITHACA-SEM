@@ -67,7 +67,8 @@ bool compareT(NodeSharedPtr n1, NodeSharedPtr n2)
 
 void OutputCADfix::Process()
 {
-    ASSERTL0(m_mesh->m_cad, "CFI system must be kept in memory")
+    m_cad = std::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad);
+    ASSERTL0(m_cad, "CFI system must be kept in memory")
 
     if (m_mesh->m_verbose)
     {
@@ -77,7 +78,6 @@ void OutputCADfix::Process()
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
 
-    m_cad          = std::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad);
     m_model        = m_cad->GetCFIModel();
     NekDouble scal = m_cad->GetScaling();
 

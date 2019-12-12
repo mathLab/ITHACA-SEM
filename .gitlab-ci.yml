@@ -1,11 +1,10 @@
 stages:
-  - docker-build-env
-  - docker-build
-  - docker-test
+  - build-env
+  - build-and-test
   - publish
 
-docker-build-env:
-  stage: docker-build-env
+build-env:
+  stage: build-env
   variables:
     dockerfile: docker/nektar-env/Dockerfile
     image_name: nektar-env
@@ -18,8 +17,8 @@ docker-build-env:
   script:
     - docker build --cpu-period 100000 --cpu-quota 200000 -t ${image_name} -f ${dockerfile} .
 
-docker-build:
-  stage: docker-build
+build-and-test:
+  stage: build-and-test
   image: nektar-env
   tags:
     - docker
@@ -29,8 +28,8 @@ docker-build:
       - tags
   script:
     - mkdir ~/.ccache && echo "cache_dir = /cache/nektar" >> ~/.ccache/ccache.conf
-    - mkdir build && (cd build &&
-      cmake
+    - mkdir build
+    - cmake -B build
       -DCMAKE_BUILD_TYPE:STRING=Debug
       -DNEKTAR_FULL_DEBUG:BOOL=ON
       -DNEKTAR_TEST_ALL:BOOL=ON
@@ -46,29 +45,10 @@ docker-build:
       -DNEKTAR_BUILD_PYTHON:BOOL=ON
       -DNEKTAR_TEST_USE_HOSTFILE=ON
       -DNEKTAR_ERROR_ON_WARNINGS=OFF
-      .. &&
-      make -j 2 all; make -j 2 install)
-    - tar -czf build.tar.gz --exclude="*.o" build
-  artifacts:
-    paths:
-      - build.tar.gz
-
-docker-test:
-  stage: docker-test
-  image: nektar-env
-  tags:
-    - docker
-  dependencies:
-    - docker-build
-  only:
-    refs:
-      - feature/gitlab_ci
-      - tags
-  script:
-    - tar xf build.tar.gz
-    - cd build
-    - for i in $(find $(pwd)/library/ -maxdepth 1 -mindepth 1 -type d); do export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$i; done
-    - ctest -j 2
+      .
+      - make -C build -j 2 all
+      - make -C build -j 2 install
+      - (cd build && ctest -j 2)
 
 publish:
   image: debian:buster-slim

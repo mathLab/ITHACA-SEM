@@ -133,7 +133,7 @@ namespace Nektar
         void SubStepAdvance( const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln, 
                              int nstep,  NekDouble time );
         NekDouble GetSubstepTimeStep();
-        void SetUpSubSteppingTimeIntegration(int intMethod,
+        void SetUpSubSteppingTimeIntegration(
                          const LibUtilities::TimeIntegrationSchemeSharedPtr &IntegrationScheme);
 
         void SubStepAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,

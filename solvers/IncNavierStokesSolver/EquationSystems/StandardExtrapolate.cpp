@@ -60,7 +60,6 @@ namespace Nektar
     }
 
 
-	
     /** 
      * Function to extrapolate the new pressure boundary condition.
      * Based on the velocity field and on the advection term.
@@ -99,33 +98,30 @@ namespace Nektar
      * 
      */
     void StandardExtrapolate::v_SubSteppingTimeIntegration(
-              int                                            intMethod,
         const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme )
     {
-        switch(intMethod)
+        if ( IntegrationScheme->GetName() == "IMEXOrder1" )
         {
-            case LibUtilities::eIMEXOrder1:
-            {
-                m_intSteps = 1; 
-            }
-            break;
-            case LibUtilities::eIMEXOrder2:
-            case LibUtilities::eIMEXGear:
-            {
-                m_intSteps = 2;
-            }
-            break;
-            case LibUtilities::eIMEXOrder3:
-            {
-                m_intSteps = 3;
-            }
-            break;
-            case LibUtilities::eIMEXOrder4:
-            {
-                m_intSteps = 4;
-            }
-            break;
+            m_intSteps = 1;
         }
+        else if ( IntegrationScheme->GetName() == "IMEXOrder2" ||
+                  IntegrationScheme->GetName() == "IMEXGear" )
+        {
+            m_intSteps = 2;
+        }
+        else if ( IntegrationScheme->GetName() == "IMEXOrder3" )
+        {
+            m_intSteps = 3;
+        }
+        else if ( IntegrationScheme->GetName() == "IMEXOrder4" )
+        {
+            m_intSteps = 4;
+        }
+	else
+	{
+	    NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "
+		     "Options include IMEXGear or IMEXOrder{1,2,3,4}");
+	}
     }
 
     /** 
@@ -157,7 +153,7 @@ namespace Nektar
         int nstep)
     {
     }
-	
+
     /** 
      * 
      */
@@ -170,4 +166,3 @@ namespace Nektar
         Vmath::Svtvp(HBCdata,-kinvis,Q,1,Advection,1,Q,1);
     }
 }
-

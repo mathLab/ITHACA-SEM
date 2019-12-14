@@ -34,6 +34,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// Note : If adding a new integrator be sure to register the
+// integrator with the Time Integration Scheme Facatory in
+// SchemeInitializor.cpp.
+
 #pragma once
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
@@ -74,14 +78,18 @@ public:
 
     static std::string className;
 
-    LUE TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eIMEXdirk_1_2_1;
+        return std::string("IMEXdirk_1_2_1");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 1.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eIMEXdirk_1_2_1;
         phase->m_schemeType = eIMEX;
 
         phase->m_numsteps  = 1;
@@ -160,14 +168,18 @@ public:
 
     static std::string className;
 
-    LUE TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eIMEXdirk_1_2_2;
+        return std::string("IMEXdirk_1_2_2");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 1.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eIMEXdirk_1_2_2;
         phase->m_schemeType = eIMEX;
 
         phase->m_numsteps  = 1;
@@ -246,14 +258,18 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eIMEXdirk_2_2_2;
+        return std::string("IMEXdirk_2_2_2");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 1.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eIMEXdirk_2_2_2;
         phase->m_schemeType = eIMEX;
 
         phase->m_numsteps  = 1;
@@ -342,14 +358,18 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eIMEXdirk_2_3_2;
+        return std::string("IMEXdirk_2_3_2");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 1.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eIMEXdirk_2_3_2;
         phase->m_schemeType = eIMEX;
 
         phase->m_numsteps  = 1;
@@ -438,14 +458,18 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eIMEXdirk_2_3_3;
+        return std::string("IMEXdirk_2_3_3");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 1.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eIMEXdirk_2_3_3;
         phase->m_schemeType = eIMEX;
 
         phase->m_numsteps  = 1;
@@ -533,14 +557,18 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eIMEXdirk_3_4_3;
+        return std::string("IMEXdirk_3_4_3");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 1.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eIMEXdirk_3_4_3;
         phase->m_schemeType = eIMEX;
 
         phase->m_numsteps  = 1;
@@ -642,14 +670,18 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eIMEXdirk_4_4_3;
+        return std::string("IMEXdirk_4_4_3");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 1.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eIMEXdirk_4_4_3;
         phase->m_schemeType = eIMEX;
 
         phase->m_numsteps  = 1;

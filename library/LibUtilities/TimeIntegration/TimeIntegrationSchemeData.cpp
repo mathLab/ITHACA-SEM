@@ -411,6 +411,9 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
 
 } // end TimeIntegrate()
 
+
+// Do the actual multi-stage multi-step integration.
+
 void TimeIntegrationSchemeData::TimeIntegrate(
     const NekDouble deltaT, ConstTripleArray &y_old, ConstSingleArray &t_old,
     TripleArray &y_new, SingleArray &t_new,
@@ -863,13 +866,11 @@ std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeData &rhs)
     int oswidth     = 9;
     int osprecision = 6;
 
-    os << "Time Integration Scheme (Master): "
-       << rhs.m_parent
-              ->TimeIntegrationMethodMap[rhs.m_parent->GetIntegrationMethod()]
-       << "\n";
-    os << "- number of steps:  " << r << "\n";
-    os << "- number of stages: " << s << "\n";
-    os << "General linear method tableau:\n";
+    os << "Time Integration Scheme (Master): " << rhs.m_parent->GetName()
+       << "\n"
+       << "- number of steps:  " << r << "\n"
+       << "- number of stages: " << s << "\n"
+       << "General linear method tableau:\n";
 
     for (int i = 0; i < s; i++)
     {

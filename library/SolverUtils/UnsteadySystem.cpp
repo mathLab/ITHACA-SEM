@@ -161,40 +161,7 @@ namespace Nektar
          */
         NekDouble UnsteadySystem::MaxTimeStepEstimator()
         {
-            NekDouble TimeStability = 0.0;
-            switch( m_intScheme->GetIntegrationMethod() )
-            {
-                case LibUtilities::eForwardEuler:
-                case LibUtilities::eClassicalRungeKutta4:
-                case LibUtilities::eRungeKutta4:
-                {
-                    TimeStability = 2.784;
-                    break;
-                }
-                case LibUtilities::eAdamsBashforthOrder1:
-                case LibUtilities::eMidpoint:
-                case LibUtilities::eRungeKutta2:
-                case LibUtilities::eRungeKutta2_ImprovedEuler:
-                case LibUtilities::eRungeKutta2_SSP:
-                case LibUtilities::eRungeKutta3_SSP:
-                {
-                    TimeStability = 2.0;
-                    break;
-                }
-                case LibUtilities::eAdamsBashforthOrder2:
-                {
-                    TimeStability = 1.0;
-                    break;
-                }
-                default:
-                {
-                    ASSERTL0(
-                        false,
-                        "No CFL control implementation for this time"
-                        "integration scheme");
-                }
-            }
-            return TimeStability;
+	    return m_intScheme->GetTimeStability();
         }
         
         /**
@@ -573,9 +540,7 @@ namespace Nektar
             AddSummaryItem( s, "Time Step", m_timestep );
             AddSummaryItem( s, "No. of Steps", m_steps );
             AddSummaryItem( s, "Checkpoints (steps)", m_checksteps );
-            AddSummaryItem( s, "Integration Type", 
-                    LibUtilities::TimeIntegrationScheme::nameFromMethod(
-                                    m_intScheme->GetIntegrationMethod() ) );
+            AddSummaryItem( s, "Integration Type", m_intScheme->GetName() );
         }
         
         /**

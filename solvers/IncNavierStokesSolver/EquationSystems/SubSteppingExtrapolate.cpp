@@ -85,66 +85,61 @@ namespace Nektar
 
 
     void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(
-              int                                            intMethod,
         const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme )
     {
         // Set to 1 for first step and it will then be increased in
         // time advance routines
-        switch( intMethod )
+        if( IntegrationScheme->GetName() == "BackwardEuler" ||
+            IntegrationScheme->GetName() == "BDFImplicitOrder1" )
         {
-            case LibUtilities::eBackwardEuler:
-            case LibUtilities::eBDFImplicitOrder1:
+            std::string vSubStepIntScheme = "ForwardEuler";
+
+            if( m_session->DefinesSolverInfo( "SubStepIntScheme" ) )
             {
-                std::string vSubStepIntScheme = "ForwardEuler";
-
-                if( m_session->DefinesSolverInfo( "SubStepIntScheme" ) )
-                {
-                    vSubStepIntScheme = m_session->GetSolverInfo( "SubStepIntScheme" );
-                }
-
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( vSubStepIntScheme );
-
-                int nvel = m_velocity.num_elements();
-
-                // Fields for linear interpolation
-                m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*nvel);
-                int ntotpts  = m_fields[0]->GetTotPoints();
-                m_previousVelFields[0] = Array<OneD, NekDouble>(2*nvel*ntotpts);
-                for( int i = 1; i < 2*nvel; ++i )
-                {
-                    m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts;
-                }
-
+                vSubStepIntScheme = m_session->GetSolverInfo( "SubStepIntScheme" );
             }
-            break;
-            case LibUtilities::eBDFImplicitOrder2:
+
+            m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( vSubStepIntScheme );
+
+            int nvel = m_velocity.num_elements();
+
+            // Fields for linear interpolation
+            m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*nvel);
+            int ntotpts  = m_fields[0]->GetTotPoints();
+            m_previousVelFields[0] = Array<OneD, NekDouble>(2*nvel*ntotpts);
+            for( int i = 1; i < 2*nvel; ++i )
             {
-                std::string vSubStepIntScheme = "RungeKutta2_ImprovedEuler";
-
-                if(m_session->DefinesSolverInfo("SubStepIntScheme"))
-                {
-                    vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
-                }
-
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( vSubStepIntScheme );
-
-                int nvel = m_velocity.num_elements();
-
-                // Fields for quadratic interpolation
-                m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(3*nvel);
-
-                int ntotpts  = m_fields[0]->GetTotPoints();
-                m_previousVelFields[0] = Array<OneD, NekDouble>(3*nvel*ntotpts);
-                for( int i = 1; i < 3*nvel; ++i )
-                {
-                    m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts;
-                }
-
+                m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts;
             }
-            break;
-            default:
-                ASSERTL0(0,"Integration method not suitable: Options include BackwardEuler or BDFImplicitOrder1");
-                break;
+        }
+
+        else if( IntegrationScheme->GetName() == "BDFImplicitOrder2" )
+        {
+            std::string vSubStepIntScheme = "RungeKutta2_ImprovedEuler";
+
+            if(m_session->DefinesSolverInfo("SubStepIntScheme"))
+            {
+                vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
+            }
+
+            m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance( vSubStepIntScheme );
+
+            int nvel = m_velocity.num_elements();
+
+            // Fields for quadratic interpolation
+            m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(3*nvel);
+
+            int ntotpts  = m_fields[0]->GetTotPoints();
+            m_previousVelFields[0] = Array<OneD, NekDouble>(3*nvel*ntotpts);
+            for( int i = 1; i < 3*nvel; ++i )
+            {
+                m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts;
+            }
+        }
+
+        else
+        {
+            ASSERTL0(0,"Integration method not suitable: Options include BackwardEuler or BDFImplicitOrder{1,2}");
         }
 
         m_intSteps = IntegrationScheme->GetNumIntegrationPhases();
@@ -523,9 +518,9 @@ namespace Nektar
         Vmath::Smul(HBCdata,-kinvis,Q,1,Q,1);
     }
 
-    LibUtilities::TimeIntegrationMethod SubSteppingExtrapolate::v_GetSubStepIntegrationMethod(void)
+    std::string SubSteppingExtrapolate::v_GetSubStepName(void)
     {
-        return m_subStepIntegrationScheme->GetIntegrationMethod();
+        return m_subStepIntegrationScheme->GetName();
     }
 
 }

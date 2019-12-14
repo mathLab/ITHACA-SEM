@@ -34,6 +34,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// Note : If adding a new integrator be sure to register the
+// integrator with the Time Integration Scheme Facatory in
+// SchemeInitializor.cpp.
+
 #pragma once
 
 #define LUE LIB_UTILITIES_EXPORT
@@ -75,14 +79,18 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eBackwardEuler;
+        return std::string("BackwardEuler");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 1.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eBackwardEuler;
         phase->m_schemeType = eDiagonallyImplicit;
 
         phase->m_numsteps  = 1;
@@ -149,14 +157,18 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eForwardEuler;
+        return std::string("ForwardEuler");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 2.784;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eForwardEuler;
         phase->m_schemeType = eExplicit;
 
         phase->m_numsteps  = 1;

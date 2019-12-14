@@ -89,7 +89,6 @@ namespace Nektar
                                            NekDouble kinvis);
 
         virtual void v_SubSteppingTimeIntegration(
-                  int                                            intMethod,
             const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme );
  
         virtual void v_SubStepSaveFields(
@@ -111,7 +110,7 @@ namespace Nektar
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection);
         
-        virtual LibUtilities::TimeIntegrationMethod v_GetSubStepIntegrationMethod(void);
+        virtual std::string v_GetSubStepName(void);
 
         void SubStepAdvection(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,  

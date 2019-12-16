@@ -209,6 +209,7 @@ bool CADSystemCFI::LoadCAD()
                         fullEdgeList.push_back(*it2);
                     }
                 }
+		delete edgeList;
 
                 for (it2 = fullEdgeList.begin(); it2 != fullEdgeList.end(); it2++)
                 {
@@ -217,8 +218,8 @@ bool CADSystemCFI::LoadCAD()
                         static_cast<cfi::Line *>(orientatedEdge.entity);
                     mapOfEdges[edge->getName()] = edge;
 
-                    vector<cfi::Oriented<cfi::TopoEntity *>> *vertList =
-                        edge->getChildList();
+		    vector<cfi::Oriented<cfi::TopoEntity *>> *vertList =
+		        edge->getChildList();
                     for (it3 = vertList->begin(); it3 != vertList->end(); it3++)
                     {
                         cfi::Oriented<cfi::TopoEntity *> orientatedVert = *it3;
@@ -228,11 +229,13 @@ bool CADSystemCFI::LoadCAD()
                         mapVertToListEdge[vert->getName()].push_back(
                             edge->getName());
                     }
+		    delete vertList;
                 }
 
                 mapOfFaces[face->getName()] = face;
             }
         }
+	delete faceList;
     }
 
     // make the vertices and build a map of name to id
@@ -281,6 +284,9 @@ bool CADSystemCFI::LoadCAD()
         Report();
     }
 
+    // Tidy up
+    delete bds;
+
     return true;
 }
 
@@ -325,6 +331,7 @@ void CADSystemCFI::AddCurve(int i, cfi::Line *in)
         m_curves[i]);
     m_verts[nameToVertId[vertList->at(1).entity->getName()]]->AddAdjCurve(
         m_curves[i]);
+    delete vertList;
 }
 
 void CADSystemCFI::AddSurf(int i, cfi::Face *in)
@@ -363,6 +370,7 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
             fullEdgeList.push_back(*it2);
         }
     }
+    delete edgeList;
 
     vector<EdgeLoopSharedPtr> edgeloops;
     int done = 0;
@@ -382,6 +390,7 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
             firstVert = vertList->at(1).entity->getName();
             edgeloop->edgeo.push_back(CADOrientation::eBackwards);
         }
+	delete vertList;
 
         edgeloop->edges.push_back(
             m_curves[nameToCurveId[fullEdgeList.at(done).entity->getName()]]);
@@ -406,6 +415,7 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
                 }
                 edgeloop->edgeo.push_back(CADOrientation::eBackwards);
             }
+	    delete vertList;
 
             edgeloop->edges.push_back(
                 m_curves[nameToCurveId[fullEdgeList.at(done).entity->getName()]]);

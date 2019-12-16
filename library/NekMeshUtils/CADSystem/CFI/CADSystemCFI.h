@@ -60,7 +60,10 @@ public:
     CADSystemCFI(std::string name) : CADSystem(name)
     {
     }
-    ~CADSystemCFI(){};
+    ~CADSystemCFI()
+    {
+        delete model;
+    }
 
     bool LoadCAD();
 
@@ -93,7 +96,7 @@ private:
     void AddSurf(int i, cfi::Face *in);
     cfi::Cfi cfiHandel;
     cfi::Model *model;
-    std::vector<cfi::Body* >bodies;
+    std::vector<cfi::Body*> bodies;
     std::map<std::string, int> nameToVertId;
     std::map<std::string, int> nameToCurveId;
     std::map<std::string, int> nameToFaceId;

@@ -151,6 +151,7 @@ void CFIMesh::Process()
             }
         }
     }
+    delete cfinodes;
 
     ////
     // Really important fact. Nodes must be renumbered as they are read by the
@@ -241,6 +242,7 @@ void CFIMesh::Process()
 
         m_mesh->m_element[3].push_back(E);
     }
+    delete prisms;
 
     if (m_mesh->m_verbose)
     {
@@ -267,6 +269,7 @@ void CFIMesh::Process()
 
         m_mesh->m_element[3].push_back(E);
     }
+    delete tets;
 
     if (m_mesh->m_verbose)
     {
@@ -293,6 +296,7 @@ void CFIMesh::Process()
 
         m_mesh->m_element[3].push_back(E);
     }
+    delete hexs;
 
     ProcessVertices();
     ProcessEdges();
@@ -347,6 +351,7 @@ void CFIMesh::Process()
             }
         }
     }
+    delete tris;
 
     vector<cfi::ElementDefinition> *quads =
         m_model->getElements(cfi::SUBTYPE_QU4, 4);
@@ -396,6 +401,7 @@ void CFIMesh::Process()
             }
         }
     }
+    delete quads;
 
     ProcessVertices();
     ProcessEdges();
@@ -456,6 +462,7 @@ void CFIMesh::Process()
             me->m_parentCAD = m_mesh->m_cad->GetCurve(f->second);
         }
     }
+    delete beams;
 }
 }
 }

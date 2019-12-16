@@ -299,5 +299,75 @@ TimeIntegrationSchemeType TimeIntegrationScheme::GetIntegrationSchemeType()
     ASSERTL0(!m_integration_phases.empty(), "No scheme")
     return m_integration_phases[m_integration_phases.size() - 1]->m_schemeType;
 }
+
+void TimeIntegrationScheme::SetExponentialCoefficients(Array<TwoD, NekDouble> &Lambda)
+{
+    ASSERTL0(!m_integration_phases.empty(), "No scheme")
+
+    // Assumption: the two-dimensional Lambda matrix is a diagonal
+    // matrix thus values are non zero if and only i=j. As such, the
+    // diagonal Lambda values are stored as two vectors so to
+    // accomodate complex numbers lambda[0] real, lambda[1] imaginary.
+
+    // Assume that each phase is an exponential integrator.
+    for (int i = 0; i < m_integration_phases.size(); i++)
+    {
+        m_integration_phases[i]->m_L = Lambda;
+
+        // Anytime the coefficents are updated reset the nVars to be
+        // assured that the exponential matrices are recalculated
+        // (e.g. the number of variables may remain the same but the
+        // coefficients have changed).
+        m_integration_phases[i]->m_lastNVars = 0;
+    }
+}
+
+void TimeIntegrationScheme::SetupSchemeExponentialData(TimeIntegrationSchemeData *phase, NekDouble deltaT) const
+{
+    boost::ignore_unused(phase);
+    boost::ignore_unused(deltaT);
+
+    ASSERTL0(false, "No SetupSchemeExponentialData method for scheme " +
+             GetName());
+};
+
+NekDouble TimeIntegrationScheme::exp_function(NekDouble deltaT,
+                                              NekDouble L_Real,
+                                              NekDouble L_Imaginary) const
+{
+    boost::ignore_unused( L_Imaginary );
+
+    return exp( deltaT * L_Real );
+}
+
+NekDouble TimeIntegrationScheme::psi_function(unsigned int i,
+                                              NekDouble deltaT,
+                                              NekDouble L_Real,
+                                              NekDouble L_Imaginary) const
+{
+    NekDouble z = deltaT * L_Real;
+
+    NekDouble expZ = exp_function(deltaT, L_Real, L_Imaginary);
+
+    switch( i )
+    {
+    case 1:
+        return  (expZ - 1.0) / (z);
+        break;
+    case 2:
+        return (expZ - z - 1.0) / (z * z);
+        break;
+    case 3:
+        return (expZ - (z*z)/2.0 - z - 1.0) / (z * z * z);
+        break;
+    default:
+        ASSERTL0(false,
+                 "No phi function defined for index " + std::to_string(i) );
+        break;
+    }
+
+    return 0;
+}
+
 } // end namespace LibUtilities
 } // end namespace NekTar

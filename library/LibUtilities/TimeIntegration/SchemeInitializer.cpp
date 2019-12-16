@@ -48,6 +48,8 @@
 
 #include <LibUtilities/TimeIntegration/RungeKuttaTimeIntegrationSchemes.h>
 
+#include <LibUtilities/TimeIntegration/EulerExponentialTimeIntegrationSchemes.h>
+
 namespace Nektar
 {
 namespace LibUtilities
@@ -64,7 +66,8 @@ namespace LibUtilities
 REGISTER(AdamsBashforthOrder2);
 REGISTER(AdamsBashforthOrder3);
 REGISTER(AdamsBashforthOrder4);
-REGISTER(AdamsMoultonOrder1);
+
+// AdamsMoultonTimeIntegrationSchemes.h
 REGISTER(AdamsMoultonOrder2);
 
 // BDFImplicitTimeIntegrationSchemes.h
@@ -75,6 +78,11 @@ REGISTER(BDFImplicitOrder2);
 REGISTER(BackwardEuler);
 REGISTER(ForwardEuler);
 
+// EulerExponentialTimeIntegrationSchemes.h
+REGISTER(LawsonEuler);
+REGISTER(NorsettEuler);
+
+// CNABTimeIntegrationScheme.h
 REGISTER(CNAB);
 
 // DIRKTimeIntegrationSchemes.h

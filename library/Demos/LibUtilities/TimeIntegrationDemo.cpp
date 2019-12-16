@@ -188,6 +188,7 @@ int main(int argc, char *argv[])
         "method,m", po::value<int>(),
         "TimeIntegrationMethod is a number in the range [1,9].\n"
         "It defines the time-integration method to be used:\n"
+        "- 0: 1st order Forward Euler scheme\n"
         "- 1: 1st order multi-step IMEX scheme\n"
         "     (Euler Backwards/Euler Forwards)\n"
         "- 2: 2nd order multi-step IMEX scheme\n"
@@ -198,7 +199,15 @@ int main(int argc, char *argv[])
         "- 7: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
         "- 8: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
         "- 9: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
-        "     (MCNAB)");
+        "     (MCNAB)\n"
+        "- 10: 2nd order multi-step Adams-Bashforth scheme\n"
+        "- 11: 3rd order multi-step Adams-Bashforth scheme\n"
+        "- 12: 4th order multi-step Adams-Bashforth scheme\n"
+	"  \n"
+        "- 20: 1st order Forward Lawson Euler exponential scheme\n"
+        "- 21: 1st order Forward Norsett Euler exponential scheme\n"
+                                                                            );
+
     po::variables_map vm;
     try
     {
@@ -265,6 +274,9 @@ int main(int argc, char *argv[])
 
     switch (nMethod)
     {
+        case 0:
+            tiScheme = factory.CreateInstance("ForwardEuler");
+            break;
         case 1:
             tiScheme = factory.CreateInstance("IMEXOrder1");
             break;
@@ -292,6 +304,21 @@ int main(int argc, char *argv[])
         case 9:
             tiScheme = factory.CreateInstance("MCNAB");
             break;
+        case 10:
+            tiScheme = factory.CreateInstance("AdamsBashforthOrder2");
+            break;
+        case 11:
+            tiScheme = factory.CreateInstance("AdamsBashforthOrder3");
+            break;
+        case 12:
+            tiScheme = factory.CreateInstance("AdamsBashforthOrder4");
+            break;
+        case 20:
+            tiScheme = factory.CreateInstance("LawsonEuler");
+            break;
+        case 21:
+            tiScheme = factory.CreateInstance("NorsettEuler");
+            break;
         default:
         {
             cerr << "The third argument defines the time-integration method to "
@@ -306,12 +333,9 @@ int main(int argc, char *argv[])
     //
     double t0 = solver->GetInitialTime();
 
-    // Note, fidifsol (finite difference solution) is an array of arrays, though
-    // in this current
-    // example, we only ever use one array (ie: fidifsol[0]).  This is because,
-    // in this demo, we are only
-    // solving for one variable.
-
+    // Note, fidifsol (finite difference solution) is an array of
+    // arrays, although in this current example, fidifsol contains a
+    // single array because for the demo there is only one variable.
     Array<OneD, Array<OneD, double>> fidifsol(
         1); // Array containing the numerical solution
     Array<OneD, Array<OneD, double>> exactsol(
@@ -329,6 +353,23 @@ int main(int argc, char *argv[])
 
     LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr sol;
     sol = tiScheme->InitializeScheme(dt, fidifsol, t0, ode);
+
+    // For exponential integrators, the coefficents for each variable
+    // needs to be set.
+    if( tiScheme->GetIntegrationSchemeType() == eExponential )
+    {
+        unsigned int nVars = fidifsol.num_elements();
+
+	// Assumption: the two-dimensional Lambda matrix is a diagonal
+	// matrix thus values are non zero if and only i=j. As such,
+	// the diagonal Lambda values are stored as two vectors so to
+	// accomodate complex numbers lambda[0] real, lambda[1]
+	// imaginary.
+	Array<TwoD, NekDouble> lambda(2, nVars, 1.0);
+
+	// FIXME - Set reasonable coefficent values
+	tiScheme->SetExponentialCoefficients( lambda );
+    }
 
     ///////////////
     // Save some data provenance and other useful info in output file...

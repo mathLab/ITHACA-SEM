@@ -122,7 +122,7 @@ TimeIntegrationSchemeData::TimeIntegrationSolutionSharedPtr
         MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(this, y_0,
                                                                   time, deltaT);
 
-    if (m_schemeType == eExplicit)
+    if (m_schemeType == eExplicit || m_schemeType == eExponential)
     {
         // ensure initial solution is in correct space
         op.DoProjection(y_0, y_out->UpdateSolution(), time);
@@ -449,7 +449,7 @@ void TimeIntegrationSchemeData::TimeIntegrate(
         //   each stage equation
         //   (for explicit schemes, this correspond to m_Y)
 
-        // Allocate memory for the arrays m_Y and m_F and m_tmp The same
+        // Allocate memory for the arrays m_Y and m_F and m_tmp. The same
         // storage will be used for every stage -> m_Y is a
         // DoubleArray
         m_tmp = DoubleArray(m_nvar);
@@ -460,7 +460,7 @@ void TimeIntegrationSchemeData::TimeIntegrate(
 
         // The same storage will be used for every stage -> m_tmp is a
         // DoubleArray
-        if (type == eExplicit)
+        if (type == eExplicit || m_schemeType == eExponential)
         {
             m_Y = m_tmp;
         }
@@ -502,6 +502,20 @@ void TimeIntegrationSchemeData::TimeIntegrate(
         m_initialised = true;
     } // end else
 
+    // For an exponential integrator if the time increment or the
+    // number of variables has changed then the exponenial matrices
+    // must be recomputed.
+    if (type == eExponential)
+    {
+        if (m_lastDeltaT != deltaT || m_lastNVars != GetFirstDim(y_old) )
+        {
+            m_parent->SetupSchemeExponentialData( this, deltaT );
+
+            m_lastDeltaT = deltaT;
+            m_lastNVars  = GetFirstDim(y_old);
+        }
+    }
+
     // The loop below calculates the stage values and derivatives
     for (int stage = 0; stage < m_numstages; stage++)
     {
@@ -522,30 +536,48 @@ void TimeIntegrationSchemeData::TimeIntegrate(
             {
                 for (int k = 0; k < m_nvar; k++)
                 {
-                    Vmath::Smul(m_npoints, deltaT * A(stage, 0), m_F[0][k], 1,
-                                m_tmp[k], 1);
+                    if (type == eExponential)
+                    {
+                        Vmath::Smul(m_npoints, deltaT * m_A_phi[k][stage][0],
+                                    m_F[0][k], 1, m_tmp[k], 1);
+                    }
+                    else
+                    {
+                        Vmath::Smul(m_npoints, deltaT * A(stage, 0),
+                                    m_F[0][k], 1, m_tmp[k], 1);
+                    }
 
                     if (type == eIMEX)
                     {
                         Vmath::Svtvp(m_npoints, deltaT * A_IMEX(stage, 0),
-                                     m_F_IMEX[0][k], 1, m_tmp[k], 1, m_tmp[k],
-                                     1);
+                                     m_F_IMEX[0][k], 1, m_tmp[k], 1,
+                                     m_tmp[k], 1);
                     }
                 }
             }
+
             m_T = A(stage, 0) * deltaT;
 
             for (int j = 1; j < stage; j++)
             {
                 for (int k = 0; k < m_nvar; k++)
                 {
-                    Vmath::Svtvp(m_npoints, deltaT * A(stage, j), m_F[j][k], 1,
-                                 m_tmp[k], 1, m_tmp[k], 1);
+                    if (type == eExponential)
+                    {
+                        Vmath::Svtvp(m_npoints, deltaT * m_A_phi[k][stage][j],
+                                     m_F[j][k], 1, m_tmp[k], 1, m_tmp[k], 1);
+                    }
+                    else
+                    {
+                        Vmath::Svtvp(m_npoints, deltaT * A(stage, j),
+                                     m_F[j][k], 1, m_tmp[k], 1, m_tmp[k], 1);
+                    }
+
                     if (type == eIMEX)
                     {
                         Vmath::Svtvp(m_npoints, deltaT * A_IMEX(stage, j),
-                                     m_F_IMEX[j][k], 1, m_tmp[k], 1, m_tmp[k],
-                                     1);
+                                     m_F_IMEX[j][k], 1, m_tmp[k], 1,
+                                     m_tmp[k], 1);
                     }
                 }
 
@@ -557,9 +589,18 @@ void TimeIntegrationSchemeData::TimeIntegrate(
             {
                 for (int k = 0; k < m_nvar; k++)
                 {
-                    Vmath::Svtvp(m_npoints, U(stage, j), y_old[j][k], 1,
-                                 m_tmp[k], 1, m_tmp[k], 1);
+                    if (type == eExponential)
+                    {
+                        Vmath::Svtvp(m_npoints, m_U_phi[k][stage][j],
+                                     y_old[j][k], 1, m_tmp[k], 1, m_tmp[k], 1);
+                    }
+                    else
+                    {
+                        Vmath::Svtvp(m_npoints, U(stage, j),
+                                     y_old[j][k], 1, m_tmp[k], 1, m_tmp[k], 1);
+                    }
                 }
+
                 m_T += U(stage, j) * t_old[j];
             }
         } // end else
@@ -619,7 +660,7 @@ void TimeIntegrationSchemeData::TimeIntegrate(
             }
             op.DoOdeRhs(m_Y, m_F_IMEX[stage], m_T);
         }
-        else if (type == eExplicit)
+        else if (type == eExplicit || m_schemeType == eExponential)
         {
             // Avoid projecting the same solution twice
             if (!((stage == 0) && m_firstStageEqualsOldSolution))
@@ -658,15 +699,18 @@ void TimeIntegrationSchemeData::TimeIntegrate(
         else
         {
             t_new[0] = B(0, 0) * deltaT;
+
             for (int j = 1; j < m_numstages; j++)
             {
                 t_new[0] += B(0, j) * deltaT;
             }
+
             for (int j = 0; j < numsteps; j++)
             {
                 t_new[0] += V(0, j) * t_old[j];
             }
         }
+
         i_start = 1;
     }
 
@@ -677,15 +721,24 @@ void TimeIntegrationSchemeData::TimeIntegrate(
         // 1: the stage derivatives
         for (int k = 0; k < m_nvar; k++)
         {
-            Vmath::Smul(m_npoints, deltaT * B(i, 0), m_F[0][k], 1, y_new[i][k],
-                        1);
+            if (type == eExponential)
+            {
+                Vmath::Smul(m_npoints, deltaT * m_B_phi[k][i][0],
+                            m_F[0][k], 1, y_new[i][k], 1);
+            }
+            else
+            {
+                Vmath::Smul(m_npoints, deltaT * B(i, 0),
+                            m_F[0][k], 1, y_new[i][k], 1);
+            }
 
             if (type == eIMEX)
             {
-                Vmath::Svtvp(m_npoints, deltaT * B_IMEX(i, 0), m_F_IMEX[0][k],
-                             1, y_new[i][k], 1, y_new[i][k], 1);
+                Vmath::Svtvp(m_npoints, deltaT * B_IMEX(i, 0),
+                             m_F_IMEX[0][k], 1, y_new[i][k], 1, y_new[i][k], 1);
             }
         }
+
         if (m_numstages != 1 || type != eIMEX)
         {
             t_new[i] = B(i, 0) * deltaT;
@@ -695,14 +748,22 @@ void TimeIntegrationSchemeData::TimeIntegrate(
         {
             for (int k = 0; k < m_nvar; k++)
             {
-                Vmath::Svtvp(m_npoints, deltaT * B(i, j), m_F[j][k], 1,
-                             y_new[i][k], 1, y_new[i][k], 1);
+                if (type == eExponential)
+                {
+                    Vmath::Svtvp(m_npoints, deltaT * m_B_phi[k][i][j],
+                                 m_F[j][k], 1, y_new[i][k], 1, y_new[i][k], 1);
+                }
+                else
+                {
+                    Vmath::Svtvp(m_npoints, deltaT * B(i, j),
+                                 m_F[j][k], 1, y_new[i][k], 1, y_new[i][k], 1);
+                }
 
                 if (type == eIMEX)
                 {
                     Vmath::Svtvp(m_npoints, deltaT * B_IMEX(i, j),
-                                 m_F_IMEX[j][k], 1, y_new[i][k], 1, y_new[i][k],
-                                 1);
+                                 m_F_IMEX[j][k], 1, y_new[i][k], 1,
+                                 y_new[i][k], 1);
                 }
             }
             if (m_numstages != 1 || type != eIMEX)
@@ -717,8 +778,16 @@ void TimeIntegrationSchemeData::TimeIntegrate(
         {
             for (int k = 0; k < m_nvar; k++)
             {
-                Vmath::Svtvp(m_npoints, V(i, j), y_old[j][k], 1, y_new[i][k], 1,
-                             y_new[i][k], 1);
+                if (type == eExponential)
+                {
+                    Vmath::Svtvp(m_npoints, m_V_phi[k][i][j], y_old[j][k], 1,
+                                 y_new[i][k], 1, y_new[i][k], 1);
+                }
+                else
+                {
+                    Vmath::Svtvp(m_npoints, V(i, j), y_old[j][k], 1,
+                                 y_new[i][k], 1, y_new[i][k], 1);
+                }
             }
             if (m_numstages != 1 || type != eIMEX)
             {
@@ -728,7 +797,7 @@ void TimeIntegrationSchemeData::TimeIntegrate(
     }
 
     // Ensure that the new solution is projected if necessary
-    if (type == eExplicit)
+    if (type == eExplicit || m_schemeType == eExponential)
     {
         op.DoProjection(y_new[0], y_new[0], t_new[0]);
     }

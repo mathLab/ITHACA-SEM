@@ -51,7 +51,7 @@ class TimeIntegrationSchemeData
 {
 public:
     TimeIntegrationSchemeData(const TimeIntegrationScheme *parent)
-        : m_parent(parent), m_initialised(false)
+        : m_parent(parent), m_initialised(false), m_lastDeltaT(0), m_lastNVars(0)
     {
     }
     ~TimeIntegrationSchemeData()
@@ -73,6 +73,7 @@ public:
     {
         return m_method;
     }
+
     inline TimeIntegrationSchemeType GetIntegrationSchemeType() const
     {
         return m_schemeType;
@@ -102,6 +103,15 @@ public:
     inline NekDouble B_IMEX(const unsigned int i, const unsigned int j) const
     {
         return m_B[1][i][j];
+    }
+
+    inline NekDouble L_Real(const unsigned int i) const
+    {
+        return m_L[0][i];
+    }
+    inline NekDouble L_Imaginary(const unsigned int i) const
+    {
+        return m_L[1][i];
     }
 
     inline unsigned int GetNstages(void) const
@@ -239,6 +249,14 @@ public:
     Array<TwoD, NekDouble> m_U;
     Array<TwoD, NekDouble> m_V;
 
+    Array<TwoD, NekDouble> m_L; // Lambda real and imaingary components
+
+    Array<OneD, Array<TwoD, NekDouble>> m_A_phi;
+    Array<OneD, Array<TwoD, NekDouble>> m_B_phi;
+
+    Array<OneD, Array<TwoD, NekDouble>> m_U_phi;
+    Array<OneD, Array<TwoD, NekDouble>> m_V_phi;
+
     bool m_initialised; /// bool to identify if array has been initialised
     int m_nvar;         /// The number of variables in integration scheme.
     int m_npoints;      /// The size of inner data which is stored for reuse.
@@ -250,6 +268,9 @@ public:
                           /// IMEX schemes
 
     NekDouble m_T; ///  Time at the different stages
+
+    NekDouble m_lastDeltaT; /// Last delta T value for exponential integration.
+    NekDouble m_lastNVars;  /// Last number of vars for exponential integration.
 
     static LUE bool VerifyIntegrationSchemeType(
         TimeIntegrationSchemeType type,

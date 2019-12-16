@@ -130,11 +130,12 @@ enum TimeIntegrationSchemeType
     eDiagonallyImplicit, //!< Diagonally implicit scheme (e.g. the DIRK schemes)
     eIMEX,               //!< Implicit Explicit General Linear Method
     eImplicit,           //!< Fully implicit scheme
+    eExponential,        //!< Exponential scheme
 };
 
 const char *const TimeIntegrationSchemeTypeMap[] = {
     "NoTimeIntegrationSchemeType", "Explicit", "DiagonallyImplicit", "IMEX",
-    "Implicit"};
+    "Implicit", "Exponential"};
 
 
 /**
@@ -189,6 +190,17 @@ public:
         const TimeIntegrationSchemeOperators &op);
 
     virtual TimeIntegrationMethod GetIntegrationMethod() const = 0;
+
+    void SetExponentialCoefficients(Array<TwoD, NekDouble> &Lambda);
+
+    virtual void SetupSchemeExponentialData(TimeIntegrationSchemeData *phase,
+                                            NekDouble deltaT)
+      const;
+
+    NekDouble exp_function(NekDouble deltaT,
+                           NekDouble L_Real, NekDouble L_Imaginary) const;
+    NekDouble psi_function(unsigned int i, NekDouble deltaT,
+                           NekDouble L_Real, NekDouble L_Imaginary) const;
 
     LUE TimeIntegrationSchemeType GetIntegrationSchemeType() const;
 
@@ -276,4 +288,3 @@ LUE std::ostream &operator<<(std::ostream &os,
 
 } // end of namespace LibUtilities
 } // end of namespace Nektar
-

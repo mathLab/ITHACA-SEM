@@ -36,6 +36,7 @@ SET(NekMeshSources
 
 IF (NEKTAR_USE_CFI)
     ADD_DEFINITIONS(-DNEKTAR_USE_CFI)
+    SET(NekMeshSources ${NekMeshSources} InputModules/InputCADfix.cpp)
     SET(NekMeshSources ${NekMeshSources} OutputModules/OutputCADfix.cpp)
 ENDIF (NEKTAR_USE_CFI)
 

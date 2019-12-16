@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMeshing.cpp
+//  File: InputCADfix.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -28,11 +28,11 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: surfacemeshing object methods.
+//  Description: CADfix converter.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CFIMesh.h"
+#include "InputCADfix.h"
 
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
@@ -41,23 +41,45 @@
 using namespace std;
 namespace Nektar
 {
-namespace NekMeshUtils
+namespace Utilities
 {
 
-ModuleKey CFIMesh::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "cfimesh"), CFIMesh::create,
-    "Extracts mesh from cfi");
+using namespace Nektar::NekMeshUtils;
 
-CFIMesh::CFIMesh(MeshSharedPtr m) : ProcessModule(m)
+ModuleKey InputCADfix::className =
+    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eInputModule, "fbm"),
+                                               InputCADfix::create,
+                                               "Reads CADfix FBM file.");
+/**
+ * @brief Set up InputCADfix object.
+ */
+InputCADfix::InputCADfix(MeshSharedPtr m) : InputModule(m)
+{
+    m_config["order"] = ConfigOption(false, "1", "Polynomial order to elevate to");
+    m_config["surfopti"] = ConfigOption(true, "", "Optimise surface mesh");
+}
+
+InputCADfix::~InputCADfix()
 {
 }
 
-CFIMesh::~CFIMesh()
+/**
+ *
+ */
+void InputCADfix::Process()
 {
-}
+    // Load the CAD system
+    ModuleSharedPtr module = GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "loadcad"), m_mesh);
+    module->RegisterConfig("filename", m_config["infile"].as<string>());
+    if (m_mesh->m_verbose)
+    {
+        module->RegisterConfig("verbose", "");
+    }
 
-void CFIMesh::Process()
-{
+    module->SetDefaults();
+    module->Process();
+
     if (m_mesh->m_verbose)
     {
         cout << endl << "Loading mesh from CFI" << endl;
@@ -65,6 +87,7 @@ void CFIMesh::Process()
 
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
+    m_mesh->m_nummode  = m_config["order"].as<int>() + 1;
 
     m_cad           = std::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad);
     m_nameToCurveId = m_cad->GetCFICurveId();
@@ -460,6 +483,47 @@ void CFIMesh::Process()
             me->m_parentCAD = m_mesh->m_cad->GetCurve(f->second);
         }
     }
+
+    // Below is based on InputMCF procedure
+
+    // Make high-order surface mesh
+    module = GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "hosurface"), m_mesh);
+    if (m_config["surfopti"].beenSet)
+    {
+        module->RegisterConfig("opti", "");
+    }
+
+    try
+    {
+        module->SetDefaults();
+        module->Process();
+    }
+    catch (runtime_error &e)
+    {
+        cout << "High-order surface meshing has failed with message:" << endl;
+        cout << e.what() << endl;
+        cout << "The mesh will be written as normal but the incomplete surface "
+                "will remain faceted"
+             << endl;
+        return;
+    }
+
+    // Apply surface label
+    for (auto &it : m_mesh->m_composite)
+    {
+        ElementSharedPtr el = it.second->m_items[0];
+        if (el->m_parentCAD)
+        {
+            string name = el->m_parentCAD->GetName();
+            if (name.size() > 0)
+            {
+                m_mesh->m_faceLabels.insert(
+                    make_pair(el->GetTagList()[0], name));
+            }
+        }
+    }
+    ProcessComposites();
 }
 }
 }

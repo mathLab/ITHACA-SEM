@@ -109,12 +109,12 @@ void CFIMesh::Process()
                 c->loct(xyz, t);
                 n->SetCADCurve(c, t);
 
-                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation>> ss =
+                vector<pair<weak_ptr<CADSurf>, CADOrientation::Orientation>> ss =
                     c->GetAdjSurf();
                 for (int j = 0; j < ss.size(); j++)
                 {
-                    Array<OneD, NekDouble> uv = ss[j].first->locuv(xyz);
-                    n->SetCADSurf(ss[j].first, uv);
+		    Array<OneD, NekDouble> uv = ss[j].first.lock()->locuv(xyz);
+                    n->SetCADSurf(ss[j].first.lock(), uv);
                 }
             }
         }
@@ -134,18 +134,18 @@ void CFIMesh::Process()
             if (f != m_nameToVertId.end())
             {
                 CADVertSharedPtr v = m_mesh->m_cad->GetVert(f->second);
-                vector<CADCurveSharedPtr> cs = v->GetAdjCurves();
+                vector<weak_ptr<CADCurve> > cs = v->GetAdjCurves();
                 for (int i = 0; i < cs.size(); i++)
                 {
                     NekDouble t;
-                    cs[i]->loct(xyz, t);
-                    n->SetCADCurve(cs[i], t);
-                    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation>>
-                        ss = cs[i]->GetAdjSurf();
+                    cs[i].lock()->loct(xyz, t);
+                    n->SetCADCurve(cs[i].lock(), t);
+                    vector<pair<weak_ptr<CADSurf>, CADOrientation::Orientation>>
+		        ss = cs[i].lock()->GetAdjSurf();
                     for (int j = 0; j < ss.size(); j++)
                     {
-                        Array<OneD, NekDouble> uv = ss[j].first->locuv(xyz);
-                        n->SetCADSurf(ss[j].first, uv);
+		        Array<OneD, NekDouble> uv = ss[j].first.lock()->locuv(xyz);
+                        n->SetCADSurf(ss[j].first.lock(), uv);
                     }
                 }
             }

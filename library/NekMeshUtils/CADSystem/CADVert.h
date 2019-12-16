@@ -120,7 +120,7 @@ public:
     /**
      * @brief Get list of CAD curves which are bound by this vertex
      */
-    std::vector<CADCurveSharedPtr> GetAdjCurves()
+    std::vector<std::weak_ptr<CADCurve> > GetAdjCurves()
     {
         return curves;
     }
@@ -133,7 +133,7 @@ protected:
     /// degen surface
     int degensurf;
     /// adjacent curves
-    std::vector<CADCurveSharedPtr> curves;
+    std::vector<std::weak_ptr<CADCurve> > curves;
 };
 
 typedef std::shared_ptr<CADVert> CADVertSharedPtr;

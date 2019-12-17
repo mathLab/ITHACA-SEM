@@ -90,9 +90,8 @@ namespace Nektar
 
                 ~ThreadSpecificPool()
                 {
-                    // The documentation isn't particularly clear if delete needs to be called manually
-                    // or if the thread specific pointer will call delete for me.  Looking through the 
-                    // boost code doesn't make it any clearer. 
+                    // Need to call delete manually, otherwise memory is leaking.
+		    delete m_pool;
                 }
 
                 /// \brief Allocate a block of memory of size ByteSize.

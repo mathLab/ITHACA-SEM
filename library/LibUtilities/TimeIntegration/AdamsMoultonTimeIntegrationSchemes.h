@@ -34,6 +34,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// Note : If adding a new integrator be sure to register the
+// integrator with the Time Integration Scheme Facatory in
+// SchemeInitializor.cpp.
+
 #pragma once
 
 #define LUE LIB_UTILITIES_EXPORT
@@ -75,9 +79,14 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eAdamsMoultonOrder1;
+        return std::string("AdamsMoultonOrder1");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 1.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
@@ -120,15 +129,19 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eAdamsMoultonOrder2;
+        return std::string("AdamsMoultonOrder2");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 1.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eDiagonallyImplicit;
-        phase->m_method     = TimeIntegrationMethod::eAdamsMoultonOrder2;
 
         phase->m_numsteps  = 2;
         phase->m_numstages = 1;

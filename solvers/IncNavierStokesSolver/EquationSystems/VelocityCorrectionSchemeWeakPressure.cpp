@@ -78,10 +78,10 @@ namespace Nektar
 
         SolverUtils::AddSummaryItem(s, "Splitting Scheme", "Velocity correction (weak press. form)");
 
-        if( m_extrapolation->GetSubStepIntegrationMethod() != LibUtilities::eNoTimeIntegrationMethod )
+        if( m_extrapolation->GetSubStepName().size() )
         {
             SolverUtils::AddSummaryItem( s, "Substepping", 
-                                         LibUtilities::TimeIntegrationScheme::nameFromMethod( m_extrapolation->GetSubStepIntegrationMethod() ) );
+                                         m_extrapolation->GetSubStepName() );
         }
 
         string dealias = m_homogen_dealiasing ? "Homogeneous1D" : "";

@@ -33,6 +33,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// Note : If adding a new integrator be sure to register the
+// integrator with the Time Integration Scheme Facatory in
+// SchemeInitializor.cpp.
+
 #pragma once
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
@@ -77,14 +81,18 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eMCNAB;
+        return std::string("MCNAB");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 1.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eMCNAB;
         phase->m_schemeType = eIMEX;
 
         phase->m_numsteps  = 5;

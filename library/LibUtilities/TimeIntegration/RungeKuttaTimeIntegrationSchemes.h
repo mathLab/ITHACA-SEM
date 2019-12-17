@@ -34,6 +34,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// Note : If adding a new integrator be sure to register the
+// integrator with the Time Integration Scheme Facatory in
+// SchemeInitializor.cpp.
+
 #pragma once
 
 #define LUE LIB_UTILITIES_EXPORT
@@ -74,14 +78,18 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eRungeKutta2;
+        return std::string("RungeKutta2");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 2.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eRungeKutta2;
         phase->m_schemeType = eExplicit;
 
         phase->m_numsteps  = 1;
@@ -153,14 +161,18 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eRungeKutta2_ImprovedEuler;
+        return std::string("RungeKutta2_ImprovedEuler");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 2.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eRungeKutta2_ImprovedEuler;
         phase->m_schemeType = eExplicit;
 
         phase->m_numsteps  = 1;
@@ -232,9 +244,14 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eRungeKutta2_SSP;
+        return std::string("RungeKutta2_SSP");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 2.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
@@ -273,14 +290,18 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eRungeKutta3_SSP;
+        return std::string("RungeKutta3_SSP");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 2.0;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eRungeKutta3_SSP;
         phase->m_schemeType = eExplicit;
 
         phase->m_numsteps  = 1;
@@ -355,14 +376,18 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eRungeKutta5;
+        return std::string("RungeKutta5");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 2.784;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eRungeKutta5;
         phase->m_schemeType = eExplicit;
 
         phase->m_numsteps  = 1;
@@ -449,14 +474,18 @@ public:
 
     static std::string className;
 
-    LUE virtual TimeIntegrationMethod GetIntegrationMethod() const
+    LUE virtual std::string GetName() const
     {
-        return TimeIntegrationMethod::eClassicalRungeKutta4;
+        return std::string("ClassicalRungeKutta4");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 2.784;
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
-        phase->m_method     = TimeIntegrationMethod::eClassicalRungeKutta4;
         phase->m_schemeType = eExplicit;
 
         phase->m_numsteps  = 1;

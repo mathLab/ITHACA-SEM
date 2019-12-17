@@ -184,8 +184,7 @@ namespace Nektar
             ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,
                      "Projection must be set to Mixed_CG_Discontinuous for "
                      "substepping");
-            SetUpSubSteppingTimeIntegration(
-                    m_intScheme->GetIntegrationMethod(), m_intScheme);
+            SetUpSubSteppingTimeIntegration(m_intScheme);
         }
     }
 
@@ -560,34 +559,32 @@ namespace Nektar
     }
 
     void UnsteadyAdvectionDiffusion::SetUpSubSteppingTimeIntegration(
-        int intMethod,
         const LibUtilities::TimeIntegrationSchemeSharedPtr &IntegrationScheme)
     {
         // Set to 1 for first step and it will then be increased in
         // time advance routines
-        switch(intMethod)
-        {
-        case LibUtilities::eBackwardEuler:
-        case LibUtilities::eBDFImplicitOrder1:
-            {
-                m_subStepIntegrationScheme =
-                    LibUtilities::GetTimeIntegrationSchemeFactory()
-                                .CreateInstance( "ForwardEuler" );
-            }
-            break;
-        case LibUtilities::eBDFImplicitOrder2:
-            {
-                m_subStepIntegrationScheme =
-                    LibUtilities::GetTimeIntegrationSchemeFactory()
-                                .CreateInstance( "RungeKutta2_ImprovedEuler" );
-            }
-            break;
-        default:
-            NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "
-                    "Options include BackwardEuler or BDFImplicitOrder1");
-            break;
-        }
-        m_intSteps = IntegrationScheme->GetNumIntegrationPhases();
+        if( IntegrationScheme->GetName() == "BackwardEuler" ||
+	    IntegrationScheme->GetName() == "BDFImplicitOrder1")
+	{
+	  m_subStepIntegrationScheme =
+	    LibUtilities::GetTimeIntegrationSchemeFactory()
+	    .CreateInstance( "ForwardEuler" );
+	}
+
+	else if( IntegrationScheme->GetName() == "BDFImplicitOrder2" )
+	{
+	    m_subStepIntegrationScheme =
+	      LibUtilities::GetTimeIntegrationSchemeFactory()
+	      .CreateInstance( "RungeKutta2_ImprovedEuler" );
+	}
+
+	else
+	{
+	    NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "
+		     "Options include BackwardEuler or BDFImplicitOrder1");
+	}
+
+	m_intSteps = IntegrationScheme->GetNumIntegrationPhases();
 	
         // set explicit time-integration class operators
         m_subStepIntegrationOps.DefineOdeRhs(&UnsteadyAdvectionDiffusion::SubStepAdvection, this);

@@ -45,7 +45,7 @@ namespace Utilities
 {
 
 /**
- * Converter for Gmsh files.
+ * Converter for CADfix files.
  */
 class InputCADfix : public NekMeshUtils::InputModule
 {

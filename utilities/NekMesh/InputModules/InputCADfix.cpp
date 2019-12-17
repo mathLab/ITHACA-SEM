@@ -57,6 +57,7 @@ InputCADfix::InputCADfix(MeshSharedPtr m) : InputModule(m)
 {
     m_config["order"] = ConfigOption(false, "1", "Polynomial order to elevate to");
     m_config["surfopti"] = ConfigOption(true, "", "Optimise surface mesh");
+    m_config["idfile"] = ConfigOption(false, "", "File with correspondence between surface names and IDs");
 }
 
 InputCADfix::~InputCADfix()
@@ -96,9 +97,17 @@ void InputCADfix::Process()
     m_model         = m_cad->GetCFIModel();
     NekDouble scal  = m_cad->GetScaling();
 
-    for (auto &it : m_nameToFaceId)
+    if (m_config["idfile"].beenSet)
     {
-        cout << it.first << "\t" << it.second << endl;
+        ofstream idFile;
+        string name = m_config["idfile"].as<string>() + ".csv";
+        idFile.open(name.c_str());
+
+        for (auto &it : m_nameToFaceId)
+        {
+            idFile << it.first << "," << it.second << endl;
+        }
+        idFile.close();
     }
 
     map<int, NodeSharedPtr> nodes;
@@ -363,8 +372,6 @@ void InputCADfix::Process()
             ASSERTL0(fnd != m_mesh->m_faceSet.end(),
                      "surface element not found in mesh");
 
-            // if (fnd == m_mesh->m_faceSet.end()) continue;
-
             FaceSharedPtr mf = *fnd;
 
             if (mf->m_elLink.size() == 1)
@@ -411,8 +418,6 @@ void InputCADfix::Process()
             FaceSet::iterator fnd = m_mesh->m_faceSet.find(fc);
             ASSERTL0(fnd != m_mesh->m_faceSet.end(),
                      "surface element not found in mesh");
-
-            // if (fnd == m_mesh->m_faceSet.end()) continue;
 
             FaceSharedPtr mf = *fnd;
 

@@ -69,7 +69,7 @@ public:
         std::ostream &os,
         const TimeIntegrationScheme::TimeIntegrationSchemeDataSharedPtr &rhs);
 
-     inline TimeIntegrationSchemeType GetIntegrationSchemeType() const
+    inline TimeIntegrationSchemeType GetIntegrationSchemeType() const
     {
         return m_schemeType;
     }
@@ -243,7 +243,7 @@ public:
     Array<TwoD, NekDouble> m_U;
     Array<TwoD, NekDouble> m_V;
 
-    Array<TwoD, NekDouble> m_L; // Lambda real and imaingary components
+    Array<TwoD, NekDouble> m_L; // Lambda real and imaginary components
 
     Array<OneD, Array<TwoD, NekDouble>> m_A_phi;
     Array<OneD, Array<TwoD, NekDouble>> m_B_phi;

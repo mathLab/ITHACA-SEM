@@ -136,7 +136,7 @@ public:
     virtual std::string GetName() const = 0;
     virtual NekDouble   GetTimeStability() const = 0;
 
-    void SetExponentialCoefficients(Array<TwoD, NekDouble> &Lambda);
+    LUE void SetExponentialCoefficients(Array<TwoD, NekDouble> &Lambda);
 
     virtual void SetupSchemeExponentialData(TimeIntegrationSchemeData *phase,
                                             NekDouble deltaT)

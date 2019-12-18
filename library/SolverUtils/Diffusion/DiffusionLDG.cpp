@@ -196,58 +196,10 @@ void DiffusionLDG::NumFluxforScalar(
             ApplyScalarBCs(fields, i, ufield[i], Fwd, Bwd, fluxtemp);
         }
 
-<<<<<<< HEAD
-            for (i = 0; i < nBndRegions; ++i)
-            {
-                if (fields[var]->GetBndConditions()[i]->
-                    GetBoundaryConditionType() == SpatialDomains::ePeriodic)
-                {
-                    continue;
-                }
-
-                // Number of boundary expansion related to that region
-                nBndEdges = fields[var]->
-                GetBndCondExpansions()[i]->GetExpSize();
-
-                // Weakly impose boundary conditions by modifying flux values
-                for (e = 0; e < nBndEdges ; ++e)
-                {
-                    nBndEdgePts = fields[var]->
-                    GetBndCondExpansions()[i]->GetExp(e)->GetTotPoints();
-
-                    id1 = fields[var]->
-                    GetBndCondExpansions()[i]->GetPhys_Offset(e);
-
-                    id2 = fields[0]->GetTrace()->
-                    GetPhys_Offset(fields[0]->GetTraceMap()->
-                                   GetBndCondIDToGlobalTraceID(cnt++));
-
-                    // For Dirichlet boundary condition: uflux = g_D
-                    if (fields[var]->GetBndConditions()[i]->
-                        GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                    {
-                        Vmath::Vcopy(nBndEdgePts,
-                                     &(fields[var]->
-                                       GetBndCondExpansions()[i]->
-                                       GetPhys())[id1], 1,
-                                     &penaltyflux[id2], 1);
-                    }
-                    // For Neumann boundary condition: uflux = u+
-                    else if ((fields[var]->GetBndConditions()[i])->
-                        GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                    {
-                        Vmath::Vcopy(nBndEdgePts,
-                                     &uplus[id2], 1,
-                                     &penaltyflux[id2], 1);
-                    }
-                }
-            }
-=======
         for (std::size_t j = 0; j < nDim; ++j)
         {
             Vmath::Vmul(nTracePts, m_traceNormals[j], 1, fluxtemp, 1,
                         uflux[j][i], 1);
->>>>>>> master
         }
     }
 }
@@ -288,7 +240,7 @@ void DiffusionLDG::ApplyScalarBCs(
                 fields[var]->GetBndCondExpansions()[i]->GetPhys_Offset(e);
 
             std::size_t id2 = fields[0]->GetTrace()->GetPhys_Offset(
-                fields[0]->GetTraceMap()->GetBndCondTraceToGlobalTraceMap(
+                fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(
                     cnt++));
 
             // AV boundary conditions
@@ -425,7 +377,7 @@ void DiffusionLDG::ApplyVectorBCs(
                 fields[var]->GetBndCondExpansions()[i]->GetPhys_Offset(e);
 
             std::size_t id2 = fields[0]->GetTrace()->GetPhys_Offset(
-                fields[0]->GetTraceMap()->GetBndCondTraceToGlobalTraceMap(
+                fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(
                     cnt++));
 
             // AV boundary conditions
@@ -438,51 +390,6 @@ void DiffusionLDG::ApplyVectorBCs(
                  boost::iequals(fields[var]->GetBndConditions()[i]->
                  GetUserDefined(),"WallAdiabatic"))
             {
-<<<<<<< HEAD
-                if (fields[var]->GetBndConditions()[i]->
-                    GetBoundaryConditionType() == SpatialDomains::ePeriodic)
-                {
-                    continue;
-                }
-                nBndEdges = fields[var]->
-                    GetBndCondExpansions()[i]->GetExpSize();
-
-                // Weakly impose boundary conditions by modifying flux values
-                for (e = 0; e < nBndEdges ; ++e)
-                {
-                    nBndEdgePts = fields[var]->
-                    GetBndCondExpansions()[i]->GetExp(e)->GetTotPoints();
-
-                    id1 = fields[var]->
-                    GetBndCondExpansions()[i]->GetPhys_Offset(e);
-
-                    id2 = fields[0]->GetTrace()->
-                    GetPhys_Offset(fields[0]->GetTraceMap()->
-                                   GetBndCondIDToGlobalTraceID(cnt++));
-                    
-                    // For Dirichlet boundary condition: 
-                    //qflux = q+ - C_11 (u+ -    g_D) (nx, ny)
-                    if(fields[var]->GetBndConditions()[i]->
-                    GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                    {
-                        Vmath::Vmul(nBndEdgePts,
-                                    &m_traceNormals[dir][id2], 1,
-                                    &qtemp[id2], 1,
-                                    &penaltyflux[id2], 1);
-                    }
-                    // For Neumann boundary condition: qflux = g_N
-                    else if((fields[var]->GetBndConditions()[i])->
-                    GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                    {
-                        Vmath::Vmul(nBndEdgePts,
-                                    &m_traceNormals[dir][id2], 1,
-                                    &(fields[var]->
-                                      GetBndCondExpansions()[i]->
-                                      GetPhys())[id1], 1,
-                                    &penaltyflux[id2], 1);
-                    }
-                }
-=======
                 Vmath::Zero(nBndEdgePts, &penaltyflux[id2], 1);
             }
             // For Dirichlet boundary condition:
@@ -503,7 +410,6 @@ void DiffusionLDG::ApplyVectorBCs(
                     nBndEdgePts, &m_traceNormals[dir][id2], 1,
                     &(fields[var]->GetBndCondExpansions()[i]->GetPhys())[id1],
                     1, &penaltyflux[id2], 1);
->>>>>>> master
             }
         }
     }

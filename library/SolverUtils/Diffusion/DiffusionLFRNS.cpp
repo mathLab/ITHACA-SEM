@@ -1444,15 +1444,9 @@ namespace Nektar
 
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
-<<<<<<< HEAD
                                    GetBndCondIDToGlobalTraceID(cnt++));
                     
                     // Imposing Temperature Twall at the wall 
-=======
-                                   GetBndCondTraceToGlobalTraceMap(cnt++));
-
-                    // Imposing Temperature Twall at the wall
->>>>>>> master
                     if (boost::iequals(fields[i]->GetBndConditions()[j]->
                                        GetUserDefined(),"WallViscous"))
                     {
@@ -1628,15 +1622,9 @@ namespace Nektar
 
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
-<<<<<<< HEAD
                                    GetBndCondIDToGlobalTraceID(cnt++));
-                    
-                    
-=======
-                                   GetBndCondTraceToGlobalTraceMap(cnt++));
 
 
->>>>>>> master
                     // In case of Dirichlet bcs:
                     // uflux = gD
                     if(fields[var]->GetBndConditions()[i]->

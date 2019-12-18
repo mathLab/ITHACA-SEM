@@ -181,7 +181,7 @@ void DiffusionLDGNS::v_InitObject(
 
             std::size_t id2 = pFields[0]->GetTrace()->
             GetPhys_Offset(pFields[0]->GetTraceMap()->
-                           GetBndCondTraceToGlobalTraceMap(cnt++));
+                           GetBndCondIDToGlobalTraceID(cnt++));
 
             Vmath::Vcopy(nBndEdgePts, &Fwd[id2], 1, &Bwd[id2], 1);
         }
@@ -458,49 +458,6 @@ void DiffusionLDGNS::ApplyBCsO1(
                         }
                     }
                 }
-<<<<<<< HEAD
-            }
-        }
-
-        // Compute boundary conditions  for temperature
-        cnt = 0;
-        nBndRegions = fields[nScalars]->
-        GetBndCondExpansions().num_elements();
-        for (j = 0; j < nBndRegions; ++j)
-        {
-            if (fields[nScalars]->GetBndConditions()[j]->
-                GetBoundaryConditionType() ==
-                SpatialDomains::ePeriodic)
-            {
-                continue;
-            }
-
-            nBndEdges = fields[nScalars]->
-            GetBndCondExpansions()[j]->GetExpSize();
-            for (e = 0; e < nBndEdges; ++e)
-            {
-                nBndEdgePts = fields[nScalars]->
-                GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
-
-                id1 = fields[nScalars]->
-                GetBndCondExpansions()[j]->GetPhys_Offset(e);
-
-                id2 = fields[0]->GetTrace()->
-                GetPhys_Offset(fields[0]->GetTraceMap()->
-                               GetBndCondIDToGlobalTraceID(cnt++));
-
-                // Imposing Temperature Twall at the wall 
-                if (boost::iequals(fields[i]->GetBndConditions()[j]->
-                    GetUserDefined(),"WallViscous"))
-                {                        
-                    Vmath::Vcopy(nBndEdgePts, 
-                                 &Tw[0], 1, 
-                                 &scalarVariables[nScalars-1][id2], 1);
-                }                    
-                // Imposing Temperature through condition on the Energy
-                // for no wall boundaries (e.g. farfield)
-=======
->>>>>>> master
                 else if (fields[i]->GetBndConditions()[j]->
                          GetBoundaryConditionType() ==
                          SpatialDomains::eDirichlet)
@@ -577,7 +534,7 @@ void DiffusionLDGNS::ApplyBCsO1(
 
             std::size_t id2 = fields[0]->GetTrace()->
             GetPhys_Offset(fields[0]->GetTraceMap()->
-                           GetBndCondTraceToGlobalTraceMap(cnt++));
+                           GetBndCondIDToGlobalTraceID(cnt++));
 
             // Imposing Temperature Twall at the wall
             if (boost::iequals(fields[nScalars]->GetBndConditions()[j]->
@@ -738,7 +695,7 @@ void DiffusionLDGNS::ApplyBCsO2(
 
             std::size_t id2 = fields[0]->GetTrace()->
             GetPhys_Offset(fields[0]->GetTraceMap()->
-                           GetBndCondTraceToGlobalTraceMap(cnt++));
+                           GetBndCondIDToGlobalTraceID(cnt++));
 
             // In case of Dirichlet bcs:
             // uflux = gD
@@ -747,31 +704,6 @@ void DiffusionLDGNS::ApplyBCsO2(
                && !boost::iequals(fields[var]->GetBndConditions()[i]->
                                   GetUserDefined(), "WallAdiabatic"))
             {
-<<<<<<< HEAD
-                nBndEdgePts = fields[var]->
-                GetBndCondExpansions()[i]->GetExp(e)->GetTotPoints();
-
-                id2 = fields[0]->GetTrace()->
-                GetPhys_Offset(fields[0]->GetTraceMap()->
-                               GetBndCondIDToGlobalTraceID(cnt++));
-
-                // In case of Dirichlet bcs: 
-                // uflux = gD
-                if(fields[var]->GetBndConditions()[i]->
-                   GetBoundaryConditionType() == SpatialDomains::eDirichlet
-                   && !boost::iequals(fields[var]->GetBndConditions()[i]->
-                                      GetUserDefined(), "WallAdiabatic"))
-                {
-                    Vmath::Vmul(nBndEdgePts, 
-                                &m_traceNormals[dir][id2], 1, 
-                                &qtemp[id2], 1, 
-                                &penaltyflux[id2], 1);
-                }
-                // 3.4) In case of Neumann bcs: 
-                // uflux = u+
-                else if((fields[var]->GetBndConditions()[i])->
-                    GetBoundaryConditionType() == SpatialDomains::eNeumann)
-=======
                 Vmath::Vmul(nBndEdgePts,
                             &m_traceNormals[dir][id2], 1,
                             &qFwd[id2], 1,
@@ -798,7 +730,6 @@ void DiffusionLDGNS::ApplyBCsO2(
                                    GetUserDefined(), "WallAdiabatic"))
             {
                 if ((var == m_spaceDim + 1))
->>>>>>> master
                 {
                     Vmath::Zero(nBndEdgePts, &penaltyflux[id2], 1);
                 }

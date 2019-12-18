@@ -49,9 +49,10 @@ namespace Nektar
 namespace SolverUtils
 {
 
-/// Defines a callback function which evaluates the flux vector \f$ F(u)
-/// \f$ in a conservative advection of the form \f$ \nabla\cdot F(u)
-/// \f$.
+/**
+ * Defines a callback function type which evaluates the flux vector \f$ F(u) \f$
+ * in a conservative advection of the form \f$ \nabla\cdot F(u) \f$.
+ */
 typedef std::function<void (
     const Array<OneD, Array<OneD, NekDouble> >&,
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)>

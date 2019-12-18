@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
 SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build,
 options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release
 RelWithDebInfo MinSizeRel.")
@@ -162,8 +162,6 @@ OPTION(NEKTAR_BUILD_UNIT_TESTS "Build unit tests."              ON)
 OPTION(NEKTAR_BUILD_TESTS      "Build regression tests."        ON)
 OPTION(NEKTAR_BUILD_TIMINGS    "Build benchmark timing codes."  OFF)
 OPTION(NEKTAR_BUILD_PYTHON     "Build Nektar++ Python bindings" OFF)
-OPTION(NEKTAR_BUILD_PACKAGES   "Build Nektar++ binary packages" OFF)
-MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
 
 OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF)
 OPTION(NEKTAR_TEST_USE_HOSTFILE "Use a hostfile to explicitly specify number of
@@ -343,7 +341,3 @@ INSTALL(DIRECTORY ${TPDIST}/include/
     )
 
 ADD_SUBDIRECTORY(docs)
-
-IF(NEKTAR_BUILD_PACKAGES)
-    ADD_SUBDIRECTORY(pkg)
-ENDIF(NEKTAR_BUILD_PACKAGES)

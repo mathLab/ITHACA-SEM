@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/fix/Homo1D_ReadBCFromFile</GitBranch>
+            <GitSHA1>fda88fc8f3eb4071a6485fb79bce8e4ff7aa1225</GitSHA1>
+            <Hostname>dyn1134-150.insecure.ic.ac.uk</Hostname>
+            <NektarVersion>4.5.0</NektarVersion>
+            <Timestamp>09-May-2018 13:07:54</Timestamp>
+        </Provenance>
+        <ChkFileNum>2</ChkFileNum>
+        <Kinvis>1</Kinvis>
+        <SessionName0>ChanFlow_3DH1D_bcsfromfiles.xml</SessionName0>
+        <Time>1.0000000000000007</Time>
+        <TimeStep>0.001</TimeStep>
+    </Metadata>
+    <ELEMENTS FIELDS="u,v,w,p" SHAPE="Segment-HomogenousExp1D" BASIS="Modified_A,Fourier" HOMOGENEOUSLENGTHS="1" HOMOGENEOUSZIDS="0,1,2,3,4,5,6,7,8,9" NUMMODESPERDIR="UNIORDER:3,10" ID="0-1,10-11" COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYBgFo2AUjIJRMApGwSgYBaNgFBALDCCUgyWY+mD/qzhZbNt/9b241F8rUD/dE9Zl47XG7Vbi63CbOdEHqyLCyvbwszAn/rSdtWch05uVHIfS9xyatfzt1dhWmxn3RXc4zJpo81jH+XdVMNOeRr4i5ac3JuxRL2L2l8p12pO6s9fzj6fknsWhZ3snRCXa8EbpCzGtjNzz+nXTz9cyH3ffmd3DIfotxcbvIkc60ycWm9y3q1PaAh5aW0isuLvJXGlPsZjawsTr6Tad589tkbz33Hr7PeE7/RNL9vTcb4+2VmjZc73hak3TBf09pdte8gcwTbaB+RPmH00P48ZeOT5bXP6F+RPGd2U0VNx4JRXuT5h4+j7B7CX7S+H+hIk37lscYdSrYAPzJ0z8a9+22PYQTRuYP2HiTnf3bdEMerQb5k+YuHHHHr980S+7Yf6Eif/8f4its0zSBuZPmHhBJe+UuFvaNhLQ+DWH+ltUJ+wI2xchnPFb2hazTn15j81lnjOh4ZoRNl1SMaU5+jV77HkzeCROz96z4GXWzd7X6Xv0I4OeCHh22nxaf7zUQm2CTb9h6kS2h+J7Nh37r5zysGfPjDjp0w1nivdcUBJZ26Qsvafz/9zTc2sbbFSOOj3KPZ64p/2sinVd9IfddjNsV80+l2PzZNPPX9xbDG1ctn67Lr/3gXXNfyt90WaHPdELp2/QvRBso5Waa/ntwOvdageefXIKi9+zQvBnXLll8564gBeznB7p70mKmzn9v9QkG5g/Yf5pcM1dLKEvgDN+Yf6E8VOVtgkLK6fB/QkPf5aJ8tpfSuH+hMfX5NVqD6/r28D8CRNn6mac9PO1nA3MnzDxW7znW89KM+6B+RMmrlxp6rJX6OlumD9h4vl3luhnvhWzgfkTJl71rTY68r2uDQACU0+9</ELEMENTS>
+</NEKTAR>

@@ -39,6 +39,9 @@
 
 #include <SolverUtils/Diffusion/Diffusion.h>
 #include <CompressibleFlowSolver/Misc/EquationOfState.h>
+#include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/Expansion2D.h>
+
 
 using namespace Nektar::SolverUtils;
 
@@ -58,6 +61,12 @@ namespace Nektar
     protected:
         DiffusionLDGNS();
 
+        /// Penalty coefficient for LDGNS
+        NekDouble                            m_C11;
+
+        /// h scaling for penalty term
+        Array<OneD, NekDouble>               m_traceOneOverH;
+
         Array<OneD, Array<OneD, NekDouble> > m_traceVel;
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
         LibUtilities::SessionReaderSharedPtr m_session;
@@ -69,47 +78,50 @@ namespace Nektar
 
         Array<OneD, Array<OneD, NekDouble> > m_homoDerivs;
 
-        int                                  m_spaceDim;
-        int                                  m_diffDim;
+        std::size_t                                  m_spaceDim;
+        std::size_t                                  m_diffDim;
 
         virtual void v_InitObject(
             LibUtilities::SessionReaderSharedPtr               pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
 
         virtual void v_Diffuse(
-            const int                                          nConvective,
+            const std::size_t                                  nConvective,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray,
-            const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-            const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+            const Array<OneD, Array<OneD, NekDouble> > &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> > &pBwd);
 
-        virtual void v_NumericalFluxO1(
+        void NumericalFluxO1(
             const Array<OneD, MultiRegions::ExpListSharedPtr>      &fields,
             const Array<OneD, Array<OneD, NekDouble> >             &inarray,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                                                         &numericalFluxO1,
-            const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-            const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+            const Array<OneD, Array<OneD, NekDouble> > &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> > &pBwd);
 
-        virtual void v_WeakPenaltyO1(
+        void ApplyBCsO1(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            const Array<OneD, Array<OneD, NekDouble> >        &uplus,
-                  Array<OneD, Array<OneD, NekDouble> >      &penaltyfluxO1);
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
+                  Array<OneD, Array<OneD, NekDouble> >        &flux01);
 
-        virtual void v_NumericalFluxO2(
+        void NumericalFluxO2(
             const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-            const Array<OneD, Array<OneD, NekDouble> >              &ufield,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
-                  Array<OneD, Array<OneD, NekDouble> >              &qflux);
+                  Array<OneD, Array<OneD, NekDouble> >              &qflux,
+            const Array<OneD, Array<OneD, NekDouble> > &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> > &pBwd);
 
-        virtual void v_WeakPenaltyO2(
+        void ApplyBCsO2(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const int                                          var,
-            const int                                          dir,
+            const std::size_t                                  var,
+            const std::size_t                                  dir,
             const Array<OneD, const NekDouble>                &qfield,
-            const Array<OneD, const NekDouble>                &qtemp,
+            const Array<OneD, const NekDouble>                &qFwd,
+            const Array<OneD, const NekDouble>                &qBwd,
                   Array<OneD,       NekDouble>                &penaltyflux);
 
         virtual void v_SetHomoDerivs(

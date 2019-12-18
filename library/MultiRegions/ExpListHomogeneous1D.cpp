@@ -478,7 +478,9 @@ namespace Nektar
         /**
          * Forward transform element by element
          */
-        void ExpListHomogeneous1D::v_FwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        void ExpListHomogeneous1D::v_FwdTrans_IterPerExp(const Array<OneD,
+                                                         const NekDouble> &inarray,
+                                                         Array<OneD, NekDouble> &outarray)
         {
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
@@ -487,6 +489,29 @@ namespace Nektar
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
                 m_planes[n]->FwdTrans_IterPerExp(inarray+cnt, tmparray = outarray + cnt1);
+                cnt   += m_planes[n]->GetTotPoints();
+                cnt1  += m_planes[n]->GetNcoeffs();
+            }
+            if(!m_WaveSpace)
+            {
+                HomogeneousFwdTrans(outarray,outarray);
+            }
+        }
+
+        /**
+         * Forward transform element by element with boundaries constrained
+         */
+        void ExpListHomogeneous1D::v_FwdTrans_BndConstrained(const Array<OneD,
+                                                             const NekDouble> &inarray,
+                                                             Array<OneD, NekDouble> &outarray)
+        {
+            int cnt = 0, cnt1 = 0;
+            Array<OneD, NekDouble> tmparray;
+            
+            //spectral element FwdTrans plane by plane
+            for(int n = 0; n < m_planes.num_elements(); ++n)
+            {
+                m_planes[n]->FwdTrans_BndConstrained(inarray+cnt, tmparray = outarray + cnt1);
                 cnt   += m_planes[n]->GetTotPoints();
                 cnt1  += m_planes[n]->GetNcoeffs();
             }

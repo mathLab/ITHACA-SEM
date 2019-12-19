@@ -46,8 +46,10 @@
 #include <SolverUtils/Diffusion/Diffusion.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <MultiRegions/GlobalMatrixKey.h>
-#define CFS_DEBUGMODE
+#include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/Expansion2D.h>
 
+#define CFS_DEBUGMODE
 namespace Nektar
 {
     /**
@@ -69,6 +71,8 @@ namespace Nektar
         Array<OneD, NekDouble> GetStabilityLimitVector(
             const Array<OneD,int> &ExpOrder);
 
+        /// Function to get estimate of min h/p factor per element
+        Array<OneD, NekDouble>  GetElmtMinHP(void);
     protected:
         SolverUtils::DiffusionSharedPtr     m_diffusion;
         ArtificialDiffusionSharedPtr        m_artificialDiffusion;
@@ -84,6 +88,12 @@ namespace Nektar
         NekDouble                           m_JFEps;
         
         bool                                m_useFiltering;
+
+        /// Store physical artificial viscosity
+        Array<OneD, NekDouble>              m_muav;
+
+        /// Store physical artificial viscosity
+        Array<OneD, NekDouble>              m_muavTrace;
 
         // Parameters for local time-stepping
         bool                                m_useLocalTimeStep;
@@ -478,7 +488,7 @@ namespace Nektar
                 Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const NekDouble                                   time);
 
-        
+
         void DoAdvection_coeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                 Array<OneD,       Array<OneD, NekDouble> > &outarray,
@@ -633,7 +643,7 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
             const NekDouble                                     mu,
             const NekDouble                                     DmuDT,
-            const Array<OneD, NekDouble>                        &normals, 
+            const Array<OneD, NekDouble>                        &normals,
                   DNekMatSharedPtr                              &fluxJac)
         {
             v_GetDiffusionFluxJacPoint(conservVar,conseDeriv,mu,DmuDT,normals,fluxJac);
@@ -668,7 +678,7 @@ namespace Nektar
         void SetBoundaryConditions(
             Array<OneD, Array<OneD, NekDouble> >             &physarray,
             NekDouble                                         time);
-        
+
         void SetBoundaryConditionsBwdWeight();
 
         void SetBoundaryConditionsDeriv(
@@ -688,7 +698,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
             const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-            Array< OneD, int >                                              &nonZeroIndex,    
+            Array< OneD, int >                                              &nonZeroIndex,
             const Array<OneD, Array<OneD, NekDouble> >                      &normals)
         {
             v_GetViscousSymmtrFluxConservVar(nConvectiveFields,nSpaceDim,inaverg,inarray,outarray,nonZeroIndex,normals);
@@ -734,10 +744,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
         {
-            if (m_shockCaptureType != "Off")
-            {
-                m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
-            }
+            // Do nothing by default
         }
 
         virtual void v_DoDiffusion_coeff(
@@ -771,7 +778,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
             const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-            Array< OneD, int >                                              &nonZeroIndex,    
+            Array< OneD, int >                                              &nonZeroIndex,
             const Array<OneD, Array<OneD, NekDouble> >                      &normals);
         
         virtual void v_SteadyStateResidual(
@@ -790,7 +797,7 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
             const NekDouble                                     mu,
             const NekDouble                                     DmuDT,
-            const Array<OneD, NekDouble>                        &normals, 
+            const Array<OneD, NekDouble>                        &normals,
                   DNekMatSharedPtr                              &fluxJac);
         virtual void v_CalphysDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,

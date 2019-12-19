@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NektarUnivConsts.hpp
+// File: Smath.h
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
-// Copyright (c) 2006 Scientific Computing and Imaging Institute,
-// University of Utah (USA) and Department of Aeronautics, Imperial
-// College London (UK).
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
 //
 // License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29,36 +29,23 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Universal constants in the Nektar Library
+// Description: Collection of templated functions for scalar mathematics
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef  NEKTARUNIVCONSTS_HPP
-#define  NEKTARUNIVCONSTS_HPP
+#ifndef NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_SCALARMATH_H
+#define NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_SCALARMATH_H
 
-#include <limits>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-
-namespace Nektar
+namespace Smath
 {
-    namespace NekConstants
-    {
-        static const int kNekLargeInt = std::numeric_limits<int>::max();
-        static const NekDouble kNekUnsetDouble = -9999;
-        static const NekDouble kNekMinResidInit = 1e16;
-        static const NekDouble kVertexTheSameDouble  = 1.0e-8;
-        static const NekDouble kGeomFactorsTol = 1.0e-8;
-        static const NekDouble kNekZeroTol = 1.0e-12;
-        static const NekDouble kGeomRightAngleTol = 1e-14;
-        static const NekDouble kNekSqrtTol = 1.0e-16;
-        static const NekDouble kNekIterativeTol = 1e-09;
-        static const NekDouble kNekSparseNonZeroTol = 1e-16;
 
-        // Tolerances for mesh generation and CAD handling
-        static const NekDouble GeomTol = 1E-2;
-        static const NekDouble CoinTol = 1E-6;
-    }
-} //end of namespace
+    /***************** Math routines  ***************/
 
-#endif
+    /// \brief Return the soft max of between two scalars
+    template<class T> LIB_UTILITIES_EXPORT T Smax(const T a, const T b,
+        const T k);
+
+}
+#endif //NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_SCALARMATH_H

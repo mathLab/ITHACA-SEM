@@ -58,9 +58,9 @@ VariableConverter::VariableConverter(
     m_session->LoadParameter("mu", m_mu, 1.78e-05);
 
     // Parameters for sensor
-    m_session->LoadParameter("Skappa", m_Skappa, -2.048);
-    m_session->LoadParameter("Kappa", m_Kappa, 0.0);
-    m_session->LoadParameter("mu0", m_mu0, 1.0);
+    m_session->LoadParameter("Skappa", m_Skappa, -1.0);
+    m_session->LoadParameter("Kappa", m_Kappa, 0.25);
+
 }
 
 /**
@@ -200,8 +200,8 @@ void VariableConverter::GetDynamicViscosity(
  * @param mu           The resulting dynamic viscosity.
  */
 void VariableConverter::GetDmuDT(
-    const Array<OneD, const NekDouble>  &temperature, 
-    const Array<OneD, const NekDouble>  &mu, 
+    const Array<OneD, const NekDouble>  &temperature,
+    const Array<OneD, const NekDouble>  &mu,
           Array<OneD, NekDouble>        &DmuDT)
 {
     const int nPts      = temperature.num_elements();
@@ -209,7 +209,7 @@ void VariableConverter::GetDmuDT(
 
     for (int i = 0; i < nPts; ++i)
     {
-        tmp         = 0.5*(temperature[i]+3.0*110.0)/(temperature[i]*(temperature[i]+110.0));
+        tmp         = 0.5* (temperature[i]+3.0*110.0)/(temperature[i]*(temperature[i]+110.0));
         DmuDT[i]    = mu[i]*tmp;
     }
 }
@@ -246,11 +246,10 @@ void VariableConverter::GetSensor(
     Array<OneD, NekDouble> &Sensor, Array<OneD, NekDouble> &SensorKappa,
     int offset)
 {
+    NekDouble Skappa;
+    NekDouble order;
     Array<OneD, NekDouble> tmp;
-
     Array<OneD, int> expOrderElement = field->EvalBasisNumModesMaxPerExp();
-
-    Array<OneD, NekDouble> solution = physarray[0];
 
     for (int e = 0; e < field->GetExpSize(); e++)
     {
@@ -270,7 +269,8 @@ void VariableConverter::GetSensor(
         }
 
         // create vector to save the solution points per element at P = p;
-        Array<OneD, NekDouble> elmtPhys(nElmtPoints, solution + physOffset);
+        Array<OneD, NekDouble> elmtPhys(nElmtPoints,
+            tmp = physarray[0] + physOffset);
         // Compute coefficients
         Array<OneD, NekDouble> elmtCoeffs(nElmtCoeffs, 0.0);
         field->GetExp(e)->FwdTrans(elmtPhys, elmtCoeffs);
@@ -295,30 +295,41 @@ void VariableConverter::GetSensor(
                     1);
 
         numerator = Vmath::Dot(nElmtPoints, difference, difference);
-
         denominator = Vmath::Dot(nElmtPoints, elmtPhys, elmtPhys);
 
         NekDouble elmtSensor = sqrt(numerator / denominator);
-        elmtSensor           = log10(elmtSensor);
+        elmtSensor = log10(max(elmtSensor, NekConstants::kNekSqrtTol));
+
         Vmath::Fill(nElmtPoints, elmtSensor, tmp = Sensor + physOffset, 1);
 
-        NekDouble elmtSensorKappa;
-        if (elmtSensor < (m_Skappa-m_Kappa))
+        // Compute reference value for sensor
+        order = max(numModesElement-1, 1);
+        if (order > 0 )
         {
-            elmtSensorKappa = 0;
-        }
-        else if (elmtSensor > (m_Skappa + m_Kappa))
-        {
-            elmtSensorKappa = m_mu0;
+            Skappa = m_Skappa - 4.0 * log10(static_cast<NekDouble>(order));
         }
         else
         {
-            elmtSensorKappa =
-                0.5 * m_mu0 *
-                (1 + sin(M_PI * (elmtSensor - m_Skappa) / (2 * m_Kappa)));
+            Skappa = 0.0;
+        }
+
+        // Compute artificial viscosity
+        NekDouble elmtSensorKappa;
+        if (elmtSensor < (Skappa-m_Kappa))
+        {
+            elmtSensorKappa = 0;
+        }
+        else if (elmtSensor > (Skappa + m_Kappa))
+        {
+            elmtSensorKappa = 1.0;
+        }
+        else
+        {
+            elmtSensorKappa = 0.5 *
+                (1 + sin(M_PI * (elmtSensor - Skappa) / (2 * m_Kappa)));
         }
         Vmath::Fill(nElmtPoints, elmtSensorKappa,
-                    tmp = SensorKappa + physOffset, 1);
+                tmp = SensorKappa + physOffset, 1);
     }
 }
 

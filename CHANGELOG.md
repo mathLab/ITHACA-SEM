@@ -9,6 +9,7 @@ v5.1.0
 
 **FieldConvert**
 - Add field conversion from Halfmode to SingleMode (!1032)
+- Refactored time integration code using factory pattern (!1034)
 
 v5.0.0
 ------
@@ -141,6 +142,7 @@ v5.0.0
 - Fix surface extraction, added regression test (!994)
 - Fix 2D meshing running out of memory due to missing else (!1012)
 - Add support for .msh v4.1 file input (!1054)
+- Added penalty term to LDG and LDGNS, slight generalization of LDG (!1080)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -166,6 +168,7 @@ v5.0.0
 - Fixed scaling for compressed xml, fixed error printout for mesh only (!1040)
 - Add field conversion from Halfmode to SingleMode (!1032)
 - Fix double precision output in .dat format (!1059)
+- Add phase sampling feature in FilterFieldConvert (!1068)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
@@ -221,7 +224,8 @@ v5.0.0
 - Extend to support MPI tests with multiple executables (!1085)
 
 **Packaging:**
-- Add Dockerfiles and gitlab CI configuration for automatic builds (!1021)
+- Add Dockerfiles and gitlab CI configuration for automatic builds (!1021,
+  !1092, !1098)
 
 v4.4.2
 ------

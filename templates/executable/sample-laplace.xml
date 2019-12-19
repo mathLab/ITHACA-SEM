@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <!-- Sample Laplace equation: solve in domain [0,1]^2 -->
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx90rdWAkEARmGMmMWcxZxzzjnnR/YRLC0pLCgsKCwsLLSae4a5x+3Yj5+FO2Qy/18V0au343KvVH8N76vST8Wrdc9zanSP1+r99+BZ3eN1ui8Er9c93qD7j+CNusebdF8M3qx7vEX3n8FbdY/ndF8K3qZ7vD26X0j+Hx3qnH+nOufbpc75davzPXrU6d+rTt8+dfr1q9NnIPJi0mdQnT5D6vQZVqdPXp0+I+r0GVXnd4yp02dcnT4TkZeSPpPq9JlSp8+0On1m1Okzq06fOXX6zKvTZ0GdDouRfyV9ltTps6xOnxV1+qyq02dNnT7r6vTZUKfPpjp9tiL/Tvpsq9NnR50+u+r02VOnz746fQ7U6XOoTp8jdfrEQX6SPifq9DlVp8+ZOn3O1elzoU6fS3X6XKnT51qdPjeRl+X4u27V6XOnTp97dfo8qNPnUZ0+T+r0eVanz4s6fX4BlS6oggAA</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1lGlXzVEYRyORoiQyNVyFhEoyVeg2iKRIA0UTzUVCIxVp0KSv7M3ZL+y1/vfNs/ZvnXvuuWc/50lI+P9zIKIejKiJEZXPIa2HkyL4sJj9jmg965LFrDsqZr+UiO+nivn+sYj9jms9+6aJ2TddzH4ntJ7fyxDzeyfF7Jep9ZzjlJhznBazX5bWc74zYs53Vsx+50Klfzj3eTHnviCmX7KV839yxPRFrnL+Z54Y/zHl/P+LYjznK+deCsT4vKSc+7osxtsV5dxjoRg/V5Vzv0VivF0Llfvn3q+LufcbYjwUK8dHiRgPpcrxdFOMhzLl+LslxkO58liot8V4uKMc33fFeLinnD64L8ZDhXL6o1KMn6pQuX/65oGYvnkoxsMj5fRTtRgPceX0WY0YD7XK6b86MR7qldOXj8WxUBuU069PxHh4qpw+bhTj4Zly+rtJjJ/noXL/9H2zmL5vEePhhXLew0sxHlqV805eifHQppz30y7GQ4dy3lWnGA+vlfPe3ojx0KWcd9gtxsNb5bzPd2L89ITK/fNue8W82z4xHvqV854HxHh4r5x3/kGMh0HlvP8hMR6GlTMXRsR4GFXOvBgT42FcOXNkQoyHSeXMl49i/HwKlftn7kyJ46F+FuNhWjnz6IsYD1+VM6e+ifEwo5z5NSvGw5xy5tq8GA8Lypl3i2I8fFfOHPwhxsOScubjshg/K6Fy/8zNn2Lm5i9xPNRV5czT32I8rClnzq6L8bChnPm7KcbDH+XM5S0xHraVM693xHjYVc4c3xPj4a9y5vu+GD//AMnlVQ0A</EDGE>
+        <ELEMENT>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx11FdPFGEAheFVUHpfQPrSWXpH6oJSBaXbRcCKgoWiYKMIqCD4l715z4UncW+e5N1k5puTyQQC//4u4EWM+k+Pxkt42f5Xj8FYjLPrqsdjAibafdSTMBlT7H7qqZiG6XZO9QwMYqadWz0Ls/GKnT8HczEPtVuc9XwsQD1nvPVCLLJzJVgPYbFdJ9F6CZZikqlehuWoPZOtV2Alas8U61UYRu2p61ZjDdai9kyzXof1qD3TrTdgI2rPDOtN2IwhDFpvwVbUnpnW27AdtWeW9Q68itoz23ondqH21HvYjT3Yi9ozx3ofRlB75lrvxwHUnnnWr+F11J751gdxCLVngfVhHEHtWWh9FMdQexZZv4HjqD1DOIE38RZqz2LrkziF2rPE+jTOYD+WWp/FOdSeZdbn8TZqz3Lrd/Auas8K6/fwPmrPSusP8CFqT72Hj3ABH6P2DFtfxCXUntXWl/EJas8a60/xGWrPWuvP8QVqzzrrL3EFtWe99Vf4GrVng/VVXEPtqe/PG3yL71B7Nll/j+u4iM3WN3ATtWeL9S38gNqz1fpH3Ebt2WZ9Bz+h9my3/hm/oPbssP4Vv6H21PdxF/dwH7Vnp/UD/I7as8v6IR6h9uy2fow/UHv2WP+Jv1B79lo/wVPUnn3Wf+MZas+I9XP8g9rzL7yMTv4A</Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> Q[0-63] </C>
+            <C ID="1"> E[0,25,42,59,76,93,110,127] </C>
+            <C ID="2"> E[128,130,132,134,136,138,140,142] </C>
+            <C ID="3"> E[23,41,58,75,92,109,126,143] </C>
+            <C ID="4"> E[3,6,9,12,15,18,21,24] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/master</GitBranch>
+            <GitSHA1>4c5b4bf6351fd21845ddae2c008088d9818978bb</GitSHA1>
+            <Hostname>kingscross</Hostname>
+            <NektarVersion>5.0.0</NektarVersion>
+            <Timestamp>29-Oct-2019 19:29:09</Timestamp>
+        </Provenance>
+        <NekMeshCommandLine>square-quads.msh square-quads.xml </NekMeshCommandLine>
+    </Metadata>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="12" TYPE="MODIFIED" FIELDS="u" />
+    </EXPANSIONS>
+    <CONDITIONS>
+        <PARAMETERS>
+            <P> Lambda = 0.0 </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE"                VALUE="Laplace"    />
+            <I PROPERTY="Projection"            VALUE="Continuous" />
+            <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"   />
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1,3,4] </B>
+            <B ID="1"> C[2] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="0" />
+            </REGION>
+
+            <REGION REF="1">
+                <D VAR="u" VALUE="sin(2*PI*y)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="sinh(2*PI*x)*sin(2*PI*y)/sinh(4*PI)" />
+        </FUNCTION>
+    </CONDITIONS>
+</NEKTAR>

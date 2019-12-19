@@ -984,7 +984,7 @@ namespace Nektar
 
         }
 
-        void ExpList::FwdTrans_BndConstrained(
+        void ExpList::v_FwdTrans_BndConstrained(
                                               const Array<OneD, const NekDouble>& inarray,
                                               Array<OneD, NekDouble> &outarray)
         {

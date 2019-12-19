@@ -51,3 +51,17 @@ ADD_CUSTOM_TARGET(user-guide-pdf
     COMMAND ${PDFLATEX} --output-directory ${USERGUIDE} ${USERGUIDESRC}/user-guide.tex
     WORKING_DIRECTORY ${USERGUIDESRC}
 )
+
+# Install output, if it is generated.
+INSTALL(CODE "IF (EXISTS ${USERGUIDE}/html)
+    FILE(GLOB UGHTML ${USERGUIDE}/html/*)
+    LIST(LENGTH UGHTML UGHTML_LEN)
+    IF(UGHTML_LEN GREATER 0)
+        FILE(INSTALL ${USERGUIDE}/html
+             DESTINATION \${CMAKE_INSTALL_PREFIX}/${NEKTAR_DOC_DIR}/user-guide)
+    ENDIF()
+ENDIF()
+IF (EXISTS ${USERGUIDE}/user-guide.pdf)
+    FILE(INSTALL ${USERGUIDE}/user-guide.pdf
+         DESTINATION \${CMAKE_INSTALL_PREFIX}/${NEKTAR_DOC_DIR}/user-guide)
+ENDIF()")

@@ -1,11 +1,8 @@
 stages:
   - docker-build-env
   - docker-build-image
+  - docker-build-dev
   - docker-test-image
-  - docker-cleanup-image
-
-before_script:
-  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
 
 .docker_build_template: &docker_build_template
   image: docker:stable
@@ -13,6 +10,9 @@ before_script:
   only:
     - master
     - /^docker\/.*$/
+    - tags
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
     - docker pull ${image_name} || true
     - DOCKER_BUILDKIT=1 docker build -t ${image_name} -f ${dockerfile} .
@@ -22,54 +22,58 @@ before_script:
     - docker push ${image_name}:latest
 
 .docker-test-template: &docker_test_template
-  image: docker:stable
+  image: ${image_name}
   stage: docker-test-image
   only:
     - master
     - /^docker\/.*$/
-  script:
-    - docker pull ${image_name} || true
-    - docker create --name ${container_name}-$CI_COMMIT_SHORT_SHA -t ${image_name}:latest
-    - docker cp $(pwd)/${test_dir} ${container_name}-$CI_COMMIT_SHORT_SHA:/docker-entrypoint
-    - docker start ${container_name}-$CI_COMMIT_SHORT_SHA
-    - docker exec ${container_name}-$CI_COMMIT_SHORT_SHA ${test_cmd}
-    - docker rm -f ${container_name}-$CI_COMMIT_SHORT_SHA
+    - tags
 
 docker-build-env:
   <<: *docker_build_template
   stage: docker-build-env
   variables:
     image_name: nektarpp/nektar-env
-    dockerfile: pkg/docker/nektar-env/Dockerfile
+    dockerfile: docker/nektar-env/Dockerfile
   only:
     refs:
       - master
       - /^docker\/.*$/
+      - tags
     changes:
-      - pkg/docker/nektar-env/Dockerfile
+      - docker/nektar-env/Dockerfile
 
 docker-build-nektar:
   <<: *docker_build_template
   variables:
     image_name: nektarpp/nektar
-    dockerfile: pkg/docker/nektar/Dockerfile
+    dockerfile: docker/nektar/Dockerfile
+    GIT_SUBMODULE_STRATEGY: normal
 
 docker-build-workbook:
   <<: *docker_build_template
   variables:
     image_name: nektarpp/nektar-workbook
-    dockerfile: pkg/docker/nektar-workbook/Dockerfile
+    dockerfile: docker/nektar-workbook/Dockerfile
+
+docker-build-dev:
+  <<: *docker_build_template
+  stage: docker-build-dev
+  variables:
+    image_name: nektarpp/nektar-dev
+    dockerfile: docker/nektar-dev/Dockerfile
 
 docker-test-nektar:
   <<: *docker_test_template
   variables:
     image_name: nektarpp/nektar
-    container_name: nektar
-    test_dir: solvers/IncNavierStokesSolver/Tests
-    test_cmd: mpirun -n 3 IncNavierStokesSolver data/ChanFlow_m3_par.xml
-
-docker-cleanup-nektar:
-  stage: docker-cleanup-image
-  when: on_failure
   script:
-    - docker rm -f nektar-$CI_COMMIT_SHORT_SHA
+    - mpirun -n 3 IncNavierStokesSolver $CI_PROJECT_DIR/solvers/IncNavierStokesSolver/Tests/ChanFlow_m3_par.xml
+
+docker-test-nektar-dev:
+  <<: *docker_test_template
+  variables:
+    image_name: nektarpp/nektar-dev
+  script:
+    - cd $CI_PROJECT_DIR/templates/executable
+    - ./test.sh /usr/local/lib64/nektar++/cmake 3

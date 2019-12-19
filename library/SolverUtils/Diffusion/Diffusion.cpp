@@ -43,16 +43,16 @@ namespace Nektar
             static DiffusionFactory instance;
             return instance;
         }
-        
+
         void Diffusion::InitObject(
             const LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
         {
             v_InitObject(pSession, pFields);
         }
-        
+
         void Diffusion::Diffuse(
-            const int nConvectiveFields,
+            const std::size_t                                 nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray,

@@ -190,7 +190,10 @@ namespace Nektar
             
             virtual void v_FwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray,
                                                Array<OneD,      NekDouble> &outarray);
-            
+
+            virtual void v_FwdTrans_BndConstrained(const Array<OneD,const NekDouble> &inarray,
+                                               Array<OneD,      NekDouble> &outarray);
+
             virtual void v_BwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray);
             

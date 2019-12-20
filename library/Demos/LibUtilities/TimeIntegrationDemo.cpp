@@ -69,14 +69,14 @@
 //
 // The output is written out to the files
 //
-//   - OneDfinDiffAdvDiffSolverOutput.dat (containing the data)
-//   - OneDfinDiffAdvDiffSolverOutput.p   (containing a gnuplot script)
+//   - OneDFiniteDiffAdvDiffSolver.dat (containing the data)
+//   - OneDFiniteDiffAdvDiffSolver.p   (containing a gnuplot script)
 //
 // and can be visualised by gnuplot using the command
 //
-//    gnuplot OneDfinDiffAdvDiffSolverOutput.p
+//    gnuplot OneDFiniteDiffAdvDiffSolverOutput.p
 //
-//--------------------------------------------------
+// -----------------------------------------------------------------
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -90,69 +90,90 @@
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 
-using namespace std;
+#include <time.h>       /* time */
+
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
 
 namespace po = boost::program_options;
 
-// We first implement a class that represents
-// the 1D finite difference solver
-class OneDfinDiffAdvDiffSolver
+// Base class for the solver.
+class DemoSolver
 {
 public:
-    // constructor based upon the discretisation details
-    OneDfinDiffAdvDiffSolver(int nPoints, int nTimeSteps)
-        : m_x0(0.0), m_xend(1.0), m_nPoints(nPoints),
-          m_dx((m_xend - m_x0) / ((double)m_nPoints - 1.0)), m_t0(0.0),
-          m_tend(1.0), m_nTimeSteps(nTimeSteps),
-          m_dt((m_tend - m_t0) / (double)m_nTimeSteps), m_wavenumber(1.0),
-          m_U(1.0), m_D(0.05)
+    // -----------------------------------------------------------------
+    // Constructor based upon the discretisation details
+    DemoSolver(int nVars, int nPoints, int nTimeSteps) :
+      m_nVars(nVars),
+
+      m_x0(0.0), m_xend(1.0), m_nPoints(nPoints),
+      m_dx((m_xend - m_x0) / ((double)m_nPoints - 1.0)),
+
+      m_t0(0.0), m_tend(0.1), m_nTimeSteps(nTimeSteps),
+      m_dt((m_tend - m_t0) / (double)m_nTimeSteps)
     {
+        m_minValue = +std::numeric_limits<double>::max();
+        m_maxValue = -std::numeric_limits<double>::max();
+    }
+
+    virtual ~DemoSolver() {};
+
+    // -----------------------------------------------------------------
+    // Exact solution and project (identity)
+    virtual void EvaluateExactSolution(
+        Array<OneD, Array<OneD, double>> &outarray,
+        const NekDouble time) const = 0;
+
+    virtual void Project(const Array<OneD, const Array<OneD, double>> &inarray,
+                               Array<OneD,       Array<OneD, double>> &outarray,
+                         const NekDouble time) const;
+
+    // -----------------------------------------------------------------
+    // Misc functions for error and outputing
+    void EvaluateL2Error( int timeStep, const NekDouble time,
+        const Array<OneD, const Array<OneD, double>> &approx,
+        const Array<OneD, const Array<OneD, double>> &exact);
+
+    void AppendOutput(
+        std::ofstream &outfile, const int timeStepNumber, const NekDouble time,
+        const Array<OneD, const Array<OneD, double>> &approx,
+        const Array<OneD, const Array<OneD, double>> &exact) const;
+
+    void GenerateGnuplotScript(const std::string &solver,
+                               const std::string &method) const;
+
+    // -----------------------------------------------------------------
+    // Access methods
+    double GetInitialTime() const
+    {
+        return m_t0;
+    }
+
+    double GetDeltaT() const
+    {
+        return m_dt;
+    }
+
+    std::string GetName() const
+    {
+        return m_name;
+    }
+
+    void SetSchemeName( std::string name )
+    {
+        m_schemeName = name;
     }
 
     // -----------------------------------------------------------------
-    // ---- These functions/methods below are the routines which will be used by
-    // ---- the TimeIntegration framework (and are required for using it)...
-    // ---- The implementation of these functions can be found at the end of the
-    // file
-    void HelmSolve(const Array<OneD, const Array<OneD, double>> &inarray,
-                   Array<OneD, Array<OneD, double>> &outarray,
-                   const NekDouble time, const NekDouble lambda) const;
 
-    void EvaluateAdvectionTerm(
-        const Array<OneD, const Array<OneD, double>> &inarray,
-        Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const;
+protected:
 
-    void Project(const Array<OneD, const Array<OneD, double>> &inarray,
-                 Array<OneD, Array<OneD, double>> &outarray,
-                 const NekDouble time) const;
-    // -----------------------------------------------------------------
+    std::string m_name;
+    std::string m_schemeName;
 
-    // -----------------------------------------------------------------
-    // Below are some additional functions
-    int GetNpoints() const;
+    // Number variables
+    int m_nVars;
 
-    void EvaluateExactSolution(Array<OneD, Array<OneD, double>> &outarray,
-                               const NekDouble time) const;
-
-    double EvaluateL2Error(
-        const Array<OneD, const Array<OneD, double>> &approx,
-        const Array<OneD, const Array<OneD, double>> &exact) const;
-
-    void AppendOutput(
-        ofstream &outfile, const int timeStepNumber, const NekDouble time,
-        const Array<OneD, const Array<OneD, double>> &approx,
-        const Array<OneD, const Array<OneD, double>> &exact) const;
-
-    void GenerateGnuplotScript(const string &method) const;
-
-    double GetInitialTime() const;
-
-    double GetDeltaT() const;
-    // -----------------------------------------------------------------
-
-private:
     // Spatial discretisation:
     double m_x0;   // the left boundary of the domain
     double m_xend; // the right boundary of the domain
@@ -166,6 +187,45 @@ private:
     int m_nTimeSteps; // the number of time-steps
     double m_dt;      // the size of a time-step
 
+    // Min and max values in the solutions
+    double m_minValue;
+    double m_maxValue;
+
+}; // end class DemoSolver
+
+///////////////////////////////////////////////////////////////////////////////
+// Class that represents the 1D finite difference solver
+class OneDFiniteDiffAdvDiffSolver : public DemoSolver
+{
+public:
+    // constructor based upon the discretisation details
+    OneDFiniteDiffAdvDiffSolver(int nVars, int nPoints, int nTimeSteps) :
+        DemoSolver(nVars, nPoints, nTimeSteps),
+        m_wavenumber(1.0), m_U(1.0), m_D(0.05)
+    {
+        m_name = std::string("OneDFiniteDiffAdvDiffSolver");
+    }
+
+    // -----------------------------------------------------------------
+    // These functions/methods below are the routines which will be
+    // used by the TimeIntegration framework (and are required for
+    // using it).
+    void HelmSolve(const Array<OneD, const Array<OneD, double>> &inarray,
+                         Array<OneD,       Array<OneD, double>> &outarray,
+                   const NekDouble time, const NekDouble lambda) const;
+
+    void EvaluateAdvectionTerm(
+        const Array<OneD, const Array<OneD, double>> &inarray,
+              Array<OneD,       Array<OneD, double>> &outarray,
+        const NekDouble time) const;
+
+    // -----------------------------------------------------------------
+    void EvaluateExactSolution(Array<OneD, Array<OneD, double>> &outarray,
+                               const NekDouble time) const;
+
+    // -----------------------------------------------------------------
+
+private:
     // Value of the coefficients:
     double m_wavenumber; // wave number
     double m_U;          // advection speed
@@ -175,19 +235,104 @@ private:
                             const Array<OneD, const double> &inarray,
                             Array<OneD, double> &outarray) const;
 
-}; // end class OneDfinDiffAdvDiffSolver
+}; // end class OneDFiniteDiffAdvDiffSolver
 
-///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// Class that represents the 1D sinusoid solver
+class OneDSinusoidSolver : public DemoSolver
+{
+public:
+    // constructor based upon the discretisation details
+    OneDSinusoidSolver(int nVars, int nPoints, int nTimeSteps) :
+        DemoSolver(nVars, nPoints, nTimeSteps)
+    {
+        m_name = std::string("OneDSinusoidSolver");
 
+        // Frequencies and phases for the sinusoidal solver.
+        m_freqs  = Array<OneD, double>(m_nVars, 0.0 );
+        m_phases = Array<OneD, double>(m_nVars, 0.0 );
+
+        // Assumption: the two-dimensional Lambda matrix is a diagonal
+        // matrix thus values are non zero if and only i=j. As such,
+        // the diagonal Lambda values are stored as two vectors so to
+        // accomodate complex numbers lambda[0] real, lambda[1]
+        // imaginary.
+        m_A      = Array<TwoD, NekDouble>(m_nVars, m_nVars, 0.0);
+        m_lambda = Array<TwoD, NekDouble>(2, m_nVars, 0.0);
+
+        // Initial values.
+        m_z0 = Array<OneD, NekDouble>(m_nVars, 0.0);
+
+        // Initialize a random seed using the time.
+        srand (time(NULL));
+
+        for (int k = 0; k < m_nVars; k++)
+        {
+            m_freqs [k] = (double) rand() / (double) RAND_MAX;
+            m_phases[k] = (double) rand() / (double) RAND_MAX;
+
+            m_lambda[0][k] = (double) rand() / (double) RAND_MAX;
+
+            m_z0[k] = (double) rand() / (double) RAND_MAX;
+        }
+
+        // Fixed values for now based on a known solution for 5 values.
+        static double freqs[]  = { 0.1405, 1.0930, -0.3592, -1.3925, 0.3480 };
+        static double phases[] = { -0.7197, 1.7775, -0.8679, 0.1710, 2.0424 };
+        static double lambda[] = { 0.7405, -0.2949, -1.6821, -1.1045, -1.0519 };
+        static double y0[]     = { 1.0541, -0.0169, 0.4792, 2.4027, 1.4006 };
+
+        for (int k = 0; k < m_nVars; k++)
+        {
+            m_freqs [k] = freqs[k];
+            m_phases[k] = phases[k];
+            m_lambda[0][k] = lambda[k];
+            m_z0[k] = y0[k];
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // These functions/methods below are the routines which will be
+    // used by the TimeIntegration framework (and are required for
+    // using it).
+    void EvaluateSinusoidTerm(
+        const Array<OneD, const Array<OneD, double>> &inarray,
+              Array<OneD,       Array<OneD, double>> &outarray,
+        const NekDouble time) const;
+
+    // -----------------------------------------------------------------
+    void EvaluateExactSolution(Array<OneD, Array<OneD, double>> &outarray,
+                               const NekDouble time) const;
+    // -----------------------------------------------------------------
+
+    Array<TwoD, NekDouble> &GetLambda()
+    {
+        return m_lambda;
+    }
+
+private:
+    // Value of the coefficients:
+    Array<OneD, double> m_freqs;
+    Array<OneD, double> m_phases;
+
+    Array<TwoD, NekDouble> m_A;
+    Array<TwoD, NekDouble> m_lambda;
+
+    Array<OneD, double> m_z0;
+
+}; // end class OneDSinusoid
+
+///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[])
 {
     po::options_description desc("Usage:");
-    desc.add_options()("help,h", "Produce this help message.")(
-        "points,p", po::value<int>(), "Number of grid points to be used.")(
-        "timesteps,t", po::value<int>(), "Number of timesteps to be used.")(
-        "method,m", po::value<int>(),
-        "TimeIntegrationMethod is a number in the range [1,9].\n"
-        "It defines the time-integration method to be used:\n"
+
+    desc.add_options()
+      ("help,h", "Produce this help message.")
+      ("values,v", po::value<int>(), "Number of values.")
+      ("timesteps,t", po::value<int>(), "Number of timesteps.")
+      ("method,m", po::value<int>(),
+        "Method is a number that selects the time-integration method:\n"
         "- 0: 1st order Forward Euler scheme\n"
         "- 1: 1st order multi-step IMEX scheme\n"
         "     (Euler Backwards/Euler Forwards)\n"
@@ -203,10 +348,10 @@ int main(int argc, char *argv[])
         "- 10: 2nd order multi-step Adams-Bashforth scheme\n"
         "- 11: 3rd order multi-step Adams-Bashforth scheme\n"
         "- 12: 4th order multi-step Adams-Bashforth scheme\n"
-	"  \n"
+        "  \n"
         "- 20: 1st order Forward Lawson Euler exponential scheme\n"
         "- 21: 1st order Forward Norsett Euler exponential scheme\n"
-                                                                            );
+       );
 
     po::variables_map vm;
     try
@@ -216,61 +361,42 @@ int main(int argc, char *argv[])
     }
     catch (const std::exception &e)
     {
-        cerr << e.what() << endl;
-        cerr << desc;
+        std::cerr << e.what() << std::endl
+                  << desc;
         return 1;
     }
 
-    if (!vm.count("points") || !vm.count("timesteps") || !vm.count("method") ||
-        vm.count("help"))
+    if (!vm.count("values") ||
+        !vm.count("timesteps") || !vm.count("method") || vm.count("help"))
     {
-        cout << "Please specify points, timesteps and method.\n\n";
-        cout << desc;
+        std::cout << "Please specify the number of "
+                  << "values, points, and timesteps and the method.\n\n"
+                  << desc;
         return 1;
     }
 
-    int nPoints    = vm["points"].as<int>();
-    int nTimesteps = vm["timesteps"].as<int>();
+    int nValues    = vm["values"].as<int>();
+    int nTimeSteps = vm["timesteps"].as<int>();
     int nMethod    = vm["method"].as<int>();
 
-    // Open a file for writing the solution
-    ofstream outfile;
-    outfile.open("OneDfinDiffAdvDiffSolverOutput.dat");
+    if( nValues < 2 )
+    {
+        std::cout << "Please specify the number of "
+                  << "values to be greater than 1.\n\n"
+                  << desc;
+        return 1;
+    }
 
-    // -----------------------------------------------------------------------------
-    // THE IMPLEMENTATION BELOW SHOWS HOW THE TIME-STEPPING FRAMEWORK CAN BE
-    // USED FOR TIME-INTEGRATION PDEs
+    // -------------------------------------------------------------------------
+    // The implementation below shows how the time-stepping framework can be
+    // used for time-integration PDEs
 
-    // 1. THE SPATIAL DISCRETISATION
-    //    Create an object of the OneDfinDiffAdvDiffSolver class.
-    //    This class can be thought of as representing the spatial (finite
-    //    difference) discretisation.
-
-    OneDfinDiffAdvDiffSolver *solver =
-        new OneDfinDiffAdvDiffSolver(nPoints, nTimesteps);
-
-    //    After this spatial discretisation, the PDE has actually been
-    //    reduced (through the method-of-lines) to an ODE. In order to use the
-    //    time-stepping framework, we need to give it the necessary
-    //    information about this ODE. Therefore, we create an oject of the
-    //    class TimeIntegrationSchemeOperators that contains a 
-    //    'function pointer' (in fact a 'functor') to the
-    //    - explicit term of the ODE (i.e. the advection term)
-    //    - implicit solve routine (i.e. the Helmholtz solver)
-    //    - projection operator (i.e. the identity operator in this case)
-    LibUtilities::TimeIntegrationSchemeOperators ode;
-    ode.DefineOdeRhs(&OneDfinDiffAdvDiffSolver::EvaluateAdvectionTerm, solver);
-    ode.DefineImplicitSolve(&OneDfinDiffAdvDiffSolver::HelmSolve, solver);
-    ode.DefineProjection(&OneDfinDiffAdvDiffSolver::Project, solver);
-
-    // 2. THE TEMPORAL DISCRETISATION
-
-    // 2.1 Read in which method should be used.  Create time integrator
-    //
-    LibUtilities::TimeIntegrationSchemeSharedPtr tiScheme;
-
+    // 1. THE TEMPORAL DISCRETISATION
+    //    Create time integrator requested.
     TimeIntegrationSchemeFactory &factory =
         LibUtilities::GetTimeIntegrationSchemeFactory();
+
+    LibUtilities::TimeIntegrationSchemeSharedPtr tiScheme;
 
     switch (nMethod)
     {
@@ -321,106 +447,336 @@ int main(int argc, char *argv[])
             break;
         default:
         {
-            cerr << "The third argument defines the time-integration method to "
-                    "be used:\n\n";
-            cout << desc;
+            std::cerr << "The third argument defines the "
+                      << "time-integration method to be used:\n\n";
+            std::cout << desc;
             exit(1);
         }
     }
 
-    // 2.2 Initialise the arrays that contain the numerical and analytical
-    // solutions:
-    //
-    double t0 = solver->GetInitialTime();
+    int nVariables;
+    int nPoints;
 
-    // Note, fidifsol (finite difference solution) is an array of
-    // arrays, although in this current example, fidifsol contains a
-    // single array because for the demo there is only one variable.
-    Array<OneD, Array<OneD, double>> fidifsol(
-        1); // Array containing the numerical solution
-    Array<OneD, Array<OneD, double>> exactsol(
-        1); // Array containing the exact solution
+    // 2. THE SPATIAL DISCRETISATION
+    //    Create an object of the DemoSolver class.
+    //    This class can be thought of as representing the spatial (finite
+    //    difference) discretisation.
+    LibUtilities::TimeIntegrationSchemeOperators ode;
+    DemoSolver *solver;
 
-    fidifsol[0] = Array<OneD, double>(nPoints);
-    exactsol[0] = Array<OneD, double>(nPoints);
-
-    solver->EvaluateExactSolution(fidifsol, t0);
-    solver->EvaluateExactSolution(exactsol, t0);
-
-    // 2.3 Initialize the time-integration scheme:
-    //
-    double dt = solver->GetDeltaT();
-
-    LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr sol;
-    sol = tiScheme->InitializeScheme(dt, fidifsol, t0, ode);
-
-    // For exponential integrators, the coefficents for each variable
-    // needs to be set.
     if( tiScheme->GetIntegrationSchemeType() == eExponential )
     {
-        unsigned int nVars = fidifsol.num_elements();
+        nVariables = nValues;
+        nPoints    = 1;
 
-	// Assumption: the two-dimensional Lambda matrix is a diagonal
-	// matrix thus values are non zero if and only i=j. As such,
-	// the diagonal Lambda values are stored as two vectors so to
-	// accomodate complex numbers lambda[0] real, lambda[1]
-	// imaginary.
-	Array<TwoD, NekDouble> lambda(2, nVars, 1.0);
+        OneDSinusoidSolver *tmpSolver =
+          new OneDSinusoidSolver(nVariables, nPoints, nTimeSteps);
 
-	// FIXME - Set reasonable coefficent values
-	tiScheme->SetExponentialCoefficients( lambda );
+        ode.DefineOdeRhs(&OneDSinusoidSolver::EvaluateSinusoidTerm, tmpSolver);
+
+        solver = tmpSolver;
+
+        // For exponential integrators, the coefficents for each
+        // variable needs to be set.
+        tiScheme->
+          SetExponentialCoefficients(((OneDSinusoidSolver *) solver)->GetLambda());
     }
-
-    ///////////////
-    // Save some data provenance and other useful info in output file...
-    outfile << "# Data in this file consists of " << nTimesteps
-            << " time steps (there\n";
-    outfile << "# will be a blank line between each set of data for each time "
-               "step).\n";
-    outfile << "#\n";
-    outfile << "# Delta T: " << dt << "\n";
-    outfile << "# Method:  " << tiScheme->GetName()
-            << "\n";
-    outfile << "#\n";
-    outfile << "# There are 3 columns with the following headers:\n";
-    outfile << "#\n";
-    outfile << "#     Time    |   Approximate Solution   |   Exact Solution\n";
-    outfile << "#\n\n";
-
-    solver->AppendOutput(
-        outfile, 0, 0, fidifsol,
-        exactsol); // Write the initial condition to the output file
-    ///////////////
-
-    // 2.4 Do the time-integration:
-    //
-    for (int timeStepNum = 0; timeStepNum < nTimesteps; timeStepNum++)
+    else
     {
-        double time = t0 + (timeStepNum * dt);
+        nVariables = 1;
+        nPoints    = nValues;
 
-        fidifsol = tiScheme->TimeIntegrate(
-            timeStepNum, dt, sol, ode); // Time-integration for 1 time-step
+        OneDFiniteDiffAdvDiffSolver *tmpSolver =
+          new OneDFiniteDiffAdvDiffSolver(nVariables, nPoints, nTimeSteps);
 
-        solver->EvaluateExactSolution(exactsol,
-                                      time); // Calculate the exact solution
-        solver->AppendOutput(outfile, timeStepNum, time, fidifsol,
-                             exactsol); // Save output to file
+        // After this spatial discretisation, the PDE has actually
+        // been reduced (through the method-of-lines) to an ODE. In
+        // order to use the time-stepping framework, we need to give
+        // it the necessary information about this ODE. Therefore, we
+        // create an oject of the class TimeIntegrationSchemeOperators
+        // that contains a
+        // 'function pointer' (in fact a 'functor') to the
+        // - explicit term of the ODE (i.e. the advection term)
+        // - implicit solve routine (i.e. the Helmholtz solver)
+        // - projection operator (i.e. the identity operator in this case)
+        ode.DefineOdeRhs(&OneDFiniteDiffAdvDiffSolver::EvaluateAdvectionTerm,
+                         tmpSolver);
+        ode.DefineImplicitSolve(&OneDFiniteDiffAdvDiffSolver::HelmSolve,
+                                tmpSolver);
+
+        solver = tmpSolver;
     }
 
-    // Calculate the error and dump to screen
-    cout << "L 2 error :" << solver->EvaluateL2Error(fidifsol, exactsol)
-         << "\n";
+    ode.DefineProjection(&DemoSolver::Project, solver);
 
-    // Some more writing out the results
-    solver->GenerateGnuplotScript(tiScheme->GetName());
+    // 3. Initialise the arrays that contain the approximate and exact
+    // solutions.
+
+    // Note, approxSol and exactSol are an array of arrays. The rows
+    // contain the variables while the colums contains the points.
+
+    // For exponential solvers the number of variables > 1 and the
+    // number of points is 1, for all other solvers the number of
+    // variables = 1 and the number of points > 1.
+
+    // Array containing the approximate solution
+    Array<OneD, Array<OneD, double>> approxSol(nVariables);
+    // Array containing the exact solution
+    Array<OneD, Array<OneD, double>>  exaxtSol(nVariables);
+
+    for( int k=0; k<nVariables; ++k )
+    {
+        approxSol[k] = Array<OneD, double>(nPoints);
+        exaxtSol[k]  = Array<OneD, double>(nPoints);
+    }
+
+    // Initialize both solutions using the exact solution.
+    double t0 = solver->GetInitialTime();
+
+    solver->EvaluateExactSolution(approxSol, t0);
+    solver->EvaluateExactSolution(exaxtSol,  t0);
+
+    // 3.1 Initialize the time-integration scheme.
+    double dt = solver->GetDeltaT();
+
+    LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr
+      solutionPtr = tiScheme->InitializeScheme(dt, approxSol, t0, ode);
+
+    // 4. Open a file for writing the solution
+    std::ofstream outfile;
+    outfile.open( solver->GetName()+".dat");
+
+    // Save the scheme name for outputting.
+    solver->SetSchemeName( tiScheme->GetName() );
+
+    // Write the initial condition to the output file
+    solver->AppendOutput( outfile, 0, 0, approxSol, exaxtSol);
+
+    // 5. Do the time integration.
+    for (int timeStep = 1; timeStep <= nTimeSteps; timeStep++)
+    {
+        double time = t0 + (timeStep * dt);
+
+        // Time integration for one time step
+        approxSol = tiScheme->TimeIntegrate(timeStep, dt, solutionPtr, ode);
+
+        // Calculate the exact solution
+        solver->EvaluateExactSolution(exaxtSol, time);
+
+        // Save the solutions the output file
+        solver->AppendOutput(outfile, timeStep, time, approxSol, exaxtSol);
+
+        // 6. Calculate the error and dump to screen
+        solver->EvaluateL2Error(timeStep, time, approxSol, exaxtSol);
+    }
+
+    // solver->EvaluateL2Error(nTimeSteps, t0 + (nTimeSteps * dt),
+    //                      approxSol, exaxtSol);
+
+    // 7. Some more writing out the results
     outfile.close();
+
+    solver->GenerateGnuplotScript(solver->GetName(), tiScheme->GetName());
 
     delete solver;
 
     return 0;
 }
 
-void OneDfinDiffAdvDiffSolver::HelmSolve(
+///////////////////////////////////////////////////////////////////////////////
+void DemoSolver::Project(
+    const Array<OneD, const Array<OneD, double>> &inarray,
+          Array<OneD,       Array<OneD, double>> &outarray,
+    const NekDouble time) const
+{
+    boost::ignore_unused(time);
+
+    // This is simply the identity operator.
+    for (int k = 0; k < m_nVars; k++)
+    {
+        for (int i = 0; i < m_nPoints; i++)
+        {
+            outarray[k][i] = inarray[k][i];
+        }
+    }
+}
+
+// Calculate the Relative Error L2 Norm (as opposed to the absolute L2
+// norm).
+void DemoSolver::EvaluateL2Error( int timeStep, const NekDouble time,
+    const Array<OneD, const Array<OneD, double>> &approx,
+    const Array<OneD, const Array<OneD, double>> &exact)
+{
+    // Write the time step and time
+    std::cout << "Time step: " << timeStep << "  "
+              << "Time: " << time << "\n";
+
+    // Get the min and max value and write the approximate solution
+    std::cout << "  approximate ";
+    for (int k = 0; k < m_nVars; k++)
+    {
+        for (int i = 0; i < m_nPoints; i++)
+        {
+            if( m_minValue > approx[k][i] )
+                m_minValue = approx[k][i];
+
+            if( m_maxValue < exact[k][i] )
+                m_maxValue = exact[k][i];
+
+            std::cout << approx[k][i] << "  ";
+        }
+    }
+    std::cout << std::endl;
+
+    // Get the min and max value and write the exact solution
+    std::cout << "  exact       ";
+    for (int k = 0; k < m_nVars; k++)
+    {
+        for (int i = 0; i < m_nPoints; i++)
+        {
+            if( m_minValue > approx[k][i] )
+                m_minValue = approx[k][i];
+
+            if( m_maxValue < exact[k][i] )
+                m_maxValue = exact[k][i];
+
+            std::cout << exact[k][i] << "  ";
+        }
+    }
+    std::cout << std::endl;
+
+    // Calcualate the sum of squares for the L2 Norm.
+    double a = 0.0;
+    double b = 0.0;
+
+    for (int k = 0; k < m_nVars; k++)
+    {
+        for (int i = 0; i < m_nPoints; i++)
+        {
+            a += (approx[k][i] - exact[k][i]) * (approx[k][i] - exact[k][i]);
+            b += exact[k][i] * exact[k][i];
+        }
+    }
+
+    // Calculate the relative error L2 Norm.
+    double norm = sqrt(a / b);
+
+    std::cout << "L 2 error :" << norm << "\n";
+}
+
+void DemoSolver::AppendOutput(
+    std::ofstream &outfile, int timeStepNumber, const NekDouble time,
+    const Array<OneD, const Array<OneD, double>> &approx,
+    const Array<OneD, const Array<OneD, double>> &exact) const
+{
+    if (timeStepNumber == 0)
+    {
+        // Save some data provenance and other useful info in output file...
+        outfile << "# Data in this file consists of " << m_nTimeSteps
+                << " time steps (there will be\n"
+                << "# a blank line between each set of data for each time step).\n"
+                << "#\n"
+                << "# Delta T: " << m_dt << "\n"
+                << "# Method:  " << m_schemeName << "\n"
+                << "#\n"
+                << "# There are 3 columns with the following headers:\n"
+                << "#\n";
+
+        if( m_nVars > 1 )
+        {
+            outfile << "#   Varaible  |  Approximate Solution  |  Exact Solution\n";
+        }
+        else if( m_nPoints > 1 )
+        {
+            outfile << "#   Location  |  Approximate Solution  |  Exact Solution\n";
+        }
+
+        outfile << "#\n\n";
+
+        outfile << "# Initial condition (at time " << time << "):\n";
+    }
+    else
+    {
+        outfile << "# Time step: " << timeStepNumber << ", time: " << time
+                << "\n";
+    }
+
+    for (int k = 0; k < m_nVars; k++)
+    {
+        for (int i = 0; i < m_nPoints; i++)
+        {
+            if( m_nVars > 1 )
+            {
+                outfile << std::scientific << std::setw(17) << std::setprecision(10)
+                        << k
+                        << "  " << approx[k][i] << "  " << exact[k][i] << "\n";
+            }
+            else if( m_nPoints > 1 )
+            {
+                outfile << std::scientific << std::setw(17) << std::setprecision(10)
+                        << m_x0 + i * m_dx
+                        << "  " << approx[k][i] << "  " << exact[k][i] << "\n";
+            }
+        }
+    }
+
+    outfile
+        << "\n\n"; // Gnuplot uses two blank lines between each set of data...
+}
+
+void DemoSolver::GenerateGnuplotScript(const std::string &solver,
+                                       const std::string &method) const
+{
+    std::ofstream outfile;
+    outfile.open(solver+".p");
+    outfile << "# Gnuplot script file\n"
+            << "set   autoscale\n"
+            << "unset log\n"
+            << "unset label\n"
+            << "set xtic auto\n"
+            << "set ytic auto\n"
+      // FIXME
+      // << "set title 'Finite Difference Solution to the 1D "
+      // << "advection-diffusion equation "
+            << "set title 'Approximate vs exact solution using method "
+            << method << "'\n"
+            << "set xlabel 'x'\n"
+            << "set ylabel 'u'\n";
+
+    if( m_nVars > 1 )
+    {
+        outfile << "set xr [" << 0          << ":" << m_nVars-1  << "]\n"
+                << "set yr [" << m_minValue << ":" << m_maxValue << "]\n";
+    }
+    else if( m_nPoints > 1 )
+    {
+        outfile << "set xr [" << m_x0       << ":" << m_xend     << "]\n"
+                << "set yr [" << m_minValue << ":" << m_maxValue << "]\n";
+    }
+
+    for (int i = 0; i <= m_nTimeSteps; i++)
+    {
+        double t = m_t0 + (i * m_dt);
+
+        outfile << "plot '" << solver << ".dat' using 1:2 index "
+                << i << " title 'Approximate Solution (t=" << t
+                << ")' with linespoints , "
+
+                << "'" << solver << ".dat' using 1:3 index "
+                << i << " title 'Exact Solution (t=" << t
+                << ")' with linespoints \n"
+
+                << "pause " << 4.0 / m_nTimeSteps << "\n";
+    }
+
+    outfile << "pause mouse any\n"; // Keep window open until the user clicks
+
+    outfile.close();
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+void OneDFiniteDiffAdvDiffSolver::HelmSolve(
     const Array<OneD, const Array<OneD, double>> &inarray,
     Array<OneD, Array<OneD, double>> &outarray, const NekDouble time,
     const NekDouble lambda) const
@@ -442,89 +798,85 @@ void OneDfinDiffAdvDiffSolver::HelmSolve(
 
     int nIntPoints = m_nPoints - 2;
 
-    Array<OneD, double> invD_f(nIntPoints);
-    solveTriDiagMatrix(nIntPoints, a, b, inarray[0] + 1, invD_f);
-
-    Array<OneD, double> C(nIntPoints, 0.0);
-    Array<OneD, double> invD_C(nIntPoints, 0.0);
-    C[0]              = a;
-    C[nIntPoints - 1] = a;
-    solveTriDiagMatrix(nIntPoints, a, b, C, invD_C);
-
-    outarray[0][0] =
-        (inarray[0][0] - a * (invD_f[0] + invD_f[nIntPoints - 1])) /
-        (b - a * (invD_C[0] + invD_C[nIntPoints - 1]));
-    outarray[0][m_nPoints - 1] = outarray[0][0];
-
-    Array<OneD, double> f(nIntPoints);
-    for (int i = 0; i < nIntPoints; i++)
+    for (int k = 0; k < m_nVars; k++)
     {
-        f[i] = inarray[0][i + 1];
-    }
-    f[0] -= outarray[0][0] * a;
-    f[nIntPoints - 1] -= outarray[0][0] * a;
+        Array<OneD, double> invD_f(nIntPoints);
+        solveTriDiagMatrix(nIntPoints, a, b, inarray[k] + 1, invD_f);
 
-    Array<OneD, double> tmp;
-    solveTriDiagMatrix(nIntPoints, a, b, f,
-                       tmp = outarray[0] + 1); // Calls the Thomas algorithm
+        Array<OneD, double> C(nIntPoints, 0.0);
+        Array<OneD, double> invD_C(nIntPoints, 0.0);
+        C[0]              = a;
+        C[nIntPoints - 1] = a;
+        solveTriDiagMatrix(nIntPoints, a, b, C, invD_C);
+
+        outarray[k][0] =
+          (inarray[k][0] - a * (invD_f[0] + invD_f[nIntPoints - 1])) /
+          (b - a * (invD_C[0] + invD_C[nIntPoints - 1]));
+        outarray[k][m_nPoints - 1] = outarray[k][0];
+
+        Array<OneD, double> f(nIntPoints);
+        for (int i = 0; i < nIntPoints; i++)
+          {
+            f[i] = inarray[k][i + 1];
+          }
+        f[0] -= outarray[k][0] * a;
+        f[nIntPoints - 1] -= outarray[k][0] * a;
+
+        Array<OneD, double> tmp;
+        solveTriDiagMatrix(nIntPoints, a, b, f,
+                           tmp = outarray[k] + 1); // Calls the Thomas algorithm
+    }
 }
 
-void OneDfinDiffAdvDiffSolver::EvaluateAdvectionTerm(
+void OneDFiniteDiffAdvDiffSolver::EvaluateAdvectionTerm(
     const Array<OneD, const Array<OneD, double>> &inarray,
-    Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const
+          Array<OneD,       Array<OneD, double>> &outarray,
+    const NekDouble time) const
 {
     boost::ignore_unused(time);
 
-    // The advection term can be evaluated using central or upwind differences
-    if (true)
+    for (int k = 0; k < m_nVars; k++)
     {
-        // Note: We are using a periodic boundary condition where the 1st point
-        // and last point are actually
-        // the same point.  This is why the 1st (and last) point in the output
-        // array (index 0 and m_nPoints-1 respectively)
-        // are NOT used for the central differences, and instead the 2nd point
-        // (index 1) and 2nd to last point
-        // are used.
-
-        // Central differences:
-        outarray[0][0] =
-            -m_U * (inarray[0][1] - inarray[0][m_nPoints - 2]) / (2.0 * m_dx);
-        outarray[0][m_nPoints - 1] = outarray[0][0];
-
-        for (int i = 1; i < m_nPoints - 1; i++)
+        // The advection term can be evaluated using central or upwind
+        // differences
+        if (true)
         {
-            outarray[0][i] =
-                -m_U * (inarray[0][i + 1] - inarray[0][i - 1]) / (2.0 * m_dx);
+            // Note: We are using a periodic boundary condition where
+            // the 1st point and last point are actually the same
+            // point.  This is why the 1st (and last) point in the
+            // output array (index 0 and m_nPoints-1 respectively) are
+            // NOT used for the central differences, and instead the
+            // 2nd point (index 1) and 2nd to last point are used.
+
+            // Central differences:
+            outarray[k][0] =
+              -m_U * (inarray[k][1] - inarray[k][m_nPoints - 2]) / (2.0 * m_dx);
+            outarray[k][m_nPoints - 1] = outarray[k][0];
+
+            for (int i = 1; i < m_nPoints - 1; i++)
+            {
+                outarray[k][i] =
+                  -m_U * (inarray[k][i + 1] - inarray[k][i - 1]) / (2.0 * m_dx);
+            }
         }
-    }
-    else
-    {
-        // upwind differences
-        for (int i = 1; i < m_nPoints; i++)
+        else
         {
-            outarray[0][i] =
-                -m_U * (inarray[0][i] - inarray[0][i - 1]) / (m_dx);
+            // upwind differences
+            for (int i = 1; i < m_nPoints; i++)
+            {
+                outarray[k][i] =
+                  -m_U * (inarray[k][i] - inarray[k][i - 1]) / (m_dx);
+            }
+
+            outarray[k][0] = outarray[k][m_nPoints - 1];
         }
-        outarray[0][0] = outarray[0][m_nPoints - 1];
     }
 }
 
-void OneDfinDiffAdvDiffSolver::Project(
-    const Array<OneD, const Array<OneD, double>> &inarray,
-    Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const
-{
-    boost::ignore_unused(time);
-
-    // This is simply the identity operator for this case
-    for (int i = 0; i < m_nPoints; i++)
-    {
-        outarray[0][i] = inarray[0][i];
-    }
-}
-
-void OneDfinDiffAdvDiffSolver::solveTriDiagMatrix(
-    int n, double a, double b, const Array<OneD, const double> &inarray,
-    Array<OneD, double> &outarray) const
+void OneDFiniteDiffAdvDiffSolver::solveTriDiagMatrix(
+    int n, double a, double b,
+    const Array<OneD, const double> &inarray,
+          Array<OneD,       double> &outarray) const
 {
     // Implementation of the Thomas algorithm for Tridiaginol systems
     Array<OneD, double> cprime(n);
@@ -546,113 +898,94 @@ void OneDfinDiffAdvDiffSolver::solveTriDiagMatrix(
         outarray[i] = dprime[i] - cprime[i] * outarray[i + 1];
     }
 }
-int OneDfinDiffAdvDiffSolver::GetNpoints() const
-{
-    return m_nPoints;
-}
 
-void OneDfinDiffAdvDiffSolver::EvaluateExactSolution(
+void OneDFiniteDiffAdvDiffSolver::EvaluateExactSolution(
     Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const
 {
-    double x;
-    for (int i = 0; i < m_nPoints; i++)
+    for (int k = 0; k < m_nVars; k++)
     {
-        x              = m_x0 + i * m_dx;
-        outarray[0][i] = exp(-m_D * 2.0 * 2.0 * M_PI * M_PI * m_wavenumber *
-                             m_wavenumber * time) *
-                         sin(2.0 * m_wavenumber * M_PI * (x - m_U * time));
+        for (int i = 0; i < m_nPoints; i++)
+        {
+            double x       = m_x0 + i * m_dx;
+            double wn = 2.0 * M_PI * m_wavenumber;
+            outarray[k][i] =
+              exp(-m_D * wn * wn * time) * sin(wn * (x - m_U * time));
+
+            outarray[k][i] = exp(-m_D * 2.0 * 2.0 * M_PI * M_PI * m_wavenumber *
+                                 m_wavenumber * time) *
+              sin(2.0 * m_wavenumber * M_PI * (x - m_U * time));
+        }
     }
 }
 
-// Note, this routine returns the Relative Error L2 Norm (as opposed to the
-// absolute L2 norm)...
-double OneDfinDiffAdvDiffSolver::EvaluateL2Error(
-    const Array<OneD, const Array<OneD, double>> &approx,
-    const Array<OneD, const Array<OneD, double>> &exact) const
+///////////////////////////////////////////////////////////////////////////////
+void OneDSinusoidSolver::EvaluateSinusoidTerm(
+    const Array<OneD, const Array<OneD, double>> &inarray,
+          Array<OneD,       Array<OneD, double>> &outarray,
+    const NekDouble time) const
 {
-    double a = 0.0;
-    double b = 0.0;
+    boost::ignore_unused(inarray);
 
-    for (int i = 0; i < m_nPoints; i++)
+    for (int k = 0; k < m_nVars; k++)
     {
-        a += (approx[0][i] - exact[0][i]) * (approx[0][i] - exact[0][i]);
-        b += exact[0][i] * exact[0][i];
+        for (int i = 0; i < m_nPoints; i++)
+        {
+            outarray[k][i] = sin(m_freqs[k]*time + m_phases[k]);
+        }
     }
-
-    // Note: Returning Relative Error L2 Norm.
-    return sqrt(a / b);
 }
 
-void OneDfinDiffAdvDiffSolver::AppendOutput(
-    ofstream &outfile, int timeStepNumber, const NekDouble time,
-    const Array<OneD, const Array<OneD, double>> &approx,
-    const Array<OneD, const Array<OneD, double>> &exact) const
+void OneDSinusoidSolver::EvaluateExactSolution(
+    Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const
 {
-    if (timeStepNumber == 0)
+    if( time == GetInitialTime() )
     {
-        outfile << "# Initial condition (at time " << time << "):\n";
+        for (int k = 0; k < m_nVars; k++)
+        {
+            for (int i = 0; i < m_nPoints; i++)
+            {
+                outarray[k][i] = m_z0[k];
+            }
+        }
     }
     else
     {
-        outfile << "# Time step: " << timeStepNumber << ", time: " << time
-                << "\n";
+        // Computes the exact solution at time t to the ODE
+        //
+        //   y' = A*y + sin(freq*t + phi),
+        //   y(0) = y0
+        //
+        // where y, freq, and phi are vectors and A is a matrix. The
+        // matrix A has the eigenvalue decomposition
+        //
+        //   A = V * diag(lambda) * inv(V)
+
+        // ARS Note - the above is not yet true.
+
+        // Compute right-hand side of the normal equations
+        for (int k = 0; k < m_nVars; k++)
+        {
+            for (int i = 0; i < m_nPoints; i++)
+            {
+                double v = cos( m_phases[k] );
+                double w = sin( m_phases[k] );
+
+                double sinft = sin(m_freqs[k]*time);
+                double cosft = cos(m_freqs[k]*time);
+
+                double lambdaFreq2 = m_freqs[k]*m_freqs[k] + m_lambda[0][k]*m_lambda[0][k];
+
+                outarray[k][i] =
+                  // exp(lambda*T) term
+                  (std::exp(m_lambda[0][k] * time) *
+                   (m_z0[k] + (m_lambda[0][k] * w + m_freqs[k] * v) / lambdaFreq2)) +
+
+                  // sin(f*T) term
+                  ((( m_freqs[k] * w - m_lambda[0][k] * v) / lambdaFreq2) * sinft) +
+
+                  // cos(f*T) term
+                  (((-m_lambda[0][k] * w - m_freqs[k] * v) / lambdaFreq2) * cosft);
+            }
+        }
     }
-
-    for (int i = 0; i < m_nPoints; i++)
-    {
-        outfile << scientific << setw(17) << setprecision(10) << m_x0 + i * m_dx
-                << "  " << approx[0][i] << "  " << exact[0][i] << "\n";
-    }
-    outfile
-        << "\n\n"; // Gnuplot uses two blank lines between each set of data...
-}
-
-void OneDfinDiffAdvDiffSolver::GenerateGnuplotScript(const string &method) const
-{
-    ofstream outfile;
-    outfile.open("OneDfinDiffAdvDiffSolverOutput.p");
-
-    outfile << "# Gnuplot script file\n";
-    outfile << "set   autoscale\n";
-    outfile << "unset log\n";
-    outfile << "unset label\n";
-    outfile << "set xtic auto\n";
-    outfile << "set ytic auto\n";
-    outfile << "set title 'Finite Difference Solution to the 1D "
-               "advection-diffusion equation (method "
-            << method << ")'\n";
-    outfile << "set xlabel 'x'\n";
-    outfile << "set ylabel 'u'\n";
-    outfile << "set xr [" << m_x0 << ":" << m_xend << "]\n";
-    outfile << "set yr [-1.0:1.0]\n";
-
-    double t;
-    for (int i = 0; i <= m_nTimeSteps; i++)
-    {
-        t = m_t0 + (i * m_dt);
-
-        outfile << "plot 'OneDfinDiffAdvDiffSolverOutput.dat' using 1:2 index ";
-        outfile << i << " title 'Finite Difference Solution (t=" << t
-                << ")' with linespoints , ";
-
-        outfile << "'OneDfinDiffAdvDiffSolverOutput.dat' using 1:3 index ";
-        outfile << i << " title 'Exact Solution (t=" << t
-                << ")' with linespoints\n";
-
-        outfile << "pause " << 4.0 / m_nTimeSteps << "\n";
-    }
-
-    outfile << "pause mouse any\n"; // Keep window open until the user clicks
-
-    outfile.close();
-}
-
-double OneDfinDiffAdvDiffSolver::GetInitialTime() const
-{
-    return m_t0;
-}
-
-double OneDfinDiffAdvDiffSolver::GetDeltaT() const
-{
-    return m_dt;
 }

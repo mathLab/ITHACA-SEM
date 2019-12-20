@@ -132,7 +132,7 @@ void TimeIntegrationScheme::SetupSchemeExponentialData(TimeIntegrationSchemeData
 
     ASSERTL0(false, "No SetupSchemeExponentialData method for scheme " +
              GetName());
-};
+}
 
 NekDouble TimeIntegrationScheme::exp_function(NekDouble deltaT,
                                               NekDouble L_Real,
@@ -154,6 +154,9 @@ NekDouble TimeIntegrationScheme::psi_function(unsigned int i,
 
     switch( i )
     {
+    case 0:
+        return  expZ;
+        break;
     case 1:
         return  (expZ - 1.0) / (z);
         break;

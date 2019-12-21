@@ -1,7 +1,7 @@
 libarpack2-dev
-libboost-numpy-dev
 libboost-python-dev
 libfftw3-dev
+libhdf5-dev
 libhdf5-mpi-dev
 liboce-foundation-dev
 liboce-modeling-dev
@@ -11,6 +11,5 @@ libtet1.5-dev
 libtriangle-dev
 mpi-default-dev
 petsc-dev
-python-dev
 python-numpy
 rsh-client

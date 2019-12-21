@@ -2,9 +2,8 @@ FROM nektar-env:%%UBUNTU_VERSION%%-default
 
 LABEL maintainer="Nektar++ Development Team <nektar-users@imperial.ac.uk>"
 
-ENV BUILD_TYPE %%BUILD_TYPE%%
 USER root
-COPY docker/nektar-env/${UBUNTU_VERSION}_${BUILD_TYPE}_packages.txt packages.txt
+COPY docker/nektar-env/${UBUNTU_VERSION}_full_packages.txt packages.txt
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
 	apt-get update && \

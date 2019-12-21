@@ -3,8 +3,7 @@ FROM ubuntu:%%UBUNTU_VERSION%%
 LABEL maintainer="Nektar++ Development Team <nektar-users@imperial.ac.uk>"
 
 ENV UBUNTU_VERSION %%UBUNTU_VERSION%%
-ENV BUILD_TYPE %%BUILD_TYPE%%
-COPY docker/nektar-env/${UBUNTU_VERSION}_${BUILD_TYPE}_packages.txt packages.txt
+COPY docker/nektar-env/${UBUNTU_VERSION}_default_packages.txt packages.txt
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
 	apt-get update && \
@@ -15,5 +14,3 @@ RUN ln -s /usr/bin/ccache /usr/local/bin/cc && ln -s /usr/bin/ccache /usr/local/
 RUN groupadd nektar && useradd -m -g nektar nektar
 USER nektar:nektar
 WORKDIR /home/nektar/nektar
-
-

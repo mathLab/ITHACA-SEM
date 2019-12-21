@@ -58,12 +58,20 @@ class EulerExponentialTimeIntegrationScheme : public TimeIntegrationScheme
 public:
     EulerExponentialTimeIntegrationScheme() : TimeIntegrationScheme()
     {
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
+        unsigned int order = 2;
 
-        EulerExponentialTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
+        m_integration_phases = TimeIntegrationSchemeDataVector(order);
+
+        for( unsigned int n=0; n<order; ++n )
+        {
+            m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
+                new TimeIntegrationSchemeData(this));
+
+            m_integration_phases[n]->m_order = n+1;
+
+            EulerExponentialTimeIntegrationScheme::SetupSchemeData(
+                m_integration_phases[n]);
+        }
     }
 
     virtual ~EulerExponentialTimeIntegrationScheme()
@@ -83,7 +91,7 @@ public:
 
         // Parameters for the compact 1 step implementation.
         phase->m_numstages = 1;
-        phase->m_numsteps  = 1;
+        phase->m_numsteps  = phase->m_order;
 
         phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
         phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
@@ -91,45 +99,50 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
 
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
 
+        // Coefficients
+
+        // B Phi function for first row first column
+        phase->m_B[0][0][0] = 1.0 / phase->m_order; // phi(0) or phi(1)
+
+        // B evaluation value shuffling first row second column
+        if( phase->m_order > 1 )
+          phase->m_B[0][0][1] = 1.0; // constant 1
+
+        // U Curent time step evaluation first row first column
+        phase->m_U[0][0] = 1.0; // constant 1
+
+        // V Phi function for first row first column
+        phase->m_V[0][0] = 1.0; // phi(0)
+
+        // V Phi function for first row additional columns
+        for( int n=2; n<=phase->m_order; ++n )
+        {
+            phase->m_V[0][n-1] = 1.0 / phase->m_order; // phi(n+1)
+        }
+
+        // V evaluation value shuffling row n column n-1
+        for( int n=2; n<phase->m_order; ++n )
+        {
+            phase->m_V[n][n-1] = 1.0; // constant 1
+        }
+        
         phase->m_numMultiStepValues = 1;
-        phase->m_numMultiStepDerivs = 0;
+        phase->m_numMultiStepDerivs = phase->m_order-1;
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        // Parameters for the classical 2 step implementation.
-        // phase->m_numstages = 1;
-        // phase->m_numsteps  = 2;
-
-        // phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
-        // phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
-
-        // phase->m_A[0] =
-        //     Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
-        // phase->m_B[0] =
-        //     Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
-
-        // phase->m_U =
-        //     Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
-        // phase->m_V =
-        //     Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
-
-        // phase->m_B[0][1][0] = 1.0;
-
-        // phase->m_V[0][0] = 1.0;
-        // phase->m_V[0][1] = 1.0;
-        
-        // phase->m_numMultiStepValues = 1;
-        // phase->m_numMultiStepDerivs = 1;
-        // phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-        // phase->m_timeLevelOffset[0] = 0;
-        // phase->m_timeLevelOffset[1] = 0;
+        // For order > 1 then derivatives are needed.
+        for( int n=1; n<phase->m_order; ++n )
+        {
+            phase->m_timeLevelOffset[n] = n;
+        }
 
         phase->m_firstStageEqualsOldSolution =
             phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
@@ -145,57 +158,81 @@ public:
     }
 
     virtual void SetupSchemeExponentialData(TimeIntegrationSchemeData *phase,
-                                            NekDouble deltaT)
-      const
+                                            NekDouble deltaT) const
     {
         // Assumptions the two-dimensional Lambda matrix is a diagonal
         // matrix thus values are non zero if and only i=j. As such,
         // the diagonal Lambda values are stored as two vectors so to
         // accomodate complex numbers m_L[0] real, m_L[1] imaginary.
-
-        ASSERTL1(phase->m_nvar == phase->m_L.GetColumns(),
+        ASSERTL1(phase->m_nvars == phase->m_L.GetColumns(),
                  "The number of variables does not match "
                  "the number of exponential coefficents.");
 
-        phase->m_A_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvar);
-        phase->m_B_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvar);
-        phase->m_U_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvar);
-        phase->m_V_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvar);
+        phase->m_A_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
+        phase->m_B_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
+        phase->m_U_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
+        phase->m_V_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
         
-        for( unsigned int i=0; i<phase->m_nvar; ++i )
+        for( unsigned int k=0; k<phase->m_nvars; ++k )
         {
-            phase->m_A_phi[i] =
-              Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 1.0);
-            phase->m_B_phi[i] =
-              Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 1.0);
-            phase->m_V_phi[i] =
-              Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
-            phase->m_U_phi[i] =
-              Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
-          
-            // Given the values for Lambda evaluate phi functions.
-	    if( GetName() == "LawsonEuler" )
-	    {
-	        phase->m_B_phi[i][0][0] =
-		  exp_function(deltaT, phase->m_L[0][i], phase->m_L[1][i]);
-	    }
-	    else if( GetName() == "NorsettEuler" )
-	    {
-	      phase->m_B_phi[i][0][0] =
-		psi_function(1, deltaT, phase->m_L[0][i], phase->m_L[1][i]);
-	    }
-	    else
-	    {
-	      ASSERTL1(false,
-		       "Cannot call EulerExponential directly "
-		       "use LawsonEuler or NorsettEuler.");
-	    }
-	    
-	    phase->m_V_phi[i][0][0] =
-	      exp_function(deltaT, phase->m_L[0][i], phase->m_L[1][i]);
-        }
-    }
+            phase->m_A_phi[k] =
+              Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
+            phase->m_B_phi[k] =
+              Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            phase->m_U_phi[k] =
+              Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
+            phase->m_V_phi[k] =
+              Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
 
+            // B Phi function for first row first column
+            if( GetName() == "LawsonEuler" )
+            {
+                phase->m_B_phi[k][0][0] =
+                    phi_function(0, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+            }
+            else if( GetName() == "NorsettEuler" )
+            {
+                phase->m_B_phi[k][0][0] =
+                    phi_function(1, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+                // FIXME - Hack for order == 2 ONLY
+                if( phase->m_order == 2 )
+                  phase->m_B_phi[k][0][0] -=
+                    phi_function(2, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+            }
+            else
+            {
+              ASSERTL1(false,
+                       "Cannot call EulerExponential directly "
+                       "use LawsonEuler or NorsettEuler.");
+            }
+
+            // B evaluation value shuffling first row second column
+            if( phase->m_order > 1 )
+                phase->m_B_phi[k][0][1] = 1.0; // constant 1
+
+            // U Curent time step evaluation first row first column
+            phase->m_U_phi[k][0][0] = 1.0; // constant 1
+
+            // V Phi function for first row first column
+            phase->m_V_phi[k][0][0] =
+                phi_function(0, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+
+            // V Phi function for first row additional columns
+            for( int n=2; n<=phase->m_order; ++n )
+            {
+                phase->m_V_phi[k][0][n-1] =
+                    phi_function(n, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+            }
+
+            // V evaluation value shuffling row n column n-1
+            for( int n=2; n<phase->m_order; ++n )
+            {
+                phase->m_V_phi[k][n][n-1] = 1.0; // constant 1
+            }
+        }
+
+        std::cout << *phase << std::endl;
+    }
 }; // end class EulerExponentialTimeIntegrator
 
 class LawsonEulerTimeIntegrationScheme : public EulerExponentialTimeIntegrationScheme

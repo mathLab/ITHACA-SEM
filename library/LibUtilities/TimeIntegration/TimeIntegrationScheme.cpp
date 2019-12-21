@@ -82,6 +82,7 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationScheme::TimeIntegrate(
     const TimeIntegrationSchemeOperators &op)
 {
     int phases = GetNumIntegrationPhases();
+
     TimeIntegrationSchemeDataSharedPtr &data =
         m_integration_phases[std::min(timestep, phases - 1)];
     return data->TimeIntegrate(delta_t, solvector, op);
@@ -134,46 +135,56 @@ void TimeIntegrationScheme::SetupSchemeExponentialData(TimeIntegrationSchemeData
              GetName());
 }
 
-NekDouble TimeIntegrationScheme::exp_function(NekDouble deltaT,
+inline NekDouble TimeIntegrationScheme::factorial(unsigned int n) const
+{
+  return (n == 1 || n == 0) ? 1 : n * factorial(n - 1);
+}
+
+NekDouble TimeIntegrationScheme::phi_function(unsigned int i,
+                                              NekDouble deltaT,
                                               NekDouble L_Real,
                                               NekDouble L_Imaginary) const
 {
     boost::ignore_unused( L_Imaginary );
 
-    return exp( deltaT * L_Real );
-}
-
-NekDouble TimeIntegrationScheme::psi_function(unsigned int i,
-                                              NekDouble deltaT,
-                                              NekDouble L_Real,
-                                              NekDouble L_Imaginary) const
-{
     NekDouble z = deltaT * L_Real;
 
-    NekDouble expZ = exp_function(deltaT, L_Real, L_Imaginary);
-
-    switch( i )
+    if( z == 0.0 )
     {
-    case 0:
-        return  expZ;
-        break;
-    case 1:
-        return  (expZ - 1.0) / (z);
-        break;
-    case 2:
-        return (expZ - z - 1.0) / (z * z);
-        break;
-    case 3:
-        return (expZ - (z*z)/2.0 - z - 1.0) / (z * z * z);
-        break;
-    default:
-        ASSERTL0(false,
-                 "No phi function defined for index " + std::to_string(i) );
-        break;
+        return 1.0 / factorial( i );
     }
+
+    if( i == 0 )
+    {
+        return exp( z );
+    }
+    else
+    {
+        return (phi_function( i-1, deltaT, L_Real, L_Imaginary) -
+                1.0 / factorial( i-1 ) ) / z;
+    }
+
+    // switch( i )
+    // {
+    // case 0:
+    //     return  expZ;
+    //     break;
+    // case 1:
+    //     return  (expZ - 1.0) / (z);
+    //     break;
+    // case 2:
+    //     return (expZ - z - 1.0) / (z * z);
+    //     break;
+    // case 3:
+    //     return (expZ - (z*z)/2.0 - z - 1.0) / (z * z * z);
+    //     break;
+    // default:
+    //     ASSERTL0(false,
+    //              "No phi function defined for index " + std::to_string(i) );
+    //     break;
+    // }
 
     return 0;
 }
-
 } // end namespace LibUtilities
 } // end namespace NekTar

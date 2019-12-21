@@ -136,15 +136,14 @@ public:
     virtual std::string GetName() const = 0;
     virtual NekDouble   GetTimeStability() const = 0;
 
+    // Methods specific to exponential integration schemes.
     LUE void SetExponentialCoefficients(Array<TwoD, NekDouble> &Lambda);
 
     virtual void SetupSchemeExponentialData(TimeIntegrationSchemeData *phase,
-                                            NekDouble deltaT)
-      const;
+                                            NekDouble deltaT) const;
 
-    NekDouble exp_function(NekDouble deltaT,
-                           NekDouble L_Real, NekDouble L_Imaginary) const;
-    NekDouble psi_function(unsigned int i, NekDouble deltaT,
+    inline NekDouble factorial( unsigned int i ) const;
+    NekDouble phi_function(unsigned int i, NekDouble deltaT,
                            NekDouble L_Real, NekDouble L_Imaginary) const;
 
     LUE TimeIntegrationSchemeType GetIntegrationSchemeType() const;

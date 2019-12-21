@@ -109,7 +109,7 @@ public:
       m_x0(0.0), m_xend(1.0), m_nPoints(nPoints),
       m_dx((m_xend - m_x0) / ((double)m_nPoints - 1.0)),
 
-      m_t0(0.0), m_tend(0.1), m_nTimeSteps(nTimeSteps),
+      m_t0(0.0), m_tend(1.0), m_nTimeSteps(nTimeSteps),
       m_dt((m_tend - m_t0) / (double)m_nTimeSteps)
     {
         m_minValue = +std::numeric_limits<double>::max();
@@ -549,27 +549,32 @@ int main(int argc, char *argv[])
     // Save the scheme name for outputting.
     solver->SetSchemeName( tiScheme->GetName() );
 
-    // Write the initial condition to the output file
+    // Write the initial conditions to the output file
     solver->AppendOutput( outfile, 0, 0, approxSol, exaxtSol);
 
     // 5. Do the time integration.
-    for (int timeStep = 1; timeStep <= nTimeSteps; timeStep++)
+    for (int timeStep = 0; timeStep < nTimeSteps; timeStep++)
     {
-        double time = t0 + (timeStep * dt);
-
         // Time integration for one time step
         approxSol = tiScheme->TimeIntegrate(timeStep, dt, solutionPtr, ode);
+
+        // Advance the time for the exact solution.
+        double time = t0 + ((timeStep+1) * dt);
 
         // Calculate the exact solution
         solver->EvaluateExactSolution(exaxtSol, time);
 
+        // Note at this point the time step is finished so save and
+        // report at timeStep+1.
+
         // Save the solutions the output file
-        solver->AppendOutput(outfile, timeStep, time, approxSol, exaxtSol);
+        solver->AppendOutput(outfile, timeStep+1, time, approxSol, exaxtSol);
 
         // 6. Calculate the error and dump to screen
-        solver->EvaluateL2Error(timeStep, time, approxSol, exaxtSol);
+        solver->EvaluateL2Error(timeStep+1, time, approxSol, exaxtSol);
     }
 
+    // 6. Calculate the error and dump to screen
     // solver->EvaluateL2Error(nTimeSteps, t0 + (nTimeSteps * dt),
     //                      approxSol, exaxtSol);
 

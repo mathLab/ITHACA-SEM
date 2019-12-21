@@ -109,6 +109,11 @@ public:
         return m_L[1][i];
     }
 
+    inline unsigned int GetNsteps(void) const
+    {
+        return m_numsteps;
+    }
+
     inline unsigned int GetNstages(void) const
     {
         return m_numstages;
@@ -235,6 +240,8 @@ public:
     unsigned int m_numsteps;  //< Number of steps in this integration phase
     unsigned int m_numstages; //< Number of stages in multi-stage component.
 
+    unsigned int m_order{1};
+
     bool m_firstStageEqualsOldSolution; //< Optimisation-flag
     bool m_lastStageEqualsNewSolution;  //< Optimisation-flag
 
@@ -243,6 +250,7 @@ public:
     Array<TwoD, NekDouble> m_U;
     Array<TwoD, NekDouble> m_V;
 
+    // Arrays used for the exponential integrators.
     Array<TwoD, NekDouble> m_L; // Lambda real and imaginary components
 
     Array<OneD, Array<TwoD, NekDouble>> m_A_phi;
@@ -252,7 +260,7 @@ public:
     Array<OneD, Array<TwoD, NekDouble>> m_V_phi;
 
     bool m_initialised; /// bool to identify if array has been initialised
-    int m_nvar;         /// The number of variables in integration scheme.
+    int m_nvars;        /// The number of variables in integration scheme.
     int m_npoints;      /// The size of inner data which is stored for reuse.
     DoubleArray m_Y;    /// Array containing the stage values
     DoubleArray m_tmp;  /// explicit right hand side of each stage equation

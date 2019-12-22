@@ -1,9 +1,9 @@
-FROM centos:%%CENTOS_VERSION%%
+FROM centos:%%OS_VERSION%%
 
 LABEL maintainer="Nektar++ Development Team <nektar-users@imperial.ac.uk>"
 
-ENV CENTOS_VERSION %%CENTOS_VERSION%%
-COPY docker/nektar-env/centos${CENTOS_VERSION}_default_packages.txt packages.txt
+ENV CENTOS_VERSION %%OS_VERSION%%
+COPY docker/nektar-env/${CENTOS_VERSION}_default_packages.txt packages.txt
 
 RUN yum install -y epel-release && \
 	yum install -y $(cat packages.txt) \

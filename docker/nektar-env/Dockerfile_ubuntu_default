@@ -1,8 +1,8 @@
-FROM ubuntu:%%UBUNTU_VERSION%%
+FROM ubuntu:%%OS_VERSION%%
 
 LABEL maintainer="Nektar++ Development Team <nektar-users@imperial.ac.uk>"
 
-ENV UBUNTU_VERSION %%UBUNTU_VERSION%%
+ENV UBUNTU_VERSION %%OS_VERSION%%
 COPY docker/nektar-env/${UBUNTU_VERSION}_default_packages.txt packages.txt
 
 RUN export DEBIAN_FRONTEND=noninteractive && \

@@ -1,8 +1,8 @@
-FROM debian:%%DEBIAN_VERSION%%-slim
+FROM debian:%%OS_VERSION%%-slim
 
 LABEL maintainer="Nektar++ Development Team <nektar-users@imperial.ac.uk>"
 
-ENV DEBIAN_VERSION %%DEBIAN_VERSION%%
+ENV DEBIAN_VERSION %%OS_VERSION%%
 COPY docker/nektar-env/${DEBIAN_VERSION}_default_packages.txt packages.txt
 
 RUN echo "deb http://deb.debian.org/debian ${DEBIAN_VERSION} non-free" > \

@@ -618,36 +618,36 @@ void DemoSolver::EvaluateL2Error(int timeStep, const NekDouble time,
 
     // Get the min and max value and write the approximate solution
     // std::cout << "  approximate ";
-    // for (int k = 0; k < m_nVars; k++)
-    // {
-    //     for (int i = 0; i < m_nPoints; i++)
-    //     {
-    //         if( m_minValue > approx[k][i] )
-    //             m_minValue = approx[k][i];
+    for (int k = 0; k < m_nVars; k++)
+    {
+        for (int i = 0; i < m_nPoints; i++)
+        {
+            if( m_minValue > approx[k][i] )
+                m_minValue = approx[k][i];
 
-    //         if( m_maxValue < exact[k][i] )
-    //             m_maxValue = exact[k][i];
+            if( m_maxValue < exact[k][i] )
+                m_maxValue = exact[k][i];
 
-    //         std::cout << approx[k][i] << "  ";
-    //     }
-    // }
+            // std::cout << approx[k][i] << "  ";
+        }
+    }
     // std::cout << std::endl;
 
     // Get the min and max value and write the exact solution
     // std::cout << "  exact       ";
-    // for (int k = 0; k < m_nVars; k++)
-    // {
-    //     for (int i = 0; i < m_nPoints; i++)
-    //     {
-    //         if( m_minValue > approx[k][i] )
-    //             m_minValue = approx[k][i];
+    for (int k = 0; k < m_nVars; k++)
+    {
+        for (int i = 0; i < m_nPoints; i++)
+        {
+            if( m_minValue > approx[k][i] )
+                m_minValue = approx[k][i];
 
-    //         if( m_maxValue < exact[k][i] )
-    //             m_maxValue = exact[k][i];
+            if( m_maxValue < exact[k][i] )
+                m_maxValue = exact[k][i];
 
-    //         std::cout << exact[k][i] << "  ";
-    //     }
-    // }
+            // std::cout << exact[k][i] << "  ";
+        }
+    }
     // std::cout << std::endl;
 
     // Calcualate the sum of squares for the L2 Norm.

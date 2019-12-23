@@ -109,18 +109,18 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 1.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
         phase->m_A[1] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[1] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
         phase->m_U =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
         phase->m_V =
             Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
 
-        phase->m_B[0][1][0] = 0.0;
-        phase->m_B[1][0][0] = 0.0;
+        phase->m_B[0][0][0] = 1.0;
+        phase->m_B[1][1][0] = 1.0;
         phase->m_V[0][0]    = 1.0;
         phase->m_V[0][1]    = 1.0;
 
@@ -469,7 +469,7 @@ public:
         phase->m_V[0][7] = -12 * twentyfifth;
         phase->m_V[1][0] = 1.0;
         phase->m_V[2][1] = 1.0;
-        phase->m_V[4][3] = 1.0;
+        phase->m_V[3][2] = 1.0;
         phase->m_V[5][4] = 1.0;
         phase->m_V[6][5] = 1.0;
         phase->m_V[7][6] = 1.0;

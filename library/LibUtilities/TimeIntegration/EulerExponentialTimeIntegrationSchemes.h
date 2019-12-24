@@ -63,10 +63,14 @@ class EulerExponentialTimeIntegrationScheme : public TimeIntegrationScheme
 public:
     EulerExponentialTimeIntegrationScheme() : TimeIntegrationScheme()
     {
-        m_order = 3;
+        // Currently up to 4th order is implemented because the number
+        // of steps is the same as the order.
+        m_order = 1;
 
         m_integration_phases = TimeIntegrationSchemeDataVector(m_order);
 
+	// Currently the next lowest order is used to seed the current
+	// order. This is not correct but is an okay approximation.
         for( unsigned int n=0; n<m_order; ++n )
         {
             m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
@@ -96,7 +100,7 @@ public:
 
         // Parameters for the compact 1 step implementation.
         phase->m_numstages = 1;
-        phase->m_numsteps  = phase->m_order;
+        phase->m_numsteps  = phase->m_order;  // Okay up to 4th order.
 
         phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
         phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
@@ -146,7 +150,7 @@ public:
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        // For order > 1 then derivatives are needed.
+        // For order > 1 derivatives are needed.
         for( int n=1; n<phase->m_order; ++n )
         {
             phase->m_timeLevelOffset[n] = n;
@@ -209,7 +213,7 @@ public:
 
             // For order N the weights are an N x N matrix with
             // values: W[j][i] = std::pow(i, j) and phi_func = W phi.
-            // There are other possible wieghting schemes
+            // There are other possible wieghting schemes.
             if( phase->m_order == 1 )
             {
                 // Nothing to do as the value is set above and the
@@ -232,26 +236,26 @@ public:
             {
                 NekDouble phi_func[phase->m_order];
 
-                phi_func[0] = phi[0];
-                phi_func[1] =
-                    phi_function(2, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
-                phi_func[2] =
-                    phi_function(3, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+		phi_func[0] = phi[0];
+
+                for( unsigned int m=1; m<phase->m_order; ++m )
+                {
+		    phi_func[m] =
+		        phi_function(m+1, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+		}
 
                 NekDouble W[3][3];
 
-                // Set up teh wieghts and calculate the determinant.
-                // for( unsigned int j=0; j<phase->m_order; ++j )
-                // {
-                //     for( unsigned int i=0; i<phase->m_order; ++i )
-                //     {
-                //      W[j][i] = std::pow(i, j);
-                //     }
-                // }
-                // NekDouble W_det = Determinant<3>(W);
+                // Set up the wieghts and calculate the determinant.
+                for( unsigned int j=0; j<phase->m_order; ++j )
+                {
+                    for( unsigned int i=0; i<phase->m_order; ++i )
+                    {
+		        W[j][i] = std::pow(i, j);
+                    }
+                }
 
-                // No need to calculate the determinant value as it is fixed;
-                NekDouble W_det = 2.0;
+                NekDouble W_det = Determinant<3>(W);
 
                 // Solve the series of equations using Cramer's rule.
                 for( unsigned int m=0; m<phase->m_order; ++m )
@@ -270,6 +274,50 @@ public:
 
                     // Get the mth solutiion.
                     phi[m] = Determinant<3>(W) / W_det;
+                }
+            }
+	    else if( phase->m_order == 4 )
+            {
+                NekDouble phi_func[phase->m_order];
+
+		phi_func[0] = phi[0];
+
+                for( unsigned int m=1; m<phase->m_order; ++m )
+                {
+		    phi_func[m] =
+		        phi_function(m+1, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+		}
+
+                NekDouble W[4][4];
+
+                // Set up the wieghts and calculate the determinant.
+                for( unsigned int j=0; j<phase->m_order; ++j )
+                {
+                    for( unsigned int i=0; i<phase->m_order; ++i )
+                    {
+		        W[j][i] = std::pow(i, j);
+                    }
+                }
+
+                NekDouble W_det = Determinant<4>(W);
+
+                // Solve the series of equations using Cramer's rule.
+                for( unsigned int m=0; m<phase->m_order; ++m )
+                {
+                    // Assemble the working matrix for this solution.
+                    for( unsigned int j=0; j<phase->m_order; ++j )
+                    {
+                        for( unsigned int i=0; i<phase->m_order; ++i )
+                        {
+                            // Fill in the mth column for the mth
+                            // solution using the phi function value
+                            // otherwise utilize the weights.
+                            W[i][j] = (j == m) ? phi_func[i] : std::pow(j, i);
+                        }
+                    }
+
+                    // Get the mth solutiion.
+                    phi[m] = Determinant<4>(W) / W_det;
                 }
             }
             else
@@ -316,7 +364,7 @@ public:
             }
         }
 
-        std::cout << *phase << std::endl;
+        // std::cout << *phase << std::endl;
     }
 
     protected:

@@ -45,7 +45,7 @@ using namespace std;
 /**
  * @brief Calculate determinant of input matrix.
  *
- * Specialised versions of this function exist only for 2x2 and 3x3 matrices.
+ * Specialised versions of this function exist only for 1x1, 2x2 and 3x3 matrices.
  *
  * @param jac  Input matrix
  *
@@ -53,8 +53,37 @@ using namespace std;
  */
 template <int DIM> inline NekDouble Determinant(NekDouble jac[][DIM])
 {
-    boost::ignore_unused(jac);
-    return 0.0;
+    NekDouble det = 0;
+
+    for( unsigned int k=0; k<DIM; ++k )
+    {
+        int sign = (k%2) ? -1 : 1;
+
+        NekDouble mat[DIM-1][DIM-1];
+
+        for( unsigned int j=1, jj=0; j<DIM; ++j )
+        {
+            for( unsigned int i=0, ii=0; i<DIM; ++i )
+            {
+                if( i != k )
+                {
+                    mat[jj][ii] = jac[j][i];
+                    ++ii;
+                }
+            }
+
+            ++jj;
+        }
+
+        det += sign * jac[0][k] * Determinant<DIM-1>( mat );
+    }
+
+    return det;
+}
+
+template <> inline NekDouble Determinant<1>(NekDouble jac[][1])
+{
+    return jac[0][0];
 }
 
 template <> inline NekDouble Determinant<2>(NekDouble jac[][2])

@@ -563,19 +563,18 @@ namespace Nektar
     {
         // Set to 1 for first step and it will then be increased in
         // time advance routines
+        unsigned int order = IntegrationScheme->GetOrder();
+        
+        // Set to 1 for first step and it will then be increased in
+        // time advance routines
         if( IntegrationScheme->GetName() == "BackwardEuler" ||
-            IntegrationScheme->GetName() == "BDFImplicitOrder1")
+            (IntegrationScheme->GetName() == "BDFImplicit" &&
+             (order == 1 || order == 2)) )
         {
-          m_subStepIntegrationScheme =
-              LibUtilities::GetTimeIntegrationSchemeFactory()
-              .CreateInstance( "ForwardEuler", 1, "" );
-        }
-
-        else if( IntegrationScheme->GetName() == "BDFImplicitOrder2" )
-        {
+            // Note RK first order SSP is just Forward Euler.
             m_subStepIntegrationScheme =
                 LibUtilities::GetTimeIntegrationSchemeFactory()
-                .CreateInstance( "RungeKutta", 2, "ImprovedEuler" );
+                .CreateInstance( "RungeKutta", order, "SSP" );
         }
 
         else

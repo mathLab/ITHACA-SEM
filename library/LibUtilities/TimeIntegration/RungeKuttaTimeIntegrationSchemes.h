@@ -59,12 +59,18 @@ public:
     RungeKuttaTimeIntegrationScheme(int order, std::string type) :
         TimeIntegrationScheme(order, type)
     {
-        // Type == 0 - Std - Currently up to 5th order is implemented.
-        // Type == 1 - SSP - Currently 1st through 3rd order is implemented.
-        ASSERTL1((type == 0 && 1 <= order && order <= 5) ||
-		 (type == 1 && 1 <= order && order <= 3),
+        ASSERTL1((m_type == "" || m_type == "SSP" || m_type == "ImprovedEuler"),
+                 "Runge Kutta Time integration scheme bad type. "
+                  "Must blank, 'SSP', or 'ImprovedEuler'");
+
+        // Std - Currently up to 5th order is implemented.
+        // SSP - Currently 1st through 3rd order is implemented.
+        ASSERTL1(((m_type == "SSP" || m_type == "ImprovedEuler") == 0 &&
+                  1 <= order && order <= 5) ||
+                 ((m_type == "SSP" || m_type == "ImprovedEuler") == 1 &&
+                  1 <= order && order <= 3),
                  "Runge Kutta Time integration scheme bad order "
-		 "Std (1-5) or SSP (1-3): " + std::to_string(order));
+                 "Std (1-5) or SSP (1-3): " + std::to_string(order));
 
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
@@ -81,7 +87,7 @@ public:
     static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-	    RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(order, type);
+            RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(order, type);
         return p;
     }
 
@@ -116,7 +122,7 @@ public:
         //                0 0 0 0 
         //    Butcher     a 0 0 0   Stored as   a
         //    Tableau     b c 0 0               b c
-        //                d e f 0               d e f 0 ... 0	
+        //                d e f 0               d e f 0 ... 0
         const NekDouble Acoefficients[2][6][15] =
             { { {     0.,      0.,      0.,      0.,      0.,
                       0.,      0.,      0.,      0.,      0.,
@@ -127,27 +133,27 @@ public:
                       0.,      0.,      0.,      0.,      0. },
                 // 2nd Order - midpoint
                 {   1./2,      // Last entry
-		      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,
                       0.,      0.,      0.,      0.,      0.,
                       0.,      0.,      0.,      0.,      0. },
                 // 3rd Order - Ralston's
                 {  1./2.,
-		      0.,   3./4.,      // Last entry
-		      0.,      0.,
+                      0.,   3./4.,      // Last entry
+                      0.,      0.,
                       0.,      0.,      0.,      0.,      0.,
                       0.,      0.,      0.,      0.,      0. },
                 // 4th Order - Classic
                 {  1./2.,
-		      0.,   1./2.,
-		      0.,      0.,      1.,      // Last entry
-		      0.,      0.,      0.,      0.,
+                      0.,   1./2.,
+                      0.,      0.,      1.,      // Last entry
+                      0.,      0.,      0.,      0.,
                       0.,      0.,      0.,      0.,      0. },
                 // 5th Order - 6 stages
                 {  1./4.,
-		   1./8.,   1./8.,
-		      0.,      0.,    1./2.,
-		  3./16.,  -3./8.,    3./8.,  9./16.,
-		  -3./7.,   8./7.,    6./7., -12./7.,   8./7. } },
+                   1./8.,   1./8.,
+                      0.,      0.,    1./2.,
+                  3./16.,  -3./8.,    3./8.,  9./16.,
+                  -3./7.,   8./7.,    6./7., -12./7.,   8./7. } },
               // Strong Stability Preserving
               { {     0.,      0.,      0.,      0.,      0.,
                       0.,      0.,      0.,      0.,      0.,
@@ -158,26 +164,26 @@ public:
                       0.,      0.,      0.,      0.,      0. },
                 // 2nd Order - strong scaling - improved
                 {     1.,      // Last entry
-		      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,
                       0.,      0.,      0.,      0.,      0.,
                       0.,      0.,      0.,      0.,      0. },
                 // 3rd Order - strong scaling
                 {     1.,
-		      1./4.,   1./4.,      // Last entry
-		      0,       0.,
+                      1./4.,   1./4.,      // Last entry
+                      0,       0.,
                       0.,      0.,       0.,     0.,      0.,
                       0.,      0.,       0.,     0.,      0. },
                 // 4th Order - Classic - not used
                 {  1./2.,
-		      0.,   1./2.,
-		      0.,      0.,      1.,      // Last entry
-		      0.,      0.,      0.,      0.,
+                      0.,   1./2.,
+                      0.,      0.,      1.,      // Last entry
+                      0.,      0.,      0.,      0.,
                       0.,      0.,      0.,      0.,      0. },
                 // 5th Order - 6 stages - not used
                 {  1./4.,
-		   1./8.,   1./8.,
-		      0.,      0.,    1./2.,
-		  3./16.,  -3./8.,    3./8.,  9./16.,
+                   1./8.,   1./8.,
+                      0.,      0.,    1./2.,
+                  3./16.,  -3./8.,    3./8.,  9./16.,
                   -3./7.,   8./7.,    6./7., -12./7.,   8./7. } } };
 
         // B Coefficients for the finial summing.
@@ -206,6 +212,9 @@ public:
                 // 5th Order - 6 stages
                 { 7./90., 32./90., 12./90., 32./90., 7./90. } } };
 
+        unsigned int index =
+          (phase->m_type == "SSP" || phase->m_type == "ImprovedEuler");
+
         phase->m_schemeType = eExplicit;
         phase->m_order = order;
         phase->m_type  = type;
@@ -230,9 +239,6 @@ public:
 
         // Coefficients
 
-	unsigned int index =
-	  (phase->m_type == "SSP" || phase->m_type == "ImprovedEuler");
-	
         // A Coefficients for each stages along the lower diagonal quadrant.
         unsigned int cc = 0;
 
@@ -241,7 +247,7 @@ public:
             for( int i=0; i<s; ++i )
             {
                 phase->m_A[0][s][i] =
-		  Acoefficients[index][phase->m_order][cc++];
+                  Acoefficients[index][phase->m_order][cc++];
             }
         }
 
@@ -290,7 +296,7 @@ public:
         boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-	  RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(2, "");
+          RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(2, "");
         return p;
     }
 
@@ -315,7 +321,7 @@ public:
         boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-	  RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(4, "");
+          RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(4, "");
         return p;
     }
 
@@ -340,7 +346,7 @@ public:
         boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-	  RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(5, "");
+          RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(5, "");
         return p;
     }
 
@@ -390,7 +396,7 @@ public:
         boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-	  RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(2, "SSP");
+          RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(2, "SSP");
         return p;
     }
 
@@ -415,7 +421,7 @@ public:
         boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-	  RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(3, "SSP");
+          RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(3, "SSP");
         return p;
     }
 

@@ -69,8 +69,8 @@ public:
 
         m_integration_phases = TimeIntegrationSchemeDataVector(m_order);
 
-	// Currently the next lowest order is used to seed the current
-	// order. This is not correct but is an okay approximation.
+        // Currently the next lowest order is used to seed the current
+        // order. This is not correct but is an okay approximation.
         for( unsigned int n=0; n<m_order; ++n )
         {
             m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
@@ -187,7 +187,7 @@ public:
         
         for( unsigned int k=0; k<phase->m_nvars; ++k )
         {
-            NekDouble phi[phase->m_order];
+            Array<OneD, NekDouble> phi = Array<OneD, NekDouble>(phase->m_nvars);
 
             // B Phi function for first row first column
             if( GetName().find( "LawsonEuler" ) == 0 )
@@ -234,15 +234,16 @@ public:
             }
             else if( phase->m_order == 3 )
             {
-                NekDouble phi_func[phase->m_order];
+                Array<OneD, NekDouble> phi_func =
+                  Array<OneD, NekDouble>(phase->m_nvars);
 
-		phi_func[0] = phi[0];
+                phi_func[0] = phi[0];
 
                 for( unsigned int m=1; m<phase->m_order; ++m )
                 {
-		    phi_func[m] =
-		        phi_function(m+1, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
-		}
+                    phi_func[m] =
+                        phi_function(m+1, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+                }
 
                 NekDouble W[3][3];
 
@@ -251,7 +252,7 @@ public:
                 {
                     for( unsigned int i=0; i<phase->m_order; ++i )
                     {
-		        W[j][i] = std::pow(i, j);
+                        W[j][i] = std::pow(i, j);
                     }
                 }
 
@@ -276,17 +277,18 @@ public:
                     phi[m] = Determinant<3>(W) / W_det;
                 }
             }
-	    else if( phase->m_order == 4 )
+            else if( phase->m_order == 4 )
             {
-                NekDouble phi_func[phase->m_order];
+                Array<OneD, NekDouble> phi_func =
+                  Array<OneD, NekDouble>(phase->m_nvars);
 
-		phi_func[0] = phi[0];
+                phi_func[0] = phi[0];
 
                 for( unsigned int m=1; m<phase->m_order; ++m )
                 {
-		    phi_func[m] =
-		        phi_function(m+1, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
-		}
+                    phi_func[m] =
+                        phi_function(m+1, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+                }
 
                 NekDouble W[4][4];
 
@@ -295,7 +297,7 @@ public:
                 {
                     for( unsigned int i=0; i<phase->m_order; ++i )
                     {
-		        W[j][i] = std::pow(i, j);
+                        W[j][i] = std::pow(i, j);
                     }
                 }
 

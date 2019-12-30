@@ -50,29 +50,34 @@ namespace LibUtilities
 {
 
 ///////////////////////////////////////////////////////////////////////////////
-// DIRK Order 2
-
-class DIRKOrder2TimeIntegrationScheme : public TimeIntegrationScheme
+// DIRK Order N
+class DIRKTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    DIRKOrder2TimeIntegrationScheme() : TimeIntegrationScheme()
+  DIRKTimeIntegrationScheme(int order, std::string type) :
+    TimeIntegrationScheme(order, type)
     {
+        // Currently 2nd and 3rd order are implemented.
+        ASSERTL1(1 < order && order <= 3,
+                 "Runge Kutta Time Diagonally Implicit integration scheme bad order (2-3): " +
+                 std::to_string(order));
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
 
-        DIRKOrder2TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
+        DIRKTimeIntegrationScheme::SetupSchemeData( m_integration_phases[0],
+                                                    m_order);
     }
 
-    virtual ~DIRKOrder2TimeIntegrationScheme()
+    virtual ~DIRKTimeIntegrationScheme()
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
-        TimeIntegrationSchemeSharedPtr p =
-            MemoryManager<DIRKOrder2TimeIntegrationScheme>::AllocateSharedPtr();
+         TimeIntegrationSchemeSharedPtr p =
+          MemoryManager<DIRKTimeIntegrationScheme>::AllocateSharedPtr(order, type);
         return p;
     }
 
@@ -80,7 +85,7 @@ public:
 
     LUE virtual std::string GetName() const
     {
-        return std::string("IMEXdirk_3_4_3");
+        return std::string("DIRK");
     }
 
     LUE virtual NekDouble GetTimeStability() const
@@ -88,12 +93,16 @@ public:
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
+                                    unsigned int order)
     {
         phase->m_schemeType = eDiagonallyImplicit;
+        phase->m_order = order;
+        phase->m_name = std::string("DIRKOrder" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
-        phase->m_numstages = 1;
+        phase->m_numstages = phase->m_order;
 
         phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
         phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
@@ -101,20 +110,57 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
 
-        NekDouble lambda = (2.0 - sqrt(2.0)) / 2.0;
+        switch( phase->m_order )
+        {
+            case 2:
+            {
+                // Two-stage, 2nd order Diagonally Implicit Runge
+                // Kutta method. It is A-stable if and only if x ≥ 1/4
+                // and is L-stable if and only if x equals one of the
+                // roots of the polynomial x^2 - 2x + 1/2, i.e. if
+                // x = 1 ± sqrt(2)/2.
+                NekDouble lambda = (2.0 - sqrt(2.0)) / 2.0;
 
-        phase->m_A[0][0][0] = lambda;
-        phase->m_A[0][1][0] = 1.0 - lambda;
-        phase->m_A[0][1][1] = lambda;
+                phase->m_A[0][0][0] = lambda;
+                phase->m_A[0][1][0] = 1.0 - lambda;
+                phase->m_A[0][1][1] = lambda;
 
-        phase->m_B[0][0][0] = 1.0 - lambda;
-        phase->m_B[0][0][1] = lambda;
+                phase->m_B[0][0][0] = 1.0 - lambda;
+                phase->m_B[0][0][1] = lambda;
+            }
+            break;
+
+            case 3:
+            {
+                // Three-stage, 3rd order, L-stable Diagonally Implicit
+                // Runge Kutta method:
+                NekDouble lambda = 0.4358665215;
+
+                phase->m_A[0][0][0] = lambda;
+                phase->m_A[0][1][0] = 0.5 * (1.0 - lambda);
+                phase->m_A[0][2][0] =
+                    0.25 * (-6.0 * lambda * lambda + 16.0 * lambda - 1.0);
+
+                phase->m_A[0][1][1] = lambda;
+
+                phase->m_A[0][2][1] =
+                    0.25 * (6.0 * lambda * lambda - 20.0 * lambda + 5.0);
+                phase->m_A[0][2][2] = lambda;
+
+                phase->m_B[0][0][0] =
+                    0.25 * (-6.0 * lambda * lambda + 16.0 * lambda - 1.0);
+                phase->m_B[0][0][1] =
+                    0.25 * (6.0 * lambda * lambda - 20.0 * lambda + 5.0);
+                phase->m_B[0][0][2] = lambda;
+            }
+            break;
+        }
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 0;
@@ -134,101 +180,61 @@ public:
                  "Time integration scheme coefficients do not match its type");
     }
 
-}; // end class DIRKOrder2TimeIntegrator
+}; // end class DIRKTimeIntegrationScheme
 
-///////////////////////////////////////////////////////////////////////////////
-// DIRK Order 3
-class DIRKOrder3TimeIntegrationScheme : public TimeIntegrationScheme
+////////////////////////////////////////////////////////////////////////////////
+// Backwards compatibility
+class DIRKOrder2TimeIntegrationScheme :
+    public DIRKTimeIntegrationScheme
 {
 public:
-    DIRKOrder3TimeIntegrationScheme() : TimeIntegrationScheme()
+    DIRKOrder2TimeIntegrationScheme(int order, std::string type) :
+        DIRKTimeIntegrationScheme(2, "")
     {
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-
-        DIRKOrder3TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
     }
 
-    virtual ~DIRKOrder3TimeIntegrationScheme()
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
-    }
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
 
-    static TimeIntegrationSchemeSharedPtr create()
-    {
-        TimeIntegrationSchemeSharedPtr p =
-            MemoryManager<DIRKOrder3TimeIntegrationScheme>::AllocateSharedPtr();
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+          DIRKTimeIntegrationScheme>::AllocateSharedPtr(2, "");
         return p;
     }
 
     static std::string className;
 
-    LUE virtual std::string GetName() const
+}; // end class DIRKOrder2TimeIntegrationScheme
+
+
+class DIRKOrder3TimeIntegrationScheme :
+    public DIRKTimeIntegrationScheme
+{
+public:
+    DIRKOrder3TimeIntegrationScheme(int order, std::string type) :
+        DIRKTimeIntegrationScheme(2, "")
     {
-        return std::string("DIRKOrder3");
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
     }
 
-    LUE virtual NekDouble GetTimeStability() const
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
-        return 1.0;
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+          DIRKTimeIntegrationScheme>::AllocateSharedPtr(3, "");
+        return p;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
-    {
-        phase->m_schemeType = eDiagonallyImplicit;
-
-        phase->m_numsteps  = 1;
-        phase->m_numstages = 3;
-
-        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
-        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
-
-        phase->m_A[0] =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
-        phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
-        phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
-        phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
-
-        NekDouble lambda = 0.4358665215;
-
-        phase->m_A[0][0][0] = lambda;
-        phase->m_A[0][1][0] = 0.5 * (1.0 - lambda);
-        phase->m_A[0][2][0] =
-            0.25 * (-6.0 * lambda * lambda + 16.0 * lambda - 1.0);
-        phase->m_A[0][1][1] = lambda;
-        phase->m_A[0][2][1] =
-            0.25 * (6.0 * lambda * lambda - 20.0 * lambda + 5.0);
-        phase->m_A[0][2][2] = lambda;
-
-        phase->m_B[0][0][0] =
-            0.25 * (-6.0 * lambda * lambda + 16.0 * lambda - 1.0);
-        phase->m_B[0][0][1] =
-            0.25 * (6.0 * lambda * lambda - 20.0 * lambda + 5.0);
-        phase->m_B[0][0][2] = lambda;
-
-        phase->m_numMultiStepValues = 1;
-        phase->m_numMultiStepDerivs = 0;
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-        phase->m_timeLevelOffset[0] = 0;
-
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
-    }
+    static std::string className;
 
 }; // end class DIRKOrder3TimeIntegrationScheme
+
 
 } // end namespace LibUtilities
 } // end namespace Nektar

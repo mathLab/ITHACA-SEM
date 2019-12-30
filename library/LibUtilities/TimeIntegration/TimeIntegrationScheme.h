@@ -60,7 +60,7 @@ typedef std::shared_ptr<TimeIntegrationScheme> TimeIntegrationSchemeSharedPtr;
 
 /// Datatype of the NekFactory used to instantiate classes derived from the
 /// EquationSystem class.
-typedef NekFactory<std::string, TimeIntegrationScheme>
+typedef NekFactory<std::string, TimeIntegrationScheme, int, std::string>
     TimeIntegrationSchemeFactory;
 
 // Allows a code to create a TimeIntegrator. Usually used like this:
@@ -133,8 +133,12 @@ public:
         TimeIntegrationSolutionSharedPtr &solvector,
         const TimeIntegrationSchemeOperators &op);
 
+    LUE std::string GetFullName () const;
     virtual std::string GetName() const = 0;
-    virtual NekDouble   GetTimeStability() const = 0;
+    LUE unsigned int GetOrder() const { return m_order; };
+    LUE std::string  GetType () const { return m_type; };
+
+    virtual NekDouble GetTimeStability() const = 0;
 
     // Methods specific to exponential integration schemes.
     LUE void SetExponentialCoefficients(Array<TwoD, NekDouble> &Lambda);
@@ -192,7 +196,8 @@ protected:
         const TimeIntegrationSchemeOperators &op);
 
     // This should never be used directly... only used by child classes...
-    LUE TimeIntegrationScheme()
+    LUE TimeIntegrationScheme(int order, std::string type) :
+        m_order(order), m_type(type)
     {
     }
 
@@ -219,7 +224,8 @@ protected:
         ConstSingleArray &t_old, TripleArray &y_new, SingleArray &t_new,
         const TimeIntegrationSchemeOperators &op) const;
 
-
+    unsigned int m_order{0};
+    std::string  m_type{""};
 
 }; // end class TimeIntegrationScheme
 

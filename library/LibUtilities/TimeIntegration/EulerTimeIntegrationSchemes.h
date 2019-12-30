@@ -56,8 +56,12 @@ namespace LibUtilities
 class BackwardEulerTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    BackwardEulerTimeIntegrationScheme() : TimeIntegrationScheme()
+    BackwardEulerTimeIntegrationScheme(int order, std::string type) :
+        TimeIntegrationScheme(1, "")
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -70,10 +74,13 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            BackwardEulerTimeIntegrationScheme>::AllocateSharedPtr();
+	  BackwardEulerTimeIntegrationScheme>::AllocateSharedPtr(1, "");
         return p;
     }
 
@@ -92,6 +99,9 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eDiagonallyImplicit;
+        phase->m_order = 1;
+        phase->m_name = std::string("BackwardEulerOrder" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 1;
@@ -102,11 +112,11 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 1.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 1.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 0;
@@ -134,8 +144,12 @@ public:
 class ForwardEulerTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    ForwardEulerTimeIntegrationScheme() : TimeIntegrationScheme()
+    ForwardEulerTimeIntegrationScheme(int order, std::string type) :
+        TimeIntegrationScheme(1, "")
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -148,10 +162,13 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            ForwardEulerTimeIntegrationScheme>::AllocateSharedPtr();
+	  ForwardEulerTimeIntegrationScheme>::AllocateSharedPtr(1, "");
         return p;
     }
 
@@ -170,6 +187,9 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eExplicit;
+        phase->m_order = 1;
+        phase->m_name = std::string("ForwardEulerOrder" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 1;
@@ -180,11 +200,11 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 1.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 0;

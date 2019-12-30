@@ -55,8 +55,12 @@ namespace LibUtilities
 class IMEXdirk_1_2_1TimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    IMEXdirk_1_2_1TimeIntegrationScheme() : TimeIntegrationScheme()
+    IMEXdirk_1_2_1TimeIntegrationScheme(int order, std::string type) :
+        TimeIntegrationScheme(1, "")
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -69,10 +73,13 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            IMEXdirk_1_2_1TimeIntegrationScheme>::AllocateSharedPtr();
+            IMEXdirk_1_2_1TimeIntegrationScheme>::AllocateSharedPtr(1, "");
         return p;
     }
 
@@ -91,6 +98,9 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
+        phase->m_order = 1;
+        phase->m_name = std::string("IMEXdirk_1_2_1Order" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 2;
@@ -101,22 +111,20 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_A[1] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[1] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
 
         phase->m_A[0][1][1] = 1.0;
-
         phase->m_B[0][0][1] = 1.0;
 
         phase->m_A[1][1][0] = 1.0;
-
         phase->m_B[1][0][1] = 1.0;
 
         phase->m_numMultiStepValues = 1;
@@ -145,8 +153,12 @@ public:
 class IMEXdirk_1_2_2TimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    IMEXdirk_1_2_2TimeIntegrationScheme() : TimeIntegrationScheme()
+    IMEXdirk_1_2_2TimeIntegrationScheme(int order, std::string type) :
+        TimeIntegrationScheme(1, "")
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -159,10 +171,13 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            IMEXdirk_1_2_2TimeIntegrationScheme>::AllocateSharedPtr();
+            IMEXdirk_1_2_2TimeIntegrationScheme>::AllocateSharedPtr(1, "");
         return p;
     }
 
@@ -181,6 +196,9 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
+        phase->m_order = 1;
+        phase->m_name = std::string("IMEXdirk_1_2_2Order" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 2;
@@ -191,22 +209,20 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_A[1] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[1] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
 
         phase->m_A[0][1][1] = 1.0 / 2.0;
-
         phase->m_B[0][0][1] = 1.0;
 
         phase->m_A[1][1][0] = 1.0 / 2.0;
-
         phase->m_B[1][0][1] = 1.0;
 
         phase->m_numMultiStepValues = 1;
@@ -235,8 +251,12 @@ public:
 class IMEXdirk_2_2_2TimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    IMEXdirk_2_2_2TimeIntegrationScheme() : TimeIntegrationScheme()
+    IMEXdirk_2_2_2TimeIntegrationScheme(int order, std::string type) :
+        TimeIntegrationScheme(2, "")
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -249,10 +269,13 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            IMEXdirk_2_2_2TimeIntegrationScheme>::AllocateSharedPtr();
+            IMEXdirk_2_2_2TimeIntegrationScheme>::AllocateSharedPtr(2, "");
         return p;
     }
 
@@ -271,6 +294,9 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
+        phase->m_order = 2;
+        phase->m_name = std::string("IMEXdirk_2_2_2Order" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 3;
@@ -287,15 +313,15 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_A[1] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[1] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
 
         NekDouble glambda = 0.2928932188134524756;
         NekDouble gdelta  = -0.7071067811865475244;
@@ -335,8 +361,12 @@ public:
 class IMEXdirk_2_3_2TimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    IMEXdirk_2_3_2TimeIntegrationScheme() : TimeIntegrationScheme()
+    IMEXdirk_2_3_2TimeIntegrationScheme(int order, std::string type) :
+        TimeIntegrationScheme(2, "")
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -349,10 +379,13 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            IMEXdirk_2_3_2TimeIntegrationScheme>::AllocateSharedPtr();
+            IMEXdirk_2_3_2TimeIntegrationScheme>::AllocateSharedPtr(2, "");
         return p;
     }
 
@@ -371,6 +404,9 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
+        phase->m_order = 2;
+        phase->m_name = std::string("IMEXdirk_2_3_2Order" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 3;
@@ -387,15 +423,15 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_A[1] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[1] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
 
         NekDouble lambda = (2.0 - sqrt(2.0)) / 2.0;
         NekDouble delta  = -2.0 * sqrt(2.0) / 3.0;
@@ -435,8 +471,12 @@ public:
 class IMEXdirk_2_3_3TimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    IMEXdirk_2_3_3TimeIntegrationScheme() : TimeIntegrationScheme()
+    IMEXdirk_2_3_3TimeIntegrationScheme(int order, std::string type) :
+        TimeIntegrationScheme(2, "")
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -449,10 +489,13 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            IMEXdirk_2_3_3TimeIntegrationScheme>::AllocateSharedPtr();
+            IMEXdirk_2_3_3TimeIntegrationScheme>::AllocateSharedPtr(2, "");
         return p;
     }
 
@@ -471,6 +514,9 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
+        phase->m_order = 2;
+        phase->m_name = std::string("IMEXdirk_2_2_3Order" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 3;
@@ -487,15 +533,15 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_A[1] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[1] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
 
         NekDouble glambda = 0.788675134594813;
 
@@ -534,8 +580,12 @@ public:
 class IMEXdirk_3_4_3TimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    IMEXdirk_3_4_3TimeIntegrationScheme() : TimeIntegrationScheme()
+    IMEXdirk_3_4_3TimeIntegrationScheme(int order, std::string type) :
+        TimeIntegrationScheme(3, "")
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -548,10 +598,13 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            IMEXdirk_3_4_3TimeIntegrationScheme>::AllocateSharedPtr();
+            IMEXdirk_3_4_3TimeIntegrationScheme>::AllocateSharedPtr(3, "");
         return p;
     }
 
@@ -570,6 +623,9 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
+        phase->m_order = 3;
+        phase->m_name = std::string("IMEXdirk_3_4_3Order" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 4;
@@ -586,15 +642,15 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_A[1] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[1] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
 
         NekDouble lambda = 0.4358665215;
 
@@ -647,8 +703,12 @@ public:
 class IMEXdirk_4_4_3TimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    IMEXdirk_4_4_3TimeIntegrationScheme() : TimeIntegrationScheme()
+    IMEXdirk_4_4_3TimeIntegrationScheme(int order, std::string type) :
+        TimeIntegrationScheme(3, "")
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -661,10 +721,13 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            IMEXdirk_4_4_3TimeIntegrationScheme>::AllocateSharedPtr();
+            IMEXdirk_4_4_3TimeIntegrationScheme>::AllocateSharedPtr(3, "");
         return p;
     }
 
@@ -683,6 +746,9 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
+        phase->m_order = 3;
+        phase->m_name = std::string("IMEXdirk_4_4_3Order" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 5;
@@ -699,15 +765,15 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_A[1] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[1] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
 
         phase->m_A[0][1][1] = 1.0 / 2.0;
         phase->m_A[0][2][1] = 1.0 / 6.0;

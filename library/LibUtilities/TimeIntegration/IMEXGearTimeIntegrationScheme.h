@@ -52,8 +52,12 @@ namespace LibUtilities
 class IMEXGearTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    IMEXGearTimeIntegrationScheme() : TimeIntegrationScheme()
+    IMEXGearTimeIntegrationScheme(int order, std::string type) :
+      TimeIntegrationScheme(2, "")
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(2);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -69,10 +73,13 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
         TimeIntegrationSchemeSharedPtr p =
-            MemoryManager<IMEXGearTimeIntegrationScheme>::AllocateSharedPtr();
+	  MemoryManager<IMEXGearTimeIntegrationScheme>::AllocateSharedPtr(2, "");
         return p;
     }
 
@@ -91,6 +98,9 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
+        phase->m_order = 2;
+        phase->m_name = std::string("IMEXGearOrder" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 3;
         phase->m_numstages = 1;

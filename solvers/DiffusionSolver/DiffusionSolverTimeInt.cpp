@@ -129,7 +129,7 @@ void Diffusion::TimeIntegrate()
 {
     LibUtilities::TimeIntegrationSchemeFactory & fac = LibUtilities::GetTimeIntegrationSchemeFactory();
 
-    m_IntScheme = fac.CreateInstance( m_scheme_name );
+    m_IntScheme = fac.CreateInstance( m_scheme_name, 0, "" );
   
     ode.DefineImplicitSolve( &Diffusion::DoImplicitSolve, this );
 
@@ -238,4 +238,3 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 }
-

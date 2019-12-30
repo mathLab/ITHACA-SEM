@@ -106,7 +106,7 @@ TimeIntegrationSolution::TimeIntegrationSolution(
 
 std::string TimeIntegrationSolution::GetName() const
 {
-    return m_schemeData->m_parent->GetName();
+    return m_schemeData->m_parent->GetFullName();
 }
 
 } // end namespace LibUtilities

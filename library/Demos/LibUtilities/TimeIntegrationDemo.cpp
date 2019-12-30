@@ -132,7 +132,8 @@ public:
     // Misc functions for error and outputing
     void EvaluateL2Error( int timeStep, const NekDouble time,
         const Array<OneD, const Array<OneD, double>> &approx,
-        const Array<OneD, const Array<OneD, double>> &exact);
+        const Array<OneD, const Array<OneD, double>> &exact,
+        bool print );
 
     void AppendOutput(
         std::ofstream &outfile, const int timeStepNumber, const NekDouble time,
@@ -331,26 +332,36 @@ int main(int argc, char *argv[])
       ("help,h", "Produce this help message.")
       ("values,v", po::value<int>(), "Number of values.")
       ("timesteps,t", po::value<int>(), "Number of timesteps.")
+      ("order,o", po::value<int>())
       ("method,m", po::value<int>(),
         "Method is a number that selects the time-integration method:\n"
-        "- 0: 1st order Forward Euler scheme\n"
+        "- 0: 1st order Forward Euler\n"
         "- 1: 1st order multi-step IMEX scheme\n"
         "     (Euler Backwards/Euler Forwards)\n"
         "- 2: 2nd order multi-step IMEX scheme\n"
         "- 3: 3rd order multi-step IMEX scheme\n"
         "- 4: 4th order multi-step IMEX scheme\n"
+        "  \n"
         "- 5: 2nd order multi-stage DIRK IMEX scheme\n"
         "- 6: 3nd order multi-stage DIRK IMEX scheme\n"
         "- 7: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
         "- 8: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
         "- 9: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
         "     (MCNAB)\n"
-        "- 10: 2nd order multi-step Adams-Bashforth scheme\n"
-        "- 11: 3rd order multi-step Adams-Bashforth scheme\n"
-        "- 12: 4th order multi-step Adams-Bashforth scheme\n"
         "  \n"
-        "- 20: 1st order Forward Lawson Euler exponential scheme\n"
-        "- 21: 1st order Forward Norsett Euler exponential scheme\n"
+        "- 10: Nth order multi-stage Runga-Kutta scheme\n"
+        "- 11: Nth order multi-stage Runga-Kutta SSP scheme\n"
+        "- 12: Nth order multi-stage Diagonally Implicit Runga-Kutta scheme\n"
+        "      (DIRK)\n"
+        "- 13: Nth order multi-step Adams-Bashforth scheme\n"
+        "- 14: Nth order multi-step Adams-Moulton scheme\n"
+        "- 15: Nth order multi-step BDFImplicit scheme\n"
+        "- 16: Nth order multi-step IMEX scheme\n"
+        "      (Euler Backwards/Euler Forwards)\n"
+        "- 17: Nth order multi-stage IMEX DIRK scheme\n"
+        "  \n"
+        "- 20: Nth order multi-step Lawson-Euler exponential scheme\n"
+        "- 21: Nth order multi-step Norsett-Euler exponential scheme\n"
        );
 
     po::variables_map vm;
@@ -366,11 +377,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (!vm.count("values") ||
-        !vm.count("timesteps") || !vm.count("method") || vm.count("help"))
+    if (!vm.count("values") || !vm.count("timesteps") || !vm.count("method") ||
+	((vm["method"].as<int>() >= 10) && !vm.count("order")) ||
+        vm.count("help"))
     {
         std::cout << "Please specify the number of "
-                  << "values and timesteps and the method.\n\n"
+                  << "values and timesteps along with the order and method.\n\n"
                   << desc;
         return 1;
     }
@@ -378,6 +390,12 @@ int main(int argc, char *argv[])
     int nValues    = vm["values"].as<int>();
     int nTimeSteps = vm["timesteps"].as<int>();
     int nMethod    = vm["method"].as<int>();
+    int nOrder     = 0;
+
+    if((vm["method"].as<int>() >= 10) )
+    {
+        nOrder = vm["order"].as<int>();
+    }
 
     if( nValues < 2 )
     {
@@ -401,49 +419,72 @@ int main(int argc, char *argv[])
     switch (nMethod)
     {
         case 0:
-            tiScheme = factory.CreateInstance("ForwardEuler");
+	  tiScheme = factory.CreateInstance("ForwardEuler", 1, "");
             break;
         case 1:
-            tiScheme = factory.CreateInstance("IMEXOrder1");
+            tiScheme = factory.CreateInstance("IMEXOrder1", 1, "");
             break;
         case 2:
-            tiScheme = factory.CreateInstance("IMEXOrder2");
+            tiScheme = factory.CreateInstance("IMEXOrder2", 2, "");
             break;
         case 3:
-            tiScheme = factory.CreateInstance("IMEXOrder3");
+            tiScheme = factory.CreateInstance("IMEXOrder3", 3, "");
             break;
         case 4:
-            tiScheme = factory.CreateInstance("IMEXOrder4");
+            tiScheme = factory.CreateInstance("IMEXOrder4", 4, "");
             break;
         case 5:
-            tiScheme = factory.CreateInstance("IMEXdirk_2_3_2");
+            tiScheme = factory.CreateInstance("IMEXdirk_2_3_2", 2, "");
             break;
         case 6:
-            tiScheme = factory.CreateInstance("IMEXdirk_3_4_3");
+            tiScheme = factory.CreateInstance("IMEXdirk_3_4_3", 3, "");
             break;
         case 7:
-            tiScheme = factory.CreateInstance("IMEXGear");
+            tiScheme = factory.CreateInstance("IMEXGear", 2, "");
             break;
         case 8:
-            tiScheme = factory.CreateInstance("CNAB");
+            tiScheme = factory.CreateInstance("CNAB", 2, "");
             break;
         case 9:
-            tiScheme = factory.CreateInstance("MCNAB");
+            tiScheme = factory.CreateInstance("MCNAB", 2, "");
             break;
         case 10:
-            tiScheme = factory.CreateInstance("AdamsBashforthOrder2");
+            tiScheme = factory.CreateInstance("RungeKutta", nOrder, "");
             break;
         case 11:
-            tiScheme = factory.CreateInstance("AdamsBashforthOrder3");
+            tiScheme = factory.CreateInstance("RungeKutta", nOrder, "SSP");
             break;
         case 12:
-            tiScheme = factory.CreateInstance("AdamsBashforthOrder4");
+            tiScheme = factory.CreateInstance("DIRK", nOrder, "");
             break;
+        case 13:
+            tiScheme = factory.CreateInstance("AdamsBashforth", nOrder, "");
+            break;
+        case 14:
+            tiScheme = factory.CreateInstance("AdamsMoulton", nOrder, "");
+            break;
+        case 15:
+            tiScheme = factory.CreateInstance("BDFImplicit", nOrder, "");
+            break;
+        case 16:
+            tiScheme = factory.CreateInstance("IMEX", nOrder, "");
+            break;
+        case 17:
+            tiScheme = factory.CreateInstance("IMEXdirk", nOrder, "");
+            break;
+
+        case 18:
+            tiScheme = factory.CreateInstance("DIRKOrder2", nOrder, "");
+            break;
+        case 19:
+            tiScheme = factory.CreateInstance("DIRKOrder3", nOrder, "");
+            break;
+
         case 20:
-            tiScheme = factory.CreateInstance("LawsonEuler");
+ 	    tiScheme = factory.CreateInstance("EulerExponential", nOrder," Lawson" );
             break;
         case 21:
-            tiScheme = factory.CreateInstance("NorsettEuler");
+	    tiScheme = factory.CreateInstance("EulerExponential", nOrder, "Norsett");
             break;
         default:
         {
@@ -571,17 +612,19 @@ int main(int argc, char *argv[])
         solver->AppendOutput(outfile, timeStep+1, time, approxSol, exaxtSol);
 
         // 6. Calculate the error and dump to screen
-        // solver->EvaluateL2Error(timeStep+1, time, approxSol, exaxtSol);
+        solver->EvaluateL2Error(timeStep+1, time, approxSol, exaxtSol, false);
     }
 
     // 6. Calculate the error and dump to screen
+    std::cout << tiScheme->GetFullName() << std::endl;
+
     solver->EvaluateL2Error(nTimeSteps, t0 + (nTimeSteps * dt),
-                         approxSol, exaxtSol);
+			    approxSol, exaxtSol, true);
 
     // 7. Some more writing out the results
     outfile.close();
 
-    solver->GenerateGnuplotScript(solver->GetName(), tiScheme->GetName());
+    solver->GenerateGnuplotScript(solver->GetName(), tiScheme->GetFullName());
 
     delete solver;
 
@@ -610,11 +653,13 @@ void DemoSolver::Project(
 // norm).
 void DemoSolver::EvaluateL2Error(int timeStep, const NekDouble time,
     const Array<OneD, const Array<OneD, double>> &approx,
-    const Array<OneD, const Array<OneD, double>> &exact)
+    const Array<OneD, const Array<OneD, double>> &exact,
+    bool print )
 {
     // Write the time step and time
-    std::cout << "Time step: " << timeStep << "  "
-              << "Time: " << time << "\n";
+    if( print )
+        std::cout << "Time step: " << timeStep << "  "
+		  << "Time: " << time << "\n";
 
     // Get the min and max value and write the approximate solution
     // std::cout << "  approximate ";
@@ -666,7 +711,8 @@ void DemoSolver::EvaluateL2Error(int timeStep, const NekDouble time,
     // Calculate the relative error L2 Norm.
     double norm = sqrt(a / b);
 
-    std::cout << "L 2 error :" << norm << "\n";
+    if( print )
+        std::cout << "L 2 error :" << norm << "\n";
 }
 
 void DemoSolver::AppendOutput(

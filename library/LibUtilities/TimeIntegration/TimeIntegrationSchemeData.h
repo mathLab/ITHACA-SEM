@@ -54,6 +54,7 @@ public:
         : m_parent(parent), m_initialised(false), m_lastDeltaT(0), m_lastNVars(0)
     {
     }
+
     ~TimeIntegrationSchemeData()
     {
     }
@@ -217,6 +218,10 @@ public:
 
     const TimeIntegrationScheme *m_parent;
 
+    std::string m_name{""};
+    unsigned int m_order{0};
+    std::string m_type{""};
+
     TimeIntegrationSchemeType m_schemeType;
 
     unsigned int m_numMultiStepValues; // number of entries in input and output
@@ -239,8 +244,6 @@ public:
 
     unsigned int m_numsteps;  //< Number of steps in this integration phase
     unsigned int m_numstages; //< Number of stages in multi-stage component.
-
-    unsigned int m_order{1};
 
     bool m_firstStageEqualsOldSolution; //< Optimisation-flag
     bool m_lastStageEqualsNewSolution;  //< Optimisation-flag

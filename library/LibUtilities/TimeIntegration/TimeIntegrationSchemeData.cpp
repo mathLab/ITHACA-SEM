@@ -941,8 +941,9 @@ std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeData &rhs)
     int oswidth     = 9;
     int osprecision = 6;
 
-    os << "Time Integration Scheme (Master): " << rhs.m_parent->GetName()
-       << "\n"
+    os << "Time Integration Scheme (Master): "
+       << rhs.m_parent->GetFullName() << "\n"
+       << "Time Integration Phase  : " << rhs.m_name << "\n"
        << "- number of steps:  " << r << "\n"
        << "- number of stages: " << s << "\n"
        << "General linear method tableau:\n";
@@ -1012,6 +1013,22 @@ std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeData &rhs)
             os.precision(osprecision);
             os << std::right << rhs.V(i, j);
         }
+
+        os << "  |";
+
+	os.width(oswidth);
+	os.precision(osprecision);
+	os << std::right << rhs.m_timeLevelOffset[i];
+
+	if( i < rhs.m_numMultiStepValues )
+	{
+	  os << std::right << " value";
+	}
+	else
+	{
+	  os << std::right << " derivative";
+	}
+
         os << std::endl;
     }
 

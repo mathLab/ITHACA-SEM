@@ -61,11 +61,15 @@ namespace LibUtilities
 class EulerExponentialTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    EulerExponentialTimeIntegrationScheme() : TimeIntegrationScheme()
+    EulerExponentialTimeIntegrationScheme(int order, std::string type) :
+      TimeIntegrationScheme(order, type)
     {
         // Currently up to 4th order is implemented because the number
         // of steps is the same as the order.
-        m_order = 1;
+        // Currently up to 4th order is implemented.
+        ASSERTL1(0 <= order && order <= 4,
+                 "EulerExponential Time integration scheme bad order: " +
+                 std::to_string(order));
 
         m_integration_phases = TimeIntegrationSchemeDataVector(m_order);
 
@@ -76,27 +80,45 @@ public:
             m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
                 new TimeIntegrationSchemeData(this));
 
-            m_integration_phases[n]->m_order = n+1;
-
             EulerExponentialTimeIntegrationScheme::SetupSchemeData(
-                m_integration_phases[n]);
+	        m_integration_phases[n], n+1, m_type);
         }
+
+        // for( unsigned int n=0; n<m_order; ++n )
+        //   std::cout << m_integration_phases[n] << std::endl;
     }
 
     virtual ~EulerExponentialTimeIntegrationScheme()
     {
     }
 
-    LUE virtual std::string GetName() const = 0;
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    {
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+          EulerExponentialTimeIntegrationScheme>::AllocateSharedPtr(order, type);
+        return p;
+    }
+
+    static std::string className;
+
+    LUE virtual std::string GetName() const
+    {
+        return std::string("EulerExponential");
+    }
 
     LUE virtual NekDouble GetTimeStability() const
     {
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
+                                    int order, std::string type)
     {
         phase->m_schemeType = eExponential;
+        phase->m_order = order;
+        phase->m_type  = type;
+        phase->m_name = type + std::string("EulerExponentialOrder") +
+	  std::to_string(phase->m_order);
 
         // Parameters for the compact 1 step implementation.
         phase->m_numstages = 1;
@@ -108,12 +130,12 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
 
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  0.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  0.0);
 
         // Coefficients
 
@@ -190,12 +212,12 @@ public:
             Array<OneD, NekDouble> phi = Array<OneD, NekDouble>(phase->m_nvars);
 
             // B Phi function for first row first column
-            if( GetName().find( "LawsonEuler" ) == 0 )
+            if( phase->m_type == "Lawson" )
             {
                 phi[0] =
                   phi_function(0, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
             }
-            else if( GetName().find( "NorsettEuler" ) == 0 )
+            else if( phase->m_type == "Norsett" )
             {
                 phi[0] =
                   phi_function(1, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
@@ -365,50 +387,9 @@ public:
                 phase->m_V_phi[k][n][n-1] = 1.0; // constant 1
             }
         }
-
-        // std::cout << *phase << std::endl;
     }
-
-    protected:
-        unsigned int m_order;
 
 }; // end class EulerExponentialTimeIntegrator
 
-class LawsonEulerTimeIntegrationScheme : public EulerExponentialTimeIntegrationScheme
-{
-public:
-    static TimeIntegrationSchemeSharedPtr create()
-    {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            LawsonEulerTimeIntegrationScheme>::AllocateSharedPtr();
-        return p;
-    }
-
-    static std::string className;
-
-    LUE virtual std::string GetName() const
-    {
-        return std::string("LawsonEuler" + std::to_string(m_order));
-    }
-}; // end class LawsonEulerTimeIntegrationScheme
-  
-class NorsettEulerTimeIntegrationScheme : public EulerExponentialTimeIntegrationScheme
-{
-public:
-    static TimeIntegrationSchemeSharedPtr create()
-    {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            NorsettEulerTimeIntegrationScheme>::AllocateSharedPtr();
-        return p;
-    }
-
-    static std::string className;
-
-    LUE virtual std::string GetName() const
-    {
-        return std::string("NorsettEuler" + std::to_string(m_order));
-    }
-}; // end class NorsettEulerTimeIntegrationScheme
-  
 } // end namespace LibUtilities
 } // end namespace Nektar

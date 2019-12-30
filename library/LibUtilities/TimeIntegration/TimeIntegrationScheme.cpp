@@ -35,7 +35,6 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
-using namespace std;
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
@@ -64,16 +63,21 @@ std::ostream &operator<<(std::ostream &os,
 std::ostream &operator<<(std::ostream &os, const TimeIntegrationScheme &rhs)
 {
 
-    os << "Time Integration Scheme: " << rhs.GetName() << ".\n"
+    os << "Time Integration Scheme: " << rhs.GetFullName() << ".\n"
        << "        Has " << rhs.m_integration_phases.size() << " phases.\n";
 
     for (int i = 0; i < rhs.m_integration_phases.size(); i++)
     {
         os << "            - "
-           << rhs.m_integration_phases[i]->m_parent->GetName()
+           << rhs.m_integration_phases[i]->m_parent->GetFullName()
            << "\n";
     }
     return os;
+}
+
+std::string TimeIntegrationScheme::GetFullName () const
+{
+    return GetName() + m_type + "Order" + std::to_string(m_order);
 }
 
 TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationScheme::TimeIntegrate(
@@ -132,7 +136,7 @@ void TimeIntegrationScheme::SetupSchemeExponentialData(TimeIntegrationSchemeData
     boost::ignore_unused(deltaT);
 
     ASSERTL0(false, "No SetupSchemeExponentialData method for scheme " +
-             GetName());
+             GetFullName());
 }
 
 inline NekDouble TimeIntegrationScheme::factorial(unsigned int n) const

@@ -564,7 +564,7 @@ namespace Nektar
         // Set to 1 for first step and it will then be increased in
         // time advance routines
         unsigned int order = IntegrationScheme->GetOrder();
-        
+
         // Set to 1 for first step and it will then be increased in
         // time advance routines
         if( IntegrationScheme->GetName() == "BackwardEuler" ||
@@ -576,7 +576,6 @@ namespace Nektar
                 LibUtilities::GetTimeIntegrationSchemeFactory()
                 .CreateInstance( "RungeKutta", order, "SSP" );
         }
-
         else
         {
             NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "

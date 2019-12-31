@@ -85,28 +85,16 @@ namespace Nektar
         int physTot = m_fields[0]->GetTotPoints();
         int intSteps = 1;
 
-        if( m_intScheme->GetName() == "IMEXOrder1" )
+        if ( m_intScheme->GetName() == "IMEX" ||
+             m_intScheme->GetName() == "IMEXGear" )
         {
-            intSteps = 1;
+            m_intSteps = m_intScheme->GetOrder();
         }
-        else if( m_intScheme->GetName() == "IMEXOrder2" ||
-                 m_intScheme->GetName() == "IMEXGear" )
+        else
         {
-            intSteps = 2;
+            NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "
+                     "Options include IMEXGear or IMEXOrder{1,2,3,4}");
         }
-        else if( m_intScheme->GetName() == "IMEXOrder3" )
-        {
-            intSteps = 3;
-        }
-        else if( m_intScheme->GetName() == "IMEXOrder4" )
-        {
-            intSteps = 4;
-        }
-	else
-	{
-	    NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "
-		     "Options include IMEXGear or IMEXOrder{1,2,3,4}");
-	}
 
         m_presForcingCorrection= Array<OneD, Array<OneD, NekDouble> >(intSteps);
         for(int i = 0; i < m_presForcingCorrection.num_elements(); i++)

@@ -65,6 +65,9 @@ bool TimeIntegrationSchemeData::VerifyIntegrationSchemeType(
 
     Array<OneD, TimeIntegrationSchemeType> vertype(IMEXdim, eExplicit);
 
+    if (type == eExponential)
+        vertype[0] = eExponential;
+
     for (int m = 0; m < IMEXdim; m++)
     {
         for (int i = 0; i < dim; i++)

@@ -67,6 +67,10 @@ public:
         // Currently up to 4th order is implemented because the number
         // of steps is the same as the order.
         // Currently up to 4th order is implemented.
+        ASSERTL1(type == "Lawson" || type == "Norsett",
+                 "EulerExponential Time integration scheme bad type: " +
+                 type);
+
         ASSERTL1(0 <= order && order <= 4,
                  "EulerExponential Time integration scheme bad order: " +
                  std::to_string(order));
@@ -81,7 +85,7 @@ public:
                 new TimeIntegrationSchemeData(this));
 
             EulerExponentialTimeIntegrationScheme::SetupSchemeData(
-	        m_integration_phases[n], n+1, m_type);
+                m_integration_phases[n], n+1, m_type);
         }
 
         // for( unsigned int n=0; n<m_order; ++n )
@@ -106,6 +110,11 @@ public:
         return std::string("EulerExponential");
     }
 
+    LUE virtual std::string GetFullName () const
+    {
+        return m_type + GetName() + "Order" + std::to_string(m_order);
+    }
+
     LUE virtual NekDouble GetTimeStability() const
     {
         return 1.0;
@@ -118,7 +127,7 @@ public:
         phase->m_order = order;
         phase->m_type  = type;
         phase->m_name = type + std::string("EulerExponentialOrder") +
-	  std::to_string(phase->m_order);
+          std::to_string(phase->m_order);
 
         // Parameters for the compact 1 step implementation.
         phase->m_numstages = 1;

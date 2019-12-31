@@ -128,7 +128,7 @@ public:
 
     LUE virtual std::string GetName() const
     {
-        return std::string("IMEXOrder");
+        return std::string("IMEX");
     }
 
     LUE virtual NekDouble GetTimeStability() const

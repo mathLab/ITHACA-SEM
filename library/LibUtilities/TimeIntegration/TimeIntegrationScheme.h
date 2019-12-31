@@ -133,7 +133,7 @@ public:
         TimeIntegrationSolutionSharedPtr &solvector,
         const TimeIntegrationSchemeOperators &op);
 
-    LUE std::string GetFullName () const;
+    LUE virtual std::string GetFullName () const;
     virtual std::string GetName() const = 0;
     LUE unsigned int GetOrder() const { return m_order; };
     LUE std::string  GetType () const { return m_type; };

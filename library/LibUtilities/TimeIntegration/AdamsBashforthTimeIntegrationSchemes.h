@@ -95,7 +95,7 @@ public:
 
             case 3:
                 RungeKuttaTimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[0], 2, 0); // Order 2
+                    m_integration_phases[0], 2, ""); // Order 2
                 break;
 
             case 4:
@@ -177,10 +177,10 @@ public:
         // B Coefficient for first row first column
         phase->m_B[0][0][0] = coefficients[phase->m_order][0];
 
-        // B evaluation value shuffling first row second column
+        // B evaluation value shuffling second row first column
         if( phase->m_order > 1 )
         {
-            phase->m_B[0][0][1] = 1.0; // constant 1
+            phase->m_B[0][1][0] = 1.0; // constant 1
         }
 
         // U Curent time step evaluation first row first column

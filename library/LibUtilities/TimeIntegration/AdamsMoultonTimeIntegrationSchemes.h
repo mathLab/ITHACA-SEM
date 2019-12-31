@@ -188,7 +188,7 @@ public:
         phase->m_A[0][0][0] = coefficients[phase->m_order][0];
         phase->m_B[0][0][0] = coefficients[phase->m_order][0];
 
-        // B evaluation value shuffling first row second column
+        // B evaluation value shuffling second row first column
         if( phase->m_order > 1 )
         {
             phase->m_B[0][1][0] = 1.0; // constant 1

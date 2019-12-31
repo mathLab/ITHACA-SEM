@@ -154,9 +154,9 @@ public:
         // B Phi function for first row first column
         phase->m_B[0][0][0] = 1.0 / phase->m_order; // phi_func(0 or 1)
 
-        // B evaluation value shuffling first row second column
+        // B evaluation value shuffling second row first column
         if( phase->m_order > 1 )
-          phase->m_B[0][0][1] = 1.0; // constant 1
+          phase->m_B[0][1][0] = 1.0; // constant 1
 
         // U Curent time step evaluation first row first column
         phase->m_U[0][0] = 1.0; // constant 1
@@ -373,9 +373,9 @@ public:
             // B Phi function for first row first column.
             phase->m_B_phi[k][0][0] = phi[0];
 
-            // B evaluation value shuffling first row second column.
+            // B evaluation value shuffling second row first column.
             if( phase->m_order > 1 )
-                phase->m_B_phi[k][0][1] = 1.0; // constant 1
+                phase->m_B_phi[k][1][0] = 1.0; // constant 1
 
             // U Curent time step evaluation first row first column.
             phase->m_U_phi[k][0][0] = 1.0; // constant 1

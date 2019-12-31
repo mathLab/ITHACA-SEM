@@ -215,7 +215,7 @@ class DIRKOrder3TimeIntegrationScheme :
 {
 public:
     DIRKOrder3TimeIntegrationScheme(int order, std::string type) :
-        DIRKTimeIntegrationScheme(2, "")
+        DIRKTimeIntegrationScheme(3, "")
     {
         boost::ignore_unused(order);
         boost::ignore_unused(type);

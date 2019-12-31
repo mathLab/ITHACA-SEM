@@ -50,7 +50,7 @@ namespace LibUtilities
 {
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMEX Dirk 1 2 1
+// IMEX Dirk 1 2 1 : Forward - Backward Euler IMEX
 
 class IMEXdirk_1_2_1TimeIntegrationScheme : public TimeIntegrationScheme
 {
@@ -148,7 +148,7 @@ public:
 }; // end class IMEXdirk_1_2_1TimeIntegrator
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMEX Dirk 1 2 2
+// IMEX Dirk 1 2 2 : Implict-Explicit Midpoint IMEX
 
 class IMEXdirk_1_2_2TimeIntegrationScheme : public TimeIntegrationScheme
 {
@@ -246,7 +246,7 @@ public:
 }; // end class IMEXdirk_1_2_2TimeIntegrator
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMEX Dirk 2 2 2
+// IMEX Dirk 2 2 2 : L Stable, two stage, second order IMEX
 
 class IMEXdirk_2_2_2TimeIntegrationScheme : public TimeIntegrationScheme
 {
@@ -356,7 +356,7 @@ public:
 }; // end class IMEXdirk_2_2_2TimeIntegrationScheme
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMEX Dirk 2 3 2
+// IMEX Dirk 2 3 2 : L Stable, three stage, second order IMEX
 
 class IMEXdirk_2_3_2TimeIntegrationScheme : public TimeIntegrationScheme
 {
@@ -466,13 +466,13 @@ public:
 }; // end class IMEXdirk_2_3_2TimeIntegrationScheme
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMEX Dirk 2 3 3
+// IMEX Dirk 2 3 3 : L Stable, two stage, third order IMEX
 
 class IMEXdirk_2_3_3TimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
     IMEXdirk_2_3_3TimeIntegrationScheme(int order, std::string type) :
-        TimeIntegrationScheme(2, "")
+        TimeIntegrationScheme(3, "")
     {
         boost::ignore_unused(order);
         boost::ignore_unused(type);
@@ -495,7 +495,7 @@ public:
         boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            IMEXdirk_2_3_3TimeIntegrationScheme>::AllocateSharedPtr(2, "");
+            IMEXdirk_2_3_3TimeIntegrationScheme>::AllocateSharedPtr(3, "");
         return p;
     }
 
@@ -575,7 +575,7 @@ public:
 }; // end class IMEXdirk_2_3_3TimeIntegrationScheme
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMEX Dirk 3 4 3
+// IMEX Dirk 3 4 3 : L Stable, three stage, third order IMEX
 
 class IMEXdirk_3_4_3TimeIntegrationScheme : public TimeIntegrationScheme
 {
@@ -698,7 +698,7 @@ public:
 }; // end class IMEXdirk_3_4_3TimeIntegrationScheme
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMEX Dirk 4 4 3
+// IMEX Dirk 4 4 3 : L Stable, four stage, third order IMEX
 
 class IMEXdirk_4_4_3TimeIntegrationScheme : public TimeIntegrationScheme
 {

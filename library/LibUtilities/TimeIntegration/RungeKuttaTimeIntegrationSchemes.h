@@ -95,7 +95,7 @@ public:
 
     LUE virtual std::string GetName() const
     {
-        return std::string("RungeKuttaOrder" + std::to_string(m_order));
+        return std::string("RungeKutta");
     }
 
     LUE virtual NekDouble GetTimeStability() const
@@ -212,8 +212,7 @@ public:
                 // 5th Order - 6 stages
                 { 7./90., 32./90., 12./90., 32./90., 7./90. } } };
 
-        unsigned int index =
-          (phase->m_type == "SSP" || phase->m_type == "ImprovedEuler");
+        unsigned int index = (type == "SSP" || type == "ImprovedEuler");
 
         phase->m_schemeType = eExplicit;
         phase->m_order = order;

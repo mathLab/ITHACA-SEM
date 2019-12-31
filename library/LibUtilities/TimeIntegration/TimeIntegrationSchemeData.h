@@ -51,7 +51,8 @@ class TimeIntegrationSchemeData
 {
 public:
     TimeIntegrationSchemeData(const TimeIntegrationScheme *parent)
-        : m_parent(parent), m_initialised(false), m_lastDeltaT(0), m_lastNVars(0)
+        : m_parent(parent),
+	  m_initialised(false), m_lastDeltaT(0), m_lastNVars(0)
     {
     }
 
@@ -218,9 +219,9 @@ public:
 
     const TimeIntegrationScheme *m_parent;
 
-    std::string m_name{""};
-    unsigned int m_order{0};
-    std::string m_type{""};
+    std::string m_name;
+    unsigned int m_order;
+    std::string m_type;
 
     TimeIntegrationSchemeType m_schemeType;
 

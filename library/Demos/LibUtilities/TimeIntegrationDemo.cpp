@@ -378,7 +378,7 @@ int main(int argc, char *argv[])
     }
 
     if (!vm.count("values") || !vm.count("timesteps") || !vm.count("method") ||
-	((vm["method"].as<int>() >= 10) && !vm.count("order")) ||
+        ((vm["method"].as<int>() >= 10) && !vm.count("order")) ||
         vm.count("help"))
     {
         std::cout << "Please specify the number of "
@@ -419,7 +419,7 @@ int main(int argc, char *argv[])
     switch (nMethod)
     {
         case 0:
-	  tiScheme = factory.CreateInstance("ForwardEuler", 1, "");
+          tiScheme = factory.CreateInstance("ForwardEuler", 1, "");
             break;
         case 1:
             tiScheme = factory.CreateInstance("IMEXOrder1", 1, "");
@@ -481,10 +481,10 @@ int main(int argc, char *argv[])
             break;
 
         case 20:
- 	    tiScheme = factory.CreateInstance("EulerExponential", nOrder," Lawson" );
+            tiScheme = factory.CreateInstance("EulerExponential", nOrder, "Lawson" );
             break;
         case 21:
-	    tiScheme = factory.CreateInstance("EulerExponential", nOrder, "Norsett");
+            tiScheme = factory.CreateInstance("EulerExponential", nOrder, "Norsett");
             break;
         default:
         {
@@ -619,7 +619,7 @@ int main(int argc, char *argv[])
     std::cout << tiScheme->GetFullName() << std::endl;
 
     solver->EvaluateL2Error(nTimeSteps, t0 + (nTimeSteps * dt),
-			    approxSol, exaxtSol, true);
+                            approxSol, exaxtSol, true);
 
     // 7. Some more writing out the results
     outfile.close();
@@ -659,7 +659,7 @@ void DemoSolver::EvaluateL2Error(int timeStep, const NekDouble time,
     // Write the time step and time
     if( print )
         std::cout << "Time step: " << timeStep << "  "
-		  << "Time: " << time << "\n";
+                  << "Time: " << time << "\n";
 
     // Get the min and max value and write the approximate solution
     // std::cout << "  approximate ";

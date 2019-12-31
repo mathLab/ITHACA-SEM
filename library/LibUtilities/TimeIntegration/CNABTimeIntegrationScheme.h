@@ -114,13 +114,14 @@ public:
         phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(2);
 
         phase->m_A[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
             Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_A[1] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[1] =
             Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
+
         phase->m_U =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  0.0);
         phase->m_V =

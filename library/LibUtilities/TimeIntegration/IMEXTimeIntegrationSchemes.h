@@ -128,7 +128,7 @@ public:
 
     LUE virtual std::string GetName() const
     {
-        return std::string("IMEXOrder" + std::to_string(m_order));
+        return std::string("IMEXOrder");
     }
 
     LUE virtual NekDouble GetTimeStability() const

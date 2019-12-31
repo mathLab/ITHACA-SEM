@@ -224,8 +224,8 @@ protected:
         ConstSingleArray &t_old, TripleArray &y_new, SingleArray &t_new,
         const TimeIntegrationSchemeOperators &op) const;
 
-    unsigned int m_order{0};
-    std::string  m_type{""};
+    unsigned int m_order;
+    std::string  m_type;
 
 }; // end class TimeIntegrationScheme
 

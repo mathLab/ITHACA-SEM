@@ -49,6 +49,118 @@ namespace Nektar
 namespace LibUtilities
 {
 
+//  IMEXDirk-(s, sigma, p), where s is the number of implicit stage
+//  schemes, sigma is the number of explicit stage scheme and p is the
+//  combined order of the scheme.
+
+///////////////////////////////////////////////////////////////////////////////
+// IMEX Dirk 1 1 1 : Forward - Backward Euler IMEX
+
+class IMEXdirk_1_1_1TimeIntegrationScheme : public TimeIntegrationScheme
+{
+public:
+    IMEXdirk_1_1_1TimeIntegrationScheme(int order, std::string type) :
+        TimeIntegrationScheme(1, "")
+    {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
+        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
+        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+            new TimeIntegrationSchemeData(this));
+
+        IMEXdirk_1_1_1TimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0]);
+
+        // for( unsigned int n=0; n<m_order; ++n )
+        //   std::cout << m_integration_phases[n] << std::endl;
+    }
+
+    virtual ~IMEXdirk_1_1_1TimeIntegrationScheme()
+    {
+    }
+
+    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
+
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+          IMEXdirk_1_1_1TimeIntegrationScheme>::AllocateSharedPtr(1, "");
+        return p;
+    }
+
+    static std::string className;
+
+    LUE virtual std::string GetName() const
+    {
+        return std::string("IMEXdirk_1_1_1");
+    }
+
+    LUE virtual NekDouble GetTimeStability() const
+    {
+        return 1.0;
+    }
+
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    {
+        phase->m_schemeType = eIMEX;
+        phase->m_order = 1;
+        phase->m_name = std::string("IMEXdirk_1_1_" +
+                                    std::to_string(phase->m_order));
+
+        phase->m_numsteps  = 2;
+        phase->m_numstages = 1;
+
+        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(2);
+        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(2);
+
+        phase->m_A[0] =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
+        phase->m_B[0] =
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
+        phase->m_A[1] =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
+        phase->m_B[1] =
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
+        phase->m_U =
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  0.0);
+        phase->m_V =
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  0.0);
+
+        phase->m_A[0][0][0] = 1.0;
+
+        phase->m_B[0][0][0] = 1.0;
+        phase->m_B[1][1][0] = 1.0;
+
+        phase->m_U[0][0]    = 1.0;
+        phase->m_U[0][1]    = 1.0;
+
+        phase->m_V[0][0]    = 1.0;
+        phase->m_V[0][1]    = 1.0;
+
+        phase->m_numMultiStepValues = 1;
+        phase->m_numMultiStepDerivs = 1;
+
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
+        phase->m_timeLevelOffset[0] = 0;
+        phase->m_timeLevelOffset[1] = 0;
+
+        phase->m_firstStageEqualsOldSolution =
+            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
+                                                      phase->m_U, phase->m_V);
+        phase->m_lastStageEqualsNewSolution =
+            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
+                                                     phase->m_U, phase->m_V);
+
+        ASSERTL1(phase->VerifyIntegrationSchemeType(
+                     phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B,
+                     phase->m_U, phase->m_V),
+                 "Time integration scheme coefficients do not match its type");
+    }
+
+}; // end class IMEXdirk_1_1_1TimeIntegrator
+
 ///////////////////////////////////////////////////////////////////////////////
 // IMEX Dirk 1 2 1 : Forward - Backward Euler IMEX
 
@@ -67,6 +179,9 @@ public:
 
         IMEXdirk_1_2_1TimeIntegrationScheme::SetupSchemeData(
             m_integration_phases[0]);
+
+        // for( unsigned int n=0; n<m_order; ++n )
+        //   std::cout << m_integration_phases[n] << std::endl;
     }
 
     virtual ~IMEXdirk_1_2_1TimeIntegrationScheme()
@@ -99,7 +214,7 @@ public:
     {
         phase->m_schemeType = eIMEX;
         phase->m_order = 1;
-        phase->m_name = std::string("IMEXdirk_1_2_1Order" +
+        phase->m_name = std::string("IMEXdirk_1_2_" +
                                     std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
@@ -197,7 +312,7 @@ public:
     {
         phase->m_schemeType = eIMEX;
         phase->m_order = 1;
-        phase->m_name = std::string("IMEXdirk_1_2_2Order" +
+        phase->m_name = std::string("IMEXdirk_1_2_" +
                                     std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
@@ -246,7 +361,7 @@ public:
 }; // end class IMEXdirk_1_2_2TimeIntegrator
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMEX Dirk 2 2 2 : L Stable, two stage, second order IMEX
+// IMEX Dirk 2 2 2 : L Stable, two implict stages, two explict stages, second order IMEX
 
 class IMEXdirk_2_2_2TimeIntegrationScheme : public TimeIntegrationScheme
 {
@@ -295,17 +410,11 @@ public:
     {
         phase->m_schemeType = eIMEX;
         phase->m_order = 2;
-        phase->m_name = std::string("IMEXdirk_2_2_2Order" +
+        phase->m_name = std::string("IMEXdirk_2_2_" +
                                     std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 3;
-
-        phase->m_numMultiStepValues = 1;
-        phase->m_numMultiStepDerivs = 0;
-
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-        phase->m_timeLevelOffset[0] = 0;
 
         phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(2);
         phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(2);
@@ -340,6 +449,12 @@ public:
         phase->m_B[1][0][0] = gdelta;
         phase->m_B[1][0][1] = 1.0 - gdelta;
 
+        phase->m_numMultiStepValues = 1;
+        phase->m_numMultiStepDerivs = 0;
+
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
+        phase->m_timeLevelOffset[0] = 0;
+
         phase->m_firstStageEqualsOldSolution =
             phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
                                                       phase->m_U, phase->m_V);
@@ -356,7 +471,7 @@ public:
 }; // end class IMEXdirk_2_2_2TimeIntegrationScheme
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMEX Dirk 2 3 2 : L Stable, three stage, second order IMEX
+// IMEX Dirk 2 3 2 : L Stable, two implict stages, three explict stages, second order IMEX
 
 class IMEXdirk_2_3_2TimeIntegrationScheme : public TimeIntegrationScheme
 {
@@ -405,17 +520,11 @@ public:
     {
         phase->m_schemeType = eIMEX;
         phase->m_order = 2;
-        phase->m_name = std::string("IMEXdirk_2_3_2Order" +
+        phase->m_name = std::string("IMEXdirk_2_3_" +
                                     std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 3;
-
-        phase->m_numMultiStepValues = 1;
-        phase->m_numMultiStepDerivs = 0;
-
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-        phase->m_timeLevelOffset[0] = 0;
 
         phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(2);
         phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(2);
@@ -450,6 +559,12 @@ public:
         phase->m_B[1][0][1] = 1.0 - lambda;
         phase->m_B[1][0][2] = lambda;
 
+        phase->m_numMultiStepValues = 1;
+        phase->m_numMultiStepDerivs = 0;
+
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
+        phase->m_timeLevelOffset[0] = 0;
+
         phase->m_firstStageEqualsOldSolution =
             phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
                                                       phase->m_U, phase->m_V);
@@ -466,7 +581,7 @@ public:
 }; // end class IMEXdirk_2_3_2TimeIntegrationScheme
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMEX Dirk 2 3 3 : L Stable, two stage, third order IMEX
+// IMEX Dirk 2 3 3 : L Stable, two implict stages, three explict stages, third order IMEX
 
 class IMEXdirk_2_3_3TimeIntegrationScheme : public TimeIntegrationScheme
 {
@@ -515,17 +630,11 @@ public:
     {
         phase->m_schemeType = eIMEX;
         phase->m_order = 2;
-        phase->m_name = std::string("IMEXdirk_2_2_3Order" +
+        phase->m_name = std::string("IMEXdirk_2_2_" +
                                     std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 3;
-
-        phase->m_numMultiStepValues = 1;
-        phase->m_numMultiStepDerivs = 0;
-
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-        phase->m_timeLevelOffset[0] = 0;
 
         phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(2);
         phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(2);
@@ -559,6 +668,12 @@ public:
         phase->m_B[1][0][1] = 0.5;
         phase->m_B[1][0][2] = 0.5;
 
+        phase->m_numMultiStepValues = 1;
+        phase->m_numMultiStepDerivs = 0;
+
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
+        phase->m_timeLevelOffset[0] = 0;
+
         phase->m_firstStageEqualsOldSolution =
             phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
                                                       phase->m_U, phase->m_V);
@@ -575,7 +690,7 @@ public:
 }; // end class IMEXdirk_2_3_3TimeIntegrationScheme
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMEX Dirk 3 4 3 : L Stable, three stage, third order IMEX
+// IMEX Dirk 3 4 3 : L Stable, three implict stages, four explict stages, third order IMEX
 
 class IMEXdirk_3_4_3TimeIntegrationScheme : public TimeIntegrationScheme
 {
@@ -624,17 +739,11 @@ public:
     {
         phase->m_schemeType = eIMEX;
         phase->m_order = 3;
-        phase->m_name = std::string("IMEXdirk_3_4_3Order" +
+        phase->m_name = std::string("IMEXdirk_3_4_" +
                                     std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 4;
-
-        phase->m_numMultiStepValues = 1;
-        phase->m_numMultiStepDerivs = 0;
-
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-        phase->m_timeLevelOffset[0] = 0;
 
         phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(2);
         phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(2);
@@ -682,6 +791,12 @@ public:
             0.25 * (6.0 * lambda * lambda - 20.0 * lambda + 5.0);
         phase->m_B[1][0][3] = lambda;
 
+        phase->m_numMultiStepValues = 1;
+        phase->m_numMultiStepDerivs = 0;
+
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
+        phase->m_timeLevelOffset[0] = 0;
+
         phase->m_firstStageEqualsOldSolution =
             phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
                                                       phase->m_U, phase->m_V);
@@ -698,7 +813,7 @@ public:
 }; // end class IMEXdirk_3_4_3TimeIntegrationScheme
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMEX Dirk 4 4 3 : L Stable, four stage, third order IMEX
+// IMEX Dirk 4 4 3 : L Stable, four implict stages, four explict stages, third order IMEX
 
 class IMEXdirk_4_4_3TimeIntegrationScheme : public TimeIntegrationScheme
 {
@@ -747,17 +862,11 @@ public:
     {
         phase->m_schemeType = eIMEX;
         phase->m_order = 3;
-        phase->m_name = std::string("IMEXdirk_4_4_3Order" +
+        phase->m_name = std::string("IMEXdirk_4_4_" +
                                     std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 5;
-
-        phase->m_numMultiStepValues = 1;
-        phase->m_numMultiStepDerivs = 0;
-
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-        phase->m_timeLevelOffset[0] = 0;
 
         phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(2);
         phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(2);
@@ -806,6 +915,12 @@ public:
         phase->m_B[1][0][1] = 7.0 / 4.0;
         phase->m_B[1][0][2] = 3.0 / 4.0;
         phase->m_B[1][0][3] = -7.0 / 4.0;
+
+        phase->m_numMultiStepValues = 1;
+        phase->m_numMultiStepDerivs = 0;
+
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
+        phase->m_timeLevelOffset[0] = 0;
 
         phase->m_firstStageEqualsOldSolution =
             phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,

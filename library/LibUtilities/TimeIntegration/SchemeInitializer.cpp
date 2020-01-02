@@ -97,6 +97,7 @@ REGISTER(DIRKOrder2);
 REGISTER(DIRKOrder3);
 
 // IMEXdirkTimeIntegrationSchemes.h
+REGISTER(IMEXdirk_1_1_1);
 REGISTER(IMEXdirk_1_2_1);
 REGISTER(IMEXdirk_1_2_2);
 REGISTER(IMEXdirk_2_2_2);

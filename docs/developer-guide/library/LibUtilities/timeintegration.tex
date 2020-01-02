@@ -263,14 +263,22 @@ DIRKOrder3           & Diagonally Implicit Runge-Kutta scheme of order 3\\
 CNAB                 & Crank-Nicolson-Adams-Bashforth Order 2 (CNAB)\\
 IMEXGear             & IMEX Gear Order 2\\
 MCNAB                & Modified Crank-Nicolson-Adams-Bashforth Order 2 (MCNAB)\\
-IMEXdirk\_1\_1\_1    & Forward-Backward Euler IMEX DIRK(1,1,1)\\
-IMEXdirk\_1\_2\_1    & Forward-Backward Euler IMEX DIRK(1,2,1)\\
-IMEXdirk\_1\_2\_2    & Implicit-Explicit Midpoint IMEX DIRK(1,2,2)\\
-IMEXdirk\_2\_2\_2    & L-stable, two stage, second order IMEX DIRK(2,2,2)\\
-IMEXdirk\_2\_3\_2    & L-stable, three stage, third order IMEX DIRK(3,4,3)\\
-IMEXdirk\_2\_3\_3    & L-stable, two stage, third order IMEX DIRK(2,3,3)\\
-IMEXdirk\_3\_4\_3    & L-stable, three stage, third order IMEX DIRK(3,4,3)\\
-IMEXdirk\_4\_4\_3    & L-stable, four stage, third order IMEX DIRK(4,4,3)\\
+IMEXdirk\_1\_1\_1    & Forward-Backward Euler, one implicit stage, one explicit
+stage, first order IMEX DIRK(1,1,1)\\
+IMEXdirk\_1\_2\_1    & Forward-Backward Euler, one implicit stage, two explicit
+stages, first order IMEX DIRK(1,2,1)\\
+IMEXdirk\_1\_2\_2    & Implicit-Explicit Midpoint one implicit stage, two explicit
+stages, second order IMEX DIRK(1,2,2)\\
+IMEXdirk\_2\_2\_2    & L-stable, two implicit stages, two explicit
+stages, second order IMEX DIRK(2,2,2)\\
+IMEXdirk\_2\_3\_2    & L-stable, two implicit stages, three explicit
+stages, second order IMEX DIRK(2,3,2)\\
+IMEXdirk\_2\_3\_3    & L-stable, two implicit stages, three explicit
+stages, third order IMEX DIRK(2,3,3)\\
+IMEXdirk\_3\_4\_3    & L-stable, three implict stages, four explicit
+stages, third order IMEX DIRK(3,4,3)\\
+IMEXdirk\_4\_4\_3    & L-stable, four implicit stages, four explicit
+stages, third order IMEX DIRK(4,4,3)\\
 \bottomrule
 \end{tabular}
 \end{center}

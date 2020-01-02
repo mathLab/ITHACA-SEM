@@ -1,68 +1,169 @@
 stages:
-  - build-env
+  - build-env-default
+  - build-env-full
   - build-and-test
+  - build-docs
   - publish
 
-build-env:
+.build-env-template: &build-env-template
   stage: build-env
-  variables:
-    dockerfile: docker/nektar-env/Dockerfile
-    image_name: nektar-env
   tags:
     - shell
   only:
     refs:
       - feature/gitlab_ci
       - tags
-  script:
-    - docker build --cpu-period 100000 --cpu-quota 200000 -t ${image_name} -f ${dockerfile} .
 
-build-and-test:
+.build-and-test-template: &build-and-test-template
   stage: build-and-test
-  image: nektar-env
   tags:
     - docker
   only:
     refs:
       - feature/gitlab_ci
       - tags
-  script:
-    - mkdir ~/.ccache && echo "cache_dir = /cache/nektar" >> ~/.ccache/ccache.conf
-    - mkdir build
-    - cmake -B build
-      -DCMAKE_BUILD_TYPE:STRING=Debug
-      -DNEKTAR_FULL_DEBUG:BOOL=ON
-      -DNEKTAR_TEST_ALL:BOOL=ON
-      -DNEKTAR_BUILD_TIMINGS:BOOL=ON
-      -DNEKTAR_USE_ARPACK:BOOL=ON
-      -DNEKTAR_USE_FFTW:BOOL=ON
-      -DNEKTAR_USE_MPI:BOOL=ON
-      -DNEKTAR_USE_SCOTCH:BOOL=ON
-      -DNEKTAR_USE_PETSC:BOOL=ON
-      -DNEKTAR_USE_HDF5:BOOL=ON
-      -DNEKTAR_USE_MESHGEN:BOOL=ON
-      -DNEKTAR_USE_CCM:BOOL=ON
-      -DNEKTAR_BUILD_PYTHON:BOOL=ON
-      -DNEKTAR_TEST_USE_HOSTFILE=ON
-      -DNEKTAR_ERROR_ON_WARNINGS=OFF
-      .
-      - make -C build -j 2 all
-      - make -C build -j 2 install
-      - (cd build && ctest -j 2)
+  script: 
+    - IFS="-" read -a NAME_VARS <<<$CI_JOB_NAME
+    - export BUILD_TYPE=${NAME_VARS[4]}
+    - export CCACHE_DIR=/cache/nektar/${NAME_VARS[3]}/
+    - mkdir -p build && (cd build && if [ $BUILD_TYPE == "default" ]; then cmake -G 'Unix Makefiles' .. -DCMAKE_BUILD_TYPE=Release -DNEKTAR_TEST_ALL=ON -DNEKTAR_BUILD_TIMINGS=ON -DNEKTAR_ERROR_ON_WARNINGS=OFF ..; elif [ $BUILD_TYPE == "full" ]; then cmake -DCMAKE_BUILD_TYPE:STRING=Debug -DNEKTAR_FULL_DEBUG:BOOL=ON -DNEKTAR_TEST_ALL:BOOL=ON -DNEKTAR_BUILD_TIMINGS:BOOL=ON -DNEKTAR_USE_ARPACK:BOOL=ON -DNEKTAR_USE_FFTW:BOOL=ON -DNEKTAR_USE_MPI:BOOL=ON -DNEKTAR_USE_SCOTCH:BOOL=ON -DNEKTAR_USE_PETSC:BOOL=ON -DNEKTAR_USE_HDF5:BOOL=ON -DNEKTAR_USE_MESHGEN:BOOL=ON -DNEKTAR_USE_CCM:BOOL=ON -DNEKTAR_BUILD_PYTHON:BOOL=ON -DNEKTAR_TEST_USE_HOSTFILE=ON -DNEKTAR_ERROR_ON_WARNINGS=OFF ..; fi)
+    - make -C build -j 4 all
+    - make -C build -j 4 install
+    - (cd build && ctest -j 4 --output-on-failure)
 
-publish:
-  image: debian:buster-slim
-  stage: publish
-  tags:
-    - docker
+################################################
+###################  DEBIAN  ###################
+################################################
+
+.build-env-debian-template-default: &build-env-debian-template-default
+  <<: *build-env-template
+  stage:
+    build-env-default
   variables:
-    GIT_STRATEGY: none 
-  only:
-    refs:
-      - feature/gitlab_ci
-      - tags
-  dependencies:
-    - docker-build
+    OS_DISTRO: debian
   script:
-    - mv build.tar.gz ${CI_COMMIT_SHORT_SHA}-build.tar.gz
-    # - # scp to a web server somewhere
+    - IFS=- read _ _ OS_VERSION _ <<<$CI_JOB_NAME
+    - IFS=- read _ _ BUILD_TYPE <<<$CI_JOB_STAGE
+    - sed  -e "s/%%OS_VERSION%%/$OS_VERSION/g" docker/nektar-env/Dockerfile_${OS_DISTRO}_${BUILD_TYPE} > Dockerfile
+    - docker build -t nektar-env:${OS_VERSION}-${BUILD_TYPE} .
+
+.build-env-debian-template-full: &build-env-debian-template-full
+  <<: *build-env-debian-template-default
+  stage:
+    build-env-full
+
+build-env-buster-default:
+  <<: *build-env-debian-template-default
+
+build-env-buster-full:
+  <<: *build-env-debian-template-full
+
+build-env-stretch-default:
+  <<: *build-env-debian-template-default
+
+build-env-stretch-full:
+  <<: *build-env-debian-template-full
+
+
+build-and-test-buster-default:
+  <<: *build-and-test-template
+  image: nektar-env:buster-default
+
+build-and-test-buster-full:
+  <<: *build-and-test-template
+  image: nektar-env:buster-full
+
+build-and-test-stretch-default:
+  <<: *build-and-test-template
+  image: nektar-env:stretch-default
+
+build-and-test-stretch-full:
+  <<: *build-and-test-template
+  image: nektar-env:stretch-full
+
+
+################################################
+###################  UBUNTU  ###################
+################################################
+
+.build-env-ubuntu-template-default: &build-env-ubuntu-template-default
+  <<: *build-env-debian-template-default
+  variables:
+    OS_DISTRO: ubuntu
+
+.build-env-ubuntu-template-full: &build-env-ubuntu-template-full
+  <<: *build-env-ubuntu-template-default
+  stage:
+    build-env-full
+    
+build-env-bionic-default:
+  <<: *build-env-ubuntu-template-default
+
+build-env-bionic-full:
+  <<: *build-env-ubuntu-template-full
+
+build-env-xenial-default:
+  <<: *build-env-ubuntu-template-default
+
+build-env-xenial-full:
+  <<: *build-env-ubuntu-template-full
+
+build-env-trusty-default:
+  <<: *build-env-ubuntu-template-default
+
+build-env-trusty-full:
+  <<: *build-env-ubuntu-template-full
+
+
+build-and-test-bionic-default:
+  <<: *build-and-test-template
+  image: nektar-env:bionic-default
+
+build-and-test-bionic-full:
+  <<: *build-and-test-template
+  image: nektar-env:bionic-full
+
+build-and-test-xenial-default:
+  <<: *build-and-test-template
+  image: nektar-env:xenial-default
+
+build-and-test-xenial-full:
+  <<: *build-and-test-template
+  image: nektar-env:xenial-full
+
+build-and-test-trusty-default:
+  <<: *build-and-test-template
+  image: nektar-env:trusty-default
+
+build-and-test-trusty-full:
+  <<: *build-and-test-template
+  image: nektar-env:trusty-full
+
+
+################################################
+###################  CENTOS  ###################
+################################################
+
+.build-env-centos-template-default: &build-env-centos-template-default
+  <<: *build-env-debian-template-default
+  variables:
+    OS_DISTRO: centos
+
+.build-env-centos-template-full: &build-env-centos-template-full
+  <<: *build-env-centos-template-default
+  stage:
+    build-env-full
+
+build-env-centos7-default:
+  <<: *build-env-centos-template-default
+
+build-env-centos7-full:
+  <<: *build-env-centos-template-full
+
+build-and-test-centos7-default:
+  <<: *build-and-test-template
+  image: nektar-env:centos7-default
+
+build-and-test-centos7-full:
+  <<: *build-and-test-template
+  image: nektar-env:centos7-full

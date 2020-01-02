@@ -9,7 +9,8 @@ libptscotch-dev
 libtet1.5-dev
 libtriangle-dev
 mpi-default-dev
+patch
 petsc-dev
 python-dev
 python-numpy
-rsh
+rsh-client

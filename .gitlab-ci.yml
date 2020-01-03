@@ -73,6 +73,9 @@ build-and-test-buster-default:
 build-and-test-buster-full:
   <<: *build-and-test-template
   image: nektar-env:buster-full
+  variables:
+    OS_DISTRO: debian
+    GIT_SUBMODULE_STRATEGY: recursive
 
 build-and-test-stretch-default:
   <<: *build-and-test-template

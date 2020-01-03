@@ -77,7 +77,21 @@ std::ostream &operator<<(std::ostream &os, const TimeIntegrationScheme &rhs)
 
 std::string TimeIntegrationScheme::GetFullName () const
 {
-    return GetName() + m_type + "Order" + std::to_string(m_order);
+    return GetName() + GetType() + "Order" + std::to_string(GetOrder());
+}
+
+unsigned int TimeIntegrationScheme::GetOrder() const
+{
+    ASSERTL0(!m_integration_phases.empty(), "No scheme")
+
+    return m_integration_phases[m_integration_phases.size() - 1]->m_order;
+}
+
+std::string TimeIntegrationScheme::GetType() const
+{
+    ASSERTL0(!m_integration_phases.empty(), "No scheme")
+
+    return m_integration_phases[m_integration_phases.size() - 1]->m_type;
 }
 
 TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationScheme::TimeIntegrate(
@@ -89,6 +103,7 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationScheme::TimeIntegrate(
 
     TimeIntegrationSchemeDataSharedPtr &data =
         m_integration_phases[std::min(timestep, phases - 1)];
+
     return data->TimeIntegrate(delta_t, solvector, op);
 }
 
@@ -105,6 +120,7 @@ TimeIntegrationSchemeType TimeIntegrationScheme::GetIntegrationSchemeType()
     const
 {
     ASSERTL0(!m_integration_phases.empty(), "No scheme")
+
     return m_integration_phases[m_integration_phases.size() - 1]->m_schemeType;
 }
 

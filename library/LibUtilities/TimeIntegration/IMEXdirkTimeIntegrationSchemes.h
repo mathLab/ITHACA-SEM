@@ -146,17 +146,7 @@ public:
         phase->m_timeLevelOffset[0] = 0;
         phase->m_timeLevelOffset[1] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(
-                     phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B,
-                     phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class IMEXdirk_1_1_1TimeIntegrator
@@ -247,17 +237,7 @@ public:
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class IMEXdirk_1_2_1TimeIntegrator
@@ -345,17 +325,7 @@ public:
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class IMEXdirk_1_2_2TimeIntegrator
@@ -455,17 +425,7 @@ public:
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(
-                     phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B,
-                     phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class IMEXdirk_2_2_2TimeIntegrationScheme
@@ -565,17 +525,7 @@ public:
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(
-                     phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B,
-                     phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class IMEXdirk_2_3_2TimeIntegrationScheme
@@ -674,17 +624,7 @@ public:
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(
-                     phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B,
-                     phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class IMEXdirk_2_3_3TimeIntegrationScheme
@@ -797,17 +737,7 @@ public:
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(
-                     phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B,
-                     phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class IMEXdirk_3_4_3TimeIntegrationScheme
@@ -922,17 +852,7 @@ public:
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(
-                     phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B,
-                     phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class IMEXdirk_4_4_3TimeIntegrationScheme

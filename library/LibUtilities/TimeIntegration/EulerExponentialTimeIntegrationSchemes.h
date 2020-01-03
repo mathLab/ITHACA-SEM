@@ -75,17 +75,17 @@ public:
                  "EulerExponential Time integration scheme bad order: " +
                  std::to_string(order));
 
-        m_integration_phases = TimeIntegrationSchemeDataVector(m_order);
+        m_integration_phases = TimeIntegrationSchemeDataVector(order);
 
         // Currently the next lowest order is used to seed the current
         // order. This is not correct but is an okay approximation.
-        for( unsigned int n=0; n<m_order; ++n )
+        for( unsigned int n=0; n<order; ++n )
         {
             m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
                 new TimeIntegrationSchemeData(this));
 
             EulerExponentialTimeIntegrationScheme::SetupSchemeData(
-                m_integration_phases[n], n+1, m_type);
+                m_integration_phases[n], n+1, type);
         }
 
         // for( unsigned int n=0; n<m_order; ++n )
@@ -112,7 +112,7 @@ public:
 
     LUE virtual std::string GetFullName () const
     {
-        return m_type + GetName() + "Order" + std::to_string(m_order);
+        return GetType() + GetName() + "Order" + std::to_string(GetOrder());
     }
 
     LUE virtual NekDouble GetTimeStability() const
@@ -187,17 +187,7 @@ public:
             phase->m_timeLevelOffset[n] = n;
         }
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration phase coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
     virtual void SetupSchemeExponentialData(TimeIntegrationSchemeData *phase,

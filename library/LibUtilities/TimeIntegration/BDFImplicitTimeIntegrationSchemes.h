@@ -66,25 +66,25 @@ public:
                  "BDFImplicit Time integration scheme bad order (1-4): " +
                  std::to_string(order));
 
-        m_integration_phases = TimeIntegrationSchemeDataVector(m_order);
+        m_integration_phases = TimeIntegrationSchemeDataVector(order);
 
-        for( unsigned int n=0; n<m_order; ++n )
+        for( unsigned int n=0; n<order; ++n )
         {
             m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
                 new TimeIntegrationSchemeData(this));
         }
 
         // Next to last phase
-        if( m_order > 1 )
+        if( order > 1 )
             BDFImplicitTimeIntegrationScheme::SetupSchemeData(
-                m_integration_phases[m_order-2], m_order-1);
+                m_integration_phases[order-2], order-1);
 
         // Last phase
         BDFImplicitTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[m_order-1], m_order);
+            m_integration_phases[order-1], order);
 
         // Initial phases
-        switch( m_order )
+        switch( order )
         {
             case 1:
                 // No intial phase.
@@ -212,24 +212,7 @@ public:
             phase->m_timeLevelOffset[n] = n;
         }
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class BDFImplicitTimeIntegrator

@@ -79,7 +79,7 @@ public:
         boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p =
-	  MemoryManager<IMEXGearTimeIntegrationScheme>::AllocateSharedPtr(2, "");
+          MemoryManager<IMEXGearTimeIntegrationScheme>::AllocateSharedPtr(2, "");
         return p;
     }
 
@@ -141,17 +141,7 @@ public:
         phase->m_timeLevelOffset[1] = 1;
         phase->m_timeLevelOffset[2] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration phase coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class IMEXGearTimeIntegrationScheme

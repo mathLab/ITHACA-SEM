@@ -80,7 +80,7 @@ public:
         boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-	  BackwardEulerTimeIntegrationScheme>::AllocateSharedPtr(1, "");
+          BackwardEulerTimeIntegrationScheme>::AllocateSharedPtr(1, "");
         return p;
     }
 
@@ -123,17 +123,7 @@ public:
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class BackwardEulerTimeIntegrator
@@ -168,7 +158,7 @@ public:
         boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-	  ForwardEulerTimeIntegrationScheme>::AllocateSharedPtr(1, "");
+          ForwardEulerTimeIntegrationScheme>::AllocateSharedPtr(1, "");
         return p;
     }
 
@@ -211,17 +201,7 @@ public:
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration phase coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class ForwardEulerTimeIntegrator

@@ -52,7 +52,9 @@ TimeIntegrationSolution::TimeIntegrationSolution(
     int nvar           = y.num_elements();
     int npoints        = y[0].num_elements();
     int nMultiStepVals = m_schemeData->GetNmultiStepValues();
-    const Array<OneD, const unsigned int> &timeLevels = GetTimeLevelOffset();
+    const Array<OneD, const unsigned int> &timeLevels =
+        m_schemeData->GetTimeLevelOffset();
+
     for (int i = 1; i < nsteps; i++)
     {
         m_solVector[i] = Array<OneD, Array<OneD, NekDouble>>(nvar);

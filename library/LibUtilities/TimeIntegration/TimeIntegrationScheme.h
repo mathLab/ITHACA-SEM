@@ -78,11 +78,8 @@ enum TimeIntegrationSchemeType
     eIMEX,               //!< Implicit Explicit General Linear Method
     eImplicit,           //!< Fully implicit scheme
     eExponential,        //!< Exponential scheme
+    eFractionalInTime,   //!< Fractional in Time scheme
 };
-
-const char *const TimeIntegrationSchemeTypeMap[] = {
-    "NoTimeIntegrationSchemeType", "Explicit", "DiagonallyImplicit", "IMEX",
-    "Implicit", "Exponential"};
 
 
 /**
@@ -135,8 +132,8 @@ public:
 
     LUE virtual std::string GetFullName () const;
     virtual std::string GetName() const = 0;
-    LUE unsigned int GetOrder() const { return m_order; };
-    LUE std::string  GetType () const { return m_type; };
+    LUE unsigned int GetOrder() const;
+    LUE std::string  GetType () const;
 
     virtual NekDouble GetTimeStability() const = 0;
 
@@ -155,8 +152,6 @@ public:
 protected:
 
     TimeIntegrationSchemeDataVector m_integration_phases;
-    bool m_firstStageEqualsOldSolution; //< Optimisation flag
-    bool m_lastStageEqualsNewSolution;  //< Optimisation flag
 
     virtual ~TimeIntegrationScheme()
     {
@@ -196,9 +191,10 @@ protected:
         const TimeIntegrationSchemeOperators &op);
 
     // This should never be used directly... only used by child classes...
-    LUE TimeIntegrationScheme(int order, std::string type) :
-        m_order(order), m_type(type)
+    LUE TimeIntegrationScheme(int order, std::string type)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(type);
     }
 
     LUE TimeIntegrationScheme(const TimeIntegrationScheme &in)
@@ -218,14 +214,6 @@ protected:
     {
         return y[0][0].num_elements();
     }
-
-    LUE bool CheckTimeIntegrateArguments(
-        const NekDouble timestep, ConstTripleArray &y_old,
-        ConstSingleArray &t_old, TripleArray &y_new, SingleArray &t_new,
-        const TimeIntegrationSchemeOperators &op) const;
-
-    unsigned int m_order;
-    std::string  m_type;
 
 }; // end class TimeIntegrationScheme
 

@@ -64,32 +64,30 @@ public:
                  "IMEX Time integration scheme bad order (1-4): " +
                  std::to_string(order));
 
-        m_integration_phases = TimeIntegrationSchemeDataVector(m_order);
+        m_integration_phases = TimeIntegrationSchemeDataVector(order);
 
-        for( unsigned int n=0; n<m_order; ++n )
+        for( unsigned int n=0; n<order; ++n )
         {
             m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
                 new TimeIntegrationSchemeData(this));
         }
 
-        // Next to last phase
-        if( m_order > 1 )
-            IMEXTimeIntegrationScheme::SetupSchemeData(
-                m_integration_phases[m_order-2], m_order-1);
-
         // Last phase
         IMEXTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[m_order-1], m_order);
+            m_integration_phases[order-1], order);
 
         // Initial phases
-        switch( m_order )
+        switch( order )
         {
             case 1:
                 // No intial phase.
                 break;
 
             case 2:
-                // Intial phase set above
+	        IMEXTimeIntegrationScheme::SetupSchemeData(
+                    m_integration_phases[0], 1);
+                // IMEXdirk_2_3_2TimeIntegrationScheme::SetupSchemeData(
+                //     m_integration_phases[0]);
                 break;
 
             case 3:
@@ -104,6 +102,8 @@ public:
                     m_integration_phases[0]);
                 IMEXdirk_2_3_3TimeIntegrationScheme::SetupSchemeData(
                     m_integration_phases[1]);
+		IMEXTimeIntegrationScheme::SetupSchemeData(
+		    m_integration_phases[2], 3);
                 break;
 
             default:
@@ -120,7 +120,7 @@ public:
     static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
     {
         TimeIntegrationSchemeSharedPtr p =
-	  MemoryManager<IMEXTimeIntegrationScheme>::AllocateSharedPtr(order, type);
+            MemoryManager<IMEXTimeIntegrationScheme>::AllocateSharedPtr(order, type);
         return p;
     }
 
@@ -145,7 +145,7 @@ public:
                                                6./11.,    // 3rd Order
                                               12./25. };  // 4th Order
 
-	// Nsteps = 2 * order
+        // Nsteps = 2 * order
         const NekDouble UVcoefficients[5][8] =
             { {         0.,    0.,     0.,        0.,
                         0.,    0.,     0.,        0. },
@@ -217,17 +217,7 @@ public:
             phase->m_timeLevelOffset[phase->m_order+n] = n;
         }
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(
-                     phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B,
-                     phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class IMEXTimeIntegrationScheme
@@ -251,7 +241,7 @@ public:
         boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-	  IMEXTimeIntegrationScheme>::AllocateSharedPtr(1, "");
+            IMEXTimeIntegrationScheme>::AllocateSharedPtr(1, "");
         return p;
     }
 
@@ -277,7 +267,7 @@ public:
         boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-	  IMEXTimeIntegrationScheme>::AllocateSharedPtr(2, "");
+            IMEXTimeIntegrationScheme>::AllocateSharedPtr(2, "");
         return p;
     }
 
@@ -303,7 +293,7 @@ public:
         boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-	  IMEXTimeIntegrationScheme>::AllocateSharedPtr(3, "");
+            IMEXTimeIntegrationScheme>::AllocateSharedPtr(3, "");
         return p;
     }
 
@@ -329,7 +319,7 @@ public:
         boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-	  IMEXTimeIntegrationScheme>::AllocateSharedPtr(4, "");
+            IMEXTimeIntegrationScheme>::AllocateSharedPtr(4, "");
         return p;
     }
 

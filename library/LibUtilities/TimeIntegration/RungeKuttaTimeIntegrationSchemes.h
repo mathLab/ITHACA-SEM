@@ -59,15 +59,15 @@ public:
     RungeKuttaTimeIntegrationScheme(int order, std::string type) :
         TimeIntegrationScheme(order, type)
     {
-        ASSERTL1((m_type == "" || m_type == "SSP" || m_type == "ImprovedEuler"),
+        ASSERTL1((type == "" || type == "SSP" || type == "ImprovedEuler"),
                  "Runge Kutta Time integration scheme bad type. "
                   "Must blank, 'SSP', or 'ImprovedEuler'");
 
         // Std - Currently up to 5th order is implemented.
         // SSP - Currently 1st through 3rd order is implemented.
-        ASSERTL1(((m_type == "SSP" || m_type == "ImprovedEuler") == 0 &&
+        ASSERTL1(((type == "SSP" || type == "ImprovedEuler") == 0 &&
                   1 <= order && order <= 5) ||
-                 ((m_type == "SSP" || m_type == "ImprovedEuler") == 1 &&
+                 ((type == "SSP" || type == "ImprovedEuler") == 1 &&
                   1 <= order && order <= 3),
                  "Runge Kutta Time integration scheme bad order "
                  "Std (1-5) or SSP (1-3): " + std::to_string(order));
@@ -77,7 +77,7 @@ public:
             new TimeIntegrationSchemeData(this));
 
         RungeKuttaTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0], m_order, type);
+            m_integration_phases[0], order, type);
     }
 
     virtual ~RungeKuttaTimeIntegrationScheme()
@@ -100,7 +100,7 @@ public:
 
     LUE virtual NekDouble GetTimeStability() const
     {
-        if( m_order == 4 || m_order == 5 )
+        if( GetOrder() == 4 || GetOrder() == 5 )
         {
             return 2.784;
         }
@@ -261,17 +261,7 @@ public:
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class RungeKuttaTimeIntegrator

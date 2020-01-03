@@ -83,6 +83,29 @@ build-and-test-stretch-full:
   image: nektar-env:stretch-full
 
 
+build-env-buster-documentation:
+  tags:
+    - shell
+  stage:
+    build-env-full
+  script:
+    - docker build -t nektar-env:buster-documentation -f docker/nektar-env/Dockerfile_debian_documentation .
+
+build-user-guide:
+  <<: *build-and-test-template
+  image: nektar-env:buster-documentation
+  script:
+    - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
+    - make -C build user-guide-pdf user-guide-html developer-guide-pdf developer-guide-html
+
+build-doxygen:
+  <<: *build-and-test-template
+  image: nektar-env:buster-documentation
+  script:
+    - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
+    - make -C build doc
+
+
 ################################################
 ###################  UBUNTU  ###################
 ################################################

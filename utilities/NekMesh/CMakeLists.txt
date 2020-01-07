@@ -81,6 +81,7 @@ ADD_NEKTAR_TEST(Nektar++/linearise_invalid_quad)
 # MeshGen test
 IF(NEKTAR_USE_MESHGEN)
 
+    ADD_NEKTAR_TEST(MeshGen/GEO/2d_adapt)
     ADD_NEKTAR_TEST(MeshGen/GEO/2d_bl)
     ADD_NEKTAR_TEST(MeshGen/GEO/2d_t106c)
 

@@ -95,22 +95,24 @@ namespace Nektar
              (order == 1 || order == 2)) )
         {
             // Note RK first order SSP is just Forward Euler.
-            std::string vSubStepIntScheme = "RungeKutta";
-            int vSubStepIntSchemeOrder = order;
-            std::string vSubStepIntSchemeType = "SSP";
+            std::string vSubStepIntScheme        = "RungeKutta";
+            std::string vSubStepIntSchemeVariant = "SSP";
+            int         vSubStepIntSchemeOrder   = order;
 
             if( m_session->DefinesSolverInfo( "SubStepIntScheme" ) )
             {
-                vSubStepIntScheme = m_session->GetSolverInfo( "SubStepIntScheme" );
+                vSubStepIntScheme =
+		  m_session->GetSolverInfo( "SubStepIntScheme" );
+                vSubStepIntSchemeVariant = "";
                 vSubStepIntSchemeOrder = order;
-                vSubStepIntSchemeType = "";
             }
 
             m_subStepIntegrationScheme =
                 LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance(
                     vSubStepIntScheme,
+                    vSubStepIntSchemeVariant,
                     vSubStepIntSchemeOrder,
-                    vSubStepIntSchemeType );
+		    std::vector<NekDouble>() );
 
             int nvel = m_velocity.num_elements();
             int ndim = order+1;

@@ -574,7 +574,8 @@ namespace Nektar
             // Note RK first order SSP is just Forward Euler.
             m_subStepIntegrationScheme =
                 LibUtilities::GetTimeIntegrationSchemeFactory()
-                .CreateInstance( "RungeKutta", order, "SSP" );
+	            .CreateInstance( "RungeKutta", "SSP", order,
+				     std::vector<NekDouble>());
         }
         else
         {

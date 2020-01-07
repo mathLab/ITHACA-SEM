@@ -104,7 +104,8 @@ namespace Nektar
                 std::string methodName = m_session->GetSolverInfo(
                                                 "TIMEINTEGRATIONMETHOD" );
                 m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory()
-		    .CreateInstance( methodName, 0, "");
+		    .CreateInstance( methodName, "", 0,
+				     std::vector<NekDouble>());
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);

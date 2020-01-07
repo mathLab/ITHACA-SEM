@@ -127,9 +127,11 @@ Diffusion::~Diffusion()
 
 void Diffusion::TimeIntegrate()
 {
-    LibUtilities::TimeIntegrationSchemeFactory & fac = LibUtilities::GetTimeIntegrationSchemeFactory();
+    LibUtilities::TimeIntegrationSchemeFactory & fac =
+        LibUtilities::GetTimeIntegrationSchemeFactory();
 
-    m_IntScheme = fac.CreateInstance( m_scheme_name, 0, "" );
+    m_IntScheme = fac.CreateInstance( m_scheme_name, "", 0,
+				      std::vector<NekDouble>() );
   
     ode.DefineImplicitSolve( &Diffusion::DoImplicitSolve, this );
 
@@ -147,7 +149,6 @@ void Diffusion::TimeIntegrate()
 
     WriteSolution();
     ExactSolution();
-
 }
 
 

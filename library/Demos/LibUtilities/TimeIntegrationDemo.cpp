@@ -319,9 +319,48 @@ private:
     Array<TwoD, NekDouble> m_A;
     Array<TwoD, NekDouble> m_lambda;
 
-    Array<OneD, double> m_z0;
+    Array<OneD, NekDouble> m_z0;
 
-}; // end class OneDSinusoid
+}; // end class OneDSinusoidSolver
+
+///////////////////////////////////////////////////////////////////////////////
+// Class that represents the 1D FDE solver
+class OneDFDESolver : public DemoSolver
+{
+public:
+    // constructor based upon the discretisation details
+    OneDFDESolver(int nVars, int nPoints, int nTimeSteps) :
+        DemoSolver(nVars, nPoints, nTimeSteps)
+    {
+        m_name = std::string("OneDFDESolver");
+
+        m_alpha = 0.3;
+
+        // Initial values set to zero
+        m_u0 = Array<OneD, NekDouble>(m_nVars, 0.0);
+    }
+
+    // -----------------------------------------------------------------
+    // These functions/methods below are the routines which will be
+    // used by the TimeIntegration framework (and are required for
+    // using it).
+    void EvaluateFDETerm(
+        const Array<OneD, const Array<OneD, double>> &inarray,
+              Array<OneD,       Array<OneD, double>> &outarray,
+        const NekDouble time) const;
+
+    // -----------------------------------------------------------------
+    void EvaluateExactSolution(Array<OneD, Array<OneD, double>> &outarray,
+                               const NekDouble time) const;
+    // -----------------------------------------------------------------
+
+private:
+    // Value of the coefficients:
+    NekDouble m_alpha; // Fractional order
+
+    Array<OneD, NekDouble> m_u0;
+
+}; // end class OneDFDESolver
 
 ///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[])
@@ -333,6 +372,7 @@ int main(int argc, char *argv[])
       ("values,v", po::value<int>(), "Number of values.")
       ("timesteps,t", po::value<int>(), "Number of timesteps.")
       ("order,o", po::value<int>())
+      ("parameter,p", po::value<std::string>())
       ("method,m", po::value<int>(),
         "Method is a number that selects the time-integration method:\n"
         "- 0: 1st order Forward Euler\n"
@@ -358,10 +398,13 @@ int main(int argc, char *argv[])
         "- 15: Nth order multi-step BDFImplicit scheme\n"
         "- 16: Nth order multi-step IMEX scheme\n"
         "      (Euler Backwards/Euler Forwards)\n"
-        "- 17: Nth order multi-stage IMEX DIRK scheme\n"
+        "- 17: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
+        "- 18: Nth order multi-stage IMEX DIRK scheme\n"
         "  \n"
         "- 20: Nth order multi-step Lawson-Euler exponential scheme\n"
         "- 21: Nth order multi-step Norsett-Euler exponential scheme\n"
+        "  \n"
+//        "- 25: Nth order multi-step Fractional In Time scheme\n"
        );
 
     po::variables_map vm;
@@ -379,6 +422,7 @@ int main(int argc, char *argv[])
 
     if (!vm.count("values") || !vm.count("timesteps") || !vm.count("method") ||
         ((vm["method"].as<int>() >= 10) && !vm.count("order")) ||
+        ((vm["method"].as<int>() == 18) && !vm.count("parameter")) ||
         vm.count("help"))
     {
         std::cout << "Please specify the number of "
@@ -391,10 +435,40 @@ int main(int argc, char *argv[])
     int nTimeSteps = vm["timesteps"].as<int>();
     int nMethod    = vm["method"].as<int>();
     int nOrder     = 0;
+    std::vector<NekDouble> freeParams;
 
     if((vm["method"].as<int>() >= 10) )
     {
         nOrder = vm["order"].as<int>();
+    }
+
+    // IMEX DIRK methods whihc have free parameters.
+    if((vm["method"].as<int>() == 18) )
+    {
+        std::string sParameter = vm["parameter"].as<std::string>();
+
+        // Parse the free parameters which are in a string.
+        while( sParameter.size() )
+        {
+            size_t found = sParameter.find(" ");
+
+            if( found == std::string::npos )
+            {
+                int fp = stoi( sParameter );
+
+                freeParams.push_back(fp);
+
+                sParameter = "";
+            }
+            else if( found > 0 )
+            {
+                int fp = stoi( sParameter.substr(0, found) );
+
+                freeParams.push_back(fp);
+
+                sParameter = sParameter.substr(found+1);
+            }
+        }
     }
 
     if( nValues < 2 )
@@ -419,72 +493,71 @@ int main(int argc, char *argv[])
     switch (nMethod)
     {
         case 0:
-          tiScheme = factory.CreateInstance("ForwardEuler", 1, "");
+          tiScheme = factory.CreateInstance("ForwardEuler", "", 1, freeParams);
             break;
         case 1:
-            tiScheme = factory.CreateInstance("IMEXOrder1", 1, "");
+            tiScheme = factory.CreateInstance("IMEXOrder1", "", 1, freeParams);
             break;
         case 2:
-            tiScheme = factory.CreateInstance("IMEXOrder2", 2, "");
+            tiScheme = factory.CreateInstance("IMEXOrder2", "", 2, freeParams);
             break;
         case 3:
-            tiScheme = factory.CreateInstance("IMEXOrder3", 3, "");
+            tiScheme = factory.CreateInstance("IMEXOrder3", "", 3, freeParams);
             break;
         case 4:
-            tiScheme = factory.CreateInstance("IMEXOrder4", 4, "");
+            tiScheme = factory.CreateInstance("IMEXOrder4", "", 4, freeParams);
             break;
         case 5:
-            tiScheme = factory.CreateInstance("IMEXdirk_2_3_2", 2, "");
+            tiScheme = factory.CreateInstance("IMEXdirk_2_3_2", "", 2, freeParams);
             break;
         case 6:
-            tiScheme = factory.CreateInstance("IMEXdirk_3_4_3", 3, "");
+            tiScheme = factory.CreateInstance("IMEXdirk_3_4_3", "", 3, freeParams);
             break;
         case 7:
-            tiScheme = factory.CreateInstance("IMEXGear", 2, "");
+            tiScheme = factory.CreateInstance("IMEX", "Gear", 2, freeParams);
             break;
         case 8:
-            tiScheme = factory.CreateInstance("CNAB", 2, "");
+            tiScheme = factory.CreateInstance("CNAB", "", 2, freeParams);
             break;
         case 9:
-            tiScheme = factory.CreateInstance("MCNAB", 2, "");
+            tiScheme = factory.CreateInstance("MCNAB", "", 2, freeParams);
             break;
         case 10:
-            tiScheme = factory.CreateInstance("RungeKutta", nOrder, "");
+            tiScheme = factory.CreateInstance("RungeKutta", "", nOrder, freeParams);
             break;
         case 11:
-            tiScheme = factory.CreateInstance("RungeKutta", nOrder, "SSP");
+            tiScheme = factory.CreateInstance("RungeKutta", "SSP", nOrder, freeParams);
             break;
         case 12:
-            tiScheme = factory.CreateInstance("DIRK", nOrder, "");
+            tiScheme = factory.CreateInstance("DIRK", "", nOrder, freeParams);
             break;
         case 13:
-            tiScheme = factory.CreateInstance("AdamsBashforth", nOrder, "");
+            tiScheme = factory.CreateInstance("AdamsBashforth", "", nOrder, freeParams);
             break;
         case 14:
-            tiScheme = factory.CreateInstance("AdamsMoulton", nOrder, "");
+            tiScheme = factory.CreateInstance("AdamsMoulton", "", nOrder, freeParams);
             break;
         case 15:
-            tiScheme = factory.CreateInstance("BDFImplicit", nOrder, "");
+            tiScheme = factory.CreateInstance("BDFImplicit", "", nOrder, freeParams);
             break;
         case 16:
-            tiScheme = factory.CreateInstance("IMEX", nOrder, "");
+            tiScheme = factory.CreateInstance("IMEX", "", nOrder, freeParams);
             break;
         case 17:
-            tiScheme = factory.CreateInstance("IMEXdirk", nOrder, "");
+            tiScheme = factory.CreateInstance("IMEX", "Gear", 2, freeParams);
             break;
-
         case 18:
-            tiScheme = factory.CreateInstance("DIRKOrder2", nOrder, "");
-            break;
-        case 19:
-            tiScheme = factory.CreateInstance("DIRKOrder3", nOrder, "");
+            tiScheme = factory.CreateInstance("IMEX", "dirk", nOrder, freeParams);
             break;
 
         case 20:
-            tiScheme = factory.CreateInstance("EulerExponential", nOrder, "Lawson" );
+            tiScheme = factory.CreateInstance("EulerExponential", "Lawson", nOrder, freeParams );
             break;
         case 21:
-            tiScheme = factory.CreateInstance("EulerExponential", nOrder, "Norsett");
+            tiScheme = factory.CreateInstance("EulerExponential", "Norsett", nOrder, freeParams);
+            break;
+        case 25:
+            tiScheme = factory.CreateInstance("FractionalInTime", "", nOrder, freeParams);
             break;
         default:
         {
@@ -505,8 +578,36 @@ int main(int argc, char *argv[])
     LibUtilities::TimeIntegrationSchemeOperators ode;
     DemoSolver *solver;
 
-    if( tiScheme->GetIntegrationSchemeType() == eExponential )
+    if( tiScheme->GetIntegrationSchemeType() == eFractionalInTime )
     {
+        if( nValues > 2 )
+        {
+          std::cout << "Curently set up for 2 variables, setting nValues to 2"
+                    << std::endl;
+
+          nValues = 2;
+        }
+
+        nVariables = nValues;
+        nPoints    = 1;
+
+        OneDFDESolver *tmpSolver =
+          new OneDFDESolver(nVariables, nPoints, nTimeSteps);
+
+        ode.DefineOdeRhs(&OneDFDESolver::EvaluateFDETerm, tmpSolver);
+
+        solver = tmpSolver;
+    }
+    else if( tiScheme->GetIntegrationSchemeType() == eExponential )
+    {
+        if( nValues > 5 )
+        {
+          std::cout << "Curently set up for 5 variables, setting nValues to 5"
+                    << std::endl;
+
+          nValues = 5;
+        }
+
         nVariables = nValues;
         nPoints    = 1;
 
@@ -670,8 +771,8 @@ void DemoSolver::EvaluateL2Error(int timeStep, const NekDouble time,
             if( m_minValue > approx[k][i] )
                 m_minValue = approx[k][i];
 
-            if( m_maxValue < exact[k][i] )
-                m_maxValue = exact[k][i];
+            if( m_maxValue < approx[k][i] )
+                m_maxValue = approx[k][i];
 
             // std::cout << approx[k][i] << "  ";
         }
@@ -684,8 +785,8 @@ void DemoSolver::EvaluateL2Error(int timeStep, const NekDouble time,
     {
         for (int i = 0; i < m_nPoints; i++)
         {
-            if( m_minValue > approx[k][i] )
-                m_minValue = approx[k][i];
+            if( m_minValue > exact[k][i] )
+                m_minValue = exact[k][i];
 
             if( m_maxValue < exact[k][i] )
                 m_maxValue = exact[k][i];
@@ -1036,6 +1137,63 @@ void OneDSinusoidSolver::EvaluateExactSolution(
 
                   // cos(f*T) term
                   (((-m_lambda[0][k] * w - m_freqs[k] * v) / lambdaFreq2) * cosft);
+            }
+        }
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+void OneDFDESolver::EvaluateFDETerm(
+    const Array<OneD, const Array<OneD, double>> &inarray,
+          Array<OneD,       Array<OneD, double>> &outarray,
+    const NekDouble time) const
+{
+    boost::ignore_unused(inarray);
+    boost::ignore_unused(time);
+
+    for (int k = 0; k < m_nVars; k++)
+    {
+        for (int i = 0; i < m_nPoints; i++)
+        {
+            if( k == 0 )
+                outarray[k][i] =       tgamma( m_alpha + 1.0 );
+            else if( k == 1 )
+                outarray[k][i] = 0.5 * tgamma( m_alpha + 1.0 );
+        }
+    }
+}
+
+void OneDFDESolver::EvaluateExactSolution(
+    Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const
+{
+    if( time == GetInitialTime() )
+    {
+        for (int k = 0; k < m_nVars; k++)
+        {
+            for (int i = 0; i < m_nPoints; i++)
+            {
+                outarray[k][i] = m_u0[k];
+            }
+        }
+    }
+    else
+    {
+        // Computes the exact solution at time t to the ODE
+        //
+        //   y' = time^alpha
+        //   y(0) = y0
+        //
+
+        // Compute right-hand side of the normal equations
+        for (int k = 0; k < m_nVars; k++)
+        {
+            for (int i = 0; i < m_nPoints; i++)
+            {
+              if( k == 0 )
+                  outarray[k][i] =       std::pow( time, m_alpha );
+              else if( k == 1 )
+                  outarray[k][i] = 0.5 * std::pow( time, m_alpha );
             }
         }
     }

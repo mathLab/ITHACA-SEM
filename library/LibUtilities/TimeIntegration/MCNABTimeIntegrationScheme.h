@@ -51,11 +51,12 @@ namespace LibUtilities
 class MCNABTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    MCNABTimeIntegrationScheme(int order, std::string type) :
-      TimeIntegrationScheme(2, "")
+    MCNABTimeIntegrationScheme(std::string variant, int order,
+			       std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme("", 2, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         m_integration_phases    = TimeIntegrationSchemeDataVector(3);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
@@ -65,10 +66,10 @@ public:
         m_integration_phases[2] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
 
-        IMEXdirk_3_4_3TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
-        IMEXdirk_3_4_3TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[1]);
+        IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0], 3, std::vector<NekDouble> {3, 4});
+        IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[1], 3, std::vector<NekDouble> {3, 4});
         MCNABTimeIntegrationScheme::SetupSchemeData(m_integration_phases[2]);
     }
 
@@ -76,13 +77,15 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+						 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p =
-	  MemoryManager<MCNABTimeIntegrationScheme>::AllocateSharedPtr(2, "");
+            MemoryManager<MCNABTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
+
         return p;
     }
 

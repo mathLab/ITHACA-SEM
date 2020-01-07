@@ -56,8 +56,9 @@ namespace LibUtilities
 class BDFImplicitTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    BDFImplicitTimeIntegrationScheme(int order, std::string type) :
-      TimeIntegrationScheme(order, type)
+    BDFImplicitTimeIntegrationScheme(std::string variant, int order,
+                                     std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme(variant, order, freeParams)
     {
         // Currently up to 4th order is implemented.
 
@@ -95,17 +96,17 @@ public:
                 break;
 
             case 3:
-                IMEXdirk_3_4_3TimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[0]);
-                IMEXdirk_3_4_3TimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[1]);
+                IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                    m_integration_phases[0], 3, std::vector<NekDouble>{3, 4});
+                IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                    m_integration_phases[1], 3, std::vector<NekDouble>{3, 4});
                 break;
 
             case 4:
-                IMEXdirk_2_3_3TimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[0]);
-                IMEXdirk_2_3_3TimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[1]);
+                IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                    m_integration_phases[0], 3, std::vector<NekDouble>{2, 3});
+                IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                    m_integration_phases[1], 3, std::vector<NekDouble>{2, 3});
                 break;
 
             default:
@@ -119,10 +120,12 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
-    {
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+						 std::vector<NekDouble> freeParams)
+  {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          BDFImplicitTimeIntegrationScheme>::AllocateSharedPtr(order, type);
+          BDFImplicitTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
+
         return p;
     }
 
@@ -223,20 +226,22 @@ class BDFImplicitOrder1TimeIntegrationScheme :
     public BDFImplicitTimeIntegrationScheme
 {
 public:
-    BDFImplicitOrder1TimeIntegrationScheme(int order, std::string type) :
-        BDFImplicitTimeIntegrationScheme(1, "")
+    BDFImplicitOrder1TimeIntegrationScheme(std::string variant, int order,
+                                           std::vector<NekDouble> freeParams) :
+      BDFImplicitTimeIntegrationScheme("", 1, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          BDFImplicitTimeIntegrationScheme>::AllocateSharedPtr(1, "");
+            BDFImplicitTimeIntegrationScheme>::AllocateSharedPtr("", 1, freeParams);
         return p;
     }
 
@@ -249,20 +254,22 @@ class BDFImplicitOrder2TimeIntegrationScheme :
     public BDFImplicitTimeIntegrationScheme
 {
 public:
-    BDFImplicitOrder2TimeIntegrationScheme(int order, std::string type) :
-        BDFImplicitTimeIntegrationScheme(2, "")
+    BDFImplicitOrder2TimeIntegrationScheme(std::string variant, int order,
+                                           std::vector<NekDouble> freeParams) :
+        BDFImplicitTimeIntegrationScheme("", 2, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          BDFImplicitTimeIntegrationScheme>::AllocateSharedPtr(2, "");
+            BDFImplicitTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
         return p;
     }
 

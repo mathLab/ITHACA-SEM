@@ -54,8 +54,9 @@ namespace LibUtilities
 class DIRKTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-  DIRKTimeIntegrationScheme(int order, std::string type) :
-    TimeIntegrationScheme(order, type)
+  DIRKTimeIntegrationScheme(std::string variant, int order,
+                            std::vector<NekDouble> freeParams) :
+    TimeIntegrationScheme(variant, order, freeParams)
     {
         // Currently 2nd and 3rd order are implemented.
         ASSERTL1(1 < order && order <= 3,
@@ -74,10 +75,11 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
          TimeIntegrationSchemeSharedPtr p =
-          MemoryManager<DIRKTimeIntegrationScheme>::AllocateSharedPtr(order, type);
+           MemoryManager<DIRKTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
         return p;
     }
 
@@ -178,20 +180,23 @@ class DIRKOrder2TimeIntegrationScheme :
     public DIRKTimeIntegrationScheme
 {
 public:
-    DIRKOrder2TimeIntegrationScheme(int order, std::string type) :
-        DIRKTimeIntegrationScheme(2, "")
+    DIRKOrder2TimeIntegrationScheme(std::string variant, int order,
+                                    std::vector<NekDouble> freeParams) :
+        DIRKTimeIntegrationScheme("", 2, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          DIRKTimeIntegrationScheme>::AllocateSharedPtr(2, "");
+            DIRKTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
+
         return p;
     }
 
@@ -204,20 +209,23 @@ class DIRKOrder3TimeIntegrationScheme :
     public DIRKTimeIntegrationScheme
 {
 public:
-    DIRKOrder3TimeIntegrationScheme(int order, std::string type) :
-        DIRKTimeIntegrationScheme(3, "")
+    DIRKOrder3TimeIntegrationScheme(std::string variant, int order,
+                                    std::vector<NekDouble> freeParams) :
+        DIRKTimeIntegrationScheme("", 3, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          DIRKTimeIntegrationScheme>::AllocateSharedPtr(3, "");
+            DIRKTimeIntegrationScheme>::AllocateSharedPtr("", 3, freeParams);
+
         return p;
     }
 

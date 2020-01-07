@@ -52,11 +52,12 @@ namespace LibUtilities
 class IMEXGearTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    IMEXGearTimeIntegrationScheme(int order, std::string type) :
-      TimeIntegrationScheme(2, "")
+    IMEXGearTimeIntegrationScheme(std::string variant, int order,
+                                  std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme("", 2, freeParams)
     {
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
+        boost::ignore_unused(variant);
 
         m_integration_phases    = TimeIntegrationSchemeDataVector(2);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
@@ -64,8 +65,8 @@ public:
         m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
 
-        IMEXdirk_2_2_2TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
+        IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0], 2, std::vector<NekDouble> {2, 2});
         IMEXGearTimeIntegrationScheme::SetupSchemeData(m_integration_phases[1]);
     }
 
@@ -73,13 +74,15 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
+        boost::ignore_unused(variant);
 
         TimeIntegrationSchemeSharedPtr p =
-          MemoryManager<IMEXGearTimeIntegrationScheme>::AllocateSharedPtr(2, "");
+            MemoryManager<IMEXGearTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
+
         return p;
     }
 
@@ -87,7 +90,7 @@ public:
 
     LUE virtual std::string GetName() const
     {
-        return std::string("IMEXGear");
+        return std::string("IMEX");
     }
 
     LUE virtual NekDouble GetTimeStability() const
@@ -98,6 +101,7 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
+        phase->m_variant = "Gear";
         phase->m_order = 2;
         phase->m_name = std::string("IMEXGearOrder" +
                                     std::to_string(phase->m_order));

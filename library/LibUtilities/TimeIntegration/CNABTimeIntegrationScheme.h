@@ -52,11 +52,12 @@ namespace LibUtilities
 class CNABTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    CNABTimeIntegrationScheme(int order, std::string type) :
-        TimeIntegrationScheme(2, "")
+    CNABTimeIntegrationScheme(std::string variant, int order,
+                                      std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme("", 2, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         m_integration_phases    = TimeIntegrationSchemeDataVector(3);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
@@ -66,10 +67,10 @@ public:
         m_integration_phases[2] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
 
-        IMEXdirk_3_4_3TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]); // dirk 3 4 3
-        IMEXdirk_3_4_3TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[1]); // dirk 3 4 3
+        IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0], 3, std::vector<NekDouble>{3, 4}); // dirk 3 4 3
+        IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[1], 3, std::vector<NekDouble>{3, 4}); // dirk 3 4 3
         CNABTimeIntegrationScheme::SetupSchemeData(
             m_integration_phases[2]); // CNAB
     }
@@ -78,13 +79,15 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+						 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p =
-            MemoryManager<CNABTimeIntegrationScheme>::AllocateSharedPtr(2, "");
+	  MemoryManager<CNABTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
+
         return p;
     }
 

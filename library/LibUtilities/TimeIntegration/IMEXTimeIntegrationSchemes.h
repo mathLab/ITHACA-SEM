@@ -44,6 +44,7 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/IMEXdirkTimeIntegrationSchemes.h>
+#include <LibUtilities/TimeIntegration/IMEXGearTimeIntegrationScheme.h>
 
 namespace Nektar
 {
@@ -56,60 +57,109 @@ namespace LibUtilities
 class IMEXTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-  IMEXTimeIntegrationScheme(int order, std::string type) :
-    TimeIntegrationScheme(order, type)
+    IMEXTimeIntegrationScheme(std::string variant, int order,
+                              std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme(variant, order, freeParams)
     {
-        // Currently up to 4th order is implemented.
-        ASSERTL1(0 < order && order <= 4,
-                 "IMEX Time integration scheme bad order (1-4): " +
-                 std::to_string(order));
-
-        m_integration_phases = TimeIntegrationSchemeDataVector(order);
-
-        for( unsigned int n=0; n<order; ++n )
+        if( variant == "dirk" )
         {
-            m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
+            ASSERTL1(freeParams.size() == 2,
+                     "IMEX DIRK Time integration scheme invalid number "
+                     "of free parameters, expected two, received  " +
+                     std::to_string(freeParams.size()));
+
+            int s     = freeParams[0];
+            int sigma = freeParams[1];
+
+            m_integration_phases    = TimeIntegrationSchemeDataVector(1);
+            m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
                 new TimeIntegrationSchemeData(this));
+
+            if( order == 1 && s == 1 && sigma == 1 )
+            {
+                // This phase is Forward Backward Euler which has two steps.
+                IMEXdirkTimeIntegrationScheme::SetupSchemeData_1_1_1(
+                    m_integration_phases[0]);
+            }
+            else
+            {
+                IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                    m_integration_phases[0], order, freeParams);
+            }
         }
-
-        // Last phase
-        IMEXTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[order-1], order);
-
-        // Initial phases
-        switch( order )
+        else if( variant == "Gear" )
         {
-            case 1:
+            m_integration_phases    = TimeIntegrationSchemeDataVector(2);
+            m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+                new TimeIntegrationSchemeData(this));
+            m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
+                new TimeIntegrationSchemeData(this));
+
+            IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                m_integration_phases[0], 2, std::vector<NekDouble> {2, 2});
+            IMEXGearTimeIntegrationScheme::SetupSchemeData(
+                m_integration_phases[1]);
+        }
+        else if( variant == "" )
+        {
+            // Currently up to 4th order is implemented.
+            ASSERTL1(0 < order && order <= 4,
+                     "IMEX Time integration scheme bad order (1-4): " +
+                     std::to_string(order));
+
+            m_integration_phases = TimeIntegrationSchemeDataVector(order);
+
+            for( unsigned int n=0; n<order; ++n )
+            {
+                m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
+                    new TimeIntegrationSchemeData(this));
+            }
+
+            // Last phase
+            IMEXTimeIntegrationScheme::SetupSchemeData(
+                m_integration_phases[order-1], order);
+
+            // Initial phases
+            switch( order )
+            {
+              case 1:
                 // No intial phase.
                 break;
 
-            case 2:
-	        IMEXTimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[0], 1);
-                // IMEXdirk_2_3_2TimeIntegrationScheme::SetupSchemeData(
-                //     m_integration_phases[0]);
-                break;
+              case 2:
+                  IMEXTimeIntegrationScheme::SetupSchemeData(
+                     m_integration_phases[0], 1);
+                // IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                //     m_integration_phases[0], 2, std::vector<NekDouble> {2, 3});
+                  break;
 
-            case 3:
-                IMEXdirk_3_4_3TimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[0]);
-                IMEXdirk_3_4_3TimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[1]);
-                break;
+              case 3:
+                  IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                      m_integration_phases[0], 3, std::vector<NekDouble> {3, 4});
+                  IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                      m_integration_phases[1], 3, std::vector<NekDouble> {3, 4});
+                  break;
 
-            case 4:
-                IMEXdirk_2_3_3TimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[0]);
-                IMEXdirk_2_3_3TimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[1]);
-		IMEXTimeIntegrationScheme::SetupSchemeData(
-		    m_integration_phases[2], 3);
-                break;
+              case 4:
+                  IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                      m_integration_phases[0], 3, std::vector<NekDouble> {2, 3});
+                  IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                      m_integration_phases[1], 3, std::vector<NekDouble> {2, 3});
+                  IMEXTimeIntegrationScheme::SetupSchemeData(
+                      m_integration_phases[2], 3);
+                  break;
 
-            default:
-                ASSERTL1(false,
-                         "IMEX Time integration scheme bad order: " +
-                         std::to_string(order));
+              default:
+                  ASSERTL1(false,
+                           "IMEX Time integration scheme bad order: " +
+                           std::to_string(order));
+            }
+        }
+        else
+        {
+          ASSERTL1(false,
+                   "IMEX Time integration scheme bad variant: " +
+                           variant);
         }
     }
 
@@ -117,14 +167,21 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
         TimeIntegrationSchemeSharedPtr p =
-            MemoryManager<IMEXTimeIntegrationScheme>::AllocateSharedPtr(order, type);
+            MemoryManager<IMEXTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
+
         return p;
     }
 
     static std::string className;
+
+    LUE virtual std::string GetFullName() const
+    {
+      return m_integration_phases[m_integration_phases.size()-1]->m_name;
+    }
 
     LUE virtual std::string GetName() const
     {
@@ -228,20 +285,22 @@ class IMEXOrder1TimeIntegrationScheme :
     public IMEXTimeIntegrationScheme
 {
 public:
-    IMEXOrder1TimeIntegrationScheme(int order, std::string type) :
-        IMEXTimeIntegrationScheme(1, "")
+    IMEXOrder1TimeIntegrationScheme(std::string variant, int order,
+                                              std::vector<NekDouble> freeParams) :
+      IMEXTimeIntegrationScheme("", 1, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            IMEXTimeIntegrationScheme>::AllocateSharedPtr(1, "");
+            IMEXTimeIntegrationScheme>::AllocateSharedPtr("", 1, freeParams);
         return p;
     }
 
@@ -254,20 +313,21 @@ class IMEXOrder2TimeIntegrationScheme :
     public IMEXTimeIntegrationScheme
 {
 public:
-    IMEXOrder2TimeIntegrationScheme(int order, std::string type) :
-        IMEXTimeIntegrationScheme(2, "")
+    IMEXOrder2TimeIntegrationScheme(std::string variant, int order, std::vector<NekDouble> freeParams) :
+      IMEXTimeIntegrationScheme("", 2, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, int order, std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            IMEXTimeIntegrationScheme>::AllocateSharedPtr(2, "");
+          IMEXTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
         return p;
     }
 
@@ -280,20 +340,22 @@ class IMEXOrder3TimeIntegrationScheme :
     public IMEXTimeIntegrationScheme
 {
 public:
-    IMEXOrder3TimeIntegrationScheme(int order, std::string type) :
-        IMEXTimeIntegrationScheme(3, "")
+    IMEXOrder3TimeIntegrationScheme(std::string variant, int order,
+                                              std::vector<NekDouble> freeParams) :
+      IMEXTimeIntegrationScheme("", 3, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            IMEXTimeIntegrationScheme>::AllocateSharedPtr(3, "");
+          IMEXTimeIntegrationScheme>::AllocateSharedPtr("", 3, freeParams);
         return p;
     }
 
@@ -306,26 +368,27 @@ class IMEXOrder4TimeIntegrationScheme :
     public IMEXTimeIntegrationScheme
 {
 public:
-    IMEXOrder4TimeIntegrationScheme(int order, std::string type) :
-        IMEXTimeIntegrationScheme(4, "")
+    IMEXOrder4TimeIntegrationScheme(std::string variant, int order,
+                                              std::vector<NekDouble> freeParams) :
+      IMEXTimeIntegrationScheme("", 4, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            IMEXTimeIntegrationScheme>::AllocateSharedPtr(4, "");
+          IMEXTimeIntegrationScheme>::AllocateSharedPtr("", 4, freeParams);
         return p;
     }
 
     static std::string className;
 
 }; // end class IMEXOrder4TimeIntegrationScheme
-
 } // end namespace LibUtilities
 } // end namespace Nektar

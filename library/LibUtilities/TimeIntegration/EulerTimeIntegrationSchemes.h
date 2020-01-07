@@ -56,11 +56,12 @@ namespace LibUtilities
 class BackwardEulerTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    BackwardEulerTimeIntegrationScheme(int order, std::string type) :
-        TimeIntegrationScheme(1, "")
+    BackwardEulerTimeIntegrationScheme(std::string variant, int order,
+				       std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme("", 1, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
@@ -74,13 +75,14 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+						 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
+        boost::ignore_unused(variant);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          BackwardEulerTimeIntegrationScheme>::AllocateSharedPtr(1, "");
+          BackwardEulerTimeIntegrationScheme>::AllocateSharedPtr("", 1, freeParams);
         return p;
     }
 
@@ -134,11 +136,12 @@ public:
 class ForwardEulerTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    ForwardEulerTimeIntegrationScheme(int order, std::string type) :
-        TimeIntegrationScheme(1, "")
+    ForwardEulerTimeIntegrationScheme(std::string variant, int order,
+				      std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme("", 1, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
@@ -152,13 +155,14 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+						 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
+        boost::ignore_unused(variant);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          ForwardEulerTimeIntegrationScheme>::AllocateSharedPtr(1, "");
+          ForwardEulerTimeIntegrationScheme>::AllocateSharedPtr("", 1, freeParams);
         return p;
     }
 

@@ -194,8 +194,9 @@ public:
     const TimeIntegrationScheme *m_parent{nullptr};
 
     std::string m_name;
-    std::string m_type;
-    unsigned int m_order{0};
+    std::string m_variant;
+    int m_order{0};
+    std::vector< NekDouble > freeParams;
 
     TimeIntegrationSchemeType m_schemeType;
 

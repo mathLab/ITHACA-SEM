@@ -61,15 +61,16 @@ namespace LibUtilities
 class EulerExponentialTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    EulerExponentialTimeIntegrationScheme(int order, std::string type) :
-      TimeIntegrationScheme(order, type)
+    EulerExponentialTimeIntegrationScheme(std::string variant, int order,
+                                          std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme(variant, order, freeParams)
     {
         // Currently up to 4th order is implemented because the number
         // of steps is the same as the order.
         // Currently up to 4th order is implemented.
-        ASSERTL1(type == "Lawson" || type == "Norsett",
-                 "EulerExponential Time integration scheme bad type: " +
-                 type);
+        ASSERTL1(variant == "Lawson" || variant == "Norsett",
+                 "EulerExponential Time integration scheme bad variant: " +
+                 variant);
 
         ASSERTL1(0 <= order && order <= 4,
                  "EulerExponential Time integration scheme bad order: " +
@@ -85,7 +86,7 @@ public:
                 new TimeIntegrationSchemeData(this));
 
             EulerExponentialTimeIntegrationScheme::SetupSchemeData(
-                m_integration_phases[n], n+1, type);
+                m_integration_phases[n], variant, n+1);
         }
 
         // for( unsigned int n=0; n<m_order; ++n )
@@ -96,10 +97,12 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          EulerExponentialTimeIntegrationScheme>::AllocateSharedPtr(order, type);
+            EulerExponentialTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
+
         return p;
     }
 
@@ -112,7 +115,7 @@ public:
 
     LUE virtual std::string GetFullName () const
     {
-        return GetType() + GetName() + "Order" + std::to_string(GetOrder());
+        return GetVariant() + GetName() + "Order" + std::to_string(GetOrder());
     }
 
     LUE virtual NekDouble GetTimeStability() const
@@ -121,12 +124,12 @@ public:
     }
 
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
-                                    int order, std::string type)
+                                    std::string variant, int order)
     {
         phase->m_schemeType = eExponential;
+        phase->m_variant  = variant;
         phase->m_order = order;
-        phase->m_type  = type;
-        phase->m_name = type + std::string("EulerExponentialOrder") +
+        phase->m_name = variant + std::string("EulerExponentialOrder") +
           std::to_string(phase->m_order);
 
         // Parameters for the compact 1 step implementation.
@@ -211,12 +214,12 @@ public:
             Array<OneD, NekDouble> phi = Array<OneD, NekDouble>(phase->m_nvars);
 
             // B Phi function for first row first column
-            if( phase->m_type == "Lawson" )
+            if( phase->m_variant == "Lawson" )
             {
                 phi[0] =
                   phi_function(0, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
             }
-            else if( phase->m_type == "Norsett" )
+            else if( phase->m_variant == "Norsett" )
             {
                 phi[0] =
                   phi_function(1, deltaT, phase->m_L[0][k], phase->m_L[1][k]);

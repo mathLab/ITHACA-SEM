@@ -51,6 +51,7 @@ namespace Nektar
 namespace LibUtilities
 {
 
+////////////////////////////////////////////////////////////////////////////////
 TimeIntegrationSchemeData::TimeIntegrationSolutionSharedPtr
     TimeIntegrationSchemeData::InitializeData(
         const NekDouble deltaT, ConstDoubleArray &y_0, const NekDouble time,
@@ -154,7 +155,7 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
             GetNmultiStepDerivs(); // number of required derivs of the current
                                    // scheme
         unsigned int nCurSchemeSteps =
-	    GetNsteps(); // number of steps in the current scheme    // FIMXE...
+            GetNsteps(); // number of steps in the current scheme    // FIMXE...
                          // what does it mean by "current scheme"... is this now
                          // a SchemeData issue?
 

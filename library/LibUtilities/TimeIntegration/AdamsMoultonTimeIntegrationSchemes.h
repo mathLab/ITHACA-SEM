@@ -59,8 +59,9 @@ namespace LibUtilities
 class AdamsMoultonTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    AdamsMoultonTimeIntegrationScheme(int order, std::string type) :
-      TimeIntegrationScheme(order, type)
+    AdamsMoultonTimeIntegrationScheme(std::string variant, int order,
+                                      std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme(variant, order, freeParams)
     {
         // Currently up to 4th order is implemented.
         ASSERTL1(0 < order && order <= 4,
@@ -101,16 +102,16 @@ public:
                 // The first and second phases needed to be set correctly
                 ForwardEulerTimeIntegrationScheme::SetupSchemeData(
                     m_integration_phases[0]);
-                IMEXdirk_3_4_3TimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[1]);
+                IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                    m_integration_phases[1], 3, std::vector<NekDouble>{3, 4});
                 break;
 
             case 4:
                 // The first and second phases needed to be set correctly
-                IMEXdirk_2_3_3TimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[0]);
-                IMEXdirk_2_3_3TimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[1]);
+                IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                    m_integration_phases[0], 3, std::vector<NekDouble>{2, 3});
+                IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                    m_integration_phases[1], 3, std::vector<NekDouble>{2, 3});
                 break;
 
             default:
@@ -124,10 +125,12 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          AdamsMoultonTimeIntegrationScheme>::AllocateSharedPtr(order, type);
+          AdamsMoultonTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
+
         return p;
     }
 
@@ -233,20 +236,23 @@ class AdamsMoultonOrder1TimeIntegrationScheme :
     public AdamsMoultonTimeIntegrationScheme
 {
 public:
-    AdamsMoultonOrder1TimeIntegrationScheme(int order, std::string type) :
-        AdamsMoultonTimeIntegrationScheme(1, "")
+    AdamsMoultonOrder1TimeIntegrationScheme(std::string variant, int order,
+                                            std::vector<NekDouble> freeParams) :
+        AdamsMoultonTimeIntegrationScheme("", 1, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          AdamsMoultonTimeIntegrationScheme>::AllocateSharedPtr(1, "");
+            AdamsMoultonTimeIntegrationScheme>::AllocateSharedPtr("", 1, freeParams);
+
         return p;
     }
 
@@ -259,20 +265,23 @@ class AdamsMoultonOrder2TimeIntegrationScheme :
     public AdamsMoultonTimeIntegrationScheme
 {
 public:
-    AdamsMoultonOrder2TimeIntegrationScheme(int order, std::string type) :
-        AdamsMoultonTimeIntegrationScheme(2, "")
+    AdamsMoultonOrder2TimeIntegrationScheme(std::string variant, int order,
+                                            std::vector<NekDouble> freeParams) :
+        AdamsMoultonTimeIntegrationScheme("", 2, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+						 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          AdamsMoultonTimeIntegrationScheme>::AllocateSharedPtr(2, "");
+            AdamsMoultonTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
+
         return p;
     }
 
@@ -285,20 +294,23 @@ class AdamsMoultonOrder3TimeIntegrationScheme :
     public AdamsMoultonTimeIntegrationScheme
 {
 public:
-    AdamsMoultonOrder3TimeIntegrationScheme(int order, std::string type) :
-        AdamsMoultonTimeIntegrationScheme(3, "")
+    AdamsMoultonOrder3TimeIntegrationScheme(std::string variant, int order,
+                                            std::vector<NekDouble> freeParams) :
+        AdamsMoultonTimeIntegrationScheme("", 3, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          AdamsMoultonTimeIntegrationScheme>::AllocateSharedPtr(3, "");
+            AdamsMoultonTimeIntegrationScheme>::AllocateSharedPtr("", 3, freeParams);
+
         return p;
     }
 
@@ -311,20 +323,23 @@ class AdamsMoultonOrder4TimeIntegrationScheme :
     public AdamsMoultonTimeIntegrationScheme
 {
 public:
-    AdamsMoultonOrder4TimeIntegrationScheme(int order, std::string type) :
-        AdamsMoultonTimeIntegrationScheme(4, "")
+    AdamsMoultonOrder4TimeIntegrationScheme(std::string variant, int order,
+                                            std::vector<NekDouble> freeParams) :
+        AdamsMoultonTimeIntegrationScheme("", 4, freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(int order, std::string type)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+                                                 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(variant);
         boost::ignore_unused(order);
-        boost::ignore_unused(type);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          AdamsMoultonTimeIntegrationScheme>::AllocateSharedPtr(4, "");
+            AdamsMoultonTimeIntegrationScheme>::AllocateSharedPtr("", 4, freeParams);
+
         return p;
     }
 

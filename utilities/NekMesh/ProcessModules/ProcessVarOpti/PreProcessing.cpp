@@ -38,6 +38,8 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 
 namespace Nektar
@@ -525,6 +527,17 @@ void ProcessVarOpti::GetElementMap(
         m_dataSet.push_back(d);
     }
 
+    if (m_config["scalingfile"].beenSet)
+    {
+        LibUtilities::Interpolator interp =
+            GetScalingFieldFromFile(m_config["scalingfile"].as<string>().c_str());
+
+        for (int i = 0; i < m_dataSet.size(); ++i)
+        {
+            m_dataSet[i]->SetScaling(interp);
+        }
+    }
+
     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
@@ -678,5 +691,88 @@ void ProcessVarOpti::RemoveLinearCurvature()
     }
 }
 
+LibUtilities::Interpolator ProcessVarOpti::GetScalingFieldFromFile(string file)
+{
+    vector<vector<NekDouble> > data;
+
+    ifstream f;
+    f.open(file);
+    ASSERTL0(f.is_open(), "No such scaling file")
+
+    string fline;
+
+    while (!f.eof())
+    {
+        getline(f, fline);
+
+        vector<string> tmp;
+        boost::split(tmp, fline, boost::is_any_of(" "));
+
+        int i = 0;
+        while (i < tmp.size())
+        {
+            if (tmp[i].size() == 0)
+            {
+                tmp.erase(tmp.begin() + i);
+            }
+            else
+            {
+                ++i;
+            }
+        }
+
+        if (tmp.size() < 4)
+        {
+            continue;
+        }
+
+        vector<NekDouble> tmpD;
+        tmpD.push_back(boost::lexical_cast<NekDouble>(tmp[0])); // x
+        tmpD.push_back(boost::lexical_cast<NekDouble>(tmp[1])); // y
+        tmpD.push_back(boost::lexical_cast<NekDouble>(tmp[3])); // scaling
+
+        data.push_back(tmpD);
+    }
+
+    int dim = m_mesh->m_expDim;
+
+    Array<OneD, Array<OneD, NekDouble> > inPts(dim + 1);
+    for (int i = 0; i < dim + 1; ++i)
+    {
+        inPts[i] = Array<OneD, NekDouble>(data.size());
+
+        for (int j = 0; j < data.size(); ++j)
+        {
+            inPts[i][j] = data[j][i];
+        }
+    }
+
+    return GetField(inPts);
+}
+
+LibUtilities::Interpolator ProcessVarOpti::GetField(Array<OneD, Array<OneD, NekDouble> > inPts)
+{
+    int dim = m_mesh->m_expDim;
+
+    vector<string> fieldNames;
+    fieldNames.push_back("");
+
+    map<LibUtilities::PtsInfo, int> ptsInfo = LibUtilities::NullPtsInfoMap;
+
+    PtsFieldSharedPtr inField = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, fieldNames, inPts, ptsInfo);
+
+    Array<OneD, Array<OneD, NekDouble> > dummyPts(dim + 1);
+    for (int i = 0; i < dim + 1; ++i)
+    {
+        dummyPts[i] = Array<OneD, NekDouble>(0);
+    }
+
+    PtsFieldSharedPtr dummyField = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, fieldNames, dummyPts, ptsInfo);
+
+    LibUtilities::Interpolator ret;
+    ret.Interpolate(inField, dummyField);
+
+    return ret;
+}
 }
 }

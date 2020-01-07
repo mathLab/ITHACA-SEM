@@ -101,6 +101,37 @@ private:
     void ProcessGradient();
     CADSurfSharedPtr surf;
 };
+
+class NodeOpti1D2D : public NodeOpti // 1D optimsation in 2D space
+{
+public:
+    NodeOpti1D2D(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
+                 ResidualSharedPtr r,
+                 std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
+                 optiType o, CADCurveSharedPtr c)
+        : NodeOpti(n, e, r, d, o, 2), curve(c)
+    {
+        m_bd = curve->GetBounds();
+    }
+
+    ~NodeOpti1D2D(){};
+
+    void Optimise();
+
+    static int m_type;
+    static NodeOptiSharedPtr create(
+        NodeSharedPtr n, std::vector<ElUtilSharedPtr> e, ResidualSharedPtr r,
+        std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d, optiType o)
+    {
+        std::vector<CADCurveSharedPtr> cs = n->GetCADCurves();
+        return NodeOptiSharedPtr(new NodeOpti1D2D(n, e, r, d, o, cs[0]));
+    }
+
+private:
+    void ProcessGradient();
+    CADCurveSharedPtr curve;
+    Array<OneD, NekDouble> m_bd;
+};
 }
 }
 

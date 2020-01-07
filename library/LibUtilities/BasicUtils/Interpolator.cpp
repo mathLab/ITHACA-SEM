@@ -80,7 +80,7 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
         }
     }
 
-    if (m_method != eQuadratic)
+    if (!m_isSetUp && m_method != eQuadratic)
     {
         SetupTree();
     }
@@ -220,6 +220,8 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
             NEKERROR(ErrorUtil::efatal, "Invalid interpolation m_method");
             break;
     }
+
+    m_isSetUp = true;
 }
 
 /**
@@ -243,7 +245,7 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
     m_ptsInField  = ptsInField;
     m_ptsOutField = ptsOutField;
 
-    if (m_weights.GetRows() == 0)
+    if (m_isSetUp || m_weights.GetRows() == 0)
     {
         CalcWeights(m_ptsInField, m_ptsOutField);
     }

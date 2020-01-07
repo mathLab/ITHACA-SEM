@@ -4,6 +4,7 @@
 !.gitattributes
 !.clang-format
 !.dockerignore
+!.gitlab-ci
 # Ignore builds and ThirdParty directories
 build
 builds

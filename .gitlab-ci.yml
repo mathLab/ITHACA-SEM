@@ -17,20 +17,44 @@ stages:
 .build-and-test-template: &build-and-test-template
   stage: build-and-test
   tags:
-    - docker-registry
+    - shell
   only:
     refs:
       - registry
       - tags
-  script: 
-    - IFS="-" read -a NAME_VARS <<<$CI_JOB_NAME
-    - export BUILD_TYPE=${NAME_VARS[4]}
-    - export CCACHE_DIR=/cache/nektar/${NAME_VARS[3]}/
+  script:
+    - IFS="-" read _ _ _ OS_VERSION BUILD_TYPE <<<$CI_JOB_NAME
+    - export CCACHE_DIR=/cache/nektar/$OS_VERSION/
     - export NUM_CPUS=2
-    - mkdir -p build && (cd build && if [ $BUILD_TYPE == "default" ]; then cmake -G 'Unix Makefiles' .. -DCMAKE_BUILD_TYPE=Release -DNEKTAR_TEST_ALL=ON -DNEKTAR_BUILD_TIMINGS=ON -DNEKTAR_ERROR_ON_WARNINGS=OFF ..; elif [ $BUILD_TYPE == "full" ]; then cmake -DCMAKE_BUILD_TYPE:STRING=Debug -DNEKTAR_FULL_DEBUG:BOOL=ON -DNEKTAR_TEST_ALL:BOOL=ON -DNEKTAR_BUILD_TIMINGS:BOOL=ON -DNEKTAR_USE_ARPACK:BOOL=ON -DNEKTAR_USE_FFTW:BOOL=ON -DNEKTAR_USE_MPI:BOOL=ON -DNEKTAR_USE_SCOTCH:BOOL=ON -DNEKTAR_USE_PETSC:BOOL=ON -DNEKTAR_USE_HDF5:BOOL=ON -DNEKTAR_USE_MESHGEN:BOOL=ON -DNEKTAR_USE_CCM:BOOL=ON -DNEKTAR_BUILD_PYTHON:BOOL=ON -DNEKTAR_TEST_USE_HOSTFILE=ON -DNEKTAR_ERROR_ON_WARNINGS=OFF ..; fi)
-    - make -C build -j $NUM_CPUS all
-    - make -C build -j $NUM_CPUS install
-    - (cd build && ctest -j $NUM_CPUS --output-on-failure)
+    - export CONTAINER_NAME=test-$CI_JOB_ID
+    - export ENV_NAME=env-${OS_VERSION}-${BUILD_TYPE}
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull $CI_REGISTRY_IMAGE:$ENV_NAME
+    - sed "s %%BASE_IMAGE%% $CI_REGISTRY_IMAGE:$ENV_NAME g" .gitlab-ci/Dockerfile_add_repo > Dockerfile_tmp
+    - export ENV_IMAGE=$(docker build -q -f Dockerfile_tmp .)
+    - docker create --name $CONTAINER_NAME -v ccache:/cache
+      -e "BUILD_TYPE=$BUILD_TYPE"
+      -e "NUM_CPUS=$NUM_CPUS"
+      -e "CCACHE_DIR=$CCACHE_DIR"
+      $ENV_IMAGE
+      bash -e .gitlab-ci/build-and-test.sh
+    - docker start -ai $CONTAINER_NAME || true
+    - exit_code=$(docker wait $CONTAINER_NAME)
+    - >
+        echo "Container exit code: $exit_code"
+    - if [ $exit_code -ne 0 ];
+      then
+        docker commit --change="WORKDIR /home/nektar" $CONTAINER_NAME nektar:$CONTAINER_NAME;
+        export FAIL_CONTAINER=pipeline_${CI_PIPELINE_ID}_${OS_VERSION}_${BUILD_TYPE};
+        docker run --name $FAIL_CONTAINER nektar:$CONTAINER_NAME bash -e nektar/.gitlab-ci/prepare_failed.sh;
+        docker commit $FAIL_CONTAINER $CI_REGISTRY_IMAGE:$FAIL_CONTAINER;
+        docker push $CI_REGISTRY_IMAGE:$FAIL_CONTAINER;
+        docker rm $CONTAINER_NAME $FAIL_CONTAINER;
+        docker image rm nektar:$CONTAINER_NAME $CI_REGISTRY_IMAGE:$FAIL_CONTAINER;
+        exit $exit_code;
+      fi
+    - docker rm $CONTAINER_NAME
+    - docker rmi $ENV_IMAGE
 
 ################################################
 ###################  DEBIAN  ###################
@@ -56,8 +80,8 @@ stages:
   stage:
     build-env-full
 
-build-env-buster-default:
-  <<: *build-env-debian-template-default
+# build-env-buster-default:
+#   <<: *build-env-debian-template-default
 
 # build-env-buster-full:
 #   <<: *build-env-debian-template-full
@@ -71,7 +95,9 @@ build-env-buster-default:
 
 build-and-test-buster-default:
   <<: *build-and-test-template
-  image: $CI_REGISTRY_IMAGE:env-buster-default
+  variables:
+    IMAGE_NAME: $CI_REGISTRY_IMAGE:env-buster-default
+  # image: $CI_REGISTRY_IMAGE:env-buster-default
 
 # build-and-test-buster-full:
 #   <<: *build-and-test-template

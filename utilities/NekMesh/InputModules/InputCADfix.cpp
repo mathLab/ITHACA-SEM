@@ -78,6 +78,9 @@ void InputCADfix::Process()
         module->RegisterConfig("verbose", "");
     }
 
+    // Set CFI mesh flag so that we always use the mesh from the CFI file.
+    module->RegisterConfig("usecfimesh, "");
+
     module->SetDefaults();
     module->Process();
 

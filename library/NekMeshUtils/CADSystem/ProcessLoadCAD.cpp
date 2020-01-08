@@ -57,6 +57,8 @@ ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(true, "", "allow 2d loading");
     m_config["NACA"] =
         ConfigOption(false, "", "naca domain");
+    m_config["usecfimesh"] =
+        ConfigOption(true, "", "Use mesh from CFI file");
     m_config["verbose"] =
         ConfigOption(true, "", "verbose output from cadsystem");
 }
@@ -79,7 +81,10 @@ void ProcessLoadCAD::Process()
     if(boost::iequals(ext,".fbm"))
     {
         m_mesh->m_cad = GetEngineFactory().CreateInstance("cfi",name);
-        m_mesh->m_cad->SetCFIMesh();
+        if (m_config["usecfimesh"].beenSet)
+        {
+            std::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad)->UseCFIMesh();
+        }
     }
     else
     {

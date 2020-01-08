@@ -71,11 +71,9 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADSystem(std::string name) : m_name(name)
+    CADSystem(std::string name, std::string engine)
+        : m_name(name), m_engine(engine)
     {
-        m_2d      = false;
-        m_cfiMesh = false;
-        m_verbose = false;
     }
 
     virtual ~CADSystem()
@@ -103,11 +101,6 @@ public:
     void SetNACA(std::string i)
     {
         m_naca = i;
-    }
-
-    void SetCFIMesh()
-    {
-        m_cfiMesh = true;
     }
 
     void SetVerbose()
@@ -205,9 +198,19 @@ public:
     NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetPeriodicTranslationVector(
         int first, int second);
 
+    /**
+     * @brief Return the name of the CAD system engine (e.g. OCE).
+     */
+    std::string GetEngine() const
+    {
+        return m_engine;
+    }
+
 protected:
-    /// Name of cad file
+    /// Name of CAD file
     std::string m_name;
+    /// Name of CAD engine.
+    std::string m_engine;
     /// Map of curves
     std::map<int, CADCurveSharedPtr> m_curves;
     /// Map of surfaces
@@ -215,11 +218,9 @@ protected:
     /// Map of vertices
     std::map<int, CADVertSharedPtr> m_verts;
     /// Verbosity
-    bool m_verbose;
+    bool m_verbose = false;
     /// 2D cad flag
-    bool m_2d;
-    /// Will the CAD be used with a CFI mesh flag
-    bool m_cfiMesh;
+    bool m_2d = false;
     /// string of 4 digit NACA code to be created
     std::string m_naca;
 

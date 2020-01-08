@@ -293,11 +293,14 @@ void ProcessVarOpti::Process()
 
     int nThreads = m_config["numthreads"].as<int>();
 
-    if (boost::iequals(boost::filesystem::extension(m_mesh->m_cad->GetName()),
-                       ".fbm"))
+    if (m_mesh->m_cad)
     {
-        WARNINGL0(false, "CFI is not thread-safe; forcing to 'numthreads=1'.")
-        nThreads = 1;
+        if (boost::equals(m_mesh->m_cad->GetEngine(), "cfi"))
+        {
+            WARNINGL0(false,
+                      "CFI is not thread-safe; forcing to 'numthreads=1'.");
+            nThreads = 1;
+        }
     }
 
     int ctr = 0;

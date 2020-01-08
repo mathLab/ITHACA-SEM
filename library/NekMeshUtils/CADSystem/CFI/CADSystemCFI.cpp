@@ -89,7 +89,7 @@ bool CADSystemCFI::LoadCAD()
 
     if (model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) != 1)
     {
-        if (m_cfiMesh)
+        if (m_useCFIMesh)
         {
             if (m_verbose)
             {
@@ -266,7 +266,7 @@ bool CADSystemCFI::LoadCAD()
     // TODO identify Degenerated faces and setdegen on vertices accordinaly
 
     // This checks that all edges are bound by two surfaces, sanity check.
-    if (!m_2d && !m_cfiMesh)
+    if (!m_2d && !m_useCFIMesh)
     {
         map<int, CADCurveSharedPtr>::iterator it;
         for (it = m_curves.begin(); it != m_curves.end(); it++)

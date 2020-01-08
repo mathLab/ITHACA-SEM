@@ -49,7 +49,7 @@ class CADSystemCFI : public CADSystem
 public:
     static CADSystemSharedPtr create(std::string name)
     {
-        return MemoryManager<CADSystemCFI>::AllocateSharedPtr(name);
+        return MemoryManager<CADSystemCFI>::AllocateSharedPtr(name, "cfi");
     }
 
     static std::string key;
@@ -60,7 +60,7 @@ public:
     CADSystemCFI(std::string name) : CADSystem(name)
     {
     }
-    ~CADSystemCFI(){};
+    ~CADSystemCFI() = default;
 
     bool LoadCAD();
 
@@ -86,6 +86,10 @@ public:
     {
         return m_scal;
     }
+    void UseCFIMesh()
+    {
+        m_useCFIMesh = true;
+    }
 
 private:
     void AddVert(int i, cfi::Point *in);
@@ -99,6 +103,7 @@ private:
     std::map<std::string, int> nameToFaceId;
     std::map<std::string, std::vector<std::string> > mapVertToListEdge;
     NekDouble m_scal;
+    bool m_useCFIMesh = false;
 };
 
 typedef std::shared_ptr<CADSystemCFI> CADSystemCFISharedPtr;

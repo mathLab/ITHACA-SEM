@@ -442,7 +442,7 @@ int main(int argc, char *argv[])
         nOrder = vm["order"].as<int>();
     }
 
-    // IMEX DIRK methods whihc have free parameters.
+    // IMEX DIRK methods also require free parameters.
     if((vm["method"].as<int>() == 18) )
     {
         std::string sParameter = vm["parameter"].as<std::string>();
@@ -493,7 +493,7 @@ int main(int argc, char *argv[])
     switch (nMethod)
     {
         case 0:
-          tiScheme = factory.CreateInstance("ForwardEuler", "", 1, freeParams);
+            tiScheme = factory.CreateInstance("ForwardEuler", "", 1, freeParams);
             break;
         case 1:
             tiScheme = factory.CreateInstance("IMEXOrder1", "", 1, freeParams);
@@ -561,7 +561,7 @@ int main(int argc, char *argv[])
             break;
         default:
         {
-            std::cerr << "The third argument defines the "
+            std::cerr << "The -m argument defines the "
                       << "time-integration method to be used:\n\n";
             std::cout << desc;
             exit(1);
@@ -762,21 +762,23 @@ void DemoSolver::EvaluateL2Error(int timeStep, const NekDouble time,
         std::cout << "Time step: " << timeStep << "  "
                   << "Time: " << time << "\n";
 
+    // Commented out because the approximate solution can blow up.
+
     // Get the min and max value and write the approximate solution
     // std::cout << "  approximate ";
-    for (int k = 0; k < m_nVars; k++)
-    {
-        for (int i = 0; i < m_nPoints; i++)
-        {
-            if( m_minValue > approx[k][i] )
-                m_minValue = approx[k][i];
+    // for (int k = 0; k < m_nVars; k++)
+    // {
+    //     for (int i = 0; i < m_nPoints; i++)
+    //     {
+    //         if( m_minValue > approx[k][i] )
+    //             m_minValue = approx[k][i];
 
-            if( m_maxValue < approx[k][i] )
-                m_maxValue = approx[k][i];
+    //         if( m_maxValue < approx[k][i] )
+    //             m_maxValue = approx[k][i];
 
-            // std::cout << approx[k][i] << "  ";
-        }
-    }
+    //         // std::cout << approx[k][i] << "  ";
+    //     }
+    // }
     // std::cout << std::endl;
 
     // Get the min and max value and write the exact solution

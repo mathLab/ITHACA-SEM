@@ -5,3 +5,4 @@ rm -rf build && mkdir -p build && (cd build && if [[ $BUILD_TYPE == "default" ]]
 make -C build -j $NUM_CPUS all
 make -C build -j $NUM_CPUS install
 (cd build && ctest -j $NUM_CPUS --output-on-failure)
+exit 5

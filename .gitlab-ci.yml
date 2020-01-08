@@ -69,7 +69,7 @@ stages:
   script:
     - IFS=- read _ _ OS_VERSION _ <<<$CI_JOB_NAME
     - IFS=- read _ _ BUILD_TYPE <<<$CI_JOB_STAGE
-    - sed  -e "s/%%OS_VERSION%%/$OS_VERSION/g" docker/nektar-env/Dockerfile_${OS_DISTRO}_${BUILD_TYPE} > Dockerfile
+    - sed  -e "s %%OS_VERSION%% $OS_VERSION g" -e "s %%REGISTRY%% $CI_REGISTRY_IMAGE g" docker/nektar-env/Dockerfile_${OS_DISTRO}_${BUILD_TYPE} > Dockerfile
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - export IMAGE=$CI_REGISTRY_IMAGE:env-${OS_VERSION}-${BUILD_TYPE}
     - docker build --pull -t $IMAGE .
@@ -80,11 +80,11 @@ stages:
   stage:
     build-env-full
 
-# build-env-buster-default:
-#   <<: *build-env-debian-template-default
+build-env-buster-default:
+  <<: *build-env-debian-template-default
 
-# build-env-buster-full:
-#   <<: *build-env-debian-template-full
+build-env-buster-full:
+  <<: *build-env-debian-template-full
 
 # build-env-stretch-default:
 #   <<: *build-env-debian-template-default
@@ -99,12 +99,12 @@ build-and-test-buster-default:
     IMAGE_NAME: $CI_REGISTRY_IMAGE:env-buster-default
   # image: $CI_REGISTRY_IMAGE:env-buster-default
 
-# build-and-test-buster-full:
-#   <<: *build-and-test-template
-#   image: nektar-env:buster-full
-#   variables:
-#     OS_DISTRO: debian
-#     GIT_SUBMODULE_STRATEGY: recursive
+build-and-test-buster-full:
+  <<: *build-and-test-template
+  image: nektar-env:buster-full
+  variables:
+    OS_DISTRO: debian
+    GIT_SUBMODULE_STRATEGY: recursive
 
 # build-and-test-stretch-default:
 #   <<: *build-and-test-template

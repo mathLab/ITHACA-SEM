@@ -195,6 +195,7 @@ namespace Nektar
 	int number_of_snapshots_dir1;
 	int globally_connected;
 	int use_Newton;
+	int use_non_unique_up_to_two;
 	int debug_mode;
 	int use_overlap_p_space;
 	int write_ROM_field;

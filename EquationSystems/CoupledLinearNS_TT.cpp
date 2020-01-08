@@ -6468,6 +6468,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		Eigen::MatrixXd collected_qoi = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
 		Eigen::MatrixXd collected_relative_L2errors = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
 		Eigen::MatrixXd collected_relative_Linferrors = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		Eigen::MatrixXd collected_relative_L2errors_v2 = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		Eigen::MatrixXd collected_relative_Linferrors_v2 = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
 		int fine_grid_dir0_index = 0;
 		int fine_grid_dir1_index = 0;
 		double locROM_qoi;
@@ -6542,6 +6544,11 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			{
 				collected_relative_L2errors(fine_grid_dir0_index, fine_grid_dir1_index) = L2norm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
 				collected_relative_Linferrors(fine_grid_dir0_index, fine_grid_dir1_index) = Linfnorm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / Linfnorm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
+				if (use_non_unique_up_to_two)
+				{
+					collected_relative_L2errors_v2(fine_grid_dir0_index, fine_grid_dir1_index) = L2norm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1], snapshot_y_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1], snapshot_y_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1]);
+					collected_relative_Linferrors_v2(fine_grid_dir0_index, fine_grid_dir1_index) = Linfnorm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1], snapshot_y_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1]) / Linfnorm_ITHACA(snapshot_x_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1], snapshot_y_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1]);
+				}
 			}
 			fine_grid_dir1_index++;
 			if (fine_grid_dir1_index == fine_grid_dir1)
@@ -6609,7 +6616,47 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				myfile_VV_Linf.close();
 			}
 			else cout << "Unable to open file"; 
+			
+			if (use_non_unique_up_to_two)
+			{
+				std::stringstream sstm_VV;
+				sstm_VV << "LocROM_cluster_VV_v2" << current_cluster_number << ".txt";
+				std::string LocROM_txt_VV = sstm_VV.str();
+				const char* outname_VV = LocROM_txt_VV.c_str();
+				ofstream myfile_VV (outname_VV);
+				if (myfile_VV.is_open())
+				{
+					for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+					{
+						for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+						{
+							myfile_VV << std::setprecision(17) << collected_relative_L2errors_v2(i0,i1) << "\t";
+						}
+						myfile_VV << "\n";
+					}
+					myfile_VV.close();
+				}
+				else cout << "Unable to open file"; 
 
+				std::stringstream sstm_VV_Linf;
+				sstm_VV_Linf << "LocROM_cluster_VV_Linf_v2" << current_cluster_number << ".txt";
+				std::string LocROM_txt_VV_Linf = sstm_VV_Linf.str();
+				const char* outname_VV_Linf = LocROM_txt_VV_Linf.c_str();
+				ofstream myfile_VV_Linf (outname_VV_Linf);
+				if (myfile_VV_Linf.is_open())
+				{
+					for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+					{
+						for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+						{
+							myfile_VV_Linf << std::setprecision(17) << collected_relative_Linferrors_v2(i0,i1) << "\t";
+						}
+						myfile_VV_Linf << "\n";
+					}
+					myfile_VV_Linf.close();
+				}
+				else cout << "Unable to open file"; 
+			}
 
 		}
 
@@ -6622,6 +6669,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 	// for each VV point identify the next closest cluster snapshot
 	Eigen::MatrixXd VV_cluster_association = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+	Eigen::MatrixXd VV_cluster_association_v2 = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1); // for if use_non_unique_up_to_two
 	int fine_general_param_vector_index = 0;
 	int no_clusters = clusters.num_elements();
 	for (int i0 = 0; i0 < fine_grid_dir0; i0++)
@@ -6636,6 +6684,11 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			{
 				if (clusters[j].count(general_param_vector_index) == 1)
 					VV_cluster_association(i0, i1) = j;
+				if (use_non_unique_up_to_two)
+				{
+					if (clusters[j].count(general_param_vector_index + Nmax/2) == 1)
+						VV_cluster_association_v2(i0, i1) = j;
+				}
 			}
 		}
 	}
@@ -6653,6 +6706,17 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				myfile << VV_cluster_association(i0,i1) << "\t";
 			}
 			myfile << "\n";
+		}
+		if (use_non_unique_up_to_two)
+		{
+			for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+			{
+				for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+				{
+					myfile << VV_cluster_association_v2(i0,i1) << "\t";
+				}
+				myfile << "\n";
+			}
 		}
 		myfile.close();
 	}
@@ -7157,6 +7221,15 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		use_Newton = 0;
 	}
+	if (m_session->DefinesParameter("use_non_unique_up_to_two")) // set if Newton or Oseen iteration
+	{
+		use_non_unique_up_to_two = m_session->GetParameter("use_non_unique_up_to_two");
+		number_of_snapshots = 2*number_of_snapshots;
+	}
+	else
+	{
+		use_non_unique_up_to_two = 0;
+	}
 	if (m_session->DefinesParameter("debug_mode")) // debug_mode with many extra information but very slow
 	{
 		debug_mode = m_session->GetParameter("debug_mode");
@@ -7262,16 +7335,29 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				std::stringstream sstm1;
 				sstm1 << "param" << i1 << "_dir1";
 				std::string result1 = sstm1.str();
-			        if (i1 == 0)
+			    if (i1 == 0)
 					start_param_dir1 = m_session->GetParameter(result1);
-			        if (i1 == number_of_snapshots_dir1-1)
+			    if (i1 == number_of_snapshots_dir1-1)
 					end_param_dir1 = m_session->GetParameter(result1);
 				general_param_vector[i_all][0] = m_session->GetParameter(result);
-			        general_param_vector[i_all][1] = m_session->GetParameter(result1);
+			    general_param_vector[i_all][1] = m_session->GetParameter(result1);
 				i_all = i_all + 1;
 //				general_param_vector[i_all] = Array<OneD, NekDouble> (parameter_space_dimension);
 			}
 		}
+		// if there is set use_non_unique_up_to_two then double the param vector
+		if (use_non_unique_up_to_two)
+		{
+			// Nmax should already be correct
+			// cout << "Nmax " << Nmax << endl;
+			for (int i = 0; i < Nmax/2; ++i)
+			{
+				general_param_vector[i + Nmax/2][0] = general_param_vector[i][0];
+				general_param_vector[i + Nmax/2][1] = general_param_vector[i][1];
+			}
+
+		}
+
 		// output sample grid as *.txt
 	        std::string sample_grid_txt = "sample_grid.txt";
 		const char* outname_sample_grid_txt = sample_grid_txt.c_str();
@@ -7512,27 +7598,37 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			{
 				// load the refs -- maybe 	InitObject();   has to happen first
 				Array<OneD, NekDouble> collected_fine_grid_ref_qoi = Array<OneD, NekDouble> (fine_grid_dir0*fine_grid_dir1);
+				if (use_non_unique_up_to_two)
+				{
+					collected_fine_grid_ref_qoi = Array<OneD, NekDouble> (2*fine_grid_dir0*fine_grid_dir1);
+				}
 				
 				int nvelo = 2;
-			        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvelo); // for a 2D problem
+		        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvelo); // for a 2D problem
 
-			        for(int i = 0; i < nvelo; ++i)
-			        {
-			            test_load_snapshot[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);  // number of phys points
-			        }
+		        for(int i = 0; i < nvelo; ++i)
+		        {
+		            test_load_snapshot[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);  // number of phys points
+		        }
 
 				cout << "no of phys points " << GetNpoints() << endl;
 
-			        std::vector<std::string> fieldStr;
-			        for(int i = 0; i < nvelo; ++i)
-			        {
-			           fieldStr.push_back(m_session->GetVariable(i));
-			        }
+		        std::vector<std::string> fieldStr;
+		        for(int i = 0; i < nvelo; ++i)
+		        {
+		           fieldStr.push_back(m_session->GetVariable(i));
+		        }
 
 				snapshot_x_collection_VV = Array<OneD, Array<OneD, NekDouble> > (fine_grid_dir0*fine_grid_dir1);
 				snapshot_y_collection_VV = Array<OneD, Array<OneD, NekDouble> > (fine_grid_dir0*fine_grid_dir1);
-			        for(int i = 0; i < fine_grid_dir0*fine_grid_dir1; ++i)
-			        {
+				if (use_non_unique_up_to_two)
+				{
+					snapshot_x_collection_VV = Array<OneD, Array<OneD, NekDouble> > (2*fine_grid_dir0*fine_grid_dir1);
+					snapshot_y_collection_VV = Array<OneD, Array<OneD, NekDouble> > (2*fine_grid_dir0*fine_grid_dir1);
+				}
+
+		        for(int i = 0; i < fine_grid_dir0*fine_grid_dir1; ++i)
+		        {
 					// generate the correct string
 					std::stringstream sstm;
 					sstm << "VV" << i+1;
@@ -7548,7 +7644,30 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 						snapshot_y_collection_VV[i][j] = test_load_snapshot[1][j];
 					}
 					collected_fine_grid_ref_qoi[i] = snapshot_y_collection_VV[i][qoi_dof];
+		        }
+				if (use_non_unique_up_to_two)
+				{
+			        for(int i = fine_grid_dir0*fine_grid_dir1; i < 2*fine_grid_dir0*fine_grid_dir1; ++i)
+			        {
+						// generate the correct string
+						std::stringstream sstm;
+						sstm << "VV" << i+1;
+						std::string result = sstm.str();
+						const char* rr = result.c_str();
+	
+				        EvaluateFunction(fieldStr, test_load_snapshot, result);
+						snapshot_x_collection_VV[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+						snapshot_y_collection_VV[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+						for (int j=0; j < GetNpoints(); ++j)
+						{
+							snapshot_x_collection_VV[i][j] = test_load_snapshot[0][j];
+							snapshot_y_collection_VV[i][j] = test_load_snapshot[1][j];
+						}
+						collected_fine_grid_ref_qoi[i] = snapshot_y_collection_VV[i][qoi_dof];
 			        }
+				}
+
+
 				// write the FOM_qoi
 
 				std::stringstream sstm;
@@ -7562,7 +7681,16 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 					{
 						myfile << collected_fine_grid_ref_qoi[i0] << "\t";
 					}
+					if (use_non_unique_up_to_two)
+					{
+						for (int i0 = fine_grid_dir0*fine_grid_dir1; i0 < 2*fine_grid_dir0*fine_grid_dir1; i0++)
+						{
+							myfile << collected_fine_grid_ref_qoi[i0] << "\t";
+						}						
+					}
+
 					myfile.close();
+
 				}
 				else cout << "Unable to open file"; 
 				
@@ -7869,7 +7997,28 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				moving_index++;
 			}
 		}
-	        std::string samples_optimal_clustering_txt = "samples_optimal_clustering.txt";
+
+		Eigen::MatrixXd samples_cluster_association_v2 = Eigen::MatrixXd::Zero(number_of_snapshots_dir0, number_of_snapshots_dir1);		
+		if (use_non_unique_up_to_two)
+		{
+			int moving_index_v2 = number_of_snapshots_dir0*number_of_snapshots_dir1;
+			for (int i0 = 0; i0 < number_of_snapshots_dir0; i0++)
+			{
+				for (int i1 = 0; i1 < number_of_snapshots_dir1; i1++)
+				{
+					// identify cluster in which o_i is
+					for (int j = 0; j < no_clusters; ++j)
+					{
+						if (optimal_clusters[j].count(moving_index_v2) == 1)
+							samples_cluster_association_v2(i0, i1) = j;
+					}
+					moving_index_v2++;
+				}
+			}
+			
+		}
+
+        std::string samples_optimal_clustering_txt = "samples_optimal_clustering.txt";
 		const char* samples_optimal_clustering_txt_t = samples_optimal_clustering_txt.c_str();
 		ofstream myfile_samples_optimal_clustering_txt_t (samples_optimal_clustering_txt_t);
 		if (myfile_samples_optimal_clustering_txt_t.is_open())
@@ -7882,7 +8031,18 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				}
 				myfile_samples_optimal_clustering_txt_t << endl;
 			}
-      			myfile_samples_optimal_clustering_txt_t.close();
+			if (use_non_unique_up_to_two)
+			{
+				for (int i0 = 0; i0 < number_of_snapshots_dir0; i0++)
+				{
+					for (int i1 = 0; i1 < number_of_snapshots_dir1; i1++)
+					{
+						myfile_samples_optimal_clustering_txt_t << samples_cluster_association_v2(i0, i1)  << "\t";
+					}
+					myfile_samples_optimal_clustering_txt_t << endl;
+				}
+			}
+   			myfile_samples_optimal_clustering_txt_t.close();
 		}
 		else cout << "Unable to open file"; 
 
@@ -8081,6 +8241,53 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 					}
 					else
 						optimal_clusters_mod[i].insert(index_all);
+
+					if (use_non_unique_up_to_two)
+					{
+						// same again with Nmax/2 offset: is it a neighbour of cluster i?
+						if (!optimal_clusters[i].count(index_all + Nmax/2))
+						{
+							int is_neigh = 0;
+							int neigh0;
+							if (j1 > 0)
+							{
+								neigh0 = j1-1 + number_of_snapshots_dir1*j0;
+								//cout << "neigh0 " << neigh0 << endl;
+								if (optimal_clusters[i].count(neigh0 + Nmax/2))
+									is_neigh = 1;
+							}
+							if (j1 < number_of_snapshots_dir1-1)
+							{
+								neigh0 = j1+1 + number_of_snapshots_dir1*j0;
+								//cout << "neigh0 " << neigh0 << endl;
+								if (optimal_clusters[i].count(neigh0 + Nmax/2))
+									is_neigh = 1;
+							}
+							if (j0 > 0)
+							{
+								neigh0 = j1 + number_of_snapshots_dir1*(j0-1);
+								//cout << "neigh0 " << neigh0 << endl;
+								if (optimal_clusters[i].count(neigh0 + Nmax/2))
+									is_neigh = 1;
+							}
+							if (j0 < number_of_snapshots_dir0-1)
+							{
+								neigh0 = j1 + number_of_snapshots_dir1*(j0+1);
+								//cout << "neigh0 " << neigh0 << endl;
+								if (optimal_clusters[i].count(neigh0 + Nmax/2))
+									is_neigh = 1;
+							}
+							if (is_neigh)
+							{
+								optimal_clusters_mod[i].insert(index_all + Nmax/2);
+								//if (debug_mode)
+								//	cout << " inserting to clust " << i << " the index " << index_all << endl;
+							}
+						}
+						else
+							optimal_clusters_mod[i].insert(index_all + Nmax/2);
+
+					}
 					index_all++;
 				}
 			}
@@ -9802,9 +10009,9 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
     void CoupledLinearNS_TT::load_snapshots_geometry_params_conv_Oseen(int number_of_snapshots)
     {
 
-	// assuming it is prepared in the correct ordering - i.e. - outer loop dir0, inner loop dir1
+		// assuming it is prepared in the correct ordering - i.e. - outer loop dir0, inner loop dir1
 
-	int nvelo = 2;
+		int nvelo = 2;
         Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvelo); // for a 2D problem
 
         for(int i = 0; i < nvelo; ++i)
@@ -9812,7 +10019,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
             test_load_snapshot[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);  // number of phys points
         }
 
-	cout << "no of phys points " << GetNpoints() << endl;
+		cout << "no of phys points " << GetNpoints() << endl;
 
         std::vector<std::string> fieldStr;
         for(int i = 0; i < nvelo; ++i)
@@ -9820,9 +10027,18 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
            fieldStr.push_back(m_session->GetVariable(i));
         }
 
-	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
-	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
-        for(int i = 0; i < number_of_snapshots; ++i)
+		snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+		snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+		int unique_number_of_snapshots;
+		if (use_non_unique_up_to_two)
+		{
+			unique_number_of_snapshots = number_of_snapshots / 2;
+		}
+		else
+		{
+			unique_number_of_snapshots = number_of_snapshots;
+		}
+        for(int i = 0; i < unique_number_of_snapshots; ++i)
         {
 		// generate the correct string
 		std::stringstream sstm;
@@ -9839,6 +10055,26 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			snapshot_y_collection[i][j] = test_load_snapshot[1][j];
 		}
         }
+		if (use_non_unique_up_to_two)
+		{
+	        for(int i = unique_number_of_snapshots; i < 2*unique_number_of_snapshots; ++i)
+	        {
+				// generate the correct string
+				std::stringstream sstm;
+				sstm << "TestSnap_cO_" << i+1;
+				std::string result = sstm.str();
+				const char* rr = result.c_str();
+
+		        EvaluateFunction(fieldStr, test_load_snapshot, result);
+				snapshot_x_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+				snapshot_y_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+				for (int j=0; j < GetNpoints(); ++j)
+				{
+					snapshot_x_collection[i][j] = test_load_snapshot[0][j];
+					snapshot_y_collection[i][j] = test_load_snapshot[1][j];
+				}	
+       		}
+		}
 
     }
 

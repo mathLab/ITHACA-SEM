@@ -32,29 +32,27 @@ stages:
     - docker pull $CI_REGISTRY_IMAGE:$ENV_NAME
     - sed "s %%BASE_IMAGE%% $CI_REGISTRY_IMAGE:$ENV_NAME g" .gitlab-ci/Dockerfile_add_repo > Dockerfile_tmp
     - export ENV_IMAGE=$(docker build -q -f Dockerfile_tmp .)
-    - docker create --name $CONTAINER_NAME -v ccache:/cache
+    - docker run --name $CONTAINER_NAME -v ccache:/cache
       -e "BUILD_TYPE=$BUILD_TYPE"
       -e "NUM_CPUS=$NUM_CPUS"
       -e "CCACHE_DIR=$CCACHE_DIR"
       $ENV_IMAGE
-      bash -e .gitlab-ci/build-and-test.sh
-    - docker start -ai $CONTAINER_NAME || true
+      bash -x .gitlab-ci/build-and-test.sh || true
     - exit_code=$(docker wait $CONTAINER_NAME)
     - >
         echo "Container exit code: $exit_code"
     - if [ $exit_code -ne 0 ];
       then
-        docker commit --change="WORKDIR /home/nektar" $CONTAINER_NAME nektar:$CONTAINER_NAME;
-        export FAIL_CONTAINER=pipeline_${CI_PIPELINE_ID}_${OS_VERSION}_${BUILD_TYPE};
-        docker run --name $FAIL_CONTAINER nektar:$CONTAINER_NAME bash -e nektar/.gitlab-ci/prepare_failed.sh;
-        docker commit $FAIL_CONTAINER $CI_REGISTRY_IMAGE:$FAIL_CONTAINER;
-        docker push $CI_REGISTRY_IMAGE:$FAIL_CONTAINER;
-        docker rm $CONTAINER_NAME $FAIL_CONTAINER;
-        docker image rm nektar:$CONTAINER_NAME $CI_REGISTRY_IMAGE:$FAIL_CONTAINER;
-        exit $exit_code;
+        export FAIL_IMAGE=$CI_REGISTRY_IMAGE:pipeline_${CI_PIPELINE_ID}_${OS_VERSION}_${BUILD_TYPE};
+        echo FAIL $FAIL_IMAGE;
+        docker commit $CONTAINER_NAME $FAIL_IMAGE;
+        docker push $FAIL_IMAGE; 
+        docker rmi $FAIL_IMAGE;
       fi
     - docker rm $CONTAINER_NAME
     - docker rmi $ENV_IMAGE
+    - exit $exit_code;
+
 
 ################################################
 ###################  DEBIAN  ###################

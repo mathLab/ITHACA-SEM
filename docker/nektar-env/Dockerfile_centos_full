@@ -1,4 +1,4 @@
-FROM nektar-env:%%OS_VERSION%%-default
+FROM %%REGISTRY%%:env-%%OS_VERSION%%-default
 
 LABEL maintainer="Nektar++ Development Team <nektar-users@imperial.ac.uk>"
 

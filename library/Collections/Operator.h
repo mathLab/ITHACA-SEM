@@ -139,9 +139,21 @@ class Operator
         COLLECTIONS_EXPORT virtual ~Operator();
 
         /// Get the size of the required workspace
-        int GetWspSize()
+        unsigned int GetWspSize()
         {
             return m_wspSize;
+        }
+
+        /// Get expansion pointer
+        unsigned int GetNumElmt()
+        {
+            return m_numElmt;
+        }
+
+        /// Get expansion pointer
+        StdRegions::StdExpansionSharedPtr GetExpSharedPtr()
+        {
+            return m_stdExp;
         }
 
     protected:

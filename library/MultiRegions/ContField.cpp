@@ -276,7 +276,7 @@ namespace Nektar
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
-            
+
             GlobalSolve(key,wsp,outarray);
         }
 
@@ -392,27 +392,27 @@ namespace Nektar
                    SpatialDomains::eRobin)
                 {
                     const Array<OneD, NekDouble> bndcoeff =
-                        (m_bndCondExpansions[i])->GetCoeffs(); 
+                        (m_bndCondExpansions[i])->GetCoeffs();
 
                     if(m_locToGloMap->GetSignChange())
                     {
                         for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                         {
-                            wsp[map[bndcnt + j]] += sign[bndcnt + j] * bndcoeff[j]; 
+                            wsp[map[bndcnt + j]] += sign[bndcnt + j] * bndcoeff[j];
                         }
                     }
                     else
                     {
                         for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                         {
-                            wsp[map[bndcnt+j]] += bndcoeff[bndcnt + j]; 
+                            wsp[map[bndcnt+j]] += bndcoeff[bndcnt + j];
                         }
-                    }                    
+                    }
                 }
 
                 bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
             }
-       
+
             StdRegions::VarCoeffMap varcoeffs;
             varcoeffs[StdRegions::eVarCoeffD00] = variablecoeffs[0];
             varcoeffs[StdRegions::eVarCoeffD11] = variablecoeffs[3];
@@ -465,7 +465,7 @@ namespace Nektar
 
 
 
-        
+
         /**
          * Given a linear system specified by the key \a key,
          * \f[\boldsymbol{M}\boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}},\f]
@@ -524,7 +524,7 @@ namespace Nektar
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
             //         IN THE SOLUTION ARRAY
             v_ImposeDirichletConditions(inout);
-            
+
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
             if(contNcoeffs - NumDirBcs > 0)
             {
@@ -589,16 +589,16 @@ namespace Nektar
             return ExpList::GenGlobalLinSys(mkey, m_locToGloMap);
         }
 
-        /**
-         *
-         */
-        void ContField::v_BwdTrans(
-                                     const Array<OneD, const NekDouble>
-                                     &inarray,
-                                     Array<OneD,       NekDouble> &outarray)
-        {
-            BwdTrans(inarray,outarray);
-        }
+        // /**
+        //  *
+        //  */
+        // void ContField::v_BwdTrans(
+        //                              const Array<OneD, const NekDouble>
+        //                              &inarray,
+        //                              Array<OneD,       NekDouble> &outarray)
+        // {
+        //     BwdTrans(inarray,outarray);
+        // }
 
 
         /**
@@ -622,33 +622,33 @@ namespace Nektar
                 GetBndCondCoeffsToLocalCoeffsSign();
             const Array<OneD, const int> map= m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsMap();
-            
+
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eDirichlet)
                 {
                     const Array<OneD, NekDouble> bndcoeff =
-                        (m_bndCondExpansions[i])->GetCoeffs(); 
+                        (m_bndCondExpansions[i])->GetCoeffs();
 
                     if(m_locToGloMap->GetSignChange())
                     {
                         for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                         {
-                            outarray[map[bndcnt + j]] = sign[bndcnt + j] * bndcoeff[j]; 
+                            outarray[map[bndcnt + j]] = sign[bndcnt + j] * bndcoeff[j];
                         }
                     }
                     else
                     {
                         for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                         {
-                            outarray[map[bndcnt+j]] = bndcoeff[j]; 
+                            outarray[map[bndcnt+j]] = bndcoeff[j];
                         }
-                    }                    
+                    }
                 }
                 bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
             }
-            
+
             // communicate local Dirichlet coeffsthat are just
             // touching a dirichlet boundary on another partition
             set<int> &ParallelDirBndSign = m_locToGloMap->GetParallelDirBndSign();
@@ -682,11 +682,11 @@ namespace Nektar
                 GetBndCondCoeffsToLocalCoeffsSign();
             const Array<OneD, const int> bndmap= m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsMap();
-            
+
             for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[i]->UpdateCoeffs();
-                
+
                 if(m_locToGloMap->GetSignChange())
                 {
                     for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
@@ -714,7 +714,7 @@ namespace Nektar
             ASSERTL1(nreg < m_bndCondExpansions.num_elements(),
                      "nreg is out or range since this many boundary "
                      "regions to not exist");
-            
+
             Array<OneD, NekDouble> sign = m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsSign();
             const Array<OneD, const int> bndmap= m_locToGloMap->
@@ -722,12 +722,12 @@ namespace Nektar
 
             // Now fill in all other Dirichlet coefficients.
             Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[nreg]->UpdateCoeffs();
-                
+
             for(int j = 0; j < nreg; ++j)
             {
                 bndcnt += m_bndCondExpansions[j]->GetNcoeffs();
             }
-            
+
             if(m_locToGloMap->GetSignChange())
             {
                 for(int j = 0; j < (m_bndCondExpansions[nreg])->GetNcoeffs(); ++j)
@@ -745,7 +745,7 @@ namespace Nektar
         }
 
 
-        
+
         /**
          * This operation is evaluated as:
          * \f{tabbing}
@@ -856,7 +856,7 @@ namespace Nektar
          * The values of the function \f$f(\boldsymbol{x})\f$
          * evaluated at the quadrature points \f$\boldsymbol{x}_i\f$
          * should be contained in the variable #m_phys of the ExpList
-         * object \a inarray. 
+         * object \a inarray.
          *
          * @param   inarray     An ExpList, containing the discrete evaluation
          *                      of the forcing function \f$f(\boldsymbol{x})\f$
@@ -894,7 +894,7 @@ namespace Nektar
             {
                 Vmath::Smul(m_ncoeffs,-1.0,inarray,1,wsp,1);
             }
-           
+
             int bndcnt = 0;
             Array<OneD, NekDouble> sign = m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsSign();
@@ -909,22 +909,22 @@ namespace Nektar
                    SpatialDomains::eRobin)
                 {
                     const Array<OneD, NekDouble> bndcoeff =
-                        (m_bndCondExpansions[i])->GetCoeffs(); 
+                        (m_bndCondExpansions[i])->GetCoeffs();
 
                     if(m_locToGloMap->GetSignChange())
                     {
                         for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                         {
-                            wsp[map[bndcnt + j]] += sign[bndcnt + j] * bndcoeff[j]; 
+                            wsp[map[bndcnt + j]] += sign[bndcnt + j] * bndcoeff[j];
                         }
                     }
                     else
                     {
                         for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                         {
-                            wsp[map[bndcnt+j]] += bndcoeff[j]; 
+                            wsp[map[bndcnt+j]] += bndcoeff[j];
                         }
-                    }                    
+                    }
                 }
 
                 bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
@@ -932,7 +932,7 @@ namespace Nektar
 
             GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,factors,
                                 varcoeff,varfactors);
-            
+
             GlobalSolve(key,wsp,outarray,dirForcing);
         }
 
@@ -982,7 +982,7 @@ namespace Nektar
             // Inner product of forcing
             Array<OneD,NekDouble> wsp(m_ncoeffs);
             IProductWRTBase(inarray,wsp);
-            
+
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
             Vmath::Neg(m_ncoeffs, wsp, 1);
@@ -1003,24 +1003,24 @@ namespace Nektar
                    SpatialDomains::eRobin)
                 {
                     const Array<OneD, NekDouble> bndcoeff =
-                        (m_bndCondExpansions[i])->GetCoeffs(); 
+                        (m_bndCondExpansions[i])->GetCoeffs();
 
                     if(m_locToGloMap->GetSignChange())
                     {
                         for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                         {
-                            wsp[map[bndcnt + j]] += sign[bndcnt + j] * bndcoeff[j]; 
+                            wsp[map[bndcnt + j]] += sign[bndcnt + j] * bndcoeff[j];
                         }
                     }
                     else
                     {
                         for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                         {
-                            wsp[map[bndcnt+j]] += bndcoeff[bndcnt + j]; 
+                            wsp[map[bndcnt+j]] += bndcoeff[bndcnt + j];
                         }
-                    }                    
+                    }
                 }
-                
+
                 bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
             }
 
@@ -1083,7 +1083,7 @@ namespace Nektar
 
 
         /**
-         * Reset the GlobalLinSys Manager 
+         * Reset the GlobalLinSys Manager
          */
         void ContField::v_ClearGlobalLinSysManager(void)
         {

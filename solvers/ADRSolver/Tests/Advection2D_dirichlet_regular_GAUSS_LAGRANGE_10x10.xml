@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <NEKTAR>
-    
+
     <EXPANSIONS>
         <E COMPOSITE="C[0]" FIELDS="u" BASISTYPE="Gauss_Lagrange, Gauss_Lagrange"
         NUMMODES="4,4" POINTSTYPE="GaussGaussLegendre, GaussGaussLegendre" NUMPOINTS="5,5"/>
     </EXPANSIONS>
-    
+
     <CONDITIONS>
-        
+
         <PARAMETERS>
             <P> FinTime         = 1.0              </P>
             <P> TimeStep        = 0.01             </P>
@@ -17,7 +17,7 @@
             <P> advx            = 1.2                 </P>
             <P> advy            = 1.2                 </P>
         </PARAMETERS>
-        
+
         <SOLVERINFO>
             <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvection"   />
             <I PROPERTY="Projection"            VALUE="DisContinuous"       />
@@ -25,18 +25,18 @@
             <I PROPERTY="UpwindType"            VALUE="Upwind"              />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
         </SOLVERINFO>
-        
+
         <VARIABLES>
             <V ID="0"> u </V>
         </VARIABLES>
-        
+
         <BOUNDARYREGIONS>
             <B ID="0"> C[100] </B>
             <B ID="1"> C[200] </B>
             <B ID="2"> C[300] </B>
             <B ID="3"> C[400] </B>
         </BOUNDARYREGIONS>
-        
+
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
                 <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="sin(PI*(x-advx*t))*cos(PI*(y-advy*t))" />
@@ -51,22 +51,29 @@
                 <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="sin(PI*(x-advx*t))*cos(PI*(y-advy*t))" />
             </REGION>
         </BOUNDARYCONDITIONS>
-        
+
         <FUNCTION NAME="AdvectionVelocity">
             <E VAR="Vx" VALUE="1.2" />
             <E VAR="Vy" VALUE="1.2" />
         </FUNCTION>
-        
+
         <FUNCTION NAME="ExactSolution">
             <E VAR="u" VALUE="sin(PI*(x-advx*t))*cos(PI*(y-advy*t))" />
         </FUNCTION>
-        
+
         <FUNCTION NAME="InitialConditions">
             <E VAR="u" VALUE="sin(PI*x)*cos(PI*y)" />
         </FUNCTION>
-        
+
     </CONDITIONS>
-    
+
+
+      <COLLECTIONS>
+        <OPERATOR TYPE="BwdTrans">
+            <ELEMENT TYPE="Q" ORDER="2-15" IMPTYPE="AVX" />
+        </OPERATOR>
+     </COLLECTIONS>
+
     <GEOMETRY DIM="2" SPACE="2">
         <VERTEX>
             <V ID="0">-1.00000000e+00 -1.00000000e+00 0.00000000e+00</V>

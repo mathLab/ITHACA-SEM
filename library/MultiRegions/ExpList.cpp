@@ -1579,7 +1579,7 @@ namespace Nektar
             Array<OneD, NekDouble> tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
-#if 0
+#if 1
                 m_collections[i].ApplyOperator(Collections::eBwdTrans,
                                                inarray + m_coll_coeff_offset[i],
                                                tmp = outarray + m_coll_phys_offset[i]);
@@ -1588,25 +1588,27 @@ namespace Nektar
                 // setup geometry
 
                 // Get operator pointer in order to access expansion pointer
-                auto opPtr
-                    {m_collections[i].GetOpSharedPtr(Collections::eBwdTrans)};
-
-                // Get expansion pointer
+                auto opPtr{m_collections[i].GetOpSharedPtr(Collections::eBwdTrans)};
 
                 // Get number of elements in the collection
-                const int nElmtOrig = opPtr->GetNumElmt();
-
+                const auto nElmtOrig = opPtr->GetNumElmt();
                 // Pad
-                const int nElmt = nElmtOrig + 4 - (nElmtOrig % 4);
-                const int nq    = opPtr->GetExpSharedPtr()->GetTotPoints() * nElmt;
-                const int nm    = opPtr->GetExpSharedPtr()->GetNcoeffs() * nElmt;
-                const int dim   = opPtr->GetExpSharedPtr()->GetShapeDimension();
+                const auto nElmt = nElmtOrig + 4 - (nElmtOrig % 4);
+                // elemental quadrature points and modes
+                const auto nqElmt = opPtr->GetExpSharedPtr()->GetTotPoints();
+                const auto nmElmt = opPtr->GetExpSharedPtr()->GetNcoeffs();
+                // total quadrature points and modes
+                const auto nq = nqElmt * nElmt;
+                const auto nm = nmElmt * nElmt;
+
+                const auto dim = opPtr->GetExpSharedPtr()->GetShapeDimension();
 
                 // Scan through list of elements and check if any are . If they are,
                 // we assume they _all_ have curvature for the purposes of testing.
-                int nqElmt = opPtr->GetExpSharedPtr()->GetTotPoints();
-                int nmElmt = opPtr->GetExpSharedPtr()->GetNcoeffs();
                 auto shapeType = opPtr->GetExpSharedPtr()->DetShapeType();
+
+                // Get Coalesced Geometry shared pointer
+                auto geomPtr{m_collections[i].GetGeomSharedPtr};
 
                 // bool deformed_fill = deformed;
 
@@ -1628,9 +1630,9 @@ namespace Nektar
                 //              "Number of modes should be uniform within the mesh");
                 // }
 
-                // // Assemble Jacobian list and derivative factors.
-                // Array<OneD, NekDouble> jac;
-                // Array<TwoD, NekDouble> df;
+                // Assemble Jacobian list and derivative factors.
+                Array<OneD, NekDouble> jac;
+                Array<TwoD, NekDouble> df;
 
                 // if (deformed)
                 // {

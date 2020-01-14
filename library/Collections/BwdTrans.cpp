@@ -139,6 +139,58 @@ OperatorKey BwdTrans_StdMat::m_typeArr[] = {
 };
 
 
+/**
+ * @brief Backward transform operator using AVX vector instructions approach.
+ */
+class BwdTrans_AVX : public Operator
+{
+    public:
+        OPERATOR_CREATE(BwdTrans_AVX)
+
+        virtual ~BwdTrans_AVX()
+        {
+        }
+
+        virtual void operator()(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &output1,
+                      Array<OneD,       NekDouble> &output2,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "AVX operator not implemented yet!");
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            boost::ignore_unused(dir, input, output, wsp);
+            ASSERTL0(false, "BwdTrans_AVX: Not valid for this operator.");
+        }
+
+    protected:
+        DNekMatSharedPtr m_mat;
+
+    private:
+        BwdTrans_AVX(
+                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                CoalescedGeomDataSharedPtr                pGeomData)
+            : Operator(pCollExp, pGeomData)
+        {
+
+        }
+};
+
+/// Factory initialisation for the BwdTrans_AVX operators
+OperatorKey BwdTrans_AVX::m_typeArr[] = {
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eQuadrilateral, eBwdTrans, eAVX,false),
+        BwdTrans_AVX::create, "BwdTrans_AVX_Quad")
+};
+
 
 /**
  * @brief Backward transform operator using default StdRegions operator

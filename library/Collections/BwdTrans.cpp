@@ -37,6 +37,9 @@
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 
+#include <AVXOperators/Operator.hpp>
+#include <AVXOperators/AVXUtil.hpp>
+
 using namespace std;
 
 namespace Nektar {
@@ -172,7 +175,7 @@ class BwdTrans_AVX : public Operator
         }
 
     protected:
-        DNekMatSharedPtr m_mat;
+
 
     private:
         BwdTrans_AVX(
@@ -180,6 +183,85 @@ class BwdTrans_AVX : public Operator
                 CoalescedGeomDataSharedPtr                pGeomData)
             : Operator(pCollExp, pGeomData)
         {
+            const auto nElmt = pCollExp.size();
+            const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
+            const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
+            const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
+
+
+            // for(int i = 0; i < nElmt; ++i)
+            // {
+            //     const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
+            //     const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
+
+
+            //     if (lep->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed)
+            //     {
+            //         deformed = true;
+            //     }
+
+            //     ASSERTL0(pCollExp[i]->GetStdExp()->GetTotPoints() == nqElmt,
+            //      "Number of quadrature points should be uniform within the mesh");
+            //     ASSERTL0(pCollExp[i]->GetStdExp()->GetNcoeffs() == nmElmt,
+            //      "Number of modes should be uniform within the mesh");
+            // }
+
+
+            // Assemble Jacobian list and derivative factors.
+            Array<OneD, NekDouble> jac;
+            jac = pGeomData->GetJac(pCollExp);
+            // Array<TwoD, NekDouble> df;
+            // df = pGeomData->GetDerivFactors(pCollExp);
+
+
+            // // Check if the collection is deformed or not
+            bool deformed{false};
+            if (jac.num_elements() == nElmt * nqElmt)
+            {
+                deformed = true;
+            }
+
+            // Basis vector.
+            std::vector<LibUtilities::BasisSharedPtr> basis(dim);
+            for(int i = 0; i < dim; i++)
+            {
+                basis[i] = pCollExp[0]->GetBasis(i);
+            }
+
+            // Generate operator string and create operator.
+            auto shapeType = m_stdExp->DetShapeType();
+            std::string op_string = "BwdTrans_Quad";
+            if (deformed)
+            {
+                op_string += "_Deformed";
+            }
+            else
+            {
+                op_string += "_Regular";
+            }
+
+            bool AVX512{false};
+            if(AVX512)
+            {
+                op_string += "_AVX512";
+            }
+            else
+            {
+                op_string += "_AVX";
+            }
+            auto oper = GetOperatorFactory().CreateInstance(op_string, basis, nElmt);
+            // If the operator needs the Jacobian, provide it here
+            if (oper->NeedsJac())
+            {
+                oper->SetJac(jac);
+            }
+
+            // // If the operator needs the derivative factors, provide it here
+            // if (oper->NeedsDF())
+            // {
+            //     oper->SetDF(df);
+            // }
+
 
         }
 };

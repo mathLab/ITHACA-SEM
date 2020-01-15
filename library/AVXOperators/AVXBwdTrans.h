@@ -110,18 +110,25 @@ struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
         auto *inptr = &input[0];
         auto *outptr = &output[0];
 
+        constexpr int nmTot = NM0 * NM1;
+        constexpr int nqTot = NQ0 * NQ1;
         constexpr int nqBlocks = NQ0 * NQ1 * VW;
         const int nmBlocks = m_nmTot * VW;
 
         T p_sums[NM0 * NQ0]; //Sums over q for each quadpt p_i
+        AlignedVector<T> tmpIn(nmTot), tmpOut(nqTot);
 
-        for(int e = 0; e < this->m_nBlocks; e++)
+        for (int e = 0; e < this->m_nBlocks; e++)
         {
+            // Load and transpose data
+            T::load_interleave(inptr, nmTot, tmpIn);
+
             AVXBwdTransQuadKernel<NM0, NM1, NQ0, NQ1, VW>(
-                inptr,
-                this->m_bdata[0], this->m_bdata[1],
-                p_sums,
-                outptr);
+                tmpIn, this->m_bdata[0], this->m_bdata[1],
+                p_sums, tmpOut);
+
+            // de-interleave and store data
+            T::deinterleave_store(tmpOut, nqTot, outptr);
 
             inptr += nmBlocks;
             outptr += nqBlocks;

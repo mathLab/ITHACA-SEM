@@ -5,7 +5,7 @@
 
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-// #include <MultiRegions/ExpList.h>
+#include <Collections/Operator.h>
 #include "VecData.hpp"
 // #include "AVXAssembly.h"
 

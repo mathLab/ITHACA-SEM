@@ -34,7 +34,7 @@
 
 #include <boost/core/ignore_unused.hpp>
 
-#include <Collections/Operator.h>
+// #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 
 #include <AVXOperators/Operator.hpp>
@@ -230,7 +230,7 @@ class BwdTrans_AVX : public Operator
                 op_string += "_AVX";
             }
             std::cout << op_string << '\n';
-            auto oper = GetOperatorFactory().CreateInstance(op_string, basis, nElmt);
+            // auto oper = GetOperatorFactory().CreateInstance(op_string, basis, nElmt);
             // // If the operator needs the Jacobian, provide it here
             // if (oper->NeedsJac())
             // {

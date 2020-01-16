@@ -5,23 +5,23 @@ stages:
   - build-docs
   - publish
 
-.build-env-template: &build-env-template
-  stage: build-env
-  tags:
-    - shell
+.execution-conditions: &execution-conditions
   only:
     refs:
       - feature/gitlab_ci
       - tags
 
+.build-env-template: &build-env-template
+  <<: *execution-conditions
+  stage: build-env
+  tags:
+    - shell
+
 .build-and-test-template: &build-and-test-template
+  <<: *execution-conditions
   stage: build-and-test
   tags:
     - docker
-  only:
-    refs:
-      - feature/gitlab_ci
-      - tags
   script: 
     - IFS="-" read -a NAME_VARS <<<$CI_JOB_NAME
     - export BUILD_TYPE=${NAME_VARS[4]}

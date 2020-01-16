@@ -27,9 +27,6 @@
         </SOLVERINFO>
 
         <PARAMETERS>
-		<!--  The updated parameters are: X_tilde = 2.01704e+07 and Delta_tilde = 2.13066e+21   -->
-	    <P> ControlCoeff = 10 </P> 
-	    <!-- <P> FilterWidth = 2e+1 </P> -->
             <P> TimeStep = 1e-4    </P>
             <P> TOL = .005    </P>
             <P> NumSteps = 1e5      </P>
@@ -85,14 +82,6 @@
 <!--	    <P> elem_3 = {29, 31}   	</P>   -->
 <!--	    <P> elem_4 = {33, 35}   	</P>   -->
 <!--	    <P> elem_5 = {0,1,2,3,4,5,6,7}   		</P>   -->
-            <P> A             = 0.65         		</P>
-            <P> omega         = 2*PI*f       	        </P>
-            <P> MappingPressureTolerance  = 1e-5               </P>
-            <P> MappingViscousTolerance   = 1e-5               </P>
-            <P> kdim = 16 </P>
-            <P> nvec = 2 </P>
-            <P> evtol = 1e-1 </P>
-            <P> nits = 1000 </P>
         </PARAMETERS>
 
         <VARIABLES>

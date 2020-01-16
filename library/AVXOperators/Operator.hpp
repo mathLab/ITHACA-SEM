@@ -5,9 +5,9 @@
 
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <MultiRegions/ExpList.h>
+// #include <MultiRegions/ExpList.h>
 #include "VecData.hpp"
-#include "AVXAssembly.h"
+// #include "AVXAssembly.h"
 
 using namespace Nektar;
 
@@ -70,38 +70,38 @@ public:
     {
     }
 
-    virtual void set_asmMap(MultiRegions::AssemblyMapSharedPtr asmMap)
-    {
-    }
+    // virtual void set_asmMap(MultiRegions::AssemblyMapSharedPtr asmMap)
+    // {
+    // }
 
-    /// Provides a reference function for operators which can be used to
-    /// validate correctness compared to Nektar++.
-    ///
-    /// In 2D this is taken as \f$ \sin x \cos y \f$, and in 3D \f$ \sin x \cos
-    /// y \sin z \f$.
-    static void RefFn(MultiRegions::ExpListSharedPtr expList,
-                      Array<OneD, NekDouble> &in)
-    {
-        const int nq = expList->GetNpoints();
-        const int dim = expList->GetExp(0)->GetShapeDimension();
+    // /// Provides a reference function for operators which can be used to
+    // /// validate correctness compared to Nektar++.
+    // ///
+    // /// In 2D this is taken as \f$ \sin x \cos y \f$, and in 3D \f$ \sin x \cos
+    // /// y \sin z \f$.
+    // static void RefFn(MultiRegions::ExpListSharedPtr expList,
+    //                   Array<OneD, NekDouble> &in)
+    // {
+    //     const int nq = expList->GetNpoints();
+    //     const int dim = expList->GetExp(0)->GetShapeDimension();
 
-        if(dim == 2){
-            Array<OneD, NekDouble> xc(nq), yc(nq);
+    //     if(dim == 2){
+    //         Array<OneD, NekDouble> xc(nq), yc(nq);
 
-            expList->GetCoords(xc,yc);
-            for(int i = 0; i < nq; i++){
-                in[i] = sin(xc[i]) * cos(yc[i]);
-            }
-        }
-        else if(dim == 3){
-            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+    //         expList->GetCoords(xc,yc);
+    //         for(int i = 0; i < nq; i++){
+    //             in[i] = sin(xc[i]) * cos(yc[i]);
+    //         }
+    //     }
+    //     else if(dim == 3){
+    //         Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
 
-            expList->GetCoords(xc,yc,zc);
-            for(int i = 0; i < nq; i++){
-                in[i] = sin(xc[i]) * cos(yc[i]) * sin(zc[i]);
-            }
-        }
-    }
+    //         expList->GetCoords(xc,yc,zc);
+    //         for(int i = 0; i < nq; i++){
+    //             in[i] = sin(xc[i]) * cos(yc[i]) * sin(zc[i]);
+    //         }
+    //     }
+    // }
 
 };
 
@@ -125,15 +125,15 @@ public:
         const Array<OneD, const NekDouble> &input,
         Array<OneD, NekDouble> &output) = 0; //Abstract Method
 
-    void Ref(MultiRegions::ExpListSharedPtr expList,
-             Array<OneD, NekDouble> &ref_exp,
-             Array<OneD, NekDouble> &ref_bwd)
-    {
-        Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
-        this->RefFn(expList, ref_fn);
-        expList->FwdTrans_IterPerExp(ref_fn, ref_exp);
-        expList->BwdTrans(ref_exp, ref_bwd);
-    }
+    // void Ref(MultiRegions::ExpListSharedPtr expList,
+    //          Array<OneD, NekDouble> &ref_exp,
+    //          Array<OneD, NekDouble> &ref_bwd)
+    // {
+    //     Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
+    //     this->RefFn(expList, ref_fn);
+    //     expList->FwdTrans_IterPerExp(ref_fn, ref_exp);
+    //     expList->BwdTrans(ref_exp, ref_bwd);
+    // }
 
 protected:
     std::vector<LibUtilities::BasisSharedPtr> m_basis;
@@ -162,13 +162,13 @@ public:
         const Array<OneD, const NekDouble> &input,
         Array<OneD, NekDouble> &output) = 0;
 
-    void Ref(MultiRegions::ExpListSharedPtr expList,
-                Array<OneD, NekDouble> &ref_fn,
-                Array<OneD, NekDouble> &ref_iprod)
-    {
-        this->RefFn(expList, ref_fn);
-        expList->IProductWRTBase(ref_fn, ref_iprod);
-    }
+    // void Ref(MultiRegions::ExpListSharedPtr expList,
+    //             Array<OneD, NekDouble> &ref_fn,
+    //             Array<OneD, NekDouble> &ref_iprod)
+    // {
+    //     this->RefFn(expList, ref_fn);
+    //     expList->IProductWRTBase(ref_fn, ref_iprod);
+    // }
 
 protected:
     /// Vector of tensor product basis directions
@@ -204,23 +204,23 @@ public:
         Array<OneD, NekDouble> &output1,
         Array<OneD, NekDouble> &output2) = 0;
 
-    void Ref(MultiRegions::ExpListSharedPtr expList,
-                Array<OneD, NekDouble> &ref_fn,
-                Array<OneD, NekDouble> &d0,
-                Array<OneD, NekDouble> &d1,
-                Array<OneD, NekDouble> &d2 = NullNekDouble1DArray)
-    {
-        const int dim = expList->GetExp(0)->GetShapeDimension();
+    // void Ref(MultiRegions::ExpListSharedPtr expList,
+    //             Array<OneD, NekDouble> &ref_fn,
+    //             Array<OneD, NekDouble> &d0,
+    //             Array<OneD, NekDouble> &d1,
+    //             Array<OneD, NekDouble> &d2 = NullNekDouble1DArray)
+    // {
+    //     const int dim = expList->GetExp(0)->GetShapeDimension();
 
-        this->RefFn(expList, ref_fn);
+    //     this->RefFn(expList, ref_fn);
 
-        if(dim == 2){
-            expList->PhysDeriv(ref_fn, d0, d1);
-        }
-        else if(dim == 3){
-            expList->PhysDeriv(ref_fn, d0, d1, d2);
-        }
-    }
+    //     if(dim == 2){
+    //         expList->PhysDeriv(ref_fn, d0, d1);
+    //     }
+    //     else if(dim == 3){
+    //         expList->PhysDeriv(ref_fn, d0, d1, d2);
+    //     }
+    // }
 
 protected:
     std::vector<LibUtilities::BasisSharedPtr> m_basis;
@@ -254,108 +254,108 @@ public:
         const Array<OneD, const NekDouble> &input,
         Array<OneD, NekDouble> &output) = 0;
 
-    void Ref(MultiRegions::ExpListSharedPtr expList,
-             Array<OneD, NekDouble> &ref_exp,
-             Array<OneD, NekDouble> &ref_helm)
-    {
-        Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
-        this->RefFn(expList, ref_fn);
-        expList->FwdTrans_IterPerExp(ref_fn, ref_exp);
+    // void Ref(MultiRegions::ExpListSharedPtr expList,
+    //          Array<OneD, NekDouble> &ref_exp,
+    //          Array<OneD, NekDouble> &ref_helm)
+    // {
+    //     Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
+    //     this->RefFn(expList, ref_fn);
+    //     expList->FwdTrans_IterPerExp(ref_fn, ref_exp);
 
-        StdRegions::ConstFactorMap factors;
-        factors[StdRegions::eFactorLambda] = 1.0;
+    //     StdRegions::ConstFactorMap factors;
+    //     factors[StdRegions::eFactorLambda] = 1.0;
 
-        MultiRegions::GlobalMatrixKey mkey(
-            StdRegions::eHelmholtz,
-            MultiRegions::NullAssemblyMapSharedPtr,
-            factors);
+    //     MultiRegions::GlobalMatrixKey mkey(
+    //         StdRegions::eHelmholtz,
+    //         MultiRegions::NullAssemblyMapSharedPtr,
+    //         factors);
 
-        expList->GeneralMatrixOp_IterPerExp(mkey, ref_exp, ref_helm);
-    }
+    //     expList->GeneralMatrixOp_IterPerExp(mkey, ref_exp, ref_helm);
+    // }
 
 protected:
     std::vector<LibUtilities::BasisSharedPtr> m_basis;
     int m_nElmt;
 };
 
-template<int VW>
-class HelmholtzGlobal : virtual public Operator
-{
-    public:
-    HelmholtzGlobal(std::vector<LibUtilities::BasisSharedPtr> basis,
-            int nElmt) :
-            m_basis(basis), m_nElmt(nElmt)
-    {
-    }
+// template<int VW>
+// class HelmholtzGlobal : virtual public Operator
+// {
+//     public:
+//     HelmholtzGlobal(std::vector<LibUtilities::BasisSharedPtr> basis,
+//             int nElmt) :
+//             m_basis(basis), m_nElmt(nElmt)
+//     {
+//     }
 
-    virtual ~HelmholtzGlobal()
-    {
-    }
+//     virtual ~HelmholtzGlobal()
+//     {
+//     }
 
-    virtual bool NeedsJac() override
-    {
-        return true;
-    }
+//     virtual bool NeedsJac() override
+//     {
+//         return true;
+//     }
 
-    virtual bool NeedsDF() override
-    {
-        return true;
-    }
+//     virtual bool NeedsDF() override
+//     {
+//         return true;
+//     }
 
-    virtual void operator()(
-        const Array<OneD, const NekDouble> &globalIn,
-        Array<OneD,       NekDouble> &globalOut,
-        AVXAssembly<VW>              &l2g) = 0;
+//     virtual void operator()(
+//         const Array<OneD, const NekDouble> &globalIn,
+//         Array<OneD,       NekDouble> &globalOut,
+//         AVXAssembly<VW>              &l2g) = 0;
 
 
-    void Ref(MultiRegions::ExpListSharedPtr expList,
-             Array<OneD, NekDouble> &ref_exp,
-             Array<OneD, NekDouble> &ref_helm)
-    {
-        Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
-        this->RefFn(expList, ref_fn);
-        expList->FwdTrans_IterPerExp(ref_fn, ref_exp);
+//     // void Ref(MultiRegions::ExpListSharedPtr expList,
+//     //          Array<OneD, NekDouble> &ref_exp,
+//     //          Array<OneD, NekDouble> &ref_helm)
+//     // {
+//     //     Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
+//     //     this->RefFn(expList, ref_fn);
+//     //     expList->FwdTrans_IterPerExp(ref_fn, ref_exp);
 
-        StdRegions::ConstFactorMap factors;
-        factors[StdRegions::eFactorLambda] = 1.0;
+//     //     StdRegions::ConstFactorMap factors;
+//     //     factors[StdRegions::eFactorLambda] = 1.0;
 
-        MultiRegions::GlobalMatrixKey mkey(
-            StdRegions::eHelmholtz,
-            MultiRegions::NullAssemblyMapSharedPtr,
-            factors);
+//     //     MultiRegions::GlobalMatrixKey mkey(
+//     //         StdRegions::eHelmholtz,
+//     //         MultiRegions::NullAssemblyMapSharedPtr,
+//     //         factors);
 
-        expList->GeneralMatrixOp_IterPerExp(mkey, ref_exp, ref_helm);
-    }
+//     //     expList->GeneralMatrixOp_IterPerExp(mkey, ref_exp, ref_helm);
+//     // }
 
-    void Ref2(MultiRegions::ExpListSharedPtr expList,
-            Array<OneD, NekDouble> &ref_exp,
-            Array<OneD, NekDouble> &ref_helm,
-            const MultiRegions::AssemblyMapSharedPtr asmMap)
-    {
-        Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
-        Array<OneD, NekDouble> ref_exp_local (expList->GetNcoeffs());
-        this->RefFn(expList, ref_fn);
-        expList->FwdTrans_IterPerExp(ref_fn, ref_exp_local);
+//     // void Ref2(MultiRegions::ExpListSharedPtr expList,
+//     //         Array<OneD, NekDouble> &ref_exp,
+//     //         Array<OneD, NekDouble> &ref_helm,
+//     //         const MultiRegions::AssemblyMapSharedPtr asmMap)
+//     // {
+//     //     Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
+//     //     Array<OneD, NekDouble> ref_exp_local (expList->GetNcoeffs());
+//     //     this->RefFn(expList, ref_fn);
+//     //     expList->FwdTrans_IterPerExp(ref_fn, ref_exp_local);
 
-        StdRegions::ConstFactorMap factors;
-        factors[StdRegions::eFactorLambda] = 1.0;
+//     //     StdRegions::ConstFactorMap factors;
+//     //     factors[StdRegions::eFactorLambda] = 1.0;
 
-        MultiRegions::GlobalMatrixKey mkey(
-            StdRegions::eHelmholtz,
-            MultiRegions::NullAssemblyMapSharedPtr,
-            factors);
+//     //     MultiRegions::GlobalMatrixKey mkey(
+//     //         StdRegions::eHelmholtz,
+//     //         MultiRegions::NullAssemblyMapSharedPtr,
+//     //         factors);
 
-        Array<OneD, NekDouble> ref_helm_local(expList->GetNcoeffs());
-        expList->GeneralMatrixOp_IterPerExp(mkey, ref_exp_local, ref_helm_local);
+//     //     Array<OneD, NekDouble> ref_helm_local(expList->GetNcoeffs());
+//     //     expList->GeneralMatrixOp_IterPerExp(mkey, ref_exp_local, ref_helm_local);
 
-        asmMap->Assemble(ref_helm_local, ref_helm);
-    }
+//     //     asmMap->Assemble(ref_helm_local, ref_helm);
+//     // }
 
-protected:
-    std::vector<LibUtilities::BasisSharedPtr> m_basis;
-    int m_nElmt;
+// protected:
+//     std::vector<LibUtilities::BasisSharedPtr> m_basis;
+//     int m_nElmt;
 
-};
+// };
 
 template <int VW, int DIM, bool DEFORMED = false>
 class AVXHelper : virtual public Operator

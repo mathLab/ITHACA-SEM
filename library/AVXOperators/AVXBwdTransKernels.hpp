@@ -5,13 +5,13 @@
 
 template<int NUMMODE0, int NUMMODE1,
          int NUMQUAD0, int NUMQUAD1,
-         int VW, class BasisType>
+         int VW>
 inline static void AVXBwdTransQuadKernel(
-    const double *inptr,
-    const AlignedVector<BasisType> &bdata0,
-    const AlignedVector<BasisType> &bdata1,
+    const AlignedVector<VecData<double, VW>> &in,
+    const AlignedVector<VecData<double, VW>> &bdata0,
+    const AlignedVector<VecData<double, VW>> &bdata1,
     VecData<double, VW> *wsp,
-    double *outptr)
+    AlignedVector<VecData<double, VW>> &out)
 {
     using T = VecData<double, VW>;
 
@@ -24,16 +24,12 @@ inline static void AVXBwdTransQuadKernel(
         int cnt_pq = 0;
         for (int q = 0; q < nm1; ++q, ++cnt_iq)
         {
-            T tmp = T(inptr + cnt_pq) * bdata0[i]; //Load 2
-            cnt_pq += VW;
+            wsp[cnt_iq] = in[cnt_pq++] * bdata0[i];
 
-            for (int p = 1; p < nm0; ++p, cnt_pq += VW)
+            for (int p = 1; p < nm0; ++p, ++cnt_pq)
             {
-                T inxmm = T(inptr + cnt_pq); //Load 1
-                tmp.fma(inxmm, bdata0[p * nq0 + i]); //Load 1
+                wsp[cnt_iq].fma(in[cnt_pq], bdata0[p * nq0 + i]);
             }
-
-            wsp[cnt_iq] = tmp; //Store 1
         }
     }
 
@@ -41,21 +37,20 @@ inline static void AVXBwdTransQuadKernel(
     for (int j = 0; j < nq1; ++j)
     {
         cnt_iq = 0;
-        for (int i = 0; i < nq0; ++i, cnt_ij += VW)
+        for (int i = 0; i < nq0; ++i, ++cnt_ij)
         {
-            T tmp = wsp[cnt_iq] * bdata1[j]; //Load 2x
+            out[cnt_ij] = wsp[cnt_iq] * bdata1[j];
             ++cnt_iq;
             for (int q = 1; q < nm1; ++q, ++cnt_iq)
             {
-                tmp.fma(wsp[cnt_iq], bdata1[q * nq1 + j]); //Load 2x
+                out[cnt_ij].fma(wsp[cnt_iq], bdata1[q * nq1 + j]);
             }
-            tmp.store(outptr + cnt_ij); //Store 1x
         }
     }
 
 }
 
-template<int NUMMODE0, int NUMMODE1, 
+template<int NUMMODE0, int NUMMODE1,
          int NUMQUAD0, int NUMQUAD1,
          int VW, bool CORRECT, class BasisType>
 inline static void AVXBwdTransTriKernel(

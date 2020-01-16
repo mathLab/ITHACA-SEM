@@ -1,21 +1,22 @@
 SET(AVXOPERATORS_SOURCES
-    AVXIProduct.cpp
+    # AVXIProduct.cpp
     AVXBwdTrans.cpp
-    AVXPhysDeriv.cpp
-    AVXHelmholtz.cpp
-    AVXHelmholtzGlobal.cpp
+    # AVXPhysDeriv.cpp
+    # AVXHelmholtz.cpp
+    # AVXHelmholtzGlobal.cpp
     Operator.cpp
   )
 
 SET(AVXOPERATORS_HEADERS
-    AVXIProduct.h
-    AVXIProductKernels.hpp
+    # AVXAssembly.h
+    # AVXIProduct.h
+    # AVXIProductKernels.hpp
     AVXBwdTrans.h
     AVXBwdTransKernels.hpp
-    AVXPhysDeriv.h
-    AVXPhysDerivKernels.hpp
-    AVXHelmholtz.h
-    AVXHelmholtzGlobal.h
+    # AVXPhysDeriv.h
+    # AVXPhysDerivKernels.hpp
+    # AVXHelmholtz.h
+    # AVXHelmholtzGlobal.h
     AVXUtil.hpp
     VecData.hpp
     Operator.hpp

@@ -51,14 +51,6 @@
             <P> param2_dir1 = 0.16       </P>
             <P> param3_dir1 = 0.18       </P>
             <P> param4_dir1 = 0.2       </P>
-            <P> A             = 0.65               </P>
-            <P> omega         = 2*PI*f               </P>
-            <P> MappingPressureTolerance  = 1e-5               </P>
-            <P> MappingViscousTolerance   = 1e-5               </P>
-            <P> kdim = 16 </P>
-            <P> nvec = 2 </P>
-            <P> evtol = 1e-1 </P>
-            <P> nits = 1000 </P>
         </PARAMETERS>
 
         <VARIABLES>

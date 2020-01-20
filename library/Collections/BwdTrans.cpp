@@ -34,11 +34,12 @@
 
 #include <boost/core/ignore_unused.hpp>
 
-// #include <Collections/Operator.h>
-#include <Collections/Collection.h>
 
 #include <AVXOperators/Operator.hpp>
 #include <AVXOperators/AVXUtil.hpp>
+
+#include <Collections/Operator.h>
+#include <Collections/CoalescedGeomData.h>
 
 using namespace std;
 
@@ -183,7 +184,7 @@ class BwdTrans_AVX : public Operator
                 CoalescedGeomDataSharedPtr                pGeomData)
             : Operator(pCollExp, pGeomData)
         {
-            int nElmt = pCollExp.size();
+            const int nElmt = pCollExp.size();
             const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
             const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
@@ -230,7 +231,8 @@ class BwdTrans_AVX : public Operator
                 op_string += "_AVX";
             }
             std::cout << op_string << '\n';
-            // auto oper = GetOperatorFactory().CreateInstance(op_string, basis, nElmt);
+            auto oper = GetOperatorFactory().
+                CreateInstance(op_string, basis, nElmt);
             // // If the operator needs the Jacobian, provide it here
             // if (oper->NeedsJac())
             // {

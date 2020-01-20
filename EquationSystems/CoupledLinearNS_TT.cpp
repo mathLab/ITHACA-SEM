@@ -4786,6 +4786,18 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
     }
 
+    Eigen::MatrixXd CoupledLinearNS_TT::reproject_from_basis( Eigen::MatrixXd curr_xy_proj )
+    {
+		Eigen::VectorXd reproj_curr_x = eigen_phys_basis_x * curr_xy_proj.col(0);
+		Eigen::VectorXd reproj_curr_y = eigen_phys_basis_y * curr_xy_proj.col(1);
+		Eigen::MatrixXd curr_xy_reprojected = Eigen::MatrixXd::Zero(eigen_phys_basis_x.rows(), 2);
+		curr_xy_reprojected.col(0) = reproj_curr_x;
+		curr_xy_reprojected.col(1) = reproj_curr_y;
+
+		return curr_xy_reprojected;
+
+    }
+
     int CoupledLinearNS_TT::get_curr_elem_pos(int curr_elem)
     {
 	// find within Array<OneD, std::set<int> > elements_trafo; the current entry
@@ -6950,7 +6962,44 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		mat_compare.col(1) = reconstruct_solution; // sembra abbastanza bene
 		mat_compare.col(2) = mat_compare.col(1) - mat_compare.col(0);
 //		cout << mat_compare << endl;
-		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << " of snapshot number " << iter_index << endl;
+//		cout << "relative euclidean error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << " of snapshot number " << iter_index << endl;
+
+		// compare this to the projection error onto RB, cannot use collect_f_all, is numerically unstable
+/*		cout << "mat_compare.cols() " << mat_compare.cols() << endl;
+		cout << "mat_compare.rows() " << mat_compare.rows() << endl;
+		cout << "collect_f_all.cols() " << collect_f_all.cols() << endl;
+		cout << "collect_f_all.rows() " << collect_f_all.rows() << endl;
+		cout << "RB.cols() " << RB.cols() << endl;
+		cout << "RB.rows() " << RB.rows() << endl; */
+
+		
+//		cout << "curr_xy_proj.cols() " << curr_xy_proj.cols() << endl;
+	//	cout << "curr_xy_proj.rows() " << curr_xy_proj.rows() << endl; 
+
+
+//		Eigen::VectorXd proj_solution = collect_f_all.transpose() * mat_compare.col(0);
+//		Eigen::VectorXd reproj_solution = collect_f_all * proj_solution;
+		Eigen::VectorXd FOM_solution = mat_compare.col(0);
+		Eigen::VectorXd FOM_solution_wo_dbc = remove_rows(FOM_solution, elem_loc_dbc);
+		Eigen::VectorXd proj_FOM_solution_wo_dbc = RB.transpose() * FOM_solution_wo_dbc;
+		Eigen::VectorXd reproj_FOM_solution_wo_dbc = RB * proj_FOM_solution_wo_dbc;
+		Eigen::VectorXd reconstruct_FOM_solution = reconstruct_solution_w_dbc(reproj_FOM_solution_wo_dbc);
+
+//		cout << "reconstruct_FOM_solution.norm(): " << reconstruct_FOM_solution.norm() << endl;
+//		cout << "reconstruct_solution.norm(): " << reconstruct_solution.norm() << endl;
+		Eigen::VectorXd diff_projection = reconstruct_FOM_solution - mat_compare.col(0);
+
+//		cout << "relative euclidean projection error norm: " << diff_projection.norm() / mat_compare.col(0).norm() << " of snapshot number " << iter_index << endl;
+
+
+		// now only in RB:
+		Eigen::VectorXd diff_projection_RB = reproj_FOM_solution_wo_dbc - remove_rows(mat_compare.col(0), elem_loc_dbc);
+		Eigen::VectorXd diff_RB = repro_solve_affine - remove_rows(mat_compare.col(0), elem_loc_dbc);
+//		cout << "relative euclidean RB projection error norm: " << diff_projection_RB.norm() / remove_rows(mat_compare.col(0), elem_loc_dbc).norm() << " of snapshot number " << iter_index << endl;
+//		cout << "relative euclidean RB error norm: " << diff_RB.norm() / remove_rows(mat_compare.col(0), elem_loc_dbc).norm() << " of snapshot number " << iter_index << endl;
+
+		// have to use curr_xy_proj for better approximations
+
 
 		if (debug_mode)
 		{
@@ -6959,9 +7008,93 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 		if (write_ROM_field || (qoi_dof >= 0))
 		{
-			recover_snapshot_data(reconstruct_solution, current_index); // this is setting the fields
+			recover_snapshot_data(reconstruct_solution, current_index); // this is setting the fields and fieldcoeffs
 		}
 
+	  	Eigen::VectorXd f_bnd = reconstruct_solution.head(curr_f_bnd.size());
+		Eigen::VectorXd f_int = reconstruct_solution.tail(curr_f_int.size());
+		Array<OneD, MultiRegions::ExpListSharedPtr> fields = UpdateFields(); 
+		Array<OneD, unsigned int> bmap, imap; 
+		Array<OneD, double> field_0(GetNcoeffs());
+		Array<OneD, double> field_1(GetNcoeffs());
+		Array<OneD, double> curr_PhysBaseVec_x(GetNpoints(), 0.0);
+		Array<OneD, double> curr_PhysBaseVec_y(GetNpoints(), 0.0);
+		int cnt = 0;
+		int cnt1 = 0;
+		int nvel = 2;
+		int nz_loc = 1;
+		int  nplanecoeffs = fields[0]->GetNcoeffs();
+		int  nel  = m_fields[0]->GetNumElmts();
+		for(int i = 0; i < nel; ++i) 
+		{
+		      int eid  = i;
+		      fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
+		      fields[0]->GetExp(eid)->GetInteriorMap(imap);
+		      int nbnd   = bmap.num_elements();
+		      int nint   = imap.num_elements();
+			      int offset = fields[0]->GetCoeff_Offset(eid);
+		            
+		      for(int j = 0; j < nvel; ++j)
+		      {
+		           for(int n = 0; n < nz_loc; ++n)
+		           {
+		                    for(int k = 0; k < nbnd; ++k)
+		                    {
+		                        fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k], f_bnd(cnt+k));
+		                    }
+		                    
+		                    for(int k = 0; k < nint; ++k)
+		                    {
+		                        fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k], f_int(cnt1+k));
+		                    }
+		                    cnt  += nbnd;
+		                    cnt1 += nint;
+		           }
+		      }
+		}
+		Array<OneD, double> test_nn = fields[0]->GetCoeffs();
+		fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(), curr_PhysBaseVec_x);
+		fields[1]->BwdTrans_IterPerExp(fields[1]->GetCoeffs(), curr_PhysBaseVec_y);
+
+        std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
+        int i;
+        for(i = 0; i < m_fields.num_elements(); ++i)
+        {
+            fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+	    }
+//		cout << "after recover_snapshot_data have fieldcoeffs[0].num_elements() " << fieldcoeffs[0].num_elements() << endl;
+
+//		cout << "after recover_snapshot_data have curr_PhysBaseVec_x.num_elements() " << curr_PhysBaseVec_x.num_elements() << endl;
+//		cout << "after recover_snapshot_data have snapshot_x_collection[current_index].num_elements() " << snapshot_x_collection[current_index].num_elements() << endl;
+
+		// have the FOM_snapshot_solution projection available as curr_xy_proj
+		// datastructure: 	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection;
+		Eigen::VectorXd diff_x_RB_solve = Eigen::VectorXd::Zero(curr_PhysBaseVec_x.num_elements());
+		Eigen::VectorXd snap_x = Eigen::VectorXd::Zero(curr_PhysBaseVec_x.num_elements());
+		Eigen::VectorXd diff_y_RB_solve = Eigen::VectorXd::Zero(curr_PhysBaseVec_x.num_elements());
+		Eigen::VectorXd snap_y = Eigen::VectorXd::Zero(curr_PhysBaseVec_x.num_elements());
+		for (int index_recr = 0; index_recr < curr_PhysBaseVec_x.num_elements(); ++index_recr)
+		{
+			snap_x(index_recr) = snapshot_x_collection[current_index][index_recr];
+			snap_y(index_recr) = snapshot_y_collection[current_index][index_recr];
+			diff_x_RB_solve(index_recr) = curr_PhysBaseVec_x[index_recr] - snapshot_x_collection[current_index][index_recr];
+			diff_y_RB_solve(index_recr) = curr_PhysBaseVec_y[index_recr] - snapshot_y_collection[current_index][index_recr];
+		}
+
+		Eigen::MatrixXd curr_xy_reproj = reproject_from_basis(curr_xy_proj);
+
+		cout << "relative euclidean error norm in x coords: " << diff_x_RB_solve.norm() / snap_x.norm() << " of snapshot number " << iter_index << endl;
+		cout << "relative euclidean error norm in y coords: " << diff_y_RB_solve.norm() / snap_y.norm() << " of snapshot number " << iter_index << endl;
+
+//		cout << "curr_xy_reproj.cols() " << curr_xy_reproj.cols() << endl;
+//		cout << "curr_xy_reproj.rows() " << curr_xy_reproj.rows() << endl;
+//		cout << "snap_x.rows() " << snap_x.rows() << endl;
+
+		Eigen::VectorXd diff_x_proj = curr_xy_reproj.col(0) - snap_x;
+		Eigen::VectorXd diff_y_proj = curr_xy_reproj.col(1) - snap_y;
+		
+		cout << "relative euclidean projection error norm in x coords: " << diff_x_proj.norm() / snap_x.norm() << " of snapshot number " << iter_index << endl;
+		cout << "relative euclidean projection error norm in y coords: " << diff_y_proj.norm() / snap_y.norm() << " of snapshot number " << iter_index << endl;
 
 	}
     }

@@ -235,6 +235,8 @@ namespace Nektar
 	Eigen::MatrixXd gen_affine_mat_proj_2d(double, double);
 	Eigen::VectorXd gen_affine_vec_proj_2d(double, double, int);
 
+	Eigen::MatrixXd reproject_from_basis( Eigen::MatrixXd curr_xy_proj );
+
 	Array<OneD, Array<OneD, Eigen::MatrixXd > > the_const_one_proj_2d;
 	Array<OneD, Array<OneD, Eigen::MatrixXd > > the_ABCD_one_proj_2d;
 	Array<OneD, Array<OneD, Eigen::VectorXd > > the_ABCD_one_rhs_proj_2d;

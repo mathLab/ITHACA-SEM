@@ -7,14 +7,10 @@ stages:
   - publish
 
 .execution-conditions: &execution-conditions
-  rules:
-    - changes:
-      - ^((?!README.md|CHANGELOG.md).)*$
-      when: on_success
-  # only:
-  #   refs:
-  #     - feature/gitlab_ci
-  #     - tags
+  only:
+    refs:
+      - feature/gitlab_ci
+      - tags
 
 .build-env-template: &build-env-template
   <<: *execution-conditions
@@ -113,14 +109,14 @@ build-env-buster-default:
 # build-env-buster-full:
 #   <<: *build-env-debian-template-full
 
-# build-env-stretch-default:
-#   <<: *build-env-debian-template-default
+build-env-stretch-default:
+  <<: *build-env-debian-template-default
 
 # build-env-stretch-full:
 #   <<: *build-env-debian-template-full
 
-# build-and-test-buster-default:
-#   <<: *build-and-test-template
+build-and-test-buster-default:
+  <<: *build-and-test-template
 
 # build-and-test-buster-full:
 #   <<: *build-and-test-template
@@ -128,22 +124,22 @@ build-env-buster-default:
 #     OS_DISTRO: debian
 #     GIT_SUBMODULE_STRATEGY: recursive
 
-# build-and-test-stretch-default:
-#   <<: *build-and-test-template
+build-and-test-stretch-default:
+  <<: *build-and-test-template
 
 # build-and-test-stretch-full:
 #   <<: *build-and-test-template
 
 
-# # COMPILER WARNINGS
-# warnings-buster-default:
-#   <<: *compiler-warning-template
+# COMPILER WARNINGS
+warnings-buster-default:
+  <<: *compiler-warning-template
 
 # warnings-buster-full:
 #   <<: *compiler-warning-template
 
-# warnings-stretch-default:
-#   <<: *compiler-warning-template
+warnings-stretch-default:
+  <<: *compiler-warning-template
 
 # warnings-stretch-full:
 #   <<: *compiler-warning-template

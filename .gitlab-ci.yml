@@ -9,6 +9,7 @@ stages:
 .execution-conditions: &execution-conditions
   only:
     refs:
+      - merge_requests
       - feature/gitlab_ci
       - tags
 

@@ -12,6 +12,8 @@ stages:
       - merge_requests
       - feature/gitlab_ci
       - tags
+    variables:
+      - $CI_MERGE_REQUEST_TITLE !~ /^WIP:.*/
 
 .build-env-template: &build-env-template
   <<: *execution-conditions

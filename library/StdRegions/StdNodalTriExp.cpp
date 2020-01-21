@@ -50,16 +50,16 @@ namespace Nektar
         }
 
         StdNodalTriExp::StdNodalTriExp(
-            const LibUtilities::BasisKey &Ba, 
-            const LibUtilities::BasisKey &Bb, 
-            LibUtilities::PointsType Ntype):
+                                       const LibUtilities::BasisKey &Ba, 
+                                       const LibUtilities::BasisKey &Bb, 
+                                       LibUtilities::PointsType Ntype):
             StdExpansion  (LibUtilities::StdTriData::getNumberOfCoefficients(
-                               Ba.GetNumModes(),
-                               Bb.GetNumModes()),
+                                                                             Ba.GetNumModes(),
+                                                                             Bb.GetNumModes()),
                            2,Ba,Bb),
             StdExpansion2D(LibUtilities::StdTriData::getNumberOfCoefficients(
-                               Ba.GetNumModes(),
-                               Bb.GetNumModes()),
+                                                                             Ba.GetNumModes(),
+                                                                             Bb.GetNumModes()),
                            Ba,Bb),
             StdTriExp     (Ba,Bb),
             m_nodalPointsKey(Ba.GetNumModes(),Ntype)
@@ -91,8 +91,8 @@ namespace Nektar
         //-------------------------------
         
         void StdNodalTriExp::NodalToModal(
-            const Array<OneD, const NekDouble>& inarray, 
-                  Array<OneD,       NekDouble>& outarray)
+                                          const Array<OneD, const NekDouble>& inarray, 
+                                          Array<OneD,       NekDouble>& outarray)
         {
             StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
                                 NullConstFactorMap, NullVarCoeffMap,
@@ -106,8 +106,8 @@ namespace Nektar
 
         // Operate with transpose of NodalToModal transformation
         void StdNodalTriExp::NodalToModalTranspose(
-            const Array<OneD, const NekDouble>& inarray, 
-                  Array<OneD,       NekDouble>& outarray)
+                                                   const Array<OneD, const NekDouble>& inarray, 
+                                                   Array<OneD,       NekDouble>& outarray)
         {
             StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
                                 NullConstFactorMap, NullVarCoeffMap,
@@ -120,12 +120,12 @@ namespace Nektar
         }
 
         void StdNodalTriExp::ModalToNodal(
-            const Array<OneD, const NekDouble>& inarray, 
-                  Array<OneD,       NekDouble>& outarray)
+                                          const Array<OneD, const NekDouble>& inarray, 
+                                          Array<OneD,       NekDouble>& outarray)
         {
             StdMatrixKey      Nkey(eNBasisTrans, DetShapeType(), *this,
-                                    NullConstFactorMap, NullVarCoeffMap,
-                                    m_nodalPointsKey.GetPointsType());
+                                   NullConstFactorMap, NullVarCoeffMap,
+                                   m_nodalPointsKey.GetPointsType());
             DNekMatSharedPtr  vdm = GetStdMatrix(Nkey);
 
             // Multiply out matrix
@@ -135,8 +135,8 @@ namespace Nektar
         }
 
         void StdNodalTriExp::GetNodalPoints(
-            Array<OneD, const NekDouble> &x, 
-            Array<OneD, const NekDouble> &y)
+                                            Array<OneD, const NekDouble> &x, 
+                                            Array<OneD, const NekDouble> &y)
         {
             LibUtilities::PointsManager()[m_nodalPointsKey]->GetPoints(x,y);
         }
@@ -149,7 +149,7 @@ namespace Nektar
             DNekMatSharedPtr Mat;
 
             Mat = MemoryManager<DNekMat>::AllocateSharedPtr(
-                m_ncoeffs, m_ncoeffs);
+                                                            m_ncoeffs, m_ncoeffs);
             GetNodalPoints(r,s);
 
             //Store the values of m_phys in a temporary array
@@ -179,15 +179,15 @@ namespace Nektar
         //---------------------------------------
         
         void StdNodalTriExp::v_BwdTrans(
-            const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
+                                        const Array<OneD, const NekDouble>& inarray,
+                                        Array<OneD,       NekDouble>& outarray)
         {
             v_BwdTrans_SumFac(inarray,outarray);
         }
 
         void StdNodalTriExp::v_BwdTrans_SumFac(
-            const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
+                                               const Array<OneD, const NekDouble>& inarray,
+                                               Array<OneD,       NekDouble>& outarray)
         {
             Array<OneD, NekDouble> tmp(m_ncoeffs);
             NodalToModal(inarray,tmp);
@@ -195,8 +195,8 @@ namespace Nektar
         }
 
         void StdNodalTriExp::v_FwdTrans(
-            const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
+                                        const Array<OneD, const NekDouble>& inarray,
+                                        Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTBase(inarray,outarray);
             
@@ -219,33 +219,33 @@ namespace Nektar
         //---------------------------------------
         
         void StdNodalTriExp::v_IProductWRTBase(
-            const Array<OneD, const NekDouble>& inarray, 
-                  Array<OneD,       NekDouble>& outarray)
+                                               const Array<OneD, const NekDouble>& inarray, 
+                                               Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTBase_SumFac(inarray,outarray);
         }
         
         void StdNodalTriExp::v_IProductWRTBase_SumFac(
-            const Array<OneD, const NekDouble>& inarray, 
-                  Array<OneD,       NekDouble>& outarray,
-            bool                                multiplybyweights)
+                                                      const Array<OneD, const NekDouble>& inarray, 
+                                                      Array<OneD,       NekDouble>& outarray,
+                                                      bool                                multiplybyweights)
         {
             StdTriExp::v_IProductWRTBase_SumFac(inarray,outarray,multiplybyweights);
             NodalToModalTranspose(outarray,outarray);    
         }
 
         void StdNodalTriExp::v_IProductWRTDerivBase(
-            const int                           dir,
-            const Array<OneD, const NekDouble>& inarray, 
-                  Array<OneD,       NekDouble>& outarray)
+                                                    const int                           dir,
+                                                    const Array<OneD, const NekDouble>& inarray, 
+                                                    Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
         }
         
         void StdNodalTriExp::v_IProductWRTDerivBase_SumFac(
-            const int                           dir, 
-            const Array<OneD, const NekDouble>& inarray, 
-                  Array<OneD,       NekDouble>& outarray)
+                                                           const int                           dir, 
+                                                           const Array<OneD, const NekDouble>& inarray, 
+                                                           Array<OneD,       NekDouble>& outarray)
         {
             StdTriExp::v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             NodalToModalTranspose(outarray,outarray);
@@ -256,11 +256,11 @@ namespace Nektar
         //---------------------------------------
         
         void StdNodalTriExp::v_FillMode(
-            const int               mode, 
-            Array<OneD, NekDouble> &outarray)
+                                        const int               mode, 
+                                        Array<OneD, NekDouble> &outarray)
         {
             ASSERTL2(mode >= m_ncoeffs, 
-                "calling argument mode is larger than total expansion order");
+                     "calling argument mode is larger than total expansion order");
 
             Vmath::Zero(m_ncoeffs, outarray, 1);
             outarray[mode] = 1.0;
@@ -282,11 +282,11 @@ namespace Nektar
         //--------------------------
 
         void StdNodalTriExp::v_GetEdgeToElementMap(
-            const int                  eid,
-            const Orientation      edgeOrient,
-            Array<OneD, unsigned int> &maparray,
-            Array<OneD,          int> &signarray,
-            int                        P)
+                                                   const int                  eid,
+                                                   const Orientation      edgeOrient,
+                                                   Array<OneD, unsigned int> &maparray,
+                                                   Array<OneD,          int> &signarray,
+                                                   int                        P)
         {
             ASSERTL0(eid >= 0 && eid <= 2,
                      "Local Edge ID must be between 0 and 2"); 
@@ -319,11 +319,11 @@ namespace Nektar
             }
 
             maparray[0] = eid;
-            maparray[nEdgeCoeffs-1] = eid == 2 ? 0 : eid+1;
-            for (int i = 2; i < nEdgeCoeffs; i++)
+            for (int i = 1; i < nEdgeCoeffs-1; i++)
             {
-                maparray[i-1] = eid*(nEdgeCoeffs-2)+1+i; 
+                maparray[i] = eid*(nEdgeCoeffs-2)+2+i; 
             }  
+            maparray[nEdgeCoeffs-1] = eid == 2 ? 0 : eid+1;
 
             if (orient == eBackwards)
             {

@@ -89,7 +89,7 @@ public:
                 m_integration_phases[n], variant, n+1);
         }
 
-        // for( unsigned int n=0; n<m_order; ++n )
+        // for( unsigned int n=0; n<order; ++n )
         //   std::cout << m_integration_phases[n] << std::endl;
     }
 
@@ -200,7 +200,7 @@ public:
         // matrix thus values are non zero if and only i=j. As such,
         // the diagonal Lambda values are stored as two vectors so to
         // accomodate complex numbers m_L[0] real, m_L[1] imaginary.
-        ASSERTL1(phase->m_nvars == phase->m_L.GetColumns(),
+        ASSERTL1(phase->m_nvars == phase->m_L.num_elements(),
                  "The number of variables does not match "
                  "the number of exponential coefficents.");
 
@@ -216,13 +216,11 @@ public:
             // B Phi function for first row first column
             if( phase->m_variant == "Lawson" )
             {
-                phi[0] =
-                  phi_function(0, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+	        phi[0] = phi_function(0, deltaT * phase->m_L[k]).real();
             }
             else if( phase->m_variant == "Norsett" )
             {
-                phi[0] =
-                  phi_function(1, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+                phi[0] = phi_function(1, deltaT * phase->m_L[k]).real();
             }
             else
             {
@@ -251,8 +249,7 @@ public:
                 // If one were to solve the system of equations it
                 // simply results in subtracting the second order
                 // value from the first order value.
-                phi[1] =
-                    phi_function(2, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+                phi[1] = phi_function(2, deltaT * phase->m_L[k]).real();
 
                 phi[0] -= phi[1];
             }
@@ -265,8 +262,7 @@ public:
 
                 for( unsigned int m=1; m<phase->m_order; ++m )
                 {
-                    phi_func[m] =
-                        phi_function(m+1, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+                    phi_func[m] = phi_function(m+1, deltaT * phase->m_L[k]).real();
                 }
 
                 NekDouble W[3][3];
@@ -310,8 +306,7 @@ public:
 
                 for( unsigned int m=1; m<phase->m_order; ++m )
                 {
-                    phi_func[m] =
-                        phi_function(m+1, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+                    phi_func[m] = phi_function(m+1, deltaT * phase->m_L[k]).real();
                 }
 
                 NekDouble W[4][4];
@@ -374,8 +369,7 @@ public:
             phase->m_U_phi[k][0][0] = 1.0; // constant 1
 
             // V Phi function for first row first column.
-            phase->m_V_phi[k][0][0] =
-                phi_function(0, deltaT, phase->m_L[0][k], phase->m_L[1][k]);
+            phase->m_V_phi[k][0][0] = phi_function(0, deltaT * phase->m_L[k]).real();
 
             // V Phi function for first row additional columns.
             for( int n=1; n<phase->m_order; ++n )
@@ -389,6 +383,8 @@ public:
                 phase->m_V_phi[k][n][n-1] = 1.0; // constant 1
             }
         }
+
+	// std::cout << *phase << std::endl;
     }
 
 }; // end class EulerExponentialTimeIntegrator

@@ -59,7 +59,7 @@ public:
     TimeIntegrationScheme(variant, order, freeParams)
     {
         // Currently 2nd and 3rd order are implemented.
-        ASSERTL1(1 < order && order <= 3,
+        ASSERTL1(2 <= order && order <= 3,
                  "Runge Kutta Time Diagonally Implicit integration scheme bad order (2-3): " +
                  std::to_string(order));
 

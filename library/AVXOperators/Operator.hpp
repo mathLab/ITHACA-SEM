@@ -9,7 +9,9 @@
 #include "VecData.hpp"
 // #include "AVXAssembly.h"
 
-using namespace Nektar;
+namespace Nektar {
+namespace AVX {
+
 
 /// Operator base class
 class Operator
@@ -561,5 +563,9 @@ using OperatorFactory = LibUtilities::NekFactory<
     >;
 
 OperatorFactory &GetOperatorFactory();
+
+
+} // namespace AVX
+} // namespace Nektar
 
 #endif

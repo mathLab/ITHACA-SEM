@@ -17,7 +17,7 @@ SET(AVXOPERATORS_HEADERS
     # AVXPhysDerivKernels.hpp
     # AVXHelmholtz.h
     # AVXHelmholtzGlobal.h
-    AVXUtil.hpp
+    # AVXUtil.hpp
     VecData.hpp
     Operator.hpp
 )
@@ -28,6 +28,7 @@ ADD_NEKTAR_LIBRARY(AVXOperators
     DEPENDS LibUtilities
     SUMMARY "Nektar++ AVX operators library"
     DESCRIPTION "This library provides key operators with AVX vector instructions.")
+
 
 INSTALL(DIRECTORY ./
     DESTINATION ${NEKTAR_INCLUDE_DIR}/AVXOperators

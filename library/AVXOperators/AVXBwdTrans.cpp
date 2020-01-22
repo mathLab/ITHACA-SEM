@@ -1,5 +1,8 @@
 #include "AVXBwdTrans.h"
 
+namespace Nektar {
+namespace AVX {
+
 #if defined(__AVX2__)
 std::string __register_BwdTrans_Quad_AVX = GetOperatorFactory().RegisterCreatorFunction(
     std::string("BwdTrans_Quad_Regular_AVX"), &AVXBwdTransQuad<4>::Create);
@@ -33,3 +36,6 @@ std::string __register_BwdTrans_Tet_AVX512 = GetOperatorFactory().RegisterCreato
 std::string __register_BwdTrans_Prism_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
     std::string("BwdTrans_Prism_Regular_AVX512"), &AVXBwdTransPrism<8>::Create);
 #endif
+
+} // namespace AVX
+} // namespace Nektar

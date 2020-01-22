@@ -231,7 +231,7 @@ class BwdTrans_AVX : public Operator
                 op_string += "_AVX";
             }
             std::cout << op_string << '\n';
-            auto oper = GetOperatorFactory().
+            auto oper = AVX::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmt);
             // // If the operator needs the Jacobian, provide it here
             // if (oper->NeedsJac())

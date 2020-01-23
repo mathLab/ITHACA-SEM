@@ -227,7 +227,7 @@ public:
     Array<TwoD, NekDouble> m_V;
 
     // Arrays used for the exponential integrators.
-    Array<TwoD, NekDouble> m_L; // Lambda real and imaginary components
+    Array<OneD, std::complex<NekDouble>> m_L;  // Lambda
 
     Array<OneD, Array<TwoD, NekDouble>> m_A_phi;
     Array<OneD, Array<TwoD, NekDouble>> m_B_phi;
@@ -290,15 +290,6 @@ private:
     inline NekDouble B_IMEX(const unsigned int i, const unsigned int j) const
     {
         return m_B[1][i][j];
-    }
-
-    inline NekDouble L_Real(const unsigned int i) const
-    {
-        return m_L[0][i];
-    }
-    inline NekDouble L_Imaginary(const unsigned int i) const
-    {
-        return m_L[1][i];
     }
 
     inline unsigned int GetNsteps(void) const

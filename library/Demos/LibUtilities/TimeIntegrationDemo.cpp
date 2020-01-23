@@ -373,18 +373,21 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[])
 {
+    // So to be case insensitive for the --L2 or --l2 option.
+    namespace po_style = boost::program_options::command_line_style;
+
     po::options_description desc("Usage:");
 
     desc.add_options()
       ("help,h", "Produce this help message.")
-      ("L2,l2", "Print the L2 error for each time step.")
       ("verbose,v", "Print the solution values for each time step.")
-      ("dof,d", po::value<int>(), "Number of degrees of freedom (points or values.")
+      ("L2,l", "Print the L2 error for each time step.")
+      ("dof,d", po::value<int>(), "Number of degrees of freedom (points or values).")
       ("timesteps,t", po::value<int>(), "Number of timesteps.")
-      ("order,o", po::value<int>())
-      ("parameter,p", po::value<std::string>())
+      ("order,o", po::value<int>(), "Order of the scheme.")
+      ("parameter,p", po::value<std::string>(), "Free parameters for the scheme.")
       ("method,m", po::value<int>(),
-        "Method is a number that selects the time-integration method:\n"
+        "Number for the time-integration scheme:\n"
         "- 0: 1st order Forward Euler\n"
         "- 1: 1st order multi-step IMEX scheme\n"
         "     (Euler Backwards/Euler Forwards)\n"
@@ -401,8 +404,8 @@ int main(int argc, char *argv[])
         "  \n"
         "- 10: Nth order multi-stage Runga-Kutta scheme\n"
         "- 11: Nth order multi-stage Runga-Kutta SSP scheme\n"
-        "- 12: Nth order multi-stage Diagonally Implicit Runga-Kutta scheme\n"
-        "      (DIRK)\n"
+        "- 12: Nth order multi-stage Diagonally Implicit\n"
+        "      Runga-Kutta scheme (DIRK)\n"
         "- 13: Nth order multi-step Adams-Bashforth scheme\n"
         "- 14: Nth order multi-step Adams-Moulton scheme\n"
         "- 15: Nth order multi-step BDFImplicit scheme\n"
@@ -420,7 +423,9 @@ int main(int argc, char *argv[])
     po::variables_map vm;
     try
     {
-        po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+        po::store(po::command_line_parser(argc, argv).options(desc)
+                  .style(po_style::unix_style|po_style::case_insensitive)
+                  .run(), vm);
         po::notify(vm);
     }
     catch (const std::exception &e)
@@ -571,9 +576,9 @@ int main(int argc, char *argv[])
         case 21:
             tiScheme = factory.CreateInstance("EulerExponential", "Norsett", nOrder, freeParams);
             break;
-        case 25:
-            tiScheme = factory.CreateInstance("FractionalInTime", "Norsett", nOrder, freeParams);
-            break;
+        // case 25:
+        //     tiScheme = factory.CreateInstance("FractionalInTime", "Norsett", nOrder, freeParams);
+        //     break;
         default:
         {
             std::cerr << "The -m argument defines the "

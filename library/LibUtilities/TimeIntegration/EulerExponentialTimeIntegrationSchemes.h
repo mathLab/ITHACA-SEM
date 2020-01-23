@@ -72,7 +72,7 @@ public:
                  "EulerExponential Time integration scheme bad variant: " +
                  variant);
 
-        ASSERTL1(0 <= order && order <= 4,
+        ASSERTL1(0 < order && order <= 4,
                  "EulerExponential Time integration scheme bad order: " +
                  std::to_string(order));
 

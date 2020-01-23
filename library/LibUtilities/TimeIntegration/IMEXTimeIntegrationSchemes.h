@@ -57,7 +57,7 @@ namespace LibUtilities
 class IMEXTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    IMEXTimeIntegrationScheme(std::string variant, int order,
+    IMEXTimeIntegrationScheme(std::string variant, unsigned int order,
                               std::vector<NekDouble> freeParams) :
         TimeIntegrationScheme(variant, order, freeParams)
     {
@@ -167,7 +167,7 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
                                                  std::vector<NekDouble> freeParams)
     {
         TimeIntegrationSchemeSharedPtr p =
@@ -285,7 +285,7 @@ class IMEXOrder1TimeIntegrationScheme :
     public IMEXTimeIntegrationScheme
 {
 public:
-    IMEXOrder1TimeIntegrationScheme(std::string variant, int order,
+    IMEXOrder1TimeIntegrationScheme(std::string variant, unsigned int order,
                                               std::vector<NekDouble> freeParams) :
       IMEXTimeIntegrationScheme("", 1, freeParams)
     {
@@ -293,7 +293,7 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
                                                  std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
@@ -313,7 +313,7 @@ class IMEXOrder2TimeIntegrationScheme :
     public IMEXTimeIntegrationScheme
 {
 public:
-    IMEXOrder2TimeIntegrationScheme(std::string variant, int order, std::vector<NekDouble> freeParams) :
+    IMEXOrder2TimeIntegrationScheme(std::string variant, unsigned int order, std::vector<NekDouble> freeParams) :
       IMEXTimeIntegrationScheme("", 2, freeParams)
     {
         boost::ignore_unused(variant);
@@ -321,7 +321,7 @@ public:
     }
 
     static TimeIntegrationSchemeSharedPtr create(
-        std::string variant, int order, std::vector<NekDouble> freeParams)
+        std::string variant, unsigned int order, std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
@@ -340,7 +340,7 @@ class IMEXOrder3TimeIntegrationScheme :
     public IMEXTimeIntegrationScheme
 {
 public:
-    IMEXOrder3TimeIntegrationScheme(std::string variant, int order,
+    IMEXOrder3TimeIntegrationScheme(std::string variant, unsigned int order,
                                               std::vector<NekDouble> freeParams) :
       IMEXTimeIntegrationScheme("", 3, freeParams)
     {
@@ -348,7 +348,7 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
                                                  std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
@@ -368,7 +368,7 @@ class IMEXOrder4TimeIntegrationScheme :
     public IMEXTimeIntegrationScheme
 {
 public:
-    IMEXOrder4TimeIntegrationScheme(std::string variant, int order,
+    IMEXOrder4TimeIntegrationScheme(std::string variant, unsigned int order,
                                               std::vector<NekDouble> freeParams) :
       IMEXTimeIntegrationScheme("", 4, freeParams)
     {
@@ -376,7 +376,7 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
                                                  std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);

@@ -51,7 +51,7 @@ namespace LibUtilities
 class MCNABTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    MCNABTimeIntegrationScheme(std::string variant, int order,
+    MCNABTimeIntegrationScheme(std::string variant, unsigned int order,
 			       std::vector<NekDouble> freeParams) :
         TimeIntegrationScheme("", 2, freeParams)
     {
@@ -77,7 +77,7 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
 						 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);

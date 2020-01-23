@@ -60,7 +60,8 @@ typedef std::shared_ptr<TimeIntegrationScheme> TimeIntegrationSchemeSharedPtr;
 
 /// Datatype of the NekFactory used to instantiate classes derived from the
 /// EquationSystem class.
-typedef NekFactory<std::string, TimeIntegrationScheme, std::string, int,
+typedef NekFactory<std::string,
+                   TimeIntegrationScheme, std::string, unsigned int,
                    std::vector<NekDouble> > TimeIntegrationSchemeFactory;
 
 // Allows a code to create a TimeIntegrator. Usually used like this:
@@ -194,7 +195,7 @@ protected:
         const TimeIntegrationSchemeOperators &op);
 
     // This should never be used directly... only used by child classes...
-    LUE TimeIntegrationScheme(std::string variant, int order,
+    LUE TimeIntegrationScheme(std::string variant, unsigned int order,
                               std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);

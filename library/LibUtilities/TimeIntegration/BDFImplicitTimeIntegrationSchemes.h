@@ -56,7 +56,7 @@ namespace LibUtilities
 class BDFImplicitTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    BDFImplicitTimeIntegrationScheme(std::string variant, int order,
+    BDFImplicitTimeIntegrationScheme(std::string variant, unsigned int order,
                                      std::vector<NekDouble> freeParams) :
         TimeIntegrationScheme(variant, order, freeParams)
     {
@@ -120,7 +120,7 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
 						 std::vector<NekDouble> freeParams)
   {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -226,7 +226,7 @@ class BDFImplicitOrder1TimeIntegrationScheme :
     public BDFImplicitTimeIntegrationScheme
 {
 public:
-    BDFImplicitOrder1TimeIntegrationScheme(std::string variant, int order,
+    BDFImplicitOrder1TimeIntegrationScheme(std::string variant, unsigned int order,
                                            std::vector<NekDouble> freeParams) :
       BDFImplicitTimeIntegrationScheme("", 1, freeParams)
     {
@@ -234,7 +234,7 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
                                                  std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
@@ -254,7 +254,7 @@ class BDFImplicitOrder2TimeIntegrationScheme :
     public BDFImplicitTimeIntegrationScheme
 {
 public:
-    BDFImplicitOrder2TimeIntegrationScheme(std::string variant, int order,
+    BDFImplicitOrder2TimeIntegrationScheme(std::string variant, unsigned int order,
                                            std::vector<NekDouble> freeParams) :
         BDFImplicitTimeIntegrationScheme("", 2, freeParams)
     {
@@ -262,7 +262,7 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
                                                  std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);

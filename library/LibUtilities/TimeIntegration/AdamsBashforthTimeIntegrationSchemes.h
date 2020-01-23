@@ -57,7 +57,7 @@ namespace LibUtilities
 class AdamsBashforthTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-  AdamsBashforthTimeIntegrationScheme(std::string variant, int order,
+  AdamsBashforthTimeIntegrationScheme(std::string variant, unsigned int order,
 				      std::vector<NekDouble> freeParams) :
     TimeIntegrationScheme(variant, order, freeParams)
     {
@@ -114,18 +114,13 @@ public:
                        "AdamsBashforth Time integration scheme bad order: " +
                        std::to_string(order));
         }
-
-        for( unsigned int n=0; n<order; ++n )
-        {
-	  std::cout << m_integration_phases[n];
-	}
     }
 
     virtual ~AdamsBashforthTimeIntegrationScheme()
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
                                                  std::vector<NekDouble> freeParams)
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -232,7 +227,7 @@ class AdamsBashforthOrder1TimeIntegrationScheme :
     public AdamsBashforthTimeIntegrationScheme
 {
 public:
-    AdamsBashforthOrder1TimeIntegrationScheme(std::string variant, int order,
+    AdamsBashforthOrder1TimeIntegrationScheme(std::string variant, unsigned int order,
 					      std::vector<NekDouble> freeParams) :
       AdamsBashforthTimeIntegrationScheme("", 1, freeParams)
     {
@@ -240,7 +235,7 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
 						 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
@@ -260,7 +255,7 @@ class AdamsBashforthOrder2TimeIntegrationScheme :
     public AdamsBashforthTimeIntegrationScheme
 {
 public:
-    AdamsBashforthOrder2TimeIntegrationScheme(std::string variant, int order, std::vector<NekDouble> freeParams) :
+    AdamsBashforthOrder2TimeIntegrationScheme(std::string variant, unsigned int order, std::vector<NekDouble> freeParams) :
       AdamsBashforthTimeIntegrationScheme("", 2, freeParams)
     {
         boost::ignore_unused(variant);
@@ -268,7 +263,7 @@ public:
     }
 
     static TimeIntegrationSchemeSharedPtr create(
-        std::string variant, int order, std::vector<NekDouble> freeParams)
+        std::string variant, unsigned int order, std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
@@ -287,7 +282,7 @@ class AdamsBashforthOrder3TimeIntegrationScheme :
     public AdamsBashforthTimeIntegrationScheme
 {
 public:
-    AdamsBashforthOrder3TimeIntegrationScheme(std::string variant, int order,
+    AdamsBashforthOrder3TimeIntegrationScheme(std::string variant, unsigned int order,
 					      std::vector<NekDouble> freeParams) :
       AdamsBashforthTimeIntegrationScheme("", 3, freeParams)
     {
@@ -295,7 +290,7 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
 						 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
@@ -315,7 +310,7 @@ class AdamsBashforthOrder4TimeIntegrationScheme :
     public AdamsBashforthTimeIntegrationScheme
 {
 public:
-    AdamsBashforthOrder4TimeIntegrationScheme(std::string variant, int order,
+    AdamsBashforthOrder4TimeIntegrationScheme(std::string variant, unsigned int order,
 					      std::vector<NekDouble> freeParams) :
       AdamsBashforthTimeIntegrationScheme("", 4, freeParams)
     {
@@ -323,7 +318,7 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
 						 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);

@@ -59,7 +59,7 @@ namespace LibUtilities
 class AdamsMoultonTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    AdamsMoultonTimeIntegrationScheme(std::string variant, int order,
+    AdamsMoultonTimeIntegrationScheme(std::string variant, unsigned int order,
                                       std::vector<NekDouble> freeParams) :
         TimeIntegrationScheme(variant, order, freeParams)
     {
@@ -125,7 +125,7 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
                                                  std::vector<NekDouble> freeParams)
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
@@ -236,7 +236,7 @@ class AdamsMoultonOrder1TimeIntegrationScheme :
     public AdamsMoultonTimeIntegrationScheme
 {
 public:
-    AdamsMoultonOrder1TimeIntegrationScheme(std::string variant, int order,
+    AdamsMoultonOrder1TimeIntegrationScheme(std::string variant, unsigned int order,
                                             std::vector<NekDouble> freeParams) :
         AdamsMoultonTimeIntegrationScheme("", 1, freeParams)
     {
@@ -244,7 +244,7 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
                                                  std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
@@ -265,7 +265,7 @@ class AdamsMoultonOrder2TimeIntegrationScheme :
     public AdamsMoultonTimeIntegrationScheme
 {
 public:
-    AdamsMoultonOrder2TimeIntegrationScheme(std::string variant, int order,
+    AdamsMoultonOrder2TimeIntegrationScheme(std::string variant, unsigned int order,
                                             std::vector<NekDouble> freeParams) :
         AdamsMoultonTimeIntegrationScheme("", 2, freeParams)
     {
@@ -273,7 +273,7 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
 						 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
@@ -294,7 +294,7 @@ class AdamsMoultonOrder3TimeIntegrationScheme :
     public AdamsMoultonTimeIntegrationScheme
 {
 public:
-    AdamsMoultonOrder3TimeIntegrationScheme(std::string variant, int order,
+    AdamsMoultonOrder3TimeIntegrationScheme(std::string variant, unsigned int order,
                                             std::vector<NekDouble> freeParams) :
         AdamsMoultonTimeIntegrationScheme("", 3, freeParams)
     {
@@ -302,7 +302,7 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
                                                  std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
@@ -323,7 +323,7 @@ class AdamsMoultonOrder4TimeIntegrationScheme :
     public AdamsMoultonTimeIntegrationScheme
 {
 public:
-    AdamsMoultonOrder4TimeIntegrationScheme(std::string variant, int order,
+    AdamsMoultonOrder4TimeIntegrationScheme(std::string variant, unsigned int order,
                                             std::vector<NekDouble> freeParams) :
         AdamsMoultonTimeIntegrationScheme("", 4, freeParams)
     {
@@ -331,7 +331,7 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
                                                  std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);

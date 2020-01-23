@@ -56,7 +56,7 @@ namespace LibUtilities
 class BackwardEulerTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    BackwardEulerTimeIntegrationScheme(std::string variant, int order,
+    BackwardEulerTimeIntegrationScheme(std::string variant, unsigned int order,
 				       std::vector<NekDouble> freeParams) :
         TimeIntegrationScheme("", 1, freeParams)
     {
@@ -75,7 +75,7 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
 						 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(order);
@@ -136,7 +136,7 @@ public:
 class ForwardEulerTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    ForwardEulerTimeIntegrationScheme(std::string variant, int order,
+    ForwardEulerTimeIntegrationScheme(std::string variant, unsigned int order,
 				      std::vector<NekDouble> freeParams) :
         TimeIntegrationScheme("", 1, freeParams)
     {
@@ -155,7 +155,7 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
 						 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(order);

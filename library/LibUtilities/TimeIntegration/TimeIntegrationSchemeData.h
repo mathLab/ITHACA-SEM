@@ -195,7 +195,7 @@ public:
 
     std::string m_name;
     std::string m_variant;
-    int m_order{0};
+    unsigned int m_order{0};
     std::vector< NekDouble > freeParams;
 
     TimeIntegrationSchemeType m_schemeType;

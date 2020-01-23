@@ -61,7 +61,7 @@ namespace LibUtilities
 class EulerExponentialTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    EulerExponentialTimeIntegrationScheme(std::string variant, int order,
+    EulerExponentialTimeIntegrationScheme(std::string variant, unsigned int order,
                                           std::vector<NekDouble> freeParams) :
         TimeIntegrationScheme(variant, order, freeParams)
     {
@@ -97,7 +97,7 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
                                                  std::vector<NekDouble> freeParams)
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<

@@ -52,7 +52,7 @@ namespace LibUtilities
 class CNABTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    CNABTimeIntegrationScheme(std::string variant, int order,
+    CNABTimeIntegrationScheme(std::string variant, unsigned int order,
                                       std::vector<NekDouble> freeParams) :
         TimeIntegrationScheme("", 2, freeParams)
     {
@@ -79,7 +79,7 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, int order,
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
 						 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);

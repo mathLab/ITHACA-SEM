@@ -124,14 +124,14 @@ TimeIntegrationSchemeType TimeIntegrationScheme::GetIntegrationSchemeType()
     return m_integration_phases[m_integration_phases.size() - 1]->m_schemeType;
 }
 
-void TimeIntegrationScheme::SetExponentialCoefficients(Array<TwoD, NekDouble> &Lambda)
+void TimeIntegrationScheme::SetExponentialCoefficients(
+    Array<OneD, std::complex<NekDouble>> &Lambda)
 {
     ASSERTL0(!m_integration_phases.empty(), "No scheme")
 
-    // Assumption: the two-dimensional Lambda matrix is a diagonal
+    // Assumption: the one-dimensional Lambda matrix is a diagonal
     // matrix thus values are non zero if and only i=j. As such, the
-    // diagonal Lambda values are stored as two vectors so to
-    // accomodate complex numbers lambda[0] real, lambda[1] imaginary.
+    // diagonal Lambda values are stored an array of complex numbers.
 
     // Assume that each phase is an exponential integrator.
     for (int i = 0; i < m_integration_phases.size(); i++)
@@ -148,8 +148,7 @@ void TimeIntegrationScheme::SetExponentialCoefficients(Array<TwoD, NekDouble> &L
 
 void TimeIntegrationScheme::SetupSchemeExponentialData(TimeIntegrationSchemeData *phase, NekDouble deltaT) const
 {
-    boost::ignore_unused(phase);
-    boost::ignore_unused(deltaT);
+    boost::ignore_unused(phase, deltaT);
 
     ASSERTL0(false, "No SetupSchemeExponentialData method for scheme " +
              GetFullName());
@@ -160,49 +159,34 @@ inline NekDouble TimeIntegrationScheme::factorial(unsigned int n) const
   return (n == 1 || n == 0) ? 1 : n * factorial(n - 1);
 }
 
-NekDouble TimeIntegrationScheme::phi_function(unsigned int i,
-                                              NekDouble deltaT,
-                                              NekDouble L_Real,
-                                              NekDouble L_Imaginary) const
+std::complex<NekDouble>
+TimeIntegrationScheme::phi_function(const unsigned int order,
+                                    const std::complex<NekDouble> z) const
 {
-    boost::ignore_unused( L_Imaginary );
+    // Central to the implementation of exponential integrators is the
+    // evaluation of exponential-like functions, commonly denoted by φ
+    // functions. It is convenient to define φ0(z) = e^z, in which case the
+    // functions obey the recurrence relation.
 
-    NekDouble z = deltaT * L_Real;
+    // 0: exp(z);
+    // 1: (exp(z)     - 1.0) / (z);
+    // 2: (exp(z) - z - 1.0) / (z * z);
 
     if( z == 0.0 )
     {
-        return 1.0 / factorial( i );
+        return 1.0 / factorial( order );
     }
 
-    if( i == 0 )
+    if( order == 0 )
     {
         return exp( z );
     }
     else
     {
-        return (phi_function( i-1, deltaT, L_Real, L_Imaginary) -
-                1.0 / factorial( i-1 ) ) / z;
+        return (phi_function( order-1, z) -
+                1.0 / factorial( order-1 ) ) / z;
     }
 
-    // switch( i )
-    // {
-    // case 0:
-    //     return  expZ;
-    //     break;
-    // case 1:
-    //     return  (expZ - 1.0) / (z);
-    //     break;
-    // case 2:
-    //     return (expZ - z - 1.0) / (z * z);
-    //     break;
-    // case 3:
-    //     return (expZ - (z*z)/2.0 - z - 1.0) / (z * z * z);
-    //     break;
-    // default:
-    //     ASSERTL0(false,
-    //              "No phi function defined for index " + std::to_string(i) );
-    //     break;
-    // }
 
     return 0;
 }

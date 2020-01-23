@@ -61,7 +61,7 @@ typedef std::shared_ptr<TimeIntegrationScheme> TimeIntegrationSchemeSharedPtr;
 /// Datatype of the NekFactory used to instantiate classes derived from the
 /// EquationSystem class.
 typedef NekFactory<std::string, TimeIntegrationScheme, std::string, int,
-		   std::vector<NekDouble> > TimeIntegrationSchemeFactory;
+                   std::vector<NekDouble> > TimeIntegrationSchemeFactory;
 
 // Allows a code to create a TimeIntegrator. Usually used like this:
 //
@@ -110,6 +110,7 @@ public:
     typedef Array<OneD, Array<OneD, NekDouble>> DoubleArray;
     typedef const Array<OneD, const NekDouble> ConstSingleArray;
     typedef Array<OneD, NekDouble> SingleArray;
+
     typedef std::function<void(ConstDoubleArray &, DoubleArray &,
                                const NekDouble)>
         FunctorType1;
@@ -139,14 +140,15 @@ public:
     virtual NekDouble GetTimeStability() const = 0;
 
     // Methods specific to exponential integration schemes.
-    LUE void SetExponentialCoefficients(Array<TwoD, NekDouble> &Lambda);
+    LUE void SetExponentialCoefficients(Array<OneD,
+                                        std::complex<NekDouble>> &Lambda);
 
     virtual void SetupSchemeExponentialData(TimeIntegrationSchemeData *phase,
                                             NekDouble deltaT) const;
 
     inline NekDouble factorial( unsigned int i ) const;
-    NekDouble phi_function(unsigned int i, NekDouble deltaT,
-                           NekDouble L_Real, NekDouble L_Imaginary) const;
+    std::complex<NekDouble> phi_function(const unsigned int order,
+                                         const std::complex<NekDouble> z) const;
 
     LUE TimeIntegrationSchemeType GetIntegrationSchemeType() const;
 
@@ -180,7 +182,7 @@ protected:
      * \param y on input: the vectors \f$\boldsymbol{y}^{[n-1]}\f$ and
      * \f$t^{[n-1]}\f$ (which corresponds to the
      *    solution at the old time level)
-     * \param y on output: the vectors \f$\boldsymbol{y}^{[n]}\f$ and
+     * \param y on output:  the vectors \f$\boldsymbol{y}^{[n]}\f$ and
      * \f$t^{[n]}\f$ (which corresponds to the
      *    solution at the old new level)
      * \return The actual solution \f$\boldsymbol{y}^{n}\f$ at the new time
@@ -193,7 +195,7 @@ protected:
 
     // This should never be used directly... only used by child classes...
     LUE TimeIntegrationScheme(std::string variant, int order,
-			      std::vector<NekDouble> freeParams)
+                              std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);

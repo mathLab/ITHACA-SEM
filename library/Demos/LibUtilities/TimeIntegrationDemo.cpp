@@ -417,7 +417,6 @@ int main(int argc, char *argv[])
         "- 20: Nth order multi-step Lawson-Euler exponential scheme\n"
         "- 21: Nth order multi-step Norsett-Euler exponential scheme\n"
         "  \n"
-        // "- 25: Nth order multi-step Fractional In Time scheme\n"
        );
 
     po::variables_map vm;
@@ -576,9 +575,6 @@ int main(int argc, char *argv[])
         case 21:
             tiScheme = factory.CreateInstance("EulerExponential", "Norsett", nOrder, freeParams);
             break;
-        // case 25:
-        //     tiScheme = factory.CreateInstance("FractionalInTime", "Norsett", nOrder, freeParams);
-        //     break;
         default:
         {
             std::cerr << "The -m argument defines the "
@@ -597,7 +593,8 @@ int main(int argc, char *argv[])
     //    This class can be thought of as representing the spatial (finite
     //    difference) discretisation.
     LibUtilities::TimeIntegrationSchemeOperators ode;
-    DemoSolver *solver;
+
+    std::shared_ptr<DemoSolver> solverSharedPtr;
 
     if( nMethod == 25 ) //tiScheme->GetIntegrationSchemeType() == eFractionalInTime )
     {
@@ -617,7 +614,7 @@ int main(int argc, char *argv[])
 
         ode.DefineOdeRhs(&OneDFDESolver::EvaluateFDETerm, tmpSolver);
 
-        solver = tmpSolver;
+        solverSharedPtr = std::shared_ptr<DemoSolver> (tmpSolver);
     }
     else if( tiScheme->GetIntegrationSchemeType() == eExponential )
     {
@@ -637,12 +634,11 @@ int main(int argc, char *argv[])
 
         ode.DefineOdeRhs(&OneDSinusoidSolver::EvaluateSinusoidTerm, tmpSolver);
 
-        solver = tmpSolver;
+        solverSharedPtr = std::shared_ptr<DemoSolver> (tmpSolver);
 
         // For exponential integrators, the coefficents for each
         // variable needs to be set.
-        tiScheme->
-          SetExponentialCoefficients(((OneDSinusoidSolver *) solver)->GetLambda());
+        tiScheme->SetExponentialCoefficients(tmpSolver->GetLambda());
     }
     else
     {
@@ -667,10 +663,10 @@ int main(int argc, char *argv[])
         ode.DefineImplicitSolve(&OneDFiniteDiffAdvDiffSolver::HelmSolve,
                                 tmpSolver);
 
-        solver = tmpSolver;
+        solverSharedPtr = std::shared_ptr<DemoSolver> (tmpSolver);
     }
 
-    ode.DefineProjection(&DemoSolver::Project, solver);
+    ode.DefineProjection(&DemoSolver::Project, solverSharedPtr);
 
     // 3. Initialise the arrays that contain the approximate and exact
     // solutions.
@@ -694,26 +690,26 @@ int main(int argc, char *argv[])
     }
 
     // Initialize both solutions using the exact solution.
-    double t0 = solver->GetInitialTime();
+    double t0 = solverSharedPtr->GetInitialTime();
 
-    solver->EvaluateExactSolution(approxSol, t0);
-    solver->EvaluateExactSolution(exactSol,  t0);
+    solverSharedPtr->EvaluateExactSolution(approxSol, t0);
+    solverSharedPtr->EvaluateExactSolution(exactSol,  t0);
 
     // 3.1 Initialize the time-integration scheme.
-    double dt = solver->GetDeltaT();
+    double dt = solverSharedPtr->GetDeltaT();
 
     LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr
       solutionPtr = tiScheme->InitializeScheme(dt, approxSol, t0, ode);
 
     // 4. Open a file for writing the solution
     std::ofstream outfile;
-    outfile.open( solver->GetFileName() + ".dat");
+    outfile.open( solverSharedPtr->GetFileName() + ".dat");
 
     // Save the scheme name for outputting.
-    solver->SetSchemeName( tiScheme->GetName() );
+    solverSharedPtr->SetSchemeName( tiScheme->GetName() );
 
     // Write the initial conditions to the output file
-    solver->AppendOutput( outfile, 0, 0, approxSol, exactSol);
+    solverSharedPtr->AppendOutput( outfile, 0, 0, approxSol, exactSol);
 
     int timeStep = 0;
     double time = t0;
@@ -728,13 +724,13 @@ int main(int argc, char *argv[])
         time += dt;
 
         // Calculate the exact solution
-        solver->EvaluateExactSolution(exactSol, time);
+        solverSharedPtr->EvaluateExactSolution(exactSol, time);
 
         // At this point the time step is finished so increment the time step.
         ++timeStep;
 
         // Save the solutions the output file
-        solver->AppendOutput(outfile, timeStep, time, approxSol, exactSol);
+        solverSharedPtr->AppendOutput(outfile, timeStep, time, approxSol, exactSol);
 
         // 6. Calculate the min / max values. If the last argument is
         // true the values will be dumped to screen.
@@ -744,10 +740,10 @@ int main(int argc, char *argv[])
           std::cout << "Time step: " << timeStep << "  "
                     << "Time: " << time << std::endl;
 
-        solver->GetMinMaxValues(approxSol, exactSol, verbose);
+        solverSharedPtr->GetMinMaxValues(approxSol, exactSol, verbose);
 
         if( L2 )
-          solver->EvaluateL2Error(approxSol, exactSol);
+          solverSharedPtr->EvaluateL2Error(approxSol, exactSol);
     }
 
     // 7. Calculate the error for the last time step and dump to screen
@@ -755,14 +751,12 @@ int main(int argc, char *argv[])
     std::cout << "Time step: " << timeStep << "  "
               << "Time: " << time << std::endl;
 
-    solver->EvaluateL2Error(approxSol, exactSol);
+    solverSharedPtr->EvaluateL2Error(approxSol, exactSol);
 
     // 7. Some more writing out the results
     outfile.close();
 
-    solver->GenerateGnuplotScript(tiScheme->GetFullName());
-
-    delete solver;
+    solverSharedPtr->GenerateGnuplotScript(tiScheme->GetFullName());
 
     return 0;
 }
@@ -857,6 +851,9 @@ void DemoSolver::EvaluateL2Error(
             b += exact[k][i] * exact[k][i];
         }
     }
+
+    ASSERTL1( b>DBL_EPSILON,
+	      "Exact solution is near zero. L2 Norn is invalid" );
 
     // Calculate the relative error L2 Norm.
     double norm = sqrt(a / b);

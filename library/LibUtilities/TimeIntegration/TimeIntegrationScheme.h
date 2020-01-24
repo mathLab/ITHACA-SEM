@@ -50,6 +50,7 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
 // Forward declaration of some of the classes in this file...
 class TimeIntegrationScheme;
 class TimeIntegrationSchemeData;
@@ -124,19 +125,19 @@ public:
         return m_integration_phases.size();
     }
 
-    LUE TimeIntegrationSolutionSharedPtr InitializeScheme(
+    LUE virtual TimeIntegrationSolutionSharedPtr InitializeScheme(
         const NekDouble deltaT, TimeIntegrationScheme::ConstDoubleArray &y_0,
         const NekDouble time, const TimeIntegrationSchemeOperators &op);
-    LUE TimeIntegrationScheme::ConstDoubleArray &TimeIntegrate(
+    LUE virtual TimeIntegrationScheme::ConstDoubleArray &TimeIntegrate(
         const int timestep, const NekDouble delta_t,
         TimeIntegrationSolutionSharedPtr &solvector,
         const TimeIntegrationSchemeOperators &op);
 
-    LUE virtual std::string GetFullName () const;
-    virtual std::string GetName() const = 0;
-    LUE std::string  GetVariant () const;
-    LUE unsigned int GetOrder() const;
-    LUE std::vector< NekDouble > GetFreeParams() const;
+    LUE virtual std::string              GetFullName  () const;
+    LUE virtual std::string              GetName      () const = 0;
+    LUE virtual std::string              GetVariant   () const;
+    LUE virtual unsigned int             GetOrder     () const;
+    LUE virtual std::vector< NekDouble > GetFreeParams() const;
 
     virtual NekDouble GetTimeStability() const = 0;
 
@@ -151,7 +152,7 @@ public:
     std::complex<NekDouble> phi_function(const unsigned int order,
                                          const std::complex<NekDouble> z) const;
 
-    LUE TimeIntegrationSchemeType GetIntegrationSchemeType() const;
+    LUE virtual TimeIntegrationSchemeType GetIntegrationSchemeType() const;
 
 protected:
 

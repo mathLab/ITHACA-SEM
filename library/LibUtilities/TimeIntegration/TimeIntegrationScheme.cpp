@@ -94,6 +94,13 @@ unsigned int TimeIntegrationScheme::GetOrder() const
     return m_integration_phases[m_integration_phases.size() - 1]->m_order;
 }
 
+std::vector< NekDouble > TimeIntegrationScheme::GetFreeParams() const
+{
+    ASSERTL0(!m_integration_phases.empty(), "No scheme")
+
+    return m_integration_phases[m_integration_phases.size() - 1]->m_freeParams;
+}
+
 TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationScheme::TimeIntegrate(
     const int timestep, const NekDouble delta_t,
     TimeIntegrationSolutionSharedPtr &solvector,
@@ -190,5 +197,6 @@ TimeIntegrationScheme::phi_function(const unsigned int order,
 
     return 0;
 }
+
 } // end namespace LibUtilities
 } // end namespace NekTar

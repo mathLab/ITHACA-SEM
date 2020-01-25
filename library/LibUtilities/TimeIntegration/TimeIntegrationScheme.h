@@ -120,26 +120,29 @@ public:
                                const NekDouble, const NekDouble)>
         FunctorType2;
 
-    unsigned int GetNumIntegrationPhases() const
-    {
-        return m_integration_phases.size();
-    }
-
-    LUE virtual TimeIntegrationSolutionSharedPtr InitializeScheme(
-        const NekDouble deltaT, TimeIntegrationScheme::ConstDoubleArray &y_0,
-        const NekDouble time, const TimeIntegrationSchemeOperators &op);
-    LUE virtual TimeIntegrationScheme::ConstDoubleArray &TimeIntegrate(
-        const int timestep, const NekDouble delta_t,
-        TimeIntegrationSolutionSharedPtr &solvector,
-        const TimeIntegrationSchemeOperators &op);
-
+    // Access methods
     LUE virtual std::string              GetFullName  () const;
     LUE virtual std::string              GetName      () const = 0;
+    // Values stored by each integration phase.
     LUE virtual std::string              GetVariant   () const;
     LUE virtual unsigned int             GetOrder     () const;
     LUE virtual std::vector< NekDouble > GetFreeParams() const;
 
-    virtual NekDouble GetTimeStability() const = 0;
+    LUE virtual TimeIntegrationSchemeType GetIntegrationSchemeType() const;
+
+    LUE virtual NekDouble GetTimeStability() const = 0;
+
+    LUE unsigned int GetNumIntegrationPhases() const;
+
+    // The worker methods
+    LUE virtual TimeIntegrationSolutionSharedPtr InitializeScheme(
+        const NekDouble deltaT, TimeIntegrationScheme::ConstDoubleArray &y_0,
+        const NekDouble time, const TimeIntegrationSchemeOperators &op);
+
+    LUE virtual TimeIntegrationScheme::ConstDoubleArray &TimeIntegrate(
+        const int timestep, const NekDouble delta_t,
+        TimeIntegrationSolutionSharedPtr &solvector,
+        const TimeIntegrationSchemeOperators &op);
 
     // Methods specific to exponential integration schemes.
     LUE void SetExponentialCoefficients(Array<OneD,
@@ -151,8 +154,6 @@ public:
     inline NekDouble factorial( unsigned int i ) const;
     std::complex<NekDouble> phi_function(const unsigned int order,
                                          const std::complex<NekDouble> z) const;
-
-    LUE virtual TimeIntegrationSchemeType GetIntegrationSchemeType() const;
 
 protected:
 
@@ -199,14 +200,13 @@ protected:
     LUE TimeIntegrationScheme(std::string variant, unsigned int order,
                               std::vector<NekDouble> freeParams)
     {
-        boost::ignore_unused(variant);
-        boost::ignore_unused(order);
-        boost::ignore_unused(freeParams);
+        boost::ignore_unused(variant, order, freeParams);
     }
 
     LUE TimeIntegrationScheme(const TimeIntegrationScheme &in)
     {
         boost::ignore_unused(in);
+        
         NEKERROR(ErrorUtil::efatal, "Copy Constructor for the "
                                     "TimeIntegrationScheme class should not be "
                                     "called");

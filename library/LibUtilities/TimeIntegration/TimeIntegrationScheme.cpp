@@ -33,14 +33,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <cmath>
-#include <algorithm>
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
-#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
 namespace Nektar
 {
@@ -75,6 +72,7 @@ std::ostream &operator<<(std::ostream &os, const TimeIntegrationScheme &rhs)
     return os;
 }
 
+// Access Methods
 std::string TimeIntegrationScheme::GetFullName () const
 {
     return GetName() + GetVariant() + "Order" + std::to_string(GetOrder());
@@ -101,19 +99,20 @@ std::vector< NekDouble > TimeIntegrationScheme::GetFreeParams() const
     return m_integration_phases[m_integration_phases.size() - 1]->m_freeParams;
 }
 
-TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationScheme::TimeIntegrate(
-    const int timestep, const NekDouble delta_t,
-    TimeIntegrationSolutionSharedPtr &solvector,
-    const TimeIntegrationSchemeOperators &op)
+TimeIntegrationSchemeType TimeIntegrationScheme::GetIntegrationSchemeType()
+    const
 {
-    int phases = GetNumIntegrationPhases();
+    ASSERTL0(!m_integration_phases.empty(), "No scheme")
 
-    TimeIntegrationSchemeDataSharedPtr &data =
-        m_integration_phases[std::min(timestep, phases - 1)];
-
-    return data->TimeIntegrate(delta_t, solvector, op);
+    return m_integration_phases[m_integration_phases.size() - 1]->m_schemeType;
 }
 
+unsigned int TimeIntegrationScheme::GetNumIntegrationPhases() const
+{
+    return m_integration_phases.size();
+}
+
+// The worker methods
 TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr TimeIntegrationScheme::
     InitializeScheme(const NekDouble deltaT,
                      TimeIntegrationScheme::ConstDoubleArray &y_0,
@@ -123,14 +122,21 @@ TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr TimeIntegrationScheme::
     return m_integration_phases.back()->InitializeData(deltaT, y_0, time, op);
 }
 
-TimeIntegrationSchemeType TimeIntegrationScheme::GetIntegrationSchemeType()
-    const
+TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationScheme::TimeIntegrate(
+    const int timestep,
+    const NekDouble delta_t,
+    TimeIntegrationSolutionSharedPtr &solvector,
+    const TimeIntegrationSchemeOperators &op)
 {
-    ASSERTL0(!m_integration_phases.empty(), "No scheme")
+    int nPhases = m_integration_phases.size();
 
-    return m_integration_phases[m_integration_phases.size() - 1]->m_schemeType;
+    TimeIntegrationSchemeDataSharedPtr &data =
+        m_integration_phases[std::min(timestep, nPhases - 1)];
+
+    return data->TimeIntegrate(delta_t, solvector, op);
 }
 
+// Methods specific to exponential integration schemes.
 void TimeIntegrationScheme::SetExponentialCoefficients(
     Array<OneD, std::complex<NekDouble>> &Lambda)
 {

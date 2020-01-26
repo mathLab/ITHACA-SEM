@@ -56,8 +56,13 @@ namespace LibUtilities
 class BackwardEulerTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    BackwardEulerTimeIntegrationScheme() : TimeIntegrationScheme()
+    BackwardEulerTimeIntegrationScheme(std::string variant, unsigned int order,
+				       std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme("", 1, freeParams)
     {
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -70,10 +75,14 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+						 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(variant);
+
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            BackwardEulerTimeIntegrationScheme>::AllocateSharedPtr();
+          BackwardEulerTimeIntegrationScheme>::AllocateSharedPtr("", 1, freeParams);
         return p;
     }
 
@@ -92,6 +101,9 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eDiagonallyImplicit;
+        phase->m_order = 1;
+        phase->m_name = std::string("BackwardEulerOrder" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 1;
@@ -102,28 +114,18 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 1.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 1.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 0;
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class BackwardEulerTimeIntegrator
@@ -134,8 +136,13 @@ public:
 class ForwardEulerTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    ForwardEulerTimeIntegrationScheme() : TimeIntegrationScheme()
+    ForwardEulerTimeIntegrationScheme(std::string variant, unsigned int order,
+				      std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme("", 1, freeParams)
     {
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
@@ -148,10 +155,14 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+						 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(variant);
+
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            ForwardEulerTimeIntegrationScheme>::AllocateSharedPtr();
+          ForwardEulerTimeIntegrationScheme>::AllocateSharedPtr("", 1, freeParams);
         return p;
     }
 
@@ -170,6 +181,9 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eExplicit;
+        phase->m_order = 1;
+        phase->m_name = std::string("ForwardEulerOrder" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 1;
@@ -180,28 +194,18 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 1.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 0;
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration phase coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class ForwardEulerTimeIntegrator

@@ -50,74 +50,6 @@ namespace LibUtilities
 class TimeIntegrationSchemeData
 {
 public:
-    TimeIntegrationSchemeData(const TimeIntegrationScheme *parent)
-        : m_parent(parent), m_initialised(false)
-    {
-    }
-    ~TimeIntegrationSchemeData()
-    {
-    }
-
-    LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationScheme &rhs);
-    LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationSchemeSharedPtr &rhs);
-
-    LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationSchemeData &rhs);
-    LUE friend std::ostream &operator<<(
-        std::ostream &os,
-        const TimeIntegrationScheme::TimeIntegrationSchemeDataSharedPtr &rhs);
-
-     inline TimeIntegrationSchemeType GetIntegrationSchemeType() const
-    {
-        return m_schemeType;
-    }
-
-    inline NekDouble A(const unsigned int i, const unsigned int j) const
-    {
-        return m_A[0][i][j];
-    }
-    inline NekDouble B(const unsigned int i, const unsigned int j) const
-    {
-        return m_B[0][i][j];
-    }
-    inline NekDouble U(const unsigned int i, const unsigned int j) const
-    {
-        return m_U[i][j];
-    }
-    inline NekDouble V(const unsigned int i, const unsigned int j) const
-    {
-        return m_V[i][j];
-    }
-
-    inline NekDouble A_IMEX(const unsigned int i, const unsigned int j) const
-    {
-        return m_A[1][i][j];
-    }
-    inline NekDouble B_IMEX(const unsigned int i, const unsigned int j) const
-    {
-        return m_B[1][i][j];
-    }
-
-    inline unsigned int GetNstages(void) const
-    {
-        return m_numstages;
-    }
-
-    inline unsigned int GetNmultiStepValues() const
-    {
-        return m_numMultiStepValues;
-    }
-    inline unsigned int GetNmultiStepDerivs() const
-    {
-        return m_numMultiStepDerivs;
-    }
-    inline const Array<OneD, const unsigned int> &GetTimeLevelOffset() const
-    {
-        return m_timeLevelOffset;
-    }
-
     typedef TimeIntegrationScheme::SingleArray SingleArray;
     typedef TimeIntegrationScheme::ConstSingleArray ConstSingleArray;
     typedef TimeIntegrationScheme::DoubleArray DoubleArray;
@@ -128,6 +60,15 @@ public:
         TimeIntegrationSchemeDataSharedPtr;
     typedef TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr
         TimeIntegrationSolutionSharedPtr;
+
+    TimeIntegrationSchemeData(const TimeIntegrationScheme *parent)
+        : m_parent(parent)
+    {
+    }
+
+    ~TimeIntegrationSchemeData()
+    {
+    }
 
     /**
      * \brief This function initialises the time integration
@@ -168,9 +109,10 @@ public:
      * the vectors \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$
      *  that can be used to start the actual integration.
      */
-
     LUE TimeIntegrationSolutionSharedPtr InitializeData(
-        const NekDouble deltaT, ConstDoubleArray &y_0, const NekDouble time,
+        const NekDouble deltaT,
+        ConstDoubleArray &y_0,
+        const NekDouble time,
         const TimeIntegrationSchemeOperators &op);
 
     /**
@@ -198,19 +140,75 @@ public:
      *    (which in fact is also embedded in the argument y).
      */
     LUE ConstDoubleArray &TimeIntegrate(
-        const NekDouble deltaT, TimeIntegrationSolutionSharedPtr &y,
+        const NekDouble deltaT,
+        TimeIntegrationSolutionSharedPtr &y,
         const TimeIntegrationSchemeOperators &op);
 
-    const TimeIntegrationScheme *m_parent;
+    // Does the actual multi-stage multi-step integration.
+    LUE void TimeIntegrate(const NekDouble deltaT,
+                           ConstTripleArray &y_old,
+                           ConstSingleArray &t_old,
+                           TripleArray      &y_new,
+                           SingleArray      &t_new,
+                           const TimeIntegrationSchemeOperators &op);
+
+    inline TimeIntegrationSchemeType GetIntegrationSchemeType() const
+    {
+        return m_schemeType;
+    }
+
+    LUE void CheckAndVerify()
+    {
+        CheckIfFirstStageEqualsOldSolution();
+        CheckIfLastStageEqualsNewSolution();
+        VerifyIntegrationSchemeType();
+    };
+
+    inline unsigned int GetNmultiStepValues() const
+    {
+        return m_numMultiStepValues;
+    }
+
+    inline unsigned int GetNmultiStepDerivs() const
+    {
+        return m_numMultiStepDerivs;
+    }
+
+    inline const Array<OneD, const unsigned int> &GetTimeLevelOffset() const
+    {
+        return m_timeLevelOffset;
+    }
+
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                    const TimeIntegrationScheme &rhs);
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                    const TimeIntegrationSchemeSharedPtr &rhs);
+
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                    const TimeIntegrationSchemeData &rhs);
+    LUE friend std::ostream &operator<<(
+        std::ostream &os,
+        const TimeIntegrationScheme::TimeIntegrationSchemeDataSharedPtr &rhs);
+
+    // Variables - all public for easy access when setting up the phase.
+    const TimeIntegrationScheme *m_parent{nullptr};
+
+    std::string m_name;
+    std::string m_variant;
+    unsigned int m_order{0};
+    std::vector< NekDouble > m_freeParams;
 
     TimeIntegrationSchemeType m_schemeType;
 
-    unsigned int m_numMultiStepValues; // number of entries in input and output
-                                       // vector that correspond
-                                       // to VALUES at previous time levels
-    unsigned int m_numMultiStepDerivs; // number of entries in input and output
-                                       // vector that correspond
-                                       // to DERIVATIVES at previous time levels
+    unsigned int m_numstages{0}; //< Number of stages in multi-stage component.
+    unsigned int m_numsteps{0};  //< Number of steps in this integration phase
+
+    unsigned int m_numMultiStepValues{0}; // number of entries in input and
+                                          // output vector that correspond
+                                          // to VALUES at previous time levels
+    unsigned int m_numMultiStepDerivs{0}; // number of entries in input and
+                                          // output vector that correspond
+                                          // to DERIVATIVES at previous time levels
     Array<OneD, unsigned int>
         m_timeLevelOffset; // denotes to which time-level the entries in both
                            // input and output vector correspond, e.g.
@@ -223,40 +221,86 @@ public:
                            //   | dt f(u^{n-2})|             | 2 |
                            //    -            -               - -
 
-    unsigned int m_numsteps;  //< Number of steps in this integration phase
-    unsigned int m_numstages; //< Number of stages in multi-stage component.
-
-    bool m_firstStageEqualsOldSolution; //< Optimisation-flag
-    bool m_lastStageEqualsNewSolution;  //< Optimisation-flag
-
     Array<OneD, Array<TwoD, NekDouble>> m_A;
     Array<OneD, Array<TwoD, NekDouble>> m_B;
     Array<TwoD, NekDouble> m_U;
     Array<TwoD, NekDouble> m_V;
 
-    bool m_initialised; /// bool to identify if array has been initialised
-    int m_nvar;         /// The number of variables in integration scheme.
-    int m_npoints;      /// The size of inner data which is stored for reuse.
-    DoubleArray m_Y;    /// Array containing the stage values
-    DoubleArray m_tmp;  /// explicit right hand side of each stage equation
+    // Arrays used for the exponential integrators.
+    Array<OneD, std::complex<NekDouble>> m_L;  // Lambda
 
-    TripleArray m_F;      /// Array corresponding to the stage Derivatives
-    TripleArray m_F_IMEX; /// Used to store the Explicit stage derivative of
-                          /// IMEX schemes
+    Array<OneD, Array<TwoD, NekDouble>> m_A_phi;
+    Array<OneD, Array<TwoD, NekDouble>> m_B_phi;
 
-    NekDouble m_T; ///  Time at the different stages
+    Array<OneD, Array<TwoD, NekDouble>> m_U_phi;
+    Array<OneD, Array<TwoD, NekDouble>> m_V_phi;
 
-    static LUE bool VerifyIntegrationSchemeType(
-        TimeIntegrationSchemeType type,
-        const Array<OneD, const Array<TwoD, NekDouble>> &A,
-        const Array<OneD, const Array<TwoD, NekDouble>> &B,
-        const Array<TwoD, const NekDouble> &U,
-        const Array<TwoD, const NekDouble> &V);
+    int m_nvars{0};            /// Number of variables in integration scheme.
+    int m_npoints{0};          /// Size of inner data which is stored for reuse.
 
-    LUE void TimeIntegrate(const NekDouble deltaT, ConstTripleArray &y_old,
-                           ConstSingleArray &t_old, TripleArray &y_new,
-                           SingleArray &t_new,
-                           const TimeIntegrationSchemeOperators &op);
+    bool m_initialised{false}; /// bool to identify array initialization
+
+    // Values uses for exponential integration
+    NekDouble m_lastDeltaT{0}; /// Last delta T
+    NekDouble m_lastNVars{0};  /// Last number of vars
+
+private:
+    DoubleArray m_Y;       /// Array containing the stage values
+    DoubleArray m_tmp;     /// Explicit RHS of each stage equation
+
+    TripleArray m_F;       /// Array corresponding to the stage Derivatives
+    TripleArray m_F_IMEX;  /// Used to store the Explicit stage derivative of
+                           /// IMEX schemes
+
+    NekDouble m_T{0};      ///  Time at the different stages
+
+    bool m_firstStageEqualsOldSolution{false}; //< Optimisation-flag
+    bool m_lastStageEqualsNewSolution{false};  //< Optimisation-flag
+
+    void CheckIfFirstStageEqualsOldSolution();
+    void CheckIfLastStageEqualsNewSolution();
+    void VerifyIntegrationSchemeType();
+
+    bool CheckTimeIntegrateArguments( // const NekDouble timestep,
+        ConstTripleArray &y_old, ConstSingleArray &t_old, TripleArray &y_new,
+        SingleArray &t_new, const TimeIntegrationSchemeOperators &op) const;
+
+    // Helpers
+    inline NekDouble A(const unsigned int i, const unsigned int j) const
+    {
+        return m_A[0][i][j];
+    }
+    inline NekDouble B(const unsigned int i, const unsigned int j) const
+    {
+        return m_B[0][i][j];
+    }
+    inline NekDouble U(const unsigned int i, const unsigned int j) const
+    {
+        return m_U[i][j];
+    }
+    inline NekDouble V(const unsigned int i, const unsigned int j) const
+    {
+        return m_V[i][j];
+    }
+
+    inline NekDouble A_IMEX(const unsigned int i, const unsigned int j) const
+    {
+        return m_A[1][i][j];
+    }
+    inline NekDouble B_IMEX(const unsigned int i, const unsigned int j) const
+    {
+        return m_B[1][i][j];
+    }
+
+    inline unsigned int GetNsteps(void) const
+    {
+        return m_numsteps;
+    }
+
+    inline unsigned int GetNstages(void) const
+    {
+        return m_numstages;
+    }
 
     inline int GetFirstDim(ConstTripleArray &y) const
     {
@@ -266,22 +310,6 @@ public:
     {
         return y[0][0].num_elements();
     }
-
-    LUE bool CheckTimeIntegrateArguments( // const NekDouble timestep,
-        ConstTripleArray &y_old, ConstSingleArray &t_old, TripleArray &y_new,
-        SingleArray &t_new, const TimeIntegrationSchemeOperators &op) const;
-
-    LUE bool CheckIfFirstStageEqualsOldSolution(
-        const Array<OneD, const Array<TwoD, NekDouble>> &A,
-        const Array<OneD, const Array<TwoD, NekDouble>> &B,
-        const Array<TwoD, const NekDouble> &U,
-        const Array<TwoD, const NekDouble> &V) const;
-
-    LUE bool CheckIfLastStageEqualsNewSolution(
-        const Array<OneD, const Array<TwoD, NekDouble>> &A,
-        const Array<OneD, const Array<TwoD, NekDouble>> &B,
-        const Array<TwoD, const NekDouble> &U,
-        const Array<TwoD, const NekDouble> &V) const;
 
 }; // end class TimeIntegrationSchemeData
 

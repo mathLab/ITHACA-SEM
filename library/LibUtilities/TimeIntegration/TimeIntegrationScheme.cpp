@@ -33,15 +33,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <cmath>
-#include <algorithm>
-using namespace std;
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
-#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
 namespace Nektar
 {
@@ -64,29 +60,59 @@ std::ostream &operator<<(std::ostream &os,
 std::ostream &operator<<(std::ostream &os, const TimeIntegrationScheme &rhs)
 {
 
-    os << "Time Integration Scheme: " << rhs.GetName() << ".\n"
+    os << "Time Integration Scheme: " << rhs.GetFullName() << ".\n"
        << "        Has " << rhs.m_integration_phases.size() << " phases.\n";
 
     for (int i = 0; i < rhs.m_integration_phases.size(); i++)
     {
         os << "            - "
-           << rhs.m_integration_phases[i]->m_parent->GetName()
+           << rhs.m_integration_phases[i]->m_parent->GetFullName()
            << "\n";
     }
     return os;
 }
 
-TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationScheme::TimeIntegrate(
-    const int timestep, const NekDouble delta_t,
-    TimeIntegrationSolutionSharedPtr &solvector,
-    const TimeIntegrationSchemeOperators &op)
+// Access Methods
+std::string TimeIntegrationScheme::GetFullName () const
 {
-    int phases = GetNumIntegrationPhases();
-    TimeIntegrationSchemeDataSharedPtr &data =
-        m_integration_phases[std::min(timestep, phases - 1)];
-    return data->TimeIntegrate(delta_t, solvector, op);
+    return GetName() + GetVariant() + "Order" + std::to_string(GetOrder());
 }
 
+std::string TimeIntegrationScheme::GetVariant() const
+{
+    ASSERTL0(!m_integration_phases.empty(), "No scheme")
+
+    return m_integration_phases[m_integration_phases.size() - 1]->m_variant;
+}
+
+unsigned int TimeIntegrationScheme::GetOrder() const
+{
+    ASSERTL0(!m_integration_phases.empty(), "No scheme")
+
+    return m_integration_phases[m_integration_phases.size() - 1]->m_order;
+}
+
+std::vector< NekDouble > TimeIntegrationScheme::GetFreeParams() const
+{
+    ASSERTL0(!m_integration_phases.empty(), "No scheme")
+
+    return m_integration_phases[m_integration_phases.size() - 1]->m_freeParams;
+}
+
+TimeIntegrationSchemeType TimeIntegrationScheme::GetIntegrationSchemeType()
+    const
+{
+    ASSERTL0(!m_integration_phases.empty(), "No scheme")
+
+    return m_integration_phases[m_integration_phases.size() - 1]->m_schemeType;
+}
+
+unsigned int TimeIntegrationScheme::GetNumIntegrationPhases() const
+{
+    return m_integration_phases.size();
+}
+
+// The worker methods
 TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr TimeIntegrationScheme::
     InitializeScheme(const NekDouble deltaT,
                      TimeIntegrationScheme::ConstDoubleArray &y_0,
@@ -96,11 +122,86 @@ TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr TimeIntegrationScheme::
     return m_integration_phases.back()->InitializeData(deltaT, y_0, time, op);
 }
 
-TimeIntegrationSchemeType TimeIntegrationScheme::GetIntegrationSchemeType()
-    const
+TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationScheme::TimeIntegrate(
+    const int timestep,
+    const NekDouble delta_t,
+    TimeIntegrationSolutionSharedPtr &solvector,
+    const TimeIntegrationSchemeOperators &op)
+{
+    int nPhases = m_integration_phases.size();
+
+    TimeIntegrationSchemeDataSharedPtr &data =
+        m_integration_phases[std::min(timestep, nPhases - 1)];
+
+    return data->TimeIntegrate(delta_t, solvector, op);
+}
+
+// Methods specific to exponential integration schemes.
+void TimeIntegrationScheme::SetExponentialCoefficients(
+    Array<OneD, std::complex<NekDouble>> &Lambda)
 {
     ASSERTL0(!m_integration_phases.empty(), "No scheme")
-    return m_integration_phases[m_integration_phases.size() - 1]->m_schemeType;
+
+    // Assumption: the one-dimensional Lambda matrix is a diagonal
+    // matrix thus values are non zero if and only i=j. As such, the
+    // diagonal Lambda values are stored an array of complex numbers.
+
+    // Assume that each phase is an exponential integrator.
+    for (int i = 0; i < m_integration_phases.size(); i++)
+    {
+        m_integration_phases[i]->m_L = Lambda;
+
+        // Anytime the coefficents are updated reset the nVars to be
+        // assured that the exponential matrices are recalculated
+        // (e.g. the number of variables may remain the same but the
+        // coefficients have changed).
+        m_integration_phases[i]->m_lastNVars = 0;
+    }
+}
+
+void TimeIntegrationScheme::SetupSchemeExponentialData(TimeIntegrationSchemeData *phase, NekDouble deltaT) const
+{
+    boost::ignore_unused(phase, deltaT);
+
+    ASSERTL0(false, "No SetupSchemeExponentialData method for scheme " +
+             GetFullName());
+}
+
+inline NekDouble TimeIntegrationScheme::factorial(unsigned int n) const
+{
+  return (n == 1 || n == 0) ? 1 : n * factorial(n - 1);
+}
+
+std::complex<NekDouble>
+TimeIntegrationScheme::phi_function(const unsigned int order,
+                                    const std::complex<NekDouble> z) const
+{
+    // Central to the implementation of exponential integrators is the
+    // evaluation of exponential-like functions, commonly denoted by φ
+    // functions. It is convenient to define φ0(z) = e^z, in which case the
+    // functions obey the recurrence relation.
+
+    // 0: exp(z);
+    // 1: (exp(z)     - 1.0) / (z);
+    // 2: (exp(z) - z - 1.0) / (z * z);
+
+    if( z == 0.0 )
+    {
+        return 1.0 / factorial( order );
+    }
+
+    if( order == 0 )
+    {
+        return exp( z );
+    }
+    else
+    {
+        return (phi_function( order-1, z) -
+                1.0 / factorial( order-1 ) ) / z;
+    }
+
+
+    return 0;
 }
 
 } // end namespace LibUtilities

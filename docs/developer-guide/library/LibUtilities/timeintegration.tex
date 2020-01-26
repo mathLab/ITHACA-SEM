@@ -239,35 +239,40 @@ time-integration schemes:
 AdamsBashforthOrder1 & Adams-Bashforth Forward multi-step scheme of order 1\\
 AdamsBashforthOrder2 & Adams-Bashforth Forward multi-step scheme of order 2\\
 AdamsBashforthOrder3 & Adams-Bashforth Forward multi-step scheme of order 3\\
+AdamsBashforthOrder4 & Adams-Bashforth Forward multi-step scheme of order 4\\
 AdamsMoultonOrder1   & Adams-Moulton Forward multi-step scheme of order 1\\
 AdamsMoultonOrder2   & Adams-Moulton Forward multi-step scheme of order 2\\
+AdamsMoultonOrder3   & Adams-Moulton Forward multi-step scheme of order 3\\
+AdamsMoultonOrder4   & Adams-Moulton Forward multi-step scheme of order 4\\
 BDFImplicitOrder1    & BDF multi-step scheme of order 1 (implicit)\\
 BDFImplicitOrder2    & BDF multi-step scheme of order 2 (implicit)\\
 ClassicalRungeKutta4 & Runge-Kutta multi-stage scheme 4th order explicit (old name)\\
-RungeKutta4 & Runge-Kutta multi-stage scheme 4th order explicit (new name for ClassicalRungeKutta4)\\
-RungeKutta3\_SSP & Nonlinear SSP RungeKutta3 explicit\\
+RungeKutta4          & Runge-Kutta multi-stage scheme 4th order explicit (new name for ClassicalRungeKutta4)\\
+RungeKutta3\_SSP     & Nonlinear SSP RungeKutta3 explicit\\
 RungeKutta2\_ImprovedEuler & Improved RungeKutta2 explicit (old name meaning Heun's method)\\
-RungeKutta2\_SSP & Nonlinear SSP RungeKutta2 explicit (surrogate for RungeKutta2\_ImprovedEuler)\\
+RungeKutta2\_SSP     & Nonlinear SSP RungeKutta2 explicit (surrogate for RungeKutta2\_ImprovedEuler)\\
+RungeKutta2          & Classical RungeKutta2 method (new name for Midpoint)\\
+Midpoint             & Midpoint method (old name)\\
 ForwardEuler         & Forward-Euler scheme\\
-BackwardEuler       & Backward Euler scheme\\
+BackwardEuler        & Backward Euler scheme\\
 IMEXOrder1           & IMEX 1st order scheme using Euler Backwards Euler
                        Forwards \\
 IMEXOrder2           & IMEX 2nd order scheme using Backward Different Formula \&
                        Extrapolation\\
 IMEXOrder3           & IMEX 3rd order scheme using Backward Different Formula \&
                        Extrapolation\\
-Midpoint             & Midpoint method (old name)\\
-RungeKutta2     & Classical RungeKutta2 method (new name for Midpoint)\\
+IMEXOrder4           & IMEX 4rd order scheme using Backward Different Formula \&
+                       Extrapolation\\
 DIRKOrder2           & Diagonally Implicit Runge-Kutta scheme of order 2\\
 DIRKOrder3           & Diagonally Implicit Runge-Kutta scheme of order 3\\
 CNAB                 & Crank-Nicolson-Adams-Bashforth Order 2 (CNAB)\\
 IMEXGear             & IMEX Gear Order 2\\
 MCNAB                & Modified Crank-Nicolson-Adams-Bashforth Order 2 (MCNAB)\\
-IMEXdirk\_1\_1\_1    & Forward-Backward Euler IMEX DIRK(1,1,1)\\
-IMEXdirk\_1\_2\_1    & Forward-Backward Euler IMEX DIRK(1,2,1)\\
-IMEXdirk\_1\_2\_2    & Implicit-Explicit Midpoint IMEX DIRK(1,2,2)\\
+IMEXdirk\_1\_1\_1    & Forward-Backward Euler, first order IMEX DIRK(1,1,1)\\
+IMEXdirk\_1\_2\_1    & Forward-Backward Euler, first order IMEX DIRK(1,2,1)\\
+IMEXdirk\_1\_2\_2    & Implicit-Explicit Midpoint, second order IMEX DIRK(1,2,2)\\
 IMEXdirk\_2\_2\_2    & L-stable, two stage, second order IMEX DIRK(2,2,2)\\
-IMEXdirk\_2\_3\_2    & L-stable, three stage, third order IMEX DIRK(3,4,3)\\
+IMEXdirk\_2\_3\_2    & L-stable, two stage, second order IMEX DIRK(2,3,2)\\
 IMEXdirk\_2\_3\_3    & L-stable, two stage, third order IMEX DIRK(2,3,3)\\
 IMEXdirk\_3\_4\_3    & L-stable, three stage, third order IMEX DIRK(3,4,3)\\
 IMEXdirk\_4\_4\_3    & L-stable, four stage, third order IMEX DIRK(4,4,3)\\

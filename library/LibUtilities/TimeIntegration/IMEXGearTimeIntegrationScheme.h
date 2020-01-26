@@ -52,16 +52,21 @@ namespace LibUtilities
 class IMEXGearTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    IMEXGearTimeIntegrationScheme() : TimeIntegrationScheme()
+    IMEXGearTimeIntegrationScheme(std::string variant, unsigned int order,
+                                  std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme("", 2, freeParams)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(variant);
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(2);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
         m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
 
-        IMEXdirk_2_2_2TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
+        IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0], 2, std::vector<NekDouble> {2, 2});
         IMEXGearTimeIntegrationScheme::SetupSchemeData(m_integration_phases[1]);
     }
 
@@ -69,10 +74,15 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+                                                 std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(order);
+        boost::ignore_unused(variant);
+
         TimeIntegrationSchemeSharedPtr p =
-            MemoryManager<IMEXGearTimeIntegrationScheme>::AllocateSharedPtr();
+            MemoryManager<IMEXGearTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
+
         return p;
     }
 
@@ -80,7 +90,7 @@ public:
 
     LUE virtual std::string GetName() const
     {
-        return std::string("IMEXGear");
+        return std::string("IMEX");
     }
 
     LUE virtual NekDouble GetTimeStability() const
@@ -91,6 +101,10 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
+        phase->m_variant = "Gear";
+        phase->m_order = 2;
+        phase->m_name = std::string("IMEXGearOrder" +
+                                    std::to_string(phase->m_order));
 
         phase->m_numsteps  = 3;
         phase->m_numstages = 1;
@@ -131,17 +145,7 @@ public:
         phase->m_timeLevelOffset[1] = 1;
         phase->m_timeLevelOffset[2] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration phase coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
 }; // end class IMEXGearTimeIntegrationScheme

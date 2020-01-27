@@ -10,7 +10,7 @@ stages:
   only:
     refs:
       - merge_requests
-      - feature/gitlab_ci
+      - gitlab_ci_macos
       - tags
 
 .build-env-template: &build-env-template
@@ -256,3 +256,23 @@ warnings-stretch-default:
 
 # build-and-test-centos7-full:
 #   <<: *build-and-test-template
+
+# MACOS
+
+build-and-test-osx-default:
+  <<: *execution-conditions
+  stage: build-and-test
+  tags:
+    - macos
+  script:
+    - rm -rf build
+    - mkdir -p build
+    - cd build
+    - cmake -G 'Unix Makefiles' ..
+      -DCMAKE_BUILD_TYPE=Release
+      -DNEKTAR_TEST_ALL=ON
+      -DNEKTAR_BUILD_TIMINGS=ON
+      -DNEKTAR_ERROR_ON_WARNINGS=OFF
+    - make -j 8
+    - make -j 8 install
+    - ctest -j 8 --output-on-failure

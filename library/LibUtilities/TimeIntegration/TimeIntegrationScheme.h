@@ -54,8 +54,8 @@ namespace LibUtilities
 // Forward declaration of some of the classes in this file...
 class TimeIntegrationScheme;
 class TimeIntegrationSchemeData;
-class TimeIntegrationSolution;
 class TimeIntegrationSchemeOperators;
+class TimeIntegrationSolution;
 
 typedef std::shared_ptr<TimeIntegrationScheme> TimeIntegrationSchemeSharedPtr;
 
@@ -134,14 +134,18 @@ public:
 
     LUE unsigned int GetNumIntegrationPhases() const;
 
+    // Gets the solution Vector
+    virtual const TripleArray &GetSolutionVector() const;
+    // Sets the solution Vector
+    virtual void SetSolutionVector(const int Offset, const DoubleArray &y);
+
     // The worker methods
-    LUE virtual TimeIntegrationSolutionSharedPtr InitializeScheme(
+    LUE virtual void InitializeScheme(
         const NekDouble deltaT, TimeIntegrationScheme::ConstDoubleArray &y_0,
         const NekDouble time, const TimeIntegrationSchemeOperators &op);
 
     LUE virtual TimeIntegrationScheme::ConstDoubleArray &TimeIntegrate(
         const int timestep, const NekDouble delta_t,
-        TimeIntegrationSolutionSharedPtr &solvector,
         const TimeIntegrationSchemeOperators &op);
 
     // Methods specific to exponential integration schemes.
@@ -193,7 +197,7 @@ protected:
      *    (which in fact is also embedded in the argument y).
      */
     LUE ConstDoubleArray &TimeIntegrate(
-        const NekDouble timestep, TimeIntegrationSolutionSharedPtr &y,
+        const NekDouble timestep,
         const TimeIntegrationSchemeOperators &op);
 
     // This should never be used directly... only used by child classes...
@@ -221,6 +225,8 @@ protected:
     {
         return y[0][0].num_elements();
     }
+
+    TimeIntegrationSolutionSharedPtr m_solvector;
 
 }; // end class TimeIntegrationScheme
 

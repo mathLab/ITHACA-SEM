@@ -277,6 +277,7 @@ SET(TimeIntegrationHeaders
 SET(TimeIntegrationSources
         ./TimeIntegration/SchemeInitializer.cpp
         ./TimeIntegration/TimeIntegrationScheme.cpp
+        ./TimeIntegration/TimeIntegrationSchemeFIT.cpp
         ./TimeIntegration/TimeIntegrationSchemeData.cpp
         ./TimeIntegration/TimeIntegrationSolution.cpp
 )

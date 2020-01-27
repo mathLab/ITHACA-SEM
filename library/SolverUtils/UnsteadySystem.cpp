@@ -213,8 +213,7 @@ namespace Nektar
             }
 
             // Initialise time integration scheme
-            m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields,
-                                                       m_time, m_ode );
+            m_intScheme->InitializeScheme( m_timestep, fields, m_time, m_ode );
 
             // Initialise filters
             for( auto &x : m_filters )
@@ -270,8 +269,8 @@ namespace Nektar
                     break;
                 }
 
-                fields = m_intScheme->TimeIntegrate(
-                    stepCounter, m_timestep, m_intSoln, m_ode);
+                fields =
+		    m_intScheme->TimeIntegrate( stepCounter, m_timestep, m_ode);
                 timer.Stop();
 
                 m_time  += m_timestep;

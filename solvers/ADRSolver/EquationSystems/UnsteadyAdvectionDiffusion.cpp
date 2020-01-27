@@ -40,11 +40,11 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 
-using namespace std;
-
 namespace Nektar
 {
-    string UnsteadyAdvectionDiffusion::className
+    using namespace LibUtilities;
+
+    std::string UnsteadyAdvectionDiffusion::className
         = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
                 "UnsteadyAdvectionDiffusion",
                 UnsteadyAdvectionDiffusion::create);
@@ -102,8 +102,8 @@ namespace Nektar
                 m_homoInitialFwd = false;
 
                 // Advection term
-                string advName;
-                string riemName;
+                std::string advName;
+                std::string riemName;
                 m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
                 m_advObject = SolverUtils::GetAdvectionFactory().
                     CreateInstance(advName, advName);
@@ -147,7 +147,7 @@ namespace Nektar
 
                 if(advName.compare("WeakDG") == 0)
                 {
-                    string riemName;
+                    std::string riemName;
                     m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                     m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
                         CreateInstance(riemName, m_session);
@@ -458,7 +458,7 @@ namespace Nektar
     {
         if(m_subSteppingScheme)
         {
-            SubStepAdvance(m_intSoln,step,m_time);
+            SubStepAdvance(step,m_time);
         }
 
         return false;
@@ -468,10 +468,8 @@ namespace Nektar
     /**
      *
      */
-    void UnsteadyAdvectionDiffusion::SubStepAdvance(
-        const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln,
-        int nstep,
-        NekDouble time)
+    void UnsteadyAdvectionDiffusion::SubStepAdvance(int nstep,
+						    NekDouble time)
     {
         int n;
         int nsubsteps;
@@ -481,7 +479,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > fields, velfields;
 
         static int ncalls = 1;
-        int  nint         = min(ncalls++, m_intSteps);
+        int  nint         = std::min(ncalls++, m_intSteps);
 
         Array<OneD, NekDouble> CFL(m_fields[0]->GetExpSize(),
                                    m_cflSafetyFactor);
@@ -492,41 +490,42 @@ namespace Nektar
         dt = GetSubstepTimeStep();
 
         nsubsteps = (m_timestep > dt)? ((int)(m_timestep/dt)+1):1;
-        nsubsteps = max(m_minsubsteps, nsubsteps);
+        nsubsteps = std::max(m_minsubsteps, nsubsteps);
 
         dt = m_timestep/nsubsteps;
 
         if (m_infosteps && !((nstep+1)%m_infosteps) && comm->GetRank() == 0)
         {
-            cout << "Sub-integrating using "<< nsubsteps
-                 << " steps over Dt = "     << m_timestep
-                 << " (SubStep CFL="        << m_cflSafetyFactor << ")"<< endl;
+            std::cout << "Sub-integrating using "<< nsubsteps
+		      << " steps over Dt = "     << m_timestep
+		      << " (SubStep CFL="        << m_cflSafetyFactor << ")"
+		      << std::endl;
         }
+
+	const TimeIntegrationScheme::TripleArray &solutionVector =
+	  m_intScheme->GetSolutionVector();
 
         for (int m = 0; m < nint; ++m)
         {
-            // We need to update the fields held by the m_integrationSoln
-            fields = integrationSoln->UpdateSolutionVector()[m];
+            // We need to update the fields held by the m_intScheme
+            fields = solutionVector[m];
 
             // Initialise NS solver which is set up to use a GLM method
             // with calls to EvaluateAdvection_SetPressureBCs and
             // SolveUnsteadyStokesSystem
-            LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr
-                SubIntegrationSoln = m_subStepIntegrationScheme->
-                InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
+	    m_subStepIntegrationScheme->
+	        InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
 
             for(n = 0; n < nsubsteps; ++n)
             {
-                fields = m_subStepIntegrationScheme->TimeIntegrate(
-                                                n, dt, SubIntegrationSoln,
-                                                m_subStepIntegrationOps );
+                fields = m_subStepIntegrationScheme->
+		    TimeIntegrate(n, dt, m_subStepIntegrationOps);
             }
 
-            // Reset time integrated solution in m_integrationSoln
-            integrationSoln->SetSolVector(m,fields);
+            // Reset time integrated solution in m_intScheme
+            m_intScheme->SetSolutionVector(m, fields);
         }
     }
-
 
     /**
      *

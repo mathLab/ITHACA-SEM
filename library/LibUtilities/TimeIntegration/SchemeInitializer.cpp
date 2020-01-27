@@ -50,6 +50,8 @@
 
 #include <LibUtilities/TimeIntegration/EulerExponentialTimeIntegrationSchemes.h>
 
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeFIT.h>
+
 namespace Nektar
 {
 namespace LibUtilities
@@ -87,6 +89,9 @@ REGISTER(ForwardEuler);
 
 // EulerExponentialTimeIntegrationSchemes.h
 REGISTER(EulerExponential);
+
+// FITTimeIntegrationSchemes.h
+REGISTER(FractionalInTime);
 
 // CNABTimeIntegrationScheme.h
 REGISTER(CNAB);

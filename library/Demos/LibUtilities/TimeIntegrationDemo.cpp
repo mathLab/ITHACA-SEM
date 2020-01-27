@@ -422,7 +422,7 @@ int main(int argc, char *argv[])
         "- 20: Nth order multi-step Lawson-Euler exponential scheme\n"
         "- 21: Nth order multi-step Norsett-Euler exponential scheme\n"
         "  \n"
-        // "- 25: Nth order multi-step Fractional In Time scheme\n"
+        "- 25: Nth order multi-step Fractional In Time scheme\n"
        );
 
     po::variables_map vm;
@@ -581,9 +581,9 @@ int main(int argc, char *argv[])
         case 21:
             tiScheme = factory.CreateInstance("EulerExponential", "Norsett", nOrder, freeParams);
             break;
-        // case 25:
-        //     tiScheme = factory.CreateInstance("FractionalInTime", "", nOrder, freeParams);
-        //     break;
+        case 25:
+            tiScheme = factory.CreateInstance("FractionalInTime", "", nOrder, freeParams);
+            break;
         default:
         {
             std::cerr << "The -m argument defines the "
@@ -707,19 +707,16 @@ int main(int argc, char *argv[])
     // 3.1 Initialize the time-integration scheme.
     double dt = solverSharedPtr->GetDeltaT();
 
-    LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr
-        solutionPtr;
-
     // The Fractional in Time needs the end time whereas the GLMs need
     // the initial time.
     if( tiScheme->GetIntegrationSchemeType() == eFractionalInTime )
     {
         double t1 = solverSharedPtr->GetFinialTime();
-        solutionPtr = tiScheme->InitializeScheme(dt, approxSol, t1, ode);
+        tiScheme->InitializeScheme(dt, approxSol, t1, ode);
     }
     else
     {
-        solutionPtr = tiScheme->InitializeScheme(dt, approxSol, t0, ode);
+        tiScheme->InitializeScheme(dt, approxSol, t0, ode);
     }
 
     // 4. Open a file for writing the solution
@@ -739,7 +736,7 @@ int main(int argc, char *argv[])
     while( timeStep < nTimeSteps )
     {
         // Time integration for one time step
-        approxSol = tiScheme->TimeIntegrate(timeStep, dt, solutionPtr, ode);
+        approxSol = tiScheme->TimeIntegrate(timeStep, dt, ode);
 
         // Advance the time for the exact solution.
         time += dt;

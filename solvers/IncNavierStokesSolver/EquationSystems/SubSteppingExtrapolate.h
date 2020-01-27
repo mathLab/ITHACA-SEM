@@ -100,7 +100,6 @@ namespace Nektar
             NekDouble kinvis);
 
         virtual void v_SubStepAdvance(
-            const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln, 
             int nstep, 
             NekDouble time);
 
@@ -133,6 +132,7 @@ namespace Nektar
 
         NekDouble GetSubstepTimeStep();
 
+        LibUtilities::TimeIntegrationSchemeSharedPtr m_intScheme;
         LibUtilities::TimeIntegrationSchemeSharedPtr m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
 

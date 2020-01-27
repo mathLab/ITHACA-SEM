@@ -71,8 +71,6 @@ protected:
     /// The time integration scheme operators to use.
     LibUtilities::TimeIntegrationSchemeOperators    m_ode;
     ///
-    LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr  m_intSoln;
-    ///
     NekDouble m_epsilon;
     /// Indicates if explicit or implicit treatment of diffusion is used.
     bool m_explicitDiffusion;

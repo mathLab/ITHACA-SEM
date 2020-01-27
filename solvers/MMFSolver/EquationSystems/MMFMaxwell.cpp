@@ -478,7 +478,7 @@ void MMFMaxwell::v_DoSolve()
     }
 
     // Initialise time integration scheme
-    m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields, m_time, m_ode );
+    m_intScheme->InitializeScheme( m_timestep, fields, m_time, m_ode );
 
     // Check uniqueness of checkpoint output
     ASSERTL0((m_checktime == 0.0 && m_checksteps == 0) ||
@@ -620,15 +620,8 @@ void MMFMaxwell::v_DoSolve()
     {
 
         timer.Start();
-        fields = m_intScheme->TimeIntegrate(step, m_timestep, m_intSoln, m_ode);
+        fields = m_intScheme->TimeIntegrate(step, m_timestep, m_ode);
         timer.Stop();
-
-        /*std::cout << typeid(m_intSoln->GetValue(0)).name() << std::endl;
-        for (int i=0; i< Ntot; ++i)
-        {
-            std::cout << "[" << i << "] = " << inarray[i] <<std::endl;
-            reval = reval + inarray[i]*inarray[i];
-        }*/
 
         m_time += m_timestep;
         elapsed = timer.TimePerTest(1);

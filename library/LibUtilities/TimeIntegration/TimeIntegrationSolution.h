@@ -94,6 +94,12 @@ public:
         return m_solVector[0];
     }
 
+    // Sets the solution Vector
+    inline void SetSolutionVector(const int Offset, const DoubleArray &y)
+    {
+        m_solVector[Offset] = y;
+    }
+
     inline const Array<OneD, const NekDouble> &GetTimeVector() const
     {
         return m_t;
@@ -142,7 +148,7 @@ public:
         return m_schemeData->GetTimeLevelOffset();
     }
 
-    // returns the entry in the solution vector which corresponds to the
+    // Returns the entry in the solution vector which corresponds to the
     // (multi-step) value at the time-level with specified offset
     inline DoubleArray &GetValue(const unsigned int timeLevelOffset)
     {
@@ -244,12 +250,6 @@ public:
                 return;
             }
         }
-    }
-
-    // sets the soln Vector
-    inline void SetSolVector(const int Offset, const DoubleArray &y)
-    {
-        m_solVector[Offset] = y;
     }
 
     // Rotate the solution vector

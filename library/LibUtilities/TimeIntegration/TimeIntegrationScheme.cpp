@@ -34,10 +34,10 @@
 
 #include <iostream>
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 
 namespace Nektar
 {
@@ -112,20 +112,32 @@ unsigned int TimeIntegrationScheme::GetNumIntegrationPhases() const
     return m_integration_phases.size();
 }
 
+// Gets the solution Vector
+const TimeIntegrationScheme::TripleArray &TimeIntegrationScheme::GetSolutionVector() const
+{
+    return m_solvector->GetSolutionVector();
+}
+
+// Sets the solution Vector
+void TimeIntegrationScheme::SetSolutionVector(const int Offset, const DoubleArray &y)
+{
+    m_solvector->SetSolutionVector(Offset, y);
+}
+
 // The worker methods
-TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr TimeIntegrationScheme::
+void TimeIntegrationScheme::
     InitializeScheme(const NekDouble deltaT,
                      TimeIntegrationScheme::ConstDoubleArray &y_0,
                      const NekDouble time,
                      const TimeIntegrationSchemeOperators &op)
 {
-    return m_integration_phases.back()->InitializeData(deltaT, y_0, time, op);
+    m_solvector =
+        m_integration_phases.back()->InitializeData(deltaT, y_0, time, op);
 }
 
 TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationScheme::TimeIntegrate(
     const int timestep,
     const NekDouble delta_t,
-    TimeIntegrationSolutionSharedPtr &solvector,
     const TimeIntegrationSchemeOperators &op)
 {
     int nPhases = m_integration_phases.size();
@@ -133,7 +145,7 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationScheme::TimeIntegrate(
     TimeIntegrationSchemeDataSharedPtr &data =
         m_integration_phases[std::min(timestep, nPhases - 1)];
 
-    return data->TimeIntegrate(delta_t, solvector, op);
+    return data->TimeIntegrate(delta_t, m_solvector, op);
 }
 
 // Methods specific to exponential integration schemes.

@@ -474,14 +474,14 @@ namespace Nektar
             m_fields[i]->SetPhysState(false);
         }
         
-        m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields, m_time, m_ode );
+        m_intScheme->InitializeScheme( m_timestep, fields, m_time, m_ode );
 
         // Time loop
         for(n = 0; n < m_steps; ++n)
         {				
             LibUtilities::Timer timer;
             timer.Start();
-            fields = m_intScheme->TimeIntegrate(n,m_timestep,m_intSoln,m_ode);
+            fields = m_intScheme->TimeIntegrate(n,m_timestep,m_ode);
             //cout<<"integration: "<<fields[0][fields[0].num_elements()-1]<<endl;                
             m_time += m_timestep;
             timer.Stop();

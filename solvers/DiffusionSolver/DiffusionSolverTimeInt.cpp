@@ -136,14 +136,14 @@ void Diffusion::TimeIntegrate()
     ode.DefineImplicitSolve( &Diffusion::DoImplicitSolve, this );
 
     // Initialise the scheme for actual time integration scheme
-    m_u = m_IntScheme->InitializeScheme( delta_t, fields, 0.0, ode );
+    m_IntScheme->InitializeScheme( delta_t, fields, 0.0, ode );
 
     // Zero field coefficients for initial guess for linear solver.
     Vmath::Zero(field->GetNcoeffs(), field->UpdateCoeffs(), 1);
 
     for (int n = 0; n < nSteps; ++n)
     {
-      fields = m_IntScheme->TimeIntegrate( n, delta_t, m_u, ode );
+      fields = m_IntScheme->TimeIntegrate( n, delta_t, ode );
     }
     Vmath::Vcopy(field->GetNpoints(), fields[0], 1, field->UpdatePhys(), 1);
 

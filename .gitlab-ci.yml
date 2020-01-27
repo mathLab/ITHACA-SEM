@@ -276,3 +276,32 @@ build-and-test-osx-default:
     - make -j 8
     - make -j 8 install
     - ctest -j 8 --output-on-failure
+
+build-and-test-osx-full:
+  <<: *execution-conditions
+  stage: build-and-test
+  tags:
+    - macos
+  script:
+    - rm -rf build
+    - mkdir -p build
+    - cd build
+    - cmake -DCMAKE_BUILD_TYPE:STRING=Debug
+      -DNEKTAR_FULL_DEBUG:BOOL=ON
+      -DNEKTAR_TEST_ALL:BOOL=ON
+      -DNEKTAR_BUILD_TIMINGS:BOOL=ON
+      -DNEKTAR_USE_ARPACK:BOOL=ON
+      -DNEKTAR_USE_FFTW:BOOL=ON
+      -DNEKTAR_USE_MPI:BOOL=ON
+      -DNEKTAR_USE_SCOTCH:BOOL=ON
+      -DNEKTAR_USE_PETSC:BOOL=ON
+      -DNEKTAR_USE_HDF5:BOOL=ON
+      -DNEKTAR_USE_MESHGEN:BOOL=ON
+      -DNEKTAR_USE_CCM:BOOL=ON
+      -DNEKTAR_BUILD_PYTHON:BOOL=ON
+      -DNEKTAR_TEST_USE_HOSTFILE=ON
+      -DNEKTAR_ERROR_ON_WARNINGS=OFF
+      ..
+    - make -j 8
+    - make -j 8 install
+    - ctest -j 8 --output-on-failure

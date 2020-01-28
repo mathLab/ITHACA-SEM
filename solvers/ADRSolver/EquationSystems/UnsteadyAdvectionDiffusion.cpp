@@ -38,8 +38,6 @@
 
 #include <ADRSolver/EquationSystems/UnsteadyAdvectionDiffusion.h>
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
-
 namespace Nektar
 {
     using namespace LibUtilities;
@@ -479,7 +477,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > fields, velfields;
 
         static int ncalls = 1;
-        int  nint         = std::min(ncalls++, m_intSteps);
+        int nint          = std::min(ncalls++, m_intSteps);
 
         Array<OneD, NekDouble> CFL(m_fields[0]->GetExpSize(),
                                    m_cflSafetyFactor);
@@ -502,8 +500,7 @@ namespace Nektar
 		      << std::endl;
         }
 
-	const TimeIntegrationScheme::TripleArray &solutionVector =
-	  m_intScheme->GetSolutionVector();
+	const TripleArray &solutionVector = m_intScheme->GetSolutionVector();
 
         for (int m = 0; m < nint; ++m)
         {

@@ -68,7 +68,6 @@ class Diffusion
         MultiRegions::ContField2DSharedPtr              field;
 
         LibUtilities::TimeIntegrationSchemeSharedPtr    m_IntScheme;
-        LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr  m_u;
         LibUtilities::TimeIntegrationSchemeOperators    ode;
         Array<OneD, Array<OneD, NekDouble> >            fields;
 

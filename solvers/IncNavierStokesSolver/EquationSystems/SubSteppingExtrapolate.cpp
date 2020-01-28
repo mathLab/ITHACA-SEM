@@ -35,7 +35,6 @@
 #include <IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.h>
 
 #include <LibUtilities/Communication/Comm.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 
 namespace Nektar
 {
@@ -334,8 +333,7 @@ namespace Nektar
 		      << " (SubStep CFL="        << m_cflSafetyFactor << ")"<< std::endl;
         }
 
-	const TimeIntegrationScheme::TripleArray &solutionVector =
-	  m_intScheme->GetSolutionVector();
+	const TripleArray &solutionVector = m_intScheme->GetSolutionVector();
 
         for (int m = 0; m < nint; ++m)
         {

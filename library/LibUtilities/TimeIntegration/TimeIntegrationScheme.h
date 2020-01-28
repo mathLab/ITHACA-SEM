@@ -73,11 +73,6 @@ LUE TimeIntegrationSchemeFactory &GetTimeIntegrationSchemeFactory();
 class TimeIntegrationScheme
 {
 public:
-    LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationScheme &rhs);
-    LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationSchemeSharedPtr &rhs);
-
     // Access methods
     LUE virtual std::string              GetFullName  () const;
     LUE virtual std::string              GetName      () const = 0;
@@ -92,9 +87,9 @@ public:
     LUE virtual unsigned int GetNumIntegrationPhases() const = 0;
 
     // Gets the solution Vector
-    virtual const TripleArray &GetSolutionVector() const = 0;
+    inline virtual const TripleArray &GetSolutionVector() const = 0;
     // Sets the solution Vector
-    virtual void SetSolutionVector(const int Offset, const DoubleArray &y) = 0;
+    inline virtual void SetSolutionVector(const int Offset, const DoubleArray &y) = 0;
 
     // The worker methods
     /**
@@ -128,6 +123,12 @@ public:
     LUE virtual ConstDoubleArray &TimeIntegrate(
         const int timestep, const NekDouble delta_t,
         const TimeIntegrationSchemeOperators &op) = 0 ;
+
+    // Friend classes
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                    const TimeIntegrationScheme &rhs);
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                    const TimeIntegrationSchemeSharedPtr &rhs);
 
 protected:
     // These methods should never be used directly, only used by child classes.

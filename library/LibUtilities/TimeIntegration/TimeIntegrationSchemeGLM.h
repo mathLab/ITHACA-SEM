@@ -35,6 +35,7 @@
 #pragma once
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSolutionGLM.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationTypes.h>
 
 #define LUE LIB_UTILITIES_EXPORT
@@ -63,8 +64,17 @@ public:
   
     LUE unsigned int GetNumIntegrationPhases() const;
 
-    const TripleArray &GetSolutionVector() const;
-    void SetSolutionVector(const int Offset, const DoubleArray &y);
+    // Gets the solution Vector
+    inline const TripleArray &GetSolutionVector() const
+    {
+        return m_solVector->GetSolutionVector();
+    }
+
+    // Sets the solution Vector
+    inline void SetSolutionVector(const int Offset, const DoubleArray &y)
+    {
+        m_solVector->SetSolutionVector(Offset, y);
+    }
 
     // The worker methods
     LUE virtual void InitializeScheme(
@@ -78,6 +88,7 @@ public:
     void InitializeSecondaryData(TimeIntegrationAlgorithmGLM *phase,
                                  NekDouble deltaT) const;
   
+    // Friend classes
     LUE friend std::ostream &operator<<(std::ostream &os,
                                     const TimeIntegrationSchemeGLM &rhs);
     LUE friend std::ostream &operator<<(std::ostream &os,

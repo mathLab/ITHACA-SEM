@@ -47,6 +47,13 @@ TimeIntegrationSchemeFactory &GetTimeIntegrationSchemeFactory()
     return instance;
 }
 
+// Access Methods
+std::string TimeIntegrationScheme::GetFullName () const
+{
+    return GetName() + GetVariant() + "Order" + std::to_string(GetOrder());
+}
+
+// Friend Operators
 std::ostream &operator<<(std::ostream &os, const TimeIntegrationScheme &rhs)
 {
     os << "Time Integration Scheme: " << rhs.GetFullName() << std::endl;
@@ -60,12 +67,6 @@ std::ostream &operator<<(std::ostream &os,
     os << *rhs.get();
 
     return os;
-}
-
-// Access Methods
-std::string TimeIntegrationScheme::GetFullName () const
-{
-    return GetName() + GetVariant() + "Order" + std::to_string(GetOrder());
 }
 
 } // end namespace LibUtilities

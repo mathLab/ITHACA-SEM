@@ -51,17 +51,6 @@ namespace LibUtilities
 class TimeIntegrationAlgorithmGLM
 {
 public:
-    LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationScheme &rhs);
-    LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationSchemeSharedPtr &rhs);
-
-    LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationAlgorithmGLM &rhs);
-    LUE friend std::ostream &operator<<(
-        std::ostream &os,
-        const TimeIntegrationAlgorithmGLMSharedPtr &rhs);
-
     TimeIntegrationAlgorithmGLM(const TimeIntegrationScheme *parent):
         m_parent(parent)
     {
@@ -235,6 +224,18 @@ public:
 
     int  m_nvars;       ///< The number of variables in integration scheme.
     int  m_npoints;     ///< The size of inner data which is stored for reuse.
+
+    // Friend classes
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                    const TimeIntegrationScheme &rhs);
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                    const TimeIntegrationSchemeSharedPtr &rhs);
+
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                    const TimeIntegrationAlgorithmGLM &rhs);
+    LUE friend std::ostream &operator<<(
+        std::ostream &os,
+        const TimeIntegrationAlgorithmGLMSharedPtr &rhs);
 
 private:
     DoubleArray m_Y;       /// Array containing the stage values

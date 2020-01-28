@@ -40,7 +40,7 @@ namespace Nektar
 {
 namespace LibUtilities
 {
-
+// Typedefs double arrays
 typedef const Array<OneD, const Array<OneD, Array<OneD, NekDouble>>> ConstTripleArray;
 typedef       Array<OneD,       Array<OneD, Array<OneD, NekDouble>>>      TripleArray;
 typedef const Array<OneD, const Array<OneD,             NekDouble>>  ConstDoubleArray;
@@ -48,6 +48,7 @@ typedef       Array<OneD,       Array<OneD,             NekDouble>>       Double
 typedef const Array<OneD, const                         NekDouble>   ConstSingleArray;
 typedef       Array<OneD,                               NekDouble>        SingleArray;
 
+// Typedefs complex double arrays
 typedef       Array<OneD,       Array<OneD, Array<OneD, std::complex<NekDouble>>>>      ComplexTripleArray;
 typedef const Array<OneD, const Array<OneD,             std::complex<NekDouble>>>  ConstComplexDoubleArray;
 typedef       Array<OneD,       Array<OneD,             std::complex<NekDouble>>>       ComplexDoubleArray;
@@ -63,17 +64,6 @@ typedef std::function<void(ConstDoubleArray &, DoubleArray &,
     FunctorType2;
 
 // Shared pointers
-class TimeIntegrationAlgorithmGLM;
-
-typedef std::shared_ptr<TimeIntegrationAlgorithmGLM>
-    TimeIntegrationAlgorithmGLMSharedPtr;
-
-typedef std::vector<TimeIntegrationAlgorithmGLMSharedPtr>
-    TimeIntegrationAlgorithmGLMVector;
-
-typedef std::vector<TimeIntegrationAlgorithmGLMSharedPtr>::iterator
-    TimeIntegrationAlgorithmGLMVectorIter;  
-//
 class TimeIntegrationScheme;
 
 typedef std::shared_ptr<TimeIntegrationScheme>
@@ -107,6 +97,17 @@ typedef std::vector<TimeIntegrationSchemeGLMSharedPtr>
 typedef std::vector<TimeIntegrationSchemeGLMSharedPtr>::iterator
     TimeIntegrationSchemeGLMVectorIter;
 //
+class TimeIntegrationAlgorithmGLM;
+
+typedef std::shared_ptr<TimeIntegrationAlgorithmGLM>
+    TimeIntegrationAlgorithmGLMSharedPtr;
+
+typedef std::vector<TimeIntegrationAlgorithmGLMSharedPtr>
+    TimeIntegrationAlgorithmGLMVector;
+
+typedef std::vector<TimeIntegrationAlgorithmGLMSharedPtr>::iterator
+    TimeIntegrationAlgorithmGLMVectorIter;  
+//
 class TimeIntegrationSolutionGLM;
 
 typedef std::shared_ptr<TimeIntegrationSolutionGLM>
@@ -117,6 +118,7 @@ typedef std::vector<TimeIntegrationSolutionGLMSharedPtr>
 
 typedef std::vector<TimeIntegrationSolutionGLMSharedPtr>::iterator
     TimeIntegrationSolutionGLMVectorIter;
+
 //
 enum TimeIntegrationSchemeType
 {

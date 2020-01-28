@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: FractionalInTimeIntegrationScheme.h
+// File: TimeIntegrationSchemeFIT.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -32,6 +32,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// Note: The file is named TimeIntegrationSchemeFIT to parallel the
+// TimeIntegrationSchemeGLM file but the class is named
+// FractionalInTimeIntegrationScheme so keep with the factory naming
+// convention.
+ 
 #pragma once
 
 #include <string>
@@ -51,11 +56,6 @@ namespace LibUtilities
 class FractionalInTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    LUE friend std::ostream &operator<<(std::ostream &os,
-                                        const FractionalInTimeIntegrationScheme &rhs);
-    LUE friend std::ostream &operator<<(std::ostream &os,
-                                        const FractionalInTimeIntegrationSchemeSharedPtr &rhs);
-
     FractionalInTimeIntegrationScheme(std::string variant, unsigned int order,
                                       std::vector<NekDouble> freeParams) :
         TimeIntegrationScheme(variant, order, freeParams),
@@ -123,13 +123,13 @@ public:
     }
 
     // Gets the solution Vector
-    virtual const TripleArray &GetSolutionVector() const
+    inline const TripleArray &GetSolutionVector() const
     {
         return m_u;
     }
 
     // Sets the solution Vector
-    void SetSolutionVector(const int Offset, const DoubleArray &y)
+    inline void SetSolutionVector(const int Offset, const DoubleArray &y)
     {
         m_u[Offset] = y;
     }
@@ -142,6 +142,12 @@ public:
     LUE virtual ConstDoubleArray &TimeIntegrate(
         const int timestep, const NekDouble delta_t,
         const TimeIntegrationSchemeOperators &op);
+
+    // Friend classes
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                        const FractionalInTimeIntegrationScheme &rhs);
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                        const FractionalInTimeIntegrationSchemeSharedPtr &rhs);
 
 protected:
     struct Instance

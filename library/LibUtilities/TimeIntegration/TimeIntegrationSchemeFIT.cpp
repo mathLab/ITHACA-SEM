@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FractionalInTimeIntegrationScheme.cpp
+// File TimeIntegrationSchemeFIT.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -32,30 +32,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// Note: The file is named TimeIntegrationSchemeFIT to parallel the
+// TimeIntegrationSchemeGLM file but the class is named
+// FractionalInTimeIntegrationScheme so keep with the factory naming
+// convention.
+
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeFIT.h>
 
 namespace Nektar
 {
 namespace LibUtilities
 {
-
-std::ostream &operator<<(std::ostream &os, const FractionalInTimeIntegrationScheme &rhs)
-{
-    os << "Time Integration Scheme: " << rhs.GetFullName() << std::endl
-       << "Base " << rhs.m_base << std::endl
-       << "Number of quadature points " << rhs.m_nQuadPts << std::endl
-       << "Alpha " << rhs.m_alpha << std::endl;
-
-    return os;
-}
-
-std::ostream &operator<<(std::ostream &os,
-                         const FractionalInTimeIntegrationSchemeSharedPtr &rhs)
-{
-    os << *rhs.get();
-
-    return os;
-}
 
 void FractionalInTimeIntegrationScheme::
 InitializeScheme(const NekDouble deltaT,
@@ -1295,6 +1282,25 @@ advance_sandbox(const unsigned int timeStep,
             instance.fsandbox_ind = std::pair<int,int>(timeStep, timeStep);
         }
     }
+}
+
+// Friend Operators
+std::ostream &operator<<(std::ostream &os, const FractionalInTimeIntegrationScheme &rhs)
+{
+    os << "Time Integration Scheme: " << rhs.GetFullName() << std::endl
+       << "Base " << rhs.m_base << std::endl
+       << "Number of quadature points " << rhs.m_nQuadPts << std::endl
+       << "Alpha " << rhs.m_alpha << std::endl;
+
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os,
+                         const FractionalInTimeIntegrationSchemeSharedPtr &rhs)
+{
+    os << *rhs.get();
+
+    return os;
 }
 
 } // end namespace LibUtilities

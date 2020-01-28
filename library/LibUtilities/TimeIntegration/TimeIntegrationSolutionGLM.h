@@ -48,9 +48,6 @@ namespace LibUtilities
 class TimeIntegrationSolutionGLM
 {
 public:
-    typedef Array<OneD, Array<OneD, Array<OneD, NekDouble>>> TripleArray;
-    typedef Array<OneD, Array<OneD, NekDouble>> DoubleArray;
-
     // Constructor for single step methods
     LUE TimeIntegrationSolutionGLM(const TimeIntegrationAlgorithmGLM *schemeAlgorithm,
                                    const DoubleArray &y, const NekDouble time,

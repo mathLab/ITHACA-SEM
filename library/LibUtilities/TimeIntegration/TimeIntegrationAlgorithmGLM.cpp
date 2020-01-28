@@ -926,14 +926,15 @@ bool TimeIntegrationAlgorithmGLM::CheckTimeIntegrateArguments(
     return true;
 }
 
-std::ostream &operator<<(
-    std::ostream &os,
-    const TimeIntegrationAlgorithmGLMSharedPtr &rhs)
+// Friend Operators
+std::ostream &operator<<(std::ostream &os,
+			 const TimeIntegrationAlgorithmGLMSharedPtr &rhs)
 {
-    return operator<<(os, *rhs);
+    return operator << (os, *rhs);
 }
 
-std::ostream &operator<<(std::ostream &os, const TimeIntegrationAlgorithmGLM &rhs)
+std::ostream &operator<<(std::ostream &os,
+			 const TimeIntegrationAlgorithmGLM &rhs)
 {
     int r                          = rhs.m_numsteps;
     int s                          = rhs.m_numstages;

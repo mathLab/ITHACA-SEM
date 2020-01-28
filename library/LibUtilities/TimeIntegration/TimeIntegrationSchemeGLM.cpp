@@ -36,36 +36,11 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationSolutionGLM.h>
 
 namespace Nektar
 {
 namespace LibUtilities
 {
-
-std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeGLM &rhs)
-{
-    os << "Time Integration Scheme: " << rhs.GetFullName() << std::endl
-       << "        Has " << rhs.m_integration_phases.size() << " phases"
-       << std::endl;
-
-    for (int i = 0; i < rhs.m_integration_phases.size(); i++)
-    {
-        os << "            - "
-           << rhs.m_integration_phases[i]->m_parent->GetFullName()
-           << "\n";
-    }
-
-    return os;
-}
-
-std::ostream &operator<<(std::ostream &os,
-                         const TimeIntegrationSchemeGLMSharedPtr &rhs)
-{
-    os << *rhs.get();
-
-    return os;
-}
 
 // Access Methods
 std::string TimeIntegrationSchemeGLM::GetVariant() const
@@ -102,18 +77,6 @@ unsigned int TimeIntegrationSchemeGLM::GetNumIntegrationPhases() const
     return m_integration_phases.size();
 }
 
-// Gets the solution Vector
-const TripleArray &TimeIntegrationSchemeGLM::GetSolutionVector() const
-{
-    return m_solVector->GetSolutionVector();
-}
-
-// Sets the solution Vector
-void TimeIntegrationSchemeGLM::SetSolutionVector(const int Offset, const DoubleArray &y)
-{
-    m_solVector->SetSolutionVector(Offset, y);
-}
-
 // The worker methods
 void TimeIntegrationSchemeGLM::
     InitializeScheme(const NekDouble deltaT,
@@ -146,6 +109,31 @@ InitializeSecondaryData(TimeIntegrationAlgorithmGLM *phase,
 
     ASSERTL0(false, "No InitializeSecondaryData method for scheme " +
 	     GetFullName());
+}
+
+// Friend Operators
+std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeGLM &rhs)
+{
+    os << "Time Integration Scheme: " << rhs.GetFullName() << std::endl
+       << "        Has " << rhs.m_integration_phases.size() << " phases"
+       << std::endl;
+
+    for (int i = 0; i < rhs.m_integration_phases.size(); i++)
+    {
+        os << "            - "
+           << rhs.m_integration_phases[i]->m_parent->GetFullName()
+           << "\n";
+    }
+
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os,
+                         const TimeIntegrationSchemeGLMSharedPtr &rhs)
+{
+    os << *rhs.get();
+
+    return os;
 }
 
 } // end namespace LibUtilities

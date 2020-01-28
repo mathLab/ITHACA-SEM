@@ -49,7 +49,8 @@ TimeIntegrationSchemeFactory &GetTimeIntegrationSchemeFactory()
 
 std::ostream &operator<<(std::ostream &os, const TimeIntegrationScheme &rhs)
 {
-    os << "Time Integration Scheme: " << rhs.GetFullName() << ".\n";
+    os << "Time Integration Scheme: " << rhs.GetFullName() << std::endl;
+
     return os;
 }
 
@@ -57,6 +58,7 @@ std::ostream &operator<<(std::ostream &os,
                          const TimeIntegrationSchemeSharedPtr &rhs)
 {
     os << *rhs.get();
+
     return os;
 }
 

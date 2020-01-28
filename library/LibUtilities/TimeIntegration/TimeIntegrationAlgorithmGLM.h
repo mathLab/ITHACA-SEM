@@ -51,6 +51,17 @@ namespace LibUtilities
 class TimeIntegrationAlgorithmGLM
 {
 public:
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                    const TimeIntegrationScheme &rhs);
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                    const TimeIntegrationSchemeSharedPtr &rhs);
+
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                    const TimeIntegrationAlgorithmGLM &rhs);
+    LUE friend std::ostream &operator<<(
+        std::ostream &os,
+        const TimeIntegrationAlgorithmGLMSharedPtr &rhs);
+
     TimeIntegrationAlgorithmGLM(const TimeIntegrationScheme *parent):
         m_parent(parent)
     {
@@ -168,17 +179,6 @@ public:
     {
         return m_timeLevelOffset;
     }
-
-    LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationScheme &rhs);
-    LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationSchemeSharedPtr &rhs);
-
-    LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationAlgorithmGLM &rhs);
-    LUE friend std::ostream &operator<<(
-        std::ostream &os,
-        const TimeIntegrationAlgorithmGLMSharedPtr &rhs);
 
     // Variables - all public for easy access when setting up the phase.
     /// Parent scheme object

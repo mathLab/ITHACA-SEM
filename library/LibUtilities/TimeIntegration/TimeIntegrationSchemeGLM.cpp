@@ -45,8 +45,9 @@ namespace LibUtilities
 
 std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeGLM &rhs)
 {
-    os << "Time Integration Scheme: " << rhs.GetFullName() << ".\n"
-       << "        Has " << rhs.m_integration_phases.size() << " phases.\n";
+    os << "Time Integration Scheme: " << rhs.GetFullName() << std::endl
+       << "        Has " << rhs.m_integration_phases.size() << " phases"
+       << std::endl;
 
     for (int i = 0; i < rhs.m_integration_phases.size(); i++)
     {
@@ -54,6 +55,7 @@ std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeGLM &rhs)
            << rhs.m_integration_phases[i]->m_parent->GetFullName()
            << "\n";
     }
+
     return os;
 }
 
@@ -61,6 +63,7 @@ std::ostream &operator<<(std::ostream &os,
                          const TimeIntegrationSchemeGLMSharedPtr &rhs)
 {
     os << *rhs.get();
+
     return os;
 }
 
@@ -102,13 +105,13 @@ unsigned int TimeIntegrationSchemeGLM::GetNumIntegrationPhases() const
 // Gets the solution Vector
 const TripleArray &TimeIntegrationSchemeGLM::GetSolutionVector() const
 {
-    return m_solvector->GetSolutionVector();
+    return m_solVector->GetSolutionVector();
 }
 
 // Sets the solution Vector
 void TimeIntegrationSchemeGLM::SetSolutionVector(const int Offset, const DoubleArray &y)
 {
-    m_solvector->SetSolutionVector(Offset, y);
+    m_solVector->SetSolutionVector(Offset, y);
 }
 
 // The worker methods
@@ -118,7 +121,7 @@ void TimeIntegrationSchemeGLM::
                      const NekDouble time,
                      const TimeIntegrationSchemeOperators &op)
 {
-    m_solvector =
+    m_solVector =
         m_integration_phases.back()->InitializeData(deltaT, y_0, time, op);
 }
 
@@ -129,10 +132,10 @@ ConstDoubleArray &TimeIntegrationSchemeGLM::TimeIntegrate(
 {
     int nPhases = m_integration_phases.size();
 
-    TimeIntegrationAlgorithmGLMSharedPtr &data =
+    TimeIntegrationAlgorithmGLMSharedPtr &algorithm =
         m_integration_phases[std::min(timestep, nPhases - 1)];
 
-    return data->TimeIntegrate(delta_t, m_solvector, op);
+    return algorithm->TimeIntegrate(delta_t, m_solVector, op);
 }
 
 void TimeIntegrationSchemeGLM::

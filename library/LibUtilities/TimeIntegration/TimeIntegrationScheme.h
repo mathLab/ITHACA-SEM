@@ -64,7 +64,7 @@ typedef NekFactory<std::string,
 //
 //    LibUtilities::TimeIntegrationSchemeSharedPtr timeIntegrationScheme =
 //      LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance(
-//                  "IMEX", "", 1, std::vector<unsigned int>() );
+//                  "IMEX", "dirk", 3, std::vector<unsigned int>{2,3} );
 LUE TimeIntegrationSchemeFactory &GetTimeIntegrationSchemeFactory();
 
 /**
@@ -81,7 +81,6 @@ public:
     // Access methods
     LUE virtual std::string              GetFullName  () const;
     LUE virtual std::string              GetName      () const = 0;
-    // Values stored by each integration phase.
     LUE virtual std::string              GetVariant   () const = 0;
     LUE virtual unsigned int             GetOrder     () const = 0;
     LUE virtual std::vector< NekDouble > GetFreeParams() const = 0;
@@ -98,36 +97,6 @@ public:
     virtual void SetSolutionVector(const int Offset, const DoubleArray &y) = 0;
 
     // The worker methods
-    LUE virtual void InitializeScheme(
-        const NekDouble deltaT, ConstDoubleArray &y_0,
-        const NekDouble time, const TimeIntegrationSchemeOperators &op) = 0;
-
-    LUE virtual ConstDoubleArray &TimeIntegrate(
-        const int timestep, const NekDouble delta_t,
-        const TimeIntegrationSchemeOperators &op) = 0 ;
-
-protected:
-
-    // This should never be used directly... only used by child classes...
-    LUE TimeIntegrationScheme(std::string variant, unsigned int order,
-                              std::vector<NekDouble> freeParams)
-    {
-        boost::ignore_unused(variant, order, freeParams);
-    }
-
-    LUE TimeIntegrationScheme(const TimeIntegrationScheme &in)
-    {
-        boost::ignore_unused(in);
-
-        NEKERROR(ErrorUtil::efatal, "Copy Constructor for the "
-                                    "TimeIntegrationScheme class should not be "
-                                    "called");
-    }
-
-    virtual ~TimeIntegrationScheme()
-    {
-    }
-
     /**
      * \brief Explicit integration of an ODE.
      *
@@ -152,18 +121,33 @@ protected:
      * level
      *    (which in fact is also embedded in the argument y).
      */
-    // LUE virtual ConstDoubleArray &TimeIntegrate(
-    //     const NekDouble timestep,
-    //     const TimeIntegrationSchemeOperators &op) = 0;
+    LUE virtual void InitializeScheme(
+        const NekDouble deltaT, ConstDoubleArray &y_0,
+        const NekDouble time, const TimeIntegrationSchemeOperators &op) = 0;
 
-    inline int GetFirstDim(ConstTripleArray &y) const
+    LUE virtual ConstDoubleArray &TimeIntegrate(
+        const int timestep, const NekDouble delta_t,
+        const TimeIntegrationSchemeOperators &op) = 0 ;
+
+protected:
+    // These methods should never be used directly, only used by child classes.
+    LUE TimeIntegrationScheme(std::string variant, unsigned int order,
+                              std::vector<NekDouble> freeParams)
     {
-        return y[0].num_elements();
+        boost::ignore_unused(variant, order, freeParams);
     }
 
-    inline int GetSecondDim(ConstTripleArray &y) const
+    LUE TimeIntegrationScheme(const TimeIntegrationScheme &in)
     {
-        return y[0][0].num_elements();
+        boost::ignore_unused(in);
+
+        NEKERROR(ErrorUtil::efatal, "Copy Constructor for the "
+                                    "TimeIntegrationScheme class should not be "
+                                    "called");
+    }
+
+    virtual ~TimeIntegrationScheme()
+    {
     }
 
 }; // end class TimeIntegrationScheme

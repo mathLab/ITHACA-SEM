@@ -84,8 +84,7 @@ public:
                                     const TimeIntegrationSchemeGLMSharedPtr &rhs);
 
 protected:
-
-    // This should never be used directly... only used by child classes...
+    // These methods should never be used directly, only used by child classes.
     LUE TimeIntegrationSchemeGLM(std::string variant, unsigned int order,
                                  std::vector<NekDouble> freeParams) :
         TimeIntegrationScheme(variant, order, freeParams)
@@ -99,7 +98,7 @@ protected:
 
     TimeIntegrationAlgorithmGLMVector m_integration_phases;
 
-    TimeIntegrationSolutionGLMSharedPtr m_solvector;
+    TimeIntegrationSolutionGLMSharedPtr m_solVector;
 
 }; // end class TimeIntegrationScheme
 

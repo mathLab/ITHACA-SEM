@@ -41,7 +41,11 @@ namespace LibUtilities
 
 std::ostream &operator<<(std::ostream &os, const FractionalInTimeIntegrationScheme &rhs)
 {
-    os << "Time Integration Scheme: " << rhs.GetFullName() << ".\n";
+    os << "Time Integration Scheme: " << rhs.GetFullName() << std::endl
+       << "Base " << rhs.m_base << std::endl
+       << "Number of quadature points " << rhs.m_nQuadPts << std::endl
+       << "Alpha " << rhs.m_alpha << std::endl;
+
     return os;
 }
 
@@ -49,6 +53,7 @@ std::ostream &operator<<(std::ostream &os,
                          const FractionalInTimeIntegrationSchemeSharedPtr &rhs)
 {
     os << *rhs.get();
+
     return os;
 }
 

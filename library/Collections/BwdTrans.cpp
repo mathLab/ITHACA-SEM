@@ -162,7 +162,7 @@ class BwdTrans_AVX : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
-            ASSERTL0(false, "AVX operator not implemented yet!");
+            (*m_oper)(input, output);
         }
 
         virtual void operator()(
@@ -176,6 +176,7 @@ class BwdTrans_AVX : public Operator
         }
 
     protected:
+        std::shared_ptr<AVX::BwdTrans> m_oper;
 
 
     private:
@@ -211,6 +212,7 @@ class BwdTrans_AVX : public Operator
             }
 
             // Generate operator string and create operator.
+            // For now hardcoded BwdTrans
             std::string op_string = "BwdTrans_Quad_Regular";
             // if (deformed) // BwdTrans can always use regular
             // {
@@ -233,17 +235,20 @@ class BwdTrans_AVX : public Operator
             std::cout << op_string << '\n';
             auto oper = AVX::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmt);
-            // // If the operator needs the Jacobian, provide it here
-            // if (oper->NeedsJac())
-            // {
-            //     oper->SetJac(jac);
-            // }
+            // If the operator needs the Jacobian, provide it here
+            if (oper->NeedsJac())
+            {
+                oper->SetJac(jac);
+            }
 
             // // If the operator needs the derivative factors, provide it here
             // if (oper->NeedsDF())
             // {
             //     oper->SetDF(df);
             // }
+
+            m_oper = std::dynamic_pointer_cast<AVX::BwdTrans>(oper);
+            ASSERTL0(m_oper, "Failed to cast pointer.");
 
 
         }

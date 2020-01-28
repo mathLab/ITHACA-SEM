@@ -90,8 +90,8 @@ REGISTER(ForwardEuler);
 // EulerExponentialTimeIntegrationSchemes.h
 REGISTER(EulerExponential);
 
-// FITTimeIntegrationSchemes.h
-REGISTER(FractionalInTime);
+// TimeIntegrationSchemesFIT.h
+REGISTER(FractionalIn);
 
 // CNABTimeIntegrationScheme.h
 REGISTER(CNAB);

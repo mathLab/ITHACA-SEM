@@ -42,7 +42,9 @@
 
 #define LUE LIB_UTILITIES_EXPORT
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
+
 #include <LibUtilities/TimeIntegration/IMEXdirkTimeIntegrationSchemes.h>
 #include <LibUtilities/TimeIntegration/IMEXGearTimeIntegrationScheme.h>
 
@@ -54,12 +56,12 @@ namespace LibUtilities
 ///////////////////////////////////////////////////////////////////////////////
 // IMEX Order N
 
-class IMEXTimeIntegrationScheme : public TimeIntegrationScheme
+class IMEXTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     IMEXTimeIntegrationScheme(std::string variant, unsigned int order,
                               std::vector<NekDouble> freeParams) :
-        TimeIntegrationScheme(variant, order, freeParams)
+        TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
         if( variant == "dirk" )
         {
@@ -71,9 +73,9 @@ public:
             int s     = freeParams[0];
             int sigma = freeParams[1];
 
-            m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-            m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-                new TimeIntegrationSchemeData(this));
+            m_integration_phases    = TimeIntegrationAlgorithmGLMVector(1);
+            m_integration_phases[0] = TimeIntegrationAlgorithmGLMSharedPtr(
+                new TimeIntegrationAlgorithmGLM(this));
 
             if( order == 1 && s == 1 && sigma == 1 )
             {
@@ -89,11 +91,11 @@ public:
         }
         else if( variant == "Gear" )
         {
-            m_integration_phases    = TimeIntegrationSchemeDataVector(2);
-            m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-                new TimeIntegrationSchemeData(this));
-            m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
-                new TimeIntegrationSchemeData(this));
+            m_integration_phases    = TimeIntegrationAlgorithmGLMVector(2);
+            m_integration_phases[0] = TimeIntegrationAlgorithmGLMSharedPtr(
+                new TimeIntegrationAlgorithmGLM(this));
+            m_integration_phases[1] = TimeIntegrationAlgorithmGLMSharedPtr(
+                new TimeIntegrationAlgorithmGLM(this));
 
             IMEXdirkTimeIntegrationScheme::SetupSchemeData(
                 m_integration_phases[0], 2, std::vector<NekDouble> {2, 2});
@@ -107,12 +109,12 @@ public:
                      "IMEX Time integration scheme bad order (1-4): " +
                      std::to_string(order));
 
-            m_integration_phases = TimeIntegrationSchemeDataVector(order);
+            m_integration_phases = TimeIntegrationAlgorithmGLMVector(order);
 
             for( unsigned int n=0; n<order; ++n )
             {
-                m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
-                    new TimeIntegrationSchemeData(this));
+                m_integration_phases[n] = TimeIntegrationAlgorithmGLMSharedPtr(
+                    new TimeIntegrationAlgorithmGLM(this));
             }
 
             // Last phase
@@ -193,7 +195,7 @@ public:
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
+    LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase,
                                     int order)
     {
         const NekDouble ABcoefficients[5] = {      0.,

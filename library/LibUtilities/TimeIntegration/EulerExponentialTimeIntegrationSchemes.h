@@ -42,8 +42,8 @@
 
 #define LUE LIB_UTILITIES_EXPORT
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
 
 #include <utilities/NekMesh/ProcessModules/ProcessVarOpti/Evaluator.hxx>
 
@@ -58,12 +58,12 @@ namespace LibUtilities
 ///////////////////////////////////////////////////////////////////////////////
 //  EulerExponential
 
-class EulerExponentialTimeIntegrationScheme : public TimeIntegrationScheme
+class EulerExponentialTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     EulerExponentialTimeIntegrationScheme(std::string variant, unsigned int order,
                                           std::vector<NekDouble> freeParams) :
-        TimeIntegrationScheme(variant, order, freeParams)
+        TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
         // Currently up to 4th order is implemented because the number
         // of steps is the same as the order.
@@ -76,14 +76,14 @@ public:
                  "EulerExponential Time integration scheme bad order: " +
                  std::to_string(order));
 
-        m_integration_phases = TimeIntegrationSchemeDataVector(order);
+        m_integration_phases = TimeIntegrationAlgorithmGLMVector(order);
 
         // Currently the next lowest order is used to seed the current
         // order. This is not correct but is an okay approximation.
         for( unsigned int n=0; n<order; ++n )
         {
-            m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
-                new TimeIntegrationSchemeData(this));
+            m_integration_phases[n] = TimeIntegrationAlgorithmGLMSharedPtr(
+                new TimeIntegrationAlgorithmGLM(this));
 
             EulerExponentialTimeIntegrationScheme::SetupSchemeData(
                 m_integration_phases[n], variant, n+1);
@@ -123,7 +123,7 @@ public:
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
+    LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase,
                                     std::string variant, int order)
     {
         phase->m_schemeType = eExponential;
@@ -193,8 +193,8 @@ public:
         phase->CheckAndVerify();
     }
 
-    virtual void SetupSchemeExponentialData(TimeIntegrationSchemeData *phase,
-                                            NekDouble deltaT) const
+    virtual void InitializeSecondaryData(TimeIntegrationAlgorithmGLM *phase,
+					 NekDouble deltaT) const
     {
         // Assumptions the two-dimensional Lambda matrix is a diagonal
         // matrix thus values are non zero if and only i=j. As such,
@@ -385,6 +385,65 @@ public:
         }
 
 	// std::cout << *phase << std::endl;
+    }
+
+    LUE void SetExponentialCoefficients(Array<OneD,
+                                        std::complex<NekDouble>> &Lambda)
+    {
+        ASSERTL0(!m_integration_phases.empty(), "No scheme")
+
+	// Assumption: the one-dimensional Lambda matrix is a diagonal
+        // matrix thus values are non zero if and only i=j. As such,
+        // the diagonal Lambda values are stored an array of complex
+        // numbers.
+
+	// Assume that each phase is an exponential integrator.
+        for (int i = 0; i < m_integration_phases.size(); i++)
+	{
+	    m_integration_phases[i]->m_L = Lambda;
+
+	    // Anytime the coefficents are updated reset the nVars to
+	    // be assured that the exponential matrices are
+	    // recalculated (e.g. the number of variables may remain
+	    // the same but the coefficients have changed).
+	    m_integration_phases[i]->m_lastNVars = 0;
+	}
+    }
+
+    inline NekDouble factorial( unsigned int n ) const
+    {
+        return (n == 1 || n == 0) ? 1 : n * factorial(n - 1);
+    }
+
+    std::complex<NekDouble> phi_function(const unsigned int order,
+                                         const std::complex<NekDouble> z) const
+    {
+        // Central to the implementation of exponential integrators is
+        // the evaluation of exponential-like functions, commonly
+        // denoted by φ functions. It is convenient to define φ0(z) =
+        // e^z, in which case the functions obey the recurrence
+        // relation.
+
+        // 0: exp(z);
+        // 1: (exp(z)     - 1.0) / (z);
+        // 2: (exp(z) - z - 1.0) / (z * z);
+
+        if( z == 0.0 )
+	{
+	    return 1.0 / factorial( order );
+	}
+
+	if( order == 0 )
+	{
+	    return exp( z );
+	}
+	else
+	{
+	    return (phi_function( order-1, z) -
+		    1.0 / factorial( order-1 ) ) / z;
+	}
+
+	return 0;
     }
 
 }; // end class EulerExponentialTimeIntegrator

@@ -42,8 +42,8 @@
 
 #define LUE LIB_UTILITIES_EXPORT
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
 
 namespace Nektar
 {
@@ -53,12 +53,12 @@ namespace LibUtilities
 ////////////////////////////////////////////////////////////////////////////////
 // Runge Kutta Order N where the number of stages == order
 
-class RungeKuttaTimeIntegrationScheme : public TimeIntegrationScheme
+class RungeKuttaTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     RungeKuttaTimeIntegrationScheme(std::string variant, unsigned int order,
 				    std::vector<NekDouble> freeParams) :
-        TimeIntegrationScheme(variant, order, freeParams)
+        TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
         ASSERTL1((variant == "" || variant == "Classic" ||
 		  variant == "SSP" || variant == "ImprovedEuler"),
@@ -75,9 +75,9 @@ public:
                  "Runge Kutta Time integration scheme bad order "
                  "Std (1-5) or SSP (1-3): " + std::to_string(order));
 
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
+        m_integration_phases    = TimeIntegrationAlgorithmGLMVector(1);
+        m_integration_phases[0] = TimeIntegrationAlgorithmGLMSharedPtr(
+            new TimeIntegrationAlgorithmGLM(this));
 
         RungeKuttaTimeIntegrationScheme::SetupSchemeData(
             m_integration_phases[0], variant, order, freeParams);
@@ -115,7 +115,7 @@ public:
         }
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
+    LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase,
                                     std::string variant, unsigned int order,
 				    std::vector<NekDouble> freeParams)
     {

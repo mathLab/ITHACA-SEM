@@ -42,8 +42,8 @@
 
 #define LUE LIB_UTILITIES_EXPORT
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
 
 #include <LibUtilities/TimeIntegration/EulerTimeIntegrationSchemes.h>
 #include <LibUtilities/TimeIntegration/IMEXdirkTimeIntegrationSchemes.h>
@@ -56,24 +56,24 @@ namespace LibUtilities
 ///////////////////////////////////////////////////////////////////////////////
 // Adams Moulton Order N
 
-class AdamsMoultonTimeIntegrationScheme : public TimeIntegrationScheme
+class AdamsMoultonTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     AdamsMoultonTimeIntegrationScheme(std::string variant, unsigned int order,
                                       std::vector<NekDouble> freeParams) :
-        TimeIntegrationScheme(variant, order, freeParams)
+        TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
         // Currently up to 4th order is implemented.
         ASSERTL1(0 < order && order <= 4,
                  "AdamsMoulton Time integration scheme bad order (1-4): " +
                  std::to_string(order));
 
-        m_integration_phases = TimeIntegrationSchemeDataVector(order);
+        m_integration_phases = TimeIntegrationAlgorithmGLMVector(order);
 
         for( unsigned int n=0; n<order; ++n )
         {
-            m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
-                new TimeIntegrationSchemeData(this));
+            m_integration_phases[n] = TimeIntegrationAlgorithmGLMSharedPtr(
+                new TimeIntegrationAlgorithmGLM(this));
         }
 
         // Next to last phase
@@ -146,7 +146,7 @@ public:
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
+    LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase,
                                     int order)
     {
         // The 3rd and 4th order tableaus have not been validated!!!!!

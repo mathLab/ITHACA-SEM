@@ -39,7 +39,9 @@
 
 #pragma once
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
+
 #include <LibUtilities/TimeIntegration/IMEXdirkTimeIntegrationSchemes.h>
 
 #define LUE LIB_UTILITIES_EXPORT
@@ -49,21 +51,21 @@ namespace Nektar
 namespace LibUtilities
 {
 
-class IMEXGearTimeIntegrationScheme : public TimeIntegrationScheme
+class IMEXGearTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     IMEXGearTimeIntegrationScheme(std::string variant, unsigned int order,
                                   std::vector<NekDouble> freeParams) :
-        TimeIntegrationScheme("", 2, freeParams)
+        TimeIntegrationSchemeGLM("", 2, freeParams)
     {
         boost::ignore_unused(order);
         boost::ignore_unused(variant);
 
-        m_integration_phases    = TimeIntegrationSchemeDataVector(2);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-        m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
+        m_integration_phases    = TimeIntegrationAlgorithmGLMVector(2);
+        m_integration_phases[0] = TimeIntegrationAlgorithmGLMSharedPtr(
+            new TimeIntegrationAlgorithmGLM(this));
+        m_integration_phases[1] = TimeIntegrationAlgorithmGLMSharedPtr(
+            new TimeIntegrationAlgorithmGLM(this));
 
         IMEXdirkTimeIntegrationScheme::SetupSchemeData(
             m_integration_phases[0], 2, std::vector<NekDouble> {2, 2});
@@ -98,7 +100,7 @@ public:
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
         phase->m_variant = "Gear";

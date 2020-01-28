@@ -39,7 +39,8 @@
 
 #pragma once
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
 
 #define LUE LIB_UTILITIES_EXPORT
 
@@ -48,23 +49,23 @@ namespace Nektar
 namespace LibUtilities
 {
 
-class MCNABTimeIntegrationScheme : public TimeIntegrationScheme
+class MCNABTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     MCNABTimeIntegrationScheme(std::string variant, unsigned int order,
 			       std::vector<NekDouble> freeParams) :
-        TimeIntegrationScheme("", 2, freeParams)
+        TimeIntegrationSchemeGLM("", 2, freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
 
-        m_integration_phases    = TimeIntegrationSchemeDataVector(3);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-        m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-        m_integration_phases[2] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
+        m_integration_phases    = TimeIntegrationAlgorithmGLMVector(3);
+        m_integration_phases[0] = TimeIntegrationAlgorithmGLMSharedPtr(
+            new TimeIntegrationAlgorithmGLM(this));
+        m_integration_phases[1] = TimeIntegrationAlgorithmGLMSharedPtr(
+            new TimeIntegrationAlgorithmGLM(this));
+        m_integration_phases[2] = TimeIntegrationAlgorithmGLMSharedPtr(
+            new TimeIntegrationAlgorithmGLM(this));
 
         IMEXdirkTimeIntegrationScheme::SetupSchemeData(
             m_integration_phases[0], 3, std::vector<NekDouble> {3, 4});
@@ -101,7 +102,7 @@ public:
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
         phase->m_order = 2;

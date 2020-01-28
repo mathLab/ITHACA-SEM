@@ -40,7 +40,8 @@
 
 #pragma once
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
 
 #define LUE LIB_UTILITIES_EXPORT
 
@@ -54,12 +55,12 @@ namespace LibUtilities
 //  schemes, sigma is the number of explicit stage scheme and p is the
 //  combined order of the scheme.
 
-class IMEXdirkTimeIntegrationScheme : public TimeIntegrationScheme
+class IMEXdirkTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     IMEXdirkTimeIntegrationScheme(std::string variant, unsigned int order,
                                   std::vector<NekDouble> freeParams) :
-        TimeIntegrationScheme(variant, order, freeParams)
+        TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
         ASSERTL1(freeParams.size() == 2,
                  "IMEX DIRK Time integration scheme invalid number "
@@ -73,9 +74,9 @@ public:
 
         std::cerr << __LINE__ << "  " << s << "  " << sigma << std::endl;
 
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
+        m_integration_phases    = TimeIntegrationAlgorithmGLMVector(1);
+        m_integration_phases[0] = TimeIntegrationAlgorithmGLMSharedPtr(
+            new TimeIntegrationAlgorithmGLM(this));
 
         if( order == 1 && s == 1 && sigma == 1 )
         {
@@ -120,7 +121,7 @@ public:
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
+    LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase,
                                     unsigned int order,
                                     std::vector<NekDouble> freeParams)
     {
@@ -205,7 +206,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 // IMEX Dirk 1 1 1 : Forward - Backward Euler IMEX
-    LUE static void SetupSchemeData_1_1_1(TimeIntegrationSchemeDataSharedPtr &phase)
+    LUE static void SetupSchemeData_1_1_1(TimeIntegrationAlgorithmGLMSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
         phase->m_order = 1;
@@ -254,7 +255,7 @@ public:
 
  ///////////////////////////////////////////////////////////////////////////////
 // IMEX Dirk 1 2 1 : Forward - Backward Euler IMEX w/B implicit == B explicit
-  LUE static void SetupSchemeData_1_2_1(TimeIntegrationSchemeDataSharedPtr &phase)
+  LUE static void SetupSchemeData_1_2_1(TimeIntegrationAlgorithmGLMSharedPtr &phase)
   {
       phase->m_A[0][1][1] = 1.0;
       phase->m_B[0][0][1] = 1.0;
@@ -267,7 +268,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 // IMEX Dirk 1 2 2 : Implict-Explicit Midpoint IMEX
-  LUE static void SetupSchemeData_1_2_2(TimeIntegrationSchemeDataSharedPtr &phase)
+  LUE static void SetupSchemeData_1_2_2(TimeIntegrationAlgorithmGLMSharedPtr &phase)
   {
       phase->m_A[0][1][1] = 1.0 / 2.0;
       phase->m_B[0][0][1] = 1.0;
@@ -280,7 +281,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 // IMEX Dirk 2 2 2 : L Stable, two stage, second order IMEX
-  LUE static void SetupSchemeData_2_2_2(TimeIntegrationSchemeDataSharedPtr &phase)
+  LUE static void SetupSchemeData_2_2_2(TimeIntegrationAlgorithmGLMSharedPtr &phase)
   {
       NekDouble glambda = 0.2928932188134524756;
       NekDouble gdelta  = -0.7071067811865475244;
@@ -304,7 +305,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 // IMEX Dirk 2 3 2 : L Stable, two stage, second order IMEX
-  LUE static void SetupSchemeData_2_3_2(TimeIntegrationSchemeDataSharedPtr &phase)
+  LUE static void SetupSchemeData_2_3_2(TimeIntegrationAlgorithmGLMSharedPtr &phase)
   {
       NekDouble lambda = (2.0 - sqrt(2.0)) / 2.0;
       NekDouble delta  = -2.0 * sqrt(2.0) / 3.0;
@@ -328,7 +329,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 // IMEX Dirk 2 3 3 : L Stable, two stage, third order IMEX
-  LUE static void SetupSchemeData_2_3_3(TimeIntegrationSchemeDataSharedPtr &phase)
+  LUE static void SetupSchemeData_2_3_3(TimeIntegrationAlgorithmGLMSharedPtr &phase)
   {
       NekDouble glambda = 0.788675134594813;
 
@@ -351,7 +352,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 // IMEX Dirk 3 4 3 : L Stable, three stage, third order IMEX
-  LUE static void SetupSchemeData_3_4_3(TimeIntegrationSchemeDataSharedPtr &phase)
+  LUE static void SetupSchemeData_3_4_3(TimeIntegrationAlgorithmGLMSharedPtr &phase)
   {
       NekDouble lambda = 0.4358665215;
 
@@ -388,7 +389,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 // IMEX Dirk 4 4 3 : L Stable, four stage, third order IMEX
-  LUE static void SetupSchemeData_4_4_3(TimeIntegrationSchemeDataSharedPtr &phase)
+  LUE static void SetupSchemeData_4_4_3(TimeIntegrationAlgorithmGLMSharedPtr &phase)
   {
       phase->m_A[0][1][1] = 1.0 / 2.0;
       phase->m_A[0][2][1] = 1.0 / 6.0;

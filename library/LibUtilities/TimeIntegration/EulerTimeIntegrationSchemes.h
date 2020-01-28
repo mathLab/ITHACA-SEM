@@ -42,8 +42,8 @@
 
 #define LUE LIB_UTILITIES_EXPORT
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
 
 namespace Nektar
 {
@@ -53,19 +53,19 @@ namespace LibUtilities
 ///////////////////////////////////////////////////////////////////////////////
 // Backward Euler
 
-class BackwardEulerTimeIntegrationScheme : public TimeIntegrationScheme
+class BackwardEulerTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     BackwardEulerTimeIntegrationScheme(std::string variant, unsigned int order,
 				       std::vector<NekDouble> freeParams) :
-        TimeIntegrationScheme("", 1, freeParams)
+        TimeIntegrationSchemeGLM("", 1, freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
 
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
+        m_integration_phases    = TimeIntegrationAlgorithmGLMVector(1);
+        m_integration_phases[0] = TimeIntegrationAlgorithmGLMSharedPtr(
+            new TimeIntegrationAlgorithmGLM(this));
 
         BackwardEulerTimeIntegrationScheme::SetupSchemeData(
             m_integration_phases[0]);
@@ -98,7 +98,7 @@ public:
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase)
     {
         phase->m_schemeType = eDiagonallyImplicit;
         phase->m_order = 1;
@@ -133,19 +133,19 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 // Forward Euler
 
-class ForwardEulerTimeIntegrationScheme : public TimeIntegrationScheme
+class ForwardEulerTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     ForwardEulerTimeIntegrationScheme(std::string variant, unsigned int order,
 				      std::vector<NekDouble> freeParams) :
-        TimeIntegrationScheme("", 1, freeParams)
+        TimeIntegrationSchemeGLM("", 1, freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
 
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
+        m_integration_phases    = TimeIntegrationAlgorithmGLMVector(1);
+        m_integration_phases[0] = TimeIntegrationAlgorithmGLMSharedPtr(
+            new TimeIntegrationAlgorithmGLM(this));
 
         ForwardEulerTimeIntegrationScheme::SetupSchemeData(
             m_integration_phases[0]);
@@ -178,7 +178,7 @@ public:
         return 2.784;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase)
     {
         phase->m_schemeType = eExplicit;
         phase->m_order = 1;

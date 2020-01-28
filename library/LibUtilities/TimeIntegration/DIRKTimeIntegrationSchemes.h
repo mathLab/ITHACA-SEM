@@ -40,7 +40,8 @@
 
 #pragma once
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
 
 #define LUE LIB_UTILITIES_EXPORT
 
@@ -51,21 +52,21 @@ namespace LibUtilities
 
 ///////////////////////////////////////////////////////////////////////////////
 // DIRK Order N
-class DIRKTimeIntegrationScheme : public TimeIntegrationScheme
+class DIRKTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
   DIRKTimeIntegrationScheme(std::string variant, unsigned int order,
                             std::vector<NekDouble> freeParams) :
-    TimeIntegrationScheme(variant, order, freeParams)
+    TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
         // Currently 2nd and 3rd order are implemented.
         ASSERTL1(2 <= order && order <= 3,
                  "Runge Kutta Time Diagonally Implicit integration scheme bad order (2-3): " +
                  std::to_string(order));
 
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
+        m_integration_phases    = TimeIntegrationAlgorithmGLMVector(1);
+        m_integration_phases[0] = TimeIntegrationAlgorithmGLMSharedPtr(
+            new TimeIntegrationAlgorithmGLM(this));
 
         DIRKTimeIntegrationScheme::SetupSchemeData( m_integration_phases[0],
                                                     order);
@@ -95,7 +96,7 @@ public:
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
+    LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase,
                                     unsigned int order)
     {
         phase->m_schemeType = eDiagonallyImplicit;

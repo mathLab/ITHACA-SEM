@@ -42,7 +42,9 @@
 
 #define LUE LIB_UTILITIES_EXPORT
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
+
 #include <LibUtilities/TimeIntegration/IMEXdirkTimeIntegrationSchemes.h>
 
 namespace Nektar
@@ -53,12 +55,12 @@ namespace LibUtilities
 ///////////////////////////////////////////////////////////////////////////////
 // BDF Implicit Order N
 
-class BDFImplicitTimeIntegrationScheme : public TimeIntegrationScheme
+class BDFImplicitTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     BDFImplicitTimeIntegrationScheme(std::string variant, unsigned int order,
                                      std::vector<NekDouble> freeParams) :
-        TimeIntegrationScheme(variant, order, freeParams)
+        TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
         // Currently up to 4th order is implemented.
 
@@ -67,12 +69,12 @@ public:
                  "BDFImplicit Time integration scheme bad order (1-4): " +
                  std::to_string(order));
 
-        m_integration_phases = TimeIntegrationSchemeDataVector(order);
+        m_integration_phases = TimeIntegrationAlgorithmGLMVector(order);
 
         for( unsigned int n=0; n<order; ++n )
         {
-            m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
-                new TimeIntegrationSchemeData(this));
+            m_integration_phases[n] = TimeIntegrationAlgorithmGLMSharedPtr(
+                new TimeIntegrationAlgorithmGLM(this));
         }
 
         // Next to last phase
@@ -141,7 +143,7 @@ public:
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
+    LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase,
                                     unsigned int order)
     {
         const NekDouble ABcoefficients[5] = {      0.,

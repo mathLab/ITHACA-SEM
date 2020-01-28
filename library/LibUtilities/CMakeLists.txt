@@ -270,16 +270,19 @@ SET(TimeIntegrationHeaders
         ./TimeIntegration/MCNABTimeIntegrationScheme.h
         ./TimeIntegration/RungeKuttaTimeIntegrationSchemes.h
         ./TimeIntegration/TimeIntegrationScheme.h
-        ./TimeIntegration/TimeIntegrationSchemeData.h
-        ./TimeIntegration/TimeIntegrationSolution.h
+        ./TimeIntegration/TimeIntegrationSchemeFIT.h
+        ./TimeIntegration/TimeIntegrationSchemeGLM.h
+        ./TimeIntegration/TimeIntegrationAlgorithmGLM.h
+        ./TimeIntegration/TimeIntegrationSolutionGLM.h
 )
 
 SET(TimeIntegrationSources
         ./TimeIntegration/SchemeInitializer.cpp
         ./TimeIntegration/TimeIntegrationScheme.cpp
         ./TimeIntegration/TimeIntegrationSchemeFIT.cpp
-        ./TimeIntegration/TimeIntegrationSchemeData.cpp
-        ./TimeIntegration/TimeIntegrationSolution.cpp
+        ./TimeIntegration/TimeIntegrationSchemeGLM.cpp
+        ./TimeIntegration/TimeIntegrationAlgorithmGLM.cpp
+        ./TimeIntegration/TimeIntegrationSolutionGLM.cpp
 )
 
 

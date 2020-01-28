@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File TimeIntegrationSchemeData.cpp
+// File TimeIntegrationAlgorithmGLM.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,11 +33,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
-
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
-#include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
+
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSolutionGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
 
 #include <iostream>
@@ -52,17 +53,17 @@ namespace LibUtilities
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-TimeIntegrationSchemeData::TimeIntegrationSolutionSharedPtr
-    TimeIntegrationSchemeData::InitializeData(
+TimeIntegrationSolutionGLMSharedPtr
+    TimeIntegrationAlgorithmGLM::InitializeData(
         const NekDouble deltaT, ConstDoubleArray &y_0, const NekDouble time,
         const TimeIntegrationSchemeOperators &op)
 {
-    // create a TimeIntegrationSolution object based upon the
+    // create a TimeIntegrationSolutionGLM object based upon the
     // initial value. Initialise all other multi-step values
     // and derivatives to zero
 
-    TimeIntegrationSolutionSharedPtr y_out =
-        MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(this, y_0,
+    TimeIntegrationSolutionGLMSharedPtr y_out =
+        MemoryManager<TimeIntegrationSolutionGLM>::AllocateSharedPtr(this, y_0,
                                                                   time, deltaT);
 
     if (m_schemeType == eExplicit || m_schemeType == eExponential)
@@ -102,10 +103,10 @@ TimeIntegrationSchemeData::TimeIntegrationSolutionSharedPtr
     return y_out;
 }
 
-TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
-    TimeIntegrate(const NekDouble deltaT,
-                  TimeIntegrationSolutionSharedPtr &solvector,
-                  const TimeIntegrationSchemeOperators &op)
+ConstDoubleArray &TimeIntegrationAlgorithmGLM::
+TimeIntegrate(const NekDouble deltaT,
+              TimeIntegrationSolutionGLMSharedPtr &solvector,
+              const TimeIntegrationSchemeOperators &op)
 {
     // ASSERTL1( !(m_parent->GetIntegrationSchemeType() == eImplicit), "Fully
     // Implicit integration scheme cannot be handled by this routine." );
@@ -174,8 +175,8 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
         // 1.2 Copy the required information from the master
         //     solution vector to the input solution vector of
         //     the current scheme
-        TimeIntegrationSolutionSharedPtr solvector_in =
-            MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(
+        TimeIntegrationSolutionGLMSharedPtr solvector_in =
+            MemoryManager<TimeIntegrationSolutionGLM>::AllocateSharedPtr(
                 this); // input solution vector of the current scheme
 
         for (int n = 0; n < nCurSchemeVals; n++)
@@ -207,8 +208,8 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
 
         // STEP 2: time-integrate for one step using the
         // current scheme
-        TimeIntegrationSolutionSharedPtr solvector_out =
-            MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(
+        TimeIntegrationSolutionGLMSharedPtr solvector_out =
+            MemoryManager<TimeIntegrationSolutionGLM>::AllocateSharedPtr(
                 this, nvar,
                 npoints); // output solution vector of the current scheme
 
@@ -348,8 +349,8 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
     }
     else
     {
-        TimeIntegrationSolutionSharedPtr solvector_new =
-            MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(
+        TimeIntegrationSolutionGLMSharedPtr solvector_new =
+            MemoryManager<TimeIntegrationSolutionGLM>::AllocateSharedPtr(
                 this, nvar, npoints);
 
         TimeIntegrate(deltaT,
@@ -368,7 +369,7 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
 
 // Does the actual multi-stage multi-step integration.
 void
-TimeIntegrationSchemeData::TimeIntegrate( const NekDouble deltaT,
+TimeIntegrationAlgorithmGLM::TimeIntegrate( const NekDouble deltaT,
                                           ConstTripleArray &y_old,
                                           ConstSingleArray &t_old,
                                           TripleArray &y_new,
@@ -465,7 +466,8 @@ TimeIntegrationSchemeData::TimeIntegrate( const NekDouble deltaT,
     {
         if (m_lastDeltaT != deltaT || m_lastNVars != GetFirstDim(y_old) )
         {
-            m_parent->SetupSchemeExponentialData( this, deltaT );
+            ((TimeIntegrationSchemeGLM *) m_parent)->
+              InitializeSecondaryData( this, deltaT );
 
             m_lastDeltaT = deltaT;
             m_lastNVars  = GetFirstDim(y_old);
@@ -763,7 +765,7 @@ TimeIntegrationSchemeData::TimeIntegrate( const NekDouble deltaT,
 
 } // end TimeIntegrate()
 
-void TimeIntegrationSchemeData::CheckIfFirstStageEqualsOldSolution()
+void TimeIntegrationAlgorithmGLM::CheckIfFirstStageEqualsOldSolution()
 {
     // First stage equals old solution if:
     // 1. the first row of the coefficient matrix A consists of zeros
@@ -801,7 +803,7 @@ void TimeIntegrationSchemeData::CheckIfFirstStageEqualsOldSolution()
     m_firstStageEqualsOldSolution = true;
 }
 
-void TimeIntegrationSchemeData::CheckIfLastStageEqualsNewSolution()
+void TimeIntegrationAlgorithmGLM::CheckIfLastStageEqualsNewSolution()
 {
     // Last stage equals new solution if:
     // 1. the last row of the coefficient matrix A is equal to the first row of
@@ -836,7 +838,7 @@ void TimeIntegrationSchemeData::CheckIfLastStageEqualsNewSolution()
     m_lastStageEqualsNewSolution = true;
 }
 
-void TimeIntegrationSchemeData::VerifyIntegrationSchemeType()
+void TimeIntegrationAlgorithmGLM::VerifyIntegrationSchemeType()
 {
 #ifdef DEBUG
     int IMEXdim = m_A.num_elements();
@@ -891,7 +893,7 @@ void TimeIntegrationSchemeData::VerifyIntegrationSchemeType()
 #endif
 }
 
-bool TimeIntegrationSchemeData::CheckTimeIntegrateArguments(
+bool TimeIntegrationAlgorithmGLM::CheckTimeIntegrateArguments(
           ConstTripleArray &y_old,
           ConstSingleArray &t_old,
           TripleArray &y_new,
@@ -926,12 +928,12 @@ bool TimeIntegrationSchemeData::CheckTimeIntegrateArguments(
 
 std::ostream &operator<<(
     std::ostream &os,
-    const TimeIntegrationSchemeData::TimeIntegrationSchemeDataSharedPtr &rhs)
+    const TimeIntegrationAlgorithmGLMSharedPtr &rhs)
 {
     return operator<<(os, *rhs);
 }
 
-std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeData &rhs)
+std::ostream &operator<<(std::ostream &os, const TimeIntegrationAlgorithmGLM &rhs)
 {
     int r                          = rhs.m_numsteps;
     int s                          = rhs.m_numstages;

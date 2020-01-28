@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: FractionalInTimeTimeIntegrationScheme.h
+// File: FractionalInTimeIntegrationScheme.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -37,6 +37,7 @@
 #include <string>
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationTypes.h>
 
 #define LUE LIB_UTILITIES_EXPORT
 
@@ -47,19 +48,18 @@ namespace LibUtilities
 
 ///////////////////////////////////////////////////////////////////////////////
 //  FractionalInTime
-
-class FractionalInTimeTimeIntegrationScheme : public TimeIntegrationScheme
+class FractionalInTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    typedef       Array<OneD,       Array<OneD, Array<OneD, std::complex<NekDouble>>>>      ComplexTripleArray;
-    typedef const Array<OneD, const Array<OneD,             std::complex<NekDouble>>>  ConstComplexDoubleArray;
-    typedef       Array<OneD,       Array<OneD,             std::complex<NekDouble>>>       ComplexDoubleArray;
-    typedef const Array<OneD, const                         std::complex<NekDouble>>   ConstComplexSingleArray;
-    typedef       Array<OneD,                               std::complex<NekDouble>>        ComplexSingleArray;
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                        const FractionalInTimeIntegrationScheme &rhs);
+    LUE friend std::ostream &operator<<(std::ostream &os,
+                                        const FractionalInTimeIntegrationSchemeSharedPtr &rhs);
 
-    FractionalInTimeTimeIntegrationScheme(std::string variant, unsigned int order,
-                             std::vector<NekDouble> freeParams) :
-        TimeIntegrationScheme(variant, order, freeParams)
+    FractionalInTimeIntegrationScheme(std::string variant, unsigned int order,
+                                      std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme(variant, order, freeParams),
+        m_name("FractionalInTime")
     {
         m_variant    = variant;
         m_order      = order;
@@ -71,7 +71,7 @@ public:
                  std::to_string(order));
     }
 
-    virtual ~FractionalInTimeTimeIntegrationScheme()
+    virtual ~FractionalInTimeIntegrationScheme()
     {
     }
 
@@ -79,7 +79,7 @@ public:
                                                  std::vector<NekDouble> freeParams)
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            FractionalInTimeTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
+            FractionalInTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
 
         return p;
     }
@@ -117,6 +117,11 @@ public:
         return 1.0;
     }
 
+    LUE unsigned int GetNumIntegrationPhases() const
+    {
+        return 1;
+    }
+
     // Gets the solution Vector
     virtual const TripleArray &GetSolutionVector() const
     {
@@ -131,7 +136,7 @@ public:
 
     // The worker methods
     LUE virtual void InitializeScheme(
-        const NekDouble deltaT, TimeIntegrationScheme::ConstDoubleArray &y_0,
+        const NekDouble deltaT, ConstDoubleArray &y_0,
         const NekDouble time, const TimeIntegrationSchemeOperators &op);
 
     LUE virtual ConstDoubleArray &TimeIntegrate(
@@ -238,7 +243,7 @@ protected:
                          const TimeIntegrationSchemeOperators &op,
                          Instance &instance);
 
-    std::string m_name{"FractionalInTime"};
+    std::string m_name;
     std::string m_variant;
     unsigned int m_order{0};
     std::vector< NekDouble > m_freeParams;
@@ -289,7 +294,12 @@ protected:
     // Mulitply the last Ahat array, transposed by J
     Array<OneD, NekDouble> m_AhattJ;
 
-}; // end class FractionalInTimeTimeIntegrator
+}; // end class FractionalInTimeIntegrator
+
+LUE std::ostream &operator<<(std::ostream &os,
+                             const FractionalInTimeIntegrationScheme &rhs);
+LUE std::ostream &operator<<(std::ostream &os,
+                             const FractionalInTimeIntegrationSchemeSharedPtr &rhs);
 
 } // end namespace LibUtilities
 } // end namespace Nektar

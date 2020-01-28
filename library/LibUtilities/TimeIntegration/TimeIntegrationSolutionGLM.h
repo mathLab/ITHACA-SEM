@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: TimeIntegrationSolution.h
+// File: TimeIntegrationSolutionGLM.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -35,10 +35,8 @@
 
 #pragma once
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationTypes.h>
 
 #define LUE LIB_UTILITIES_EXPORT
 
@@ -47,29 +45,29 @@ namespace Nektar
 namespace LibUtilities
 {
 
-class TimeIntegrationSolution
+class TimeIntegrationSolutionGLM
 {
 public:
     typedef Array<OneD, Array<OneD, Array<OneD, NekDouble>>> TripleArray;
     typedef Array<OneD, Array<OneD, NekDouble>> DoubleArray;
 
     // Constructor for single step methods
-    LUE TimeIntegrationSolution(const TimeIntegrationSchemeData *schemeData,
+    LUE TimeIntegrationSolutionGLM(const TimeIntegrationAlgorithmGLM *schemeData,
                                 const DoubleArray &y, const NekDouble time,
                                 const NekDouble timestep);
 
     // Constructor for multi-step methods
-    LUE TimeIntegrationSolution(const TimeIntegrationSchemeData *schemeData,
+    LUE TimeIntegrationSolutionGLM(const TimeIntegrationAlgorithmGLM *schemeData,
                                 const TripleArray &y,
                                 const Array<OneD, NekDouble> &t);
 
-    LUE TimeIntegrationSolution(const TimeIntegrationSchemeData *schemeData,
+    LUE TimeIntegrationSolutionGLM(const TimeIntegrationAlgorithmGLM *schemeData,
                                 const unsigned int nvar,
                                 const unsigned int npoints);
 
-    LUE TimeIntegrationSolution(const TimeIntegrationSchemeData *schemeData);
+    LUE TimeIntegrationSolutionGLM(const TimeIntegrationAlgorithmGLM *schemeData);
 
-    inline const TimeIntegrationSchemeData *GetIntegrationSchemeData() const
+    inline const TimeIntegrationAlgorithmGLM *GetIntegrationSchemeData() const
     {
         return m_schemeData;
     }
@@ -154,7 +152,7 @@ public:
     {
         int nMultiStepVals = m_schemeData->GetNmultiStepValues();
         const Array<OneD, const unsigned int> &offsetvec =
-	    m_schemeData->GetTimeLevelOffset();
+            m_schemeData->GetTimeLevelOffset();
 
         for (int i = 0; i < nMultiStepVals; i++)
         {
@@ -175,7 +173,7 @@ public:
         int nMultiStepVals = m_schemeData->GetNmultiStepValues();
         int size           = m_schemeData->m_numsteps;
         const Array<OneD, const unsigned int> &offsetvec =
-	    m_schemeData->GetTimeLevelOffset();
+            m_schemeData->GetTimeLevelOffset();
 
         for (int i = nMultiStepVals; i < size; i++)
         {
@@ -195,7 +193,7 @@ public:
     {
         int nMultiStepVals = m_schemeData->GetNmultiStepValues();
         const Array<OneD, const unsigned int> &offsetvec =
-	     m_schemeData->GetTimeLevelOffset();
+             m_schemeData->GetTimeLevelOffset();
 
         for (int i = 0; i < nMultiStepVals; i++)
         {
@@ -217,7 +215,7 @@ public:
     {
         int nMultiStepVals = m_schemeData->GetNmultiStepValues();
         const Array<OneD, const unsigned int> &offsetvec =
-	    m_schemeData->GetTimeLevelOffset();
+            m_schemeData->GetTimeLevelOffset();
 
         for (int i = 0; i < nMultiStepVals; i++)
         {
@@ -239,7 +237,7 @@ public:
         int nMultiStepVals = m_schemeData->GetNmultiStepValues();
         int size           = m_schemeData->m_numsteps;
         const Array<OneD, const unsigned int> &offsetvec =
-	    m_schemeData->GetTimeLevelOffset();
+            m_schemeData->GetTimeLevelOffset();
 
         for (int i = nMultiStepVals; i < size; i++)
         {
@@ -270,11 +268,12 @@ public:
     }
 
 private:
-    const TimeIntegrationSchemeData *m_schemeData;
+    const TimeIntegrationAlgorithmGLM *m_schemeData;
+
     TripleArray m_solVector;
     Array<OneD, NekDouble> m_t;
 
-}; // end class TimeIntegrationSolution
+}; // end class TimeIntegrationSolutionGLM
 
 } // end of namespace LibUtilities
 } // end of namespace Nektar

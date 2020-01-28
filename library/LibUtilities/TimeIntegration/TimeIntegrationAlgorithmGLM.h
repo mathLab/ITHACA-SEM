@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: TimeIntegrationSchemeData.h
+// File: TimeIntegrationAlgorithmGLM.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -31,14 +31,15 @@
 //
 // Description: Header file of time integration scheme data class
 //
-// The TimeIntegrationSchemeData class should only be used by the
-// TimeIntegrationScheme class.
+// The TimeIntegrationAlgorithmGLM class should only be used by the
+// TimeIntegrationSchemeGLM class.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationTypes.h>
 
 #define LUE LIB_UTILITIES_EXPORT
 
@@ -47,26 +48,15 @@ namespace Nektar
 namespace LibUtilities
 {
 
-class TimeIntegrationSchemeData
+class TimeIntegrationAlgorithmGLM
 {
 public:
-    typedef TimeIntegrationScheme::SingleArray SingleArray;
-    typedef TimeIntegrationScheme::ConstSingleArray ConstSingleArray;
-    typedef TimeIntegrationScheme::DoubleArray DoubleArray;
-    typedef TimeIntegrationScheme::ConstDoubleArray ConstDoubleArray;
-    typedef TimeIntegrationScheme::TripleArray TripleArray;
-    typedef TimeIntegrationScheme::ConstTripleArray ConstTripleArray;
-    typedef TimeIntegrationScheme::TimeIntegrationSchemeDataSharedPtr
-        TimeIntegrationSchemeDataSharedPtr;
-    typedef TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr
-        TimeIntegrationSolutionSharedPtr;
-
-    TimeIntegrationSchemeData(const TimeIntegrationScheme *parent)
-        : m_parent(parent)
+    TimeIntegrationAlgorithmGLM(const TimeIntegrationScheme *parent):
+        m_parent(parent)
     {
     }
 
-    ~TimeIntegrationSchemeData()
+    ~TimeIntegrationAlgorithmGLM()
     {
     }
 
@@ -80,12 +70,12 @@ public:
      * needed to evaluate the time integration scheme
      * formulated as a General Linear Method. These vectors
      * are embedded in an object of the class
-     * TimeIntegrationSolution. This class is the abstraction
+     * TimeIntegrationSolutionGLM. This class is the abstraction
      * of the input and output vectors of the General Linear
      * Method.
      *
      * For single-step methods, this function is trivial as it
-     * just wraps a TimeIntegrationSolution object around the
+     * just wraps a TimeIntegrationSolutionGLM object around the
      * given initial values and initial time.  However, for
      * multistep methods, actual time stepping is being done
      * to evaluate the necessary parameters at multiple time
@@ -105,11 +95,11 @@ public:
      *       to evaluate the right hand side \f$f(t,\boldsymbol{y})\f$ of the
      * ODE.
      * \param y_0 the initial value \f$\boldsymbol{y}(t_0)\f$
-     * \return An object of the class TimeIntegrationSolution which represents
+     * \return An object of the class TimeIntegrationSolutionGLM which represents
      * the vectors \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$
      *  that can be used to start the actual integration.
      */
-    LUE TimeIntegrationSolutionSharedPtr InitializeData(
+    LUE TimeIntegrationSolutionGLMSharedPtr InitializeData(
         const NekDouble deltaT,
         ConstDoubleArray &y_0,
         const NekDouble time,
@@ -141,7 +131,7 @@ public:
      */
     LUE ConstDoubleArray &TimeIntegrate(
         const NekDouble deltaT,
-        TimeIntegrationSolutionSharedPtr &y,
+        TimeIntegrationSolutionGLMSharedPtr &y,
         const TimeIntegrationSchemeOperators &op);
 
     // Does the actual multi-stage multi-step integration.
@@ -185,12 +175,13 @@ public:
                                     const TimeIntegrationSchemeSharedPtr &rhs);
 
     LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationSchemeData &rhs);
+                                    const TimeIntegrationAlgorithmGLM &rhs);
     LUE friend std::ostream &operator<<(
         std::ostream &os,
-        const TimeIntegrationScheme::TimeIntegrationSchemeDataSharedPtr &rhs);
+        const TimeIntegrationAlgorithmGLMSharedPtr &rhs);
 
     // Variables - all public for easy access when setting up the phase.
+    /// Parent scheme object
     const TimeIntegrationScheme *m_parent{nullptr};
 
     std::string m_name;
@@ -198,7 +189,8 @@ public:
     unsigned int m_order{0};
     std::vector< NekDouble > m_freeParams;
 
-    TimeIntegrationSchemeType m_schemeType;
+    // Type of time integration scheme (Explicit, Implicit, IMEX, etc)
+    TimeIntegrationSchemeType m_schemeType{eNoTimeIntegrationSchemeType};
 
     unsigned int m_numstages{0}; //< Number of stages in multi-stage component.
     unsigned int m_numsteps{0};  //< Number of steps in this integration phase
@@ -235,14 +227,14 @@ public:
     Array<OneD, Array<TwoD, NekDouble>> m_U_phi;
     Array<OneD, Array<TwoD, NekDouble>> m_V_phi;
 
-    int m_nvars{0};            /// Number of variables in integration scheme.
-    int m_npoints{0};          /// Size of inner data which is stored for reuse.
-
     bool m_initialised{false}; /// bool to identify array initialization
 
     // Values uses for exponential integration
     NekDouble m_lastDeltaT{0}; /// Last delta T
     NekDouble m_lastNVars{0};  /// Last number of vars
+
+    int  m_nvars;       ///< The number of variables in integration scheme.
+    int  m_npoints;     ///< The size of inner data which is stored for reuse.
 
 private:
     DoubleArray m_Y;       /// Array containing the stage values
@@ -311,13 +303,14 @@ private:
         return y[0][0].num_elements();
     }
 
-}; // end class TimeIntegrationSchemeData
+}; // end class TimeIntegrationAlgorithmGLM
 
 LUE std::ostream &operator<<(std::ostream &os,
-                             const TimeIntegrationSchemeData &rhs);
+                             const TimeIntegrationAlgorithmGLM &rhs);
+
 LUE std::ostream &operator<<(
     std::ostream &os,
-    const TimeIntegrationSchemeData::TimeIntegrationSchemeDataSharedPtr &rhs);
+    const TimeIntegrationAlgorithmGLMSharedPtr &rhs);
 
 // =========================================================================
 

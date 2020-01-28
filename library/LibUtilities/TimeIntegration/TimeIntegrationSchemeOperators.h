@@ -52,6 +52,13 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
+class TimeIntegrationSchemeOperators;
+
+typedef std::shared_ptr<TimeIntegrationSchemeOperators>
+    TimeIntegrationSchemeOperatorsSharedPtr;
+
+  
 /**
  * @brief Binds a set of functions for use by time integration schemes.
  */
@@ -168,4 +175,3 @@ private:
 
 }
 }
-

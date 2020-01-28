@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FractionalInTimeTimeIntegrationScheme.cpp
+// File FractionalInTimeIntegrationScheme.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -32,8 +32,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
-
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeFIT.h>
 
 namespace Nektar
@@ -41,11 +39,25 @@ namespace Nektar
 namespace LibUtilities
 {
 
-void FractionalInTimeTimeIntegrationScheme::
+std::ostream &operator<<(std::ostream &os, const FractionalInTimeIntegrationScheme &rhs)
+{
+    os << "Time Integration Scheme: " << rhs.GetFullName() << ".\n";
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os,
+                         const FractionalInTimeIntegrationSchemeSharedPtr &rhs)
+{
+    os << *rhs.get();
+    return os;
+}
+
+void FractionalInTimeIntegrationScheme::
 InitializeScheme(const NekDouble deltaT,
-                 TimeIntegrationScheme::ConstDoubleArray &y_0,
+                       ConstDoubleArray &y_0,
                  const NekDouble time,
                  const TimeIntegrationSchemeOperators &op)
+
 {
     boost::ignore_unused(op);
 
@@ -206,8 +218,8 @@ InitializeScheme(const NekDouble deltaT,
 }
 
 
-TimeIntegrationScheme::ConstDoubleArray &
-FractionalInTimeTimeIntegrationScheme::
+ConstDoubleArray &
+FractionalInTimeIntegrationScheme::
 TimeIntegrate(const int timestep, const NekDouble delta_t,
               const TimeIntegrationSchemeOperators &op)
 {
@@ -344,7 +356,7 @@ TimeIntegrate(const int timestep, const NekDouble delta_t,
 }
 
 
-unsigned int FractionalInTimeTimeIntegrationScheme::
+unsigned int FractionalInTimeIntegrationScheme::
 modincrement(const int unsigned counter,
              const int unsigned base) const
 {
@@ -352,7 +364,7 @@ modincrement(const int unsigned counter,
 }
 
 // Computes the smallest integer L such that base < 2 * base^l.
-unsigned int FractionalInTimeTimeIntegrationScheme::
+unsigned int FractionalInTimeIntegrationScheme::
 compute_L( const unsigned int base,
            const unsigned int l ) const
 {
@@ -372,7 +384,7 @@ compute_L( const unsigned int base,
 //  boundaries for a partition of [0, m h]. The value of h is not
 //  needed to compute this vector.
 unsigned int
-FractionalInTimeTimeIntegrationScheme::compute_qml( const unsigned int base,
+FractionalInTimeIntegrationScheme::compute_qml( const unsigned int base,
                                                     const unsigned int m )
 {
     int L = compute_L(base, m);
@@ -381,9 +393,9 @@ FractionalInTimeTimeIntegrationScheme::compute_qml( const unsigned int base,
     
     for( unsigned int i=0; i<L-1; ++i )
     {
-	m_qml[i] = floor(m / pow(base, i+1) ) - 1;
-	
-	// std::cout << qml[i] << "  ";
+        m_qml[i] = floor(m / pow(base, i+1) ) - 1;
+
+        // std::cout << qml[i] << "  ";
     }
     // std::cout << std::endl;
     
@@ -396,7 +408,7 @@ FractionalInTimeTimeIntegrationScheme::compute_qml( const unsigned int base,
 // boundaries for a partition of [0, m h]. The value of h is not
 // needed to compute this vector.
 unsigned int
-FractionalInTimeTimeIntegrationScheme::compute_taus( const unsigned int base,
+FractionalInTimeIntegrationScheme::compute_taus( const unsigned int base,
                                                      const unsigned int m )
 {
     if( m == 1 )
@@ -441,7 +453,7 @@ FractionalInTimeTimeIntegrationScheme::compute_taus( const unsigned int base,
 // theta. Denoting the contour Gamma, the returned quadrature rule is
 // the approximation
 //
-void FractionalInTimeTimeIntegrationScheme::
+void FractionalInTimeIntegrationScheme::
 talbot_quadrature(const unsigned int nQuadPts,
                   const NekDouble mu,
                   const NekDouble nu,
@@ -476,7 +488,7 @@ talbot_quadrature(const unsigned int nQuadPts,
 }
 
 
-void FractionalInTimeTimeIntegrationScheme::
+void FractionalInTimeIntegrationScheme::
 integral_class_initialize(const unsigned int index,
                           Instance &instance) const
 {
@@ -813,7 +825,7 @@ integral_class_initialize(const unsigned int index,
 // (1) activates ceiling staging
 // (2) moves ceiling stash ---> stage
 // (3) moves floor stash --> stage (+ updates all ceiling data)
-void FractionalInTimeTimeIntegrationScheme::
+void FractionalInTimeIntegrationScheme::
 update_stage(const unsigned int timeStep,
              Instance &instance)
 {
@@ -944,7 +956,7 @@ update_stage(const unsigned int timeStep,
 //
 // using a time-stepping scheme of a particular order. Here, k depends on alph,
 // the derivative order.
-void FractionalInTimeTimeIntegrationScheme::
+void FractionalInTimeIntegrationScheme::
 final_increment(const unsigned int timeStep,
                 const TimeIntegrationSchemeOperators &op)
 {
@@ -971,7 +983,7 @@ final_increment(const unsigned int timeStep,
 }
 
 
-void FractionalInTimeTimeIntegrationScheme::
+void FractionalInTimeIntegrationScheme::
 integral_contribution(const unsigned int timeStep,
                       const unsigned int tauml,
                       const Instance &instance)
@@ -1026,7 +1038,7 @@ integral_contribution(const unsigned int timeStep,
 }
 
 
-void FractionalInTimeTimeIntegrationScheme::
+void FractionalInTimeIntegrationScheme::
 time_advance(const unsigned int timeStep,
              const Instance &instance,
              const TimeIntegrationSchemeOperators &op,
@@ -1075,7 +1087,7 @@ time_advance(const unsigned int timeStep,
                 for( unsigned int i=0; i<timeStep+1; ++i )
                 {
                     tmp[m][q] +=
-		        instance.As[timeStep+1][m][i] * instance.Eh[i][q];
+                        instance.As[timeStep+1][m][i] * instance.Eh[i][q];
                 }
             }
         }
@@ -1175,7 +1187,7 @@ time_advance(const unsigned int timeStep,
 // (4) advances floor sandbox
 // (5) moves floor sandbox ---> stash
 
-void FractionalInTimeTimeIntegrationScheme::
+void FractionalInTimeIntegrationScheme::
 advance_sandbox(const unsigned int timeStep,
                 const TimeIntegrationSchemeOperators &op,
                 Instance &instance)
@@ -1261,8 +1273,8 @@ advance_sandbox(const unsigned int timeStep,
                 {
                     for( unsigned int j=0; j<m_npoints; ++j )
                     {
-		        instance.fstash_y[q][i][j] =
-			    instance.fsandbox_y[q][i][j];
+                        instance.fstash_y[q][i][j] =
+                            instance.fsandbox_y[q][i][j];
                     }
                 }
             }

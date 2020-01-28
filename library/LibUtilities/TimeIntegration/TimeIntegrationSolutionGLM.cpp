@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File TimeIntegrationSolution.cpp
+// File TimeIntegrationSolutionGLM.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -32,14 +32,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSolutionGLM.h>
 
 namespace Nektar
 {
 namespace LibUtilities
 {
-TimeIntegrationSolution::TimeIntegrationSolution(
-    const TimeIntegrationSchemeData *schemeData, const DoubleArray &y,
+
+TimeIntegrationSolutionGLM::TimeIntegrationSolutionGLM(
+    const TimeIntegrationAlgorithmGLM *schemeData, const DoubleArray &y,
     const NekDouble time, const NekDouble timestep)
     : m_schemeData(schemeData), m_solVector(m_schemeData->m_numsteps),
       m_t(m_schemeData->m_numsteps)
@@ -73,8 +76,8 @@ TimeIntegrationSolution::TimeIntegrationSolution(
     }
 }
 
-TimeIntegrationSolution::TimeIntegrationSolution(
-    const TimeIntegrationSchemeData *schemeData, const TripleArray &y,
+TimeIntegrationSolutionGLM::TimeIntegrationSolutionGLM(
+    const TimeIntegrationAlgorithmGLM *schemeData, const TripleArray &y,
     const Array<OneD, NekDouble> &t)
     : m_schemeData(schemeData), m_solVector(y), m_t(t)
 {
@@ -82,8 +85,8 @@ TimeIntegrationSolution::TimeIntegrationSolution(
              "Amount of Entries does not match number of (multi-) steps");
 }
 
-TimeIntegrationSolution::TimeIntegrationSolution(
-    const TimeIntegrationSchemeData *schemeData, const unsigned int nvar,
+TimeIntegrationSolutionGLM::TimeIntegrationSolutionGLM(
+    const TimeIntegrationAlgorithmGLM *schemeData, const unsigned int nvar,
     const unsigned int npoints)
     : m_schemeData(schemeData),
       m_solVector(schemeData->m_numsteps),
@@ -99,14 +102,14 @@ TimeIntegrationSolution::TimeIntegrationSolution(
     }
 }
 
-TimeIntegrationSolution::TimeIntegrationSolution(
-    const TimeIntegrationSchemeData *schemeData)
+TimeIntegrationSolutionGLM::TimeIntegrationSolutionGLM(
+    const TimeIntegrationAlgorithmGLM *schemeData)
     : m_schemeData(schemeData), m_solVector(m_schemeData->m_numsteps),
       m_t(m_schemeData->m_numsteps)
 {
 }
 
-std::string TimeIntegrationSolution::GetName() const
+std::string TimeIntegrationSolutionGLM::GetName() const
 {
     return m_schemeData->m_parent->GetFullName();
 }

@@ -328,12 +328,12 @@ namespace Nektar
 
         if (m_infosteps && !((nstep+1)%m_infosteps) && m_comm->GetRank() == 0)
         {
-	    std::cout << "Sub-integrating using "<< nsubsteps
-		      << " steps over Dt = "     << m_timestep
-		      << " (SubStep CFL="        << m_cflSafetyFactor << ")"<< std::endl;
+            std::cout << "Sub-integrating using "<< nsubsteps
+                      << " steps over Dt = "     << m_timestep
+                      << " (SubStep CFL="        << m_cflSafetyFactor << ")"<< std::endl;
         }
 
-	const TripleArray &solutionVector = m_intScheme->GetSolutionVector();
+        const TripleArray &solutionVector = m_intScheme->GetSolutionVector();
 
         for (int m = 0; m < nint; ++m)
         {
@@ -344,12 +344,12 @@ namespace Nektar
             // with calls to EvaluateAdvection_SetPressureBCs and
             // SolveUnsteadyStokesSystem
             m_subStepIntegrationScheme->
-	        InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
+                InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
 
             for(n = 0; n < nsubsteps; ++n)
             {
                 fields = m_subStepIntegrationScheme->
-		    TimeIntegrate(n, dt, m_subStepIntegrationOps);
+                    TimeIntegrate(n, dt, m_subStepIntegrationOps);
             }
 
             // set up HBC m_acceleration field for Pressure BCs

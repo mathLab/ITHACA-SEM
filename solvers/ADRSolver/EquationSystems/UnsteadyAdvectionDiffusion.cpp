@@ -467,7 +467,7 @@ namespace Nektar
      *
      */
     void UnsteadyAdvectionDiffusion::SubStepAdvance(int nstep,
-						    NekDouble time)
+                                                    NekDouble time)
     {
         int n;
         int nsubsteps;
@@ -495,12 +495,12 @@ namespace Nektar
         if (m_infosteps && !((nstep+1)%m_infosteps) && comm->GetRank() == 0)
         {
             std::cout << "Sub-integrating using "<< nsubsteps
-		      << " steps over Dt = "     << m_timestep
-		      << " (SubStep CFL="        << m_cflSafetyFactor << ")"
-		      << std::endl;
+                      << " steps over Dt = "     << m_timestep
+                      << " (SubStep CFL="        << m_cflSafetyFactor << ")"
+                      << std::endl;
         }
 
-	const TripleArray &solutionVector = m_intScheme->GetSolutionVector();
+        const TripleArray &solutionVector = m_intScheme->GetSolutionVector();
 
         for (int m = 0; m < nint; ++m)
         {
@@ -510,13 +510,13 @@ namespace Nektar
             // Initialise NS solver which is set up to use a GLM method
             // with calls to EvaluateAdvection_SetPressureBCs and
             // SolveUnsteadyStokesSystem
-	    m_subStepIntegrationScheme->
-	        InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
+            m_subStepIntegrationScheme->
+                InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
 
             for(n = 0; n < nsubsteps; ++n)
             {
                 fields = m_subStepIntegrationScheme->
-		    TimeIntegrate(n, dt, m_subStepIntegrationOps);
+                    TimeIntegrate(n, dt, m_subStepIntegrationOps);
             }
 
             // Reset time integrated solution in m_intScheme
@@ -570,8 +570,8 @@ namespace Nektar
             // Note RK first order SSP is just Forward Euler.
             m_subStepIntegrationScheme =
                 LibUtilities::GetTimeIntegrationSchemeFactory()
-	            .CreateInstance( "RungeKutta", "SSP", order,
-				     std::vector<NekDouble>());
+                    .CreateInstance( "RungeKutta", "SSP", order,
+                                     std::vector<NekDouble>());
         }
         else
         {

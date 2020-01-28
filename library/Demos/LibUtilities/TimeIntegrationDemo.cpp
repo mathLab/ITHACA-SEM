@@ -86,9 +86,9 @@
 #include <boost/program_options.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/TimeIntegration/EulerExponentialTimeIntegrationSchemes.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 
 #include <time.h>       /* time */
 
@@ -647,7 +647,8 @@ int main(int argc, char *argv[])
 
         // For exponential integrators, the coefficents for each
         // variable needs to be set.
-        tiScheme->SetExponentialCoefficients(tmpSolver->GetLambda());
+	((EulerExponentialTimeIntegrationScheme *) (&(*tiScheme)))->
+	    SetExponentialCoefficients(tmpSolver->GetLambda());
     }
     else
     {

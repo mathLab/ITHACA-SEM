@@ -647,8 +647,8 @@ int main(int argc, char *argv[])
 
         // For exponential integrators, the coefficents for each
         // variable needs to be set.
-	((EulerExponentialTimeIntegrationScheme *) (&(*tiScheme)))->
-	    SetExponentialCoefficients(tmpSolver->GetLambda());
+        ((EulerExponentialTimeIntegrationScheme *) (&(*tiScheme)))->
+            SetExponentialCoefficients(tmpSolver->GetLambda());
     }
     else
     {

@@ -445,11 +445,19 @@ int main(int argc, char *argv[])
         ((vm["method"].as<int>() == 18) && !vm.count("parameter")) ||
         vm.count("help"))
     {
-        std::cout << "Please specify the number of "
-                  << "dof and timesteps along with the order and method."
-                  << std::endl << std::endl
-                  << desc;
-        return 1;
+      std::cout << std::endl
+		<< "Please specify the number of dof and timesteps "
+		<< "along with the ";
+
+      if( vm["method"].as<int>() == 18)
+	  std::cout << "order, method, and free parameters in quotes.";
+      else
+	  std::cout << "order and method.";
+      
+      std::cout << std::endl << std::endl
+		<< desc;
+
+      return 1;
     }
 
     bool L2      = vm.count("L2");
@@ -582,7 +590,7 @@ int main(int argc, char *argv[])
             tiScheme = factory.CreateInstance("EulerExponential", "Norsett", nOrder, freeParams);
             break;
         case 25:
-            tiScheme = factory.CreateInstance("FractionalInTime", "", nOrder, freeParams);
+            tiScheme = factory.CreateInstance("FractionalIn", "", nOrder, freeParams);
             break;
         default:
         {

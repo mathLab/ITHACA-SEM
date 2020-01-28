@@ -85,8 +85,8 @@ public:
         const int timestep, const NekDouble delta_t,
         const TimeIntegrationSchemeOperators &op);
   
-    void InitializeSecondaryData(TimeIntegrationAlgorithmGLM *phase,
-                                 NekDouble deltaT) const;
+    virtual void InitializeSecondaryData(TimeIntegrationAlgorithmGLM *phase,
+					 NekDouble deltaT) const;
   
     // Friend classes
     LUE friend std::ostream &operator<<(std::ostream &os,

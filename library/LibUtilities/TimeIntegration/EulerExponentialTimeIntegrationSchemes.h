@@ -209,10 +209,10 @@ public:
         phase->m_U_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
         phase->m_V_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
         
+	Array<OneD, NekDouble> phi = Array<OneD, NekDouble>(phase->m_order);
+
         for( unsigned int k=0; k<phase->m_nvars; ++k )
         {
-            Array<OneD, NekDouble> phi = Array<OneD, NekDouble>(phase->m_nvars);
-
             // B Phi function for first row first column
             if( phase->m_variant == "Lawson" )
             {
@@ -256,13 +256,14 @@ public:
             else if( phase->m_order == 3 )
             {
                 Array<OneD, NekDouble> phi_func =
-                  Array<OneD, NekDouble>(phase->m_nvars);
+                  Array<OneD, NekDouble>(phase->m_order);
 
                 phi_func[0] = phi[0];
 
                 for( unsigned int m=1; m<phase->m_order; ++m )
                 {
-                    phi_func[m] = phi_function(m+1, deltaT * phase->m_L[k]).real();
+                    phi_func[m] =
+		      phi_function(m+1, deltaT * phase->m_L[k]).real();
                 }
 
                 NekDouble W[3][3];
@@ -300,7 +301,7 @@ public:
             else if( phase->m_order == 4 )
             {
                 Array<OneD, NekDouble> phi_func =
-                  Array<OneD, NekDouble>(phase->m_nvars);
+                  Array<OneD, NekDouble>(phase->m_order);
 
                 phi_func[0] = phi[0];
 
@@ -311,7 +312,7 @@ public:
 
                 NekDouble W[4][4];
 
-                // Set up the wieghts and calculate the determinant.
+                // Set up the weights and calculate the determinant.
                 for( unsigned int j=0; j<phase->m_order; ++j )
                 {
                     for( unsigned int i=0; i<phase->m_order; ++i )

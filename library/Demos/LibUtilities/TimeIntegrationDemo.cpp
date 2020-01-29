@@ -85,6 +85,8 @@
 #include <boost/core/ignore_unused.hpp>
 #include <boost/program_options.hpp>
 
+#include <StdRegions/StdNodalTriExp.h>
+
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/TimeIntegration/EulerExponentialTimeIntegrationSchemes.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
@@ -131,18 +133,18 @@ public:
     // -----------------------------------------------------------------
     // Misc functions for error and outputing
     void GetMinMaxValues(
-        const Array<OneD, const Array<OneD, double>> &approx,
         const Array<OneD, const Array<OneD, double>> &exact,
+        const Array<OneD, const Array<OneD, double>> &approx,
         bool print );
 
     void EvaluateL2Error(
-        const Array<OneD, const Array<OneD, double>> &approx,
-        const Array<OneD, const Array<OneD, double>> &exact );
+        const Array<OneD, const Array<OneD, double>> &exact,
+        const Array<OneD, const Array<OneD, double>> &approx );
 
     void AppendOutput(
         std::ofstream &outfile, const int timeStepNumber, const NekDouble time,
-        const Array<OneD, const Array<OneD, double>> &approx,
-        const Array<OneD, const Array<OneD, double>> &exact) const;
+        const Array<OneD, const Array<OneD, double>> &exact,
+        const Array<OneD, const Array<OneD, double>> &approx) const;
 
     void GenerateGnuplotScript(const std::string &method) const;
 
@@ -278,30 +280,69 @@ public:
         // Initialize a random seed using the time.
         srand( time(NULL) );
 
+        // Randomly generate the jacobian in a way that essentially
+        // ensures diagonalizability with real eigenvalues and
+        // invertibility. Real eigenvalues aren't necessary, but keep
+        // things real-valued for ease.
+        DNekMat jac     (m_nVars, m_nVars, 0.0, eFULL);
+        DNekMat jacDiag (m_nVars, m_nVars, 0.0, eDIAGONAL);
+        DNekMat jacInvert(m_nVars, m_nVars, 0.0, eFULL);
+
+        DNekMat metric  (m_nVars, m_nVars, 0.0, eFULL);
+
+        for (int k = 0; k < m_nVars; ++k)
+        {
+            jacDiag(k,k) = (double) rand() / (double) RAND_MAX;
+
+            for (int l = 0; l < m_nVars; ++l)
+            {
+                jac(l,k) = (double) rand() / (double) RAND_MAX;
+            }
+        }
+
+        metric = jac * jacDiag;
+        jac.Invert();
+        metric = metric * jac;
+
+        // Compute eigenvalues/eigenvectors of the metric tensor using
+        // ideal mapping.
+        char jobvl = 'N', jobvr = 'V';
+        int worklen = 8*m_nVars, info;
+
+        DNekMat eval(m_nVars, m_nVars, 0.0, eDIAGONAL);  // Eigen Values
+        DNekMat evec(m_nVars, m_nVars, 0.0, eFULL);      // Eigen Vectors
+        Array<OneD, NekDouble> vl  (m_nVars*m_nVars);
+        Array<OneD, NekDouble> work(worklen);
+        Array<OneD, NekDouble> wi  (m_nVars);
+
+        Lapack::Dgeev(jobvl, jobvr, m_nVars, metric.GetRawPtr(), m_nVars,
+                      &(eval.GetPtr())[0], &wi[0], &vl[0], m_nVars,
+                      &(evec.GetPtr())[0], m_nVars,
+                      &work[0], worklen, info);
+
         for (int k = 0; k < m_nVars; k++)
         {
             m_freqs [k] = (double) rand() / (double) RAND_MAX;
             m_phases[k] = (double) rand() / (double) RAND_MAX;
 
-            m_lambda[k] =
-              std::complex< NekDouble>((double) rand() / (double) RAND_MAX, 0);
+            m_lambda[k] = eval(k,k);
 
             m_z0[k] = (double) rand() / (double) RAND_MAX;
         }
 
-        // Fixed values for now based on a known solution for 5 values.
-        static double freqs[]  = { 0.1405, 1.0930, -0.3592, -1.3925, 0.3480 };
-        static double phases[] = { -0.7197, 1.7775, -0.8679, 0.1710, 2.0424 };
-        static double lambda[] = { 0.7405, -0.2949, -1.6821, -1.1045, -1.0519 };
-        static double y0[]     = { 1.0541, -0.0169, 0.4792, 2.4027, 1.4006 };
+        // Fixed values for testing based on a known solution for 5 values.
+        // static double freqs[]  = { 0.1405, 1.0930, -0.3592, -1.3925, 0.3480 };
+        // static double phases[] = { -0.7197, 1.7775, -0.8679, 0.1710, 2.0424 };
+        // static double lambda[] = { 0.7405, -0.2949, -1.6821, -1.1045, -1.0519 };
+        // static double y0[]     = { 1.0541, -0.0169, 0.4792, 2.4027, 1.4006 };
 
-        for (int k = 0; k < m_nVars; k++)
-        {
-            m_freqs [k] = freqs[k];
-            m_phases[k] = phases[k];
-            m_lambda[k] = std::complex<NekDouble>(lambda[k], 0);
-            m_z0[k] = y0[k];
-        }
+        // for (int k = 0; k < m_nVars; k++)
+        // {
+        //     m_freqs [k] = freqs[k];
+        //     m_phases[k] = phases[k];
+        //     m_lambda[k] = std::complex<NekDouble>(lambda[k], 0);
+        //     m_z0[k] = y0[k];
+        // }
     }
 
     // -----------------------------------------------------------------
@@ -349,8 +390,20 @@ public:
 
         m_alpha = 0.3;
 
+        srand( time(NULL) );
+
         // Initial values set to zero
-        m_u0 = Array<OneD, NekDouble>(m_nVars, 0.0);
+        m_u0 = Array<OneD, Array<OneD, NekDouble>>(m_nVars);
+
+        for (int i = 0; i < m_nVars; i++)
+        {
+            m_u0[i] = Array<OneD, NekDouble>(m_nPoints, 0.0);
+
+            for (int j = 0; j < m_nPoints; j++)
+            {
+                m_u0[i][j] = (double) rand() / (double) RAND_MAX;
+            }
+        }
     }
 
     // -----------------------------------------------------------------
@@ -371,7 +424,7 @@ private:
     // Value of the coefficients:
     NekDouble m_alpha; // Fractional order
 
-    Array<OneD, NekDouble> m_u0;
+    Array<OneD, Array<OneD, NekDouble>> m_u0;
 
 }; // end class OneDFDESolver
 
@@ -446,16 +499,16 @@ int main(int argc, char *argv[])
         vm.count("help"))
     {
       std::cout << std::endl
-		<< "Please specify the number of dof and timesteps "
-		<< "along with the ";
+                << "Please specify the number of dof and timesteps "
+                << "along with the ";
 
       if( vm["method"].as<int>() == 18)
-	  std::cout << "order, method, and free parameters in quotes.";
+          std::cout << "order, method, and free parameters in quotes.";
       else
-	  std::cout << "order and method.";
-      
+          std::cout << "order and method.";
+
       std::cout << std::endl << std::endl
-		<< desc;
+                << desc;
 
       return 1;
     }
@@ -615,14 +668,6 @@ int main(int argc, char *argv[])
 
     if( tiScheme->GetIntegrationSchemeType() == eFractionalInTime )
     {
-        if( nDoF > 2 )
-        {
-          std::cout << "Curently set up for 2 variables, setting nDoF to 2"
-                    << std::endl;
-
-          nDoF = 2;
-        }
-
         nVariables = nDoF;
         nPoints    = 1;
 
@@ -635,14 +680,6 @@ int main(int argc, char *argv[])
     }
     else if( tiScheme->GetIntegrationSchemeType() == eExponential )
     {
-        if( nDoF > 5 )
-        {
-          std::cout << "Curently set up for 5 variables, setting nDoF to 5"
-                    << std::endl;
-
-          nDoF = 5;
-        }
-
         nVariables = nDoF;
         nPoints    = 1;
 
@@ -736,7 +773,7 @@ int main(int argc, char *argv[])
     solverSharedPtr->SetSchemeName( tiScheme->GetName() );
 
     // Write the initial conditions to the output file
-    solverSharedPtr->AppendOutput( outfile, 0, 0, approxSol, exactSol);
+    solverSharedPtr->AppendOutput( outfile, 0, 0, exactSol, approxSol);
 
     int timeStep = 0;
     double time = t0;
@@ -757,7 +794,8 @@ int main(int argc, char *argv[])
         ++timeStep;
 
         // Save the solutions the output file
-        solverSharedPtr->AppendOutput(outfile, timeStep, time, approxSol, exactSol);
+        solverSharedPtr->
+            AppendOutput(outfile, timeStep, time, exactSol, approxSol);
 
         // 6. Calculate the min / max values. If the last argument is
         // true the values will be dumped to screen.
@@ -767,10 +805,10 @@ int main(int argc, char *argv[])
           std::cout << "Time step: " << timeStep << "  "
                     << "Time: " << time << std::endl;
 
-        solverSharedPtr->GetMinMaxValues(approxSol, exactSol, verbose);
+        solverSharedPtr->GetMinMaxValues(exactSol, approxSol, verbose);
 
         if( L2 )
-          solverSharedPtr->EvaluateL2Error(approxSol, exactSol);
+          solverSharedPtr->EvaluateL2Error(exactSol, approxSol);
     }
 
     // 7. Calculate the error for the last time step and dump to screen
@@ -778,7 +816,7 @@ int main(int argc, char *argv[])
     std::cout << "Time step: " << timeStep << "  "
               << "Time: " << time << std::endl;
 
-    solverSharedPtr->EvaluateL2Error(approxSol, exactSol);
+    solverSharedPtr->EvaluateL2Error(exactSol, approxSol);
 
     // 7. Some more writing out the results
     outfile.close();
@@ -809,8 +847,8 @@ void DemoSolver::Project(
 // Calculate the Relative Error L2 Norm (as opposed to the absolute L2
 // norm).
 void DemoSolver::GetMinMaxValues(
-    const Array<OneD, const Array<OneD, double>> &approx,
     const Array<OneD, const Array<OneD, double>> &exact,
+    const Array<OneD, const Array<OneD, double>> &approx,
     bool print )
 {
     // Get the min and max value and write the approximate solution
@@ -863,8 +901,8 @@ void DemoSolver::GetMinMaxValues(
 // Calculate the Relative Error L2 Norm (as opposed to the absolute L2
 // norm).
 void DemoSolver::EvaluateL2Error(
-    const Array<OneD, const Array<OneD, double>> &approx,
-    const Array<OneD, const Array<OneD, double>> &exact )
+    const Array<OneD, const Array<OneD, double>> &exact,
+    const Array<OneD, const Array<OneD, double>> &approx )
 {
     // Calcualate the sum of squares for the L2 Norm.
     double a = 0.0;
@@ -890,8 +928,8 @@ void DemoSolver::EvaluateL2Error(
 
 void DemoSolver::AppendOutput(
     std::ofstream &outfile, int timeStepNumber, const NekDouble time,
-    const Array<OneD, const Array<OneD, double>> &approx,
-    const Array<OneD, const Array<OneD, double>> &exact) const
+    const Array<OneD, const Array<OneD, double>> &exact,
+    const Array<OneD, const Array<OneD, double>> &approx) const
 {
     if (timeStepNumber == 0)
     {
@@ -919,7 +957,7 @@ void DemoSolver::AppendOutput(
             outfile << "#   Location";
         }
 
-        outfile << "  |  Approximate Solution  |  Exact Solution"
+        outfile << "  |  Exact Solution  |  Approximate Solution"
                 << std::endl
                 << "#"
                 << std::endl << std::endl
@@ -940,7 +978,7 @@ void DemoSolver::AppendOutput(
                 outfile << std::scientific
                         << std::setw(17) << std::setprecision(10)
                         << k
-                        << "  " << approx[k][i] << "  " << exact[k][i]
+                        << "  " << exact[k][i] << "  " << approx[k][i]
                         << std::endl;
             }
             else if( m_nPoints > 1 )
@@ -948,7 +986,7 @@ void DemoSolver::AppendOutput(
                 outfile << std::scientific
                         << std::setw(17) << std::setprecision(10)
                         << m_x0 + i * m_dx
-                        << "  " << approx[k][i] << "  " << exact[k][i]
+                        << "  " << exact[k][i] << "  " << approx[k][i]
                         << std::endl;
             }
         }
@@ -995,15 +1033,17 @@ void DemoSolver::GenerateGnuplotScript(const std::string &method) const
     {
         double t = m_t0 + (i * m_dt);
 
-        outfile << "plot '" << m_fileName << ".dat' using 1:2 index "
-                << i << " title 'Approximate Solution (t=" << t
-                << ")' with linespoints , "
-
-                << "'" << m_fileName << ".dat' using 1:3 index "
+        outfile << "plot '"
+                << m_fileName << ".dat' using 1:2 index "
                 << i << " title 'Exact Solution (t=" << t
-                << ")' with linespoints " << std::endl
-
-                << "pause " << 4.0 / m_nTimeSteps << std::endl;
+                << ")' with linespoints "
+                << ", '"
+                << m_fileName << ".dat' using 1:3 index "
+                << i << " title 'Approximate Solution (t=" << t
+                << ")' with linespoints "
+                << std::endl
+                << "pause " << 4.0 / m_nTimeSteps
+                << std::endl;
     }
 
     // Keep window open until the user clicks
@@ -1198,8 +1238,6 @@ void OneDSinusoidSolver::EvaluateExactSolution(
         //
         //   A = V * diag(lambda) * inv(V)
 
-        // ARS Note - the above is not yet true.
-
         // Compute right-hand side of the normal equations
         for (int k = 0; k < m_nVars; k++)
         {
@@ -1240,12 +1278,11 @@ void OneDFDESolver::EvaluateFDETerm(
 
     for (int i = 0; i < m_nVars; i++)
     {
+        NekDouble w = (NekDouble) (m_nVars-i) / (NekDouble) (m_nVars);
+
         for (int j = 0; j < m_nPoints; j++)
         {
-            if( i == 0 )
-                outarray[i][j] =       tgamma( m_alpha + 1.0 );
-            else if( i == 1 )
-                outarray[i][j] = 0.5 * tgamma( m_alpha + 1.0 );
+            outarray[i][j] = w * tgamma( m_alpha + 1.0 );
         }
     }
 }
@@ -1253,34 +1290,20 @@ void OneDFDESolver::EvaluateFDETerm(
 void OneDFDESolver::EvaluateExactSolution(
     Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const
 {
-    if( time == GetInitialTime() )
-    {
-        for (int i = 0; i < m_nVars; i++)
-        {
-            for (int j = 0; j < m_nPoints; j++)
-            {
-                outarray[i][j] = m_u0[i];
-            }
-        }
-    }
-    else
-    {
-        // Computes the exact solution at time t to the ODE
-        //
-        //   y' = time^alpha
-        //   y(0) = y0
-        //
+    // Computes the exact solution at time t to the ODE
+    //
+    //   y' = time^alpha
+    //   y(0) = y0
+    //
 
-        // Compute right-hand side of the normal equations
-        for (int i = 0; i < m_nVars; i++)
+    // Compute right-hand side of the normal equations
+    for (int i = 0; i < m_nVars; i++)
+    {
+        NekDouble w = (NekDouble) (m_nVars-i) / (NekDouble) (m_nVars);
+
+        for (int j = 0; j < m_nPoints; j++)
         {
-            for (int j = 0; j < m_nPoints; j++)
-            {
-                if( i == 0 )
-                    outarray[i][j] =       std::pow( time, m_alpha );
-                else if( i == 1 )
-                    outarray[i][j] = 0.5 * std::pow( time, m_alpha );
-            }
+            outarray[i][j] = m_u0[i][j] + w * std::pow( time, m_alpha );
         }
     }
 }

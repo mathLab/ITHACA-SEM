@@ -45,7 +45,6 @@
 #include <MultiRegions/Preconditioner.h>
 #include <LinearElasticSolver/EquationSystems/LinearElasticSystem.h>
 #include <StdRegions/StdNodalTriExp.h>
-#include <StdRegions/StdNodalTriExp.h>
 
 #ifdef NEKTAR_USE_MPI
 #include <MultiRegions/GlobalLinSysXxtStaticCond.h>

@@ -10,7 +10,7 @@ stages:
   only:
     refs:
       - merge_requests
-      - feature/gitlab_ci
+      - gitlab_ci_win7
       - tags
 
 .build-env-template: &build-env-template
@@ -104,20 +104,20 @@ stages:
   stage:
     build-env-full
 
-build-env-buster-default:
-  <<: *build-env-debian-template-default
+# build-env-buster-default:
+#   <<: *build-env-debian-template-default
 
 # build-env-buster-full:
 #   <<: *build-env-debian-template-full
 
-build-env-stretch-default:
-  <<: *build-env-debian-template-default
+# build-env-stretch-default:
+#   <<: *build-env-debian-template-default
 
 # build-env-stretch-full:
 #   <<: *build-env-debian-template-full
 
-build-and-test-buster-default:
-  <<: *build-and-test-template
+# build-and-test-buster-default:
+#   <<: *build-and-test-template
 
 # build-and-test-buster-full:
 #   <<: *build-and-test-template
@@ -125,22 +125,22 @@ build-and-test-buster-default:
 #     OS_DISTRO: debian
 #     GIT_SUBMODULE_STRATEGY: recursive
 
-build-and-test-stretch-default:
-  <<: *build-and-test-template
+# build-and-test-stretch-default:
+#   <<: *build-and-test-template
 
 # build-and-test-stretch-full:
 #   <<: *build-and-test-template
 
 
-# COMPILER WARNINGS
-warnings-buster-default:
-  <<: *compiler-warning-template
+# # COMPILER WARNINGS
+# warnings-buster-default:
+#   <<: *compiler-warning-template
 
 # warnings-buster-full:
 #   <<: *compiler-warning-template
 
-warnings-stretch-default:
-  <<: *compiler-warning-template
+# warnings-stretch-default:
+#   <<: *compiler-warning-template
 
 # warnings-stretch-full:
 #   <<: *compiler-warning-template
@@ -262,22 +262,22 @@ warnings-stretch-default:
 # ####################  OSX  #####################
 # ################################################
 
-.build-and-test-osx-template: &build-and-test-osx-template
-  <<: *build-and-test-template
-  tags:
-    - macos
-  script:
-    - mkdir -p log
-    - export OS_VERSION="osx"
-    - export NUM_CPUS=8
-    - bash -x ./.gitlab-ci/build-and-test.sh |
-      tee log/${OS_VERSION}_${BUILD_TYPE}.log
+# .build-and-test-osx-template: &build-and-test-osx-template
+#   <<: *build-and-test-template
+#   tags:
+#     - macos
+#   script:
+#     - mkdir -p log
+#     - export OS_VERSION="osx"
+#     - export NUM_CPUS=8
+#     - bash -x ./.gitlab-ci/build-and-test.sh |
+#       tee log/${OS_VERSION}_${BUILD_TYPE}.log
 
 
-build-and-test-osx-default:
-  <<: *build-and-test-osx-template
-  variables:
-    BUILD_TYPE: "default"
+# build-and-test-osx-default:
+#   <<: *build-and-test-osx-template
+#   variables:
+#     BUILD_TYPE: "default"
 
 # build-and-test-osx-full:
 #   <<: *build-and-test-osx-template

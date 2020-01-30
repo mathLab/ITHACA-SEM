@@ -894,7 +894,7 @@ void DemoSolver::GetMinMaxValues(
     if( print )
         std::cout << "  exact       ";
 
-    if(  print && m_nVars > 1 && m_nPoints > 1 )
+    if( print && m_nVars > 1 && m_nPoints > 1 )
         std::cout << std::endl;
 
     for (int k = 0; k < m_nVars; k++)
@@ -907,11 +907,11 @@ void DemoSolver::GetMinMaxValues(
             if( m_maxValue < exact[k][i] )
                 m_maxValue = exact[k][i];
 
-            if( print )
+	    if( print )
                 std::cout << exact[k][i] << "  ";
         }
 
-        if( print )
+	if( print && m_nVars > 1 && m_nPoints > 1 )
             std::cout << std::endl;
     }
 
@@ -937,11 +937,11 @@ void DemoSolver::GetMinMaxValues(
             // if( m_maxValue < approx[k][i] )
             //     m_maxValue = approx[k][i];
 
-          if( print )
-              std::cout << approx[k][i] << "  ";
+	    if( print )
+                std::cout << approx[k][i] << "  ";
         }
 
-        if( print )
+	if( print && m_nVars > 1 && m_nPoints > 1 )
             std::cout << std::endl;
     }
 

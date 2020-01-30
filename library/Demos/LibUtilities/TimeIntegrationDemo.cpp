@@ -57,7 +57,7 @@
 //  |
 //  |    and with  x = [0,1]
 //  |              t = [0,1]
-//  |              U = 1
+//  |              V = 1
 //  |              D = 0.05
 //  |              k = 1
 //  |
@@ -88,6 +88,7 @@
 #include <StdRegions/StdNodalTriExp.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/TimeIntegration/EulerExponentialTimeIntegrationSchemes.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
@@ -116,6 +117,12 @@ public:
     {
         m_minValue = +std::numeric_limits<double>::max();
         m_maxValue = -std::numeric_limits<double>::max();
+
+        m_minError = +std::numeric_limits<double>::max();
+        m_maxError = -std::numeric_limits<double>::max();
+
+        m_minL2Norm = +std::numeric_limits<double>::max();
+        m_maxL2Norm = -std::numeric_limits<double>::max();
     }
 
     virtual ~DemoSolver() {};
@@ -137,14 +144,17 @@ public:
         const Array<OneD, const Array<OneD, double>> &approx,
         bool print );
 
-    void EvaluateL2Error(
+    double EvaluateL2Error(
         const Array<OneD, const Array<OneD, double>> &exact,
-        const Array<OneD, const Array<OneD, double>> &approx );
+        const Array<OneD, const Array<OneD, double>> &approx,
+        bool print );
 
     void AppendOutput(
-        std::ofstream &outfile, const int timeStepNumber, const NekDouble time,
+        std::ofstream &outfile, std::ofstream &errorfile, std::ofstream &L2normfile,
+        const int timeStepNumber, const NekDouble time,
         const Array<OneD, const Array<OneD, double>> &exact,
-        const Array<OneD, const Array<OneD, double>> &approx) const;
+        const Array<OneD, const Array<OneD, double>> &approx,
+        const double L2Norm) const;
 
     void GenerateGnuplotScript(const std::string &method) const;
 
@@ -203,6 +213,14 @@ protected:
     double m_minValue;
     double m_maxValue;
 
+    // Min and max errors in the solutions
+    double m_minError;
+    double m_maxError;
+
+    // Min and max L2Norms in the solutions
+    double m_minL2Norm;
+    double m_maxL2Norm;
+
 }; // end class DemoSolver
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -213,7 +231,7 @@ public:
     // constructor based upon the discretisation details
     OneDFiniteDiffAdvDiffSolver(int nVars, int nPoints, int nTimeSteps) :
         DemoSolver(nVars, nPoints, nTimeSteps),
-        m_wavenumber(1.0), m_U(1.0), m_D(0.05)
+        m_wavenumber(1.0), m_V(1.0), m_D(0.05)
     {
         m_fileName = std::string("OneDFiniteDiffAdvDiffSolver");
         m_title = std::string("Finite Difference Solution to the 1D advection-diffusion equation");
@@ -241,7 +259,7 @@ public:
 private:
     // Value of the coefficients:
     double m_wavenumber; // wave number
-    double m_U;          // advection speed
+    double m_V;          // advection speed
     double m_D;          // diffusion coefficient
 
     void solveTriDiagMatrix(int n, double alpha, double beta,
@@ -766,23 +784,42 @@ int main(int argc, char *argv[])
     }
 
     // 4. Open a file for writing the solution
-    std::ofstream outfile;
+    std::ofstream outfile, errorfile, L2Normfile;
     outfile.open( solverSharedPtr->GetFileName() + ".dat");
+    errorfile.open( solverSharedPtr->GetFileName() + "Error.dat");
+    L2Normfile.open( solverSharedPtr->GetFileName() + "L2Norm.dat");
 
     // Save the scheme name for outputting.
     solverSharedPtr->SetSchemeName( tiScheme->GetName() );
 
-    // Write the initial conditions to the output file
-    solverSharedPtr->AppendOutput( outfile, 0, 0, exactSol, approxSol);
-
+    // Time step and time values
     int timeStep = 0;
     double time = t0;
+
+    LibUtilities::Timer timer;
+    NekDouble intTime = 0.0;
+
+    // Write the time step and time
+    if( verbose || L2 )
+        std::cout << "Time step: " << timeStep << "  "
+                  << "Time: " << time << std::endl;
+
+    solverSharedPtr->GetMinMaxValues(exactSol, approxSol, verbose);
+
+    double L2Norm = solverSharedPtr->EvaluateL2Error(exactSol, approxSol, L2);
+
+    // Write the initial conditions, error, and L2 Norm to the output file.
+    solverSharedPtr->AppendOutput( outfile, errorfile, L2Normfile,
+                                   0, 0, exactSol, approxSol, L2Norm);
 
     // 5. Do the time integration.
     while( timeStep < nTimeSteps )
     {
         // Time integration for one time step
+        timer.Start();
         approxSol = tiScheme->TimeIntegrate(timeStep, dt, ode);
+        timer.Stop();
+        intTime += timer.TimePerTest(1);
 
         // Advance the time for the exact solution.
         time += dt;
@@ -793,33 +830,35 @@ int main(int argc, char *argv[])
         // At this point the time step is finished so increment the time step.
         ++timeStep;
 
-        // Save the solutions the output file
-        solverSharedPtr->
-            AppendOutput(outfile, timeStep, time, exactSol, approxSol);
-
         // 6. Calculate the min / max values. If the last argument is
         // true the values will be dumped to screen.
 
         // Write the time step and time
         if( verbose || L2 )
-          std::cout << "Time step: " << timeStep << "  "
-                    << "Time: " << time << std::endl;
+            std::cout << "Time step: " << timeStep << "  "
+                      << "Time: " << time << std::endl;
 
         solverSharedPtr->GetMinMaxValues(exactSol, approxSol, verbose);
 
-        if( L2 )
-          solverSharedPtr->EvaluateL2Error(exactSol, approxSol);
+        L2Norm = solverSharedPtr->EvaluateL2Error(exactSol, approxSol, L2);
+
+        // Save the solutions, error, and L2 Norm to the output file
+        solverSharedPtr->AppendOutput(outfile, errorfile, L2Normfile,
+                                      timeStep, time, exactSol, approxSol, L2Norm);
     }
 
     // 7. Calculate the error for the last time step and dump to screen
     std::cout << tiScheme->GetFullName() << std::endl;
     std::cout << "Time step: " << timeStep << "  "
               << "Time: " << time << std::endl;
+    std::cout << "CPU Time : " << std::setw(8) << std::left
+              << intTime << std::endl;
 
-    solverSharedPtr->EvaluateL2Error(exactSol, approxSol);
+    solverSharedPtr->EvaluateL2Error(exactSol, approxSol, true);
 
     // 7. Some more writing out the results
     outfile.close();
+    errorfile.close();
 
     solverSharedPtr->GenerateGnuplotScript(tiScheme->GetFullName());
 
@@ -851,9 +890,40 @@ void DemoSolver::GetMinMaxValues(
     const Array<OneD, const Array<OneD, double>> &approx,
     bool print )
 {
+    // Get the min and max value and write the exact solution
+    if( print )
+        std::cout << "  exact       ";
+
+    if(  print && m_nVars > 1 && m_nPoints > 1 )
+        std::cout << std::endl;
+
+    for (int k = 0; k < m_nVars; k++)
+    {
+        for (int i = 0; i < m_nPoints; i++)
+        {
+            if( m_minValue > exact[k][i] )
+                m_minValue = exact[k][i];
+
+            if( m_maxValue < exact[k][i] )
+                m_maxValue = exact[k][i];
+
+            if( print )
+                std::cout << exact[k][i] << "  ";
+        }
+
+        if( print )
+            std::cout << std::endl;
+    }
+
+    if( print )
+        std::cout << std::endl;
+
     // Get the min and max value and write the approximate solution
     if( print )
         std::cout << "  approximate ";
+
+    if( print && m_nVars > 1 && m_nPoints > 1 )
+        std::cout << std::endl;
 
     for (int k = 0; k < m_nVars; k++)
     {
@@ -870,28 +940,9 @@ void DemoSolver::GetMinMaxValues(
           if( print )
               std::cout << approx[k][i] << "  ";
         }
-    }
 
-    if( print )
-        std::cout << std::endl;
-
-    // Get the min and max value and write the exact solution
-    if( print )
-        std::cout << "  exact       ";
-
-    for (int k = 0; k < m_nVars; k++)
-    {
-        for (int i = 0; i < m_nPoints; i++)
-        {
-            if( m_minValue > exact[k][i] )
-                m_minValue = exact[k][i];
-
-            if( m_maxValue < exact[k][i] )
-                m_maxValue = exact[k][i];
-
-            if( print )
-                std::cout << exact[k][i] << "  ";
-        }
+        if( print )
+            std::cout << std::endl;
     }
 
     if( print )
@@ -900,9 +951,10 @@ void DemoSolver::GetMinMaxValues(
 
 // Calculate the Relative Error L2 Norm (as opposed to the absolute L2
 // norm).
-void DemoSolver::EvaluateL2Error(
+double DemoSolver::EvaluateL2Error(
     const Array<OneD, const Array<OneD, double>> &exact,
-    const Array<OneD, const Array<OneD, double>> &approx )
+    const Array<OneD, const Array<OneD, double>> &approx,
+    bool print )
 {
     // Calcualate the sum of squares for the L2 Norm.
     double a = 0.0;
@@ -912,24 +964,45 @@ void DemoSolver::EvaluateL2Error(
     {
         for (int i = 0; i < m_nPoints; i++)
         {
-            a += (approx[k][i] - exact[k][i]) * (approx[k][i] - exact[k][i]);
+            double diff = approx[k][i] - exact[k][i];
+
+            if( m_minError > diff )
+                m_minError = diff;
+
+            if( m_maxError < diff )
+                m_maxError = diff;
+
+            a += diff * diff;
             b += exact[k][i] * exact[k][i];
         }
     }
 
-    ASSERTL1( b>DBL_EPSILON,
-              "Exact solution is near zero. L2 Norn is invalid" );
-
     // Calculate the relative error L2 Norm.
     double norm = sqrt(a / b);
 
-    std::cout << "L 2 error :" << norm << std::endl;
+    if( m_minL2Norm > norm )
+      m_minL2Norm = norm;
+
+    if( m_maxL2Norm < norm )
+      m_maxL2Norm = norm;
+
+    if( print )
+    {
+        ASSERTL1( b > DBL_EPSILON,
+                  "Exact solution is near zero. L2 Norn is invalid" );
+
+        std::cout << "L 2 error :" << norm << std::endl;
+    }
+
+    return norm;
 }
 
 void DemoSolver::AppendOutput(
-    std::ofstream &outfile, int timeStepNumber, const NekDouble time,
+    std::ofstream &outfile, std::ofstream &errorfile, std::ofstream &L2Normfile,
+    int timeStepNumber, const NekDouble time,
     const Array<OneD, const Array<OneD, double>> &exact,
-    const Array<OneD, const Array<OneD, double>> &approx) const
+    const Array<OneD, const Array<OneD, double>> &approx,
+    const double L2Norm ) const
 {
     if (timeStepNumber == 0)
     {
@@ -948,13 +1021,47 @@ void DemoSolver::AppendOutput(
                 << std::endl
                 << "#" << std::endl;
 
+        // Save some data provenance and other useful info in output file...
+        errorfile << "# Data in this file consists of " << m_nTimeSteps
+                  << " time steps (there will be" << std::endl
+                  << "# a blank line between each data set for each time step)."
+                  << std::endl
+                  << "#" << std::endl
+                  << "# Delta T: " << m_dt
+                  << std::endl
+                  << "# Method:  " << m_schemeName
+                  << std::endl
+                  << "#" << std::endl
+                  << "# There are 2 columns with the following headers:"
+                  << std::endl
+                  << "#" << std::endl;
+
+        // Save some data provenance and other useful info in output file...
+        L2Normfile << "# Data in this file consists of " << m_nTimeSteps
+                   << " time steps."
+                   << std::endl
+                   << "#" << std::endl
+                   << "# Delta T: " << m_dt
+                   << std::endl
+                   << "# Method:  " << m_schemeName
+                   << std::endl
+                   << "#" << std::endl
+                   << "# There are 2 columns with the following headers:"
+                   << std::endl
+                   << "#" << std::endl
+                   << "#     Time      |      L2 Norm"
+                   << std::endl
+                   << "#" << std::endl;
+
         if( m_nVars > 1 )
         {
             outfile << "#   Variable";
+            errorfile << "#   Variable";
         }
         else if( m_nPoints > 1 )
         {
             outfile << "#   Location";
+            errorfile << "#   Location";
         }
 
         outfile << "  |  Exact Solution  |  Approximate Solution"
@@ -963,11 +1070,26 @@ void DemoSolver::AppendOutput(
                 << std::endl << std::endl
                 << "# Initial condition (at time " << time << "):"
                 << std::endl;
+
+        errorfile << "  |  Error (approx-exact)"
+                  << std::endl
+                  << "#"
+                  << std::endl << std::endl
+                  << "# Initial condition (at time " << time << "):"
+                  << std::endl;
     }
     else
     {
         outfile << "# Time step: " << timeStepNumber << ", time: " << time
-                << std::endl;    }
+                << std::endl;
+        errorfile << "# Time step: " << timeStepNumber << ", time: " << time
+                << std::endl;
+    }
+
+    L2Normfile << std::scientific
+               << std::setw(17) << std::setprecision(10)
+               << time << "  " << L2Norm
+               << std::endl;
 
     for (int k = 0; k < m_nVars; k++)
     {
@@ -980,6 +1102,12 @@ void DemoSolver::AppendOutput(
                         << k
                         << "  " << exact[k][i] << "  " << approx[k][i]
                         << std::endl;
+
+                errorfile << std::scientific
+                          << std::setw(17) << std::setprecision(10)
+                          << k
+                          << "  " << approx[k][i] - exact[k][i]
+                          << std::endl;
             }
             else if( m_nPoints > 1 )
             {
@@ -988,68 +1116,157 @@ void DemoSolver::AppendOutput(
                         << m_x0 + i * m_dx
                         << "  " << exact[k][i] << "  " << approx[k][i]
                         << std::endl;
+
+                errorfile << std::scientific
+                          << std::setw(17) << std::setprecision(10)
+                          << m_x0 + i * m_dx
+                          << "  " << approx[k][i] - exact[k][i]
+                          << std::endl;
             }
         }
     }
 
     // Gnuplot uses two blank lines between each set of data.
-    outfile << std::endl << std::endl;
+    outfile   << std::endl << std::endl;
+    errorfile << std::endl << std::endl;
 }
 
 void DemoSolver::GenerateGnuplotScript(const std::string &method) const
 {
-    std::ofstream outfile;
-    outfile.open(m_fileName + ".p");
-    outfile << "# Gnuplot script file" << std::endl
-            << "set   autoscale" << std::endl
-            << "unset log" << std::endl
-            << "unset label" << std::endl
-            << "set xtic auto" << std::endl
-            << "set ytic auto" << std::endl
-      // FIXME
-      // << "set title 'Finite Difference Solution to the 1D "
-      // << "advection-diffusion equation "
-            << "set title 'Approximate vs exact solution using method "
-            << method << "'" << std::endl
-            << "set xlabel 'x'" << std::endl
-            << "set ylabel 'u'" << std::endl;
+    std::vector< std::string > fileSuffix{"", "Error", "L2Norm"};
 
-    if( m_nVars > 1 )
+    for( int j=0; j<3; ++j )
     {
-        outfile << "set xr [" << 0          << ":" << m_nVars-1  << "]"
-                << std::endl
-                << "set yr [" << m_minValue << ":" << m_maxValue << "]"
-                << std::endl;
+        std::ofstream outfile;
+        outfile.open(m_fileName + fileSuffix[j] + ".p");
+        outfile << "# Gnuplot script file" << std::endl
+                << "set   autoscale" << std::endl
+                << "unset log" << std::endl
+                << "unset label" << std::endl
+                << "set xtic auto" << std::endl
+                << "set ytic auto" << std::endl;
+          // FIXME
+          // << "set title 'Finite Difference Solution to the 1D "
+          // << "advection-diffusion equation "
+        if( j == 0 )
+        {
+            outfile << "set title 'Approximate vs exact solution using method ";
+
+            if( m_nVars > 1 )
+                outfile << method << "'" << std::endl
+                        << "set xlabel 'variable'" << std::endl
+                        << "set ylabel 'u'" << std::endl;
+            else
+                outfile << method << "'" << std::endl
+                        << "set xlabel 'x'" << std::endl
+                        << "set ylabel 'u'" << std::endl;
+        }
+        else if( j == 0 )
+        {
+            outfile << "set title 'Error using method ";
+
+            if( m_nVars > 1 )
+                outfile << method << "'" << std::endl
+                        << "set xlabel 'variable'" << std::endl
+                        << "set ylabel 'u'" << std::endl;
+            else
+                outfile << method << "'" << std::endl
+                        << "set xlabel 'x'" << std::endl
+                        << "set ylabel 'u'" << std::endl;
+        }
+        else if( j == 1 )
+        {
+            outfile << "set title 'L2Norm using method ";
+
+            outfile << method << "'" << std::endl
+                    << "set xlabel 'time'" << std::endl
+                    << "set ylabel 'L2Norm'" << std::endl;
+        }
+
+        double minValue;
+        double maxValue;
+
+        if( j == 0 )
+        {
+            minValue = m_minValue;
+            maxValue = m_maxValue;
+        }
+        else if( j == 1 )
+        {
+            minValue = m_minError;
+            maxValue = m_maxError;
+        }
+        else if( j == 2 )
+        {
+            minValue = m_minL2Norm;
+            maxValue = m_maxL2Norm;
+        }
+
+        if( j == 0 || j == 1 )
+        {
+            if( m_nVars > 1 )
+            {
+                outfile << "set xr [" << 0        << ":" << m_nVars-1<< "]"
+                        << std::endl
+                        << "set yr [" << minValue << ":" << maxValue << "]"
+                        << std::endl;
+            }
+            else if( m_nPoints > 1 )
+            {
+                outfile << "set xr [" << m_x0     << ":" << m_xend   << "]"
+                        << std::endl
+                        << "set yr [" << minValue << ":" << maxValue << "]"
+                        << std::endl;
+            }
+        }
+        else
+        {
+            outfile << "set xr [" << m_t0     << ":" << m_tend   << "]"
+                    << std::endl
+                    << "set yr [" << minValue << ":" << maxValue << "]"
+                    << std::endl;
+
+            outfile << "plot '"
+                    << m_fileName << fileSuffix[j] << ".dat' using 1:2 index "
+                    << 0 << " title 'L2 Norm' with linespoints "
+                    << std::endl;
+        }
+
+        for (int i = 0; i <= m_nTimeSteps; i++)
+        {
+            double t = m_t0 + (i * m_dt);
+
+            if( j == 0 )
+            {
+                outfile << "plot '"
+                        << m_fileName << fileSuffix[j] << ".dat' using 1:2 index "
+                        << i << " title 'Exact Solution (t=" << t
+                        << ")' with linespoints "
+                        << ", '"
+                        << m_fileName << fileSuffix[j] << ".dat' using 1:3 index "
+                        << i << " title 'Approximate Solution (t=" << t
+                        << ")' with linespoints "
+                        << std::endl
+                        << "pause " << 4.0 / m_nTimeSteps
+                        << std::endl;
+            }
+            else if( j == 1 )
+            {
+                outfile << "plot '"
+                        << m_fileName << fileSuffix[j] << ".dat' using 1:2 index "
+                        << i << " title 'Error (t=" << t
+                        << ")' with linespoints "
+                        << std::endl
+                        << "pause " << 4.0 / m_nTimeSteps
+                        << std::endl;
+            }
+        }
+
+        // Keep window open until the user clicks
+        outfile << "pause mouse any" << std::endl;
+
+        outfile.close();
     }
-    else if( m_nPoints > 1 )
-    {
-        outfile << "set xr [" << m_x0       << ":" << m_xend     << "]"
-                << std::endl
-                << "set yr [" << m_minValue << ":" << m_maxValue << "]"
-                << std::endl;
-    }
-
-    for (int i = 0; i <= m_nTimeSteps; i++)
-    {
-        double t = m_t0 + (i * m_dt);
-
-        outfile << "plot '"
-                << m_fileName << ".dat' using 1:2 index "
-                << i << " title 'Exact Solution (t=" << t
-                << ")' with linespoints "
-                << ", '"
-                << m_fileName << ".dat' using 1:3 index "
-                << i << " title 'Approximate Solution (t=" << t
-                << ")' with linespoints "
-                << std::endl
-                << "pause " << 4.0 / m_nTimeSteps
-                << std::endl;
-    }
-
-    // Keep window open until the user clicks
-    outfile << "pause mouse any" << std::endl;
-
-    outfile.close();
 }
 
 
@@ -1128,13 +1345,13 @@ void OneDFiniteDiffAdvDiffSolver::EvaluateAdvectionTerm(
 
             // Central differences:
             outarray[k][0] =
-              -m_U * (inarray[k][1] - inarray[k][m_nPoints - 2]) / (2.0 * m_dx);
+              -m_V * (inarray[k][1] - inarray[k][m_nPoints - 2]) / (2.0 * m_dx);
             outarray[k][m_nPoints - 1] = outarray[k][0];
 
             for (int i = 1; i < m_nPoints - 1; i++)
             {
                 outarray[k][i] =
-                  -m_U * (inarray[k][i + 1] - inarray[k][i - 1]) / (2.0 * m_dx);
+                  -m_V * (inarray[k][i + 1] - inarray[k][i - 1]) / (2.0 * m_dx);
             }
         }
         else
@@ -1143,7 +1360,7 @@ void OneDFiniteDiffAdvDiffSolver::EvaluateAdvectionTerm(
             for (int i = 1; i < m_nPoints; i++)
             {
                 outarray[k][i] =
-                  -m_U * (inarray[k][i] - inarray[k][i - 1]) / (m_dx);
+                  -m_V * (inarray[k][i] - inarray[k][i - 1]) / (m_dx);
             }
 
             outarray[k][0] = outarray[k][m_nPoints - 1];
@@ -1184,14 +1401,14 @@ void OneDFiniteDiffAdvDiffSolver::EvaluateExactSolution(
     {
         for (int i = 0; i < m_nPoints; i++)
         {
-            double x       = m_x0 + i * m_dx;
+            double x = m_x0 + i * m_dx;
             double wn = 2.0 * M_PI * m_wavenumber;
             outarray[k][i] =
-              exp(-m_D * wn * wn * time) * sin(wn * (x - m_U * time));
+              exp(-m_D * wn * wn * time) * sin(wn * (x - m_V * time));
 
-            outarray[k][i] = exp(-m_D * 2.0 * 2.0 * M_PI * M_PI * m_wavenumber *
-                                 m_wavenumber * time) *
-              sin(2.0 * m_wavenumber * M_PI * (x - m_U * time));
+            // outarray[k][i] = exp(-m_D * 2.0 * 2.0 * M_PI * M_PI * m_wavenumber *
+            //                      m_wavenumber * time) *
+            //   sin(2.0 * m_wavenumber * M_PI * (x - m_V * time));
         }
     }
 }

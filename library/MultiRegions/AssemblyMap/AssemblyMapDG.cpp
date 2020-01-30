@@ -53,6 +53,8 @@
 #include <boost/graph/properties.hpp>
 #include <boost/graph/bandwidth.hpp>
 
+#include <LibUtilities/Communication/CommMpi.h>  // TODO: Implement the graph constructor using virtual functions so can remove this include I added
+
 using namespace std;
 
 namespace Nektar
@@ -841,6 +843,91 @@ namespace Nektar
                     }
                 }
             }
+
+            //Set up graph topology for MPI
+            std::unordered_set<int> localEdgeIds;  // TODO: Can improve this to filter out boundary edges also before sending
+            for (int i = 0; i < locExpVector.size(); ++i)
+            {
+                for (int j = 0; j < locExpVector[i]->GetNedges(); ++j)
+                {
+                    LocalRegions::SegExpSharedPtr locSegExp = m_elmtToTrace[i][j]->as<LocalRegions::SegExp>();
+                    int id = locSegExp->GetGeom()->GetGlobalID();
+                    localEdgeIds.insert(id);
+                }
+            }
+
+            int nRanks =  m_comm->GetSize();
+
+            Array<OneD, int> rankNumEdges(nRanks);
+            Array<OneD, int> localEdgeSize(1, localEdgeIds.size());
+            m_comm->AllGather(localEdgeSize, rankNumEdges);
+
+            Array<OneD, int> rankLocalEdgeDisp(nRanks, 0);
+            for (i = 1; i < nRanks; ++i)
+            {
+                rankLocalEdgeDisp[i] = rankLocalEdgeDisp[i-1] + rankNumEdges[i-1];
+            }
+
+            std::vector<int> tmpVec(localEdgeIds.begin(), localEdgeIds.end());
+            Array<OneD, int> localEdgeIdsArray(localEdgeIds.size());
+            for (i = 0; i < tmpVec.size(); ++i)
+            {
+                localEdgeIdsArray[i] = tmpVec[i];
+            }
+
+            Array<OneD, int> rankLocalEdgeIds(std::accumulate(
+                    rankNumEdges.begin(), rankNumEdges.end(), 0), 0);
+
+            m_comm->AllGatherv(localEdgeIdsArray, rankLocalEdgeIds, rankNumEdges, rankLocalEdgeDisp);
+
+            int myRank = m_comm->GetRank();
+            std::vector<int> otherRanks;
+            for(i = 0; i < nRanks; ++i)
+            {
+                if (i != myRank)
+                {
+                    otherRanks.emplace_back(i);
+                }
+            }
+
+            std::map<int, std::vector<int>> rankSharedEdges;
+
+            for (auto rank : otherRanks)
+            {
+                for (int j = 0; j < rankNumEdges[rank]; ++j)
+                {
+                    int edgeId = rankLocalEdgeIds[rankLocalEdgeDisp[rank] + j];
+
+                    int *found = std::find(localEdgeIdsArray.begin(), localEdgeIdsArray.end(), edgeId);
+                    if (found != localEdgeIdsArray.end())
+                    {
+                        rankSharedEdges[rank].emplace_back(edgeId);
+                    }
+                }
+            }
+
+            int sources[rankSharedEdges.size()];
+            int weights[rankSharedEdges.size()];
+            int cnt = 0;
+            for (auto rankEdgeVec : rankSharedEdges)
+            {
+                sources[cnt] = rankEdgeVec.first;
+                weights[cnt] = rankEdgeVec.second.size();
+                ++cnt;
+            }
+
+            MPI_Comm commGraph;
+            int retval = MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD,
+                                           rankSharedEdges.size(), sources, weights,  // Sources
+                                           rankSharedEdges.size(), sources, weights,  // Destinations
+                                           MPI_INFO_NULL, 1, &commGraph);
+
+            ASSERTL0(retval == MPI_SUCCESS, "MPI error creating distributed graph.");
+
+            int newRank;
+            MPI_Comm_rank(commGraph, &newRank);
+            std::cout << "Old rank: " << myRank << std::endl;
+            std::cout << "New rank: " << newRank << std::endl;
 
             Array<OneD, long> tmp2(nTracePhys);
             for (int i = 0; i < nTracePhys; ++i)

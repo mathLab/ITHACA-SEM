@@ -67,12 +67,8 @@ public:
                  "of free parameters, expected two, received  " +
                  std::to_string(freeParams.size()));
 
-        std::cerr << __LINE__ << std::endl;
-
         int s     = freeParams[0];
         int sigma = freeParams[1];
-
-        std::cerr << __LINE__ << "  " << s << "  " << sigma << std::endl;
 
         m_integration_phases    = TimeIntegrationAlgorithmGLMVector(1);
         m_integration_phases[0] = TimeIntegrationAlgorithmGLMSharedPtr(

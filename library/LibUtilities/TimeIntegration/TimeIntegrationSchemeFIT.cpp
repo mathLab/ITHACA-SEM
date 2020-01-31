@@ -535,15 +535,12 @@ integral_class_initialize(const unsigned int index,
     instance.fsandbox_ind = std::pair<int, int>(0, 0);
 
     // Defining parameters of the Talbot contour quadrature rule
-    NekDouble sigma = 0;
-    NekDouble mu0 = 8;
-    NekDouble nu = 0.6;
     NekDouble Tl =
         m_deltaT * (2.*pow(m_base, index) - 1. - pow(m_base, index-1));
-    NekDouble mu = mu0 / Tl;
+    NekDouble mu = m_mu0 / Tl;
 
     // Talbot quadrature rule
-    talbot_quadrature(m_nQuadPts, mu, nu, sigma, instance.z, instance.w);
+    talbot_quadrature(m_nQuadPts, mu, m_nu, m_sigma, instance.z, instance.w);
 
     // With sigma == 0, the dependence of z and w on index is just a
     // multiplicative scaling factor (mu). So technically we'll only
@@ -976,9 +973,13 @@ advance_sandbox(const unsigned int timeStep,
 void FractionalInTimeIntegrationScheme::print(std::ostream &os) const
 {
     os << "Time Integration Scheme: " << GetFullName() << std::endl
-       << "Base " << m_base << std::endl
-       << "Number of quadature points " << m_nQuadPts << std::endl
-       << "Alpha " << m_alpha << std::endl;
+       << "       Base " << m_base << std::endl
+       << "       Number of instances " << m_Lmax << std::endl
+       << "       Number of quadature points " << m_nQuadPts << std::endl
+       << "             Talbot Parameter: sigma " << m_sigma << std::endl
+       << "             Talbot Parameter: mu0 " << m_mu0 << std::endl
+       << "             Talbot Parameter: nu " << m_nu << std::endl
+       << "       Alpha " << m_alpha << std::endl;
 }
 
 // Friend Operators

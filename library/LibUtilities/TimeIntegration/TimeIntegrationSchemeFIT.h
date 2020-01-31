@@ -258,12 +258,15 @@ protected:
     TimeIntegrationSchemeType m_schemeType{eFractionalInTime};
 
     // Varaibles and methods specific to FIT integration schemes.
-    NekDouble    m_deltaT{0.01};
+    NekDouble    m_deltaT{0};
     NekDouble    m_T{0};          // Finial time
     unsigned int m_maxTimeSteps;  // Number of time steps.
     NekDouble    m_alpha{0.3};    // Value for exp integration.
     unsigned int m_base{4};       // "Base" of the algorithm.
     unsigned int m_nQuadPts{20};  // Number of Talbot quadrature rule points
+    NekDouble    m_sigma{0};
+    NekDouble    m_mu0{8};
+    NekDouble    m_nu{0.6};
 
     int m_nvars{0};            // Number of variables in the integration scheme.
     int m_npoints{0};          // Number of points    in the integration scheme.

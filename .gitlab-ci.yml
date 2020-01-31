@@ -307,3 +307,16 @@ build-and-test-win7-default:
     - cmake.exe --build . --target ALL_BUILD --config Debug
     - cmake.exe --build . --target INSTALL --config Debug
     - ctest --output-on-failure -C Debug -j3
+
+
+build-and-test-win10-default:
+  <<: *build-and-test-template
+  tags:
+    - win10
+  script:
+    - mkdir build
+    - cd build
+    - cmake.exe -G "Visual Studio 14 2015 Win64" --config Debug ..
+    - cmake.exe --build . --target ALL_BUILD --config Debug
+    - cmake.exe --build . --target INSTALL --config Debug
+    - ctest --output-on-failure -C Debug -j3

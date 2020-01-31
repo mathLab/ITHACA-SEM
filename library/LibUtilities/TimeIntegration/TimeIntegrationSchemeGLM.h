@@ -85,14 +85,16 @@ public:
         const int timestep, const NekDouble delta_t,
         const TimeIntegrationSchemeOperators &op);
   
-    virtual void InitializeSecondaryData(TimeIntegrationAlgorithmGLM *phase,
-					 NekDouble deltaT) const;
+    LUE virtual void InitializeSecondaryData(TimeIntegrationAlgorithmGLM *phase,
+                                             NekDouble deltaT) const;
   
+    LUE virtual void print(std::ostream &os) const;
+
     // Friend classes
     LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationSchemeGLM &rhs);
+        const TimeIntegrationSchemeGLM &rhs);
     LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationSchemeGLMSharedPtr &rhs);
+        const TimeIntegrationSchemeGLMSharedPtr &rhs);
 
 protected:
     // These methods should never be used directly, only used by child classes.

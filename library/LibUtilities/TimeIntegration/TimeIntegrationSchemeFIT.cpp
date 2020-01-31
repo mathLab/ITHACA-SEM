@@ -224,9 +224,6 @@ TimeIntegrate(const int timestep,
     // The Fractional in Time works via the logical? time step value.
     int timeStep = timestep + 1;
 
-    // std::cout << "order  " << m_order << "  "
-    //        << "timeStep  " << timeStep << std::endl;
-
     // Update the storage and counters for integral classes.  Performs
     // staging for updating u.
     for (int l=0; l<m_Lmax; ++l)
@@ -280,6 +277,7 @@ TimeIntegrate(const int timestep,
     }
 
     // Dump the current solution.
+    // std::cout << "timeStep  " << timeStep << std::endl;
     // for( int j=0; j<m_npoints; ++j )
     // {
     //     for( int i=0; i<m_nvars; ++i )
@@ -416,7 +414,7 @@ talbot_quadrature(const unsigned int nQuadPts,
         lamb[q] = sigma + mu * th * std::complex<NekDouble>(1./tan(th), nu);
 
         w[q] = std::complex<NekDouble>(0, -1./NekDouble(nQuadPts)) *
-          mu * std::complex<NekDouble>(1./tan(th) - th/(sin(th)*sin(th)), nu);
+            mu * std::complex<NekDouble>(1./tan(th) - th/(sin(th)*sin(th)), nu);
     }
 
     // Special case for th = 0 which happens when there is an odd number
@@ -669,6 +667,9 @@ integral_class_initialize(const unsigned int index,
         }
     }
 
+    // AtEh is set for the primary order. If a lower order method is
+    // needed for initializing it will be changed in time_advance then
+    // restored.
     instance.AtEh = ComplexDoubleArray(m_order+1);
 
     for( unsigned int m=0; m<=m_order; ++m )
@@ -780,6 +781,8 @@ void FractionalInTimeIntegrationScheme::
 final_increment(const unsigned int timeStep,
                 const TimeIntegrationSchemeOperators &op)
 {
+    // Note: m_uNext is initialized to zero and then reset to zero
+    // after it is used to update the current solution in TimeIntegrate.
     for( unsigned int m=0; m<m_order; ++m )
     {
         op.DoOdeRhs(m_u[m], m_F, m_deltaT * (timeStep-m));
@@ -830,8 +833,8 @@ integral_contribution(const unsigned int timeStep,
 
 void FractionalInTimeIntegrationScheme::
 time_advance(const unsigned int timeStep,
-                   Instance &instance,
              const TimeIntegrationSchemeOperators &op,
+                   Instance &instance,
                    ComplexTripleArray &y)
 {
     // Solution to y' = z*y + f(u), using an exponential integrator with
@@ -839,7 +842,7 @@ time_advance(const unsigned int timeStep,
 
     int order;
 
-    // Try automated high-order method:
+    // Try automated high-order method.
     if( timeStep <= m_order )
     {
         // Not enough history. For now, demote to lower-order method.
@@ -903,7 +906,7 @@ advance_sandbox(const unsigned int timeStep,
 {
     // (1)
     // update(instance.csandbox.y)
-    time_advance(timeStep, instance, op, instance.csandbox_y);
+    time_advance(timeStep, op, instance, instance.csandbox_y);
     instance.csandbox_ind.second = timeStep;
 
     // (2)
@@ -933,7 +936,7 @@ advance_sandbox(const unsigned int timeStep,
     if( instance.fsandbox_active )
     {
         // (4)
-        time_advance(timeStep, instance, op, instance.fsandbox_y);
+        time_advance(timeStep, op, instance, instance.fsandbox_y);
 
         instance.fsandbox_ind.second = timeStep;
 
@@ -969,14 +972,20 @@ advance_sandbox(const unsigned int timeStep,
     }
 }
 
+//
+void FractionalInTimeIntegrationScheme::print(std::ostream &os) const
+{
+    os << "Time Integration Scheme: " << GetFullName() << std::endl
+       << "Base " << m_base << std::endl
+       << "Number of quadature points " << m_nQuadPts << std::endl
+       << "Alpha " << m_alpha << std::endl;
+}
+
 // Friend Operators
 std::ostream &operator<<(std::ostream &os,
                          const FractionalInTimeIntegrationScheme &rhs)
 {
-    os << "Time Integration Scheme: " << rhs.GetFullName() << std::endl
-       << "Base " << rhs.m_base << std::endl
-       << "Number of quadature points " << rhs.m_nQuadPts << std::endl
-       << "Alpha " << rhs.m_alpha << std::endl;
+    rhs.print( os );
 
     return os;
 }

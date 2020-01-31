@@ -103,27 +103,31 @@ ConstDoubleArray &TimeIntegrationSchemeGLM::TimeIntegrate(
 
 void TimeIntegrationSchemeGLM::
 InitializeSecondaryData(TimeIntegrationAlgorithmGLM *phase,
-			NekDouble deltaT) const
+                        NekDouble deltaT) const
 {
     boost::ignore_unused(phase, deltaT);
 
     ASSERTL0(false, "No InitializeSecondaryData method for scheme " +
-	     GetFullName());
+             GetFullName());
+}
+
+void TimeIntegrationSchemeGLM::print(std::ostream &os) const
+{
+    os << "Time Integration Scheme: " << GetFullName() << std::endl
+       << "        Has " << m_integration_phases.size() << " phase(s)"
+       << std::endl;
+
+    for (int i = 0; i < m_integration_phases.size(); i++)
+    {
+        os << "            - "
+           << m_integration_phases[i]->m_name << std::endl;
+    }
 }
 
 // Friend Operators
 std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeGLM &rhs)
 {
-    os << "Time Integration Scheme: " << rhs.GetFullName() << std::endl
-       << "        Has " << rhs.m_integration_phases.size() << " phases"
-       << std::endl;
-
-    for (int i = 0; i < rhs.m_integration_phases.size(); i++)
-    {
-        os << "            - "
-           << rhs.m_integration_phases[i]->m_parent->GetFullName()
-           << "\n";
-    }
+    rhs.print( os );
 
     return os;
 }

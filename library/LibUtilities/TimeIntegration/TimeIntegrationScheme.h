@@ -122,13 +122,15 @@ public:
 
     LUE virtual ConstDoubleArray &TimeIntegrate(
         const int timestep, const NekDouble delta_t,
-        const TimeIntegrationSchemeOperators &op) = 0 ;
+        const TimeIntegrationSchemeOperators &op) = 0;
+
+    LUE virtual void print(std::ostream &os) const = 0;
 
     // Friend classes
     LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationScheme &rhs);
+        const TimeIntegrationScheme &rhs);
     LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationSchemeSharedPtr &rhs);
+        const TimeIntegrationSchemeSharedPtr &rhs);
 
 protected:
     // These methods should never be used directly, only used by child classes.

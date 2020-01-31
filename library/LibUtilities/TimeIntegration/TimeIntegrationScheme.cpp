@@ -56,7 +56,7 @@ std::string TimeIntegrationScheme::GetFullName () const
 // Friend Operators
 std::ostream &operator<<(std::ostream &os, const TimeIntegrationScheme &rhs)
 {
-    os << "Time Integration Scheme: " << rhs.GetFullName() << std::endl;
+    rhs.print(os);
 
     return os;
 }

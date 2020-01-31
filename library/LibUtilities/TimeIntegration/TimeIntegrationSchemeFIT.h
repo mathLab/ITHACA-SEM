@@ -143,11 +143,13 @@ public:
         const int timestep, const NekDouble delta_t,
         const TimeIntegrationSchemeOperators &op);
 
+    LUE virtual void print(std::ostream &os) const;
+
     // Friend classes
     LUE friend std::ostream &operator<<(std::ostream &os,
-                                        const FractionalInTimeIntegrationScheme &rhs);
+        const FractionalInTimeIntegrationScheme &rhs);
     LUE friend std::ostream &operator<<(std::ostream &os,
-                                        const FractionalInTimeIntegrationSchemeSharedPtr &rhs);
+        const FractionalInTimeIntegrationSchemeSharedPtr &rhs);
 
 protected:
     struct Instance
@@ -239,8 +241,8 @@ protected:
                                const Instance &instance);
 
     void time_advance(const unsigned int timeStep,
-                            Instance &instance,
                       const TimeIntegrationSchemeOperators &op,
+                            Instance &instance,
                             ComplexTripleArray &y);
 
     void advance_sandbox(const unsigned int timeStep,

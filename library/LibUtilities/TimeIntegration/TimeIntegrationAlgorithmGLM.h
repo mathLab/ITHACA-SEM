@@ -227,14 +227,13 @@ public:
 
     // Friend classes
     LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationScheme &rhs);
+                                        const TimeIntegrationScheme &rhs);
     LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationSchemeSharedPtr &rhs);
+        const TimeIntegrationSchemeSharedPtr &rhs);
 
     LUE friend std::ostream &operator<<(std::ostream &os,
-                                    const TimeIntegrationAlgorithmGLM &rhs);
-    LUE friend std::ostream &operator<<(
-        std::ostream &os,
+                                        const TimeIntegrationAlgorithmGLM &rhs);
+    LUE friend std::ostream &operator<<(std::ostream &os,
         const TimeIntegrationAlgorithmGLMSharedPtr &rhs);
 
 private:
@@ -309,8 +308,7 @@ private:
 LUE std::ostream &operator<<(std::ostream &os,
                              const TimeIntegrationAlgorithmGLM &rhs);
 
-LUE std::ostream &operator<<(
-    std::ostream &os,
+LUE std::ostream &operator<<(std::ostream &os,
     const TimeIntegrationAlgorithmGLMSharedPtr &rhs);
 
 // =========================================================================

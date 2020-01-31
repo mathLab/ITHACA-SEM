@@ -63,53 +63,62 @@ InitializeScheme(const NekDouble deltaT,
 
     // The +2 below is a demonstration of how to do additional
     // allocation in case one decides later to increase T
-    m_Lmax = compute_L( m_base, m_maxTimeSteps ) + 2;
+    m_Lmax = compute_L(m_base, m_maxTimeSteps) + 2;
 
     // Demarcation integers - one array that is re-used
-    m_qml  = Array<OneD, int>( m_Lmax-1, 0 );
+    m_qml  = Array<OneD, int>(m_Lmax-1, 0);
     // Demarcation interval markers - one array that is re-used
-    m_taus = Array<OneD, int>( m_Lmax+1, 0 );
+    m_taus = Array<OneD, int>(m_Lmax+1, 0);
 
     // Storage of the initial values.
-    m_u0    = Array<TwoD,              NekDouble>  (m_nvars, m_npoints, 0.0);
+    m_u0 = y_0;
 
-    for( int i=0; i<m_nvars; ++i )
-    {
-        for( int j=0; j<m_npoints; ++j )
-        {
-            m_u0[i][j] = y_0[i][j];
-        }
-    }
+    // m_u0 = DoubleArray( m_nvars );
 
-    // Storage of the next solution from the final increment.
-    m_uNext = Array<TwoD,              NekDouble>  (m_nvars, m_npoints, 0.0);
-    // Storage for the integral contribution.
-    m_uInt  = Array<TwoD, std::complex<NekDouble> >(m_nvars, m_npoints, 0.0);
+    // for( int i=0; i<m_nvars; ++i )
+    // {
+    //     m_u0[i] = SingleArray( m_npoints, 0.0 );
+
+    //     for( int j=0; j<m_npoints; ++j )
+    //     {
+    //         m_u0[i][j] = y_0[i][j];
+    //     }
+    // }
 
     // Storage for the exponential factor in the integral
     // contribution. One array that is re-used
-    m_expFactor = Array<OneD, std::complex<NekDouble> >(m_nQuadPts, 0.0);
-
-    // Storage of the derivatives. One array that is re-used
-    m_F = TripleArray( m_order+1 );
+    m_expFactor = ComplexSingleArray(m_nQuadPts, 0.0);
 
     // Storage of previous states and associated timesteps.
     m_u = TripleArray( m_order+1 );
 
     for( unsigned int m=0; m<=m_order; ++m )
     {
-        m_F[m] = DoubleArray( m_nvars );
         m_u[m] = DoubleArray( m_nvars );
 
         for( unsigned int i=0; i<m_nvars; ++i )
         {
-            m_F[m][i] = SingleArray( m_npoints, 0.0 );
             m_u[m][i] = SingleArray( m_npoints, 0.0 );
         }
     }
 
+    // Storage for the stage derivative as the data will be re-used to
+    // update the solution.
+    m_F = DoubleArray( m_nvars );
+    // Storage of the next solution from the final increment.
+    m_uNext = DoubleArray( m_nvars );
+    // Storage for the integral contribution.
+    m_uInt  = ComplexDoubleArray( m_nvars );
+
+    for( unsigned int i=0; i<m_nvars; ++i )
+    {
+        m_F    [i] =        SingleArray( m_npoints, 0.0 );
+        m_uNext[i] =        SingleArray( m_npoints, 0.0 );
+        m_uInt [i] = ComplexSingleArray( m_npoints, 0.0 );
+    }
+
     // J
-    m_J = Array<OneD, NekDouble>(m_order, 0.0);
+    m_J = SingleArray(m_order, 0.0);
 
     m_J[0] = pow( m_deltaT, m_alpha ) / tgamma( m_alpha+1. );
 
@@ -119,73 +128,76 @@ InitializeScheme(const NekDouble deltaT,
     }
 
     // Ahat array, one for each order.
-    m_Ahats = Array<OneD, Array<TwoD, NekDouble>>(m_order+1);
-
-    Array<OneD, Array<TwoD, NekDouble>> &Ahats = m_Ahats;
+    m_Ahats = TripleArray(m_order+1);
 
     for( unsigned int m=1; m<=m_order; ++m )
     {
-        Ahats[m] = Array<TwoD, NekDouble>(m, m, 0.0);
+        m_Ahats[m] = DoubleArray(m);
+
+        for( unsigned int n=0; n<m; ++n )
+        {
+            m_Ahats[m][n] = SingleArray(m, 0.0);
+        }
 
         switch( m )
         {
           case 1:
-            Ahats[m][0][0] = 1.;
+            m_Ahats[m][0][0] = 1.;
             break;
 
           case 2:
-            Ahats[m][0][0] =  1.;      Ahats[m][0][1] =  0.;
-            Ahats[m][1][0] =  1.;      Ahats[m][1][1] = -1.;
+            m_Ahats[m][0][0] =  1.;      m_Ahats[m][0][1] =  0.;
+            m_Ahats[m][1][0] =  1.;      m_Ahats[m][1][1] = -1.;
             break;
 
           case 3:
-            Ahats[m][0][0] =  1.;     Ahats[m][0][1] =  0.;  Ahats[m][0][2] = 0;
-            Ahats[m][1][0] =  3./2.;  Ahats[m][1][1] = -2.;  Ahats[m][1][2] = 1./2.;
-            Ahats[m][2][0] =  1./2.;  Ahats[m][2][1] = -1.;  Ahats[m][2][2] = 1./2.;
+            m_Ahats[m][0][0] =  1.;      m_Ahats[m][0][1] =  0.;   m_Ahats[m][0][2] = 0;
+            m_Ahats[m][1][0] =  3./2.;   m_Ahats[m][1][1] = -2.;   m_Ahats[m][1][2] = 1./2.;
+            m_Ahats[m][2][0] =  1./2.;   m_Ahats[m][2][1] = -1.;   m_Ahats[m][2][2] = 1./2.;
             break;
 
           case 4:
-            Ahats[m][0][0] =  1.;      Ahats[m][0][1] =  0.;
-            Ahats[m][0][2] =  0.;      Ahats[m][0][3] =  0.;
+            m_Ahats[m][0][0] =  1.;      m_Ahats[m][0][1] =  0.;
+            m_Ahats[m][0][2] =  0.;      m_Ahats[m][0][3] =  0.;
 
-            Ahats[m][1][0] =  11./6.;  Ahats[m][1][1] = -3;
-            Ahats[m][1][2] =  3./2.;   Ahats[m][1][3] = -1./3.;
+            m_Ahats[m][1][0] =  11./6.;  m_Ahats[m][1][1] = -3;
+            m_Ahats[m][1][2] =  3./2.;   m_Ahats[m][1][3] = -1./3.;
 
-            Ahats[m][2][0] =  1.;      Ahats[m][2][1] = -5./2.;
-            Ahats[m][2][2] =  2.;      Ahats[m][2][3] = -1./2.;
+            m_Ahats[m][2][0] =  1.;      m_Ahats[m][2][1] = -5./2.;
+            m_Ahats[m][2][2] =  2.;      m_Ahats[m][2][3] = -1./2.;
 
-            Ahats[m][3][0] =  1./6.;   Ahats[m][3][1] = -1./2.;
-            Ahats[m][3][2] =  1./2.;   Ahats[m][3][3] = -1./6.;
+            m_Ahats[m][3][0] =  1./6.;   m_Ahats[m][3][1] = -1./2.;
+            m_Ahats[m][3][2] =  1./2.;   m_Ahats[m][3][3] = -1./6.;
             break;
 
           default:
 
-            Ahats[m][0][0] = 1;
+            m_Ahats[m][0][0] = 1;
 
             for( unsigned int j=2; j<=m; ++j )
             {
                 for( unsigned int i=0; i<m; ++i )
                 {
-                    Ahats[m][j-1][i] = pow( (1-j), i );
+                    m_Ahats[m][j-1][i] = pow( (1-j), i );
                 }
             }
 
             ASSERTL1(false, "No matrix inverse.");
 
-            // Ahats[m] = inv(Ahats[m]);
+            // m_Ahats[m] = inv(m_Ahats[m]);
 
             break;
         }
     }
 
     // Mulitply the last Ahat array, transposed, by J
-    m_AhattJ = Array<OneD, NekDouble>(m_order, 0.0);
+    m_AhattJ = SingleArray(m_order, 0.0);
 
     for( unsigned int i=0; i<m_order; ++i )
     {
         for( unsigned int j=0; j<m_order; ++j )
         {
-            m_AhattJ[i] += Ahats[m_order][j][i] * m_J[j];
+            m_AhattJ[i] += m_Ahats[m_order][j][i] * m_J[j];
         }
     }
 
@@ -262,6 +274,8 @@ TimeIntegrate(const int timestep,
         for( int j=0; j<m_npoints; ++j )
         {
             m_u[0][i][j] = m_uNext[i][j] + m_u0[i][j];
+
+            m_uNext[i][j] = 0;  // Zero out for the next itereation.
         }
     }
 
@@ -327,12 +341,12 @@ FractionalInTimeIntegrationScheme::compute_qml( const unsigned int base,
 
     // m_qml is set in InitializeScheme to be the largest length expected.
     // qml = Array<OneD, int>( L-1, 0 );
-    
+
     for( unsigned int i=0; i<L-1; ++i )
     {
         m_qml[i] = floor(m / pow(base, i+1) ) - 1;
     }
-    
+
     return L;
 }
 
@@ -388,11 +402,11 @@ talbot_quadrature(const unsigned int nQuadPts,
                   const NekDouble mu,
                   const NekDouble nu,
                   const NekDouble sigma,
-                  Array<OneD, std::complex<NekDouble> > &lamb,
-                  Array<OneD, std::complex<NekDouble> > &w) const
+                        ComplexSingleArray &lamb,
+                        ComplexSingleArray &w) const
 {
-    lamb = Array<OneD, std::complex<NekDouble> >(nQuadPts, 0.0);
-    w    = Array<OneD, std::complex<NekDouble> >(nQuadPts, 0.0);
+    lamb = ComplexSingleArray(nQuadPts, 0.0);
+    w    = ComplexSingleArray(nQuadPts, 0.0);
 
     for( unsigned int q=0; q<nQuadPts; ++q )
     {
@@ -420,7 +434,7 @@ talbot_quadrature(const unsigned int nQuadPts,
 
 void FractionalInTimeIntegrationScheme::
 integral_class_initialize(const unsigned int index,
-                          Instance &instance) const
+                                Instance &instance) const
 {
     // This object stores information for performing integration over an
     // interval [a, b]. (Defined by taus in the parent calling
@@ -454,27 +468,27 @@ integral_class_initialize(const unsigned int index,
     instance.activebase = 2. * pow(m_base,(index-1));
 
     // Storage for values of y currently used to update u
-    instance.stage_y    = ComplexTripleArray( m_nQuadPts );
-    instance.cstash_y   = ComplexTripleArray( m_nQuadPts );
-    instance.csandbox_y = ComplexTripleArray( m_nQuadPts );
-    instance.fstash_y   = ComplexTripleArray( m_nQuadPts );
-    instance.fsandbox_y = ComplexTripleArray( m_nQuadPts );
+    instance.stage_y    = ComplexTripleArray( m_nvars );
+    instance.cstash_y   = ComplexTripleArray( m_nvars );
+    instance.csandbox_y = ComplexTripleArray( m_nvars );
+    instance.fstash_y   = ComplexTripleArray( m_nvars );
+    instance.fsandbox_y = ComplexTripleArray( m_nvars );
 
-    for( unsigned int q=0; q<m_nQuadPts; ++q )
+    for( unsigned int q=0; q<m_nvars; ++q )
     {
-        instance.stage_y[q]    = ComplexDoubleArray( m_nvars );
-        instance.cstash_y[q]   = ComplexDoubleArray( m_nvars );
-        instance.csandbox_y[q] = ComplexDoubleArray( m_nvars );
-        instance.fstash_y[q]   = ComplexDoubleArray( m_nvars );
-        instance.fsandbox_y[q] = ComplexDoubleArray( m_nvars );
+        instance.stage_y[q]    = ComplexDoubleArray( m_npoints );
+        instance.cstash_y[q]   = ComplexDoubleArray( m_npoints );
+        instance.csandbox_y[q] = ComplexDoubleArray( m_npoints );
+        instance.fstash_y[q]   = ComplexDoubleArray( m_npoints );
+        instance.fsandbox_y[q] = ComplexDoubleArray( m_npoints );
 
-        for( unsigned int i=0; i<m_nvars; ++i )
+        for( unsigned int i=0; i<m_npoints; ++i )
         {
-            instance.stage_y[q][i]    = ComplexSingleArray( m_npoints, 0.0 );
-            instance.cstash_y[q][i]   = ComplexSingleArray( m_npoints, 0.0 );
-            instance.csandbox_y[q][i] = ComplexSingleArray( m_npoints, 0.0 );
-            instance.fstash_y[q][i]   = ComplexSingleArray( m_npoints, 0.0 );
-            instance.fsandbox_y[q][i] = ComplexSingleArray( m_npoints, 0.0 );
+            instance.stage_y   [q][i] = ComplexSingleArray( m_nQuadPts, 0.0 );
+            instance.cstash_y  [q][i] = ComplexSingleArray( m_nQuadPts, 0.0 );
+            instance.csandbox_y[q][i] = ComplexSingleArray( m_nQuadPts, 0.0 );
+            instance.fstash_y  [q][i] = ComplexSingleArray( m_nQuadPts, 0.0 );
+            instance.fsandbox_y[q][i] = ComplexSingleArray( m_nQuadPts, 0.0 );
         }
     }
 
@@ -547,13 +561,18 @@ integral_class_initialize(const unsigned int index,
     // everywhere.
 
     // As array one for each order.
-    Array<OneD, Array<TwoD, NekDouble> > &As = instance.As;
+    TripleArray &As = instance.As;
 
-    As = Array<OneD, Array<TwoD, NekDouble> >(m_order+2);
+    As = TripleArray(m_order+2);
 
     for( unsigned int m=1; m<=m_order+1; ++m )
     {
-        As[m] = Array<TwoD, NekDouble>(m,  m, 0.0);
+        As[m] = DoubleArray(m);
+
+        for( unsigned int n=0; n<m; ++n )
+        {
+            As[m][n] = SingleArray(m, 0.0);
+        }
 
         switch( m )
         {
@@ -625,32 +644,43 @@ integral_class_initialize(const unsigned int index,
         }
     }
 
-    instance.E = Array<OneD, std::complex<NekDouble> >(m_nQuadPts, 0.0);
-    instance.Eh =
-        Array<TwoD, std::complex<NekDouble> >(m_nQuadPts, m_order+1, 0.0);
-
-    instance.AtEh  =
-      Array<TwoD, std::complex<NekDouble> >(m_nQuadPts, m_order+1, 0.0);
-
     // Initialize the exponenetial integrators.
+    instance.E = ComplexSingleArray(m_nQuadPts, 0.0);
+
     for( unsigned int q=0; q<m_nQuadPts; ++q )
     {
         instance.E[q] = exp(instance.z[q] * m_deltaT);
+    }
 
-        instance.Eh[q][0] =
-            1. / instance.z[q] * (exp(instance.z[q] * m_deltaT) - 1.0);
+    instance.Eh = ComplexDoubleArray(m_order+1);
 
-        for( unsigned int m=1; m<m_order+1; ++m )
+    for( unsigned int m=0; m<m_order+1; ++m )
+    {
+        instance.Eh[m] = ComplexSingleArray(m_nQuadPts, 0.0);
+
+        for( unsigned int q=0; q<m_nQuadPts; ++q )
         {
-            instance.Eh[q][m] = -1./instance.z[q] +
-              NekDouble(m)/(instance.z[q] * m_deltaT) * instance.Eh[q][m-1];
+            if( m == 0 )
+                instance.Eh[0][q] =
+                    1. / instance.z[q] * (exp(instance.z[q] * m_deltaT) - 1.0);
+            else
+               instance.Eh[m][q] = -1./instance.z[q] +
+                   NekDouble(m) / (instance.z[q] * m_deltaT) * instance.Eh[m-1][q];
         }
+    }
 
-        for( unsigned int m=0; m<m_order+1; ++m )
+    instance.AtEh = ComplexDoubleArray(m_order+1);
+
+    for( unsigned int m=0; m<=m_order; ++m )
+    {
+        instance.AtEh[m] = ComplexSingleArray(m_nQuadPts, 0.0);
+
+        for( unsigned int q=0; q<m_nQuadPts; ++q )
         {
-            for( unsigned int i=0; i<m_order+1; ++i )
+            for( unsigned int i=0; i<=m_order; ++i )
             {
-              instance.AtEh[q][m] += As[m_order+1][m][i] * instance.Eh[q][i];
+                instance.AtEh[m][q] +=
+                  instance.As[m_order+1][m][i] * instance.Eh[i][q];
             }
         }
     }
@@ -664,7 +694,7 @@ integral_class_initialize(const unsigned int index,
 // (3) moves floor stash --> stage (+ updates all ceiling data)
 void FractionalInTimeIntegrationScheme::
 update_stage(const unsigned int timeStep,
-             Instance &instance)
+                   Instance &instance)
 {
     // Counter to flip active bit
     if( !instance.active )
@@ -700,17 +730,20 @@ update_stage(const unsigned int timeStep,
             instance.fsandbox_ind = std::pair<int, int>(0,0);
             instance.fsandbox_active = false;
 
-            for( unsigned int q=0; q<m_nQuadPts; ++q )
+            // Copy
+            for( unsigned int i=0; i<m_nvars; ++i )
             {
-                for( unsigned int i=0; i<m_nvars; ++i )
+                for( unsigned int j=0; j<m_npoints; ++j )
                 {
-                    for( unsigned int j=0; j<m_npoints; ++j )
+                    for( unsigned int q=0; q<m_nQuadPts; ++q )
                     {
-                        instance.stage_y   [q][i][j] =
-                            instance.fstash_y  [q][i][j];
-                        instance.csandbox_y[q][i][j] =
-                            instance.fsandbox_y[q][i][j];
-                        instance.fsandbox_y[q][i][j] = 0;
+                        instance.stage_y   [i][j][q] =
+                            instance.fstash_y  [i][j][q];
+
+                        instance.csandbox_y[i][j][q] =
+                            instance.fsandbox_y[i][j][q];
+
+                        instance.fsandbox_y[i][j][q] = 0;
                     }
                 }
             }
@@ -722,13 +755,14 @@ update_stage(const unsigned int timeStep,
             // instance.stage_y   = instance.cstash_y;
             instance.stage_ind = instance.cstash_ind;
 
+            // Copy
             for( unsigned int q=0; q<m_nQuadPts; ++q )
             {
                 for( unsigned int i=0; i<m_nvars; ++i )
                 {
                     for( unsigned int j=0; j<m_npoints; ++j )
                     {
-                        instance.stage_y[q][i][j] = instance.cstash_y[q][i][j];
+                        instance.stage_y[i][j][q] = instance.cstash_y[i][j][q];
                     }
                 }
             }
@@ -748,18 +782,13 @@ final_increment(const unsigned int timeStep,
 {
     for( unsigned int m=0; m<m_order; ++m )
     {
-        op.DoOdeRhs(m_u[m], m_F[m], m_deltaT * (timeStep-m));
-    }
+        op.DoOdeRhs(m_u[m], m_F, m_deltaT * (timeStep-m));
 
-    for( unsigned int i=0; i<m_nvars; ++i )
-    {
-        for( unsigned int j=0; j<m_npoints; ++j )
+        for( unsigned int i=0; i<m_nvars; ++i )
         {
-            m_uNext[i][j] = 0;
-
-            for( unsigned int q=0; q<m_order; ++q )
+            for( unsigned int j=0; j<m_npoints; ++j )
             {
-                m_uNext[i][j] += m_F[q][i][j] * m_AhattJ[q];
+                m_uNext[i][j] += m_F[i][j] * m_AhattJ[m];
             }
         }
     }
@@ -787,7 +816,7 @@ integral_contribution(const unsigned int timeStep,
 
             for( unsigned int q=0; q<m_nQuadPts; ++q )
             {
-                m_uInt[i][j] += instance.stage_y[q][i][j] * m_expFactor[q];
+                m_uInt[i][j] += instance.stage_y[i][j][q] * m_expFactor[q];
             }
 
             if( m_uInt[i][j].real() < 1e8 )
@@ -801,85 +830,59 @@ integral_contribution(const unsigned int timeStep,
 
 void FractionalInTimeIntegrationScheme::
 time_advance(const unsigned int timeStep,
-             const Instance &instance,
+                   Instance &instance,
              const TimeIntegrationSchemeOperators &op,
-             ComplexTripleArray &y)
+                   ComplexTripleArray &y)
 {
     // Solution to y' = z*y + f(u), using an exponential integrator with
     // implicit order (m_order + 1) interpolation of the f(u) term.
 
-    // std::cout << instance.index << std::endl;
+    int order;
 
     // Try automated high-order method:
-    if( timeStep < m_order )
+    if( timeStep <= m_order )
     {
         // Not enough history. For now, demote to lower-order method.
         // TODO: use multi-stage method
-        for( unsigned int m=0; m<timeStep+1; ++m )
+        order = timeStep;
+
+        // Prep for the time step
+        for( unsigned int m=0; m<=order; ++m )
         {
-            op.DoOdeRhs(m_u[m], m_F[m], m_deltaT * (timeStep-m));
-        }
-
-        // y = y * instance.E + F * instance.As{timeStep+1}.' * instance.Eh(1:(timeStep+1),:);
-
-        // instance.As{timeStep+1}.' * instance.Eh(1:(timeStep+1),:);
-        Array<TwoD, std::complex<NekDouble> > tmp =
-          Array<TwoD, std::complex<NekDouble> >(m_nQuadPts, timeStep+1, 0.0);
-
-        for( unsigned int q=0; q<m_nQuadPts; ++q )
-        {
-            for( unsigned int m=0; m<timeStep+1; ++m )
+            for( unsigned int q=0; q<m_nQuadPts; ++q )
             {
-                for( unsigned int i=0; i<timeStep+1; ++i )
+                instance.AtEh[m][q] = 0;
+
+                for( unsigned int i=0; i<=order; ++i )
                 {
-                    tmp[q][m] +=
-                        instance.As[timeStep+1][m][i] * instance.Eh[q][i];
-                }
-            }
-        }
-
-        // y = y * instance.E + F * instance.As{timeStep+1}.' * instance.Eh(1:(timeStep+1),:);
-
-        for( unsigned int q=0; q<m_nQuadPts; ++q )
-        {
-            for( unsigned int i=0; i<m_nvars; ++i )
-            {
-                for( unsigned int j=0; j<m_npoints; ++j )
-                {
-                    // y * instance.E
-                    y[q][i][j] *= instance.E[q];
-
-                    for( unsigned int m=0; m<timeStep+1; ++m )
-                    {
-                        // F * instance.As{timeStep+1}.' * instance.Eh(1:(timeStep+1),:);
-                        y[q][i][j] += m_F[m][i][j] * tmp[q][m];
-                    }
+                    instance.AtEh[m][q] +=
+                      instance.As[order+1][m][i] * instance.Eh[i][q];
                 }
             }
         }
     }
     else
     {
-        for( unsigned int m=0; m<m_order+1; ++m )
-        {
-            op.DoOdeRhs(m_u[m], m_F[m], m_deltaT * (timeStep-m));
-        }
+        order = m_order;
+    }
 
-        // y = y * instance.E + F * instance.AtEh;
-        for( unsigned int q=0; q<m_nQuadPts; ++q )
+    // y = y * instance.E + F * instance.AtEh;
+    for( unsigned int m=0; m<=order; ++m )
+    {
+        op.DoOdeRhs(m_u[m], m_F, m_deltaT * (timeStep-m));
+
+        for( unsigned int i=0; i<m_nvars; ++i )
         {
-            for( unsigned int i=0; i<m_nvars; ++i )
+            for( unsigned int j=0; j<m_npoints; ++j )
             {
-                for( unsigned int j=0; j<m_npoints; ++j )
+                for( unsigned int q=0; q<m_nQuadPts; ++q )
                 {
                     // y * instance.E
-                    y[q][i][j] *= instance.E[q];
+                    if( m == 0 )
+                      y[i][j][q] *= instance.E[q];
 
-                    for( unsigned int m=0; m<m_order+1; ++m )
-                    {
-                        // F * instance.AtEh
-                        y[q][i][j] += m_F[m][i][j] * instance.AtEh[q][m];
-                    }
+                    // F * instance.AtEh
+                    y[i][j][q] += m_F[i][j] * instance.AtEh[m][q];
                 }
             }
         }
@@ -896,7 +899,7 @@ time_advance(const unsigned int timeStep,
 void FractionalInTimeIntegrationScheme::
 advance_sandbox(const unsigned int timeStep,
                 const TimeIntegrationSchemeOperators &op,
-                Instance &instance)
+                      Instance &instance)
 {
     // (1)
     // update(instance.csandbox.y)
@@ -914,13 +917,14 @@ advance_sandbox(const unsigned int timeStep,
         // instance.cstash_y   = instance.csandbox_y;
         instance.cstash_ind = instance.csandbox_ind;
 
-        for( unsigned int q=0; q<m_nQuadPts; ++q )
+        // Copy
+        for( unsigned int i=0; i<m_nvars; ++i )
         {
-            for( unsigned int i=0; i<m_nvars; ++i )
+            for( unsigned int j=0; j<m_npoints; ++j )
             {
-                for( unsigned int j=0; j<m_npoints; ++j )
+                for( unsigned int q=0; q<m_nQuadPts; ++q )
                 {
-                    instance.cstash_y[q][i][j] = instance.csandbox_y[q][i][j];
+                    instance.cstash_y[i][j][q] = instance.csandbox_y[i][j][q];
                 }
             }
         }
@@ -940,14 +944,15 @@ advance_sandbox(const unsigned int timeStep,
             // instance.fstash_y   = instance.fsandbox_y;
             instance.fstash_ind = instance.fsandbox_ind;
 
-            for( unsigned int q=0; q<m_nQuadPts; ++q )
+            // Copy
+            for( unsigned int i=0; i<m_nvars; ++i )
             {
-                for( unsigned int i=0; i<m_nvars; ++i )
+                for( unsigned int j=0; j<m_npoints; ++j )
                 {
-                    for( unsigned int j=0; j<m_npoints; ++j )
+                    for( unsigned int q=0; q<m_nQuadPts; ++q )
                     {
-                        instance.fstash_y[q][i][j] =
-                            instance.fsandbox_y[q][i][j];
+                        instance.fstash_y[i][j][q] =
+                            instance.fsandbox_y[i][j][q];
                     }
                 }
             }
@@ -965,7 +970,8 @@ advance_sandbox(const unsigned int timeStep,
 }
 
 // Friend Operators
-std::ostream &operator<<(std::ostream &os, const FractionalInTimeIntegrationScheme &rhs)
+std::ostream &operator<<(std::ostream &os,
+                         const FractionalInTimeIntegrationScheme &rhs)
 {
     os << "Time Integration Scheme: " << rhs.GetFullName() << std::endl
        << "Base " << rhs.m_base << std::endl

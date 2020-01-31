@@ -36,7 +36,7 @@
 // TimeIntegrationSchemeGLM file but the class is named
 // FractionalInTimeIntegrationScheme so keep with the factory naming
 // convention.
- 
+
 #pragma once
 
 #include <string>
@@ -153,7 +153,7 @@ protected:
     struct Instance
     {
       int base;
-      
+
       int  index;           // Index of this instance
       bool active;          // Used to determine if active
       int  activecounter;   // counter used to flip active bit
@@ -196,16 +196,14 @@ protected:
       std::pair< int, int > fsandbox_ind;
 
       // Talbot quadrature rule
-      Array<OneD, std::complex<NekDouble> > z;
-      Array<OneD, std::complex<NekDouble> > w;
+      ComplexSingleArray z;
+      ComplexSingleArray w;
 
-      Array<OneD, Array<TwoD, NekDouble> > As;
+      TripleArray As;
 
-      Array<OneD, std::complex<NekDouble> > E;
-      Array<TwoD, std::complex<NekDouble> > Eh;
-
-      Array<TwoD, std::complex<NekDouble> > AtEh;
-      // Array<TwoD, std::complex<NekDouble> > AptEh;
+      ComplexSingleArray E;
+      ComplexDoubleArray Eh;
+      ComplexDoubleArray AtEh;
     };
 
     inline unsigned int modincrement(const unsigned int counter,
@@ -224,14 +222,14 @@ protected:
                            const NekDouble mu,
                            const NekDouble nu,
                            const NekDouble sigma,
-                           Array<OneD, std::complex<NekDouble> > &lamb,
-                           Array<OneD, std::complex<NekDouble> > &w) const;
+                                 ComplexSingleArray &lamb,
+                                 ComplexSingleArray &w) const;
 
     void integral_class_initialize(const unsigned int index,
                                    Instance &instance) const;
 
     void update_stage(const unsigned int timeStep,
-                      Instance &instance);
+                            Instance &instance);
 
     void final_increment(const unsigned int timeStep,
                          const TimeIntegrationSchemeOperators &op);
@@ -241,14 +239,15 @@ protected:
                                const Instance &instance);
 
     void time_advance(const unsigned int timeStep,
-                      const Instance &instance,
+                            Instance &instance,
                       const TimeIntegrationSchemeOperators &op,
-                      ComplexTripleArray &y);
+                            ComplexTripleArray &y);
 
     void advance_sandbox(const unsigned int timeStep,
                          const TimeIntegrationSchemeOperators &op,
-                         Instance &instance);
+                               Instance &instance);
 
+    // Variables common to all schemes.
     std::string m_name;
     std::string m_variant;
     unsigned int m_order{0};
@@ -276,29 +275,29 @@ protected:
     Array<OneD, int> m_taus;
 
     // Storage of the initial values.
-    Array<TwoD, NekDouble> m_u0;
+    DoubleArray m_u0;
     // Storage of the next solution from the final increment.
-    Array<TwoD, NekDouble> m_uNext;
+    DoubleArray m_uNext;
     // Storage for the integral contribution.
-    Array<TwoD, std::complex<NekDouble> > m_uInt;
+    ComplexDoubleArray m_uInt;
     // Storage for the exponential factor in the integral contribution.
-    Array<OneD, std::complex<NekDouble> > m_expFactor;
-
-    // Different storage for every stage derivative as the data
-    // will be re-used to update the solution.
-    TripleArray m_F;
+    ComplexSingleArray m_expFactor;
 
     // Storage of previous states and associated timesteps.
     TripleArray m_u;
 
+    // Storage for the stage derivative as the data will be re-used to
+    // update the solution.
+    DoubleArray m_F;
+
     // J
-    Array<OneD, NekDouble> m_J;
+    SingleArray m_J;
 
     // Ahat array one for each order.
-    Array<OneD, Array<TwoD, NekDouble> > m_Ahats;
+    TripleArray m_Ahats;
 
     // Mulitply the last Ahat array, transposed by J
-    Array<OneD, NekDouble> m_AhattJ;
+    SingleArray m_AhattJ;
 
 }; // end class FractionalInTimeIntegrator
 

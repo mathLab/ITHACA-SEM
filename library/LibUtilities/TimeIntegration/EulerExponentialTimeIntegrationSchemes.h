@@ -88,9 +88,6 @@ public:
             EulerExponentialTimeIntegrationScheme::SetupSchemeData(
                 m_integration_phases[n], variant, n+1);
         }
-
-        // for( unsigned int n=0; n<order; ++n )
-        //   std::cout << m_integration_phases[n] << std::endl;
     }
 
     virtual ~EulerExponentialTimeIntegrationScheme()
@@ -384,8 +381,6 @@ public:
                 phase->m_V_phi[k][n][n-1] = 1.0; // constant 1
             }
         }
-
-	// std::cout << *phase << std::endl;
     }
 
     LUE void SetExponentialCoefficients(Array<OneD,

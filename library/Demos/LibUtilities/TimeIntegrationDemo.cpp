@@ -847,16 +847,18 @@ int main(int argc, char *argv[])
                                       timeStep, time, exactSol, approxSol, L2Norm);
     }
 
-    // 7. Calculate the error for the last time step and dump to screen
-    std::cout << tiScheme->GetFullName() << std::endl;
-    std::cout << "Time step: " << timeStep << "  "
-              << "Time: " << time << std::endl;
-    std::cout << "CPU Time : " << std::setw(8) << std::left
-              << intTime << std::endl;
+    // Printing preable so the user knows what was done.
+    std::cout << tiScheme << std::endl
+              << "Number of time steps performed: " << timeStep << std::endl
+              << "Time increment: " << dt << std::endl
+              << "Total time: " << time << std::endl
+              << "CPU time : " << std::setw(8) << std::left << intTime
+              << std::endl;
 
+    // 7. Calculate the error for the last time step and dump to screen
     solverSharedPtr->EvaluateL2Error(exactSol, approxSol, true);
 
-    // 7. Some more writing out the results
+    // 8. Some more writing out the results
     outfile.close();
     errorfile.close();
 
@@ -907,11 +909,11 @@ void DemoSolver::GetMinMaxValues(
             if( m_maxValue < exact[k][i] )
                 m_maxValue = exact[k][i];
 
-	    if( print )
+            if( print )
                 std::cout << exact[k][i] << "  ";
         }
 
-	if( print && m_nVars > 1 && m_nPoints > 1 )
+        if( print && m_nVars > 1 && m_nPoints > 1 )
             std::cout << std::endl;
     }
 
@@ -937,11 +939,11 @@ void DemoSolver::GetMinMaxValues(
             // if( m_maxValue < approx[k][i] )
             //     m_maxValue = approx[k][i];
 
-	    if( print )
+            if( print )
                 std::cout << approx[k][i] << "  ";
         }
 
-	if( print && m_nVars > 1 && m_nPoints > 1 )
+        if( print && m_nVars > 1 && m_nPoints > 1 )
             std::cout << std::endl;
     }
 

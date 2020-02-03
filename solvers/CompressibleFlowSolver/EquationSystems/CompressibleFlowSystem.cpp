@@ -209,7 +209,7 @@ namespace Nektar
                     m_flagPrecondCacheOptmis = false;
                 }
 
-                cout << " flagPrecondCacheOptmis= "<<m_flagPrecondCacheOptmis<<endl;
+                // cout << " flagPrecondCacheOptmis= "<<m_flagPrecondCacheOptmis<<endl;
                 
                 if(m_flagPrecMatVarsSingle)
                 {

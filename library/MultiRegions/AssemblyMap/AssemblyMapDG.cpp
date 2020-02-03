@@ -53,8 +53,6 @@
 #include <boost/graph/properties.hpp>
 #include <boost/graph/bandwidth.hpp>
 
-#include <LibUtilities/Communication/CommMpi.h>  // TODO: Implement the graph constructor using virtual functions so can remove this include I added
-
 using namespace std;
 
 namespace Nektar
@@ -822,6 +820,7 @@ namespace Nektar
                     for (int j = 0; j < quad; ++j)
                     {
                         m_traceToUniversalMap[j+offset] = eid*maxQuad+j+1;
+                        m_edgeToTrace[eid].emplace_back(offset + j);
                     }
 
                     if (realign)
@@ -891,8 +890,7 @@ namespace Nektar
             }
 
             std::map<int, std::vector<int>> rankSharedEdges;
-
-            for (auto rank : otherRanks)
+            for (auto &rank : otherRanks)
             {
                 for (int j = 0; j < rankNumEdges[rank]; ++j)
                 {
@@ -906,28 +904,45 @@ namespace Nektar
                 }
             }
 
-            int sources[rankSharedEdges.size()];
-            int weights[rankSharedEdges.size()];
+            int nNeighbours = rankSharedEdges.size();
+            Array<OneD,int> destinations(nNeighbours, 0);
+            Array<OneD,int> weights(nNeighbours, 0);
             int cnt = 0;
-            for (auto rankEdgeVec : rankSharedEdges)
+            for (auto &rankEdgeVec : rankSharedEdges)
             {
-                sources[cnt] = rankEdgeVec.first;
+                destinations[cnt] = rankEdgeVec.first;
                 weights[cnt] = rankEdgeVec.second.size();
                 ++cnt;
             }
 
-            MPI_Comm commGraph;
             int retval = MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD,
-                                           rankSharedEdges.size(), sources, weights,  // Sources
-                                           rankSharedEdges.size(), sources, weights,  // Destinations
-                                           MPI_INFO_NULL, 1, &commGraph);
+                                                        nNeighbours, destinations.get(), weights.get(),  // Sources
+                                                        nNeighbours, destinations.get(), weights.get(),  // Destinations
+                                                        MPI_INFO_NULL, 0, &m_commGraph);                 // TODO: Enable reordering once no longer using MPI_COMM_WORLD
 
             ASSERTL0(retval == MPI_SUCCESS, "MPI error creating distributed graph.");
 
-            int newRank;
-            MPI_Comm_rank(commGraph, &newRank);
-            std::cout << "Old rank: " << myRank << std::endl;
-            std::cout << "New rank: " << newRank << std::endl;
+
+            //Setting up indices etc. for the MPI_Neighbor_Alltoallv in UniversalTraceAssemble
+            m_sendCount = Nektar::Array<OneD, int>(nNeighbours, -1);
+            cnt = 0;
+            for (auto &rankEdgeVec : rankSharedEdges)
+            {
+                for (auto &edgeNos : rankEdgeVec.second)
+                {
+                    std::vector<int> edgeDisp = m_edgeToTrace[edgeNos];
+                    m_edgeTraceIndex.insert(m_edgeTraceIndex.end(), m_edgeToTrace[edgeNos].begin(), m_edgeToTrace[edgeNos].end());
+                    m_sendCount[cnt] += edgeDisp.size();
+                }
+
+                ++cnt;
+            }
+
+            m_sendDisp = Nektar::Array<OneD, int>(nNeighbours, 0);
+            for (i = 1; i < nNeighbours; ++i)
+            {
+                m_sendDisp[i] = m_sendDisp[i-1] + m_sendCount[i-1];
+            }
 
             Array<OneD, long> tmp2(nTracePhys);
             for (int i = 0; i < nTracePhys; ++i)
@@ -1022,10 +1037,39 @@ namespace Nektar
             }
         }
 
-        void AssemblyMapDG::UniversalTraceAssemble(
-            Array<OneD, NekDouble> &pGlobal) const
+        void AssemblyMapDG::UniversalTraceAssemble(Array<OneD, NekDouble> &Fwd, Array<OneD, NekDouble> &Bwd)
         {
-            Gs::Gather(pGlobal, Gs::gs_add, m_traceGsh);
+            Array<OneD, double> sendBuff(m_edgeTraceIndex.size());
+            Array<OneD, double> recvBuff(m_edgeTraceIndex.size(), -1);
+            for (int i = 0; i < m_edgeTraceIndex.size(); ++i)
+            {
+                sendBuff[i] = Fwd[m_edgeTraceIndex[i]];
+            }
+
+            MPI_Neighbor_alltoallv(sendBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
+                                   recvBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
+                                   m_commGraph);
+
+            for (int i = 0; i < m_edgeTraceIndex.size(); ++i)
+            {
+                Bwd[m_edgeTraceIndex[i]] = recvBuff[i];
+            }
+
+            std::cout << "On rank: " << m_comm->GetRank() << " sendBuff is: ";
+            for (auto & tst : sendBuff)
+            {
+                std::cout << tst << " ";
+            }
+            std::cout << std::endl;
+            std::cout << "On rank: " << m_comm->GetRank() << " recvBuff is: ";
+            for (auto & tst : recvBuff)
+            {
+                std::cout << tst << " ";
+            }
+            std::cout << std::endl;
+
+            //Gs::Gather(pGlobal, Gs::gs_add, m_traceGsh);
+
         }
 
         int AssemblyMapDG::v_GetLocalToGlobalMap(const int i) const

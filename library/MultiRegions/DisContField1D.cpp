@@ -951,8 +951,8 @@ namespace Nektar
             }
 
             // Do parallel exchange for forwards/backwards spaces.
-            m_traceMap->UniversalTraceAssemble(Fwd);
-            m_traceMap->UniversalTraceAssemble(Bwd);
+            //m_traceMap->UniversalTraceAssemble(Fwd);
+            //m_traceMap->UniversalTraceAssemble(Bwd);
 
         }
         

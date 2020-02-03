@@ -41,6 +41,8 @@
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList0D.h>
 
+#include <LibUtilities/Communication/CommMpi.h>  // TODO: Implement the graph constructor using virtual functions so can remove this include I added
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -86,8 +88,7 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT int GetTraceToUniversalMapUnique(int i);
 
-            MULTI_REGIONS_EXPORT void UniversalTraceAssemble(
-                Array<OneD, NekDouble> &pGlobal) const;
+            MULTI_REGIONS_EXPORT void UniversalTraceAssemble(Array<OneD, NekDouble>& Fwd, Array<OneD, NekDouble>& Bwd);
 
         protected:
             Gs::gs_data * m_traceGsh;
@@ -103,6 +104,22 @@ namespace Nektar
             /// Integer map of unique process trace space quadrature points to
             /// universal space (signed).
             Array<OneD,int> m_traceToUniversalMapUnique;
+
+
+            ///Distributed graph communicator
+            MPI_Comm m_commGraph;
+
+            /// List of trace map indices of the quad points to exchange
+            std::vector<int> m_edgeTraceIndex;
+
+            /// List of counts for MPI_neighbor_alltoallv in UniversalTraceAssemble
+            Array<OneD,int> m_sendCount;
+
+            /// List of displacements for MPI_neighbor_alltoallv in UniversalTraceAssemble
+            Array<OneD, int> m_sendDisp;
+
+            /// Map of ID to quad point trace indices
+            std::map<int, std::vector<int>> m_edgeToTrace;
 
             void SetUpUniversalDGMap(const ExpList &locExp);
 

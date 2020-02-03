@@ -2009,8 +2009,8 @@ using namespace std;
             }
             
             // Do parallel exchange for forwards/backwards spaces.
-            m_traceMap->UniversalTraceAssemble(Fwd);
-            m_traceMap->UniversalTraceAssemble(Bwd);
+            //m_traceMap->UniversalTraceAssemble(Fwd);
+            //m_traceMap->UniversalTraceAssemble(Bwd);
         }
 
          const vector<bool> &DisContField3D::v_GetLeftAdjacentFaces(void) const
@@ -2040,7 +2040,7 @@ using namespace std;
 
             // gather entries along parallel partitions which have
             // only filled in Fwd part on their own partition
-            m_traceMap->UniversalTraceAssemble(outarray);
+            //m_traceMap->UniversalTraceAssemble(outarray);
 
         }
         

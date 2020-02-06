@@ -5,7 +5,8 @@
 #include <boost/align/aligned_allocator.hpp>
 #include <immintrin.h>
 
-using namespace Nektar;
+namespace Nektar {
+namespace AVX {
 
 template<typename DataType, int vecWidth>
 struct VecData
@@ -582,4 +583,7 @@ AlignedVector<VecData<T, VW>> ToAlignedVector(Array<OneD, T> &input)
     return ret;
 }
 
-#endif
+} // namespace AVX
+} // namespace Nektar
+
+#endif // header guard

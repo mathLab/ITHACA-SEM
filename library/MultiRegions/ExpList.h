@@ -93,11 +93,6 @@ namespace Nektar
             eZ
         };
 
-        /// Number of bytes in a AVX2 vector
-        constexpr int AVX_VECTOR_BYTES = 32;
-        /// Number of elements in a AVX2 vector
-        constexpr int AVX_VECTOR_SIZE = AVX_VECTOR_BYTES / sizeof(NekDouble);
-
         /// A map between global matrix keys and their associated block
         /// matrices.
         typedef std::map<GlobalMatrixKey,DNekScalBlkMatSharedPtr> BlockMatrixMap;

@@ -162,7 +162,20 @@ class BwdTrans_AVX : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
-            (*m_oper)(input, output);
+            boost::ignore_unused(output1, output2, wsp);
+            if (m_isPadded)
+            {
+                // copy into padded vector
+                Vmath::Vcopy(m_nElmtNoPad, input, 1, m_input, 1);
+                // call op
+                (*m_oper)(m_input, m_output);
+                // copy out
+                Vmath::Vcopy(m_nElmtNoPad, m_output, 1, output, 1);
+            }
+            else
+            {
+                (*m_oper)(input, output);
+            }
         }
 
         virtual void operator()(
@@ -172,12 +185,24 @@ class BwdTrans_AVX : public Operator
                       Array<OneD,       NekDouble> &wsp)
         {
             boost::ignore_unused(dir, input, output, wsp);
-            ASSERTL0(false, "BwdTrans_AVX: Not valid for this operator.");
+            NEKERROR(ErrorUtil::efatal,
+                "BwdTrans_AVX: Not valid for this operator.");
         }
 
     protected:
         std::shared_ptr<AVX::BwdTrans> m_oper;
-
+        /// flag for padding
+        bool m_isPadded{false};
+        /// number of elements
+        size_t m_nElmtNoPad;
+        /// padded number of elements
+        size_t m_nElmt;
+        /// padded total number of points
+        size_t m_nq;
+        /// padded total number of coefficients
+        size_t m_nm;
+        /// padded input/output
+        Array<OneD, NekDouble> m_input, m_output;
 
     private:
         BwdTrans_AVX(
@@ -185,28 +210,46 @@ class BwdTrans_AVX : public Operator
                 CoalescedGeomDataSharedPtr                pGeomData)
             : Operator(pCollExp, pGeomData)
         {
-            const int nElmt = pCollExp.size();
+            const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
             const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
             const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
-            const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
 
+            // Padding
+            m_nElmtNoPad = pCollExp.size();
+            if (m_nElmtNoPad % AVX::SIMD_WIDTH_SIZE != 0)
+            {
+                m_isPadded = true;
+                m_nElmt = m_nElmtNoPad + AVX::SIMD_WIDTH_SIZE -
+                    (m_nElmtNoPad % AVX::SIMD_WIDTH_SIZE);
 
-            // Store Jacobian list and derivative factors.
-            Array<OneD, NekDouble> jac;
-            jac = pGeomData->GetJac(pCollExp);
+                m_input = Array<OneD, NekDouble>{m_nElmt, 0.0};
+                m_output = Array<OneD, NekDouble>{m_nElmt, 0.0};
+            }
+            else
+            {
+                m_nElmt = m_nElmtNoPad;
+            }
+            m_nq    = nqElmt * m_nElmt;
+            m_nm    = nmElmt * m_nElmt;
+
+            // Store Jacobian
+            Array<OneD, NekDouble> jac{m_nElmt, 0.0};
+            Vmath::Vcopy(m_nElmtNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
+
+            // Store derivative factors
             // Array<TwoD, NekDouble> df;
             // df = pGeomData->GetDerivFactors(pCollExp);
 
             // Check if the collection is deformed or not
             bool deformed{false};
-            if (jac.num_elements() == nElmt * nqElmt)
+            if (jac.num_elements() == m_nElmt * nqElmt)
             {
                 deformed = true;
             }
 
             // Basis vector.
             std::vector<LibUtilities::BasisSharedPtr> basis(dim);
-            for(int i = 0; i < dim; i++)
+            for (auto i = 0; i < dim; ++i)
             {
                 basis[i] = pCollExp[0]->GetBasis(i);
             }
@@ -234,7 +277,7 @@ class BwdTrans_AVX : public Operator
             }
             std::cout << op_string << '\n';
             auto oper = AVX::GetOperatorFactory().
-                CreateInstance(op_string, basis, nElmt);
+                CreateInstance(op_string, basis, m_nElmt);
             // If the operator needs the Jacobian, provide it here
             if (oper->NeedsJac())
             {

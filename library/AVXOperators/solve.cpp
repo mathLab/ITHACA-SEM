@@ -343,7 +343,7 @@ int main(int argc, char *argv[])
 
     libxsmm_init();
 
-    MultiRegions::AVX_VECTOR_SIZE = 4;
+    // MultiRegions::AVX_VECTOR_SIZE = 4;
 
     // Read in mesh
     SpatialDomains::MeshGraphSharedPtr graph =

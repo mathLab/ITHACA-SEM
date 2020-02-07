@@ -608,11 +608,18 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         {
             ellipses[id] = var;
         }
-        else if (boost::iequals(type, "Line Loop"))
+        else if (boost::iequals(type, "Curve Loop"))
         {
-            // line loops sometimes have negative entries for gmsh
+            // curve loops sometimes have negative entries for gmsh
             // orientaton purposes
             // we dont care so remove it
+            boost::erase_all(var, "-");
+            loops[id] = var;
+        }
+        else if (boost::iequals(type, "Line Loop"))
+        {
+            // old name of curve loops before Gmsh v4.0.0
+            // we keep it for backward compatibility
             boost::erase_all(var, "-");
             loops[id] = var;
         }

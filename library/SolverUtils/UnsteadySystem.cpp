@@ -32,6 +32,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+
 #include <iostream>
 #include <iomanip>
 using namespace std;
@@ -39,13 +40,12 @@ using namespace std;
 #include <boost/core/ignore_unused.hpp>
 #include <boost/format.hpp>
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
 
 namespace Nektar
-{	
+{
     namespace SolverUtils
     {
         /**
@@ -101,9 +101,11 @@ namespace Nektar
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
             {
-                m_intScheme = LibUtilities::GetTimeIntegrationWrapperFactory().
-                    CreateInstance(m_session->GetSolverInfo(
-                                       "TIMEINTEGRATIONMETHOD"));
+                std::string methodName = m_session->GetSolverInfo(
+                                                "TIMEINTEGRATIONMETHOD" );
+                m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory()
+		    .CreateInstance( methodName, "", 0,
+				     std::vector<NekDouble>());
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
@@ -112,7 +114,8 @@ namespace Nektar
                 m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
 
                 // Time tolerance between filter update time and time integration
-                m_session->LoadParameter("FilterTimeWarning", m_filterTimeWarning, 1);
+                m_session->LoadParameter("FilterTimeWarning",
+                                         m_filterTimeWarning, 1);
 
                 // Ensure that there is no conflict of parameters
                 if(m_cflSafetyFactor > 0.0)
@@ -159,40 +162,7 @@ namespace Nektar
          */
         NekDouble UnsteadySystem::MaxTimeStepEstimator()
         {
-            NekDouble TimeStability = 0.0;
-            switch(m_intScheme->GetIntegrationMethod())
-            {
-                case LibUtilities::eForwardEuler:
-                case LibUtilities::eClassicalRungeKutta4:
-                case LibUtilities::eRungeKutta4:
-                {
-                    TimeStability = 2.784;
-                    break;
-                }
-                case LibUtilities::eAdamsBashforthOrder1:
-                case LibUtilities::eMidpoint:
-                case LibUtilities::eRungeKutta2:
-                case LibUtilities::eRungeKutta2_ImprovedEuler:
-                case LibUtilities::eRungeKutta2_SSP:
-                case LibUtilities::eRungeKutta3_SSP:
-                {
-                    TimeStability = 2.0;
-                    break;
-                }
-                case LibUtilities::eAdamsBashforthOrder2:
-                {
-                    TimeStability = 1.0;
-                    break;
-                }
-                default:
-                {
-                    ASSERTL0(
-                        false,
-                        "No CFL control implementation for this time"
-                        "integration scheme");
-                }
-            }
-            return TimeStability;
+            return m_intScheme->GetTimeStability();
         }
         
         /**
@@ -241,13 +211,13 @@ namespace Nektar
                 fields[i] = m_fields[m_intVariables[i]]->GetPhys();
                 m_fields[m_intVariables[i]]->SetPhysState(false);
             }
-            
+
             // Initialise time integration scheme
-            m_intSoln = m_intScheme->InitializeScheme(
-                m_timestep, fields, m_time, m_ode);
+            m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields,
+                                                       m_time, m_ode );
 
             // Initialise filters
-            for (auto &x : m_filters)
+            for( auto &x : m_filters )
             {
                 x.second->Initialise(m_fields, m_time);
             }
@@ -308,7 +278,7 @@ namespace Nektar
                 elapsed  = timer.TimePerTest(1);
                 intTime += elapsed;
                 cpuTime += elapsed;
-		
+
                 // Write out status information
                 if (m_session->GetComm()->GetRank() == 0 && 
                     !((step+1) % m_infosteps))
@@ -568,12 +538,10 @@ namespace Nektar
                                m_explicitReaction  ? "explicit" : "implicit");
             }
 
-            AddSummaryItem(s, "Time Step", m_timestep);
-            AddSummaryItem(s, "No. of Steps", m_steps);
-            AddSummaryItem(s, "Checkpoints (steps)", m_checksteps);
-            AddSummaryItem(s, "Integration Type",
-                           LibUtilities::TimeIntegrationMethodMap[
-                               m_intScheme->GetIntegrationMethod()]);
+            AddSummaryItem( s, "Time Step", m_timestep );
+            AddSummaryItem( s, "No. of Steps", m_steps );
+            AddSummaryItem( s, "Checkpoints (steps)", m_checksteps );
+            AddSummaryItem( s, "Integration Type", m_intScheme->GetName() );
         }
         
         /**
@@ -656,7 +624,7 @@ namespace Nektar
                 }
             }
         }
-	
+
         /**
          * @brief Return the timestep to be used for the next step in the
          * time-marching loop.

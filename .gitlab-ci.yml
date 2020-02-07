@@ -301,6 +301,8 @@ build-and-test-win7-default:
   tags:
     - win7
   script:
+    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;" + $Env:path
+    - echo $Env:path
     - mkdir build
     - cd build
     - cmake.exe -G "Visual Studio 12 2013 Win64" --config Debug ..
@@ -314,6 +316,8 @@ build-and-test-win10-default:
   tags:
     - win10
   script:
+    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;$CI_PROJECT_DIR\build\ThirdParty\dist\bin;" + $Env:path
+    - echo $Env:path
     - mkdir build
     - cd build
     - cmake.exe -G "Visual Studio 14 2015 Win64" --config Debug ..

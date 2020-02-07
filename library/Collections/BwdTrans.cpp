@@ -151,26 +151,35 @@ class BwdTrans_AVX : public Operator
     public:
         OPERATOR_CREATE(BwdTrans_AVX)
 
-        virtual ~BwdTrans_AVX()
+        ~BwdTrans_AVX()
         {
         }
 
-        virtual void operator()(
+        void operator()(
                 const Array<OneD, const NekDouble> &input,
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp) final
         {
             boost::ignore_unused(output1, output2, wsp);
+            // {
+            //     volatile int i = 0;
+            //     char hostname[256];
+            //     gethostname(hostname, sizeof(hostname));
+            //     printf("PID %d on %s ready for attach\n", getpid(), hostname);
+            //     fflush(stdout);
+            //     while (0 == i)
+            //         sleep(5);
+            // }
             if (m_isPadded)
             {
                 // copy into padded vector
-                Vmath::Vcopy(m_nElmtNoPad, input, 1, m_input, 1);
+                Vmath::Vcopy(input.num_elements(), input, 1, m_input, 1);
                 // call op
                 (*m_oper)(m_input, m_output);
                 // copy out
-                Vmath::Vcopy(m_nElmtNoPad, m_output, 1, output, 1);
+                Vmath::Vcopy(output.num_elements(), m_output, 1, output, 1);
             }
             else
             {
@@ -178,18 +187,18 @@ class BwdTrans_AVX : public Operator
             }
         }
 
-        virtual void operator()(
+        void operator()(
                       int                           dir,
                 const Array<OneD, const NekDouble> &input,
                       Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal,
                 "BwdTrans_AVX: Not valid for this operator.");
         }
 
-    protected:
+    private:
         std::shared_ptr<AVX::BwdTrans> m_oper;
         /// flag for padding
         bool m_isPadded{false};
@@ -204,7 +213,6 @@ class BwdTrans_AVX : public Operator
         /// padded input/output
         Array<OneD, NekDouble> m_input, m_output;
 
-    private:
         BwdTrans_AVX(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
@@ -221,16 +229,15 @@ class BwdTrans_AVX : public Operator
                 m_isPadded = true;
                 m_nElmt = m_nElmtNoPad + AVX::SIMD_WIDTH_SIZE -
                     (m_nElmtNoPad % AVX::SIMD_WIDTH_SIZE);
-
-                m_input = Array<OneD, NekDouble>{m_nElmt, 0.0};
-                m_output = Array<OneD, NekDouble>{m_nElmt, 0.0};
+                m_nq    = nqElmt * m_nElmt;
+                m_nm    = nmElmt * m_nElmt;
+                m_input = Array<OneD, NekDouble>{m_nm, 0.0};
+                m_output = Array<OneD, NekDouble>{m_nq, 0.0};
             }
             else
             {
                 m_nElmt = m_nElmtNoPad;
             }
-            m_nq    = nqElmt * m_nElmt;
-            m_nm    = nmElmt * m_nElmt;
 
             // Store Jacobian
             Array<OneD, NekDouble> jac{m_nElmt, 0.0};

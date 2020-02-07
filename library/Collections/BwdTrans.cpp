@@ -259,7 +259,6 @@ class BwdTrans_AVX : public Operator
             {
                 op_string += "_AVX512";
             }
-            std::cout << op_string << '\n';
             auto oper = AVX::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmtPad);
             // If the operator needs the Jacobian, provide it here

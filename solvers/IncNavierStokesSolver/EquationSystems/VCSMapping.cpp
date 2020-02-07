@@ -78,38 +78,24 @@ namespace Nektar
             m_pressure,
             m_velocity,
             m_advObject); 
-        m_extrapolation->SubSteppingTimeIntegration(
-                            m_intScheme->GetIntegrationMethod(), m_intScheme);
+        m_extrapolation->SubSteppingTimeIntegration(m_intScheme);
         m_extrapolation->GenerateHOPBCMap(m_session);
 
        // Storage to extrapolate pressure forcing
         int physTot = m_fields[0]->GetTotPoints();
         int intSteps = 1;
-        int intMethod = m_intScheme->GetIntegrationMethod();
-        switch(intMethod)
+
+        if ( m_intScheme->GetName() == "IMEX" ||
+             m_intScheme->GetName() == "IMEXGear" )
         {
-            case LibUtilities::eIMEXOrder1:
-            {
-                intSteps = 1;
-            }
-            break;
-            case LibUtilities::eIMEXOrder2:
-            case LibUtilities::eIMEXGear:
-            {
-                intSteps = 2;
-            }
-            break;
-            case LibUtilities::eIMEXOrder3:
-            {
-                intSteps = 3;
-            }
-            break;
-            case LibUtilities::eIMEXOrder4:
-            {
-                intSteps = 4;
-            }
-            break;
-        }        
+            m_intSteps = m_intScheme->GetOrder();
+        }
+        else
+        {
+            NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "
+                     "Options include IMEXGear or IMEXOrder{1,2,3,4}");
+        }
+
         m_presForcingCorrection= Array<OneD, Array<OneD, NekDouble> >(intSteps);
         for(int i = 0; i < m_presForcingCorrection.num_elements(); i++)
         {

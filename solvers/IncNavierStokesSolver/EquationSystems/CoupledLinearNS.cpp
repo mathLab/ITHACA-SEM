@@ -34,7 +34,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <IncNavierStokesSolver/EquationSystems/CoupledLinearNS.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LocalRegions/MatrixKey.h>

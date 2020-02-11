@@ -37,9 +37,11 @@
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_TIMER_H
 
 #include <chrono>
+#include <iostream>
 
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+#include <LibUtilities/Communication/Comm.h>
 
 namespace Nektar
 {
@@ -64,6 +66,16 @@ class Timer
         LIB_UTILITIES_EXPORT void Stop();
         LIB_UTILITIES_EXPORT Seconds Elapsed();
 
+        /// \brief Accumulate elapsed time for a region
+        LIB_UTILITIES_EXPORT void AccumulateRegion(std::string);
+
+        /// \brief Retrieve accumulated time for a region
+        // LIB_UTILITIES_EXPORT Seconds ElapsedRegion(std::string);
+
+        /// \brief Print elapsed regions
+        LIB_UTILITIES_EXPORT static void PrintElapsedRegions
+            (LibUtilities::CommSharedPtr comm);
+
         /// \brief Returns amount of seconds per iteration in
         ///        a test with n iterations.
         LIB_UTILITIES_EXPORT NekDouble TimePerTest(unsigned int n);
@@ -71,7 +83,11 @@ class Timer
     private:
         CounterType m_start;
         CounterType m_end;
+        static std::map<std::string, Seconds> m_elapsedRegion;
+
+
 };
+
 
 }
 }

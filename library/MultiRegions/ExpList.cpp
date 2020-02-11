@@ -70,6 +70,8 @@
 #include <Collections/CollectionOptimisation.h>
 #include <Collections/Operator.h>
 
+#include <LibUtilities/BasicUtils/Timer.h>
+
 using namespace std;
 
 namespace Nektar
@@ -1576,6 +1578,9 @@ namespace Nektar
         void ExpList::v_BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
                                             Array<OneD, NekDouble> &outarray)
         {
+            LibUtilities::Timer timer;
+            timer.Start();
+
             Array<OneD, NekDouble> tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
@@ -1583,6 +1588,10 @@ namespace Nektar
                                                inarray + m_coll_coeff_offset[i],
                                                tmp = outarray + m_coll_phys_offset[i]);
             }
+
+            timer.Stop();
+            // Elapsed time
+            timer.AccumulateRegion("v_BwdTrans_IterPerExp");
         }
 
         LocalRegions::ExpansionSharedPtr& ExpList::GetExp(

@@ -59,5 +59,61 @@ NekDouble Timer::TimePerTest(unsigned int n)
     return Elapsed().count() / static_cast<NekDouble>(n);
 }
 
+void Timer::AccumulateRegion(std::string region)
+{
+    auto search = m_elapsedRegion.find(region);
+    if (search == m_elapsedRegion.end())
+    {
+        m_elapsedRegion.insert({region, this->Elapsed()});
+    }
+    else
+    {
+        search->second += this->Elapsed();
+    }
 }
+
+// Timer::Seconds Timer::ElapsedRegion(std::string region)
+// {
+//     auto search = m_elapsedRegion.find(region);
+//     if (search == m_elapsedRegion.end())
+//     {
+//         NEKERROR(ErrorUtil::efatal, "Region not registered.");
+//     }
+//     return search->second;
+// }
+
+void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm)
+{
+    if (comm->GetRank() == 0)
+    {
+        std::cout
+            << "-------------------------------------------\n"
+            << "Region\t\t Elapsed time Ave (s)"
+            << "\t Min (s)"
+            << "\t Max (s)\n";
+    }
+    for (auto item = m_elapsedRegion.begin();
+            item != m_elapsedRegion.end(); ++item)
+    {
+        auto elapsedAve = item->second.count();
+        comm->AllReduce(elapsedAve, LibUtilities::ReduceSum);
+        elapsedAve /= comm->GetSize();
+        auto elapsedMin = item->second.count();
+        comm->AllReduce(elapsedMin, LibUtilities::ReduceMin);
+        auto elapsedMax = item->second.count();
+        comm->AllReduce(elapsedMax, LibUtilities::ReduceMax);
+
+        if (comm->GetRank() == 0)
+        {
+            std::cout << item->first << '\t'
+                << elapsedAve << '\t'
+                << elapsedMin << '\t'
+                << elapsedMax << '\n';
+        }
+    }
 }
+
+std::map<std::string, Timer::Seconds> Timer::m_elapsedRegion{};
+
+}
+} // end Nektar namespace

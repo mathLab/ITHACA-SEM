@@ -34,6 +34,7 @@
 
 #include <SolverUtils/Driver.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 using namespace std;
 using namespace Nektar;
@@ -60,6 +61,9 @@ int main(int argc, char *argv[])
 
         // Execute driver
         drv->Execute();
+
+        // Print out timings
+        LibUtilities::Timer::PrintElapsedRegions(session->GetComm());
 
         // Finalise session
         session->Finalise();

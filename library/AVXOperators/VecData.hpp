@@ -320,7 +320,7 @@ struct VecData<double, 4>
         unsigned int dataLen,
         double *out)
     {
-        unsigned int nBlocks = dataLen / 4;
+        // unsigned int nBlocks = dataLen / 4;
 
         double *out0 = out;
         double *out1 = out + dataLen;

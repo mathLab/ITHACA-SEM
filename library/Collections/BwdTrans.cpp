@@ -146,7 +146,7 @@ OperatorKey BwdTrans_StdMat::m_typeArr[] = {
 /**
  * @brief Backward transform operator using AVX vector instructions approach.
  */
-class BwdTrans_AVX : public Operator
+class BwdTrans_AVX final : public Operator
 {
     public:
         OPERATOR_CREATE(BwdTrans_AVX)
@@ -239,28 +239,15 @@ class BwdTrans_AVX : public Operator
                 basis[i] = pCollExp[0]->GetBasis(i);
             }
 
-            // Generate operator string and create operator.
-            // For now hardcoded BwdTrans
-            std::string op_string = "BwdTrans_Quad_Regular";
-            // if (deformed) // BwdTrans can always use regular
-            // {
-            //     op_string += "_Deformed";
-            // }
-            // else
-            // {
-            //     op_string += "_Regular";
-            // }
+            // Get shape type
+            auto shapeType = pCollExp[0]->GetStdExp()->DetShapeType();
 
-            if (AVX::SIMD_WIDTH_SIZE == 4)
-            {
-                op_string += "_AVX";
-            }
-            else
-            {
-                op_string += "_AVX512";
-            }
+            // Generate operator string and create operator.
+            std::string op_string = "BwdTrans";  // For now hardcoded BwdTrans
+            op_string += AVX::GetOpstring(shapeType, deformed);
             auto oper = AVX::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmtPad);
+
             // If the operator needs the Jacobian, provide it here
             if (oper->NeedsJac())
             {
@@ -285,6 +272,9 @@ OperatorKey BwdTrans_AVX::m_typeArr[] = {
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eQuadrilateral, eBwdTrans, eAVX,false),
         BwdTrans_AVX::create, "BwdTrans_AVX_Quad")
+    // GetOperatorFactory().RegisterCreatorFunction(
+        // OperatorKey(eTriangle,      eBwdTrans, eAVX,false),
+        // BwdTrans_IterPerExp::create, "BwdTrans_AVX_Tri"),
 };
 
 

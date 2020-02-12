@@ -72,16 +72,6 @@ void Timer::AccumulateRegion(std::string region)
     }
 }
 
-// Timer::Seconds Timer::ElapsedRegion(std::string region)
-// {
-//     auto search = m_elapsedRegion.find(region);
-//     if (search == m_elapsedRegion.end())
-//     {
-//         NEKERROR(ErrorUtil::efatal, "Region not registered.");
-//     }
-//     return search->second;
-// }
-
 void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm)
 {
     if (comm->GetRank() == 0)

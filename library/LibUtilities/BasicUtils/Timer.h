@@ -69,9 +69,6 @@ class Timer
         /// \brief Accumulate elapsed time for a region
         LIB_UTILITIES_EXPORT void AccumulateRegion(std::string);
 
-        /// \brief Retrieve accumulated time for a region
-        // LIB_UTILITIES_EXPORT Seconds ElapsedRegion(std::string);
-
         /// \brief Print elapsed regions
         LIB_UTILITIES_EXPORT static void PrintElapsedRegions
             (LibUtilities::CommSharedPtr comm);

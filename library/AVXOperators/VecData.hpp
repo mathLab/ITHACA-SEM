@@ -23,7 +23,7 @@ template<typename DataType>
 struct VecData<DataType, 1>
 {
     using T = VecData<double, 1>;
-    static const unsigned int vecWidth = 1;
+    static const size_t vecWidth = 1;
     DataType m_data;
 
     inline VecData() = default;
@@ -70,11 +70,11 @@ struct VecData<DataType, 1>
 
     inline static void load_interleave(
         DataType *in,
-        unsigned int dataLen,
+        size_t dataLen,
         AlignedVector<VecData<DataType, 1>> &out)
     {
         // Nothing to do -- straightforward copy.
-        for (int i = 0; i < dataLen; ++i)
+        for (size_t i = 0; i < dataLen; ++i)
         {
             out[i] = in[i];
         }
@@ -124,7 +124,7 @@ template<>
 struct VecData<int, 4>
 {
     using T = VecData<int,4>;
-    static const unsigned int vecWidth = 4;
+    static const size_t vecWidth = 4;
     __m128i m_data;
 
     inline VecData() = default;
@@ -236,10 +236,10 @@ struct VecData<double, 4>
 
     inline static void load_interleave(
         const double *in,
-        unsigned int dataLen,
+        size_t dataLen,
         AlignedVector<VecData<double, 4>> &out)
     {
-        unsigned int nBlocks = dataLen / 4;
+        size_t nBlocks = dataLen / 4;
 
         const double *d0 = in;
         const double *d1 = in + dataLen;
@@ -247,7 +247,7 @@ struct VecData<double, 4>
         const double *d3 = in + 3 * dataLen;
 
         /*
-        for (unsigned int i = 0; i < dataLen; ++i)
+        for (size_t i = 0; i < dataLen; ++i)
         {
             out[i].m_data[0] = d0[i];
             out[i].m_data[1] = d1[i];
@@ -257,7 +257,7 @@ struct VecData<double, 4>
         return;
         */
 
-        for (unsigned int i = 0; i < nBlocks; ++i)
+        for (size_t i = 0; i < nBlocks; ++i)
         {
 #if 0
             // Load 4 doubles from each of d0..d3 to give 2d array:
@@ -302,7 +302,7 @@ struct VecData<double, 4>
         }
 
         // Handle leftover data.
-        for (unsigned int i = 4 * nBlocks; i < dataLen; ++i)
+        for (size_t i = 4 * nBlocks; i < dataLen; ++i)
         {
             out[i].m_data[0] = *d0;
             out[i].m_data[1] = *d1;
@@ -317,7 +317,7 @@ struct VecData<double, 4>
 
     inline static void deinterleave_store(
         const AlignedVector<VecData<double, 4>> &in,
-        unsigned int dataLen,
+        size_t dataLen,
         double *out)
     {
         // unsigned int nBlocks = dataLen / 4;
@@ -328,7 +328,7 @@ struct VecData<double, 4>
         double *out3 = out + 3 * dataLen;
 
         /*
-        for (unsigned int i = 0; i < nBlocks; ++i)
+        for (size_t i = 0; i < nBlocks; ++i)
         {
             __m256d ymm4 = _mm256_permute2f128_pd(in[4*i+0].m_data, in[4*i+2].m_data, 0x20); // ymm4 <= [d00 d01 d20 d21]
             __m256d ymm5 = _mm256_permute2f128_pd(in[4*i+1].m_data, in[4*i+3].m_data, 0x20); // ymm5 <= [d10 d11 d30 d31]
@@ -346,7 +346,7 @@ struct VecData<double, 4>
             out3 += 4;
         }
 
-        for (unsigned int i = 4 * nBlocks; i < dataLen; ++i)
+        for (size_t i = 4 * nBlocks; i < dataLen; ++i)
         {
             *out0 = in[i].m_data[0];
             *out1 = in[i].m_data[1];
@@ -358,7 +358,7 @@ struct VecData<double, 4>
             ++out3;
         }
         */
-        for (unsigned int i = 0; i < dataLen; ++i)
+        for (size_t i = 0; i < dataLen; ++i)
         {
             out0[i] = in[i].m_data[0];
             out1[i] = in[i].m_data[1];

@@ -16,8 +16,6 @@ inline static void AVXBwdTransQuadKernel(
     VecData<double, VW> *wsp,
     AlignedVector<VecData<double, VW>> &out)
 {
-    using T = VecData<double, VW>;
-
     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1;
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
 
@@ -55,13 +53,13 @@ inline static void AVXBwdTransQuadKernel(
 
 template<int NUMMODE0, int NUMMODE1,
          int NUMQUAD0, int NUMQUAD1,
-         int VW, bool CORRECT, class BasisType>
+         int VW, bool CORRECT>
 inline static void AVXBwdTransTriKernel(
-    const double *inptr,
-    const AlignedVector<BasisType> &basis0,
-    const AlignedVector<BasisType> &basis1,
+    const AlignedVector<VecData<double, VW>> &in,
+    const AlignedVector<VecData<double, VW>> &bdata0,
+    const AlignedVector<VecData<double, VW>> &bdata1,
     VecData<double, VW> *p_sums,
-    double *outptr)
+    AlignedVector<VecData<double, VW>> &out)
 {
     using T = VecData<double, VW>;
 
@@ -69,18 +67,17 @@ inline static void AVXBwdTransTriKernel(
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
 
     int eta_idx = 0;
-    for(int eta1 = 0; eta1 < nq1; eta1++){
+    for (int eta1 = 0; eta1 < nq1; ++eta1)
+    {
 
         int mode = 0; //Combined number of modes.
-        for(int p = 0; p < nm0; p++){
+        for (int p = 0; p < nm0; ++p)
+        {
 
             T p_sum = T(0.0);
 
-            for(int q = 0; q < (nm1-p); q++, mode++){
-                T basis_val = basis1[mode * nq1 + eta1]; //Load 1x
-                T coef = T( &(inptr[mode*VW]) ); //Load 1x
-
-               p_sum.fma(basis_val, coef);
+            for (int q = 0; q < (nm1-p); ++q, ++mode){
+               p_sum.fma(bdata1[mode * nq1 + eta1], in[mode]);
             }
 
             p_sums[p] = p_sum; //Store 1x
@@ -89,24 +86,19 @@ inline static void AVXBwdTransTriKernel(
 
         //We already have q_sum at each quadrature point in eta 1 for each mode, p.
         //From this assemble the tensor produce of each quadrature point, eta1
-        for(int eta0 = 0; eta0 < nq0; eta0++, eta_idx += VW){
-
-            T p_sum = T(0.0);
-            for(int p = 0; p < nm0; p++){
-                p_sum.fma(p_sums[p], basis0[p*nq0 + eta0]); //Load 2x
+        for (int eta0 = 0; eta0 < nq0; ++eta0, ++eta_idx)
+        {
+            out[eta_idx] = 0.0;
+            for (int p = 0; p < nm0; ++p)
+            {
+                out[eta_idx].fma(p_sums[p], bdata0[p*nq0 + eta0]); //Load 2x
             }
 
             if (CORRECT)
             {
-                T coef = T( &(inptr[VW]) ); //ceof p = 0, q = 1 | Load 1x
-                T basis_val0 = basis0[nq0 + eta0]; //Load 1x
-                T basis_val1 = basis1[nq1 + eta1]; //Load 1x
-
-                //p_sum += coef * basis0 * basis1
-                p_sum.fma(coef * basis_val0, basis_val1);
+                //p_sum += coef * bdata0 * bdata1
+                out[eta_idx].fma(in[1] * bdata0[nq0 + eta0], bdata1[nq1 + eta1]);
             }
-
-            p_sum.store(outptr + eta_idx); //Store 1
         }
     }
 }

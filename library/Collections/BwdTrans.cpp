@@ -270,11 +270,11 @@ class BwdTrans_AVX final : public Operator
 /// Factory initialisation for the BwdTrans_AVX operators
 OperatorKey BwdTrans_AVX::m_typeArr[] = {
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eQuadrilateral, eBwdTrans, eAVX,false),
-        BwdTrans_AVX::create, "BwdTrans_AVX_Quad")
-    // GetOperatorFactory().RegisterCreatorFunction(
-        // OperatorKey(eTriangle,      eBwdTrans, eAVX,false),
-        // BwdTrans_IterPerExp::create, "BwdTrans_AVX_Tri"),
+        OperatorKey(eQuadrilateral, eBwdTrans, eAVX, false),
+        BwdTrans_AVX::create, "BwdTrans_AVX_Quad"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTriangle,      eBwdTrans, eAVX, false),
+        BwdTrans_AVX::create, "BwdTrans_AVX_Tri")
 };
 
 

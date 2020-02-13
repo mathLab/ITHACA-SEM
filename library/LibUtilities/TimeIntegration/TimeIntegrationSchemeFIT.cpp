@@ -61,8 +61,8 @@ InitializeScheme(const NekDouble deltaT,
     m_T = time;  // Finial time;
     m_maxTimeSteps = m_T / m_deltaT;
 
-    // The +2 below is a demonstration of how to do additional
-    // allocation in case one decides later to increase T
+    // The +2 below is a buffer, and keeps +2 extra rectangle groups in case T
+    // needs to be increased later.
     m_Lmax = compute_L(m_base, m_maxTimeSteps) + 2;
 
     // Demarcation integers - one array that is re-used
@@ -128,6 +128,7 @@ InitializeScheme(const NekDouble deltaT,
     }
 
     // Ahat array, one for each order.
+    // These are elements in a multi-step exponential integrator tableau
     m_Ahats = TripleArray(m_order+1);
 
     for( unsigned int m=1; m<=m_order; ++m )
@@ -293,8 +294,7 @@ TimeIntegrate(const int timestep,
     // std::cout << std::endl;
 
     // Update the storage and counters for integral classes to
-    // time timeStep * m_deltaT. Also update the sandboxes and
-    // stashes.
+    // time timeStep * m_deltaT. Also time-steps the sandboxes and stashes.
     for (int i=0; i<m_Lmax; ++i)
     {
         advance_sandbox( timeStep, op, m_integral_classes[i] );
@@ -391,9 +391,8 @@ FractionalInTimeIntegrationScheme::compute_taus( const unsigned int base,
 //
 // gamma(th) = sigma + mu * ( th*cot(th) + i*nu*th ),  -pi < th < pi
 //
-// An N-point rule is returned, equidistant in the parameter
-// theta. Denoting the contour Gamma, the returned quadrature rule is
-// the approximation
+// An N-point rule is returned, equidistant in the parameter theta. The
+// returned quadrature rule approximes an integral over the contour.
 //
 void FractionalInTimeIntegrationScheme::
 talbot_quadrature(const unsigned int nQuadPts,
@@ -453,8 +452,9 @@ integral_class_initialize(const unsigned int index,
 
     // Items on the "stage" are stored for use in computing u at the
     // current time.  Items in the "stash" are stored for use for future
-    // staging Items in the "sandbox" are being actively updated at the
-    // current time for future stashing.
+    // staging. Items in the "sandbox" are being actively updated at the
+    // current time for future stashing. Only items in the sandbox are
+    // time-stepped. the stage and stash locations are for storage only.
 
     // This is the same for all integral classes, so there's probably a
     // better way to engineer this. And technically, all that's needed
@@ -618,7 +618,7 @@ integral_class_initialize(const unsigned int index,
             break;
 
             // The default is a general formula, but the matrix inversion
-            // involved is ill-conditioned, so the special cases below are
+            // involved is ill-conditioned, so the special cases above are
             // epxlicitly given to combat roundoff error in the most-used
             // scenarios.
         default:

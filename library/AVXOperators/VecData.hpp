@@ -1,6 +1,7 @@
 #ifndef VECDATA_HPP
 #define VECDATA_HPP
 
+#include "AVXUtil.hpp"
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/align/aligned_allocator.hpp>
 #include <immintrin.h>
@@ -14,7 +15,8 @@ struct VecData
 };
 
 template<class T>
-using AlignedVector = std::vector<T, boost::alignment::aligned_allocator<T, 64>>;
+using AlignedVector =
+    std::vector<T, boost::alignment::aligned_allocator<T, SIMD_WIDTH_BYTES>>;
 
 /////
 ///// Normal data types
@@ -547,7 +549,8 @@ inline VecData<double, 8> gather(const double* data, VecData<int, 8> &indices)
 /////
 
 template<class T>
-using AlignedVector = std::vector<T, boost::alignment::aligned_allocator<T, 64>>;
+using AlignedVector =
+    std::vector<T, boost::alignment::aligned_allocator<T, SIMD_WIDTH_BYTES>>;
 
 template<class T, int VW>
 AlignedVector<VecData<T, VW>> ToAlignedVector(Array<OneD, T> &input)

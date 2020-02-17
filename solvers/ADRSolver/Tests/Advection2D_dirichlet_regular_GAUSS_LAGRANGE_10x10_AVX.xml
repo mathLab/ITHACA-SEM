@@ -70,7 +70,7 @@
 
       <COLLECTIONS>
         <OPERATOR TYPE="BwdTrans">
-            <ELEMENT TYPE="Q" ORDER="2-15" IMPTYPE="AVX" />
+            <ELEMENT TYPE="Q" ORDER="2-8" IMPTYPE="AVX" />
         </OPERATOR>
      </COLLECTIONS>
 

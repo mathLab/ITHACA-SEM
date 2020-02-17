@@ -178,18 +178,17 @@ struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
         auto *inptr = &input[0];
         auto *outptr = &output[0];
 
-        constexpr int nmTot = NM0 * NM1;
         constexpr int nqTot = NQ0 * NQ1;
-        constexpr int nqBlocks = NQ0 * NQ1 * VW;
+        constexpr int nqBlocks = nqTot * VW;
         const int nmBlocks = m_nmTot * VW;
 
         T p_sums[NM0 * NQ0]; //Sums over q for each quadpt p_i
-        AlignedVector<T> tmpIn(nmTot), tmpOut(nqTot);
+        AlignedVector<T> tmpIn(m_nmTot), tmpOut(nqTot);
 
-        for (int e = 0; e < this->m_nBlocks; e++)
+        for (int e = 0; e < this->m_nBlocks; ++e)
         {
             // Load and transpose data
-            T::load_interleave(inptr, nmTot, tmpIn);
+            T::load_interleave(inptr, m_nmTot, tmpIn);
 
             AVXBwdTransQuadKernel<NM0, NM1, NQ0, NQ1, VW>(
                 tmpIn, this->m_bdata[0], this->m_bdata[1],
@@ -329,18 +328,17 @@ struct AVXBwdTransTri : public BwdTrans, public AVXHelper<VW, 2>
         auto *inptr = &input[0];
         auto *outptr = &output[0];
 
-        constexpr size_t nmTot = NM0 * NM1;
-        constexpr size_t nqTot = NQ0 * NQ1;
-        constexpr size_t nqBlocks = NQ0 * NQ1 * VW;
-        const size_t nmBlocks = m_nmTot * VW;
+        constexpr int nqTot = NQ0 * NQ1;
+        constexpr int nqBlocks = nqTot * VW;
+        const int nmBlocks = m_nmTot * VW;
 
         T q_sums[NM0]; //Sums over q for each p
-        AlignedVector<T> tmpIn(nmTot), tmpOut(nqTot);
+        AlignedVector<T> tmpIn(m_nmTot), tmpOut(nqTot);
 
-        for(size_t e = 0; e < this->m_nBlocks; e++)
+        for(int e = 0; e < this->m_nBlocks; ++e)
         {
             // Load and transpose data
-            T::load_interleave(inptr, nmTot, tmpIn);
+            T::load_interleave(inptr, m_nmTot, tmpIn);
 
             AVXBwdTransTriKernel<NM0, NM1, NQ0, NQ1, VW, CORRECT>(
                 tmpIn,
@@ -357,7 +355,7 @@ struct AVXBwdTransTri : public BwdTrans, public AVXHelper<VW, 2>
     }
 
 private:
-    size_t m_nmTot;
+    int m_nmTot;
 };
 
 template<int VW>

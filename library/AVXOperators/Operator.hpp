@@ -564,6 +564,8 @@ using OperatorFactory = LibUtilities::NekFactory<
 
 OperatorFactory &GetOperatorFactory();
 
+/// Helper function, get operator string
+std::string GetOpstring(LibUtilities::ShapeType shape, bool deformed=false);
 
 } // namespace AVX
 } // namespace Nektar

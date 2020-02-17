@@ -21,51 +21,8 @@ constexpr int SIMD_WIDTH_BITS = 512;
 
 /// Number of bytes in a AVX2 vector
 constexpr int SIMD_WIDTH_BYTES = SIMD_WIDTH_BITS / 8;
-/// Number of elements in a AVX vector
+/// Number of elements in a AVX vector for NekDoubles
 constexpr int SIMD_WIDTH_SIZE = SIMD_WIDTH_BYTES / sizeof(NekDouble);
-
-/// Get operator string
-std::string GetOpstring(LibUtilities::ShapeType shape, bool deformed=false)
-{
-
-    std::string op_string = "_";
-
-    if(shape == LibUtilities::eTriangle){
-        op_string += "Tri";
-    }
-    else if(shape == LibUtilities::eQuadrilateral){
-        op_string += "Quad";
-    }
-    else if(shape == LibUtilities::eTetrahedron){
-        op_string += "Tet";
-    }
-    else if(shape == LibUtilities::ePrism){
-        op_string += "Prism";
-    }
-    else if(shape == LibUtilities::eHexahedron){
-        op_string += "Hex";
-    }
-
-    if (deformed)
-    {
-        op_string += "_Deformed";
-    }
-    else
-    {
-        op_string += "_Regular";
-    }
-
-    if (SIMD_WIDTH_SIZE == 4)
-    {
-        op_string += "_AVX";
-    }
-    else
-    {
-        op_string += "_AVX512";
-    }
-
-    return op_string;
-}
 
 
 template<typename T>

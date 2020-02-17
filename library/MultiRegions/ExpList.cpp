@@ -796,6 +796,36 @@ namespace Nektar
         }
 
         /**
+         * The coefficients of the function to be acted upon
+         * should be contained in the \param inarray. The
+         * resulting coefficients are stored in \param outarray
+         *
+         * @param   inarray         An array of size \f$N_{\mathrm{eof}}\f$
+         *                          containing the inner product.
+         */
+        void ExpList::RightMultiplyByElmtInvMassOnDiag(
+                                            const DNekBlkMatSharedPtr   &inmat,
+                                            DNekBlkMatSharedPtr         &outmat)
+        {
+            std::shared_ptr<LocalRegions::ExpansionVector> pexp = GetExp();
+            int ntotElmt            = (*pexp).size();
+            GlobalMatrixKey mkey(StdRegions::eInvMass);
+            const DNekScalBlkMatSharedPtr& InvMass = GetBlockMatrix(mkey);
+            DNekMatSharedPtr outtmp; 
+            DNekMatSharedPtr intmp; 
+            DNekScalMatSharedPtr Invtmp;
+
+            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            {
+                outtmp  =   outmat->GetBlock(nelmt,nelmt);
+                intmp   =   inmat->GetBlock(nelmt,nelmt);
+                Invtmp  =   InvMass->GetBlock(nelmt,nelmt);
+
+                (*outtmp) = (*intmp)*(*Invtmp);
+            }
+        }
+
+        /**
          * Given a function \f$u(\boldsymbol{x})\f$ defined at the
          * quadrature points, this function determines the
          * transformed elemental coefficients \f$\hat{u}_n^e\f$
@@ -2803,6 +2833,15 @@ namespace Nektar
                      "v_AddTraceQuadPhysToField is not defined or valid for this class type");
         }
 
+        void ExpList::v_AddTraceQuadPhysToOffDiag(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &field)
+        {
+            ASSERTL0(false,
+                     "v_AddTraceQuadPhysToOffDiag is not defined or valid for this class type");
+        }
+
         void ExpList::v_GetLocTraceFromTracePts(
             const Array<OneD, const NekDouble>  &Fwd,
             const Array<OneD, const NekDouble>  &Bwd,
@@ -4041,10 +4080,11 @@ namespace Nektar
             NekDouble tmp;
             NekDouble sign = 1.0;
 
-            bool Debugflag = false;
+            bool Debugflag = true;
             if(locTraceToTraceMap->GetflagTracephysToLeftRightExpphysMap()&&Debugflag)
             {
                 Array<OneD, DNekMatSharedPtr>       TracFBMat(2);
+                Array<OneD, NekDouble>       TracMatData;
                 const Array<OneD, const Array<OneD, Array<OneD, int > > > Trac2ElmtphysMap  =   locTraceToTraceMap->GetTracephysToLeftRightExpphysMap();
 
                 int nlr = 0;
@@ -4060,19 +4100,24 @@ namespace Nektar
                     {
                         if(LRAdjflag[nlr][ntrace])
                         {
-                            ElmtMat        = fieldMat[LRAdjExpid[nlr][ntrace]];
+                            TracMatData = TracFBMat[nlr]->GetPtr();
+                            const Array<OneD, int > tmpelmtMap  = elmtLRMap[nlr][ntrace];
+                            const Array<OneD, int > tmpelmtSign = elmtLRSign[nlr][ntrace];
+                            int ElmtId = LRAdjExpid[nlr][ntrace];
+                            int nElmtCoeff = GetNcoeffs(ElmtId);
+                            ElmtMat_data        = fieldMat[ElmtId]->GetPtr();
 
                             for(int ncl = 0; ncl < nTracePnt; ncl++)
                             {
                                 nclAdjExp = Trac2ElmtphysMap[nlr][ntrace][ncl];
 
+                                int noffsetElmt = nclAdjExp*nElmtCoeff;
+                                int noffsetTrac = ncl*nTraceCoef;
                                 for(int nrw = 0; nrw < nTraceCoef; nrw++)
                                 {
-                                    sign=-elmtLRSign[nlr][ntrace][nrw];                                    
-                                    nrwAdjExp = elmtLRMap[nlr][ntrace][nrw];
-                                    tmp   =  sign*(*TracFBMat[nlr])(nrw,ncl);
-                                    tmp   +=   (*ElmtMat)(nrwAdjExp,nclAdjExp);
-                                    ElmtMat->SetValue(nrwAdjExp,nclAdjExp,tmp);
+                                    sign      = tmpelmtSign[nrw];                                    
+                                    nrwAdjExp = tmpelmtMap[nrw];
+                                    ElmtMat_data[nrwAdjExp+noffsetElmt] -= sign*TracMatData[nrw+noffsetTrac];
                                 }
                             }
                         }
@@ -4081,10 +4126,16 @@ namespace Nektar
             }
             else
             {
+//TODO::
+//TODO::
+//TODO::
+//TODO::
+//TODO:: FURTHER OPTIMIZATION!!!!
                 int nTracePntsTtl     = tracelist->GetTotPoints();
                 int nlocTracePts      = locTraceToTraceMap->GetNLocTracePts();
                 int nlocTracePtsFwd   = locTraceToTraceMap->GetNFwdLocTracePts();
                 int nlocTracePtsBwd   = nlocTracePts-nlocTracePtsFwd;
+
                 Array<OneD, int >  nlocTracePtsLR(2);
                 nlocTracePtsLR[0]     = nlocTracePtsFwd;
                 nlocTracePtsLR[1]     = nlocTracePtsBwd;
@@ -4097,11 +4148,32 @@ namespace Nektar
                     tmplocTrace[i]    =   Array<OneD, NekDouble> (nlocTracePtsLR[i]);
                 }
 
+                int nNumbElmt = fieldMat.num_elements();
+                Array<OneD, Array<OneD, NekDouble> > ElmtMatDataArray(nNumbElmt);
+                Array<OneD, int>  ElmtCoefArray(ntotTrace);
+                for(int i=0;i<nNumbElmt;i++)
+                {
+                    ElmtMatDataArray[i] =   fieldMat[i]->GetPtr();
+                    ElmtCoefArray[i]    =   GetNcoeffs(i);
+                }
+
                 int nTraceCoefMax = 0;
                 int nTraceCoefMin = std::numeric_limits<int>::max();
+                Array<OneD, int>  TraceCoefArray(ntotTrace);
+                Array<OneD, int>  TracePntArray(ntotTrace);
+                Array<OneD, int>  TraceOffArray(ntotTrace);
+                Array<OneD, Array<OneD, NekDouble> >  FwdMatData(ntotTrace);
+                Array<OneD, Array<OneD, NekDouble> >  BwdMatData(ntotTrace);
                 for(int  nt = 0; nt < ntotTrace; nt++)
                 {
                     nTraceCoef           = (*traceExp)[nt]->GetNcoeffs();
+                    nTracePnt           = tracelist->GetTotPoints(nt);
+                    int noffset         =  tracelist->GetPhys_Offset(nt);
+                    TraceCoefArray[nt]  = nTraceCoef;
+                    TracePntArray[nt]   = nTracePnt;
+                    TraceOffArray[nt]   = noffset;
+                    FwdMatData[nt]      = FwdMat[nt]->GetPtr();
+                    BwdMatData[nt]      = BwdMat[nt]->GetPtr();
                     if(nTraceCoef>nTraceCoefMax)
                     {
                         nTraceCoefMax = nTraceCoef;
@@ -4125,21 +4197,68 @@ namespace Nektar
                     noffset += nlocTracePtsLR[i];
                 }
 
-                for(int nc=0;nc<nTraceCoefMax;nc++)
+                Array<OneD, Array<OneD, int > > MatIndexArray(2);
+                for(int nlr = 0; nlr<2;nlr++)
+                {
+                    MatIndexArray[nlr]  =   Array<OneD, int > (nlocTracePtsLR[nlr]);
+                    for(int  nloc = 0; nloc < nlocTracePtsLR[nlr]; nloc++)
+                    {
+                        traceID             = LocTracephysToTraceIDMap[nlr][nloc];
+                        nTraceCoef          = TraceCoefArray[traceID];
+                        ElmtId      = LRAdjExpid[nlr][traceID];
+                        noffset     = GetPhys_Offset(ElmtId);
+                        nElmtCoef  = ElmtCoefArray[ElmtId];
+                        nfieldPnts  = fieldToLocTraceMapLR[nlr][nloc]; 
+                        nPnts   = nfieldPnts - noffset;  
+
+                        MatIndexArray[nlr][nloc] = nPnts*nElmtCoef;
+                    }
+                }
+
+                for(int nc=0;nc<nTraceCoefMin;nc++)
                 {
                     for(int  nt = 0; nt < ntotTrace; nt++)
                     {
-                        nTraceCoef          = tracelist->GetNcoeffs(nt);
-                        nTracePnt           = tracelist->GetTotPoints(nt);
+                        nTraceCoef          = TraceCoefArray[nt];
+                        nTracePnt           = TracePntArray[nt] ;
+                        noffset             = TraceOffArray[nt] ;
+                        Vmath::Vcopy(nTracePnt,&FwdMatData[nt][nc],nTraceCoef,&TraceFwdPhy[noffset],1);
+                        Vmath::Vcopy(nTracePnt,&BwdMatData[nt][nc],nTraceCoef,&TraceBwdPhy[noffset],1);
+                    }
 
-                        int noffset         =  tracelist->GetPhys_Offset(nt);
+                    for(int i=0;i<2;i++)
+                    {
+                        Vmath::Zero(nlocTracePtsLR[i],tmplocTrace[i],1);
+                    }
+                    
+                    GetLocTraceFromTracePts(TraceFwdPhy,TraceBwdPhy,tmplocTrace[0],tmplocTrace[1]);
+
+                    for(int nlr = 0; nlr<2;nlr++)
+                    {
+                        for(int  nloc = 0; nloc < nlocTracePtsLR[nlr]; nloc++)
+                        {
+                            traceID     = LocTracephysToTraceIDMap[nlr][nloc];
+                            nTraceCoef  = TraceCoefArray[traceID];
+                            ElmtId      = LRAdjExpid[nlr][traceID];
+                            nrwAdjExp   = elmtLRMap[nlr][traceID][nc];
+                            sign        = elmtLRSign[nlr][traceID][nc];        
+                            MatIndex    = MatIndexArray[nlr][nloc] + nrwAdjExp;
+
+                            ElmtMatDataArray[ElmtId][MatIndex] -=   sign*tmplocTrace[nlr][nloc];
+                        }
+                    }
+                }
+                for(int nc=nTraceCoefMin;nc<nTraceCoefMax;nc++)
+                {
+                    for(int  nt = 0; nt < ntotTrace; nt++)
+                    {
+                        nTraceCoef          = TraceCoefArray[nt];
+                        nTracePnt           = TracePntArray[nt] ;
+                        noffset             = TraceOffArray[nt] ;
                         if(nc<nTraceCoef)
                         {
-                            for(int i=0;i<nTracePnt;i++)
-                            {
-                                TraceFwdPhy[noffset+i] =    (*FwdMat[nt])(nc,i);
-                                TraceBwdPhy[noffset+i] =    (*BwdMat[nt])(nc,i);
-                            }
+                            Vmath::Vcopy(nTracePnt,&FwdMatData[nt][nc],nTraceCoef,&TraceFwdPhy[noffset],1);
+                            Vmath::Vcopy(nTracePnt,&BwdMatData[nt][nc],nTraceCoef,&TraceBwdPhy[noffset],1);
                         }
                         else
                         {
@@ -4155,29 +4274,20 @@ namespace Nektar
                     // AddTraceQuadPhysToField(TraceFwdPhy,TraceBwdPhy,tmpfield[0],tmpfield[1]);
                     GetLocTraceFromTracePts(TraceFwdPhy,TraceBwdPhy,tmplocTrace[0],tmplocTrace[1]);
 
-                    //TODO:: to optimize matrix operations
                     for(int nlr = 0; nlr<2;nlr++)
                     {
                         for(int  nloc = 0; nloc < nlocTracePtsLR[nlr]; nloc++)
                         {
                             traceID             = LocTracephysToTraceIDMap[nlr][nloc];
-                            nTraceCoef          = tracelist->GetNcoeffs(traceID);
+                            nTraceCoef          = TraceCoefArray[traceID];
                             if(nc<nTraceCoef)
                             {
                                 ElmtId      = LRAdjExpid[nlr][traceID];
                                 nrwAdjExp   = elmtLRMap[nlr][traceID][nc];
                                 sign        =-elmtLRSign[nlr][traceID][nc];        
-                                noffset     = GetPhys_Offset(ElmtId);
-                                nElmtCoef  = GetNcoeffs(ElmtId);
-                                ElmtMat     = fieldMat[ElmtId];
-                                ElmtMat_data= ElmtMat->GetPtr();
+                                MatIndex = MatIndexArray[nlr][nloc] + nrwAdjExp;
 
-                                nfieldPnts  = fieldToLocTraceMapLR[nlr][nloc]; 
-                                nPnts   = nfieldPnts - noffset;  
-
-                                MatIndex = nPnts*nElmtCoef + nrwAdjExp;
-
-                                ElmtMat_data[MatIndex] +=   sign*tmplocTrace[nlr][nloc];
+                                ElmtMatDataArray[ElmtId][MatIndex] +=   sign*tmplocTrace[nlr][nloc];
                             }
                         }
                     }

@@ -86,15 +86,15 @@ namespace Nektar
     }
 
     /**
-     * @brief Calculate weak DG Diffusion in the LDG form for the 
+     * @brief Calculate weak DG Diffusion in the LDG form for the
      * Navier-Stokes (NS) equations:
      *
-     * \f$ \langle\psi, \hat{u}\cdot n\rangle 
+     * \f$ \langle\psi, \hat{u}\cdot n\rangle
      *   - \langle\nabla\psi \cdot u\rangle
-     *     \langle\phi, \hat{q}\cdot n\rangle - 
+     *     \langle\phi, \hat{q}\cdot n\rangle -
      *     (\nabla \phi \cdot q) \rangle \f$
      *
-     * The equations that need a diffusion operator are those related 
+     * The equations that need a diffusion operator are those related
      * with the velocities and with the energy.
      *
      */
@@ -138,7 +138,7 @@ namespace Nektar
         Array<OneD, NekDouble>               tmp1(nCoeffs);
         Array<OneD, Array<OneD, NekDouble> > tmp2(nConvectiveFields);
 
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                                                 derivativesO1(m_spaceDim);
 
         for (j = 0; j < m_spaceDim; ++j)
@@ -153,7 +153,7 @@ namespace Nektar
         }
 
         DiffuseCalculateDerivative(nConvectiveFields,fields,inarray,derivativesO1,pFwd,pBwd);
-        
+
         // Initialisation viscous tensor
         m_viscTensor = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                                                                (m_spaceDim);
@@ -203,7 +203,7 @@ namespace Nektar
      * @brief Calculate  LDG First Order derivatives
      * @param inarray 2D [u,v,T]
      * @param inarrayderivative 2D [du_dx,dv_dx,dT_dx],[du_dy,dv_dy,dT_dy]
-     * The equations that need a diffusion operator are those related 
+     * The equations that need a diffusion operator are those related
      * with the velocities and with the energy.
      *
      */
@@ -224,7 +224,7 @@ namespace Nektar
         Array<OneD, NekDouble>               tmp1(nCoeffs);
         Array<OneD, Array<OneD, NekDouble> > tmp2(nConvectiveFields);
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > numericalFluxO1(m_spaceDim);
-                                                   
+
         for (int j = 0; j < m_spaceDim; ++j)
         {
             numericalFluxO1[j] = Array<OneD, Array<OneD, NekDouble> >(nScalars);
@@ -262,11 +262,11 @@ namespace Nektar
     }
 
      /**
-     * @brief Calculate LDG Diffusion Volume Flux 
+     * @brief Calculate LDG Diffusion Volume Flux
      * @param inarray 2D [u,v,T]
      * @param inarrayderivative 2D [du_dx,dv_dx,dT_dx],[du_dy,dv_dy,dT_dy]
      * @param VolumeFlux volumeflxu integrant
-     * The equations that need a diffusion operator are those related 
+     * The equations that need a diffusion operator are those related
      * with the velocities and with the energy.
      *
      */
@@ -276,7 +276,7 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble>>           &inarray,
         Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
-        Array< OneD, int >                                  &nonZeroIndex) 
+        Array< OneD, int >                                  &nonZeroIndex)
     {
         //?Homogeneous? Need to change here to inarrayderivative
         //For 3D Homogeneous 1D only take derivatives in 3rd direction
@@ -305,7 +305,7 @@ namespace Nektar
      * @param inarray 2D [u,v,T]
      * @param inarrayderivative 2D [du_dx,dv_dx,dT_dx],[du_dy,dv_dy,dT_dy]
      * @param VolumeFlux volumeflxu integrant
-     * The equations that need a diffusion operator are those related 
+     * The equations that need a diffusion operator are those related
      * with the velocities and with the energy.
      *
      */
@@ -342,7 +342,7 @@ namespace Nektar
     void DiffusionLDGNS::v_NumericalFluxO1(
         const Array<OneD, MultiRegions::ExpListSharedPtr>        &fields,
         const Array<OneD, Array<OneD, NekDouble> >               &inarray,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                                                         &numericalFluxO1,
         const Array<OneD, Array<OneD, NekDouble> >               &pFwd,
         const Array<OneD, Array<OneD, NekDouble> >               &pBwd)
@@ -357,7 +357,7 @@ namespace Nektar
         // Get the normal velocity Vn
         for(i = 0; i < nDim; ++i)
         {
-            Vmath::Svtvp(nTracePts, 1.0, m_traceNormals[i], 1, 
+            Vmath::Svtvp(nTracePts, 1.0, m_traceNormals[i], 1,
                          Vn, 1, Vn, 1);
         }
 
@@ -404,7 +404,7 @@ namespace Nektar
         {
             for (i = 0; i < nScalars; ++i)
             {
-                Vmath::Vmul(nTracePts, m_traceNormals[j], 1, 
+                Vmath::Vmul(nTracePts, m_traceNormals[j], 1,
                             numflux[i], 1, numericalFluxO1[j][i], 1);
             }
         }
@@ -416,10 +416,10 @@ namespace Nektar
      */
     void DiffusionLDGNS::v_WeakPenaltyO1(
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,	   
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         const Array<OneD, Array<OneD, NekDouble> >        &uplus,
               Array<OneD, Array<OneD, NekDouble> >        &penaltyfluxO1)
-    {            
+    {
         int cnt;
         int i, j, e;
         int id1, id2;
@@ -477,7 +477,7 @@ namespace Nektar
                         GetUserDefined(),"WallAdiabatic"))
                     {
                         // Reinforcing bcs for velocity in case of Wall bcs
-                        Vmath::Zero(nBndEdgePts, 
+                        Vmath::Zero(nBndEdgePts,
                                     &scalarVariables[i][id2], 1);
 
                     }
@@ -523,7 +523,7 @@ namespace Nektar
                         }
                     }
                     else if (fields[i]->GetBndConditions()[j]->
-                             GetBoundaryConditionType() == 
+                             GetBoundaryConditionType() ==
                              SpatialDomains::eDirichlet)
                     {
                         // Imposing velocity bcs if not Wall
@@ -537,26 +537,26 @@ namespace Nektar
 
                     // For Dirichlet boundary condition: uflux = u_bcs
                     if (fields[i]->GetBndConditions()[j]->
-                        GetBoundaryConditionType() == 
+                        GetBoundaryConditionType() ==
                         SpatialDomains::eDirichlet)
                     {
-                        Vmath::Vcopy(nBndEdgePts, 
-                                     &scalarVariables[i][id2], 1, 
+                        Vmath::Vcopy(nBndEdgePts,
+                                     &scalarVariables[i][id2], 1,
                                      &penaltyfluxO1[i][id2], 1);
                     }
 
                     // For Neumann boundary condition: uflux = u_+
                     else if ((fields[i]->GetBndConditions()[j])->
-                             GetBoundaryConditionType() == 
+                             GetBoundaryConditionType() ==
                              SpatialDomains::eNeumann)
                     {
-                        Vmath::Vcopy(nBndEdgePts, 
-                                     &uplus[i][id2], 1, 
+                        Vmath::Vcopy(nBndEdgePts,
+                                     &uplus[i][id2], 1,
                                      &penaltyfluxO1[i][id2], 1);
                     }
 
                     // Building kinetic energy to be used for T bcs
-                    Vmath::Vmul(nBndEdgePts, 
+                    Vmath::Vmul(nBndEdgePts,
                                 &scalarVariables[i][id2], 1,
                                 &scalarVariables[i][id2], 1,
                                 &tmp1[id2], 1);
@@ -600,20 +600,20 @@ namespace Nektar
                 GetPhys_Offset(fields[0]->GetTraceMap()->
                                GetBndCondTraceToGlobalTraceMap(cnt++));
 
-                // Imposing Temperature Twall at the wall 
+                // Imposing Temperature Twall at the wall
                 // The original code is "fields[i]->", in which i depends on results of previous loop
                 // never do that!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 if (boost::iequals(fields[nScalars]->GetBndConditions()[j]->
                     GetUserDefined(),"WallViscous"))
-                {                        
-                    Vmath::Vcopy(nBndEdgePts, 
-                                 &Tw[0], 1, 
+                {
+                    Vmath::Vcopy(nBndEdgePts,
+                                 &Tw[0], 1,
                                  &scalarVariables[nScalars-1][id2], 1);
-                }                    
+                }
                 // Imposing Temperature through condition on the Energy
                 // for no wall boundaries (e.g. farfield)
                 else if (fields[i]->GetBndConditions()[j]->
-                         GetBoundaryConditionType() == 
+                         GetBoundaryConditionType() ==
                          SpatialDomains::eDirichlet)
                 {
                     // Use equation of state to evaluate temperature
@@ -639,8 +639,8 @@ namespace Nektar
                         fields[nScalars]->GetBndConditions()[j]
                         ->GetUserDefined(), "WallAdiabatic"))
                 {
-                    Vmath::Vcopy(nBndEdgePts, 
-                                 &scalarVariables[nScalars-1][id2], 1, 
+                    Vmath::Vcopy(nBndEdgePts,
+                                 &scalarVariables[nScalars-1][id2], 1,
                                  &penaltyfluxO1[nScalars-1][id2], 1);
 
                 }
@@ -652,8 +652,8 @@ namespace Nektar
                          boost::iequals(fields[nScalars]->GetBndConditions()[j]->
                                         GetUserDefined(), "WallAdiabatic"))
                 {
-                    Vmath::Vcopy(nBndEdgePts, 
-                                 &uplus[nScalars-1][id2], 1, 
+                    Vmath::Vcopy(nBndEdgePts,
+                                 &uplus[nScalars-1][id2], 1,
                                  &penaltyfluxO1[nScalars-1][id2], 1);
 
                 }
@@ -685,14 +685,14 @@ namespace Nektar
         // Get the normal velocity Vn
         for(i = 0; i < nDim; ++i)
         {
-            Vmath::Svtvp(nTracePts, 1.0, m_traceNormals[i], 1, 
+            Vmath::Svtvp(nTracePts, 1.0, m_traceNormals[i], 1,
                          Vn, 1, Vn, 1);
         }
 
         Array<OneD, NekDouble > qtemp(nTracePts);
 
-        // Evaulate Riemann flux 
-        // qflux = \hat{q} \cdot u = q \cdot n 
+        // Evaulate Riemann flux
+        // qflux = \hat{q} \cdot u = q \cdot n
         // Notice: i = 1 (first row of the viscous tensor is zero)
         for (i = 1; i < nVariables; ++i)
         {
@@ -706,7 +706,7 @@ namespace Nektar
                 fields[i]->GetTrace()->Upwind(Vn, qBwd, qFwd, qfluxtemp);
 
                 // Multiply the Riemann flux by the trace normals
-                Vmath::Vmul(nTracePts, m_traceNormals[j], 1, qfluxtemp, 1, 
+                Vmath::Vmul(nTracePts, m_traceNormals[j], 1, qfluxtemp, 1,
                             qfluxtemp, 1);
 
                 // Extract the physical values of the solution at the boundaries
@@ -719,7 +719,7 @@ namespace Nektar
                 }
 
                 // Store the final flux into qflux
-                Vmath::Vadd(nTracePts, qfluxtemp, 1, qflux[i], 1, 
+                Vmath::Vadd(nTracePts, qfluxtemp, 1, qflux[i], 1,
                             qflux[i], 1);
             }
         }
@@ -740,7 +740,7 @@ namespace Nektar
     {
         int cnt = 0;
         int nBndEdges, nBndEdgePts;
-        int i, e; 
+        int i, e;
         int id2;
 
         int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
@@ -768,32 +768,32 @@ namespace Nektar
                 GetPhys_Offset(fields[0]->GetTraceMap()->
                                GetBndCondTraceToGlobalTraceMap(cnt++));
 
-                // In case of Dirichlet bcs: 
+                // In case of Dirichlet bcs:
                 // uflux = gD
                 if(fields[var]->GetBndConditions()[i]->
                    GetBoundaryConditionType() == SpatialDomains::eDirichlet
                    && !boost::iequals(fields[var]->GetBndConditions()[i]->
                                       GetUserDefined(), "WallAdiabatic"))
                 {
-                    Vmath::Vmul(nBndEdgePts, 
-                                &m_traceNormals[dir][id2], 1, 
-                                &qtemp[id2], 1, 
+                    Vmath::Vmul(nBndEdgePts,
+                                &m_traceNormals[dir][id2], 1,
+                                &qtemp[id2], 1,
                                 &penaltyflux[id2], 1);
                 }
-                // 3.4) In case of Neumann bcs: 
+                // 3.4) In case of Neumann bcs:
                 // uflux = u+
                 else if((fields[var]->GetBndConditions()[i])->
                     GetBoundaryConditionType() == SpatialDomains::eNeumann)
                 {
-                    ASSERTL0(false, 
+                    ASSERTL0(false,
                              "Neumann bcs not implemented for LDGNS");
 
                     /*
-                    Vmath::Vmul(nBndEdgePts, 
-                                &m_traceNormals[dir][id2], 1, 
+                    Vmath::Vmul(nBndEdgePts,
+                                &m_traceNormals[dir][id2], 1,
                                 &(fields[var]->
                                   GetBndCondExpansions()[i]->
-                                  UpdatePhys())[id1], 1, 
+                                  UpdatePhys())[id1], 1,
                                 &penaltyflux[id2], 1);
                      */
                 }
@@ -816,5 +816,23 @@ namespace Nektar
                 }
             }
         }
+    }
+
+    /**
+     * @brief Compute primary variables
+     *
+     */
+    void DiffusionLDGNS::v_GetPrimVar(
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+              Array<OneD, Array<OneD, NekDouble>>         &primVar)
+    {
+        int nDim = fields[0]->GetCoordim(0);
+        int nPts = fields[0]->GetTotPoints();
+        for(int i = 0; i < nDim; ++i)
+            {
+                primVar[i] = Array<OneD, NekDouble>(nPts, 0.0);
+                primVar[i] = inarray[i];
+            }
     }
 }//end of namespace Nektar

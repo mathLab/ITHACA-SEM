@@ -89,6 +89,48 @@ namespace Nektar
 
     static Array<OneD, DNekBlkMatSharedPtr>  NullArrayDNekBlkMatSharedPtr;
 
+
+
+
+    typedef NekVector<NekSingle>                SNekVec;
+
+    typedef NekMatrix<NekSingle, StandardMatrixTag>
+            SNekMat;
+    typedef NekMatrix<NekSingle, StandardMatrixTag> SDenseMatrix;
+
+    typedef NekMatrix<NekMatrix<NekSingle, StandardMatrixTag>, ScaledMatrixTag>
+            SNekScalMat;
+    typedef NekMatrix<SDenseMatrix, ScaledMatrixTag> SScaledMatrix;
+
+    typedef NekMatrix<NekMatrix<NekSingle, StandardMatrixTag>, BlockMatrixTag>
+            SNekBlkMat;
+    typedef NekMatrix<SDenseMatrix, BlockMatrixTag> SBlockMatrix;
+
+    typedef NekMatrix<NekMatrix<NekMatrix<NekSingle, StandardMatrixTag>, BlockMatrixTag>, BlockMatrixTag>
+            BlkMatSNekBlkMat;
+    typedef NekMatrix<NekMatrix<NekMatrix<NekSingle, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>
+            SNekScalBlkMat;
+    typedef NekMatrix<NekMatrix<NekMatrix<NekMatrix<NekSingle, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>, BlockMatrixTag>
+            BlkMatSNekScalBlkMat;
+
+    typedef std::shared_ptr<SNekMat>               SNekMatSharedPtr;
+    typedef std::shared_ptr<SNekScalMat>           SNekScalMatSharedPtr;
+    typedef std::shared_ptr<SNekBlkMat>            SNekBlkMatSharedPtr;
+    typedef std::shared_ptr<BlkMatSNekBlkMat>      BlkMatSNekBlkMatSharedPtr;
+    typedef std::shared_ptr<SNekScalBlkMat>        SNekScalBlkMatSharedPtr;
+    typedef std::shared_ptr<BlkMatSNekScalBlkMat>  BlkMatSNekScalBlkMatSharedPtr;
+    typedef std::shared_ptr<BlkMatSNekScalBlkMat>  BlkMatSNekScalBlkMatSharedPtr;
+
+
+    static SNekMatSharedPtr NullSNekMatSharedPtr;
+    static SNekScalMatSharedPtr NullSNekScalMatSharedPtr;
+    static SNekScalBlkMatSharedPtr NullSNekScalBlkMatSharedPtr;
+
+//     typedef LinearSystem                      DNekScalLinSys;
+//     typedef std::shared_ptr<DNekScalLinSys>   DNekScalLinSysSharedPtr;
+
+    static Array<OneD, SNekBlkMatSharedPtr>  NullArraySNekBlkMatSharedPtr;
+
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_TYPEDEFS_HPP

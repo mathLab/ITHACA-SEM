@@ -40,7 +40,6 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <SolverUtils/AdvectionSystem.h>
 #include <IncNavierStokesSolver/EquationSystems/StandardExtrapolate.h>
 

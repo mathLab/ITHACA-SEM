@@ -795,6 +795,7 @@ namespace Nektar
             }
             else
             {
+                std::cout << "RANK: " << m_comm->GetRank() << " m_edgeToTrace: ";
                 for (int i = 0; i < trace->GetExpSize(); ++i)
                 {
                     eid    = trace->GetExp(i)->GetGeom()->GetGlobalID();
@@ -817,11 +818,14 @@ namespace Nektar
                         }
                     }
 
+                    std::cout << "edge ID: " << eid << " (";
                     for (int j = 0; j < quad; ++j)
                     {
                         m_traceToUniversalMap[j+offset] = eid*maxQuad+j+1;
                         m_edgeToTrace[eid].emplace_back(offset + j); // TODO: Check correct
+                        std::cout << offset + j << " ";
                     }
+                    std::cout << ")";
 
                     if (realign)
                     {
@@ -842,6 +846,7 @@ namespace Nektar
                     }
                 }
             }
+            std::cout << std::endl;
 
             //Set up graph topology for MPI
             std::unordered_set<int> localEdgeIds;  // TODO: Can improve this to filter out boundary edges also before sending
@@ -890,8 +895,10 @@ namespace Nektar
             }
 
             std::map<int, std::vector<int>> rankSharedEdges;
+            std::cout << "RANK: " << m_comm->GetRank() << " rankSharedEdges: ";
             for (auto &rank : otherRanks)
             {
+                std::cout << rank << ": (";
                 for (int j = 0; j < rankNumEdges[rank]; ++j)
                 {
                     int edgeId = rankLocalEdgeIds[rankLocalEdgeDisp[rank] + j];
@@ -900,9 +907,13 @@ namespace Nektar
                     if (found != localEdgeIdsArray.end())
                     {
                         rankSharedEdges[rank].emplace_back(edgeId);
+                        std::cout << edgeId << " ";
                     }
                 }
+                std::cout << ")  ";
             }
+            std::cout << std::endl;
+
 
             int nNeighbours = rankSharedEdges.size();
             Array<OneD,int> destinations(nNeighbours, 0);
@@ -936,6 +947,12 @@ namespace Nektar
 
                 ++cnt;
             }
+
+            std::cout << "RANK: " << m_comm->GetRank() << " m_edgeTraceIndex: ";
+            for (auto i : m_edgeTraceIndex)
+                std::cout << i << " ";
+            std::cout << std::endl;
+
 
             m_sendDisp = Nektar::Array<OneD, int>(nNeighbours, 0);
             for (i = 1; i < nNeighbours; ++i)
@@ -1117,8 +1134,8 @@ namespace Nektar
                 }
             }
 
-            //Gs::Gather(pGlobal, Gs::gs_add, m_traceGsh);
-
+            //Gs::Gather(Fwd, Gs::gs_add, m_traceGsh);
+            //Gs::Gather(Bwd, Gs::gs_add, m_traceGsh);
         }
 
         int AssemblyMapDG::v_GetLocalToGlobalMap(const int i) const

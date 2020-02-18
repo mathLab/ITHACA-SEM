@@ -839,8 +839,6 @@ void LocTraceToTraceMap::Setup3D(
     }
 }
 
-
-
 /**
  * @brief Set up member variables for a two-dimensional problem.
  *

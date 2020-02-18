@@ -329,7 +329,6 @@ private:
     /// local trace storage.
     Array<OneD, Array<OneD, int> > m_traceCoeffsToElmtSign;
 
-
     // flag indicates whether the Expasion that are the left&right adjacent to current trace exists 
     Array<OneD, Array<OneD, bool>> m_LeftRightAdjacentExpFlag;
     
@@ -348,14 +347,12 @@ private:
     // If interpolations is needed it should be determined as the InnerProduct of m_fieldToLocTraceMap matrix and interpolation matrix    
     Array<OneD, Array<OneD, Array<OneD, int > > >   m_TracephysToLeftRightExpphysMap;
     bool                                            m_flagTracephysToLeftRightExpphysMap;
-
     
 };
 
 typedef std::shared_ptr<LocTraceToTraceMap> LocTraceToTraceMapSharedPtr;
 
     static LocTraceToTraceMapSharedPtr NullLocTraceToTraceMapSharedPtr;
-
 
 }
 }

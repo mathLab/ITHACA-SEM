@@ -490,7 +490,7 @@ protected:
         if (DEFORMED)
         {
             int nq = m_nq[0];
-            for (int i = 1; i < DIM; i++)
+            for (int i = 1; i < DIM; ++i)
             {
                 nq *= m_nq[i];
             }
@@ -498,13 +498,13 @@ protected:
             m_df.resize(m_nBlocks * n_df*nq);
             auto *df_ptr = &m_df[0];
 
-            for (int e = 0, cnt = 0; e < m_nBlocks; e++)
+            for (int e = 0; e < m_nBlocks; ++e)
             {
                 for (int q = 0; q < nq; q++)
                 {
-                    for (int dir = 0; dir < n_df; dir++, df_ptr++)
+                    for (int dir = 0; dir < n_df; ++dir, ++df_ptr)
                     {
-                        for (int j = 0; j < VW; j++)
+                        for (int j = 0; j < VW; ++j)
                         {
                             vec[j] = df[dir][(VW*e + j)*nq + q];
                         }
@@ -516,11 +516,11 @@ protected:
         else
         {
             m_df.resize(m_nBlocks * n_df);
-            for (int e = 0; e < m_nBlocks; e++)
+            for (int e = 0; e < m_nBlocks; ++e)
             {
-                for (int dir = 0; dir < n_df; dir++)
+                for (int dir = 0; dir < n_df; ++dir)
                 {
-                    for(int j = 0; j < VW; j++)
+                    for(int j = 0; j < VW; ++j)
                     {
                         vec[j] = df[dir][VW*e + j];
                     }

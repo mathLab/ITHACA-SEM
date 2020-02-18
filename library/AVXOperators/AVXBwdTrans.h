@@ -69,7 +69,7 @@ struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
 
     virtual NekDouble NStores()
     {
-        const int nm0 = m_basis[0]->GetNumModes();
+        // const int nm0 = m_basis[0]->GetNumModes();
         const int nm1 = m_basis[1]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
@@ -87,7 +87,7 @@ struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
     }
 
     virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out)
+                                  Array<OneD,       NekDouble> &out) final
     {
         switch(m_basis[0]->GetNumModes())
         {
@@ -159,11 +159,7 @@ struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
                     case 14: AVXBwdTransQuadImpl<7 ,7 ,14 ,14 >(in, out); break;
                     default: NEKERROR(ErrorUtil::efatal,
                 "AVXBwdTransQuad: # of modes / points combo not implemented.");
-                } break;
-            // case 8:  AVXBwdTransQuadImpl<8 ,8 ,9 ,9 >(in, out); break;
-            // case 9:  AVXBwdTransQuadImpl<9 ,9 ,10,10>(in, out); break;
-            // case 10: AVXBwdTransQuadImpl<10,10,11,11>(in, out); break;
-            // case 11: AVXBwdTransQuadImpl<11,11,12,12>(in, out); break;
+                } break;;
             default: NEKERROR(ErrorUtil::efatal,
                 "AVXBwdTransQuad: # of modes / points combo not implemented.");
         }
@@ -250,7 +246,7 @@ struct AVXBwdTransTri : public BwdTrans, public AVXHelper<VW, 2>
     virtual NekDouble NLoads()
     {
         const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
+        // const int nm1 = m_basis[1]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
 
@@ -266,7 +262,7 @@ struct AVXBwdTransTri : public BwdTrans, public AVXHelper<VW, 2>
     virtual NekDouble NStores()
     {
         const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
+        // const int nm1 = m_basis[1]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
 
@@ -283,38 +279,148 @@ struct AVXBwdTransTri : public BwdTrans, public AVXHelper<VW, 2>
     }
 
     virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out)
+                                  Array<OneD,       NekDouble> &out) final
     {
         if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
         {
             switch(m_basis[0]->GetNumModes())
             {
-                case 2:  AVXBwdTransTriImpl<2 ,2 ,3 ,2 ,true>(in, out); break;
-                case 3:  AVXBwdTransTriImpl<3 ,3 ,4 ,3 ,true>(in, out); break;
-                case 4:  AVXBwdTransTriImpl<4 ,4 ,5 ,4 ,true>(in, out); break;
-                case 5:  AVXBwdTransTriImpl<5 ,5 ,6 ,5 ,true>(in, out); break;
-                case 6:  AVXBwdTransTriImpl<6 ,6 ,7 ,6 ,true>(in, out); break;
-                case 7:  AVXBwdTransTriImpl<7 ,7 ,8 ,7 ,true>(in, out); break;
-                case 8:  AVXBwdTransTriImpl<8 ,8 ,9 ,8 ,true>(in, out); break;
-                case 9:  AVXBwdTransTriImpl<9 ,9 ,10,9 ,true>(in, out); break;
-                case 10: AVXBwdTransTriImpl<10,10,11,10,true>(in, out); break;
-                case 11: AVXBwdTransTriImpl<11,11,12,11,true>(in, out); break;
+                case 2: switch(m_basis[0]->GetNumPoints())
+                {
+                    case 3: AVXBwdTransTriImpl<2, 2, 3, 2, true>(in, out); break;
+                    case 4: AVXBwdTransTriImpl<2, 2, 4, 3, true>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 4: AVXBwdTransTriImpl<3, 3, 4, 3, true>(in, out); break;
+                    case 5: AVXBwdTransTriImpl<3, 3, 5, 4, true>(in, out); break;
+                    case 6: AVXBwdTransTriImpl<3, 3, 6, 5, true>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 5: AVXBwdTransTriImpl<4, 4, 5, 4, true>(in, out); break;
+                    case 6: AVXBwdTransTriImpl<4, 4, 6, 5, true>(in, out); break;
+                    case 7: AVXBwdTransTriImpl<4, 4, 7, 6, true>(in, out); break;
+                    case 8: AVXBwdTransTriImpl<4, 4, 8, 7, true>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 6: AVXBwdTransTriImpl<5, 5, 6, 5, true>(in, out); break;
+                    case 7: AVXBwdTransTriImpl<5, 5, 7, 6, true>(in, out); break;
+                    case 8: AVXBwdTransTriImpl<5, 5, 8, 7, true>(in, out); break;
+                    case 9: AVXBwdTransTriImpl<5, 5, 9, 8, true>(in, out); break;
+                    case 10: AVXBwdTransTriImpl<5, 5, 10, 9, true>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 7: AVXBwdTransTriImpl<6, 6, 7, 6, true>(in, out); break;
+                    case 8: AVXBwdTransTriImpl<6, 6, 8, 7, true>(in, out); break;
+                    case 9: AVXBwdTransTriImpl<6, 6, 9, 8, true>(in, out); break;
+                    case 10: AVXBwdTransTriImpl<6, 6, 10, 9, true>(in, out); break;
+                    case 11: AVXBwdTransTriImpl<6, 6, 11, 10, true>(in, out); break;
+                    case 12: AVXBwdTransTriImpl<6, 6, 12, 11, true>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 8: AVXBwdTransTriImpl<7, 7, 8, 7, true>(in, out); break;
+                    case 9: AVXBwdTransTriImpl<7, 7, 9, 8, true>(in, out); break;
+                    case 10: AVXBwdTransTriImpl<7, 7, 10, 9, true>(in, out); break;
+                    case 11: AVXBwdTransTriImpl<7, 7, 11, 10, true>(in, out); break;
+                    case 12: AVXBwdTransTriImpl<7, 7, 12, 11, true>(in, out); break;
+                    case 13: AVXBwdTransTriImpl<7, 7, 13, 12, true>(in, out); break;
+                    case 14: AVXBwdTransTriImpl<7, 7, 14, 13, true>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+                } break;
+            default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+
             }
         }
         else
         {
             switch(m_basis[0]->GetNumModes())
             {
-                case 2:  AVXBwdTransTriImpl<2 ,2 ,3 ,2 ,false>(in, out); break;
-                case 3:  AVXBwdTransTriImpl<3 ,3 ,4 ,3 ,false>(in, out); break;
-                case 4:  AVXBwdTransTriImpl<4 ,4 ,5 ,4 ,false>(in, out); break;
-                case 5:  AVXBwdTransTriImpl<5 ,5 ,6 ,5 ,false>(in, out); break;
-                case 6:  AVXBwdTransTriImpl<6 ,6 ,7 ,6 ,false>(in, out); break;
-                case 7:  AVXBwdTransTriImpl<7 ,7 ,8 ,7 ,false>(in, out); break;
-                case 8:  AVXBwdTransTriImpl<8 ,8 ,9 ,8 ,false>(in, out); break;
-                case 9:  AVXBwdTransTriImpl<9 ,9 ,10,9 ,false>(in, out); break;
-                case 10: AVXBwdTransTriImpl<10,10,11,10,false>(in, out); break;
-                case 11: AVXBwdTransTriImpl<11,11,12,11,false>(in, out); break;
+                case 2: switch(m_basis[0]->GetNumPoints())
+                {
+                    case 3: AVXBwdTransTriImpl<2 ,2 ,3 ,2, false >(in, out); break;
+                    case 4: AVXBwdTransTriImpl<2 ,2 ,4 ,3, false >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 4: AVXBwdTransTriImpl<3 ,3 ,4 ,3, false >(in, out); break;
+                    case 5: AVXBwdTransTriImpl<3 ,3 ,5 ,4, false >(in, out); break;
+                    case 6: AVXBwdTransTriImpl<3 ,3 ,6 ,5, false >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 5: AVXBwdTransTriImpl<4, 4, 5, 4, false>(in, out); break;
+                    case 6: AVXBwdTransTriImpl<4, 4, 6, 5, false>(in, out); break;
+                    case 7: AVXBwdTransTriImpl<4, 4, 7, 6, false>(in, out); break;
+                    case 8: AVXBwdTransTriImpl<4, 4, 8, 7, false>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 6: AVXBwdTransTriImpl<5, 5, 6, 5, false>(in, out); break;
+                    case 7: AVXBwdTransTriImpl<5, 5, 7, 6, false>(in, out); break;
+                    case 8: AVXBwdTransTriImpl<5, 5, 8, 7, false>(in, out); break;
+                    case 9: AVXBwdTransTriImpl<5, 5, 9, 8, false>(in, out); break;
+                    case 10: AVXBwdTransTriImpl<5, 5, 10, 9, false>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 7: AVXBwdTransTriImpl<6, 6, 7, 6, false>(in, out); break;
+                    case 8: AVXBwdTransTriImpl<6, 6, 8, 7, false>(in, out); break;
+                    case 9: AVXBwdTransTriImpl<6, 6, 9, 8, false>(in, out); break;
+                    case 10: AVXBwdTransTriImpl<6, 6, 10, 9, false>(in, out); break;
+                    case 11: AVXBwdTransTriImpl<6, 6, 11, 10, false>(in, out); break;
+                    case 12: AVXBwdTransTriImpl<6, 6, 12, 11, false>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 8: AVXBwdTransTriImpl<7, 7, 8, 7, false>(in, out); break;
+                    case 9: AVXBwdTransTriImpl<7, 7, 9, 8, false>(in, out); break;
+                    case 10: AVXBwdTransTriImpl<7, 7, 10, 9, false>(in, out); break;
+                    case 11: AVXBwdTransTriImpl<7, 7, 11, 10, false>(in, out); break;
+                    case 12: AVXBwdTransTriImpl<7, 7, 12, 11, false>(in, out); break;
+                    case 13: AVXBwdTransTriImpl<7, 7, 13, 12, false>(in, out); break;
+                    case 14: AVXBwdTransTriImpl<7, 7, 14, 13, false>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+                } break;
+            default: NEKERROR(ErrorUtil::efatal,
+                "AVXBwdTransQuad: # of modes / points combo not implemented.");
+
             }
         }
     }
@@ -425,7 +531,7 @@ struct AVXBwdTransHex : public BwdTrans, public AVXHelper<VW, 3>
 
     virtual NekDouble NStores() override
     {
-        const int nm0 = m_basis[0]->GetNumModes();
+        // const int nm0 = m_basis[0]->GetNumModes();
         const int nm1 = m_basis[1]->GetNumModes();
         const int nm2 = m_basis[2]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
@@ -541,7 +647,7 @@ struct AVXBwdTransTet : public BwdTrans, public AVXHelper<VW, 3>
     {
         const int nm0 = m_basis[0]->GetNumModes();
         const int nm1 = m_basis[1]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
+        // const int nm2 = m_basis[2]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
         const int nq2 = m_basis[2]->GetNumPoints();
@@ -559,7 +665,7 @@ struct AVXBwdTransTet : public BwdTrans, public AVXHelper<VW, 3>
     {
         const int nm0 = m_basis[0]->GetNumModes();
         const int nm1 = m_basis[1]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
+        // const int nm2 = m_basis[2]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
         const int nq2 = m_basis[2]->GetNumPoints();
@@ -692,7 +798,7 @@ struct AVXBwdTransPrism : public BwdTrans, public AVXHelper<VW, 3>
     virtual NekDouble NLoads() override
     {
         const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
+        // const int nm1 = m_basis[1]->GetNumModes();
         const int nm2 = m_basis[2]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
@@ -710,8 +816,8 @@ struct AVXBwdTransPrism : public BwdTrans, public AVXHelper<VW, 3>
     virtual NekDouble NStores() override
     {
         const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
+        // const int nm1 = m_basis[1]->GetNumModes();
+        // const int nm2 = m_basis[2]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
         const int nq2 = m_basis[2]->GetNumPoints();

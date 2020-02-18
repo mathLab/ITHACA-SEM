@@ -9,7 +9,7 @@ OperatorFactory &GetOperatorFactory()
     return tmp;
 }
 
-std::string GetOpstring(LibUtilities::ShapeType shape, bool deformed=false)
+std::string GetOpstring(LibUtilities::ShapeType shape, bool deformed)
 {
 
     std::string op_string = "_";

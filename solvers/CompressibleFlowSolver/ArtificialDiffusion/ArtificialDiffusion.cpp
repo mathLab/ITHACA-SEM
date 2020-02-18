@@ -108,8 +108,6 @@ void ArtificialDiffusion::v_DoArtificialDiffusion(
     }
 }
 
-
-
 /**
  *
  */
@@ -119,7 +117,6 @@ void ArtificialDiffusion::DoArtificialDiffusion_coeff(
 {
     v_DoArtificialDiffusion_coeff(inarray, outarray);
 }
-
 
 /**
  *
@@ -150,6 +147,7 @@ void ArtificialDiffusion::v_DoArtificialDiffusion_coeff(
                     outarray[i], 1);
     }
 }
+
 /**
  *
  */

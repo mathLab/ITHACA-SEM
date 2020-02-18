@@ -305,7 +305,6 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > inFwd(nvariables-1);
             Array<OneD, Array<OneD, NekDouble> > inBwd(nvariables-1);
 
-            
             for (i = 0; i < nvariables-1; ++i)
             {
                 inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
@@ -856,7 +855,6 @@ namespace Nektar
             nonZeroIndex[n_nonZero-i] =   nConvectiveFields-i;
         }
     }
-
 
     /**
      * @brief For very special treatment. For general boundaries it should do nothing

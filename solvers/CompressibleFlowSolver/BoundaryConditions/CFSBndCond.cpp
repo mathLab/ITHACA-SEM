@@ -61,7 +61,6 @@ CFSBndCond::CFSBndCond(const LibUtilities::SessionReaderSharedPtr& pSession,
     m_session->LoadParameter("Gamma", m_gamma, 1.4);
     m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
     m_session->LoadParameter("pInf", m_pInf, 101325);
-    m_session->LoadParameter("pOut", m_pOut, m_pInf);
     m_session->LoadParameter("uInf", m_velInf[0], 0.1);
     if (m_spacedim >= 2)
     {

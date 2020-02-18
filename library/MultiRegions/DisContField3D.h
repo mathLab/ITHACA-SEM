@@ -221,8 +221,6 @@ namespace Nektar
                 if(m_trace == NullExpListSharedPtr)
                 {
                     SetUpDG();
-                    // m_locTraceToTraceMap->TracelocToElmtlocCoeffMap(*this, m_trace);
-
                 }
 
                 return m_trace;

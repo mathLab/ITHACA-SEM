@@ -124,8 +124,6 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
             Array< OneD, int >                                  &nonZeroIndex);
 
-        
-
         void NumericalFluxO1(
             const Array<OneD, MultiRegions::ExpListSharedPtr>      &fields,
             const Array<OneD, Array<OneD, NekDouble> >             &inarray,

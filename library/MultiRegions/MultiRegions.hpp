@@ -151,7 +151,6 @@ namespace Nektar
             "ConjugateGradient",
         };
 
-
         // let's keep this for linking to external
         // sparse libraries
         enum MatrixStorageType

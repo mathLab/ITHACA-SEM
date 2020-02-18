@@ -832,12 +832,12 @@ namespace Nektar
          * and @a Bwd.
          * 
          * We first define the convention which defines "forwards" and
-         * "backwards". First an association is made between the vertex of  = GetExpS
-         * element and its corresponding vertex in the trace space using th = GetExpS
+         * "backwards". First an association is made between the vertex of each
+         * element and its corresponding vertex in the trace space using the
          * mapping #m_traceMap. The element can either be left-adjacent or
          * right-adjacent to this trace edge (see
-         * Expansion0D::GetLeftAdjacentElementExp). Boundary edges are neve = GetExpS
-         * left-adjacent since elemental left-adjacency is populated first. = GetExpS
+         * Expansion0D::GetLeftAdjacentElementExp). Boundary edges are never 
+         * left-adjacent since elemental left-adjacency is populated first.
          * 
          * If the element is left-adjacent we extract the vertex trace data from
          * @a field into the forward trace space @a Fwd; otherwise, we place it

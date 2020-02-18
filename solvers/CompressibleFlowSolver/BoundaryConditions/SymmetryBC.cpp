@@ -119,4 +119,5 @@ void SymmetryBC::v_Apply(
         }
     }
 }
+
 }

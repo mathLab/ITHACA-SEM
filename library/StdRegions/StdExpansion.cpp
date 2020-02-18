@@ -1620,7 +1620,6 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape or library");
             }
 
-
             void StdExpansion::v_DividByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
@@ -1989,5 +1988,6 @@ namespace Nektar
             NekVector<NekDouble> out(m_ncoeffs, outarray,eWrapper);
             out = (*intmat) * in;
         }
+        
     }//end namespace
 }//end namespace

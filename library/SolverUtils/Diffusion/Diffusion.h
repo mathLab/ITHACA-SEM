@@ -479,7 +479,6 @@ namespace Nektar
             }
 
             SOLVER_UTILS_EXPORT virtual const Array<OneD, const Array<OneD, NekDouble> > &v_GetTraceNormal();
-
         }; 
         
         /// A shared pointer to an EquationSystem object

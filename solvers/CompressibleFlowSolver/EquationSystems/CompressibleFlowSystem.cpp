@@ -126,7 +126,6 @@ namespace Nektar
         }
         else
         {   
-            
             ASSERTL0(false, "Implicit CFS not set up.");
         }
 
@@ -255,7 +254,6 @@ namespace Nektar
             }
         }
         
-
         //Oringinal CompressibleFlowSolver
         // Calculate advection
         DoAdvection(inarray, outarray, time, Fwd, Bwd);
@@ -269,7 +267,6 @@ namespace Nektar
         // Add diffusion terms
         DoDiffusion(inarray, outarray, Fwd, Bwd);
 
- 
         // Add forcing terms
         for (auto &x : m_forcing)
         {

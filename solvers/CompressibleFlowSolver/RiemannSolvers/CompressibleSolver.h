@@ -98,7 +98,6 @@ namespace Nektar
             NekDouble rhoL, NekDouble pL, NekDouble eL, NekDouble HL, NekDouble srL,
             NekDouble rhoR, NekDouble pR, NekDouble eR, NekDouble HR, NekDouble srR,
             NekDouble HRoe, NekDouble URoe2, NekDouble srLR);
-
     };
 }
 

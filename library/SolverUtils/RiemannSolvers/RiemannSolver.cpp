@@ -153,7 +153,7 @@ namespace Nektar
          * 
          * In 2D, this is accomplished through the transform:
          * 
-         * \f[ (u_x, u_y) = (n_x u_x + n_y u_y, -n_y v_x + n_y v_x) \f]
+         * \f[ (u_x, u_y) = (n_x u_x + n_y u_y, -n_x v_x + n_y v_y) \f]
          * 
          * In 3D, we generate a (non-unique) transformation using
          * RiemannSolver::fromToRotation.

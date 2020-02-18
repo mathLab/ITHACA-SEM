@@ -120,7 +120,6 @@ namespace Nektar
 
         NekDouble                           m_BndEvaluateTime;
 
-
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession,
             const SpatialDomains::MeshGraphSharedPtr& pGraph);
@@ -268,7 +267,6 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
             Array< OneD, int >                                              &nonZeroIndex,    
             const Array<OneD, Array<OneD, NekDouble> >                      &normals);
-
     };
 }
 #endif

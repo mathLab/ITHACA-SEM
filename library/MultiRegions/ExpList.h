@@ -1082,11 +1082,6 @@ namespace Nektar
                 return m_coeffsToElmt;
             }
 
-            // MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetPointsToElmt() const
-            // {
-            //     return m_pointsToElmt;
-            // }
-
             MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr &GetlocTraceToTraceMap() const
             {
                 return v_GetlocTraceToTraceMap();
@@ -1190,9 +1185,6 @@ namespace Nektar
             /// m_coeffs to elemental value map
             Array<OneD,std::pair<int,int> >  m_coeffsToElmt;
 
-            /// m_phys to elemental value map
-            // Array<OneD,pair<int,int> >  m_pointsToElmt;
-
             NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
 
             BlockMatrixMapShPtr  m_blockMat;
@@ -1210,7 +1202,6 @@ namespace Nektar
             const DNekScalBlkMatSharedPtr GenBlockMatrix(
                 const GlobalMatrixKey &gkey);
 
-            // void GetElmt_id(const GlobalMatrixKey &gkey,map<int,int> &elmt_id);
             const DNekScalBlkMatSharedPtr& GetBlockMatrix(
                 const GlobalMatrixKey &gkey);  
 
@@ -1651,6 +1642,7 @@ namespace Nektar
                     GetBoundaryCondition(const SpatialDomains::
                             BoundaryConditionCollection& collection,
                             unsigned int index, const std::string& variable);
+
 
         private:
 
@@ -2649,8 +2641,7 @@ namespace Nektar
             v_GeneralMatrixOp(gkey,inarray,outarray,coeffstate);
         }
 
-        // Get the normal vector of element boundaries
-        // Also Get the element length in the each element boundary(Vertex, edge or face) normal direction
+
         inline void ExpList::SetUpPhysNormals()
         {
             v_SetUpPhysNormals();

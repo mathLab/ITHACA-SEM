@@ -555,6 +555,7 @@ using namespace std;
             m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::
                 AllocateSharedPtr(*this, m_trace, elmtToTrace,
                                   m_leftAdjacentFaces);
+
          }
 
         /**
@@ -644,7 +645,6 @@ using namespace std;
                 }
 
                 m_bndCondExpansions[cnt]  = locExpList;
-
                 m_bndConditions[cnt++]    = locBCond;
             }
         }
@@ -1930,8 +1930,6 @@ using namespace std;
                   Array<OneD,       NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            // int n, cnt, npts, e;
-
             // Zero vectors.
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
@@ -1947,7 +1945,6 @@ using namespace std;
 
             DisContField3D::v_PeriodicBwdCopy(Fwd,Bwd);
         }
-
 
         /**
          */

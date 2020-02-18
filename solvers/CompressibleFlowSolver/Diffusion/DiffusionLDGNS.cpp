@@ -229,7 +229,6 @@ void DiffusionLDGNS::v_InitObject(
     }
 }
 
-// TODO:: REPLACED
 void DiffusionLDGNS::v_Diffuse_coeff(
     const std::size_t                                  nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

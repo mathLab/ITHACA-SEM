@@ -189,7 +189,6 @@ namespace Nektar
             SOLVER_UTILS_EXPORT bool CheckParams  (std::string name);
             SOLVER_UTILS_EXPORT bool CheckAuxScal (std::string name);
             SOLVER_UTILS_EXPORT bool CheckAuxVec  (std::string name);
-
         };
 
         /// A shared pointer to an EquationSystem object

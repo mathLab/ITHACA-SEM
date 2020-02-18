@@ -302,7 +302,6 @@ namespace Nektar
             {
                 m_BndCondBwdWeight[index]   =   value;
             }
-
         };
 
         typedef std::shared_ptr<DisContField3DHomogeneous1D>

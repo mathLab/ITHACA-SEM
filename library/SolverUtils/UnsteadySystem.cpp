@@ -321,7 +321,6 @@ namespace Nektar
                     cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
                          <<" INT Time: "<< intTime<<"s"<<endl;
                     cpuPrevious = cpuTime;
-                    
                     cpuTime = 0.0;
                 }
 
@@ -340,6 +339,7 @@ namespace Nektar
                     }
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
+                
                 // Perform any solver-specific post-integration steps
                 if (v_PostIntegrate(step))
                 {

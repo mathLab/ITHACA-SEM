@@ -208,6 +208,5 @@ namespace Nektar
 
             m_riemann->Solve(m_spaceDim, Fwd, Bwd, TraceFlux);
         }
-
     }//end of namespace SolverUtils
 }//end of namespace Nektar

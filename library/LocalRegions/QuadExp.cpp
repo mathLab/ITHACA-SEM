@@ -538,6 +538,7 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);
         }
 
+
         void QuadExp::v_IProductWRTDerivBase_MatOp(
             const int dir,
             const Array<OneD, const NekDouble>& inarray,

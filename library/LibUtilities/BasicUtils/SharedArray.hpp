@@ -212,8 +212,6 @@ namespace Nektar
                 *m_count += 1;
             }
 
-             /// TODO: BEST TO DEFINE A DERIVED 2D array, which share the same memory with 1D array
-            
             ~Array()
             {
                 if( m_count == nullptr )

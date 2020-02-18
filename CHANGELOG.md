@@ -220,7 +220,6 @@ v5.0.0
 
 **Packaging:**
 - Add Dockerfiles and gitlab CI configuration for automatic builds (!1021,
-  !1092)
   !1092, !1098)
 
 v4.4.2

@@ -820,7 +820,7 @@ namespace Nektar
                     for (int j = 0; j < quad; ++j)
                     {
                         m_traceToUniversalMap[j+offset] = eid*maxQuad+j+1;
-                        m_edgeToTrace[eid].emplace_back(offset + j);
+                        m_edgeToTrace[eid].emplace_back(offset + j); // TODO: Check correct
                     }
 
                     if (realign)
@@ -850,8 +850,8 @@ namespace Nektar
                 for (int j = 0; j < locExpVector[i]->GetNedges(); ++j)
                 {
                     LocalRegions::SegExpSharedPtr locSegExp = m_elmtToTrace[i][j]->as<LocalRegions::SegExp>();
-                    int id = locSegExp->GetGeom()->GetGlobalID();
-                    localEdgeIds.insert(id);
+                    int edgeId = locSegExp->GetGeom()->GetGlobalID();
+                    localEdgeIds.insert(edgeId);
                 }
             }
 
@@ -922,17 +922,16 @@ namespace Nektar
 
             ASSERTL0(retval == MPI_SUCCESS, "MPI error creating distributed graph.");
 
-
             //Setting up indices etc. for the MPI_Neighbor_Alltoallv in UniversalTraceAssemble
-            m_sendCount = Nektar::Array<OneD, int>(nNeighbours, -1);
+            m_sendCount = Array<OneD, int>(nNeighbours, 0);
             cnt = 0;
-            for (auto &rankEdgeVec : rankSharedEdges)
+            for (auto &rankEdgeSet : rankSharedEdges)
             {
-                for (auto &edgeNos : rankEdgeVec.second)
+                for (int i = 0; i < rankEdgeSet.second.size(); ++i)
                 {
-                    std::vector<int> edgeDisp = m_edgeToTrace[edgeNos];
-                    m_edgeTraceIndex.insert(m_edgeTraceIndex.end(), m_edgeToTrace[edgeNos].begin(), m_edgeToTrace[edgeNos].end());
-                    m_sendCount[cnt] += edgeDisp.size();
+                    std::vector<int> edgeIndex = m_edgeToTrace[rankEdgeSet.second[i]];
+                    m_edgeTraceIndex.insert(m_edgeTraceIndex.end(), edgeIndex.begin(), edgeIndex.end());
+                    m_sendCount[cnt] += edgeIndex.size();
                 }
 
                 ++cnt;
@@ -1039,34 +1038,84 @@ namespace Nektar
 
         void AssemblyMapDG::UniversalTraceAssemble(Array<OneD, NekDouble> &Fwd, Array<OneD, NekDouble> &Bwd)
         {
-            Array<OneD, double> sendBuff(m_edgeTraceIndex.size());
+            std::cout << "RANK: " << m_comm->GetRank() << " FWD: ";
+            for (int i : m_edgeTraceIndex)
+                std::cout << Fwd[i] << " ";
+            std::cout << std::endl;
+
+            std::cout << "RANK: " << m_comm->GetRank() << " BWD: ";
+            for (int i : m_edgeTraceIndex)
+                std::cout << Bwd[i] << " ";
+            std::cout << std::endl;
+
+            //Test m_edgeTraceAdjacency
+            int a = -1, b = -1, nQ = 5;
+            m_edgeTraceAdjacency = std::vector<int>(m_edgeTraceIndex.size(), -1);
+            switch (m_comm->GetRank())
+            {
+                case 0:
+                    a = 0, b = 0;
+                    break;
+                case 1:
+                    a = 1, b = 1;
+                    break;
+                case 2:
+                    a = 0, b = 1;
+                    break;
+                case 3:
+                    a = 1; b = 0;
+                    break;
+            }
+            for (int i = 0; i < nQ; ++i)
+                m_edgeTraceAdjacency[i] = a;
+            for (int i = nQ; i < 2*nQ; ++i)
+                m_edgeTraceAdjacency[i] = b;
+
+
+            std::cout << "RANK: " << m_comm->GetRank() << " ADJ: ";
+            for (int i : m_edgeTraceAdjacency)
+                std::cout << i << " ";
+            std::cout << std::endl;
+
+            Array<OneD, double> sendBuff(m_edgeTraceIndex.size(), -1);
             Array<OneD, double> recvBuff(m_edgeTraceIndex.size(), -1);
             for (int i = 0; i < m_edgeTraceIndex.size(); ++i)
             {
-                sendBuff[i] = Fwd[m_edgeTraceIndex[i]];
+                if (m_edgeTraceAdjacency[i] == 1)
+                {
+                    sendBuff[i] = Fwd[m_edgeTraceIndex[i]];
+                }
+                else
+                {
+                    sendBuff[i] = Bwd[m_edgeTraceIndex[i]];
+                }
             }
+
+            std::cout << "RANK: " << m_comm->GetRank() << " SEND: ";
+            for (double i : sendBuff)
+                std::cout << i << " ";
+            std::cout << std::endl;
 
             MPI_Neighbor_alltoallv(sendBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
                                    recvBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
                                    m_commGraph);
 
+            std::cout << "RANK: " << m_comm->GetRank() << " RECV: ";
+            for (double i : recvBuff)
+                std::cout << i << " ";
+            std::cout << std::endl;
+
             for (int i = 0; i < m_edgeTraceIndex.size(); ++i)
             {
-                Bwd[m_edgeTraceIndex[i]] = recvBuff[i];
+                if (m_edgeTraceAdjacency[i] == 1)
+                {
+                    Bwd[m_edgeTraceIndex[i]] = recvBuff[i];
+                }
+                else
+                {
+                    Fwd[m_edgeTraceIndex[i]] = recvBuff[i];
+                }
             }
-
-            std::cout << "On rank: " << m_comm->GetRank() << " sendBuff is: ";
-            for (auto & tst : sendBuff)
-            {
-                std::cout << tst << " ";
-            }
-            std::cout << std::endl;
-            std::cout << "On rank: " << m_comm->GetRank() << " recvBuff is: ";
-            for (auto & tst : recvBuff)
-            {
-                std::cout << tst << " ";
-            }
-            std::cout << std::endl;
 
             //Gs::Gather(pGlobal, Gs::gs_add, m_traceGsh);
 

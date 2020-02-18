@@ -112,6 +112,9 @@ namespace Nektar
             /// List of trace map indices of the quad points to exchange
             std::vector<int> m_edgeTraceIndex;
 
+            /// List if left adjacent = 1, corresponds to m_edgeTraceIndex
+            std::vector<int> m_edgeTraceAdjacency;
+
             /// List of counts for MPI_neighbor_alltoallv in UniversalTraceAssemble
             Array<OneD,int> m_sendCount;
 

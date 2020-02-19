@@ -254,12 +254,12 @@ inline void TensorContractDealII(const AlignedVector<BasisType> &bdata,
 
 template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
-         int VW, class BasisType>
+         int VW>
 inline static void AVXBwdTransHexKernel(
     const AlignedVector<VecData<double, VW>> &in,
-    const AlignedVector<BasisType> &bdata0,
-    const AlignedVector<BasisType> &bdata1,
-    const AlignedVector<BasisType> &bdata2,
+    const AlignedVector<VecData<double, VW>> &bdata0,
+    const AlignedVector<VecData<double, VW>> &bdata1,
+    const AlignedVector<VecData<double, VW>> &bdata2,
     VecData<double, VW> *sum_irq,
     VecData<double, VW> *sum_jir,
     AlignedVector<VecData<double, VW>> &out)

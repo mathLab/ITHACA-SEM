@@ -138,13 +138,13 @@
   </EXPANSIONS>
   <CONDITIONS>
     <PARAMETERS>
-      <P> NumSteps       = 20              </P>
+      <P> NumSteps       = 20         </P>
       <P> TimeStep       = 0.0015     </P>
-      <P> IO_CheckSteps  = 200         </P>
-      <P> IO_InfoSteps   = 1                </P>
-      <P> advx           = 1                 </P>
-      <P> advy           = 1.5                 </P>
-      <P> advz           = 2                 </P>
+      <P> IO_CheckSteps  = 200        </P>
+      <P> IO_InfoSteps   = 1          </P>
+      <P> advx           = 1          </P>
+      <P> advy           = 1.5        </P>
+      <P> advz           = 2          </P>
     </PARAMETERS>
 
     <SOLVERINFO>
@@ -171,9 +171,9 @@
     </BOUNDARYCONDITIONS>
 
     <FUNCTION NAME="AdvectionVelocity">
-      <E VAR="Vx" VALUE="1" />
-      <E VAR="Vy" VALUE="1.5" />
-      <E VAR="Vz" VALUE="2" />
+      <E VAR="Vx" VALUE="advx" />
+      <E VAR="Vy" VALUE="advy" />
+      <E VAR="Vz" VALUE="advz" />
     </FUNCTION>
 
     <FUNCTION NAME="ExactSolution">

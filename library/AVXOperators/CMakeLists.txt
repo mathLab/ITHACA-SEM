@@ -17,7 +17,7 @@ SET(AVXOPERATORS_HEADERS
     # AVXPhysDerivKernels.hpp
     # AVXHelmholtz.h
     # AVXHelmholtzGlobal.h
-    # AVXUtil.hpp
+    AVXUtil.hpp
     VecData.hpp
     Operator.hpp
 )

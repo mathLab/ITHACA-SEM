@@ -492,9 +492,6 @@ namespace Nektar
                         m_fields[0] = firstfield;
                         for (i = 1; i < m_fields.num_elements(); i++)
                         {
-                            cout <<" m_graph->SameExpansions= "<<m_graph->SameExpansions(
-                                        m_session->GetVariable(0),
-                                        m_session->GetVariable(i))<<endl;
                             if(m_graph->SameExpansions(
                                         m_session->GetVariable(0),
                                         m_session->GetVariable(i)))

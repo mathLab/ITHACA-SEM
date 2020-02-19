@@ -141,15 +141,6 @@ namespace Nektar
             "FullLinearSpaceWithBlock"
         };
 
-        enum IterativeMethodType
-        {
-            eConjugateGradient,
-        };
-
-        const char* const IterativeMethodTypeMap[] =
-        {
-            "ConjugateGradient",
-        };
 
         // let's keep this for linking to external
         // sparse libraries

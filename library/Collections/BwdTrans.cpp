@@ -274,7 +274,10 @@ OperatorKey BwdTrans_AVX::m_typeArr[] = {
         BwdTrans_AVX::create, "BwdTrans_AVX_Quad"),
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eTriangle,      eBwdTrans, eAVX, false),
-        BwdTrans_AVX::create, "BwdTrans_AVX_Tri")
+        BwdTrans_AVX::create, "BwdTrans_AVX_Tri"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eHexahedron,    eBwdTrans, eAVX, false),
+        BwdTrans_AVX::create, "BwdTrans_AVX_Hex")
 };
 
 

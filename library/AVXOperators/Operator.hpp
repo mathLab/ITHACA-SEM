@@ -64,13 +64,9 @@ public:
         return false;
     }
 
-    virtual void SetJac(const Array<OneD, const NekDouble> &jac)
-    {
-    }
+    virtual void SetJac(const Array<OneD, const NekDouble> &jac) = 0;
 
-    virtual void SetDF(const Array<TwoD, const NekDouble> &df)
-    {
-    }
+    virtual void SetDF(const Array<TwoD, const NekDouble> &df) = 0;
 
     // virtual void set_asmMap(MultiRegions::AssemblyMapSharedPtr asmMap)
     // {

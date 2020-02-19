@@ -19,14 +19,12 @@ inline static void AVXBwdTransQuadKernel(
     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1;
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
 
-    int cnt_iq = 0;
-    for (int i = 0; i < nq0; ++i)
+    for (int i = 0, cnt_iq = 0; i < nq0; ++i)
     {
-        int cnt_pq = 0;
-        for (int q = 0; q < nm1; ++q, ++cnt_iq)
+        for (int q = 0, cnt_pq = 0; q < nm1; ++q, ++cnt_iq)
         {
-            wsp[cnt_iq] = in[cnt_pq++] * bdata0[i];
-
+            wsp[cnt_iq] = in[cnt_pq] * bdata0[i];
+            ++cnt_pq;
             for (int p = 1; p < nm0; ++p, ++cnt_pq)
             {
                 wsp[cnt_iq].fma(in[cnt_pq], bdata0[p * nq0 + i]);
@@ -34,11 +32,9 @@ inline static void AVXBwdTransQuadKernel(
         }
     }
 
-    int cnt_ij = 0;
-    for (int j = 0; j < nq1; ++j)
+    for (int j = 0, cnt_ij = 0; j < nq1; ++j)
     {
-        cnt_iq = 0;
-        for (int i = 0; i < nq0; ++i, ++cnt_ij)
+        for (int i = 0, cnt_iq = 0; i < nq0; ++i, ++cnt_ij)
         {
             out[cnt_ij] = wsp[cnt_iq] * bdata1[j];
             ++cnt_iq;
@@ -66,17 +62,15 @@ inline static void AVXBwdTransTriKernel(
     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1;
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
 
-    int eta_idx = 0;
-    for (int eta1 = 0; eta1 < nq1; ++eta1)
+    for (int eta1 = 0, eta_idx = 0; eta1 < nq1; ++eta1)
     {
-
-        int mode = 0; //Combined number of modes.
-        for (int p = 0; p < nm0; ++p)
+        for (int p = 0, mode = 0; p < nm0; ++p)
         {
 
             T p_sum = T(0.0);
 
-            for (int q = 0; q < (nm1-p); ++q, ++mode){
+            for (int q = 0; q < (nm1-p); ++q, ++mode)
+            {
                p_sum.fma(bdata1[mode * nq1 + eta1], in[mode]);
             }
 
@@ -88,17 +82,19 @@ inline static void AVXBwdTransTriKernel(
         //From this assemble the tensor produce of each quadrature point, eta1
         for (int eta0 = 0; eta0 < nq0; ++eta0, ++eta_idx)
         {
-            out[eta_idx] = 0.0;
+            T p_sum = T(0.0);
             for (int p = 0; p < nm0; ++p)
             {
-                out[eta_idx].fma(p_sums[p], bdata0[p*nq0 + eta0]); //Load 2x
+                p_sum.fma(p_sums[p], bdata0[p*nq0 + eta0]); //Load 2x
             }
 
             if (CORRECT)
             {
                 //p_sum += coef * bdata0 * bdata1
-                out[eta_idx].fma(in[1] * bdata0[nq0 + eta0], bdata1[nq1 + eta1]);
+                p_sum.fma(in[1] * bdata0[nq0 + eta0], bdata1[nq1 + eta1]);
             }
+
+            out[eta_idx] = p_sum;
         }
     }
 }
@@ -260,13 +256,13 @@ template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
          int VW, class BasisType>
 inline static void AVXBwdTransHexKernel(
-    const double *inptrtmp,
+    const AlignedVector<VecData<double, VW>> &in,
     const AlignedVector<BasisType> &bdata0,
     const AlignedVector<BasisType> &bdata1,
     const AlignedVector<BasisType> &bdata2,
     VecData<double, VW> *sum_irq,
     VecData<double, VW> *sum_jir,
-    double *outptr)
+    AlignedVector<VecData<double, VW>> &out)
 {
     using T = VecData<double, VW>;
 
@@ -278,22 +274,19 @@ inline static void AVXBwdTransHexKernel(
     TensorContractDealII<VW, 3, 1, nm0, nq0, true, false>(bdata0, sum_irq, sum_jir);
     TensorContractDealII<VW, 3, 2, nm0, nq0, true, false>(bdata0, sum_jir, (T *)outptr);
 #else
-    T *inptr = (T *)inptrtmp;
 
-    int cnt_irq = 0;
-    for (int i = 0; i < nq0; ++i)
+    for (int i = 0, cnt_irq = 0; i < nq0; ++i)
     {
-        int cnt_rqp = 0;
-        for (int r = 0; r < nm2; ++r)
+        for (int r = 0, cnt_rqp = 0; r < nm2; ++r)
         {
             for (int q = 0; q < nm1; ++q, ++cnt_irq)
             {
-                T tmp = inptr[cnt_rqp] * bdata0[i];
+                T tmp = in[cnt_rqp] * bdata0[i];
                 ++cnt_rqp;
 
                 for (int p = 1; p < nm0; ++p, ++cnt_rqp)
                 {
-                    tmp.fma(inptr[cnt_rqp], bdata0[p*nq0+i]);
+                    tmp.fma(in[cnt_rqp], bdata0[p*nq0+i]);
                 }
 
                 sum_irq[cnt_irq] = tmp;
@@ -301,11 +294,9 @@ inline static void AVXBwdTransHexKernel(
         }
     }
 
-    int cnt_jir = 0;
-    for (int j = 0; j < nq1; ++j)
+    for (int j = 0, cnt_jir = 0; j < nq1; ++j)
     {
-        cnt_irq = 0;
-        for (int i = 0; i < nq0; ++i)
+        for (int i = 0, cnt_irq = 0; i < nq0; ++i)
         {
             for (int r = 0; r < nm2; ++r, ++cnt_jir)
             {
@@ -322,13 +313,11 @@ inline static void AVXBwdTransHexKernel(
         }
     }
 
-    int cnt_kji = 0;
-    for (int k = 0; k < nq2; ++k)
+    for (int k = 0, cnt_kji = 0; k < nq2; ++k)
     {
-        cnt_jir = 0;
-        for (int j = 0; j < nq1; ++j)
+        for (int j = 0, cnt_jir = 0; j < nq1; ++j)
         {
-            for (int i = 0; i < nq0; ++i, cnt_kji += VW)
+            for (int i = 0; i < nq0; ++i, ++cnt_kji)
             {
                 T tmp = sum_jir[cnt_jir] * bdata2[k];
                 ++cnt_jir;
@@ -338,7 +327,7 @@ inline static void AVXBwdTransHexKernel(
                     tmp.fma(sum_jir[cnt_jir++], bdata2[r*nq2+k]);
                 }
 
-                tmp.store(outptr + cnt_kji);
+                out[cnt_kji] = tmp;
             }
         }
     }

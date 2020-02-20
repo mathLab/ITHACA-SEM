@@ -18,7 +18,7 @@
             <value variable="rho" tolerance="1e-12">1.70021e-10</value>
             <value variable="rhou" tolerance="1e-12">9.76513e-10</value>
             <value variable="rhov" tolerance="1e-12">9.81855e-10</value>
-            <value variable="E" tolerance="1e-8">8.31031e-07</value>
+            <value variable="E" tolerance="5e-8">8.31031e-07</value>
         </metric>
     </metrics>
 </test>

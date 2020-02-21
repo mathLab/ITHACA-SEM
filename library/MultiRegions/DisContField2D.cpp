@@ -436,13 +436,12 @@ namespace Nektar
             // Set up physical normals
             SetUpPhysNormals();
             
-            // Set up information for parallel and periodic problems. 
+            // Set up information for periodic problems.
             for (int i = 0; i < m_trace->GetExpSize(); ++i)
             {
                 LocalRegions::Expansion1DSharedPtr traceEl = 
                         m_trace->GetExp(i)->as<LocalRegions::Expansion1D>();
                     
-                int offset      = m_trace->GetPhys_Offset(i);
                 int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
                 auto pIt = m_periodicEdges.find(traceGeomId);
 
@@ -453,11 +452,6 @@ namespace Nektar
                         traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
                             traceEl->GetLeftAdjacentElementEdge());
                     }
-                }
-                else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
-                {
-                    traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
-                        traceEl->GetLeftAdjacentElementEdge());
                 }
             }
                 
@@ -499,21 +493,11 @@ namespace Nektar
             cnt = 0;
             for (int i = 0; i < m_exp->size(); ++i)
             {
-                std::cout << "RANK " << m_comm->GetRank() << " adjacent edges: ";
                 for (int j = 0; j < (*m_exp)[i]->GetNedges(); ++j, ++cnt)
                 {
                     m_leftAdjacentEdges[cnt] = IsLeftAdjacentEdge(i, j);
-                    std::cout << m_leftAdjacentEdges[cnt] << " (id: " << (*m_exp)[i]->GetGeom()->GetEid(j) << ") ";
                 }
-                std::cout << std::endl;
             }
-
-            std::cout << "RANK " << m_comm->GetRank() << " TRACE ORDER: ";
-            for (int i = 0; i < m_trace->GetExpSize(); ++i)
-            {
-                std::cout << m_trace->GetExp(i)->GetGeom()->GetGlobalID() << " ";
-            }
-            std::cout << std::endl;
 
             // Set up mapping to copy Fwd of periodic bcs to Bwd of other edge.
             cnt = 0;
@@ -1292,10 +1276,7 @@ namespace Nektar
                     }
                     else
                     {
-                        int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
-
-                        fwd = m_traceMap->
-                            GetTraceToUniversalMapUnique(offset) >= 0;
+                        fwd = true; // Partition edge is always fwd
                     }
                 }
             }
@@ -1506,7 +1487,7 @@ namespace Nektar
                 m_locTraceToTraceMap->FwdLocTracesFromField(inarray,tracevals);
                 m_locTraceToTraceMap->
                             InterpLocEdgesToTrace(0,tracevals,outarray);
-                //m_traceMap->UniversalTraceAssemble(outarray);
+                m_traceMap->UniversalTraceAssembleGS(outarray);
             }
             else
             {

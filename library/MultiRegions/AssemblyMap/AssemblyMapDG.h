@@ -88,7 +88,11 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT int GetTraceToUniversalMapUnique(int i);
 
-            MULTI_REGIONS_EXPORT void UniversalTraceAssemble(Array<OneD, NekDouble>& Fwd, Array<OneD, NekDouble>& Bwd);
+            MULTI_REGIONS_EXPORT void UniversalTraceAssemble(
+                    Array<OneD, NekDouble>& Fwd, Array<OneD, NekDouble>& Bwd);
+
+            MULTI_REGIONS_EXPORT void UniversalTraceAssembleGS(
+                    Array<OneD, NekDouble> &pGlobal) const;
 
         protected:
             Gs::gs_data * m_traceGsh;
@@ -112,9 +116,6 @@ namespace Nektar
             /// List of trace map indices of the quad points to exchange
             std::vector<int> m_edgeTraceIndex;
 
-            /// List if left adjacent = 1, corresponds to m_edgeTraceIndex
-            std::vector<int> m_edgeTraceAdjacency;
-
             /// List of counts for MPI_neighbor_alltoallv in UniversalTraceAssemble
             Array<OneD,int> m_sendCount;
 
@@ -129,6 +130,8 @@ namespace Nektar
             void SetUpUniversalTraceMap(
                 const ExpList         &locExp,
                 const ExpListSharedPtr trace,
+                const Array<OneD, const MultiRegions::ExpListSharedPtr>         &bndCondExp,
+                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
                 const PeriodicMap     &perMap = NullPeriodicMap);
 
             virtual int v_GetLocalToGlobalMap(const int i) const;

@@ -40,6 +40,18 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        std::string GlobalLinSysIterative::IteratSolverlookupIds[2] =
+        {
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "LinIteratSovler", "ConjugateGradient", MultiRegions::eConjugateGradient),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "LinIteratSovler", "GMRES", MultiRegions::eGMRES),
+        };
+
+        std::string GlobalLinSysIterative::IteratSolverdef =
+            LibUtilities::SessionReader::RegisterDefaultSolverInfo(
+                "LinIteratSovler", "ConjugateGradient");
+
         /**
          * @class GlobalLinSysIterative
          *
@@ -94,14 +106,45 @@ namespace Nektar
                     const AssemblyMapSharedPtr &plocToGloMap,
                     const int nDir)
         {
-            if (m_useProjection)
+            LinIteratSovler pType = plocToGloMap->GetLinIteratSovler();
+            switch(pType)
             {
-                DoAconjugateProjection(nGlobal, pInput, pOutput, plocToGloMap, nDir);
-            }
-            else
-            {
-                // applying plain Conjugate Gradient
-                DoConjugateGradient(nGlobal, pInput, pOutput, plocToGloMap, nDir);
+            case MultiRegions::eGMRES:
+                {
+                    if (!m_precon)
+                    {
+                        v_UniqueMap();
+                        m_precon = CreatePrecon(plocToGloMap);
+                        m_precon->BuildPreconditioner();
+                    }
+                    LibUtilities::CommSharedPtr v_Comm = m_expList.lock()->GetComm()->GetRowComm();
+                    m_linsol    = MemoryManager<NekLinSysIterative>::AllocateSharedPtr(m_expList.lock()->GetSession(),v_Comm); 
+
+                    m_LinSysOprtors.DefineMatrixMultiply(&GlobalLinSysIterative::DoMatrixMultiplyFlag, this);
+                    m_LinSysOprtors.DefinePrecond(&GlobalLinSysIterative::DoPreconditionerFlag, this);
+                    m_linsol->setLinSysOperators(m_LinSysOprtors);
+                    
+                    int ntmpGMRESIts =  m_linsol->SolveLinearSystem(nGlobal,pInput, pOutput,nDir,m_tolerance);
+                    boost::ignore_unused(ntmpGMRESIts);
+                    
+                    break;
+                }
+            case MultiRegions::eConjugateGradient:
+                {
+                    if (m_useProjection)
+                    {
+                        DoAconjugateProjection(nGlobal, pInput, pOutput, plocToGloMap, nDir);
+                    }
+                    else
+                    {
+                        // applying plain Conjugate Gradient
+                        DoConjugateGradient(nGlobal, pInput, pOutput, plocToGloMap, nDir);
+                    }
+                    break;
+                }
+            default:
+                ASSERTL0(false, "LinIteratSovler NOT CORRECT.");
+                break;
             }
         }
 

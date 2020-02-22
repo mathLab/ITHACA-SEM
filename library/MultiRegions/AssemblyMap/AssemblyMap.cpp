@@ -113,6 +113,8 @@ namespace Nektar
                                                             "GlobalSysSoln");
             m_preconType = pSession->GetSolverInfoAsEnum<PreconditionerType>(
                                                             "Preconditioner");
+            m_LinIteratSovler = pSession->GetSolverInfoAsEnum<LinIteratSovler>(
+                                                            "LinIteratSovler");
 
             // Override values with data from GlobalSysSolnInfo section 
             if(pSession->DefinesGlobalSysSolnInfo(variable, "GlobalSysSoln"))
@@ -129,6 +131,14 @@ namespace Nektar
                                                             "Preconditioner");
                 m_preconType = pSession->GetValueAsEnum<PreconditionerType>(
                                                     "Preconditioner", precon);
+            }
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable, "LinIteratSovler"))
+            {
+                std::string iterater = pSession->GetGlobalSysSolnInfo(variable,
+                                                            "LinIteratSovler");
+                m_LinIteratSovler = pSession->GetValueAsEnum<LinIteratSovler>(
+                                                    "LinIteratSovler", iterater);
             }
 
             if(pSession->DefinesGlobalSysSolnInfo(variable,
@@ -187,6 +197,7 @@ namespace Nektar
             m_hash(0),
             m_solnType(oldLevelMap->m_solnType),
             m_preconType(oldLevelMap->m_preconType),
+            m_LinIteratSovler(oldLevelMap->m_LinIteratSovler),
             m_maxIterations(oldLevelMap->m_maxIterations),
             m_iterativeTolerance(oldLevelMap->m_iterativeTolerance),
             m_successiveRHS(oldLevelMap->m_successiveRHS),

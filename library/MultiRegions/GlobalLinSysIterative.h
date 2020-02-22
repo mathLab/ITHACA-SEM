@@ -37,7 +37,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
-
+#include <LibUtilities/LinearAlgebra/NekLinSysIterative.h>
 #include <boost/circular_buffer.hpp>
 
 namespace Nektar
@@ -93,6 +93,13 @@ namespace Nektar
             /// Total counter of previous solutions
             int m_numPrevSols;
 
+            LinSysOperators                             m_LinSysOprtors;
+
+            NekLinSysIterativeSharedPtr                 m_linsol;
+
+            static std::string IteratSolverlookupIds[];
+            static std::string IteratSolverdef;
+
             /// A-conjugate projection technique
             void DoAconjugateProjection(
                     const int pNumRows,
@@ -124,6 +131,26 @@ namespace Nektar
                     const int nGlobal,
                     const Array<OneD,const NekDouble> &in,
                     const int nDir);
+
+            void DoMatrixMultiplyFlag(
+                const Array<OneD, NekDouble>& pInput,
+                      Array<OneD, NekDouble>& pOutput,
+                const  bool                 &controlFlag)
+            {
+                boost::ignore_unused(controlFlag);
+                
+                v_DoMatrixMultiply(pInput,pOutput);
+            }
+
+            void DoPreconditionerFlag(
+                const Array<OneD, NekDouble>& pInput,
+                      Array<OneD, NekDouble>& pOutput,
+                const  bool                 &controlFlag)
+            {
+                boost::ignore_unused(controlFlag);
+                
+                m_precon->DoPreconditioner(pInput,pOutput);
+            }
 
 
             /// Solve the matrix system

@@ -110,14 +110,14 @@ build-env-buster-default:
 # build-env-buster-full:
 #   <<: *build-env-debian-template-full
 
-build-env-stretch-default:
-  <<: *build-env-debian-template-default
+# build-env-stretch-default:
+#   <<: *build-env-debian-template-default
 
 # build-env-stretch-full:
 #   <<: *build-env-debian-template-full
 
-build-and-test-buster-default:
-  <<: *build-and-test-template
+# build-and-test-buster-default:
+#   <<: *build-and-test-template
 
 # build-and-test-buster-full:
 #   <<: *build-and-test-template
@@ -125,22 +125,22 @@ build-and-test-buster-default:
 #     OS_DISTRO: debian
 #     GIT_SUBMODULE_STRATEGY: recursive
 
-build-and-test-stretch-default:
-  <<: *build-and-test-template
+# build-and-test-stretch-default:
+#   <<: *build-and-test-template
 
 # build-and-test-stretch-full:
 #   <<: *build-and-test-template
 
 
-# COMPILER WARNINGS
-warnings-buster-default:
-  <<: *compiler-warning-template
+# # COMPILER WARNINGS
+# warnings-buster-default:
+#   <<: *compiler-warning-template
 
 # warnings-buster-full:
 #   <<: *compiler-warning-template
 
-warnings-stretch-default:
-  <<: *compiler-warning-template
+# warnings-stretch-default:
+#   <<: *compiler-warning-template
 
 # warnings-stretch-full:
 #   <<: *compiler-warning-template
@@ -156,28 +156,42 @@ warnings-stretch-default:
 #   script:
 #     - docker build -t nektar-env:buster-documentation -f docker/nektar-env/Dockerfile_debian_documentation .
 
-# build-user-guide:
-#   <<: *build-and-test-template
-#   image: nektar-env:buster-documentation
-#   script:
-#     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
-#     - make -C build user-guide-pdf user-guide-html developer-guide-pdf developer-guide-html
+build-user-guide:
+  <<: *build-and-test-template
+  image: nektar:env-documentation
+  script:
+    - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
+    - make -C build -j 3 user-guide-pdf user-guide-html developer-guide-pdf developer-guide-html
+  artifacts:
+    paths:
+      - build/docs/user-guide/user-guide.pdf
+      - build/docs/user-guide/html
+      - build/docs/developer-guide/developers-guide.pdf
+      - build/docs/developer-guide/html
 
-# build-doxygen:
-#   <<: *build-and-test-template
-#   image: nektar-env:buster-documentation
-#   script:
-#     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
-#     - make -C build doc
+build-doxygen:
+  <<: *build-and-test-template
+  image: nektar:env-documentation
+  script:
+    - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
+    - make -C build doc
+  artifacts:
+    paths:
+      - build/docs/doxygen/html/
 
-# build-tutorials:
-#   <<: *build-and-test-template
-#   image: nektar-env:buster-documentation
-#   variables:
-#     GIT_SUBMODULE_STRATEGY: recursive
-#   script:
-#     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release .
-#     - make -C build -j 2 tutorials-pdf tutorials-html
+build-tutorials:
+  <<: *build-and-test-template
+  image: nektar:env-documentation
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  script:
+    - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release .
+    - make -C build -j 2 tutorials-pdf tutorials-html
+  artifacts:
+    paths:
+      - build/docs/tutorial/
+
+
 
 # ################################################
 # ###################  UBUNTU  ###################
@@ -274,10 +288,10 @@ warnings-stretch-default:
       tee log/${OS_VERSION}_${BUILD_TYPE}.log
 
 
-build-and-test-osx-default:
-  <<: *build-and-test-osx-template
-  variables:
-    BUILD_TYPE: "default"
+# build-and-test-osx-default:
+#   <<: *build-and-test-osx-template
+#   variables:
+#     BUILD_TYPE: "default"
 
 # build-and-test-osx-full:
 #   <<: *build-and-test-osx-template

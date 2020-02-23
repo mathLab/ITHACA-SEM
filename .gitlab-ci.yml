@@ -162,7 +162,7 @@ build-env-buster-documentation:
 
 build-user-guide:
   <<: *build-and-test-template
-  image: nektar:env-documentation
+  image: $CI_REGISTRY_IMAGE:env-documentation
   script:
     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
     - make -C build -j 3 user-guide-pdf user-guide-html developer-guide-pdf developer-guide-html
@@ -175,7 +175,7 @@ build-user-guide:
 
 build-doxygen:
   <<: *build-and-test-template
-  image: nektar:env-documentation
+  image: $CI_REGISTRY_IMAGE:env-documentation
   script:
     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
     - make -C build doc
@@ -185,7 +185,7 @@ build-doxygen:
 
 build-tutorials:
   <<: *build-and-test-template
-  image: nektar:env-documentation
+  image: $CI_REGISTRY_IMAGE:env-documentation
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   script:

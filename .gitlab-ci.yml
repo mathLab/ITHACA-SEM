@@ -148,13 +148,17 @@ build-env-buster-default:
 #     build-and-test-buster-default
 
 
-# build-env-buster-documentation:
-#   tags:
-#     - shell
-#   stage:
-#     build-env-full
-#   script:
-#     - docker build -t nektar-env:buster-documentation -f docker/nektar-env/Dockerfile_debian_documentation .
+build-env-buster-documentation:
+  tags:
+    - shell
+  stage:
+    build-env-full
+  script:
+    - export IMAGE=$CI_REGISTRY_IMAGE:env-documentation
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull $IMAGE || true
+    - docker build --pull -t $IMAGE -f docker/nektar-env/Dockerfile_debian_documentation .
+    - docker push $IMAGE
 
 build-user-guide:
   <<: *build-and-test-template

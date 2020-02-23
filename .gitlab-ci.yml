@@ -160,9 +160,14 @@ build-env-buster-documentation:
     - docker build --pull -t $IMAGE -f docker/nektar-env/Dockerfile_debian_documentation .
     - docker push $IMAGE
 
-build-user-guide:
+.build-documentation-template: &build-documentation-template
   <<: *build-and-test-template
   image: $CI_REGISTRY_IMAGE:env-documentation
+  tags:
+    - docker
+
+build-user-guide:
+  <<: *build-documentation-template
   script:
     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
     - make -C build -j 3 user-guide-pdf user-guide-html developer-guide-pdf developer-guide-html
@@ -174,8 +179,7 @@ build-user-guide:
       - build/docs/developer-guide/html
 
 build-doxygen:
-  <<: *build-and-test-template
-  image: $CI_REGISTRY_IMAGE:env-documentation
+  <<: *build-documentation-template
   script:
     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
     - make -C build doc
@@ -184,8 +188,7 @@ build-doxygen:
       - build/docs/doxygen/html/
 
 build-tutorials:
-  <<: *build-and-test-template
-  image: $CI_REGISTRY_IMAGE:env-documentation
+  <<: *build-documentation-template
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   script:

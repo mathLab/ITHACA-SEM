@@ -37,7 +37,7 @@
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINSYS_NEWTON_H
 
 #include <LibUtilities/LinearAlgebra/NekNonlinSys.h>
-#include <LibUtilities/LinearAlgebra/NekLinSysIterative.h>
+#include <LibUtilities/LinearAlgebra/NekLinSysIterat.h>
 
 namespace Nektar
 {
@@ -74,7 +74,7 @@ namespace Nektar
             
             protected:
 
-                NekLinSysIterativeSharedPtr                 m_linsol;
+                NekLinSysIteratSharedPtr                 m_linsol;
 
                 // int                                         m_maxstorage;
                 int                                         m_MaxNonlinIte;

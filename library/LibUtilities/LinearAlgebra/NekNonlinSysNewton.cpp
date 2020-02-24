@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/LinearAlgebra/NekNonlinSysNewton.h>
+#include <LibUtilities/LinearAlgebra/NekLinSysIteratGMRES.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
 using namespace std;
@@ -124,12 +125,12 @@ namespace Nektar
             m_Residual = Array<OneD, NekDouble> (m_SysDimen,0.0);
             m_DeltSltn = Array<OneD, NekDouble> (m_SysDimen,0.0);
 
-            m_linsol    = MemoryManager<NekLinSysIterative>::AllocateSharedPtr(m_session,m_Comm); 
+            m_linsol    = MemoryManager<NekLinSysIteratGMRES>::AllocateSharedPtr(m_session,m_Comm,m_SysDimen); 
 
             // NonlinLinSysOperators operators;
             // operators.DefineNonlinLinSysLhsEval(&m_operator.DoNonlinLinSysLhsEval, m_operator);
             // operators.DefineNonlinLinPrecond(&m_operator.DoNonlinLinPrecond, m_operator);
-            // m_linsol->setLinSysOperators(m_operator);
+            m_linsol->setSysOperators(m_operator);
         }
 
         NekNonlinSysNewton::~NekNonlinSysNewton()
@@ -170,7 +171,7 @@ namespace Nektar
                 }
 
                 NekDouble   LinSysTol = m_NonlinIteTolLinRelatTol*sqrt(m_SysResNorm);
-                int ntmpGMRESIts =  m_linsol->SolveLinearSystem(ntotal,m_Residual,m_DeltSltn,0,LinSysTol);
+                int ntmpGMRESIts =  m_linsol->SolveSystem(ntotal,m_Residual,m_DeltSltn,0,LinSysTol);
                 NtotLinSysIts   +=  ntmpGMRESIts;
                 Vmath::Vsub(ntotal,m_Solution,1,m_DeltSltn,1,m_Solution,1);
                 NttlNonlinIte ++;

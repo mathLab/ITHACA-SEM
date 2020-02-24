@@ -224,8 +224,6 @@ namespace Nektar
         bool                                        m_DifferenceFlag0  = false;
         bool                                        m_DifferenceFlag1  = false;
 
-        /// Storage for solutions to previous linear problems
-        boost::circular_buffer<Array<OneD, NekDouble> > m_prevLinSol;
         /// Total counter of previous solutions
         int m_numPrevSols;
         /// A-conjugate projection technique

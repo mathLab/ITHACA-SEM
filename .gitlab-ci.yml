@@ -21,15 +21,11 @@ stages:
   <<: *execution-conditions
   stage: build-env
   image: docker:19.03.6
-  tags:
-    - docker
 
 .build-and-test-template: &build-and-test-template
   <<: *execution-conditions
   stage: build-and-test
   image: docker:19.03.6
-  tags:
-    - docker
   script:
     - OS_VERSION=$(echo $CI_JOB_NAME | cut -d- -f 1)
     - BUILD_TYPE=$(echo $CI_JOB_NAME | cut -d- -f 2)
@@ -154,8 +150,7 @@ buster-default-warnings:
 
 
 # buster-documentation-build-env:
-#   tags:
-#     - shell
+#   image: docker:19.03.6
 #   stage:
 #     build-env-full
 #   script:
@@ -168,8 +163,6 @@ buster-default-warnings:
 # .build-documentation-template: &build-documentation-template
 #   <<: *build-and-test-template
 #   image: $CI_REGISTRY_IMAGE:env-documentation
-#   tags:
-#     - docker
 
 # user-guide-build:
 #   <<: *build-documentation-template

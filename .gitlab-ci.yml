@@ -10,6 +10,12 @@ stages:
       - merge_requests
       - feature/gitlab_ci
       - tags
+    changes:
+      - "**/*"
+      - .dockerignore
+      - .gitmodules
+      - .gitlab-ci.yml
+      - CMakeLists.txt
 
 .build-env-template: &build-env-template
   <<: *execution-conditions

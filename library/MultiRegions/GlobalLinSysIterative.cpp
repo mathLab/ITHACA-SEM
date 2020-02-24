@@ -118,7 +118,26 @@ namespace Nektar
                         m_precon->BuildPreconditioner();
                     }
                     LibUtilities::CommSharedPtr v_Comm = m_expList.lock()->GetComm()->GetRowComm();
-                    m_linsol    = MemoryManager<LibUtilities::NekLinSysIteratGMRES>::AllocateSharedPtr(m_expList.lock()->GetSession(),v_Comm,nGlobal-nDir); 
+                    LibUtilities::SessionReaderSharedPtr psession = m_expList.lock()->GetSession();
+                    
+                    std::string vEquation = "GMRES";
+                    // if(pSession->DefinesGlobalSysSolnInfo(variable, "GlobalSysSoln"))
+                    // {
+                    //     std::string sysSoln = pSession->GetGlobalSysSolnInfo(variable,
+                    //                                                 "GlobalSysSoln");
+                    //     m_solnType = pSession->GetValueAsEnum<GlobalSysSolnType>(
+                    //                                         "GlobalSysSoln", sysSoln);
+                    // }
+                    // if(psession->DefinesSolverInfo("LinIteratSovler"))
+                    // {
+                    //     vEquation = psession->GetSolverInfo("LinIteratSovler");
+                    // }
+
+                    // Check such a module exists for this equation.
+                    ASSERTL0(LibUtilities::GetNekLinSysIteratFactory().ModuleExists(vEquation),
+                            "NekLinSysIterat '" + vEquation + "' is not defined.\n");
+                    m_linsol = LibUtilities::GetNekLinSysIteratFactory().CreateInstance(
+                                        vEquation, psession,v_Comm,nGlobal-nDir);
 
                     m_LinSysOprtors.DefineNonlinLinSysLhsEval(&GlobalLinSysIterative::DoMatrixMultiplyFlag, this);
                     m_LinSysOprtors.DefineNonlinLinPrecond(&GlobalLinSysIterative::DoPreconditionerFlag, this);

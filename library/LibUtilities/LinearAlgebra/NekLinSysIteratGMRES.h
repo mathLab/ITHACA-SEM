@@ -62,15 +62,18 @@ namespace Nektar
              * parallel communication, it also calls the main initialisation
              * of the object.
              */
-            LIB_UTILITIES_EXPORT static NekLinSysIteratGMRESSharedPtr CreateInstance(
+
+            LIB_UTILITIES_EXPORT static NekLinSysIteratSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr  &pSession,
                 const LibUtilities::CommSharedPtr           &vComm,
                 const int                                   nDimen)
             {
                 NekLinSysIteratGMRESSharedPtr p = MemoryManager<
                     NekLinSysIteratGMRES>::AllocateSharedPtr(pSession, vComm, nDimen);
+                p->InitObject();
                 return p;
             }
+            static std::string className;
             /// Constructor for full direct matrix solve.
             LIB_UTILITIES_EXPORT NekLinSysIteratGMRES(
                 const LibUtilities::SessionReaderSharedPtr  &pSession,

@@ -37,6 +37,7 @@
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_H
 
 #include <LibUtilities/LinearAlgebra/NekNonlinLinSys.h>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
 namespace Nektar
 {
     namespace LibUtilities
@@ -45,6 +46,14 @@ namespace Nektar
         class  NekLinSysIterat;
 
         typedef std::shared_ptr<NekLinSysIterat> NekLinSysIteratSharedPtr;
+
+        typedef LibUtilities::NekFactory<
+            std::string,
+            NekLinSysIterat,
+            const LibUtilities::SessionReaderSharedPtr  &,
+            const LibUtilities::CommSharedPtr           &,
+            const int                                    > NekLinSysIteratFactory;
+        LIB_UTILITIES_EXPORT NekLinSysIteratFactory& GetNekLinSysIteratFactory();
         
         class  NekLinSysIterat : public NekNonlinLinSys
         {

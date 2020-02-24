@@ -47,6 +47,11 @@ namespace Nektar
          *
          * Solves a linear system using iterative methods.
          */
+        NekLinSysIteratFactory& GetNekLinSysIteratFactory()
+        {
+            static NekLinSysIteratFactory instance;
+            return instance;
+        }
 
         /// Constructor for full direct matrix solve.
         NekLinSysIterat::NekLinSysIterat(

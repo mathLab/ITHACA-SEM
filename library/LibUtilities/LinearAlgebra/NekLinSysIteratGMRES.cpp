@@ -47,6 +47,10 @@ namespace Nektar
          *
          * Solves a linear system using iterative methods.
          */
+        string NekLinSysIteratGMRES::className =
+        LibUtilities::GetNekLinSysIteratFactory().RegisterCreatorFunction(
+            "GMRES", NekLinSysIteratGMRES::create,
+            "NekLinSysIteratGMRES solver.");
 
         /// Constructor for full direct matrix solve.
         NekLinSysIteratGMRES::NekLinSysIteratGMRES(

@@ -82,6 +82,8 @@ namespace Nektar
                 NekDouble                                   m_NonlinIteTolRelativeL2;
                 NekDouble                                   m_NonlinIteTolRelativeL8;
                 NekDouble                                   m_NonlinIteTolLinRelatTol;
+                NekDouble                                   m_SysResNorm0;
+                NekDouble                                   m_SysResNorm;
 
                 virtual void v_InitObject();
 
@@ -92,6 +94,11 @@ namespace Nektar
                     const int                           nDir,
                     const NekDouble                     tol    ,
                     const NekDouble                     factor );
+                
+                virtual bool v_ConvergenceCheck(
+                    const int                           nIteration,
+                    const Array<OneD, const NekDouble>  &Residual,
+                    const NekDouble                     tol         );
                 
             private:
                 Array<OneD, NekDouble>  m_Solution;

@@ -153,12 +153,8 @@ namespace Nektar
             boost::ignore_unused(factor);
 
             int ntotal = nGlobal-nDir;
-            int nwidthcolm = 12;
             int NtotLinSysIts = 0;
-            NekDouble resnorm0 = 0.0;
-            NekDouble resnorm  = 0.0;
-            NekDouble resmaxm  = 0.0;
-            NekDouble resratio = 1.0;
+            
             int NttlNonlinIte    = 0;
 
             m_Solution = pOutput;
@@ -167,59 +163,77 @@ namespace Nektar
             {
                 m_operator.DoNonlinLinSysRhsEval(m_Solution,m_Residual);
                 
-                resnorm = Vmath::Dot(ntotal,m_Residual,m_Residual);
-                m_Comm->AllReduce(resnorm, Nektar::LibUtilities::ReduceSum);
-
-                if(0==k)
+                m_converged = v_ConvergenceCheck(k,m_Residual, tol);
+                if(m_converged)
                 {
-                    resnorm0 = resnorm;
-                    resratio = 1.0;
-
-                    // if(m_Res0PreviousStep<0.0)
-                    // {
-                    //     m_Res0PreviousStep = resnorm0;
-                    //     ratioSteps         = 1.0;
-                    // }
-                    // else
-                    // {
-                    //     ratioSteps         = m_Res0PreviousStep/resnorm0;
-                    //     m_Res0PreviousStep = resnorm0;
-                    // }
-
-                }
-                else
-                {
-                    resratio = resnorm/resnorm0;
+                    break;
                 }
 
-                if (resratio<m_NonlinIteTolRelativeL2||resnorm<tol)
-                {
-                    resmaxm = 0.0;
-                    for(int i=0;i<ntotal;i++)
-                    {
-                        resmaxm = max(resmaxm,abs(m_Residual[i]));
-                    }
-                    m_Comm->AllReduce(resmaxm, Nektar::LibUtilities::ReduceMax);
-                    if((resmaxm<m_NonlinIteTolRelativeL8)&&k>0)
-                    {
-                        m_converged = true;
-                        if(resratio>m_NonlinIteTolRelativeL2&&m_root)
-                        {
-                            WARNINGL0(true,"     # resratio>tol2Ratio in CompressibleFlowSystem::DoImplicitSolve ");
-                            cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                                <<" resratio= "<<resratio<<" tol2Ratio= "<<m_NonlinIteTolRelativeL2<<endl;
-                        }
-                        break;
-                    }
-                }
-
-                NekDouble   LinSysTol = m_NonlinIteTolLinRelatTol*sqrt(resnorm);
+                NekDouble   LinSysTol = m_NonlinIteTolLinRelatTol*sqrt(m_SysResNorm);
                 int ntmpGMRESIts =  m_linsol->SolveLinearSystem(ntotal,m_Residual,m_DeltSltn,0,LinSysTol);
                 NtotLinSysIts   +=  ntmpGMRESIts;
                 Vmath::Vsub(ntotal,m_Solution,1,m_DeltSltn,1,m_Solution,1);
                 NttlNonlinIte ++;
             }
             return NttlNonlinIte;
+        }
+
+        bool NekNonlinSysNewton::v_ConvergenceCheck(
+                const int                           nIteration,
+                const Array<OneD, const NekDouble>  &Residual,
+                const NekDouble                     tol         )
+        {
+            bool converged = false;
+            int nwidthcolm = 12;
+            NekDouble resmaxm  = 0.0;
+            NekDouble resratio = 1.0;
+            int ntotal = Residual.num_elements();
+
+            m_SysResNorm = Vmath::Dot(ntotal,Residual,Residual);
+            m_Comm->AllReduce(m_SysResNorm, Nektar::LibUtilities::ReduceSum);
+
+            if(0==nIteration)
+            {
+                m_SysResNorm0 = m_SysResNorm;
+                resratio = 1.0;
+
+                // if(m_Res0PreviousStep<0.0)
+                // {
+                //     m_Res0PreviousStep = m_SysResNorm0;
+                //     ratioSteps         = 1.0;
+                // }
+                // else
+                // {
+                //     ratioSteps         = m_Res0PreviousStep/m_SysResNorm0;
+                //     m_Res0PreviousStep = m_SysResNorm0;
+                // }
+
+            }
+            else
+            {
+                resratio = m_SysResNorm/m_SysResNorm0;
+            }
+
+            if (resratio<m_NonlinIteTolRelativeL2||m_SysResNorm<tol)
+            {
+                resmaxm = 0.0;
+                for(int i=0;i<ntotal;i++)
+                {
+                    resmaxm = max(resmaxm,abs(Residual[i]));
+                }
+                m_Comm->AllReduce(resmaxm, Nektar::LibUtilities::ReduceMax);
+                if((resmaxm<m_NonlinIteTolRelativeL8)&&nIteration>0)
+                {
+                    converged = true;
+                    if(resratio>m_NonlinIteTolRelativeL2&&m_root)
+                    {
+                        WARNINGL0(true,"     # resratio>tol2Ratio in CompressibleFlowSystem::DoImplicitSolve ");
+                        cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                            <<" resratio= "<<resratio<<" tol2Ratio= "<<m_NonlinIteTolRelativeL2<<endl;
+                    }
+                }
+            }
+            return converged;
         }
     }
 }

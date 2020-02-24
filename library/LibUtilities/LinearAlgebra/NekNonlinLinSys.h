@@ -179,42 +179,60 @@ namespace Nektar
             {
                 return v_SolveSystem(nGlobal,pInput,pOutput,nDir,tol,factor);
             }
+
+            LIB_UTILITIES_EXPORT bool ConvergenceCheck(
+                const int                           nIteration,
+                const Array<OneD, const NekDouble>  &Residual,
+                const NekDouble                     tol    =   1.0E-7)
+            {
+                return v_ConvergenceCheck(nIteration,Residual,tol);
+            }
             
         protected:
-                /// Tolerance of iterative solver.
-                NekDouble                                   m_tolerance;
+            /// Tolerance of iterative solver.
+            NekDouble                                   m_tolerance;
 
-                LibUtilities::CommSharedPtr                 m_Comm;
-                LibUtilities::SessionReaderSharedPtr        m_session;
+            LibUtilities::CommSharedPtr                 m_Comm;
+            LibUtilities::SessionReaderSharedPtr        m_session;
+            
+            /// Whether the iteration has been converged
+            bool                                        m_converged;
+            /// Root if parallel
+            bool                                        m_root;
+            /// verbose
+            bool                                        m_verbose;
+
+            NonlinLinSysOperators                       m_operator;
+
+            int                                         m_SysDimen;
+
+            virtual void v_InitObject()
+            {
                 
-                /// Whether the iteration has been converged
-                bool                                        m_converged;
-                /// Root if parallel
-                bool                                        m_root;
-                /// verbose
-                bool                                        m_verbose;
+            }
 
-                NonlinLinSysOperators                       m_operator;
+            virtual int v_SolveSystem(
+                const int                           nGlobal,
+                const Array<OneD, const NekDouble>  &pInput,
+                Array<OneD,      NekDouble>         &pOutput,
+                const int                           nDir,
+                const NekDouble                     tol    ,
+                const NekDouble                     factor )
+            {
+                boost::ignore_unused(nGlobal, pInput, pOutput,nDir,tol,factor);
+                ASSERTL0(false, "LinIteratSovler NOT CORRECT.");
+                return 0;
+            }
 
-                int                                         m_SysDimen;
-
-                virtual void v_InitObject()
-                {
-                    
-                }
-
-                virtual int v_SolveSystem(
-                    const int                           nGlobal,
-                    const Array<OneD, const NekDouble>  &pInput,
-                    Array<OneD,      NekDouble>         &pOutput,
-                    const int                           nDir,
-                    const NekDouble                     tol    ,
-                    const NekDouble                     factor )
-                {
-                    boost::ignore_unused(nGlobal, pInput, pOutput,nDir,tol,factor);
-                    ASSERTL0(false, "LinIteratSovler NOT CORRECT.");
-                    return 0;
-                }
+            virtual bool v_ConvergenceCheck(
+                const int                           nIteration,
+                const Array<OneD, const NekDouble>  &Residual,
+                const NekDouble                     tol         )
+            {
+                boost::ignore_unused(nIteration, Residual, tol);
+                ASSERTL0(false, "LinIteratSovler NOT CORRECT.");
+                return false;
+            }
     };
     }
 }

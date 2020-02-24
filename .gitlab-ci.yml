@@ -10,7 +10,7 @@ stages:
   only:
     refs:
       - merge_requests
-      - feature/gitlab_ci
+      - gitlab_ci_win7
       - tags
 
 .build-env-template: &build-env-template
@@ -106,8 +106,8 @@ stages:
   stage:
     build-env-full
 
-build-env-buster-default:
-  <<: *build-env-debian-template-default
+# build-env-buster-default:
+#   <<: *build-env-debian-template-default
 
 # build-env-buster-full:
 #   <<: *build-env-debian-template-full
@@ -118,8 +118,8 @@ build-env-buster-default:
 # build-env-stretch-full:
 #   <<: *build-env-debian-template-full
 
-build-and-test-buster-default:
-  <<: *build-and-test-template
+# build-and-test-buster-default:
+#   <<: *build-and-test-template
 
 # build-and-test-buster-full:
 #   <<: *build-and-test-template
@@ -134,9 +134,9 @@ build-and-test-buster-default:
 #   <<: *build-and-test-template
 
 
-# COMPILER WARNINGS
-warnings-buster-default:
-  <<: *compiler-warning-template
+# # COMPILER WARNINGS
+# warnings-buster-default:
+#   <<: *compiler-warning-template
 
 # warnings-buster-full:
 #   <<: *compiler-warning-template
@@ -285,16 +285,16 @@ warnings-buster-default:
 # ####################  OSX  #####################
 # ################################################
 
-.build-and-test-osx-template: &build-and-test-osx-template
-  <<: *build-and-test-template
-  tags:
-    - macos
-  script:
-    - mkdir -p log
-    - export OS_VERSION="osx"
-    - export NUM_CPUS=8
-    - bash -x ./.gitlab-ci/build-and-test.sh |
-      tee log/${OS_VERSION}_${BUILD_TYPE}.log
+# .build-and-test-osx-template: &build-and-test-osx-template
+#   <<: *build-and-test-template
+#   tags:
+#     - macos
+#   script:
+#     - mkdir -p log
+#     - export OS_VERSION="osx"
+#     - export NUM_CPUS=8
+#     - bash -x ./.gitlab-ci/build-and-test.sh |
+#       tee log/${OS_VERSION}_${BUILD_TYPE}.log
 
 
 # build-and-test-osx-default:
@@ -313,3 +313,37 @@ warnings-buster-default:
 
 # warnings-osx-full:
 #   <<: *compiler-warning-template
+
+
+# ################################################
+# #################  WINDOWS  ####################
+# ################################################
+
+build-and-test-win7-default:
+  <<: *build-and-test-template
+  tags:
+    - win7
+  script:
+    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;" + $Env:path
+    - echo $Env:path
+    - mkdir build
+    - cd build
+    - cmake.exe -G "Visual Studio 12 2013 Win64" --config Debug ..
+    - cmake.exe --build . --target ALL_BUILD --config Debug
+    - cmake.exe --build . --target INSTALL --config Debug
+    - ctest --output-on-failure -C Debug -j3
+
+
+build-and-test-win10-default:
+  <<: *build-and-test-template
+  tags:
+    - win10
+  script:
+    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;$CI_PROJECT_DIR\build\ThirdParty\dist\bin;" + $Env:path
+    - echo $Env:path
+    - mkdir build
+    - cd build
+    - cmake.exe -G "Visual Studio 14 2015 Win64" --config Debug ..
+    - cmake.exe --build . --target ALL_BUILD --config Debug
+    - cmake.exe --build . --target INSTALL --config Debug
+    - ctest --output-on-failure -C Debug -j3

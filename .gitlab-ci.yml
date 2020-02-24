@@ -319,31 +319,31 @@ stages:
 # #################  WINDOWS  ####################
 # ################################################
 
-build-and-test-win7-default:
-  <<: *build-and-test-template
-  tags:
-    - win7
-  script:
-    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;" + $Env:path
-    - echo $Env:path
-    - mkdir build
-    - cd build
-    - cmake.exe -G "Visual Studio 12 2013 Win64" --config Debug ..
-    - cmake.exe --build . --target ALL_BUILD --config Debug
-    - cmake.exe --build . --target INSTALL --config Debug
-    - ctest --output-on-failure -C Debug -j3
+# build-and-test-win7-default:
+#   <<: *build-and-test-template
+#   tags:
+#     - win7
+#   script:
+#     - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;" + $Env:path
+#     - echo $Env:path
+#     - mkdir build
+#     - cd build
+#     - cmake.exe -G "Visual Studio 12 2013 Win64" --config Debug ..
+#     - cmake.exe --build . --target ALL_BUILD --config Debug
+#     - cmake.exe --build . --target INSTALL --config Debug
+#     - ctest --output-on-failure -C Debug -j3
 
 
-build-and-test-win10-default:
-  <<: *build-and-test-template
-  tags:
-    - win10
-  script:
-    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;$CI_PROJECT_DIR\build\ThirdParty\dist\bin;" + $Env:path
-    - echo $Env:path
-    - mkdir build
-    - cd build
-    - cmake.exe -G "Visual Studio 14 2015 Win64" --config Debug ..
-    - cmake.exe --build . --target ALL_BUILD --config Debug
-    - cmake.exe --build . --target INSTALL --config Debug
-    - ctest --output-on-failure -C Debug -j3
+# build-and-test-win10-default:
+#   <<: *build-and-test-template
+#   tags:
+#     - win10
+#   script:
+#     - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;$CI_PROJECT_DIR\build\ThirdParty\dist\bin;" + $Env:path
+#     - echo $Env:path
+#     - mkdir build
+#     - cd build
+#     - cmake.exe -G "Visual Studio 14 2015 Win64" --config Debug ..
+#     - cmake.exe --build . --target ALL_BUILD --config Debug
+#     - cmake.exe --build . --target INSTALL --config Debug
+#     - ctest --output-on-failure -C Debug -j3

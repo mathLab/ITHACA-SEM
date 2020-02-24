@@ -61,7 +61,6 @@ stages:
         docker rmi $FAIL_IMAGE;
       fi
     - docker rm $CONTAINER_NAME
-    - docker rmi $ENV_IMAGE
     - exit $exit_code;
   artifacts:
     paths:

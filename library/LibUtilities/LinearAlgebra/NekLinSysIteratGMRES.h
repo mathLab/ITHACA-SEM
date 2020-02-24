@@ -36,19 +36,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_GMRES_H
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_GMRES_H
 
-#include <boost/circular_buffer.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicUtils/NekManager.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/BasicUtils/Vmath.hpp>
-#include <LibUtilities/LibUtilitiesDeclspec.h>
-#include <LibUtilities/Communication/Comm.h>
-#include <LibUtilities/LinearAlgebra/NekVector.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekLinSysIterat.h>
-#include <iomanip>
 namespace Nektar
 {
     namespace LibUtilities
@@ -144,15 +132,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &pInput,
                     Array<OneD,       NekDouble> &pOutput,
                 const int pNumDir);
-            void UpdateKnownSolutions(
-                const int pGlobalBndDofs,
-                const Array<OneD, const NekDouble> &pSolution,
-                const int pNumDirBndDofs);
-            NekDouble CalculateAnorm(
-                const int nGlobal,
-                const Array<OneD, const NekDouble> &in,
-                const int nDir);
-            
             /// Actual iterative gmres solver for one restart
             NekDouble DoGmresRestart(
                 const bool                         restarted,

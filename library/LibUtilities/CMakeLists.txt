@@ -224,7 +224,6 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/SparseUtils.hpp
     ./LinearAlgebra/NekLinSysIterat.h
     ./LinearAlgebra/NekLinSysIteratGMRES.h
-    ./LinearAlgebra/NekLinSysIterative.h
     ./LinearAlgebra/NekNonlinLinSys.h
     ./LinearAlgebra/NekNonlinSys.h
     ./LinearAlgebra/NekNonlinSysNewton.h
@@ -246,7 +245,6 @@ SET(LinearAlgebraSources
     ./LinearAlgebra/SparseMatrix.cpp
     ./LinearAlgebra/NekLinSysIterat.cpp
     ./LinearAlgebra/NekLinSysIteratGMRES.cpp
-    ./LinearAlgebra/NekLinSysIterative.cpp
     ./LinearAlgebra/NekNonlinLinSys.cpp
     ./LinearAlgebra/NekNonlinSys.cpp
     ./LinearAlgebra/NekNonlinSysNewton.cpp

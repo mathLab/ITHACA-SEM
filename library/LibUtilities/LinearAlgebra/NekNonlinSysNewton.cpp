@@ -127,9 +127,6 @@ namespace Nektar
 
             m_linsol    = MemoryManager<NekLinSysIteratGMRES>::AllocateSharedPtr(m_session,m_Comm,m_SysDimen); 
 
-            // NonlinLinSysOperators operators;
-            // operators.DefineNonlinLinSysLhsEval(&m_operator.DoNonlinLinSysLhsEval, m_operator);
-            // operators.DefineNonlinLinPrecond(&m_operator.DoNonlinLinPrecond, m_operator);
             m_linsol->setSysOperators(m_operator);
         }
 
@@ -197,18 +194,6 @@ namespace Nektar
             {
                 m_SysResNorm0 = m_SysResNorm;
                 resratio = 1.0;
-
-                // if(m_Res0PreviousStep<0.0)
-                // {
-                //     m_Res0PreviousStep = m_SysResNorm0;
-                //     ratioSteps         = 1.0;
-                // }
-                // else
-                // {
-                //     ratioSteps         = m_Res0PreviousStep/m_SysResNorm0;
-                //     m_Res0PreviousStep = m_SysResNorm0;
-                // }
-
             }
             else
             {

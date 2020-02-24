@@ -118,13 +118,13 @@ namespace Nektar
                         m_precon->BuildPreconditioner();
                     }
                     LibUtilities::CommSharedPtr v_Comm = m_expList.lock()->GetComm()->GetRowComm();
-                    m_linsol    = MemoryManager<NekLinSysIterative>::AllocateSharedPtr(m_expList.lock()->GetSession(),v_Comm); 
+                    m_linsol    = MemoryManager<LibUtilities::NekLinSysIteratGMRES>::AllocateSharedPtr(m_expList.lock()->GetSession(),v_Comm,nGlobal-nDir); 
 
-                    m_LinSysOprtors.DefineMatrixMultiply(&GlobalLinSysIterative::DoMatrixMultiplyFlag, this);
-                    m_LinSysOprtors.DefinePrecond(&GlobalLinSysIterative::DoPreconditionerFlag, this);
-                    m_linsol->setLinSysOperators(m_LinSysOprtors);
+                    m_LinSysOprtors.DefineNonlinLinSysLhsEval(&GlobalLinSysIterative::DoMatrixMultiplyFlag, this);
+                    m_LinSysOprtors.DefineNonlinLinPrecond(&GlobalLinSysIterative::DoPreconditionerFlag, this);
+                    m_linsol->setSysOperators(m_LinSysOprtors);
                     
-                    int ntmpGMRESIts =  m_linsol->SolveLinearSystem(nGlobal,pInput, pOutput,nDir,m_tolerance);
+                    int ntmpGMRESIts =  m_linsol->SolveSystem(nGlobal,pInput, pOutput,nDir,m_tolerance);
                     boost::ignore_unused(ntmpGMRESIts);
                     
                     break;

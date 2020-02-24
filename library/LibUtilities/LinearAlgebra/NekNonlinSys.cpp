@@ -41,25 +41,25 @@ namespace Nektar
 {       
     namespace LibUtilities
     {
-    /**
-     * @class  NekNonlinSys
-     *
-     * Solves a linear system using iterative methods.
-     */
+        /**
+         * @class  NekNonlinSys
+         *
+         * Solves a linear system using iterative methods.
+         */
 
-    /// Constructor for full direct matrix solve.
-    NekNonlinSys::NekNonlinSys(
-        const LibUtilities::SessionReaderSharedPtr  &pSession,
-        const LibUtilities::CommSharedPtr           &vComm,
-        const int                                   nDimen)
-        : NekNonlinLinSys(pSession, vComm, nDimen)
-    {
-        boost::ignore_unused(pSession,vComm,nDimen);
-    }
+        /// Constructor for full direct matrix solve.
+        NekNonlinSys::NekNonlinSys(
+            const LibUtilities::SessionReaderSharedPtr  &pSession,
+            const LibUtilities::CommSharedPtr           &vComm,
+            const int                                   nDimen)
+            : NekNonlinLinSys(pSession, vComm, nDimen)
+        {
+            boost::ignore_unused(pSession,vComm,nDimen);
+        }
 
-    NekNonlinSys::~NekNonlinSys()
-    {
-    }
+        NekNonlinSys::~NekNonlinSys()
+        {
+        }
     }
 }
 

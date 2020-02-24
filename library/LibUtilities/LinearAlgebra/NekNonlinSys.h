@@ -36,20 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINSYS_H
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINSYS_H
 
-#include <boost/core/ignore_unused.hpp>
-
-#include <boost/circular_buffer.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicUtils/NekManager.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/BasicUtils/Vmath.hpp>
-#include <LibUtilities/LibUtilitiesDeclspec.h>
-#include <LibUtilities/Communication/Comm.h>
-#include <LibUtilities/LinearAlgebra/NekVector.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-#include <iomanip>
 #include <LibUtilities/LinearAlgebra/NekNonlinLinSys.h>
 
 namespace Nektar

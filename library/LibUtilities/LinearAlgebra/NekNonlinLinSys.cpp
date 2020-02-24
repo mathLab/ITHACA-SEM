@@ -41,40 +41,38 @@ namespace Nektar
 {       
     namespace LibUtilities
     {
-    /**
-     * @class  NekNonlinLinSys
-     *
-     * Solves a linear system using iterative methods.
-     */
+        /**
+         * @class  NekNonlinLinSys
+         *
+         * Solves a linear system using iterative methods.
+         */
 
-    /// Constructor for full direct matrix solve.
-    NekNonlinLinSys::NekNonlinLinSys(
-        const LibUtilities::SessionReaderSharedPtr  &pSession,
-        const LibUtilities::CommSharedPtr           &vComm,
-        const int                                   nDimen)
-    {
-        m_session = pSession;
-        m_tolerance         =   1.0E-15;
-        m_verbose           =   false;
-        m_root              =   false;
-        m_Comm              =   vComm;
-
-        if (0==m_Comm->GetRank())
+        /// Constructor for full direct matrix solve.
+        NekNonlinLinSys::NekNonlinLinSys(
+            const LibUtilities::SessionReaderSharedPtr  &pSession,
+            const LibUtilities::CommSharedPtr           &vComm,
+            const int                                   nDimen)
         {
-            m_root              =   true;
+            m_session = pSession;
+            m_tolerance         =   NekConstants::kNekIterativeTol;
+            m_verbose           =   false;
+            m_root              =   false;
+            m_Comm              =   vComm;
+
+            if (0==m_Comm->GetRank())
+            {
+                m_root              =   true;
+            }
+            m_verbose   =   pSession->DefinesCmdLineArgument("verbose");
+
+            m_converged = false;
+
+            m_SysDimen = nDimen;
         }
-        m_verbose   =   pSession->DefinesCmdLineArgument("verbose");
 
-        m_converged = false;
-
-        m_SysDimen = nDimen;
+        NekNonlinLinSys::~NekNonlinLinSys()
+        {
+        }
     }
-
-    NekNonlinLinSys::~NekNonlinLinSys()
-    {
-    }
-
-    }
-
 }
 

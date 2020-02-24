@@ -57,11 +57,6 @@ namespace Nektar
                     const int                                   nscale);
                 LIB_UTILITIES_EXPORT ~NekNonlinSysNewton();
                 
-                // int GetMaxLinIte()
-                // {
-                //     return (m_maxrestart*m_maxstorage);
-                // }
-
                 LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> & GetRefSolution() const
                 {
                     return m_Solution;
@@ -74,8 +69,7 @@ namespace Nektar
             
             protected:
 
-                NekLinSysIteratSharedPtr                 m_linsol;
-
+                NekLinSysIteratSharedPtr                    m_linsol;
                 // int                                         m_maxstorage;
                 int                                         m_MaxNonlinIte;
 
@@ -104,7 +98,6 @@ namespace Nektar
                 Array<OneD, NekDouble>  m_Solution;
                 Array<OneD, NekDouble>  m_Residual;
                 Array<OneD, NekDouble>  m_DeltSltn;
-
         };
     }
 }

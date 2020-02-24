@@ -55,7 +55,23 @@ namespace Nektar
             const int                                   nDimen)
             : NekNonlinLinSys(pSession,vComm, nDimen)
         {
+            std::vector<std::string>  variables(1);
+            variables[0] =  pSession->GetVariable(0);
+            string variable = variables[0];
 
+            if(pSession->DefinesGlobalSysSolnInfo(variable,
+                                              "LinIteratSolverTolerance"))
+            {
+                m_tolerance = boost::lexical_cast<NekDouble>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "LinIteratSolverTolerance").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("LinIteratSolverTolerance",
+                                        m_tolerance,
+                                        NekConstants::kNekIterativeTol);
+            }
         }
 
         void NekLinSysIterat::v_InitObject()

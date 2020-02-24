@@ -37,7 +37,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
-#include <LibUtilities/LinearAlgebra/NekLinSysIterative.h>
+#include <LibUtilities/LinearAlgebra/NekLinSysIteratGMRES.h>
 #include <boost/circular_buffer.hpp>
 
 namespace Nektar
@@ -93,9 +93,9 @@ namespace Nektar
             /// Total counter of previous solutions
             int m_numPrevSols;
 
-            LinSysOperators                             m_LinSysOprtors;
+            LibUtilities::NonlinLinSysOperators                       m_LinSysOprtors;
 
-            NekLinSysIterativeSharedPtr                 m_linsol;
+            LibUtilities::NekLinSysIteratSharedPtr                    m_linsol;
 
             static std::string IteratSolverlookupIds[];
             static std::string IteratSolverdef;

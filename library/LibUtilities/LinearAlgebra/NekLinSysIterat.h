@@ -36,19 +36,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_H
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_H
 
-#include <boost/circular_buffer.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicUtils/NekManager.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/BasicUtils/Vmath.hpp>
-#include <LibUtilities/LibUtilitiesDeclspec.h>
-#include <LibUtilities/Communication/Comm.h>
-#include <LibUtilities/LinearAlgebra/NekVector.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekNonlinLinSys.h>
-#include <iomanip>
 namespace Nektar
 {
     namespace LibUtilities
@@ -83,7 +71,6 @@ namespace Nektar
                     NekLinSysIterat>::AllocateSharedPtr(pSession, vComm,nDimen);
                 return p;
             }
-            /// Constructor for full direct matrix solve.
             LIB_UTILITIES_EXPORT NekLinSysIterat(
                 const LibUtilities::SessionReaderSharedPtr  &pSession,
                 const LibUtilities::CommSharedPtr           &vComm,

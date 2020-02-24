@@ -70,7 +70,7 @@ namespace Nektar
                 "flag_LeftPrecond", "True", m_flag_LeftPrecond, false);
             pSession->MatchSolverInfo(
                 "flag_RightPrecond", "False", m_flag_RightPrecond, true);
-
+            
             if(pSession->DefinesGlobalSysSolnInfo(variable,
                                                 "MaxRestart"))
             {
@@ -138,15 +138,6 @@ namespace Nektar
         void NekLinSysIteratGMRES::v_InitObject()
         {
             NekLinSysIterat::v_InitObject();
-            // m_Residual = Array<OneD, NekDouble> (m_SysDimen,0.0);
-            // m_DeltSltn = Array<OneD, NekDouble> (m_SysDimen,0.0);
-
-            // m_linsol    = MemoryManager<NekLinSysIterative>::AllocateSharedPtr(m_session,m_Comm); 
-
-            // NonlinLinSysOperators operators;
-            // operators.DefineNonlinLinSysLhsEval(&m_operator.DoNonlinLinSysLhsEval, m_operator);
-            // operators.DefineNonlinLinPrecond(&m_operator.DoNonlinLinPrecond, m_operator);
-            // m_linsol->setLinSysOperators(m_operator);
         }
 
 
@@ -165,24 +156,14 @@ namespace Nektar
             const NekDouble                     tol,
             const NekDouble                     factor)
         {
-            ASSERTL0(0==nDir,"0!=nDir not tested");
-            ASSERTL0(m_SysDimen==nGlobal, "m_SysDimen!=nGlobal");
+            m_map =  Array<OneD,      int>(nGlobal,1);
 
-            boost::ignore_unused(factor);
+            boost::ignore_unused(tol);
 
             m_tolerance = max(tol,1.0E-16);
             m_prec_factor = factor;
             int niterations = DoGMRES(nGlobal, pInput, pOutput, nDir);
 
-            /* //LinIteratSovler pType = eGMRES;
-            switch(1)
-            {
-            case eGMRES:
-                break;
-            default:
-                ASSERTL0(false, "LinIteratSovler NOT CORRECT.");
-                break;
-            } */
             return niterations;
         }
 
@@ -195,7 +176,6 @@ namespace Nektar
             boost::ignore_unused(nIteration,Residual,tol);
             return converged;
         }
-
 
         /**  
         * Solve a global linear system using the Gmres 
@@ -226,7 +206,6 @@ namespace Nektar
                 Set_Rhs_Magnitude(inGlob);
             }
 
-
             // Get vector sizes
             NekDouble eps = 0.0;
             int nNonDir = nGlobal - nDir;
@@ -244,7 +223,6 @@ namespace Nektar
             bool restarted = false;
             bool truncted = false;
 
-
             // m_maxstorage = 5;
             // m_maxrestart = m_maxiter / m_maxstorage + 1;
             // default truncted Gmres(m) closed
@@ -254,7 +232,7 @@ namespace Nektar
                 truncted = true;
             }
 
-            int nwidthcolm = 10;
+            int nwidthcolm = 13;
 
             for(int nrestart = 0; nrestart < m_maxrestart; ++nrestart)
             {
@@ -307,7 +285,6 @@ namespace Nektar
 
             WARNINGL0(m_converged, "GMRES did not converged !!");
             return m_totalIterations;
-
         }
 
         NekDouble  NekLinSysIteratGMRES::DoGmresRestart(
@@ -536,7 +513,6 @@ namespace Nektar
             return eps;
         }
 
-
         // Arnoldi Subroutine
         void  NekLinSysIteratGMRES::DoArnoldi(
             const int starttem,
@@ -599,34 +575,30 @@ namespace Nektar
             }
             // end of Modified Gram-Schmidt
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //         // Classical Gram-Schmidt
-    //         int number = endtem - starttem;
-    //         Array<OneD,NekDouble> vExchangeArray(number, 0.0);
-    //         numbertem=0;
-    //         for (int i = starttem; i < endtem; ++i)
-    //         {
-    //             vExchangeArray[numbertem] =
-    //                 Vmath::Dot2(nNonDir, &w[0] + nDir, &V_local[i][0] + nDir,
-    //                             &m_map[0] + nDir);
-    //             numbertem = numbertem + 1;
-    //         }
-
-    // #ifdef DEBUG_MPI
-    //         m_Comm->AllReduce(vExchangeArray,  LibUtilities::ReduceSum);
-    // #endif // DEBUG
-
-    //         numbertem = 0;
-    //         for (int i = starttem; i < endtem; ++i)
-    //         {
-    //             hsingle[i] = vExchangeArray[numbertem];
-    //             beta       = -1.0 * vExchangeArray[numbertem];
-    //             Vmath::Svtvp(nNonDir, beta, &V_local[i][0] + nDir, 1,
-    //                          &w[0] + nDir, 1, &w[0] + nDir, 1);
-    //             numbertem = numbertem + 1;
-    //         }
-    //         // end of Classical Gram-Schmidt
-    //         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // // Classical Gram-Schmidt
+            // int number = endtem - starttem;
+            // Array<OneD,NekDouble> vExchangeArray(number, 0.0);
+            // numbertem=0;
+            // for (int i = starttem; i < endtem; ++i)
+            // {
+            //     vExchangeArray[numbertem] =
+            //         Vmath::Dot2(nNonDir, &w[0] + nDir, &V_local[i][0] + nDir,
+            //                     &m_map[0] + nDir);
+            //     numbertem = numbertem + 1;
+            // }
+            // m_Comm->AllReduce(vExchangeArray,  LibUtilities::ReduceSum);
+            // numbertem = 0;
+            // for (int i = starttem; i < endtem; ++i)
+            // {
+            //     hsingle[i] = vExchangeArray[numbertem];
+            //     beta       = -1.0 * vExchangeArray[numbertem];
+            //     Vmath::Svtvp(nNonDir, beta, &V_local[i][0] + nDir, 1,
+            //                  &w[0] + nDir, 1, &w[0] + nDir, 1);
+            //     numbertem = numbertem + 1;
+            // }
+            // // end of Classical Gram-Schmidt
+            // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             // calculate the L2 norm and normalize
             vExchange = Vmath::Dot2(nNonDir,
@@ -641,8 +613,6 @@ namespace Nektar
             alpha = 1.0 / hsingle[endtem];
             Vmath::Smul(nNonDir, alpha, &w[0] + nDir, 1, &Vsingle2[0] + nDir, 1);
         }
-
-
 
         // QR factorization through Givens rotation
         void  NekLinSysIteratGMRES::DoGivensRotation(

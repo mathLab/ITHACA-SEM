@@ -3,14 +3,12 @@ stages:
   - build-env-full
   - build-and-test
   - compiler-warnings
-  - build-docs
-  - publish
 
 .execution-conditions: &execution-conditions
   only:
     refs:
       - merge_requests
-      - gitlab_ci_win7
+      - feature/gitlab_ci
       - tags
 
 .build-env-template: &build-env-template
@@ -27,8 +25,8 @@ stages:
   tags:
     - docker
   script:
-    - OS_VERSION=$(echo $CI_JOB_NAME | cut -d- -f 4)
-    - BUILD_TYPE=$(echo $CI_JOB_NAME | cut -d- -f 5)
+    - OS_VERSION=$(echo $CI_JOB_NAME | cut -d- -f 1)
+    - BUILD_TYPE=$(echo $CI_JOB_NAME | cut -d- -f 2)
     - export CCACHE_DIR=/cache/nektar/$OS_VERSION/
     - export NUM_CPUS=2
     - export CONTAINER_NAME=test-$CI_JOB_ID
@@ -72,8 +70,8 @@ stages:
     WARNING_REGEX: '.*warning[: ].*'
     GIT_STRATEGY: none
   script:
-    - export OS=$(echo $CI_JOB_NAME | cut -d- -f 2)
-    - export BUILD_TYPE=$(echo $CI_JOB_NAME | cut -d- -f 3)
+    - export OS=$(echo $CI_JOB_NAME | cut -d- -f 1)
+    - export BUILD_TYPE=$(echo $CI_JOB_NAME | cut -d- -f 2)
     - export LOG_FILE="log/${OS}_${BUILD_TYPE}.log"
     - if [ $(grep -c "$WARNING_REGEX" $LOG_FILE) -ne 0 ];
       then
@@ -93,9 +91,9 @@ stages:
   variables:
     OS_DISTRO: debian
   script:
-    - OS_VERSION=$(echo $CI_JOB_NAME | cut -d- -f 3)
-    - BUILD_TYPE=$(echo $CI_JOB_STAGE | cut -d- -f 3)
-    - sed  -e "s %%OS_VERSION%% $OS_VERSION g" -e "s %%REGISTRY%% $CI_REGISTRY_IMAGE g" docker/nektar-env/Dockerfile_${OS_DISTRO}_${BUILD_TYPE} > Dockerfile
+    - OS_VERSION=$(echo $CI_JOB_NAME | cut -d- -f 1)
+    - BUILD_TYPE=$(echo $CI_JOB_NAME | cut -d- -f 2)
+    - sed -e "s %%OS_VERSION%% $OS_VERSION g" -e "s %%REGISTRY%% $CI_REGISTRY_IMAGE g" docker/nektar-env/Dockerfile_${OS_DISTRO}_${BUILD_TYPE} > Dockerfile
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - export IMAGE=$CI_REGISTRY_IMAGE:env-${OS_VERSION}-${BUILD_TYPE}
     - docker build --pull -t $IMAGE .
@@ -106,51 +104,51 @@ stages:
   stage:
     build-env-full
 
-# build-env-buster-default:
-#   <<: *build-env-debian-template-default
+buster-default-build-env:
+  <<: *build-env-debian-template-default
 
-# build-env-buster-full:
+# buster-full-build-env:
 #   <<: *build-env-debian-template-full
 
-# build-env-stretch-default:
+# stretch-default-build-env:
 #   <<: *build-env-debian-template-default
 
-# build-env-stretch-full:
+# stretch-full-build-env:
 #   <<: *build-env-debian-template-full
 
-# build-and-test-buster-default:
-#   <<: *build-and-test-template
+buster-default-build-and-test:
+  <<: *build-and-test-template
 
-# build-and-test-buster-full:
+# buster-full-build-and-test:
 #   <<: *build-and-test-template
 #   variables:
 #     OS_DISTRO: debian
 #     GIT_SUBMODULE_STRATEGY: recursive
 
-# build-and-test-stretch-default:
+# stretch-default-build-and-test:
 #   <<: *build-and-test-template
 
-# build-and-test-stretch-full:
+# stretch-full-build-and-test:
 #   <<: *build-and-test-template
 
 
-# # COMPILER WARNINGS
-# warnings-buster-default:
+# COMPILER WARNINGS
+buster-default-warnings:
+  <<: *compiler-warning-template
+
+# buster-full-warnings:
 #   <<: *compiler-warning-template
 
-# warnings-buster-full:
+# stretch-default-warnings:
 #   <<: *compiler-warning-template
 
-# warnings-stretch-default:
-#   <<: *compiler-warning-template
-
-# warnings-stretch-full:
+# stretch-full-warnings:
 #   <<: *compiler-warning-template
 #   dependencies:
 #     build-and-test-buster-default
 
 
-# build-env-buster-documentation:
+# buster-documentation-build-env:
 #   tags:
 #     - shell
 #   stage:
@@ -168,7 +166,7 @@ stages:
 #   tags:
 #     - docker
 
-# build-user-guide:
+# user-guide-build:
 #   <<: *build-documentation-template
 #   script:
 #     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
@@ -180,7 +178,7 @@ stages:
 #       - build/docs/developer-guide/developers-guide.pdf
 #       - build/docs/developer-guide/html
 
-# build-doxygen:
+# doxygen-build:
 #   <<: *build-documentation-template
 #   script:
 #     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
@@ -189,7 +187,7 @@ stages:
 #     paths:
 #       - build/docs/doxygen/html/
 
-# build-tutorials:
+# tutorials-build:
 #   <<: *build-documentation-template
 #   variables:
 #     GIT_SUBMODULE_STRATEGY: recursive
@@ -216,41 +214,41 @@ stages:
 #   stage:
 #     build-env-full
     
-# build-env-bionic-default:
+# bionic-default-build-env:
 #   <<: *build-env-ubuntu-template-default
 
-# build-env-bionic-full:
+# bionic-full-build-env:
 #   <<: *build-env-ubuntu-template-full
 
-# build-env-xenial-default:
+# xenial-default-build-env:
 #   <<: *build-env-ubuntu-template-default
 
-# build-env-xenial-full:
+# xenial-full-build-env:
 #   <<: *build-env-ubuntu-template-full
 
-# build-env-trusty-default:
+# trusty-default-build-env:
 #   <<: *build-env-ubuntu-template-default
 
-# build-env-trusty-full:
+# trusty-full-build-env:
 #   <<: *build-env-ubuntu-template-full
 
 
-# build-and-test-bionic-default:
+# bionic-default-build-and-test:
 #   <<: *build-and-test-template
 
-# build-and-test-bionic-full:
+# bionic-full-build-and-test:
 #   <<: *build-and-test-template
 
-# build-and-test-xenial-default:
+# xenial-default-build-and-test:
 #   <<: *build-and-test-template
 
-# build-and-test-xenial-full:
+# xenial-full-build-and-test:
 #   <<: *build-and-test-template
 
-# build-and-test-trusty-default:
+# trusty-default-build-and-test:
 #   <<: *build-and-test-template
 
-# build-and-test-trusty-full:
+# trusty-full-build-and-test:
 #   <<: *build-and-test-template
 
 
@@ -268,16 +266,16 @@ stages:
 #   stage:
 #     build-env-full
 
-# build-env-centos7-default:
+# centos7-default-build-env:
 #   <<: *build-env-centos-template-default
 
-# build-env-centos7-full:
+# centos7-full-build-env:
 #   <<: *build-env-centos-template-full
 
-# build-and-test-centos7-default:
+# centos7-default-build-and-test:
 #   <<: *build-and-test-template
 
-# build-and-test-centos7-full:
+# centos7-full-build-and-test:
 #   <<: *build-and-test-template
 
 
@@ -297,21 +295,21 @@ stages:
 #       tee log/${OS_VERSION}_${BUILD_TYPE}.log
 
 
-# build-and-test-osx-default:
+# osx-default-build-and-test:
 #   <<: *build-and-test-osx-template
 #   variables:
 #     BUILD_TYPE: "default"
 
-# build-and-test-osx-full:
+# osx-full-build-and-test:
 #   <<: *build-and-test-osx-template
 #   variables:
 #     BUILD_TYPE: "full"
 
 
-# warnings-osx-default:
+# osx-default-warnings:
 #   <<: *compiler-warning-template
 
-# warnings-osx-full:
+# osx-full-warnings:
 #   <<: *compiler-warning-template
 
 
@@ -319,7 +317,7 @@ stages:
 # #################  WINDOWS  ####################
 # ################################################
 
-# build-and-test-win7-default:
+# win7-default-build-and-test:
 #   <<: *build-and-test-template
 #   tags:
 #     - win7
@@ -334,7 +332,7 @@ stages:
 #     - ctest --output-on-failure -C Debug -j3
 
 
-# build-and-test-win10-default:
+# win10-default-build-and-test:
 #   <<: *build-and-test-template
 #   tags:
 #     - win10

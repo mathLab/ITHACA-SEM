@@ -67,7 +67,7 @@ stages:
   <<: *execution-conditions
   stage: compiler-warnings
   tags:
-    - shell
+    - docker
   variables:
     WARNING_REGEX: '.*warning[: ].*'
     GIT_STRATEGY: none

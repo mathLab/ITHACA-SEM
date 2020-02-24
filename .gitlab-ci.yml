@@ -8,7 +8,7 @@ stages:
   only:
     refs:
       - merge_requests
-      - feature/gitlab_ci
+      - master
       - tags
     changes:
       - "**/*"

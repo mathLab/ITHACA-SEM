@@ -59,38 +59,9 @@ namespace Nektar
             const int                                   nDimen)
             : NekLinSysIterat(pSession, vComm, nDimen)
         {
-            m_prec_factor       =   1.0;
             std::vector<std::string>  variables(1);
             variables[0] =  pSession->GetVariable(0);
             string variable = variables[0];
-
-            if(pSession->DefinesGlobalSysSolnInfo(variable,
-                                                  "IterativeSolverTolerance"))
-            {
-                m_tolerance = boost::lexical_cast<NekDouble>(
-                        pSession->GetGlobalSysSolnInfo(variable,
-                                "IterativeSolverTolerance").c_str());
-            }
-            else
-            {
-                pSession->LoadParameter("IterativeSolverTolerance",
-                                        m_tolerance,
-                                        NekConstants::kNekIterativeTol);
-            }
-
-            if(pSession->DefinesGlobalSysSolnInfo(variable,
-                                                  "MaxIterations"))
-            {
-                m_maxiter = boost::lexical_cast<int>(
-                        pSession->GetGlobalSysSolnInfo(variable,
-                                "MaxIterations").c_str());
-            }
-            else
-            {
-                pSession->LoadParameter("MaxIterations",
-                                        m_maxiter,
-                                        5000);
-            }
 
             if(pSession->DefinesGlobalSysSolnInfo(variable,"SuccessiveRHS"))
             {
@@ -105,7 +76,6 @@ namespace Nektar
             }
 
             int successiveRHS;
-            
             if((successiveRHS = m_successiveRHS))
             {
                 m_prevLinSol.set_capacity(successiveRHS);

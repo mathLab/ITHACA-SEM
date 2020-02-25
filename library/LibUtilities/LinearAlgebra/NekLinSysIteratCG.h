@@ -83,19 +83,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT ~NekLinSysIteratCG();
             
         protected:
-            /// maximum iterations
-            int                                         m_maxiter;
+
             int                                         m_successiveRHS;
-
-            /// Tolerance of iterative solver.
-            NekDouble                                   m_tolerance;
-
-            /// cnt to how many times rhs_magnitude is called 
-            NekDouble                                   m_rhs_mag_sm = 0.9; 
-            NekDouble                                   m_prec_factor;
-            
-            int                                         m_totalIterations = 0;
-
             /// Whether to apply projection technique
             bool                                        m_useProjection = false;
 

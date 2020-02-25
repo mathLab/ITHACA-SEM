@@ -93,13 +93,6 @@ namespace Nektar
             int                                         m_maxstorage;
             /// maximum bandwidth of Hessenburg matrix if use truncted Gmres(m)
             int                                         m_maxhesband;
-            int                                         m_totalIterations;
-            /// dot product of rhs to normalise stopping criterion
-            NekDouble                                   m_prec_factor;
-            /// cnt to how many times rhs_magnitude is called
-            NekDouble                                   m_rhs_mag_sm;
-            /// Whether to apply projection technique
-            bool                                        m_useProjection;
 
             bool                                        m_flag_LeftPrecond   = false;
             bool                                        m_flag_RightPrecond  = true;

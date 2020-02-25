@@ -97,6 +97,16 @@ namespace Nektar
 
             /// dot product of rhs to normalise stopping criterion
             NekDouble                                   m_rhs_magnitude = NekConstants::kNekUnsetDouble;
+                        /// maximum iterations
+            int                                         m_maxiter;
+            /// Tolerance of iterative solver.
+            NekDouble                                   m_tolerance;
+
+            int                                         m_totalIterations = 0;
+            /// cnt to how many times rhs_magnitude is called 
+            NekDouble                                   m_rhs_mag_sm = 0.9; 
+
+            NekDouble                                   m_prec_factor = 1.0;
 
             virtual void v_InitObject();
         private:

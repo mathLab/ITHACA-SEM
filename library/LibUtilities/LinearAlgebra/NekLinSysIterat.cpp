@@ -77,6 +77,20 @@ namespace Nektar
                                         m_tolerance,
                                         NekConstants::kNekIterativeTol);
             }
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable,
+                                                  "MaxIterations"))
+            {
+                m_maxiter = boost::lexical_cast<int>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "MaxIterations").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("MaxIterations",
+                                        m_maxiter,
+                                        5000);
+            }
         }
 
         void NekLinSysIterat::v_InitObject()

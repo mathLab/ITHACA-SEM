@@ -59,13 +59,9 @@ namespace Nektar
             const int                                   nDimen)
             : NekLinSysIterat(pSession, vComm, nDimen)
         {
-            m_maxrestart        =   1;
             m_maxstorage        =   30;
             m_maxhesband        =   30;
             // m_maxiter           =   60;
-            m_rhs_magnitude     =   1.0;
-            m_prec_factor       =   1.0;
-            m_rhs_mag_sm        =   1.0;
             std::vector<std::string>  variables(1);
             variables[0] =  pSession->GetVariable(0);
             string variable = variables[0];
@@ -75,19 +71,6 @@ namespace Nektar
             pSession->MatchSolverInfo(
                 "flag_RightPrecond", "False", m_flag_RightPrecond, true);
             
-            if(pSession->DefinesGlobalSysSolnInfo(variable,
-                                                "MaxRestart"))
-            {
-                m_maxrestart = boost::lexical_cast<int>(
-                        pSession->GetGlobalSysSolnInfo(variable,
-                                "MaxRestart").c_str());
-            }
-            else
-            {
-                pSession->LoadParameter("MaxRestart",
-                                        m_maxrestart,
-                                        1);
-            }
             if(pSession->DefinesGlobalSysSolnInfo(variable,
                                                 "MaxStorage"))
             {
@@ -114,6 +97,8 @@ namespace Nektar
                                         m_maxhesband,
                                         m_maxstorage+1);
             }
+
+            m_maxrestart = ceil(NekDouble(m_maxiter)/NekDouble(m_maxstorage));
 
             int flaguseCentralDifference = 0;
             pSession->LoadParameter("flaguseCentralDifference",

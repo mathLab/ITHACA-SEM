@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File  NekLinSysIteratFixedpoint.h
+// File  NekLinSysIteratFixedpointJacobi.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: NekLinSysIteratFixedpoint header
+// Description: NekLinSysIteratFixedpointJacobi header
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_FIXEDPOINT_H
-#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_FIXEDPOINT_H
+#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_FIXEDPOINTJACOBI_H
+#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_FIXEDPOINTJACOBI_H
 
 #include <LibUtilities/LinearAlgebra/NekLinSysIterat.h>
 namespace Nektar
@@ -42,16 +42,16 @@ namespace Nektar
     namespace LibUtilities
     {   
         /// A global linear system.
-        class  NekLinSysIteratFixedpoint;
+        class  NekLinSysIteratFixedpointJacobi;
 
-        typedef std::shared_ptr<NekLinSysIteratFixedpoint> NekLinSysIteratFixedpointSharedPtr;
+        typedef std::shared_ptr<NekLinSysIteratFixedpointJacobi> NekLinSysIteratFixedpointJacobiSharedPtr;
         
-        class  NekLinSysIteratFixedpoint : public NekLinSysIterat
+        class  NekLinSysIteratFixedpointJacobi : public NekLinSysIterat
         {
         public:
 
             /// Support creation through MemoryManager.
-            friend class MemoryManager<NekLinSysIteratFixedpoint>;
+            friend class MemoryManager<NekLinSysIteratFixedpointJacobi>;
             /**
              * @brief Creates an instance of the SessionReader class.
              *
@@ -68,18 +68,18 @@ namespace Nektar
                 const LibUtilities::CommSharedPtr           &vComm,
                 const int                                   nDimen)
             {
-                NekLinSysIteratFixedpointSharedPtr p = MemoryManager<
-                    NekLinSysIteratFixedpoint>::AllocateSharedPtr(pSession, vComm, nDimen);
+                NekLinSysIteratFixedpointJacobiSharedPtr p = MemoryManager<
+                    NekLinSysIteratFixedpointJacobi>::AllocateSharedPtr(pSession, vComm, nDimen);
                 p->InitObject();
                 return p;
             }
             static std::string className;
             /// Constructor for full direct matrix solve.
-            LIB_UTILITIES_EXPORT NekLinSysIteratFixedpoint(
+            LIB_UTILITIES_EXPORT NekLinSysIteratFixedpointJacobi(
                 const LibUtilities::SessionReaderSharedPtr  &pSession,
                 const LibUtilities::CommSharedPtr           &vComm,
                 const int                                   nDimen);
-            LIB_UTILITIES_EXPORT ~NekLinSysIteratFixedpoint();
+            LIB_UTILITIES_EXPORT ~NekLinSysIteratFixedpointJacobi();
             
         protected:
 

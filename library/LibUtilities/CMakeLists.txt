@@ -225,7 +225,7 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/NekLinSysIterat.h
     ./LinearAlgebra/NekLinSysIteratGMRES.h
     ./LinearAlgebra/NekLinSysIteratCG.h
-    ./LinearAlgebra/NekLinSysIteratFixedpoint.h
+    ./LinearAlgebra/NekLinSysIteratFixedpointJacobi.h
     ./LinearAlgebra/NekNonlinLinSys.h
     ./LinearAlgebra/NekNonlinSys.h
     ./LinearAlgebra/NekNonlinSysNewton.h
@@ -248,7 +248,7 @@ SET(LinearAlgebraSources
     ./LinearAlgebra/NekLinSysIterat.cpp
     ./LinearAlgebra/NekLinSysIteratGMRES.cpp
     ./LinearAlgebra/NekLinSysIteratCG.cpp
-    ./LinearAlgebra/NekLinSysIteratFixedpoint.cpp
+    ./LinearAlgebra/NekLinSysIteratFixedpointJacobi.cpp
     ./LinearAlgebra/NekNonlinLinSys.cpp
     ./LinearAlgebra/NekNonlinSys.cpp
     ./LinearAlgebra/NekNonlinSysNewton.cpp

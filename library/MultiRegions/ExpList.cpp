@@ -1580,9 +1580,9 @@ namespace Nektar
                                             Array<OneD, NekDouble> &outarray)
         {
             LibUtilities::Timer timer;
-            timer.Start();
 
             LIKWID_MARKER_START("v_BwdTrans_IterPerExp");
+            timer.Start();
 
             Array<OneD, NekDouble> tmp;
             for (int i = 0; i < m_collections.size(); ++i)
@@ -1592,9 +1592,9 @@ namespace Nektar
                                                tmp = outarray + m_coll_phys_offset[i]);
             }
 
+            timer.Stop();
             LIKWID_MARKER_STOP("v_BwdTrans_IterPerExp");
 
-            timer.Stop();
             // Elapsed time
             timer.AccumulateRegion("v_BwdTrans_IterPerExp");
         }

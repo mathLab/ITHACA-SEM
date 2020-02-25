@@ -54,9 +54,9 @@ int main(int argc, char *argv[])
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    LIKWID_MARKER_INIT;
-    LIKWID_MARKER_THREADINIT;
-    LIKWID_MARKER_REGISTER("v_BwdTrans_IterPerExp");
+        LIKWID_MARKER_INIT;
+        LIKWID_MARKER_THREADINIT;
+        LIKWID_MARKER_REGISTER("v_BwdTrans_IterPerExp");
 
         // Create MeshGraph
         graph = SpatialDomains::MeshGraph::Read(session);
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
         // Print out timings
         LibUtilities::Timer::PrintElapsedRegions(session->GetComm());
 
-    LIKWID_MARKER_CLOSE;
+        LIKWID_MARKER_CLOSE;
 
         // Finalise session
         session->Finalise();

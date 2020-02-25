@@ -178,6 +178,10 @@ IF (NOT WIN32)
     OPTION(NEKTAR_USE_MESHGEN "Build mesh generation utilities." OFF)
 ENDIF()
 
+# Use likwid for timing
+OPTION(NEKTAR_USE_LIKWID "Enable Likiwid." OFF)
+MARK_AS_ADVANCED(NEKTAR_USE_LIKWID)
+
 # Build options
 OPTION(NEKTAR_FULL_DEBUG "Enable Full Debugging." OFF)
 MARK_AS_ADVANCED(NEKTAR_FULL_DEBUG)
@@ -248,6 +252,7 @@ INCLUDE (ThirdPartyCCM)
 INCLUDE (ThirdPartyBlasLapack)
 INCLUDE (ThirdPartyCwipi)
 INCLUDE (FindCFI)
+INCLUDE (FindLikwid)
 
 INCLUDE (Doxygen)
 

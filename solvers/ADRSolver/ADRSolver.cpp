@@ -35,6 +35,7 @@
 #include <SolverUtils/Driver.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/BasicUtils/Likwid.hpp>
 
 using namespace std;
 using namespace Nektar;
@@ -47,10 +48,15 @@ int main(int argc, char *argv[])
     string vDriverModule;
     DriverSharedPtr drv;
 
+
     try
     {
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
+    LIKWID_MARKER_INIT;
+    LIKWID_MARKER_THREADINIT;
+    LIKWID_MARKER_REGISTER("v_BwdTrans_IterPerExp");
 
         // Create MeshGraph
         graph = SpatialDomains::MeshGraph::Read(session);
@@ -64,6 +70,8 @@ int main(int argc, char *argv[])
 
         // Print out timings
         LibUtilities::Timer::PrintElapsedRegions(session->GetComm());
+
+    LIKWID_MARKER_CLOSE;
 
         // Finalise session
         session->Finalise();

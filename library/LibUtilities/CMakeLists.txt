@@ -34,6 +34,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
     ./BasicUtils/VtkUtil.hpp
+    ./BasicUtils/Likwid.hpp
 )
 
 SET(BasicUtilsSources
@@ -429,6 +430,13 @@ IF( NEKTAR_USE_HDF5 )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${HDF5_LIBRARIES})
     ADD_DEPENDENCIES(LibUtilities hdf5-1.8.16)
 ENDIF( NEKTAR_USE_HDF5 )
+
+# Likwid
+IF (NEKTAR_USE_LIKWID)
+   TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${LIKWID_LIBRARY})
+   TARGET_INCLUDE_DIRECTORIES(LibUtilities PUBLIC ${LIKWID_INCLUDE_DIR})
+ENDIF()
+
 
 INSTALL(DIRECTORY ./
     DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities

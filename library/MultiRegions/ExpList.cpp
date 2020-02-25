@@ -71,6 +71,7 @@
 #include <Collections/Operator.h>
 
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/BasicUtils/Likwid.hpp>
 
 using namespace std;
 
@@ -1581,6 +1582,8 @@ namespace Nektar
             LibUtilities::Timer timer;
             timer.Start();
 
+            LIKWID_MARKER_START("v_BwdTrans_IterPerExp");
+
             Array<OneD, NekDouble> tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
@@ -1588,6 +1591,8 @@ namespace Nektar
                                                inarray + m_coll_coeff_offset[i],
                                                tmp = outarray + m_coll_phys_offset[i]);
             }
+
+            LIKWID_MARKER_STOP("v_BwdTrans_IterPerExp");
 
             timer.Stop();
             // Elapsed time

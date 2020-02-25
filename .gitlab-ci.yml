@@ -65,8 +65,6 @@ stages:
 .compiler-warning-template: &compiler-warning-template
   <<: *execution-conditions
   stage: compiler-warnings
-  tags:
-    - docker
   variables:
     WARNING_REGEX: '.*warning[: ].*'
     GIT_STRATEGY: none
@@ -108,173 +106,199 @@ stages:
 buster-default-build-env:
   <<: *build-env-debian-template-default
 
-# buster-full-build-env:
-#   <<: *build-env-debian-template-full
+buster-full-build-env:
+  <<: *build-env-debian-template-full
 
-# stretch-default-build-env:
-#   <<: *build-env-debian-template-default
+stretch-default-build-env:
+  <<: *build-env-debian-template-default
 
-# stretch-full-build-env:
-#   <<: *build-env-debian-template-full
+stretch-full-build-env:
+  <<: *build-env-debian-template-full
 
 buster-default-build-and-test:
   <<: *build-and-test-template
 
-# buster-full-build-and-test:
-#   <<: *build-and-test-template
-#   variables:
-#     OS_DISTRO: debian
-#     GIT_SUBMODULE_STRATEGY: recursive
+buster-full-build-and-test:
+  <<: *build-and-test-template
+  variables:
+    OS_DISTRO: debian
+    GIT_SUBMODULE_STRATEGY: recursive
 
-# stretch-default-build-and-test:
-#   <<: *build-and-test-template
+stretch-default-build-and-test:
+  <<: *build-and-test-template
 
-# stretch-full-build-and-test:
-#   <<: *build-and-test-template
+stretch-full-build-and-test:
+  <<: *build-and-test-template
 
 
 # COMPILER WARNINGS
 buster-default-warnings:
   <<: *compiler-warning-template
 
-# buster-full-warnings:
-#   <<: *compiler-warning-template
+buster-full-warnings:
+  <<: *compiler-warning-template
 
-# stretch-default-warnings:
-#   <<: *compiler-warning-template
+stretch-default-warnings:
+  <<: *compiler-warning-template
 
-# stretch-full-warnings:
-#   <<: *compiler-warning-template
-#   dependencies:
-#     build-and-test-buster-default
+stretch-full-warnings:
+  <<: *compiler-warning-template
 
 
-# buster-documentation-build-env:
-#   image: docker:19.03.6
-#   stage:
-#     build-env-full
-#   script:
-#     - export IMAGE=$CI_REGISTRY_IMAGE:env-documentation
-#     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-#     - docker pull $IMAGE || true
-#     - docker build --pull -t $IMAGE -f docker/nektar-env/Dockerfile_debian_documentation .
-#     - docker push $IMAGE
+buster-documentation-build-env:
+  <<: *execution-conditions
+  image: docker:19.03.6
+  stage:
+    build-env-full
+  script:
+    - export IMAGE=$CI_REGISTRY_IMAGE:env-documentation
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull $IMAGE || true
+    - docker build --pull -t $IMAGE -f docker/nektar-env/Dockerfile_debian_documentation .
+    - docker push $IMAGE
 
-# .build-documentation-template: &build-documentation-template
-#   <<: *build-and-test-template
-#   image: $CI_REGISTRY_IMAGE:env-documentation
+.build-documentation-template: &build-documentation-template
+  <<: *build-and-test-template
+  image: $CI_REGISTRY_IMAGE:env-documentation
 
-# user-guide-build:
-#   <<: *build-documentation-template
-#   script:
-#     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
-#     - make -C build -j 3 user-guide-pdf user-guide-html developer-guide-pdf developer-guide-html
-#   artifacts:
-#     paths:
-#       - build/docs/user-guide/user-guide.pdf
-#       - build/docs/user-guide/html
-#       - build/docs/developer-guide/developers-guide.pdf
-#       - build/docs/developer-guide/html
+user-guide-build:
+  <<: *build-documentation-template
+  script:
+    - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
+    - make -C build -j 3 user-guide-pdf user-guide-html developer-guide-pdf developer-guide-html
+  artifacts:
+    paths:
+      - build/docs/user-guide/user-guide.pdf
+      - build/docs/user-guide/html
+      - build/docs/developer-guide/developers-guide.pdf
+      - build/docs/developer-guide/html
 
-# doxygen-build:
-#   <<: *build-documentation-template
-#   script:
-#     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
-#     - make -C build doc
-#   artifacts:
-#     paths:
-#       - build/docs/doxygen/html/
+doxygen-build:
+  <<: *build-documentation-template
+  script:
+    - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
+    - make -C build doc
+  artifacts:
+    paths:
+      - build/docs/doxygen/html/
 
-# tutorials-build:
-#   <<: *build-documentation-template
-#   variables:
-#     GIT_SUBMODULE_STRATEGY: recursive
-#   script:
-#     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release .
-#     - make -C build -j 2 tutorials-pdf tutorials-html
-#   artifacts:
-#     paths:
-#       - build/docs/tutorial/
+tutorials-build:
+  <<: *build-documentation-template
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  script:
+    - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release .
+    - make -C build -j 2 tutorials-pdf tutorials-html
+  artifacts:
+    paths:
+      - build/docs/tutorial/
 
 
 
-# ################################################
-# ###################  UBUNTU  ###################
-# ################################################
+################################################
+###################  UBUNTU  ###################
+################################################
 
-# .build-env-ubuntu-template-default: &build-env-ubuntu-template-default
-#   <<: *build-env-debian-template-default
-#   variables:
-#     OS_DISTRO: ubuntu
+.build-env-ubuntu-template-default: &build-env-ubuntu-template-default
+  <<: *build-env-debian-template-default
+  variables:
+    OS_DISTRO: ubuntu
 
-# .build-env-ubuntu-template-full: &build-env-ubuntu-template-full
-#   <<: *build-env-ubuntu-template-default
-#   stage:
-#     build-env-full
+.build-env-ubuntu-template-full: &build-env-ubuntu-template-full
+  <<: *build-env-ubuntu-template-default
+  stage:
+    build-env-full
     
-# bionic-default-build-env:
-#   <<: *build-env-ubuntu-template-default
+bionic-default-build-env:
+  <<: *build-env-ubuntu-template-default
 
-# bionic-full-build-env:
-#   <<: *build-env-ubuntu-template-full
+bionic-full-build-env:
+  <<: *build-env-ubuntu-template-full
 
-# xenial-default-build-env:
-#   <<: *build-env-ubuntu-template-default
+xenial-default-build-env:
+  <<: *build-env-ubuntu-template-default
 
-# xenial-full-build-env:
-#   <<: *build-env-ubuntu-template-full
+xenial-full-build-env:
+  <<: *build-env-ubuntu-template-full
 
-# trusty-default-build-env:
-#   <<: *build-env-ubuntu-template-default
+trusty-default-build-env:
+  <<: *build-env-ubuntu-template-default
 
-# trusty-full-build-env:
-#   <<: *build-env-ubuntu-template-full
-
-
-# bionic-default-build-and-test:
-#   <<: *build-and-test-template
-
-# bionic-full-build-and-test:
-#   <<: *build-and-test-template
-
-# xenial-default-build-and-test:
-#   <<: *build-and-test-template
-
-# xenial-full-build-and-test:
-#   <<: *build-and-test-template
-
-# trusty-default-build-and-test:
-#   <<: *build-and-test-template
-
-# trusty-full-build-and-test:
-#   <<: *build-and-test-template
+trusty-full-build-env:
+  <<: *build-env-ubuntu-template-full
 
 
-# ################################################
-# ###################  CENTOS  ###################
-# ################################################
+bionic-default-build-and-test:
+  <<: *build-and-test-template
 
-# .build-env-centos-template-default: &build-env-centos-template-default
-#   <<: *build-env-debian-template-default
-#   variables:
-#     OS_DISTRO: centos
+bionic-full-build-and-test:
+  <<: *build-and-test-template
 
-# .build-env-centos-template-full: &build-env-centos-template-full
-#   <<: *build-env-centos-template-default
-#   stage:
-#     build-env-full
+xenial-default-build-and-test:
+  <<: *build-and-test-template
 
-# centos7-default-build-env:
-#   <<: *build-env-centos-template-default
+xenial-full-build-and-test:
+  <<: *build-and-test-template
 
-# centos7-full-build-env:
-#   <<: *build-env-centos-template-full
+trusty-default-build-and-test:
+  <<: *build-and-test-template
 
-# centos7-default-build-and-test:
-#   <<: *build-and-test-template
+trusty-full-build-and-test:
+  <<: *build-and-test-template
 
-# centos7-full-build-and-test:
-#   <<: *build-and-test-template
+
+# COMPILER WARNINGS
+bionic-default-warnings:
+  <<: *compiler-warning-template
+
+bionic-full-warnings:
+  <<: *compiler-warning-template
+
+xenial-default-warnings:
+  <<: *compiler-warning-template
+
+xenial-full-warnings:
+  <<: *compiler-warning-template
+
+trusty-default-warnings:
+  <<: *compiler-warning-template
+
+trusty-full-warnings:
+  <<: *compiler-warning-template
+
+################################################
+###################  CENTOS  ###################
+################################################
+
+.build-env-centos-template-default: &build-env-centos-template-default
+  <<: *build-env-debian-template-default
+  variables:
+    OS_DISTRO: centos
+
+.build-env-centos-template-full: &build-env-centos-template-full
+  <<: *build-env-centos-template-default
+  stage:
+    build-env-full
+
+centos7-default-build-env:
+  <<: *build-env-centos-template-default
+
+centos7-full-build-env:
+  <<: *build-env-centos-template-full
+
+centos7-default-build-and-test:
+  <<: *build-and-test-template
+
+centos7-full-build-and-test:
+  <<: *build-and-test-template
+
+
+# COMPILER WARNINGS
+centos7-default-warnings:
+  <<: *compiler-warning-template
+
+centos7-full-warnings:
+  <<: *compiler-warning-template
 
 
 # ################################################

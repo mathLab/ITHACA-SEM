@@ -129,7 +129,15 @@ namespace Nektar
                     const  bool     &flag = false) const
                 {
                     ASSERTL1(m_functors1[2],"DoNonlinLinPrecond should be defined for this time integration scheme");
-                    m_functors1[2](inarray,outarray,flag);
+                    if(m_functors1[2])
+                    {
+                        m_functors1[2](inarray,outarray,flag);
+                    }
+                    else
+                    {
+                        Vmath::Vcopy(outarray.num_elements(),inarray,1,outarray,1);
+                    }
+                    
                 }
 
                 inline void DoNonlinLinFixPointIte(

@@ -99,6 +99,7 @@ namespace Nektar
             }
 
             m_maxrestart = ceil(NekDouble(m_maxiter)/NekDouble(m_maxstorage));
+            m_maxstorage = min(m_maxiter,m_maxstorage);
 
             int flaguseCentralDifference = 0;
             pSession->LoadParameter("flaguseCentralDifference",

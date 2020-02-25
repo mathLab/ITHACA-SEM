@@ -160,8 +160,6 @@ namespace Nektar
             const NekDouble                     tol,
             const NekDouble                     factor)
         {
-            m_map =  Array<OneD,      int>(nGlobal,1);
-
             boost::ignore_unused(tol);
 
             m_tolerance = max(tol,1.0E-16);

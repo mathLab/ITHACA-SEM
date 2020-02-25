@@ -87,8 +87,6 @@ namespace Nektar
             }
         
         protected:
-            /// Global to universal unique map
-            Array<OneD, int>                            m_map;
             /// maximum gmres restart iteration
             int                                         m_maxrestart;
             /// maximum gmres search directions for one restart(determines the max storage usage)
@@ -96,8 +94,6 @@ namespace Nektar
             /// maximum bandwidth of Hessenburg matrix if use truncted Gmres(m)
             int                                         m_maxhesband;
             int                                         m_totalIterations;
-            /// dot product of rhs to normalise stopping criterion
-            NekDouble                                   m_rhs_magnitude;
             /// dot product of rhs to normalise stopping criterion
             NekDouble                                   m_prec_factor;
             /// cnt to how many times rhs_magnitude is called

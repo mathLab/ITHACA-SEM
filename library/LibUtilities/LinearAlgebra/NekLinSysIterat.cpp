@@ -87,6 +87,16 @@ namespace Nektar
         NekLinSysIterat::~NekLinSysIterat()
         {
         }
+
+        void NekLinSysIterat::setUniversalUniqueMap(Array<OneD, int> &map)
+        {
+            int nmap = map.num_elements();
+            if(m_map.num_elements()!=nmap)
+            {
+                m_map   =   Array<OneD, int>(nmap,0);
+            }
+            Vmath::Vcopy(nmap,map,1,m_map,1);
+        }
     }
 }
 

@@ -95,43 +95,17 @@ namespace Nektar
 
             LibUtilities::NonlinLinSysOperators                       m_LinSysOprtors;
 
-            LibUtilities::NekLinSysIteratSharedPtr                    m_linsol;
+            LibUtilities::NekLinSysIteratSharedPtr                    m_linsol = LibUtilities::NullNekLinSysIteratSharedPtr;
 
             static std::string IteratSolverlookupIds[];
             static std::string IteratSolverdef;
-
-            /// A-conjugate projection technique
-            void DoAconjugateProjection(
-                    const int pNumRows,
-                    const Array<OneD,const NekDouble> &pInput,
-                          Array<OneD,      NekDouble> &pOutput,
-                    const AssemblyMapSharedPtr &locToGloMap,
-                    const int pNumDir);
-
-            /// Actual iterative solve
-            void DoConjugateGradient(
-                    const int pNumRows,
-                    const Array<OneD,const NekDouble> &pInput,
-                          Array<OneD,      NekDouble> &pOutput,
-                    const AssemblyMapSharedPtr &locToGloMap,
-                    const int pNumDir);
-
 
             void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
 
             virtual void v_UniqueMap() = 0;
             
         private:
-            void UpdateKnownSolutions(
-                    const int pGlobalBndDofs,
-                    const Array<OneD,const NekDouble> &pSolution,
-                    const int pNumDirBndDofs);
-
-            NekDouble CalculateAnorm(
-                    const int nGlobal,
-                    const Array<OneD,const NekDouble> &in,
-                    const int nDir);
-
+            
             void DoMatrixMultiplyFlag(
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput,

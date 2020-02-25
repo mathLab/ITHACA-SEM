@@ -86,10 +86,24 @@ namespace Nektar
                 const int                                   nDimen);
             LIB_UTILITIES_EXPORT ~NekLinSysIterat();
             
+            LIB_UTILITIES_EXPORT void setUniversalUniqueMap(Array<OneD, int> &map);
+            LIB_UTILITIES_EXPORT void setRhsMagnitude(const NekDouble map)
+            {
+                m_rhs_magnitude = map;
+            }
         protected:
+                        /// Global to universal unique map
+            Array<OneD, int>                            m_map;
+
+            /// dot product of rhs to normalise stopping criterion
+            NekDouble                                   m_rhs_magnitude = NekConstants::kNekUnsetDouble;
+
             virtual void v_InitObject();
         private:
         };
+
+        static NekLinSysIteratSharedPtr NullNekLinSysIteratSharedPtr;
+
     }
 }
     

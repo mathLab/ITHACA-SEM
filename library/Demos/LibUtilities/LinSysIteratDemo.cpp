@@ -95,8 +95,7 @@ class LinSysDemo
             int ndigits     = 9;  // the number of sigificant digits
             int nothers     = 10; // extra width to place -, E, and power
             int nwidthcolm  = nothers+ndigits-1; // the second value determines the number of sigificant digits
-            // cout    << " ntmpIts= "<<ntmpIts <<endl
-                cout 
+            cout    << " ntmpIts= "<<ntmpIts <<endl
                     <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1);
 
             string vars = "uvwx";

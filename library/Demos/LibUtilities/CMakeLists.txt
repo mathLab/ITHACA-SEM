@@ -6,6 +6,8 @@ ADD_NEKTAR_EXECUTABLE(TimeIntegrationDemo
     COMPONENT demos DEPENDS LibUtilities SOURCES TimeIntegrationDemo.cpp)
 ADD_NEKTAR_EXECUTABLE(ErrorStream
     COMPONENT demos DEPENDS LibUtilities SOURCES ErrorStream.cpp)
+ADD_NEKTAR_EXECUTABLE(LinSysIteratDemo
+    COMPONENT demos DEPENDS LibUtilities SOURCES LinSysIteratDemo.cpp)
 
 IF(NEKTAR_USE_MPI)
     ADD_NEKTAR_EXECUTABLE(FieldIOBenchmarker
@@ -30,3 +32,4 @@ ADD_NEKTAR_TEST(TimeIntegrationDemoDIRKIMEXOrder3)
 ADD_NEKTAR_TEST(TimeIntegrationDemoCNAB)
 ADD_NEKTAR_TEST(TimeIntegrationDemoMCNAB)
 ADD_NEKTAR_TEST(ErrorStream)
+ADD_NEKTAR_TEST(LinSysIteratDemo_LinearSys_Jacobi)

@@ -64,33 +64,37 @@ void Timer::AccumulateRegion(std::string region)
     auto search = m_elapsedRegion.find(region);
     if (search == m_elapsedRegion.end())
     {
-        m_elapsedRegion.insert({region, this->Elapsed()});
+        m_elapsedRegion.insert({region,
+            std::make_pair<Timer::Seconds, size_t>(this->Elapsed(),1)});
     }
     else
     {
-        search->second += this->Elapsed();
+        search->second.first += this->Elapsed();
+        search->second.second += 1;
     }
 }
 
 void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm)
 {
-    if (comm->GetRank() == 0)
+    if (comm->GetRank() == 0 &&
+        m_elapsedRegion.begin() != m_elapsedRegion.end())
     {
         std::cout
             << "-------------------------------------------\n"
             << "Region\t\t Elapsed time Ave (s)"
             << "\t Min (s)"
-            << "\t Max (s)\n";
+            << "\t Max (s)"
+            << "\t Count\n";
     }
     for (auto item = m_elapsedRegion.begin();
             item != m_elapsedRegion.end(); ++item)
     {
-        auto elapsedAve = item->second.count();
+        auto elapsedAve = item->second.first.count();
         comm->AllReduce(elapsedAve, LibUtilities::ReduceSum);
         elapsedAve /= comm->GetSize();
-        auto elapsedMin = item->second.count();
+        auto elapsedMin = item->second.first.count();
         comm->AllReduce(elapsedMin, LibUtilities::ReduceMin);
-        auto elapsedMax = item->second.count();
+        auto elapsedMax = item->second.first.count();
         comm->AllReduce(elapsedMax, LibUtilities::ReduceMax);
 
         if (comm->GetRank() == 0)
@@ -98,12 +102,14 @@ void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm)
             std::cout << item->first << '\t'
                 << elapsedAve << '\t'
                 << elapsedMin << '\t'
-                << elapsedMax << '\n';
+                << elapsedMax << '\t'
+                << item->second.second << '\n';
         }
     }
 }
 
-std::map<std::string, Timer::Seconds> Timer::m_elapsedRegion{};
+std::unordered_map<std::string, std::pair<Timer::Seconds, size_t>>
+    Timer::m_elapsedRegion{};
 
 }
 } // end Nektar namespace

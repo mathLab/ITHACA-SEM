@@ -38,6 +38,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <unordered_map>
 
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
@@ -69,7 +70,7 @@ class Timer
         /// \brief Accumulate elapsed time for a region
         LIB_UTILITIES_EXPORT void AccumulateRegion(std::string);
 
-        /// \brief Print elapsed regions
+        /// \brief Print elapsed time and call count for each region
         LIB_UTILITIES_EXPORT static void PrintElapsedRegions
             (LibUtilities::CommSharedPtr comm);
 
@@ -80,7 +81,8 @@ class Timer
     private:
         CounterType m_start;
         CounterType m_end;
-        static std::map<std::string, Seconds> m_elapsedRegion;
+        static std::unordered_map<std::string, std::pair<Seconds, size_t>>
+            m_elapsedRegion;
 
 
 };

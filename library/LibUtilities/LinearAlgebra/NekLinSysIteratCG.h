@@ -94,8 +94,6 @@ namespace Nektar
             /// Total counter of previous solutions
             int m_numPrevSols = 0;
 
-            void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
-
             virtual void v_InitObject();
 
             virtual int v_SolveSystem(

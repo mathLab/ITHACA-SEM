@@ -100,8 +100,6 @@ namespace Nektar
             bool                                        m_DifferenceFlag0  = false;
             bool                                        m_DifferenceFlag1  = false;
 
-            void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
-
             virtual void v_InitObject();
 
             virtual int v_SolveSystem(

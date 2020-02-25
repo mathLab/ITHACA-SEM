@@ -546,35 +546,5 @@ namespace Nektar
                 k++;
             }
         }
-
-        void NekLinSysIteratCG::Set_Rhs_Magnitude(
-            const NekVector<NekDouble> &pIn)
-        {
-            Array<OneD, NekDouble> vExchange(1, 0.0);
-            if (m_map.num_elements() > 0)
-            {
-                vExchange[0] = Vmath::Dot2(pIn.GetDimension(),
-                                        &pIn[0],&pIn[0],&m_map[0]);
-            }
-
-            m_Comm->AllReduce(
-                vExchange, Nektar::LibUtilities::ReduceSum);
-
-            // To ensure that very different rhs values are not being
-            // used in subsequent solvers such as the velocit solve in
-            // INC NS. If this works we then need to work out a better
-            // way to control this.
-            NekDouble new_rhs_mag = (vExchange[0] > 1e-6)? vExchange[0] : 1.0;
-
-            if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
-            {
-                m_rhs_magnitude = new_rhs_mag;
-            }
-            else
-            {
-                m_rhs_magnitude = (m_rhs_mag_sm*(m_rhs_magnitude) + 
-                                   (1.0-m_rhs_mag_sm)*new_rhs_mag); 
-            }
-        }
     }
 }

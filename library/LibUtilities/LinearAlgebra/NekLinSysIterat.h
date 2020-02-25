@@ -108,6 +108,8 @@ namespace Nektar
 
             NekDouble                                   m_prec_factor = 1.0;
 
+            void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
+            
             virtual void v_InitObject();
         private:
         };

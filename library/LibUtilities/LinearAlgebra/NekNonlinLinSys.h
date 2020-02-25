@@ -56,18 +56,28 @@ namespace Nektar
                 typedef       Array<OneD, NekDouble> OutArrayType;
                 
                 typedef std::function< void (InArrayType&, OutArrayType&, const bool&) >                      FunctorType1;
+                typedef std::function< void (InArrayType&, InArrayType&, OutArrayType&, const bool&) >        FunctorType2;
                 typedef Array<OneD, FunctorType1> FunctorType1Array;
+                typedef Array<OneD, FunctorType2> FunctorType2Array;
+                static const int nfunctor1 = 3;
+                static const int nfunctor2 = 1;
                 
                 NonlinLinSysOperators(void):
-                m_functors1(3)
+                m_functors1(nfunctor1),
+                m_functors2(nfunctor2)
                 {
                 }
                 NonlinLinSysOperators(NonlinLinSysOperators &in):
-                m_functors1(3)
+                m_functors1(nfunctor1),
+                m_functors2(nfunctor2)
                 {
-                    for (int i = 0; i < 3; i++)
+                    for (int i = 0; i < nfunctor1; i++)
                     {
                         m_functors1[i] = in.m_functors1[i];
+                    }
+                    for (int i = 0; i < nfunctor2; i++)
+                    {
+                        m_functors2[i] = in.m_functors2[i];
                     }
                 }
                 template<typename FuncPointerT, typename ObjectPointerT> 
@@ -88,13 +98,19 @@ namespace Nektar
                     m_functors1[2] =  std::bind(
                         func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
                 }
+                template<typename FuncPointerT, typename ObjectPointerT> 
+                    void DefineNonlinLinFixPointIte(FuncPointerT func, ObjectPointerT obj)
+                {
+                    m_functors2[0] =  std::bind(
+                        func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+                }
                 
                 inline void DoNonlinLinSysRhsEval(
                     InArrayType     &inarray, 
                     OutArrayType    &outarray,
                     const  bool      &flag = false) const
                 {
-                    ASSERTL1(m_functors1[0],"DoLinSysRhs should be defined for this time integration scheme");
+                    ASSERTL1(m_functors1[0],"DoNonlinLinSysRhsEval should be defined for this time integration scheme");
                     m_functors1[0](inarray,outarray,flag);
                 }
                 
@@ -103,7 +119,7 @@ namespace Nektar
                     OutArrayType    &outarray,
                     const  bool     &flag = false) const
                 {
-                    ASSERTL1(m_functors1[1],"DoMatrixMultiply should be defined for this time integration scheme");
+                    ASSERTL1(m_functors1[1],"DoNonlinLinSysLhsEval should be defined for this time integration scheme");
                     m_functors1[1](inarray,outarray,flag);
                 }
                 
@@ -112,8 +128,18 @@ namespace Nektar
                     OutArrayType    &outarray,
                     const  bool     &flag = false) const
                 {
-                    ASSERTL1(m_functors1[2],"DoPrecond should be defined for this time integration scheme");
+                    ASSERTL1(m_functors1[2],"DoNonlinLinPrecond should be defined for this time integration scheme");
                     m_functors1[2](inarray,outarray,flag);
+                }
+
+                inline void DoNonlinLinFixPointIte(
+                    InArrayType     &rhs, 
+                    InArrayType     &xn, 
+                    OutArrayType    &xn1,
+                    const  bool     &flag = false) const
+                {
+                    ASSERTL1(m_functors2[0],"DoNonlinLinFixPointIte should be defined for this time integration scheme");
+                    m_functors2[0](rhs,xn,xn1,flag);
                 }
             protected:
                 /* Defines three operators 
@@ -122,8 +148,10 @@ namespace Nektar
                                                 For linear system A is the coefficient matrix; 
                                                 For nonlinear system A is the coefficient matrix in each nonlinear iterations, for example A is the Jacobian matrix for Newton method; 
                     DoNonlinLinPrecond      :   Preconditioning operator of the system.
+                    DoNonlinLinFixPointIte  :   Operator to calculate RHS of fix point iterations (x^{n+1}=M^{-1}(b-N*x^{n}), with M+N=A).
                 */
                 FunctorType1Array m_functors1;
+                FunctorType2Array m_functors2;
         };
         
         class  NekNonlinLinSys;
@@ -219,12 +247,12 @@ namespace Nektar
                 virtual bool v_ConvergenceCheck(
                     const int                           nIteration,
                     const Array<OneD, const NekDouble>  &Residual,
-                    const NekDouble                     tol         )
-                {
-                    boost::ignore_unused(nIteration, Residual, tol);
-                    ASSERTL0(false, "LinIteratSovler NOT CORRECT.");
-                    return false;
-                }
+                    const NekDouble                     tol         );
+                // {
+                //     boost::ignore_unused(nIteration, Residual, tol);
+                //     ASSERTL0(false, "LinIteratSovler NOT CORRECT.");
+                //     return false;
+                // }
         };
     }
 }

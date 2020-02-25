@@ -154,16 +154,6 @@ namespace Nektar
             return niterations;
         }
 
-        bool NekLinSysIteratGMRES::v_ConvergenceCheck(
-                const int                           nIteration,
-                const Array<OneD, const NekDouble>  &Residual,
-                const NekDouble                     tol         )
-        {
-            bool converged = false;
-            boost::ignore_unused(nIteration,Residual,tol);
-            return converged;
-        }
-
         /**  
         * Solve a global linear system using the Gmres 
         * We solve only for the non-Dirichlet modes. The operator is evaluated  

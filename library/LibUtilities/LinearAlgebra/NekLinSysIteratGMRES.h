@@ -110,10 +110,6 @@ namespace Nektar
                 const NekDouble                     tol    ,
                 const NekDouble                     factor );
             
-            virtual bool v_ConvergenceCheck(
-                const int                           nIteration,
-                const Array<OneD, const NekDouble>  &Residual,
-                const NekDouble                     tol         );
         private:
             
             /// Actual iterative solve-GMRS

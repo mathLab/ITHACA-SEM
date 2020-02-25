@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File  NekLinSysIteratCG.h
+// File  NekLinSysIteratFixedpoint.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,30 +29,29 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: NekLinSysIteratCG header
+// Description: NekLinSysIteratFixedpoint header
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_CG_H
-#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_CG_H
+#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_FIXEDPOINT_H
+#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_FIXEDPOINT_H
 
 #include <LibUtilities/LinearAlgebra/NekLinSysIterat.h>
-#include <boost/circular_buffer.hpp>
 namespace Nektar
 {
     namespace LibUtilities
     {   
         /// A global linear system.
-        class  NekLinSysIteratCG;
+        class  NekLinSysIteratFixedpoint;
 
-        typedef std::shared_ptr<NekLinSysIteratCG> NekLinSysIteratCGSharedPtr;
+        typedef std::shared_ptr<NekLinSysIteratFixedpoint> NekLinSysIteratFixedpointSharedPtr;
         
-        class  NekLinSysIteratCG : public NekLinSysIterat
+        class  NekLinSysIteratFixedpoint : public NekLinSysIterat
         {
         public:
 
             /// Support creation through MemoryManager.
-            friend class MemoryManager<NekLinSysIteratCG>;
+            friend class MemoryManager<NekLinSysIteratFixedpoint>;
             /**
              * @brief Creates an instance of the SessionReader class.
              *
@@ -69,30 +68,20 @@ namespace Nektar
                 const LibUtilities::CommSharedPtr           &vComm,
                 const int                                   nDimen)
             {
-                NekLinSysIteratCGSharedPtr p = MemoryManager<
-                    NekLinSysIteratCG>::AllocateSharedPtr(pSession, vComm, nDimen);
+                NekLinSysIteratFixedpointSharedPtr p = MemoryManager<
+                    NekLinSysIteratFixedpoint>::AllocateSharedPtr(pSession, vComm, nDimen);
                 p->InitObject();
                 return p;
             }
             static std::string className;
             /// Constructor for full direct matrix solve.
-            LIB_UTILITIES_EXPORT NekLinSysIteratCG(
+            LIB_UTILITIES_EXPORT NekLinSysIteratFixedpoint(
                 const LibUtilities::SessionReaderSharedPtr  &pSession,
                 const LibUtilities::CommSharedPtr           &vComm,
                 const int                                   nDimen);
-            LIB_UTILITIES_EXPORT ~NekLinSysIteratCG();
+            LIB_UTILITIES_EXPORT ~NekLinSysIteratFixedpoint();
             
         protected:
-
-            int                                         m_successiveRHS;
-            /// Whether to apply projection technique
-            bool                                        m_useProjection = false;
-
-             /// Storage for solutions to previous linear problems
-            boost::circular_buffer<Array<OneD, NekDouble> > m_prevLinSol;
-
-            /// Total counter of previous solutions
-            int m_numPrevSols = 0;
 
             virtual void v_InitObject();
 
@@ -103,33 +92,8 @@ namespace Nektar
                 const int                           nDir,
                 const NekDouble                     tol    ,
                 const NekDouble                     factor );
-            
         private:
             
-            /// A-conjugate projection technique
-            void DoAconjugateProjection(
-                    const int pNumRows,
-                    const Array<OneD,const NekDouble> &pInput,
-                          Array<OneD,      NekDouble> &pOutput,
-                    const int pNumDir);
-
-            /// Actual iterative solve
-            void DoConjugateGradient(
-                    const int pNumRows,
-                    const Array<OneD,const NekDouble> &pInput,
-                          Array<OneD,      NekDouble> &pOutput,
-                    const int pNumDir);
-
-            void UpdateKnownSolutions(
-                    const int pGlobalBndDofs,
-                    const Array<OneD,const NekDouble> &pSolution,
-                    const int pNumDirBndDofs);
-
-            NekDouble CalculateAnorm(
-                    const int nGlobal,
-                    const Array<OneD,const NekDouble> &in,
-                    const int nDir);
-
         };
     }
 }

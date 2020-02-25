@@ -126,18 +126,6 @@ namespace Nektar
             return 0;
         }
 
-        bool NekLinSysIteratCG::v_ConvergenceCheck(
-                const int                           nIteration,
-                const Array<OneD, const NekDouble>  &Residual,
-                const NekDouble                     tol         )
-        {
-            bool converged = false;
-            boost::ignore_unused(nIteration,Residual,tol);
-            return converged;
-        }
-
-        
-
         /**
          * This method implements A-conjugate projection technique
          * in order to speed up successive linear solves with

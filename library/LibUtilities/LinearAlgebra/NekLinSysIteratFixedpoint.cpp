@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File:  NekNonlinLinSys.cpp
+// File:  NekLinSysIteratFixedpoint.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,68 +29,77 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:  NekNonlinLinSys definition
+// Description:  NekLinSysIteratFixedpoint definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/LinearAlgebra/NekNonlinLinSys.h>
+#include <LibUtilities/LinearAlgebra/NekLinSysIteratFixedpoint.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 using namespace std;
 
 namespace Nektar
-{       
+{      
     namespace LibUtilities
-    {
+    {  
         /**
-         * @class  NekNonlinLinSys
+         * @class  NekLinSysIteratFixedpoint
          *
          * Solves a linear system using iterative methods.
          */
+        string NekLinSysIteratFixedpoint::className =
+        LibUtilities::GetNekLinSysIteratFactory().RegisterCreatorFunction(
+            "Fixedpoint", NekLinSysIteratFixedpoint::create,
+            "NekLinSysIteratFixedpoint solver.");
 
         /// Constructor for full direct matrix solve.
-        NekNonlinLinSys::NekNonlinLinSys(
+        NekLinSysIteratFixedpoint::NekLinSysIteratFixedpoint(
             const LibUtilities::SessionReaderSharedPtr  &pSession,
             const LibUtilities::CommSharedPtr           &vComm,
             const int                                   nDimen)
-        {
-            m_session = pSession;
-            m_tolerance         =   NekConstants::kNekIterativeTol;
-            m_verbose           =   false;
-            m_root              =   false;
-            m_Comm              =   vComm;
-
-            if (0==m_Comm->GetRank())
-            {
-                m_root              =   true;
-            }
-            m_verbose   =   pSession->DefinesCmdLineArgument("verbose");
-
-            m_converged = false;
-
-            m_SysDimen = nDimen;
-        }
-
-        NekNonlinLinSys::~NekNonlinLinSys()
+            : NekLinSysIterat(pSession, vComm, nDimen)
         {
         }
 
-        bool NekNonlinLinSys::v_ConvergenceCheck(
-            const int                           nIteration,
-            const Array<OneD, const NekDouble>  &Residual,
-            const NekDouble                     tol         )
+        void NekLinSysIteratFixedpoint::v_InitObject()
         {
-            bool converged = false;
-            int ntotal = Residual.num_elements();
-            boost::ignore_unused(nIteration);
+            NekLinSysIterat::v_InitObject();
+        }
 
-            NekDouble   SysResNorm = Vmath::Dot(ntotal,Residual,Residual);
-            m_Comm->AllReduce(SysResNorm, Nektar::LibUtilities::ReduceSum);
 
-            if (SysResNorm<tol)
+        NekLinSysIteratFixedpoint::~NekLinSysIteratFixedpoint()
+        {
+        }
+
+        /**
+         *
+         */
+        int NekLinSysIteratFixedpoint::v_SolveSystem(
+            const int                           nGlobal,
+            const Array<OneD, const NekDouble>  &pRhs,
+            Array<OneD,      NekDouble>         &pSolution,
+            const int                           nDir,
+            const NekDouble                     tol,
+            const NekDouble                     factor)
+        {
+            boost::ignore_unused(tol,nDir);
+
+            int niterations = 0;
+            m_tolerance = max(tol,1.0E-16);
+            m_prec_factor = factor;
+
+            Array<OneD, NekDouble> pSol0 (nGlobal);
+            Vmath::Vcopy(nGlobal, pSolution,1,pSol0,1);
+            for(int i=0;i<m_maxiter;i++)
             {
-                converged = true;
+                m_operator.DoNonlinLinFixPointIte(pRhs, pSol0, pSolution);
+                Vmath::Vsub(nGlobal, pSolution,1,pSol0,1,pSol0,1 );
+                m_converged = ConvergenceCheck(i,pSol0,m_tolerance);
+                Vmath::Vcopy(nGlobal, pSolution,1,pSol0,1);
+                niterations++;
             }
-            return converged;
+
+            return niterations;
         }
     }
 }

@@ -128,7 +128,6 @@ namespace Nektar
                     OutArrayType    &outarray,
                     const  bool     &flag = false) const
                 {
-                    ASSERTL1(m_functors1[2],"DoNonlinLinPrecond should be defined for this time integration scheme");
                     if(m_functors1[2])
                     {
                         m_functors1[2](inarray,outarray,flag);

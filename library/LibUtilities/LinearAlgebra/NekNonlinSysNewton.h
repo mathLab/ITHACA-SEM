@@ -51,33 +51,37 @@ namespace Nektar
             public:
 
                 /// Constructor for full direct matrix solve.
+				friend class MemoryManager<NekNonlinSysNewton>;
+                
+				LIB_UTILITIES_EXPORT static NekNonlinSysSharedPtr create(
+                    const LibUtilities::SessionReaderSharedPtr  &pSession,
+                    const LibUtilities::CommSharedPtr           &vComm,
+                    const int                                   nDimen)
+                {
+                    NekNonlinSysSharedPtr p = MemoryManager<
+                        NekNonlinSysNewton>::AllocateSharedPtr(pSession, vComm, nDimen);
+                    p->InitObject();
+                    return p;
+                }
+
+                static std::string className;
                 LIB_UTILITIES_EXPORT NekNonlinSysNewton(
                     const LibUtilities::SessionReaderSharedPtr  &pSession,
                     const LibUtilities::CommSharedPtr           &vComm,
                     const int                                   nscale);
                 LIB_UTILITIES_EXPORT ~NekNonlinSysNewton();
-                
-                LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> & GetRefSolution() const
-                {
-                    return m_Solution;
-                }
-
-                LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> & GetRefResidual() const
-                {
-                    return m_Residual;
-                }
             
             protected:
 
                 NekLinSysIteratSharedPtr                    m_linsol;
-                // int                                         m_maxstorage;
-                int                                         m_MaxNonlinIte;
 
                 NekDouble                                   m_NonlinIteTolRelativeL2;
                 NekDouble                                   m_NonlinIteTolRelativeL8;
                 NekDouble                                   m_NonlinIteTolLinRelatTol;
                 NekDouble                                   m_SysResNorm0;
                 NekDouble                                   m_SysResNorm;
+
+                std::string                                 m_LinIteratSovlerType;
 
                 virtual void v_InitObject();
 
@@ -95,9 +99,6 @@ namespace Nektar
                     const NekDouble                     tol         );
                 
             private:
-                Array<OneD, NekDouble>  m_Solution;
-                Array<OneD, NekDouble>  m_Residual;
-                Array<OneD, NekDouble>  m_DeltSltn;
         };
     }
 }

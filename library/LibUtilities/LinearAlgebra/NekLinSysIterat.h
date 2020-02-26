@@ -87,9 +87,9 @@ namespace Nektar
             LIB_UTILITIES_EXPORT ~NekLinSysIterat();
             
             LIB_UTILITIES_EXPORT void setUniversalUniqueMap(Array<OneD, int> &map);
-            LIB_UTILITIES_EXPORT void setRhsMagnitude(const NekDouble map)
+            LIB_UTILITIES_EXPORT void setRhsMagnitude(const NekDouble mag)
             {
-                m_rhs_magnitude = map;
+                m_rhs_magnitude = mag;
             }
         protected:
                         /// Global to universal unique map
@@ -109,6 +109,7 @@ namespace Nektar
             NekDouble                                   m_prec_factor = 1.0;
 
             void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
+            void setUniversalUniqueMap();
             
             virtual void v_InitObject();
         private:

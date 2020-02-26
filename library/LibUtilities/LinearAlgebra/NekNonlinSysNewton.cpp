@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/LinearAlgebra/NekNonlinSysNewton.h>
-#include <LibUtilities/LinearAlgebra/NekLinSysIteratGMRES.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
 using namespace std;
@@ -48,6 +47,10 @@ namespace Nektar
          *
          * Solves a nonlinear system using iterative methods.
          */
+		 string NekNonlinSysNewton::className =
+        LibUtilities::GetNekNonlinSysFactory().RegisterCreatorFunction(
+            "Newton", NekNonlinSysNewton::create,
+            "NekNonlinSysNewton solver.");
 
         /// Constructor for full direct matrix solve.
         NekNonlinSysNewton::NekNonlinSysNewton(
@@ -56,24 +59,9 @@ namespace Nektar
             const int                                   nscale)
             : NekNonlinSys(pSession, vComm, nscale)
         {
-            m_MaxNonlinIte        =   30;
             std::vector<std::string>  variables(1);
             variables[0] =  pSession->GetVariable(0);
             string variable = variables[0];
-
-            if(pSession->DefinesGlobalSysSolnInfo(variable,
-                                                "MaxStorage"))
-            {
-                m_MaxNonlinIte = boost::lexical_cast<int>(
-                        pSession->GetGlobalSysSolnInfo(variable,
-                                "MaxStorage").c_str());
-            }
-            else
-            {
-                pSession->LoadParameter("MaxStorage",
-                                        m_MaxNonlinIte,
-                                        30);
-            }
 
             if(pSession->DefinesGlobalSysSolnInfo(variable,
                                                 "NonlinIteTolRelativeL2"))
@@ -117,6 +105,20 @@ namespace Nektar
                                         m_NonlinIteTolLinRelatTol,
                                         5.0E-2);
             }
+
+            m_LinIteratSovlerType = "GMRES";
+            if(pSession->DefinesGlobalSysSolnInfo(variable,
+                                                "LinIteratSovler"))
+            {
+                m_LinIteratSovlerType = pSession->GetGlobalSysSolnInfo(variable,"LinIteratSovler");
+            }
+            else
+            {
+                if(pSession->DefinesSolverInfo("LinIteratSovler"))
+                {
+                    m_LinIteratSovlerType = pSession->GetSolverInfo("LinIteratSovler");
+                }
+            }
         }
 
         void NekNonlinSysNewton::v_InitObject()
@@ -125,9 +127,11 @@ namespace Nektar
             m_Residual = Array<OneD, NekDouble> (m_SysDimen,0.0);
             m_DeltSltn = Array<OneD, NekDouble> (m_SysDimen,0.0);
 
-            m_linsol    = MemoryManager<NekLinSysIteratGMRES>::AllocateSharedPtr(m_session,m_Comm,m_SysDimen); 
+            ASSERTL0(LibUtilities::GetNekLinSysIteratFactory().ModuleExists(m_LinIteratSovlerType),
+                    "NekLinSysIterat '" + m_LinIteratSovlerType + "' is not defined.\n");
+            m_linsol = LibUtilities::GetNekLinSysIteratFactory().CreateInstance(
+                                m_LinIteratSovlerType, m_session,m_Comm,m_SysDimen);
 
-            m_linsol->setSysOperators(m_operator);
         }
 
         NekNonlinSysNewton::~NekNonlinSysNewton()
@@ -145,6 +149,8 @@ namespace Nektar
             const NekDouble                     tol,
             const NekDouble                     factor)
         {
+            m_linsol->setSysOperators(m_operator);
+
             ASSERTL0(0==nDir,"0!=nDir not tested");
             ASSERTL0(m_SysDimen==nGlobal, "m_SysDimen!=nGlobal");
 
@@ -157,7 +163,7 @@ namespace Nektar
 
             m_Solution = pOutput;
             Vmath::Vcopy(ntotal,pInput,1, m_Solution,1);
-            for (int k = 0; k < m_MaxNonlinIte; k++)
+            for (int k = 0; k < m_maxiter; k++)
             {
                 m_operator.DoNonlinLinSysRhsEval(m_Solution,m_Residual);
                 

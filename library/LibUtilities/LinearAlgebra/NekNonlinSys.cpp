@@ -46,6 +46,11 @@ namespace Nektar
          *
          * Solves a linear system using iterative methods.
          */
+		 NekNonlinSysFactory& GetNekNonlinSysFactory()
+        {
+            static NekNonlinSysFactory instance;
+            return instance;
+        }
 
         /// Constructor for full direct matrix solve.
         NekNonlinSys::NekNonlinSys(
@@ -54,7 +59,42 @@ namespace Nektar
             const int                                   nDimen)
             : NekNonlinLinSys(pSession, vComm, nDimen)
         {
-            boost::ignore_unused(pSession,vComm,nDimen);
+            std::vector<std::string>  variables(1);
+            variables[0] =  pSession->GetVariable(0);
+            string variable = variables[0];
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable,
+                                              "NonlinIteratSolverTolerance"))
+            {
+                m_tolerance = boost::lexical_cast<NekDouble>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "NonlinIteratSolverTolerance").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("NonlinIteratSolverTolerance",
+                                        m_tolerance,
+                                        NekConstants::kNekIterativeTol);
+            }
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable,
+                                                  "NonlinIteratMaxIterations"))
+            {
+                m_maxiter = boost::lexical_cast<int>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "NonlinIteratMaxIterations").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("NonlinIteratMaxIterations",
+                                        m_maxiter,
+                                        5000);
+            }
+        }
+
+        void NekNonlinSys::v_InitObject()
+        {
+            NekNonlinLinSys::v_InitObject();
         }
 
         NekNonlinSys::~NekNonlinSys()

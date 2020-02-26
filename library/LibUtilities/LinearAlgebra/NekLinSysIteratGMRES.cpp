@@ -456,7 +456,12 @@ namespace Nektar
                 if((!truncted) || (nd < m_maxhesband))
                 {
                     // if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude )
-                    if ((eps < m_tolerance * m_tolerance * m_rhs_magnitude)&&nd>1 )
+                    if ((eps < m_tolerance * m_tolerance * m_rhs_magnitude)&&nd>0 )
+                    {
+                        m_converged = true;
+                    }
+                    NekDouble tolmin = 1.0E-15;
+                    if (eps < tolmin * tolmin * m_rhs_magnitude)
                     {
                         m_converged = true;
                     }

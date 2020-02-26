@@ -44,8 +44,6 @@ namespace Nektar
         /// A global linear system.
         class  NekLinSysIteratGMRES;
 
-        typedef std::shared_ptr<NekLinSysIteratGMRES> NekLinSysIteratGMRESSharedPtr;
-        
         class  NekLinSysIteratGMRES : public NekLinSysIterat
         {
         public:
@@ -68,7 +66,7 @@ namespace Nektar
                 const LibUtilities::CommSharedPtr           &vComm,
                 const int                                   nDimen)
             {
-                NekLinSysIteratGMRESSharedPtr p = MemoryManager<
+                NekLinSysIteratSharedPtr p = MemoryManager<
                     NekLinSysIteratGMRES>::AllocateSharedPtr(pSession, vComm, nDimen);
                 p->InitObject();
                 return p;

@@ -96,6 +96,7 @@ namespace Nektar
         void NekLinSysIterat::v_InitObject()
         {
             NekNonlinLinSys::v_InitObject();
+            setUniversalUniqueMap();
         }
 
         NekLinSysIterat::~NekLinSysIterat()
@@ -110,6 +111,11 @@ namespace Nektar
                 m_map   =   Array<OneD, int>(nmap,0);
             }
             Vmath::Vcopy(nmap,map,1,m_map,1);
+        }
+
+        void NekLinSysIterat::setUniversalUniqueMap()
+        {
+            m_map   =   Array<OneD, int>(m_SysDimen,1);
         }
 
         void  NekLinSysIterat::Set_Rhs_Magnitude(

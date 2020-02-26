@@ -30,7 +30,7 @@ stages:
     - OS_VERSION=$(echo $CI_JOB_NAME | cut -d- -f 1)
     - BUILD_TYPE=$(echo $CI_JOB_NAME | cut -d- -f 2)
     - export CCACHE_DIR=/cache/nektar/$OS_VERSION/
-    - export NUM_CPUS=2
+    - export NUM_CPUS=3
     - export CONTAINER_NAME=test-$CI_JOB_ID
     - export ENV_NAME=env-${OS_VERSION}-${BUILD_TYPE}
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY

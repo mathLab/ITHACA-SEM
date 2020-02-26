@@ -305,65 +305,65 @@ centos7-full-warnings:
 # ####################  OSX  #####################
 # ################################################
 
-# .build-and-test-osx-template: &build-and-test-osx-template
-#   <<: *build-and-test-template
-#   tags:
-#     - macos
-#   script:
-#     - mkdir -p log
-#     - export OS_VERSION="osx"
-#     - export NUM_CPUS=8
-#     - bash -x ./.gitlab-ci/build-and-test.sh |
-#       tee log/${OS_VERSION}_${BUILD_TYPE}.log
+.build-and-test-osx-template: &build-and-test-osx-template
+  <<: *build-and-test-template
+  tags:
+    - macos
+  script:
+    - mkdir -p log
+    - export OS_VERSION="osx"
+    - export NUM_CPUS=8
+    - bash -x ./.gitlab-ci/build-and-test.sh |
+      tee log/${OS_VERSION}_${BUILD_TYPE}.log
 
 
-# osx-default-build-and-test:
-#   <<: *build-and-test-osx-template
-#   variables:
-#     BUILD_TYPE: "default"
+osx-default-build-and-test:
+  <<: *build-and-test-osx-template
+  variables:
+    BUILD_TYPE: "default"
 
-# osx-full-build-and-test:
-#   <<: *build-and-test-osx-template
-#   variables:
-#     BUILD_TYPE: "full"
+osx-full-build-and-test:
+  <<: *build-and-test-osx-template
+  variables:
+    BUILD_TYPE: "full"
 
 
-# osx-default-warnings:
-#   <<: *compiler-warning-template
+osx-default-warnings:
+  <<: *compiler-warning-template
 
-# osx-full-warnings:
-#   <<: *compiler-warning-template
+osx-full-warnings:
+  <<: *compiler-warning-template
 
 
 # ################################################
 # #################  WINDOWS  ####################
 # ################################################
 
-# win7-default-build-and-test:
-#   <<: *build-and-test-template
-#   tags:
-#     - win7
-#   script:
-#     - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;" + $Env:path
-#     - echo $Env:path
-#     - mkdir build
-#     - cd build
-#     - cmake.exe -G "Visual Studio 12 2013 Win64" --config Debug ..
-#     - cmake.exe --build . --target ALL_BUILD --config Debug
-#     - cmake.exe --build . --target INSTALL --config Debug
-#     - ctest --output-on-failure -C Debug -j3
+win7-default-build-and-test:
+  <<: *build-and-test-template
+  tags:
+    - win7
+  script:
+    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;" + $Env:path
+    - echo $Env:path
+    - mkdir build
+    - cd build
+    - cmake.exe -G "Visual Studio 12 2013 Win64" --config Debug ..
+    - cmake.exe --build . --target ALL_BUILD --config Debug
+    - cmake.exe --build . --target INSTALL --config Debug
+    - ctest --output-on-failure -C Debug -j3
 
 
-# win10-default-build-and-test:
-#   <<: *build-and-test-template
-#   tags:
-#     - win10
-#   script:
-#     - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;$CI_PROJECT_DIR\build\ThirdParty\dist\bin;" + $Env:path
-#     - echo $Env:path
-#     - mkdir build
-#     - cd build
-#     - cmake.exe -G "Visual Studio 14 2015 Win64" --config Debug ..
-#     - cmake.exe --build . --target ALL_BUILD --config Debug
-#     - cmake.exe --build . --target INSTALL --config Debug
-#     - ctest --output-on-failure -C Debug -j3
+win10-default-build-and-test:
+  <<: *build-and-test-template
+  tags:
+    - win10
+  script:
+    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;$CI_PROJECT_DIR\build\ThirdParty\dist\bin;" + $Env:path
+    - echo $Env:path
+    - mkdir build
+    - cd build
+    - cmake.exe -G "Visual Studio 14 2015 Win64" --config Debug ..
+    - cmake.exe --build . --target ALL_BUILD --config Debug
+    - cmake.exe --build . --target INSTALL --config Debug
+    - ctest --output-on-failure -C Debug -j3

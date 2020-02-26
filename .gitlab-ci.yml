@@ -16,6 +16,8 @@ stages:
       - .gitmodules
       - .gitlab-ci.yml
       - CMakeLists.txt
+    variables:
+      - $CI_MERGE_REQUEST_TITLE !~ /^WIP:.*/
 
 .build-env-template: &build-env-template
   <<: *execution-conditions

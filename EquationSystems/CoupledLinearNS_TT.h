@@ -200,6 +200,7 @@ namespace Nektar
 	int use_overlap_p_space;
 	int write_ROM_field;
 	int snapshot_computation_plot_rel_errors;
+	int compute_smaller_model_errs;
 
         Eigen::MatrixXd MtM;
         Eigen::MatrixXd Mtrafo;

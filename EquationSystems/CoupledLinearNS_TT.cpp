@@ -7097,6 +7097,225 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		cout << "relative euclidean projection error norm in y coords: " << diff_y_proj.norm() / snap_y.norm() << " of snapshot number " << iter_index << endl;
 
 	}
+
+	if (use_fine_grid_VV)
+	{
+		// repeat the evaluation without the accuracy check
+		// fine_general_param_vector is available already
+		// start sweeping 
+
+		// Question: how to init?
+		// could use all-zero or the cluster-mean
+		Array<OneD, NekDouble> cluster_mean_x(snapshot_x_collection[0].num_elements(), 0.0);
+		Array<OneD, NekDouble> cluster_mean_y(snapshot_y_collection[0].num_elements(), 0.0);
+/*		for (std::set<int>::iterator it=current_cluster.begin(); it!=current_cluster.end(); ++it)
+		{
+			for (int i = 0; i < snapshot_x_collection[0].num_elements(); ++i)
+			{
+				cluster_mean_x[i] += (1.0 / current_cluster.size()) * snapshot_x_collection[*it][i];
+				cluster_mean_y[i] += (1.0 / current_cluster.size()) * snapshot_y_collection[*it][i];
+			}
+		} */
+
+		Eigen::MatrixXd collected_qoi = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		Eigen::MatrixXd collected_relative_L2errors = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		Eigen::MatrixXd collected_relative_Linferrors = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		Eigen::MatrixXd collected_relative_L2errors_v2 = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		Eigen::MatrixXd collected_relative_Linferrors_v2 = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		int fine_grid_dir0_index = 0;
+		int fine_grid_dir1_index = 0;
+		double locROM_qoi;
+		for (int iter_index = 0; iter_index < fine_grid_dir0*fine_grid_dir1; ++iter_index)
+		{
+//			cout << "fine_grid_iter_index " << iter_index << " of max " << fine_grid_dir0*fine_grid_dir1 << endl;
+			int current_index = iter_index;
+			double current_nu;
+			double w;
+			Array<OneD, NekDouble> current_param = fine_general_param_vector[current_index];
+			w = current_param[0];	
+			current_nu = current_param[1];
+			if (debug_mode)
+			{
+//				cout << " VV online phase current nu " << current_nu << endl;
+//				cout << " VV online phase current w " << w << endl;
+			}
+			Set_m_kinvis( current_nu );
+			if (use_Newton)
+			{
+				DoInitialiseAdv(cluster_mean_x, cluster_mean_y);
+			}
+			Eigen::MatrixXd curr_xy_proj = project_onto_basis(cluster_mean_x, cluster_mean_y);
+			Eigen::MatrixXd affine_mat_proj;
+			Eigen::VectorXd affine_vec_proj;
+			affine_mat_proj = gen_affine_mat_proj_2d(current_nu, w);
+			affine_vec_proj = gen_affine_vec_proj_2d(current_nu, w, current_index);
+			Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+			double relative_change_error;
+			int no_iter=0;
+			Array<OneD, double> field_x;
+			Array<OneD, double> field_y;
+			// now start looping
+			do
+			{
+				// for now only Oseen // otherwise need to do the DoInitialiseAdv(cluster_mean_x, cluster_mean_y);
+				Eigen::VectorXd prev_solve_affine = solve_affine;
+				Eigen::VectorXd repro_solve_affine = RB * solve_affine;
+				Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+
+				recover_snapshot_loop(reconstruct_solution, field_x, field_y);
+				if (use_Newton)
+				{
+					DoInitialiseAdv(field_x, field_y);
+				}
+				curr_xy_proj = project_onto_basis(field_x, field_y);
+				if (parameter_space_dimension == 1)
+				{
+					affine_mat_proj = gen_affine_mat_proj(current_nu);
+					affine_vec_proj = gen_affine_vec_proj(current_nu, current_index);
+				}
+				else if (parameter_space_dimension == 2)
+				{
+					affine_mat_proj = gen_affine_mat_proj_2d(current_nu, w);
+					affine_vec_proj = gen_affine_vec_proj_2d(current_nu, w, current_index);
+				}
+				solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+				relative_change_error = (solve_affine - prev_solve_affine).norm() / prev_solve_affine.norm();
+//				cout << "relative_change_error " << relative_change_error << endl;
+				no_iter++;
+			} 
+			while( ((relative_change_error > 1e-5) && (no_iter < 100)) );
+//			cout << "ROM solve no iters used " << no_iter << endl;
+			Eigen::VectorXd repro_solve_affine = RB * solve_affine;
+			Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+			if (write_ROM_field || (qoi_dof >= 0))
+			{
+				locROM_qoi = recover_snapshot_data(reconstruct_solution, 0);
+			}
+			collected_qoi(fine_grid_dir0_index, fine_grid_dir1_index) = locROM_qoi;
+			if (use_fine_grid_VV_and_load_ref)
+			{
+				collected_relative_L2errors(fine_grid_dir0_index, fine_grid_dir1_index) = L2norm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
+				collected_relative_Linferrors(fine_grid_dir0_index, fine_grid_dir1_index) = Linfnorm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / Linfnorm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
+				if (use_non_unique_up_to_two)
+				{
+					collected_relative_L2errors_v2(fine_grid_dir0_index, fine_grid_dir1_index) = L2norm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1], snapshot_y_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1], snapshot_y_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1]);
+					collected_relative_Linferrors_v2(fine_grid_dir0_index, fine_grid_dir1_index) = Linfnorm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1], snapshot_y_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1]) / Linfnorm_ITHACA(snapshot_x_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1], snapshot_y_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1]);
+				}
+			}
+			fine_grid_dir1_index++;
+			if (fine_grid_dir1_index == fine_grid_dir1)
+			{
+				fine_grid_dir1_index = 0;
+				fine_grid_dir0_index++;
+			}			
+		} // for (int iter_index = 0; iter_index < fine_grid_dir0*fine_grid_dir1; ++iter_index)
+		std::stringstream sstm;
+		sstm << "VV_ROM_cluster.txt";
+		std::string LocROM_txt = sstm.str();
+		const char* outname = LocROM_txt.c_str();
+		ofstream myfile (outname);
+		if (myfile.is_open())
+		{
+			for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+			{
+				for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+				{
+					myfile << std::setprecision(17) << collected_qoi(i0,i1) << "\t";
+				}
+				myfile << "\n";
+			}
+			myfile.close();
+		}
+		else cout << "Unable to open file"; 
+
+		if (use_fine_grid_VV_and_load_ref)
+		{
+
+			std::stringstream sstm_VV;
+			sstm_VV << "VV_ROM_cluster_VV.txt";
+			std::string LocROM_txt_VV = sstm_VV.str();
+			const char* outname_VV = LocROM_txt_VV.c_str();
+			ofstream myfile_VV (outname_VV);
+			if (myfile_VV.is_open())
+			{
+				for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+				{
+					for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+					{
+						myfile_VV << std::setprecision(17) << collected_relative_L2errors(i0,i1) << "\t";
+					}
+					myfile_VV << "\n";
+				}
+				myfile_VV.close();
+			}
+			else cout << "Unable to open file"; 
+
+			std::stringstream sstm_VV_Linf;
+			sstm_VV_Linf << "VV_ROM_cluster_VV_Linf.txt";
+			std::string LocROM_txt_VV_Linf = sstm_VV_Linf.str();
+			const char* outname_VV_Linf = LocROM_txt_VV_Linf.c_str();
+			ofstream myfile_VV_Linf (outname_VV_Linf);
+			if (myfile_VV_Linf.is_open())
+			{
+				for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+				{
+					for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+					{
+						myfile_VV_Linf << std::setprecision(17) << collected_relative_Linferrors(i0,i1) << "\t";
+					}
+					myfile_VV_Linf << "\n";
+				}
+				myfile_VV_Linf.close();
+			}
+			else cout << "Unable to open file"; 
+			
+			if (use_non_unique_up_to_two)
+			{
+				std::stringstream sstm_VV;
+				sstm_VV << "VV_ROM_cluster_VV_v2.txt";
+				std::string LocROM_txt_VV = sstm_VV.str();
+				const char* outname_VV = LocROM_txt_VV.c_str();
+				ofstream myfile_VV (outname_VV);
+				if (myfile_VV.is_open())
+				{
+					for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+					{
+						for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+						{
+							myfile_VV << std::setprecision(17) << collected_relative_L2errors_v2(i0,i1) << "\t";
+						}
+						myfile_VV << "\n";
+					}
+					myfile_VV.close();
+				}
+				else cout << "Unable to open file"; 
+
+				std::stringstream sstm_VV_Linf;
+				sstm_VV_Linf << "VV_ROM_cluster_VV_Linf_v2.txt";
+				std::string LocROM_txt_VV_Linf = sstm_VV_Linf.str();
+				const char* outname_VV_Linf = LocROM_txt_VV_Linf.c_str();
+				ofstream myfile_VV_Linf (outname_VV_Linf);
+				if (myfile_VV_Linf.is_open())
+				{
+					for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+					{
+						for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+						{
+							myfile_VV_Linf << std::setprecision(17) << collected_relative_Linferrors_v2(i0,i1) << "\t";
+						}
+						myfile_VV_Linf << "\n";
+					}
+					myfile_VV_Linf.close();
+				}
+				else cout << "Unable to open file"; 
+			}
+
+		}
+
+	}
+
+
+
     }
 
     void CoupledLinearNS_TT::recover_snapshot_loop(Eigen::VectorXd reconstruct_solution, Array<OneD, double> & field_x, Array<OneD, double> & field_y)
@@ -7326,6 +7545,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	else
 	{
 		do_trafo_check = 1;
+	}
+	if (m_session->DefinesParameter("compute_smaller_model_errs")) 
+	{
+		compute_smaller_model_errs = m_session->GetParameter("compute_smaller_model_errs");	
+	}
+	else
+	{
+		compute_smaller_model_errs = 0;
 	}
 	if (m_session->DefinesParameter("qoi_dof")) 
 	{

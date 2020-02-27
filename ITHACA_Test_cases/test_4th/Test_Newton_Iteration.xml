@@ -46,7 +46,7 @@
             <P> param4 = 0.1       </P>
             <P> ref_param_index = 2       </P>
             <P> ref_param_nu = 1       </P>
-            <P> POD_tolerance = .999999       </P>
+            <P> POD_tolerance = .999       </P>
             <P> use_Newton = 1       </P>
 	    <P> globally_connected = 2      </P>
 	    <P> debug_mode = 0      </P>

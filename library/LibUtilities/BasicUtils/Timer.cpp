@@ -34,6 +34,8 @@
 
 #include <LibUtilities/BasicUtils/Timer.h>
 
+#include <iomanip>
+
 namespace Nektar
 {
 namespace LibUtilities
@@ -99,7 +101,7 @@ void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm)
 
         if (comm->GetRank() == 0)
         {
-            std::cout << item->first << '\t'
+            std::cout << std::setw(22) << item->first << '\t'
                 << elapsedAve << '\t'
                 << elapsedMin << '\t'
                 << elapsedMax << '\t'

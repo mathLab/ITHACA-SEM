@@ -91,6 +91,7 @@ stages:
     build-env-default
   variables:
     OS_DISTRO: debian
+    GIT_STRATEGY: none
   script:
     - OS_VERSION=$(echo $CI_JOB_NAME | cut -d- -f 1)
     - BUILD_TYPE=$(echo $CI_JOB_NAME | cut -d- -f 2)
@@ -206,6 +207,7 @@ tutorials-build:
   <<: *build-env-debian-template-default
   variables:
     OS_DISTRO: ubuntu
+    GIT_STRATEGY: none
 
 .build-env-ubuntu-template-full: &build-env-ubuntu-template-full
   <<: *build-env-ubuntu-template-default
@@ -277,6 +279,7 @@ trusty-full-warnings:
   <<: *build-env-debian-template-default
   variables:
     OS_DISTRO: centos
+    GIT_STRATEGY: none
 
 .build-env-centos-template-full: &build-env-centos-template-full
   <<: *build-env-centos-template-default

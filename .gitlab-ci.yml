@@ -4,9 +4,6 @@ stages:
   - build-and-test
   - compiler-warnings
 
-variables:
-  NEKTAR_REGISTRY_IMAGE: gitlab.nektar.info:4567/nektar/nektar
-
 .execution-conditions: &execution-conditions
   only:
     refs:
@@ -39,8 +36,8 @@ variables:
     - export CONTAINER_NAME=test-$CI_JOB_ID
     - export ENV_NAME=env-${OS_VERSION}-${BUILD_TYPE}
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker pull $NEKTAR_REGISTRY_IMAGE:$ENV_NAME
-    - sed "s %%BASE_IMAGE%% $NEKTAR_REGISTRY_IMAGE:$ENV_NAME g" .gitlab-ci/Dockerfile_add_repo > Dockerfile_tmp
+    - docker pull $CI_REGISTRY_IMAGE:$ENV_NAME
+    - sed "s %%BASE_IMAGE%% $CI_REGISTRY_IMAGE:$ENV_NAME g" .gitlab-ci/Dockerfile_add_repo > Dockerfile_tmp
     - export ENV_IMAGE=$(docker build -q -f Dockerfile_tmp .)
     - mkdir -p log
     - docker run --name $CONTAINER_NAME -v ccache:/cache
@@ -55,7 +52,7 @@ variables:
         echo "Container exit code: $exit_code"
     - if [ $exit_code -ne 0 ];
       then
-        export FAIL_IMAGE=$NEKTAR_REGISTRY_IMAGE:pipeline_${CI_PIPELINE_ID}_${OS_VERSION}_${BUILD_TYPE};
+        export FAIL_IMAGE=$CI_REGISTRY_IMAGE:pipeline_${CI_PIPELINE_ID}_${OS_VERSION}_${BUILD_TYPE};
         echo FAIL $FAIL_IMAGE;
         docker commit $CONTAINER_NAME $FAIL_IMAGE;
         docker push $FAIL_IMAGE; 
@@ -97,9 +94,9 @@ variables:
   script:
     - OS_VERSION=$(echo $CI_JOB_NAME | cut -d- -f 1)
     - BUILD_TYPE=$(echo $CI_JOB_NAME | cut -d- -f 2)
-    - sed -e "s %%OS_VERSION%% $OS_VERSION g" -e "s %%REGISTRY%% $NEKTAR_REGISTRY_IMAGE g" docker/nektar-env/Dockerfile_${OS_DISTRO}_${BUILD_TYPE} > Dockerfile
+    - sed -e "s %%OS_VERSION%% $OS_VERSION g" -e "s %%REGISTRY%% $CI_REGISTRY_IMAGE g" docker/nektar-env/Dockerfile_${OS_DISTRO}_${BUILD_TYPE} > Dockerfile
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - export IMAGE=$NEKTAR_REGISTRY_IMAGE:env-${OS_VERSION}-${BUILD_TYPE}
+    - export IMAGE=$CI_REGISTRY_IMAGE:env-${OS_VERSION}-${BUILD_TYPE}
     - docker pull $IMAGE || true
     - docker build --pull -t $IMAGE .
     - docker push $IMAGE
@@ -157,7 +154,7 @@ buster-documentation-build-env:
   stage:
     build-env-full
   script:
-    - export IMAGE=$NEKTAR_REGISTRY_IMAGE:env-documentation
+    - export IMAGE=$CI_REGISTRY_IMAGE:env-documentation
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker pull $IMAGE || true
     - docker build --pull -t $IMAGE -f docker/nektar-env/Dockerfile_debian_documentation .
@@ -165,7 +162,7 @@ buster-documentation-build-env:
 
 .build-documentation-template: &build-documentation-template
   <<: *build-and-test-template
-  image: $NEKTAR_REGISTRY_IMAGE:env-documentation
+  image: $CI_REGISTRY_IMAGE:env-documentation
 
 user-guide-build:
   <<: *build-documentation-template

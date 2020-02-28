@@ -938,6 +938,9 @@ namespace Nektar
                 localEdgeIdsArray[i] = uniqueEdgeIds[i];
             }
 
+            //Sort localEdgeIdsArray before sending (this is important!)
+            std::sort(localEdgeIdsArray.begin(), localEdgeIdsArray.end());
+
             Array<OneD, int> rankLocalEdgeIds(std::accumulate(
                     rankNumEdges.begin(), rankNumEdges.end(), 0), 0);
 

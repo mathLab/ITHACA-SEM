@@ -1010,6 +1010,27 @@ namespace Nektar
                 ++cnt;
             }
 
+            //Debugging of byte size of arrays sent
+            int mySize = sizeof(double) * m_edgeTraceIndex.size();
+            int allSizes[nRanks];
+            MPI_Gather(&mySize, 1, MPI_INT, &allSizes, 1, MPI_INT, 0, m_commGraph);
+            if (myRank == 0)
+            {
+                int sizeTotal = 0;
+                int minSize = allSizes[0];
+                int maxSize = allSizes[0];
+                std::cout << "RANK(SEND BYTES): ";
+                for (int i = 0; i < nRanks; ++i)
+                {
+                    sizeTotal += allSizes[i];
+                    minSize = (allSizes[i] < minSize) ? allSizes[i] : minSize;
+                    maxSize = (allSizes[i] > maxSize) ? allSizes[i] : maxSize;
+                    std::cout << i << "(" << allSizes[i] << "), ";
+                }
+                std::cout << "\b\b" << std::endl;
+                std::cout << "AVG SIZE: " << sizeTotal/nRanks << " MAX SIZE: " << maxSize << " MIN SIZE: " << minSize << std::endl;
+            }
+
             m_sendDisp = Nektar::Array<OneD, int>(nNeighbours, 0);
             for (i = 1; i < nNeighbours; ++i)
             {

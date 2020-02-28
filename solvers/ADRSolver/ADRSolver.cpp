@@ -48,7 +48,6 @@ int main(int argc, char *argv[])
 
     try
     {
-        int i;
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 

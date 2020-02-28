@@ -53,6 +53,7 @@
 #include <boost/graph/properties.hpp>
 #include <boost/graph/bandwidth.hpp>
 
+#include <chrono>
 using namespace std;
 
 namespace Nektar
@@ -1117,9 +1118,22 @@ namespace Nektar
                 sendBuff[i] = Fwd[m_edgeTraceIndex[i]];
             }
 
+            auto start = std::chrono::high_resolution_clock::now();
+
             MPI_Neighbor_alltoallv(sendBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
                                    recvBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
                                    m_commGraph);
+
+            auto end = std::chrono::high_resolution_clock::now();
+            m_mpiTime += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+            NekDouble totalTime = 0;
+            MPI_Reduce(&m_mpiTime, &totalTime, 1, MPI_DOUBLE, MPI_SUM, 0, m_commGraph);
+            int my_rank;
+            MPI_Comm_rank(m_commGraph, &my_rank);
+            if (my_rank == 0)
+            {
+                std::cout << "TOTAL MPI TIME: " << totalTime << std::endl;
+            }
 
             for (int i = 0; i < m_edgeTraceIndex.size(); ++i)
             {

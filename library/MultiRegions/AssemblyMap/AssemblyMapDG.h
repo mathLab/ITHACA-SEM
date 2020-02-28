@@ -54,6 +54,7 @@ namespace Nektar
         class AssemblyMapDG: public AssemblyMap
         {
         public:
+            NekDouble m_mpiTime;
             /// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMapDG();
 

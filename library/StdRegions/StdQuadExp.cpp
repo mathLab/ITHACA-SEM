@@ -903,9 +903,10 @@ namespace Nektar
 	  vv1 = physvals[0];
 	  vv2 = physvals[1];
 	  nq1 = quadpts[0].num_elements();
-	  mode0 = 0;
-	  mode1 = 0;
 	  
+	  mode0 =  0;
+	  mode1 =  0;
+	  	  
 	  
 	}  
 	NekDouble ret1 = StdExpansion::PhysEvaluateBary(Array<OneD, NekDouble>(1, coll[0]), 

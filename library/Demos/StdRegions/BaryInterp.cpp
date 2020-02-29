@@ -58,9 +58,9 @@ using namespace Nektar::StdRegions;
 namespace po = boost::program_options;
 
 template <class myType>
-int commoncode(myType*E, 
+Array<OneD, NekDouble> commoncode(myType*E, 
 	       NekMatrix<NekDouble> matT,
-	       int n_coeffs)
+	       int n_coeffs, int mode0, int mode1)
 {
   Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
   t[0] = -0.5;
@@ -68,8 +68,9 @@ int commoncode(myType*E,
   t[2] = -0.3;
    
   const Array<OneD, const NekDouble> tt = t;
-  int tallyflag = 0;
-  for(int uu = 0; uu<n_coeffs; uu++)
+  Array<OneD, NekDouble> ret(4);
+  int uu = n_coeffs;
+  //for(int uu = 0; uu<n_coeffs; uu++)
   { 	      
      
     // Using existing Nek++ version:
@@ -79,37 +80,44 @@ int commoncode(myType*E,
     t1.Stop();
     NekDouble elapsed  = t1.TimePerTest(1);
     cout<<"\n Original Nek++ PhysEvaluate took = "<<elapsed<<" s. val = "<<val1<<"\n";
-      
+    ret[0] = val1;      
+
     // Using (1): separable basis in x- and y- direction
     // case (1A)
     Array<OneD, Array<OneD,  NekDouble> >quadpts(2);
     quadpts[0] = E->GetBasis(0)->GetZ();
     quadpts[1] = E->GetBasis(1)->GetZ();
-		
+
     Array<OneD, Array<OneD,  NekDouble> >indphis(2);
-    indphis[0] = E->GetBasis(0)->GetBdata();
-    indphis[1] = E->GetBasis(1)->GetBdata();
+    Array<OneD, NekDouble> r1(quadpts[0].num_elements());
+    Array<OneD, NekDouble> r2(quadpts[1].num_elements());
+    indphis[0] = r1;
+    indphis[1] = r2;
+    Vmath::Vcopy(quadpts[0].num_elements(), E->GetBasis(0)->GetBdata()+quadpts[0].num_elements()*mode0, 1, indphis[0], 1);
+    Vmath::Vcopy(quadpts[1].num_elements(), E->GetBasis(1)->GetBdata()+quadpts[1].num_elements()*mode1, 1, indphis[1], 1);
     t1.Start();   				    
     NekDouble val1A = E->PhysEvaluateBaryInd(tt, quadpts, indphis, 0);
     t1.Stop();
     NekDouble elapsed1A  = t1.TimePerTest(1);
     cout<<"\n 1A case: took "<<elapsed1A<<" s.val = "<<val1A;
-      
+    ret[1] = val1A;
+
     //case (1Ba)
     Array<OneD, Array<OneD,  NekDouble> >quadpts2(2);
     Array<OneD, Array<OneD,  NekDouble> >indphis2(2);
     t1.Start();   
-    NekDouble val1Ba = E->PhysEvaluateBaryInd(tt, quadpts, indphis, uu);
+    NekDouble val1Ba = E->PhysEvaluateBaryInd(tt, quadpts2, indphis2, uu);
     t1.Stop();
     NekDouble elapsed1Ba  = t1.TimePerTest(1);
     cout<<"\n 1Ba case: took "<<elapsed1Ba<<" s.val = "<<val1Ba;
+    ret[2] = val1Ba;
     
     //case (1Bb) assert should fail
-    t1.Start();   
-    NekDouble val1Bb = E->PhysEvaluateBaryInd(tt, quadpts, indphis, n_coeffs+1);
-    t1.Stop();
-    NekDouble elapsed1Bb  = t1.TimePerTest(1);
-    cout<<"\n 1Bb case: took "<<elapsed1Bb<<" s. val = "<<val1Bb<<"\n";
+    //    t1.Start();   
+    //NekDouble val1Bb = E->PhysEvaluateBaryInd(tt, quadpts, indphis, n_coeffs+1);
+    //t1.Stop();
+    //NekDouble elapsed1Bb  = t1.TimePerTest(1);
+    //cout<<"\n 1Bb case: took "<<elapsed1Bb<<" s. val = "<<val1Bb<<"\n";
 
     // Using (2): Barycentriuc interp version of existing physevaluate()
     t1.Start();   
@@ -117,16 +125,17 @@ int commoncode(myType*E,
     t1.Stop();
     NekDouble elapsed2  = t1.TimePerTest(1);
     cout<<"\n 2 case: took "<<elapsed2<<" s.val = "<<val2;
+    ret[3] = val2;
 
     //check
     if(abs(val1 - val1A)>1e-9 ||
        abs(val1 - val1Ba)>1e-9 ||
        abs(val1 - val2)>1e-9  )
       {
-	tallyflag = 1;
+	cout<<"\n fail !";
       }
   }
-  return tallyflag;
+  return ret;
 }
 
 
@@ -559,7 +568,6 @@ int main(int argc, char *argv[])
     Array<OneD, NekDouble> dx = Array<OneD, NekDouble>(totPoints);
     Array<OneD, NekDouble> dy = Array<OneD, NekDouble>(totPoints);
     Array<OneD, NekDouble> dz = Array<OneD, NekDouble>(totPoints);
-    Array<OneD, NekDouble> sol = Array<OneD, NekDouble>(totPoints);
 
     switch (dimension)
     {
@@ -590,7 +598,7 @@ int main(int argc, char *argv[])
 
   NekMatrix<NekDouble> matT;
   int n_coeffs;
-  int tallyflag = 0;
+  Array<OneD, NekDouble> ret;
   if(( strcmp(ShapeTypeMap[stype],"Triangle") == 0
       || strcmp(ShapeTypeMap[stype],"Quadrilateral") == 0 ) &&( baryinterp == 1))
     {
@@ -602,7 +610,29 @@ int main(int argc, char *argv[])
 
 	  n_coeffs = LibUtilities::StdTriData::getNumberOfCoefficients(nmodes0,nmodes1);
 	  PolyEval2(&exp1, matT, n_coeffs);
-	  tallyflag = commoncode(&exp1,matT,n_coeffs);
+	  int coeffid = n_coeffs-1;
+	  int       m = nmodes1, i;
+	  int  mode0 = 0;
+	    
+	  int ctr2 = 0, temp = coeffid;
+	  for (i = 0; i < nmodes0; ++i, m+=nmodes1-i)
+	    {
+	      if(ctr2>0)
+		{
+		  temp = temp-(nmodes1-i)-1;
+	      }
+	      
+	      if (m > coeffid)
+		{
+		  mode0 = i;
+		  break;
+		}
+	      ctr2++;
+	    }
+	  
+	  int mode1 = coeffid;
+	  cout<<"\n mode0="<<mode0<<" mode1=" <<mode1<<"\n";
+	  ret = commoncode(&exp1,matT,n_coeffs-1,mode0,mode1);
 	}
       else  if( strcmp(ShapeTypeMap[stype], "Quadrilateral") == 0 )
 	{
@@ -610,11 +640,13 @@ int main(int argc, char *argv[])
 
 	  int nmodes0 = E->GetBasis(0)->GetNumModes();
 	  int nmodes1 = E->GetBasis(1)->GetNumModes();
-
 	  n_coeffs = LibUtilities::StdQuadData::getNumberOfCoefficients(nmodes0,nmodes1);
+	  int mode0  = ((int)n_coeffs-1)%(nmodes1);
+	  int mode1 =  (n_coeffs-1)/(nmodes0);
+	  
 	  PolyEval2(&exp1, matT, n_coeffs);
 
-	  tallyflag = commoncode(&exp1,matT,n_coeffs);		
+	  ret = commoncode(&exp1,matT,n_coeffs-1,mode0, mode1);		
 	}
       else
 	{
@@ -623,13 +655,18 @@ int main(int argc, char *argv[])
 	}
 	    
     }
-  if(tallyflag == 1)
-    {
-	cout<<"\n failed!";
-	exit(0);
-  }
+  // ret has first value = original Nektar++ PhysEvaluate call;
+  // so we will compare the rest of the values in ret with ret[0]
 
-	  
-return 0;
+  Array<OneD,NekDouble> sol(3,ret[0]);
+  Array<OneD,NekDouble> phys(3);
+  phys[0] = ret[1];
+  phys[1] = ret[2];
+  phys[2] = ret[3];
+
+
+  cout << "\nL infinity error: \t" << E->Linf(phys, sol) << endl; 
+  cout << "L 2 error: \t \t \t" << E->L2(phys, sol) << endl;  
+  return 0;
 }
 

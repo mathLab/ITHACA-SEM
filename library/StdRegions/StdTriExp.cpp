@@ -964,9 +964,8 @@ namespace Nektar
 	Array<OneD, NekDouble> vv1; 
 	Array<OneD, NekDouble> vv2; 
 	
-	int nq1 ;
-        
-
+	int nq1 = m_base[0]->GetNumPoints();
+	
 	int mode0, mode1;
 
 	//assert that mode <= maxtricoeff
@@ -975,21 +974,20 @@ namespace Nektar
 							      m_base[1]->GetNumModes()),
 		                                              "mode > max allowable mode");
 	
-
-
 	// Case when we want to interpolate the basis function 
 	// with the data already present in calling object
-
 	if(quadpts[0].num_elements() == 0) //NULL vector passed for quadpts, use existing
 	  {
-	    // assert that physvals also null
-	    ASSERTL2(physvals[0].num_elements == 0, "cannot pass physvals in this case."); 
-	    // Refer to documentation fo Barycentric interpolation implemented in Nektar++
-
-	    vv1 = m_base[0]->GetBdata();
-	    vv2 = m_base[1]->GetBdata();
-	    nq1 = m_base[0]->GetNumPoints();
+	    cout<<"\n in if";
 	    NekDouble coeffid = mode;
+	    
+	    // deal with top vertex mode in modified basis
+	    if (coeffid == 1 &&
+		m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+	      {
+		vv1 = Array<OneD, NekDouble>(nq1,1.0);
+	      }
+
 	    
 	    int       nmodes0 = m_base[0]->GetNumModes();
 	    int       nmodes1 = m_base[1]->GetNumModes();
@@ -1011,18 +1009,23 @@ namespace Nektar
 	      }
 	      ctr2++;
 	    }
+
 	    mode1 = coeffid;
-	    // deal with top vertex mode in modified basis
-	    if (coeffid == 1 &&
-		m_base[0]->GetBasisType() == LibUtilities::eModified_A)
-	      {
-		vv1 = Array<OneD, NekDouble>(nq1,1.0);
-	      }
-	    
+
+	    // assert that physvals also null
+	    ASSERTL2(physvals[0].num_elements == 0, "cannot pass physvals in this case."); 
+	    // Refer to documentation fo Barycentric interpolation implemented in Nektar++
+
+	    vv1 = m_base[0]->GetBdata();
+	    vv2 = m_base[1]->GetBdata();
+	    cout<<"\n mode0 = "<<mode0<<" mode1="<<mode1<<"\n";	    
 	  }
 	else //mode = 0 (not basis interpolation, caller sends quadpts and physvals)
 	  {
-	    int nq1 = quadpts[1].num_elements(), nq0 = quadpts[0].num_elements();
+	    cout<<"\n in else";
+	    // assert if quadpts[0].num_elements() == quadpts[1].num_elements
+	    int nq1 = quadpts[1].num_elements();
+	    int nq0 = quadpts[0].num_elements();
 	    //redefine m_bcweights here coz quad pts changed
 	    StdExpansion::m_bcweightstest[1] = Array<OneD, NekDouble>(nq1, 1.0);
 	    Array<OneD, NekDouble> z = quadpts[1];
@@ -1061,10 +1064,9 @@ namespace Nektar
 		
 	      vv1 = physvals[0];
 	      vv2 = physvals[1];
-	      nq1 = quadpts[0].num_elements();
+	     
 	      mode0 = 0;
 	      mode1 = 0;
-	      
 	      
 	  }  
 	NekDouble ret1 = StdExpansion::PhysEvaluateBary(Array<OneD, NekDouble>(1, coll[0]), 

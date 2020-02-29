@@ -1064,8 +1064,9 @@ namespace Nektar
 	  int nquad = z.num_elements();
 	  for (int i = 0; i < nquad; ++i)
           {
-
-	    NekDouble xdiff = z[i] - Lcoord[0];
+	    NekDouble xdiff;
+	    xdiff  = z[i] - Lcoord[0];
+	      
 	    if (xdiff == 0.0)
 	    {
 	      ret =  physvals[i+mode*nquad];

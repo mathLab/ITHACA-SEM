@@ -118,7 +118,6 @@ namespace Nektar
             }
         }
 
-
         if (m_explicitDiffusion)
         {
             m_ode.DefineOdeRhs    (&UnsteadyDiffusion::DoOdeRhs,        this);
@@ -126,6 +125,8 @@ namespace Nektar
         }
         else
         {
+            m_ode.DefineOdeRhs    (&UnsteadyDiffusion::DoOdeRhs,        this);
+            m_ode.DefineProjection(&UnsteadyDiffusion::DoOdeProjection, this);
             m_ode.DefineImplicitSolve(
                                 &UnsteadyDiffusion::DoImplicitSolve, this);
         }

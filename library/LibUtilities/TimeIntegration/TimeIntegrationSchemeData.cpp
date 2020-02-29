@@ -564,27 +564,34 @@ TimeIntegrationSchemeData::TimeIntegrate( const NekDouble deltaT,
         // Calculate the stage derivative based upon the stage value
         if (type == eDiagonallyImplicit)
         {
-            if (m_numstages == 1)
+            if( (stage==0) && m_firstStageEqualsOldSolution )
             {
-                m_T = t_old[0] + deltaT;
+                op.DoOdeRhs(m_Y, m_F[stage], m_T);        
             }
             else
             {
-                m_T = t_old[0];
-                for (int j = 0; j <= stage; ++j)
+                if (m_numstages == 1)
                 {
-                    m_T += A(stage, j) * deltaT;
+                    m_T = t_old[0] + deltaT;
                 }
-            }
+                else
+                {
+                    m_T = t_old[0];
+                    for (int j = 0; j <= stage; ++j)
+                    {
+                        m_T += A(stage, j) * deltaT;
+                    }
+                }
 
-            op.DoImplicitSolve(m_tmp, m_Y, m_T, A(stage, stage) * deltaT);
+                op.DoImplicitSolve(m_tmp, m_Y, m_T, A(stage, stage) * deltaT);
 
-            for (int k = 0; k < m_nvars; k++)
-            {
-                Vmath::Vsub(m_npoints, m_Y[k], 1, m_tmp[k], 1, m_F[stage][k],
-                            1);
-                Vmath::Smul(m_npoints, 1.0 / (A(stage, stage) * deltaT),
-                            m_F[stage][k], 1, m_F[stage][k], 1);
+                for (int k = 0; k < m_nvars; k++)
+                {
+                    Vmath::Vsub(m_npoints, m_Y[k], 1, m_tmp[k], 1, m_F[stage][k],
+                                1);
+                    Vmath::Smul(m_npoints, 1.0 / (A(stage, stage) * deltaT),
+                                m_F[stage][k], 1, m_F[stage][k], 1);
+                }
             }
         }
         else if (type == eIMEX)

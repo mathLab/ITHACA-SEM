@@ -65,22 +65,92 @@ namespace Nektar
                 std::bind(&StdExpansion::CreateIndexMap,this, std::placeholders::_1),
                 std::string("StdExpansionIndexMap"))
         {
+	  int nq;
+	  Array<OneD, NekDouble> z;
+
+	  m_bcweightstest = Array<OneD, Array<OneD,NekDouble> >(3);
             switch(m_base.num_elements())
             {
             case 3:
                 ASSERTL2(Bc!=LibUtilities::NullBasisKey,
                     "NULL Basis attempting to be used.");
                 m_base[2] = LibUtilities::BasisManager()[Bc];
-                /* Falls through. */
+		
+		//Barycentric weights:
+		nq = m_base[2]->GetNumPoints();
+		z = m_base[2]->GetZ();
+		m_bcweightstest[2] = Array<OneD, NekDouble>(nq, 1.0);
+		
+		for (int i = 0; i < nq; ++i)
+		  {
+		    for (int j = 0; j < nq; ++j)
+		      {
+			if (i == j)
+			  {
+			    continue;
+			  }
+			
+			m_bcweightstest[2][i] *= (z[i] - z[j]);
+		      }
+		    
+		    m_bcweightstest[2][i] = 1.0 / m_bcweightstest[2][i];
+		  }
+
+
+
+
             case 2:
                 ASSERTL2(Bb!=LibUtilities::NullBasisKey,
                     "NULL Basis attempting to be used.");
+
                 m_base[1] = LibUtilities::BasisManager()[Bb];
-                /* Falls through. */
+		//Barycentric weights:
+		nq = m_base[1]->GetNumPoints();
+		z = m_base[1]->GetZ();
+		m_bcweightstest[1] = Array<OneD, NekDouble>(nq, 1.0);
+		
+		for (int i = 0; i < nq; ++i)
+		  {
+		    for (int j = 0; j < nq; ++j)
+		      {
+			if (i == j)
+			  {
+			    continue;
+			  }
+			
+			m_bcweightstest[1][i] *= (z[i] - z[j]);
+		      }
+		    
+		    m_bcweightstest[1][i] = 1.0 / m_bcweightstest[1][i];
+		  }
+
+
+
             case 1:
                 ASSERTL2(Ba!=LibUtilities::NullBasisKey,
                     "NULL Basis attempting to be used.");
                 m_base[0] = LibUtilities::BasisManager()[Ba];
+		//Barycentric weights:
+		nq = m_base[0]->GetNumPoints();
+		z = m_base[0]->GetZ();
+		m_bcweightstest[0] = Array<OneD, NekDouble>(nq, 1.0);
+		
+		for (int i = 0; i < nq; ++i)
+		  {
+		    for (int j = 0; j < nq; ++j)
+		      {
+			if (i == j)
+			  {
+			    continue;
+			  }
+			
+			m_bcweightstest[0][i] *= (z[i] - z[j]);
+		      }
+		    
+		    m_bcweightstest[0][i] = 1.0 / m_bcweightstest[0][i];
+		  }
+
+
                 break;
             default:
                 break;
@@ -976,6 +1046,42 @@ namespace Nektar
         {
             return v_StdPhysEvaluate(Lcoord,physvals);
         }
+
+      // Only implements 1D, calling method should provide Lcoord for x,y,z sequentially
+      // and physvals for that particularadirection
+        NekDouble StdExpansion::PhysEvaluateBary(const Array<OneD, const NekDouble> &Lcoord,
+						 const Array<OneD, const NekDouble> &physvals,
+						 int mode,				     
+						 int baseidx)
+        {
+	  NekDouble ret;
+	  
+	  //Expecting Lcoords to be passed after doing: LocCoordToLocCollapsed(Lcoords,coll);
+	  
+	  NekDouble numer = 0.0, denom = 0.0;
+	  int flag = 0;
+	  const Array<OneD, const NekDouble> z = m_base[baseidx]->GetZ();
+	  int nquad = z.num_elements();
+	  for (int i = 0; i < nquad; ++i)
+          {
+
+	    NekDouble xdiff = z[i] - Lcoord[0];
+	    if (xdiff == 0.0)
+	    {
+	      ret =  physvals[i+mode*nquad];
+	      flag = 1;
+	      break;
+	    }
+	    NekDouble tmp = m_bcweightstest[baseidx][i] / xdiff;
+	    numer += tmp * physvals[i+mode*nquad];
+	    denom += tmp;
+	  }
+	  if(flag == 0)
+	    ret = numer/denom;
+	  
+	  return ret;
+	}
+
 
         int StdExpansion::v_GetElmtId(void)
         {

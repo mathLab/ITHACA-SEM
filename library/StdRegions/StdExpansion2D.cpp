@@ -112,6 +112,34 @@ namespace Nektar
             }
         }
 
+
+        NekDouble StdExpansion2D::PhysEvaluateBary(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
+        {
+	  
+
+	  Array<OneD, NekDouble> coll(2);
+
+	  ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
+	  ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
+	  ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol, "coord[1] < -1");
+	  ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
+
+	  LocCoordToLocCollapsed(coords,coll);
+	  
+	  int nq2 = m_base[1]->GetNumPoints();
+
+	  // Just a more efficient impl of v_PhysEvaluate() in StdExpansion2D
+	  
+	  Array<OneD, NekDouble> wsp(nq2);
+	  for(int i = 0; i < nq2; i++)
+	    wsp[i] = StdExpansion::PhysEvaluateBary(Array<OneD, NekDouble>(1, coll[0]),
+						    physvals, i,0);
+	  
+	  NekDouble ret2 = StdExpansion::PhysEvaluateBary(Array<OneD, NekDouble>(1, coll[1]),
+							  wsp, 0, 1);	    
+	  return ret2;
+	}
+
         NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
         {
             Array<OneD, NekDouble> coll(2);

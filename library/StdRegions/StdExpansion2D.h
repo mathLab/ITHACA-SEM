@@ -118,6 +118,10 @@ namespace StdRegions
 
         protected:
 
+	    NekDouble PhysEvaluateBary(const Array<OneD, const NekDouble>& coords, 
+				       const Array<OneD, const NekDouble> & physvals);
+ 
+
             /** \brief This function evaluates the expansion at a single
              *  (arbitrary) point of the domain
              *

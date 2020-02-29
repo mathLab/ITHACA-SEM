@@ -779,6 +779,144 @@ namespace Nektar
             }
         }
 
+      // (2) Barycentric interpolation for non-separable fn:
+      // 
+      // Alternate impl of PhysEvaluate() of nektar++ :: 
+      // call goes to StdExpansion2D (shape independent)
+
+      NekDouble StdQuadExp::PhysEvaluateBary(const Array<OneD, const NekDouble>& coords, 
+					     const Array<OneD, const NekDouble> & physvals
+					     )
+      {
+	return StdExpansion2D::PhysEvaluateBary(coords, physvals);
+      }
+
+      // (1) For separable functions: F(x,y) = f(x)f(y)
+      //     shape dependent barycentric interpolation version of PhysEvaluate:
+      //      
+      // For case (1A)   : general function interpolation given f(quadpts)=physvals
+      //                   quadpts and physvals are NOT NULL, mode is 0 (to be ignored)
+      // For case (1Ba)  : basis function evaluation. \phi(x,y)=\phi_1(x)\phi_2(y)
+      //                   mode = degree of \phi to be interpolated
+      //                   quadpts and physvals are NULL vectors, mode has to be \in [0,maxcoeff]
+      //                   where 
+      //           maxcoeff = LibUtilities::StdQuadData::getNumberOfCoefficients(nmodes0,nmodes1);
+      // For case (1Bb)  : mode > prod of individual basis degrees. In this case, 
+      //                   (a) either ask user to define a new obj with appropriate basis key
+      //                   that can do this or,
+      //                   (b) use current obj but ask user to pass quadpts and physvals from the 
+      //                   basis definition which is of higher degree than this object's basis def
+      //                   Currently (a) implemented. 
+      //                   Infreastructure for (b) is ready - reverts back to (1A)
+
+      NekDouble StdQuadExp::PhysEvaluateBaryInd(const Array<OneD, const NekDouble>& coords, 
+				  Array<OneD,  Array<OneD,  NekDouble> >& quadpts, 
+				  Array<OneD, Array<OneD,  NekDouble> >& physvals,
+				  int mode)
+      {
+	Array<OneD, NekDouble> coll(2);
+	
+	ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
+	ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
+	ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol, "coord[1] < -1");
+	ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
+	LocCoordToLocCollapsed(coords,coll);
+	
+	Array<OneD, NekDouble> vv1; 
+	Array<OneD, NekDouble> vv2; 
+	
+	int nq1 ;
+	int nm1 = m_base[0]->GetNumModes();
+	int nm2 = m_base[1]->GetNumModes();
+
+	int mode0, mode1;
+
+	// assert mode <= nm1*nm2;	
+	ASSERTL2(mode <  LibUtilities::StdQuadData::getNumberOfCoefficients(nm1,nm2),
+		 "mode > max allowable mode");
+	
+	// Case when we want to interpolate the basis function 
+	// with the data already present in calling object
+	if(quadpts[0].num_elements() == 0) //NULL vector passed for quadpts, use existing
+	{
+	  
+	  // assert that physvals also null
+	  ASSERTL2(physvals[0].num_elements == 0, "cannot pass physvals in this case.");
+	  // Refer to documentation fo Barycentric interpolation implemented in Nektar+
+	  
+
+	  vv1 = m_base[0]->GetBdata();
+	  vv2 = m_base[1]->GetBdata();
+	  nq1 = m_base[0]->GetNumPoints();
+	  NekDouble coeffid = mode;
+	  
+	  mode0 = ((int)coeffid)%(nm2);
+	  mode1 =  coeffid/(nm1);
+	  
+	  // deal with top vertex mode in modified basis
+	  if (coeffid == 1 &&
+		m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+	    {
+	      vv1 = Array<OneD, NekDouble>(nq1,1.0);
+	    }
+	    
+	}
+	else //mode = 0 (not basis interpolation, caller sends quadpts and physvals)
+	{
+	  int nq1 = quadpts[1].num_elements(), nq0 = quadpts[0].num_elements();
+	  //redefine m_bcweights here coz quad pts changed
+	  StdExpansion::m_bcweightstest[1] = Array<OneD, NekDouble>(nq1, 1.0);
+	  Array<OneD, NekDouble> z = quadpts[1];
+	  for (int i = 0; i < nq1; ++i)
+	    {
+	      for (int j = 0; j < nq1; ++j)
+		{
+		  if (i == j)
+		    {
+		      continue;
+		    }
+		  
+		  m_bcweightstest[1][i] *= (z[i] - z[j]);
+		}
+	      
+	      m_bcweightstest[1][i] = 1.0 / m_bcweightstest[1][i];
+	    }
+	  z = quadpts[0];
+	  StdExpansion::m_bcweightstest[0] = Array<OneD, NekDouble>(nq0, 1.0);
+	  
+	  for (int i = 0; i < nq0; ++i)
+	    {
+	      for (int j = 0; j < nq0; ++j)
+		{
+		  if (i == j)
+		    {
+		      continue;
+		    }
+		  
+		  m_bcweightstest[0][i] *= (z[i] - z[j]);
+		}
+	      
+	      m_bcweightstest[0][i] = 1.0 / m_bcweightstest[0][i];
+	    }
+	  
+	  
+	  vv1 = physvals[0];
+	  vv2 = physvals[1];
+	  nq1 = quadpts[0].num_elements();
+	  mode0 = 0;
+	  mode1 = 0;
+	  
+	  
+	}  
+	NekDouble ret1 = StdExpansion::PhysEvaluateBary(Array<OneD, NekDouble>(1, coll[0]), 
+							vv1, mode0, 0);
+	NekDouble ret2 = StdExpansion::PhysEvaluateBary(Array<OneD, NekDouble>(1, coll[1]), 
+							vv2, mode1, 1);
+	return ret1*ret2;
+	
+      }
+
+
         //////////////
         // Mappings //
         //////////////

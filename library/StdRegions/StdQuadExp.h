@@ -59,8 +59,16 @@ namespace Nektar
                     const LibUtilities::BasisKey &Bb);
             STD_REGIONS_EXPORT StdQuadExp(const StdQuadExp &T);
             STD_REGIONS_EXPORT ~StdQuadExp();
+	    NekDouble PhysEvaluateBaryInd(const Array<OneD, const NekDouble>& coords, 
+				   Array<OneD,  Array<OneD,  NekDouble> >& quadpts, 
+				   Array<OneD, Array<OneD,  NekDouble> >& physvals,
+					  int mode);
+	    NekDouble PhysEvaluateBary(const Array<OneD, const NekDouble>& coords, 
+				       const Array<OneD, const NekDouble> & physvals);
+ 
 
         protected:
+
             //-------------------------------
             // Integration Methods
             //-------------------------------

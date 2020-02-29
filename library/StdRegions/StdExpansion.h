@@ -1149,6 +1149,11 @@ namespace Nektar
                 return v_PhysEvaluate(coords,physvals);
             }
 
+	    NekDouble PhysEvaluateBary(const Array<OneD, const NekDouble>& coords,
+				       const Array<OneD, const NekDouble>& physvals,
+				       int mode = 0, int baseidx = 0);
+
+
 
             /** \brief This function evaluates the expansion at a single
              *  (arbitrary) point of the domain
@@ -1429,6 +1434,10 @@ namespace Nektar
             Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
             int m_elmt_id;
             int m_ncoeffs;                                   /**< Total number of coefficients used in the expansion */
+
+	    // weights for barycentric interpolation
+	    Array<OneD, Array<OneD, NekDouble> > m_bcweightstest;
+
             LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
             LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess> m_stdStaticCondMatrixManager;
 	    LibUtilities::NekManager<IndexMapKey, IndexMapValues, IndexMapKey::opLess> m_IndexMapManager;

@@ -786,6 +786,14 @@ namespace Nektar
             return v_GenMatrix(mkey);
         }
 
+      NekDouble StdSegExp::PhysEvaluateBary(
+					    const Array<OneD, const NekDouble>& coords, 
+					    const Array<OneD, const NekDouble> & physvals)
+      {
+
+	return  StdExpansion::PhysEvaluateBary(coords, physvals);
+      }
+
         //---------------------------------------------------------------------
         // Mappings
         //---------------------------------------------------------------------

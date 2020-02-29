@@ -55,6 +55,17 @@ namespace Nektar
                 const LibUtilities::BasisKey &Bb);
             STD_REGIONS_EXPORT StdTriExp(const StdTriExp &T);
             STD_REGIONS_EXPORT ~StdTriExp();
+	    NekDouble PhysEvaluateBary(const Array<OneD, const NekDouble>& coords, 
+				       const Array<OneD, const NekDouble> & physvals);
+	    NekDouble PhysEvaluateBaryInd(const Array<OneD, const NekDouble>& coords, 
+					  Array<OneD,  Array<OneD, NekDouble> >& quadpts, 
+					  Array<OneD, Array<OneD,  NekDouble> >& physvals,
+					  int mode);
+	    void FillMode(
+			    const int               mode,
+			    Array<OneD, NekDouble> &outarray);
+	    
+
 
         protected:
             //-------------------------------

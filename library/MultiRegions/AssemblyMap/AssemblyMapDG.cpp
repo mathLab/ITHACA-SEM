@@ -1012,8 +1012,8 @@ namespace Nektar
 
             //Debugging of byte size of arrays sent
             int mySize = sizeof(double) * m_edgeTraceIndex.size();
-            int allSizes[nRanks];
-            MPI_Gather(&mySize, 1, MPI_INT, &allSizes, 1, MPI_INT, 0, m_commGraph);
+            Array<OneD, int> allSizes(nRanks, 0);
+            MPI_Gather(&mySize, 1, MPI_INT, allSizes.get(), 1, MPI_INT, 0, m_commGraph);
             if (myRank == 0)
             {
                 int sizeTotal = 0;
@@ -1028,8 +1028,31 @@ namespace Nektar
                     std::cout << i << "(" << allSizes[i] << "), ";
                 }
                 std::cout << "\b\b" << std::endl;
-                std::cout << "AVG SIZE: " << sizeTotal/nRanks << " MAX SIZE: " << maxSize << " MIN SIZE: " << minSize << std::endl;
+                std::cout << "TOT SIZE: " << sizeTotal << " AVG SIZE: " << sizeTotal/nRanks << " MAX SIZE: " << maxSize << " MIN SIZE: " << minSize << std::endl;
             }
+
+            //Debugging of number of neighbours
+            int nNeighboursIn = 0, nNeighboursOut = 0, weighted = 0;
+            MPI_Dist_graph_neighbors_count(m_commGraph, &nNeighboursIn, &nNeighboursOut, &weighted);
+            Array<OneD, int> allNeighbours(nRanks, 0);
+            MPI_Gather(&nNeighboursIn, 1, MPI_INT, allNeighbours.get(), 1, MPI_INT, 0, m_commGraph);
+            if (myRank == 0)
+            {
+                int sizeTotal = 0;
+                int minSize = allSizes[0];
+                int maxSize = allSizes[0];
+                std::cout << "RANK(nNeighbours): ";
+                for (int i = 0; i < nRanks; ++i)
+                {
+                    sizeTotal += allNeighbours[i];
+                    minSize = (allNeighbours[i] < minSize) ? allNeighbours[i] : minSize;
+                    maxSize = (allNeighbours[i] > maxSize) ? allNeighbours[i] : maxSize;
+                    std::cout << i << "(" << allNeighbours[i] << "), ";
+                }
+                std::cout << "\b\b" << std::endl;
+                std::cout << "TOT SIZE: " << sizeTotal << " AVG SIZE: " << sizeTotal/nRanks << " MAX SIZE: " << maxSize << " MIN SIZE: " << minSize << std::endl;
+            }
+
 
             m_sendDisp = Nektar::Array<OneD, int>(nNeighbours, 0);
             for (i = 1; i < nNeighbours; ++i)

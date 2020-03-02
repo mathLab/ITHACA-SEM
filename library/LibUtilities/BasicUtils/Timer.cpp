@@ -102,10 +102,10 @@ void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm)
         if (comm->GetRank() == 0)
         {
             std::cout << std::setw(22) << item->first << '\t'
-                << elapsedAve << '\t'
-                << elapsedMin << '\t'
-                << elapsedMax << '\t'
-                << item->second.second << '\n';
+                << std::setw(8) << elapsedAve << '\t'
+                << std::setw(8) << elapsedMin << '\t'
+                << std::setw(8) << elapsedMax << '\t'
+                << std::setw(8) << item->second.second << '\n';
         }
     }
 }

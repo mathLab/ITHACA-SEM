@@ -169,6 +169,8 @@ namespace Nektar
 
 	void gen_proj_adv_terms();
 	void gen_proj_adv_terms_2d();
+	void online_snapshot_check_with_smaller_basis(int);
+	void online_snapshot_check_with_smaller_basis_VV(int);
 	Eigen::MatrixXd gen_no_advection_matrix_pressure();
 	Eigen::MatrixXd gen_no_advection_matrix_ABCD();
 

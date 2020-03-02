@@ -42,29 +42,34 @@
             <P> load_snapshot_data_from_files = 1       </P>
             <P> load_cO_snapshot_data_from_files = 1       </P>  <!--  converged_Oseen snapshots   -->
 	    <P> do_trafo_check = 0       </P>  
-            <P> number_of_snapshots = 72       </P>
-            <P> ref_param_index = 71       </P>
+            <P> number_of_snapshots = 110       </P>
+            <P> ref_param_index = 109       </P>
             <P> ref_param_nu = 1       </P>
-            <P> number_of_snapshots_dir0 = 8       </P>
-            <P> number_of_snapshots_dir1 = 9       </P>
+            <P> number_of_snapshots_dir0 = 10       </P>
+            <P> number_of_snapshots_dir1 = 11       </P>
             <P> POD_tolerance = .9       </P>
             <P> param0_dir0 = 0.5       </P>
-            <P> param1_dir0 = 0.57142857       </P>
-            <P> param2_dir0 = 0.64285714       </P>
-            <P> param3_dir0 = 0.71428571       </P>
-            <P> param4_dir0 = 0.78571429      </P>
-            <P> param5_dir0 = 0.85714286       </P>
-            <P> param6_dir0 = 0.92857143       </P>
-            <P> param7_dir0 = 1.0       </P>
+            <P> param1_dir0 = 0.55555556       </P>
+            <P> param2_dir0 = 0.61111111       </P>
+            <P> param3_dir0 = 0.66666667       </P>
+            <P> param4_dir0 = 0.72222222      </P>
+            <P> param5_dir0 = 0.77777778       </P>
+            <P> param6_dir0 = 0.83333333       </P>
+            <P> param7_dir0 = 0.88888889       </P>
+            <P> param8_dir0 = 0.94444444       </P>
+            <P> param9_dir0 = 1.0       </P>
             <P> param0_dir1 = 0.1       </P>
-            <P> param1_dir1 = 0.1125       </P>
-            <P> param2_dir1 = 0.125       </P>
-            <P> param3_dir1 = 0.1375       </P>
-            <P> param4_dir1 = 0.15        </P>
-            <P> param5_dir1 = 0.1625      </P>
-            <P> param6_dir1 = 0.175      </P>
-            <P> param7_dir1 = 0.1875       </P>
-            <P> param8_dir1 = 0.2       </P>
+            <P> param1_dir1 = 0.11       </P>
+            <P> param2_dir1 = 0.12       </P>
+            <P> param3_dir1 = 0.13       </P>
+            <P> param4_dir1 = 0.14        </P>
+            <P> param5_dir1 = 0.15      </P>
+            <P> param6_dir1 = 0.16      </P>
+            <P> param7_dir1 = 0.17       </P>
+            <P> param8_dir1 = 0.18       </P>
+            <P> param9_dir1 = 0.19       </P>
+            <P> param10_dir1 = 0.2       </P>
+            <P> POD_tolerance = .999999       </P>
 	    <P> use_fine_grid_VV = 1       </P>
 	    <P> compute_smaller_model_errs = 1       </P>
 	    <P> use_fine_grid_VV_and_load_ref = 1       </P>
@@ -81,7 +86,7 @@
 	    <P> type_para1 = 1        </P> <!-- 0=kin_visc, 1=geo   -->
 	    <P> type_para2 = 0   	</P>
 	    <P> number_elem_trafo = 5   </P>
-	    <P> debug_mode = 1   </P>
+	    <P> debug_mode = 0   </P>
 	    <P> globally_connected = 2      </P>
 <!--	    <P> elem_1 = {32,30,11,10,9,8,17,16,15,14,25,24,23,22}   	</P>   -->  <!-- find a nice solution for the element numberings and also the matrices   -->
 <!--        <P> elem_2 = {12, 28, 34, 13,21,20,18,19,26,27}   		</P>   -->  <!-- for development purposes, just hard-code the example, as it is convenient to have available in the code later   -->
@@ -423,6 +428,120 @@
 	<FUNCTION NAME="TestSnap_cO_72">
 	      <F FILE="Conv_Oseen_param71.fld" />
 	</FUNCTION>  
+ <FUNCTION NAME="TestSnap_cO_73"> 
+<F FILE="Conv_Oseen_param72.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_74"> 
+<F FILE="Conv_Oseen_param73.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_75"> 
+<F FILE="Conv_Oseen_param74.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_76"> 
+<F FILE="Conv_Oseen_param75.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_77"> 
+<F FILE="Conv_Oseen_param76.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_78"> 
+<F FILE="Conv_Oseen_param77.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_79"> 
+<F FILE="Conv_Oseen_param78.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_80"> 
+<F FILE="Conv_Oseen_param79.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_81"> 
+<F FILE="Conv_Oseen_param80.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_82"> 
+<F FILE="Conv_Oseen_param81.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_83"> 
+<F FILE="Conv_Oseen_param82.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_84"> 
+<F FILE="Conv_Oseen_param83.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_85"> 
+<F FILE="Conv_Oseen_param84.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_86"> 
+<F FILE="Conv_Oseen_param85.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_87"> 
+<F FILE="Conv_Oseen_param86.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_88"> 
+<F FILE="Conv_Oseen_param87.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_89"> 
+<F FILE="Conv_Oseen_param88.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_90"> 
+<F FILE="Conv_Oseen_param89.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_91"> 
+<F FILE="Conv_Oseen_param90.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_92"> 
+<F FILE="Conv_Oseen_param91.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_93"> 
+<F FILE="Conv_Oseen_param92.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_94"> 
+<F FILE="Conv_Oseen_param93.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_95"> 
+<F FILE="Conv_Oseen_param94.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_96"> 
+<F FILE="Conv_Oseen_param95.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_97"> 
+<F FILE="Conv_Oseen_param96.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_98"> 
+<F FILE="Conv_Oseen_param97.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_99"> 
+<F FILE="Conv_Oseen_param98.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_100"> 
+<F FILE="Conv_Oseen_param99.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_101"> 
+<F FILE="Conv_Oseen_param100.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_102"> 
+<F FILE="Conv_Oseen_param101.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_103"> 
+<F FILE="Conv_Oseen_param102.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_104"> 
+<F FILE="Conv_Oseen_param103.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_105"> 
+<F FILE="Conv_Oseen_param104.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_106"> 
+<F FILE="Conv_Oseen_param105.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_107"> 
+<F FILE="Conv_Oseen_param106.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_108"> 
+<F FILE="Conv_Oseen_param107.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_109"> 
+<F FILE="Conv_Oseen_param108.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_110"> 
+<F FILE="Conv_Oseen_param109.fld" /> 
+</FUNCTION> 
 
 
 	<FUNCTION NAME="TestSnap1">

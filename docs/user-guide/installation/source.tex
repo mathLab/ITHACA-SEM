@@ -56,7 +56,7 @@ installed system-wide).
 Package & Req. & Sys. & User & Auto.              & Note \\
 \midrule
 C++ compiler    & \cmark & \cmark & & & gcc, icc, etc, supporting C++11 \\
-CMake $>2.8.11$ & \cmark & \cmark & \cmark &        & Ncurses
+CMake $\geq 3.1.3$ & \cmark & \cmark & \cmark &        & Ncurses
 GUI optional
 \\
 BLAS            & \cmark & \cmark & \cmark & \cmark & Or MKL,
@@ -218,7 +218,7 @@ system-wide).
 Package & Req. & MacPorts & User & Auto.          & Note \\
 \midrule
 Xcode           & \cmark &        & & & Provides developer tools \\
-CMake $>2.8.11$ & \cmark & \texttt{cmake}   & \cmark &        & Ncurses
+CMake $\geq 3.1.3$ & \cmark & \texttt{cmake}   & \cmark &        & Ncurses
 GUI optional \\
 BLAS            & \cmark &                  &        &        & Part of
 Xcode \\
@@ -378,8 +378,8 @@ automatically in the build process.
                   &        & \multicolumn{2}{c}{Installation} & \\ \cmidrule(r){3-4}
 Package           & Req.   & User   & Auto.        & Note \\
 \midrule
-MS Visual Studio  & \cmark & \cmark &              & 2012, 2013 and 2015 known working\\
-CMake $\geq 3.0$  & \cmark & \cmark &              & \\
+MS Visual Studio  & \cmark & \cmark &              & 2013, 2015, 2017 and 2019 known working\\
+CMake $\geq 3.1.3$  & \cmark & \cmark &              & \\
 BLAS              & \cmark & \cmark & \cmark       & \\
 LAPACK            & \cmark & \cmark & \cmark       & \\
 Boost $\geq 1.56$ & \cmark & \cmark & \cmark       & Compile with iostreams\\
@@ -394,7 +394,7 @@ Boost $\geq 1.56$ & \cmark & \cmark & \cmark       & Compile with iostreams\\
   work). This can be obtained from Microsoft free of charge by using their
   Community developer tools from
   \url{https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx}.
-  \item Install CMake 3.0+ from \url{http://www.cmake.org/download/}. When
+  \item Install CMake 3.1.3+ from \url{http://www.cmake.org/download/}. When
   prompted, select the option to add CMake to the system PATH.
   \item (Optional) Install Git from \url{http://git-scm.com/download/win} to use
   the development versions of \nekpp. When prompted, select the option to add

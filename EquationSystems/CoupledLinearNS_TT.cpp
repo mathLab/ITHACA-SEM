@@ -7578,6 +7578,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << endl;
 
 	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
+	Eigen::VectorXd collected_relative_euclidean_errors = Eigen::VectorXd::Zero(Nmax);
 	// start sweeping 
 	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
 	{
@@ -7780,8 +7781,13 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 		Eigen::MatrixXd curr_xy_reproj = reproject_from_basis(curr_xy_proj);
 
-		cout << "relative euclidean error norm in x coords: " << diff_x_RB_solve.norm() / snap_x.norm() << " of snapshot number " << iter_index << endl;
-		cout << "relative euclidean error norm in y coords: " << diff_y_RB_solve.norm() / snap_y.norm() << " of snapshot number " << iter_index << endl;
+		double rel_x = diff_x_RB_solve.norm() / snap_x.norm();
+		double rel_y = diff_y_RB_solve.norm() / snap_y.norm();
+
+		cout << "relative euclidean error norm in x coords: " << rel_x << " of snapshot number " << iter_index << endl;
+		cout << "relative euclidean error norm in y coords: " << rel_y << " of snapshot number " << iter_index << endl;
+
+		collected_relative_euclidean_errors(iter_index) = sqrt( rel_x * rel_x + rel_y * rel_y );
 
 //		cout << "curr_xy_reproj.cols() " << curr_xy_reproj.cols() << endl;
 //		cout << "curr_xy_reproj.rows() " << curr_xy_reproj.rows() << endl;
@@ -7793,7 +7799,23 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		cout << "relative euclidean projection error norm in x coords: " << diff_x_proj.norm() / snap_x.norm() << " of snapshot number " << iter_index << endl;
 		cout << "relative euclidean projection error norm in y coords: " << diff_y_proj.norm() / snap_y.norm() << " of snapshot number " << iter_index << endl;
 
+	} //for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+
+	std::stringstream sstm;
+	sstm << "ROM_cluster_reduc" << reduction_int << ".txt";
+	std::string ROM_txt = sstm.str();
+	const char* outname = ROM_txt.c_str();
+	ofstream myfile (outname);
+	if (myfile.is_open())
+	{
+		for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+		{
+			myfile << std::setprecision(17) << collected_relative_euclidean_errors(iter_index) << "\n";
+		}
+		myfile.close();
 	}
+	else cout << "Unable to open file"; 
+
 	}
 
     void CoupledLinearNS_TT::recover_snapshot_loop(Eigen::VectorXd reconstruct_solution, Array<OneD, double> & field_x, Array<OneD, double> & field_y)

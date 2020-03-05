@@ -156,8 +156,9 @@ buster-documentation-build-env:
   script:
     - export IMAGE=$CI_REGISTRY_IMAGE:env-documentation
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - sed -e "s %%BASE_IMAGE%% $CI_REGISTRY_IMAGE g" docker/nektar-env/Dockerfile_debian_documentation > Dockerfile
     - docker pull $IMAGE || true
-    - docker build --pull -t $IMAGE -f docker/nektar-env/Dockerfile_debian_documentation .
+    - docker build --pull -t $IMAGE .
     - docker push $IMAGE
 
 .build-documentation-template: &build-documentation-template

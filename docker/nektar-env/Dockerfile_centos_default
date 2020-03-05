@@ -1,0 +1,22 @@
+FROM centos:%%OS_VERSION%%
+
+LABEL maintainer="Nektar++ Development Team <nektar-users@imperial.ac.uk>"
+
+ENV CENTOS_VERSION %%OS_VERSION%%
+COPY docker/nektar-env/${CENTOS_VERSION}_default_packages.txt packages.txt
+
+RUN yum install -y epel-release && \
+	yum install -y $(cat packages.txt) \
+	&& yum clean all
+
+# openmpi installs to a non-standard location on centos7
+# below env vars added to help out cmake
+ENV LD_LIBRARY_PATH /usr/lib64/openmpi/lib/
+ENV PATH /usr/lib64/openmpi/bin/:$PATH
+
+RUN ln -s /usr/bin/ccache /usr/local/bin/cc && ln -s /usr/bin/ccache /usr/local/bin/c++ 
+
+RUN groupadd nektar && useradd -m -g nektar nektar
+USER nektar:nektar
+RUN mkdir /home/nektar/nektar
+WORKDIR /home/nektar/nektar

@@ -1096,6 +1096,7 @@ namespace Nektar
             NekDouble timeAvgAllv = -1;
             NekDouble timeAvgNeighbourV = -1;
 
+            std::cout << "Number of shares: " << trace->GetNpoints() << std::endl;
             //Alltoall
             LibUtilities::Timer tAll;
             tAll.Start();
@@ -1139,13 +1140,10 @@ namespace Nektar
             Array<OneD, NekDouble> sumTimeAll(1, tAll.TimePerTest(testLoopCount));
             m_comm->AllReduce(sumTimeAll, LibUtilities::ReduceSum);
 
-            int bytesSentAll = sizeof(NekDouble) * nRanks * maxCount * maxQuad;
-
             if (myRank == 0)
             {
                 timeAvgAll = sumTimeAll[0]/nRanks;
                 std::cout << "alltoall times (avg, min, max):   " << timeAvgAll << " " << minTimeAll[0] << " " << maxTimeAll[0] << std::endl;
-                std::cout << "bytes sent/recv (avg, min, max):  " << bytesSentAll << " " << bytesSentAll << " " << bytesSentAll << std::endl;
             }
 
             //Alltoallv
@@ -1182,20 +1180,10 @@ namespace Nektar
             Array<OneD, NekDouble> sumTimeAllv(1, tAllv.TimePerTest(testLoopCount));
             m_comm->AllReduce(sumTimeAllv, LibUtilities::ReduceSum);
 
-            Array<OneD, int> minBytesSentAllv(1, sizeof(double) * allVEdgeIndex.size());
-            m_comm->AllReduce(minBytesSentAllv, LibUtilities::ReduceMin);
-
-            Array<OneD, int> maxBytesSentAllv(1, sizeof(double) * allVEdgeIndex.size());
-            m_comm->AllReduce(maxBytesSentAllv, LibUtilities::ReduceMax);
-
-            Array<OneD, int> sumBytesSentAllv(1, sizeof(double) * allVEdgeIndex.size());
-            m_comm->AllReduce(sumBytesSentAllv, LibUtilities::ReduceSum);
-
             if (myRank == 0)
             {
                 timeAvgAllv = sumTimeAllv[0]/nRanks;
                 std::cout << "alltoallv times (avg, min, max):  " << timeAvgAllv << " " << minTimeAllv[0] << " " << maxTimeAllv[0] << std::endl;
-                std::cout << "bytes sent/recv (avg, min, max):  " << sumBytesSentAllv[0]/nRanks << " " << minBytesSentAllv[0] << " " << maxBytesSentAllv[0] << std::endl;
             }
 
             //neighbor_alltoallv
@@ -1228,35 +1216,22 @@ namespace Nektar
             Array<OneD, NekDouble> timeNeighbourAllv(nRanks, 0.0);
             MPI_Gather(&timeNeighbourAllvLocal, 1, MPI_DOUBLE, timeNeighbourAllv.get(), 1, MPI_DOUBLE, 0, m_commGraph);
 
-            int bytesSentNeighbourAllvLocal = sizeof(double) * m_edgeTraceIndex.size();
-            Array<OneD, int> bytesSentNeighbourAllv(nRanks, 0);
-            MPI_Gather(&bytesSentNeighbourAllvLocal, 1, MPI_INT, bytesSentNeighbourAllv.get(), 1, MPI_INT, 0, m_commGraph);
-
             if (myRank == 0)
             {
                 NekDouble totalTime = timeNeighbourAllv[0];
                 NekDouble minTime = timeNeighbourAllv[0];
                 NekDouble maxTime = timeNeighbourAllv[0];
 
-                NekDouble totalSent = bytesSentNeighbourAllv[0];
-                NekDouble minSent = bytesSentNeighbourAllv[0];
-                NekDouble maxSent = bytesSentNeighbourAllv[0];
-
                 for (int i = 1; i < nRanks; ++i)
                 {
                     totalTime += timeNeighbourAllv[i];
                     minTime = (timeNeighbourAllv[i] < minTime) ? timeNeighbourAllv[i] : minTime;
                     maxTime = (timeNeighbourAllv[i] > maxTime) ? timeNeighbourAllv[i] : maxTime;
-
-                    totalSent += bytesSentNeighbourAllv[i];
-                    minSent = (bytesSentNeighbourAllv[i] < minSent) ? bytesSentNeighbourAllv[i] : minSent;
-                    maxSent = (bytesSentNeighbourAllv[i] > maxSent) ? bytesSentNeighbourAllv[i] : maxSent;
                 }
 
                 timeAvgNeighbourV = totalTime/nRanks;
 
                 std::cout << "n_alltoall times (avg, min, max): " << timeAvgNeighbourV << " " << minTime << " " << maxTime << std::endl;
-                std::cout << "bytes sent/recv (avg, min, max):  " << totalSent/nRanks << " " << minSent << " " << maxSent << std::endl;
             }
 
             Array<OneD, long> tmp2(nTracePhys);

@@ -714,33 +714,29 @@ update_stage(const unsigned int timeStep,
         // Floor staging superscedes ceiling staging
         if( timeStep % instance.fstash_base == 0 )
         {
-            // instance.stage_y   = instance.fstash_y;
+            // Here a swap of the contents can be done because values
+            // will copied into the stash and the f sandbox values will
+            // cleared next.
+            std::swap( instance.stage_y, instance.fstash_y );
             instance.stage_ind = instance.fstash_ind;
 
-            // instance.csandbox_y   = instance.fsandbox_y;
+            std::swap( instance.csandbox_y, instance.fsandbox_y );
             instance.csandbox_ind = instance.fsandbox_ind;
 
             // After floor staging happens once, new base is base^index
             instance.fstash_base = pow(instance.base, instance.index);
 
             // Restart floor sandbox
-            // instance.fsandbox_y = zeros(size(instance.fsandbox_y));
             instance.fsandbox_ind = std::pair<int, int>(0,0);
             instance.fsandbox_active = false;
 
-            // Copy
+            // Clear the floor sandbox values.
             for( unsigned int i=0; i<m_nvars; ++i )
             {
                 for( unsigned int j=0; j<m_npoints; ++j )
                 {
                     for( unsigned int q=0; q<m_nQuadPts; ++q )
                     {
-                        instance.stage_y   [i][j][q] =
-                            instance.fstash_y  [i][j][q];
-
-                        instance.csandbox_y[i][j][q] =
-                            instance.fsandbox_y[i][j][q];
-
                         instance.fsandbox_y[i][j][q] = 0;
                     }
                 }
@@ -750,20 +746,11 @@ update_stage(const unsigned int timeStep,
         // Check for ceiling staging
         else if( timeStep % instance.stage_cbase == 0 )
         {
-            // instance.stage_y   = instance.cstash_y;
             instance.stage_ind = instance.cstash_ind;
 
-            // Copy
-            for( unsigned int q=0; q<m_nQuadPts; ++q )
-            {
-                for( unsigned int i=0; i<m_nvars; ++i )
-                {
-                    for( unsigned int j=0; j<m_npoints; ++j )
-                    {
-                        instance.stage_y[i][j][q] = instance.cstash_y[i][j][q];
-                    }
-                }
-            }
+            // A swap of the contents can be done because values will
+            // copied into the stash.
+            std::swap( instance.stage_y, instance.cstash_y );
         }
     }
 }
@@ -917,7 +904,9 @@ advance_sandbox(const unsigned int timeStep,
         // instance.cstash_y   = instance.csandbox_y;
         instance.cstash_ind = instance.csandbox_ind;
 
-        // Copy
+        // Stash the c sandbox value. This step has to be a deep copy
+        // because the values in the sandbox are still needed for the
+        // time advance.
         for( unsigned int i=0; i<m_nvars; ++i )
         {
             for( unsigned int j=0; j<m_npoints; ++j )
@@ -944,7 +933,9 @@ advance_sandbox(const unsigned int timeStep,
             // instance.fstash_y   = instance.fsandbox_y;
             instance.fstash_ind = instance.fsandbox_ind;
 
-            // Copy
+            // Stash the f sandbox values. This step has to be a deep
+            // copy because the values in the sandbox are still needed
+            // for the time advance.
             for( unsigned int i=0; i<m_nvars; ++i )
             {
                 for( unsigned int j=0; j<m_npoints; ++j )

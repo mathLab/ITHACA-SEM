@@ -168,7 +168,7 @@ static inline gs_data *Init(const Nektar::Array<OneD, long> pId,
                             bool verbose = true)
 {
 #ifdef NEKTAR_USE_MPI
-    if (pComm->GetSize() == 1)
+    if (pComm->IsSerial())
     {
         return 0;
     }
@@ -201,7 +201,7 @@ static inline void Unique(const Nektar::Array<OneD, long> pId,
                           const LibUtilities::CommSharedPtr &pComm)
 {
 #ifdef NEKTAR_USE_MPI
-    if (pComm->GetSize() == 1)
+    if (pComm->IsSerial())
     {
         return;
     }

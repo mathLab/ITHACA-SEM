@@ -149,6 +149,21 @@ bool CommMpi::v_TreatAsRankZero(void)
 /**
  *
  */
+bool CommMpi::v_IsSerial(void)
+{
+    if(m_size == 1)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+/**
+ *
+ */
 void CommMpi::v_Block()
 {
     MPI_Barrier(m_comm);

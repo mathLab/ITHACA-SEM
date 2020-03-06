@@ -1,0 +1,17 @@
+%
+\section{Kernel}
+
+This directory contains two files, kernel.h and kernel.cpp, both of which are related to the line-SIAC (L-SIAC) filtering \cite{sanchez2016multi,jallepalli2017treatment} of FEM solutions.
+SIAC filtering takes the form:
+
+$$
+u^*(x) = \int_{-\infty}^{\infty} K_H\left(\frac{\xi - x}{H}\right) u_h(\xi) \, d\xi
+$$
+
+\noindent where $u_h$ denotes the FEM (continuous Galkerkin or discontinuous Galerkin) solution and $K_H$ represents a kernel function:
+
+$$
+K_H(x) = \frac{1}{H} \sum_{\gamma = 0}^M c_\gamma \psi\left(\frac{x}{H} - \zeta_\gamma \right).
+$$
+
+In this expression, the functions $\psi(x)$ are B-Splines.  The two kernel files in this directory provide all the tools needed to construct the B-Spline functions and the kernel function described above.

@@ -565,8 +565,6 @@ namespace Nektar
         std::string::size_type indxBeg = womStr.find_first_of(':') + 1;
         string filename = womStr.substr(indxBeg,string::npos);
 
-        NekComplexDouble coef;
-
         TiXmlDocument doc(filename);
 
         bool loadOkay = doc.LoadFile();

@@ -36,16 +36,14 @@
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
 void export_Expansion();
-void export_SegExp();
-void export_TriExp();
-void export_QuadExp();
+void export_LocalElements();
+void export_MatrixKey();
 
 BOOST_PYTHON_MODULE(_LocalRegions)
 {
     np::initialize();
 
     export_Expansion();
-    export_SegExp();
-    export_TriExp();
-    export_QuadExp();
+    export_LocalElements();
+    export_MatrixKey();
 }

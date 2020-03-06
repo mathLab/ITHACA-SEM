@@ -38,15 +38,24 @@
 #include <StdRegions/StdMatrixKey.h>
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
+#include <boost/python/suite/indexing/map_indexing_suite.hpp>
+
 using namespace Nektar;
 using namespace Nektar::StdRegions;
 
-StdMatrixKey StdMatrixKey_Init(const MatrixType matType,
-                               const LibUtilities::ShapeType shapeType,
-                               const StdExpansionSharedPtr exp,
-                               const ConstFactorMap &factorMap)
+StdMatrixKey *StdMatrixKey_Init(const MatrixType matType,
+                                const LibUtilities::ShapeType shapeType,
+                                const StdExpansionSharedPtr exp,
+                                const py::object &constFactorMap)
 {
-    return StdMatrixKey(matType, shapeType, *exp, factorMap);
+    ConstFactorMap tmp = NullConstFactorMap;
+
+    if (!constFactorMap.is_none())
+    {
+        tmp = py::extract<ConstFactorMap>(constFactorMap);
+    }
+
+    return new StdMatrixKey(matType, shapeType, *exp, tmp);
 }
 
 /**
@@ -57,17 +66,19 @@ void export_StdMatrixKey()
     NEKPY_WRAP_ENUM(MatrixType, MatrixTypeMap);
     NEKPY_WRAP_ENUM(ConstFactorType, ConstFactorTypeMap);
 
-    py::class_<StdMatrixKey>(
-        "StdMatrixKey", py::init<const MatrixType,
-        const LibUtilities::ShapeType, const StdExpansion&>() )
+    // Wrapper for constant factor map.
+    py::class_<ConstFactorMap>("ConstFactorMap")
+        .def(py::map_indexing_suite<ConstFactorMap, true>());
+
+    py::class_<StdMatrixKey>("StdMatrixKey", py::no_init)
+        .def("__init__", py::make_constructor(
+                 &StdMatrixKey_Init, py::default_call_policies(),
+                 (py::arg("matType"), py::arg("shapeType"), py::arg("exp"),
+                  py::arg("constFactorMap") = py::object())))
 
         .def("GetMatrixType", &StdMatrixKey::GetMatrixType)
+        .def("GetShapeType",  &StdMatrixKey::GetShapeType)
+        .def("GetNcoeffs",    &StdMatrixKey::GetNcoeffs)
+        .def("GetBasis",      &StdMatrixKey::GetBasis)
         ;
-
-    // py::class_<StdMatrixKey>(
-    //     "StdMatrixKey", py::no_init)
-    //     .def("__init__", py::make_constructor(
-    //              &StdMatrixKey_Init, py::default_call_policies(),
-    //              (py::arg("matType"), py::arg("shapeType"), py::arg("exp"),
-    //               py::arg("factorMap"))));
 }

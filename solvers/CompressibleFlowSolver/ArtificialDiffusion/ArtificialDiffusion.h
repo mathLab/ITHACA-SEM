@@ -47,7 +47,7 @@
 
 namespace Nektar
 {
-//  Forward declaration
+// Forward declaration
 class ArtificialDiffusion;
 
 /// A shared pointer to a artificial diffusion object
@@ -81,6 +81,9 @@ class ArtificialDiffusion
             const Array<OneD, Array<OneD, NekDouble> > &physfield,
                   Array<OneD, NekDouble  >             &mu);
 
+        /// Set h/p scaling
+        void SetElmtHP(const Array<OneD, NekDouble> &hOverP);
+
     protected:
         /// Session reader
         LibUtilities::SessionReaderSharedPtr        m_session;
@@ -90,6 +93,10 @@ class ArtificialDiffusion
         VariableConverterSharedPtr                  m_varConv;
         /// LDG Diffusion operator
         SolverUtils::DiffusionSharedPtr             m_diffusion;
+        /// Constant scaling
+        NekDouble                                   m_mu0;
+        /// h/p scaling
+        Array<OneD, NekDouble>                      m_hOverP;
 
         /// Constructor
         ArtificialDiffusion(

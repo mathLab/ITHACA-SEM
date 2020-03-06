@@ -317,6 +317,11 @@ protected:
         return true;
     }
 
+    bool v_IsSerial(void)
+    {
+        return true;
+    }
+
     bool v_RemoveExistingFiles(void)
     {
         return false;

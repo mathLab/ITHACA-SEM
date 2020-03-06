@@ -84,7 +84,10 @@ void ProcessRemoveField::Process(po::variables_map &vm)
         m_f->m_variables.erase(it);
         m_f->m_exp.erase(m_f->m_exp.begin() + fieldID);
 
-        cout << "Field " << fieldName[i] << " has been erased" << endl;
+        if (m_f->m_comm->TreatAsRankZero())
+        {
+            cout << "Field " << fieldName[i] << " has been erased" << endl;
+        }
     }
 }
 } // namespace FieldUtils

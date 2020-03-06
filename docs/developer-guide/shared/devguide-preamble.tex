@@ -1,0 +1,474 @@
+%%% DOCUMENTCLASS 
+%%%-------------------------------------------------------------------------------
+
+\documentclass[
+a4paper, % Stock and paper size.
+11pt, % Type size.
+% article,
+% oneside, 
+onecolumn, % Only one column of text on a page.
+% openright, % Each chapter will start on a recto page.devguide
+% openleft, % Each chapter will start on a verso page.
+openany, % A chapter may start on either a recto or verso page.
+]{memoir}
+
+%%% PACKAGES 
+%%%------------------------------------------------------------------------------
+
+\usepackage[utf8]{inputenc} % If utf8 encoding
+% \usepackage[lantin1]{inputenc} % If not utf8 encoding, then this is probably the way to go
+\usepackage[T1]{fontenc}    %
+\usepackage{lmodern}
+\usepackage[english]{babel} % English please
+\usepackage[final]{microtype} % Less badboxes
+\usepackage[stable]{footmisc} % Footnotes in section titles
+\usepackage{url}
+
+% \usepackage{kpfonts} %Font
+
+\usepackage{amsmath,amssymb,mathtools} % Math
+
+% \usepackage{tikz} % Figures
+\usepackage{graphicx} % Include figures
+\usepackage{makeidx}
+\usepackage{import}
+\usepackage{subcaption}
+\captionsetup{compatibility=false}
+
+%%% PAGE LAYOUT 
+%%%-----------------------------------------------------------------------------
+\setlrmarginsandblock{0.15\paperwidth}{*}{1} % Left and right margin
+\setulmarginsandblock{0.2\paperwidth}{*}{1}  % Upper and lower margin
+\checkandfixthelayout
+
+\newlength\forceindent
+\setlength{\forceindent}{\parindent}
+\setlength{\parindent}{0cm}
+\renewcommand{\indent}{\hspace*{\forceindent}}
+\setlength{\parskip}{1em}
+
+
+%%% SECTIONAL DIVISIONS
+%%%------------------------------------------------------------------------------
+
+\maxsecnumdepth{subsection} % Subsections (and higher) are numbered
+\setsecnumdepth{subsection}
+
+\makeatletter %
+\makechapterstyle{standard}{
+  \setlength{\beforechapskip}{0\baselineskip}
+  \setlength{\midchapskip}{1\baselineskip}
+  \setlength{\afterchapskip}{8\baselineskip}
+  \renewcommand{\chapterheadstart}{\vspace*{\beforechapskip}}
+  \renewcommand{\chapnamefont}{\centering\normalfont\Large}
+  \renewcommand{\printchaptername}{\chapnamefont \@chapapp}
+  \renewcommand{\chapternamenum}{\space}
+  \renewcommand{\chapnumfont}{\normalfont\Large}
+  \renewcommand{\printchapternum}{\chapnumfont \thechapter}
+  \renewcommand{\afterchapternum}{\par\nobreak\vskip \midchapskip}
+  \renewcommand{\printchapternonum}{\vspace*{\midchapskip}\vspace*{5mm}}
+  \renewcommand{\chaptitlefont}{\centering\bfseries\LARGE}
+%  \renewcommand{\printchaptertitle}[1]{\chaptitlefont ##1}
+  \renewcommand{\afterchaptertitle}{\par\nobreak\vskip \afterchapskip}
+}
+\makeatother
+
+%\chapterstyle{standard}
+\chapterstyle{madsen}
+
+\setsecheadstyle{\normalfont\large\bfseries}
+\setsubsecheadstyle{\normalfont\normalsize\bfseries}
+\setparaheadstyle{\normalfont\normalsize\bfseries}
+\setparaindent{0pt}\setafterparaskip{0pt}
+
+%%% FLOATS AND CAPTIONS
+%%%------------------------------------------------------------------------------
+
+\makeatletter                  % You do not need to write [htpb] all the time
+\renewcommand\fps@figure{htbp} %
+\renewcommand\fps@table{htbp}  %
+\makeatother                   %
+
+\captiondelim{\space } % A space between caption name and text
+\captionnamefont{\small\bfseries} % Font of the caption name
+\captiontitlefont{\small\normalfont} % Font of the caption text
+
+% incompatible with subcaption package so commented out for now
+%\changecaptionwidth          % Change the width of the caption
+%\captionwidth{1\textwidth} %
+
+%%% ABSTRACT
+%%%------------------------------------------------------------------------------
+
+\renewcommand{\abstractnamefont}{\normalfont\small\bfseries} % Font of abstract title
+\setlength{\absleftindent}{0.1\textwidth} % Width of abstract
+\setlength{\absrightindent}{\absleftindent}
+
+%%% HEADER AND FOOTER 
+%%%------------------------------------------------------------------------------
+
+\makepagestyle{standard} % Make standard pagestyle
+
+\makeatletter                 % Define standard pagestyle
+\makeevenfoot{standard}{}{}{} %
+\makeoddfoot{standard}{}{}{}  %
+\makeevenhead{standard}{\bfseries\thepage\normalfont\qquad\small\leftmark}{}{}
+\makeoddhead{standard}{}{}{\small\rightmark\qquad\bfseries\thepage}
+% \makeheadrule{standard}{\textwidth}{\normalrulethickness}
+\makeatother                  %
+
+\makeatletter
+\makepsmarks{standard}{
+\createmark{chapter}{both}{shownumber}{\@chapapp\ }{ \quad }
+\createmark{section}{right}{shownumber}{}{ \quad }
+\createplainmark{toc}{both}{\contentsname}
+\createplainmark{lof}{both}{\listfigurename}
+\createplainmark{lot}{both}{\listtablename}
+\createplainmark{bib}{both}{\bibname}
+\createplainmark{index}{both}{\indexname}
+\createplainmark{glossary}{both}{\glossaryname}
+}
+\makeatother                               %
+
+\makepagestyle{chap} % Make new chapter pagestyle
+
+\makeatletter
+\makeevenfoot{chap}{}{\small\bfseries\thepage}{} % Define new chapter pagestyle
+\makeoddfoot{chap}{}{\small\bfseries\thepage}{}  %
+\makeevenhead{chap}{}{}{}   %
+\makeoddhead{chap}{}{}{}    %
+% \makeheadrule{chap}{\textwidth}{\normalrulethickness}
+\makeatother
+
+\nouppercaseheads
+\pagestyle{standard}               % Choosing pagestyle and chapter pagestyle
+\aliaspagestyle{chapter}{chap} %
+
+%%% NEW COMMANDS
+%%%-----------------------------------------------------------------------------
+
+%%% Nektar++ version and Tutorial Root
+\endlinechar=-1\relax
+\newread\filever
+\openin\filever=VERSION
+\read\filever to\linever
+\newcommand{\nekver}{\linever}
+\closein\filever
+
+% relurl takes filename as first arg and url suffix (less filename) as second.
+\ifdefined\HCode
+\newcommand{\relurl}[2]{\href{#1}{\underline{#1}}}
+\else
+\newcommand{\relurl}[2]{\url{http://doc.nektar.info/tutorials/\nekver/#2/#1}}
+\fi
+\endlinechar=13\relax
+
+\newcommand{\p}{\partial} %Partial
+% Or what ever you want
+
+
+%%% CODE SNIPPETS, COMMANDS, ETC
+%%%-----------------------------------------------------------------------------
+\usepackage{xcolor}
+\usepackage{listings} % Display code / shell commands
+\usepackage{lstautogobble}
+\usepackage{xspace}
+\usepackage{xcolor}
+\usepackage{listings} % Display code / shell commands
+\usepackage{lstautogobble}
+%\newcommand{\shellcommand}[1]{\begin{lstlisting} \#1 \end{lstlisting}
+\lstset{
+  breaklines=true
+}
+\lstdefinestyle{BashInputStyle}{
+  language=bash,
+  basicstyle=\small\ttfamily,
+%  numbers=left,
+%  numberstyle=\tiny,
+%  numbersep=3pt,
+  frame=single,
+  columns=fullflexible,
+  backgroundcolor=\color{yellow!10},
+  linewidth=0.95\linewidth,
+  xleftmargin=0.05\linewidth,
+  keepspaces=true,
+  breaklines=true,
+  framesep=5pt,
+  rulecolor=\color{black!30},
+  aboveskip=10pt,
+  autogobble=true
+}
+\definecolor{gray}{rgb}{0.4,0.4,0.4}
+\definecolor{darkblue}{rgb}{0.0,0.0,0.6}
+\definecolor{darkred}{rgb}{0.6,0.0,0.0}
+\definecolor{cyan}{rgb}{0.0,0.6,0.6}
+\definecolor{maroon}{rgb}{0.5,0.0,0.0}
+\lstdefinelanguage{XML}
+{
+  basicstyle=\ttfamily\footnotesize,
+  morestring=[b]",
+  moredelim=[s][\bfseries\color{maroon}]{<}{\ },
+  moredelim=[s][\bfseries\color{maroon}]{</}{>},
+  moredelim=[l][\bfseries\color{maroon}]{/>},
+  moredelim=[l][\bfseries\color{maroon}]{>},
+  morecomment=[s]{<?}{?>},
+  morecomment=[s]{<!--}{-->},
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  identifierstyle=\color{darkblue},
+  breaklines=true
+}
+\lstdefinestyle{XMLStyle}{
+  language=XML,
+  basicstyle=\sffamily\footnotesize,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=3pt,
+  frame=,
+  columns=fullflexible,
+  backgroundcolor=\color{black!05},
+  linewidth=0.95\linewidth,
+  xleftmargin=0.05\linewidth,
+  breaklines=true
+}
+\lstdefinestyle{C++Style}{
+  language=C++,
+  basicstyle=\ttfamily\footnotesize,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=3pt,
+  frame=,
+  columns=fullflexible,
+  backgroundcolor=\color{black!05},
+  linewidth=0.95\linewidth,
+  xleftmargin=0.1\linewidth,
+  showspaces=false,
+  showstringspaces=false,
+  breaklines=true,
+  keywordstyle=\color{blue}\ttfamily,
+  stringstyle=\color{red}\ttfamily,
+  commentstyle=\color{violet}\ttfamily,
+  morecomment=[l][\color{teal}]{\#}
+}
+
+\ifdefined\HCode
+\newcommand{\inltt}[1]{\texttt{#1}}
+\newcommand{\inlsh}[1]{\texttt{#1}}
+\else
+\newcommand{\inltt}[1]{\tikz[anchor=base,baseline]\node[inner sep=3pt,
+rounded corners,outer sep=0,draw=black!30,fill=black!05]{\small\texttt{#1}};}
+\newcommand{\inlsh}[1]{\tikz[anchor=base,baseline]\node[inner sep=2pt,
+outer sep=0,fill=black!05]{\texttt{#1}};}
+\fi
+\newcommand{\nekpp}{{\em Nektar++}\xspace}
+
+% Highlight box
+\usepackage{environ}
+\usepackage[tikz]{bclogo}
+\usetikzlibrary{calc}
+
+% Only use fancy boxes for PDF
+\ifdefined\HCode
+\NewEnviron{notebox}{\textbf{Note:} \BODY}
+\NewEnviron{warningbox}{\textbf{Warning:} \BODY}
+\NewEnviron{tipbox}{\textbf{Tip:} \BODY}
+\NewEnviron{custombox}[3]{\textbf{#1} \BODY}
+\else
+\NewEnviron{notebox}
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=black!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bcinfo};
+      \end{minipage}%
+      \begin{minipage}{.9\linewidth}
+      \textbf{Note}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\NewEnviron{warningbox}
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=red!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bcdanger};
+      \end{minipage}%
+      \begin{minipage}{.9\linewidth}
+      \textbf{Warning}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\NewEnviron{tipbox}
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=green!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bclampe};
+      \end{minipage}%
+      \begin{minipage}{.9\linewidth}
+      \textbf{Tip}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\NewEnviron{custombox}[3]
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=#3!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{#2};
+      \end{minipage}%
+      \begin{minipage}{.9\linewidth}
+      \textbf{#1}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\fi
+
+%%% TABLE OF CONTENTS AND INDEX
+%%%-----------------------------------------------------------------------------
+
+\maxtocdepth{subsection} % Only parts, chapters and sections in the table of contents
+\settocdepth{subsection}
+
+\makeindex
+
+%\AtEndDocument{\addtocontents{toc}{\par}} % Add a \par to the end of the TOC
+
+%%% INTERNAL HYPERLINKS
+%%%-----------------------------------------------------------------------------
+\usepackage[linktoc=all,hyperfootnotes=false]{hyperref}   % Internal hyperlinks
+\hypersetup{
+colorlinks,
+citecolor=darkblue,
+filecolor=darkblue,
+linkcolor=darkblue,
+urlcolor=darkblue,
+pdfborder={0 0 0},      % No borders around internal hyperlinks
+}
+\usepackage{memhfixc}   %
+
+
+%%% PRETTY TITLE PAGE FOR PDF DOC
+%%%-----------------------------------------------------------------------------
+\ifdefined\HCode
+\else
+\makeatletter
+\newlength\drop
+\newcommand{\br}{\hfill\break}
+\newcommand*{\titlepage}{%
+    \thispagestyle{empty}
+    \begingroup% Gentle Madness
+    \drop = 0.1\textheight
+    \vspace*{\baselineskip}
+    \vfill
+    \hbox{%
+      \hspace*{0.1\textwidth}%
+      \rule{1pt}{\dimexpr\textheight-28pt\relax}%
+      \hspace*{0.05\textwidth}% 
+      \parbox[b]{0.85\textwidth}{%
+        \vbox{%
+          {\includegraphics[width=0.2\textwidth]{img/icon-blue.png}\par}
+          \vskip1.00\baselineskip
+          {\Huge\bfseries\raggedright\@title\par}
+          \vskip2.37\baselineskip
+          %{\huge\bfseries Version \input{../../VERSION}\par}
+ %         \vskip4\baselineskip
+          {\huge\bfseries \textcolor{darkred}{Developer's Guide}\par}
+          \vskip1.0\baselineskip
+          {\large\bfseries Editors: Robert M. (Mike) Kirby, Spencer J. Sherwin, Chris D. Cantwell and David Moxey \par}
+          \vskip1.0\baselineskip
+          {\large\bfseries \textcolor{darkblue}{A distributed working draft for further contribution by the Nektar++ community} \par}
+          \vskip1.0\baselineskip
+          {\large\bfseries\@date\par}
+          \vspace{0.3\textheight}
+          {\small\noindent\@author}\\[\baselineskip]
+        }% end of vbox
+      }% end of parbox
+    }% end of hbox
+    \vfill
+    \null
+\endgroup}
+\makeatother
+\fi
+
+\definecolor{LightGrey}{rgb}{0.9,0.9,0.9}
+\newcounter{taskcount}[chapter]
+\newcommand\gmsh{\emph{Gmsh}~}
+\newcommand\paraview{\emph{Paraview}~}
+\newcommand\nektar{\emph{Nektar++}\xspace}
+\newcommand\devguidepath{\texttt{/nektutorial}}
+\ifdefined\HCode
+\NewEnviron{devguidetask}{
+\addtocounter{taskcount}{1}
+\textbf{Task: \arabic{chapter}.\arabic{taskcount}} \BODY
+}
+\else
+\NewEnviron{devguidetask}
+  {\addtocounter{taskcount}{1}
+  \par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=black!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}[t]{.1\linewidth}
+      \vspace{-5mm}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bccrayon};
+      \end{minipage}%
+      \begin{minipage}[t]{.9\linewidth}
+      \textbf{{Task \arabic{chapter}.\arabic{taskcount}}}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\fi
+\ifdefined\HCode
+\NewEnviron{advanceddevguidetask}{
+\addtocounter{taskcount}{1}
+\textbf{Advanced Task: \arabic{chapter}.\arabic{taskcount}} \BODY
+}
+\else
+\NewEnviron{advanceddevguidetask}
+  {\addtocounter{taskcount}{1}
+  \par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=black!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}[t]{.1\linewidth}
+      \vspace{-5mm}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bccrayon};
+      \end{minipage}%
+      \begin{minipage}[t]{.9\linewidth}
+      \textbf{{Advanced Task \arabic{chapter}.\arabic{taskcount}}}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\fi
+
+\newcommand\devguidecommand[1]{
+    \par{\vspace{1ex}
+         \addtolength{\leftskip}{2mm}\texttt{#1}\par\vspace{1ex}}
+}
+\newcommand\devguidenote[1]{\par{\textbf{Note: }#1}}
+
+
+%%% THE DOCUMENT
+%%% Where all the important stuff is included!
+%%%-------------------------------------------------------------------------------
+
+\author{Department of Aeronautics, Imperial College London, UK\newline
+Scientific Computing and Imaging Institute, University of Utah, USA}
+\date{\today}

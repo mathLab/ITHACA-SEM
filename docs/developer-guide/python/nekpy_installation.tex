@@ -1,0 +1,120 @@
+\chapter{Installing NekPy}
+
+NekPy has the following list of requirements:
+
+\begin{itemize}
+	\item Boost with Python support
+	\item Nektar++ \texttt{master} branch compiled from source (i.e. not from packages)
+	\item Python 2.7+ (note that examples rely on Python 2.7)
+	\item NumPy
+\end{itemize}
+
+Most of these can be installed using package managers on various operating
+systems, as we describe below. We also have a requirement on the \texttt{Boost.NumPy}
+package, which is available in Boost 1.63 or later. If this isn't found on your
+system, it will be automatically downloaded and compiled.
+
+\section{Compiling and installing Nektar++}
+
+Nektar++ should be compiled as per the user guide instructions and installed
+into a directory which we will refer to as \texttt{\$NEKDIR}. By default this is the
+\texttt{dist} directory inside the Nektar++ build directory.
+
+Note that Nektar++ must, at a minimum, be compiled with \texttt{NEKTAR\_BUILD\_LIBRARY},
+\texttt{NEKTAR\_BUILD\_UTILITIES} , \texttt{NEKTAR\_BUILD\_SOLVERS} and \texttt{NEKTAR\_BUILD\_PYTHON}. 
+This will automatically download and install \texttt{Boost.NumPy} if required. Note 
+that all solvers may be disabled as long as the \texttt{NEKTAR\_BUILD\_SOLVERS} option is set. 
+
+\subsection{macOS}
+
+\subsubsection{Homebrew}
+
+Users of Homebrew should make sure their installation is up-to-date with 
+\texttt{brew upgrade}. Then run
+
+\begin{lstlisting}[language=bash]
+brew install python boost-python
+\end{lstlisting}
+
+To install the NumPy package, use the \texttt{pip} package manager:
+
+\begin{lstlisting}[language=bash]
+pip install numpy
+\end{lstlisting}
+
+\subsubsection{MacPorts}
+
+Users of MacPorts should sure their installation is up-to-date with 
+\texttt{sudo port selfupdate \&\& sudo port upgrade outdated}. Then run
+
+\begin{lstlisting}[language=bash]
+sudo port install python27 py27-numpy
+sudo port select --set python python27
+\end{lstlisting}
+
+
+\subsection{Linux: Ubuntu/Debian}
+
+Users of Debian and Ubuntu Linux systems should sure their installation is
+up-to-date with \texttt{sudo apt-get update \&\& sudo apt-get upgrade}
+
+\begin{lstlisting}[language=bash]
+sudo apt-get install libboost-python-dev python-numpy
+\end{lstlisting}
+
+\subsection{Compiling the wrappers}
+
+Run the following command in \path{$NEKDIR/build} directory to install the Python package
+for the current user:
+
+\begin{lstlisting}[language=bash]
+make nekpy-install-user
+\end{lstlisting}
+
+Alternatively, the following command can be used to install the package for all users:
+
+\begin{lstlisting}[language=bash]
+make nekpy-install-system
+\end{lstlisting}
+
+
+\section{Using the bindings}
+
+By default, the bindings will install into the \texttt{dist} directory, along with a
+number of examples that are stored in the 
+\path{$NEKDIR/library/Demos/Python} directory. To 
+test your installation, you can for example run one of these (e.g. \texttt{python Basis.py}) or
+launch an interactive session:
+
+\begin{lstlisting}[language=bash]
+$ cd builds
+$ python
+Python 2.7.13 (default, Apr  4 2017, 08:47:57) 
+[GCC 4.2.1 Compatible Apple LLVM 8.1.0 (clang-802.0.38)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from NekPy.LibUtilities import PointsKey, PointsType
+>>> PointsKey(10, PointsType.GaussLobattoLegendre)
+<NekPy.LibUtilities._LibUtilities.PointsKey object at 0x11005c310>
+\end{lstlisting}
+
+\subsection{Examples}
+
+A number of examples of the wrappers can be found in the 
+\path{$NEKDIR/library/Demos/Python}
+directory, along with a sample mesh \texttt{newsquare\_2x2.xml}:
+
+\begin{itemize}
+	\item \texttt{SessionReader.py} is the simplest example and shows how to construct a
+  		session reader object. Run it as \texttt{python SessionReader.py mesh.xml}.
+  	\item \texttt{Basis.py} shows functionality of basic \texttt{LibUtilities} points and basis
+  		classes. Run this as \texttt{python Basis.py}.
+	\item \texttt{StdProject.py} shows how to use some of the \texttt{StdRegions} wrappers and
+  		duplicates the functionality of \texttt{Basis.py} using the \texttt{StdExpansion} class. Run
+  		this as \texttt{python StdProject.py}.
+	\item \texttt{MeshGraph.py} loads a mesh and prints out some basic properties of its
+		quadrilateral elements. Run it as \texttt{python MeshGraph.py newsquare\_2x2.xml}.
+\end{itemize}
+
+If you want to modify the source files, it's advisable to edit them in the
+\path{$NEKDIR/library/Demos/Python} directory and 
+re-run \texttt{make install}, otherwise local changes will be overwritten by the next \texttt{make install}.

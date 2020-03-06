@@ -68,7 +68,7 @@ namespace Nektar
         {
             ASSERTL0(value->Attribute("tolerance"),
                      "Missing tolerance in eigenvalue metric");
-            ASSERTL0(value->GetText() || value->GetText() == "",
+            ASSERTL0(!EmptyString(value->GetText()),
                      "Missing value in preconditioner metric.");
 
             MetricRegexFieldValue mag, angle;

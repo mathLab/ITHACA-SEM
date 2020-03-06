@@ -1198,7 +1198,13 @@ namespace Nektar
             LibUtilities::FieldMetaDataMap fieldMetaDataMap(m_fieldMetaDataMap);
             mapping->Output( fieldMetaDataMap, outname);
 
-            m_fld->Write(outname, FieldDef, FieldData, fieldMetaDataMap, true);
+#ifdef NEKTAR_DISABLE_BACKUPS
+            bool backup = false;
+#else
+            bool backup = true;
+#endif
+
+            m_fld->Write(outname, FieldDef, FieldData, fieldMetaDataMap, backup);
         }
 
 

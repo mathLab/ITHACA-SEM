@@ -91,6 +91,7 @@ void ProcessExtractSurf::Process()
 
     // Clear existing vertices, edges and faces.
     m_mesh->m_vertexSet.clear();
+
     m_mesh->m_edgeSet.clear();
     m_mesh->m_faceSet.clear();
 

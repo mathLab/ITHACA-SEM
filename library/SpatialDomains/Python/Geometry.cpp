@@ -34,6 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <SpatialDomains/Geometry.h>
+#include <SpatialDomains/Geometry1D.h>
+#include <SpatialDomains/Geometry2D.h>
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
 using namespace Nektar;
@@ -60,10 +62,30 @@ void export_Geometry()
 
         .def("GetCoordim",     &Geometry::GetCoordim)
         .def("GetGlobalID",    &Geometry::GetGlobalID)
+
+        .def("Setup",          &Geometry::Setup)
         .def("FillGeom",       &Geometry::FillGeom)
-        .def("GetXmap",        &Geometry::GetXmap)
         .def("GenGeomFactors", &Geometry_GenGeomFactors)
+
         .def("ContainsPoint",  &Geometry_ContainsPoint)
+
+        .def("GetVertex",      &Geometry::GetVertex)
+        .def("GetEdge",        &Geometry::GetEdge)
+        .def("GetFace",        &Geometry::GetFace)
+        .def("GetVid",         &Geometry::GetVid)
+        .def("GetEid",         &Geometry::GetEid)
+        .def("GetFid",         &Geometry::GetFid)
+        .def("GetTid",         &Geometry::GetTid)
+
+        .def("GetNumVerts",    &Geometry::GetNumVerts)
+        .def("GetNumEdges",    &Geometry::GetNumEdges)
+        .def("GetNumFaces",    &Geometry::GetNumFaces)
+        .def("GetShapeDim",    &Geometry::GetShapeDim)
+        .def("GetShapeType",   &Geometry::GetShapeType)
+        .def("GetEorient",     &Geometry::GetEorient)
+        .def("GetForient",     &Geometry::GetForient)
+
+        .def("GetXmap",        &Geometry::GetXmap)
         .def("GetCoeffs",      &Geometry::GetCoeffs,
              py::return_value_policy<py::copy_const_reference>())
         ;

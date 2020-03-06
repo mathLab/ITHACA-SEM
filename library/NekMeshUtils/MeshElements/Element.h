@@ -286,6 +286,76 @@ public:
     NEKMESHUTILS_EXPORT int GetMaxOrder();
 
     /**
+     * @brief Determines whether an element is deformed by inspecting whether
+     * there are any edge, face or volume interior nodes.
+     */
+    NEKMESHUTILS_EXPORT bool IsDeformed()
+    {
+        if (m_volumeNodes.size() > 0)
+        {
+            return true;
+        }
+
+        for (auto &edge : m_edge)
+        {
+            if (edge->m_edgeNodes.size() > 0)
+            {
+                return true;
+            }
+        }
+
+        for (auto &face : m_face)
+        {
+            if (face->m_faceNodes.size() > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @brief Returns the approximate bounding box of this element based on the
+     * coordinates of all vertices, edges and faces of the element. Note that
+     * this does not robustly take into account the curvature of the element.
+     */
+    NEKMESHUTILS_EXPORT std::pair<Node, Node> GetBoundingBox()
+    {
+#define SWAP_NODE(a)                                            \
+        lower.m_x = std::min(lower.m_x, a->m_x);                  \
+        lower.m_y = std::min(lower.m_y, a->m_y);                  \
+        lower.m_z = std::min(lower.m_z, a->m_z);                  \
+        upper.m_x = std::max(upper.m_x, a->m_x);                  \
+        upper.m_y = std::max(upper.m_y, a->m_y);                  \
+        upper.m_z = std::max(upper.m_z, a->m_z);
+
+        Node lower(*m_vertex[0]), upper(*m_vertex[0]);
+
+        for (int i = 1; i < m_vertex.size(); ++i)
+        {
+            SWAP_NODE(m_vertex[i])
+        }
+        for (auto &edge : m_edge)
+        {
+            for (auto &edgeNode : edge->m_edgeNodes)
+            {
+                SWAP_NODE(edgeNode);
+            }
+        }
+        for (auto &face : m_face)
+        {
+            for (auto &faceNode : face->m_faceNodes)
+            {
+                SWAP_NODE(faceNode);
+            }
+        }
+
+        return std::make_pair(lower, upper);
+#undef SWAP_NODE
+    }
+
+    /**
      * @brief Insert interior (i.e. volume) points into this element to make the
      * geometry an order @p order representation.
      *

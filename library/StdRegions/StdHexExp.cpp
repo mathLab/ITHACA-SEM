@@ -970,7 +970,7 @@ namespace Nektar
                 break;
             }
 
-            if ( faceOrient >= 9 )
+            if ( faceOrient >= eDir1FwdDir2_Dir2FwdDir1 )
             {
                 std::swap(numModes0, numModes1);
             }
@@ -1059,7 +1059,7 @@ namespace Nektar
             {
                 for(j = 0; j < P; j++)
                 {
-                    if( faceOrient < 9 )
+                    if( faceOrient < eDir1FwdDir2_Dir2FwdDir1 )
                     {
                         arrayindx[i*P+j] = i*P+j;
                     }
@@ -1174,10 +1174,12 @@ namespace Nektar
                 }
             }
 
-            if( (faceOrient==6) || (faceOrient==8) ||
-               (faceOrient==11) || (faceOrient==12) )
+            if( (faceOrient==eDir1FwdDir1_Dir2BwdDir2) ||
+                (faceOrient==eDir1BwdDir1_Dir2BwdDir2) ||
+                (faceOrient==eDir1BwdDir2_Dir2FwdDir1) ||
+                (faceOrient==eDir1BwdDir2_Dir2BwdDir1) )
             {
-                if(faceOrient<9)
+                if(faceOrient<eDir1FwdDir2_Dir2FwdDir1)
                 {
                     if (modified)
                     {
@@ -1247,10 +1249,12 @@ namespace Nektar
                 }
             }
 
-            if( (faceOrient==7) || (faceOrient==8) ||
-               (faceOrient==10) || (faceOrient==12) )
+            if( (faceOrient==eDir1BwdDir1_Dir2FwdDir2) ||
+                (faceOrient==eDir1BwdDir1_Dir2BwdDir2) ||
+                (faceOrient==eDir1FwdDir2_Dir2BwdDir1) ||
+                (faceOrient==eDir1BwdDir2_Dir2BwdDir1) )
             {
-                if(faceOrient<9)
+                if(faceOrient<eDir1FwdDir2_Dir2FwdDir1)
                 {
                     if (modified)
                     {
@@ -1845,7 +1849,7 @@ namespace Nektar
             {
                 for(j = 0; j < (nummodesA-2); j++)
                 {
-                    if( faceOrient < 9 )
+                    if( faceOrient < eDir1FwdDir2_Dir2FwdDir1 )
                     {
                         arrayindx[i*(nummodesA-2)+j] = i*(nummodesA-2)+j;
                     }
@@ -1895,7 +1899,7 @@ namespace Nektar
                 {
                     if( bType[2] == LibUtilities::eGLL_Lagrange)
                     {
-                        if( (((int) faceOrient)-5) % 2 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 2 )
                         {
                             IdxRange[2][0] = nummodes[2] - 2;
                             IdxRange[2][1] = 0;
@@ -1915,7 +1919,7 @@ namespace Nektar
                         IdxRange[2][1] = nummodes[2];
                         Incr[2] = 1;
 
-                        if( (((int) faceOrient)-5) % 2 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 2 )
                         {
                             for(i = 3; i < nummodes[2]; i+=2)
                             {
@@ -1958,7 +1962,7 @@ namespace Nektar
                 {
                     if( bType[1] == LibUtilities::eGLL_Lagrange)
                     {
-                        if( (((int) faceOrient)-5) % 2 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 2 )
                         {
                             IdxRange[1][0] = nummodes[1] - 2;
                             IdxRange[1][1] = 0;
@@ -1978,7 +1982,7 @@ namespace Nektar
                         IdxRange[1][1] = nummodes[1];
                         Incr[1] = 1;
 
-                        if( (((int) faceOrient)-5) % 2 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 2 )
                         {
                             for(i = 3; i < nummodes[1]; i+=2)
                             {
@@ -1992,7 +1996,7 @@ namespace Nektar
                 {
                     if( bType[1] == LibUtilities::eGLL_Lagrange)
                     {
-                        if( (((int) faceOrient)-5) % 4 > 1 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 4 > 1 )
                         {
                             IdxRange[1][0] = nummodes[1] - 2;
                             IdxRange[1][1] = 0;
@@ -2012,7 +2016,7 @@ namespace Nektar
                         IdxRange[1][1] = nummodes[1];
                         Incr[1] = 1;
 
-                        if( (((int) faceOrient)-5) % 4 > 1 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 4 > 1 )
                         {
                             for(i = 3; i < nummodes[1]; i+=2)
                             {
@@ -2052,7 +2056,7 @@ namespace Nektar
                 {
                     if( bType[0] == LibUtilities::eGLL_Lagrange)
                     {
-                        if( (((int) faceOrient)-5) % 4 > 1 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 4 > 1 )
                         {
                             IdxRange[0][0] = nummodes[0] - 2;
                             IdxRange[0][1] = 0;
@@ -2072,7 +2076,7 @@ namespace Nektar
                         IdxRange[0][1] = nummodes[0];
                         Incr[0] = 1;
 
-                        if( (((int) faceOrient)-5) % 4 > 1 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 4 > 1 )
                         {
                             for(i = 3; i < nummodes[0]; i+=2)
                             {
@@ -2396,18 +2400,18 @@ namespace Nektar
 
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
             int i,j,k,cnt=0;
-            
+
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
-            
-            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff)) 
+
+            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff))
             {
-                // Rodrigo's power kernel                
-                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                // Rodrigo's power kernel
+                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio);
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVPowerKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);
-                
+
                 for(int i = 0; i < nmodes_a; ++i)
                 {
                     for(int j = 0; j < nmodes_b; ++j)
@@ -2420,7 +2424,7 @@ namespace Nektar
                         {
                             NekDouble fac = std::max(fac1,
                                      pow((1.0*k)/(nmodes_c-1),cutoff*nmodes_c));
-                            
+
                             orthocoeffs[cnt]
                                 *= SvvDiffCoeff * fac;
                             cnt++;
@@ -2440,18 +2444,18 @@ namespace Nektar
                 // clamp max_abc
                 max_abc = max(max_abc,0);
                 max_abc = min(max_abc,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
-                
+
                 for(int i = 0; i < nmodes_a; ++i)
                 {
                     for(int j = 0; j < nmodes_b; ++j)
                     {
                         int maxij = max(i,j);
-                        
+
                         for(int k = 0; k < nmodes_c; ++k)
                         {
                             int maxijk = max(maxij,k);
                             maxijk = min(maxijk,kSVVDGFiltermodesmax-1);
-                        
+
                             orthocoeffs[cnt] *= SvvDiffCoeff *
                                 kSVVDGFilter[max_abc][maxijk];
                             cnt++;
@@ -2461,20 +2465,20 @@ namespace Nektar
             }
             else
             {
-                
+
                 int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
                 NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
                 //  Filter just trilinear space
                 int nmodes = max(nmodes_a,nmodes_b);
                 nmodes = max(nmodes,nmodes_c);
-                
+
                 Array<OneD, NekDouble> fac(nmodes,1.0);
                 for(j = cutoff; j < nmodes; ++j)
                 {
                     fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
                     fac[j] *= fac[j]; //added this line to conform with equation
                 }
-                
+
                 for(i = 0; i < nmodes_a; ++i)
                 {
                     for(j = 0; j < nmodes_b; ++j)

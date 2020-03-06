@@ -999,13 +999,6 @@ void InputGmsh::ReadNextNode()
         }
         else
         {
-            /*
-            // No longer true in Gmsh 4.0
-            // Was it true before?
-            cerr << "Gmsh vertex ids should be contiguous" << endl;
-            abort();
-            */
-            
             // Build m_idMap so far
             for (int i = 0; i < m_mesh->m_node.size(); ++i)
             {

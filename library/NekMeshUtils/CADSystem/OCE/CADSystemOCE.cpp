@@ -429,7 +429,7 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
     ParseUtils::GenerateVector(m_naca, data);
     ASSERTL0(data.size() == 5, "not a vaild domain");
 
-    int n       = boost::lexical_cast<int>(naca);
+    int n       = std::stoi(naca);
     NekDouble T = (n % 100) / 100.0;
     n /= 100;
     NekDouble P = (n % 10) / 10.0;
@@ -589,7 +589,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         string type = tmp2[0];
         boost::erase_all(tmp2[1], ")");
         boost::erase_all(tmp2[1], " ");
-        int id = boost::lexical_cast<int>(tmp2[1]);
+        int id = std::stoi(tmp2[1]);
 
         boost::erase_all(tmp1[1], " ");
         boost::erase_all(tmp1[1], "{");

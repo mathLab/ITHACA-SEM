@@ -541,6 +541,15 @@ Components of the \nekpp package can be selected using the following options:
 
     Compiles utilities for pre- and post-processing simulation data.
 
+    \item \inlsh{NEKTAR\_DISABLE\_BACKUPS}
+
+    By default, Nektar++ solvers and the FieldConvert utility will not overwrite
+    any generated field files or output files they find an existing file with
+    the same name. Instead, the existing file will be either moved to a backup
+    file or you will be prompted to overwrite them. If you do not want this
+    behaviour, then enabling this option will cause all pre-existing output to
+    be overwritten silently.
+
     \item \inlsh{NEKTAR\_SOLVER\_X}
 
     Enabled compilation of the 'X' solver.

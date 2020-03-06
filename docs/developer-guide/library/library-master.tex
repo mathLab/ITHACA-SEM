@@ -1,0 +1,227 @@
+% Library Master File
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Inside the Library: LibUtilities}
+
+In this chapter, we walk the reader through the different components of the LibUtilities Directory.
+We have ordered them in alphabetical order by directory name, not by level of importance or
+relevance to the code.  Since all of these items are considered foundational to Nektar++, they
+should all be considered equally important and relevant.   Along the same lines -- since all of
+these areas of the code represent the deepest members of the code hierarchy, these
+items should rarely be modified. 
+%
+\input{library/LibUtilities/basicconst.tex}
+%
+\input{library/LibUtilities/basicutils.tex}
+%
+\input{library/LibUtilities/communication.tex}
+%
+\input{library/LibUtilities/fft.tex}
+%
+\input{library/LibUtilities/foundations.tex}
+%
+\input{library/LibUtilities/interpreter.tex}
+%
+\input{library/LibUtilities/kernel.tex}
+%
+\input{library/LibUtilities/linearalgebra.tex}
+%
+\input{library/LibUtilities/memory.tex}
+%
+\input{library/LibUtilities/polylib.tex}
+%
+\input{library/LibUtilities/timeintegration.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Inside the Library: StdRegions}
+\label{chap:stdregions}
+
+In this chapter, we walk the reader through the different components of the StdRegions Directory.
+We begin with a discussion of the mathematical fundamentals, for which we use the book
+by Karniadakis and Sherwin \cite{KaSh05} as our principle reference.  We then provide
+the reader with an overview of the primary data structures introduced within the
+StdRegions Directory (often done through C++ objects), and then present the major 
+algorithms -- expressed as either object methods or functions -- employed over these data structures.  
+
+\input{library/StdRegions/stdreg-fundamentals.tex}
+%
+\input{library/StdRegions/stdreg-datastructures.tex}
+%
+\input{library/StdRegions/stdreg-algorithms.tex}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Inside the Library: SpatialDomains}
+\label{chap:spatialdomains}
+
+
+In this chapter, we walk the reader through the different components
+of the SpatialDomains Directory.  We begin with a discussion of the
+mathematical fundamentals, for which we use the book by Karniadakis
+and Sherwin \cite{KaSh05} as our principle reference.  We then provide
+the reader with an overview of the primary data structures introduced
+within the SpatialDomains Directory (often done through C++ objects),
+and then present the major algorithms -- expressed as either object
+methods or functions -- employed over these data structures.
+
+
+The SpatialDomains Directory and its corresponding class definitions serve two principal purposes:
+\begin{enumerate}
+\item To hold the elemental geometric information (i.e. vertex information, curve information and reference-to-world mapping information); and
+\item To facility reading in and writing out geometry-related information.
+\end{enumerate}
+
+When designing Nektar++, developing a class hierarchy for StdRegions
+(those fundamental domains over which we define integration and
+differentiation) and LocalRegions (i.e. elements in world-space) was
+fairly straightforward following \cite{KaSh05}.  For instance, a
+triangle in world-space {\em is-a} standard triangle.  The first
+question that arose was where to store geometric information, as
+information within the LocalRegions element or as information
+encapsulated from the element so that multiple Expansions could all
+point to the same geometric information.  The decision we made was to
+store geometric information -- that is, the vertex information in
+world-space that defines an element and the edge and face curvature
+information -- in its own data structure that could be shared by
+multiple Expansions (functions) over the same domain (element) in
+world-space.  Hence SpatialDomains started as the directory containing
+Geometry and GeomFactors class definitions to meet the first item
+listed above.  A LocalRegion {\em is-a} StdRegion and {\em has-a}
+SpatialDomain (i.e. Geometry and GeomFactors).
+
+We then realized that in order to jump-start the process of
+constructing elements and combining them together into MultiRegions
+(collections of elements that represent a (sub)-domain of interest),
+we needed devise a light-weight data structure into which we could
+load geometric information from our geometry file and from which we
+could then construct Expansions (with their mappings, etc.).  The
+light-weight data structure we devised was MeshGraph, and it was meant
+to meet the second item listed above.
+
+
+\input{library/SpatialDomains/spdomains-fundamentals.tex}
+%
+\input{library/SpatialDomains/spdomains-datastructures.tex}
+%
+\input{library/SpatialDomains/spdomains-algorithms.tex}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Inside the Library: LocalRegions}
+\label{chap:localregions}
+
+
+In this chapter, we walk the reader through the different components
+of the LocalRegions Directory.  We begin with a discussion of the
+mathematical fundamentals, for which we use the book by Karniadakis
+and Sherwin \cite{KaSh05} as our principle reference.  We then provide
+the reader with an overview of the primary data structures introduced
+within the LocalRegions Directory (often done through C++ objects),
+and then present the major algorithms -- expressed as either object
+methods or functions -- employed over these data structures.
+
+\input{library/LocalRegions/localreg-fundamentals.tex}
+%
+\input{library/LocalRegions/localreg-datastructures.tex}
+%
+\input{library/LocalRegions/localreg-algorithms.tex}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Inside the Library: Collections}
+
+In this chapter, we walk the reader through the different components
+of the Collections Directory.  We begin with a discussion of the
+mathematical fundamentals, for which we use the book by Karniadakis
+and Sherwin \cite{KaSh05} as our principle reference.  We then provide
+the reader with an overview of the primary data structures introduced
+within the Collections Directory (often done through C++ objects), and
+then present the major algorithms -- expressed as either object
+methods or functions -- employed over these data structures.
+
+\input{library/Collections/collections-fundamentals.tex}
+%
+\input{library/Collections/collections-datastructures.tex}
+%
+\input{library/Collections/collections-algorithms.tex}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Inside the Library: MultiRegions}
+\label{chap:multiregions}
+
+
+In this chapter, we walk the reader through the different components
+of the MultiRegions Directory.  We begin with a discussion of the
+mathematical fundamentals, for which we use the book by Karniadakis
+and Sherwin \cite{KaSh05} as our principle reference.  We then provide
+the reader with an overview of the primary data structures introduced
+within the MultiRegions Directory (often done through C++ objects),
+and then present the major algorithms -- expressed as either object
+methods or functions -- employed over these data structures.
+
+\input{library/MultiRegions/multireg-fundamentals.tex}
+%
+\input{library/MultiRegions/multireg-datastructures.tex}
+%
+\input{library/MultiRegions/multireg-algorithms.tex}
+%
+\input{library/MultiRegions/multireg-preconditioners.tex}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Inside the Library: GlobalMapping}
+\label{chapter:globalmapping} 
+
+In this chapter, we walk the reader through the different components
+of the GlobalMapping Directory.  We begin with a discussion of the
+mathematical fundamentals, for which we use research article by
+Cantwell et al. \cite{CantwellYKPS14} and the book \cite{Ar89} as our
+principle references.  We then provide the reader with an overview of
+the primary data structures introduced within the GlobalMapping
+Directory (often done through C++ objects), and then present the major
+algorithms -- expressed as either object methods or functions --
+employed over these data structures.
+
+\input{library/GlobalMapping/globalmapping-fundamentals.tex}
+%
+\input{library/GlobalMapping/globalmapping-datastructures.tex}
+%
+\input{library/GlobalMapping/globalmapping-algorithms.tex}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Inside the Library: FieldUtils}
+
+In this chapter, we walk the reader through the different components of the FieldUtils Directory.
+We begin with a discussion of the mathematical fundamentals, for which we use the book
+by Karniadakis and Sherwin \cite{KaSh05} as our principle reference.  We then provide
+the reader with an overview of the primary data structures introduced within the
+FieldUtils Directory (often done through C++ objects), and then present the major 
+algorithms -- expressed as either object methods or functions -- employed over these data structures.  
+
+\input{library/FieldUtils/fieldutils-fundamentals.tex}
+%
+\input{library/FieldUtils/fieldutils-datastructures.tex}
+%
+\input{library/FieldUtils/fieldutils-algorithms.tex}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Inside the Library: SolverUtils}
+
+In this chapter, we walk the reader through the different components of the SolverUtils Directory.
+We begin with a discussion of the mathematical fundamentals, for which we use the book
+by Karniadakis and Sherwin \cite{KaSh05} as our principle reference.  We then provide
+the reader with an overview of the primary data structures introduced within the
+SolverUtils Directory (often done through C++ objects), and then present the major 
+algorithms -- expressed as either object methods or functions -- employed over these data structures.  
+
+\input{library/SolverUtils/solverutils-fundamentals.tex}
+%
+\input{library/SolverUtils/solverutils-datastructures.tex}
+%
+\input{library/SolverUtils/solverutils-algorithms.tex}
+
+

@@ -506,11 +506,19 @@ namespace Nektar
           // Now fill in all other Dirichlet coefficients.
           for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
           {
-              Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[i]->UpdateCoeffs();
+              Array<OneD, NekDouble>& coeffs =
+                  m_bndCondExpansions[i]->UpdateCoeffs();
 
+              if(m_bndConditions[i]->GetBoundaryConditionType()
+                 == SpatialDomains::ePeriodic)
+              {
+                  continue;
+              }
+              
               for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
               {
-                  sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                  sign = m_locToGloMap->
+                      GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
                   coeffs[j] = sign * tmp[bndMap[bndcnt++]];
               }
           }
@@ -531,10 +539,16 @@ namespace Nektar
                    "regions to not exist");
 
             // Now fill in all other Dirichlet coefficients.
-          Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[nreg]->UpdateCoeffs();
+          Array<OneD, NekDouble>& coeffs =
+              m_bndCondExpansions[nreg]->UpdateCoeffs();
           
           for(int j = 0; j < nreg; ++j)
           {
+              if(m_bndConditions[j]->GetBoundaryConditionType()
+                 == SpatialDomains::ePeriodic)
+              {
+                  continue;
+              }
               bndcnt += m_bndCondExpansions[j]->GetNcoeffs();
           }
           

@@ -148,9 +148,6 @@ public:
     OutputTecplotBinary(FieldSharedPtr f) : OutputTecplot(f)
     {
         m_binary = true;
-        m_config["double"] =
-            ConfigOption(true, "0", "Write double-precision data: more "
-                                    "accurate but more disk space required");
     }
 
     virtual ~OutputTecplotBinary()

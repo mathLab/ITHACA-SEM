@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
     <description>StdProject_Diff3D Hexahedron Orthonormal basis P=6 Q=7</description>
-    <executable>StdProject_Diff3D</executable>
-    <parameters>8 1 1 1 6 6 6 7 7 7</parameters>
+    <executable>StdProject</executable>
+    <parameters>-s hexahedron -b Ortho_A Ortho_A Ortho_A -o 6 6 6 -p 7 7 7 -d</parameters>
     <metrics>
         <metric type="L2" id="1">
             <value tolerance="1e-12">4.88883e-13</value>

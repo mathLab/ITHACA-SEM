@@ -105,7 +105,6 @@ protected:
     NekDouble m_mu;
     NekDouble m_Skappa;
     NekDouble m_Kappa;
-    NekDouble m_mu0;
 };
 }
 #endif

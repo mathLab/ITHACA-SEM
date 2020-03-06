@@ -128,6 +128,10 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+#ifdef NEKTAR_DISABLE_BACKUPS
+    vm.insert(std::make_pair("forceoutput", po::variable_value()));
+#endif
+
     // Print available modules.
     if (vm.count("modules-list"))
     {
@@ -240,9 +244,13 @@ int main(int argc, char* argv[])
     }
     else
     {
+        if(vm.count("nparts"))
+        {
+            nParts = vm["nparts"].as<int>();
+        }
+
         f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
                                                     "Serial", argc, argv);
-
     }
 
     vector<ModuleSharedPtr> modules;
@@ -276,6 +284,7 @@ int main(int argc, char* argv[])
     }
 
     InputModuleSharedPtr inputModule;
+    string outfilename;
 
     for (int i = 0; i < modcmds.size(); ++i)
     {
@@ -372,6 +381,16 @@ int main(int argc, char* argv[])
             inputModule = std::dynamic_pointer_cast<InputModule>(mod);
             inputModule->AddFile(module.second, tmp1[0]);
         }
+        else if(module.first == eOutputModule)
+        {
+            outfilename = tmp1[0];
+            if(nParts > 1)
+            {
+                // if nParts is specified then ensure output modules
+                // write out mutipile files
+                mod->RegisterConfig("writemultiplefiles");
+            }
+        }
 
         // Set options for this module.
         for (int j = offset; j < tmp1.size(); ++j)
@@ -438,17 +457,6 @@ int main(int argc, char* argv[])
         PrintExecutionSequence(modules);
     }
 
-    // if nParts is specified then ensure output modules write out mutipile files
-    if(nParts > 1)
-    {
-        for (int i = 0; i < modules.size(); ++i)
-        {
-            if(modules[i]->GetModulePriority() == eOutput)
-            {
-                modules[i]->RegisterConfig("writemultiplefiles","true");
-            }
-        }
-    }
 
     // Loop on partitions if required
     LibUtilities::CommSharedPtr defComm = f->m_comm;
@@ -494,6 +502,63 @@ int main(int argc, char* argv[])
         }
     }
 
+    // write out Info file if required.
+    if (nParts > 1)
+    {
+        int i;
+        // check to see if we have created a fld file.
+        for (i = 0; i < modules.size(); ++i)
+        {
+            if (boost::iequals(modules[i]->GetModuleName(), "OutputFld"))
+            {
+                break;
+            }
+        }
+
+        if (i != modules.size())
+        {
+            if (MPInprocs > 1)
+            {
+                MPIComm->Block();
+            }
+
+            if (MPIrank == 0)
+            {
+                module.first  = eOutputModule;
+                module.second = string("info");
+                mod           = GetModuleFactory().CreateInstance(module, f);
+
+                mod->RegisterConfig("nparts",
+                                    boost::lexical_cast<string>(nParts));
+                mod->SetDefaults();
+
+                if (f->m_writeBndFld)
+                {
+                    // find ending of output file and insert _b1, _b2
+                    int dot = outfilename.find_last_of('.') + 1;
+                    string ext =
+                        outfilename.substr(dot, outfilename.length() - dot);
+                    string name = outfilename.substr(0, dot - 1);
+
+                    for (int b = 0; b < f->m_bndRegionsToWrite.size(); ++b)
+                    {
+                        string outfilenew = name + "_b" +
+                                            boost::lexical_cast<string>(
+                                                f->m_bndRegionsToWrite[b]) +
+                                            "." + ext;
+                        mod->RegisterConfig("outfile", outfilenew);
+                        RunModule(mod, vm, verbose);
+                    }
+                }
+                else
+                {
+                    mod->RegisterConfig("outfile", outfilename);
+                    RunModule(mod, vm, verbose);
+                }
+            }
+        }
+    }
+
     if(verbose)
     {
         timer.Stop();
@@ -504,7 +569,8 @@ int main(int argc, char* argv[])
         cout << "Total CPU Time: " << setw(8) << left
              << ss.str() << endl;
     }
-    if(nParts > 1)
+
+    if(MPInprocs > 1)
     {
         MPIComm->Block();
         MPIComm->Finalise();

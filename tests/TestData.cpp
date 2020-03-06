@@ -35,9 +35,9 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <TestData.h>
+#include <TestException.hpp>
 
 using namespace std;
 

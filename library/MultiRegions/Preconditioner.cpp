@@ -188,8 +188,10 @@ namespace Nektar
         Array<OneD, NekDouble>
             Preconditioner::AssembleStaticCondGlobalDiagonals()
         {
-            int nGlobalBnd = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            auto asmMap = m_locToGloMap.lock();
+
+            int nGlobalBnd = asmMap->GetNumGlobalBndCoeffs();
+            int nDirBnd = asmMap->GetNumGlobalDirBndCoeffs();
             int rows = nGlobalBnd - nDirBnd;
 
             DNekScalBlkMatSharedPtr loc_mat;
@@ -212,9 +214,9 @@ namespace Nektar
 
                 for (i = 0; i < bnd_row; ++i)
                 {
-                    gid1  = m_locToGloMap->GetLocalToGlobalBndMap (cnt + i)
+                    gid1  = asmMap->GetLocalToGlobalBndMap (cnt + i)
                         - nDirBnd;
-                    sign1 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + i);
+                    sign1 = asmMap->GetLocalToGlobalBndSign(cnt + i);
 
                     if (gid1 < 0)
                     {
@@ -223,9 +225,9 @@ namespace Nektar
 
                     for (j = 0; j < bnd_row; ++j)
                     {
-                        gid2  = m_locToGloMap->GetLocalToGlobalBndMap (cnt + j)
+                        gid2  = asmMap->GetLocalToGlobalBndMap (cnt + j)
                             - nDirBnd;
-                        sign2 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + j);
+                        sign2 = asmMap->GetLocalToGlobalBndSign(cnt + j);
 
                         if (gid2 == gid1)
                         {

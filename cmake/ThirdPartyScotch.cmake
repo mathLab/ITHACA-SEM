@@ -12,29 +12,16 @@ IF (NOT WIN32)
 ENDIF(NOT WIN32)
 
 IF (NEKTAR_USE_SCOTCH)
-    # Assume we build scotch by default
-    SET(BUILD_SCOTCH OFF)
-
-    # First search for system serial scotch installs. Hint /opt/local for MacPorts.
-    FIND_LIBRARY(SCOTCH_LIBRARY    NAMES scotch PATHS ${MACPORTS_PREFIX}/lib)
-    FIND_LIBRARY(SCOTCHERR_LIBRARY NAMES scotcherr PATHS ${MACPORTS_PREFIX}/lib)
-    FIND_PATH   (SCOTCH_INCLUDE_DIR scotch.h PATHS ${MACPORTS_PREFIX}/include PATH_SUFFIXES scotch)
-
-    # If not found, we need to build scotch
-    IF (NOT SCOTCH_LIBRARY OR NOT SCOTCHERR_LIBRARY OR NOT SCOTCH_INCLUDE_DIR)
-        SET(BUILD_SCOTCH ON)
-    ENDIF ()
-
-    # If we are also using MPI, search for PT-Scotch library
     IF (NEKTAR_USE_MPI)
-        FIND_LIBRARY(PTSCOTCH_LIBRARY    NAMES ptscotch PATHS ${MACPORTS_PREFIX}/lib)
-        FIND_LIBRARY(PTSCOTCHERR_LIBRARY NAMES ptscotcherr PATHS ${MACPORTS_PREFIX}/lib)
-        FIND_PATH   (PTSCOTCH_INCLUDE_DIR ptscotch.h PATHS ${MACPORTS_PREFIX}/include PATH_SUFFIXES scotch)
+        FIND_PACKAGE(Scotch 5 COMPONENTS ptscotch)
+    ELSE()
+        FIND_PACKAGE(Scotch 5)
+    ENDIF()
 
-        # If we cannot find PT-Scotch, we need to build them
-        IF (NOT PTSCOTCH_LIBRARY OR NOT PTSCOTCHERR_LIBRARY OR NOT PTSCOTCH_INCLUDE_DIR)
-            SET(BUILD_SCOTCH ON)
-        ENDIF ()
+    IF (SCOTCH_FOUND)
+        SET(BUILD_SCOTCH OFF)
+    ELSE()
+        SET(BUILD_SCOTCH ON)
     ENDIF ()
 
     CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_SCOTCH
@@ -72,12 +59,19 @@ IF (NEKTAR_USE_SCOTCH)
             ENDIF ()
             SET(SCOTCH_LDFLAGS "-lz -lm -lrt -lpthread")
         ENDIF ()
-        
-        SET(SCOTCH_BUILD_TARGET "scotch")
-        SET(SCOTCH_C_COMPILER ${CMAKE_C_COMPILER})
+
+        # Determine the build target and compiler to use for scotch.
+        # We use the normal C compiler by default. If MPI is being used and is
+        # not built into the normal compiler, we use the MPI-specified compiler.
         IF (NEKTAR_USE_MPI)
             SET(SCOTCH_BUILD_TARGET "ptscotch")
+        ELSE ()
+            SET(SCOTCH_BUILD_TARGET "scotch")
+        ENDIF ()
+        IF (NEKTAR_USE_MPI AND NOT MPI_BUILTIN)
             SET(SCOTCH_C_COMPILER ${MPI_C_COMPILER})
+        ELSE ()
+            SET(SCOTCH_C_COMPILER ${CMAKE_C_COMPILER})
         ENDIF ()
 
         INCLUDE(ExternalProject)
@@ -111,28 +105,32 @@ IF (NEKTAR_USE_SCOTCH)
             DESCRIPTION "Scotch library")
         THIRDPARTY_LIBRARY(SCOTCHERR_LIBRARY STATIC scotcherr
             DESCRIPTION "Scotch error library")
-        THIRDPARTY_LIBRARY(PTSCOTCH_LIBRARY STATIC ptscotch
+        THIRDPARTY_LIBRARY(PTSCOTCH_LIBRARY STATIC ptscotch;scotch
             DESCRIPTION "PT-Scotch library")
         THIRDPARTY_LIBRARY(PTSCOTCHERR_LIBRARY STATIC ptscotcherr
             DESCRIPTION "PT-Scotch error library")
         SET(SCOTCH_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
             "Scotch include directory" FORCE)
-        SET(PTSCOTCH_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
-            "PT-Scotch include directory" FORCE)
-        MESSAGE(STATUS "Build Scotch: ${SCOTCH_LIBRARY}")
+        SET(SCOTCH_LIBRARY_DIR ${TPDIST}/lib CACHE FILEPATH
+            "Scotch library directory" FORCE)
+        IF(NEKTAR_USE_MPI)
+            MESSAGE(STATUS "Build PT-Scotch: ${PTSCOTCH_LIBRARY}")
+        ELSE()
+            MESSAGE(STATUS "Build Scotch: ${SCOTCH_LIBRARY}")
+        ENDIF()
         SET(SCOTCH_CONFIG_INCLUDE_DIR ${TPINC})
     ELSE (THIRDPARTY_BUILD_SCOTCH)
         ADD_CUSTOM_TARGET(scotch-6.0.4 ALL)
-        MESSAGE(STATUS "Found Scotch: ${SCOTCH_LIBRARY}")
         SET(SCOTCH_CONFIG_INCLUDE_DIR ${SCOTCH_INCLUDE_DIR})
     ENDIF (THIRDPARTY_BUILD_SCOTCH)
 
-    INCLUDE_DIRECTORIES(${SCOTCH_INCLUDE_DIR})
+    INCLUDE_DIRECTORIES(${SCOTCH_INCLUDE_DIR} ${PTSCOTCH_INCLUDE_DIR})
+    LINK_DIRECTORIES(${SCOTCH_LIBRARY_DIR} ${PTSCOTCH_LIBRARY_DIR})
 
     MARK_AS_ADVANCED(SCOTCH_LIBRARY)
     MARK_AS_ADVANCED(SCOTCHERR_LIBRARY)
+    MARK_AS_ADVANCED(SCOTCH_LIBRARY_DIR)
+    MARK_AS_ADVANCED(SCOTCH_INCLUDE_DIR)
     MARK_AS_ADVANCED(PTSCOTCH_LIBRARY)
     MARK_AS_ADVANCED(PTSCOTCHERR_LIBRARY)
-    MARK_AS_ADVANCED(SCOTCH_INCLUDE_DIR)
-    MARK_AS_ADVANCED(PTSCOTCH_INCLUDE_DIR)
 ENDIF()

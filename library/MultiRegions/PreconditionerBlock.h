@@ -74,10 +74,7 @@ namespace Nektar
             virtual ~PreconditionerBlock() {}
 
         protected:
-            const std::weak_ptr<GlobalLinSys>           m_linsys;
-            PreconditionerType                          m_preconType;
-            DNekBlkMatSharedPtr                         m_blkMat;
-            std::shared_ptr<AssemblyMap>                m_locToGloMap;
+            DNekBlkMatSharedPtr m_blkMat;
 
         private:
             void BlockPreconditionerCG(void);

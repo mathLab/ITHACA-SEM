@@ -193,7 +193,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT const std::string  GetSessionNameRank() const;
             /// Returns the communication object.
             LIB_UTILITIES_EXPORT CommSharedPtr &GetComm();
-            /// Returns the communication object.
+            /// Returns if file system shared
             LIB_UTILITIES_EXPORT bool GetSharedFilesystem();
             /// Finalises the session.
             LIB_UTILITIES_EXPORT void Finalise();

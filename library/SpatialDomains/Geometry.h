@@ -44,8 +44,10 @@
 
 #include <unordered_map>
 
+#include <boost/optional.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
+
 namespace bg = boost::geometry;
 
 namespace Nektar

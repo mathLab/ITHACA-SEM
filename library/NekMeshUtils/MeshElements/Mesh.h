@@ -150,6 +150,8 @@ public:
 
     NEKMESHUTILS_EXPORT void MakeOrder(int                      order,
                                        LibUtilities::PointsType distType);
+
+    NEKMESHUTILS_EXPORT void PrintStats(std::ostream &out);
 };
 /// Shared pointer to a mesh.
 typedef std::shared_ptr<Mesh> MeshSharedPtr;

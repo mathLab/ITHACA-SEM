@@ -39,7 +39,11 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <SpatialDomains/MeshPartition.h>
 
+#ifdef NEKTAR_USE_MPI
+#include <ptscotch.h>
+#else
 #include <scotch.h>
+#endif
 
 namespace Nektar
 {

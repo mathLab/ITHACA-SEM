@@ -65,6 +65,9 @@ void Dummy::v_InitObject()
     m_ode.DefineOdeRhs(&Dummy::DoOdeRhs, this);
     m_ode.DefineProjection(&Dummy::DoOdeProjection, this);
 
+    m_forcing = SolverUtils::Forcing::Load(
+        m_session, shared_from_this(), m_fields, m_fields.num_elements());
+
     if (m_session->DefinesElement("Nektar/Coupling"))
     {
         TiXmlElement *vCoupling = m_session->GetElement("Nektar/Coupling");
@@ -80,8 +83,12 @@ void Dummy::v_InitObject()
         auto sV = m_session->GetVariables();
         for (auto const &sendVar : m_coupling->GetSendFieldNames())
         {
-            int i = distance(sV.begin(), find(sV.begin(), sV.end(), sendVar));
-            m_intVariables.push_back(i);
+            auto match = find(sV.begin(), sV.end(), sendVar);
+            if (match != sV.end())
+            {
+                int id = distance(sV.begin(), match);
+                m_intVariables.push_back(id);
+            }
         }
     }
 }
@@ -100,12 +107,30 @@ bool Dummy::v_PreIntegrate(int step)
 {
     if (m_coupling)
     {
+        int numForceFields = 0;
+        for (auto &x : m_forcing)
+        {
+            numForceFields += x->GetForces().num_elements();
+        }
         vector<string> varNames;
-        Array<OneD, Array<OneD, NekDouble> > phys(m_fields.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > phys(m_fields.num_elements() +
+                                                  numForceFields);
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {
             varNames.push_back(m_session->GetVariable(i));
             phys[i] = m_fields[i]->UpdatePhys();
+        }
+
+        int f = 0;
+        for (auto &x : m_forcing)
+        {
+            for (int i = 0; i < x->GetForces().num_elements(); ++i)
+            {
+                phys[m_fields.num_elements() + f + i] = x->GetForces()[i];
+                varNames.push_back("F_" + boost::lexical_cast<string>(f) + "_" +
+                                   m_session->GetVariable(i));
+            }
+            f++;
         }
 
         m_coupling->Send(step, m_time, phys, varNames);
@@ -128,10 +153,13 @@ bool Dummy::v_PostIntegrate(int step)
         auto sV = m_session->GetVariables();
         for (auto const &sendVar : m_coupling->GetSendFieldNames())
         {
-            int i = distance(sV.begin(), find(sV.begin(), sV.end(), sendVar));
-            cout << "sendVar = " << sendVar << ", i = " << i << endl;
-            GetFunction("SendFields", m_fields[i])
-                ->Evaluate(sendVar, m_fields[i]->UpdatePhys(), m_time);
+            auto match = find(sV.begin(), sV.end(), sendVar);
+            if (match != sV.end())
+            {
+                int id = distance(sV.begin(), match);
+                GetFunction("SendFields", m_fields[id])
+                    ->Evaluate(sendVar, m_fields[id]->UpdatePhys(), m_time);
+            }
         }
 
         timer1.Stop();
@@ -160,6 +188,44 @@ void Dummy::v_Output()
     }
 
     UnsteadySystem::v_Output();
+
+    int f = 0;
+    for (auto &x : m_forcing)
+    {
+        for (int i = 0; i < x->GetForces().num_elements(); ++i)
+        {
+            int npts = GetTotPoints();
+
+            NekDouble l2err   = 0.0;
+            NekDouble linferr = 0.0;
+            for (int j = 0; j < npts; ++j)
+            {
+                l2err += x->GetForces()[i][j] * x->GetForces()[i][j];
+                linferr = max(linferr, fabs(x->GetForces()[i][j]));
+            }
+
+            m_comm->AllReduce(l2err, LibUtilities::ReduceSum);
+            m_comm->AllReduce(npts, LibUtilities::ReduceSum);
+            m_comm->AllReduce(linferr, LibUtilities::ReduceMax);
+
+            l2err /= npts;
+            l2err = sqrt(l2err);
+
+            if (m_comm->TreatAsRankZero())
+            {
+                cout << "L 2 error (variable "
+                     << "F_" + boost::lexical_cast<string>(f) + "_" +
+                            m_session->GetVariable(i)
+                     << ") : " << l2err << endl;
+
+                cout << "L inf error (variable "
+                     << "F_" + boost::lexical_cast<string>(f) + "_" +
+                            m_session->GetVariable(i)
+                     << ") : " << linferr << endl;
+            }
+        }
+        f++;
+    }
 }
 
 /**
@@ -197,4 +263,4 @@ void Dummy::DoOdeProjection(
     }
 }
 
-} // end of namespace
+} // namespace Nektar

@@ -38,6 +38,7 @@
 #define NEKTAR_SOLVERS_DummySOLVER_EQUATIONSYSTEMS_DUMMY_H
 
 #include <SolverUtils/Core/Coupling.h>
+#include <SolverUtils/Forcing/Forcing.h>
 #include <SolverUtils/UnsteadySystem.h>
 
 using namespace Nektar::SolverUtils;
@@ -68,6 +69,7 @@ public:
 
 protected:
     SolverUtils::CouplingSharedPtr m_coupling;
+    std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
 
     /// Initialises UnsteadySystem class members.
     Dummy(const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -95,6 +97,6 @@ protected:
         return false;
     }
 };
-}
+} // namespace Nektar
 
 #endif

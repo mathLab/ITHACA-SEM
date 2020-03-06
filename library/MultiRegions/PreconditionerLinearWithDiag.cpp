@@ -74,8 +74,8 @@ namespace Nektar
          */ 
         void PreconditionerLinearWithDiag::v_InitObject()
         {
-            m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap);
-            m_diagonalPrecon = GetPreconFactory().CreateInstance("Diagonal",m_linsys.lock(),m_locToGloMap);
+            m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap.lock());
+            m_diagonalPrecon = GetPreconFactory().CreateInstance("Diagonal",m_linsys.lock(),m_locToGloMap.lock());
         }
 
         /**

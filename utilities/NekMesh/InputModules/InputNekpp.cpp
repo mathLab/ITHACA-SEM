@@ -71,7 +71,7 @@ void InputNekpp::Process()
     vector<string> filename;
     filename.push_back(m_config["infile"].as<string>());
 
-    char *prgname = "NekMesh";
+    char *prgname = const_cast<char *>("NekMesh");
     LibUtilities::SessionReaderSharedPtr pSession =
         LibUtilities::SessionReader::CreateInstance(1, &prgname, filename);
     SpatialDomains::MeshGraphSharedPtr graph =

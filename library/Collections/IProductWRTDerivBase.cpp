@@ -1053,7 +1053,7 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
          *
          * where we note that
          *
-         * \f[ d\phi/d\xi_0 = d\phi/d\eta_0 4/((1-\eta_1)(1-\eta_2)) /f]
+         * \f[ d\phi/d\xi_0 = d\phi/d\eta_0 4/((1-\eta_1)(1-\eta_2)) \f]
          * 
          * \f[ d\phi/d\xi_1 =  d\phi/d\eta_0 2(1+\eta_0)/((1-\eta_1)(1-\eta_2))
          *       +  d\phi/d\eta_1 2/(1-\eta_2) \f]

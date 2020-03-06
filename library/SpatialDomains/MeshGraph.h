@@ -307,6 +307,8 @@ public:
     inline void SetExpansions(const std::string variable,
                               ExpansionMapShPtr &exp);
 
+    inline void SetSession(LibUtilities::SessionReaderSharedPtr pSession);
+
     /// Sets the basis key for all expansions of the given shape.
     SPATIAL_DOMAINS_EXPORT void SetBasisKey(LibUtilities::ShapeType shape,
                                             LibUtilities::BasisKeyVector &keys,
@@ -501,6 +503,14 @@ void MeshGraph::SetExpansions(const std::string variable,
     {
         m_expansionMapShPtrMap[variable] = exp;
     }
+}
+
+/**
+ *
+ */
+void MeshGraph::SetSession(LibUtilities::SessionReaderSharedPtr pSession)
+{
+    m_session = pSession;
 }
 
 /**

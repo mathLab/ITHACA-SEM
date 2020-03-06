@@ -736,7 +736,7 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
         std::map<int, std::vector<int>> procMap;
 
         for (boost::tie(vertit, vertit_end) = boost::vertices(m_graph);
-             vertit != vertit_end, i < nLocal; ++vertit, ++i)
+             vertit != vertit_end && i < nLocal; ++vertit, ++i)
         {
             int toProc = part[i];
             numToSend[toProc]++;

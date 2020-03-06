@@ -55,12 +55,25 @@ MeshGraphSharedPtr MeshGraph_Read(
  */
 void export_MeshGraph()
 {
+    py::class_<PointGeomMap>("PointGeomMap")
+        .def(py::map_indexing_suite<PointGeomMap, true>());
     py::class_<SegGeomMap>("SegGeomMap")
         .def(py::map_indexing_suite<SegGeomMap, true>());
     py::class_<QuadGeomMap>("QuadGeomMap")
         .def(py::map_indexing_suite<QuadGeomMap, true>());
     py::class_<TriGeomMap>("TriGeomMap")
         .def(py::map_indexing_suite<TriGeomMap, true>());
+    py::class_<TetGeomMap>("TetGeomMap")
+        .def(py::map_indexing_suite<TetGeomMap, true>());
+    py::class_<PrismGeomMap>("PrismGeomMap")
+        .def(py::map_indexing_suite<PrismGeomMap, true>());
+    py::class_<PyrGeomMap>("PyrGeomMap")
+        .def(py::map_indexing_suite<PyrGeomMap, true>());
+    py::class_<HexGeomMap>("HexGeomMap")
+        .def(py::map_indexing_suite<HexGeomMap, true>());
+    py::class_<CurveMap>("CurveMap")
+        .def(py::map_indexing_suite<CurveMap, true>());
+
     py::class_<MeshGraph,
                std::shared_ptr<MeshGraph>,
                boost::noncopyable>(
@@ -70,12 +83,32 @@ void export_MeshGraph()
         .staticmethod("Read")
 
         .def("GetMeshDimension", &MeshGraph::GetMeshDimension)
+        .def("GetAllPointGeoms", &MeshGraph::GetAllPointGeoms,
+             py::return_internal_reference<>())
         .def("GetAllSegGeoms", &MeshGraph::GetAllSegGeoms,
              py::return_internal_reference<>())
         .def("GetAllQuadGeoms", &MeshGraph::GetAllQuadGeoms,
              py::return_internal_reference<>())
         .def("GetAllTriGeoms",  &MeshGraph::GetAllTriGeoms,
              py::return_internal_reference<>())
+        .def("GetAllTetGeoms",  &MeshGraph::GetAllTetGeoms,
+             py::return_internal_reference<>())
+        .def("GetAllPrismGeoms",  &MeshGraph::GetAllPrismGeoms,
+             py::return_internal_reference<>())
+        .def("GetAllPyrGeoms",  &MeshGraph::GetAllPyrGeoms,
+             py::return_internal_reference<>())
+        .def("GetAllHexGeoms",  &MeshGraph::GetAllHexGeoms,
+             py::return_internal_reference<>())
+        .def("GetCurvedEdges",  &MeshGraph::GetCurvedEdges,
+             py::return_internal_reference<>())
+        .def("GetCurvedFaces",  &MeshGraph::GetCurvedFaces,
+             py::return_internal_reference<>())
 
+        .def("GetNumElements", &MeshGraph::GetNumElements)
+
+        .def("SetExpansionsToEvenlySpacedPoints",
+             &MeshGraph::SetExpansionsToEvenlySpacedPoints)
+        .def("SetExpansionsToPolyOrder", &MeshGraph::SetExpansionsToPolyOrder)
+        .def("SetExpansionsToPointOrder", &MeshGraph::SetExpansionsToPointOrder)
         ;
 }

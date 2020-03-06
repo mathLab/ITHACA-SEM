@@ -1,11 +1,7 @@
-ADD_NEKPY_LIBRARY(SpatialDomains SOURCES
+ADD_NEKPY_LIBRARY(SpatialDomains DEPENDS StdRegions SOURCES
     SpatialDomains.cpp
     Geometry.cpp
-    Geometry1D.cpp
-    Geometry2D.cpp
-    PointGeom.cpp
+    Curve.cpp
     MeshGraph.cpp
-    SegGeom.cpp
-    QuadGeom.cpp
-    TriGeom.cpp
+    GeomElements.cpp
     )

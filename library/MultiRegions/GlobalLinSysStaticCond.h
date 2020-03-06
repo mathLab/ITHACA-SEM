@@ -112,7 +112,7 @@ namespace Nektar
             /// Block \f$ D^{-1} \f$ matrix.
             DNekScalBlkMatSharedPtr                  m_invD;
             /// Local to global map.
-            std::shared_ptr<AssemblyMap>             m_locToGloMap;
+            std::weak_ptr<AssemblyMap>               m_locToGloMap;
             /// Workspace array for matrix multiplication
             Array<OneD, NekDouble>                   m_wsp;
 

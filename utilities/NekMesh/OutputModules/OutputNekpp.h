@@ -61,6 +61,8 @@ public:
     virtual void Process();
 
 private:
+    LibUtilities::AnalyticExpressionEvaluator m_strEval;
+
     void TransferVertices(SpatialDomains::MeshGraphSharedPtr graph);
     void TransferEdges(
         SpatialDomains::MeshGraphSharedPtr graph,

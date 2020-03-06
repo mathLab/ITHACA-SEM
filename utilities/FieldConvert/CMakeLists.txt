@@ -35,6 +35,13 @@ ADD_NEKTAR_TEST(chan3D_interppointdatatofld)
 ADD_NEKTAR_TEST(chan3D_interppointdatatofld_interpcoord)
 ADD_NEKTAR_TEST(chan3D_ptsTocsv)
 ADD_NEKTAR_TEST(chan3D_csvTopts)
+ADD_NEKTAR_TEST(chan3D_npart_tec)
+ADD_NEKTAR_TEST(wss_3D_periodic)
+
+IF (NEKTAR_USE_METIS OR NEKTAR_USE_SCOTCH)
+    ADD_NEKTAR_TEST(chan3D_part_only)
+    ADD_NEKTAR_TEST(Tet_channel_npart_wss)
+ENDIF()
 
 IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(chan3D_tec_par)

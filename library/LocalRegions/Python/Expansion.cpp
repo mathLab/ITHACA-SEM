@@ -49,5 +49,6 @@ void export_Expansion()
                    "Expansion", py::no_init)
 
         .def("GetGeom", &Expansion::GetGeom)
+        .def("Reset", &Expansion::Reset)
         ;
 }

@@ -88,6 +88,14 @@ bool CommSerial::v_TreatAsRankZero(void)
 /**
  *
  */
+bool CommSerial::v_IsSerial(void)
+{
+    return true;
+}
+
+/**
+ *
+ */
 void CommSerial::v_Block()
 {
 }
@@ -212,8 +220,17 @@ void CommSerial::v_SplitComm(int pRows, int pColumns)
  */
 CommSharedPtr CommSerial::v_CommCreateIf(int flag)
 {
-    ASSERTL0(flag, "Serial process must always be split");
-    return shared_from_this();
+     if (flag == 0)
+    {
+        // flag == 0 => get back MPI_COMM_NULL, return a null ptr instead.
+        return std::shared_ptr<Comm>();
+    }
+    else
+    {
+        // Return a real communicator
+        return shared_from_this();
+    }
+
 }
 }
 }

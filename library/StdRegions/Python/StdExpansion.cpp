@@ -119,6 +119,37 @@ py::tuple StdExpansion_GetCoords(StdExpansionSharedPtr exp)
     return py::tuple();
 }
 
+py::tuple StdExpansion_PhysDeriv(StdExpansionSharedPtr exp,
+                                 const Array<OneD, const NekDouble> &inarray)
+{
+    int nPhys = exp->GetTotPoints();
+    int coordim = exp->GetCoordim();
+
+    vector<Array<OneD, NekDouble> > derivs(coordim);
+    for (int i = 0; i < coordim; ++i)
+    {
+        derivs[i] = Array<OneD, NekDouble>(nPhys);
+    }
+
+    switch (coordim)
+    {
+        case 1:
+            exp->PhysDeriv(inarray, derivs[0]);
+            return py::make_tuple(derivs[0]);
+            break;
+        case 2:
+            exp->PhysDeriv(inarray, derivs[0], derivs[1]);
+            return py::make_tuple(derivs[0], derivs[1]);
+            break;
+        case 3:
+            exp->PhysDeriv(inarray, derivs[0], derivs[1], derivs[2]);
+            return py::make_tuple(derivs[0], derivs[1], derivs[2]);
+            break;
+    }
+
+    return py::tuple();
+}
+
 void export_StdExpansion()
 {
     py::class_<StdExpansion,
@@ -141,6 +172,7 @@ void export_StdExpansion()
              py::return_value_policy<py::copy_const_reference>())
 
         .def("GenMatrix", &StdExpansion::GenMatrix)
+        .def("GetStdMatrix", &StdExpansion::GetStdMatrix)
 
         .def("FwdTrans", &StdExpansion_FwdTrans)
         .def("BwdTrans", &StdExpansion_BwdTrans)
@@ -151,5 +183,7 @@ void export_StdExpansion()
         .def("L2", &StdExpansion_L2_Error)
 
         .def("GetCoords", &StdExpansion_GetCoords)
+
+        .def("PhysDeriv", &StdExpansion_PhysDeriv)
         ;
 }

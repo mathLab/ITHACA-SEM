@@ -256,8 +256,7 @@ ENDMACRO(ADD_NEKTAR_TEST)
 # Adds a new NekPy library with the given sources.
 #
 MACRO(ADD_NEKPY_LIBRARY name)
-    CMAKE_PARSE_ARGUMENTS(NEKPY "" "" "SOURCES" ${ARGN})
-    SET(NEKPY_NAME ${name})
+    CMAKE_PARSE_ARGUMENTS(NEKPY "" "DEPENDS" "SOURCES" ${ARGN})
 
     # Create library.
     ADD_LIBRARY(_${name} SHARED ${NEKPY_SOURCES})
@@ -277,10 +276,14 @@ MACRO(ADD_NEKPY_LIBRARY name)
         ${name})
 
     # Install __init__.py files.
-    CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/python/init.py.in
-        ${CMAKE_BINARY_DIR}/NekPy/${name}/__init__.py)
-    SET_TARGET_PROPERTIES(_${name} PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/NekPy/${name})
+    SET(TMPOUT "")
+    IF (NEKPY_DEPENDS)
+        SET(TMPOUT "from ..${NEKPY_DEPENDS} import _${NEKPY_DEPENDS}\n")
+    ENDIF()
+    SET(TMPOUT "${TMPOUT}from ._${name} import *")
+
+    FILE(WRITE ${CMAKE_BINARY_DIR}/NekPy/${name}/__init__.py ${TMPOUT})
+    INSTALL(TARGETS _${name} DESTINATION ${CMAKE_BINARY_DIR}/NekPy/${name})
 ENDMACRO()
 
 MACRO(ADD_NEKPY_EXECUTABLE name source)

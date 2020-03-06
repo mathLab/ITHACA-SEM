@@ -1,0 +1,385 @@
+\section{Preconditioners}
+\label{sec:precon}
+
+Most of the solvers in \nekpp, including the incompressible Navier-Stokes
+equations, rely on the solution of a Helmholtz equation,
+%
+\begin{equation}
+  \nabla^{2}u(\mathbf{x})+\lambda u(\mathbf{x})=f(\mathbf{x}),
+  \label{eq:precon:helm}
+\end{equation}
+%
+an elliptic boundary value problem, at every time-step, where $u$ is defined on
+a domain $\Omega$ of $N_{\mathrm{el}}$ non-overlapping elements. In this
+section, we outline the preconditioners which are implemented in \nekpp. Whilst
+some of the preconditioners are generic, many are especially designed for the
+\emph{modified} basis only.
+
+\subsection{Mathematical formulation}
+
+The standard spectral/$hp$ approach to discretise \eqref{eq:precon:helm} starts
+with an expansion in terms of the elemental modes:
+%
+\begin{equation}
+  u^{\delta}(\mathbf{x})=\sum_{n=0}^{N_{\mathrm{dof}}-1}\hat{u}_n
+  \Phi_n(\mathbf{x})=\sum_{e=1}^{{N_{\mathrm{el}}}}
+  \sum_{n=0}^{N^{e}_m-1}\hat{u}_n^e\phi_n^e(\mathbf{x})
+  \label{eq:precon:disc}
+\end{equation}
+%
+where $N_{\mathrm{el}}$ is the number of elements, $N^{e}_m$ is the number of
+local expansion modes within the element $\Omega^e$, $\phi_n^e(\mathbf{x})$ is
+the $n^{\mathrm{th}}$ local expansion mode within the element $\Omega^e$,
+$\hat{u}_n^e$ is the $n^{\mathrm{th}}$ local expansion coefficient within the
+element $\Omega^e$. Approximating our solution by~\eqref{eq:precon:disc}, we
+adopt a Galerkin discretisation of equation~\eqref{eq:precon:helm} where for an
+appropriate test space $V^\delta$ we find an approximate solution
+$\mathbf{u}^{\delta} \in V^{\delta}$ such that
+%
+\[
+\mathcal L \left({v, u}\right) = \int_{\Omega}\nabla v^{\delta} \cdot \nabla
+u^{\delta} + \lambda v^{\delta} u^{\delta} d \mathbf{x} = \int_{\Omega}
+v^{\delta} f d\mathbf{x} \quad \forall v^{\delta} \in V^{\delta}
+\]
+%
+This can be formulated in matrix terms as
+%
+\[
+\mathbf{H}\hat{\mathbf{u}} = \mathbf{f}
+\]
+%
+where $\mathbf{H}$ represents the Helmholtz matrix, $\hat{\mathbf{u}}$ are the
+unknown global coefficients and $\mathbf{f}$ the inner product the expansion
+basis with the forcing function.
+
+\subsubsection{$C^0$ formulation}
+
+We first consider the $C^0$ (i.e. continuous Galerkin) formulation. The
+spectral/$hp$ expansion basis is obtained by considering interior modes, which
+have support in the interior of the element, separately from boundary modes
+which are non-zero on the boundary of the element. We align the boundary modes
+across the interface of the elements to obtain a continuous global solution. The
+boundary modes can be further decomposed into vertex, edge and face modes,
+defined as follows:
+
+\begin{itemize}
+  \item vertex modes have support on a single vertex and the three adjacent
+  edges and faces as well as the interior of the element;
+  \item edge modes have support on a single edge and two adjacent faces as well
+  as the interior of the element; 
+  \item face modes have support on a single face and the interior of the
+  element.
+\end{itemize}
+
+When the discretisation is continuous, this strong coupling between vertices,
+edges and faces leads to a matrix of high condition number $\kappa$. Our aim is
+to reduce this condition number by applying specialised
+preconditioners. Utilising the above mentioned decomposition, we can write the
+matrix equation as:
+%
+\[
+\left[\begin{array}{cc}
+  \mathbf{H}_{bb} & \mathbf{H}_{bi}\\
+  \mathbf{H}_{ib} & \mathbf{H}_{ii}
+  \end{array}\right]
+\left[ \begin{array}{c}
+\hat{\mathbf{u}}_{b}\\
+\hat{\mathbf{u}}_{i}\\
+\end{array}\right] =
+\left[ \begin{array}{c}
+\hat{\mathbf{f}}_{b}\\
+\hat{\mathbf{f}}_{i}\\
+\end{array}\right]
+\]
+%
+where the subscripts $b$ and $i$ denote the boundary and interior degrees of
+freedom respectively. This system then can be statically condensed allowing us
+to solve for the boundary and interior degrees of freedom in a decoupled
+manor. The statically condensed matrix is given by
+%
+\[
+\left[\begin{array}{cc}
+  \mathbf{H}_{bb}-\mathbf{H}_{bi} \mathbf{H}_{ii}^{-1} \mathbf{H}_{ib} & 0\\
+  \mathbf{H}_{ib} & \mathbf{H}_{ii}
+  \end{array}\right]
+\left[ \begin{array}{c}
+\hat{\mathbf{u}}_{b}\\
+\hat{\mathbf{u}}_{i}\\
+\end{array}\right] =
+\left[ \begin{array}{c}
+\hat{\mathbf{f}}_{b}-\mathbf{H}_{bi} \mathbf{H}_{ii}^{-1}\hat{\mathbf{f}}_{i}\\
+\hat{\mathbf{f}}_{i}\\
+\end{array}\right]
+\]
+%
+This is highly advantageous since by definition of our interior expansion this
+vanishes on the boundary, and so $\mathbf{H}_{ii}$ is block diagonal and thus
+can be easily inverted. The above sub-structuring has reduced our problem to
+solving the boundary problem:
+%
+\[
+\mathbf{S}_{1}\hat{\mathbf{u}} = \hat{\mathbf{f}}_{1}
+\]
+%
+where
+$\mathbf{S_{1}}=\mathbf{H}_{bb}-\mathbf{H}_{bi} \mathbf{H}_{ii}^{-1}
+\mathbf{H}_{ib}$
+and
+$\hat{\mathbf{f}}_{1}=\hat{\mathbf{f}}_{b}-\mathbf{H}_{bi}
+\mathbf{H}_{ii}^{-1}\hat{\mathbf{f}}_{i}$.
+Although this new system typically has better convergence properties (i.e lower
+$\kappa$), the system is still ill-conditioned, leading to a convergence rate of
+the conjugate gradient (CG) routine that is prohibitively slow. For this reason
+we need to precondition $\mathbf{S}_1$. To do this we solve an equivalent
+system of the form:
+%
+\[
+\mathbf{M}^{-1}\left(\mathbf{S}_{1} \hat{\mathbf{u}} - \hat{\mathbf{f}}_{1} \right) = 0
+\]
+%
+where the preconditioning matrix $\mathbf{M}$ is such that
+$\kappa\left(\mathbf{M}^{-1} \mathbf{S}_{1}\right)$ is less than
+$\kappa\left(\mathbf{S}_{1}\right)$ and speeds up the convergence rate. Within
+the conjugate gradient routine the same preconditioner $\mathbf{M}$ is applied
+to the residual vector $\hat{\mathbf{r}}_{k+1}$ of the CG routine every
+iteration:
+%
+\[
+\hat{\mathbf{z}}_{k+1}=\mathbf{M}^{-1}\hat{\mathbf{r}}_{k+1}.
+\]
+%
+
+\subsubsection{HDG formulation}
+
+When utilising a hybridizable discontinuous Galerkin formulation, we perform a
+static condensation approach but in a discontinuous framework, which for brevity
+we omit here. However, we still obtain a matrix equation of the form
+%
+\[
+\mathbf{\Lambda}\hat{\mathbf{u}} = \hat{\mathbf{f}}.
+\]
+%
+where $\mathbf{\Lambda}$ represents an operator which projects the solution of
+each face back onto the three-dimensional element or edge onto the
+two-dimensional element. In this setting then, $\hat{\mathbf{f}}$ consists of
+degrees of freedom for each egde (in 2D) or face (in 3D). The overall system
+does not, therefore, results in a weaker coupling between degrees of freedom,
+but at the expense of a larger matrix system.
+
+\subsection{Preconditioners}
+
+Within the \nekpp framework a number of preconditioners are available to speed
+up the convergence rate of the conjugate gradient routine. The table below
+summarises each method, the dimensions of elements which are supported, and also
+the discretisation type support which can either be continuous (CG) or
+discontinuous (hybridizable DG).
+
+\begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Name}  & \textbf{Dimensions} & \textbf{Discretisations} \\
+    \midrule
+    \inltt{Null}                              & All  & All \\
+    \inltt{Diagonal}                          & All  & All \\
+    \inltt{FullLinearSpace}                   & 2/3D & CG  \\
+    \inltt{LowEnergyBlock}                    & 3D   & CG  \\
+    \inltt{Block}                             & 2/3D & All \\
+    \midrule
+    \inltt{FullLinearSpaceWithDiagonal}       & All  & CG  \\
+    \inltt{FullLinearSpaceWithLowEnergyBlock} & 2/3D & CG  \\
+    \inltt{FullLinearSpaceWithBlock}          & 2/3D & CG  \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+
+The default is the \inltt{Diagonal} preconditioner. The above preconditioners
+are specified through the \inltt{Preconditioner} option of the
+\inltt{SOLVERINFO} section in the session file. For example, to enable
+\inltt{FullLinearSpace} one can use:
+
+\begin{lstlisting}[style=XMLStyle]
+  <I PROPERTY="Preconditioner" VALUE="FullLinearSpace" />
+\end{lstlisting}
+
+Alternatively one can have more control over different preconditioners for each
+solution field by using the \inltt{GlobalSysSoln} section. For more details,
+consult the user guide. The following sections specify the details for each
+method.
+
+\subsubsection{Diagonal}
+
+Diagonal (or Jacobi) preconditioning is amongst the simplest preconditioning
+strategies. In this scheme one takes the global matrix $\mathbf{H} = (h_{ij})$
+and computes the diagonal terms $h_{ii}$. The preconditioner is then formed as a
+diagonal matrix $\mathbf{M}^{-1} = (h_{ii}^{-1})$.
+
+\subsubsection{Linear space}
+
+The linear space (or coarse space) of the matrix system is that containing
+degrees of freedom corresponding only to the vertex modes in the high-order
+system. Preconditioning of this space is achieved by forming the matrix
+corresponding to the coarse space and inverting it, so that
+%
+\[
+\mathbf{M}^{-1} = (\mathbf{S}^{-1}_{1})_{vv}
+\]
+%
+Since the mesh associated with higher order methods is relatively coarse
+compared with traditional finite element discretisations, the linear space can
+usually be directly inverted without memory issues. However such a methodology
+can be prohibitive on large parallel systems, due to a bottleneck in
+communication.
+
+In \nekpp the inversion of the linear space present is handled using the
+$XX^{T}$ library. $XX^{T}$ is a parallel direct solver for problems of the form
+$\mathbf{A}\hat{\mathbf{x}} = \hat{\mathbf{b}}$ based around a sparse
+factorisation of the inverse of $\mathbf{A}$. To precondition utilising this
+methodology the linear sub-space is gathered from the expansion and the
+preconditioned residual within the CG routine is determined by solving
+%
+\[
+(\mathbf{S}_{1})_{vv}\hat{\mathbf{z}}=\hat{\mathbf{r}}
+\]
+%
+The preconditioned residual $\hat{\mathbf{z}}$ is then scattered back to the
+respective location in the global degrees of freedom.
+
+\subsubsection{Block}
+
+Block preconditioning of the $C^0$ continuous system is defined by the
+following:
+%
+\[
+\mathbf{M}^{-1}=\left[ \begin{array}{ccc}
+(\mathbf{S}^{-1}_{1})_{vv} & 0 & 0 \\
+0 & (\mathbf{S}^{-1}_{1})_{eb} & 0\\
+0 & 0 & (\mathbf{S}^{-1}_{1})_{ef}\\
+ \end{array} \right]
+\]
+%
+where $\mathrm{diag}[(\mathbf{S}_{1})_{vv}]$ is the diagonal of the vertex
+modes, $(\mathbf{S}_{1})_{eb}$ and $(\mathbf{S}_{1})_{fb}$ are block diagonal
+matrices corresponding to coupling of an edge (or face) with itself i.e ignoring
+the coupling to other edges and faces. This preconditioner is best suited for
+two dimensional problems.
+
+In the HDG system, we take the block corresponding to each face and invert
+it. Each of these inverse blocks then forms one of the diagonal components of
+the block matrix $\mathbf{M}^{-1}$.
+
+\subsection{Low energy}
+
+Low energy basis preconditioning follows the methodology proposed by Sherwin \&
+Casarin. In this method a new basis is numerically constructed from the original
+basis which allows the Schur complement matrix to be preconditioned using a
+block preconditioner. The method is outlined briefly in the following.
+
+Elementally the local approximation $\mathbf{u}^{\delta}$ can be expressed as
+different expansions lying in the same discrete space $V^{\delta}$
+%
+\[
+\mathbf{u}^{\delta}(\mathbf{x})=\sum_{i}^{\dim(V^{\delta})}\hat{u}_{1i}\phi_{1i}(x)
+= \sum_{i}^{\dim(V^{\delta})}\hat{u}_{2i}\phi_{2j}(x)
+\]
+%
+Since both expansions lie in the same space it's possible to express one basis
+in terms of the other via a transformation, i.e.
+%
+\[
+\phi_{2}=\mathbf{C}\phi_{1} \implies \hat{\mathbf{u}}_{1}=C^{T}\hat{\mathbf{u}}_{2}
+\]
+%
+Applying this to the Helmholtz operator it is possible to show that,
+%
+\[
+\mathbf{H}_{2}=\mathbf{C}\mathbf{H}_{1}\mathbf{C}^{T}
+\]
+%
+For sub-structured matrices ($\mathbf{S}$) the transformation matrix
+($\mathbf{C}$) becomes:
+%
+\[
+\mathbf{C}=\left[ \begin{array}{cc}
+\mathbf{R} & 0\\
+0 & \mathbf{I}
+ \end{array} \right]
+\]
+%
+Hence the transformation in terms of the Schur complement matrices is:
+%
+\[
+\mathbf{S}_{2}=\mathbf{R}\mathbf{S}_{1}\mathbf{R}^{T}
+\]
+%
+Typically the choice of expansion basis $\phi_{1}$ can lead to a Helmholtz
+matrix that has undesirable properties i.e poor condition number. By choosing a
+suitable transformation matrix $\mathbf{C}$ it is possible to construct a new
+basis, numerically, that is amenable to block diagonal preconditioning.
+%
+\[
+\mathbf{S}_{1}=\left[ \begin{array}{ccc}
+\mathbf{S}_{vv} & \mathbf{S}_{ve} & \mathbf{S}_{vf}\\
+\mathbf{S}^{T}_{ve}& \mathbf{S}_{ee} & \mathbf{S}_{ef} \\
+\mathbf{S}^{T}_{vf} & \mathbf{S}^{T}_{ef} & \mathbf{S}_{ff} \end{array} \right] =\left[ \begin{array}{cc}
+\mathbf{S}_{vv} & \mathbf{S}_{v,ef} \\
+\mathbf{S}^{T}_{v,ef} & \mathbf{S}_{ef,ef} \end{array} \right]
+\]
+%
+Applying the transformation
+$\mathbf{S}_{2}=\mathbf{R} \mathbf{S}_{1} \mathbf{R}^{T}$ leads to the following
+matrix
+%
+\[
+\mathbf{S}_{2}=\left[ \begin{array}{cc}
+\mathbf{S}_{vv}+\mathbf{R}_{v}\mathbf{S}^{T}_{v,ef}+\mathbf{S}_{v,ef}\mathbf{R}^{T}_{v}+\mathbf{R}_{v}\mathbf{S}_{ef,ef}\mathbf{R}^{T}_{v} & [\mathbf{S}_{v,ef}+\mathbf{R}_{v}\mathbf{S}_{ef,ef}]\mathbf{A}^{T} \\
+\mathbf{A}[\mathbf{S}^{T}_{v,ef}+\mathbf{S}_{ef,ef}\mathbf{R}^{T}_{v}] & \mathbf{A}\mathbf{S}_{ef,ef}\mathbf{A}^{T} \end{array} \right]
+\]
+%
+where $\mathbf{A}\mathbf{S}_{ef,ef}\mathbf{A}^{T}$ is given by
+%
+\[
+\mathbf{A}\mathbf{S}_{ef,ef}\mathbf{A}^{T}=\left[ \begin{array}{cc}
+\mathbf{S}_{ee}+\mathbf{R}_{ef}\mathbf{S}^{T}_{ef}+\mathbf{S}_{ef}\mathbf{R}^{T}_{ef}+\mathbf{R}_{ef}\mathbf{S}_{ff}\mathbf{R}^{T}_{ef} & \mathbf{S}_{ef}+\mathbf{R}_{ef}\mathbf{S}_{ff}\\
+\mathbf{S}^{T}_{ef}+\mathbf{S}_{ff}\mathbf{R}^{T}_{ef} & \mathbf{S}_{ff}
+ \end{array} \right]
+\]
+%
+To orthogonalise the vertex-edge and vertex-face modes, it can be seen from the
+above that
+%
+\[
+\mathbf{R}^{T}_{ef}=-\mathbf{S}^{-1}_{ff}\mathbf{S}^{T}_{ef}
+\]
+%
+and for the edge-face modes:
+%
+\[
+\mathbf{R}^{T}_{v}=-\mathbf{S}^{-1}_{ef,ef}\mathbf{S}^{T}_{v,ef}
+\]
+%
+Here it is important to consider the form of the expansion basis since the
+presence of $\mathbf{S}^{-1}_{ff}$ will lead to a new basis which has support on
+all other faces; this is problematic when creating a $C^{0}$ continuous global
+basis.  To circumvent this problem when forming the new basis, the decoupling is
+only performed between a specific edge and the two adjacent faces in a symmetric
+standard region. Since the decoupling is performed in a rotationally symmetric
+standard region the basis does not take into account the Jacobian mapping
+between the local element and global coordinates, hence the final expansion will
+not be completely orthogonal.
+
+The low energy basis creates a Schur complement matrix that although it is not
+completely orthogonal can be spectrally approximated by its block diagonal
+contribution. The final form of the preconditioner is:
+%
+\[
+\mathbf{M}^{-1}=\left[ \begin{array}{ccc}
+\mathrm{diag}[(\mathbf{S}_{2})_{vv}] & 0 & 0 \\
+0 & (\mathbf{S}_{2})_{eb} & 0\\
+0 & 0 & (\mathbf{S}_{2})_{fb}\\
+ \end{array} \right]^{-1}
+\]
+%
+where $\mathrm{diag}[(\mathbf{S}_{2})_{vv}]$ is the diagonal of the vertex
+modes, $(\mathbf{S}_{2})_{eb}$ and $(\mathbf{S}_{2})_{fb}$ are block diagonal
+matrices corresponding to coupling of an edge (or face) with itself i.e ignoring
+the coupling to other edges and faces.

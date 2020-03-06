@@ -36,24 +36,16 @@
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
 void export_Geometry();
-void export_Geometry1D();
-void export_Geometry2D();
+void export_Curve();
 void export_MeshGraph();
-void export_PointGeom();
-void export_QuadGeom();
-void export_SegGeom();
-void export_TriGeom();
+void export_GeomElements();
 
 BOOST_PYTHON_MODULE(_SpatialDomains)
 {
     np::initialize();
 
     export_Geometry();
-    export_Geometry1D();
-    export_Geometry2D();
+    export_Curve();
     export_MeshGraph();
-    export_PointGeom();
-    export_QuadGeom();
-    export_SegGeom();
-    export_TriGeom();
+    export_GeomElements();
 }

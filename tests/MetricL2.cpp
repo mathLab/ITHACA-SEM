@@ -62,7 +62,7 @@ namespace Nektar
             // the L2 error.
             ASSERTL0(value->Attribute("tolerance"),
                      "Missing tolerance in L2 metric");
-            ASSERTL0(value->GetText() || value->GetText() == "",
+            ASSERTL0(!EmptyString(value->GetText()),
                      "Missing value in L2 metric.");
 
             MetricRegexFieldValue var;

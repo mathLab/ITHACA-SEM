@@ -84,10 +84,10 @@ namespace Nektar
         void GlobalLinSysStaticCond::v_InitObject()
         {
             // Allocate memory for top-level structure
-            SetupTopLevel(m_locToGloMap);
+            SetupTopLevel(m_locToGloMap.lock());
 
             // Construct this level
-            Initialise(m_locToGloMap);
+            Initialise(m_locToGloMap.lock());
         }
         
         /**
@@ -264,8 +264,8 @@ namespace Nektar
         void GlobalLinSysStaticCond::v_Initialise(
                 const std::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
-            int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
-            int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
+            int nLocalBnd = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
+            int nGlobal = m_locToGloMap.lock()->GetNumGlobalCoeffs();
             int nGlobBndDofs       = pLocToGloMap->GetNumGlobalBndCoeffs();
             int nDirBndDofs        = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;

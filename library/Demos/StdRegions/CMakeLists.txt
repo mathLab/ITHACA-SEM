@@ -1,17 +1,5 @@
-ADD_NEKTAR_EXECUTABLE(StdProject0D
-    COMPONENT demos DEPENDS StdRegions SOURCES StdProject0D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdProject1D
-    COMPONENT demos DEPENDS StdRegions SOURCES StdProject1D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdProject2D
-    COMPONENT demos DEPENDS StdRegions SOURCES StdProject2D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdProject3D
-    COMPONENT demos DEPENDS StdRegions SOURCES StdProject3D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdProject_Diff1D
-    COMPONENT demos DEPENDS StdRegions SOURCES StdProject_Diff1D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdProject_Diff2D
-    COMPONENT demos DEPENDS StdRegions SOURCES StdProject_Diff2D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdProject_Diff3D
-    COMPONENT demos DEPENDS StdRegions SOURCES StdProject_Diff3D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdProject
+    COMPONENT demos DEPENDS StdRegions SOURCES StdProject.cpp)
 ADD_NEKTAR_EXECUTABLE(StdEquiToCoeff2D
     COMPONENT demos DEPENDS StdRegions SOURCES StdEquiToCoeff2D.cpp)
 

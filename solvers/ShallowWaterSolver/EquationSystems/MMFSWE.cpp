@@ -2605,7 +2605,7 @@ void MMFSWE::RossbyWave(unsigned int field, Array<OneD, NekDouble> &outfield)
 
     // disturbancees of Rossby-Haurwitz Wave
     NekDouble x0d, y0d, z0d, phi0, theta0;
-    NekDouble rad_earth = 6.37122 * 1000000;
+    //NekDouble rad_earth = 6.37122 * 1000000;
 
     phi0   = 40.0 * m_pi / 180.0;
     theta0 = 50.0 * m_pi / 180.0;

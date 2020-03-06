@@ -107,7 +107,8 @@ void OutputFld::OutputFromExp(po::variables_map &vm)
                 }
             }
         }
-        fld->Write(filename, FieldDef, FieldData, m_f->m_fieldMetaDataMap);
+        fld->Write(filename, FieldDef, FieldData, m_f->m_fieldMetaDataMap,
+                   false);
     }
     else
     {

@@ -38,6 +38,7 @@
 #include <string>
 
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #ifndef MPI_SYNC
@@ -67,12 +68,12 @@ public:
     }
 
     /// Name of class
-    static std::string className;
+    LIB_UTILITIES_EXPORT static std::string className;
 
-    CommMpi(int narg, char *arg[]);
-    virtual ~CommMpi();
+    LIB_UTILITIES_EXPORT CommMpi(int narg, char *arg[]);
+    LIB_UTILITIES_EXPORT virtual ~CommMpi();
 
-    MPI_Comm GetComm();
+    LIB_UTILITIES_EXPORT MPI_Comm GetComm();
 
 protected:
 

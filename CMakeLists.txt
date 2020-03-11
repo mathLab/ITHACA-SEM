@@ -42,5 +42,18 @@ ADD_SOLVER_EXECUTABLE(ITHACASEM solvers ${IncNavierStokesSolverSource})
 TARGET_LINK_LIBRARIES(ITHACASEM ${NEKTAR++_LIBRARIES} ${NEKTAR++_TP_LIBRARIES})
 
 
+SET(IncNavierStokesSolverSourceDeflation    ./EquationSystems/CoupledLinearNS_trafoP_Deflation.cpp   ./EquationSystems/CoupledLinearNS_TT_Deflation.cpp    ./EquationSystems/CoupledLinearNS_ROM.cpp      ./EquationSystems/CoupledLinearNS.cpp       ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp       ./EquationSystems/IncNavierStokes.cpp       ./EquationSystems/VelocityCorrectionScheme.cpp
+       ./EquationSystems/VelocityCorrectionSchemeWeakPressure.cpp       ./EquationSystems/VCSMapping.cpp       ./EquationSystems/Extrapolate.cpp       ./EquationSystems/StandardExtrapolate.cpp
+       ./EquationSystems/MappingExtrapolate.cpp       ./EquationSystems/SubSteppingExtrapolate.cpp       ./EquationSystems/SubSteppingExtrapolateWeakPressure.cpp       ./EquationSystems/WeakPressureExtrapolate.cpp
+       ./AdvectionTerms/AdjointAdvection.cpp       ./AdvectionTerms/LinearisedAdvection.cpp       ./AdvectionTerms/NavierStokesAdvection.cpp       ./AdvectionTerms/SkewSymmetricAdvection.cpp
+       ./AdvectionTerms/AlternateSkewAdvection.cpp       ./AdvectionTerms/NoAdvection.cpp       ./Filters/FilterEnergy.cpp       ./Filters/FilterReynoldsStresses.cpp
+       ./Filters/FilterMovingBody.cpp       ./Forcing/ForcingMovingBody.cpp	       ./Forcing/ForcingStabilityCoupledLNS.cpp	       ./myIncNavierStokesSolver.cpp       )
+
+
+ADD_SOLVER_EXECUTABLE(ITHACASEM_Deflation solvers ${IncNavierStokesSolverSourceDeflation})
+
+#add_executable(ITHACASEM myIncNavierStokesSolver.cpp)
+
+TARGET_LINK_LIBRARIES(ITHACASEM_Deflation ${NEKTAR++_LIBRARIES} ${NEKTAR++_TP_LIBRARIES})
 
 

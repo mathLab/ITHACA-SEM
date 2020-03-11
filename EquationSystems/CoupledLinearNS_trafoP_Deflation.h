@@ -43,6 +43,7 @@
 #include <boost/shared_ptr.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include "../Eigen/Dense"
+#include <vector>
 //#include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
 namespace Nektar
@@ -53,6 +54,7 @@ namespace Nektar
     {
     public:
         friend class MemoryManager<CoupledLinearNS_trafoP>;
+        //friend class CoupledLinearNS_TT;
         
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
@@ -135,10 +137,44 @@ namespace Nektar
 
 	NekDouble Get_m_kinvis(void);
 	void Set_m_kinvis(NekDouble);
+	
+	//to write the files with the maps that link the dof to the pyhs coord
+	void WritePhysCoordIndicesMapping();
+	//compute initial guess for the continuation method
+	double ComputeContinuationGuess(int curr_i, int prev_i);
+	void ComputeContinuationGuessGivenNi(int curr_i, int prev_i, double delta_param);
+	Array<OneD, Array<OneD, NekDouble> > DoSolve_at_param_continuation(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter);
+	double findMinParam(std::vector<int> &indices_to_be_continued);
+	//perform my continuation method
+	Array<OneD, Array<OneD, Array<OneD, NekDouble> > > Continuation_method(Eigen::VectorXd *params);
+	//get a vector with, in position i, the index of its mirrored phys point
+	std::vector<int> GetFlipperMap(std::vector<double> &x, std::vector<double> &y);
+	//flip each solutions and try to obtain new solutions but different from the previous ones
+	Array<OneD, Array<OneD, NekDouble> > FlipAndCheck(std::vector<int> &flipperMap, int *flipCounter);
+	// write output on a file
+	void FarrelOutput(std::vector<int> &flipperMap, std::ofstream &outfile, int sign);
+	int FarrelOutputSign(std::vector<double> &x, std::vector<double> &y);
+    std::vector<int> getFlipperMap() { return flipperMap; };
+	
+	bool converged, deflate;
+	int use_deflation, total_solutions_found;
+	Array<OneD, Array<OneD, NekDouble> > sol_x_cont_defl, sol_y_cont_defl;
+	std::vector<double> param_vector;
+	double arclength_step, step_multiplier, max_step, start_with_Oseen, second_param; //second_param is the multiplicative scaling of the inlet velocity
+	Array<OneD, NekDouble> param_vector2;
+	std::vector<int> local_indices_to_be_continued;
+	
 	int use_Newton;
 	int snapshot_computation_plot_rel_errors;
 	int debug_mode;
+	int write_SEM_field;
 	Array<OneD, Array<OneD, NekDouble> > myAdvField;
+	std::vector<int> flipperMap;
+	
+	NekDouble total_solve_time;
+	unsigned int no_total_solve;
+	
+	double L2_norm(Array<OneD, NekDouble> u, Array<OneD, NekDouble> v);
 
     protected:
 

@@ -53,6 +53,8 @@ namespace Nektar
     {
     public:
         friend class MemoryManager<CoupledLinearNS_TT>;
+        friend class Nektar::SolverUtils::EquationSystem;
+        //friend class CoupledLinearNS_trafoP;
         
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
@@ -84,31 +86,13 @@ namespace Nektar
 
 	Eigen::VectorXd trafoSnapshot(Eigen::VectorXd RB_via_POD, double kInvis);
 
-	double Geo_T(double w, int elemT, int index); // array of matrices not suitable since there is no way to be symbolic
-
 	void trafoSnapshot_simple(Eigen::MatrixXd RB_via_POD);
 
         Eigen::MatrixXd DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector);
 
 	void load_snapshots(int number_of_snapshots);
-	void load_snapshots_geometry_params(int );
-	void load_snapshots_geometry_params_conv_Oseen(int );
 	void compute_snapshots(int number_of_snapshots);
-	void compute_snapshots_geometry_params();
-	void do_geo_trafo();
-	void write_curr_field(std::string filename);
         
-	int parameter_space_dimension;
-	int load_cO_snapshot_data_from_files;
-	int do_trafo_check;
-	double POD_tolerance;
-	double start_param_dir0;
-	double end_param_dir0;
-	double start_param_dir1;
-	double end_param_dir1;
-	int use_fine_grid_VV;
-	int use_fine_grid_VV_and_load_ref;
-
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
 
@@ -130,27 +114,6 @@ namespace Nektar
 	Eigen::MatrixXd eigen_phys_basis_y;
 	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_x;
 	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_y;
-	Array<OneD, std::set<int> > elements_trafo;
-	int number_elem_trafo;
-	int qoi_dof;
-	int use_LocROM;
-	int only_single_cluster;
-	int which_single_cluster;
-	int load_predef_cluster;
-	int fine_grid_dir0;
-	int fine_grid_dir1;
-	double L2norm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y );
-	double Linfnorm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y );
-	double L2norm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
-	double Linfnorm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
-	void k_means_ITHACA(int no_clusters, Array<OneD, std::set<int> > &clusters, double &CVT_energy);
-	void evaluate_local_clusters(Array<OneD, std::set<int> > optimal_clusters);
-        void run_local_ROM_offline(Eigen::MatrixXd collect_f_all);
-        void run_local_ROM_offline_add_transition(Eigen::MatrixXd , Eigen::MatrixXd );
-	void run_local_ROM_online(std::set<int>, int );
-	void associate_VV_to_clusters(Array<OneD, std::set<int> >);
-
-//	Array<OneD, Eigen::Matrix2d > elements_trafo_matrix; // put this as a function or find a way with symbolic computation
         void gen_phys_base_vecs();
 
 	Array<OneD, Eigen::MatrixXd> adv_mats_proj_x;
@@ -161,48 +124,22 @@ namespace Nektar
 	Array<OneD, Eigen::VectorXd> adv_vec_proj_y_newton;
 	Array<OneD, Eigen::MatrixXd> adv_vec_proj_x_newton_RB;
 	Array<OneD, Eigen::MatrixXd> adv_vec_proj_y_newton_RB;
-	Array<OneD, Array<OneD, Array<OneD, Eigen::MatrixXd > > > adv_mats_proj_x_2d;
-	Array<OneD, Array<OneD, Array<OneD, Eigen::MatrixXd > > > adv_mats_proj_y_2d;
-	Array<OneD, Array<OneD, Array<OneD, Eigen::VectorXd > > > adv_vec_proj_x_2d;
-	Array<OneD, Array<OneD, Array<OneD, Eigen::VectorXd > > > adv_vec_proj_y_2d;
-
 
 	void gen_proj_adv_terms();
-	void gen_proj_adv_terms_2d();
-	void online_snapshot_check_with_smaller_basis(int);
-	void online_snapshot_check_with_smaller_basis_VV(int);
-	Eigen::MatrixXd gen_no_advection_matrix_pressure();
-	Eigen::MatrixXd gen_no_advection_matrix_ABCD();
 
-	Eigen::MatrixXd gen_adv_mats_proj_x(Array<OneD, double>, int);
-	Eigen::MatrixXd gen_adv_mats_proj_y(Array<OneD, double>, int);
-	Array<OneD, Array<OneD, Eigen::MatrixXd > > gen_adv_mats_proj_x_2d(Array<OneD, double>, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_x_2d);
-	Array<OneD, Array<OneD, Eigen::MatrixXd > > gen_adv_mats_proj_y_2d(Array<OneD, double>, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_y_2d);
-
-	double recover_snapshot_data(Eigen::VectorXd, int);
-	void recover_snapshot_loop(Eigen::VectorXd, Array<OneD, double> &, Array<OneD, double> &);
+	void recover_snapshot_data(Eigen::VectorXd, int);
 
 	void offline_phase();
 	void online_phase();
-	Array<OneD, NekDouble> param_point;
-	Array<OneD, Array<OneD, NekDouble> > general_param_vector;
-	Array<OneD, Array<OneD, NekDouble> > fine_general_param_vector;
-	int find_closest_snapshot_location(Array<OneD, NekDouble>, Array<OneD, Array<OneD, NekDouble> >);
-	int find_closest_snapshot_location_linf(Array<OneD, NekDouble>, Array<OneD, Array<OneD, NekDouble> >);
-	int find_closest_snapshot_location_l1(Array<OneD, NekDouble>, Array<OneD, Array<OneD, NekDouble> >);
 	Array<OneD, NekDouble> param_vector;
 	int Nmax;
 	int RBsize;
-	int number_of_snapshots_dir0;
-	int number_of_snapshots_dir1;
 	int globally_connected;
 	int use_Newton;
-	int use_non_unique_up_to_two;
 	int debug_mode;
-	int use_overlap_p_space;
 	int write_ROM_field;
+	int write_SEM_field;
 	int snapshot_computation_plot_rel_errors;
-	int compute_smaller_model_errs;
 
         Eigen::MatrixXd MtM;
         Eigen::MatrixXd Mtrafo;
@@ -235,15 +172,6 @@ namespace Nektar
 	Eigen::VectorXd the_const_one_rhs_proj;
 	Eigen::MatrixXd gen_affine_mat_proj(double);
 	Eigen::VectorXd gen_affine_vec_proj(double, int);
-	Eigen::MatrixXd gen_affine_mat_proj_2d(double, double);
-	Eigen::VectorXd gen_affine_vec_proj_2d(double, double, int);
-
-	Eigen::MatrixXd reproject_from_basis( Eigen::MatrixXd curr_xy_proj );
-
-	Array<OneD, Array<OneD, Eigen::MatrixXd > > the_const_one_proj_2d;
-	Array<OneD, Array<OneD, Eigen::MatrixXd > > the_ABCD_one_proj_2d;
-	Array<OneD, Array<OneD, Eigen::VectorXd > > the_ABCD_one_rhs_proj_2d;
-	Array<OneD, Array<OneD, Eigen::VectorXd > > the_const_one_rhs_proj_2d;
 
 	int no_dbc_in_loc;
 	int no_not_dbc_in_loc;
@@ -260,9 +188,6 @@ namespace Nektar
 	int M_truth_size;               // works for all globally connected scenarios
 	int M_truth_size_without_DBC;   // works for all globally connected scenarios
 	int nBndDofs;
-	int f_bnd_size;
-	int f_p_size;
-	int f_int_size;
 
 	Eigen::VectorXd curr_f_bnd;
 	Eigen::VectorXd curr_f_p;
@@ -270,26 +195,18 @@ namespace Nektar
 
 	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection;
 	Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection;
-	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection_VV;
-	Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection_VV;
-
         
 	CoupledLinearNS_TT(const LibUtilities::SessionReaderSharedPtr &pSesssion);
 
 	double ref_param_nu;
 	int ref_param_index;
-	Eigen::MatrixXd adv_geo_mat_projector(Array<OneD, Array<OneD, Eigen::MatrixXd > > Ah_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > B_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > C_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > D_elem, int, int, Eigen::VectorXd &adv_vec_proj );
-	Eigen::MatrixXd press_geo_mat_projector(Array<OneD, Array<OneD, Eigen::MatrixXd > >, Array<OneD, Array<OneD, Eigen::MatrixXd > >, int curr_elem_trafo, int deriv_index, Eigen::VectorXd &press_vec_proj);
-	Eigen::MatrixXd ABCD_geo_mat_projector(Array<OneD, Array<OneD, Eigen::MatrixXd > > A_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > B_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > C_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > D_elem, int curr_elem_trafo, int deriv_index, Eigen::VectorXd &ABCD_vec_proj);
+
 
 	void gen_reference_matrices();
-	void gen_reference_matrices_2d();
 	Eigen::VectorXd reconstruct_solution_w_dbc(Eigen::VectorXd);
         void setDBC(Eigen::MatrixXd collect_f_all);
 	void setDBC_M(Eigen::MatrixXd collect_f_all);
 	Eigen::MatrixXd project_onto_basis(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y);
-	Array<OneD, Array<OneD, NekDouble> > trafo_current_para(Array<OneD, NekDouble>, Array<OneD, NekDouble>, Array<OneD, NekDouble>, Eigen::VectorXd &, Eigen::VectorXd &, Eigen::VectorXd &);
-	int get_curr_elem_pos(int);
 
         void set_MtM();
         void DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y);
@@ -298,7 +215,26 @@ namespace Nektar
 
 	NekDouble Get_m_kinvis(void);
 	void Set_m_kinvis(NekDouble);
-	Array<OneD, Array<OneD, NekDouble> > myAdvField_Newton;
+	
+	
+	Eigen::VectorXd gen_affine_vec(double, double, Eigen::VectorXd);
+	
+	
+	std::vector< Array<OneD, double> > reproject_back(Eigen::VectorXd);
+	double FarrelOutput(Eigen::VectorXd);
+	Eigen::VectorXd reconstruct_solution_w_different_dbc(Eigen::VectorXd, double);
+	void error_analysis(int, double, double, std::ofstream &);
+	
+	std::vector<int> flipperMap;
+	int max_dimension;
+	int compare_accuracy_mode;
+	Array<OneD, NekDouble> param_vector2;
+	NekDouble offline_average_time, online_average_time;
+	unsigned int online_no_solves;
+	std::vector<Eigen::VectorXd> solve_affine;
+	bool create_error_file;
+	
+	
 
     protected:
         
@@ -334,6 +270,7 @@ namespace Nektar
         virtual void v_DoInitialise(void);
 
         virtual void v_Output(void);
+               
 
     };
     

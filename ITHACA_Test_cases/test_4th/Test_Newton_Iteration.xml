@@ -38,7 +38,7 @@
             <P> Kinvis = 10       </P>
             <P> Kinvis_max = 123       </P>
             <P> load_snapshot_data_from_files = 0       </P>
-            <P> number_of_snapshots = 1       </P>
+            <P> number_of_snapshots = 5       </P>
             <P> param0 = 0.3       </P>
             <P> param1 = 0.5      </P>
             <P> param2 = 1       </P>

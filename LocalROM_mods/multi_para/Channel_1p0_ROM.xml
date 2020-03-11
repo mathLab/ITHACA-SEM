@@ -4,7 +4,7 @@
     xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
 
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="u,v" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v" TYPE="MODIFIED" />
 	<!--        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u,v,p" TYPE="MODIFIED" />     -->
     </EXPANSIONS>
 
@@ -32,29 +32,41 @@
 	    <!-- <P> FilterWidth = 2e+1 </P> -->
             <P> TimeStep = 1e-4    </P>
             <P> TOL = .005    </P>
-            <P> NumSteps = 1e6      </P>
+            <P> NumSteps = 1e5      </P>
             <P> IO_CheckSteps = 1000       </P>
             <P> IO_InfoSteps = 1000       </P>
-            <P> Kinvis = 10       </P>
-            <P> Kinvis_max = 123       </P>
+            <P> Kinvis = 1       </P>
+            <!-- <P> Kinvis = .01       </P> -->
+            <P> parameter_space_dimension = 2      </P>
+            <P> parameter_space_tensor_grid = 1    </P>   <!--  like a bool: 0 is no, else is yes  -->
             <P> load_snapshot_data_from_files = 1       </P>
-            <P> number_of_snapshots = 4       </P>
-            <P> param0 = 0.1       </P>
-            <P> param1 = 0.5       </P>
-            <P> param2 = 1       </P>
-            <P> param3 = 10       </P>
-            <P> ref_param_index = 2       </P>
+            <P> load_cO_snapshot_data_from_files = 1       </P>  <!--  converged_Oseen snapshots   -->
+	    <P> do_trafo_check = 0       </P>  
+            <P> number_of_snapshots = 20       </P>
+            <P> ref_param_index = 19       </P>
             <P> ref_param_nu = 1       </P>
-            <P> POD_tolerance = .9999       </P>
+            <P> number_of_snapshots_dir0 = 4       </P>
+            <P> number_of_snapshots_dir1 = 5       </P>
+            <P> POD_tolerance = .95       </P>
+            <P> param0_dir0 = 0.7       </P>
+            <P> param1_dir0 = 0.8       </P>
+            <P> param2_dir0 = 0.9       </P>
+            <P> param3_dir0 = 1.0       </P>
+            <P> param0_dir1 = 0.2       </P>
+            <P> param1_dir1 = 0.4       </P>
+            <P> param2_dir1 = 0.6       </P>
+            <P> param3_dir1 = 0.8       </P>
+            <P> param4_dir1 = 1.0       </P>
+	    <P> type_para1 = 1        </P> <!-- 0=kin_visc, 1=geo   -->
+	    <P> type_para2 = 0   	</P>
+	    <P> number_elem_trafo = 5   </P>
+	    <P> debug_mode = 0   </P>
 	    <P> globally_connected = 2      </P>
-            <P> A             = 0.65               </P>
-            <P> omega         = 2*PI*f               </P>
-            <P> MappingPressureTolerance  = 1e-5               </P>
-            <P> MappingViscousTolerance   = 1e-5               </P>
-            <P> kdim = 16 </P>
-            <P> nvec = 2 </P>
-            <P> evtol = 1e-1 </P>
-            <P> nits = 1000 </P>
+<!--	    <P> elem_1 = {32,30,11,10,9,8,17,16,15,14,25,24,23,22}   	</P>   -->  <!-- find a nice solution for the element numberings and also the matrices   -->
+<!--        <P> elem_2 = {12, 28, 34, 13,21,20,18,19,26,27}   		</P>   -->  <!-- for development purposes, just hard-code the example, as it is convenient to have available in the code later   -->
+<!--	    <P> elem_3 = {29, 31}   	</P>   -->
+<!--	    <P> elem_4 = {33, 35}   	</P>   -->
+<!--	    <P> elem_5 = {0,1,2,3,4,5,6,7}   		</P>   -->
         </PARAMETERS>
 
         <VARIABLES>
@@ -87,7 +99,6 @@
       	 <FUNCTION NAME="InitialConditions">
             <E VAR="u" VALUE="0" />
             <E VAR="v" VALUE="0" />
-            <E VAR="p" VALUE="0" />
         </FUNCTION>  
 
 	<!--  <FUNCTION NAME="InitialConditions">
@@ -102,24 +113,171 @@
          <FUNCTION NAME="ExactSolution">
             <E VAR="u" VALUE="y*(1-y)" />
             <E VAR="v" VALUE="0" />
-            <E VAR="p" VALUE="0" />
         </FUNCTION>  
 
+	<FUNCTION NAME="TestSnap_cO_1">
+	      <F FILE="Conv_Oseen_param0.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_2">
+	      <F FILE="Conv_Oseen_param1.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_3">
+	      <F FILE="Conv_Oseen_param2.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_4">
+	      <F FILE="Conv_Oseen_param3.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_5">
+	      <F FILE="Conv_Oseen_param4.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_6">
+	      <F FILE="Conv_Oseen_param5.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_7">
+	      <F FILE="Conv_Oseen_param6.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_8">
+	      <F FILE="Conv_Oseen_param7.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_9">
+	      <F FILE="Conv_Oseen_param8.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_10">
+	      <F FILE="Conv_Oseen_param9.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_11">
+	      <F FILE="Conv_Oseen_param10.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_12">
+	      <F FILE="Conv_Oseen_param11.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_13">
+	      <F FILE="Conv_Oseen_param12.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_14">
+	      <F FILE="Conv_Oseen_param13.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_15">
+	      <F FILE="Conv_Oseen_param14.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_16">
+	      <F FILE="Conv_Oseen_param15.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_17">
+	      <F FILE="Conv_Oseen_param16.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_18">
+	      <F FILE="Conv_Oseen_param17.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_19">
+	      <F FILE="Conv_Oseen_param18.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap_cO_20">
+	      <F FILE="Conv_Oseen_param19.fld" />
+	</FUNCTION>  
+
 	<FUNCTION NAME="TestSnap1">
-	      <F FILE="Channel_1p5_TT_sol0p1.fld" />
+	      <F FILE="xml_channel_narrow_0.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap2">
-	      <F FILE="Channel_1p5_TT_sol0p5.fld" />
+	      <F FILE="xml_channel_narrow_1.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap3">
-	      <F FILE="Channel_1p5_TT_sol1.fld" />
+	      <F FILE="xml_channel_narrow_2.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap4">
-	      <F FILE="Channel_1p5_TT_sol10.fld" />
+	      <F FILE="xml_channel_narrow_3.fld" />
 	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap5">
+	      <F FILE="xml_channel_narrow_4.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap6">
+	      <F FILE="xml_channel_narrow_5.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap7">
+	      <F FILE="xml_channel_narrow_6.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap8">
+	      <F FILE="xml_channel_narrow_7.fld" />
+	</FUNCTION>  
+
+
+	<FUNCTION NAME="TestSnap9">
+	      <F FILE="xml_channel_narrow_8.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap10">
+	      <F FILE="xml_channel_narrow_9.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap11">
+	      <F FILE="xml_channel_narrow_10.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap12">
+	      <F FILE="xml_channel_narrow_11.fld" />
+	</FUNCTION>  
+
+
+	<FUNCTION NAME="TestSnap13">
+	      <F FILE="xml_channel_narrow_12.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap14">
+	      <F FILE="xml_channel_narrow_13.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap15">
+	      <F FILE="xml_channel_narrow_14.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap16">
+	      <F FILE="xml_channel_narrow_15.fld" />
+	</FUNCTION>  
+
+
+	<FUNCTION NAME="TestSnap17">
+	      <F FILE="xml_channel_narrow_16.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap18">
+	      <F FILE="xml_channel_narrow_17.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap19">
+	      <F FILE="xml_channel_narrow_18.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap20">
+	      <F FILE="xml_channel_narrow_19.fld" />
+	</FUNCTION>  
+
 
         <FUNCTION NAME="Mapping">
             <E VAR="x" VALUE="x + sin(2*PI*t) * 0.05 * (exp(-( abs(x-0.5) + abs(y-0.5) ) ))" />
@@ -137,9 +295,7 @@
 	</FORCE>    
                     
     <FUNCTION NAME="AdvectionVelocity">
-    <!--  <F FILE="Channel_1p5_TT.fld" /> -->
-      <E VAR="u" VALUE="0" />
-      <E VAR="v" VALUE="0" />
+      <F FILE="Channel_1p0.fld" />
     </FUNCTION> 
 
     </CONDITIONS>
@@ -152,20 +308,20 @@
             <V ID="2">  0.0  2.0  0.0 </V>
             <V ID="3">  0.0  3.0  0.0 </V>
             <V ID="4">  1.5  0.0  0.0 </V>
-            <V ID="5">  1.5 0.75  0.0 </V>
-            <V ID="6">  1.5  2.25 0.0 </V>
+            <V ID="5">  1.5 1.0  0.0 </V>
+            <V ID="6">  1.5  2.0 0.0 </V>
             <V ID="7">  1.5  3.0  0.0 </V>
             <V ID="8">  2.0  0.0  0.0 </V>
-            <V ID="9">  2.0  0.75  0.0 </V>
-            <V ID="10">  2.0  2.25 0.0 </V>
+            <V ID="9">  2.0  1.0  0.0 </V>
+            <V ID="10">  2.0  2.0 0.0 </V>
             <V ID="11">  2.0  3.0  0.0 </V>
             <V ID="12">  8.0  0.0  0.0 </V>
-            <V ID="13">  8.0  0.75  0.0 </V>
-            <V ID="14">  8.0  2.25  0.0 </V>
+            <V ID="13">  8.0  1.0  0.0 </V>
+            <V ID="14">  8.0  2.0  0.0 </V>
             <V ID="15">  8.0  3.0  0.0 </V>
             <V ID="16">  3.0  1.5  0.0 </V>
-            <V ID="17">  3.0  0.75  0.0 </V>
-            <V ID="18">  3.0  2.25  0.0 </V>
+            <V ID="17">  3.0  1.0  0.0 </V>
+            <V ID="18">  3.0  2.0  0.0 </V>
             <V ID="19">  3.0  0.0  0.0 </V>
             <V ID="20">  3.0  3.0  0.0 </V>
             <V ID="21">  0.0  1.5  0.0 </V>

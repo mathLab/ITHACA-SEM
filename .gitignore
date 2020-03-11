@@ -1,3 +1,6 @@
+
+LocalROM_mods/multi_para/*.fld
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

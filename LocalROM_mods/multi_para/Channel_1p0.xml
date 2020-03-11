@@ -4,7 +4,7 @@
     xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
 
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="u,v" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v,p" TYPE="MODIFIED" />
 	<!--        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u,v,p" TYPE="MODIFIED" />     -->
     </EXPANSIONS>
 
@@ -14,16 +14,16 @@
             <!-- <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS" />  -->
             <!-- <I PROPERTY="MappingImplicitPressure" VALUE="TRUE"/> -->
             <!-- <I PROPERTY="EQTYPE" VALUE="SteadyStokes" /> -->
-            <I PROPERTY="EQTYPE" VALUE="SteadyOseen" />
-	    <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS_TT" />
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+	    <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" /> 
 	    <!-- <I PROPERTY="GlobalSysSoln" VALUE="DirectFull" /> -->
             <!--  <I PROPERTY="Driver" VALUE="SteadyState" />  doing some pseudo-time integration to compute steady state-->
 	    <!-- <I PROPERTY="MappingImplicitPressure" VALUE="TRUE"/>  Default = FALSE -->
 	    <!-- <I PROPERTY="MappingImplicitViscous" VALUE="TRUE"/> Default = FALSE -->
             <!-- <I PROPERTY="AdvectionForm" VALUE="Convective" /> -->
-            <!-- <I PROPERTY="EvolutionOperator" VALUE="Nonlinear" />  -->
+            <I PROPERTY="EvolutionOperator" VALUE="Nonlinear" />  
             <I PROPERTY="Projection" VALUE="Galerkin" />
-            <!-- <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />-->
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
         </SOLVERINFO>
 
         <PARAMETERS>
@@ -32,34 +32,31 @@
 	    <!-- <P> FilterWidth = 2e+1 </P> -->
             <P> TimeStep = 1e-4    </P>
             <P> TOL = .005    </P>
-            <P> NumSteps = 1e6      </P>
+            <P> NumSteps = 1e5      </P>
             <P> IO_CheckSteps = 1000       </P>
             <P> IO_InfoSteps = 1000       </P>
-            <P> Kinvis = 10       </P>
-            <P> Kinvis_max = 123       </P>
-            <P> load_snapshot_data_from_files = 1       </P>
-            <P> number_of_snapshots = 4       </P>
-            <P> param0 = 0.1       </P>
-            <P> param1 = 0.5       </P>
-            <P> param2 = 1       </P>
-            <P> param3 = 10       </P>
-            <P> ref_param_index = 2       </P>
-            <P> ref_param_nu = 1       </P>
-            <P> POD_tolerance = .9999       </P>
-	    <P> globally_connected = 2      </P>
-            <P> A             = 0.65               </P>
-            <P> omega         = 2*PI*f               </P>
-            <P> MappingPressureTolerance  = 1e-5               </P>
-            <P> MappingViscousTolerance   = 1e-5               </P>
-            <P> kdim = 16 </P>
-            <P> nvec = 2 </P>
-            <P> evtol = 1e-1 </P>
-            <P> nits = 1000 </P>
+            <P> Kinvis = 1       </P>
+            <!-- <P> Kinvis = .01       </P> -->
+            <P> parameter_space_dimension = 2      </P>
+            <P> parameter_space_tensor_grid = 1    </P>   <!--  like a bool: 0 is no, else is yes  -->
+            <P> number_of_snapshots = 20       </P>
+            <P> number_of_snapshots_dir0 = 4       </P>
+            <P> number_of_snapshots_dir1 = 5       </P>
+            <P> param0_dir0 = 0.7       </P>
+            <P> param1_dir0 = 0.8       </P>
+            <P> param2_dir0 = 0.9       </P>
+            <P> param3_dir0 = 1.0       </P>
+            <P> param0_dir1 = 0.12       </P>
+            <P> param1_dir1 = 0.14       </P>
+            <P> param2_dir1 = 0.16       </P>
+            <P> param3_dir1 = 0.18       </P>
+            <P> param4_dir1 = 0.2       </P>
         </PARAMETERS>
 
         <VARIABLES>
             <V ID="0"> u </V>
             <V ID="1"> v </V>
+            <V ID="2"> p </V>
         </VARIABLES>
 
         <BOUNDARYREGIONS>
@@ -72,15 +69,18 @@
             <REGION REF="0">    <!-- Walls -->
                 <D VAR="u" VALUE="0" />
                 <D VAR="v" VALUE="0" />
+                <N VAR="p" VALUE="0" />
             </REGION>
             <REGION REF="1">    <!-- InFlow -->
                 <!-- <D VAR="u" VALUE="(y*(1-y))" /> -->
                 <D VAR="u" VALUE="(y*(3-y))" />
                 <D VAR="v" VALUE="0" />
+                <N VAR="p" VALUE="0" />
             </REGION>
             <REGION REF="2">    <!-- OutFlow -->
                 <N VAR="u" VALUE="0" />
                 <N VAR="v" VALUE="0" />
+                <D VAR="p" VALUE="0" />
             </REGION>
         </BOUNDARYCONDITIONS>
 
@@ -105,22 +105,6 @@
             <E VAR="p" VALUE="0" />
         </FUNCTION>  
 
-	<FUNCTION NAME="TestSnap1">
-	      <F FILE="Channel_1p5_TT_sol0p1.fld" />
-	</FUNCTION>  
-
-	<FUNCTION NAME="TestSnap2">
-	      <F FILE="Channel_1p5_TT_sol0p5.fld" />
-	</FUNCTION>  
-
-	<FUNCTION NAME="TestSnap3">
-	      <F FILE="Channel_1p5_TT_sol1.fld" />
-	</FUNCTION>  
-
-	<FUNCTION NAME="TestSnap4">
-	      <F FILE="Channel_1p5_TT_sol10.fld" />
-	</FUNCTION>  
-
         <FUNCTION NAME="Mapping">
             <E VAR="x" VALUE="x + sin(2*PI*t) * 0.05 * (exp(-( abs(x-0.5) + abs(y-0.5) ) ))" />
             <E VAR="y" VALUE="y" />
@@ -137,10 +121,10 @@
 	</FORCE>    
                     
     <FUNCTION NAME="AdvectionVelocity">
-    <!--  <F FILE="Channel_1p5_TT.fld" /> -->
-      <E VAR="u" VALUE="0" />
+      <E VAR="u" VALUE="1-y*y" />
       <E VAR="v" VALUE="0" />
-    </FUNCTION> 
+      <E VAR="w" VALUE="0" />
+    </FUNCTION>
 
     </CONDITIONS>
 
@@ -152,20 +136,20 @@
             <V ID="2">  0.0  2.0  0.0 </V>
             <V ID="3">  0.0  3.0  0.0 </V>
             <V ID="4">  1.5  0.0  0.0 </V>
-            <V ID="5">  1.5 0.75  0.0 </V>
-            <V ID="6">  1.5  2.25 0.0 </V>
+            <V ID="5">  1.5 1.0  0.0 </V>
+            <V ID="6">  1.5  2.0 0.0 </V>
             <V ID="7">  1.5  3.0  0.0 </V>
             <V ID="8">  2.0  0.0  0.0 </V>
-            <V ID="9">  2.0  0.75  0.0 </V>
-            <V ID="10">  2.0  2.25 0.0 </V>
+            <V ID="9">  2.0  1.0  0.0 </V>
+            <V ID="10">  2.0  2.0 0.0 </V>
             <V ID="11">  2.0  3.0  0.0 </V>
             <V ID="12">  8.0  0.0  0.0 </V>
-            <V ID="13">  8.0  0.75  0.0 </V>
-            <V ID="14">  8.0  2.25  0.0 </V>
+            <V ID="13">  8.0  1.0  0.0 </V>
+            <V ID="14">  8.0  2.0  0.0 </V>
             <V ID="15">  8.0  3.0  0.0 </V>
             <V ID="16">  3.0  1.5  0.0 </V>
-            <V ID="17">  3.0  0.75  0.0 </V>
-            <V ID="18">  3.0  2.25  0.0 </V>
+            <V ID="17">  3.0  1.0  0.0 </V>
+            <V ID="18">  3.0  2.0  0.0 </V>
             <V ID="19">  3.0  0.0  0.0 </V>
             <V ID="20">  3.0  3.0  0.0 </V>
             <V ID="21">  0.0  1.5  0.0 </V>

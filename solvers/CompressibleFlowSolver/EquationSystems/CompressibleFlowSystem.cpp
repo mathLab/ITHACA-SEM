@@ -506,9 +506,9 @@ namespace Nektar
         // Add forcing terms
         for (auto &x : m_forcing)
         {
-            boost::ignore_unused(x);
-            ASSERTL0(false,"forcing not coded for DoOdeRhs_coeff");
-            // x->Apply_coeff(m_fields, inarray, outarray, time);
+            // boost::ignore_unused(x);
+            // ASSERTL0(false,"forcing not coded for DoOdeRhs_coeff");
+            x->Apply_coeff(m_fields, inarray, outarray, time);
         }
 
         if (m_useLocalTimeStep)

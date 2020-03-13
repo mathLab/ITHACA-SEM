@@ -212,5 +212,44 @@ namespace SolverUtils
         }
     }
 
+    void ForcingBody::v_Apply_coeff(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> > &inarray,
+            Array<OneD, Array<OneD, NekDouble> > &outarray,
+            const NekDouble &time)
+    {
+        int ncoeff = outarray[m_NumVariable-1].num_elements();
+        Array<OneD, NekDouble> tmp(ncoeff, 0.0);
+
+        if(m_hasTimeFcnScaling)
+        {
+            Array<OneD, NekDouble>  TimeFcn(1);
+
+            for (int i = 0; i < m_NumVariable; i++)
+            {
+                EvaluateTimeFunction(time, m_timeFcnEqn, TimeFcn);
+
+                fields[i]->FwdTrans(m_Forcing[i],tmp);
+
+                Vmath::Svtvp(ncoeff, TimeFcn[0],
+                             tmp, 1,
+                             outarray[i],  1,
+                             outarray[i],  1);
+            }
+        }
+        else
+        {
+            Update(fields, inarray, time);
+
+            for (int i = 0; i < m_NumVariable; i++)
+            {
+                fields[i]->FwdTrans(m_Forcing[i],tmp);
+
+                Vmath::Vadd(ncoeff, outarray[i], 1,
+                            tmp, 1, outarray[i], 1);
+            }
+        }
+    }
+
 }
 }

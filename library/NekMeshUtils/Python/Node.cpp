@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: NekMeshUtils.cpp
+// File: Node.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -28,19 +28,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Python wrapper for NekMeshUtils classes.
+// Description: Python wrapper for Node.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/Python/NekPyConfig.hpp>
+#include <NekMeshUtils/MeshElements/Node.h>
 
-void export_Element();
-void export_Node();
+using namespace Nektar;
+using namespace Nektar::NekMeshUtils;
 
-BOOST_PYTHON_MODULE(_NekMeshUtils)
+void export_Node()
 {
-    np::initialize();
-
-    export_Node();
-    export_Element();
+    py::class_<Node,
+               std::shared_ptr<Node>,
+               boost::noncopyable>(
+                   "Node", py::init<int, NekDouble, NekDouble, NekDouble>())
+        .def("GetID", &Node::GetID)
+        .def("SetID", &Node::SetID)
+        .def("Distance", &Node::Distance)
+        .def("GetLoc", &Node::GetLoc)
+        .def("abs2", &Node::abs2)
+        ;
 }

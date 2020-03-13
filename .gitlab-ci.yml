@@ -111,41 +111,51 @@ buster-default-build-env:
 
 buster-full-build-env:
   <<: *build-env-debian-template-full
+  needs: ["buster-default-build-env"]
 
 stretch-default-build-env:
   <<: *build-env-debian-template-default
 
 stretch-full-build-env:
   <<: *build-env-debian-template-full
+  needs: ["stretch-default-build-env"]
 
 buster-default-build-and-test:
   <<: *build-and-test-template
+  needs: ["buster-default-build-env"]
 
 buster-full-build-and-test:
   <<: *build-and-test-template
+  needs: ["buster-full-build-env"]
   variables:
     OS_DISTRO: debian
     GIT_SUBMODULE_STRATEGY: recursive
 
 stretch-default-build-and-test:
   <<: *build-and-test-template
+  needs: ["stretch-default-build-env"]
 
 stretch-full-build-and-test:
   <<: *build-and-test-template
+  needs: ["stretch-full-build-env"]
 
 
 # COMPILER WARNINGS
 buster-default-warnings:
   <<: *compiler-warning-template
+  needs: ["buster-default-build-and-test"]
 
 buster-full-warnings:
   <<: *compiler-warning-template
+  needs: ["buster-full-build-and-test"]
 
 stretch-default-warnings:
   <<: *compiler-warning-template
+  needs: ["stretch-default-build-and-test"]
 
 stretch-full-warnings:
   <<: *compiler-warning-template
+  needs: ["stretch-full-build-and-test"]
 
 
 buster-documentation-build-env:
@@ -343,19 +353,19 @@ osx-full-warnings:
 # #################  WINDOWS  ####################
 # ################################################
 
-win7-default-build-and-test:
-  <<: *build-and-test-template
-  tags:
-    - win7
-  script:
-    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;" + $Env:path
-    - echo $Env:path
-    - mkdir build
-    - cd build
-    - cmake.exe -G "Visual Studio 12 2013 Win64" --config Debug ..
-    - cmake.exe --build . --target ALL_BUILD --config Debug
-    - cmake.exe --build . --target INSTALL --config Debug
-    - ctest --output-on-failure -C Debug -j3
+#win7-default-build-and-test:
+#  <<: *build-and-test-template
+#  tags:
+#    - win7
+#  script:
+#    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;" + $Env:path
+#    - echo $Env:path
+#    - mkdir build
+#    - cd build
+#    - cmake.exe -G "Visual Studio 12 2013 Win64" --config Debug ..
+#    - cmake.exe --build . --target ALL_BUILD --config Debug
+#    - cmake.exe --build . --target INSTALL --config Debug
+#    - ctest --output-on-failure -C Debug -j3
 
 
 win10-default-build-and-test:

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR>
+    <!-- Embed a 2-dimensional object in a 2-dimensional space -->
+    <!-- DIM <= SPACE -->
+    <!-- This provides a method of optimizing code for a 1-D curve embedded in 3-space. -->
+    <GEOMETRY DIM="2" SPACE="2">
+
+        <!-- Definitions that can be used below in this file. -->
+        <DEF>
+            <D> A = 1.0 </D>
+            <D> B = 2.0 </D>
+            <D> C = 3.0 </D>
+        </DEF>
+
+        <VERTEX>
+            <!-- Always must have three values per entry. -->
+            <V ID="0"> 0.0 1.0 0.0 </V>
+            <V ID="1"> 1.0 1.0 0.0 </V>
+            <V ID="2"> 2.0 1.0 0.0 </V>
+            <V ID="3"> 3.0 1.0 0.0 </V>
+            <V ID="4"> 4.0 1.0 0.0 </V>
+            <V ID="5"> 5.0 1.0 0.0 </V>
+        </VERTEX>
+
+        <!-- Q - quads, T - triangles, S - segments, E - tet, P - pyramid, R - prism, H - hex -->
+        <!-- Only certain element types are appropriate for the given dimension (dim on mesh) -->
+        <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
+        <ELEMENT>
+            <S ID="0"> 0 1 </S>
+            <S ID="1"> 1 2 </S>
+            <S ID="2"> 2 3 </S>
+            <S ID="3"> 3 4 </S>
+            <S ID="4"> 4 5 </S>
+        </ELEMENT>
+
+        <!-- V - vertex, S - Segment, E - edge, F - face -->
+        <COMPOSITE>
+            <C ID="0"> S[0-4] </C>
+            <C ID="1"> S[3,4] </C>
+            <C ID="2"> V[0]   </C>
+            <C ID="3"> V[5]   </C>
+        </COMPOSITE>
+
+        <DOMAIN> C[0,1] </DOMAIN>
+
+    </GEOMETRY>
+
+    <EXPANSIONTYPES>
+        <E COMPOSITE="C[0]" NUMMODES="5" TYPE="MODIFIED" />
+    </EXPANSIONTYPES>
+
+    <CONDITIONS>
+
+        <!-- Removed redundancy since we can specify any level of granularity
+         in the ExpansionTypes section below.-->
+        <PARAMETERS>
+            <P> Lambda = 10 </P>
+            <P> Tolerance = 0.0000000001 </P>
+        </PARAMETERS>
+
+        <!--One of these for each dimension. These are the vector
+        components, say, s = (u,v); comprised of two components in
+        this example for a 2D dimension.-->
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <!--These composites must be defined in the geometry file.-->
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+        </BOUNDARYREGIONS>
+
+        <!-- We can revisit this since the syntax is not complete.
+             We will allow domain, composite, or boundary.-->
+        <!--<EXPANSIONTYPE>
+            Domain = eModifiedA, NumModes = N (or f(x,y)), eGLL,
+            Ptype = (order + 1)
+            BoundaryRegion[0-1] = eLagrangeGLL, eGLR
+        </EXPANSIONTYPE>-->
+
+        <!--The region numbers below correspond to the regions specified in the
+        BoundaryRegion definition above.-->
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="1.0" />
+                <D VAR="v" VALUE="2.0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+    </CONDITIONS>
+
+</NEKTAR>
+

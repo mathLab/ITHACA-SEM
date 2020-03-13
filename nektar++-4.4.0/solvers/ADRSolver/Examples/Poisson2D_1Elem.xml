@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX>
+            <V ID="0"> 0.0 0.0 0.0 </V>
+            <V ID="1"> 1.0 0.0 0.0 </V>
+            <V ID="2"> 1.0 1.0 0.0 </V>
+            <V ID="3"> 0.0 1.0 0.0 </V>
+        </VERTEX>
+        <EDGE>
+            <E ID="0"> 0 1   </E>
+            <E ID="1"> 1 2   </E>
+            <E ID="2"> 2 3   </E>
+            <E ID="3"> 3 0   </E>
+        </EDGE>
+        <ELEMENT>
+            <Q ID="0"> 0 1 2 3 </Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> Q[0]</C>
+            <C ID="1"> E[0]</C>     <!-- South -->
+            <C ID="2"> E[1]</C>     <!-- East -->
+            <C ID="3"> E[2]</C>     <!-- North -->
+            <C ID="4"> E[3]</C>     <!-- West -->
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="9" FIELDS="u" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="Poisson" />
+            <I PROPERTY="Projection" VALUE="Continuous" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> Lambda = 0.0 </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+            <B ID="3"> C[4] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <N VAR="u" VALUE="0.0" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" VALUE="0.0" />
+            </REGION>
+            <REGION REF="2">
+                <N VAR="u" VALUE="0.0" />
+            </REGION>
+            <REGION REF="3">
+                <D VAR="u" VALUE="(2*y*y*y)-(3*y*y)+1" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="Forcing">
+            <E VAR="u" VALUE="-2*((2*y*y*y)-(3*y*y)+1)+6*((1-(x*x))*((2*y)-1))" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="(1-(x*x))*((2*y*y*y)-(3*y*y)+1)" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+</NEKTAR>

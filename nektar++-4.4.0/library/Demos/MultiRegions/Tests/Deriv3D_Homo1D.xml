@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+    <GEOMETRY DIM="2" SPACE="2">
+
+        <VERTEX>
+            <V ID="0">  0.0    0.0    0.0 </V>
+            <V ID="1">  1.0    0.0    0.0 </V>
+            <V ID="2">  1.0    1.0    0.0 </V>
+            <V ID="3">  0.0    1.0    0.0 </V>
+        </VERTEX>
+
+        <EDGE>
+            <E ID="0">   0  1   </E>
+            <E ID="1">   1  2   </E>
+            <E ID="2">   2  3   </E>
+            <E ID="3">   3  0   </E>
+        </EDGE>
+
+        <ELEMENT>
+            <Q ID="0">    0     1     2     3 </Q>
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> Q[0]</C>
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="3" FIELDS="u,v,w" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <PARAMETERS>
+            <P> HomModesZ = 8      </P>
+            <P> LZ        = 2*PI   </P>
+            <P> USEFFT    = 0      </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> w </V>
+        </VARIABLES>
+
+        <FUNCTION NAME="InitialCondition">
+            <E VAR="u" VALUE="5*x" />
+            <E VAR="v" VALUE="sin(y)" />
+            <E VAR="w" VALUE="cos(z)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="5" />
+            <E VAR="v" VALUE="cos(y)" />
+            <E VAR="w" VALUE="-sin(z)" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+</NEKTAR>

@@ -1,0 +1,120 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File CommSerial.h
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: CommSerial header
+//
+///////////////////////////////////////////////////////////////////////////////
+#ifndef NEKTAR_LIB_UTILITIES_COMMSERIAL_H
+#define NEKTAR_LIB_UTILITIES_COMMSERIAL_H
+
+#include <string>
+
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+
+namespace Nektar
+{
+namespace LibUtilities
+{
+// Forward declarations
+class CommSerial;
+
+/// Pointer to a Communicator object.
+typedef boost::shared_ptr<CommSerial> CommSerialSharedPtr;
+
+/// A global linear system.
+class CommSerial : public Comm
+{
+public:
+    /// Creates an instance of this class
+    LIB_UTILITIES_EXPORT static CommSharedPtr create(int narg, char *arg[])
+    {
+        return MemoryManager<CommSerial>::AllocateSharedPtr(narg, arg);
+    }
+
+    /// Name of class
+    LIB_UTILITIES_EXPORT static std::string className;
+
+    LIB_UTILITIES_EXPORT CommSerial(int argc, char *argv[]);
+    LIB_UTILITIES_EXPORT virtual ~CommSerial();
+
+protected:
+    LIB_UTILITIES_EXPORT virtual void v_Finalise();
+    LIB_UTILITIES_EXPORT virtual int v_GetRank();
+    LIB_UTILITIES_EXPORT virtual bool v_TreatAsRankZero(void);
+
+    LIB_UTILITIES_EXPORT virtual void v_Block();
+    LIB_UTILITIES_EXPORT virtual NekDouble v_Wtime();
+    LIB_UTILITIES_EXPORT virtual void v_Send(void *buf, int count,
+                                             CommDataType dt, int dest);
+    LIB_UTILITIES_EXPORT virtual void v_Recv(void *buf, int count,
+                                             CommDataType dt, int source);
+    LIB_UTILITIES_EXPORT virtual void v_SendRecv(
+        void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+        void *recvbuf, int recvcount, CommDataType recvtype, int source);
+    LIB_UTILITIES_EXPORT virtual void v_SendRecvReplace(void *buf, int count,
+                                                        CommDataType dt,
+                                                        int pSendProc,
+                                                        int pRecvProc);
+    LIB_UTILITIES_EXPORT virtual void v_AllReduce(void *buf, int count,
+                                                  CommDataType dt,
+                                                  enum ReduceOperator pOp);
+    LIB_UTILITIES_EXPORT virtual void v_AlltoAll(void *sendbuf, int sendcount,
+                                                 CommDataType sendtype,
+                                                 void *recvbuf, int recvcount,
+                                                 CommDataType recvtype);
+    LIB_UTILITIES_EXPORT virtual void v_AlltoAllv(
+        void *sendbuf, int sendcounts[], int sensdispls[],
+        CommDataType sendtype, void *recvbuf, int recvcounts[], int rdispls[],
+        CommDataType recvtype);
+    LIB_UTILITIES_EXPORT virtual void v_Bcast(void *buffer, int count,
+                                              CommDataType dt, int root);
+    LIB_UTILITIES_EXPORT virtual void v_Exscan(
+        Array<OneD, unsigned long long> &pData, const enum ReduceOperator pOp,
+        Array<OneD, unsigned long long> &ans);
+    LIB_UTILITIES_EXPORT virtual void v_Gather(void *sendbuf, int sendcount,
+                                               CommDataType sendtype,
+                                               void *recvbuf, int recvcount,
+                                               CommDataType recvtype, int root);
+    LIB_UTILITIES_EXPORT virtual void v_Scatter(void *sendbuf, int sendcount,
+                                                CommDataType sendtype,
+                                                void *recvbuf, int recvcount,
+                                                CommDataType recvtype,
+                                                int root);
+
+    LIB_UTILITIES_EXPORT virtual void v_SplitComm(int pRows, int pColumns);
+    LIB_UTILITIES_EXPORT virtual CommSharedPtr v_CommCreateIf(int flag);
+};
+}
+}
+
+#endif

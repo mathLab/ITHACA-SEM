@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+    <GEOMETRY DIM="1" SPACE="2">
+
+        <VERTEX>
+            <V ID="0"> 0.0 1.0 0.0 </V>
+            <V ID="1"> 0.01 1.0 0.0 </V>
+            <V ID="2"> 0.02 1.0 0.0 </V>
+            <V ID="3"> 0.03 1.0 0.0 </V>
+            <V ID="4"> 0.04 1.0 0.0 </V>
+            <V ID="5"> 0.05 1.0 0.0 </V>
+            <V ID="6"> 0.06 1.0 0.0 </V>
+            <V ID="7"> 0.07 1.0 0.0 </V>
+            <V ID="8"> 0.08 1.0 0.0 </V>
+            <V ID="9"> 0.09 1.0 0.0 </V>
+            <V ID="10"> 0.1 1.0 0.0 </V>
+            <V ID="11"> 0.11 1.0 0.0 </V>
+            <V ID="12"> 0.12 1.0 0.0 </V>
+            <V ID="13"> 0.13 1.0 0.0 </V>
+            <V ID="14"> 0.14 1.0 0.0 </V>
+            <V ID="15"> 0.15 1.0 0.0 </V>
+            <V ID="16"> 0.16 1.0 0.0 </V>
+            <V ID="17"> 0.17 1.0 0.0 </V>
+            <V ID="18"> 0.18 1.0 0.0 </V>
+            <V ID="19"> 0.19 1.0 0.0 </V>
+            <V ID="20"> 0.20 1.0 0.0 </V>
+            <V ID="21"> 0.21 1.0 0.0 </V>
+            <V ID="22"> 0.22 1.0 0.0 </V>
+            <V ID="23"> 0.23 1.0 0.0 </V>
+            <V ID="24"> 0.24 1.0 0.0 </V>
+            <V ID="25"> 0.25 1.0 0.0 </V>
+            <V ID="26"> 0.26 1.0 0.0 </V>
+            <V ID="27"> 0.27 1.0 0.0 </V>
+            <V ID="28"> 0.28 1.0 0.0 </V>
+            <V ID="29"> 0.29 1.0 0.0 </V>
+            <V ID="30"> 0.30 1.0 0.0 </V>
+            <V ID="31"> 0.31 1.0 0.0 </V>
+            <V ID="32"> 0.32 1.0 0.0 </V>
+            <V ID="33"> 0.33 1.0 0.0 </V>
+            <V ID="34"> 0.34 1.0 0.0 </V>
+            <V ID="35"> 0.35 1.0 0.0 </V>
+            <V ID="36"> 0.36 1.0 0.0 </V>
+            <V ID="37"> 0.37 1.0 0.0 </V>
+            <V ID="38"> 0.38 1.0 0.0 </V>
+            <V ID="39"> 0.39 1.0 0.0 </V>
+            <V ID="40"> 0.40 1.0 0.0 </V>
+            <V ID="41"> 0.41 1.0 0.0 </V>
+            <V ID="42"> 0.42 1.0 0.0 </V>
+            <V ID="43"> 0.43 1.0 0.0 </V>
+            <V ID="44"> 0.44 1.0 0.0 </V>
+            <V ID="45"> 0.45 1.0 0.0 </V>
+            <V ID="46"> 0.46 1.0 0.0 </V>
+            <V ID="47"> 0.47 1.0 0.0 </V>
+            <V ID="48"> 0.48 1.0 0.0 </V>
+            <V ID="49"> 0.49 1.0 0.0 </V>
+            <V ID="50"> 0.50 1.0 0.0 </V>
+            <V ID="51"> 0.51 1.0 0.0 </V>
+            <V ID="52"> 0.52 1.0 0.0 </V>
+            <V ID="53"> 0.53 1.0 0.0 </V>
+            <V ID="54"> 0.54 1.0 0.0 </V>
+            <V ID="55"> 0.55 1.0 0.0 </V>
+            <V ID="56"> 0.56 1.0 0.0 </V>
+            <V ID="57"> 0.57 1.0 0.0 </V>
+            <V ID="58"> 0.58 1.0 0.0 </V>
+            <V ID="59"> 0.59 1.0 0.0 </V>
+            <V ID="60"> 0.60 1.0 0.0 </V>
+            <V ID="61"> 0.61 1.0 0.0 </V>
+            <V ID="62"> 0.62 1.0 0.0 </V>
+            <V ID="63"> 0.63 1.0 0.0 </V>
+            <V ID="64"> 0.64 1.0 0.0 </V>
+            <V ID="65"> 0.65 1.0 0.0 </V>
+            <V ID="66"> 0.66 1.0 0.0 </V>
+            <V ID="67"> 0.67 1.0 0.0 </V>
+            <V ID="68"> 0.68 1.0 0.0 </V>
+            <V ID="69"> 0.69 1.0 0.0 </V>
+            <V ID="70"> 0.70 1.0 0.0 </V>
+            <V ID="71"> 0.71 1.0 0.0 </V>
+            <V ID="72"> 0.72 1.0 0.0 </V>
+            <V ID="73"> 0.73 1.0 0.0 </V>
+            <V ID="74"> 0.74 1.0 0.0 </V>
+            <V ID="75"> 0.75 1.0 0.0 </V>
+            <V ID="76"> 0.76 1.0 0.0 </V>
+            <V ID="77"> 0.77 1.0 0.0 </V>
+            <V ID="78"> 0.78 1.0 0.0 </V>
+            <V ID="79"> 0.79 1.0 0.0 </V>
+            <V ID="80"> 0.80 1.0 0.0 </V>
+            <V ID="81"> 0.81 1.0 0.0 </V>
+            <V ID="82"> 0.82 1.0 0.0 </V>
+            <V ID="83"> 0.83 1.0 0.0 </V>
+            <V ID="84"> 0.84 1.0 0.0 </V>
+            <V ID="85"> 0.85 1.0 0.0 </V>
+            <V ID="86"> 0.86 1.0 0.0 </V>
+            <V ID="87"> 0.87 1.0 0.0 </V>
+            <V ID="88"> 0.88 1.0 0.0 </V>
+            <V ID="89"> 0.89 1.0 0.0 </V>
+            <V ID="90"> 0.90 1.0 0.0 </V>
+            <V ID="91"> 0.91 1.0 0.0 </V>
+            <V ID="92"> 0.92 1.0 0.0 </V>
+            <V ID="93"> 0.93 1.0 0.0 </V>
+            <V ID="94"> 0.94 1.0 0.0 </V>
+            <V ID="95"> 0.95 1.0 0.0 </V>
+            <V ID="96"> 0.96 1.0 0.0 </V>
+            <V ID="97"> 0.97 1.0 0.0 </V>
+            <V ID="98"> 0.98 1.0 0.0 </V>
+            <V ID="99"> 0.99 1.0 0.0 </V>
+            <V ID="100"> 1.00 1.0 0.0 </V>
+        </VERTEX>
+
+        <ELEMENT>
+            <S ID="0"> 0 1 </S>
+            <S ID="1"> 1 2 </S>
+            <S ID="2"> 2 3 </S>
+            <S ID="3"> 3 4 </S>
+            <S ID="4"> 4 5 </S>
+            <S ID="5"> 5 6 </S>
+            <S ID="6"> 6 7 </S>
+            <S ID="7"> 7 8 </S>
+            <S ID="8"> 8 9 </S>
+            <S ID="9"> 9 10 </S>
+            <S ID="10"> 10 11 </S>
+            <S ID="11"> 11 12 </S>
+            <S ID="12"> 12 13 </S>
+            <S ID="13"> 13 14 </S>
+            <S ID="14"> 14 15 </S>
+            <S ID="15"> 15 16 </S>
+            <S ID="16"> 16 17 </S>
+            <S ID="17"> 17 18 </S>
+            <S ID="18"> 18 19 </S>
+            <S ID="19"> 19 20 </S>
+            <S ID="20"> 20 21 </S>
+            <S ID="21"> 21 22 </S>
+            <S ID="22"> 22 23 </S>
+            <S ID="23"> 23 24 </S>
+            <S ID="24"> 24 25 </S>
+            <S ID="25"> 25 26 </S>
+            <S ID="26"> 26 27 </S>
+            <S ID="27"> 27 28 </S>
+            <S ID="28"> 28 29 </S>
+            <S ID="29"> 29 30 </S>
+            <S ID="30"> 30 31 </S>
+            <S ID="31"> 31 32 </S>
+            <S ID="32"> 32 33 </S>
+            <S ID="33"> 33 34 </S>
+            <S ID="34"> 34 35 </S>
+            <S ID="35"> 35 36 </S>
+            <S ID="36"> 36 37 </S>
+            <S ID="37"> 37 38 </S>
+            <S ID="38"> 38 39 </S>
+            <S ID="39"> 39 40 </S>
+            <S ID="40"> 40 41 </S>
+            <S ID="41"> 41 42 </S>
+            <S ID="42"> 42 43 </S>
+            <S ID="43"> 43 44 </S>
+            <S ID="44"> 44 45 </S>
+            <S ID="45"> 45 46 </S>
+            <S ID="46"> 46 47 </S>
+            <S ID="47"> 47 48 </S>
+            <S ID="48"> 48 49 </S>
+            <S ID="49"> 49 50 </S>
+            <S ID="50"> 50 51 </S>
+            <S ID="51"> 51 52 </S>
+            <S ID="52"> 52 53 </S>
+            <S ID="53"> 53 54 </S>
+            <S ID="54"> 54 55 </S>
+            <S ID="55"> 55 56 </S>
+            <S ID="56"> 56 57 </S>
+            <S ID="57"> 57 58 </S>
+            <S ID="58"> 58 59 </S>
+            <S ID="59"> 59 60 </S>
+            <S ID="60"> 60 61 </S>
+            <S ID="61"> 61 62 </S>
+            <S ID="62"> 62 63 </S>
+            <S ID="63"> 63 64 </S>
+            <S ID="64"> 64 65 </S>
+            <S ID="65"> 65 66 </S>
+            <S ID="66"> 66 67 </S>
+            <S ID="67"> 67 68 </S>
+            <S ID="68"> 68 69 </S>
+            <S ID="69"> 69 70 </S>
+            <S ID="70"> 70 71 </S>
+            <S ID="71"> 71 72 </S>
+            <S ID="72"> 72 73 </S>
+            <S ID="73"> 73 74 </S>
+            <S ID="74"> 74 75 </S>
+            <S ID="75"> 75 76 </S>
+            <S ID="76"> 76 77 </S>
+            <S ID="77"> 77 78 </S>
+            <S ID="78"> 78 79 </S>
+            <S ID="79"> 79 80 </S>
+            <S ID="80"> 80 81 </S>
+            <S ID="81"> 81 82 </S>
+            <S ID="82"> 82 83 </S>
+            <S ID="83"> 83 84 </S>
+            <S ID="84"> 84 85 </S>
+            <S ID="85"> 85 86 </S>
+            <S ID="86"> 86 87 </S>
+            <S ID="87"> 87 88 </S>
+            <S ID="88"> 88 89 </S>
+            <S ID="89"> 89 90 </S>
+            <S ID="90"> 90 91 </S>
+            <S ID="91"> 91 92 </S>
+            <S ID="92"> 92 93 </S>
+            <S ID="93"> 93 94 </S>
+            <S ID="94"> 94 95 </S>
+            <S ID="95"> 95 96 </S>
+            <S ID="96"> 96 97 </S>
+            <S ID="97"> 97 98 </S>
+            <S ID="98"> 98 99 </S>
+            <S ID="99"> 99 100 </S>
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> S[0-1] </C>
+            <C ID="1"> V[0]   </C>
+            <C ID="2"> V[100]   </C>
+            <C ID="3"> S[2-99] </C>
+        </COMPOSITE>
+
+        <DOMAIN> C[0,3] </DOMAIN>
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="15" FIELDS="u,ue" TYPE="MODIFIED" />
+        <E COMPOSITE="C[3]" NUMMODES="15" FIELDS="u,ue" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <PARAMETERS>
+            <P> TimeStep = 1/1000           </P>
+            <P> Substeps = 10 		</P>
+            <P> NumSteps = 5000              </P>
+            <P> FinTime = 5 </P>
+            <P> IO_CheckSteps = 5000/20              </P>
+            <P> IO_InfoSteps = 5000/20/10              </P>
+            <P> Chi = 1400              </P>
+            <P> Cm = 1              </P>
+            <P> sigmai = 1.75              </P>
+            <P> sigmae = 7.0              </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="Bidomain" />
+            <I PROPERTY="CellModel" VALUE="LuoRudy91" />
+            <I PROPERTY="Projection" VALUE="Continuous" />
+            <I PROPERTY="DiffusionAdvancement" VALUE="Implicit" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3" />
+            <I PROPERTY="GlobalSysSoln" VALUE="DirectMultiLevelStaticCond" />
+        </SOLVERINFO>
+
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> ue </V>
+        </VARIABLES>
+
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <N VAR="u" VALUE="0" />
+                <N VAR="ue" VALUE="0" />
+                <D VAR="ue" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <N VAR="u" VALUE="0" />
+                <N VAR="ue" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="0.0" />
+            <E VAR="ue" VALUE="0.0" />
+        </FUNCTION>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="-84.3801107371 + 100*(1-sin(x))" />
+            <E VAR="ue" VALUE="0.0" />
+        </FUNCTION>
+    </CONDITIONS>
+
+    <FILTERS>
+        <FILTER TYPE="HistoryPoints">
+            <PARAM NAME="OutputFile">luo.his</PARAM>
+            <PARAM NAME="OutputFrequency">250</PARAM>
+            <PARAM NAME="Points">
+                0.0 1.0 0.0
+                0.1 1.0 0.0
+                0.20 1.0 0.0
+                0.30 1.0 0.0
+                0.40 1.0 0.0
+                0.50 1.0 0.0
+                0.60 1.0 0.0
+                0.70 1.0 0.0
+                0.80 1.0 0.0
+                0.90 1.0 0.0
+                1.00 1.0 0.0
+            </PARAM>
+        </FILTER>
+    </FILTERS>
+
+</NEKTAR>

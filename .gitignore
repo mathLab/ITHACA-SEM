@@ -118,3 +118,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Others
+*.txt
+*.fld
+~*

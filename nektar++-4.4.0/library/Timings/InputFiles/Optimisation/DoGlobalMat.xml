@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR>
+  <GLOBALOPTIMIZATIONPARAMETERS>
+
+    <BwdTrans>
+      <DO_GLOBAL_MAT_OP  VALUE="1" />
+    </BwdTrans>
+    
+    <IProductWRTBase>
+      <DO_GLOBAL_MAT_OP  VALUE="1" />
+    </IProductWRTBase>
+    
+    <HelmholtzMatrixOp>
+      <DO_GLOBAL_MAT_OP  VALUE="1" />
+    </HelmholtzMatrixOp>
+    
+    <MassMatrixOp>
+      <DO_GLOBAL_MAT_OP  VALUE="1" />
+    </MassMatrixOp>
+    
+  </GLOBALOPTIMIZATIONPARAMETERS>
+</NEKTAR>
+

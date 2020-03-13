@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+  <GEOMETRY DIM="1" SPACE="2">
+    <VERTEX>
+      <V ID="0"> 0.000e+00 0.000e+00 0.000e+00</V>
+      <V ID="1"> 0.020e+00 0.000e+00 0.000e+00</V>
+      <V ID="2"> 0.040e+00 0.000e+00 0.000e+00</V>           
+      <V ID="3"> 0.060e+00 0.000e+00 0.000e+00</V>        
+      <V ID="4"> 0.080e+00 0.000e+00 0.000e+00</V>          
+      <V ID="5"> 0.100e+00 0.000e+00 0.000e+00</V>
+      <V ID="6"> 0.120e+00 0.000e+00 0.000e+00</V>         
+      <V ID="7"> 0.140e+00 0.000e+00 0.000e+00</V>        
+      <V ID="8"> 0.160e+00 0.000e+00 0.000e+00</V>       
+      <V ID="9"> 0.180e+00 0.000e+00 0.000e+00</V>
+      <V ID="10"> 0.200e+00 0.000e+00 0.000e+00</V>
+      <V ID="11"> 0.220e+00 0.000e+00 0.000e+00</V>
+      <V ID="12"> 0.240e+00 0.000e+00 0.000e+00</V>
+      <V ID="13"> 0.260e+00 0.000e+00 0.000e+00</V>           
+      <V ID="14"> 0.280e+00 0.000e+00 0.000e+00</V>        
+      <V ID="15"> 0.300e+00 0.000e+00 0.000e+00</V>          
+      <V ID="16"> 0.320e+00 0.000e+00 0.000e+00</V>
+      <V ID="17"> 0.340e+00 0.000e+00 0.000e+00</V>         
+      <V ID="18"> 0.360e+00 0.000e+00 0.000e+00</V>        
+      <V ID="19"> 0.380e+00 0.000e+00 0.000e+00</V>       
+      <V ID="20"> 0.400e+00 0.000e+00 0.000e+00</V>
+    </VERTEX>
+    <ELEMENT>
+      <S ID="0">    0     1 </S>
+      <S ID="1">    1     2 </S>
+      <S ID="2">    2     3 </S>
+      <S ID="3">    3     4 </S>
+      <S ID="4">    4     5 </S>
+      <S ID="5">    5     6 </S>
+      <S ID="6">    6     7 </S>
+      <S ID="7">    7     8 </S>
+      <S ID="8">    8     9 </S>
+      <S ID="9">    9     10 </S>
+      <S ID="10">    10     11 </S>
+      <S ID="11">    11     12 </S>
+      <S ID="12">    12     13 </S>
+      <S ID="13">    13     14 </S>
+      <S ID="14">    14     15 </S>
+      <S ID="15">    15     16 </S>
+      <S ID="16">    16     17 </S>
+      <S ID="17">    17     18 </S>
+      <S ID="18">    18     19 </S>
+      <S ID="19">    19     20 </S>
+    </ELEMENT>
+    <COMPOSITE>
+      <C ID="0"> S[0-19] </C>
+      <C ID="1"> V[0] </C>
+      <C ID="2"> V[20] </C>
+
+    </COMPOSITE>
+
+    <DOMAIN> 
+      <D ID="0"> C[0] </D>
+    </DOMAIN>
+  </GEOMETRY>
+
+  <EXPANSIONS>
+    <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="A,u" TYPE="MODIFIED" />
+  </EXPANSIONS>
+
+  <CONDITIONS>
+
+    <PARAMETERS>
+      <P> TimeStep       = 1e-4               </P> 
+      <P> FinTime        = 1.00              </P>
+      <P> NumSteps       = FinTime/TimeStep   </P>
+      <P> IO_CheckSteps  = NumSteps/50        </P>
+      <P> IO_InfoSteps   = 100                </P>
+      <P> T              = 0.25               </P>
+      <P> h0             = 0.0015             </P>
+      <P> rho            = 1.050e+03          </P>
+      <P> pext           = 0.0                </P> 
+      <P> RT             = 1.89e+08           </P>
+      <P> C              = 6.31e-09           </P>
+      <P> pout           = 1333               </P>
+    </PARAMETERS>
+    
+    <SOLVERINFO>
+      <I PROPERTY="EQTYPE"                VALUE="PulseWavePropagation"/>
+      <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+      <I PROPERTY="TimeIntegrationMethod" VALUE="RungeKutta2_ImprovedEuler" />
+      <I PROPERTY="UpwindTypePulse"       VALUE="UpwindPulse"         /> 
+    </SOLVERINFO>
+    <VARIABLES>
+      <V ID="0"> A </V>
+      <V ID="1"> u </V>
+    </VARIABLES>
+
+    <BOUNDARYREGIONS>
+      <B ID="0"> C[1] </B>
+      <B ID="1"> C[2] </B>
+    </BOUNDARYREGIONS>
+
+    <BOUNDARYCONDITIONS>
+      <REGION REF="0">
+        <D VAR="A" USERDEFINEDTYPE="Q-inflow" VALUE="(7.112e-4)*(sin(7.854*t) - 0.562)*(1/(1+exp(-400*(sin(7.854*t)- 0.562))))" />
+        <D VAR="u" USERDEFINEDTYPE="Q-inflow" VALUE="1.0" />
+      </REGION>
+      <REGION REF="1">
+        <D VAR="A" USERDEFINEDTYPE="RCR-terminal" VALUE="RT" />
+        <D VAR="u" USERDEFINEDTYPE="RCR-terminal" VALUE="C" />
+      </REGION>
+    </BOUNDARYCONDITIONS>
+
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="A" DOMAIN="0" VALUE="3.14159e-04" />
+      <E VAR="u" DOMAIN="0" VALUE="0.0" />
+    </FUNCTION>
+    
+    <FUNCTION NAME="A_0">
+      <E VAR="A_0" DOMAIN="0" VALUE="3.14159e-04" />
+    </FUNCTION>
+    
+    <FUNCTION NAME="MaterialProperties"> 
+      <E VAR="beta" DOMAIN="0" VALUE="4.51e+6" />     	
+    </FUNCTION>
+
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="A" DOMAIN="0" VALUE="3.14159e-04" />
+      <E VAR="u" DOMAIN="0" VALUE="0" />
+    </FUNCTION>
+
+  </CONDITIONS>
+
+</NEKTAR>
+

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <GEOMETRY DIM="1" SPACE="2">
+
+        <VERTEX>
+            <V ID="0"> 0.1 1.0 0.0 </V>
+            <V ID="1"> 1.1 1.0 0.0 </V>
+            <V ID="2"> 2.0 1.0 0.0 </V>
+            <V ID="3"> 3.2 1.0 0.0 </V>
+            <V ID="4"> 4.0 1.0 0.0 </V>
+            <V ID="5"> 5.0 1.0 0.0 </V>
+        </VERTEX>
+
+        <ELEMENT>
+            <S ID="0"> 0 1 </S>
+            <S ID="1"> 1 2 </S>
+            <S ID="2"> 2 3 </S>
+            <S ID="3"> 3 4 </S>
+            <S ID="4"> 4 5 </S>
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> S[0-1] </C>
+            <C ID="1"> V[0]   </C>
+            <C ID="2"> V[5]   </C>
+            <C ID="3"> S[2-4] </C>
+        </COMPOSITE>
+
+        <DOMAIN> C[0,3] </DOMAIN>
+
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="8" FIELDS="u" TYPE="MODIFIED" />
+        <E COMPOSITE="C[3]" NUMMODES="8" FIELDS="u" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <PARAMETERS>
+            <P> Lambda    = 2 </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE"                VALUE="Helmholtz"       />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"   />
+            <I PROPERTY="AdvectionType"         VALUE="WeakDG"          />
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="cos(PI*x)" />
+            </REGION>
+            <REGION REF="1">
+                <R VAR="u" VALUE="x*cos(PI*x)-PI*sin(PI*x)" PRIMCOEFF="x" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="Forcing">
+            <E VAR="u" VALUE="-(Lambda + PI*PI)*cos(PI*x)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="cos(PI*x)" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+</NEKTAR>
+

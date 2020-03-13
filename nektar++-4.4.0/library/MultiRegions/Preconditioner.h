@@ -1,0 +1,287 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File Preconditioner.h
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: Preconditioner header
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONER_H
+#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONER_H
+
+#include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/MultiRegionsDeclspec.h>
+#include <StdRegions/StdExpansion.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/Communication/GsLib.hpp>
+
+#include <boost/shared_ptr.hpp>
+
+namespace Nektar
+{
+    namespace MultiRegions
+    {
+        class AssemblyMap;
+        typedef boost::shared_ptr<AssemblyMap> AssemblyMapSharedPtr;
+
+        class Preconditioner;
+        typedef boost::shared_ptr<Preconditioner>  PreconditionerSharedPtr;
+
+        static PreconditionerSharedPtr NullPreconditionerSharedPtr;
+
+        typedef LibUtilities::NekFactory< std::string, Preconditioner, 
+            const boost::shared_ptr<GlobalLinSys>&,
+            const boost::shared_ptr<AssemblyMap>& > PreconFactory;
+        PreconFactory& GetPreconFactory();
+
+        class Preconditioner
+        {
+        public:
+            MULTI_REGIONS_EXPORT Preconditioner(
+                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+	                 const AssemblyMapSharedPtr &pLocToGloMap);
+
+            MULTI_REGIONS_EXPORT
+            virtual ~Preconditioner() {}
+
+	    inline void DoPreconditioner(
+                const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput);
+
+            inline void DoPreconditionerWithNonVertOutput(
+                         const Array<OneD, NekDouble>& pInput,
+                         Array<OneD, NekDouble>& pOutput,
+                         const Array<OneD, NekDouble>& pNonVertOutput,
+                         Array<OneD, NekDouble>& pVertForce = NullNekDouble1DArray);
+
+
+	    inline void DoTransformToLowEnergy(
+                Array<OneD, NekDouble>& pInOut,
+                int offset);
+
+            inline void DoTransformToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
+	    inline void DoTransformFromLowEnergy(
+                Array<OneD, NekDouble>& pInOut);
+
+            inline void DoMultiplybyInverseTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+            
+            inline void DoMultiplybyInverseTransposedTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);                
+
+	    inline void BuildPreconditioner();
+
+   	    inline void InitObject();
+
+            Array<OneD, NekDouble> AssembleStaticCondGlobalDiagonals();
+
+             inline const DNekScalBlkMatSharedPtr&
+                GetBlockTransformedSchurCompl() const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockCMatrix() const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockInvDMatrix() const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockSchurCompl() const;
+        
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockTransformationMatrix() const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockTransposedTransformationMatrix() const;
+
+            inline DNekScalMatSharedPtr TransformedSchurCompl(
+                int offset, const boost::shared_ptr<DNekScalMat > &loc_mat);
+
+	protected:
+            const boost::weak_ptr<GlobalLinSys> m_linsys;
+            PreconditionerType                  m_preconType;
+            DNekMatSharedPtr                    m_preconditioner;
+            boost::shared_ptr<AssemblyMap>      m_locToGloMap;
+            LibUtilities::CommSharedPtr         m_comm;
+
+            virtual DNekScalMatSharedPtr v_TransformedSchurCompl(
+                int offset, const boost::shared_ptr<DNekScalMat > &loc_mat);
+
+
+	private:
+
+            void NullPreconditioner(void);
+
+	    virtual void v_InitObject();
+
+	    virtual void v_DoPreconditioner(
+                const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput);
+
+            virtual void v_DoPreconditionerWithNonVertOutput(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput,
+                const Array<OneD, NekDouble>& pNonVertOutput,
+                Array<OneD, NekDouble>& pVertForce);
+
+            
+	    virtual void v_DoTransformToLowEnergy(
+                Array<OneD, NekDouble>& pInOut,
+                int offset);
+
+            virtual void v_DoTransformToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
+	    virtual void v_DoTransformFromLowEnergy(
+                Array<OneD, NekDouble>& pInput);
+
+            virtual void v_DoMultiplybyInverseTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
+            virtual void v_DoMultiplybyInverseTransposedTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
+	    virtual void v_BuildPreconditioner();
+
+            static std::string lookupIds[];
+            static std::string def;
+	};
+        typedef boost::shared_ptr<Preconditioner>  PreconditionerSharedPtr;
+
+        /**
+         *
+         */
+        inline void Preconditioner::InitObject()
+        {
+            v_InitObject();
+        }
+
+        /**
+         *
+         */ 
+        inline DNekScalMatSharedPtr Preconditioner::TransformedSchurCompl(
+            int offset, const boost::shared_ptr<DNekScalMat > &loc_mat)
+        {
+            return v_TransformedSchurCompl(offset,loc_mat);
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoPreconditioner(
+            const Array<OneD, NekDouble> &pInput,
+                  Array<OneD, NekDouble> &pOutput)
+        {
+	    v_DoPreconditioner(pInput,pOutput);
+        }
+        
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoPreconditionerWithNonVertOutput(
+            const Array<OneD, NekDouble>& pInput,
+                  Array<OneD, NekDouble>& pOutput,
+            const Array<OneD, NekDouble>& pNonVertOutput,
+                  Array<OneD, NekDouble>& pVertForce)
+        {
+            v_DoPreconditionerWithNonVertOutput(pInput,pOutput,pNonVertOutput,
+                                                pVertForce);
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoTransformToLowEnergy(
+            Array<OneD, NekDouble>& pInOut, int offset)
+        {
+	    v_DoTransformToLowEnergy(pInOut,offset);
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoTransformToLowEnergy(
+            const Array<OneD, NekDouble>& pInput,
+                  Array<OneD, NekDouble>& pOutput)
+        {
+	    v_DoTransformToLowEnergy(pInput,pOutput);
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoTransformFromLowEnergy(
+            Array<OneD, NekDouble>& pInput)
+        {
+	    v_DoTransformFromLowEnergy(pInput);
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoMultiplybyInverseTransformationMatrix(
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
+        {
+            v_DoMultiplybyInverseTransformationMatrix(pInput,pOutput);
+        }
+           
+        /**
+         *
+         */
+        inline void Preconditioner::
+            DoMultiplybyInverseTransposedTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                      Array<OneD, NekDouble>& pOutput)
+        {
+            v_DoMultiplybyInverseTransposedTransformationMatrix(pInput,pOutput);
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::BuildPreconditioner()
+        {
+	    v_BuildPreconditioner();
+        }
+    }
+}
+
+#endif

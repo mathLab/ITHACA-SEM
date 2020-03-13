@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<NEKTAR>
+
+  <EXPANSIONS>
+    <E COMPOSITE="C[0]" NUMMODES="3" FIELDS="u,v,w,p"  TYPE="GLL_LAGRANGE_SEM" />
+  </EXPANSIONS>
+
+  <CONDITIONS>
+    <SOLVERINFO>
+      <I PROPERTY="SolverType"        VALUE="VelocityCorrectionScheme"/>
+      <I PROPERTY="EQTYPE"            VALUE="UnsteadyNavierStokes"/>
+      <I PROPERTY="EvolutionOperator" VALUE="Direct"/>
+      <I PROPERTY="Projection"        VALUE="Galerkin"/>
+      <I PROPERTY="Driver"            VALUE= "Standard" />
+      <I PROPERTY="ModeType"        VALUE= "HalfMode" />
+      <I PROPERTY="HOMOGENEOUS"       VALUE="1D"/>
+      <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />    
+        </SOLVERINFO>
+
+    <PARAMETERS>
+      <P> TimeStep      = 0.001 </P>
+      <P> NumSteps      = 300</P>
+      <P> IO_CheckSteps = 1000  </P>
+      <P> IO_InfoSteps  = 1    </P>
+      <P> Kinvis        = 1     </P>
+      <P> LZ            = 1.0       </P>
+      <P> kdim            = 1       </P>
+      <P> HomModesZ     = 12       </P>
+
+      <P> nits            = 0       </P>
+    </PARAMETERS>
+
+    <VARIABLES>
+      <V ID="0"> u </V> 
+      <V ID="1"> v </V> 
+      <V ID="2"> w </V> 
+      <V ID="3"> p </V> 
+    </VARIABLES>
+
+    <BOUNDARYREGIONS>
+      <B ID="0"> C[1] </B>
+      <B ID="1"> C[2] </B>
+      <B ID="2"> C[3] </B>
+    </BOUNDARYREGIONS>
+
+     <BOUNDARYCONDITIONS>
+      <REGION REF="0">
+        <D VAR="u" VALUE="-2*PI*x*y*cos(2*PI*z)"/>
+        <D VAR="v" VALUE="x*x*cos(2*PI*z)"/>
+        <D VAR="w" VALUE="y*sin(2*PI*z)"/>
+        <N VAR="p" USERDEFINEDTYPE="H"  VALUE="0"/>
+     </REGION>
+      
+      <REGION REF="1">
+        <D VAR="u" VALUE="-2*PI*x*y*cos(2*PI*z)"/>
+        <D VAR="v" VALUE="x*x*cos(2*PI*z)"/>
+        <D VAR="w" VALUE="y*sin(2*PI*z)"/>
+        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>
+    </REGION>
+       <REGION REF="2">
+        <D VAR="u" VALUE="-2*PI*x*y*cos(2*PI*z)"/>
+        <D VAR="v" VALUE="x*x*cos(2*PI*z)"/>
+        <D VAR="w" VALUE="y*sin(2*PI*z)"/>
+        <D VAR="p" VALUE="4*x*y*cos(2*PI*z)"/>
+       </REGION>
+    </BOUNDARYCONDITIONS>
+
+   <FUNCTION NAME="InitialConditions">
+        <E VAR="u" VALUE="-2*PI*x*y*cos(2*PI*z)"/>
+        <E VAR="v" VALUE="x*x*cos(2*PI*z)"/>
+        <E VAR="w" VALUE="y*sin(2*PI*z)"/>
+        <E VAR="p" VALUE="4*x*y*cos(2*PI*z)" />
+    </FUNCTION>
+   <FUNCTION NAME="BodyForce">
+      <E VAR="u" VALUE="-2*PI*y*cos(2*PI*z)-4*PI*x*cos(2*PI*z)-8*PI*PI*PI*x*y*cos(2*PI*z) + 4*y*cos(2*PI*z)" />
+      <E VAR="v" VALUE="2*x*cos(2*PI*z)+4*PI*PI*x*x*cos(2*PI*z)-2*cos(2*PI*z) + 4*x*cos(2*PI*z)" />
+      <E VAR="w" VALUE="2*sin(2*PI*z)+4*PI*PI*y*sin(2*PI*z) - 8*PI*x*y*sin(2*PI*z)"/>
+      <E VAR="p" VALUE="0" />
+
+    </FUNCTION>
+ <FUNCTION NAME="ExactSolution">
+        <E VAR="u" VALUE="-2*PI*x*y*cos(2*PI*z)"/>
+        <E VAR="v" VALUE="x*x*cos(2*PI*z)"/>
+        <E VAR="w" VALUE="y*sin(2*PI*z)"/>
+        <E VAR="p" VALUE="4*x*y*cos(2*PI*z)" />
+    </FUNCTION>
+
+    
+     <!--FUNCTION NAME="BaseFlow">
+     <F  VAR="u,v,p" FILE="QuadMesh_n2-Base.fld"/>
+      </FUNCTION-->
+      
+      <FUNCTION NAME="BaseFlow">
+      <E VAR="u" VALUE="1"/>
+      <E VAR="v" VALUE="2" />
+      <E VAR="w" VALUE="0"/>
+      <E VAR="p" VALUE="0" />
+      </FUNCTION>
+
+    
+  </CONDITIONS>
+
+  <FORCING>
+      <FORCE TYPE="Body">
+          <BODYFORCE> BodyForce </BODYFORCE>
+      </FORCE>
+  </FORCING>
+
+  <GEOMETRY DIM="2" SPACE="2">
+    
+    <VERTEX>
+      <!-- Always must have four values per entry. -->      
+      <V ID="0"> 0.0    0.0    0.0 </V>
+      <V ID="1"> 0.5    0.0    0.0 </V>
+      <V ID="2"> 1.0    0.0    0.0 </V>
+      <V ID="3"> 0.0    0.5    0.0 </V>
+      <V ID="4"> 0.5    0.5    0.0 </V>
+      <V ID="5"> 1.0    0.5    0.0 </V>
+      <V ID="6"> 0.0    1.0    0.0 </V>
+      <V ID="7"> 0.5    1.0    0.0 </V>
+      <V ID="8"> 1.0    1.0    0.0 </V>
+    </VERTEX>
+
+    <EDGE>
+      <E ID="0"> 0 1 </E>
+      <E ID="1"> 1 2 </E>
+      <E ID="2"> 0 3 </E>
+      <E ID="3"> 1 4 </E>
+      <E ID="4"> 2 5 </E>
+      <E ID="5"> 3 4 </E>
+      <E ID="6"> 4 5 </E>
+      <E ID="7"> 3 6 </E>
+      <E ID="8"> 4 7 </E>
+      <E ID="9"> 5 8 </E>
+      <E ID="10"> 6 7 </E>
+      <E ID="11"> 7 8 </E>
+    </EDGE>
+    
+    <!-- Q - quads, T - triangles, S - segments, E - tet, P - pyramid, R - prism, H - hex -->
+    <!-- Only certain element types are appropriate for the given dimension (dim on mesh) -->
+    <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
+    <ELEMENT>
+      <Q ID="0"> 0 3 5 2 </Q>
+      <Q ID="1"> 1 4 6 3 </Q>
+      <Q ID="2"> 5 8 10 7 </Q>
+      <Q ID="3"> 6 9 11 8 </Q>
+    </ELEMENT>
+    
+    <COMPOSITE>
+      <C ID="0"> Q[0-3] </C>
+      <C ID="1"> E[0,1,10,11] </C>   // Walls
+      <C ID="2"> E[2,7] </C>         // Inflow
+      <C ID="3"> E[4,9] </C>         // Outflow
+    </COMPOSITE>
+
+    <DOMAIN> C[0] </DOMAIN>
+
+  </GEOMETRY>
+  
+</NEKTAR>
+

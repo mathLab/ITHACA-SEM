@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+    <GEOMETRY DIM="1" SPACE="1">
+
+        <VERTEX>
+            <V ID="0">  0.00    0.0    0.0 </V>
+            <V ID="1">  0.25    0.0    0.0 </V>
+            <V ID="2">  0.50    0.0    0.0 </V>
+            <V ID="3">  0.75    0.0    0.0 </V>
+            <V ID="4">  1.00    0.0    0.0 </V>
+        </VERTEX>
+
+        <ELEMENT>
+            <S ID="0"> 0 1 </S>
+            <S ID="1"> 1 2 </S>
+            <S ID="2"> 2 3 </S>
+            <S ID="3"> 3 4 </S>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> S[0-3]</C>
+            <C ID="1"> V[0]</C>
+            <C ID="2"> V[4]</C>
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvectionDiffusion" />
+            <I PROPERTY="Projection"            VALUE="Continuous" />
+            <I PROPERTY="HOMOGENEOUS"           VALUE="2D" />
+            <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit" />
+            <I PROPERTY="AdvectionAdvancement"  VALUE="Explicit" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> TimeStep      = 0.001       </P>
+            <P> NumSteps      = 200         </P>
+            <P> IO_CheckSteps = 200         </P>
+            <P> IO_InfoSteps  = 10          </P>
+            <P> wavefreq      = PI          </P>
+            <P> epsilon       = 1.0         </P>
+            <P> Lambda    = 1.0             </P>
+            <P> HomModesY = 4               </P>
+            <P> LY        = 1.0             </P>
+            <P> HomModesZ = 4               </P>
+            <P> LZ        = 1.0             </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" USERDEFINEDTYPE="TimeDependent"
+                    VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LY/LY-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x-t))*sin(2*wavefreq/LY*(y-t))*sin(2*wavefreq/LZ*(z-t))" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" USERDEFINEDTYPE="TimeDependent"
+                    VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LY/LY-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x-t))*sin(2*wavefreq/LY*(y-t))*sin(2*wavefreq/LZ*(z-t))" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="AdvectionVelocity">
+            <E VAR="Vx" VALUE="1.0" />
+            <E VAR="Vy" VALUE="1.0" />
+            <E VAR="Vz" VALUE="1.0" />
+        </FUNCTION>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u"
+                VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LY/LY-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x-t))*sin(2*wavefreq/LY*(y-t))*sin(2*wavefreq/LZ*(z-t))" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u"
+                VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LY/LY-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x-t))*sin(2*wavefreq/LY*(y-t))*sin(2*wavefreq/LZ*(z-t))" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+</NEKTAR>

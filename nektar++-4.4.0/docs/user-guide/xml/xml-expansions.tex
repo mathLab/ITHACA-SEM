@@ -1,0 +1,39 @@
+\section{Expansions}
+This section defines the polynomial expansions used on each of the defined
+geometric composites. Expansion entries specify the number of modes, the basis
+type. The short-hand version has the following form
+
+\begin{lstlisting}[style=XMLStyle]
+<E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u" TYPE="MODIFIED" />
+\end{lstlisting}
+
+or, if we have more then one variable we can apply the same basis to all using
+
+\begin{lstlisting}[style=XMLStyle]
+<E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u,v,p" TYPE="MODIFIED" />
+\end{lstlisting}
+
+The expansion basis can also be specified in detail as a combination of
+one-dimensional bases, and thus the user is able to, for example, increase the
+quadrature order. For tet elements this takes the form:
+
+\begin{lstlisting}[style=XMLStyle]
+<E COMPOSITE="C[0]" 
+   BASISTYPE="Modified_A,Modified_B,Modified_C" 
+   NUMMODES="3,3,3"
+   POINTSTYPE="GaussLobattoLegendre,GaussRadauMAlpha1Beta0,GaussRadauMAlpha2Beta0"
+   NUMPOINTS="4,3,3"
+   FIELDS="u" />
+\end{lstlisting}
+
+and for prism elements:
+
+\begin{lstlisting}[style=XMLStyle]
+<E COMPOSITE="C[1]" 
+   BASISTYPE="Modified_A,Modified_A,Modified_B" 
+   NUMMODES="3,3,3"
+   POINTSTYPE="GaussLobattoLegendre,GaussLobattoLegendre,GaussRadauMAlpha1Beta0"
+   NUMPOINTS="4,4,3"
+   FIELDS="u" />
+\end{lstlisting}
+

@@ -1,0 +1,34 @@
+OPTION(THIRDPARTY_BUILD_SMV "Build LibSMV" OFF)
+
+IF (THIRDPARTY_BUILD_SMV)
+    INCLUDE(ExternalProject)
+    EXTERNALPROJECT_ADD(
+        libsmvf1.0
+        URL ${TPURL}/libsmvf1.0.tar.gz
+        URL_MD5 "40cad0538acebd4aa83136ef9319150e"
+        STAMP_DIR ${TPBUILD}/stamp
+        DOWNLOAD_DIR ${TPSRC}
+        SOURCE_DIR ${TPSRC}/libsmvf1.0
+        BINARY_DIR ${TPBUILD}/libsmvf1.0
+        TMP_DIR ${TPBUILD}/libsmvf1.0-tmp
+        INSTALL_DIR ${TPDIST}
+        CONFIGURE_COMMAND ${CMAKE_COMMAND}
+            -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST} ${TPSRC}/libsmvf1.0
+        INSTALL_COMMAND echo "LibSMV compiled successfully"
+    )
+    SET(SMV smv CACHE FILEPATH "Path to LibSMV." FORCE)
+
+    MARK_AS_ADVANCED(SMV)
+    LINK_DIRECTORIES(${TPDIST}/lib)
+    MESSAGE(STATUS "Build LibSMV: ${TPDIST}/lib/lib${SMV}.a")
+    SET(NEKTAR_USING_SMV TRUE)
+    ADD_DEFINITIONS(-DNEKTAR_USING_SMV)
+ELSE (THIRDPARTY_BUILD_SMV)
+    IF (NEKTAR_USE_SMV)
+        INCLUDE(FindSMV)
+        IF (SMV_FOUND)
+            MESSAGE(STATUS "Found LibSMV: ${SMV_LIBRARY}")
+        ENDIF(SMV_FOUND)
+    ENDIF (NEKTAR_USE_SMV)
+ENDIF (THIRDPARTY_BUILD_SMV)
+

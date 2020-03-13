@@ -1,0 +1,390 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
+SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build,
+options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release
+RelWithDebInfo MinSizeRel.")
+
+PROJECT(Nektar++ C CXX)
+
+
+INCLUDE(CheckLanguage)
+
+CHECK_LANGUAGE(Fortran)
+IF(CMAKE_Fortran_COMPILER)
+  ENABLE_LANGUAGE(Fortran)
+ELSE()
+  MESSAGE(STATUS "No Fortran support")
+ENDIF()
+
+# Helps organize projects in IDEs.
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# Extract the version number from the VERSION file and set in CMake
+# The format of this file must be X.X.X
+FILE(STRINGS "VERSION" NEKVER)
+STRING(REPLACE "." ";" NEKVERLIST ${NEKVER})
+LIST(GET NEKVERLIST 0 NEKTAR_VERSION_MAJOR)
+LIST(GET NEKVERLIST 1 NEKTAR_VERSION_MINOR)
+LIST(GET NEKVERLIST 2 NEKTAR_VERSION_PATCH)
+SET(NEKTAR_VERSION ${NEKTAR_VERSION_MAJOR}.${NEKTAR_VERSION_MINOR}.${NEKTAR_VERSION_PATCH})
+
+# Add support for CMAKE_DEPENDENT_OPTION
+INCLUDE(CMakeDependentOption)
+
+# Enable CTest.
+ENABLE_TESTING()
+
+# Use the CMake 2.4 policy for CMake 2.6
+IF(COMMAND cmake_policy)
+    CMAKE_POLICY(SET CMP0003 OLD)
+
+    # Silence warnings when using generator expressions in
+    # TARGET_LINK_LIBRARIES.
+    IF(POLICY CMP0022)
+        CMAKE_POLICY(SET CMP0022 NEW)
+    ENDIF()
+ENDIF(COMMAND cmake_policy)
+
+# Find the modules included with Nektar
+SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+
+# Set default install path if not provided on the command-line
+IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE PATH "" FORCE)
+ENDIF()
+
+# Find default search paths for OS X; adapted from Stack Overflow question
+# 1487752
+IF (APPLE)
+    EXECUTE_PROCESS(COMMAND which port
+        RESULT_VARIABLE DETECT_MACPORTS
+        OUTPUT_VARIABLE MACPORTS_PREFIX
+        ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+    EXECUTE_PROCESS(COMMAND brew --prefix
+        RESULT_VARIABLE DETECT_HOMEBREW
+        OUTPUT_VARIABLE HOMEBREW_PREFIX
+        ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    IF (${DETECT_MACPORTS} EQUAL 0)
+        GET_FILENAME_COMPONENT(MACPORTS_PREFIX ${MACPORTS_PREFIX} DIRECTORY)
+        GET_FILENAME_COMPONENT(MACPORTS_PREFIX ${MACPORTS_PREFIX} DIRECTORY)
+        SET(CMAKE_LIBRARY_PATH ${MACPORTS_PREFIX}/lib ${CMAKE_LIBRARY_PATH})
+        SET(CMAKE_INCLUDE_PATH ${MACPORTS_PREFIX}/include ${CMAKE_INCLUDE_PATH})
+        MESSAGE(STATUS "Detected MacPorts installation: ${MACPORTS_PREFIX}")
+    ELSE()
+        UNSET(MACPORTS_PREFIX)
+    ENDIF()
+
+    IF (${DETECT_HOMEBREW} EQUAL 0)
+        SET(CMAKE_LIBRARY_PATH ${HOMEBREW_PREFIX}/lib ${CMAKE_LIBRARY_PATH})
+        SET(CMAKE_INCLUDE_PATH ${HOMEBREW_PREFIX}/include ${CMAKE_INCLUDE_PATH})
+        MESSAGE(STATUS "Detected Homebrew installation: ${HOMEBREW_PREFIX}")
+    ELSE()
+        UNSET(HOMEBREW_PREFIX)
+    ENDIF()
+
+    UNSET(DETECT_HOMEBREW)
+    UNSET(DETECT_MACPORTS)
+ENDIF()
+
+# Attempt to retrieve git branch and SHA1 hash of current changeset.
+INCLUDE(GetGitRevisionDescription)
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+
+# Set library, binary, include, share and doc paths.
+SET(LIB_DIR "lib/nektar++-${NEKTAR_VERSION}")
+IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE )
+    SET(LIB_DIR "lib64/nektar++-${NEKTAR_VERSION}")
+ENDIF()
+SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
+
+SET(NEKTAR_BIN_DIR bin)
+SET(NEKTAR_LIB_DIR ${LIB_DIR})
+SET(NEKTAR_INCLUDE_DIR include/nektar++-${NEKTAR_VERSION})
+SET(NEKTAR_SHARE_DIR share/nektar++-${NEKTAR_VERSION})
+SET(NEKTAR_DOC_DIR share/doc/nektar++-${NEKTAR_VERSION})
+
+# Build shared libraries.
+SET(NEKTAR_LIBRARY_TYPE "SHARED")
+
+# Set up RPATH
+SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+SET(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}")
+IF (APPLE)
+    SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}")
+ENDIF()
+LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES
+	"${CMAKE_INSTALL_PREFIX}/${LIB_DIR}" isSystemDir)
+IF("${isSystemDir}" STREQUAL "-1")
+	SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}")
+ENDIF("${isSystemDir}" STREQUAL "-1")
+
+# Get rid of OS X RPATH warnings -- we should set this to 1 once we reach
+# required minimum cmake version of 3.0.0 and configure it in a more sane
+# fashion.
+IF(NOT DEFINED CMAKE_MACOSX_RPATH)
+    SET(CMAKE_MACOSX_RPATH 0)
+ENDIF()
+
+# Components of the Nektar++ package to build
+OPTION(NEKTAR_BUILD_LIBRARY    "Build main Nektar++ libraries." ON)
+OPTION(NEKTAR_BUILD_DEMOS      "Build demonstration codes."     ON)
+OPTION(NEKTAR_BUILD_SOLVERS    "Build example solvers."         ON)
+OPTION(NEKTAR_BUILD_UTILITIES  "Build utilities."               ON)
+OPTION(NEKTAR_BUILD_UNIT_TESTS "Build unit tests."              ON)
+OPTION(NEKTAR_BUILD_TESTS      "Build regression tests."        ON)
+OPTION(NEKTAR_BUILD_TIMINGS    "Build benchmark timing codes."  OFF)
+OPTION(NEKTAR_BUILD_PACKAGES   "Build Nektar++ binary packages" OFF)
+MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
+
+OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF)
+OPTION(NEKTAR_TEST_USE_HOSTFILE "Use a hostfile to explicitly specify number of
+slots." OFF)
+
+# Meshing utilities and library
+IF (NOT WIN32)
+    OPTION(NEKTAR_USE_MESHGEN "Build mesh generation utilities." OFF)
+ENDIF()
+
+# Build options
+OPTION(NEKTAR_FULL_DEBUG "Enable Full Debugging." OFF)
+MARK_AS_ADVANCED(NEKTAR_FULL_DEBUG)
+
+IF (${CMAKE_COMPILER_IS_GNUCXX})
+    OPTION(NEKTAR_ENABLE_PROFILE "Uses -pg compiler flag" OFF)
+    MARK_AS_ADVANCED(NEKTAR_ENABLE_PROFILE)
+ENDIF (${CMAKE_COMPILER_IS_GNUCXX})
+
+OPTION(NEKTAR_USE_EXPRESSION_TEMPLATES
+    "Use Expression templates." OFF)
+MARK_AS_ADVANCED(NEKTAR_USE_EXPRESSION_TEMPLATES)
+
+# BLAS Support
+OPTION(NEKTAR_USE_BLAS_LAPACK "Use Blas and lapack routines." ON)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_OPENBLAS
+    "Use OpenBLAS library as a substitute to native BLAS." OFF
+    "NEKTAR_USE_BLAS_LAPACK" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_SMV
+    "Use LibSMV library for faster small matrix-vector multiplies." OFF
+    "NEKTAR_USE_BLAS_LAPACK" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_ACML
+    "Use the AMD Core Math Library (ACML) for BLAS and Lapack support." OFF
+    "NEKTAR_USE_BLAS_LAPACK" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_MKL
+    "Use the Intel Math Kernel Library (MKL) for BLAS and Lapack support." OFF
+    "NEKTAR_USE_BLAS_LAPACK" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_SYSTEM_BLAS_LAPACK
+    "Use the system provided blas and lapack libraries" ON
+    "NEKTAR_USE_BLAS_LAPACK; UNIX; NOT APPLE; NOT NEKTAR_USE_OPENBLAS; NOT NEKTAR_USE_MKL; NOT NEKTAR_USE_ACML; NOT NEKTAR_USE_ACCELERATE_FRAMEWORK" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_ACCELERATE_FRAMEWORK
+    "Use the Mac Accelerate Framework for BLAS and Lapack support." ON
+    "NEKTAR_USE_BLAS_LAPACK; APPLE" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_WIN32_LAPACK
+    "Use Win32 Lapack provided with the Third Party Distribution."
+    ON "NEKTAR_USE_BLAS_LAPACK; WIN32" OFF)
+
+# Memory pools
+OPTION(NEKTAR_USE_MEMORY_POOLS
+    "Use memory pools to accelerate memory allocation." ON)
+MARK_AS_ADVANCED(NEKTAR_USE_MEMORY_POOLS)
+
+IF (MSVC)
+    # Needed for M_PI to be visible in visual studio.
+    ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+
+    # Removes the warnings about unsafe methods such as strcpy, std::copy,
+    # memcmp, etc.
+    ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_DEPRECATE)
+ENDIF()
+
+# Include Nektar++ common macros
+INCLUDE (NektarCommon)
+
+# Set various ThirdParty locations
+OPTION(THIRDPARTY_USE_SSL "Use secure HTTP connection to download third-party files." OFF)
+IF (THIRDPARTY_USE_SSL)
+    SET(TPURL https://www.nektar.info/thirdparty)
+ELSE()
+    SET(TPURL http://www.nektar.info/thirdparty)
+ENDIF()
+
+SET(TPSRC   ${CMAKE_SOURCE_DIR}/ThirdParty)
+SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
+SET(TPDIST  ${CMAKE_BINARY_DIR}/ThirdParty/dist)
+SET(TPINC   ${CMAKE_INSTALL_PREFIX}/include/ThirdParty)
+SET(TPLIB   ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR})
+
+# Create ThirdParty source directory if it doesn't exist already.
+IF (NOT EXISTS ${TPSRC})
+    FILE(MAKE_DIRECTORY ${TPSRC})
+ENDIF ()
+
+# Find ThirdParty libraries and headers.
+INCLUDE (ThirdPartyTinyxml)
+INCLUDE (ThirdPartyLoki)
+INCLUDE (ThirdPartyMetis)
+INCLUDE (ThirdPartyHDF5)
+INCLUDE (ThirdPartyScotch)
+INCLUDE (ThirdPartyZlib)
+INCLUDE (ThirdPartyBoost)
+INCLUDE (ThirdPartyFFTW)
+INCLUDE (ThirdPartyArpack)
+INCLUDE (ThirdPartyMPI)
+INCLUDE (ThirdPartyVTK)
+INCLUDE (ThirdPartySMV)
+INCLUDE (ThirdPartyOCE)
+INCLUDE (ThirdPartyTetGen)
+INCLUDE (ThirdPartyCCM)
+
+INCLUDE (Doxygen)
+
+IF( NEKTAR_USE_MKL )
+    INCLUDE (FindMKL)
+    SET(NEKTAR_USING_BLAS TRUE)
+    SET(NEKTAR_USING_LAPACK TRUE)
+    SET(NEKTAR_USING_MKL TRUE)
+ENDIF( NEKTAR_USE_MKL )
+
+IF( NEKTAR_USE_OPENBLAS )
+    INCLUDE (FindOpenBlas)
+    SET(NEKTAR_USING_OPENBLAS TRUE)
+ENDIF( NEKTAR_USE_OPENBLAS )
+
+IF( NEKTAR_USE_SMV )
+    INCLUDE (FindSMV)
+    SET(NEKTAR_USING_SMV TRUE)
+    ADD_DEFINITIONS(-DNEKTAR_USING_SMV)
+ENDIF( NEKTAR_USE_SMV )
+
+IF( NEKTAR_USE_ACCELERATE_FRAMEWORK )
+    INCLUDE (FindAccelerateFramework)
+ENDIF( NEKTAR_USE_ACCELERATE_FRAMEWORK )
+
+IF( NEKTAR_USE_ACML )
+    INCLUDE (FindACML)
+    SET(NEKTAR_USING_BLAS TRUE)
+    SET(NEKTAR_USING_LAPACK TRUE)
+    SET(NEKTAR_USING_ACML TRUE)
+    ADD_DEFINITIONS(-DUSE_ACML)
+ENDIF( NEKTAR_USE_ACML )
+
+IF( NEKTAR_USE_WIN32_LAPACK )
+    INCLUDE (FindWin32Lapack)
+ENDIF( NEKTAR_USE_WIN32_LAPACK )
+
+IF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
+    INCLUDE(ThirdPartyBlasLapack)
+    SET(NEKTAR_USING_BLAS TRUE)
+    SET(NEKTAR_USING_LAPACK TRUE)
+ENDIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
+
+IF( NEKTAR_USE_BLAS_LAPACK )
+    SET(NEKTAR_USING_BLAS TRUE)
+    SET(NEKTAR_USING_LAPACK TRUE)
+    ADD_DEFINITIONS( -DNEKTAR_USING_LAPACK -DNEKTAR_USING_BLAS )
+ENDIF( NEKTAR_USE_BLAS_LAPACK )
+
+IF( NEKTAR_USE_TINYXML_STL )
+    ADD_DEFINITIONS( -DTIXML_USE_STL)
+ENDIF( NEKTAR_USE_TINYXML_STL )
+
+IF( NEKTAR_USE_DIRECT_BLAS_CALLS )
+    ADD_DEFINITIONS(-DNEKTAR_USING_DIRECT_BLAS_CALLS)
+ENDIF( NEKTAR_USE_DIRECT_BLAS_CALLS )
+
+IF( NEKTAR_USE_EXPRESSION_TEMPLATES )
+    ADD_DEFINITIONS(-DNEKTAR_USE_EXPRESSION_TEMPLATES -DNEKTAR_USING_CMAKE)
+ENDIF( NEKTAR_USE_EXPRESSION_TEMPLATES )
+
+IF( NEKTAR_USE_MEMORY_POOLS )
+    ADD_DEFINITIONS(-DNEKTAR_MEMORY_POOL_ENABLED)
+ELSE( NEKTAR_USE_MEMORY_POOLS )
+    REMOVE_DEFINITIONS(-DNEKTAR_MEMORY_POOL_ENABLED)
+ENDIF( NEKTAR_USE_MEMORY_POOLS )
+
+INCLUDE (ThirdPartyPETSc)
+
+SET(Boost_USE_STATIC_LIBS OFF)
+IF( WIN32 )
+    # The auto-linking feature has problems with USE_STATIC_LIBS off, so we use
+    # BOOST_ALL_NO_LIB to turn it off.
+    # Several boost libraries headers aren't configured correctly if
+    # USE_STATIC_LIBS is off, so we explicitly say they are dynamic with the
+    # remaining definitions.
+    ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB -DBOOST_PROGRAM_OPTIONS_DYN_LINK -DBOOST_IOSTREAMS_DYN_LINK -DBOOST_THREAD_DYN_LINK)
+ENDIF( )
+
+# Set up include directories. Include work-around for -isystem for CMake (see
+# bug 0010837) to avoid unnecessary compiler warnings for third-party libs.
+IF (APPLE)
+  SET(CMAKE_INCLUDE_SYSTEM_FLAG_C   "-isystem ")
+  SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
+ENDIF (APPLE)
+
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
+
+# Build active components
+IF (NEKTAR_BUILD_LIBRARY)
+    SET(NEKTAR++_LIBRARIES SolverUtils LibUtilities StdRegions SpatialDomains LocalRegions
+        MultiRegions Collections GlobalMapping FieldUtils NekMeshUtils)
+    INCLUDE_DIRECTORIES(library)
+    ADD_SUBDIRECTORY(library)
+    INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake COMPONENT dev)
+ENDIF (NEKTAR_BUILD_LIBRARY)
+
+IF (NEKTAR_BUILD_SOLVERS)
+    INCLUDE_DIRECTORIES(solvers)
+    ADD_SUBDIRECTORY(solvers)
+ENDIF(NEKTAR_BUILD_SOLVERS)
+
+IF (NEKTAR_BUILD_UTILITIES)
+    INCLUDE_DIRECTORIES(utilities)
+    ADD_SUBDIRECTORY(utilities)
+ENDIF (NEKTAR_BUILD_UTILITIES)
+
+IF (NEKTAR_BUILD_TESTS)
+    INCLUDE_DIRECTORIES(tests)
+    ADD_SUBDIRECTORY(tests)
+    IF (NEKTAR_USE_MPI)
+        OPTION(NEKTAR_TEST_FORCEMPIEXEC  "Force all tests to be run through the MPI job launcher."  OFF)
+    ENDIF (NEKTAR_USE_MPI)
+ENDIF (NEKTAR_BUILD_TESTS)
+
+# Compile list of definitions for Nektar++Config.cmake input file. We exclude
+# vtk definitions which should not be required for external builds.
+SET(NEKTAR_DEFINITIONS "")
+GET_DIRECTORY_PROPERTY(
+    NEKTAR_DEFINITIONS_LIST DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS)
+FOREACH(def ${NEKTAR_DEFINITIONS_LIST})
+    IF (NOT def MATCHES "^vtk")
+        SET(NEKTAR_DEFINITIONS "${NEKTAR_DEFINITIONS} -D${def}")
+    ENDIF()
+ENDFOREACH()
+
+# Write out Nektar++ build configuration
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/Nektar++Config.cmake.in
+               ${CMAKE_BINARY_DIR}/Nektar++Config.cmake @ONLY)
+
+# Install Nektar++ CMake configuration file
+INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
+    DESTINATION ${NEKTAR_LIB_DIR}/cmake/
+    COMPONENT dev)
+
+# Install ThirdParty headers to subdirectory of ${NEKTAR_INCLUDE_DIR}
+INSTALL(DIRECTORY ${TPDIST}/include/
+    DESTINATION ${NEKTAR_INCLUDE_DIR}/ThirdParty
+    COMPONENT ThirdParty
+)
+
+# Install ThirdParty libraries into ${NEKTAR_LIB_DIR}
+INSTALL(DIRECTORY ${TPDIST}/lib/
+    DESTINATION ${NEKTAR_LIB_DIR}
+    COMPONENT ThirdParty
+)
+
+IF(NEKTAR_BUILD_PACKAGES)
+    add_subdirectory(pkg)
+ENDIF(NEKTAR_BUILD_PACKAGES)
+
+ADD_SUBDIRECTORY(docs)

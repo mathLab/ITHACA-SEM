@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR>
+    <CONDITIONS>
+
+        <!-- Removed redundancy since we can specify any level of granularity
+         in the ExpansionTypes section below.-->
+        <PARAMETERS>
+            <P> Lambda = 10 </P>
+            <!-- Some comment here -->
+            <P> Tolerance = 0.0000000001 </P>
+            <P> Test = 2.0*Tolerance </P>
+            <P> Test2 = Test * Lambda </P>
+        </PARAMETERS>
+
+        <FUNCTIONS>
+            <F LHS="F1" VALUE="2.0*sin(x)" />
+            <F LHS="F2" VALUE="3.0*cos(x)" />
+            <F LHS="F3" VALUE="tan(x)" />
+            <F LHS="F4" VALUE="5.0*sec(x)" />
+        </FUNCTIONS>
+
+        <!--One of these for each dimension. These are the vector components, say,
+        s = (u,v); comprised of two components in this example for a 2D
+        dimension.-->
+        <VARIABLES>
+            <V ID="0"> u </V> 
+            <!-- Comment test -->
+            <V ID="1"> v </V>
+        </VARIABLES>
+
+        <!--These composites must be defined in the geometry file.-->
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[0] </B>
+            <B ID="1"> C[1] </B>
+        </BOUNDARYREGIONS>
+
+        <!-- We can revisit this since the syntax is not complete.
+             We will allow domain, composite, or boundary.-->
+        <EXPANSIONTYPES>
+            <!--Minimum: composite, expansion type (simplified), and nummodes = f(x,y,z)
+
+            Domain = eModifiedA, eModifiedB, NumModes = N (or f(x,y)), eGLL,
+            Ptype = (order + 1)
+            BoundaryRegion[0-1] = eLagrangeGLL, eGLR-->
+
+            <E COMPOSITE="C[0]" NUMMODES="floor(4*x + 0.5)" TYPE="Modified" />
+            <E COMPOSITE="C[1]" NUMMODES="3" TYPE="Modified" />
+            <E COMPOSITE="C[2]" NUMMODES="7" TYPE="Modified" />
+        </EXPANSIONTYPES>
+
+        <!--The region numbers below correspond to the regions specified in the
+        BoundaryRegion definition above.-->
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" USERDEFINEDTYPE="x*y^2" VALUE="6.789" />
+                <D VAR="v" USERDEFINEDTYPE="x^2 + x*y" VALUE="F1" />
+                <N VAR="u" USERDEFINEDTYPE="x + y" VALUE="F2"/>
+                <D VAR="u" USERDEFINEDTYPE="x^2 + y" VALUE="sin(PI*x)*sin(PI*y)" />
+                <R VAR="v" USERDEFINEDTYPE="sin(PI*x)" A="a(x,y)" B="b(x,y)" />
+               
+            </REGION>
+
+            <!-- Notice that the variable order has been reversed. -->
+            <REGION REF="1">
+                <R VAR="v" USERDEFINEDTYPE="x*y" A="a(x,y)" B="b(x,y)" />
+                <D VAR="u" />
+                <P VAR="u" VALUE="B[1]"/>
+                <N VAR="u" USERDEFINEDTYPE="sin(PI*x)*sin(PI*y)" VALUE="F2" />
+                
+            </REGION>
+
+            <!--<REGION ID="2">
+                <D> </D> u,v = 0; all vars equal to zero
+            </REGION>
+
+            <REGION ID="3">
+                <R>u, a(x,y), b(x,y) </R>
+            </REGION>-->
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION="Forcing">
+            <E VAR="u" VALUE="5.0*sin(x)" />
+            <E VAR="v" VALUE="F1" />
+        </FUNCTION>
+
+        <FUNCTION="InitialConditions">
+            <F VAR ="u" VALUE="12.345" />
+            <F VAR ="v" VALUE="F2" />
+        </FUNCTION>
+
+        <FUNCTION="ExactSolution">
+            <F VAR="u" VALUE="F3" />
+            <F VAR="v" VALUE="x*y" />
+        </FUNCTION>
+    </CONDITIONS>
+</NEKTAR>

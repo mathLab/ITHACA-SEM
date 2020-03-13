@@ -1,0 +1,78 @@
+#!/bin/bash
+if [ -z "$1" ]; then
+echo usage: $0 number_of_loops operator_to_test
+exit
+fi
+if [ -z "$2" ]; then
+echo usage: $0 number_of_loops operator_to_test
+exit
+fi
+
+NumLoops=$1
+OpToTest=$2
+ExecutableFile="./TimingCGGeneralMatrixOp3D"
+if [ ! -x $ExecutableFile -a -x "./TimingCGGeneralMatrixOp3D-g" ]; then
+    ExecutableFile="./TimingCGGeneralMatrixOp3D-g";
+    echo "*******************************************";
+    echo "Warning: Using DEBUG code for timing tests.";
+    echo "*******************************************";
+fi
+TimingResultsFile="./CGGeneralMatrixOp3D-$OpToTest.dat"
+ExecutableDumpFile="./CGTimingGeneralMatrixOp3D-$OpToTest.dat"
+MinTimeFile="./CGMinTime3D-$OpToTest.dat"
+
+MaxNumModesp1=10;
+
+if [ ! -x $ExecutableFile ]; then
+    echo "Timing code '$ExecutableFile' not found.";
+    exit;
+fi
+
+echo "%     Type  nElements     nModes     nCalls       Time  Time/Call         L2Error L2Error(hi-res)      LinfError LinfErr(hi-res)  nLocCoef  nGlobCoef  nLocBCoef nGlobBCoef  nLocDCoef nGlobDCoef       nnz   optlevel" > $TimingResultsFile
+
+# Loop over the element type
+for Type in 1 3; do
+    # Loop over the optimisation level
+    for OptimisationLevel in 0 2 3; do
+        # Loop over the mesh-size
+        for MeshSize in 1 2 3 4 5 6 7 8 9 10; do
+            # Loop over the number of modes
+            for ((NumModes=2; NumModes<MaxNumModesp1; NumModes++)); do
+                # Initialise the minimal time to a really big value
+                MinTime=10000000000000000;
+
+                # Only need to compute solution errors in one case
+                if [ $OptimisationLevel -eq 0 ]; then
+                    Action=0;
+                else
+                    Action=1;
+                fi
+
+                # Loop over the number of Loops you want to run it
+                for ((a=0; a<NumLoops; a++)); do
+                    echo Nektar++ $ExecutableFile $Type $MeshSize $NumModes \
+                                    $OptimisationLevel $OpToTest $Action
+
+                    $ExecutableFile $Type $MeshSize $NumModes \
+                                    $OptimisationLevel $OpToTest $Action \
+                                    2>/dev/null > "$ExecutableDumpFile"
+
+                    read TypeOut NumElementsOut NumModesOut NumCallsOut \
+                        ElapsedTimeOut TimepCallOut L2Out L2OutBis LinfOut \
+                        LinfOutBis nLocCoefOut  nGlobCoefOut nLocBCoefOut \
+                        nGlobBCoefOut  nLocDCoefOut nGlobDCoefOut nnzOut \
+                        optLevelOut < "$ExecutableDumpFile"
+
+                    if [ $ElapsedTimeOut -lt $MinTime ]; then
+                        MinTime=$ElapsedTimeOut
+                        cp $ExecutableDumpFile $MinTimeFile
+                    fi
+                done
+                cat $MinTimeFile >> $TimingResultsFile
+            done
+        done
+    done
+done
+
+rm -f $MinTimeFile
+rm -f $ExecutableDumpFile

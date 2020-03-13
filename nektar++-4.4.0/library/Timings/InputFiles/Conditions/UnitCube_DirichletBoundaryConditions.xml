@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+  <CONDITIONS>
+
+    <PARAMETERS>
+      <P> w = 5 </P>
+      <P> Lambda    = 1 </P>
+    </PARAMETERS>
+    
+    <VARIABLES>
+      <V ID="0"> u </V> 
+    </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1-6] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="sin(w*PI*x)*sin(w*PI*y)*sin(w*PI*z)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="Forcing">
+            <E VAR="u" VALUE="-(Lambda + 3*w*w*PI*PI)*sin(w*PI*x)*sin(w*PI*y)* sin(w*PI*z)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="sin(w*PI*x)*sin(w*PI*y)*sin(w*PI*z)" />
+        </FUNCTION>
+
+
+  </CONDITIONS>
+</NEKTAR>

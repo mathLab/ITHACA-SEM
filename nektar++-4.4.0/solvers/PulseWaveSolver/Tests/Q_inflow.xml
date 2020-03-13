@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+  <GEOMETRY DIM="1" SPACE="1">
+    <VERTEX>
+      <V ID="0">-1.000e+02 0.000e+00 0.000e+00</V>
+      <V ID="1">-8.000e+01 0.000e+00 0.000e+00</V>
+      <V ID="2">-6.000e+01 0.000e+00 0.000e+00</V>
+      <V ID="3">-4.000e+01 0.000e+00 0.000e+00</V>
+      <V ID="4">-2.000e+01 0.000e+00 0.000e+00</V>
+      <V ID="5"> 0.000e+00 0.000e+00 0.000e+00</V>
+      <V ID="6"> 2.000e+01 0.00e+00 0.000e+00</V>
+      <V ID="7"> 4.000e+01 0.00e+00 0.000e+00</V>
+      <V ID="8"> 6.000e+01 0.00e+00 0.000e+00</V>
+      <V ID="9"> 8.000e+01 0.00e+00 0.000e+00</V>
+      <V ID="10"> 1.000e+02 0.00e+00 0.000e+00</V>
+      <V ID="11"> 1.200e+02 0.00e+00 0.000e+00</V>
+    </VERTEX>
+    <ELEMENT>
+      <S ID="0">    0     1 </S>
+      <S ID="1">    1     2 </S>
+      <S ID="2">    2     3 </S>
+      <S ID="3">    3     4 </S>
+      <S ID="4">    4     5 </S>
+      <S ID="5">    5     6 </S>            
+      <S ID="6">    6     7 </S>
+      <S ID="7">    7     8 </S>
+      <S ID="8">    8     9 </S>
+      <S ID="9">    9     10 </S>
+      <S ID="10">   10    11 </S>
+    </ELEMENT>
+    <COMPOSITE>
+      <C ID="0"> S[0-10] </C>
+      <C ID="1"> V[0] </C>
+      <C ID="2"> V[11] </C>
+    </COMPOSITE>
+    <DOMAIN>  
+      <D ID="0"> C[0] </D> 
+    </DOMAIN>
+  </GEOMETRY>
+
+
+  <EXPANSIONS>
+    <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="A,u" TYPE="MODIFIED" />
+  </EXPANSIONS>
+
+
+  <CONDITIONS>
+    <PARAMETERS>
+      <P> TimeStep       = 10e-4              </P> 
+      <P> FinTime        = 0.2                </P>
+      <P> NumSteps       = FinTime/TimeStep   </P>
+      <P> IO_CheckSteps  = NumSteps/50        </P>
+      <P> IO_InfoSteps   = 100                </P>
+      <P> T              = 10                 </P>
+      <P> omega          = 2*PI/T             </P>
+      <P> h0             = 1.0                </P>
+      <P> rho            = 0.5                </P>
+      <P> nue            = 0.5                </P>
+      <P> pext           = 0.0                </P> 
+    </PARAMETERS>
+    
+    <SOLVERINFO>
+      <I PROPERTY="EQTYPE"                VALUE="PulseWavePropagation"/>
+      <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+      <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+      <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"        />
+      <I PROPERTY="UpwindTypePulse"       VALUE="UpwindPulse"         /> 
+    </SOLVERINFO>
+
+    <VARIABLES>
+      <V ID="0"> A </V>
+      <V ID="1"> u </V>
+    </VARIABLES>
+
+    <BOUNDARYREGIONS>
+      <B ID="0"> C[1] </B>
+      <B ID="1"> C[2] </B>
+    </BOUNDARYREGIONS>
+
+    <BOUNDARYCONDITIONS>
+      <REGION REF="0">
+        <D VAR="A" USERDEFINEDTYPE="Q-inflow" VALUE="1.5" />
+        <D VAR="u" USERDEFINEDTYPE="Q-inflow" VALUE="1.0" />
+      </REGION>
+      <REGION REF="1">    
+        <D VAR="A" VALUE="1.0" />
+        <D VAR="u" VALUE="1.0" />
+      </REGION>
+    </BOUNDARYCONDITIONS>
+
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="A" VALUE="1.0" />
+      <E VAR="u" VALUE="1.0" />            
+    </FUNCTION>
+
+    <FUNCTION NAME="A_0">
+      <E VAR="A_0" DOMAIN="0" VALUE="1.0" />
+    </FUNCTION>
+    
+    <FUNCTION NAME="MaterialProperties"> 
+      <E VAR="beta" DOMAIN="0" VALUE="100" />     	
+    </FUNCTION>
+
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="A" DOMAIN="0" VALUE="0" />
+      <E VAR="u" DOMAIN="0" VALUE="0" />
+    </FUNCTION>
+
+  </CONDITIONS>
+
+</NEKTAR>
+

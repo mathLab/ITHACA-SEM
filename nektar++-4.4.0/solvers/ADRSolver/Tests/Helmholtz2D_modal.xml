@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAGH/ZDaB4HmAgjVvkH9jARJqzyLHD9zFjlf8D1s0DpNDDgg+oTgutnhdKzZoLASXt0eTYobQwG7Bj62VHsZ8CQ50Ax/yOG+Zwo2kWg4gj/c2GVR4QfN1Z5hP95sMojwo8XxX0w/z/YD5Png9Ko4YeQ50fR/xFDvwCK/bDwQcgLQmnU8EXIC6GYfxMqLgB3vzCKvKADurwIVnkEEMVqPgKIQelqkXXuD6uW7IeoY4WbIw6lC225ri8ueGsPCad/8PCXgLkDpF3knz1qODEwSELpHXKtrwN3sDlAwuEyXF4KSk9yT/6Z1L1vP7Mh47KVE//A5aWh9FJe7nuq2b/tX545GKOw+yhcXgZKt6uX11xZ/9TeOt2k/d7DT3B5WSitzhvXWaVwYn/B6bh37ldfw+XloPTNtyxCPi+f2be8lf3I0X4VLi8Ppc2C7h/nDuByeL//7DRz2zdweQUofeDO3Z3PSngdWsrr76ayIdKnIpRe53Cbfc0xfgfGO745ovmM8PBVgtIpG09+LL0v4LCzV/3f/y42uLwylK4qrG9MahF02BXX2CrfxgWXV4HS3W8dvZ5E8jp09Ik+nnmYHy6vCqVNjp/U97TjdMjQL9gcns0Hl1eD0u5HvhfFajA5/OjacLPiLSL/qUPp2c/+zPhf+tX+6vuGXbPsEeZrQOnbSz7/+Pr8rf1kZ3GxK20I/ZpQOnzZFf3Qnrv2U9bfvmRgygmX14LSXuFlj94pf7PvV/ggvauEGS6vDaWZWP7PfTqDyaHT8EBBybRf8PDVgdJHbr3fvV6Z1yEtWTd80Q+E+bpQevPjvoBpYgIOxusuXj0lxAuX14PSbT6MTXNC/tp3xtqxvXzIDpfXh9I3PjbofeRiczB9dSwh6wIi/gyg9H6l1sv/8jgd9P8F/+2xRsQfAG4SGV0A</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJyFlcVSA1EQRfGgISGEkAQJ7u7u7u7w/3/Bgj6bU5ViNrfu7Td9euxNRcXfURmalW9RXqW8NbRaPhVaI58OrQ1NKq8Tn74J5d2h9ZqPvEF5T2ij5idv0vzkzcqLOj+lPKk8r/PTylnHdXZrHZ552sQjz6gv9fZQnhucrHwhtEMefi60S3mncubJq05eUF6UVmldVxn/H5+Dfr3yXGdJHk5faE55v3K4A+LSb1Ce84bkuY5hee7jSGhS+ai4vB9j4uLHxcVPiIufFI/7OKV5eM+my8wxU2aO2TJzzIlHPi8e9YVQ9hX4i6HcJ/hL4jL3snjMvSJeKXQ1lP2GudY0D/x1ebgb8nA3xSPfEpf6trjsjzuhvEfwd0N57+Dvicdz2heP7+RA87CfHmoO+EehCdWPNQ/rT7Se+qk8c55pPvJzzUf9IpT/D5zLUL5XOFehfB/0v1Zf9osbcfmv3IoL504ezr36kj+oL/XHUP7DcJ5C2Z/gPKsv3/mL+rLfvYbyX4X/Ji6cd3n6f6gv+af6U/8KzWj9t7jUf9SH/BcT7CTJ</EDGE>
+        <ELEMENT>
+            <T COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxdkEcOAkEQxIacl7DknPn/DzlQPuC5WGpZPdVVyu91w144Cxvl//XlNcNBOJfX0p6h/Lb2jOR1NB+HC+Xmn4k8clZhLY+c5JjKJyc5PvLIuQoP4VK56XMtn5yb8CiPnPS6lV9pvgtPyklfe3nkope3PP49h5fwob3cfZVXa34LnyE9cfddHj1xz0veFw/KBgAA</T>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxd0ttSQQEchXFPQUpE7BKFHKMccqpI5JCI3v8tuuhbN8vNb8ZY9jez/+HQ/+cSs3iH1xjBNN5gwXYnmMEcFm0XxQDzWLLdKV7hLd7b7sy6K/iAZYxZdxWbtju37hq2bBe37jo+2i5h3Q18st2FdXdwgG1MWncXR7ZLWXcPX2yn96/uZ3y1nd6/uvv4Zju9f3Wra4xDDOz7Kc5xgnr/6n7Hhe10r+qe4aftdK/q/sCl7XSv6lnjN65Q96qeDe5sp3tVzxfubac7V88Wf2yne1ePnnfAI+re9Rz9z6/9/g/2bB46</Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> Q[22-47] </C>
+            <C ID="1"> T[0-21] </C>
+            <C ID="2"> E[0-1] </C>
+            <C ID="3"> E[2-5] </C>
+            <C ID="4"> E[45] </C>
+            <C ID="5"> E[56] </C>
+            <C ID="6"> E[67] </C>
+            <C ID="7"> E[79] </C>
+            <C ID="8"> E[88] </C>
+            <C ID="9"> E[94-95] </C>
+            <C ID="10"> E[84,75,69,62,51,40,30,20,6] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0,1] </DOMAIN>
+    </GEOMETRY>
+
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u" TYPE="MODIFIED" />
+        <E COMPOSITE="C[1]" NUMMODES="7" FIELDS="u" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <PARAMETERS>
+            <P> Lambda = 1 </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
+            <I PROPERTY="Projection" VALUE="Continuous" />
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[2] </B>
+            <B ID="1"> C[3] </B>
+            <B ID="2"> C[4] </B>
+            <B ID="3"> C[5] </B>
+            <B ID="4"> C[6] </B>
+            <B ID="5"> C[7] </B>
+            <B ID="6"> C[8] </B>
+            <B ID="7"> C[9] </B>
+            <B ID="8"> C[10] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+            </REGION>
+            <REGION REF="1">
+                <R VAR="u" VALUE="sin(PI*x)*sin(PI*y)-PI*sin(PI*x)*cos(PI*y)"
+                    PRIMCOEFF="1" />
+            </REGION>
+            <REGION REF="2">
+                <N VAR="u"
+                    VALUE="(5/sqrt(61))*PI*cos(PI*x)*sin(PI*y)-(6/sqrt(61))*PI*sin(PI*x)*cos(PI*y)" />
+            </REGION>
+            <REGION REF="3">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+            </REGION>
+            <REGION REF="4">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+            </REGION>
+            <REGION REF="5">
+                <N VAR="u" VALUE="PI*cos(PI*x)*sin(PI*y)" />
+            </REGION>
+            <REGION REF="6">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+            </REGION>
+            <REGION REF="7">
+                <R VAR="u"
+                    VALUE="sin(PI*x)*sin(PI*y) + (5/sqrt(61))*PI*cos(PI*x)*sin(PI*y)+(6/sqrt(61))*PI*sin(PI*x)*cos(PI*y)"
+                    PRIMCOEFF="1" />
+            </REGION>
+            <REGION REF="8">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="Forcing">
+            <E VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*x)*sin(PI*y)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+    <GLOBALOPTIMIZATIONPARAMETERS>
+
+        <BwdTrans>
+            <DO_GLOBAL_MAT_OP VALUE="0" />
+            <DO_BLOCK_MAT_OP TRI="0" QUAD="0" />
+        </BwdTrans>
+
+        <IProductWRTBase>
+            <DO_GLOBAL_MAT_OP VALUE="0" />
+            <DO_BLOCK_MAT_OP TRI="0" QUAD="0" />
+        </IProductWRTBase>
+
+        <MassMatrixOp>
+            <DO_GLOBAL_MAT_OP VALUE="0" />
+            <DO_BLOCK_MAT_OP TRI="1" QUAD="1" />
+        </MassMatrixOp>
+
+        <HelmholtzMatrixOp>
+            <DO_GLOBAL_MAT_OP VALUE="0" />
+            <DO_BLOCK_MAT_OP TRI="1" QUAD="1" />
+        </HelmholtzMatrixOp>
+
+    </GLOBALOPTIMIZATIONPARAMETERS>
+</NEKTAR>

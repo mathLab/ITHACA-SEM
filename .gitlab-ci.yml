@@ -29,6 +29,8 @@ stages:
   <<: *execution-conditions
   stage: build-and-test
   image: docker:19.03.6
+  variables:
+    GIT_STRATEGY: clone
   script:
     - OS_VERSION=$(echo $CI_JOB_NAME | cut -d- -f 1)
     - BUILD_TYPE=$(echo $CI_JOB_NAME | cut -d- -f 2)

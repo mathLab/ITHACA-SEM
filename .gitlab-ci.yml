@@ -163,7 +163,7 @@ buster-documentation-build-env:
   <<: *execution-conditions
   image: docker:19.03.6
   stage:
-    build-env-default
+    build-env-full
   script:
     - export IMAGE=$CI_REGISTRY_IMAGE:env-documentation
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -171,6 +171,7 @@ buster-documentation-build-env:
     - docker pull $IMAGE || true
     - docker build --pull -t $IMAGE .
     - docker push $IMAGE
+  needs: ["buster-default-build-env"]
 
 .build-documentation-template: &build-documentation-template
   <<: *build-and-test-template

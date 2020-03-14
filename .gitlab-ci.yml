@@ -10,6 +10,7 @@ stages:
       - merge_requests
       - master
       - tags
+      - web
     changes:
       - "**/*"
       - .dockerignore
@@ -28,11 +29,13 @@ stages:
   <<: *execution-conditions
   stage: build-and-test
   image: docker:19.03.6
+  variables:
+    GIT_STRATEGY: clone
   script:
     - OS_VERSION=$(echo $CI_JOB_NAME | cut -d- -f 1)
     - BUILD_TYPE=$(echo $CI_JOB_NAME | cut -d- -f 2)
     - export CCACHE_DIR=/cache/nektar/$OS_VERSION/
-    - export NUM_CPUS=3
+    - export NUM_CPUS=4
     - export CONTAINER_NAME=test-$CI_JOB_ID
     - export ENV_NAME=env-${OS_VERSION}-${BUILD_TYPE}
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -111,41 +114,51 @@ buster-default-build-env:
 
 buster-full-build-env:
   <<: *build-env-debian-template-full
+  needs: ["buster-default-build-env"]
 
 stretch-default-build-env:
   <<: *build-env-debian-template-default
 
 stretch-full-build-env:
   <<: *build-env-debian-template-full
+  needs: ["stretch-default-build-env"]
 
 buster-default-build-and-test:
   <<: *build-and-test-template
+  needs: ["buster-default-build-env"]
 
 buster-full-build-and-test:
   <<: *build-and-test-template
+  needs: ["buster-full-build-env"]
   variables:
     OS_DISTRO: debian
     GIT_SUBMODULE_STRATEGY: recursive
 
 stretch-default-build-and-test:
   <<: *build-and-test-template
+  needs: ["stretch-default-build-env"]
 
 stretch-full-build-and-test:
   <<: *build-and-test-template
+  needs: ["stretch-full-build-env"]
 
 
 # COMPILER WARNINGS
 buster-default-warnings:
   <<: *compiler-warning-template
+  needs: ["buster-default-build-and-test"]
 
 buster-full-warnings:
   <<: *compiler-warning-template
+  needs: ["buster-full-build-and-test"]
 
 stretch-default-warnings:
   <<: *compiler-warning-template
+  needs: ["stretch-default-build-and-test"]
 
 stretch-full-warnings:
   <<: *compiler-warning-template
+  needs: ["stretch-full-build-and-test"]
 
 
 buster-documentation-build-env:
@@ -156,19 +169,22 @@ buster-documentation-build-env:
   script:
     - export IMAGE=$CI_REGISTRY_IMAGE:env-documentation
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - sed -e "s %%BASE_IMAGE%% $CI_REGISTRY_IMAGE g" docker/nektar-env/Dockerfile_debian_documentation > Dockerfile
     - docker pull $IMAGE || true
-    - docker build --pull -t $IMAGE -f docker/nektar-env/Dockerfile_debian_documentation .
+    - docker build --pull -t $IMAGE .
     - docker push $IMAGE
+  needs: ["buster-default-build-env"]
 
 .build-documentation-template: &build-documentation-template
   <<: *build-and-test-template
   image: $CI_REGISTRY_IMAGE:env-documentation
+  needs: ["buster-documentation-build-env"]
 
 user-guide-build:
   <<: *build-documentation-template
   script:
     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
-    - make -C build -j 3 user-guide-pdf user-guide-html developer-guide-pdf developer-guide-html
+    - make -C build -j 4 user-guide-pdf user-guide-html developer-guide-pdf developer-guide-html
   artifacts:
     paths:
       - build/docs/user-guide/user-guide.pdf
@@ -217,57 +233,73 @@ bionic-default-build-env:
 
 bionic-full-build-env:
   <<: *build-env-ubuntu-template-full
+  needs: ["bionic-default-build-env"]
 
 xenial-default-build-env:
   <<: *build-env-ubuntu-template-default
 
 xenial-full-build-env:
   <<: *build-env-ubuntu-template-full
+  needs: ["xenial-default-build-env"]
 
 trusty-default-build-env:
   <<: *build-env-ubuntu-template-default
 
 trusty-full-build-env:
   <<: *build-env-ubuntu-template-full
+  needs: ["trusty-default-build-env"]
 
 
 bionic-default-build-and-test:
   <<: *build-and-test-template
+  needs: ["bionic-default-build-env"]
 
 bionic-full-build-and-test:
   <<: *build-and-test-template
+  needs: ["bionic-full-build-env"]
 
 xenial-default-build-and-test:
   <<: *build-and-test-template
+  needs: ["xenial-default-build-env"]
 
 xenial-full-build-and-test:
   <<: *build-and-test-template
+  needs: ["xenial-full-build-env"]
 
 trusty-default-build-and-test:
   <<: *build-and-test-template
+  needs: ["trusty-default-build-env"]
 
 trusty-full-build-and-test:
   <<: *build-and-test-template
+  needs: ["trusty-full-build-env"]
 
 
 # COMPILER WARNINGS
 bionic-default-warnings:
   <<: *compiler-warning-template
+  needs: ["bionic-default-build-and-test"]
 
 bionic-full-warnings:
   <<: *compiler-warning-template
+  needs: ["bionic-full-build-and-test"]
 
 xenial-default-warnings:
   <<: *compiler-warning-template
+  needs: ["xenial-default-build-and-test"]
 
 xenial-full-warnings:
   <<: *compiler-warning-template
+  needs: ["xenial-full-build-and-test"]
 
 trusty-default-warnings:
   <<: *compiler-warning-template
+  needs: ["trusty-default-build-and-test"]
 
 trusty-full-warnings:
   <<: *compiler-warning-template
+  needs: ["trusty-full-build-and-test"]
+
 
 ################################################
 ###################  CENTOS  ###################
@@ -288,20 +320,25 @@ centos7-default-build-env:
 
 centos7-full-build-env:
   <<: *build-env-centos-template-full
+  needs: ["centos7-default-build-env"]
 
 centos7-default-build-and-test:
   <<: *build-and-test-template
+  needs: ["centos7-default-build-env"]
 
 centos7-full-build-and-test:
   <<: *build-and-test-template
+  needs: ["centos7-full-build-env"]
 
 
 # COMPILER WARNINGS
 centos7-default-warnings:
   <<: *compiler-warning-template
+  needs: ["centos7-default-build-and-test"]
 
 centos7-full-warnings:
   <<: *compiler-warning-template
+  needs: ["centos7-full-build-and-test"]
 
 
 # ################################################
@@ -324,37 +361,41 @@ osx-default-build-and-test:
   <<: *build-and-test-osx-template
   variables:
     BUILD_TYPE: "default"
+  needs: []
 
 osx-full-build-and-test:
   <<: *build-and-test-osx-template
   variables:
     BUILD_TYPE: "full"
+  needs: []
 
 
 osx-default-warnings:
   <<: *compiler-warning-template
+  needs: ["osx-default-build-and-test"]
 
 osx-full-warnings:
   <<: *compiler-warning-template
+  needs: ["osx-full-build-and-test"]
 
 
 # ################################################
 # #################  WINDOWS  ####################
 # ################################################
 
-win7-default-build-and-test:
-  <<: *build-and-test-template
-  tags:
-    - win7
-  script:
-    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;" + $Env:path
-    - echo $Env:path
-    - mkdir build
-    - cd build
-    - cmake.exe -G "Visual Studio 12 2013 Win64" --config Debug ..
-    - cmake.exe --build . --target ALL_BUILD --config Debug
-    - cmake.exe --build . --target INSTALL --config Debug
-    - ctest --output-on-failure -C Debug -j3
+#win7-default-build-and-test:
+#  <<: *build-and-test-template
+#  tags:
+#    - win7
+#  script:
+#    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;" + $Env:path
+#    - echo $Env:path
+#    - mkdir build
+#    - cd build
+#    - cmake.exe -G "Visual Studio 12 2013 Win64" --config Debug ..
+#    - cmake.exe --build . --target ALL_BUILD --config Debug
+#    - cmake.exe --build . --target INSTALL --config Debug
+#    - ctest --output-on-failure -C Debug -j3
 
 
 win10-default-build-and-test:
@@ -370,3 +411,4 @@ win10-default-build-and-test:
     - cmake.exe --build . --target ALL_BUILD --config Debug
     - cmake.exe --build . --target INSTALL --config Debug
     - ctest --output-on-failure -C Debug -j3
+  needs: []

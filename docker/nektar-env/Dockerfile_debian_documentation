@@ -1,4 +1,4 @@
-FROM gitlab.nektar.info:4567/ccaveayl/nektar:env-buster-default
+FROM %%BASE_IMAGE%%:env-buster-default
 
 USER root
 COPY docker/nektar-env/buster_documentation_packages.txt packages.txt

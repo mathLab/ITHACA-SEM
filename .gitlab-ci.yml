@@ -32,7 +32,7 @@ stages:
     - OS_VERSION=$(echo $CI_JOB_NAME | cut -d- -f 1)
     - BUILD_TYPE=$(echo $CI_JOB_NAME | cut -d- -f 2)
     - export CCACHE_DIR=/cache/nektar/$OS_VERSION/
-    - export NUM_CPUS=3
+    - export NUM_CPUS=4
     - export CONTAINER_NAME=test-$CI_JOB_ID
     - export ENV_NAME=env-${OS_VERSION}-${BUILD_TYPE}
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -180,7 +180,7 @@ user-guide-build:
   <<: *build-documentation-template
   script:
     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
-    - make -C build -j 3 user-guide-pdf user-guide-html developer-guide-pdf developer-guide-html
+    - make -C build -j 4 user-guide-pdf user-guide-html developer-guide-pdf developer-guide-html
   artifacts:
     paths:
       - build/docs/user-guide/user-guide.pdf

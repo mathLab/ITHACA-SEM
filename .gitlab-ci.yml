@@ -10,6 +10,7 @@ stages:
       - merge_requests
       - master
       - tags
+      - web
     changes:
       - "**/*"
       - .dockerignore

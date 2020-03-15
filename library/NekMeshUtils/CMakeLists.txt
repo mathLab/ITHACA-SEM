@@ -18,6 +18,9 @@ SET(NEKMESHUTILS_SOURCES
     CADSystem/CADVert.cpp
     CADSystem/CADCurve.cpp
     CADSystem/ProcessLoadCAD.cpp
+
+    ../../utilities/NekMesh/InputModules/InputNekpp.cpp
+    ../../utilities/NekMesh/OutputModules/OutputNekpp.cpp
     )
 
 IF(NEKTAR_USE_MESHGEN)

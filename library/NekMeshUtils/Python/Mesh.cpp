@@ -33,50 +33,21 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/Python/NekPyConfig.hpp>
-#include <NekMeshUtils/MeshElements/Node.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
 
 using namespace Nektar;
 using namespace Nektar::NekMeshUtils;
 
-void KeyError()
+void export_Mesh()
 {
-    PyErr_SetString(PyExc_KeyError, "Key not found");
-}
-
-template<class T>
-struct unordered_set_item
-{
-    using K = typename T::key_type;
-    static bool contains(T const &x, K const &k)
-    {
-        return x.find(k) != x.end();
-    }
-    static void add(T &x, K const &k)
-    {
-        x.insert(k);
-    }
-};
-
-void export_Node()
-{
-    py::class_<Node,
-               std::shared_ptr<Node>,
+    py::class_<Mesh,
+               std::shared_ptr<Mesh>,
                boost::noncopyable>(
-                   "Node", py::init<int, NekDouble, NekDouble, NekDouble>())
-        .def("GetID", &Node::GetID)
-        .def("SetID", &Node::SetID)
-        .def("Distance", &Node::Distance)
-        .def("GetLoc", &Node::GetLoc)
-        .def("abs2", &Node::abs2)
-        ;
-
-    // Create converter for NodeSet
-    py::class_<NodeSet>("NodeSet")
-        .def("__len__", &NodeSet::size)
-        .def("clear", &NodeSet::clear)
-        .def("__iter__", py::iterator<NodeSet>())
-        .def("__contains__", &unordered_set_item<NodeSet>::contains)
-        .def("add", &unordered_set_item<NodeSet>::add,
-             py::with_custodian_and_ward<1,2>())
+                   "Mesh", py::init<>())
+        .def_readwrite("node", &Mesh::m_vertexSet)
+        .def_readwrite("verbose", &Mesh::m_verbose)
+        .def_readwrite("expDim", &Mesh::m_expDim)
+        .def_readwrite("spaceDim", &Mesh::m_spaceDim)
+        .def_readonly("element", &Mesh::m_element)
         ;
 }

@@ -488,7 +488,7 @@ protected:
 typedef std::shared_ptr<Element> ElementSharedPtr;
 /// Container for elements; key is expansion dimension, value is
 /// vector of elements of that dimension.
-typedef std::map<unsigned int, std::vector<ElementSharedPtr> > ElementMap;
+typedef std::array<std::vector<ElementSharedPtr>, 4> ElementMap;
 /// Element factory definition.
 typedef Nektar::LibUtilities::NekFactory<LibUtilities::ShapeType,
                                          Element,

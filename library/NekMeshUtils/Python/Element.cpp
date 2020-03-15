@@ -35,6 +35,8 @@
 #include <LibUtilities/Python/NekPyConfig.hpp>
 #include <NekMeshUtils/MeshElements/Element.h>
 
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 using namespace Nektar;
 using namespace Nektar::NekMeshUtils;
 
@@ -77,8 +79,7 @@ ElmtConfig *ElmtConfig_Init(
         shapeType, order, faceNodes, volNodes, orient, eType, fType);
 }
 
-std::shared_ptr<Element> Element_Create(LibUtilities::ShapeType shapeType,
-                                        ElmtConfig *conf,
+std::shared_ptr<Element> Element_Create(ElmtConfig *conf,
                                         py::list &nodes,
                                         py::list &tags)
 {
@@ -99,6 +100,29 @@ std::shared_ptr<Element> Element_Create(LibUtilities::ShapeType shapeType,
     return GetElementFactory().CreateInstance(conf->m_e, *conf, nodes_, tags_);
 }
 
+struct ElementMapHelper
+{
+    using T = ElementMap;
+    using V = std::vector<ElementSharedPtr>;
+
+    static V& get(T &x, int i)
+    {
+        if (i < 0 || i > 3)
+        {
+            IndexError();
+        }
+        return x[i];
+    }
+    static int len(T const &x)
+    {
+        return 4;
+    }
+    static void IndexError()
+    {
+        PyErr_SetString(PyExc_IndexError, "Index out of range");
+    }
+};
+
 void export_Element()
 {
     // Export element configuration struct
@@ -115,11 +139,25 @@ void export_Element()
                std::shared_ptr<Element>,
                boost::noncopyable>(
                    "Element", py::no_init)
-        .def("Create", &Element_Create)
-        .staticmethod("Create")
         .def("GetId", &Element::GetId)
         .def("GetDim", &Element::GetDim)
         .def("GetShapeType", &Element::GetShapeType)
         .def("GetTag", &Element::GetTag)
+
+        // Factory methods
+        .def("Create", &Element_Create)
+        .staticmethod("Create")
         ;
+
+    // Export handler for element mesh storage (ElementMap)
+    py::class_<ElementMap>("ElementMap")
+        .def("__len__", &ElementMapHelper::len)
+        .def("__getitem__", &ElementMapHelper::get,
+             py::return_internal_reference<>())
+        ;
+
+    // Export handler for list of elements (std::vector<ElementSharedPtr>)
+    py::class_<std::vector<ElementSharedPtr>>("ElementVector")
+        .def(py::vector_indexing_suite<std::vector<ElementSharedPtr>>())
+    ;
 }

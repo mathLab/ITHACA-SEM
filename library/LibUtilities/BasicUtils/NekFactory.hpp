@@ -109,7 +109,7 @@ public:
     typedef std::shared_ptr<tBase> tBaseSharedPtr;
     /// CreatorFunction type which takes parameter and returns base class shared
     /// pointer.
-    typedef tBaseSharedPtr (*CreatorFunction) (tParam...);
+    typedef std::function<tBaseSharedPtr(tParam...)> CreatorFunction;
 
     /// Define a struct to hold the information about a module.
     struct ModuleEntry

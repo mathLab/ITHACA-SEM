@@ -35,12 +35,16 @@
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
 void export_Element();
+void export_Mesh();
+void export_Module();
 void export_Node();
 
 BOOST_PYTHON_MODULE(_NekMeshUtils)
 {
     np::initialize();
 
-    export_Node();
     export_Element();
+    export_Mesh();
+    export_Module();
+    export_Node();
 }

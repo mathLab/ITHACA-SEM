@@ -43,6 +43,7 @@
 #define LUE LIB_UTILITIES_EXPORT
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
 
 namespace Nektar
 {
@@ -50,29 +51,48 @@ namespace LibUtilities
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Runge Kutta 2
+// Runge Kutta Order N where the number of stages == order
 
-class RungeKutta2TimeIntegrationScheme : public TimeIntegrationScheme
+class RungeKuttaTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    RungeKutta2TimeIntegrationScheme() : TimeIntegrationScheme()
+    RungeKuttaTimeIntegrationScheme(std::string variant, unsigned int order,
+				    std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme(variant, order, freeParams)
     {
+        ASSERTL1((variant == "" || variant == "Classic" ||
+		  variant == "SSP" || variant == "ImprovedEuler"),
+                 "Runge Kutta Time integration scheme bad variant: "
+		 + variant + ". "
+                  "Must blank, 'Classic', 'SSP', or 'ImprovedEuler'");
+
+        // Std - Currently up to 5th order is implemented.
+        // SSP - Currently 1st through 3rd order is implemented.
+        ASSERTL1(((variant == "SSP" || variant == "ImprovedEuler") == 0 &&
+                  1 <= order && order <= 5) ||
+                 ((variant == "SSP" || variant == "ImprovedEuler") == 1 &&
+                  1 <= order && order <= 3),
+                 "Runge Kutta Time integration scheme bad order "
+                 "Std (1-5) or SSP (1-3): " + std::to_string(order));
+
         m_integration_phases    = TimeIntegrationSchemeDataVector(1);
         m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
             new TimeIntegrationSchemeData(this));
 
-        RungeKutta2TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
+        RungeKuttaTimeIntegrationScheme::SetupSchemeData(
+            m_integration_phases[0], variant, order, freeParams);
     }
 
-    virtual ~RungeKutta2TimeIntegrationScheme()
+    virtual ~RungeKuttaTimeIntegrationScheme()
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+						 std::vector<NekDouble> freeParams)
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            RungeKutta2TimeIntegrationScheme>::AllocateSharedPtr();
+	    RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
+
         return p;
     }
 
@@ -80,20 +100,137 @@ public:
 
     LUE virtual std::string GetName() const
     {
-        return std::string("RungeKutta2");
+        return std::string("RungeKutta");
     }
 
     LUE virtual NekDouble GetTimeStability() const
     {
-        return 2.0;
+        if( GetOrder() == 4 || GetOrder() == 5 )
+        {
+            return 2.784;
+        }
+        else
+        {
+            return 2.0;
+        }
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
+                                    std::string variant, unsigned int order,
+				    std::vector<NekDouble> freeParams)
     {
+        boost::ignore_unused(freeParams);
+
+        const unsigned int nStages[6] = { 0, 1, 2, 3, 4, 6 };
+
+        // A Coefficients for the lower diagonal quadrant stored in a
+        // contiguous fashion. For the fourth order, six coefficients
+        // from the Butcher tableau would be stored as the following.
+        //
+        //                0 0 0 0 
+        //    Butcher     a 0 0 0   Stored as   a
+        //    Tableau     b c 0 0               b c
+        //                d e f 0               d e f 0 ... 0
+        const NekDouble Acoefficients[2][6][15] =
+            { { {     0.,      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0. },
+                // 1st Order
+                {     0.,      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0. },
+                // 2nd Order - midpoint
+                {   1./2,      // Last entry
+                      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0. },
+                // 3rd Order - Ralston's
+                {  1./2.,
+                      0.,   3./4.,      // Last entry
+                      0.,      0.,
+                      0.,      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0. },
+                // 4th Order - Classic
+                {  1./2.,
+                      0.,   1./2.,
+                      0.,      0.,      1.,      // Last entry
+                      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0. },
+                // 5th Order - 6 stages
+                {  1./4.,
+                   1./8.,   1./8.,
+                      0.,      0.,    1./2.,
+                  3./16.,  -3./8.,    3./8.,  9./16.,
+                  -3./7.,   8./7.,    6./7., -12./7.,   8./7. } },
+              // Strong Stability Preserving
+              { {     0.,      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0. },
+                // 1st Order
+                {     0.,      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0. },
+                // 2nd Order - strong scaling - improved
+                {     1.,      // Last entry
+                      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0. },
+                // 3rd Order - strong scaling
+                {     1.,
+                      1./4.,   1./4.,      // Last entry
+                      0,       0.,
+                      0.,      0.,       0.,     0.,      0.,
+                      0.,      0.,       0.,     0.,      0. },
+                // 4th Order - Classic - not used
+                {  1./2.,
+                      0.,   1./2.,
+                      0.,      0.,      1.,      // Last entry
+                      0.,      0.,      0.,      0.,
+                      0.,      0.,      0.,      0.,      0. },
+                // 5th Order - 6 stages - not used
+                {  1./4.,
+                   1./8.,   1./8.,
+                      0.,      0.,    1./2.,
+                  3./16.,  -3./8.,    3./8.,  9./16.,
+                  -3./7.,   8./7.,    6./7., -12./7.,   8./7. } } };
+
+        // B Coefficients for the finial summing.
+        const NekDouble Bcoefficients[2][6][5] =
+            { { {    0.,       0.,    0.,       0.,      0. },
+                // 1st Order
+                {    1.,       0.,    0.,       0.,      0. },
+                // 2nd Order - midpoint
+                {    0.,       1.,     0.,      0.,      0. },
+                // 3rd Order - Ralston's
+                { 2./9.,    3./9.,  4./9.,      0.,      0. },
+                // 4th Order - Classic
+                { 1./6.,    2./6.,  2./6.,   1./6.,      0. },
+                // 5th Order - 6 stages
+                { 7./90., 32./90., 12./90., 32./90., 7./90. } },
+              // Strong Stability Preserving
+              { {    0.,       0.,     0.,      0.,      0. },
+                // 1st Order
+                {    1.,       0.,     0.,      0.,      0. },
+                // 2nd Order - improved
+                { 1./2.,    1./2.,     0.,      0.,      0. },
+                // 3rd Order - strong scaling
+                { 1./6.,    1./6.,  4./6.,      0.,      0. },
+                // 4th Order - Classic
+                { 1./6.,    2./6.,  2./6.,   1./6.,      0. },
+                // 5th Order - 6 stages
+                { 7./90., 32./90., 12./90., 32./90., 7./90. } } };
+
+        unsigned int index = (variant == "SSP" || variant == "ImprovedEuler");
+
         phase->m_schemeType = eExplicit;
+        phase->m_variant = variant;
+        phase->m_order = order;
+        phase->m_name =
+          std::string("RungeKutta") + phase->m_variant +
+          std::string("Order") + std::to_string(phase->m_order);
 
         phase->m_numsteps  = 1;
-        phase->m_numstages = 2;
+        phase->m_numstages = nStages[phase->m_order];
 
         phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
         phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
@@ -101,436 +238,205 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
 
-        phase->m_A[0][1][0] = 0.5;
-        phase->m_B[0][0][1] = 1.0;
+        // Coefficients
+
+        // A Coefficients for each stages along the lower diagonal quadrant.
+        unsigned int cc = 0;
+
+        for( int s=1; s<phase->m_numstages; ++s )
+        {
+            for( int i=0; i<s; ++i )
+            {
+                phase->m_A[0][s][i] =
+                  Acoefficients[index][phase->m_order][cc++];
+            }
+        }
+
+        // B Coefficients for the finial summing.
+        for( int n=0; n<phase->m_order; ++n )
+        {
+            phase->m_B[0][0][n] = Bcoefficients[index][phase->m_order][n];
+        }
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 0;
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        phase->CheckAndVerify();
     }
 
-}; // end class RungeKutta2TimeIntegrator
+}; // end class RungeKuttaTimeIntegrator
 
 ////////////////////////////////////////////////////////////////////////////////
-// Runge Kutta 2 Improved Euler
-
-class RungeKutta2_ImprovedEulerTimeIntegrationScheme
-    : public TimeIntegrationScheme
+// Backwards compatibility
+class RungeKutta2TimeIntegrationScheme :
+    public RungeKuttaTimeIntegrationScheme
 {
 public:
-    RungeKutta2_ImprovedEulerTimeIntegrationScheme() : TimeIntegrationScheme()
+    RungeKutta2TimeIntegrationScheme(std::string variant, unsigned int order,
+				     std::vector<NekDouble> freeParams) :
+        RungeKuttaTimeIntegrationScheme("", 2, freeParams)
     {
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-
-        RungeKutta2_ImprovedEulerTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
     }
 
-    virtual ~RungeKutta2_ImprovedEulerTimeIntegrationScheme()
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+						 std::vector<NekDouble> freeParams)
     {
-    }
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
 
-    static TimeIntegrationSchemeSharedPtr create()
-    {
-        TimeIntegrationSchemeSharedPtr p =
-            MemoryManager<RungeKutta2_ImprovedEulerTimeIntegrationScheme>::
-                AllocateSharedPtr();
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+          RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
         return p;
     }
 
     static std::string className;
 
-    LUE virtual std::string GetName() const
+}; // end class RungeKutta2TimeIntegrationScheme
+
+class ClassicalRungeKutta4TimeIntegrationScheme :
+    public RungeKuttaTimeIntegrationScheme
+{
+public:
+    ClassicalRungeKutta4TimeIntegrationScheme(std::string variant, unsigned int order,
+					      std::vector<NekDouble> freeParams) :
+        RungeKuttaTimeIntegrationScheme("Classic", 4, freeParams)
     {
-        return std::string("RungeKutta2_ImprovedEuler");
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
     }
 
-    LUE virtual NekDouble GetTimeStability() const
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+						 std::vector<NekDouble> freeParams)
     {
-        return 2.0;
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
+
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+          RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr("Classic", 4, freeParams);
+        return p;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    static std::string className;
+
+}; // end class RungeKutta2TimeIntegrationScheme
+
+class RungeKutta5TimeIntegrationScheme :
+    public RungeKuttaTimeIntegrationScheme
+{
+public:
+    RungeKutta5TimeIntegrationScheme(std::string variant, unsigned int order,
+				     std::vector<NekDouble> freeParams) :
+      RungeKuttaTimeIntegrationScheme("", 5, freeParams)
     {
-        phase->m_schemeType = eExplicit;
-
-        phase->m_numsteps  = 1;
-        phase->m_numstages = 2;
-
-        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
-        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
-
-        phase->m_A[0] =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
-        phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
-        phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
-        phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
-
-        phase->m_A[0][1][0] = 1.0;
-
-        phase->m_B[0][0][0] = 0.5;
-        phase->m_B[0][0][1] = 0.5;
-
-        phase->m_numMultiStepValues = 1;
-        phase->m_numMultiStepDerivs = 0;
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-        phase->m_timeLevelOffset[0] = 0;
-
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration phase coefficients do not match its type");
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
     }
+
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+						 std::vector<NekDouble> freeParams)
+    {
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
+
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+          RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr("", 5, freeParams);
+        return p;
+    }
+
+    static std::string className;
+
+}; // end class RungeKutta2TimeIntegrationScheme
+
+class RungeKutta2_ImprovedEulerTimeIntegrationScheme :
+    public RungeKuttaTimeIntegrationScheme
+{
+public:
+    RungeKutta2_ImprovedEulerTimeIntegrationScheme(std::string variant, unsigned int order,
+						   std::vector<NekDouble> freeParams) :
+        RungeKuttaTimeIntegrationScheme("ImprovedEuler", 2, freeParams)
+    {
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
+    }
+
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+						 std::vector<NekDouble> freeParams)
+    {
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
+
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr("ImprovedEuler", 2, freeParams);
+        return p;
+    }
+
+    static std::string className;
 
 }; // end class RungeKutta2_ImprovedEulerTimeIntegrationScheme
 
-////////////////////////////////////////////////////////////////////////////////
-// Runge Kutta 2 SSP
-
-class RungeKutta2_SSPTimeIntegrationScheme : public TimeIntegrationScheme
+class RungeKutta2_SSPTimeIntegrationScheme :
+    public RungeKuttaTimeIntegrationScheme
 {
 public:
-    RungeKutta2_SSPTimeIntegrationScheme() : TimeIntegrationScheme()
+    RungeKutta2_SSPTimeIntegrationScheme(std::string variant, unsigned int order,
+					 std::vector<NekDouble> freeParams) :
+      RungeKuttaTimeIntegrationScheme("SSP", 2, freeParams)
     {
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-
-        RungeKutta2_SSPTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
     }
 
-    virtual ~RungeKutta2_SSPTimeIntegrationScheme()
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+						 std::vector<NekDouble> freeParams)
     {
-    }
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
 
-    static TimeIntegrationSchemeSharedPtr create()
-    {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            RungeKutta2_SSPTimeIntegrationScheme>::AllocateSharedPtr();
+          RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr("SSP", 2, freeParams);
         return p;
     }
 
     static std::string className;
 
-    LUE virtual std::string GetName() const
-    {
-        return std::string("RungeKutta2_SSP");
-    }
+}; // end class RungeKutta2_SSPTimeIntegrationScheme
 
-    LUE virtual NekDouble GetTimeStability() const
-    {
-        return 2.0;
-    }
-
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
-    {
-        RungeKutta2_ImprovedEulerTimeIntegrationScheme::SetupSchemeData(phase);
-    }
-
-}; // end class RungeKutta2_SSPTimeIntegrator
-
-////////////////////////////////////////////////////////////////////////////////
-// Runge Kutta 3 SSP
-
-class RungeKutta3_SSPTimeIntegrationScheme : public TimeIntegrationScheme
+class RungeKutta3_SSPTimeIntegrationScheme :
+    public RungeKuttaTimeIntegrationScheme
 {
 public:
-    RungeKutta3_SSPTimeIntegrationScheme() : TimeIntegrationScheme()
+    RungeKutta3_SSPTimeIntegrationScheme(std::string variant, unsigned int order,
+					 std::vector<NekDouble> freeParams) :
+      RungeKuttaTimeIntegrationScheme("SSP", 3, freeParams)
     {
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-
-        RungeKutta3_SSPTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
     }
 
-    virtual ~RungeKutta3_SSPTimeIntegrationScheme()
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+						 std::vector<NekDouble> freeParams)
     {
-    }
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
 
-    static TimeIntegrationSchemeSharedPtr create()
-    {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            RungeKutta3_SSPTimeIntegrationScheme>::AllocateSharedPtr();
+          RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr("SSP", 3, freeParams);
         return p;
     }
 
     static std::string className;
 
-    LUE virtual std::string GetName() const
-    {
-        return std::string("RungeKutta3_SSP");
-    }
-
-    LUE virtual NekDouble GetTimeStability() const
-    {
-        return 2.0;
-    }
-
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
-    {
-        phase->m_schemeType = eExplicit;
-
-        phase->m_numsteps  = 1;
-        phase->m_numstages = 3;
-
-        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
-        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
-
-        phase->m_A[0] =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
-        phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
-        phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
-        phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
-
-        phase->m_A[0][1][0] = 1.0;
-        phase->m_A[0][2][0] = 0.25;
-        phase->m_A[0][2][1] = 0.25;
-
-        phase->m_B[0][0][0] = 1.0 / 6.0;
-        phase->m_B[0][0][1] = 1.0 / 6.0;
-        phase->m_B[0][0][2] = 2.0 / 3.0;
-
-        phase->m_numMultiStepValues = 1;
-        phase->m_numMultiStepDerivs = 0;
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-        phase->m_timeLevelOffset[0] = 0;
-
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration phase coefficients do not match its type");
-    }
-
-}; // end class RungeKutta3_SSPTimeIntegrator
-
-////////////////////////////////////////////////////////////////////////////////
-// Runge Kutta 5
-
-class RungeKutta5TimeIntegrationScheme : public TimeIntegrationScheme
-{
-public:
-    RungeKutta5TimeIntegrationScheme() : TimeIntegrationScheme()
-    {
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-
-        RungeKutta5TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
-    }
-
-    virtual ~RungeKutta5TimeIntegrationScheme()
-    {
-    }
-
-    static TimeIntegrationSchemeSharedPtr create()
-    {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            RungeKutta5TimeIntegrationScheme>::AllocateSharedPtr();
-        return p;
-    }
-
-    static std::string className;
-
-    LUE virtual std::string GetName() const
-    {
-        return std::string("RungeKutta5");
-    }
-
-    LUE virtual NekDouble GetTimeStability() const
-    {
-        return 2.784;
-    }
-
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
-    {
-        phase->m_schemeType = eExplicit;
-
-        phase->m_numsteps  = 1;
-        phase->m_numstages = 6;
-
-        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
-        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
-
-        phase->m_A[0] =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
-        phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
-        phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
-        phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
-
-        phase->m_A[0][1][0] = 1.0 / 4.0;
-        phase->m_A[0][2][0] = 1.0 / 8.0;
-        phase->m_A[0][2][1] = 1.0 / 8.0;
-        phase->m_A[0][3][2] = 1.0 / 2.0;
-        phase->m_A[0][4][0] = 3.0 / 16.0;
-        phase->m_A[0][4][1] = -3.0 / 8.0;
-        phase->m_A[0][4][2] = 3.0 / 8.0;
-        phase->m_A[0][4][3] = 9.0 / 16.0;
-        phase->m_A[0][5][0] = -3.0 / 7.0;
-        phase->m_A[0][5][1] = 8.0 / 7.0;
-        phase->m_A[0][5][2] = 6.0 / 7.0;
-        phase->m_A[0][5][3] = -12.0 / 7.0;
-        phase->m_A[0][5][4] = 8.0 / 7.0;
-
-        phase->m_B[0][0][0] = 7.0 / 90.0;
-        phase->m_B[0][0][1] = 32.0 / 90.0;
-        phase->m_B[0][0][2] = 12.0 / 90.0;
-        phase->m_B[0][0][3] = 32.0 / 90.0;
-        phase->m_B[0][0][4] = 7.0 / 90.0;
-
-        phase->m_numMultiStepValues = 1;
-        phase->m_numMultiStepDerivs = 0;
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-        phase->m_timeLevelOffset[0] = 0;
-
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration phase coefficients do not match its type");
-    }
-
-}; // end class RungeKutta5TimeIntegrator
-
-////////////////////////////////////////////////////////////////////////////////
-// Classic RungeKutta 4
-
-class ClassicalRungeKutta4TimeIntegrationScheme : public TimeIntegrationScheme
-{
-public:
-    ClassicalRungeKutta4TimeIntegrationScheme() : TimeIntegrationScheme()
-    {
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-
-        ClassicalRungeKutta4TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
-    }
-
-    virtual ~ClassicalRungeKutta4TimeIntegrationScheme()
-    {
-    }
-
-    static TimeIntegrationSchemeSharedPtr create()
-    {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            ClassicalRungeKutta4TimeIntegrationScheme>::AllocateSharedPtr();
-        return p;
-    }
-
-    static std::string className;
-
-    LUE virtual std::string GetName() const
-    {
-        return std::string("ClassicalRungeKutta4");
-    }
-
-    LUE virtual NekDouble GetTimeStability() const
-    {
-        return 2.784;
-    }
-
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
-    {
-        phase->m_schemeType = eExplicit;
-
-        phase->m_numsteps  = 1;
-        phase->m_numstages = 4;
-
-        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
-        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
-
-        phase->m_A[0] =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
-        phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
-        phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
-        phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
-
-        phase->m_A[0][1][0] = 0.5;
-        phase->m_A[0][2][1] = 0.5;
-        phase->m_A[0][3][2] = 1.0;
-
-        phase->m_B[0][0][0] = 1.0 / 6.0;
-        phase->m_B[0][0][1] = 1.0 / 3.0;
-        phase->m_B[0][0][2] = 1.0 / 3.0;
-        phase->m_B[0][0][3] = 1.0 / 6.0;
-
-        phase->m_numMultiStepValues = 1;
-        phase->m_numMultiStepDerivs = 0;
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-        phase->m_timeLevelOffset[0] = 0;
-
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(phase->m_schemeType,
-                                                    phase->m_A, phase->m_B,
-                                                    phase->m_U, phase->m_V),
-                 "Time integration phase coefficients do not match its type");
-    }
-
-}; // end class ClassicalRungeKutta4TimeIntegrator
+}; // end class RungeKutta3_SSPTimeIntegrationScheme
 
 } // end namespace LibUtilities
 } // end namespace Nektar

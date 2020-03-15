@@ -45,7 +45,7 @@ using namespace std;
 #include <SolverUtils/UnsteadySystem.h>
 
 namespace Nektar
-{	
+{
     namespace SolverUtils
     {
         /**
@@ -104,7 +104,8 @@ namespace Nektar
                 std::string methodName = m_session->GetSolverInfo(
                                                 "TIMEINTEGRATIONMETHOD" );
                 m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory()
-                                                .CreateInstance( methodName );
+		    .CreateInstance( methodName, "", 0,
+				     std::vector<NekDouble>());
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
@@ -161,7 +162,7 @@ namespace Nektar
          */
         NekDouble UnsteadySystem::MaxTimeStepEstimator()
         {
-	    return m_intScheme->GetTimeStability();
+            return m_intScheme->GetTimeStability();
         }
         
         /**
@@ -277,7 +278,7 @@ namespace Nektar
                 elapsed  = timer.TimePerTest(1);
                 intTime += elapsed;
                 cpuTime += elapsed;
-		
+
                 // Write out status information
                 if (m_session->GetComm()->GetRank() == 0 && 
                     !((step+1) % m_infosteps))
@@ -623,7 +624,7 @@ namespace Nektar
                 }
             }
         }
-	
+
         /**
          * @brief Return the timestep to be used for the next step in the
          * time-marching loop.

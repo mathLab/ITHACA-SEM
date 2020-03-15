@@ -100,28 +100,16 @@ namespace Nektar
     void StandardExtrapolate::v_SubSteppingTimeIntegration(
         const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme )
     {
-        if ( IntegrationScheme->GetName() == "IMEXOrder1" )
+        if ( IntegrationScheme->GetName() == "IMEX" ||
+             IntegrationScheme->GetName() == "IMEXGear" )
         {
-            m_intSteps = 1;
+            m_intSteps = IntegrationScheme->GetOrder();
         }
-        else if ( IntegrationScheme->GetName() == "IMEXOrder2" ||
-                  IntegrationScheme->GetName() == "IMEXGear" )
+        else
         {
-            m_intSteps = 2;
+            NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "
+                     "Options include IMEXGear or IMEXOrder{1,2,3,4}");
         }
-        else if ( IntegrationScheme->GetName() == "IMEXOrder3" )
-        {
-            m_intSteps = 3;
-        }
-        else if ( IntegrationScheme->GetName() == "IMEXOrder4" )
-        {
-            m_intSteps = 4;
-        }
-	else
-	{
-	    NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "
-		     "Options include IMEXGear or IMEXOrder{1,2,3,4}");
-	}
     }
 
     /** 

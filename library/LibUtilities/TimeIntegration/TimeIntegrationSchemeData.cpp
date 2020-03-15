@@ -46,69 +46,12 @@
 
 #include <math.h>
 
-using namespace std;
-
 namespace Nektar
 {
 namespace LibUtilities
 {
 
-bool TimeIntegrationSchemeData::VerifyIntegrationSchemeType(
-    TimeIntegrationSchemeType type,
-    const Array<OneD, const Array<TwoD, NekDouble>> &A,
-    const Array<OneD, const Array<TwoD, NekDouble>> &B,
-    const Array<TwoD, const NekDouble> &U,
-    const Array<TwoD, const NekDouble> &V)
-{
-    boost::ignore_unused(B, U, V);
-
-    int IMEXdim = A.num_elements();
-    int dim     = A[0].GetRows();
-
-    Array<OneD, TimeIntegrationSchemeType> vertype(IMEXdim, eExplicit);
-
-    for (int m = 0; m < IMEXdim; m++)
-    {
-        for (int i = 0; i < dim; i++)
-        {
-            if (fabs(A[m][i][i]) > NekConstants::kNekZeroTol)
-            {
-                vertype[m] = eDiagonallyImplicit;
-            }
-        }
-
-        for (int i = 0; i < dim; i++)
-        {
-            for (int j = i + 1; j < dim; j++)
-            {
-                if (fabs(A[m][i][j]) > NekConstants::kNekZeroTol)
-                {
-                    vertype[m] = eImplicit;
-                    ASSERTL1(false, "Fully Implicit schemes cannnot be handled "
-                                    "by the TimeIntegrationScheme class");
-                }
-            }
-        }
-    }
-
-    if (IMEXdim == 2)
-    {
-        ASSERTL1(B.num_elements() == 2, "Coefficient Matrix B should have an "
-                                        "implicit and explicit part for IMEX "
-                                        "schemes");
-        if ((vertype[0] == eDiagonallyImplicit) && (vertype[1] == eExplicit))
-        {
-            vertype[0] = eIMEX;
-        }
-        else
-        {
-            ASSERTL1(false, "This is not a proper IMEX scheme");
-        }
-    }
-
-    return (vertype[0] == type);
-}
-
+////////////////////////////////////////////////////////////////////////////////
 TimeIntegrationSchemeData::TimeIntegrationSolutionSharedPtr
     TimeIntegrationSchemeData::InitializeData(
         const NekDouble deltaT, ConstDoubleArray &y_0, const NekDouble time,
@@ -122,7 +65,7 @@ TimeIntegrationSchemeData::TimeIntegrationSolutionSharedPtr
         MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(this, y_0,
                                                                   time, deltaT);
 
-    if (m_schemeType == eExplicit)
+    if (m_schemeType == eExplicit || m_schemeType == eExponential)
     {
         // ensure initial solution is in correct space
         op.DoProjection(y_0, y_out->UpdateSolution(), time);
@@ -204,6 +147,7 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
         DoubleArray y_n;
         NekDouble t_n = 0;
         DoubleArray dtFy_n;
+
         unsigned int nCurSchemeVals =
             GetNmultiStepValues(); // number of required values of the current
                                    // scheme
@@ -211,16 +155,17 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
             GetNmultiStepDerivs(); // number of required derivs of the current
                                    // scheme
         unsigned int nCurSchemeSteps =
-            m_numsteps; // number of steps in the current scheme     // FIMXE...
-                        // what does it mean by "current scheme"... is this now
-                        // a SchemeData issue?
+            GetNsteps(); // number of steps in the current scheme    // FIMXE...
+                         // what does it mean by "current scheme"... is this now
+                         // a SchemeData issue?
+
         unsigned int nMasterSchemeVals =
             solvector->GetNvalues(); // number of values of the master scheme
         unsigned int nMasterSchemeDers =
             solvector->GetNderivs(); // number of derivs of the master scheme
-        // The arrays below contains information to which
-        // time-level the values and derivatives of the
-        // schemes belong
+
+        // The arrays below contains information to which time-level
+        // the values and derivatives of the schemes belong
         const Array<OneD, const unsigned int> &curTimeLevels =
             GetTimeLevelOffset();
         const Array<OneD, const unsigned int> &masterTimeLevels =
@@ -229,7 +174,6 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
         // 1.2 Copy the required information from the master
         //     solution vector to the input solution vector of
         //     the current scheme
-
         TimeIntegrationSolutionSharedPtr solvector_in =
             MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(
                 this); // input solution vector of the current scheme
@@ -247,6 +191,7 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
             // vector of the current scheme
             solvector_in->SetValue(curTimeLevels[n], y_n, t_n);
         }
+
         for (int n = nCurSchemeVals; n < nCurSchemeSteps; n++)
         {
             // Get the required derivative out of the master
@@ -262,14 +207,14 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
 
         // STEP 2: time-integrate for one step using the
         // current scheme
-
         TimeIntegrationSolutionSharedPtr solvector_out =
             MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(
                 this, nvar,
                 npoints); // output solution vector of the current scheme
 
-        // integrate
-        TimeIntegrate(deltaT, solvector_in->GetSolutionVector(),
+        // Integrate one step
+        TimeIntegrate(deltaT,
+                      solvector_in->GetSolutionVector(),
                       solvector_in->GetTimeVector(),
                       solvector_out->UpdateSolutionVector(),
                       solvector_out->UpdateTimeVector(), op);
@@ -284,9 +229,12 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
         //     calculate the derivative. This can be done
         //     based upon the corresponding value and the
         //     DoOdeRhs operator.
-        bool CalcNewDeriv = false; // flag inidicating whether the new
-                                   // derivative is availble in the output of
-        // of the current scheme or whether it should be calculated
+        bool CalcNewDeriv = false; // This flag inidicates whether
+                                   // the new derivative is availble
+                                   // in the output of the current
+                                   // scheme or whether it should be
+                                   // calculated.
+
         if (nMasterSchemeDers > 0)
         {
             if (nCurSchemeDers == 0)
@@ -306,23 +254,26 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
         if (CalcNewDeriv)
         {
             int newDerivTimeLevel =
-                masterTimeLevels[nMasterSchemeVals]; // contains the time level
-                                                     // at which
-            // we want to know the derivative of the
-            // master scheme
+                masterTimeLevels[nMasterSchemeVals]; // Contains the
+                                                     // time level at
+                                                     // which the
+                                                     // derivative of
+                                                     // the master
+                                                     // scheme is
+                                                     // known.
             // DoubleArray  y_n;
             // NekDouble    t_n;
-            // if the  time level correspond to 0, calculate the derivative
-            // based upon the solution value
-            // at the new time-level
+            // If the time level corresponds to 0, calculate the
+            // derivative based upon the solution value at the new
+            // time-level
             if (newDerivTimeLevel == 0)
             {
                 y_n = solvector_out->GetValue(0);
                 t_n = solvector_out->GetValueTime(0);
             }
-            // if the  time level correspond to 1, calculate the derivative
-            // based upon the solution value
-            // at the new old-level
+            // If the time level corresponds to 1, calculate the
+            // derivative based upon the solution value at the new
+            // old-level.
             else if (newDerivTimeLevel == 1)
             {
                 y_n = solvector->GetValue(0);
@@ -339,26 +290,28 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
                 f_n[j] = Array<OneD, NekDouble>(npoints);
             }
 
-            // calculate the derivative
+            // Calculate the derivative
             op.DoOdeRhs(y_n, f_n, t_n);
 
-            // multiply by dt (as required by the General Linear Method
+            // Multiply by dt (as required by the General Linear Method
             // framework)
             for (int j = 0; j < nvar; j++)
             {
                 Vmath::Smul(npoints, deltaT, f_n[j], 1, f_n[j], 1);
             }
 
-            // Rotate the solution vector
-            // (i.e. updating without calculating/inserting new values)
+            // Rotate the solution vector (i.e. updating without
+            // calculating/inserting new values).
             solvector->RotateSolutionVector();
-            // Set the calculated derivative in the master solution vector
+
+            // Set the calculated derivative in the master solution
+            // vector.
             solvector->SetDerivative(newDerivTimeLevel, f_n, deltaT);
         }
         else
         {
-            // Rotate the solution vector (i.e. updating
-            // without calculating/inserting new values)
+            // Rotate the solution vector (i.e. updating without
+            // calculating/inserting new values).
             solvector->RotateSolutionVector();
         }
 
@@ -383,13 +336,13 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
         for (int n = nCurSchemeVals; n < nCurSchemeSteps; n++)
         {
             // Get the calculated derivative out of the output
-            // solution vector of the current scheme
+            // solution vector of the current scheme.
             // DoubleArray& dtFy_n =
             // solvector_out->GetDerivative (curTimeLevels[n]);
             dtFy_n = solvector_out->GetDerivative(curTimeLevels[n]);
 
             // Set the calculated derivative in the master
-            // solution vector
+            // solution vector.
             solvector->SetDerivative(curTimeLevels[n], dtFy_n, deltaT);
         }
     }
@@ -399,7 +352,8 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
             MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(
                 this, nvar, npoints);
 
-        TimeIntegrate(deltaT, solvector->GetSolutionVector(),
+        TimeIntegrate(deltaT,
+                      solvector->GetSolutionVector(),
                       solvector->GetTimeVector(),
                       solvector_new->UpdateSolutionVector(),
                       solvector_new->UpdateTimeVector(), op);
@@ -412,12 +366,14 @@ TimeIntegrationScheme::ConstDoubleArray &TimeIntegrationSchemeData::
 } // end TimeIntegrate()
 
 
-// Do the actual multi-stage multi-step integration.
-
-void TimeIntegrationSchemeData::TimeIntegrate(
-    const NekDouble deltaT, ConstTripleArray &y_old, ConstSingleArray &t_old,
-    TripleArray &y_new, SingleArray &t_new,
-    const TimeIntegrationSchemeOperators &op)
+// Does the actual multi-stage multi-step integration.
+void
+TimeIntegrationSchemeData::TimeIntegrate( const NekDouble deltaT,
+                                          ConstTripleArray &y_old,
+                                          ConstSingleArray &t_old,
+                                          TripleArray &y_new,
+                                          SingleArray &t_new,
+                                          const TimeIntegrationSchemeOperators &op )
 {
     ASSERTL1(
         CheckTimeIntegrateArguments(/*deltaT,*/ y_old, t_old, y_new, t_new, op),
@@ -425,26 +381,23 @@ void TimeIntegrationSchemeData::TimeIntegrate(
 
     TimeIntegrationSchemeType type = m_schemeType;
 
-    int numsteps = m_numsteps;
-
     // Check if storage has already been initialised.
     // If so, we just zero the temporary storage.
-    if (m_initialised && m_nvar == GetFirstDim(y_old) &&
+    if (m_initialised && m_nvars == GetFirstDim(y_old) &&
         m_npoints == GetSecondDim(y_old))
     {
-        for (int j = 0; j < m_nvar; j++)
+        for (int j = 0; j < m_nvars; j++)
         {
             Vmath::Zero(m_npoints, m_tmp[j], 1);
         }
     }
     else
     {
-        m_nvar    = GetFirstDim(y_old);
+        m_nvars   = GetFirstDim(y_old);
         m_npoints = GetSecondDim(y_old);
 
-        // First, we are going to calculate the various stage
-        // values and stage derivatives (this is the multi-stage
-        // part of the method)
+        // First, calculate the various stage values and stage
+        // derivatives (this is the multi-stage part of the method)
         // - m_Y   corresponds to the stage values
         // - m_F   corresponds to the stage derivatives
         // - m_T   corresponds to the time at the different stages
@@ -452,25 +405,25 @@ void TimeIntegrationSchemeData::TimeIntegrate(
         //   each stage equation
         //   (for explicit schemes, this correspond to m_Y)
 
-        // Allocate memory for the arrays m_Y and m_F and m_tmp The same
+        // Allocate memory for the arrays m_Y and m_F and m_tmp. The same
         // storage will be used for every stage -> m_Y is a
         // DoubleArray
-        m_tmp = DoubleArray(m_nvar);
-        for (int j = 0; j < m_nvar; j++)
+        m_tmp = DoubleArray(m_nvars);
+        for (int j = 0; j < m_nvars; j++)
         {
             m_tmp[j] = Array<OneD, NekDouble>(m_npoints, 0.0);
         }
 
         // The same storage will be used for every stage -> m_tmp is a
         // DoubleArray
-        if (type == eExplicit)
+        if (type == eExplicit || m_schemeType == eExponential)
         {
             m_Y = m_tmp;
         }
         else
         {
-            m_Y = DoubleArray(m_nvar);
-            for (int j = 0; j < m_nvar; j++)
+            m_Y = DoubleArray(m_nvars);
+            for (int j = 0; j < m_nvars; j++)
             {
                 m_Y[j] = Array<OneD, NekDouble>(m_npoints, 0.0);
             }
@@ -481,8 +434,8 @@ void TimeIntegrationSchemeData::TimeIntegrate(
         m_F = TripleArray(m_numstages);
         for (int i = 0; i < m_numstages; ++i)
         {
-            m_F[i] = DoubleArray(m_nvar);
-            for (int j = 0; j < m_nvar; j++)
+            m_F[i] = DoubleArray(m_nvars);
+            for (int j = 0; j < m_nvars; j++)
             {
                 m_F[i][j] = Array<OneD, NekDouble>(m_npoints, 0.0);
             }
@@ -493,62 +446,94 @@ void TimeIntegrationSchemeData::TimeIntegrate(
             m_F_IMEX = TripleArray(m_numstages);
             for (int i = 0; i < m_numstages; ++i)
             {
-                m_F_IMEX[i] = DoubleArray(m_nvar);
-                for (int j = 0; j < m_nvar; j++)
+                m_F_IMEX[i] = DoubleArray(m_nvars);
+                for (int j = 0; j < m_nvars; j++)
                 {
                     m_F_IMEX[i][j] = Array<OneD, NekDouble>(m_npoints, 0.0);
                 }
             }
         }
 
-        // Finally, flag that we have initialised the memory.
+        // Finally, flag that the memory has been initialised.
         m_initialised = true;
     } // end else
+
+    // For an exponential integrator if the time increment or the
+    // number of variables has changed then the exponenial matrices
+    // must be recomputed.
+    if (type == eExponential)
+    {
+        if (m_lastDeltaT != deltaT || m_lastNVars != GetFirstDim(y_old) )
+        {
+            m_parent->SetupSchemeExponentialData( this, deltaT );
+
+            m_lastDeltaT = deltaT;
+            m_lastNVars  = GetFirstDim(y_old);
+        }
+    }
 
     // The loop below calculates the stage values and derivatives
     for (int stage = 0; stage < m_numstages; stage++)
     {
         if ((stage == 0) && m_firstStageEqualsOldSolution)
         {
-            for (int k = 0; k < m_nvar; k++)
+            for (int k = 0; k < m_nvars; k++)
             {
                 Vmath::Vcopy(m_npoints, y_old[0][k], 1, m_Y[k], 1);
             }
+
             m_T = t_old[0];
         }
         else
         {
             // The stage values m_Y are a linear combination of:
             // 1: The stage derivatives:
-
             if (stage != 0)
             {
-                for (int k = 0; k < m_nvar; k++)
+                for (int k = 0; k < m_nvars; k++)
                 {
-                    Vmath::Smul(m_npoints, deltaT * A(stage, 0), m_F[0][k], 1,
-                                m_tmp[k], 1);
+                    if (type == eExponential)
+                    {
+                        Vmath::Smul(m_npoints, deltaT * m_A_phi[k][stage][0],
+                                    m_F[0][k], 1, m_tmp[k], 1);
+                    }
+                    else
+                    {
+                        Vmath::Smul(m_npoints, deltaT * A(stage, 0),
+                                    m_F[0][k], 1, m_tmp[k], 1);
+                    }
 
                     if (type == eIMEX)
                     {
                         Vmath::Svtvp(m_npoints, deltaT * A_IMEX(stage, 0),
-                                     m_F_IMEX[0][k], 1, m_tmp[k], 1, m_tmp[k],
-                                     1);
+                                     m_F_IMEX[0][k], 1, m_tmp[k], 1,
+                                     m_tmp[k], 1);
                     }
                 }
             }
+
             m_T = A(stage, 0) * deltaT;
 
             for (int j = 1; j < stage; j++)
             {
-                for (int k = 0; k < m_nvar; k++)
+                for (int k = 0; k < m_nvars; k++)
                 {
-                    Vmath::Svtvp(m_npoints, deltaT * A(stage, j), m_F[j][k], 1,
-                                 m_tmp[k], 1, m_tmp[k], 1);
+                    if (type == eExponential)
+                    {
+                        Vmath::Svtvp(m_npoints, deltaT * m_A_phi[k][stage][j],
+                                     m_F[j][k], 1, m_tmp[k], 1, m_tmp[k], 1);
+                    }
+                    else
+                    {
+                        Vmath::Svtvp(m_npoints, deltaT * A(stage, j),
+                                     m_F[j][k], 1, m_tmp[k], 1, m_tmp[k], 1);
+                    }
+
                     if (type == eIMEX)
                     {
                         Vmath::Svtvp(m_npoints, deltaT * A_IMEX(stage, j),
-                                     m_F_IMEX[j][k], 1, m_tmp[k], 1, m_tmp[k],
-                                     1);
+                                     m_F_IMEX[j][k], 1, m_tmp[k], 1,
+                                     m_tmp[k], 1);
                     }
                 }
 
@@ -556,13 +541,22 @@ void TimeIntegrationSchemeData::TimeIntegrate(
             }
 
             // 2: The imported multi-step solution of the previous time level:
-            for (int j = 0; j < numsteps; j++)
+            for (int j = 0; j < m_numsteps; j++)
             {
-                for (int k = 0; k < m_nvar; k++)
+                for (int k = 0; k < m_nvars; k++)
                 {
-                    Vmath::Svtvp(m_npoints, U(stage, j), y_old[j][k], 1,
-                                 m_tmp[k], 1, m_tmp[k], 1);
+                    if (type == eExponential)
+                    {
+                        Vmath::Svtvp(m_npoints, m_U_phi[k][stage][j],
+                                     y_old[j][k], 1, m_tmp[k], 1, m_tmp[k], 1);
+                    }
+                    else
+                    {
+                        Vmath::Svtvp(m_npoints, U(stage, j),
+                                     y_old[j][k], 1, m_tmp[k], 1, m_tmp[k], 1);
+                    }
                 }
+
                 m_T += U(stage, j) * t_old[j];
             }
         } // end else
@@ -585,7 +579,7 @@ void TimeIntegrationSchemeData::TimeIntegrate(
 
             op.DoImplicitSolve(m_tmp, m_Y, m_T, A(stage, stage) * deltaT);
 
-            for (int k = 0; k < m_nvar; k++)
+            for (int k = 0; k < m_nvars; k++)
             {
                 Vmath::Vsub(m_npoints, m_Y[k], 1, m_tmp[k], 1, m_F[stage][k],
                             1);
@@ -612,7 +606,7 @@ void TimeIntegrationSchemeData::TimeIntegrate(
             {
                 op.DoImplicitSolve(m_tmp, m_Y, m_T, A(stage, stage) * deltaT);
 
-                for (int k = 0; k < m_nvar; k++)
+                for (int k = 0; k < m_nvars; k++)
                 {
                     Vmath::Vsub(m_npoints, m_Y[k], 1, m_tmp[k], 1,
                                 m_F[stage][k], 1);
@@ -622,7 +616,7 @@ void TimeIntegrationSchemeData::TimeIntegrate(
             }
             op.DoOdeRhs(m_Y, m_F_IMEX[stage], m_T);
         }
-        else if (type == eExplicit)
+        else if (type == eExplicit || m_schemeType == eExponential)
         {
             // Avoid projecting the same solution twice
             if (!((stage == 0) && m_firstStageEqualsOldSolution))
@@ -630,6 +624,7 @@ void TimeIntegrationSchemeData::TimeIntegrate(
                 // ensure solution is in correct space
                 op.DoProjection(m_Y, m_Y, m_T);
             }
+
             op.DoOdeRhs(m_Y, m_F[stage], m_T);
         }
     }
@@ -649,7 +644,7 @@ void TimeIntegrationSchemeData::TimeIntegrate(
     int i_start = 0;
     if (m_lastStageEqualsNewSolution)
     {
-        for (int k = 0; k < m_nvar; k++)
+        for (int k = 0; k < m_nvars; k++)
         {
             Vmath::Vcopy(m_npoints, m_Y[k], 1, y_new[0][k], 1);
         }
@@ -661,34 +656,46 @@ void TimeIntegrationSchemeData::TimeIntegrate(
         else
         {
             t_new[0] = B(0, 0) * deltaT;
+
             for (int j = 1; j < m_numstages; j++)
             {
                 t_new[0] += B(0, j) * deltaT;
             }
-            for (int j = 0; j < numsteps; j++)
+
+            for (int j = 0; j < m_numsteps; j++)
             {
                 t_new[0] += V(0, j) * t_old[j];
             }
         }
+
         i_start = 1;
     }
 
-    for (int i = i_start; i < numsteps; i++)
+    for (int i = i_start; i < m_numsteps; i++)
     {
         // The solution at the new time level is a linear
         // combination of:
         // 1: the stage derivatives
-        for (int k = 0; k < m_nvar; k++)
+        for (int k = 0; k < m_nvars; k++)
         {
-            Vmath::Smul(m_npoints, deltaT * B(i, 0), m_F[0][k], 1, y_new[i][k],
-                        1);
+            if (type == eExponential)
+            {
+                Vmath::Smul(m_npoints, deltaT * m_B_phi[k][i][0],
+                            m_F[0][k], 1, y_new[i][k], 1);
+            }
+            else
+            {
+                Vmath::Smul(m_npoints, deltaT * B(i, 0),
+                            m_F[0][k], 1, y_new[i][k], 1);
+            }
 
             if (type == eIMEX)
             {
-                Vmath::Svtvp(m_npoints, deltaT * B_IMEX(i, 0), m_F_IMEX[0][k],
-                             1, y_new[i][k], 1, y_new[i][k], 1);
+                Vmath::Svtvp(m_npoints, deltaT * B_IMEX(i, 0),
+                             m_F_IMEX[0][k], 1, y_new[i][k], 1, y_new[i][k], 1);
             }
         }
+
         if (m_numstages != 1 || type != eIMEX)
         {
             t_new[i] = B(i, 0) * deltaT;
@@ -696,18 +703,27 @@ void TimeIntegrationSchemeData::TimeIntegrate(
 
         for (int j = 1; j < m_numstages; j++)
         {
-            for (int k = 0; k < m_nvar; k++)
+            for (int k = 0; k < m_nvars; k++)
             {
-                Vmath::Svtvp(m_npoints, deltaT * B(i, j), m_F[j][k], 1,
-                             y_new[i][k], 1, y_new[i][k], 1);
+                if (type == eExponential)
+                {
+                    Vmath::Svtvp(m_npoints, deltaT * m_B_phi[k][i][j],
+                                 m_F[j][k], 1, y_new[i][k], 1, y_new[i][k], 1);
+                }
+                else
+                {
+                    Vmath::Svtvp(m_npoints, deltaT * B(i, j),
+                                 m_F[j][k], 1, y_new[i][k], 1, y_new[i][k], 1);
+                }
 
                 if (type == eIMEX)
                 {
                     Vmath::Svtvp(m_npoints, deltaT * B_IMEX(i, j),
-                                 m_F_IMEX[j][k], 1, y_new[i][k], 1, y_new[i][k],
-                                 1);
+                                 m_F_IMEX[j][k], 1, y_new[i][k], 1,
+                                 y_new[i][k], 1);
                 }
             }
+
             if (m_numstages != 1 || type != eIMEX)
             {
                 t_new[i] += B(i, j) * deltaT;
@@ -716,13 +732,22 @@ void TimeIntegrationSchemeData::TimeIntegrate(
 
         // 2: the imported multi-step solution of the previous
         // time level
-        for (int j = 0; j < numsteps; j++)
+        for (int j = 0; j < m_numsteps; j++)
         {
-            for (int k = 0; k < m_nvar; k++)
+            for (int k = 0; k < m_nvars; k++)
             {
-                Vmath::Svtvp(m_npoints, V(i, j), y_old[j][k], 1, y_new[i][k], 1,
-                             y_new[i][k], 1);
+                if (type == eExponential)
+                {
+                    Vmath::Svtvp(m_npoints, m_V_phi[k][i][j], y_old[j][k], 1,
+                                 y_new[i][k], 1, y_new[i][k], 1);
+                }
+                else
+                {
+                    Vmath::Svtvp(m_npoints, V(i, j), y_old[j][k], 1,
+                                 y_new[i][k], 1, y_new[i][k], 1);
+                }
             }
+
             if (m_numstages != 1 || type != eIMEX)
             {
                 t_new[i] += V(i, j) * t_old[j];
@@ -731,60 +756,52 @@ void TimeIntegrationSchemeData::TimeIntegrate(
     }
 
     // Ensure that the new solution is projected if necessary
-    if (type == eExplicit)
+    if (type == eExplicit || m_schemeType == eExponential)
     {
         op.DoProjection(y_new[0], y_new[0], t_new[0]);
     }
 
 } // end TimeIntegrate()
 
-bool TimeIntegrationSchemeData::CheckIfFirstStageEqualsOldSolution(
-    const Array<OneD, const Array<TwoD, NekDouble>> &A,
-    const Array<OneD, const Array<TwoD, NekDouble>> &B,
-    const Array<TwoD, const NekDouble> &U,
-    const Array<TwoD, const NekDouble> &V) const
+void TimeIntegrationSchemeData::CheckIfFirstStageEqualsOldSolution()
 {
-    boost::ignore_unused(B, V);
-
     // First stage equals old solution if:
     // 1. the first row of the coefficient matrix A consists of zeros
     // 2. U[0][0] is equal to one and all other first row entries of U are zero
 
     // 1. Check first condition
-    for (int m = 0; m < A.num_elements(); m++)
+    for (int m = 0; m < m_A.num_elements(); m++)
     {
         for (int i = 0; i < m_numstages; i++)
         {
-            if (fabs(A[m][0][i]) > NekConstants::kNekZeroTol)
+            if (fabs(m_A[m][0][i]) > NekConstants::kNekZeroTol)
             {
-                return false;
+                m_firstStageEqualsOldSolution = false;
+                return;
             }
         }
     }
 
     // 2. Check second condition
-    if (fabs(U[0][0] - 1.0) > NekConstants::kNekZeroTol)
+    if (fabs(m_U[0][0] - 1.0) > NekConstants::kNekZeroTol)
     {
-        return false;
+        m_firstStageEqualsOldSolution = false;
+        return;
     }
 
-    int numsteps = m_numsteps;
-    for (int i = 1; i < numsteps; i++)
+    for (int i = 1; i < m_numsteps; i++)
     {
-        if (fabs(U[0][i]) > NekConstants::kNekZeroTol)
+        if (fabs(m_U[0][i]) > NekConstants::kNekZeroTol)
         {
-            return false;
+            m_firstStageEqualsOldSolution = false;
+            return;
         }
     }
 
-    return true;
+    m_firstStageEqualsOldSolution = true;
 }
 
-bool TimeIntegrationSchemeData::CheckIfLastStageEqualsNewSolution(
-    const Array<OneD, const Array<TwoD, NekDouble>> &A,
-    const Array<OneD, const Array<TwoD, NekDouble>> &B,
-    const Array<TwoD, const NekDouble> &U,
-    const Array<TwoD, const NekDouble> &V) const
+void TimeIntegrationSchemeData::CheckIfLastStageEqualsNewSolution()
 {
     // Last stage equals new solution if:
     // 1. the last row of the coefficient matrix A is equal to the first row of
@@ -793,29 +810,85 @@ bool TimeIntegrationSchemeData::CheckIfLastStageEqualsNewSolution(
     // matrix V
 
     // 1. Check first condition
-    for (int m = 0; m < A.num_elements(); m++)
+    for (int m = 0; m < m_A.num_elements(); m++)
     {
         for (int i = 0; i < m_numstages; i++)
         {
-            if (fabs(A[m][m_numstages - 1][i] - B[m][0][i]) >
+            if (fabs(m_A[m][m_numstages-1][i] - m_B[m][0][i]) >
                 NekConstants::kNekZeroTol)
             {
-                return false;
+                m_lastStageEqualsNewSolution = false;
+                return;
             }
         }
     }
 
     // 2. Check second condition
-    int numsteps = m_numsteps;
-    for (int i = 0; i < numsteps; i++)
+    for (int i = 0; i < m_numsteps; i++)
     {
-        if (fabs(U[m_numstages - 1][i] - V[0][i]) > NekConstants::kNekZeroTol)
+        if (fabs(m_U[m_numstages-1][i] - m_V[0][i]) > NekConstants::kNekZeroTol)
         {
-            return false;
+            m_lastStageEqualsNewSolution = false;
+            return;
         }
     }
 
-    return true;
+    m_lastStageEqualsNewSolution = true;
+}
+
+void TimeIntegrationSchemeData::VerifyIntegrationSchemeType()
+{
+#ifdef DEBUG
+    int IMEXdim = m_A.num_elements();
+    int dim     = m_A[0].GetRows();
+
+    Array<OneD, TimeIntegrationSchemeType> vertype(IMEXdim, eExplicit);
+
+    if (m_schemeType == eExponential)
+        vertype[0] = eExponential;
+
+    for (int m = 0; m < IMEXdim; m++)
+    {
+        for (int i = 0; i < dim; i++)
+        {
+            if (fabs(m_A[m][i][i]) > NekConstants::kNekZeroTol)
+            {
+                vertype[m] = eDiagonallyImplicit;
+            }
+        }
+
+        for (int i = 0; i < dim; i++)
+        {
+            for (int j = i + 1; j < dim; j++)
+            {
+                if (fabs(m_A[m][i][j]) > NekConstants::kNekZeroTol)
+                {
+                    vertype[m] = eImplicit;
+                    ASSERTL1(false, "Fully Implicit schemes cannnot be handled "
+                                    "by the TimeIntegrationScheme class");
+                }
+            }
+        }
+    }
+
+    if (IMEXdim == 2)
+    {
+        ASSERTL1(m_B.num_elements() == 2, "Coefficient Matrix B should have an "
+                 "implicit and explicit part for IMEX schemes");
+
+        if ((vertype[0] == eDiagonallyImplicit) && (vertype[1] == eExplicit))
+        {
+            vertype[0] = eIMEX;
+        }
+        else
+        {
+            ASSERTL1(false, "This is not a proper IMEX scheme");
+        }
+    }
+
+    ASSERTL1(vertype[0] == m_schemeType,
+                 "Time integration scheme coefficients do not match its type");
+#endif
 }
 
 bool TimeIntegrationSchemeData::CheckTimeIntegrateArguments(
@@ -825,10 +898,11 @@ bool TimeIntegrationSchemeData::CheckTimeIntegrateArguments(
           SingleArray &t_new,
     const TimeIntegrationSchemeOperators &op) const
 {
-#ifndef DEBUG
+#ifdef DEBUG
+    boost::ignore_unused(op);
+#else
     boost::ignore_unused(y_old, t_old, y_new, t_new, op);
 #endif
-    boost::ignore_unused(op);
 
     // Check if arrays are all of consistent size
 
@@ -860,14 +934,15 @@ std::ostream &operator<<(
 std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeData &rhs)
 {
     int r                          = rhs.m_numsteps;
-    int s                          = rhs.GetNstages();
+    int s                          = rhs.m_numstages;
     TimeIntegrationSchemeType type = rhs.m_schemeType;
 
     int oswidth     = 9;
     int osprecision = 6;
 
-    os << "Time Integration Scheme (Master): " << rhs.m_parent->GetName()
-       << "\n"
+    os << "Time Integration Scheme (Master): "
+       << rhs.m_parent->GetFullName() << "\n"
+       << "Time Integration Phase  : " << rhs.m_name << "\n"
        << "- number of steps:  " << r << "\n"
        << "- number of stages: " << s << "\n"
        << "General linear method tableau:\n";
@@ -890,6 +965,7 @@ std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeData &rhs)
                 os << std::right << rhs.A_IMEX(i, j) << " ";
             }
         }
+
         os << " |";
 
         for (int j = 0; j < r; j++)
@@ -898,15 +974,17 @@ std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeData &rhs)
             os.precision(osprecision);
             os << std::right << rhs.U(i, j);
         }
-        os << endl;
+        os << std::endl;
     }
+
     int imexflag = (type == eIMEX) ? 2 : 1;
     for (int i = 0; i < (r + imexflag * s) * (oswidth + 1) + imexflag * 2 - 1;
          i++)
     {
         os << "-";
     }
-    os << endl;
+    os << std::endl;
+
     for (int i = 0; i < r; i++)
     {
         for (int j = 0; j < s; j++)
@@ -925,6 +1003,7 @@ std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeData &rhs)
                 os << std::right << rhs.B_IMEX(i, j) << " ";
             }
         }
+
         os << " |";
 
         for (int j = 0; j < r; j++)
@@ -933,8 +1012,83 @@ std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeData &rhs)
             os.precision(osprecision);
             os << std::right << rhs.V(i, j);
         }
-        os << endl;
+
+        os << "  |";
+
+        os.width(oswidth);
+        os.precision(osprecision);
+        os << std::right << rhs.m_timeLevelOffset[i];
+
+        if( i < rhs.m_numMultiStepValues )
+        {
+          os << std::right << " value";
+        }
+        else
+        {
+          os << std::right << " derivative";
+        }
+
+        os << std::endl;
     }
+
+    if( type == eExponential )
+    {
+        for (int k = 0; k < rhs.m_nvars; k++)
+        {
+            os << std::endl
+               << "General linear method exponential tableau for variable "
+               << k << ":\n";
+
+            for (int i = 0; i < s; i++)
+            {
+                for (int j = 0; j < s; j++)
+                {
+                    os.width(oswidth);
+                    os.precision(osprecision);
+                    os << std::right << rhs.m_A_phi[k][i][j] << " ";
+                }
+
+                os << " |";
+
+                for (int j = 0; j < r; j++)
+                {
+                    os.width(oswidth);
+                    os.precision(osprecision);
+                    os << std::right << rhs.m_U_phi[k][i][j];
+                }
+                os << std::endl;
+            }
+
+            int imexflag = (type == eIMEX) ? 2 : 1;
+            for (int i = 0; i < (r + imexflag * s) * (oswidth + 1) + imexflag * 2 - 1;
+                 i++)
+            {
+                os << "-";
+            }
+            os << std::endl;
+
+            for (int i = 0; i < r; i++)
+            {
+                for (int j = 0; j < s; j++)
+                {
+                    os.width(oswidth);
+                    os.precision(osprecision);
+                    os << std::right << rhs.m_B_phi[k][i][j] << " ";
+                }
+
+                os << " |";
+
+                for (int j = 0; j < r; j++)
+                {
+                    os.width(oswidth);
+                    os.precision(osprecision);
+                    os << std::right << rhs.m_V_phi[k][i][j];
+                }
+                os << std::endl;
+            }
+        }
+    }
+
     return os;
 } // end function operator<<
 

@@ -44,6 +44,7 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/IMEXdirkTimeIntegrationSchemes.h>
+#include <LibUtilities/TimeIntegration/IMEXGearTimeIntegrationScheme.h>
 
 namespace Nektar
 {
@@ -51,37 +52,140 @@ namespace LibUtilities
 {
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMEX Order 1
+// IMEX Order N
 
-class IMEXOrder1TimeIntegrationScheme : public TimeIntegrationScheme
+class IMEXTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
-    IMEXOrder1TimeIntegrationScheme() : TimeIntegrationScheme()
+    IMEXTimeIntegrationScheme(std::string variant, unsigned int order,
+                              std::vector<NekDouble> freeParams) :
+        TimeIntegrationScheme(variant, order, freeParams)
     {
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
+        if( variant == "dirk" )
+        {
+            ASSERTL1(freeParams.size() == 2,
+                     "IMEX DIRK Time integration scheme invalid number "
+                     "of free parameters, expected two, received  " +
+                     std::to_string(freeParams.size()));
 
-        IMEXOrder1TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
+            int s     = freeParams[0];
+            int sigma = freeParams[1];
+
+            m_integration_phases    = TimeIntegrationSchemeDataVector(1);
+            m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+                new TimeIntegrationSchemeData(this));
+
+            if( order == 1 && s == 1 && sigma == 1 )
+            {
+                // This phase is Forward Backward Euler which has two steps.
+                IMEXdirkTimeIntegrationScheme::SetupSchemeData_1_1_1(
+                    m_integration_phases[0]);
+            }
+            else
+            {
+                IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                    m_integration_phases[0], order, freeParams);
+            }
+        }
+        else if( variant == "Gear" )
+        {
+            m_integration_phases    = TimeIntegrationSchemeDataVector(2);
+            m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
+                new TimeIntegrationSchemeData(this));
+            m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
+                new TimeIntegrationSchemeData(this));
+
+            IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                m_integration_phases[0], 2, std::vector<NekDouble> {2, 2});
+            IMEXGearTimeIntegrationScheme::SetupSchemeData(
+                m_integration_phases[1]);
+        }
+        else if( variant == "" )
+        {
+            // Currently up to 4th order is implemented.
+            ASSERTL1(0 < order && order <= 4,
+                     "IMEX Time integration scheme bad order (1-4): " +
+                     std::to_string(order));
+
+            m_integration_phases = TimeIntegrationSchemeDataVector(order);
+
+            for( unsigned int n=0; n<order; ++n )
+            {
+                m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
+                    new TimeIntegrationSchemeData(this));
+            }
+
+            // Last phase
+            IMEXTimeIntegrationScheme::SetupSchemeData(
+                m_integration_phases[order-1], order);
+
+            // Initial phases
+            switch( order )
+            {
+              case 1:
+                // No intial phase.
+                break;
+
+              case 2:
+                  IMEXTimeIntegrationScheme::SetupSchemeData(
+                     m_integration_phases[0], 1);
+                // IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                //     m_integration_phases[0], 2, std::vector<NekDouble> {2, 3});
+                  break;
+
+              case 3:
+                  IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                      m_integration_phases[0], 3, std::vector<NekDouble> {3, 4});
+                  IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                      m_integration_phases[1], 3, std::vector<NekDouble> {3, 4});
+                  break;
+
+              case 4:
+                  IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                      m_integration_phases[0], 3, std::vector<NekDouble> {2, 3});
+                  IMEXdirkTimeIntegrationScheme::SetupSchemeData(
+                      m_integration_phases[1], 3, std::vector<NekDouble> {2, 3});
+                  IMEXTimeIntegrationScheme::SetupSchemeData(
+                      m_integration_phases[2], 3);
+                  break;
+
+              default:
+                  ASSERTL1(false,
+                           "IMEX Time integration scheme bad order: " +
+                           std::to_string(order));
+            }
+        }
+        else
+        {
+          ASSERTL1(false,
+                   "IMEX Time integration scheme bad variant: " +
+                           variant);
+        }
     }
 
-    virtual ~IMEXOrder1TimeIntegrationScheme()
+    virtual ~IMEXTimeIntegrationScheme()
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create()
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+                                                 std::vector<NekDouble> freeParams)
     {
         TimeIntegrationSchemeSharedPtr p =
-            MemoryManager<IMEXOrder1TimeIntegrationScheme>::AllocateSharedPtr();
+            MemoryManager<IMEXTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
+
         return p;
     }
 
     static std::string className;
 
+    LUE virtual std::string GetFullName() const
+    {
+      return m_integration_phases[m_integration_phases.size()-1]->m_name;
+    }
+
     LUE virtual std::string GetName() const
     {
-        return std::string("IMEXOrder1");
+        return std::string("IMEX");
     }
 
     LUE virtual NekDouble GetTimeStability() const
@@ -89,405 +193,202 @@ public:
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
+    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
+                                    int order)
     {
+        const NekDouble ABcoefficients[5] = {      0.,
+                                                   1.,    // 1st Order
+                                               2./ 3.,    // 2nd Order
+                                               6./11.,    // 3rd Order
+                                              12./25. };  // 4th Order
+
+        // Nsteps = 2 * order
+        const NekDouble UVcoefficients[5][8] =
+            { {         0.,    0.,     0.,        0.,
+                        0.,    0.,     0.,        0. },
+              // 1st Order
+              {         1.,    1.,     0.,        0.,
+                        0.,    0.,     0.,        0. },
+              // 2nd Order
+              {  4./ 3.,  -1./ 3.,  4./3.,   -2./ 3.,
+                 0.,           0.,     0.,        0. },
+              // 3rd Order
+              {  18./11.,  -9./11.,  2./11.,  18./11.,
+                -18./11.,   6./11.,      0.,       0. },
+              // 4th Order
+              { 48./25., -36./25., 16./25.,  -3./25.,
+                48./25., -72./25., 48./25., -12./25. } };
+
         phase->m_schemeType = eIMEX;
+        phase->m_order = order;
+        phase->m_name = std::string("IMEXOrder" +
+                                    std::to_string(phase->m_order));
 
+        phase->m_numsteps  = 2 * phase->m_order;
         phase->m_numstages = 1;
-        phase->m_numsteps  = 2;
-
-        phase->m_numMultiStepValues = 1;
-        phase->m_numMultiStepDerivs = 1;
-
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-        phase->m_timeLevelOffset[0] = 0;
-        phase->m_timeLevelOffset[1] = 0;
 
         phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(2);
         phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(2);
 
         phase->m_A[0] =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_A[1] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[1] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  0.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  0.0);
 
-        phase->m_B[0][1][0] = 0.0;
-        phase->m_B[1][0][0] = 0.0;
-        phase->m_V[0][0]    = 1.0;
-        phase->m_V[0][1]    = 1.0;
+        // Coefficients
+        phase->m_B[1][phase->m_order][0] =  1.0;
 
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
+        phase->m_A[0][0][0] = ABcoefficients[phase->m_order];
+        phase->m_B[0][0][0] = ABcoefficients[phase->m_order];
 
-        ASSERTL1(phase->VerifyIntegrationSchemeType(
-                     phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B,
-                     phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
+        for( int n=0; n<2*phase->m_order; ++n )
+        {
+            phase->m_U[0][n] = UVcoefficients[phase->m_order][n];
+            phase->m_V[0][n] = UVcoefficients[phase->m_order][n];
+        }
+
+        // V evaluation value shuffling row n column n-1
+        for( int n=1; n<2*phase->m_order; ++n )
+        {
+            if( n != phase->m_order )
+                phase->m_V[n][n-1] = 1.0; // constant 1
+        }
+
+        phase->m_numMultiStepValues = phase->m_order;
+        phase->m_numMultiStepDerivs = phase->m_order;
+
+        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
+
+        // Values and derivatives needed.
+        for( int n=0; n<phase->m_order; ++n )
+        {
+            phase->m_timeLevelOffset[n] = n;
+            phase->m_timeLevelOffset[phase->m_order+n] = n;
+        }
+
+        phase->CheckAndVerify();
     }
 
-}; // end class IMEXOrder1TimeIntegrator
+}; // end class IMEXTimeIntegrationScheme
 
-///////////////////////////////////////////////////////////////////////////////
-// IMEX Order 2
-
-class IMEXOrder2TimeIntegrationScheme : public TimeIntegrationScheme
+////////////////////////////////////////////////////////////////////////////////
+// Backwards compatibility
+class IMEXOrder1TimeIntegrationScheme :
+    public IMEXTimeIntegrationScheme
 {
 public:
-    IMEXOrder2TimeIntegrationScheme() : TimeIntegrationScheme()
+    IMEXOrder1TimeIntegrationScheme(std::string variant, unsigned int order,
+                                              std::vector<NekDouble> freeParams) :
+      IMEXTimeIntegrationScheme("", 1, freeParams)
     {
-        m_integration_phases    = TimeIntegrationSchemeDataVector(2);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-        m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-
-        IMEXOrder1TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
-        IMEXOrder2TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[1]);
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
     }
 
-    virtual ~IMEXOrder2TimeIntegrationScheme()
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+                                                 std::vector<NekDouble> freeParams)
     {
-    }
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
 
-    static TimeIntegrationSchemeSharedPtr create()
-    {
-        TimeIntegrationSchemeSharedPtr p =
-            MemoryManager<IMEXOrder2TimeIntegrationScheme>::AllocateSharedPtr();
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+            IMEXTimeIntegrationScheme>::AllocateSharedPtr("", 1, freeParams);
         return p;
     }
 
     static std::string className;
 
-    LUE virtual std::string GetName() const
+}; // end class IMEXOrder1TimeIntegrationScheme
+
+
+class IMEXOrder2TimeIntegrationScheme :
+    public IMEXTimeIntegrationScheme
+{
+public:
+    IMEXOrder2TimeIntegrationScheme(std::string variant, unsigned int order, std::vector<NekDouble> freeParams) :
+      IMEXTimeIntegrationScheme("", 2, freeParams)
     {
-        return std::string("IMEXOrder2");
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
     }
 
-    LUE virtual NekDouble GetTimeStability() const
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order, std::vector<NekDouble> freeParams)
     {
-        return 1.0;
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
+
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+          IMEXTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
+        return p;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
-    {
-        phase->m_schemeType = eIMEX;
-
-        phase->m_numsteps  = 4;
-        phase->m_numstages = 1;
-
-        phase->m_numMultiStepValues = 2;
-        phase->m_numMultiStepDerivs = 2;
-
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-
-        phase->m_timeLevelOffset[0] = 0;
-        phase->m_timeLevelOffset[1] = 1;
-        phase->m_timeLevelOffset[2] = 0;
-        phase->m_timeLevelOffset[3] = 1;
-
-        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(2);
-        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(2);
-
-        NekDouble third = 1.0 / 3.0;
-
-        phase->m_A[0] = Array<TwoD, NekDouble>(phase->m_numstages,
-                                               phase->m_numstages, 2 * third);
-        phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
-        phase->m_A[1] =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
-        phase->m_B[1] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
-        phase->m_U = Array<TwoD, NekDouble>(phase->m_numstages,
-                                            phase->m_numsteps, 4 * third);
-        phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
-
-        phase->m_B[0][0][0] = 2 * third;
-        phase->m_B[1][2][0] = 1.0;
-        phase->m_U[0][1]    = -third;
-        phase->m_U[0][3]    = -2 * third;
-
-        phase->m_V[0][0] = 4 * third;
-        phase->m_V[0][1] = -third;
-        phase->m_V[0][2] = 4 * third;
-        phase->m_V[0][3] = -2 * third;
-        phase->m_V[1][0] = 1.0;
-        phase->m_V[3][2] = 1.0;
-
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(
-                     phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B,
-                     phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
-    }
+    static std::string className;
 
 }; // end class IMEXOrder2TimeIntegrationScheme
 
-///////////////////////////////////////////////////////////////////////////////
-// IMEX Order 3
 
-class IMEXOrder3TimeIntegrationScheme : public TimeIntegrationScheme
+class IMEXOrder3TimeIntegrationScheme :
+    public IMEXTimeIntegrationScheme
 {
 public:
-    IMEXOrder3TimeIntegrationScheme() : TimeIntegrationScheme()
+    IMEXOrder3TimeIntegrationScheme(std::string variant, unsigned int order,
+                                              std::vector<NekDouble> freeParams) :
+      IMEXTimeIntegrationScheme("", 3, freeParams)
     {
-        m_integration_phases    = TimeIntegrationSchemeDataVector(3);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-        m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-        m_integration_phases[2] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-
-        IMEXdirk_3_4_3TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
-        IMEXdirk_3_4_3TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[1]);
-        IMEXOrder3TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[2]);
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
     }
 
-    virtual ~IMEXOrder3TimeIntegrationScheme()
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+                                                 std::vector<NekDouble> freeParams)
     {
-    }
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
 
-    static TimeIntegrationSchemeSharedPtr create()
-    {
-        TimeIntegrationSchemeSharedPtr p =
-            MemoryManager<IMEXOrder3TimeIntegrationScheme>::AllocateSharedPtr();
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+          IMEXTimeIntegrationScheme>::AllocateSharedPtr("", 3, freeParams);
         return p;
     }
 
     static std::string className;
-
-    LUE virtual std::string GetName() const
-    {
-        return std::string("IMEXOrder3");
-    }
-
-    LUE virtual NekDouble GetTimeStability() const
-    {
-        return 1.0;
-    }
-
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
-    {
-        phase->m_schemeType = eIMEX;
-
-        phase->m_numsteps  = 6;
-        phase->m_numstages = 1;
-
-        phase->m_numMultiStepValues = 3;
-        phase->m_numMultiStepDerivs = 3;
-
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-
-        phase->m_timeLevelOffset[0] = 0;
-        phase->m_timeLevelOffset[1] = 1;
-        phase->m_timeLevelOffset[2] = 2;
-        phase->m_timeLevelOffset[3] = 0;
-        phase->m_timeLevelOffset[4] = 1;
-        phase->m_timeLevelOffset[5] = 2;
-
-        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(2);
-        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(2);
-
-        NekDouble eleventh = 1.0 / 11.0;
-
-        phase->m_A[0] = Array<TwoD, NekDouble>(
-            phase->m_numstages, phase->m_numstages, 6 * eleventh);
-        phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
-        phase->m_A[1] =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
-        phase->m_B[1] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
-        phase->m_U = Array<TwoD, NekDouble>(phase->m_numstages,
-                                            phase->m_numsteps, 18 * eleventh);
-        phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
-
-        phase->m_B[0][0][0] = 6 * eleventh;
-        phase->m_B[1][3][0] = 1.0;
-        phase->m_U[0][1]    = -9 * eleventh;
-        phase->m_U[0][2]    = 2 * eleventh;
-        phase->m_U[0][4]    = -18 * eleventh;
-        phase->m_U[0][5]    = 6 * eleventh;
-
-        phase->m_V[0][0] = 18 * eleventh;
-        phase->m_V[0][1] = -9 * eleventh;
-        phase->m_V[0][2] = 2 * eleventh;
-        phase->m_V[0][3] = 18 * eleventh;
-        phase->m_V[0][4] = -18 * eleventh;
-        phase->m_V[0][5] = 6 * eleventh;
-        phase->m_V[1][0] = 1.0;
-        phase->m_V[2][1] = 1.0;
-        phase->m_V[4][3] = 1.0;
-        phase->m_V[5][4] = 1.0;
-
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(
-                     phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B,
-                     phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
-    }
 
 }; // end class IMEXOrder3TimeIntegrationScheme
 
-///////////////////////////////////////////////////////////////////////////////
-// IMEX Order 3
 
-class IMEXOrder4TimeIntegrationScheme : public TimeIntegrationScheme
+class IMEXOrder4TimeIntegrationScheme :
+    public IMEXTimeIntegrationScheme
 {
 public:
-    IMEXOrder4TimeIntegrationScheme() : TimeIntegrationScheme()
+    IMEXOrder4TimeIntegrationScheme(std::string variant, unsigned int order,
+                                              std::vector<NekDouble> freeParams) :
+      IMEXTimeIntegrationScheme("", 4, freeParams)
     {
-        m_integration_phases    = TimeIntegrationSchemeDataVector(4);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-        m_integration_phases[1] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-        m_integration_phases[2] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-        m_integration_phases[3] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
-
-        IMEXdirk_2_3_3TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0]);
-        IMEXdirk_2_3_3TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[1]);
-        IMEXOrder3TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[2]);
-        IMEXOrder4TimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[3]);
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
     }
 
-    virtual ~IMEXOrder4TimeIntegrationScheme()
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
+                                                 std::vector<NekDouble> freeParams)
     {
-    }
+        boost::ignore_unused(variant);
+        boost::ignore_unused(order);
 
-    static TimeIntegrationSchemeSharedPtr create()
-    {
-        TimeIntegrationSchemeSharedPtr p =
-            MemoryManager<IMEXOrder4TimeIntegrationScheme>::AllocateSharedPtr();
+        TimeIntegrationSchemeSharedPtr p = MemoryManager<
+          IMEXTimeIntegrationScheme>::AllocateSharedPtr("", 4, freeParams);
         return p;
     }
 
     static std::string className;
 
-    LUE virtual std::string GetName() const
-    {
-        return std::string("IMEXOrder4");
-    }
-
-    LUE virtual NekDouble GetTimeStability() const
-    {
-        return 1.0;
-    }
-
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase)
-    {
-        phase->m_schemeType = eIMEX;
-
-        phase->m_numsteps  = 8;
-        phase->m_numstages = 1;
-
-        phase->m_numMultiStepValues = 4;
-        phase->m_numMultiStepDerivs = 4;
-
-        phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
-
-        phase->m_timeLevelOffset[0] = 0;
-        phase->m_timeLevelOffset[1] = 1;
-        phase->m_timeLevelOffset[2] = 2;
-        phase->m_timeLevelOffset[3] = 3;
-        phase->m_timeLevelOffset[4] = 0;
-        phase->m_timeLevelOffset[5] = 1;
-        phase->m_timeLevelOffset[6] = 2;
-        phase->m_timeLevelOffset[7] = 3;
-
-        phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(2);
-        phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(2);
-
-        NekDouble twentyfifth = 1.0 / 25.0;
-
-        phase->m_A[0] = Array<TwoD, NekDouble>(
-            phase->m_numstages, phase->m_numstages, 12 * twentyfifth);
-        phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
-        phase->m_A[1] =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
-        phase->m_B[1] =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
-        phase->m_U = Array<TwoD, NekDouble>(
-            phase->m_numstages, phase->m_numsteps, 48 * twentyfifth);
-        phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
-
-        phase->m_B[0][0][0] = 12 * twentyfifth;
-        phase->m_B[1][4][0] = 1.0;
-        phase->m_U[0][1]    = -36 * twentyfifth;
-        phase->m_U[0][2]    = 16 * twentyfifth;
-        phase->m_U[0][3]    = -3 * twentyfifth;
-        phase->m_U[0][5]    = -72 * twentyfifth;
-        phase->m_U[0][7]    = -12 * twentyfifth;
-
-        phase->m_V[0][0] = 48 * twentyfifth;
-        phase->m_V[0][1] = -36 * twentyfifth;
-        phase->m_V[0][2] = 16 * twentyfifth;
-        phase->m_V[0][3] = -3 * twentyfifth;
-        phase->m_V[0][4] = 48 * twentyfifth;
-        phase->m_V[0][5] = -72 * twentyfifth;
-        phase->m_V[0][6] = 48 * twentyfifth;
-        phase->m_V[0][7] = -12 * twentyfifth;
-        phase->m_V[1][0] = 1.0;
-        phase->m_V[2][1] = 1.0;
-        phase->m_V[4][3] = 1.0;
-        phase->m_V[5][4] = 1.0;
-        phase->m_V[6][5] = 1.0;
-        phase->m_V[7][6] = 1.0;
-
-        phase->m_firstStageEqualsOldSolution =
-            phase->CheckIfFirstStageEqualsOldSolution(phase->m_A, phase->m_B,
-                                                      phase->m_U, phase->m_V);
-        phase->m_lastStageEqualsNewSolution =
-            phase->CheckIfLastStageEqualsNewSolution(phase->m_A, phase->m_B,
-                                                     phase->m_U, phase->m_V);
-
-        ASSERTL1(phase->VerifyIntegrationSchemeType(
-                     phase->GetIntegrationSchemeType(), phase->m_A, phase->m_B,
-                     phase->m_U, phase->m_V),
-                 "Time integration scheme coefficients do not match its type");
-    }
-
 }; // end class IMEXOrder4TimeIntegrationScheme
-
 } // end namespace LibUtilities
 } // end namespace Nektar

@@ -563,29 +563,28 @@ namespace Nektar
     {
         // Set to 1 for first step and it will then be increased in
         // time advance routines
+        unsigned int order = IntegrationScheme->GetOrder();
+
+        // Set to 1 for first step and it will then be increased in
+        // time advance routines
         if( IntegrationScheme->GetName() == "BackwardEuler" ||
-	    IntegrationScheme->GetName() == "BDFImplicitOrder1")
-	{
-	  m_subStepIntegrationScheme =
-	    LibUtilities::GetTimeIntegrationSchemeFactory()
-	    .CreateInstance( "ForwardEuler" );
-	}
+            (IntegrationScheme->GetName() == "BDFImplicit" &&
+             (order == 1 || order == 2)) )
+        {
+            // Note RK first order SSP is just Forward Euler.
+            m_subStepIntegrationScheme =
+                LibUtilities::GetTimeIntegrationSchemeFactory()
+	            .CreateInstance( "RungeKutta", "SSP", order,
+				     std::vector<NekDouble>());
+        }
+        else
+        {
+            NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "
+                     "Options include BackwardEuler or BDFImplicitOrder1");
+        }
 
-	else if( IntegrationScheme->GetName() == "BDFImplicitOrder2" )
-	{
-	    m_subStepIntegrationScheme =
-	      LibUtilities::GetTimeIntegrationSchemeFactory()
-	      .CreateInstance( "RungeKutta2_ImprovedEuler" );
-	}
+        m_intSteps = IntegrationScheme->GetNumIntegrationPhases();
 
-	else
-	{
-	    NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "
-		     "Options include BackwardEuler or BDFImplicitOrder1");
-	}
-
-	m_intSteps = IntegrationScheme->GetNumIntegrationPhases();
-	
         // set explicit time-integration class operators
         m_subStepIntegrationOps.DefineOdeRhs(&UnsteadyAdvectionDiffusion::SubStepAdvection, this);
         m_subStepIntegrationOps.DefineProjection(&UnsteadyAdvectionDiffusion::SubStepProjection, this);

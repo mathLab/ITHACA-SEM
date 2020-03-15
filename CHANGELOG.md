@@ -7,6 +7,9 @@ v5.1.0
 - Refactored time integration code using factory pattern (!1034)
 - Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
 
+**CardiacEPSolver**
+- Added additional parameter sets to Fenton-Karma model (!1119)
+
 v5.0.0
 ------
 **Library**

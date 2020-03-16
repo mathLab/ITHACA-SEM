@@ -61,14 +61,14 @@ IF (NEKTAR_USE_METIS)
                     DEPENDERS build
                     DEPENDEES download)
             ENDIF()
-        ELSEIF (${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
+        ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 			# Metis build fails on more recent MSVC compiler versions. The issue 
 			# and suggested fix are described in
 			# https://github.com/jlblancoc/suitesparse-metis-for-windows/issues/30
 			# and gk_arch.h is patched here based on this suggested fix
 			EXTERNALPROJECT_ADD_STEP(metis-5.1.0 patch-install-path
-				COMMAND powershell -Command "(Get-Content ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h) -replace '(#define rint\\(x\\)[\\w\\(\\) \\+\\.]+)',(\"#if (_MSC_VER "<" 1800)`n\"+'$1'+\"`n#endif\") | Out-File -filepath ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h -encoding ASCII"
-				COMMAND powershell -Command "(Get-Content ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h) -replace '(#define INFINITY FLT_MAX)',(\"#if (_MSC_VER "<" 1800)`n\"+'$1'+\"`n#endif\") | Out-File -filepath ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h -encoding ASCII"
+				COMMAND powershell -Command "(Get-Content ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h) -replace '(#define rint\\(x\\)[\\w\\(\\) \\+\\.]+)',( \"#if (_MSC_VER " < " 1800)`n\"+'$1'+\"`n#endif\") | Out-File -filepath ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h -encoding ASCII"
+				COMMAND powershell -Command "(Get-Content ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h) -replace '(#define INFINITY FLT_MAX)',(\"#if (_MSC_VER " < " 1800)`n\"+'$1'+\"`n#endif\") | Out-File -filepath ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h -encoding ASCII"
 				COMMAND powershell -Command (Add-Content C:/work/nektar-mpi/ThirdParty/metis-5.1.0/CMakeLists.txt "`nINSTALL`(TARGETS` metis` DESTINATION` lib`)`nINSTALL`(FILES` include/metis.h` DESTINATION` include`)`n")
 				DEPENDERS build
 				DEPENDEES download)

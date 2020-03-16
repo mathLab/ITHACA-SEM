@@ -2319,17 +2319,17 @@ namespace Nektar
 
 	////////////////////////////
 	// temporary debugging
-	cout << "fh_bnd.num_elements() " << fh_bnd.num_elements() << endl;
+	//cout << "fh_bnd.num_elements() " << fh_bnd.num_elements() << endl;
 	double temp_norm = 0;
 	for (int i = 0; i < fh_bnd.num_elements(); i++)
 		temp_norm += fh_bnd[i];
 //	temp_norm = sqrt(temp_norm);
-	cout << "fh_bnd norm " << temp_norm << endl; 
+	//cout << "fh_bnd norm " << temp_norm << endl; 
 	///////////////////////////
 
 	////////////////////////////
 	// temporary debugging
-	cout << "bnd.num_elements() " << bnd.num_elements() << endl;
+	//cout << "bnd.num_elements() " << bnd.num_elements() << endl;
 	 temp_norm = 0;
 	for (int i = 0; i < bnd.num_elements(); i++)
 	{
@@ -2337,7 +2337,7 @@ namespace Nektar
 //		cout << bnd[i] << " ";
 	}
 //	temp_norm = sqrt(temp_norm);
-	cout << "bnd norm " << temp_norm << endl;
+	//cout << "bnd norm " << temp_norm << endl;
 	///////////////////////////
 
 
@@ -2345,7 +2345,7 @@ namespace Nektar
         
 	////////////////////////////
 	// temporary debugging
-	cout << "bnd.num_elements() " << bnd.num_elements() << endl;
+	//cout << "bnd.num_elements() " << bnd.num_elements() << endl;
 	temp_norm = 0;
 	for (int i = 0; i < bnd.num_elements(); i++)
 	{
@@ -2353,7 +2353,7 @@ namespace Nektar
 //		cout << bnd[i] << " ";
 	}
 	temp_norm = sqrt(temp_norm);
-	cout << "bnd norm " << temp_norm << endl;
+	//cout << "bnd norm " << temp_norm << endl;
 	///////////////////////////
 
 

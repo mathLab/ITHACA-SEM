@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 
 #ifndef EXPLIST3DHOMO1D_H
 #define EXPLIST3DHOMO1D_H
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
@@ -147,9 +148,9 @@ namespace Nektar
             virtual void v_GetPeriodicEntities(
                 PeriodicMap &periodicVerts,
                 PeriodicMap &periodicEdges,
-                PeriodicMap &periodicFaces)// default argument for dimension compatibility
-                                            
+                PeriodicMap &periodicFaces)
             {
+                boost::ignore_unused(periodicFaces);
                 m_planes[0]->GetPeriodicEntities(periodicVerts,periodicEdges);
             }
 

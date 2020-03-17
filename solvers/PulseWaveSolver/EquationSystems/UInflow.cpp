@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -38,7 +37,7 @@
 namespace Nektar
 {
 
-string UInflow::className = GetBoundaryFactory().RegisterCreatorFunction(
+std::string UInflow::className = GetBoundaryFactory().RegisterCreatorFunction(
     "U-inflow", UInflow::create, "Velocity inflow boundary condition");
 
 /**
@@ -67,7 +66,6 @@ void UInflow::v_DoBoundary(
     Array<OneD, Array<OneD, NekDouble>> &beta, const NekDouble time, int omega,
     int offset, int n)
 {
-    NekDouble A;
     NekDouble u;
     NekDouble A_r;
     NekDouble u_r;
@@ -83,7 +81,6 @@ void UInflow::v_DoBoundary(
     vessel[1]->EvaluateBoundaryConditions(time);
 
     // Read the BC values from the input file
-    A  = (vessel[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
     u   = (vessel[1]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
 
     // Initial conditions in inlet vessel

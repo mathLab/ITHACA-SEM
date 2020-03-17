@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/DriverModifiedArnoldi.h>
 
@@ -559,6 +560,8 @@ void DriverModifiedArnoldi::EV_big(
     Array<OneD, NekDouble>               &wr,
     Array<OneD, NekDouble>               &wi)
 {
+    boost::ignore_unused(wr);
+
     NekDouble wgt, norm;
 
     // Generate big eigenvectors

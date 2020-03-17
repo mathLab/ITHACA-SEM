@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,7 +33,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.h>
+
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 
 using namespace std;
 
@@ -82,73 +83,56 @@ namespace Nektar
         ASSERTL0(false,"This method should not be called by Substepping routine");
     }
 
-
     void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(
-        int intMethod,
-        const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
+        const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme )
     {
-        int i;
-
+        unsigned int order = IntegrationScheme->GetOrder();
+        
         // Set to 1 for first step and it will then be increased in
         // time advance routines
-        switch(intMethod)
+        if( IntegrationScheme->GetName() == "BackwardEuler" ||
+            (IntegrationScheme->GetName() == "BDFImplicit" &&
+             (order == 1 || order == 2)) )
         {
-            case LibUtilities::eBackwardEuler:
-            case LibUtilities::eBDFImplicitOrder1:
+            // Note RK first order SSP is just Forward Euler.
+            std::string vSubStepIntScheme        = "RungeKutta";
+            std::string vSubStepIntSchemeVariant = "SSP";
+            int         vSubStepIntSchemeOrder   = order;
+
+            if( m_session->DefinesSolverInfo( "SubStepIntScheme" ) )
             {
-                std::string vSubStepIntScheme = "ForwardEuler";
-
-                if(m_session->DefinesSolverInfo("SubStepIntScheme"))
-                {
-                    vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
-                }
-
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(vSubStepIntScheme);
-
-                int nvel = m_velocity.num_elements();
-
-                // Fields for linear interpolation
-                m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*nvel);
-                int ntotpts  = m_fields[0]->GetTotPoints();
-                m_previousVelFields[0] = Array<OneD, NekDouble>(2*nvel*ntotpts);
-                for(i = 1; i < 2*nvel; ++i)
-                {
-                    m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts;
-                }
-
+                vSubStepIntScheme =
+		  m_session->GetSolverInfo( "SubStepIntScheme" );
+                vSubStepIntSchemeVariant = "";
+                vSubStepIntSchemeOrder = order;
             }
-            break;
-            case LibUtilities::eBDFImplicitOrder2:
+
+            m_subStepIntegrationScheme =
+                LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance(
+                    vSubStepIntScheme,
+                    vSubStepIntSchemeVariant,
+                    vSubStepIntSchemeOrder,
+		    std::vector<NekDouble>() );
+
+            int nvel = m_velocity.num_elements();
+            int ndim = order+1;
+
+            // Fields for linear/quadratic interpolation
+            m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(ndim*nvel);
+            int ntotpts  = m_fields[0]->GetTotPoints();
+            m_previousVelFields[0] = Array<OneD, NekDouble>(ndim*nvel*ntotpts);
+
+            for( int i = 1; i < ndim*nvel; ++i )
             {
-                std::string vSubStepIntScheme = "RungeKutta2_ImprovedEuler";
-
-                if(m_session->DefinesSolverInfo("SubStepIntScheme"))
-                {
-                    vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
-                }
-
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(vSubStepIntScheme);
-
-                int nvel = m_velocity.num_elements();
-
-                // Fields for quadratic interpolation
-                m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(3*nvel);
-
-                int ntotpts  = m_fields[0]->GetTotPoints();
-                m_previousVelFields[0] = Array<OneD, NekDouble>(3*nvel*ntotpts);
-                for(i = 1; i < 3*nvel; ++i)
-                {
-                    m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts;
-                }
-
+                m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts;
             }
-            break;
-            default:
-                ASSERTL0(0,"Integration method not suitable: Options include BackwardEuler or BDFImplicitOrder1");
-                break;
+        }
+        else
+        {
+            ASSERTL0(0,"Integration method not suitable: Options include BackwardEuler or BDFImplicitOrder{1,2}");
         }
 
-        m_intSteps = IntegrationScheme->GetIntegrationSteps();
+        m_intSteps = IntegrationScheme->GetNumIntegrationPhases();
 
         // set explicit time-integration class operators
         m_subStepIntegrationOps.DefineOdeRhs(&SubSteppingExtrapolate::SubStepAdvection, this);
@@ -315,9 +299,9 @@ namespace Nektar
      *
      */
     void SubSteppingExtrapolate::v_SubStepAdvance(
-                                                  const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln,
-                                                  int nstep,
-                                                  NekDouble time)
+        const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln,
+        int nstep,
+        NekDouble time )
     {
         int n;
         int nsubsteps;
@@ -357,9 +341,8 @@ namespace Nektar
             // Initialise NS solver which is set up to use a GLM method
             // with calls to EvaluateAdvection_SetPressureBCs and
             // SolveUnsteadyStokesSystem
-            LibUtilities::TimeIntegrationSolutionSharedPtr
-                SubIntegrationSoln = m_subStepIntegrationScheme->
-                InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
+            LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr
+                SubIntegrationSoln = m_subStepIntegrationScheme->InitializeScheme( dt, fields, time, m_subStepIntegrationOps );
 
             for(n = 0; n < nsubsteps; ++n)
             {
@@ -525,9 +508,9 @@ namespace Nektar
         Vmath::Smul(HBCdata,-kinvis,Q,1,Q,1);
     }
 
-    LibUtilities::TimeIntegrationMethod SubSteppingExtrapolate::v_GetSubStepIntegrationMethod(void)
+    std::string SubSteppingExtrapolate::v_GetSubStepName(void)
     {
-        return m_subStepIntegrationScheme->GetIntegrationMethod();
+        return m_subStepIntegrationScheme->GetName();
     }
 
 }

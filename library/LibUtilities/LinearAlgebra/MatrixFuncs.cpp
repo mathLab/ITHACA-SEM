@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 // normal, scaled, and block matrices.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/LinearAlgebra/MatrixFuncs.h>
 
@@ -72,6 +73,7 @@ namespace Nektar
                                                         unsigned int row, unsigned int column,
                                                         unsigned int sub, unsigned int super)
     {
+        boost::ignore_unused(totalColumns);
         if( (column <= row && (row - column) <= CalculateNumberOfDiags(totalRows, sub)) ||
             (column > row && (column - row) <= CalculateNumberOfDiags(totalRows, super)) )
         {
@@ -91,6 +93,7 @@ namespace Nektar
     BandedMatrixFuncs::Advance(const unsigned int totalRows, const unsigned int totalColumns,
             const unsigned int curRow, const unsigned int curColumn)
     {
+        boost::ignore_unused(totalRows, totalColumns);
         unsigned int nextRow = curRow;
         unsigned int nextColumn = curColumn;
 
@@ -105,6 +108,7 @@ namespace Nektar
     
     unsigned int FullMatrixFuncs::CalculateIndex(unsigned int totalRows, unsigned int totalColumns, unsigned int curRow, unsigned int curColumn)
     {
+        boost::ignore_unused(totalColumns);
         return curColumn*totalRows + curRow;
     }
 
@@ -159,20 +163,22 @@ namespace Nektar
     UpperTriangularMatrixFuncs::Advance(const unsigned int totalRows, const unsigned int totalColumns,
             const unsigned int curRow, const unsigned int curColumn)
     {
+        boost::ignore_unused(totalRows);
+
         ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
         ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
-            boost::lexical_cast<std::string>(curRow) + " of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
+            std::to_string(curRow) + " of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " upper triangular matrix.");
         ASSERTL1(curColumn < totalColumns, "Attemping to iterate through an element on row " +
-            boost::lexical_cast<std::string>(curColumn) + " of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
+            std::to_string(curColumn) + " of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " upper triangular matrix.");
         ASSERTL1(curRow <= curColumn, "Attemping to iterate through element (" +
-            boost::lexical_cast<std::string>(curRow) + ", " +
-            boost::lexical_cast<std::string>(curColumn) + ") of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
+            std::to_string(curRow) + ", " +
+            std::to_string(curColumn) + ") of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " upper triangular matrix.");
 
         unsigned int nextRow = curRow;
         unsigned int nextColumn = curColumn;
@@ -217,18 +223,18 @@ namespace Nektar
     {
         ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
         ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
-            boost::lexical_cast<std::string>(curRow) + " of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
+            std::to_string(curRow) + " of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " lower triangular matrix.");
         ASSERTL1(curColumn < totalColumns, "Attemping to iterate through an element on row " +
-            boost::lexical_cast<std::string>(curColumn) + " of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
+            std::to_string(curColumn) + " of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " lower triangular matrix.");
         ASSERTL1(curRow >= curColumn, "Attemping to iterate through element (" +
-            boost::lexical_cast<std::string>(curRow) + ", " +
-            boost::lexical_cast<std::string>(curColumn) + ") of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
+            std::to_string(curRow) + ", " +
+            std::to_string(curColumn) + ") of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " lower triangular matrix.");
 
         if( transpose == 'T' )
         {
@@ -278,13 +284,13 @@ namespace Nektar
     {
         ASSERTL1(totalRows == totalColumns, "Symmetric matrices must be square.");
         ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
-            boost::lexical_cast<std::string>(curRow) + " of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " symmetric matrix.");
+            std::to_string(curRow) + " of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " symmetric matrix.");
         ASSERTL1(curColumn < totalColumns, "Attemping to iterate through an element on row " +
-            boost::lexical_cast<std::string>(curColumn) + " of a (" +
-            boost::lexical_cast<std::string>(totalRows) + ", " +
-            boost::lexical_cast<std::string>(totalColumns) + " symmetric matrix.");
+            std::to_string(curColumn) + " of a (" +
+            std::to_string(totalRows) + ", " +
+            std::to_string(totalColumns) + " symmetric matrix.");
 
         unsigned int nextRow = curRow;
         unsigned int nextColumn = curColumn;
@@ -313,6 +319,8 @@ namespace Nektar
     DiagonalMatrixFuncs::Advance(const unsigned int totalRows, const unsigned int totalColumns,
             const unsigned int curRow, const unsigned int curColumn)
     {
+        boost::ignore_unused(totalColumns);
+
         ASSERTL0(curRow == curColumn, "Iteration of a diagonal matrix is only valid along the diagonal.");
 
         unsigned int nextRow = curRow;

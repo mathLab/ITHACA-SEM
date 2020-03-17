@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -38,6 +37,7 @@
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <UnitTests/CountedObject.h>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -52,12 +52,14 @@ namespace Nektar
         template<typename DataType, typename MatrixType>
         int foo(NekMatrix<DataType, MatrixType>& d)
         {
-           return 1;
+            boost::ignore_unused(d);
+            return 1;
         }
         
         template<typename DataType>
         int foo(NekMatrix<DataType, BlockMatrixTag>& d)
         {
+            boost::ignore_unused(d);
             return 2;
         }
             

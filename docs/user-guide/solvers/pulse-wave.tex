@@ -326,10 +326,10 @@ and other parameters are specified.
     </PARAMETERS>
 
     <SOLVERINFO>
-        <I PROPERTY="EQTYPE" VALUE="PulseWavePropagation" />
-        <I PROPERTY="Projection" VALUE="DisContinuous" />
+        <I PROPERTY="EQTYPE"                VALUE="PulseWavePropagation"      />
+        <I PROPERTY="Projection"            VALUE="DisContinuous"             />
         <I PROPERTY="TimeIntegrationMethod" VALUE="RungeKutta2_ImprovedEuler" />
-        <I PROPERTY="UpwindTypePulse"  VALUE="UpwindPulse"/> 
+        <I PROPERTY="UpwindTypePulse"       VALUE="UpwindPulse"               /> 
     </SOLVERINFO>
 
     <VARIABLES>
@@ -423,7 +423,7 @@ Our simulation is started as described before and the results show the time
 history for the conservative variables A and u, as well as for the
 characteristic variables W1 and W2 at the beginning of the ascending aorta
 (Artery 1). We can see that physically correct the shape of the inflow boundary
-condition appears in the forward traveling characteristic W1. As we do not have
+condition appears in the forward travelling characteristic W1. As we do not have
 a terminal resistance at the outflow, one would normally expect W2 to be
 constant. However this is not the case, as bifurcations cause reflections if the
 radii of parent and daughter vessels are not well matching, leading to changes
@@ -521,10 +521,10 @@ Finally the domain is specified by the first composite by
 \paragraph{Solver Information:~}The Discontinuous Galerkin Method is used as projection scheme and the time-integration is performed by a simple Forward Euler scheme. A full list of possible time integration scheme is given in the parameter section of the  \hyperref[PulseWaveSolver]{Pulse Wave Solver}
 \begin{lstlisting}[style=XMLStyle] 
 <SOLVERINFO>
-  <I PROPERTY="EQTYPE" VALUE="PulseWavePropagation" />
-  <I PROPERTY="Projection" VALUE="DisContinuous" />
-  <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler" />
-  <I PROPERTY="UpwindTypePulse"  VALUE="UpwindPulse"/> 
+  <I PROPERTY="EQTYPE"                VALUE="PulseWavePropagation" />
+  <I PROPERTY="Projection"            VALUE="DisContinuous"        />
+  <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"         />
+  <I PROPERTY="UpwindTypePulse"       VALUE="UpwindPulse"          /> 
 </SOLVERINFO>
 \end{lstlisting}
 

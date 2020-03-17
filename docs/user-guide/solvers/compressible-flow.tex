@@ -235,15 +235,15 @@ conditions are employed (i.e. $T_{w}$). Default value = 300.15$K$;
 Under this section it is possible to set the solver information.
 \begin{lstlisting}[style=XmlStyle]
 <SOLVERINFO>
-  <I PROPERTY="EQType"                VALUE="NavierStokesCFE"     />
-  <I PROPERTY="Projection"            VALUE="DisContinuous"       />
-  <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
-  <I PROPERTY="DiffusionType"         VALUE="LDGNS"               />
-  <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
-  <I PROPERTY="UpwindType"            VALUE="ExactToro"           />
-  <I PROPERTY="ProblemType"           VALUE="General"             />
-  <I PROPERTY="ViscosityType"         VALUE="Constant"            />
-  <I PROPERTY="EquationOfState"       VALUE="IdealGas"            />
+  <I PROPERTY="EQType"                VALUE="NavierStokesCFE"      />
+  <I PROPERTY="Projection"            VALUE="DisContinuous"        />
+  <I PROPERTY="AdvectionType"         VALUE="WeakDG"               />
+  <I PROPERTY="DiffusionType"         VALUE="LDGNS"                />
+  <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+  <I PROPERTY="UpwindType"            VALUE="ExactToro"            />
+  <I PROPERTY="ProblemType"           VALUE="General"              />
+  <I PROPERTY="ViscosityType"         VALUE="Constant"             />
+  <I PROPERTY="EquationOfState"       VALUE="IdealGas"             />
 </SOLVERINFO>
 \end{lstlisting}
 \begin{itemize}
@@ -259,7 +259,7 @@ Under this section it is possible to set the solver information.
 \item \inltt{DisContinuous}.\\
 Note that the Continuous projection is not supported in the Compressible Flow Solver.
 \end{itemize}
-\item \inltt{AdvectionType} is the advection operator we want to use:
+\item \inltt{AdvectionType} is the advection operator we want to use.
 \begin{itemize}
 \item \inltt{WeakDG} (classical DG in weak form);
 \item \inltt{FRDG} (Flux-Reconstruction recovering nodal DG scheme);
@@ -268,21 +268,24 @@ Note that the Continuous projection is not supported in the Compressible Flow So
 \item \inltt{FRcmin} (Flux-Reconstruction with $c = c_{min}$);
 \item \inltt{FRcinf} (Flux-Reconstruction with $c = \infty$).
 \end{itemize}
+Note that only \inltt{WeakDG} is fully supported, the other operators work only with quadrilateral elements ($2D$ or $2.5D$).
 \item \inltt{DiffusionType} is the diffusion operator we want to use
 for the Navier-Stokes equations:
 \begin{itemize}
-\item \inltt{LDGNS} (LDG);
+\item \inltt{LDGNS} (LDG with primitive variables. The penalty term is inversely proportional to the element size, proportional to the local viscosity for the momentum equations and to the thermal conductivity for the energy equation, and proportional to an optional parameter \inltt{LDGNSc11} which is by default set to one; proportionality to polynomial order can be manually imposed by setting the parameter \inltt{LDGNSc11} equal to $p^2$);
 \item \inltt{LFRDGNS} (Flux-Reconstruction recovering nodal DG scheme);
 \item \inltt{LFRSDNS} (Flux-Reconstruction recovering a spectral difference (SD) scheme);
 \item \inltt{LFRHUNS} (Flux-Reconstruction recovering Huynh (G2) scheme);
 \item \inltt{LFRcminNS} (Flux-Reconstruction with $c = c_{min}$);
 \item \inltt{LFRcinfNS} (Flux-Reconstruction with $c = \infty$).
 \end{itemize}
+Note that only \inltt{LDGNS} is fully supported, the other operators work only with quadrilateral elements ($2D$ or $2.5D$).
 \item \inltt{TimeIntegrationMethod} is the time-integration scheme we want to use.
 Note that only an explicit discretisation is supported:
 \begin{itemize}
 \item \inltt{ForwardEuler};
-\item \inltt{RungeKutta2\_ImprovedEuler};
+\item \inltt{RungeKutta2\_SSP};
+\item \inltt{RungeKutta3\_SSP};
 \item \inltt{ClassicalRungeKutta4}.
 \end{itemize}
 \item \inltt{UpwindType} is the numerical interface flux (i.e. Riemann solver)
@@ -444,8 +447,7 @@ Under the two following sections it is possible to define the initial conditions
 
 \section{Examples}
 \subsection{Shock capturing}
-Compressible flows can be characterised by abrupt changes in density within the flow domain often referred to as shocks. These discontinuities lead to numerical instabilities (Gibbs phenomena). This problem is prevented by locally adding a diffusion term to the equations to damp the numerical oscillations.
-An artificial diffusion term is introduced locally to the Euler equations to deal with flow discontinuity and the consequential numerical oscillations. Two models are implemented, a non-smooth and a smooth artificial viscosity model.
+Compressible flows can be characterised by abrupt changes in density within the flow domain often referred to as shocks. These discontinuities can lead to numerical instabilities (Gibbs phenomena). This problem is prevented by locally adding a diffusion term to the equations to damp the numerical oscillations.
 
 \subsubsection{Non-smooth artificial viscosity model}
 For the non-smooth artificial viscosity model the added artificial viscosity is constant in each element and discontinuous between the elements. The Euler system is augmented by an added Laplacian term on right hand side of equation \ref{eq:euler} \cite{persson2006sub}.
@@ -480,9 +482,9 @@ where $s_0 = s_\kappa - 4.25\;log_{10}(p)$.
 
 To enable the non-smooth viscosity model, the following line has to be added to the \inltt{SOLVERINFO} section:
 \begin{lstlisting}[style=XmlStyle]
- <SOLVERINFO>
-<I PROPERTY="ShockCaptureType"      VALUE="NonSmooth"               />
- <SOLVERINFO>
+<SOLVERINFO>
+  <I PROPERTY="ShockCaptureType"      VALUE="NonSmooth" />
+<SOLVERINFO>
 \end{lstlisting}
 The diffusivity and the sensor can be controlled by the following parameters:
 \begin{lstlisting}[style=XmlStyle]
@@ -502,45 +504,6 @@ The diffusivity and the sensor can be controlled by the following parameters:
 \end{center}
 \end{figure}
 
-\subsubsection{Smooth artificial viscosity model}
-For the smooth artificial viscosity model an extra PDE for the artificial viscosity is appended to the Euler system
-\begin{equation}\label{eq:eulerplusvis}\begin{split}
-\frac{\partial \epsilon}{\partial t} &= \nabla\cdot \left(\nabla \epsilon\right) + \frac{1}{\tau}\left(\frac{h}{p}\lambda_{max}S_\kappa - \epsilon\right)\	\	\	\	\	\	\textrm{on}\	\	\	\	\	\	\	\Omega\\
-\frac{\partial \epsilon}{\partial n} &= 0\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\textrm{on}\	\	\	\	\	\	\	\Gamma
-\end{split}
-\end{equation}
-where $S_\kappa$ is a normalised sensor value and serves as a forcing term for the artificial viscosity. A smooth artificial viscosity distribution is obtained.\\
-\\
-To enable the smooth viscosity model, the following line has to be added to the \inltt{SOLVERINFO} section:
-\begin{lstlisting}[style=XmlStyle]
- <SOLVERINFO>
-<I PROPERTY="ShockCaptureType"      VALUE="Smooth"               />
- <SOLVERINFO>
-\end{lstlisting}
-Furthermore, the extra viscosity variable \inltt{eps} has to be added to the variable list:
-\begin{lstlisting}[style=XmlStyle]
-<VARIABLES>
-  <V ID="0"> rho  </V>
-  <V ID="1"> rhou </V>
-  <V ID="2"> rhov </V>
-  <V ID="4"> E    </V>
-  <V ID="5"> eps </V>
-</VARIABLES>
-\end{lstlisting}
-A similar addition has to be made for the boundary conditions and initial conditions. The tests that have been run started with a uniform homogeneous boundary condition and initial condition.
-The following parameters can be set in the xml session file:
-\begin{lstlisting}[style=XmlStyle]
-<PARAMETERS>
-<P> Skappa 	 	= -1.3                     </P>
-<P> Kappa 	 	= 0.2                      </P>
-<P> mu0 	 	= 1.0                      </P>
-<P> FH 	 	 	= 3                        </P>
-<P> FL 	 	 	= 0.01*FH                  </P>
-<P> C1 	 	 	= 0.03                     </P>
-<P> C2 		 	= 5/3*C1                   </P>
-</PARAMETERS>
-\end{lstlisting}
-where for now \inltt{FH} and \inltt{FL} are used to tune which range of the sensor is used as a forcing term and \inltt{C1} and \inltt{C2} are fixed constants which can be played around with to make the model more diffusive or not. However these constants are generally fixed.
 \subsection{Variable polynomial order}
 A sensor based $p$-adaptive algorithm is implemented to optimise the computational cost and accuracy.
 The DG scheme allows one to use different polynomial orders since the fluxes over the elements are determined using a Riemann solver and there is now further coupling between the elements. Furthermore, the initial $p$-adaptive algorithm uses the same sensor as the shock capturing algorithm to identify the smoothness of the local solution so it rather straightforward to implement both algorithms at the same time.\\

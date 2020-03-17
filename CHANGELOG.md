@@ -1,11 +1,21 @@
 Changelog
 =========
 
+v5.1.0
+------
+**Library**
+- Refactored time integration code using factory pattern (!1034)
+- Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
+
+**CardiacEPSolver**
+- Added additional parameter sets to Fenton-Karma model (!1119)
+
 v5.0.0
 ------
 **Library**
 - Added in sum factorisation version for pyramid expansions and orthogonal
   expansion in pyramids (!750)
+- Added detection of 'abort' file to cleanly terminate simulation early (!772)
 - Significant overhaul of CMake infrastructure (!770, !804)
 - Fix ThridpartyCCM options (!802)
 - Fix Windows CRLF tokens in GEO reader and improve comment handling (!805)
@@ -38,6 +48,8 @@ v5.0.0
 - Fix minor bug in ARPACK thirdparty build cmake (!874)
 - Added in sum factorisation version for pyramid expnasions and orthogonal
   expansion in pyramids (!750)
+- Adjust boost third-party compilation to account for different toolset
+  choices (!886)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
   !904, !941)
 - Restructure the low energy preconditioner to handle pyramidic and variable
@@ -54,7 +66,7 @@ v5.0.0
 - Fix ability to have periodic boundary conditions that are aligned by a
   rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
-  and a DummySolver to test the implementations (!853, !931, !950, !973)
+  and a DummySolver to test the implementations (!853, !931, !950, !973, !1017)
 - Fix compilation issue with newer Boost versions and clang (!940)
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
@@ -62,7 +74,8 @@ v5.0.0
 - Fix missing metadata import from Hdf5 files (!971)
 - Fix missing flags for periodic BC in DiffusionLDG (!985)
 - Add the moving reference frame as a forcing (!987)
-- Added rtree for element bounding box lookup to accelerate interpolation (!996)
+- Added rtree for element bounding box lookup to accelerate interpolation (!996,
+  !1066)
 - Fix integration weights on prisms and pyramids if not using the default
   integration rule (!998)
 - Fix missing ContainsPoint in Pyramid expansion (!1000)
@@ -71,11 +84,25 @@ v5.0.0
 - Combine and generalise demo code in StdRegions and LocalRegions (!993)
 - Fix for error output to allow for custom error streams (!944)
 - Fixed bug in ReOrientQuadFacePhysMap (!1003)
-- Add NekPy Python interface (!962, !990, !989, !1004)
+- Add NekPy Python interface (!962, !990, !989, !1004, !1014, !1061, !1070)
 - Fix edge case for ThirdPartyScotch and FindScoth (!1009)
 - Fix to populate m_elmtToExpId map if not already set up in GetExpIndex (!1019)
 - Added flag to skip periodic BCs while filling Dirichlet BCs in
   ContField3D.cpp (!1018)
+- Fix bounding box for interpolation (!1033)
+- Added IMEXOrder4, RK5 and AB4 time integration schemes (!1037)
+- Fix TriExp.cpp orientation bug (!1048)
+- Fix XML attributes in conditions.cpp to be unordered (!1015)
+- Fix issue with HDF5 mesh input in serial (!1049)
+- Add estimate of filters CPU time (!1044)
+- Update CompressibleFlowSolver/Examples/Test_IsentropicVortex1.xml example (!1045)
+- Add error if HDG used with periodic BCs (!1071)
+- Fix issues related to leading factors, arithmetic order and associativity of
+  exponential operator in expression evaluator (!1066)
+- Remove use of `using namespace std` in header files (!1066)
+- Add error messages for use of ARPACK in serial (!1079)
+- Generalise ContainsPoint routine (!1078)
+- Homogenized fallthrough to fix issues with gcc 7.4.0 (!1084)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -113,6 +140,8 @@ v5.0.0
 - Fix issue with extracting 1D curved surface from 2D file (!984)
 - Fix surface extraction, added regression test (!994)
 - Fix 2D meshing running out of memory due to missing else (!1012)
+- Add support for .msh v4.1 file input (!1054)
+- Added penalty term to LDG and LDGNS, slight generalization of LDG (!1080)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -135,6 +164,10 @@ v5.0.0
 - Fixed nparts option in FieldConvert and automated Info.xml generation (!995)
 - Added if statement to fix case of 1D/2D manifold interpolation in 1D/2D space,
   added check on dimensions for interpolation, fixed seg interp (!999)
+- Fixed scaling for compressed xml, fixed error printout for mesh only (!1040)
+- Add field conversion from Halfmode to SingleMode (!1032)
+- Fix double precision output in .dat format (!1059)
+- Add phase sampling feature in FilterFieldConvert (!1068)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
@@ -142,6 +175,8 @@ v5.0.0
 - Updated SVV to allow for the DGKernel extension (!851)
 - Pre-calculate Time invariant portion of Womersley Solution (!814)
 - Fix for independent setting of SVV in Homogeneous direction (!936)
+- Write flow field based on CFL threshold (!1025)
+- Fix unsteady Stokes solver (!1074)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
@@ -155,6 +190,7 @@ v5.0.0
 - Modified pressure outlet BCs to allow for the reference static pressure to be
   set from the VALUE fields (!981)
 - hp scaling for Laplacian AV (!1013)
+- Removed smooth AV (!1072)
 
 **AcousticSolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC
@@ -164,17 +200,31 @@ v5.0.0
 - The APE system now uses u_i, c^2 and rho as base flow fields (!918)
 - Added the Linearized Euler Equations (LEE) (!918)
 
+**ADRSolver:**
+- Fix forcing from file for Poisson solver (!1029)
+
 **APESolver:**
 - APESolver was replaced with AcousticSolver (!918)
 
 **PulseWaveSolver**
 - Added two new boundary conditions: AInflow and UInflow
 
+**CardiacEPSolver**
+- Converted FentonKarma model to dimensional form and added variants (!1011)
+
 **Documentation**:
 - Added an initial developer's guide (!1001)
+- Updated user guide to reflect current implementation (!1051)
+- Added manpages for key solvers and utilities (!1051)
 
 **Tester**
 - Fix build with boost 1.67 (!947)
+- Various change to tests to decrease test time (!1053)
+- Extend to support MPI tests with multiple executables (!1085)
+
+**Packaging:**
+- Add Dockerfiles and gitlab CI configuration for automatic builds (!1021,
+  !1092, !1098)
 
 v4.4.2
 ------

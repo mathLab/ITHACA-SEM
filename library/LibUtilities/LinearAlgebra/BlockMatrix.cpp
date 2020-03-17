@@ -8,7 +8,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -30,6 +29,8 @@
 // Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/LinearAlgebra/StandardMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
@@ -166,12 +167,12 @@ namespace Nektar
     NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetBlockPtr(unsigned int row, unsigned int column) const
     {
         ASSERTL2(this->GetTransposeFlag() == 'N' ? row < m_numberOfBlockRows : row < m_numberOfBlockColumns,
-                 std::string("Row ") + boost::lexical_cast<std::string>(row) +
-                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
+                 std::string("Row ") + std::to_string(row) +
+                 std::string(" requested in a block matrix with a maximum of ") + std::to_string(m_numberOfBlockRows) +
                  std::string(" rows"));
         ASSERTL2(this->GetTransposeFlag() == 'N' ? column < m_numberOfBlockColumns : column < m_numberOfBlockColumns,
-                 std::string("Column ") + boost::lexical_cast<std::string>(column) +
-                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
+                 std::string("Column ") + std::to_string(column) +
+                 std::string(" requested in a block matrix with a maximum of ") + std::to_string(m_numberOfBlockColumns) +
                  std::string(" columns"));
         int x = CalculateBlockIndex(row,column);
         if (x == -1)
@@ -189,12 +190,12 @@ namespace Nektar
     NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetBlock(unsigned int row, unsigned int column) const
     {
         ASSERTL2(this->GetTransposeFlag() == 'N' ? row < m_numberOfBlockRows : row < m_numberOfBlockColumns,
-                 std::string("Row ") + boost::lexical_cast<std::string>(row) +
-                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
+                 std::string("Row ") + std::to_string(row) +
+                 std::string(" requested in a block matrix with a maximum of ") + std::to_string(m_numberOfBlockRows) +
                  std::string(" rows"));
         ASSERTL2(this->GetTransposeFlag() == 'N' ? column < m_numberOfBlockColumns : column < m_numberOfBlockRows,
-                 std::string("Column ") + boost::lexical_cast<std::string>(column) +
-                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
+                 std::string("Column ") + std::to_string(column) +
+                 std::string(" requested in a block matrix with a maximum of ") + std::to_string(m_numberOfBlockColumns) +
                  std::string(" columns"));
         int x = CalculateBlockIndex(row,column);
         if (x < 0)
@@ -212,12 +213,12 @@ namespace Nektar
     NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetBlock(unsigned int row, unsigned int column)
     {
         ASSERTL2(this->GetTransposeFlag() == 'N' ? row < m_numberOfBlockRows : row < m_numberOfBlockColumns,
-                 std::string("Row ") + boost::lexical_cast<std::string>(row) +
-                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
+                 std::string("Row ") + std::to_string(row) +
+                 std::string(" requested in a block matrix with a maximum of ") + std::to_string(m_numberOfBlockRows) +
                  std::string(" rows"));
         ASSERTL2(this->GetTransposeFlag() == 'N' ? column < m_numberOfBlockColumns : column < m_numberOfBlockRows,
-                 std::string("Column ") + boost::lexical_cast<std::string>(column) +
-                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
+                 std::string("Column ") + std::to_string(column) +
+                 std::string(" requested in a block matrix with a maximum of ") + std::to_string(m_numberOfBlockColumns) +
                  std::string(" columns"));
         int x = CalculateBlockIndex(row,column);
         if (x == -1)
@@ -234,12 +235,12 @@ namespace Nektar
     void NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::SetBlock(unsigned int row, unsigned int column, std::shared_ptr<InnerType>& m)
     {
         ASSERTL2(this->GetTransposeFlag() == 'N' ? row < m_numberOfBlockRows : row < m_numberOfBlockColumns,
-                 std::string("Row ") + boost::lexical_cast<std::string>(row) +
-                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
+                 std::string("Row ") + std::to_string(row) +
+                 std::string(" requested in a block matrix with a maximum of ") + std::to_string(m_numberOfBlockRows) +
                  std::string(" rows"));
         ASSERTL2(this->GetTransposeFlag() == 'N' ? column < m_numberOfBlockColumns : column < m_numberOfBlockRows,
-                 std::string("Column ") + boost::lexical_cast<std::string>(column) +
-                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
+                 std::string("Column ") + std::to_string(column) +
+                 std::string(" requested in a block matrix with a maximum of ") + std::to_string(m_numberOfBlockColumns) +
                  std::string(" columns"));
         m_data[CalculateBlockIndex(row, column)] = InnerType::CreateWrapper(m);
     }
@@ -250,11 +251,11 @@ namespace Nektar
     typename NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::ConstGetValueType
     NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::operator()(unsigned int row, unsigned int col) const
     {
-        ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
+        ASSERTL2(row < this->GetRows(), std::string("Row ") + std::to_string(row) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetRows()) +
             std::string(" rows"));
-        ASSERTL2(col < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(col) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
+        ASSERTL2(col < this->GetColumns(), std::string("Column ") + std::to_string(col) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetColumns()) +
             std::string(" columns"));
 
 
@@ -397,8 +398,9 @@ namespace Nektar
     template<typename DataType, typename InnerMatrixType>
     unsigned int NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetNumberOfElementsInBlock(unsigned int block, unsigned int totalBlocks, const Array<OneD, unsigned int>& sizes)
     {
-        ASSERTL2(block < totalBlocks, std::string("Block Element ") + boost::lexical_cast<std::string>(block) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(totalBlocks) +
+        boost::ignore_unused(totalBlocks);
+        ASSERTL2(block < totalBlocks, std::string("Block Element ") + std::to_string(block) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(totalBlocks) +
             std::string(" blocks."));
         if( block == 0 )
         {

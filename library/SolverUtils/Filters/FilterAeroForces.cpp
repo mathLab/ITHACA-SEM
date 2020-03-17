@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,7 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <iomanip>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
@@ -91,7 +91,7 @@ FilterAeroForces::FilterAeroForces(
     else
     {
         LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+            m_session->GetInterpreter(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
     
@@ -104,7 +104,7 @@ FilterAeroForces::FilterAeroForces(
     else
     {
         LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+            m_session->GetInterpreter(), it->second);
         m_startTime = equ.Evaluate();
     }
 
@@ -174,7 +174,7 @@ FilterAeroForces::FilterAeroForces(
                 if (!directionString.empty())
                 {
                     LibUtilities::Equation equ(
-                        m_session->GetExpressionEvaluator(), directionString);
+                        m_session->GetInterpreter(), directionString);
                     m_directions[i][j] = equ.Evaluate();
                     norm += m_directions[i][j]*m_directions[i][j];
                 }
@@ -507,6 +507,8 @@ void FilterAeroForces::v_Finalise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
     const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     if (pFields[0]->GetComm()->GetRank() == 0)
     {
         m_outputStream.close();
@@ -773,7 +775,7 @@ void FilterAeroForces::CalculateForces(
                         // Dimension specific part for obtaining values
                         //   at boundary and normal vector
                         Array<OneD, Array<OneD, NekDouble> > normals;
-                        int nbc;
+                        int nbc = 0;
                         switch(expdim)
                         {
                             case 2:
@@ -952,6 +954,8 @@ void FilterAeroForces::CalculateForcesMapping(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     int i, j, k, n, cnt, elmtid, offset, boundary, plane;
     // Get number of quadrature points and dimensions
     int physTot = pFields[0]->GetNpoints();
@@ -1258,7 +1262,7 @@ void FilterAeroForces::CalculateForcesMapping(
                         // Dimension specific part for obtaining values
                         //   at boundary and normal vector
                         Array<OneD, Array<OneD, NekDouble> > normals;
-                        int nbc;
+                        int nbc = 0;
                         switch(expdim)
                         {
                             case 2:

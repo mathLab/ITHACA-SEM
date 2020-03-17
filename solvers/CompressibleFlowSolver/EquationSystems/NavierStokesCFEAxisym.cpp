@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -127,24 +126,12 @@ namespace Nektar
         const NekDouble lambda = -2.0/3.0;
 
         // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, 0.0);
-        Array<OneD, NekDouble > thermalConductivity(nPts, 0.0);
         Array<OneD, NekDouble > divVel             (nPts, 0.0);
         Array<OneD, NekDouble > tmp                (nPts, 0.0);
 
-        // Variable viscosity through the Sutherland's law
-        if (m_ViscosityType == "Variable")
-        {
-            m_varConv->GetDynamicViscosity(physfield[nVariables-2], mu);
-            NekDouble tRa = m_Cp / m_Prandtl;
-            Vmath::Smul(nPts, tRa, mu, 1, thermalConductivity, 1);
-        }
-        else
-        {
-            Vmath::Fill(nPts, m_mu, mu, 1);
-            Vmath::Fill(nPts, m_thermalConductivity,
-                        thermalConductivity, 1);
-        }
+        // Update viscosity and thermal conductivity
+        GetViscosityAndThermalCondFromTemp(physfield[nVariables-2], m_mu,
+            m_thermalConductivity);
 
         // Velocity divergence = d(u_r)/dr + d(u_z)/dz + u_r/r
         Vmath::Vadd(nPts, derivativesO1[0][0], 1, derivativesO1[1][1], 1,
@@ -153,7 +140,7 @@ namespace Nektar
 
         // Velocity divergence scaled by lambda * mu
         Vmath::Smul(nPts, lambda, divVel, 1, divVel, 1);
-        Vmath::Vmul(nPts, mu,  1, divVel, 1, divVel, 1);
+        Vmath::Vmul(nPts, m_mu,  1, divVel, 1, divVel, 1);
 
         // Viscous flux vector for the rho equation = 0
         for (i = 0; i < m_spacedim; ++i)
@@ -162,7 +149,7 @@ namespace Nektar
         }
 
         // Viscous stress tensor (for the momentum equations)
-        
+
         for (i = 0; i < 2; ++i)
         {
             for (j = i; j < 2; ++j)
@@ -171,7 +158,7 @@ namespace Nektar
                                   derivativesO1[j][i], 1,
                                   viscousTensor[i][j+1], 1);
 
-                Vmath::Vmul(nPts, mu, 1,
+                Vmath::Vmul(nPts, m_mu, 1,
                                   viscousTensor[i][j+1], 1,
                                   viscousTensor[i][j+1], 1);
 
@@ -198,7 +185,7 @@ namespace Nektar
                               viscousTensor[2][3], 1);
             Vmath::Smul(nPts, 2.0, viscousTensor[2][3], 1,
                               viscousTensor[2][3], 1);
-            Vmath::Vmul(nPts, mu, 1, viscousTensor[2][3], 1,
+            Vmath::Vmul(nPts, m_mu, 1, viscousTensor[2][3], 1,
                               viscousTensor[2][3], 1);
             Vmath::Vadd(nPts, viscousTensor[2][3], 1,
                               divVel, 1,
@@ -211,13 +198,13 @@ namespace Nektar
                               viscousTensor[2][1], 1);
             Vmath::Vadd(nPts, derivativesO1[0][2], 1 , viscousTensor[2][1], 1,
                               viscousTensor[2][1], 1);
-            Vmath::Vmul(nPts, mu, 1, viscousTensor[2][1], 1,
+            Vmath::Vmul(nPts, m_mu, 1, viscousTensor[2][1], 1,
                               viscousTensor[2][1], 1);
             Vmath::Vcopy(nPts, viscousTensor[2][1], 1,
                                        viscousTensor[0][3], 1);
 
             // Tau_z_theta = mu (d(u_theta)/dz )
-            Vmath::Vmul(nPts, mu, 1, derivativesO1[1][2], 1,
+            Vmath::Vmul(nPts, m_mu, 1, derivativesO1[1][2], 1,
                               viscousTensor[2][2], 1);
             Vmath::Vcopy(nPts, viscousTensor[2][2], 1,
                                        viscousTensor[1][3], 1);
@@ -238,7 +225,7 @@ namespace Nektar
             // Add k*T_i
             if (i != 2)
             {
-                Vmath::Vvtvp(nPts, thermalConductivity, 1,
+                Vmath::Vvtvp(nPts, m_thermalConductivity, 1,
                                    derivativesO1[i][m_spacedim], 1,
                                    viscousTensor[i][m_spacedim+1], 1,
                                    viscousTensor[i][m_spacedim+1], 1);
@@ -247,7 +234,7 @@ namespace Nektar
             {
                 Vmath::Vmul(nPts, derivativesO1[i][m_spacedim], 1 ,
                                     invR, 1, tmp, 1);
-                Vmath::Vvtvp(nPts, thermalConductivity, 1,
+                Vmath::Vvtvp(nPts, m_thermalConductivity, 1,
                                    tmp, 1,
                                    viscousTensor[i][m_spacedim+1], 1,
                                    viscousTensor[i][m_spacedim+1], 1);

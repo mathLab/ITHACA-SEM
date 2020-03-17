@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 
 #include <iostream>
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
@@ -634,6 +635,7 @@ void NonlinearPeregrine::WallBoundary2D(
         Array<OneD, Array<OneD, NekDouble> > &Fwd,
         Array<OneD, Array<OneD, NekDouble> > &physarray)
 {
+    boost::ignore_unused(physarray);
 
     int i;
     int nvariables = 3;
@@ -961,6 +963,8 @@ void NonlinearPeregrine::SetBoundaryConditionsForcing(
         Array<OneD, Array<OneD, NekDouble> > &inarray,
         NekDouble time)
 {
+    boost::ignore_unused(time);
+
     int cnt = 0;
 
     // loop over Boundary Regions
@@ -1072,6 +1076,8 @@ void NonlinearPeregrine::SetBoundaryConditionsContVariables(
         Array<OneD, NekDouble> &inarray,
         NekDouble time)
 {
+    boost::ignore_unused(time);
+
     int cnt = 0;
 
     // loop over Boundary Regions
@@ -1213,6 +1219,7 @@ void NonlinearPeregrine::v_SetInitialConditions(
         bool dumpInitialConditions,
         const int domain)
 {
+    boost::ignore_unused(domain);
 
     switch (m_problemType)
     {

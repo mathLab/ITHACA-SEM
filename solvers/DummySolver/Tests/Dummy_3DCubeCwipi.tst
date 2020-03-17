@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
     <description>Run two CWIPI-coupled instances of the DummySolver, exchanging fields</description>
-    <executable>foo</executable>
-    <parameters>bar</parameters>
-    <command>mpirun --tag-output -n 1 ../DummySolver-g --verbose --cwipi 'Dummy0' Dummy_3DCubeCwipi_0.xml cube.left.xml : -n 1 ../DummySolver-g --verbose --cwipi 'Dummy1' Dummy_3DCubeCwipi_1.xml cube.right.xml 1>output.out 2>output.err</command>
+    <segment>
+        <executable> DummySolver </executable>
+        <parameters> --verbose --cwipi 'Dummy0' Dummy_3DCubeCwipi_0.xml cube.left.xml </parameters>
+        <processes> 1 </processes>
+    </segment>
+    <segment>
+        <executable> DummySolver </executable>
+        <parameters> --verbose --cwipi 'Dummy1' Dummy_3DCubeCwipi_1.xml cube.right.xml </parameters>
+        <processes> 1 </processes>
+    </segment>
     <files>
         <file description="Session File 0">Dummy_3DCubeCwipi_0.xml</file>
         <file description="Session File 1">Dummy_3DCubeCwipi_1.xml</file>

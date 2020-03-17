@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -79,32 +78,24 @@ namespace Nektar
             m_pressure,
             m_velocity,
             m_advObject); 
-        m_extrapolation->SubSteppingTimeIntegration(
-                            m_intScheme->GetIntegrationMethod(), m_intScheme);
+        m_extrapolation->SubSteppingTimeIntegration(m_intScheme);
         m_extrapolation->GenerateHOPBCMap(m_session);
 
        // Storage to extrapolate pressure forcing
         int physTot = m_fields[0]->GetTotPoints();
         int intSteps = 1;
-        int intMethod = m_intScheme->GetIntegrationMethod();
-        switch(intMethod)
+
+        if ( m_intScheme->GetName() == "IMEX" ||
+             m_intScheme->GetName() == "IMEXGear" )
         {
-            case LibUtilities::eIMEXOrder1:
-            {
-                intSteps = 1; 
-            }
-            break;
-            case LibUtilities::eIMEXOrder2:
-            {
-                intSteps = 2;
-            }
-            break;
-            case LibUtilities::eIMEXOrder3:
-            {
-                intSteps = 3;
-            }
-            break;
-        }        
+            m_intSteps = m_intScheme->GetOrder();
+        }
+        else
+        {
+            NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "
+                     "Options include IMEXGear or IMEXOrder{1,2,3,4}");
+        }
+
         m_presForcingCorrection= Array<OneD, Array<OneD, NekDouble> >(intSteps);
         for(int i = 0; i < m_presForcingCorrection.num_elements(); i++)
         {

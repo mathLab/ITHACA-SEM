@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,9 @@
 // Description: Triangle routines built upon StdExpansion2D
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdNodalTriExp.h>
@@ -133,6 +135,8 @@ namespace Nektar
                   Array<OneD,       NekDouble>& out_d1,
                   Array<OneD,       NekDouble>& out_d2)
         {
+            boost::ignore_unused(out_d2);
+
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -222,6 +226,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>& out_d1,
                   Array<OneD,       NekDouble>& out_d2)
         {
+            boost::ignore_unused(out_d2);
             StdTriExp::v_PhysDeriv(inarray, out_d0, out_d1);
         }
 
@@ -272,6 +277,8 @@ namespace Nektar
                   bool                          doCheckCollDir0,
                   bool                          doCheckCollDir1)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1);
+
             int  i;
             int  mode;
             int  nquad0  = m_base[0]->GetNumPoints();
@@ -514,6 +521,8 @@ namespace Nektar
                   bool                          doCheckCollDir0,
                   bool                          doCheckCollDir1)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1);
+
             int i;
             int mode;
             int nquad0  = m_base[0]->GetNumPoints();
@@ -826,6 +835,8 @@ namespace Nektar
                                     Array<OneD, NekDouble> &coords_1,
                                     Array<OneD, NekDouble> &coords_2)
         {
+            boost::ignore_unused(coords_2);
+
             Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
             Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
             int nq0 = GetNumPoints(0);
@@ -885,12 +896,15 @@ namespace Nektar
                     }
 
                     default:
-                        ASSERTL0(false,"unexpected points distribution");
+                        NEKERROR(ErrorUtil::efatal,
+                                 "unexpected points distribution");
                         break;
                     }
+                    break;
                 }
                 default:
-                    ASSERTL0(false,"Information not available to set edge key");
+                    NEKERROR(ErrorUtil::efatal,
+                             "Information not available to set edge key");
                     break;
                 }
             }
@@ -1618,6 +1632,8 @@ namespace Nektar
             Array<OneD, int> &conn,
             bool              standard)
         {
+            boost::ignore_unused(standard);
+
             int np1 = m_base[0]->GetNumPoints();
             int np2 = m_base[1]->GetNumPoints();
             int np = max(np1,np2);

@@ -10,12 +10,21 @@ IF (NEKTAR_BUILD_PYTHON)
     CMAKE_DEPENDENT_OPTION(NEKTAR_USE_PYTHON3
         "If true, prefer to use Python 3." OFF "NEKTAR_BUILD_PYTHON" OFF)
 
-    # Unset any existing python executable/library settings so that
-    # we can rediscover correct python version if v2/3 settings changed
-    unset(PYTHON_EXECUTABLE CACHE)
-    unset(PYTHON_INCLUDE_DIR CACHE)
-    unset(PYTHON_LIBRARY CACHE)
-    unset(PYTHON_LIBRARY_DEBUG CACHE)
+    # Set the Python3 status flag as the opposite of the Python3 flag by
+    # default on first run to ensure Python is searched for.
+    IF (NOT DEFINED NEKTAR_PYTHON3_STATUS)
+        SET(NEKTAR_PYTHON3_STATUS NOT ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "")
+    ENDIF()
+
+    IF (NOT NEKTAR_PYTHON3_STATUS STREQUAL NEKTAR_USE_PYTHON3)
+        unset(PYTHON_EXECUTABLE CACHE)
+        unset(PYTHON_INCLUDE_DIR CACHE)
+        unset(PYTHON_LIBRARY CACHE)
+        unset(PYTHON_LIBRARY_DEBUG CACHE)
+        unset(BOOST_PYTHON_LIB CACHE)
+        unset(BOOST_NUMPY_LIB CACHE)
+        SET(NEKTAR_PYTHON3_STATUS ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "")
+    ENDIF()
 
     SET(PYTHONVER 2.7)
     IF (NEKTAR_USE_PYTHON3)
@@ -25,9 +34,6 @@ IF (NEKTAR_BUILD_PYTHON)
     # Find Python
     FIND_PACKAGE(PythonInterp  ${PYTHONVER} REQUIRED)
     FIND_PACKAGE(PythonLibsNew ${PYTHONVER} REQUIRED)
-    INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
-
-    ADD_DEFINITIONS(-DWITH_PYTHON)
 
     # Include headers from root directory for config file.
 
@@ -66,8 +72,6 @@ IF (NEKTAR_BUILD_PYTHON)
         MESSAGE(FATAL_ERROR "Could not find Boost Python installation: check it is installed in your distribution.")
     ENDIF()
 
-    MESSAGE(STATUS "Found Boost.Python: ${BOOST_PYTHON_LIB}")
-
     # Try to find Boost.NumPy
     FIND_LIBRARY(BOOST_NUMPY_LIB
         NAMES boost_numpy-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}${BOOST_LIB_SUFFIX}
@@ -77,14 +81,27 @@ IF (NEKTAR_BUILD_PYTHON)
         boost_numpy${BOOST_LIB_SUFFIX}
         PATHS ${Boost_LIBRARY_DIRS})
 
+    INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
+    ADD_DEFINITIONS(-DWITH_PYTHON)
+
+    MESSAGE(STATUS "Found Python: ${PYTHON_EXECUTABLE}")
+    MESSAGE(STATUS "Found Boost.Python: ${BOOST_PYTHON_LIB}")
+
     # If we can't find it, pull it from git and compile it
     IF (NOT BOOST_NUMPY_LIB)
         INCLUDE(ExternalProject)
+        IF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            SET(WARNING_FLAGS "-Wno-cpp")
+        ENDIF()
+        IF (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+            SET(WARNING_FLAGS "-Wno-#warnings")
+        ENDIF()
+
         EXTERNALPROJECT_ADD(
             boost-numpy
             PREFIX ${TPSRC}
-            URL ${TPURL}/boost-numpy_1.0.1.tar.bz2
-            URL_MD5 ae8c6f4d114a9c20dff72e915288a408
+            URL ${TPURL}/boost-numpy_1.0.2.tar.bz2
+            URL_MD5 250a517556e67f65c8837c73f419f773
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/boost-numpy
@@ -93,6 +110,7 @@ IF (NEKTAR_BUILD_PYTHON)
             INSTALL_DIR ${TPDIST}
             CONFIGURE_COMMAND ${CMAKE_COMMAND}
                 -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
+                -DCMAKE_CXX_FLAGS=${WARNING_FLAGS}
                 -DPYTHON_EXECUTABLE=${PYTHON_EXECUTABLE}
                 -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DLIBRARY_TYPE=STATIC
                 ${TPSRC}/boost-numpy
@@ -102,7 +120,7 @@ IF (NEKTAR_BUILD_PYTHON)
         ELSE()
             SET(BOOST_NUMPY_LIB ${TPDIST}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}boost_numpy${CMAKE_STATIC_LIBRARY_SUFFIX})
         ENDIF()
-
+        
         INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include)
         MESSAGE(STATUS "Build Boost.NumPy: ${BOOST_NUMPY_LIB}")
     ELSE()
@@ -110,6 +128,7 @@ IF (NEKTAR_BUILD_PYTHON)
         ADD_CUSTOM_TARGET(boost-numpy ALL)
         ADD_DEFINITIONS(-DBOOST_HAS_NUMPY)
     ENDIF()
+    
     CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/python/setup.py.in ${CMAKE_BINARY_DIR}/setup.py)
 
     ADD_CUSTOM_TARGET(nekpy-install-user

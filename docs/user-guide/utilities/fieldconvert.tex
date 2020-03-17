@@ -92,7 +92,14 @@ FieldConvert test.xml test.fld test.plt
 where \inltt{FieldConvert} is the executable associated to the utility
 FieldConvert, \inltt{test.xml} is the session file and
 \inltt{test.vtu}, \inltt{test.dat},  \inltt{test.plt} are the desired
-format outputs, either Paraview, VisIt or Tecplot formats.
+format outputs, either Paraview, VisIt or Tecplot formats. \\
+When converting to \inltt{.dat} or \inltt{.plt} format, it is possible to
+enable output with double precision, which is more accurate but requires larger
+disk space. For example, double precision output in plt. format can be produced
+with the command:
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert test.xml test.fld test.plt:plt:double
+\end{lstlisting}
 %
 \begin{tipbox}
 Note that the session file is also supported
@@ -166,6 +173,7 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
 \item \inltt{gradient}: Computes gradient of fields;
+\item \inltt{halfmodetofourier}: Convert \inltt{HalfMode} expansion to \inltt{SingleMode} for further processing;
 \item \inltt{homplane}: Extract a plane from 3DH1D expansions;
 \item \inltt{homstretch}: Stretch a 3DH1D expansion by an integer factor;
 \item \inltt{innerproduct}: take the inner product between one or a series of fields with another field (or series of fields).
@@ -440,6 +448,13 @@ to visualise the result either in Tecplot, Paraview or VisIt.
 %
 %
 
+\subsection{Convert HalfMode expansion to SingleMode for further processing: \textit{halfmodetofourier} module}
+
+To obtain full Fourier expansion form a \inltt{HalfMode} result, use the comand:
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m halfmodetofourier file.xml half_mode_file.fld single_mode_file.fld
+\end{lstlisting}
+
 \subsection{Extract a plane from 3DH1D expansion: \textit{homplane} module}
 
 To obtain a 2D expansion containing one of the planes of a
@@ -466,7 +481,7 @@ To stretch a 3DH1D expansion in the z-direction, use the command:
 FieldConvert -m homstretch:factor=value file.xml file.fld file-stretch.fld
 \end{lstlisting}
 The number of modes in the resulting field can be chosen using the command-line
-parameter \inltt{output-points-hom-z}.
+parameter \inltt{-{}-output-points-hom-z}.
 
 The output file \inltt{file-stretch.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
@@ -636,7 +651,8 @@ The format of the file \inltt{file2.pts} is of the same form as for the
 </NEKTAR>
 \end{lstlisting}
 Similar to the \textit{interppointdatatofld} module, the \inltt{.pts} file can
-be interchanged with a \inltt{.csv} file:
+be interchanged with a \inltt{.csv} file (the output can also be written to 
+\inltt{.csv}):
 \begin{lstlisting}[style=BashInputStyle]
 # x, y
 0.0,0.0
@@ -650,31 +666,33 @@ interpolation between these two values and the third defines the default
 value to be used if the point is outside the domain. Their default values
 are -10,000,000, 10,000,000 and 0.
 
-In addition, instead of specifying the file \inltt{file2.pts}, a module list of the form
+In addition, instead of specifying the file \inltt{file2.pts}, a module list of
+the form 
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert -m interppoints:fromxml=file1.xml:fromfld= \
-	file1.fld:line=npts,x0,y0,x1,y1
+	file1.fld:line=npts,x0,y0,x1,y1 file2.dat
 \end{lstlisting}
 can be specified where \inltt{npts} is the number of equispaced points between
-$(x0,y0)$ to $(x1,y1)$ which can also be used in 3D by specifying $(x0,y0,z0)$
-to $(x1,y1,z1)$.
+$(x_0,y_0)$ to $(x_1,y_1)$. This also works in 3D, by specifying
+$(x_0,y_0,z_0)$ to $(x_1,y_1,z_1)$.
 
 An extraction of a plane of points can also be specified by
 \begin{lstlisting}[style=BashInputStyle]
   FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:\
-        plane=npts1,npts2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3
+        plane=npts1,npts2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3 file2.dat
 \end{lstlisting}
 where \inltt{npts1,npts2} is the number of equispaced points in each
-direction and $(x0,y0,z0)$, $(x1,y1,z1)$, $(x2,y2,z2)$ and $(x3,y3,z3)$
-define the plane of points specified in a clockwise or anticlockwise direction.
+direction and $(x_0,y_0,z_0)$, $(x_1,y_1,z_1)$, $(x_2,y_2,z_2)$ and
+$(x_3,y_3,z_3)$ define the plane of points specified in a clockwise or
+anticlockwise direction.
 
-In addition an extraction of a box of points can also be specified by
+In addition, an extraction of a box of points can also be specified by
 \begin{lstlisting}[style=BashInputStyle]
   FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:\
-       box=npts1,npts2,npts3,xmin,xmax,ymin,ymax,zmin,zmax
+       box=npts1,npts2,npts3,xmin,xmax,ymin,ymax,zmin,zmax file2.dat
 \end{lstlisting}
 where \inltt{npts1,npts2,npts3} is the number of equispaced points in each
-direction and $(xmin,ymin,zmin)$ and $(xmax,ymax,zmax3)$
+direction and $(x_{min},y_{min},z_{min})$ and $(x_{max},y_{max},z_{max})$
 define the limits of the box of points.
 
 There is also an additional optional argument \inltt{cp=p0,q} which adds to the
@@ -955,7 +973,7 @@ The option \inltt{bnd} specifies which boundary region to extract. Note this is 
 \subsection{Scale a given .fld: \textit{scaleinputfld} module}
 To scale a .fld file by a given scalar quantity, the user can run:
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m scaleinputfld:scale=value test.fld test-scal.fld
+FieldConvert -m scaleinputfld:scale=value test.xml test.fld test-scal.fld
 \end{lstlisting}
 The argument \inltt{scale=value} rescales of a factor \inltt{value}
 \inltt{test.fld} by the factor value.

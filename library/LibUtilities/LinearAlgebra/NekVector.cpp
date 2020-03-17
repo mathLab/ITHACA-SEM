@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -140,8 +139,8 @@ namespace Nektar
         if( h == eCopy )
         {
             ASSERTL0(size <= ptr.num_elements(), "Attempting to populate a vector of size " +
-                boost::lexical_cast<std::string>(size) + " but the incoming array only has " +
-                boost::lexical_cast<std::string>(ptr.num_elements()) + " elements.");
+                std::to_string(size) + " but the incoming array only has " +
+                std::to_string(ptr.num_elements()) + " elements.");
 
             m_data = Array<OneD, DataType>(size);
             std::copy(ptr.begin(), ptr.begin()+size, m_data.begin());
@@ -170,8 +169,8 @@ namespace Nektar
         if( h == eCopy )
         {
             ASSERTL0(size <= ptr.num_elements(), "Attempting to populate a vector of size " +
-                boost::lexical_cast<std::string>(size) + " but the incoming array only has " +
-                boost::lexical_cast<std::string>(ptr.num_elements()) + " elements.");
+                std::to_string(size) + " but the incoming array only has " +
+                std::to_string(ptr.num_elements()) + " elements.");
 
             m_data = Array<OneD, DataType>(size);
             std::copy(ptr.begin(), ptr.begin()+size, m_data.begin());
@@ -251,7 +250,8 @@ namespace Nektar
     template<typename DataType>
     typename boost::call_traits<DataType>::reference NekVector<DataType>::operator()(unsigned int i)
     {
-        ASSERTL1((i >= 0) && (i < this->GetDimension()), "Invalid access to m_data via parenthesis operator");
+        ASSERTL1(i < this->GetDimension(),
+                 "Invalid access to m_data via parenthesis operator");
         return this->GetData()[i];
     }
 
@@ -337,7 +337,8 @@ namespace Nektar
     template<typename DataType>
     typename boost::call_traits<DataType>::const_reference NekVector<DataType>::operator()(unsigned int i) const
     {
-        ASSERTL1(( i >= 0) && (i < GetDimension()), "Invalid access to m_data via parenthesis operator");
+        ASSERTL1(i < GetDimension(),
+                 "Invalid access to m_data via parenthesis operator");
         return m_data[i];
     }
 

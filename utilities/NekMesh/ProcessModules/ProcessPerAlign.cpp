@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -45,7 +44,7 @@
 #include "ProcessPerAlign.h"
 
 #include <boost/algorithm/string.hpp>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 
 using namespace std;
 using namespace Nektar::NekMeshUtils;
@@ -121,14 +120,15 @@ void ProcessPerAlign::Process()
     boost::split(tmp2, rot, boost::is_any_of(","));
     bool rotalign = false;
 
-    NekDouble vec[3],rotangle;
+    NekDouble vec[3] = {0.0, 0.0, 0.0};
+    NekDouble rotangle = 0.0;
 
     if (tmp2[0] != "")
     {
         // set up for syntax -m peralign:dir=“x":rot="PI/11":surf1=3:surf2=4:tol=1e-6 
         rotalign = true;
         // Evaluate expression since may be give as function of PI
-        LibUtilities::AnalyticExpressionEvaluator strEval;
+        LibUtilities::Interpreter strEval;
         int ExprId = strEval.DefineFunction(" ", tmp2[0]);
         rotangle = strEval.Evaluate(ExprId);
 

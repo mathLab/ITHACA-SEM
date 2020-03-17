@@ -1,4 +1,5 @@
 \section{Forcing}
+\label{sec:xml:forcing}
 An optional section of the file allows forcing functions to be defined. These are enclosed in the
 \inltt{FORCING} tag. The forcing type is enclosed within the \inltt{FORCE} tag and expressed in the file as:
 
@@ -8,14 +9,7 @@ An optional section of the file allows forcing functions to be defined. These ar
 </FORCE>
 \end{lstlisting}
 
-The force type can be any of the following:
-\begin{itemize}
-    \item "Absorption"
-    \item "Body"
-    \item "MovingReferenceFrame"
-    \item "Programmatic"
-    \item "Noise"
-\end{itemize}
+The force type can be any one of the following.
 
 \subsection{Absorption}
 This force type allows the user to apply an absorption layer (essentially a porous region) anywhere in the domain. The user may also specify a velocity profile to be imposed at the start of this layer, and in the event of a time-dependent simulation, this profile can be modulated with a time-dependent function. These velocity functions and the function defining the region in which to apply the absorption layer are expressed in the \inltt{CONDITIONS} section, however the name of these functions are defined here by the \inltt{COEFF} tag for the layer, the \inltt{REFFLOW} tag for the velocity profile, and the \inltt{REFFLOWTIME} for the time-dependent function.  

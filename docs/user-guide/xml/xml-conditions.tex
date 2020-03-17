@@ -1,14 +1,12 @@
 \section{Conditions}
-The final section of the file defines parameters and boundary conditions which
+This section of the file defines parameters and boundary conditions which
 define the nature of the problem to be solved. These are enclosed in the
 \inltt{CONDITIONS} tag.
 
 \subsection{Parameters}
 
-Parameters may be required by a particular solver (for instance time-integration
-parameters or solver-specific parameters), or arbitrary and only used within the
-context of the session file (e.g. parameters in the definition of an initial
-condition). All parameters are enclosed in the \inltt{PARAMETERS} XML element.
+Numerical parameters may be required by a particular solver (for instance time-integration or physical parameters), or may be arbitrary and only used for the purpose of simplifying the problem specification in the session file (e.g. parameters which would otherwise be repeated in the definition of an initial
+condition and boundary conditions). All parameters are enclosed in the \inltt{PARAMETERS} XML element.
 
 \begin{lstlisting}[style=XMLStyle] 
 <PARAMETERS>
@@ -31,6 +29,8 @@ For example,
 <P> FinTime  = NumSteps*TimeStep </P>
 \end{lstlisting}
 
+A number of pre-defined constants may also be used in parameter expressions, for example \texttt{PI}. A full list of supported constants is provided in Section~\ref{sec:xml:expressions:syntax}.
+
 \subsection{Solver Information}
 
 These specify properties to define the actions specific to solvers, typically
@@ -45,7 +45,7 @@ example,
 </SOLVERINFO>
 \end{lstlisting}
 
-The list of available solvers in Nektar++ can be found in
+Boolean-valued solver properties are specified using \inltt{True} or \inltt{False}. The list of available solvers in Nektar++ can be found in
 Part~\ref{p:applications}.
 
 \subsubsection{Drivers}
@@ -65,11 +65,11 @@ In the following example, the driver \inltt{Standard} is used to manage the
 execution of the incompressible Navier-Stokes equations:
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
-    <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
-    <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
-    <I PROPERTY="Projection" VALUE="Galerkin" />
-    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
-    <I PROPERTY="Driver" VALUE="Standard" />
+    <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes"     />
+    <I PROPERTY="SolverType"            VALUE="VelocityCorrectionScheme" />
+    <I PROPERTY="Projection"            VALUE="Galerkin"                 />
+    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"               />
+    <I PROPERTY="Driver"                VALUE="Standard"                 />
 </SOLVERINFO>
 \end{lstlisting}
 
@@ -102,7 +102,7 @@ the velocity variables using
 </VARIABLES>
 \end{lstlisting}
 
-\subsection{Global System Solution Information}
+\subsection{Global System Solution Algorithm}
 
 Many \nekpp solvers use an implicit formulation of their equations to, for
 instance, improve timestep restrictions. This means that a large matrix system
@@ -143,11 +143,10 @@ more expensive \texttt{FullLinearSpaceWithLowEnergyBlock} preconditioner and a
 larger residual of $10^{-6}$. We now outline the choices that one can use for
 each of these parameters and give a brief description of what they mean.
 
-\begin{notebox}
-  Defaults for all fields can be defined by setting the equivalent property in
-  the \texttt{SOLVERINFO} section. Parameters defined in this section will
-  override any options specificed there.
-\end{notebox}
+Defaults for all fields can be defined by setting the equivalent property in
+the \texttt{SOLVERINFO} section. Parameters defined in this section will
+override any options specified there.
+
 
 \subsubsection{\texttt{GlobalSysSoln} options}
 
@@ -173,9 +172,11 @@ each of these parameters and give a brief description of what they mean.
   CMake configuration.
 \end{itemize}
 
+\begin{warningbox}
 Both the \textbf{Xxt} and \textbf{PETSc} solvers are considered advanced and are
 under development -- either the direct or iterative solvers are recommended in
 most scenarios.
+\end{warningbox}
 
 These solvers can be run in one of three approaches:
 
@@ -472,12 +473,13 @@ the Incompressible Navier-Stokes solver,
 \end{lstlisting}
 
 Boundary conditions can also be loaded simultaneously from a file and from an 
-analytic expression. For example in the scenario where a spatial boundary 
+expression (currently only implemented in 3D).
+For example, in the scenario where a spatial boundary 
 condition is read from a file, but needs to be modulated by a time-dependent 
-analytic expression:
+expression:
 \begin{lstlisting}[style=XMLStyle]
 <REGION REF="1">
-  <D VAR="u" VALUE="USERDEFINEDTYPE="TimeDependent" VALUE="sin(PI*(x-t))"
+  <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="sin(PI*(x-t))"
              FILE="bcsfromfiles_u_1.bc" />
 </REGION>
 \end{lstlisting}
@@ -518,7 +520,7 @@ where the step time is used as variable. For example, the function
 
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="Baseflow">
-       <F VAR="U0,V0" TIMEDEPENDENT="1"FILE="U0V0_%14.8E.fld"/>
+       <F VAR="U0,V0" TIMEDEPENDENT="1" FILE="U0V0_%14.8E.fld"/>
 </FUNCTION>
 \end{lstlisting}
 
@@ -557,9 +559,9 @@ three-dimensional incompressible Navier-Stokes simulation, this produces an FLD
 file with the variables \inltt{u}, \inltt{v}, \inltt{w} and \inltt{p}. If we
 wanted to use this velocity field as input for an advection velocity, the
 advection-diffusion-reaction solver expects the variables \inltt{Vx}, \inltt{Vy}
-and \inltt{Vz}.
-
-We can manually specify this mapping by adding a colon to the
+and \inltt{Vz}. We can manually specify this mapping by adding a colon to the
+filename, indicating the variable names in the target file that align with the
+desired function variable names. This gives a definition such as:
 
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="AdvectionVelocity">
@@ -570,8 +572,9 @@ We can manually specify this mapping by adding a colon to the
 There are some caveats with this syntax:
 
 \begin{itemize}
-  \item You must specify the same number of fields for both the variable, and
-  after the colon. For example, the following is not valid.
+  \item The same number of fields must be defined for both the \inltt{VAR}
+  attribute and in the comma-separated list after the colon. For example, the
+  following is not valid:
   \begin{lstlisting}[style=XMLStyle,gobble=4]
     <FUNCTION NAME="AdvectionVelocity">
       <F VAR="Vx,Vy,Vz" FILE="file.fld:u" />
@@ -600,7 +603,7 @@ loaded for each timestep. The filenames are defined using
 </FUNCTION>
 \end{lstlisting}
 
-Section~\ref{sec:xml:analytic-expressions} provides the list of acceptable
+Section~\ref{sec:xml:expressions} provides the list of acceptable
 mathematical functions and other related technical details.
 
 \subsection{Quasi-3D approach}
@@ -617,54 +620,36 @@ homogeneouns dimension; here an example
 
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
-  <I PROPERTY="SolverType"            VALUE="VelocityCorrectionScheme"/>
-  <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes"/>
-  <I PROPERTY="AdvectionForm"         VALUE="Convective"/>
-  <I PROPERTY="Projection"            VALUE="Galerkin"/>
-  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
-  <I PROPERTY="HOMOGENEOUS"           VALUE="1D"/>
+  ...
+  <I PROPERTY="HOMOGENEOUS"           VALUE="1D"                       />
 </SOLVERINFO>
 \end{lstlisting}
 
 then we need to specify the parameters which define the 1D harmonic expanson
 along the z-axis, namely the homogeneous length (LZ) and the number of modes in
-the homogeneous direction (HomModesZ). HomModesZ corresponds also to the number
+the homogeneous direction (HomModesZ). \inltt{HomModesZ} corresponds also to the number
 of quadrature points in the homogenous direction, hence on the number of 2D
-planes discretized with a specral/hp element method.
+planes discretized with a spectral/hp element method.
 
 \begin{lstlisting}[style=XMLStyle]
 <PARAMETERS>
-  <P> TimeStep      = 0.001   </P>
-  <P> NumSteps      = 1000    </P>
-  <P> IO_CheckSteps = 100     </P>
-  <P> IO_InfoSteps  = 10      </P>
-  <P> Kinvis        = 0.025   </P>
+  ...
   <P> HomModesZ     = 4       </P>
   <P> LZ            = 1.0     </P>
 </PARAMETERS>
 \end{lstlisting}
 
-In case we want to create a Quasi-3D approach starting form a 1D spectral/hp
+In case we want to create a Quasi-3D approach starting from a 1D spectral/hp
 element mesh, the procedure is the same, but we need to specify the parameters
 for two harmonic directions (in Y and Z direction). For Example,
 
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
-  <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvectionDiffusion" />
-  <I PROPERTY="Projection"            VALUE="Continuous"/>
-  <I PROPERTY="HOMOGENEOUS"           VALUE="2D"/>
-  <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"/>
-  <I PROPERTY="AdvectionAdvancement"  VALUE="Explicit"/>
-  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
+  ...
+  <I PROPERTY="HOMOGENEOUS"           VALUE="2D"                         />
 </SOLVERINFO>
 <PARAMETERS>
-  <P> TimeStep      = 0.001 </P>
-  <P> NumSteps      = 200   </P>
-  <P> IO_CheckSteps = 200   </P>
-  <P> IO_InfoSteps  = 10    </P>
-  <P> wavefreq      = PI    </P>
-  <P> epsilon       = 1.0   </P>
-  <P> Lambda        = 1.0   </P>
+  ...
   <P> HomModesY     = 10    </P>
   <P> LY            = 6.5   </P>
   <P> HomModesZ     = 6     </P>
@@ -672,26 +657,22 @@ for two harmonic directions (in Y and Z direction). For Example,
 </PARAMETERS>
 \end{lstlisting}
 
-By default the opeartions associated with the harmonic expansions are performed
-with the Matix-Vector-Multiplication (MVM) defined inside the code. The Fast
-Fourier Transofrm (FFT) can be used to speed up the operations (if the FFTW
+By default the operations associated with the harmonic expansions are performed
+with the Matrix-Vector-Multiplication (MVM) defined inside the code. The Fast
+Fourier Transform (FFT) can be used to speed up the operations (if the FFTW
 library has been compiled in ThirdParty, see the compilation instructions). To
 use the FFT routines we need just to insert a flag in the solver information as
 below:
 
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
-  <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvectionDiffusion" />
-  <I PROPERTY="Projection"            VALUE="Continuous"/>
-  <I PROPERTY="HOMOGENEOUS"           VALUE="2D"/>
-  <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"/>
-  <I PROPERTY="AdvectionAdvancement"  VALUE="Explicit"/>
-  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
-  <I PROPERTY="USEFFT"                VALUE="FFTW"/>
+  ...
+  <I PROPERTY="HOMOGENEOUS"           VALUE="2D"                         />
+  <I PROPERTY="USEFFT"                VALUE="FFTW"                       />
 </SOLVERINFO>
 \end{lstlisting}
 
-The number of homogenenous modes has to be even. The Quasi-3D apporach can be
+The number of homogeneous modes has to be even. The Quasi-3D approach can be
 created starting from a 2D mesh and adding one homogenous expansion or starting
 form a 1D mesh and adding two homogeneous expansions. Not other options
 available. In case of a 1D homogeneous extension, the homogeneous direction will

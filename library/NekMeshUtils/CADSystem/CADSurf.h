@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -79,7 +78,7 @@ public:
      */
     CADSurf()
     {
-        m_type = CADType::eSurf;
+        m_type        = CADType::eSurf;
         m_orientation = CADOrientation::eForwards;
     }
 
@@ -117,6 +116,12 @@ public:
     virtual Array<OneD, NekDouble> GetBounds() = 0;
 
     /**
+     * @brief Get the limits of the parametric space for the surface.
+     */
+    virtual void GetBounds(NekDouble &umin, NekDouble &umax, NekDouble &vmin,
+                           NekDouble &vmax) = 0;
+
+    /**
      * @brief Get the normal vector at parametric point u,v.
      *
      * @param uv Array of u and v parametric coords.
@@ -147,6 +152,14 @@ public:
      * @return Array of x,y,z location.
      */
     virtual Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv) = 0;
+
+    /**
+     * @brief Get the x,y,z at parametric point u,v.
+     *
+     * @param uv Array of u and v parametric coords.
+     */
+    virtual void P(Array<OneD, NekDouble> uv, NekDouble &x, NekDouble &y,
+                   NekDouble &z) = 0;
 
     /**
      * @brief Performs a reverse look up to find u,v and x,y,z.

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -585,40 +585,40 @@ NekDouble Shape_sol(NekDouble x, NekDouble y, NekDouble z, vector<int> order,
 {
     map<ShapeType, function<int(int, const vector<int> &)>> shapeConstraint2;
     shapeConstraint2[ePoint] =
-            [](int k, const vector<int> &order) { return 1; };
+            [](int,   const vector<int> &     ) { return 1; };
     shapeConstraint2[eSegment] =
-            [](int k, const vector<int> &order) { return 1; };
+            [](int,   const vector<int> &     ) { return 1; };
     shapeConstraint2[eTriangle] =
             [](int k, const vector<int> &order) { return order[1] - k; };
     shapeConstraint2[eQuadrilateral] =
-            [](int k, const vector<int> &order) { return order[1]; };
+            [](int,   const vector<int> &order) { return order[1]; };
     shapeConstraint2[eTetrahedron] =
             [](int k, const vector<int> &order) { return order[1] - k; };
     shapeConstraint2[ePyramid] =
             [](int k, const vector<int> &order) { return order[1] - k; };
     shapeConstraint2[ePrism] =
-            [](int k, const vector<int> &order) { return order[1]; };
+            [](int,   const vector<int> &order) { return order[1]; };
     shapeConstraint2[eHexahedron] =
-            [](int k, const vector<int> &order) { return order[1]; };
+            [](int,   const vector<int> &order) { return order[1]; };
 
     map<ShapeType, function<int(int, int, const vector<int> &order)>>
             shapeConstraint3;
     shapeConstraint3[ePoint] =
-            [](int k, int l, const vector<int> &order) { return 1; };
+            [](int,   int,   const vector<int> &     ) { return 1; };
     shapeConstraint3[eSegment] =
-            [](int k, int l, const vector<int> &order) { return 1; };
+            [](int,   int,   const vector<int> &     ) { return 1; };
     shapeConstraint3[eTriangle] =
-            [](int k, int l, const vector<int> &order) { return 1; };
+            [](int,   int,   const vector<int> &     ) { return 1; };
     shapeConstraint3[eQuadrilateral] =
-            [](int k, int l, const vector<int> &order) { return 1; };
+            [](int,   int,   const vector<int> &     ) { return 1; };
     shapeConstraint3[eTetrahedron] =
             [](int k, int l, const vector<int> &order) { return order[2] - k - l; };
     shapeConstraint3[ePyramid] =
             [](int k, int l, const vector<int> &order) { return order[2] - k - l; };
     shapeConstraint3[ePrism] =
-            [](int k, int l, const vector<int> &order) { return order[2] - k; };
+            [](int k, int,   const vector<int> &order) { return order[2] - k; };
     shapeConstraint3[eHexahedron] =
-            [](int k, int l, const vector<int> &order) { return order[2]; };
+            [](int,   int,   const vector<int> &order) { return order[2]; };
 
     NekDouble sol = 0.0;
     if (!diff)

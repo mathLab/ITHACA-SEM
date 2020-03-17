@@ -1,6 +1,7 @@
 SET(LibUtilitiesUnitTestSources
     TestConsistentObjectAccess.cpp
     TestRawType.cpp
+    TestInterpreter.cpp
     TestSharedArray.cpp
     main.cpp
     ../util.cpp

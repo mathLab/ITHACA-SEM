@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -88,12 +87,12 @@ void PtsField::SetDim(const int ptsDim)
     m_dim = ptsDim;
 }
 
-int PtsField::GetDim() const
+size_t PtsField::GetDim() const
 {
     return m_dim;
 }
 
-int PtsField::GetNFields() const
+size_t PtsField::GetNFields() const
 {
     return m_pts.num_elements() - m_dim;
 }
@@ -120,14 +119,14 @@ void PtsField::SetFieldNames(const vector<std::string> fieldNames)
 void PtsField::AddField(const Array< OneD, NekDouble > &pts,
                         const string fieldName)
 {
-    int nTotvars = m_pts.num_elements();
+    size_t nTotvars = m_pts.num_elements();
 
     ASSERTL1(pts.num_elements() ==  m_pts[0].num_elements(), 
             "Field size mismatch");
 
     // redirect existing pts
     Array<OneD, Array<OneD, NekDouble> > newpts(nTotvars + 1);
-    for (int i = 0; i < nTotvars; ++i)
+    for (size_t i = 0; i < nTotvars; ++i)
     {
         newpts[i] = m_pts[i];
     }
@@ -141,11 +140,11 @@ void PtsField::AddField(const Array< OneD, NekDouble > &pts,
 
 void PtsField::RemoveField(const string fieldName)
 {
-    int nTotvars = m_pts.num_elements();
+    size_t nTotvars = m_pts.num_elements();
 
     // redirect existing pts
     Array<OneD, Array<OneD, NekDouble> > newpts(nTotvars - 1);
-    for (int i = 0, j = 0; i < nTotvars; ++i)
+    for (size_t i = 0, j = 0; i < nTotvars; ++i)
     {
         if (i < GetDim() || m_fieldNames[i - GetDim()] != fieldName)
         {
@@ -164,14 +163,14 @@ void PtsField::AddPoints(const Array<OneD, const Array<OneD, NekDouble> > &pts)
              "number of variables mismatch");
 
     // TODO: dont copy, dont iterate
-    for (int i = 0; i < m_pts.num_elements(); ++i)
+    for (size_t i = 0; i < m_pts.num_elements(); ++i)
     {
         Array<OneD, NekDouble> tmp(m_pts[i].num_elements() + pts[i].num_elements());
-        for (int j = 0; j < m_pts[i].num_elements(); ++j)
+        for (size_t j = 0; j < m_pts[i].num_elements(); ++j)
         {
             tmp[j] = m_pts[i][j];
         }
-        for (int j = 0; j < pts[i].num_elements(); ++j)
+        for (size_t j = 0; j < pts[i].num_elements(); ++j)
         {
             tmp[m_pts[i].num_elements() + j] = pts[i][j];
         }
@@ -179,18 +178,18 @@ void PtsField::AddPoints(const Array<OneD, const Array<OneD, NekDouble> > &pts)
     }
 }
 
-int PtsField::GetNpoints() const
+size_t PtsField::GetNpoints() const
 {
     return m_pts[0].num_elements();
 }
 
-NekDouble PtsField::GetPointVal(const int fieldInd, const int ptInd) const
+NekDouble PtsField::GetPointVal(const size_t fieldInd, const size_t ptInd) const
 {
     return m_pts[fieldInd][ptInd];
 }
 
-void PtsField::SetPointVal(const int fieldInd,
-                           const int ptInd,
+void PtsField::SetPointVal(const size_t fieldInd,
+                           const size_t ptInd,
                            const NekDouble val)
 {
     m_pts[fieldInd][ptInd] = val;
@@ -214,12 +213,12 @@ void PtsField::SetPts(Array< OneD, Array< OneD, NekDouble > > &pts)
     m_pts = pts;
 }
 
-vector<int> PtsField::GetPointsPerEdge() const
+vector<size_t> PtsField::GetPointsPerEdge() const
 {
     return m_nPtsPerEdge;
 }
 
-int PtsField::GetPointsPerEdge(const int i) const
+size_t PtsField::GetPointsPerEdge(const size_t i) const
 {
     return m_nPtsPerEdge[i];
 }
@@ -231,7 +230,7 @@ int PtsField::GetPointsPerEdge(const int i) const
  * data has no specific shape (ePtsLine) or is a block (ePtsTetBlock,
  * ePtsTriBlock), size=1 for ePtsLine, 2 for ePtsPlane and 3 for ePtsBox
  */
-void PtsField::SetPointsPerEdge(const vector< int > nPtsPerEdge)
+void PtsField::SetPointsPerEdge(const vector< size_t > nPtsPerEdge)
 {
     ASSERTL0(
         m_ptsType == ePtsLine || m_ptsType == ePtsPlane || m_ptsType == ePtsBox,

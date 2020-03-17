@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -41,7 +40,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <SolverUtils/AdvectionSystem.h>
 
 
@@ -89,8 +88,7 @@ namespace Nektar
         void UpdateRobinPrimCoeff(void);
 
         inline void SubSteppingTimeIntegration(
-            const int intMethod,
-            const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme);
+            const LibUtilities::TimeIntegrationSchemeSharedPtr &IntegrationScheme);
 
         inline void SubStepSaveFields(
             const int nstep);
@@ -101,7 +99,7 @@ namespace Nektar
             NekDouble kinvis);
 
         inline void SubStepAdvance(
-            const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
+            const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln, 
             const int nstep, 
             NekDouble time);
 
@@ -135,7 +133,7 @@ namespace Nektar
         
         void IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IprodVn);
         
-        LibUtilities::TimeIntegrationMethod GetSubStepIntegrationMethod(void); 
+        std::string GetSubStepName(void); 
 
         void ExtrapolateArray( Array<OneD, Array<OneD, NekDouble> > &array);
 
@@ -160,8 +158,7 @@ namespace Nektar
             NekDouble kinvis)=0;
 
        virtual void v_SubSteppingTimeIntegration(
-            int intMethod,        
-            const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)=0;
+            const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme ) = 0;
 
         virtual void v_SubStepSaveFields(
             int nstep)=0;
@@ -172,9 +169,9 @@ namespace Nektar
             NekDouble kinvis)=0;
 
         virtual void v_SubStepAdvance(
-            const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-            int nstep, 
-            NekDouble time)=0;
+            const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr & integrationSoln, 
+                  int                                                                     nstep, 
+                  NekDouble                                                               time ) = 0;
 
         virtual void v_MountHOPBCs(
             int HBCdata, 
@@ -182,8 +179,7 @@ namespace Nektar
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection)=0;
         
-        virtual LibUtilities::TimeIntegrationMethod 
-            v_GetSubStepIntegrationMethod(void);
+        virtual std::string v_GetSubStepName(void);
 
         void CalcNeumannPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
@@ -349,10 +345,9 @@ namespace Nektar
      *
      */
     inline void Extrapolate::SubSteppingTimeIntegration(
-        int intMethod,
-        const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
+        const LibUtilities::TimeIntegrationSchemeSharedPtr &IntegrationScheme)
     {
-        v_SubSteppingTimeIntegration(intMethod, IntegrationScheme);
+        v_SubSteppingTimeIntegration(IntegrationScheme);
     }
     
     /**
@@ -379,7 +374,7 @@ namespace Nektar
      *
      */
     inline void Extrapolate::SubStepAdvance(
-        const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
+        const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln, 
         int nstep, 
         NekDouble time)
     {
@@ -401,10 +396,9 @@ namespace Nektar
     /**
      *
      */
-    inline LibUtilities::TimeIntegrationMethod 
-        Extrapolate::GetSubStepIntegrationMethod(void)
+    inline std::string Extrapolate::GetSubStepName(void)
     {
-        return v_GetSubStepIntegrationMethod();
+        return v_GetSubStepName();
     }
 
     /**

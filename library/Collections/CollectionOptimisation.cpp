@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,8 +32,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+
 #include <Collections/CollectionOptimisation.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 using namespace std;
 
@@ -319,6 +322,8 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
         OperatorImpMap &impTypes,
         bool verbose )
 {
+    boost::ignore_unused(impTypes);
+
     OperatorImpMap ret;
 
     StdRegions::StdExpansionSharedPtr pExp = pCollExp[0];

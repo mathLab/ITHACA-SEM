@@ -1,0 +1,39 @@
+<NEKTAR>
+    <MESHING>
+
+        <INFORMATION>
+            <I PROPERTY="CADFile"   VALUE="3d_bl_wing.stp" />
+            <I PROPERTY="MeshType"  VALUE="3DBndLayer"            />
+        </INFORMATION>
+
+        <PARAMETERS>
+            <P PARAM="MinDelta" VALUE="0.02"    />
+            <P PARAM="MaxDelta" VALUE="0.5"     />
+            <P PARAM="EPS"      VALUE="0.05"     />
+
+            <P PARAM="Order"    VALUE="4"       />
+
+            <P PARAM="BndLayerSurfaces"  VALUE="1,2,3,4"     />
+            <P PARAM="BndLayerThickness"  VALUE="0.03"    />
+            <P PARAM="BndLayerLayers" VALUE="6"     />
+            <P PARAM="BndLayerProgression"   VALUE="1.5" />
+        </PARAMETERS>
+
+        <BOOLPARAMETERS>
+            <P VALUE="SurfOpti" />
+        </BOOLPARAMETERS>
+
+        <REFINEMENT>
+            <LINE>
+                <X1> 1.2 </X1>
+                <Y1> -0.843 </Y1>
+                <Z1> 0.22 </Z1>
+                <X2> 1.38 </X2>
+                <Y2> -0.843 </Y2>
+                <Z2> 0.194 </Z2>
+                <R>  0.01 </R>
+                <D>  0.002 </D>
+            </LINE>
+        </REFINEMENT>
+    </MESHING>
+</NEKTAR>

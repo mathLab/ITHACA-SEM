@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -35,6 +34,7 @@
 #include <string>
 #include <iostream>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
@@ -115,6 +115,8 @@ ProcessIsoContour::~ProcessIsoContour(void)
 
 void ProcessIsoContour::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     bool verbose = (m_f->m_verbose && m_f->m_comm->TreatAsRankZero());
 
     vector<IsoSharedPtr> iso;
@@ -155,7 +157,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
             Array<OneD, NekDouble> pts(m_f->m_fieldPts->GetNpoints());
 
             // evaluate new function
-            LibUtilities::AnalyticExpressionEvaluator strEval;
+            LibUtilities::Interpreter strEval;
             string varstr = "x y z";
             vector<Array<OneD, const NekDouble> > interpfields;
 
@@ -669,7 +671,7 @@ void ProcessIsoContour::SetupIsoFromFieldPts(vector<IsoSharedPtr> &isovec)
 
 void Iso::Condense(void)
 {
-    register int i,j,cnt;
+    int i,j,cnt;
     IsoVertex v;
     vector<IsoVertex> vert;
 

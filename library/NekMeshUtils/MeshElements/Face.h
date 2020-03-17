@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #ifndef NEKMESHUTILS_MESHELEMENTS_FACE
 #define NEKMESHUTILS_MESHELEMENTS_FACE
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <SpatialDomains/TriGeom.h>
@@ -88,7 +89,7 @@ public:
     /// Equality is defined by matching all vertices.
     NEKMESHUTILS_EXPORT bool operator==(Face &pSrc)
     {
-        std::vector<NodeSharedPtr>::iterator it1, it2;
+        std::vector<NodeSharedPtr>::iterator it1;
         for (it1 = m_vertexList.begin(); it1 != m_vertexList.end(); ++it1)
         {
             if (find(pSrc.m_vertexList.begin(),

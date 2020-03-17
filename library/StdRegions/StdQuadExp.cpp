@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,9 @@
 // Description: Quadrilateral routines built upon StdExpansion2D
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdSegExp.h>
@@ -99,6 +101,7 @@ namespace Nektar
                             Array<OneD, NekDouble> &out_d1,
                             Array<OneD, NekDouble> &out_d2)
         {
+            boost::ignore_unused(out_d2);
             PhysTensorDeriv(inarray, out_d0, out_d1);
         }
 
@@ -131,6 +134,7 @@ namespace Nektar
                             Array<OneD, NekDouble> &out_d1,
                             Array<OneD, NekDouble> &out_d2)
         {
+            boost::ignore_unused(out_d2);
             //PhysTensorDeriv(inarray, out_d0, out_d1);
             StdQuadExp::v_PhysDeriv(inarray, out_d0, out_d1);
         }
@@ -699,7 +703,7 @@ namespace Nektar
         LibUtilities::ShapeType StdQuadExp::v_DetShapeType() const
         {
             return LibUtilities::eQuadrilateral;
-        };
+        }
 
 
         int StdQuadExp::v_NumBndryCoeffs() const
@@ -761,6 +765,7 @@ namespace Nektar
 			    Array<OneD, NekDouble> &coords_1,
 			    Array<OneD, NekDouble> &coords_2)
         {
+            boost::ignore_unused(coords_2);
             Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
             Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
             int nq0 = GetNumPoints(0);
@@ -850,7 +855,7 @@ namespace Nektar
             int i,j;
             int cnt=0;
             int nummodes0, nummodes1;
-            int startvalue;
+            int startvalue = 0;
             if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());
@@ -1807,6 +1812,8 @@ namespace Nektar
             Array<OneD, int> &conn,
             bool              standard)
         {
+            boost::ignore_unused(standard);
+
             int np1 = m_base[0]->GetNumPoints();
             int np2 = m_base[1]->GetNumPoints();
             int np = max(np1,np2);

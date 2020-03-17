@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <ShallowWaterSolver/RiemannSolvers/LinearSWESolver.h>
 
 namespace Nektar
@@ -51,15 +52,16 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
               Array<OneD,       Array<OneD, NekDouble> > &flux)
     {
+        boost::ignore_unused(nDim);
 
-	// extract the forward and backward trace of the depth
-  	const Array<OneD, NekDouble> &dFwd = m_scalars["depthFwd"]();
- 	const Array<OneD, NekDouble> &dBwd = m_scalars["depthBwd"]();
+        // extract the forward and backward trace of the depth
+          const Array<OneD, NekDouble> &dFwd = m_scalars["depthFwd"]();
+         const Array<OneD, NekDouble> &dBwd = m_scalars["depthBwd"]();
 
 
         if (m_pointSolve)
         {
-	  	  
+                    
             int expDim = Fwd.num_elements()-1;
             NekDouble vf;
 
@@ -68,8 +70,8 @@ namespace Nektar
                 for (int i = 0; i < Fwd[0].num_elements(); ++i)
                 {
                     v_PointSolve(
-			Fwd [0][i], Fwd [1][i], 0.0, dFwd[i], 
-		  	Bwd [0][i], Bwd [1][i], 0.0, dBwd[i],
+                        Fwd [0][i], Fwd [1][i], 0.0, dFwd[i], 
+                          Bwd [0][i], Bwd [1][i], 0.0, dBwd[i],
                         flux[0][i], flux[1][i], vf);
                 }
             }
@@ -77,16 +79,16 @@ namespace Nektar
             {
                 for (int i = 0; i < Fwd[0].num_elements(); ++i)
                 {
-		  v_PointSolve(
-			Fwd [0][i], Fwd [1][i], Fwd [2][i], dFwd[i],
-			Bwd [0][i], Bwd [1][i], Bwd [2][i], dBwd[i],
+                  v_PointSolve(
+                        Fwd [0][i], Fwd [1][i], Fwd [2][i], dFwd[i],
+                        Bwd [0][i], Bwd [1][i], Bwd [2][i], dBwd[i],
                         flux[0][i], flux[1][i], flux[2][i]);
                 }
             }
             else if (expDim == 3)
             {
-	      ASSERTL0(false, "No 3D Shallow water supported.");
-	    }
+              ASSERTL0(false, "No 3D Shallow water supported.");
+            }
         }
         else
         {

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -33,6 +32,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
@@ -458,6 +458,8 @@ void InputStar::GenElement2D(vector<NodeSharedPtr> &VertNodes,
                              vector<int> &FaceNodes,
                              int nComposite)
 {
+    boost::ignore_unused(i);
+
     LibUtilities::ShapeType elType;
 
     if (FaceNodes.size() == 3)
@@ -500,6 +502,8 @@ void InputStar::GenElement3D(vector<NodeSharedPtr> &VertNodes,
                              int nComposite,
                              bool DoOrient)
 {
+    boost::ignore_unused(i);
+
     LibUtilities::ShapeType elType;
     // set up Node list
     Array<OneD, int> Nodes = SortFaceNodes(VertNodes, ElementFaces, FaceNodes);
@@ -921,7 +925,7 @@ void InputStar::InitCCM(void)
 void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
 {
     CCMIOID mapID, vertices;
-    CCMIOSize nVertices, size;
+    CCMIOSize nVertices;
     int dims = 1;
 
     CCMIOReadProcessor(

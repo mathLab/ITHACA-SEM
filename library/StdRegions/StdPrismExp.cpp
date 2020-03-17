@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Prismatic routines built upon StdExpansion3D
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <StdRegions/StdPrismExp.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
@@ -294,6 +295,9 @@ namespace Nektar
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1,
+                                 doCheckCollDir2);
+
             int i, mode;
             int nquad0    = m_base[0]->GetNumPoints();
             int nquad1    = m_base[1]->GetNumPoints();
@@ -475,6 +479,9 @@ namespace Nektar
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1,
+                                 doCheckCollDir2);
+
             // Interior prism implementation based on Spen's book page
             // 119. and 608.
             const int nquad0 = m_base[0]->GetNumPoints();
@@ -548,8 +555,8 @@ namespace Nektar
         {
             ASSERTL0(dir >= 0 && dir <= 2, "input dir is out of range");
 
-            int nq = GetTotPoints();
-            MatrixType mtype;
+            int nq           = GetTotPoints();
+            MatrixType mtype = eIProductWRTDerivBase0;
 
             switch (dir)
             {

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: An ExpList which is homogeneous in 2-directions
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/ExpListHomogeneous2D.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
@@ -278,6 +279,8 @@ namespace Nektar
                         Array<OneD, Array<OneD, NekDouble> > &outarray,
                         CoeffState coeffstate)
         {
+            boost::ignore_unused(coeffstate);
+
             // TODO Proper implementation of this
             int ndim = inarray1.num_elements();
             ASSERTL1( inarray2.num_elements() % ndim == 0,
@@ -411,6 +414,8 @@ namespace Nektar
                                                       bool Shuff,
                                                       bool UnShuff)        
         {
+            boost::ignore_unused(Shuff, UnShuff);
+
             if(m_useFFT)
             {
                 
@@ -544,6 +549,8 @@ namespace Nektar
 
         DNekBlkMatSharedPtr ExpListHomogeneous2D::GenHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype, CoeffState coeffstate) const
         {
+            boost::ignore_unused(coeffstate);
+
             int i;
             int n_exp = 0;
             

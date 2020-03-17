@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,10 +36,12 @@
 #include <string>
 using namespace std;
 
-#include "ProcessBoundaryExtract.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessBoundaryExtract.h"
 
 namespace Nektar
 {
@@ -72,6 +73,8 @@ ProcessBoundaryExtract::~ProcessBoundaryExtract()
 
 void ProcessBoundaryExtract::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     m_f->m_addNormals = m_config["addnormals"].as<bool>();
 
     // Set up Field options to output boundary fld

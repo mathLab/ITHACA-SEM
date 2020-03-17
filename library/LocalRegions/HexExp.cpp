@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -64,7 +63,7 @@ namespace Nektar
                        const SpatialDomains::HexGeomSharedPtr &geom):
             StdExpansion  (Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(),3,Ba,Bb,Bc),
             StdExpansion3D(Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(),Ba,Bb,Bc),
-            StdRegions::StdHexExp(Ba,Bb,Bc),
+            StdHexExp(Ba,Bb,Bc),
             Expansion     (geom),
             Expansion3D   (geom),
             m_matrixManager(
@@ -83,7 +82,9 @@ namespace Nektar
          * @param   T           HexExp to copy.
          */
         HexExp::HexExp(const HexExp &T):
-            StdRegions::StdHexExp(T),
+            StdExpansion(T),
+            StdExpansion3D(T),
+            StdHexExp(T),
             Expansion(T),
             Expansion3D(T),
             m_matrixManager(T.m_matrixManager),

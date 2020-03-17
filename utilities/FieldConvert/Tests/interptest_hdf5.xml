@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2" HDF5FILE="interptest_hdf5.nekg" />
+    <EXPANSIONS>
+        <E COMPOSITE="C[100]" NUMMODES="4" TYPE="MODIFIED" FIELDS="u" />
+        <E COMPOSITE="C[101]" NUMMODES="4" TYPE="MODIFIED" FIELDS="u" />
+    </EXPANSIONS>
+</NEKTAR>

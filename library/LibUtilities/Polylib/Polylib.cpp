@@ -5,6 +5,8 @@
 #include <float.h>
 #include <complex>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 /// Maximum number of iterations in polynomial defalation routine Jacobz
 #define STOP  30 
@@ -89,7 +91,7 @@ namespace Polylib {
     void zwgj (double *z, double *w, const int np, const double alpha, 
         const double beta)
     {
-        register int i;
+        int i;
         double fac, one = 1.0, two = 2.0, apb = alpha + beta;
 
         jacobz (np,z,alpha,beta);
@@ -123,7 +125,7 @@ namespace Polylib {
             w[0] = 2.0;
         }
         else{
-            register int i;
+            int i;
             double fac, one = 1.0, two = 2.0, apb = alpha + beta;
 
             z[0] = -one;
@@ -161,7 +163,7 @@ namespace Polylib {
             w[0] = 2.0;
         }
         else{
-            register int i;
+            int i;
             double fac, one = 1.0, two = 2.0, apb = alpha + beta;
 
             jacobz  (np-1,z,alpha+1,beta);
@@ -204,7 +206,7 @@ namespace Polylib {
             w[1] =  1.0;
         }
         else{
-            register int i;
+            int i;
             double   fac, one = 1.0, apb = alpha + beta, two = 2.0;
 
             z[0]    = -one;
@@ -548,7 +550,7 @@ namespace Polylib {
             D[0] = 0.0;
         }
         else{
-            register int i,j; 
+            int i,j; 
             double *pd;
 
             pd = (double *)malloc(np*sizeof(double));
@@ -589,7 +591,7 @@ namespace Polylib {
             D[0] = 0.0;
         }
         else{
-            register int i, j; 
+            int i, j; 
             double   one = 1.0, two = 2.0;
             double   *pd;
 
@@ -639,7 +641,7 @@ namespace Polylib {
             D[0] = 0.0;
         }
         else{
-            register int i, j; 
+            int i, j; 
             double   one = 1.0, two = 2.0;
             double   *pd;
 
@@ -689,7 +691,7 @@ namespace Polylib {
             D[0] = 0.0;
         }
         else{
-            register int i, j; 
+            int i, j; 
             double   one = 1.0, two = 2.0;
             double   *pd;
 
@@ -747,7 +749,7 @@ namespace Polylib {
     double hgj (const int i, const double z, const double *zgj, 
         const int np, const double alpha, const double beta)
     {
-
+        boost::ignore_unused(alpha, beta);
 	double zi, dz;
 
         zi  = *(zgj+i);
@@ -782,6 +784,7 @@ namespace Polylib {
     double hgrjm (const int i, const double z, const double *zgrj, const int np, 
         const double alpha, const double beta)
     {
+        boost::ignore_unused(alpha, beta);
 
 	double zi, dz;
 
@@ -817,7 +820,7 @@ namespace Polylib {
     double hgrjp (const int i, const double z, const double *zgrj, const int np, 
         const double alpha, const double beta)
     {
-
+        boost::ignore_unused(alpha, beta);
 	double zi, dz;
 
         zi  = *(zgrj+i);
@@ -852,6 +855,8 @@ namespace Polylib {
     double hglj (const int i, const double z, const double *zglj, const int np, 
         const double alpha, const double beta)
     {
+        boost::ignore_unused(alpha, beta);
+
         double zi, dz;
 
         zi  = *(zglj+i);
@@ -879,7 +884,7 @@ namespace Polylib {
     void Imgj(double *im, const double *zgj, const double *zm, const int nz, 
         const int mz,const double alpha, const double beta){
             double zp;
-            register int i, j;
+            int i, j;
 
             for (i = 0; i < nz; ++i) {
                 for (j = 0; j < mz; ++j)
@@ -909,7 +914,7 @@ namespace Polylib {
         const int mz, const double alpha, const double beta)
     {
         double zp;
-        register int i, j;
+        int i, j;
 
         for (i = 0; i < nz; i++) {
             for (j = 0; j < mz; j++)
@@ -939,7 +944,7 @@ namespace Polylib {
         const int mz,const double alpha, const double beta)
     {
             double zp;
-            register int i, j;
+            int i, j;
 
             for (i = 0; i < nz; i++) {
                 for (j = 0; j < mz; j++)
@@ -970,7 +975,7 @@ namespace Polylib {
         const int mz, const double alpha, const double beta)
     {
         double zp;
-        register int i, j;
+        int i, j;
 
         for (i = 0; i < nz; i++) {
             for (j = 0; j < mz; j++)
@@ -1025,7 +1030,7 @@ namespace Polylib {
     */
     void jacobfd(const int np, const double *z, double *poly_in, double *polyd, 
         const int n, const double alpha, const double beta){
-            register int i;
+            int i;
             double  zero = 0.0, one = 1.0, two = 2.0;
 
             if(!np)
@@ -1048,7 +1053,7 @@ namespace Polylib {
                         polyd[i] = 0.5*(alpha + beta + two);
             }
             else{
-                register int k;
+                int k;
                 double   a1,a2,a3,a4;
                 double   two = 2.0, apb = alpha + beta;
                 double   *poly, *polyn1,*polyn2;
@@ -1126,7 +1131,7 @@ namespace Polylib {
     void jacobd(const int np, const double *z, double *polyd, const int n, 
         const double alpha, const double beta)
     {
-        register int i;
+        int i;
         double one = 1.0;
         if(n == 0)
             for(i = 0; i < np; ++i) polyd[i] = 0.0;
@@ -1189,7 +1194,7 @@ namespace Polylib {
 
     static void Jacobz(const int n, double *z, const double alpha, 
         const double beta){
-            register int i,j,k;
+            int i,j,k;
             double   dth = M_PI/(2.0*(double)n);
             double   poly,pder,rlast=0.0;
             double   sum,delr,r;

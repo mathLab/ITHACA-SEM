@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -105,7 +104,7 @@ namespace SolverUtils
 
             m_session->SubstituteExpressions(funcNameTime);
             m_timeFcnEqn = MemoryManager<LibUtilities::Equation>
-                ::AllocateSharedPtr(m_session->GetExpressionEvaluator(),funcNameTime);
+                ::AllocateSharedPtr(m_session->GetInterpreter(),funcNameTime);
 
             m_hasTimeFcnScaling = true;
         }
@@ -116,21 +115,56 @@ namespace SolverUtils
             m_Forcing[i] = Array<OneD, NekDouble> (pFields[0]->GetTotPoints(), 0.0);
         }
 
+        Array<OneD, Array<OneD, NekDouble> > tmp(pFields.num_elements());
+        for (int i = 0; i < pFields.num_elements(); ++i)
+        {
+            tmp[i] = pFields[i]->GetPhys();
+        }
 
-        Update(pFields, 0.0);
+        Update(pFields, tmp, 0.0);
     }
 
 
     void ForcingBody::Update(
             const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields,
+            const Array<OneD, Array<OneD, NekDouble> > &inarray,
             const NekDouble &time)
     {
+        LibUtilities::EquationSharedPtr eqn = m_session->GetFunction(
+            m_funcName, m_session->GetVariable(0));
+
+        if (!boost::iequals(eqn->GetVlist(), "x y z t"))
+        {
+            // Coupled forcing
+            int nq = pFields[0]->GetNpoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq), t(nq, time);
+            std::string varstr = "x y z";
+            std::vector<Array<OneD, const NekDouble>> fielddata = {
+                xc, yc, zc, t};
+
+            for (int i = 0; i < pFields.num_elements(); ++i)
+            {
+                varstr += " " + m_session->GetVariable(i);
+                fielddata.push_back(inarray[i]);
+            }
+
+            // Evaluate function
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                m_session->GetFunction(m_funcName, m_session->GetVariable(i))->
+                    Evaluate(fielddata, m_Forcing[i]);
+            }
+
+            return;
+        }
+
         for (int i = 0; i < m_NumVariable; ++i)
         {
             std::string  s_FieldStr   = m_session->GetVariable(i);
             ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
                      "Variable '" + s_FieldStr + "' not defined.");
-            GetFunction(pFields, m_session, m_funcName, true)->Evaluate(s_FieldStr, m_Forcing[i], time);
+            GetFunction(pFields, m_session, m_funcName, true)->Evaluate(
+                s_FieldStr, m_Forcing[i], time);
         }
 
         // If singleMode or halfMode, transform the forcing term to be in
@@ -168,7 +202,7 @@ namespace SolverUtils
         }
         else
         {
-            Update(fields, time);
+            Update(fields, inarray, time);
 
             for (int i = 0; i < m_NumVariable; i++)
             {

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,9 @@
 // Description: File for Expansion2D routines
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion3D.h>
@@ -919,10 +921,13 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
                 {
-                    int i,j,k,dir;
-                    int nbndry = NumDGBndryCoeffs();
-                    int ncoeffs = GetNcoeffs();
-                    int nedges  = GetNedges();
+                    int i        = 0;
+                    int j        = 0;
+                    int k        = 0;
+                    int dir      = 0;
+                    int nbndry   = NumDGBndryCoeffs();
+                    int ncoeffs  = GetNcoeffs();
+                    int nedges   = GetNedges();
                     int shapedim = 2;
 
                     Array<OneD,NekDouble> lambda(nbndry);
@@ -1599,6 +1604,8 @@ namespace Nektar
             const int                                   nq0,
             Array<OneD, int>                            &idmap)
         {
+            boost::ignore_unused(nvert);
+
             if (idmap.num_elements() != nq0)
             {
                 idmap = Array<OneD, int>(nq0);

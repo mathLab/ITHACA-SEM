@@ -10,7 +10,6 @@
 // University of Utah (USA) and Department of Aeronautics, Imperial
 // College London (UK).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -41,6 +40,7 @@
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/multi_array.hpp>
 
 namespace Nektar
@@ -56,16 +56,17 @@ namespace Nektar
         typename std::enable_if<std::is_fundamental<ObjectType>::value>::type >
     {
         public:
-            static void Initialize(ObjectType* data, unsigned int itemsToCreate)
+            static void Initialize(ObjectType* data, size_t itemsToCreate)
             {
+                boost::ignore_unused(data, itemsToCreate);
             }
             
-            static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType& initValue)
+            static void Initialize(ObjectType* data, size_t itemsToCreate, const ObjectType& initValue)
             {
                 std::fill_n(data, itemsToCreate, initValue);
             }
 
-            static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType* initValue)
+            static void Initialize(ObjectType* data, size_t itemsToCreate, const ObjectType* initValue)
             {
                 std::copy(initValue, initValue + itemsToCreate, data);
             }
@@ -90,7 +91,7 @@ namespace Nektar
             /// \brief Initalize each element in the array with ObjectType's default constructor.
             /// \param data The array of values to populate.
             /// \param itemsToCreate The size of data.
-            static void Initialize(ObjectType* data, unsigned int itemsToCreate)
+            static void Initialize(ObjectType* data, size_t itemsToCreate)
             {
                 DoInitialization(
                     data, itemsToCreate,
@@ -101,14 +102,14 @@ namespace Nektar
             /// \param data The array of values to populate.
             /// \param itemsToCreate The size of data.
             /// \param initValue The inital value each element in data will have.
-            static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType& initValue)
+            static void Initialize(ObjectType* data, size_t itemsToCreate, const ObjectType& initValue)
             {
                 DoInitialization(
                     data, itemsToCreate,
                     [&](ObjectType *element) { new (element) ObjectType(initValue); });
             }
 
-            static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType* initValue)
+            static void Initialize(ObjectType* data, size_t itemsToCreate, const ObjectType* initValue)
             {
                 DoInitialization(
                     data, itemsToCreate,
@@ -117,12 +118,12 @@ namespace Nektar
             
             private:
                 template<typename CreateType>
-                static void DoInitialization(ObjectType* data, unsigned int itemsToCreate, const CreateType &f)
+                static void DoInitialization(ObjectType* data, size_t itemsToCreate, const CreateType &f)
                 {
-                    unsigned int nextObjectToCreate = 0;
+                    size_t nextObjectToCreate = 0;
                     try
                     {
-                        for(unsigned int i = 0; i < itemsToCreate; ++i)
+                        for(size_t i = 0; i < itemsToCreate; ++i)
                         {
                             ObjectType* memLocation = &data[i];
                             f(memLocation);
@@ -131,7 +132,7 @@ namespace Nektar
                     }
                     catch(...)
                     {
-                        for(unsigned int i = 0; i < nextObjectToCreate; ++i)
+                        for(size_t i = 0; i < nextObjectToCreate; ++i)
                         {
                             ObjectType* memLocation = &data[nextObjectToCreate - i - 1];
                             memLocation->~ObjectType();
@@ -150,8 +151,9 @@ namespace Nektar
                                  typename std::enable_if<std::is_fundamental<ObjectType>::value>::type>
     {
         public:
-            static void Destroy(ObjectType* data, unsigned int itemsToDestroy)
+            static void Destroy(ObjectType* data, size_t itemsToDestroy)
             {
+                boost::ignore_unused(data, itemsToDestroy);
             }
     };
     
@@ -160,9 +162,9 @@ namespace Nektar
                                  typename std::enable_if<!std::is_fundamental<ObjectType>::value>::type>
     {
         public:
-            static void Destroy(ObjectType* data, unsigned int itemsToDestroy)
+            static void Destroy(ObjectType* data, size_t itemsToDestroy)
             {
-                for(unsigned int i = 0; i < itemsToDestroy; ++i)
+                for(size_t i = 0; i < itemsToDestroy; ++i)
                 {
                     ObjectType* memLocation = &data[itemsToDestroy - i - 1];
                     memLocation->~ObjectType();
@@ -175,11 +177,12 @@ namespace Nektar
     CreateStorage(const ExtentListType& extent)
     {
         typedef boost::multi_array_ref<DataType, Dim::Value> ArrayType;
-        unsigned int size = std::accumulate(extent.begin(), extent.end(), 1, 
-            std::multiplies<unsigned int>());
+        size_t size = std::accumulate(extent.begin(), extent.end(), 1, 
+            std::multiplies<size_t>());
         DataType* storage = MemoryManager<DataType>::RawAllocate(size);
         return MemoryManager<ArrayType>::AllocateSharedPtrD(
             [=](boost::multi_array_ref<DataType, Dim::Value> *ptr) {
+                boost::ignore_unused(ptr);
                 ArrayDestructionPolicy<DataType>::Destroy(storage, size);
                 MemoryManager<DataType>::RawDeallocate(storage, size);
             },
@@ -188,27 +191,25 @@ namespace Nektar
     
     template<typename DataType>
     std::shared_ptr<boost::multi_array_ref<DataType, 1> >
-    CreateStorage(unsigned int d1)
+    CreateStorage(size_t d1)
     {
-        std::vector<unsigned int> extents(1, d1);
+        std::vector<size_t> extents = { d1 };
         return CreateStorage<OneD, DataType>(extents);
     } 
     
     template<typename DataType>
     std::shared_ptr<boost::multi_array_ref<DataType, 2> >
-    CreateStorage(unsigned int d1, unsigned int d2)
+    CreateStorage(size_t d1, size_t d2)
     {
-        unsigned int vals[]  = {d1, d2};
-        std::vector<unsigned int> extents(vals, vals+2);
+        std::vector<size_t> extents = { d1, d2 };
         return CreateStorage<TwoD, DataType>(extents);
     }
     
     template<typename DataType>
     std::shared_ptr<boost::multi_array_ref<DataType, 3> >
-    CreateStorage(unsigned int d1, unsigned int d2, unsigned int d3)
+    CreateStorage(size_t d1, size_t d2, size_t d3)
     {
-        unsigned int vals[]  = {d1, d2, d3};
-        std::vector<unsigned int> extents(vals, vals+3);
+        std::vector<size_t> extents = { d1, d2, d3 };
         return CreateStorage<ThreeD, DataType>(extents);
     }
 }

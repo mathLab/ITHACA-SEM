@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -70,6 +69,15 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
 Array<OneD, NekDouble> CADSurfOCE::GetBounds()
 {
     return m_bounds;
+}
+
+void CADSurfOCE::GetBounds(NekDouble &umin, NekDouble &umax, NekDouble &vmin,
+                           NekDouble &vmax)
+{
+    umin = m_bounds[0];
+    umax = m_bounds[1];
+    vmin = m_bounds[2];
+    vmax = m_bounds[3];
 }
 
 bool CADSurfOCE::IsPlanar()
@@ -155,6 +163,19 @@ Array<OneD, NekDouble> CADSurfOCE::P(Array<OneD, NekDouble> uv)
     location[1] = loc.Y() / 1000.0;
     location[2] = loc.Z() / 1000.0;
     return location;
+}
+
+void CADSurfOCE::P(Array<OneD, NekDouble> uv, NekDouble &x, NekDouble &y,
+                   NekDouble &z)
+{
+#if defined(NEKTAR_DEBUG)
+    Test(uv);
+#endif
+
+    gp_Pnt loc = m_s->Value(uv[0], uv[1]);
+    x          = loc.X() / 1000.0;
+    y          = loc.Y() / 1000.0;
+    z          = loc.Z() / 1000.0;
 }
 
 Array<OneD, NekDouble> CADSurfOCE::N(Array<OneD, NekDouble> uv)
@@ -292,6 +313,7 @@ void CADSurfOCE::Test(Array<OneD, NekDouble> uv)
 
     error << " On Surface: " << GetId();
     ASSERTL1(passed, "Warning: " + error.str());
+    (void)passed; // suppress warning
 }
 } // namespace NekMeshUtils
 } // namespace Nektar

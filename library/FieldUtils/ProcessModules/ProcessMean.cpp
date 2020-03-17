@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,9 +36,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessMean.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessMean.h"
 
 namespace Nektar
 {
@@ -61,6 +62,8 @@ ProcessMean::~ProcessMean()
 
 void ProcessMean::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nfields  = m_f->m_variables.size();
     int spacedim = m_f->m_graph->GetMeshDimension() + m_f->m_numHomogeneousDir;
     int npoints  = m_f->m_exp[0]->GetNpoints();

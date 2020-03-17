@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,15 +35,19 @@
 
 #include "MeshGraphXmlCompressed.h"
 
+#include <LibUtilities/BasicUtils/CompressData.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/CompressData.h>
+
+#include <LibUtilities/Interpreter/Interpreter.h>
 #include <SpatialDomains/MeshEntities.hpp>
 
 // These are required for the Write(...) and Import(...) functions.
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/format.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
@@ -74,8 +77,7 @@ void MeshGraphXmlCompressed::ReadVertices()
 
     // check to see if any scaling parameters are in
     // attributes and determine these values
-    LibUtilities::AnalyticExpressionEvaluator expEvaluator;
-    // LibUtilities::ExpressionEvaluator expEvaluator;
+    LibUtilities::Interpreter expEvaluator;
     const char *xscal = element->Attribute("XSCALE");
     if (!xscal)
     {
@@ -117,7 +119,6 @@ void MeshGraphXmlCompressed::ReadVertices()
     // check to see if any moving parameters are in
     // attributes and determine these values
 
-    // LibUtilities::ExpressionEvaluator expEvaluator;
     const char *xmov = element->Attribute("XMOVE");
     if (!xmov)
     {
@@ -173,7 +174,7 @@ void MeshGraphXmlCompressed::ReadVertices()
 
         std::vector<SpatialDomains::MeshVertex> vertData;
         LibUtilities::CompressData::ZlibDecodeFromBase64Str(vertexStr,
-                                                              vertData);
+                                                            vertData);
 
         int indx;
         NekDouble xval, yval, zval;
@@ -212,7 +213,7 @@ void MeshGraphXmlCompressed::ReadCurves()
 
     NekDouble xscale, yscale, zscale;
 
-    LibUtilities::AnalyticExpressionEvaluator expEvaluator;
+    LibUtilities::Interpreter expEvaluator;
     const char *xscal = element->Attribute("XSCALE");
     if (!xscal)
     {
@@ -254,7 +255,6 @@ void MeshGraphXmlCompressed::ReadCurves()
     // check to see if any moving parameters are in
     // attributes and determine these values
 
-    // LibUtilities::ExpressionEvaluator expEvaluator;
     const char *xmov = element->Attribute("XMOVE");
     if (!xmov)
     {
@@ -302,18 +302,18 @@ void MeshGraphXmlCompressed::ReadCurves()
     string IsCompressed;
     field->QueryStringAttribute("COMPRESSED", &IsCompressed);
 
-    if(IsCompressed.size() == 0)
+    if (IsCompressed.size() == 0)
     {
-        //this could be that the curved tag is empty
-        //in this case we dont want to read it
+        // this could be that the curved tag is empty
+        // in this case we dont want to read it
         return;
     }
 
     ASSERTL0(boost::iequals(IsCompressed,
                             LibUtilities::CompressData::GetCompressString()),
              "Compressed formats do not match. Expected :" +
-                 LibUtilities::CompressData::GetCompressString() +
-                 " but got " + boost::lexical_cast<std::string>(IsCompressed));
+                 LibUtilities::CompressData::GetCompressString() + " but got " +
+                 boost::lexical_cast<std::string>(IsCompressed));
 
     std::vector<SpatialDomains::MeshCurvedInfo> edginfo;
     std::vector<SpatialDomains::MeshCurvedInfo> facinfo;
@@ -337,7 +337,7 @@ void MeshGraphXmlCompressed::ReadCurves()
             }
 
             LibUtilities::CompressData::ZlibDecodeFromBase64Str(elmtStr,
-                                                                  edginfo);
+                                                                edginfo);
         }
         else if (boost::iequals(entitytype, "F"))
         {
@@ -351,7 +351,7 @@ void MeshGraphXmlCompressed::ReadCurves()
             }
 
             LibUtilities::CompressData::ZlibDecodeFromBase64Str(elmtStr,
-                                                                  facinfo);
+                                                                facinfo);
         }
         else if (boost::iequals(entitytype, "DATAPOINTS"))
         {
@@ -374,7 +374,7 @@ void MeshGraphXmlCompressed::ReadCurves()
             }
 
             LibUtilities::CompressData::ZlibDecodeFromBase64Str(elmtStr,
-                                                                  cpts.index);
+                                                                cpts.index);
 
             TiXmlElement *DataPts = x->FirstChildElement("POINTS");
             ASSERTL0(DataPts, "Cannot read data pts tag in compressed "
@@ -387,7 +387,7 @@ void MeshGraphXmlCompressed::ReadCurves()
             }
 
             LibUtilities::CompressData::ZlibDecodeFromBase64Str(elmtStr,
-                                                                  cpts.pts);
+                                                                cpts.pts);
         }
         else
         {
@@ -397,7 +397,7 @@ void MeshGraphXmlCompressed::ReadCurves()
     }
 
     // rescale (x,y,z) points;
-    for (int i = 0; i > cpts.pts.size(); ++i)
+    for (int i = 0; i < cpts.pts.size(); ++i)
     {
         cpts.pts[i].x = xscale * cpts.pts[i].x + xmove;
         cpts.pts[i].y = yscale * cpts.pts[i].y + ymove;
@@ -465,8 +465,8 @@ void MeshGraphXmlCompressed::ReadEdges()
     ASSERTL0(boost::iequals(IsCompressed,
                             LibUtilities::CompressData::GetCompressString()),
              "Compressed formats do not match. Expected :" +
-                 LibUtilities::CompressData::GetCompressString() +
-                 " but got " + std::string(IsCompressed));
+                 LibUtilities::CompressData::GetCompressString() + " but got " +
+                 std::string(IsCompressed));
     // Extract the edge body
     TiXmlNode *edgeChild = field->FirstChild();
     ASSERTL0(edgeChild, "Unable to extract the data from "
@@ -532,8 +532,8 @@ void MeshGraphXmlCompressed::ReadFaces()
             boost::iequals(IsCompressed,
                            LibUtilities::CompressData::GetCompressString()),
             "Compressed formats do not match. Expected :" +
-                LibUtilities::CompressData::GetCompressString() +
-                " but got " + std::string(IsCompressed));
+                LibUtilities::CompressData::GetCompressString() + " but got " +
+                std::string(IsCompressed));
 
         // Extract the face body
         TiXmlNode *faceChild = element->FirstChild();
@@ -551,7 +551,7 @@ void MeshGraphXmlCompressed::ReadFaces()
         {
             std::vector<SpatialDomains::MeshTri> faceData;
             LibUtilities::CompressData::ZlibDecodeFromBase64Str(faceStr,
-                                                                  faceData);
+                                                                faceData);
 
             for (int i = 0; i < faceData.size(); ++i)
             {
@@ -584,7 +584,7 @@ void MeshGraphXmlCompressed::ReadFaces()
         {
             std::vector<SpatialDomains::MeshQuad> faceData;
             LibUtilities::CompressData::ZlibDecodeFromBase64Str(faceStr,
-                                                                  faceData);
+                                                                faceData);
 
             for (int i = 0; i < faceData.size(); ++i)
             {
@@ -641,8 +641,8 @@ void MeshGraphXmlCompressed::ReadElements1D()
             boost::iequals(IsCompressed,
                            LibUtilities::CompressData::GetCompressString()),
             "Compressed formats do not match. Expected :" +
-                LibUtilities::CompressData::GetCompressString() +
-                " but got " + std::string(IsCompressed));
+                LibUtilities::CompressData::GetCompressString() + " but got " +
+                std::string(IsCompressed));
 
         // Extract the face body
         TiXmlNode *child = segment->FirstChild();
@@ -721,8 +721,8 @@ void MeshGraphXmlCompressed::ReadElements2D()
             boost::iequals(IsCompressed,
                            LibUtilities::CompressData::GetCompressString()),
             "Compressed formats do not match. Expected :" +
-                LibUtilities::CompressData::GetCompressString() +
-                " but got " + std::string(IsCompressed));
+                LibUtilities::CompressData::GetCompressString() + " but got " +
+                std::string(IsCompressed));
 
         // Extract the face body
         TiXmlNode *faceChild = element->FirstChild();
@@ -740,7 +740,7 @@ void MeshGraphXmlCompressed::ReadElements2D()
         {
             std::vector<SpatialDomains::MeshTri> faceData;
             LibUtilities::CompressData::ZlibDecodeFromBase64Str(faceStr,
-                                                                  faceData);
+                                                                faceData);
 
             for (int i = 0; i < faceData.size(); ++i)
             {
@@ -773,7 +773,7 @@ void MeshGraphXmlCompressed::ReadElements2D()
         {
             std::vector<SpatialDomains::MeshQuad> faceData;
             LibUtilities::CompressData::ZlibDecodeFromBase64Str(faceStr,
-                                                                  faceData);
+                                                                faceData);
 
             for (int i = 0; i < faceData.size(); ++i)
             {
@@ -836,8 +836,8 @@ void MeshGraphXmlCompressed::ReadElements3D()
             boost::iequals(IsCompressed,
                            LibUtilities::CompressData::GetCompressString()),
             "Compressed formats do not match. Expected :" +
-                LibUtilities::CompressData::GetCompressString() +
-                " but got " + std::string(IsCompressed));
+                LibUtilities::CompressData::GetCompressString() + " but got " +
+                std::string(IsCompressed));
 
         // Extract the face body
         TiXmlNode *child = element->FirstChild();
@@ -866,7 +866,7 @@ void MeshGraphXmlCompressed::ReadElements3D()
                 }
 
                 TetGeomSharedPtr tetgeom(
-                    MemoryManager<TetGeom>::AllocateSharedPtr(indx, tfaces));;
+                    MemoryManager<TetGeom>::AllocateSharedPtr(indx, tfaces));
                 m_tetGeoms[indx] = tetgeom;
                 PopulateFaceToElMap(tetgeom, 4);
             }
@@ -906,7 +906,7 @@ void MeshGraphXmlCompressed::ReadElements3D()
                         Nqfaces++;
                     }
                 }
-                ASSERTL0((Ntfaces == 4) && (Nqfaces = 1),
+                ASSERTL0((Ntfaces == 4) && (Nqfaces == 1),
                          "Did not identify the correct number of "
                          "triangular and quadrilateral faces for a "
                          "pyramid");
@@ -952,7 +952,7 @@ void MeshGraphXmlCompressed::ReadElements3D()
                         Nqfaces++;
                     }
                 }
-                ASSERTL0((Ntfaces == 2) && (Nqfaces = 3),
+                ASSERTL0((Ntfaces == 2) && (Nqfaces == 3),
                          "Did not identify the correct number of "
                          "triangular and quadrilateral faces for a "
                          "prism");
@@ -993,7 +993,7 @@ void MeshGraphXmlCompressed::ReadElements3D()
 void MeshGraphXmlCompressed::WriteVertices(TiXmlElement *geomTag,
                                            PointGeomMap &verts)
 {
-    if(verts.size() == 0)
+    if (verts.size() == 0)
     {
         return;
     }
@@ -1006,9 +1006,9 @@ void MeshGraphXmlCompressed::WriteVertices(TiXmlElement *geomTag,
     {
         MeshVertex v;
         v.id = i.first;
-        v.x = i.second->x();
-        v.y = i.second->y();
-        v.z = i.second->z();
+        v.x  = i.second->x();
+        v.y  = i.second->y();
+        v.z  = i.second->z();
         vertInfo.push_back(v);
     }
 
@@ -1028,7 +1028,7 @@ void MeshGraphXmlCompressed::WriteVertices(TiXmlElement *geomTag,
 void MeshGraphXmlCompressed::WriteEdges(TiXmlElement *geomTag,
                                         SegGeomMap &edges)
 {
-    if(edges.size() == 0)
+    if (edges.size() == 0)
     {
         return;
     }
@@ -1071,7 +1071,7 @@ void MeshGraphXmlCompressed::WriteEdges(TiXmlElement *geomTag,
 
 void MeshGraphXmlCompressed::WriteTris(TiXmlElement *faceTag, TriGeomMap &tris)
 {
-    if(tris.size() == 0)
+    if (tris.size() == 0)
     {
         return;
     }
@@ -1083,7 +1083,7 @@ void MeshGraphXmlCompressed::WriteTris(TiXmlElement *faceTag, TriGeomMap &tris)
     for (auto &i : tris)
     {
         MeshTri t;
-        t.id = i.first;
+        t.id   = i.first;
         t.e[0] = i.second->GetEid(0);
         t.e[1] = i.second->GetEid(1);
         t.e[2] = i.second->GetEid(2);
@@ -1096,8 +1096,7 @@ void MeshGraphXmlCompressed::WriteTris(TiXmlElement *faceTag, TriGeomMap &tris)
 
     x->SetAttribute("COMPRESSED",
                     LibUtilities::CompressData::GetCompressString());
-    x->SetAttribute("BITSIZE",
-                    LibUtilities::CompressData::GetBitSizeStr());
+    x->SetAttribute("BITSIZE", LibUtilities::CompressData::GetBitSizeStr());
 
     x->LinkEndChild(new TiXmlText(triStr));
 
@@ -1107,7 +1106,7 @@ void MeshGraphXmlCompressed::WriteTris(TiXmlElement *faceTag, TriGeomMap &tris)
 void MeshGraphXmlCompressed::WriteQuads(TiXmlElement *faceTag,
                                         QuadGeomMap &quads)
 {
-    if(quads.size() == 0)
+    if (quads.size() == 0)
     {
         return;
     }
@@ -1119,7 +1118,7 @@ void MeshGraphXmlCompressed::WriteQuads(TiXmlElement *faceTag,
     for (auto &i : quads)
     {
         MeshQuad q;
-        q.id = i.first;
+        q.id   = i.first;
         q.e[0] = i.second->GetEid(0);
         q.e[1] = i.second->GetEid(1);
         q.e[2] = i.second->GetEid(2);
@@ -1133,8 +1132,7 @@ void MeshGraphXmlCompressed::WriteQuads(TiXmlElement *faceTag,
 
     x->SetAttribute("COMPRESSED",
                     LibUtilities::CompressData::GetCompressString());
-    x->SetAttribute("BITSIZE",
-                    LibUtilities::CompressData::GetBitSizeStr());
+    x->SetAttribute("BITSIZE", LibUtilities::CompressData::GetBitSizeStr());
 
     x->LinkEndChild(new TiXmlText(quadStr));
 
@@ -1143,7 +1141,7 @@ void MeshGraphXmlCompressed::WriteQuads(TiXmlElement *faceTag,
 
 void MeshGraphXmlCompressed::WriteHexs(TiXmlElement *elmtTag, HexGeomMap &hexs)
 {
-    if(hexs.size() == 0)
+    if (hexs.size() == 0)
     {
         return;
     }
@@ -1155,7 +1153,7 @@ void MeshGraphXmlCompressed::WriteHexs(TiXmlElement *elmtTag, HexGeomMap &hexs)
     for (auto &i : hexs)
     {
         MeshHex e;
-        e.id = i.first;
+        e.id   = i.first;
         e.f[0] = i.second->GetFid(0);
         e.f[1] = i.second->GetFid(1);
         e.f[2] = i.second->GetFid(2);
@@ -1171,8 +1169,7 @@ void MeshGraphXmlCompressed::WriteHexs(TiXmlElement *elmtTag, HexGeomMap &hexs)
 
     x->SetAttribute("COMPRESSED",
                     LibUtilities::CompressData::GetCompressString());
-    x->SetAttribute("BITSIZE",
-                    LibUtilities::CompressData::GetBitSizeStr());
+    x->SetAttribute("BITSIZE", LibUtilities::CompressData::GetBitSizeStr());
 
     x->LinkEndChild(new TiXmlText(elStr));
 
@@ -1182,7 +1179,7 @@ void MeshGraphXmlCompressed::WriteHexs(TiXmlElement *elmtTag, HexGeomMap &hexs)
 void MeshGraphXmlCompressed::WritePrisms(TiXmlElement *elmtTag,
                                          PrismGeomMap &pris)
 {
-    if(pris.size() == 0)
+    if (pris.size() == 0)
     {
         return;
     }
@@ -1194,7 +1191,7 @@ void MeshGraphXmlCompressed::WritePrisms(TiXmlElement *elmtTag,
     for (auto &i : pris)
     {
         MeshPrism e;
-        e.id = i.first;
+        e.id   = i.first;
         e.f[0] = i.second->GetFid(0);
         e.f[1] = i.second->GetFid(1);
         e.f[2] = i.second->GetFid(2);
@@ -1209,8 +1206,7 @@ void MeshGraphXmlCompressed::WritePrisms(TiXmlElement *elmtTag,
 
     x->SetAttribute("COMPRESSED",
                     LibUtilities::CompressData::GetCompressString());
-    x->SetAttribute("BITSIZE",
-                    LibUtilities::CompressData::GetBitSizeStr());
+    x->SetAttribute("BITSIZE", LibUtilities::CompressData::GetBitSizeStr());
 
     x->LinkEndChild(new TiXmlText(elStr));
 
@@ -1219,7 +1215,7 @@ void MeshGraphXmlCompressed::WritePrisms(TiXmlElement *elmtTag,
 
 void MeshGraphXmlCompressed::WritePyrs(TiXmlElement *elmtTag, PyrGeomMap &pyrs)
 {
-    if(pyrs.size() == 0)
+    if (pyrs.size() == 0)
     {
         return;
     }
@@ -1231,7 +1227,7 @@ void MeshGraphXmlCompressed::WritePyrs(TiXmlElement *elmtTag, PyrGeomMap &pyrs)
     for (auto &i : pyrs)
     {
         MeshPyr e;
-        e.id = i.first;
+        e.id   = i.first;
         e.f[0] = i.second->GetFid(0);
         e.f[1] = i.second->GetFid(1);
         e.f[2] = i.second->GetFid(2);
@@ -1246,8 +1242,7 @@ void MeshGraphXmlCompressed::WritePyrs(TiXmlElement *elmtTag, PyrGeomMap &pyrs)
 
     x->SetAttribute("COMPRESSED",
                     LibUtilities::CompressData::GetCompressString());
-    x->SetAttribute("BITSIZE",
-                    LibUtilities::CompressData::GetBitSizeStr());
+    x->SetAttribute("BITSIZE", LibUtilities::CompressData::GetBitSizeStr());
 
     x->LinkEndChild(new TiXmlText(elStr));
 
@@ -1256,7 +1251,7 @@ void MeshGraphXmlCompressed::WritePyrs(TiXmlElement *elmtTag, PyrGeomMap &pyrs)
 
 void MeshGraphXmlCompressed::WriteTets(TiXmlElement *elmtTag, TetGeomMap &tets)
 {
-    if(tets.size() == 0)
+    if (tets.size() == 0)
     {
         return;
     }
@@ -1268,7 +1263,7 @@ void MeshGraphXmlCompressed::WriteTets(TiXmlElement *elmtTag, TetGeomMap &tets)
     for (auto &i : tets)
     {
         MeshTet e;
-        e.id = i.first;
+        e.id   = i.first;
         e.f[0] = i.second->GetFid(0);
         e.f[1] = i.second->GetFid(1);
         e.f[2] = i.second->GetFid(2);
@@ -1282,8 +1277,7 @@ void MeshGraphXmlCompressed::WriteTets(TiXmlElement *elmtTag, TetGeomMap &tets)
 
     x->SetAttribute("COMPRESSED",
                     LibUtilities::CompressData::GetCompressString());
-    x->SetAttribute("BITSIZE",
-                    LibUtilities::CompressData::GetBitSizeStr());
+    x->SetAttribute("BITSIZE", LibUtilities::CompressData::GetBitSizeStr());
 
     x->LinkEndChild(new TiXmlText(elStr));
 
@@ -1293,7 +1287,7 @@ void MeshGraphXmlCompressed::WriteTets(TiXmlElement *elmtTag, TetGeomMap &tets)
 void MeshGraphXmlCompressed::WriteCurves(TiXmlElement *geomTag, CurveMap &edges,
                                          CurveMap &faces)
 {
-    if(edges.size() == 0 && faces.size() == 0)
+    if (edges.size() == 0 && faces.size() == 0)
     {
         return;
     }
@@ -1305,29 +1299,29 @@ void MeshGraphXmlCompressed::WriteCurves(TiXmlElement *geomTag, CurveMap &edges,
     MeshCurvedPts curvedPts;
     curvedPts.id = 0;
     int ptOffset = 0;
-    int newIdx = 0;
-    int edgeCnt = 0;
-    int faceCnt = 0;
+    int newIdx   = 0;
+    int edgeCnt  = 0;
+    int faceCnt  = 0;
 
-    for (auto& i : edges)
+    for (auto &i : edges)
     {
         MeshCurvedInfo cinfo;
-        cinfo.id = edgeCnt++;
+        cinfo.id       = edgeCnt++;
         cinfo.entityid = i.first;
-        cinfo.npoints = i.second->m_points.size();
-        cinfo.ptype = i.second->m_ptype;
-        cinfo.ptid = 0;
+        cinfo.npoints  = i.second->m_points.size();
+        cinfo.ptype    = i.second->m_ptype;
+        cinfo.ptid     = 0;
         cinfo.ptoffset = ptOffset;
 
         edgeInfo.push_back(cinfo);
 
-        for(int j = 0; j < i.second->m_points.size(); j++)
+        for (int j = 0; j < i.second->m_points.size(); j++)
         {
             MeshVertex v;
             v.id = newIdx;
-            v.x = i.second->m_points[j]->x();
-            v.y = i.second->m_points[j]->y();
-            v.z = i.second->m_points[j]->z();
+            v.x  = i.second->m_points[j]->x();
+            v.y  = i.second->m_points[j]->y();
+            v.z  = i.second->m_points[j]->z();
             curvedPts.pts.push_back(v);
             curvedPts.index.push_back(newIdx);
             newIdx++;
@@ -1335,39 +1329,38 @@ void MeshGraphXmlCompressed::WriteCurves(TiXmlElement *geomTag, CurveMap &edges,
         ptOffset += cinfo.npoints;
     }
 
-    for (auto& i : faces)
+    for (auto &i : faces)
     {
         MeshCurvedInfo cinfo;
-        cinfo.id = faceCnt++;
+        cinfo.id       = faceCnt++;
         cinfo.entityid = i.first;
-        cinfo.npoints = i.second->m_points.size();
-        cinfo.ptype = i.second->m_ptype;
-        cinfo.ptid = 0;
+        cinfo.npoints  = i.second->m_points.size();
+        cinfo.ptype    = i.second->m_ptype;
+        cinfo.ptid     = 0;
         cinfo.ptoffset = ptOffset;
 
         faceInfo.push_back(cinfo);
 
-        for(int j = 0; j < i.second->m_points.size(); j++)
+        for (int j = 0; j < i.second->m_points.size(); j++)
         {
             MeshVertex v;
             v.id = newIdx;
-            v.x = i.second->m_points[j]->x();
-            v.y = i.second->m_points[j]->y();
-            v.z = i.second->m_points[j]->z();
+            v.x  = i.second->m_points[j]->x();
+            v.y  = i.second->m_points[j]->y();
+            v.z  = i.second->m_points[j]->z();
             curvedPts.pts.push_back(v);
             curvedPts.index.push_back(newIdx);
             newIdx++;
         }
         ptOffset += cinfo.npoints;
     }
-
 
     curveTag->SetAttribute("COMPRESSED",
                            LibUtilities::CompressData::GetCompressString());
     curveTag->SetAttribute("BITSIZE",
                            LibUtilities::CompressData::GetBitSizeStr());
 
-    if(edgeInfo.size())
+    if (edgeInfo.size())
     {
         TiXmlElement *x = new TiXmlElement("E");
         string dataStr;
@@ -1377,7 +1370,7 @@ void MeshGraphXmlCompressed::WriteCurves(TiXmlElement *geomTag, CurveMap &edges,
         curveTag->LinkEndChild(x);
     }
 
-    if(faceInfo.size())
+    if (faceInfo.size())
     {
         TiXmlElement *x = new TiXmlElement("F");
         string dataStr;
@@ -1387,25 +1380,26 @@ void MeshGraphXmlCompressed::WriteCurves(TiXmlElement *geomTag, CurveMap &edges,
         curveTag->LinkEndChild(x);
     }
 
-    if(edgeInfo.size() || faceInfo.size())
+    if (edgeInfo.size() || faceInfo.size())
     {
         TiXmlElement *x = new TiXmlElement("DATAPOINTS");
         x->SetAttribute("ID", curvedPts.id);
         TiXmlElement *subx = new TiXmlElement("INDEX");
         string dataStr;
-        LibUtilities::CompressData::ZlibEncodeToBase64Str(curvedPts.index, dataStr);
+        LibUtilities::CompressData::ZlibEncodeToBase64Str(curvedPts.index,
+                                                          dataStr);
         subx->LinkEndChild(new TiXmlText(dataStr));
         x->LinkEndChild(subx);
 
         subx = new TiXmlElement("POINTS");
-        LibUtilities::CompressData::ZlibEncodeToBase64Str(curvedPts.pts, dataStr);
+        LibUtilities::CompressData::ZlibEncodeToBase64Str(curvedPts.pts,
+                                                          dataStr);
         subx->LinkEndChild(new TiXmlText(dataStr));
         x->LinkEndChild(subx);
         curveTag->LinkEndChild(x);
     }
 
-
     geomTag->LinkEndChild(curveTag);
 }
-}
-}
+} // namespace SpatialDomains
+} // namespace Nektar

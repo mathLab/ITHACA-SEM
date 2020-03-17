@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -94,6 +93,9 @@ void DriverArpack::v_InitObject(ostream &out)
     ASSERTL0(2      <= m_kdim-m_nvec,"NCV-NEV is less than 2");
 
     m_equ[0]->PrintSummary(out);
+
+    ASSERTL0(m_comm->GetSize() == 1,
+             "ARPACK Arnoldi solver does not support execution in parallel.");
 
     // Print session parameters
     out << "\tArnoldi solver type    : Arpack" << endl;

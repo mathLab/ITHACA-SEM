@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Euler equations for isentropic vortex
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <CompressibleFlowSolver/EquationSystems/IsentropicVortex.h>
 
@@ -76,6 +77,8 @@ namespace Nektar
         bool        dumpInitialConditions,
         const int   domain)
     {
+        boost::ignore_unused(domain);
+
         int nTotQuadPoints  = GetTotPoints();
         Array<OneD, NekDouble> x(nTotQuadPoints);
         Array<OneD, NekDouble> y(nTotQuadPoints);
@@ -142,6 +145,8 @@ namespace Nektar
         NekDouble                             time,
         const int                                   o)
     {
+        boost::ignore_unused(z);
+
         int nq = x.num_elements();
         
         // Flow parameters

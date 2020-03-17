@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,13 +35,15 @@
 #include <string>
 using namespace std;
 
-#include "ProcessEquiSpacedOutput.h"
+#include <boost/core/ignore_unused.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/Interp.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdTriExp.h>
-#include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessEquiSpacedOutput.h"
 
 namespace Nektar
 {
@@ -72,6 +73,8 @@ ProcessEquiSpacedOutput::~ProcessEquiSpacedOutput()
 
 void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nel = m_f->m_exp[0]->GetExpSize();
     if (!nel)
     {

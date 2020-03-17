@@ -8,7 +8,6 @@
 //
 // Copyright (c) 2017 Kilian Lackhove
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -45,6 +44,7 @@
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/format.hpp>
 #include <boost/functional/hash.hpp>
 
@@ -65,7 +65,7 @@ void CouplingCwipi::InterpCallback(
     const int entities_dim,
     const int n_local_vertex,
     const int n_local_element,
-    const int n_local_polhyedra,
+    const int n_local_polyhedra,
     const int n_distant_point,
     const double local_coordinates[],
     const int local_connectivity_index[],
@@ -84,6 +84,19 @@ void CouplingCwipi::InterpCallback(
     const void *local_field,
     void *distant_field)
 {
+    boost::ignore_unused(n_local_element, n_local_polyhedra, local_coordinates,
+                         local_connectivity_index, local_connectivity,
+                         local_polyhedra_face_index,
+                         local_polyhedra_cell_to_face_connectivity,
+                         local_polyhedra_face_connectivity_index,
+                         local_polyhedra_face_connectivity,
+                         distant_points_location,
+                         distant_points_distance,
+                         distant_points_barycentric_coordinates_index,
+                         distant_points_barycentric_coordinates,
+                         solver_type,
+                         local_field);
+
     Array<OneD, Array<OneD, NekDouble> > interpField(stride);
 
     Array<OneD, Array<OneD, NekDouble> > distCoords(n_distant_point);
@@ -124,7 +137,7 @@ CouplingCwipi::CouplingCwipi(MultiRegions::ExpListSharedPtr field)
     m_config["OVERSAMPLE"]   = "0";
     m_config["FILTERWIDTH"]  = "-1";
     m_config["DUMPRAW"]      = "0";
-    m_config["SENDMETHOD"]   = "NEARESTNEIGHBOUR";
+    m_config["SENDMETHOD"]   = "EVALUATE";
     m_config["NOTLOCMETHOD"] = "KEEP";
 }
 
@@ -1075,7 +1088,7 @@ void CouplingCwipi::DumpRawFields(const NekDouble time,
     LibUtilities::Timer timer1;
     timer1.Start();
 
-#ifdef _WIN32
+#if (defined _WIN32 && _MSC_VER < 1900)
     // We need this to make sure boost::format has always
     // two digits in the exponents of Scientific notation.
     unsigned int old_exponent_format;

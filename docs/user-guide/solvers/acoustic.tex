@@ -170,10 +170,10 @@ Under this section it is possible to set the parameters of the simulation.
 \subsection{Solver Info}
 \begin{lstlisting}[style=XmlStyle]
 <SOLVERINFO>
-  <I PROPERTY="EQType" VALUE="APE"/>
-  <I PROPERTY="Projection" VALUE="DisContinuous"/>
-  <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
-  <I PROPERTY="UpwindType" VALUE="LaxFriedrichs"/>
+  <I PROPERTY="EQType"                VALUE="APE"                  />
+  <I PROPERTY="Projection"            VALUE="DisContinuous"        />
+  <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+  <I PROPERTY="UpwindType"            VALUE="LaxFriedrichs"        />
 </SOLVERINFO>
 \end{lstlisting}
 \begin{itemize}
@@ -283,20 +283,24 @@ We require a discontinuous Galerkin projection and use an explicit
 fourth-order Runge-Kutta time integration scheme. We therefore set the following
 solver information:
 \begin{lstlisting}[style=XmlStyle]
-<I PROPERTY="EQType" VALUE="APE"/>
-<I PROPERTY="Projection" VALUE="DisContinuous"/>
-<I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
-<I PROPERTY="UpwindType" VALUE="LaxFriedrichs"/>
+<SOLVERINFO>
+    <I PROPERTY="EQType"                VALUE="APE"/>
+    <I PROPERTY="Projection"            VALUE="DisContinuous"/>
+    <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+    <I PROPERTY="UpwindType"            VALUE="LaxFriedrichs"/>
+</SOLVERINFO>
 \end{lstlisting}
 
 To maintain numerical stability we must use a small time-step.
 Finally, we set the density, heat ratio and ambient pressure.
 \begin{lstlisting}[style=XMLStyle]
-<P> TimeStep       = 1e-05              </P>
-<P> NumSteps       = 1000               </P>
-<P> FinTime        = TimeStep*NumSteps  </P>
-<P> IO_CheckSteps  = 10                 </P>
-<P> IO_InfoSteps   = 10                 </P>
+<PARAMETERS>
+    <P> TimeStep       = 1e-05              </P>
+    <P> NumSteps       = 1000               </P>
+    <P> FinTime        = TimeStep*NumSteps  </P>
+    <P> IO_CheckSteps  = 10                 </P>
+    <P> IO_InfoSteps   = 10                 </P>
+</PARAMETERS>
 \end{lstlisting}
 
 The initial condition and the base flow field are specified by the \inltt{Baseflow}  and  \inltt{InitialConditions} functions, respectively:

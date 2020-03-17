@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 // to the body force, where c is the frame velocity vector
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/Forcing/ForcingMovingReferenceFrame.h>
 #include <MultiRegions/ExpList.h>
@@ -78,6 +79,8 @@ void ForcingMovingReferenceFrame::v_InitObject(
         const unsigned int &pNumForcingFields,
         const TiXmlElement *pForce)
 {
+    boost::ignore_unused(pNumForcingFields);
+
     int  npoints = pFields[0]->GetNpoints();
     int  expdim  = pFields[0]->GetGraph()->GetMeshDimension();
     bool isH1d;
@@ -244,6 +247,8 @@ void ForcingMovingReferenceFrame::Update(
         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     int npoints = pFields[0]->GetNpoints();
     Array<OneD, NekDouble> tmp(npoints, 0.0);
     
@@ -338,6 +343,8 @@ void ForcingMovingReferenceFrame::v_Apply(
               Array<OneD, Array<OneD, NekDouble> > &outarray,
         const NekDouble &time)
 {
+    boost::ignore_unused(inarray);
+
     Update(fields, time);
 
     for (int i = 0; i < m_spacedim; i++)

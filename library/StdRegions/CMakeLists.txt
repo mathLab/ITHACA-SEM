@@ -20,7 +20,6 @@ IndexMapKey.cpp
 )
 
 SET(STD_REGIONS_HEADERS
-SpatialDomainsDeclarations.hpp
 StdExpansion0D.h
 StdExpansion1D.h
 StdExpansion2D.h
@@ -40,8 +39,6 @@ StdSegExp.h
 StdPointExp.h
 StdTetExp.h
 StdTriExp.h
-LocalRegionsDeclarations.hpp
-SpatialDomainsDeclarations.hpp
 StdRegions.hpp
 IndexMapKey.h
 )

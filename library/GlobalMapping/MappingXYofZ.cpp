@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Mapping of the type X = x + f(z), Y = y + g(z)
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <GlobalMapping/MappingXYofZ.h>
 #include <MultiRegions/ExpList.h>
@@ -165,6 +166,8 @@ void MappingXYofZ::v_DotGradJacobian(
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
     Array<OneD, NekDouble>                            &outarray)
 {
+    boost::ignore_unused(inarray);
+
     int physTot = m_fields[0]->GetTotPoints();        
     Vmath::Zero(physTot, outarray, 1);   
 }

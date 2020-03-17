@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: File for Expansion routines
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/Foundations/Interp.h>
 #include <LocalRegions/Expansion.h>
@@ -70,6 +71,7 @@ namespace Nektar
         }
         
         Expansion::Expansion(const Expansion &pSrc) :
+                StdExpansion(pSrc),
                 m_geom(pSrc.m_geom),
                 m_metricinfo(pSrc.m_metricinfo)
         {
@@ -184,6 +186,7 @@ namespace Nektar
 
         DNekScalMatSharedPtr Expansion::v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
         {
+            boost::ignore_unused(mkey);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return NullDNekScalMatSharedPtr;
         }
@@ -474,6 +477,7 @@ namespace Nektar
             const DNekScalMatSharedPtr &r_bnd, 
             const StdRegions::MatrixType matrixType)
         {
+            boost::ignore_unused(r_bnd, matrixType);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return NullDNekMatSharedPtr;
         }
@@ -481,6 +485,7 @@ namespace Nektar
         DNekMatSharedPtr Expansion::v_BuildVertexMatrix(
             const DNekScalMatSharedPtr &r_bnd)
         {
+            boost::ignore_unused(r_bnd);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return NullDNekMatSharedPtr;
         }
@@ -492,6 +497,8 @@ namespace Nektar
             NekDouble *coeffs,
             std::vector<LibUtilities::BasisType> &fromType)
         {
+            boost::ignore_unused(data, nummodes, nmodes_offset,
+                                 coeffs, fromType);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
         }
 
@@ -502,6 +509,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fy,
                   Array<OneD,       NekDouble> &outarray)
         {
+            boost::ignore_unused(edge, EdgeExp, Fx, Fy, outarray);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
         }
 
@@ -511,6 +519,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {
+            boost::ignore_unused(edge, EdgeExp, Fn, outarray);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
         }
 
@@ -520,6 +529,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {
+            boost::ignore_unused(face, FaceExp, Fn, outarray);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
         }
 
@@ -530,12 +540,14 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> > &coeffs,
                   Array<OneD,             NekDouble>   &outarray)
         {
+            boost::ignore_unused(dir, inarray, EdgeExp, coeffs, outarray);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
         }
 
         NekDouble Expansion::v_VectorFlux(
             const Array<OneD, Array<OneD, NekDouble > > &vec)
         {
+            boost::ignore_unused(vec);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return 0.0;
         }

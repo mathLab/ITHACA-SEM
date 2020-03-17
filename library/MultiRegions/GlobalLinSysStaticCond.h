@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSSTATICCOND_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSSTATICCOND_H
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSysIterative.h>
@@ -68,6 +69,7 @@ namespace Nektar
                 int                   scLevel,
                 NekVector<NekDouble> &F_GlobBnd)
             {
+                boost::ignore_unused(scLevel, F_GlobBnd);
                 return m_schurCompl;
             }
 
@@ -75,19 +77,19 @@ namespace Nektar
                 Array<OneD, NekDouble>& pInOut,
                 int offset)
             {
-
+                boost::ignore_unused(pInOut, offset);
             }
 
             virtual void v_BasisBwdTransform(
                 Array<OneD, NekDouble>& pInOut)
             {
-                
+                boost::ignore_unused(pInOut);
             }
 
             virtual void v_AssembleSchurComplement(
                 std::shared_ptr<AssemblyMap> pLoctoGloMap)
             {
-                
+                boost::ignore_unused(pLoctoGloMap);
             }
 
             virtual int v_GetNumBlocks();

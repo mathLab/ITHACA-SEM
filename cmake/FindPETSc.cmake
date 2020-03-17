@@ -91,7 +91,7 @@ find_path (PETSC_DIR include/petsc.h
   # Arch Linux path
   /opt/petsc/linux-c-opt
   # MacPorts path
-  /opt/local/lib/petsc
+  ${MACPORTS_PREFIX}/lib/petsc
   $ENV{HOME}/petsc
   DOC "PETSc Directory")
 

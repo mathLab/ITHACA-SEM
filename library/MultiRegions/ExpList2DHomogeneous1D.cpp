@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -57,11 +56,17 @@ namespace Nektar
             const NekDouble                             lhom,
             const bool                                  useFFT,
             const bool                                  dealiasing,
-            const Array<OneD, ExpListSharedPtr>        &planes)
+            const Array<OneD, ExpListSharedPtr>        &planes,
+            const LibUtilities::CommSharedPtr comm)
             : ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
             SetExpType(e2DH1D);
             int i, n, cnt, nel;
+
+            if (comm)
+            {
+                m_comm = comm;
+            }
 
             ASSERTL1(m_planes.num_elements() == planes.num_elements(),
                      "Size of basis number of points and number"
@@ -369,6 +374,8 @@ namespace Nektar
             int expansion,
             int istrip)
         {
+            boost::ignore_unused(istrip);
+
             // If there is only one plane (e.g. HalfMode), we write a 2D plane.
             if (m_planes.num_elements() == 1)
             {
@@ -489,6 +496,23 @@ namespace Nektar
                                  &normals[i][n*nPtsPlane], 1);
                 }
             }
+        }
+
+        NekDouble ExpList2DHomogeneous1D::v_Integral(const Array<OneD,
+            const NekDouble> &inarray)
+        {
+            NekDouble val = 0.0;
+            int       i   = 0;
+
+            for (i = 0; i < (*m_exp).size(); ++i)
+            {
+                val += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
+            }
+            val *= m_lhom/m_homogeneousBasis->GetNumModes();
+            
+            m_comm->AllReduce(val, LibUtilities::ReduceSum);
+
+            return val;
         }
     } //end of namespace
 } //end of namespace

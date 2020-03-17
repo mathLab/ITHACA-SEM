@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -58,9 +57,9 @@ namespace Nektar
         AverageSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_PointSolve(
-            double  hL, double  huL, double  hvL,
-            double  hR, double  huR, double  hvR,
-            double &hf, double &huf, double &hvf);
+            NekDouble  hL, NekDouble  huL, NekDouble  hvL,
+            NekDouble  hR, NekDouble  huR, NekDouble  hvR,
+            NekDouble &hf, NekDouble &huf, NekDouble &hvf);
     };
 }
 

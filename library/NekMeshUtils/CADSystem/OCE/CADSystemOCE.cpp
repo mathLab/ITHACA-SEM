@@ -593,7 +593,7 @@ template<typename T>
 inline bool ContainsIDs(std::string                name,
                         unsigned int               id,
                         std::string                contName,
-                        std::vector<unsigned int> &facetids,
+                        std::vector<int>          &facetids,
                         std::map<unsigned int, T> &toSearch)
 {
     bool valid = true;
@@ -632,7 +632,8 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
     // Construct a parser for the geo file. Ensure we use the correct skipper so
     // that comments are ignored.
-    GeoParser<std::string::const_iterator> geoParser;
+    LibUtilities::Interpreter interp;
+    GeoParser<std::string::const_iterator> geoParser(interp);
     CommentSkipper<std::string::const_iterator> skip;
     ast::GeoFile geoFile;
 
@@ -844,6 +845,12 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     map<unsigned int, TopoDS_Wire> cWires;
     for (auto &loop : geoFile.lineLoops)
     {
+        // Make IDs all positive since we don't care about the orientations.
+        for (auto &id : loop.ids)
+        {
+            id = std::abs(id);
+        }
+
         CheckWarning("line loop", loop.id, cWires);
         if (!ContainsIDs("Line Loop", loop.id, "edge", loop.ids, cEdges))
         {
@@ -859,22 +866,116 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     }
 
     // Build faces
-    //for (auto &planeSurf : geoReader.planeSurfs)
-    //{
-    auto planeSurf = geoFile.planeSurfs[0];
-    BRepBuilderAPI_MakeFace face(cWires[planeSurf.ids[0]], true);
-    for (int i = 1; i < planeSurf.ids.size(); i++)
+    map<unsigned int, TopoDS_Face> cFaces;
+    for (auto &planeSurf : geoFile.planeSurfs)
     {
-        face.Add(cWires[planeSurf.ids[i]]);
+        BRepBuilderAPI_MakeFace face(cWires[planeSurf.ids[0]], true);
+        for (int i = 1; i < planeSurf.ids.size(); i++)
+        {
+            face.Add(cWires[planeSurf.ids[i]]);
+        }
+
+        ASSERTL0(face.Error() == BRepBuilderAPI_FaceDone, "build geo failed");
+
+        ShapeFix_Face sf(face.Face());
+        sf.FixOrientation();
+
+        cFaces[planeSurf.id] = sf.Face();
     }
 
-    ASSERTL0(face.Error() == BRepBuilderAPI_FaceDone, "build geo failed");
+    // Build Ruled Surfaces
+    for (auto &surf : geoFile.ruledSurfs)
+    {
+        CheckWarning("surface", surf.id, cFaces);
+        if (!ContainsIDs("Ruled Surface", surf.id, "line loop", surf.ids, cWires))
+        {
+            continue;
+        }
+        if (surf.ids.size() != 1)
+        {
+            NEKERROR(ErrorUtil::ewarning,
+                     "Surface " + std::to_string(surf.id) + " should only "
+                     "contain a single line loop, ignoring.");
+            continue;
+        }
 
-    ShapeFix_Face sf(face.Face());
-    sf.FixOrientation();
+        BRepFill_Filling fill(2, 30);
+        TopExp_Explorer ex;
 
-    return sf.Face();
-    //}
+        for (ex.Init(cWires[surf.ids[0]], TopAbs_EDGE); ex.More(); ex.Next())
+        {
+            const TopoDS_Edge &shape = TopoDS::Edge(ex.Current());
+            fill.Add(shape, GeomAbs_C0);
+        }
+
+        fill.Build();
+        cFaces[surf.id] = fill.Face();
+    }
+
+    map<unsigned int, TopoDS_Shell> cShells;
+    for (auto &sloop : geoFile.surfLoops)
+    {
+        CheckWarning("surface loop", sloop.id, cShells);
+        if (!ContainsIDs("Surface Loop", sloop.id, "surface", sloop.ids, cFaces))
+        {
+            continue;
+        }
+
+        BRepBuilderAPI_Sewing shellMaker;
+
+        for (auto &id : sloop.ids)
+        {
+            shellMaker.Add(cFaces[id]);
+        }
+
+        shellMaker.Perform();
+        cShells[sloop.id] = TopoDS::Shell(shellMaker.SewedShape());
+    }
+
+    map<unsigned int, TopoDS_Shape> cVolumes;
+    for (auto &vol : geoFile.volumes)
+    {
+        CheckWarning("volume", vol.id, cVolumes);
+        if (!ContainsIDs("Volume", vol.id, "surface loop", vol.ids, cShells))
+        {
+            continue;
+        }
+
+        BRepBuilderAPI_MakeSolid solidMaker;
+
+        for (int i = 0; i < vol.ids.size(); ++i)
+        {
+            solidMaker.Add(cShells[vol.ids[i]]);
+
+            if (i == 0)
+            {
+                continue;
+            }
+
+            // For each shell that's being removed from the solid, add centroid
+            // for tetrahedralisation purposes. In general this won't work so
+            // well because we could have a non-convex shell, but let's assume
+            // it is a decent guess for now.
+            GProp_GProps props;
+            BRepGProp::VolumeProperties(cShells[vol.ids[i]], props);
+            gp_Pnt centroid = props.CentreOfMass();
+
+            Array<OneD, NekDouble> voidPt(3);
+            voidPt[0] = centroid.X();
+            voidPt[1] = centroid.Y();
+            voidPt[2] = centroid.Z();
+            m_voidPoints.push_back(voidPt);
+        }
+
+        TopoDS_Solid s = solidMaker.Solid();
+
+        // Perform fix on solid
+        ShapeFix_Solid solidFix(s);
+        solidFix.Perform();
+        cVolumes[vol.id] = solidFix.Solid();
+    }
+
+    return cVolumes.begin()->second;
 
     /*
     //Check if 2D

@@ -237,9 +237,9 @@ public:
      * @param id  The ID returned from #DefineFunction representing the function
      *            to be evaluated.
      * @param x   The value of variable 1 (typically \f$ x \f$).
-     * @param y   The value of variable 2 (typically \f$ x \f$).
-     * @param z   The value of variable 3 (typically \f$ x \f$).
-     * @param t   The value of variable 4 (typically \f$ x \f$).
+     * @param y   The value of variable 2 (typically \f$ y \f$).
+     * @param z   The value of variable 3 (typically \f$ z \f$).
+     * @param t   The value of variable 4 (typically \f$ t \f$).
      */
     LIB_UTILITIES_EXPORT NekDouble Evaluate(
         const int id, const NekDouble x, const NekDouble y, const NekDouble z,

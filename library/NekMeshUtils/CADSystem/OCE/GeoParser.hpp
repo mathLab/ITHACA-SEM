@@ -35,18 +35,41 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-using namespace boost::spirit;
 namespace qi = boost::spirit::qi;
 namespace phx = boost::phoenix;
 
 namespace ast
 {
+
+double Eval(LibUtilities::Interpreter &interp,
+            std::vector<char> &expr)
+{
+    std::string exprStr(expr.begin(), expr.end());
+    int interpId = interp.DefineFunction("", exprStr);
+    return interp.Evaluate(interpId);
+}
+
+void SetParam(LibUtilities::Interpreter &interp,
+              std::vector<char> &varname,
+              double &val)
+{
+    std::string varStr(varname.begin(), varname.end());
+    interp.SetParameter(varStr, val);
+}
+
+void PrintWarning(std::vector<char> &geomname)
+{
+    std::string geom(geomname.begin(), geomname.end());
+    std::cout << "Warning: ignoring unknown geometry entity"
+              << geom << std::endl;
+}
 
 struct Point
 {
@@ -60,7 +83,7 @@ struct Point
 struct Geom
 {
     unsigned int id;
-    std::vector<unsigned int> ids;
+    std::vector<int> ids;
 };
 
 struct GeoFile
@@ -87,7 +110,7 @@ struct CommentSkipper : public qi::grammar<Iterator> {
     {
         line = "//" >> *(qi::char_ - qi::eol) >> (qi::eol | qi::eoi);
         block = "/*" >> *(block | qi::char_ - "*/") > "*/";
-        skip = ascii::space | line | block;
+        skip = boost::spirit::ascii::space | line | block;
     }
     qi::rule<Iterator> skip, block, line;
 };
@@ -95,25 +118,36 @@ struct CommentSkipper : public qi::grammar<Iterator> {
 template <typename Iterator, typename Skipper = CommentSkipper<Iterator>>
 struct GeoParser : qi::grammar<Iterator, ast::GeoFile(), Skipper>
 {
-    GeoParser() : GeoParser::base_type(geoFile)
+    using Interp = LibUtilities::Interpreter;
+
+    GeoParser(Interp &interp) : GeoParser::base_type(geoFile), m_interp(interp)
     {
         using phx::push_back;
         using phx::bind;
-
+        using qi::_1;
+        using qi::_2;
+        using qi::_val;
         using ast::Point;
         using ast::Geom;
         using ast::GeoFile;
 
-        point = '(' >> qi::uint_[bind(&Point::id, _val) = _1] >> ')'
-            >> '=' >> '{'
-            >> qi::double_[bind(&Point::x, _val) = _1] >> ','
-            >> qi::double_[bind(&Point::y, _val) = _1] >> ','
-            >> qi::double_[bind(&Point::z, _val) = _1] >> ','
-            >> qi::double_[bind(&Point::clen, _val) = _1] >> '}';
+        expr = (*(qi::alnum | qi::char_('+') | qi::char_('-') | qi::char_('_') |
+                  qi::char_('*') | qi::char_('/') | qi::char_('.') |
+                  qi::char_('(') | qi::char_(')')))[
+            _val = phx::bind(ast::Eval, phx::ref(interp), _1)
+            ];
 
-        geom = "(" >> qi::uint_[bind(&Geom::id, _val) = _1] >> ")"
-            >> "=" >> "{"
-            >> (qi::uint_[push_back(bind(&Geom::ids, _val), _1)] % ",")
+        point = '('
+            >> qi::uint_[bind(&Point::id, _val) = _1] >> ')'
+            >> '=' >> '{'
+            >> (qi::double_ | expr) [bind(&Point::x, _val) = _1] >> ','
+            >> (qi::double_ | expr) [bind(&Point::y, _val) = _1] >> ','
+            >> (qi::double_ | expr) [bind(&Point::z, _val) = _1] >> ','
+            >> (qi::double_ | expr) [bind(&Point::clen, _val) = _1] >> '}';
+
+        geom = "("
+            >> qi::uint_[bind(&Geom::id, _val) = _1] >> ")" >> "=" >> "{"
+            >> (qi::int_[push_back(bind(&Geom::ids, _val), _1)] % ",")
             >> "}";
 
         geoFile = *(
@@ -121,33 +155,39 @@ struct GeoParser : qi::grammar<Iterator, ast::GeoFile(), Skipper>
                 ("Point" >> point[push_back(bind(&GeoFile::points, _val), _1)]) |
                 ("Line"  >> geom[push_back(bind(&GeoFile::lines, _val), _1)]) |
                 ("Spline"  >> geom[push_back(bind(&GeoFile::splines, _val), _1)]) |
-                ("BSpline"  >> geom[push_back(bind(&GeoFile::bsplines, _val), _1)]) |
+                (
+                    (qi::lit("BSpline") | "Bezier")
+                    >> geom[push_back(bind(&GeoFile::bsplines, _val), _1)]) |
                 ("Circle"  >> geom[push_back(bind(&GeoFile::circles, _val), _1)]) |
                 ("Ellipse"  >> geom[push_back(bind(&GeoFile::ellipses, _val), _1)]) |
-                ("Line Loop" >> geom[push_back(bind(&GeoFile::lineLoops, _val), _1)]) |
+                (
+                    (qi::lit("Line Loop") | "Curve Loop")
+                    >> geom[push_back(bind(&GeoFile::lineLoops, _val), _1)]) |
                 ("Plane Surface"  >> geom[push_back(bind(&GeoFile::planeSurfs, _val), _1)]) |
-                ("Ruled Surface"  >> geom[push_back(bind(&GeoFile::ruledSurfs, _val), _1)]) |
+                (
+                    (qi::lit("Surface") | "Ruled Surface")
+                    >> geom[push_back(bind(&GeoFile::ruledSurfs, _val), _1)]) |
                 ("Surface Loop"  >> geom[push_back(bind(&GeoFile::surfLoops, _val), _1)]) |
-                ("Volume"  >> geom[push_back(bind(&GeoFile::volumes, _val), _1)])
-                ) >> ";");
+                ("Volume"  >> geom[push_back(bind(&GeoFile::volumes, _val), _1)]) |
+                ((*qi::alpha >> geom) [phx::bind(&ast::PrintWarning, _1)] ) |
+                (*(qi::alnum | qi::char_('_') | qi::char_('.')) >> '=' >> expr)[
+                    phx::bind(&ast::SetParam, phx::ref(interp), _1, _2)
+                    ]
+                )
+            >> ";");
     }
+
+
 
     template<typename T>
     using rule = qi::rule<Iterator, T(), Skipper>;
 
     rule<ast::Point> point;
     rule<ast::Geom> geom;
-    rule<ast::Geom> line;
-    rule<ast::Geom> spline;
-    rule<ast::Geom> bspline;
-    rule<ast::Geom> circle;
-    rule<ast::Geom> ellipse;
-    rule<ast::Geom> lineLoop;
-    rule<ast::Geom> planeSurf;
-    rule<ast::Geom> ruledSurf;
-    rule<ast::Geom> surfLoop;
-    rule<ast::Geom> volume;
     rule<ast::GeoFile> geoFile;
+    rule<double> expr;
+
+    Interp &m_interp;
 };
 
 

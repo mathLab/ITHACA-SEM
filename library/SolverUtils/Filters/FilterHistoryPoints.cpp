@@ -223,7 +223,7 @@ void FilterHistoryPoints::v_Initialise(
     // and the process ID.
     for (i = 0; i < vHP; ++i)
     {
-        Array<OneD, NekDouble> locCoords(3);
+        Array<OneD, NekDouble> locCoords(pFields[0]->GetShapeDimension());
         m_historyPoints[i]->GetCoords(  gloCoord[0],
                                         gloCoord[1],
                                         gloCoord[2]);

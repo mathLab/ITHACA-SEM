@@ -9,6 +9,10 @@ v5.1.0
 
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)
+v5.0.1
+------
+**Library**
+- Fix incorrect coordinate dimension used in history point filter (!1118)
 
 v5.0.0
 ------

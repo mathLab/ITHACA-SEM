@@ -60,8 +60,8 @@ namespace Nektar
          */
 
         StdSegExp::StdSegExp(const LibUtilities::BasisKey &Ba):
-        StdExpansion(Ba.GetNumModes(), 1, Ba),
-        StdExpansion1D(Ba.GetNumModes(),Ba)
+            StdExpansion(Ba.GetNumModes(), 1, Ba),
+            StdExpansion1D(Ba.GetNumModes(),Ba)
         {
         }
 
@@ -69,8 +69,8 @@ namespace Nektar
         /** \brief Copy Constructor */
 
         StdSegExp::StdSegExp(const StdSegExp &T):
-                StdExpansion(T),
-                StdExpansion1D(T)
+            StdExpansion(T),
+            StdExpansion1D(T)
         {
         }
 
@@ -154,9 +154,9 @@ namespace Nektar
          */
 
         void StdSegExp::v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &out_d0,
-                Array<OneD, NekDouble> &out_d1,
-                Array<OneD, NekDouble> &out_d2)
+                                    Array<OneD, NekDouble> &out_d0,
+                                    Array<OneD, NekDouble> &out_d1,
+                                    Array<OneD, NekDouble> &out_d2)
         {
             boost::ignore_unused(out_d1, out_d2);
             PhysTensorDeriv(inarray,out_d0);
@@ -164,8 +164,8 @@ namespace Nektar
 
 
         void StdSegExp::v_PhysDeriv(const int dir,
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray)
+                                    const Array<OneD, const NekDouble>& inarray,
+                                    Array<OneD, NekDouble> &outarray)
         {
             boost::ignore_unused(dir);
             ASSERTL1(dir==0,"input dir is out of range");
@@ -174,10 +174,10 @@ namespace Nektar
         }
 
         void StdSegExp::v_StdPhysDeriv(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &out_d0,
-                Array<OneD, NekDouble> &out_d1,
-                Array<OneD, NekDouble> &out_d2)
+                                       const Array<OneD, const NekDouble>& inarray,
+                                       Array<OneD, NekDouble> &out_d0,
+                                       Array<OneD, NekDouble> &out_d1,
+                                       Array<OneD, NekDouble> &out_d2)
         {
             boost::ignore_unused(out_d1, out_d2);
             PhysTensorDeriv(inarray,out_d0);
@@ -185,9 +185,9 @@ namespace Nektar
         }
 
         void StdSegExp::v_StdPhysDeriv(
-                const int dir,
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray)
+                                       const int dir,
+                                       const Array<OneD, const NekDouble>& inarray,
+                                       Array<OneD, NekDouble> &outarray)
         {
             boost::ignore_unused(dir);
             ASSERTL1(dir==0,"input dir is out of range");
@@ -221,8 +221,8 @@ namespace Nektar
          */
 
         void StdSegExp::v_BwdTrans(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray)
+                                   const Array<OneD, const NekDouble>& inarray,
+                                   Array<OneD, NekDouble> &outarray)
         {
             int  nquad = m_base[0]->GetNumPoints();
 
@@ -233,17 +233,17 @@ namespace Nektar
             else
             {
 
-            Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,
-                        (m_base[0]->GetBdata()).get(),
-                        nquad,&inarray[0],1,0.0,&outarray[0],1);
+                Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,
+                            (m_base[0]->GetBdata()).get(),
+                            nquad,&inarray[0],1,0.0,&outarray[0],1);
 
             }
         }
 
         void StdSegExp::v_ReduceOrderCoeffs(
-            int                                 numMin,
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray)
+                                            int                                 numMin,
+                                            const Array<OneD, const NekDouble> &inarray,
+                                            Array<OneD,       NekDouble> &outarray)
         {
             int n_coeffs = inarray.num_elements();
 
@@ -257,14 +257,14 @@ namespace Nektar
             Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp,1);
 
             const LibUtilities::PointsKey Pkey0(
-                nmodes0, LibUtilities::eGaussLobattoLegendre);
+                                                nmodes0, LibUtilities::eGaussLobattoLegendre);
 
             LibUtilities::BasisKey b0(m_base[0]->GetBasisType(),nmodes0,Pkey0);
 
             LibUtilities::BasisKey bortho0(LibUtilities::eOrtho_A,nmodes0,Pkey0);
 
             LibUtilities::InterpCoeff1D(
-                b0, coeff_tmp, bortho0, coeff);
+                                        b0, coeff_tmp, bortho0, coeff);
 
             Vmath::Zero(n_coeffs,coeff_tmp,1);
 
@@ -273,7 +273,7 @@ namespace Nektar
                          tmp2 = coeff_tmp,1);
 
             LibUtilities::InterpCoeff1D(
-                bortho0, coeff_tmp, b0, outarray);
+                                        bortho0, coeff_tmp, b0, outarray);
         }
 
         /**
@@ -295,7 +295,7 @@ namespace Nektar
          * \param outarray: the coeffficients of the expansion
          */
         void StdSegExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray)
+                                   Array<OneD, NekDouble> &outarray)
         {
             if(m_base[0]->Collocation())
             {
@@ -317,8 +317,8 @@ namespace Nektar
         }
 
         void StdSegExp::v_FwdTrans_BndConstrained(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray)
+                                                  const Array<OneD, const NekDouble>& inarray,
+                                                  Array<OneD, NekDouble> &outarray)
         {
             if(m_base[0]->Collocation())
             {
@@ -337,11 +337,11 @@ namespace Nektar
                     }
                     break;
                 case LibUtilities::eGauss_Lagrange:
-                {
-                    nInteriorDofs = m_ncoeffs;
-                    offset = 0;
-                }
-                break;
+                    {
+                        nInteriorDofs = m_ncoeffs;
+                        offset = 0;
+                    }
+                    break;
                 case LibUtilities::eModified_A:
                 case LibUtilities::eModified_B:
                     {
@@ -374,11 +374,11 @@ namespace Nektar
 
                         // get Mass matrix inverse (only of interior DOF)
                         DNekMatSharedPtr  matsys =
-                        (m_stdStaticCondMatrixManager[masskey])-> GetBlock(1,1);
+                            (m_stdStaticCondMatrixManager[masskey])-> GetBlock(1,1);
 
                         Blas::Dgemv('N',nInteriorDofs,nInteriorDofs,1.0,
-                                &(matsys->GetPtr())[0],nInteriorDofs,tmp1.get()
-                                +offset,1,0.0,outarray.get()+offset,1);
+                                    &(matsys->GetPtr())[0],nInteriorDofs,tmp1.get()
+                                    +offset,1,0.0,outarray.get()+offset,1);
                     }
                 }
                 else
@@ -391,7 +391,7 @@ namespace Nektar
 
 
         void StdSegExp::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray)
+                                          Array<OneD, NekDouble> &outarray)
         {
             v_BwdTrans(inarray, outarray);
         }
@@ -426,10 +426,10 @@ namespace Nektar
          */
 
         void StdSegExp::v_IProductWRTBase(
-            const Array<OneD, const NekDouble> &base,
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray,
-            int coll_check)
+                                          const Array<OneD, const NekDouble> &base,
+                                          const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,       NekDouble> &outarray,
+                                          int coll_check)
         {
             boost::ignore_unused(coll_check);
 
@@ -440,15 +440,15 @@ namespace Nektar
             Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
 
             /* Comment below was a bug for collocated basis
-            if(coll_check&&m_base[0]->Collocation())
-            {
-                Vmath::Vcopy(nquad, tmp, 1, outarray, 1);
-            }
-            else
-            {
-                Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
-                            &tmp[0],1,0.0,outarray.get(),1);
-            }*/
+               if(coll_check&&m_base[0]->Collocation())
+               {
+               Vmath::Vcopy(nquad, tmp, 1, outarray, 1);
+               }
+               else
+               {
+               Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
+               &tmp[0],1,0.0,outarray.get(),1);
+               }*/
 
             // Correct implementation
             Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
@@ -466,15 +466,15 @@ namespace Nektar
          *  output of the function
          */
         void StdSegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray)
+                                          Array<OneD, NekDouble> &outarray)
         {
             v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
         }
 
         void StdSegExp::v_IProductWRTDerivBase(
-                const int dir,
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> & outarray)
+                                               const int dir,
+                                               const Array<OneD, const NekDouble>& inarray,
+                                               Array<OneD, NekDouble> & outarray)
         {
             boost::ignore_unused(dir);
             ASSERTL1(dir >= 0 && dir < 1,"input dir is out of range");
@@ -482,9 +482,9 @@ namespace Nektar
         }
 
         void StdSegExp::v_IProductWRTBase_SumFac(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray,
-                bool multiplybyweights)
+                                                 const Array<OneD, const NekDouble>& inarray,
+                                                 Array<OneD, NekDouble> &outarray,
+                                                 bool multiplybyweights)
         {
             int    nquad = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble> tmp(nquad);
@@ -496,7 +496,7 @@ namespace Nektar
                 Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
 
                 Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
-                                &tmp[0],1,0.0,outarray.get(),1);
+                            &tmp[0],1,0.0,outarray.get(),1);
             }
             else
             {
@@ -519,23 +519,23 @@ namespace Nektar
             const NekDouble * base  = m_base[0]->GetBdata().get();
 
             ASSERTL2(mode <= m_ncoeffs,
-             "calling argument mode is larger than total expansion order");
+                     "calling argument mode is larger than total expansion order");
 
             Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
         }
 
 
         NekDouble StdSegExp::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& coords,
-                const Array<OneD, const NekDouble>& physvals)
+                                            const Array<OneD, const NekDouble>& coords,
+                                            const Array<OneD, const NekDouble>& physvals)
         {
             return  StdExpansion1D::v_PhysEvaluate(coords, physvals);
         }
 
         void StdSegExp::v_LaplacianMatrixOp(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray,
-            const StdMatrixKey                 &mkey)
+                                            const Array<OneD, const NekDouble> &inarray,
+                                            Array<OneD,       NekDouble> &outarray,
+                                            const StdMatrixKey                 &mkey)
         {
             boost::ignore_unused(mkey);
 
@@ -553,9 +553,9 @@ namespace Nektar
 
 
         void StdSegExp::v_HelmholtzMatrixOp(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray,
-            const StdMatrixKey                 &mkey)
+                                            const Array<OneD, const NekDouble> &inarray,
+                                            Array<OneD,       NekDouble> &outarray,
+                                            const StdMatrixKey                 &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
 
@@ -575,7 +575,7 @@ namespace Nektar
         }
 
         void StdSegExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
-                                            const StdMatrixKey &mkey)
+                                             const StdMatrixKey &mkey)
         {
             // Generate an orthogonal expansion
             int nq = m_base[0]->GetNumPoints();
@@ -600,14 +600,14 @@ namespace Nektar
             {
                 if(j >= cutoff)//to filter out only the "high-modes"
                 {
-                     orthocoeffs[j] *=
-                         (SvvDiffCoeff*exp(-(j-nmodes)*(j-nmodes)/
-                                            ((NekDouble)((j-cutoff+1)*
-                                                 (j-cutoff+1)))));
-                 }
+                    orthocoeffs[j] *=
+                        (SvvDiffCoeff*exp(-(j-nmodes)*(j-nmodes)/
+                                          ((NekDouble)((j-cutoff+1)*
+                                                       (j-cutoff+1)))));
+                }
                 else
                 {
-                     orthocoeffs[j] *= 0.0;
+                    orthocoeffs[j] *= 0.0;
                 }
             }
 
@@ -616,10 +616,10 @@ namespace Nektar
         }
 
         void StdSegExp::v_ExponentialFilter(
-                                          Array<OneD, NekDouble> &array,
-                                    const NekDouble        alpha,
-                                    const NekDouble        exponent,
-                                    const NekDouble        cutoff)
+                                            Array<OneD, NekDouble> &array,
+                                            const NekDouble        alpha,
+                                            const NekDouble        exponent,
+                                            const NekDouble        cutoff)
         {
             // Generate an orthogonal expansion
             int nq     = m_base[0]->GetNumPoints();
@@ -657,8 +657,8 @@ namespace Nektar
 
         //up to here
         void StdSegExp::v_MultiplyByStdQuadratureMetric(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray)
+                                                        const Array<OneD, const NekDouble> &inarray,
+                                                        Array<OneD,       NekDouble> &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
 
@@ -669,9 +669,9 @@ namespace Nektar
         }
 
         void StdSegExp::v_GetCoords(
-                Array<OneD, NekDouble> &coords_0,
-                Array<OneD, NekDouble> &coords_1,
-                Array<OneD, NekDouble> &coords_2)
+                                    Array<OneD, NekDouble> &coords_0,
+                                    Array<OneD, NekDouble> &coords_1,
+                                    Array<OneD, NekDouble> &coords_2)
         {
             boost::ignore_unused(coords_1, coords_2);
             Blas::Dcopy(GetNumPoints(0),(m_base[0]->GetZ()).get(),
@@ -702,8 +702,8 @@ namespace Nektar
         }
 
         int StdSegExp::v_CalcNumberOfCoefficients(
-                const std::vector<unsigned int> &nummodes,
-                int &modes_offset)
+                                                  const std::vector<unsigned int> &nummodes,
+                                                  int &modes_offset)
         {
             int nmodes = nummodes[modes_offset];
             modes_offset += 1;
@@ -733,18 +733,18 @@ namespace Nektar
                     }
 
                     int neq = LibUtilities::StdSegData::
-                                              getNumberOfCoefficients(nq);
+                        getNumberOfCoefficients(nq);
                     Array<OneD, NekDouble >   coords (1);
                     DNekMatSharedPtr          I     ;
                     Mat                     = MemoryManager<DNekMat>::
-                                                AllocateSharedPtr(neq, nq);
+                        AllocateSharedPtr(neq, nq);
 
                     for(int i = 0; i < neq; ++i)
                     {
                         coords[0] = -1.0 + 2*i/(NekDouble)(neq-1);
                         I         = m_base[0]->GetI(coords);
                         Vmath::Vcopy(nq, I->GetRawPtr(), 1,
-                                         Mat->GetRawPtr()+i,neq);
+                                     Mat->GetRawPtr()+i,neq);
                     }
                 }
                 break;
@@ -785,14 +785,6 @@ namespace Nektar
         {
             return v_GenMatrix(mkey);
         }
-
-      NekDouble StdSegExp::PhysEvaluateBary(
-					    const Array<OneD, const NekDouble>& coords, 
-					    const Array<OneD, const NekDouble> & physvals)
-      {
-
-	return  StdExpansion::PhysEvaluateBary(coords, physvals);
-      }
 
         //---------------------------------------------------------------------
         // Mappings
@@ -878,8 +870,8 @@ namespace Nektar
         }
 
         void StdSegExp::v_GetSimplexEquiSpacedConnectivity(
-            Array<OneD, int> &conn,
-            bool              standard)
+                                                           Array<OneD, int> &conn,
+                                                           bool              standard)
         {
             boost::ignore_unused(standard);
             int np = m_base[0]->GetNumPoints();

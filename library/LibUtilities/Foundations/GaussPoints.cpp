@@ -48,22 +48,22 @@ namespace Nektar
     namespace LibUtilities 
     {
         bool GaussPoints::initPointsManager[] = {
-                PointsManager().RegisterCreator(PointsKey(0, eGaussGaussLegendre),           GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMLegendre),          GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauPLegendre),          GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoLegendre),         GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussGaussChebyshev),          GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMChebyshev),         GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauPChebyshev),         GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoChebyshev),        GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1),       GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2),       GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0),       GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),       GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussKronrodLegendre),         GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauKronrodMLegendre),   GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussRadauKronrodMAlpha1Beta0),GaussPoints::Create),
-                PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoKronrodLegendre),  GaussPoints::Create)
+            PointsManager().RegisterCreator(PointsKey(0, eGaussGaussLegendre),           GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMLegendre),          GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussRadauPLegendre),          GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoLegendre),         GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussGaussChebyshev),          GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMChebyshev),         GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussRadauPChebyshev),         GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoChebyshev),        GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1),       GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2),       GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0),       GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),       GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussKronrodLegendre),         GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussRadauKronrodMLegendre),   GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussRadauKronrodMAlpha1Beta0),GaussPoints::Create),
+            PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoKronrodLegendre),  GaussPoints::Create)
         };
 
         void GaussPoints::CalculatePoints()
@@ -146,6 +146,11 @@ namespace Nektar
             }
         }
 
+        void GaussPoints::CalculateBaryWeights()
+        {
+	    PointsBaseType::CalculateBaryWeights();
+	}
+
         void GaussPoints::CalculateWeights()
         {
             // For Gauss Quadrature, this is done as part of the points computation
@@ -216,14 +221,14 @@ namespace Nektar
             case eGaussRadauKronrodMAlpha1Beta0:
             case eGaussLobattoKronrodLegendre:
                 {
-                for(unsigned int i=0;i<m_pointsKey.GetNumPoints();++i)
-                {
-                    for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
+                    for(unsigned int i=0;i<m_pointsKey.GetNumPoints();++i)
                     {
-                        (*m_derivmatrix[0])(i,j) = LagrangePolyDeriv(m_points[0][i],j,m_pointsKey.GetNumPoints(),m_points[0]);
+                        for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
+                        {
+                            (*m_derivmatrix[0])(i,j) = LagrangePolyDeriv(m_points[0][i],j,m_pointsKey.GetNumPoints(),m_points[0]);
+                        }
                     }
-                }
-                return;
+                    return;
                 }
                 break;
 	      
@@ -239,58 +244,58 @@ namespace Nektar
         {
             switch(m_pointsKey.GetPointsType())
             {
-                case eGaussGaussLegendre:
-                    Polylib::Imgj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
-                    break;
+            case eGaussGaussLegendre:
+                Polylib::Imgj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
+                break;
 
-                case eGaussRadauMLegendre:
-                    Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
-                    break;
+            case eGaussRadauMLegendre:
+                Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
+                break;
 
-                case eGaussRadauPLegendre:
-                    Polylib::Imgrjp(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
-                    break;
+            case eGaussRadauPLegendre:
+                Polylib::Imgrjp(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
+                break;
 
-                case eGaussLobattoLegendre:
-                    Polylib::Imglj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
-                    break;
+            case eGaussLobattoLegendre:
+                Polylib::Imglj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
+                break;
 
-                case eGaussGaussChebyshev:
-                    Polylib::Imgj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
-                    break;
+            case eGaussGaussChebyshev:
+                Polylib::Imgj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
+                break;
 
-                case eGaussRadauMChebyshev:
-                    Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
-                    break;
+            case eGaussRadauMChebyshev:
+                Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
+                break;
 
-                case eGaussRadauPChebyshev:
-                    Polylib::Imgrjp(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
-                    break;
+            case eGaussRadauPChebyshev:
+                Polylib::Imgrjp(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
+                break;
 
-                case eGaussLobattoChebyshev:
-                    Polylib::Imglj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
-                    break;
+            case eGaussLobattoChebyshev:
+                Polylib::Imglj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
+                break;
 
-                case eGaussRadauMAlpha0Beta1:
-                    Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,1.0);
-                    break;
+            case eGaussRadauMAlpha0Beta1:
+                Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,1.0);
+                break;
 
-                case eGaussRadauMAlpha0Beta2:
-                    Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,2.0);
-                    break;
+            case eGaussRadauMAlpha0Beta2:
+                Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,2.0);
+                break;
 
-                case eGaussRadauMAlpha1Beta0:
-                    Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,1.0,0.0);
-                    break;
+            case eGaussRadauMAlpha1Beta0:
+                Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,1.0,0.0);
+                break;
 
-                case eGaussRadauMAlpha2Beta0:
-                    Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,2.0,0.0);
-                    break;
+            case eGaussRadauMAlpha2Beta0:
+                Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,2.0,0.0);
+                break;
 		
-                case eGaussKronrodLegendre:
-                case eGaussRadauKronrodMLegendre:
-                case eGaussRadauKronrodMAlpha1Beta0:
-                case eGaussLobattoKronrodLegendre:
+            case eGaussKronrodLegendre:
+            case eGaussRadauKronrodMLegendre:
+            case eGaussRadauKronrodMAlpha1Beta0:
+            case eGaussLobattoKronrodLegendre:
                 {
                     for(unsigned int i=0;i<npts;++i)
                     {
@@ -357,8 +362,8 @@ namespace Nektar
             return returnval;
         }
 
-         NekDouble GaussPoints::LagrangeInterpolant(NekDouble x, int npts, const Array<OneD, const NekDouble>& xpts,
-            const Array<OneD, const NekDouble>& funcvals)
+        NekDouble GaussPoints::LagrangeInterpolant(NekDouble x, int npts, const Array<OneD, const NekDouble>& xpts,
+                                                   const Array<OneD, const NekDouble>& funcvals)
         {
             NekDouble sum = 0.0;
 

@@ -78,7 +78,7 @@ namespace Nektar
         /////////////////////////
 
         NekDouble StdQuadExp::v_Integral(
-                                  const Array<OneD, const NekDouble>& inarray)
+                                         const Array<OneD, const NekDouble>& inarray)
         {
             Array<OneD, const NekDouble> w0 = m_base[0]->GetW();
             Array<OneD, const NekDouble> w1 = m_base[1]->GetW();
@@ -97,17 +97,17 @@ namespace Nektar
          */
 
         void StdQuadExp::v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> &out_d0,
-                            Array<OneD, NekDouble> &out_d1,
-                            Array<OneD, NekDouble> &out_d2)
+                                     Array<OneD, NekDouble> &out_d0,
+                                     Array<OneD, NekDouble> &out_d1,
+                                     Array<OneD, NekDouble> &out_d2)
         {
             boost::ignore_unused(out_d2);
             PhysTensorDeriv(inarray, out_d0, out_d1);
         }
 
         void StdQuadExp::v_PhysDeriv(const int dir,
-                             const Array<OneD, const NekDouble>& inarray,
-                             Array<OneD, NekDouble> &outarray)
+                                     const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD, NekDouble> &outarray)
         {
             switch(dir)
             {
@@ -130,9 +130,9 @@ namespace Nektar
         }
 
         void StdQuadExp::v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> &out_d0,
-                            Array<OneD, NekDouble> &out_d1,
-                            Array<OneD, NekDouble> &out_d2)
+                                        Array<OneD, NekDouble> &out_d0,
+                                        Array<OneD, NekDouble> &out_d1,
+                                        Array<OneD, NekDouble> &out_d2)
         {
             boost::ignore_unused(out_d2);
             //PhysTensorDeriv(inarray, out_d0, out_d1);
@@ -140,8 +140,8 @@ namespace Nektar
         }
 
         void StdQuadExp::v_StdPhysDeriv(const int dir,
-                            const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> &outarray)
+                                        const Array<OneD, const NekDouble>& inarray,
+                                        Array<OneD, NekDouble> &outarray)
         {
             //PhysTensorDeriv(inarray, outarray);
             StdQuadExp::v_PhysDeriv(dir,inarray,outarray);
@@ -154,12 +154,12 @@ namespace Nektar
         ////////////////
 
         void StdQuadExp::v_BwdTrans(const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> &outarray)
+                                    Array<OneD, NekDouble> &outarray)
         {
             if(m_base[0]->Collocation() && m_base[1]->Collocation())
             {
                 Vmath::Vcopy(m_base[0]->GetNumPoints() * m_base[1]->GetNumPoints(),
-                               inarray, 1, outarray, 1);
+                             inarray, 1, outarray, 1);
             }
             else
             {
@@ -168,8 +168,8 @@ namespace Nektar
         }
 
         void StdQuadExp::v_BwdTrans_SumFac(
-                            const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> &outarray)
+                                           const Array<OneD, const NekDouble>& inarray,
+                                           Array<OneD, NekDouble> &outarray)
         {
             Array<OneD, NekDouble> wsp(m_base[0]->GetNumPoints()*
                                        m_base[1]->GetNumModes());
@@ -190,13 +190,13 @@ namespace Nektar
         //    base0 == m_base[0]->GetDbdata() --> set doCheckCollDir0 == false;
         //    base1 == m_base[1]->GetDbdata() --> set doCheckCollDir1 == false;
         void StdQuadExp::v_BwdTrans_SumFacKernel(
-                            const Array<OneD, const NekDouble>& base0,
-                            const Array<OneD, const NekDouble>& base1,
-                            const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> &outarray,
-                            Array<OneD, NekDouble> &wsp,
-                            bool doCheckCollDir0,
-                            bool doCheckCollDir1)
+                                                 const Array<OneD, const NekDouble>& base0,
+                                                 const Array<OneD, const NekDouble>& base1,
+                                                 const Array<OneD, const NekDouble>& inarray,
+                                                 Array<OneD, NekDouble> &outarray,
+                                                 Array<OneD, NekDouble> &wsp,
+                                                 bool doCheckCollDir0,
+                                                 bool doCheckCollDir1)
         {
             int  nquad0  = m_base[0]->GetNumPoints();
             int  nquad1  = m_base[1]->GetNumPoints();
@@ -213,12 +213,12 @@ namespace Nektar
             else if(colldir0)
             {
                 Blas::Dgemm('N','T', nquad0, nquad1,nmodes1, 1.0, &inarray[0], nquad0,
-                                base1.get(), nquad1, 0.0, &outarray[0], nquad0);
+                            base1.get(), nquad1, 0.0, &outarray[0], nquad0);
             }
             else if(colldir1)
             {
                 Blas::Dgemm('N','N', nquad0,nmodes1,nmodes0,1.0, base0.get(),
-                                nquad0, &inarray[0], nmodes0,0.0,&outarray[0], nquad0);
+                            nquad0, &inarray[0], nmodes0,0.0,&outarray[0], nquad0);
             }
             else
             {
@@ -227,15 +227,15 @@ namespace Nektar
                 // Those two calls correpsond to the operation
                 // out = B0*in*Transpose(B1);
                 Blas::Dgemm('N','N', nquad0,nmodes1,nmodes0,1.0, base0.get(),
-                                nquad0, &inarray[0], nmodes0,0.0,&wsp[0], nquad0);
+                            nquad0, &inarray[0], nmodes0,0.0,&wsp[0], nquad0);
                 Blas::Dgemm('N','T', nquad0, nquad1,nmodes1, 1.0, &wsp[0], nquad0,
-                                base1.get(), nquad1, 0.0, &outarray[0], nquad0);
+                            base1.get(), nquad1, 0.0, &outarray[0], nquad0);
             }
         }
 
 
         void StdQuadExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> &outarray)
+                                    Array<OneD, NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
             {
@@ -243,7 +243,7 @@ namespace Nektar
             }
             else
             {
-	        StdQuadExp::v_IProductWRTBase(inarray,outarray);
+                StdQuadExp::v_IProductWRTBase(inarray,outarray);
 
                 // get Mass matrix inverse
                 StdMatrixKey     masskey(eInvMass,DetShapeType(),*this);
@@ -257,9 +257,9 @@ namespace Nektar
             }
         }
 
-      void StdQuadExp::v_FwdTrans_BndConstrained(
-                            const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> &outarray)
+        void StdQuadExp::v_FwdTrans_BndConstrained(
+                                                   const Array<OneD, const NekDouble>& inarray,
+                                                   Array<OneD, NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
             {
@@ -357,34 +357,34 @@ namespace Nektar
         // Inner Product Functions //
         /////////////////////////////
 
-       /** \brief Calculate the inner product of inarray with respect to
-        *  the basis B=base0*base1 and put into outarray
-        *
-        *  \f$
-        *  \begin{array}{rcl}
-        *  I_{pq} = (\phi_q \phi_q, u) & = & \sum_{i=0}^{nq_0}
-        *  \sum_{j=0}^{nq_1}
-        *  \phi_p(\xi_{0,i}) \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i}
-        *  \xi_{1,j}) \\
-        *  & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
-        *  \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j}
-        *  \end{array}
-        *  \f$
-        *
-        *  where
-        *
-        *  \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
-        *
-        *  which can be implemented as
-        *
-        *  \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j})
-        *  \tilde{u}_{i,j} = {\bf B_1 U}  \f$
-        *  \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} =
-        *  {\bf B_0 F}  \f$
-        */
+        /** \brief Calculate the inner product of inarray with respect to
+         *  the basis B=base0*base1 and put into outarray
+         *
+         *  \f$
+         *  \begin{array}{rcl}
+         *  I_{pq} = (\phi_q \phi_q, u) & = & \sum_{i=0}^{nq_0}
+         *  \sum_{j=0}^{nq_1}
+         *  \phi_p(\xi_{0,i}) \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i}
+         *  \xi_{1,j}) \\
+         *  & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
+         *  \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j}
+         *  \end{array}
+         *  \f$
+         *
+         *  where
+         *
+         *  \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
+         *
+         *  which can be implemented as
+         *
+         *  \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j})
+         *  \tilde{u}_{i,j} = {\bf B_1 U}  \f$
+         *  \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} =
+         *  {\bf B_0 F}  \f$
+         */
         void StdQuadExp::v_IProductWRTBase(
-                            const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> &outarray)
+                                           const Array<OneD, const NekDouble>& inarray,
+                                           Array<OneD, NekDouble> &outarray)
         {
             if(m_base[0]->Collocation() && m_base[1]->Collocation())
             {
@@ -397,9 +397,9 @@ namespace Nektar
         }
 
         void StdQuadExp::v_IProductWRTBase_SumFac(
-            const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble> &outarray,
-            bool                                multiplybyweights)
+                                                  const Array<OneD, const NekDouble>& inarray,
+                                                  Array<OneD,       NekDouble> &outarray,
+                                                  bool                                multiplybyweights)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -426,8 +426,8 @@ namespace Nektar
         }
 
         void StdQuadExp::v_IProductWRTBase_MatOp(
-                             const Array<OneD, const NekDouble>& inarray,
-                             Array<OneD, NekDouble> &outarray)
+                                                 const Array<OneD, const NekDouble>& inarray,
+                                                 Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
             StdMatrixKey      iprodmatkey(eIProductWRTBase,DetShapeType(),*this);
@@ -438,15 +438,15 @@ namespace Nektar
         }
 
         void StdQuadExp::v_IProductWRTDerivBase(const int dir,
-                            const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> & outarray)
+                                                const Array<OneD, const NekDouble>& inarray,
+                                                Array<OneD, NekDouble> & outarray)
         {
             StdQuadExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
         }
 
         void StdQuadExp::v_IProductWRTDerivBase_SumFac(const int dir,
-                             const Array<OneD, const NekDouble>& inarray,
-                             Array<OneD, NekDouble> &outarray)
+                                                       const Array<OneD, const NekDouble>& inarray,
+                                                       Array<OneD, NekDouble> &outarray)
         {
             ASSERTL0((dir==0)||(dir==1),"input dir is out of range");
 
@@ -476,8 +476,8 @@ namespace Nektar
         }
 
         void StdQuadExp::v_IProductWRTDerivBase_MatOp(const int dir,
-                             const Array<OneD, const NekDouble>& inarray,
-                             Array<OneD, NekDouble> &outarray)
+                                                      const Array<OneD, const NekDouble>& inarray,
+                                                      Array<OneD, NekDouble> &outarray)
         {
             ASSERTL0((dir==0)||(dir==1),"input dir is out of range");
 
@@ -511,59 +511,59 @@ namespace Nektar
         //    base0 == m_base[0]->GetDbdata() --> set doCheckCollDir0 == false;
         //    base1 == m_base[1]->GetDbdata() --> set doCheckCollDir1 == false;
         void StdQuadExp::v_IProductWRTBase_SumFacKernel(
-                             const Array<OneD, const NekDouble>& base0,
-                             const Array<OneD, const NekDouble>& base1,
-                             const Array<OneD, const NekDouble>& inarray,
-                             Array<OneD, NekDouble> &outarray,
-                             Array<OneD, NekDouble> &wsp,
-                             bool doCheckCollDir0,
-                             bool doCheckCollDir1)
+                                                        const Array<OneD, const NekDouble>& base0,
+                                                        const Array<OneD, const NekDouble>& base1,
+                                                        const Array<OneD, const NekDouble>& inarray,
+                                                        Array<OneD, NekDouble> &outarray,
+                                                        Array<OneD, NekDouble> &wsp,
+                                                        bool doCheckCollDir0,
+                                                        bool doCheckCollDir1)
+        {
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nmodes0 = m_base[0]->GetNumModes();
+            int    nmodes1 = m_base[1]->GetNumModes();
+
+            bool colldir0 = doCheckCollDir0?(m_base[0]->Collocation()):false;
+            bool colldir1 = doCheckCollDir1?(m_base[1]->Collocation()):false;
+
+            if(colldir0 && colldir1)
             {
-                int    nquad0 = m_base[0]->GetNumPoints();
-                int    nquad1 = m_base[1]->GetNumPoints();
-                int    nmodes0 = m_base[0]->GetNumModes();
-                int    nmodes1 = m_base[1]->GetNumModes();
-
-                bool colldir0 = doCheckCollDir0?(m_base[0]->Collocation()):false;
-                bool colldir1 = doCheckCollDir1?(m_base[1]->Collocation()):false;
-
-                if(colldir0 && colldir1)
-                {
-                    Vmath::Vcopy(m_ncoeffs,inarray.get(),1,outarray.get(),1);
-                }
-                else if(colldir0)
-                {
-                    Blas::Dgemm('N', 'N',nmodes0,nmodes1, nquad1,1.0, inarray.get(),
-                                nmodes0, base1.get(), nquad1, 0.0,outarray.get(),nmodes0);
-                }
-                else if(colldir1)
-                {
-                    Blas::Dgemm('T','N',nmodes0,nquad1,nquad0,1.0,base0.get(),
-                                nquad0,inarray.get(),nquad0,0.0,outarray.get(),nmodes0);
-                }
-                else
-                {
-                    ASSERTL1(wsp.num_elements()>=nquad1*nmodes0,"Workspace size is not sufficient");
+                Vmath::Vcopy(m_ncoeffs,inarray.get(),1,outarray.get(),1);
+            }
+            else if(colldir0)
+            {
+                Blas::Dgemm('N', 'N',nmodes0,nmodes1, nquad1,1.0, inarray.get(),
+                            nmodes0, base1.get(), nquad1, 0.0,outarray.get(),nmodes0);
+            }
+            else if(colldir1)
+            {
+                Blas::Dgemm('T','N',nmodes0,nquad1,nquad0,1.0,base0.get(),
+                            nquad0,inarray.get(),nquad0,0.0,outarray.get(),nmodes0);
+            }
+            else
+            {
+                ASSERTL1(wsp.num_elements()>=nquad1*nmodes0,"Workspace size is not sufficient");
 
 #if 1
-                    Blas::Dgemm('T','N',nmodes0,nquad1,nquad0,1.0,base0.get(),
-                                nquad0,inarray.get(),nquad0,0.0,wsp.get(),nmodes0);
+                Blas::Dgemm('T','N',nmodes0,nquad1,nquad0,1.0,base0.get(),
+                            nquad0,inarray.get(),nquad0,0.0,wsp.get(),nmodes0);
 
 #else
-                    for(int i = 0; i < nmodes0; ++i)
+                for(int i = 0; i < nmodes0; ++i)
+                {
+                    for(int j = 0; j < nquad1; ++j)
                     {
-                        for(int j = 0; j < nquad1; ++j)
-                        {
-                            wsp[j*nmodes0+i] = Blas::Ddot(nquad0,
-                                                          base0.get()+i*nquad0,1,
-                                                          inarray.get()+j*nquad0,1);
-                        }
+                        wsp[j*nmodes0+i] = Blas::Ddot(nquad0,
+                                                      base0.get()+i*nquad0,1,
+                                                      inarray.get()+j*nquad0,1);
                     }
-#endif
-                    Blas::Dgemm('N', 'N',nmodes0,nmodes1, nquad1,1.0, wsp.get(),
-                                nmodes0, base1.get(), nquad1, 0.0,outarray.get(),nmodes0);
                 }
+#endif
+                Blas::Dgemm('N', 'N',nmodes0,nmodes1, nquad1,1.0, wsp.get(),
+                            nmodes0, base1.get(), nquad1, 0.0,outarray.get(),nmodes0);
             }
+        }
 
         //////////////////////////
         // Evaluation functions //
@@ -571,7 +571,7 @@ namespace Nektar
 
 
         void StdQuadExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
-                                                 Array<OneD, NekDouble>& eta)
+                                                  Array<OneD, NekDouble>& eta)
         {
             eta[0] = xi[0];
             eta[1] = xi[1];
@@ -584,7 +584,7 @@ namespace Nektar
          */
 
         void StdQuadExp::v_FillMode(const int mode,
-                            Array<OneD, NekDouble> &outarray)
+                                    Array<OneD, NekDouble> &outarray)
         {
             int    i;
             int   nquad0 = m_base[0]->GetNumPoints();
@@ -695,7 +695,7 @@ namespace Nektar
             }
             else
             {
-               return  GetBasis(1)->GetBasisKey();
+                return  GetBasis(1)->GetBasisKey();
             }
 
         }
@@ -715,7 +715,7 @@ namespace Nektar
             ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
                      GetBasisType(1) == LibUtilities::eGLL_Lagrange||
                      GetBasisType(0) == LibUtilities::eGauss_Lagrange,
-                      "BasisType is not a boundary interior form");
+                     "BasisType is not a boundary interior form");
 
             return 4 + 2*(GetBasisNumModes(0)-2) + 2*(GetBasisNumModes(1)-2);
         }
@@ -735,8 +735,8 @@ namespace Nektar
         }
 
         int StdQuadExp::v_CalcNumberOfCoefficients(
-                           const std::vector<unsigned int> &nummodes,
-                           int &modes_offset)
+                                                   const std::vector<unsigned int> &nummodes,
+                                                   int &modes_offset)
         {
             int nmodes = nummodes[modes_offset]*nummodes[modes_offset+1];
             modes_offset += 2;
@@ -762,8 +762,8 @@ namespace Nektar
         }
 
         void StdQuadExp::v_GetCoords(Array<OneD, NekDouble> &coords_0,
-			    Array<OneD, NekDouble> &coords_1,
-			    Array<OneD, NekDouble> &coords_2)
+                                     Array<OneD, NekDouble> &coords_1,
+                                     Array<OneD, NekDouble> &coords_2)
         {
             boost::ignore_unused(coords_2);
             Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
@@ -779,143 +779,43 @@ namespace Nektar
             }
         }
 
-      // (2) Barycentric interpolation for non-separable fn:
-      // 
-      // Alternate impl of PhysEvaluate() of nektar++ :: 
-      // call goes to StdExpansion2D (shape independent)
+        /** \brief This function evaluates the basis function mode "mode" at a single 
+         *  (arbitrary) point of the domain using Barycentric Interpolation.
+         *  It harnesses the multiplicatively separable nature of the basis function.
+         *
+         *  \param coord the coordinate of the single point 
+         *  \param mode = degree of \phi to be interpolated
+         *
+         *  \return returns the value of the basis function at the single point  
+         */
 
-      NekDouble StdQuadExp::PhysEvaluateBary(const Array<OneD, const NekDouble>& coords, 
-					     const Array<OneD, const NekDouble> & physvals
-					     )
-      {
-	return StdExpansion2D::PhysEvaluateBary(coords, physvals);
-      }
-
-      // (1) For separable functions: F(x,y) = f(x)f(y)
-      //     shape dependent barycentric interpolation version of PhysEvaluate:
-      //      
-      // For case (1A)   : general function interpolation given f(quadpts)=physvals
-      //                   quadpts and physvals are NOT NULL, mode is 0 (to be ignored)
-      // For case (1Ba)  : basis function evaluation. \phi(x,y)=\phi_1(x)\phi_2(y)
-      //                   mode = degree of \phi to be interpolated
-      //                   quadpts and physvals are NULL vectors, mode has to be \in [0,maxcoeff]
-      //                   where 
-      //           maxcoeff = LibUtilities::StdQuadData::getNumberOfCoefficients(nmodes0,nmodes1);
-      // For case (1Bb)  : mode > prod of individual basis degrees. In this case, 
-      //                   (a) either ask user to define a new obj with appropriate basis key
-      //                   that can do this or,
-      //                   (b) use current obj but ask user to pass quadpts and physvals from the 
-      //                   basis definition which is of higher degree than this object's basis def
-      //                   Currently (a) implemented. 
-      //                   Infreastructure for (b) is ready - reverts back to (1A)
-
-      NekDouble StdQuadExp::PhysEvaluateBaryInd(const Array<OneD, const NekDouble>& coords, 
-				  Array<OneD,  Array<OneD,  NekDouble> >& quadpts, 
-				  Array<OneD, Array<OneD,  NekDouble> >& physvals,
-				  int mode)
-      {
-	Array<OneD, NekDouble> coll(2);
+        NekDouble StdQuadExp::PhysEvaluateBasis(const Array<OneD, const NekDouble>& coords,
+                                                int mode)
+        {
+            Array<OneD, NekDouble> coll(2);
 	
-	ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
-	ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
-	ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol, "coord[1] < -1");
-	ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
-	LocCoordToLocCollapsed(coords,coll);
+            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
+            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
+            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol, "coord[1] < -1");
+            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
+            LocCoordToLocCollapsed(coords,coll);
 	
-	Array<OneD, NekDouble> vv1; 
-	Array<OneD, NekDouble> vv2; 
-	
-	int nq1 ;
-	int nm1 = m_base[0]->GetNumModes();
-	int nm2 = m_base[1]->GetNumModes();
+            int nm1 = m_base[0]->GetNumModes();
+            int nm2 = m_base[1]->GetNumModes();
 
-	int mode0, mode1;
-
-	// assert mode <= nm1*nm2;	
-	ASSERTL2(mode <  LibUtilities::StdQuadData::getNumberOfCoefficients(nm1,nm2),
-		 "mode > max allowable mode");
+            int mode0, mode1;
+            NekDouble coeffid = mode;
+	  
+            mode0 = ((int)coeffid)%(nm2);
+            mode1 =  coeffid/(nm1);
+	  
+            NekDouble ret1 = StdExpansion::PhysEvaluateBasis(coll[0], 
+                                                             mode0, 0);
+            NekDouble ret2 = StdExpansion::PhysEvaluateBasis(coll[1], 
+                                                             mode1, 1);
+            return ret1*ret2;
 	
-	// Case when we want to interpolate the basis function 
-	// with the data already present in calling object
-	if(quadpts[0].num_elements() == 0) //NULL vector passed for quadpts, use existing
-	{
-	  
-	  // assert that physvals also null
-	  ASSERTL2(physvals[0].num_elements == 0, "cannot pass physvals in this case.");
-	  // Refer to documentation fo Barycentric interpolation implemented in Nektar+
-	  
-
-	  vv1 = m_base[0]->GetBdata();
-	  vv2 = m_base[1]->GetBdata();
-	  nq1 = m_base[0]->GetNumPoints();
-	  NekDouble coeffid = mode;
-	  
-	  mode0 = ((int)coeffid)%(nm2);
-	  mode1 =  coeffid/(nm1);
-	  
-	  // deal with top vertex mode in modified basis
-	  if (coeffid == 1 &&
-		m_base[0]->GetBasisType() == LibUtilities::eModified_A)
-	    {
-	      vv1 = Array<OneD, NekDouble>(nq1,1.0);
-	    }
-	    
-	}
-	else //mode = 0 (not basis interpolation, caller sends quadpts and physvals)
-	{
-	  int nq1 = quadpts[1].num_elements(), nq0 = quadpts[0].num_elements();
-	  //redefine m_bcweights here coz quad pts changed
-	  StdExpansion::m_bcweightstest[1] = Array<OneD, NekDouble>(nq1, 1.0);
-	  Array<OneD, NekDouble> z = quadpts[1];
-	  for (int i = 0; i < nq1; ++i)
-	    {
-	      for (int j = 0; j < nq1; ++j)
-		{
-		  if (i == j)
-		    {
-		      continue;
-		    }
-		  
-		  m_bcweightstest[1][i] *= (z[i] - z[j]);
-		}
-	      
-	      m_bcweightstest[1][i] = 1.0 / m_bcweightstest[1][i];
-	    }
-	  z = quadpts[0];
-	  StdExpansion::m_bcweightstest[0] = Array<OneD, NekDouble>(nq0, 1.0);
-	  
-	  for (int i = 0; i < nq0; ++i)
-	    {
-	      for (int j = 0; j < nq0; ++j)
-		{
-		  if (i == j)
-		    {
-		      continue;
-		    }
-		  
-		  m_bcweightstest[0][i] *= (z[i] - z[j]);
-		}
-	      
-	      m_bcweightstest[0][i] = 1.0 / m_bcweightstest[0][i];
-	    }
-	  
-	  
-	  vv1 = physvals[0];
-	  vv2 = physvals[1];
-	  nq1 = quadpts[0].num_elements();
-	  
-	  mode0 =  0;
-	  mode1 =  0;
-	  	  
-	  
-	}  
-	NekDouble ret1 = StdExpansion::PhysEvaluateBary(Array<OneD, NekDouble>(1, coll[0]), 
-							vv1, mode0, 0);
-	NekDouble ret2 = StdExpansion::PhysEvaluateBary(Array<OneD, NekDouble>(1, coll[1]), 
-							vv2, mode1, 1);
-	return ret1*ret2;
-	
-      }
+        }
 
 
         //////////////
@@ -1090,7 +990,7 @@ namespace Nektar
                             localDOF = m_base[0]->GetNumModes()+1;
                         }
                     }
-                break;
+                    break;
                 default:
                     ASSERTL0(false,"eid must be between 0 and 3");
                     break;
@@ -1129,7 +1029,7 @@ namespace Nektar
                             localDOF = m_base[0]->GetNumModes()+1;
                         }
                     }
-                break;
+                    break;
                 case 3:
                     {
                         if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
@@ -1151,9 +1051,9 @@ namespace Nektar
         }
 
         void StdQuadExp::v_GetEdgeInteriorMap(const int eid,
-                             const Orientation edgeOrient,
-                             Array<OneD, unsigned int> &maparray,
-                             Array<OneD, int> &signarray)
+                                              const Orientation edgeOrient,
+                                              Array<OneD, unsigned int> &maparray,
+                                              Array<OneD, int> &signarray)
         {
             int i;
             const int nummodes0 = m_base[0]->GetNumModes();
@@ -1301,11 +1201,11 @@ namespace Nektar
         }
 
         void StdQuadExp::v_GetEdgeToElementMap(
-             const int                  eid,
-             const Orientation          edgeOrient,
-             Array<OneD, unsigned int>& maparray,
-             Array<OneD, int>&          signarray,
-             int                        P)
+                                               const int                  eid,
+                                               const Orientation          edgeOrient,
+                                               Array<OneD, unsigned int>& maparray,
+                                               Array<OneD, int>&          signarray,
+                                               int                        P)
         {
             int i;
             int numModes=0;
@@ -1499,8 +1399,8 @@ namespace Nektar
                 else
                 {
                     ASSERTL0(false, "Different trace space edge dimension "
-                                    "and element edge dimension not possible "
-                                    "for GLL-Lagrange bases");
+                             "and element edge dimension not possible "
+                             "for GLL-Lagrange bases");
                 }
             }
         }
@@ -1522,7 +1422,7 @@ namespace Nektar
 
             switch(mtype)
             {
-                case ePhysInterpToEquiSpaced:
+            case ePhysInterpToEquiSpaced:
                 {
                     int nq0 = m_base[0]->GetNumPoints();
                     int nq1 = m_base[1]->GetNumPoints();
@@ -1539,14 +1439,14 @@ namespace Nektar
                     }
 
                     int neq = LibUtilities::StdQuadData::
-                                                getNumberOfCoefficients(nq, nq);
+                        getNumberOfCoefficients(nq, nq);
                     Array<OneD, Array<OneD, NekDouble> > coords(neq);
                     Array<OneD, NekDouble>               coll  (2);
                     Array<OneD, DNekMatSharedPtr>        I     (2);
                     Array<OneD, NekDouble>               tmp   (nq0);
 
                     Mat = MemoryManager<DNekMat>::
-                                        AllocateSharedPtr(neq, nq0 * nq1);
+                        AllocateSharedPtr(neq, nq0 * nq1);
                     int cnt = 0;
 
                     for(int i = 0; i < nq; ++i)
@@ -1579,7 +1479,7 @@ namespace Nektar
                     }
                     break;
                 }
-                case eMass:
+            case eMass:
                 {
                     Mat = StdExpansion::CreateGeneralMatrix(mkey);
                     // For Fourier basis set the imaginary component of mean mode
@@ -1601,7 +1501,7 @@ namespace Nektar
                     }
                     break;
                 }
-                case eFwdTrans:
+            case eFwdTrans:
                 {
                     Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
                     StdMatrixKey iprodkey(eIProductWRTBase,DetShapeType(),*this);
@@ -1612,7 +1512,7 @@ namespace Nektar
                     (*Mat) = Imass*Iprod;
                     break;
                 }
-                case eGaussDG:
+            case eGaussDG:
                 {
                     ConstFactorMap factors = mkey.GetConstFactors();
 
@@ -1621,9 +1521,9 @@ namespace Nektar
                     int nCoeffs = m_base[dir]->GetNumModes();
 
                     const LibUtilities::PointsKey BS_p(
-                        nCoeffs, LibUtilities::eGaussGaussLegendre);
+                                                       nCoeffs, LibUtilities::eGaussGaussLegendre);
                     const LibUtilities::BasisKey  BS_k(
-                        LibUtilities::eGauss_Lagrange, nCoeffs, BS_p);
+                                                       LibUtilities::eGauss_Lagrange, nCoeffs, BS_p);
 
                     Array<OneD, NekDouble> coords(1, 0.0);
                     coords[0] = (edge == 0 || edge == 3) ? -1.0 : 1.0;
@@ -1633,11 +1533,11 @@ namespace Nektar
                     DNekMatSharedPtr             m_Ix  = basis->GetI(coords);
 
                     Mat = MemoryManager<DNekMat>::AllocateSharedPtr(
-                        1.0, nCoeffs);
+                                                                    1.0, nCoeffs);
                     Vmath::Vcopy(nCoeffs, m_Ix->GetPtr(), 1, Mat->GetPtr(), 1);
                     break;
                 }
-                default:
+            default:
                 {
                     Mat = StdExpansion::CreateGeneralMatrix(mkey);
                     break;
@@ -1657,9 +1557,9 @@ namespace Nektar
         ///////////////////////////////////
 
         void StdQuadExp::v_GeneralMatrixOp_MatOp(
-                             const Array<OneD, const NekDouble> &inarray,
-                             Array<OneD,NekDouble> &outarray,
-                             const StdMatrixKey &mkey)
+                                                 const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD,NekDouble> &outarray,
+                                                 const StdMatrixKey &mkey)
         {
 
             DNekMatSharedPtr mat = m_stdMatrixManager[mkey];
@@ -1716,8 +1616,8 @@ namespace Nektar
                     {
                         // linear space but makes high modes very negative
                         NekDouble fac = std::max(
-                                    pow((1.0*j)/(nmodes_a-1),cutoff*nmodes_a),
-                                    pow((1.0*k)/(nmodes_b-1),cutoff*nmodes_b));
+                                                 pow((1.0*j)/(nmodes_a-1),cutoff*nmodes_a),
+                                                 pow((1.0*k)/(nmodes_b-1),cutoff*nmodes_b));
 
                         orthocoeffs[j*nmodes_b+k] *= SvvDiffCoeff * fac;
                     }
@@ -1750,7 +1650,7 @@ namespace Nektar
                 NekDouble  SvvDiffCoeff = mkey.GetConstFactor(eFactorSVVDiffCoeff);
                 //Exponential Kernel implementation
                 int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*
-                                                        min(nmodes_a,nmodes_b));
+                                    min(nmodes_a,nmodes_b));
 
                 //counters for scanning through orthocoeffs array
                 int cnt = 0;
@@ -1762,14 +1662,14 @@ namespace Nektar
                     {
                         if(j + k >= cutoff)//to filter out only the "high-modes"
                         {
-                             orthocoeffs[j*nmodes_b+k] *=
-                                 (SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/
-                                                    ((NekDouble)((j+k-cutoff+1)*
-                                                         (j+k-cutoff+1)))));
-                         }
+                            orthocoeffs[j*nmodes_b+k] *=
+                                (SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/
+                                                  ((NekDouble)((j+k-cutoff+1)*
+                                                               (j+k-cutoff+1)))));
+                        }
                         else
                         {
-                             orthocoeffs[j*nmodes_b+k] *= 0.0;
+                            orthocoeffs[j*nmodes_b+k] *= 0.0;
                         }
                         cnt++;
                     }
@@ -1781,10 +1681,10 @@ namespace Nektar
         }
 
         void StdQuadExp::v_ExponentialFilter(
-                                          Array<OneD, NekDouble> &array,
-                                    const NekDouble        alpha,
-                                    const NekDouble        exponent,
-                                    const NekDouble        cutoff)
+                                             Array<OneD, NekDouble> &array,
+                                             const NekDouble        alpha,
+                                             const NekDouble        exponent,
+                                             const NekDouble        cutoff)
         {
             // Generate an orthogonal expansion
             int qa      = m_base[0]->GetNumPoints();
@@ -1833,9 +1733,9 @@ namespace Nektar
         }
 
         void StdQuadExp::v_ReduceOrderCoeffs(
-            int                                 numMin,
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray)
+                                             int                                 numMin,
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,       NekDouble> &outarray)
         {
             int n_coeffs = inarray.num_elements();
 
@@ -1852,9 +1752,9 @@ namespace Nektar
             Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp,1);
 
             const LibUtilities::PointsKey Pkey0(
-                nmodes0, LibUtilities::eGaussLobattoLegendre);
+                                                nmodes0, LibUtilities::eGaussLobattoLegendre);
             const LibUtilities::PointsKey Pkey1(
-                nmodes1, LibUtilities::eGaussLobattoLegendre);
+                                                nmodes1, LibUtilities::eGaussLobattoLegendre);
 
             LibUtilities::BasisKey b0(m_base[0]->GetBasisType(),nmodes0,Pkey0);
             LibUtilities::BasisKey b1(m_base[1]->GetBasisType(),nmodes1,Pkey1);
@@ -1863,7 +1763,7 @@ namespace Nektar
             LibUtilities::BasisKey bortho1(LibUtilities::eOrtho_A,nmodes1,Pkey1);
 
             LibUtilities::InterpCoeff2D(
-                b0, b1, coeff_tmp, bortho0, bortho1, coeff);
+                                        b0, b1, coeff_tmp, bortho0, bortho1, coeff);
 
             Vmath::Zero(n_coeffs,coeff_tmp,1);
 
@@ -1878,53 +1778,53 @@ namespace Nektar
             }
 
             LibUtilities::InterpCoeff2D(
-                bortho0, bortho1, coeff_tmp, b0, b1, outarray);
+                                        bortho0, bortho1, coeff_tmp, b0, b1, outarray);
         }
 
 
         void StdQuadExp::v_MassMatrixOp(
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdMatrixKey &mkey)
+                                        const Array<OneD, const NekDouble> &inarray,
+                                        Array<OneD,NekDouble> &outarray,
+                                        const StdMatrixKey &mkey)
         {
             StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
         void StdQuadExp::v_LaplacianMatrixOp(
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdMatrixKey &mkey)
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdMatrixKey &mkey)
         {
             StdQuadExp::v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
         void StdQuadExp::v_LaplacianMatrixOp(const int k1, const int k2,
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdMatrixKey &mkey)
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdMatrixKey &mkey)
         {
             StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
         }
 
         void StdQuadExp::v_WeakDerivMatrixOp(const int i,
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdMatrixKey &mkey)
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdMatrixKey &mkey)
         {
             StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
         }
 
         void StdQuadExp::v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                           Array<OneD,NekDouble> &outarray,
-                           const StdMatrixKey &mkey)
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdMatrixKey &mkey)
         {
             StdQuadExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
         //up to here
         void StdQuadExp::v_MultiplyByStdQuadratureMetric(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray)
+                                                         const Array<OneD, const NekDouble> &inarray,
+                                                         Array<OneD,       NekDouble> &outarray)
         {
             int i;
             int nquad0 = m_base[0]->GetNumPoints();
@@ -1948,8 +1848,8 @@ namespace Nektar
         }
 
         void StdQuadExp::v_GetSimplexEquiSpacedConnectivity(
-            Array<OneD, int> &conn,
-            bool              standard)
+                                                            Array<OneD, int> &conn,
+                                                            bool              standard)
         {
             boost::ignore_unused(standard);
 

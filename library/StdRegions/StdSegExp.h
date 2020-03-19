@@ -62,8 +62,8 @@ namespace Nektar
 
             STD_REGIONS_EXPORT ~StdSegExp();
 
-          NekDouble PhysEvaluateBary(const Array<OneD, const NekDouble>& coords, 
-				     const Array<OneD, const NekDouble> & physvals);
+	    //          NekDouble PhysEvaluateBary(const Array<OneD, const NekDouble>& coords, 
+	    //			     const Array<OneD, const NekDouble> & physvals);
 
     protected:
 

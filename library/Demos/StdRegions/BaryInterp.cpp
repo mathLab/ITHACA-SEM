@@ -60,80 +60,39 @@ namespace po = boost::program_options;
 template <class myType>
 Array<OneD, NekDouble> commoncode(myType*E, 
 	       NekMatrix<NekDouble> matT,
-	       int n_coeffs, int mode0, int mode1)
-{
-  Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
-  t[0] = -0.5;
-  t[1] = -0.25;
-  t[2] = -0.3;
+				  int n_coeffs,
+				  Array<OneD, NekDouble> t)
+{  
+  //  Array<OneD, NekDouble> t = pts;
    
   const Array<OneD, const NekDouble> tt = t;
-  Array<OneD, NekDouble> ret(4);
+  Array<OneD, NekDouble> ret(2);
   int uu = n_coeffs;
-  //for(int uu = 0; uu<n_coeffs; uu++)
   { 	      
      
-    // Using existing Nek++ version:
     Timer t1;
     t1.Start();   
+    Array<OneD, NekDouble> tempval(matT.GetRows()); 
+    Vmath::Vcopy(matT.GetRows(),matT.GetPtr()+uu*matT.GetColumns(),1,tempval,1);
+
+    //cout<<"\n tempval = "<<tempval[0]<<" "<<tempval[1]<<" "<<tempval[2];
     NekDouble val1 = E->PhysEvaluate(t,matT.GetPtr()+uu*(matT.GetRows()));
     t1.Stop();
     NekDouble elapsed  = t1.TimePerTest(1);
-    cout<<"\n Original Nek++ PhysEvaluate took = "<<elapsed<<" s. val = "<<val1<<"\n";
+    cout<<"\n PhysEvaluate took = "<<elapsed<<" s. val = "<<val1<<"\n";
     ret[0] = val1;      
 
-    // Using (1): separable basis in x- and y- direction
-    // case (1A)
-    Array<OneD, Array<OneD,  NekDouble> >quadpts(2);
-    quadpts[0] = E->GetBasis(0)->GetZ();
-    quadpts[1] = E->GetBasis(1)->GetZ();
-
-    Array<OneD, Array<OneD,  NekDouble> >indphis(2);
-    Array<OneD, NekDouble> r1(quadpts[0].num_elements());
-    Array<OneD, NekDouble> r2(quadpts[1].num_elements());
-    indphis[0] = r1;
-    indphis[1] = r2;
-    Vmath::Vcopy(quadpts[0].num_elements(), E->GetBasis(0)->GetBdata()+quadpts[0].num_elements()*mode0, 1, indphis[0], 1);
-    Vmath::Vcopy(quadpts[1].num_elements(), E->GetBasis(1)->GetBdata()+quadpts[1].num_elements()*mode1, 1, indphis[1], 1);
-    t1.Start();   				    
-    NekDouble val1A = E->PhysEvaluateBaryInd(tt, quadpts, indphis, 0);
-    t1.Stop();
-    NekDouble elapsed1A  = t1.TimePerTest(1);
-    cout<<"\n 1A case: took "<<elapsed1A<<" s.val = "<<val1A;
-    ret[1] = val1A;
 
     //case (1Ba)
     Array<OneD, Array<OneD,  NekDouble> >quadpts2(2);
     Array<OneD, Array<OneD,  NekDouble> >indphis2(2);
     t1.Start();   
-    NekDouble val1Ba = E->PhysEvaluateBaryInd(tt, quadpts2, indphis2, uu);
+    NekDouble val1Ba = E->PhysEvaluateBasis(tt, uu);
     t1.Stop();
     NekDouble elapsed1Ba  = t1.TimePerTest(1);
-    cout<<"\n 1Ba case: took "<<elapsed1Ba<<" s.val = "<<val1Ba;
-    ret[2] = val1Ba;
-    
-    //case (1Bb) assert should fail
-    //    t1.Start();   
-    //NekDouble val1Bb = E->PhysEvaluateBaryInd(tt, quadpts, indphis, n_coeffs+1);
-    //t1.Stop();
-    //NekDouble elapsed1Bb  = t1.TimePerTest(1);
-    //cout<<"\n 1Bb case: took "<<elapsed1Bb<<" s. val = "<<val1Bb<<"\n";
-
-    // Using (2): Barycentriuc interp version of existing physevaluate()
-    t1.Start();   
-    NekDouble val2 = E->PhysEvaluateBary(tt, matT.GetPtr()+uu*(matT.GetRows()));
-    t1.Stop();
-    NekDouble elapsed2  = t1.TimePerTest(1);
-    cout<<"\n 2 case: took "<<elapsed2<<" s.val = "<<val2;
-    ret[3] = val2;
-
-    //check
-    if(abs(val1 - val1A)>1e-9 ||
-       abs(val1 - val1Ba)>1e-9 ||
-       abs(val1 - val2)>1e-9  )
-      {
-	cout<<"\n fail !";
-      }
+    cout<<"\n PhysEvaluateBasis case: took "<<elapsed1Ba<<" s.val = "<<val1Ba;
+    ret[1] = val1Ba;
+   
   }
   return ret;
 }
@@ -597,74 +556,64 @@ int main(int argc, char *argv[])
 
 
   NekMatrix<NekDouble> matT;
-  int n_coeffs;
-  Array<OneD, NekDouble> ret;
-  if(( strcmp(ShapeTypeMap[stype],"Triangle") == 0
-      || strcmp(ShapeTypeMap[stype],"Quadrilateral") == 0 ) &&( baryinterp == 1))
+  Array<OneD,NekDouble> sol(E->GetTotPoints());
+  Array<OneD,NekDouble> phys(E->GetTotPoints());
+  
+  //  for( int p = 0; p < E->GetTotPoints(); p++)
+  //{
+    int n_coeffs;
+    Array<OneD, NekDouble> ret;
+    if(( strcmp(ShapeTypeMap[stype],"Triangle") == 0
+	 || strcmp(ShapeTypeMap[stype],"Quadrilateral") == 0 ) &&( baryinterp == 1))
     {
+      Array<OneD, NekDouble> pts(3);
+   
+      pts[0] = -0.5; //((p+1.0)*0.003);
+      pts[1] = -0.25; //-(p+1.0)*0.01 ;
+      pts[2] =  -0.3;//0.0; 
+      cout<<"\n pts[0]="<<pts[0]<<" pts[1]  ="<<pts[1];
       if( strcmp(ShapeTypeMap[stype], "Triangle") == 0 )
-	{
-	  StdTriExp exp1(bkey[0],bkey[1]);
-	  int nmodes0 = E->GetBasis(0)->GetNumModes();
-	  int nmodes1 = E->GetBasis(1)->GetNumModes();
-
-	  n_coeffs = LibUtilities::StdTriData::getNumberOfCoefficients(nmodes0,nmodes1);
-	  PolyEval2(&exp1, matT, n_coeffs);
-	  int coeffid = n_coeffs-1;
-	  int       m = nmodes1, i;
-	  int  mode0 = 0;
-	    
-	  int ctr2 = 0, temp = coeffid;
-	  for (i = 0; i < nmodes0; ++i, m+=nmodes1-i)
-	    {
-	      if(ctr2>0)
-		{
-		  temp = temp-(nmodes1-i)-1;
-	      }
-	      
-	      if (m > coeffid)
-		{
-		  mode0 = i;
-		  break;
-		}
-	      ctr2++;
-	    }
-	  
-	  int mode1 = coeffid;
-	  cout<<"\n mode0="<<mode0<<" mode1=" <<mode1<<"\n";
-	  ret = commoncode(&exp1,matT,n_coeffs-1,mode0,mode1);
-	}
+      {
+	StdTriExp exp1(bkey[0],bkey[1]);
+	int nmodes0 = E->GetBasis(0)->GetNumModes();
+	int nmodes1 = E->GetBasis(1)->GetNumModes();
+	
+	n_coeffs = LibUtilities::StdTriData::getNumberOfCoefficients(nmodes0,nmodes1);
+	PolyEval2(&exp1, matT, n_coeffs);
+	
+	ret = commoncode(&exp1,matT,n_coeffs-1,pts);
+      }
       else  if( strcmp(ShapeTypeMap[stype], "Quadrilateral") == 0 )
-	{
-	  StdQuadExp exp1(bkey[0],bkey[1]);
-
-	  int nmodes0 = E->GetBasis(0)->GetNumModes();
-	  int nmodes1 = E->GetBasis(1)->GetNumModes();
-	  n_coeffs = LibUtilities::StdQuadData::getNumberOfCoefficients(nmodes0,nmodes1);
-	  int mode0  = ((int)n_coeffs-1)%(nmodes1);
-	  int mode1 =  (n_coeffs-1)/(nmodes0);
-	  
-	  PolyEval2(&exp1, matT, n_coeffs);
-
-	  ret = commoncode(&exp1,matT,n_coeffs-1,mode0, mode1);		
-	}
+      {
+	StdQuadExp exp1(bkey[0],bkey[1]);
+	
+	int nmodes0 = E->GetBasis(0)->GetNumModes();
+	int nmodes1 = E->GetBasis(1)->GetNumModes();
+	n_coeffs = LibUtilities::StdQuadData::getNumberOfCoefficients(nmodes0,nmodes1);
+	PolyEval2(&exp1, matT, n_coeffs);
+	
+	ret = commoncode(&exp1,matT,n_coeffs-1,pts);		
+      }
       else
-	{
-	  cout<<"\n Error! Please enter Triangle or Quads only";
-	  exit(0);
-	}
-	    
+      {
+	cout<<"\n Error! Please enter Triangle or Quads only";
+	exit(0);
+      }
+      
     }
+    sol[0] = floor(ret[0]*1e4)/1e8;
+    phys[0] = floor(ret[1]*1e4)/1e8;
+    //}
+  cout<<"\n sol[0] = "<<sol[0]<<" " <<sol[1];
+  cout<<"\n phys[0] = "<<phys[0]<<" " <<phys[1];
   // ret has first value = original Nektar++ PhysEvaluate call;
   // so we will compare the rest of the values in ret with ret[0]
+  
+  //  Array<OneD,NekDouble> sol(E->GetTotPoints(),ret[0]);
+  //Array<OneD,NekDouble> phys(E->GetTotPoints(),ret[1]);
+  
 
-  Array<OneD,NekDouble> sol(3,ret[0]);
-  Array<OneD,NekDouble> phys(3);
-  phys[0] = ret[1];
-  phys[1] = ret[2];
-  phys[2] = ret[3];
-
-
+  
   cout << "\nL infinity error: \t" << E->Linf(phys, sol) << endl; 
   cout << "L 2 error: \t \t \t" << E->L2(phys, sol) << endl;  
   return 0;

@@ -24,6 +24,7 @@ stages:
   <<: *execution-conditions
   stage: build-env
   image: docker:19.03.6
+  timeout: 30m
 
 .build-and-test-template: &build-and-test-template
   <<: *execution-conditions
@@ -66,6 +67,7 @@ stages:
   artifacts:
     paths:
       - log/
+  timeout: 3h
 
 .compiler-warning-template: &compiler-warning-template
   <<: *execution-conditions
@@ -83,6 +85,7 @@ stages:
         exit 1;
       fi
   allow_failure: true
+  timeout: 15m
 
 ################################################
 ###################  DEBIAN  ###################
@@ -411,4 +414,6 @@ win10-default-build-and-test:
     - cmake.exe --build . --target ALL_BUILD --config Debug
     - cmake.exe --build . --target INSTALL --config Debug
     - ctest --output-on-failure -C Debug -j3
+    - cd ..
+    - del /f/q/s build
   needs: []

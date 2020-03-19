@@ -415,5 +415,5 @@ win10-default-build-and-test:
     - cmake.exe --build . --target INSTALL --config Debug
     - ctest --output-on-failure -C Debug -j3
   after_script:
-    - del /f/q/s build
+    - Remove-Item -Recurse -Force build
   needs: []

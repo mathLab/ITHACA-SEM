@@ -1610,8 +1610,7 @@ namespace Nektar
                 const NekDouble &coord,
                 const NekDouble *physvals)
             {
-                NekDouble ret, numer = 0.0, denom = 0.0;
-                bool flag = false;
+                NekDouble numer = 0.0, denom = 0.0;
 
                 ASSERTL2(DIR < m_base.num_elements(),
                          "Direction should be less than shape dimension.");
@@ -1625,11 +1624,10 @@ namespace Nektar
                 {
                     NekDouble xdiff = z[i] - coord;
                     NekDouble pval = physvals[i];
+
                     if (xdiff == 0.0)
                     {
-                        ret = pval;
-                        flag = true;
-                        break;
+                        return pval;
                     }
 
                     NekDouble tmp = bw[i] / xdiff;
@@ -1637,12 +1635,7 @@ namespace Nektar
                     denom += tmp;
                 }
 
-                if (flag)
-                {
-                    ret = numer / denom;
-                }
-
-                return ret;
+                return numer / denom;
             }
 
             /**

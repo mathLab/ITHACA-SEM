@@ -129,7 +129,7 @@ namespace Nektar
             LocCoordToLocCollapsed(coords,coll);
 
             const int nq0 = m_base[0]->GetNumPoints();
-            const int nq1 = m_base[0]->GetNumPoints();
+            const int nq1 = m_base[1]->GetNumPoints();
 
             Array<OneD, NekDouble> wsp(nq1);
             for (int i = 0; i < nq1; ++i)

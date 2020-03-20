@@ -58,21 +58,21 @@ using namespace Nektar::StdRegions;
 namespace po = boost::program_options;
 
 template <class myType>
-Array<OneD, NekDouble> commoncode(myType*E, 
+Array<OneD, NekDouble> commoncode(myType*E,
                                   NekMatrix<NekDouble> matT,
 				  int n_coeffs,
 				  Array<OneD, NekDouble> t)
-{  
+{
     //  Array<OneD, NekDouble> t = pts;
-   
+
     const Array<OneD, const NekDouble> tt = t;
     Array<OneD, NekDouble> ret(2);
     int uu = n_coeffs;
-    { 	      
-     
+    {
+
         Timer t1;
-        t1.Start();   
-        Array<OneD, NekDouble> tempval(matT.GetRows()); 
+        t1.Start();
+        Array<OneD, NekDouble> tempval(matT.GetRows());
         Vmath::Vcopy(matT.GetRows(),matT.GetPtr()+uu*matT.GetColumns(),1,tempval,1);
 
         //cout<<"\n tempval = "<<tempval[0]<<" "<<tempval[1]<<" "<<tempval[2];
@@ -80,19 +80,19 @@ Array<OneD, NekDouble> commoncode(myType*E,
         t1.Stop();
         NekDouble elapsed  = t1.TimePerTest(1);
         cout<<"\n PhysEvaluate took = "<<elapsed<<" s. val = "<<val1<<"\n";
-        ret[0] = val1;      
+        ret[0] = val1;
 
 
         //case (1Ba)
         Array<OneD, Array<OneD,  NekDouble> >quadpts2(2);
         Array<OneD, Array<OneD,  NekDouble> >indphis2(2);
-        t1.Start();   
+        t1.Start();
         NekDouble val1Ba = E->PhysEvaluateBasis(tt, uu);
         t1.Stop();
         NekDouble elapsed1Ba  = t1.TimePerTest(1);
         cout<<"\n PhysEvaluateBasis case: took "<<elapsed1Ba<<" s.val = "<<val1Ba;
         ret[1] = val1Ba;
-   
+
     }
     return ret;
 }
@@ -102,13 +102,13 @@ Array<OneD, NekDouble> commoncode(myType*E,
 // Given \phi_1(x) and \phi_2(x) return tensor prod if tensorp = 1
 template <class myType>
 
-void PolyEval2(                
-	       myType *expobj,
-	       NekMatrix< NekDouble > &Iprod, int m_ncoeffs 
-			       )
+void PolyEval2(
+    myType *expobj,
+    NekMatrix< NekDouble > &Iprod, int m_ncoeffs
+    )
 {
     // if tensorp = 1 return tensor prod
-    //          i.e let(z = [x_1, y_1]) 
+    //          i.e let(z = [x_1, y_1])
     //          return \forall i \forall j [\phi(z_i)*\phi(z_j)]
     // else return \phi(x_1)*\phi(y_1)
     int  nquad0  = expobj->GetBasis(0)->GetNumPoints();
@@ -121,13 +121,13 @@ void PolyEval2(
     int ctrtemp = 0, tempi = 0;
     for(int i = 0; i < m_ncoeffs; i++, tempi++)//nmodes0*nmodes1; i++)
     {
-	    
-        Array<OneD, NekDouble> vals(nquad0*nquad1); 
-	    
+
+        Array<OneD, NekDouble> vals(nquad0*nquad1);
+
         expobj->FillMode(i,vals);
 
-        // coltemp = (coltemp+(nmodes0-((tempi)%(nmodes0))+1));	        
-        coltemp = (coltemp+(nmodes0-(tempi))+1);	        
+        // coltemp = (coltemp+(nmodes0-((tempi)%(nmodes0))+1));
+        coltemp = (coltemp+(nmodes0-(tempi))+1);
         if(coltemp > m_ncoeffs-ctrtemp-1)
 	{
             ctrtemp = ctrtemp + 1;
@@ -143,12 +143,12 @@ void PolyEval2(
         //	cout<<"\n coltemp="<<coltemp<< " i = "<<i;
         //Vmath::Vcopy(nquad1*nquad0, &vals[0], 1, &(matX.GetPtr()[loc]),1);
         Vmath::Vcopy(nquad1*nquad0, &vals[0], 1, &(matX.GetPtr()[i*nquad0*nquad1]),1);
-	      
+
     }
     Iprod=matX;
-	
 
-} 
+
+}
 
 
 int main(int argc, char *argv[])
@@ -260,45 +260,45 @@ int main(int argc, char *argv[])
                 }
         switch (nodaltype)
         {
-	case eNodalTriElec:
-	case eNodalTriFekete:
-	case eNodalTriSPI:
-	case eNodalTriEvenlySpaced:
-            btype[0] = eOrtho_A;
-            btype[1] = eOrtho_B;
-            stype = eTriangle;
-            break;
-	case eNodalQuadElec:
-            btype[0] = eOrtho_A;
-            btype[1] = eOrtho_B;
-            stype = eQuadrilateral;
-            break;
-	case eNodalTetElec:
-	case eNodalTetSPI:
-	case eNodalTetEvenlySpaced:
-            btype[0] = eOrtho_A;
-            btype[1] = eOrtho_B;
-            btype[2] = eOrtho_C;
-            stype = eTetrahedron;
-            break;
-	case eNodalPrismElec:
-	case eNodalPrismSPI:
-	case eNodalPrismEvenlySpaced:
-            btype[0] = eOrtho_A;
-            btype[1] = eOrtho_A;
-            btype[2] = eOrtho_B;
-            stype = ePrism;
-            break;
-	case eNodalHexElec:
-            btype[0] = eOrtho_A;
-            btype[1] = eOrtho_A;
-            btype[2] = eOrtho_A;
-            stype = eHexahedron;
-            break;
-	default:
-            ASSERTL0(!nodaltype, ("The nodal type '" + ntype +
-                                  "' is invalid for StdProject."));
-            break;
+            case eNodalTriElec:
+            case eNodalTriFekete:
+            case eNodalTriSPI:
+            case eNodalTriEvenlySpaced:
+                btype[0] = eOrtho_A;
+                btype[1] = eOrtho_B;
+                stype = eTriangle;
+                break;
+            case eNodalQuadElec:
+                btype[0] = eOrtho_A;
+                btype[1] = eOrtho_B;
+                stype = eQuadrilateral;
+                break;
+            case eNodalTetElec:
+            case eNodalTetSPI:
+            case eNodalTetEvenlySpaced:
+                btype[0] = eOrtho_A;
+                btype[1] = eOrtho_B;
+                btype[2] = eOrtho_C;
+                stype = eTetrahedron;
+                break;
+            case eNodalPrismElec:
+            case eNodalPrismSPI:
+            case eNodalPrismEvenlySpaced:
+                btype[0] = eOrtho_A;
+                btype[1] = eOrtho_A;
+                btype[2] = eOrtho_B;
+                stype = ePrism;
+                break;
+            case eNodalHexElec:
+                btype[0] = eOrtho_A;
+                btype[1] = eOrtho_A;
+                btype[2] = eOrtho_A;
+                stype = eHexahedron;
+                break;
+            default:
+                ASSERTL0(!nodaltype, ("The nodal type '" + ntype +
+                                      "' is invalid for StdProject."));
+                break;
         }
     }
 
@@ -391,7 +391,7 @@ int main(int argc, char *argv[])
         {eOrtho_A, eModified_A, eFourier, eGLL_Lagrange, eGauss_Lagrange,
          eLegendre, eChebyshev, eMonomial}
     };
-    
+
 
     for (int i = 0; i < dimension; ++i)
     {
@@ -463,17 +463,17 @@ int main(int argc, char *argv[])
     switch (stype)
     {
         cout<<"stype = "<<stype;
-    case ePoint:
+        case ePoint:
         {
             E = new StdPointExp(bkey[0]);
             break;
         }
-    case eSegment:
+        case eSegment:
         {
             E = new StdSegExp(bkey[0]);
             break;
         }
-    case eTriangle:
+        case eTriangle:
         {
             E = nodaltype != eNoPointsType ? new StdNodalTriExp(bkey[0],
                                                                 bkey[1],
@@ -481,12 +481,12 @@ int main(int argc, char *argv[])
                 : new StdTriExp(bkey[0], bkey[1]);
             break;
         }
-    case eQuadrilateral:
+        case eQuadrilateral:
         {
             E = new StdQuadExp(bkey[0], bkey[1]);
             break;
         }
-    case eTetrahedron:
+        case eTetrahedron:
         {
             E = nodaltype != eNoPointsType ? new StdNodalTetExp(bkey[0],
                                                                 bkey[1],
@@ -496,12 +496,12 @@ int main(int argc, char *argv[])
                                 bkey[2]);
             break;
         }
-    case ePyramid:
+        case ePyramid:
         {
             E = new StdPyrExp(bkey[0], bkey[1], bkey[2]);
             break;
         }
-    case ePrism:
+        case ePrism:
         {
             E = nodaltype != eNoPointsType ? new StdNodalPrismExp(bkey[0],
                                                                   bkey[1],
@@ -511,13 +511,13 @@ int main(int argc, char *argv[])
                                   bkey[2]);
             break;
         }
-    case eHexahedron:
+        case eHexahedron:
         {
             E = new StdHexExp(bkey[0], bkey[1], bkey[2]);
             break;
         }
-    default:
-        break;
+        default:
+            break;
     }
 
     const auto totPoints = (unsigned) E->GetTotPoints();
@@ -530,39 +530,39 @@ int main(int argc, char *argv[])
 
     switch (dimension)
     {
-    case 1:
+        case 1:
         {
             E->GetCoords(x);
             break;
         }
 
-    case 2:
+        case 2:
         {
             E->GetCoords(x, y);
             break;
         }
 
-    case 3:
+        case 3:
         {
             E->GetCoords(x, y, z);
             break;
         }
-    default:
-        break;
+        default:
+            break;
     }
 
     NekMatrix<NekDouble> matT;
     Array<OneD,NekDouble> sol(E->GetTotPoints());
     Array<OneD,NekDouble> phys(E->GetTotPoints());
-  
+
     int n_coeffs;
     Array<OneD, NekDouble> ret;
     if(( strcmp(ShapeTypeMap[stype],"Triangle") == 0
 	 || strcmp(ShapeTypeMap[stype],"Quadrilateral") == 0 ) &&( baryinterp == 1))
     {
         Array<OneD, NekDouble> pts(3);
-   
-        pts[0] = -0.5; 
+
+        pts[0] = -0.5;
         pts[1] = -0.25;
         pts[2] =  -0.3;
         if( strcmp(ShapeTypeMap[stype], "Triangle") == 0 )
@@ -570,34 +570,34 @@ int main(int argc, char *argv[])
             StdTriExp exp1(bkey[0],bkey[1]);
             int nmodes0 = E->GetBasis(0)->GetNumModes();
             int nmodes1 = E->GetBasis(1)->GetNumModes();
-	
+
             n_coeffs = LibUtilities::StdTriData::getNumberOfCoefficients(nmodes0,nmodes1);
             PolyEval2(&exp1, matT, n_coeffs);
-	
+
             ret = commoncode(&exp1,matT,n_coeffs-1,pts);
         }
         else  if( strcmp(ShapeTypeMap[stype], "Quadrilateral") == 0 )
         {
             StdQuadExp exp1(bkey[0],bkey[1]);
-	
+
             int nmodes0 = E->GetBasis(0)->GetNumModes();
             int nmodes1 = E->GetBasis(1)->GetNumModes();
             n_coeffs = LibUtilities::StdQuadData::getNumberOfCoefficients(nmodes0,nmodes1);
             PolyEval2(&exp1, matT, n_coeffs);
-	
-            ret = commoncode(&exp1,matT,n_coeffs-1,pts);		
+
+            ret = commoncode(&exp1,matT,n_coeffs-1,pts);
         }
         else
         {
             cout<<"\n Error! Please enter Triangle or Quads only";
             exit(0);
         }
-      
+
     }
     sol[0]  = ret[0];
     phys[0] = ret[1];
-    cout << "\nL infinity error: \t" << E->Linf(phys, sol) << endl; 
-    cout << "L 2 error: \t \t \t" << E->L2(phys, sol) << endl;  
+    cout << "\nL infinity error: \t" << E->Linf(phys, sol) << endl;
+    cout << "L 2 error: \t \t \t" << E->L2(phys, sol) << endl;
     return 0;
 }
 

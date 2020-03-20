@@ -71,6 +71,8 @@ namespace Nektar
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
                     "CF3b",  FentonKarma::eCF3b),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "FC2002Set1",  FentonKarma::eFC2002Set1a),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
                     "FC2002Set1a",  FentonKarma::eFC2002Set1a),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
                     "FC2002Set1b",  FentonKarma::eFC2002Set1b),
@@ -83,7 +85,15 @@ namespace Nektar
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
                     "FC2002Set2",  FentonKarma::eFC2002Set2),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "FC2002Set4",  FentonKarma::eFC2002Set4),
+                    "FC2002Set4",  FentonKarma::eFC2002Set4a),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "FC2002Set4a",  FentonKarma::eFC2002Set4a),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "FC2002Set4b",  FentonKarma::eFC2002Set4b),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "FC2002Set4c",  FentonKarma::eFC2002Set4c),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "FC2002Set4d",  FentonKarma::eFC2002Set4d),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
                     "FC2002Set5",  FentonKarma::eFC2002Set5),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
@@ -417,8 +427,62 @@ namespace Nektar
                 k1           = 10;
                 k2           = 0;
                 break;
-            case eFC2002Set4:   // (Fenton, Cherry, Chaos 12(852), 2002)
-                g_fi_max     = 2.46;
+            case eFC2002Set4a:   // (Fenton, Cherry, Chaos 12(852), 2002)
+                g_fi_max     = 1.0/0.407;
+                tau_r        = 34;
+                tau_si       = 26.5;
+                tau_0        = 9;
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 5;       // Opposite convention
+                tau_v2_minus = 15.6;    // to the paper
+                tau_w_plus   = 350;
+                tau_w_minus  = 80;
+                u_c          = 0.15;
+                u_v          = 0.04;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.45;
+                k1           = 15;
+                k2           = 0;
+                break;
+            case eFC2002Set4b:   // (Fenton, Cherry, Chaos 12(852), 2002)
+                g_fi_max     = 1.0/0.41;
+                tau_r        = 34;
+                tau_si       = 26.5;
+                tau_0        = 9;
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 5;       // Opposite convention
+                tau_v2_minus = 15.6;    // to the paper
+                tau_w_plus   = 350;
+                tau_w_minus  = 80;
+                u_c          = 0.15;
+                u_v          = 0.04;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.45;
+                k1           = 15;
+                k2           = 0;
+                break;
+            case eFC2002Set4c:   // (Fenton, Cherry, Chaos 12(852), 2002)
+                g_fi_max     = 1.0/0.405;
+                tau_r        = 34;
+                tau_si       = 26.5;
+                tau_0        = 9;
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 5;       // Opposite convention
+                tau_v2_minus = 15.6;    // to the paper
+                tau_w_plus   = 350;
+                tau_w_minus  = 80;
+                u_c          = 0.15;
+                u_v          = 0.04;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.45;
+                k1           = 15;
+                k2           = 0;
+                break;
+            case eFC2002Set4d:   // (Fenton, Cherry, Chaos 12(852), 2002)
+                g_fi_max     = 1.0/0.4;
                 tau_r        = 34;
                 tau_si       = 26.5;
                 tau_0        = 9;

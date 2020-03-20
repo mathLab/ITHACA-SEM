@@ -1408,7 +1408,7 @@ namespace Nektar
             return 0;
         }
 
-        NekDouble v_PhysEvaluateBasis(const Array<OneD, const NekDouble>& coords, int mode)
+        NekDouble StdExpansion::v_PhysEvaluateBasis(const Array<OneD, const NekDouble>& coords, int mode)
         {
             boost::ignore_unused(coords, mode);
             NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");

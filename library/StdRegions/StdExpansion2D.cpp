@@ -50,14 +50,14 @@ namespace Nektar
         }
 
         StdExpansion2D::StdExpansion2D(int numcoeffs,
-                                       const LibUtilities::BasisKey &Ba,
+                       const LibUtilities::BasisKey &Ba,
                                        const LibUtilities::BasisKey &Bb):
-            StdExpansion(numcoeffs,2, Ba, Bb)
+        StdExpansion(numcoeffs,2, Ba, Bb)
         {
         }
 
         StdExpansion2D::StdExpansion2D(const StdExpansion2D &T):
-            StdExpansion(T)
+                StdExpansion(T)
         {
         }
 
@@ -69,8 +69,8 @@ namespace Nektar
         // Differentiation Methods
         //----------------------------
         void StdExpansion2D::PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
-                                             Array<OneD, NekDouble> &outarray_d0,
-                                             Array<OneD, NekDouble> &outarray_d1)
+                         Array<OneD, NekDouble> &outarray_d0,
+                         Array<OneD, NekDouble> &outarray_d1)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
@@ -112,101 +112,55 @@ namespace Nektar
             }
         }
 
-
-        NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, 
-                                                 const Array<OneD, const NekDouble> & physvals)
+        NekDouble StdExpansion2D::v_PhysEvaluate(
+            const Array<OneD, const NekDouble> &coords,
+            const Array<OneD, const NekDouble> &physvals)
         {
-	  
+            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol,
+                     "coord[0] < -1");
+            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol,
+                     "coord[0] >  1");
+            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol,
+                     "coord[1] < -1");
+            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol,
+                     "coord[1] >  1");
+
             Array<OneD, NekDouble> coll(2);
-
-            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
-            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
-            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol, "coord[1] < -1");
-            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
-
             LocCoordToLocCollapsed(coords,coll);
-	  
-            int nq0 = m_base[0]->GetNumPoints();
-            int nq1 = m_base[1]->GetNumPoints();
-            Array<OneD, NekDouble> physvals1(nq0);
-            Array<OneD, NekDouble> physvalscopy = physvals;
-            // Just a more efficient impl of v_PhysEvaluate() in StdExpansion2D
+
+            const int nq0 = m_base[0]->GetNumPoints();
+            const int nq1 = m_base[0]->GetNumPoints();
+
             Array<OneD, NekDouble> wsp(nq1);
-            for(int i = 0; i < nq1; i++)
+            for (int i = 0; i < nq1; ++i)
             {
-                Vmath::Vcopy(nq0, &physvalscopy[i*nq0],1, &physvals1[0], 1);
-                wsp[i] = StdExpansion::PhysEvaluate(coll[0],
-                                                    physvals1, 0);
+                wsp[i] = StdExpansion::BaryEvaluate<0>(
+                    coll[0], &physvals[0] + i * nq0);
             }
 
-            NekDouble ret2 = StdExpansion::PhysEvaluate(coll[1],
-                                                        wsp, 1);	    
-            return ret2;
+            return StdExpansion::BaryEvaluate<1>(coll[1], &wsp[0]);
         }
 
-    
-        /** \brief This function evaluates a general multiplicatively separable 
-         *  function at a single (arbitrary) point of the domain using 
-         *  Barycentric Interpolation. 
-         *  Multiplicatively separable functions: F(x,y)=f(x)f(y)
-         *  It harnesses the multiplicatively separable nature of the function
-         *  We need to redefine barycentric weights because of the new set of quadpts
-         *  upon which physvals has been defined.
-         *
-         *  \param coords the coordinates of the single point  
-         *  \param physvals the values of F(quadpts)
-         *  \param quadpts user defined quadrature points where F(quadpts) = physvals
-         *         if NULL, quadpts = m_base[0]->GetZ() and m_base[1]->GetZ()
-         *  \return returns the value of the expansion at the single point  
-         */
-        //NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords,
-        //			   const Array<OneD,  Array<OneD,  NekDouble> >& physvals,
-        //			   const Array<OneD,  Array<OneD,  NekDouble> >& quadpts)
-        //{
-      
-        //}
-    
-
-        // Deprecated
-        // NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
-        //{
-	  
-        //  Array<OneD, NekDouble> coll(2);
-        //  Array<OneD, DNekMatSharedPtr>  I(2);
-	  
-        //  ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
-        //   ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
-        //   ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol, "coord[1] < -1");
-        //   ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
-	  
-        //   LocCoordToLocCollapsed(coords,coll);
-          
-        //   I[0] = m_base[0]->GetI(coll);
-        //   I[1] = m_base[1]->GetI(coll+1);
-	  
-        //   return v_PhysEvaluate(I,physvals);
-        // }
-      
         NekDouble StdExpansion2D::v_PhysEvaluate(
-                                                 const Array<OneD, DNekMatSharedPtr > &I, 
-                                                 const Array<OneD, const NekDouble> &physvals)
+            const Array<OneD, DNekMatSharedPtr > &I, 
+            const Array<OneD, const NekDouble> &physvals)
         {
             NekDouble val;
             int i;
             int nq0 = m_base[0]->GetNumPoints();
             int nq1 = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> wsp1(nq1);
-	
+
             // interpolate first coordinate direction
             for (i = 0; i < nq1;++i)
             {
                 wsp1[i] = Blas::Ddot(nq0, &(I[0]->GetPtr())[0], 1,
                                      &physvals[i * nq0], 1);
             }
-	
+
             // interpolate in second coordinate direction
             val = Blas::Ddot(nq1, I[1]->GetPtr(), 1, wsp1, 1);
-	
+
             return val;
         }
 
@@ -215,8 +169,8 @@ namespace Nektar
         //////////////////////////////
 
         NekDouble StdExpansion2D::Integral(const Array<OneD, const NekDouble>& inarray,
-                                           const Array<OneD, const NekDouble>& w0,
-                                           const Array<OneD, const NekDouble>& w1)
+                       const Array<OneD, const NekDouble>& w0,
+                       const Array<OneD, const NekDouble>& w1)
         {
             int i;
             NekDouble Int = 0.0;
@@ -242,33 +196,33 @@ namespace Nektar
         }
 
         void StdExpansion2D::BwdTrans_SumFacKernel(
-                                                   const Array<OneD, const NekDouble>& base0,
-                                                   const Array<OneD, const NekDouble>& base1,
-                                                   const Array<OneD, const NekDouble>& inarray,
-                                                   Array<OneD, NekDouble> &outarray,
-                                                   Array<OneD, NekDouble> &wsp,
-                                                   bool doCheckCollDir0,
-                                                   bool doCheckCollDir1)
+                const Array<OneD, const NekDouble>& base0,
+                const Array<OneD, const NekDouble>& base1,
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp,
+                bool doCheckCollDir0,
+                bool doCheckCollDir1)
         {
             v_BwdTrans_SumFacKernel(base0, base1, inarray, outarray, wsp, doCheckCollDir0, doCheckCollDir1);
         }
 
         void StdExpansion2D::IProductWRTBase_SumFacKernel(
-                                                          const Array<OneD, const NekDouble>& base0,
-                                                          const Array<OneD, const NekDouble>& base1,
-                                                          const Array<OneD, const NekDouble>& inarray,
-                                                          Array<OneD, NekDouble> &outarray,
-                                                          Array<OneD, NekDouble> &wsp,
-                                                          bool doCheckCollDir0,
-                                                          bool doCheckCollDir1)
+                const Array<OneD, const NekDouble>& base0,
+                const Array<OneD, const NekDouble>& base1,
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp,
+                bool doCheckCollDir0,
+                bool doCheckCollDir1)
         {
             v_IProductWRTBase_SumFacKernel(base0, base1, inarray, outarray, wsp, doCheckCollDir0, doCheckCollDir1);
         }
 
         void StdExpansion2D::v_LaplacianMatrixOp_MatFree(
-                                                         const Array<OneD, const NekDouble> &inarray,
-                                                         Array<OneD,NekDouble> &outarray,
-                                                         const StdRegions::StdMatrixKey &mkey)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,NekDouble> &outarray,
+            const StdRegions::StdMatrixKey &mkey)
         {
             if (mkey.GetNVarCoeff() == 0
                 &&!mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
@@ -308,16 +262,16 @@ namespace Nektar
             else
             {
                 StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(
-                                                                    inarray,outarray,mkey);
+                    inarray,outarray,mkey);
             }
         }
 
 
 
         void StdExpansion2D::v_HelmholtzMatrixOp_MatFree(
-                                                         const Array<OneD, const NekDouble> &inarray,
-                                                         Array<OneD,NekDouble> &outarray,
-                                                         const StdRegions::StdMatrixKey &mkey)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,NekDouble> &outarray,
+            const StdRegions::StdMatrixKey &mkey)
         {
             if (mkey.GetNVarCoeff() == 0
                 &&!mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
@@ -366,12 +320,12 @@ namespace Nektar
                 // outarray = lambda * outarray + wsp1
                 //          = (lambda * M + L ) * u_hat
                 Vmath::Svtvp(m_ncoeffs, lambda, &outarray[0], 1,
-                             &wsp1[0], 1, &outarray[0], 1);
+                              &wsp1[0], 1, &outarray[0], 1);
             }
             else
             {
                 StdExpansion::HelmholtzMatrixOp_MatFree_GenericImpl(
-                                                                    inarray,outarray,mkey);
+                    inarray,outarray,mkey);
             }
         }
 

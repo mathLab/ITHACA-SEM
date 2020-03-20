@@ -162,7 +162,6 @@ namespace Nektar
 
             void CalculatePoints();
             void CalculateWeights();
-            void CalculateBaryWeights();
             void CalculateDerivMatrix();
             void CalculateInterpMatrix(unsigned int npts, const Array<OneD, const NekDouble>& xpoints, Array<OneD, NekDouble>& interp);
 

@@ -42,15 +42,15 @@
 
 namespace Nektar
 {
-    namespace StdRegions
-    {
+namespace StdRegions
+{
 
-        class StdExpansion2D: virtual public StdExpansion
-        {
+    class StdExpansion2D: virtual public StdExpansion
+    {
         public:
             STD_REGIONS_EXPORT StdExpansion2D();
             STD_REGIONS_EXPORT StdExpansion2D(int numcoeffs, const LibUtilities::BasisKey &Ba,
-                                              const LibUtilities::BasisKey &Bb);
+                           const LibUtilities::BasisKey &Bb);
             STD_REGIONS_EXPORT StdExpansion2D(const StdExpansion2D &T);
             STD_REGIONS_EXPORT virtual ~StdExpansion2D();
 
@@ -89,32 +89,32 @@ namespace Nektar
              *  \end{array} \f$
              */
             STD_REGIONS_EXPORT void PhysTensorDeriv(
-                                                    const Array<OneD, const NekDouble>& inarray,
-                                                    Array<OneD, NekDouble> &outarray_d0,
-                                                    Array<OneD, NekDouble> &outarray_d1);
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray_d0,
+                          Array<OneD, NekDouble> &outarray_d1);
 
             STD_REGIONS_EXPORT NekDouble Integral(
-                                                  const Array<OneD, const NekDouble>& inarray,
-                                                  const Array<OneD, const NekDouble>& w0,
-                                                  const Array<OneD, const NekDouble>& w1);
+                    const Array<OneD, const NekDouble>& inarray,
+                    const Array<OneD, const NekDouble>& w0,
+                    const Array<OneD, const NekDouble>& w1);
 
             STD_REGIONS_EXPORT void BwdTrans_SumFacKernel(
-                                                          const Array<OneD, const NekDouble>& base0,
-                                                          const Array<OneD, const NekDouble>& base1,
-                                                          const Array<OneD, const NekDouble>& inarray,
-                                                          Array<OneD, NekDouble> &outarray,
-                                                          Array<OneD, NekDouble> &wsp,
-                                                          bool doCheckCollDir0 = true,
-                                                          bool doCheckCollDir1 = true);
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& inarray,
+                    Array<OneD, NekDouble> &outarray,
+                    Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0 = true,
+                    bool doCheckCollDir1 = true);
 
             STD_REGIONS_EXPORT void IProductWRTBase_SumFacKernel(
-                                                                 const Array<OneD, const NekDouble>& base0,
-                                                                 const Array<OneD, const NekDouble>& base1,
-                                                                 const Array<OneD, const NekDouble>& inarray,
-                                                                 Array<OneD, NekDouble> &outarray,
-                                                                 Array<OneD, NekDouble> &wsp,
-                                                                 bool doCheckCollDir0 = true,
-                                                                 bool doCheckCollDir1 = true);
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& inarray,
+                    Array<OneD, NekDouble> &outarray,
+                    Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0 = true,
+                    bool doCheckCollDir1 = true);
 
         protected:
 
@@ -141,39 +141,39 @@ namespace Nektar
              *  \return returns the value of the expansion at the single point
              */
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                                                                const Array<OneD, const NekDouble>& coords,
-                                                                const Array<OneD, const NekDouble>& physvals);
+                    const Array<OneD, const NekDouble>& coords,
+                    const Array<OneD, const NekDouble>& physvals);
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                                                                const Array<OneD, DNekMatSharedPtr>& I,
-                                                                const Array<OneD, const NekDouble> & physvals);
+                    const Array<OneD, DNekMatSharedPtr>& I,
+                    const Array<OneD, const NekDouble> & physvals);
             
             STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFacKernel(
-                                                                    const Array<OneD, const NekDouble>& base0,
-                                                                    const Array<OneD, const NekDouble>& base1,
-                                                                    const Array<OneD, const NekDouble>& inarray,
-                                                                    Array<OneD, NekDouble> &outarray,
-                                                                    Array<OneD, NekDouble> &wsp,
-                                                                    bool doCheckCollDir0,
-                                                                    bool doCheckCollDir1) = 0;
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& inarray,
+                    Array<OneD, NekDouble> &outarray,
+                    Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1) = 0;
 
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFacKernel(
-                                                                           const Array<OneD, const NekDouble>& base0,
-                                                                           const Array<OneD, const NekDouble>& base1,
-                                                                           const Array<OneD, const NekDouble>& inarray,
-                                                                           Array<OneD, NekDouble> &outarray,
-                                                                           Array<OneD, NekDouble> &wsp,
-                                                                           bool doCheckCollDir0,
-                                                                           bool doCheckCollDir1) = 0;
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& inarray,
+                    Array<OneD, NekDouble> &outarray,
+                    Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1) = 0;
 
             STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(
-                                                                        const Array<OneD, const NekDouble> &inarray,
-                                                                        Array<OneD,       NekDouble> &outarray,
-                                                                        const StdRegions::StdMatrixKey &mkey);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                    const StdRegions::StdMatrixKey &mkey);
             STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
-                                                                        const Array<OneD, const NekDouble> &inarray,
-                                                                        Array<OneD,       NekDouble> &outarray,
-                                                                        const StdRegions::StdMatrixKey &mkey);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                    const StdRegions::StdMatrixKey &mkey);
 
             STD_REGIONS_EXPORT virtual int v_GetTraceNcoeffs(const int i) const
             {
@@ -197,11 +197,11 @@ namespace Nektar
             {
                 return 2;
             }
-        };
+    };
 
-        typedef std::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;
+    typedef std::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;
 
-    } //end of namespace
+} //end of namespace
 } //end of namespace
 
 #endif //STDEXP2D_H

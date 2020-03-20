@@ -62,8 +62,6 @@ namespace Nektar
 
             STD_REGIONS_EXPORT ~StdSegExp();
 
-	    //          NekDouble PhysEvaluateBary(const Array<OneD, const NekDouble>& coords, 
-	    //			     const Array<OneD, const NekDouble> & physvals);
 
     protected:
 
@@ -154,6 +152,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                     const Array<OneD, const NekDouble>& Lcoords,
                     const Array<OneD, const NekDouble>& physvals);
+
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluateBasis(
+                const Array<OneD, const NekDouble>& coords,
+                int mode);
 
             STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
                     const Array<OneD, const NekDouble> &inarray,

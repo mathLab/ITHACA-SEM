@@ -58,21 +58,21 @@ namespace Nektar
             };
 
             /// Constructor
-        BasisKey(const BasisType btype, const int nummodes,
-                 const PointsKey pkey):
-            m_nummodes(nummodes),
+            BasisKey(const BasisType btype, const int nummodes,
+                     const PointsKey pkey):
+                m_nummodes(nummodes),
                 m_basistype(btype),
                 m_pointsKey(pkey)
-                {
-                }
+            {
+            }
 
             /// Copy constructor
-        BasisKey(const BasisKey &B):
-            m_nummodes(B.m_nummodes),
+            BasisKey(const BasisKey &B):
+                m_nummodes(B.m_nummodes),
                 m_basistype(B.m_basistype),
                 m_pointsKey(B.m_pointsKey)
-                {
-                }
+            {
+            }
 
             /// Destructor
             ~BasisKey()
@@ -165,7 +165,7 @@ namespace Nektar
             inline bool SameExp(const BasisKey &x) const
             {
                 return ((x.m_nummodes == m_nummodes)
-                        &&(x.m_basistype == m_basistype));
+                                &&(x.m_basistype == m_basistype));
             }
 
             /// Determine if basis has exact integration for inner product.
@@ -184,7 +184,7 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT friend bool operator<(const BasisKey &lhs, const BasisKey &rhs);
             LIB_UTILITIES_EXPORT friend bool opLess::operator()( const BasisKey &lhs,
-                                                                 const BasisKey &rhs) const;
+                                            const BasisKey &rhs) const;
 
         protected:
             int        m_nummodes;   ///< Expansion order.
@@ -192,7 +192,7 @@ namespace Nektar
             PointsKey  m_pointsKey;  ///< Points specification.
 
         private:
-        BasisKey():m_pointsKey(NullPointsKey)
+            BasisKey():m_pointsKey(NullPointsKey)
             {
                 NEKERROR(ErrorUtil::efatal,
                          "Default Constructor BasisKey should never be called");
@@ -337,7 +337,7 @@ namespace Nektar
             Array<OneD, NekDouble>  m_bdata;    ///< Basis definition.
             Array<OneD, NekDouble>  m_dbdata;   ///< Derivative Basis definition.
             NekManager<BasisKey, NekMatrix<NekDouble>, BasisKey::opLess>
-                m_InterpManager;
+                                    m_InterpManager;
 
         private:
             static bool initBasisManager[];
@@ -346,7 +346,7 @@ namespace Nektar
             Basis(const BasisKey &bkey);
 
             /// Private default constructor.
-        Basis():m_basisKey(NullBasisKey)
+            Basis():m_basisKey(NullBasisKey)
             {
                 NEKERROR(ErrorUtil::efatal,
                          "Default Constructor for Basis should not be called");
@@ -354,7 +354,7 @@ namespace Nektar
 
             std::shared_ptr< NekMatrix<NekDouble> > CalculateInterpMatrix(
                                 const BasisKey &tbasis0);
-            
+
             /// Generate appropriate basis and their derivatives.
             void GenBasis();
         };

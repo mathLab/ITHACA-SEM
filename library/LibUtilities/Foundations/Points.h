@@ -68,8 +68,8 @@ namespace Nektar
             };
 
             /// Default constructor.
-        PointsKey(void):
-            m_numpoints(0),
+           PointsKey(void):
+                m_numpoints(0),
                 m_pointstype(eNoPointsType),
                 m_factor(NekConstants::kNekUnsetDouble)
                 {
@@ -78,15 +78,15 @@ namespace Nektar
             /// Constructor defining the number and distribution of points.
         PointsKey(const int &numpoints, const PointsType &pointstype,
                   const NekDouble factor = NekConstants::kNekUnsetDouble):
-            m_numpoints(numpoints),
-                m_pointstype(pointstype),
-                m_factor(factor)
-                {
-                }
+                m_numpoints(numpoints),
+                    m_pointstype(pointstype),
+                    m_factor(factor)
+                    {
+                    }
 
             /// Destructor.
-            virtual ~PointsKey()
-            {
+                virtual ~PointsKey()
+                {
             }
 
             /// Copy constructor.
@@ -96,13 +96,13 @@ namespace Nektar
             }
 
             PointsKey& operator=(const PointsKey &key)
-        {
-            m_numpoints  = key.m_numpoints;
-            m_pointstype = key.m_pointstype;
-            m_factor     = key.m_factor;
+            {
+                m_numpoints  = key.m_numpoints;
+                m_pointstype = key.m_pointstype;
+                m_factor     = key.m_factor;
 
-            return *this;
-        }
+                return *this;
+            }
 
             inline unsigned int GetNumPoints() const
             {
@@ -247,7 +247,7 @@ namespace Nektar
 
         /// Stores a set of points of datatype DataT, defined by a PointKey.
         template<typename DataT>
-            class Points
+        class Points
         {
         public:
             typedef DataT DataType;
@@ -296,20 +296,20 @@ namespace Nektar
             }
 
             inline void GetZW(Array<OneD, const DataType> &z,
-                              Array<OneD, const DataType> &w) const
+                Array<OneD, const DataType> &w) const
             {
                 z = m_points[0];
                 w = m_weights;
             }
 
-            inline void GetPoints(Array<OneD, const DataType> &x) const
-            {
-                x = m_points[0];
-            }
-
             inline const Array<OneD, const NekDouble>& GetBaryWeights() const
             {
                 return m_bcweights;
+            }
+
+            inline void GetPoints(Array<OneD, const DataType> &x) const
+            {
+                x = m_points[0];
             }
 
             inline void GetPoints(Array<OneD, const DataType> &x,
@@ -319,14 +319,6 @@ namespace Nektar
                 y = m_points[1];
             }
 
-            /* inline void GetBaryWeights(Array<OneD, const DataType> &wx, */
-            /*                       Array<OneD, const DataType> &wy) const */
-            /* { */
-            /*     wx = m_bcweights[0]; */
-            /*     wy = m_bcweights[1]; */
-            /* } */
-
-
             inline void GetPoints(Array<OneD, const DataType> &x,
                                   Array<OneD, const DataType> &y,
                                   Array<OneD, const DataType> &z) const
@@ -335,15 +327,6 @@ namespace Nektar
                 y = m_points[1];
                 z = m_points[2];
             }
-
-            /* inline void GetBaryWeights(Array<OneD, const DataType> &wx, */
-            /*                       Array<OneD, const DataType> &wy, */
-            /*                       Array<OneD, const DataType> &wz) const */
-            /* { */
-            /*     wx = m_bcweights[0]; */
-            /*     wy = m_bcweights[1]; */
-            /*     wz = m_bcweights[2]; */
-            /* } */
 
             inline const MatrixSharedPtrType& GetD(Direction dir = xDir) const
             {
@@ -400,10 +383,16 @@ namespace Nektar
             }
 
         protected:
+            /// Points type for this points distributions.
             PointsKey             m_pointsKey;
+            /// Storage for the point locations, allowing for up to a 3D points
+            /// storage.
             Array<OneD, DataType> m_points[3];
+            /// Quadrature weights for the weights.
             Array<OneD, DataType> m_weights;
-            Array<OneD, DataType> m_bcweights; // barycentric weights
+            /// Barycentric weights.
+            Array<OneD, DataType> m_bcweights;
+            /// Derivative matrices.
             MatrixSharedPtrType   m_derivmatrix[3];
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_InterpManager;
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_GalerkinProjectionManager;
@@ -422,14 +411,26 @@ namespace Nektar
             virtual void CalculateWeights()
             {
                 m_weights = Array<OneD, DataType>(GetTotNumPoints());
-	    }
+            }
 
-	    virtual void CalculateBaryWeights()
+            /**
+             * @brief This function calculates the barycentric weights used for
+             * enhanced interpolation speed.
+             *
+             * For the points distribution \f$ z_i \f$ with \f% 1\leq z_i \leq N
+             * \f$, the barycentric weights are computed as:
+             *
+             * \f[
+             * b_i=\prod_{\substack{1\leq j\leq N\\ i\neq j}} \frac{1}{z_i-z_j}
+             * \f]
+             */
+            virtual void CalculateBaryWeights()
             {
-                unsigned int totNumPoints = m_pointsKey.GetNumPoints();
-                Array<OneD, DataType> z;
-                z = m_points[0];
+                const unsigned int totNumPoints = m_pointsKey.GetNumPoints();
                 m_bcweights = Array<OneD, DataType>(totNumPoints, 1.0);
+
+                Array<OneD, DataType> z = m_points[0];
+
                 for (int i = 0; i < totNumPoints; ++i)
                 {
                     for (int j = 0; j < totNumPoints; ++j)
@@ -438,15 +439,14 @@ namespace Nektar
                         {
                             continue;
                         }
-		  
+
                         m_bcweights[i] *= (z[i] - z[j]);
                     }
-		
+
                     m_bcweights[i] = 1.0 / m_bcweights[i];
                 }
-	      
             }
-	    
+
             virtual void CalculateDerivMatrix()
             {
                 int totNumPoints = GetTotNumPoints();
@@ -456,7 +456,7 @@ namespace Nektar
                 }
             }
 
-        Points(const PointsKey &key):m_pointsKey(key)
+            Points(const PointsKey &key):m_pointsKey(key)
             {
             }
 

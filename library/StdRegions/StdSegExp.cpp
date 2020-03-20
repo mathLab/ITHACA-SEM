@@ -529,7 +529,14 @@ namespace Nektar
                                             const Array<OneD, const NekDouble>& coords,
                                             const Array<OneD, const NekDouble>& physvals)
         {
-            return  StdExpansion1D::v_PhysEvaluate(coords, physvals);
+            return StdExpansion1D::v_PhysEvaluate(coords, physvals);
+        }
+
+        NekDouble StdSegExp::v_PhysEvaluateBasis(
+            const Array<OneD, const NekDouble>& coords,
+            int mode)
+        {
+            return StdExpansion::BaryEvaluateBasis<0>(coords[0], mode);
         }
 
         void StdSegExp::v_LaplacianMatrixOp(

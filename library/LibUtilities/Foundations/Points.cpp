@@ -40,10 +40,10 @@ namespace Nektar
     namespace LibUtilities 
     {
         /**
-         * @class PointsKey
-         * Specification for a set of points. This includes the total number of
-         * points, as well as their distribution.
-         */
+        * @class PointsKey
+        * Specification for a set of points. This includes the total number of
+        * points, as well as their distribution.
+        */
 
         bool operator==(const PointsKey &lhs, const PointsKey &rhs)
         {

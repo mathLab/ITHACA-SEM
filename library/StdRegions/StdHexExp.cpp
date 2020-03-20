@@ -665,6 +665,34 @@ namespace Nektar
             }
         }
 
+        NekDouble StdHexExp::v_PhysEvaluateBasis(
+            const Array<OneD, const NekDouble>& coords,
+            int mode)
+        {
+            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol,
+                     "coord[0] < -1");
+            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol,
+                     "coord[0] >  1");
+            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol,
+                     "coord[1] < -1");
+            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol,
+                     "coord[1] >  1");
+            ASSERTL2(coords[2] > -1 - NekConstants::kNekZeroTol,
+                     "coord[2] < -1");
+            ASSERTL2(coords[2] <  1 + NekConstants::kNekZeroTol,
+                     "coord[2] >  1");
+
+            const int nm0 = m_base[0]->GetNumModes();
+            const int nm1 = m_base[1]->GetNumModes();
+            const int mode2 = mode / (nm0 * nm1);
+            const int mode1 = (mode - mode2 * nm0 * nm1) / nm0;
+            const int mode0 = (mode - mode2 * nm0 * nm1) % nm0;
+
+            return
+                StdExpansion::BaryEvaluateBasis<0>(coords[0], mode0) *
+                StdExpansion::BaryEvaluateBasis<1>(coords[1], mode1) *
+                StdExpansion::BaryEvaluateBasis<2>(coords[2], mode2);
+        }
 
         int StdHexExp::v_GetNverts() const
         {

@@ -911,6 +911,68 @@ namespace Nektar
             StdTetExp::v_BwdTrans(tmp, outarray);
         }
 
+        NekDouble StdTetExp::v_PhysEvaluateBasis(
+            const Array<OneD, const NekDouble>& coords,
+            int mode)
+        {
+            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol,
+                     "coord[0] < -1");
+            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol,
+                     "coord[0] >  1");
+            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol,
+                     "coord[1] < -1");
+            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol,
+                     "coord[1] >  1");
+            ASSERTL2(coords[2] > -1 - NekConstants::kNekZeroTol,
+                     "coord[2] < -1");
+            ASSERTL2(coords[2] <  1 + NekConstants::kNekZeroTol,
+                     "coord[2] >  1");
+
+            const int nm0 = m_base[0]->GetNumModes();
+            const int nm1 = m_base[1]->GetNumModes();
+            const int nm2 = m_base[2]->GetNumModes();
+
+            int mode0 = 0, mode1 = 0, mode2 = 0;
+
+            // Very suboptimal lookup for rather more complex tet indices.
+            for (mode0 = 0; mode0 < nm0; ++mode0)
+            {
+                for (mode1 = 0; mode1 < nm1 - mode0; ++mode1)
+                {
+                    for (mode2 = 0; mode2 < nm2 - mode0 - mode1; ++mode2)
+                    {
+                        if (mode == GetMode(mode0, mode1, mode2))
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Lookup for mode2 index in basis
+            int i, j, k, cnt = 0;
+            for (i = 0; i < nm2; ++i)
+            {
+                for (j = 0; j < nm2 - i; ++j)
+                {
+                    for (k = 0; k < nm2 - i - j; ++k, ++cnt)
+                    {
+                        if (i == mode0 && j == mode1 && k == mode2)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return
+                StdExpansion::BaryEvaluateBasis<0>(coords[0], mode0) *
+                StdExpansion::BaryEvaluateBasis<1>(
+                    coords[1], mode1 + mode0 * (2*nm1 + 1 - mode0)/2) *
+                StdExpansion::BaryEvaluateBasis<2>(
+                    coords[2], cnt);
+        }
+
         void StdTetExp::v_GetFaceNumModes(
                     const int                  fid,
                     const Orientation          faceOrient,

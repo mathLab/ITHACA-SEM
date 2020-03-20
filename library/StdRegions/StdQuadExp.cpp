@@ -795,20 +795,20 @@ namespace Nektar
             const Array<OneD, const NekDouble>& coords,
             int mode)
         {
-            ASSERTL2(
-                coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
-            ASSERTL2(
-                coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
-            ASSERTL2(
-                coords[1] > -1 - NekConstants::kNekZeroTol, "coord[1] < -1");
-            ASSERTL2(
-                coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
+            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol,
+                     "coord[0] < -1");
+            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol,
+                     "coord[0] >  1");
+            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol,
+                     "coord[1] < -1");
+            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol,
+                     "coord[1] >  1");
 
-            const int nm1 = m_base[0]->GetNumModes();
-            const int nm2 = m_base[1]->GetNumModes();
+            const int nm0 = m_base[0]->GetNumModes();
+            const int nm1 = m_base[1]->GetNumModes();
 
-            return StdExpansion::BaryEvaluateBasis<0>(coords[0], mode % nm2) *
-                StdExpansion::BaryEvaluateBasis<1>(coords[1], mode / nm1);
+            return StdExpansion::BaryEvaluateBasis<0>(coords[0], mode % nm1) *
+                StdExpansion::BaryEvaluateBasis<1>(coords[1], mode / nm0);
         }
 
         //////////////

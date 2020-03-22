@@ -37,6 +37,8 @@
 #include "CADSurfCFI.h"
 #include "CADVertCFI.h"
 
+#include <boost/lexical_cast.hpp>
+
 using namespace std;
 
 namespace Nektar
@@ -51,27 +53,27 @@ bool CADSystemCFI::LoadCAD()
 {
     // it is possible to get CFI to lock on to a open gui session
     // not sure it ever will with this code
-    cfiHandel.startServer();
+    m_cfiHandle.startServer();
     if (m_verbose)
     {
         cout << "cfi loaded in mode: ";
-        if (cfiHandel.info.mode == cfi::MODE_STANDALONE)
+        if (m_cfiHandle.info.mode == cfi::MODE_STANDALONE)
         {
             cout << "standalone" << endl;
         }
-        else if (cfiHandel.info.mode == cfi::MODE_CLIENT)
+        else if (m_cfiHandle.info.mode == cfi::MODE_CLIENT)
         {
             cout << "client" << endl;
         }
-        else if (cfiHandel.info.mode == cfi::MODE_SERVER)
+        else if (m_cfiHandle.info.mode == cfi::MODE_SERVER)
         {
             cout << "server" << endl;
         }
-        else if (cfiHandel.info.mode == cfi::MODE_BOTH)
+        else if (m_cfiHandle.info.mode == cfi::MODE_BOTH)
         {
             cout << "both" << endl;
         }
-        else if (cfiHandel.info.mode == cfi::MODE_PLUGIN)
+        else if (m_cfiHandle.info.mode == cfi::MODE_PLUGIN)
         {
             cout << "plugin" << endl;
         }
@@ -80,16 +82,21 @@ bool CADSystemCFI::LoadCAD()
             cout << "unknown" << endl;
         }
 
-        cout << "\tVersion " << cfiHandel.info.version << endl
-             << "\tfixno " << cfiHandel.info.fixno << endl
-             << "\tubid " << cfiHandel.info.ubid << endl;
+        cout << "\tVersion " << m_cfiHandle.info.version << endl
+             << "\tfixno " << m_cfiHandle.info.fixno << endl
+             << "\tubid " << m_cfiHandle.info.ubid << endl;
     }
 
-    model = cfiHandel.openModelFile(m_name.c_str());
-
-    if (model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) != 1)
+    if (m_config["UseCFIMesh"].count())
     {
-        if (m_useCFIMesh)
+        m_useCFImesh = boost::lexical_cast<bool>(m_config["UseCFIMesh"]);
+    }
+
+    m_model = m_cfiHandle.openModelFile(m_name.c_str());
+
+    if (m_model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) != 1)
+    {
+        if (m_config["UseCFIMesh"].count())
         {
             if (m_verbose)
             {
@@ -101,21 +108,19 @@ bool CADSystemCFI::LoadCAD()
             if (m_verbose)
             {
                 cout << "\tHas multibodies and instructions to mesh, this is "
-                        "not "
-                        "possible"
-                     << endl;
+                        "not possible" << endl;
             }
             abort();
         }
     }
 
     vector<cfi::Entity *> *bds =
-        model->getEntityList(cfi::TYPE_BODY, cfi::SUBTYPE_ALL);
+        m_model->getEntityList(cfi::TYPE_BODY, cfi::SUBTYPE_ALL);
 
     for (auto &i : *bds)
     {
         cfi::Body *b = static_cast<cfi::Body *>(i);
-        bodies.push_back(b);
+        m_bodies.push_back(b);
     }
 
     // cfi doesnt mind stupid units so this scales everything back to meters
@@ -123,7 +128,7 @@ bool CADSystemCFI::LoadCAD()
     // the m_scal object is passed to all cad entities and scales any operation
     // before running it.
     m_scal = 1.0;
-    if (model->getUnits() == cfi::UNIT_INCHES)
+    if (m_model->getUnits() == cfi::UNIT_INCHES)
     {
         if (m_verbose)
         {
@@ -131,8 +136,8 @@ bool CADSystemCFI::LoadCAD()
         }
         m_scal = 0.0254;
     }
-    else if (model->getUnits() == cfi::UNIT_MILLIMETERS ||
-             model->getUnits() == cfi::UNIT_MILLIMETRES)
+    else if (m_model->getUnits() == cfi::UNIT_MILLIMETERS ||
+             m_model->getUnits() == cfi::UNIT_MILLIMETRES)
     {
         if (m_verbose)
         {
@@ -153,16 +158,16 @@ bool CADSystemCFI::LoadCAD()
     // cad by cascading down from the faces
     // also builds a list on unique edges in the process
 
-    for (int i = 0; i < bodies.size(); i++)
+    for (int i = 0; i < m_bodies.size(); i++)
     {
         // check that it is not a group of bodies
-        if (bodies[i]->getTopoSubtype() == cfi::SUBTYPE_COMBINED)
+        if (m_bodies[i]->getTopoSubtype() == cfi::SUBTYPE_COMBINED)
         {
             continue;
         }
 
         vector<cfi::Oriented<cfi::TopoEntity *>> *faceList =
-            bodies[i]->getChildList();
+            m_bodies[i]->getChildList();
 
         vector<cfi::Oriented<cfi::TopoEntity *>>::iterator it, it2, it3;
         for (it = faceList->begin(); it != faceList->end(); it++)
@@ -225,7 +230,7 @@ bool CADSystemCFI::LoadCAD()
                         cfi::Point *vert =
                             static_cast<cfi::Point *>(orientatedVert.entity);
                         mapOfVerts[vert->getName()] = vert;
-                        mapVertToListEdge[vert->getName()].push_back(
+                        m_mapVertToListEdge[vert->getName()].push_back(
                             edge->getName());
                     }
                 }
@@ -241,7 +246,7 @@ bool CADSystemCFI::LoadCAD()
     for (vit = mapOfVerts.begin(); vit != mapOfVerts.end(); vit++, i++)
     {
         AddVert(i, vit->second);
-        nameToVertId[vit->second->getName()] = i;
+        m_nameToVertId[vit->second->getName()] = i;
     }
 
     // build curves
@@ -250,7 +255,7 @@ bool CADSystemCFI::LoadCAD()
     for (eit = mapOfEdges.begin(); eit != mapOfEdges.end(); eit++, i++)
     {
         AddCurve(i, eit->second);
-        nameToCurveId[eit->second->getName()] = i;
+        m_nameToCurveId[eit->second->getName()] = i;
     }
 
     // build surfaces
@@ -258,7 +263,7 @@ bool CADSystemCFI::LoadCAD()
     i = 1;
     for (fit = mapOfFaces.begin(); fit != mapOfFaces.end(); fit++, i++)
     {
-        nameToFaceId[fit->second->getName()] = i;
+        m_nameToFaceId[fit->second->getName()] = i;
 
         AddSurf(i, fit->second);
     }
@@ -316,14 +321,14 @@ void CADSystemCFI::AddCurve(int i, cfi::Line *in)
     ASSERTL0(t[0] < t[1], "weirdness");
 
     vector<CADVertSharedPtr> vs;
-    vs.push_back(m_verts[nameToVertId[vertList->at(0).entity->getName()]]);
-    vs.push_back(m_verts[nameToVertId[vertList->at(1).entity->getName()]]);
+    vs.push_back(m_verts[m_nameToVertId[vertList->at(0).entity->getName()]]);
+    vs.push_back(m_verts[m_nameToVertId[vertList->at(1).entity->getName()]]);
     m_curves[i] = newCurve;
     m_curves[i]->SetVert(vs);
     m_curves[i]->SetName(in->getName());
-    m_verts[nameToVertId[vertList->at(0).entity->getName()]]->AddAdjCurve(
+    m_verts[m_nameToVertId[vertList->at(0).entity->getName()]]->AddAdjCurve(
         m_curves[i]);
-    m_verts[nameToVertId[vertList->at(1).entity->getName()]]->AddAdjCurve(
+    m_verts[m_nameToVertId[vertList->at(1).entity->getName()]]->AddAdjCurve(
         m_curves[i]);
 }
 
@@ -384,7 +389,7 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
         }
 
         edgeloop->edges.push_back(
-            m_curves[nameToCurveId[fullEdgeList.at(done).entity->getName()]]);
+            m_curves[m_nameToCurveId[fullEdgeList.at(done).entity->getName()]]);
 
         for (done++; done < fullEdgeList.size(); done++)
         {
@@ -408,7 +413,8 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
             }
 
             edgeloop->edges.push_back(
-                m_curves[nameToCurveId[fullEdgeList.at(done).entity->getName()]]);
+                m_curves[m_nameToCurveId[
+                        fullEdgeList.at(done).entity->getName()]]);
 
             if (end)
             {
@@ -448,7 +454,7 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
 
 Array<OneD, NekDouble> CADSystemCFI::GetBoundingBox()
 {
-    cfi::BoundingBox box = model->calcBoundingBox();
+    cfi::BoundingBox box = m_model->calcBoundingBox();
 
     Array<OneD, NekDouble> ret(6);
     ret[0] = box.xLower;

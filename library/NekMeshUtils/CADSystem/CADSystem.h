@@ -88,24 +88,51 @@ public:
         return m_name;
     }
 
+    /**
+     * @brief Set the CAD engine up to handle 2D geometries explicitly.
+     */
     void Set2D()
     {
         m_2d = true;
     }
 
+    /**
+     * @brief Returns whether the CAD engine is set in 2D mode.
+     */
     bool Is2D()
     {
         return m_2d;
     }
 
-    void SetNACA(std::string i)
+    /**
+     * @brief Gets a configuration option.
+     *
+     * @param key  Configuration key.
+     *
+     * @return The configuration value.
+     */
+    const std::string &GetConfig(const std::string &key) const
     {
-        m_naca = i;
+        return m_config[key];
     }
 
-    void SetVerbose()
+    /**
+     * @brief Sets a configuration option @p key to @p value.
+     *
+     * @param key    Configuration key.
+     * @param value  The configuration value.
+     */
+    void &GetConfig(const std::string &key, const std::string &value)
     {
-        m_verbose = true;
+        m_config[key] = value;
+    }
+
+    /**
+     * @brief Sets the verbose flag for additional output.
+     */
+    void SetVerbose(bool verbose = true)
+    {
+        m_verbose = verbose;
     }
 
     /**
@@ -175,7 +202,7 @@ public:
     }
 
     /**
-     * @brief Gets map of all vertices
+     * @brief Gets map of all vertices.
      */
     std::map<int, CADVertSharedPtr> GetVerts()
     {
@@ -185,7 +212,7 @@ public:
     /**
      * @brief Gets number of vertices
      */
-    int GetNumVerts()
+    int GetNumVerts() const
     {
         return m_verts.size();
     }
@@ -221,8 +248,9 @@ protected:
     bool m_verbose = false;
     /// 2D cad flag
     bool m_2d = false;
-    /// string of 4 digit NACA code to be created
-    std::string m_naca;
+    /// Configuration options which might be used per-engine, serialised in
+    /// strings.
+    std::map<std::string, std::string> m_config;
 
     /**
      * @brief Reports basic properties to screen.

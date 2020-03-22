@@ -77,7 +77,7 @@ bool CADSystemOCE::LoadCAD()
 
     bool fromStep = false;
 
-    if (m_naca.size() == 0)
+    if (m_config["UseNACA"].count())
     {
         // not a naca profile behave normally
         // could be a geo

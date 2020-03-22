@@ -78,17 +78,18 @@ void ProcessLoadCAD::Process()
 
     string ext = boost::filesystem::extension(name);
 
-    if(boost::iequals(ext,".fbm"))
+    if (boost::iequals(ext, ".fbm"))
     {
         m_mesh->m_cad = GetEngineFactory().CreateInstance("cfi",name);
+
         if (m_config["usecfimesh"].beenSet)
         {
-            std::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad)->UseCFIMesh();
+            m_mesh->m_cad->SetConfig("UseCFIMesh", "1");
         }
     }
     else
     {
-        m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",name);
+        m_mesh->m_cad = GetEngineFactory().CreateInstance("oce", name);
     }
 
     if(m_config["2D"].beenSet)
@@ -98,7 +99,7 @@ void ProcessLoadCAD::Process()
 
     if(m_config["NACA"].beenSet)
     {
-        m_mesh->m_cad->SetNACA(m_config["NACA"].as<string>());
+        m_mesh->m_cad->SetConfig("UseNACA", m_config["NACA"].as<std::string>());
     }
 
     if(m_config["verbose"].beenSet)

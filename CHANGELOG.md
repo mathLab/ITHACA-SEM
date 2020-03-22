@@ -14,6 +14,11 @@ v5.0.1
 **Library**
 - Fix incorrect coordinate dimension used in history point filter (!1118)
 
+v5.0.1
+------
+**CI**
+- Switched to Gitlab CI (!1120, !1120, !1128, !1129)
+
 v5.0.0
 ------
 **Library**

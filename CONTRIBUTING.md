@@ -10,7 +10,7 @@ split up into a number of sections:
 - [How to contribute](#how-to-contribute)
 - [Submission checklist](#submission-checklist)
 - [Git cheatsheet](#git-cheatsheet)
-- [Testing and Buildbot](#testing-and-buildbot)
+- [Testing and GitLab CI](#testing-and-gitlab)
 - [Documentation](#documentation)
 - [Formatting guidelines](#formatting-guidelines)
 
@@ -51,9 +51,9 @@ project. It's a pretty simple process:
 ## Submission checklist
 - Did you add regression tests (for fixes) or unit tests and/or normal tests for
   new features?
-- Have you run your branch through buildbot and do all the tests pass?
+- Have you run your branch through GitLab CI and do all the tests pass?
 - Have you fixed any new compiler warnings your code has introduced into the
-  compilation step for all of the Linux buildbots?
+  compilation step for all of the Linux CI environments?
   - **unused parameters**: if these are genuinely needed (e.g. virtual functions
     in a derived class, please use `boost::ignore_unused()` to mark as such.
   - **switch case may fall-through**: for switch statements which
@@ -105,7 +105,7 @@ commit, you can additionally use the `git gui` command to bring up a simple
 interface. `git difftool` can also be used in combination with a GUI diff
 viewer, to graphically view the output of `git diff`.
 
-## Testing and Buildbot
+## Testing and GitLab CI
 Your new features or fixes should include tests that cover the code you've
 added. There are numerous examples within the various `Tests` directory lying
 within the source trees, and there is an example of writing `.tst` files for our
@@ -114,28 +114,14 @@ tests, add them to the `CMakeLists.txt` file for the relevant solver, or to the
 appropriate demos directory for library features in whatever directory you are
 working in.
 
-You should also test your branch on the
-[Nektar++ buildbot](http://buildbot.nektar.info/), which will compile and test
-the code against a number of Linux, Mac and Windows operating systems, both 32-
-and 64-bit. If your tests don't pass, we can't merge the code into master.
+You should also test your branch on the Nektar++ GitLab CI, which will compile
+and test the code against a number of Linux, Mac and Windows operating
+systems. If your tests don't pass, we can't merge the code into master.
 
-When you submit a merge request testing on buildbot will happen automatically,
+When you submit a merge request testing on GitLab CI will happen automatically,
 unless you have marked the merge request as a work-in-progress (WIP: prefix).
 Each time you push commits to a non-WIP merge request branch, it will also
 trigger a build.
-
-For WIP merge request branches, you can force a build on individual builders
-using the buildbot web interface:
-
-1. Go to the buildbot site and log in using the drop-down menu (top right).
-2. Go to the console display and select the builder from the column headings on
-   which you would like to force test.
-3. Select 'Force' from the top-right of the page.
-4. Enter the details as required. If you're working on a fork, then the *Fork*
-   box should be changed to `username/nektar`.
-5. Hit the *Start build* button.
-6. Return to the *console* display to see progress. You can click on the
-   flashing indicator for your active build to see progress and output.
 
 ## Documentation
 Nektar++ has a fairly comprehensive user guide and a developer guide that is

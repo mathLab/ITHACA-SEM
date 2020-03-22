@@ -113,7 +113,8 @@ public:
      */
     const std::string &GetConfig(const std::string &key) const
     {
-        return m_config[key];
+        auto it = m_config.find(key);
+        return it->second;
     }
 
     /**
@@ -122,7 +123,7 @@ public:
      * @param key    Configuration key.
      * @param value  The configuration value.
      */
-    void &GetConfig(const std::string &key, const std::string &value)
+    void SetConfig(const std::string &key, const std::string &value)
     {
         m_config[key] = value;
     }

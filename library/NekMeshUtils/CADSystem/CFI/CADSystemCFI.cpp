@@ -87,16 +87,16 @@ bool CADSystemCFI::LoadCAD()
              << "\tubid " << m_cfiHandle.info.ubid << endl;
     }
 
-    if (m_config["UseCFIMesh"].count())
+    if (m_config.count("UseCFIMesh"))
     {
-        m_useCFImesh = boost::lexical_cast<bool>(m_config["UseCFIMesh"]);
+        m_useCFIMesh = boost::lexical_cast<bool>(m_config["UseCFIMesh"]);
     }
 
     m_model = m_cfiHandle.openModelFile(m_name.c_str());
 
     if (m_model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) != 1)
     {
-        if (m_config["UseCFIMesh"].count())
+        if (m_useCFIMesh)
         {
             if (m_verbose)
             {

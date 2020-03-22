@@ -24,7 +24,7 @@ IF(NEKTAR_USE_MESHGEN)
 
             IF(CFI_INCLUDE_DIR)
 
-		MESSAGE(STATUS "cfi libraries: ${CFI_LIBRARY_API}")
+		MESSAGE(STATUS "Found CFI Libraries: ${CFI_LIBRARY_API}")
 
                 INCLUDE_DIRECTORIES(NekMeshUtils ${CFI_INCLUDE_DIR_HXX})
                 INCLUDE_DIRECTORIES(NekMeshUtils ${CFI_INCLUDE_DIR})

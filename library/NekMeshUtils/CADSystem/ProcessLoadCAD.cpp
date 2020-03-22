@@ -80,7 +80,7 @@ void ProcessLoadCAD::Process()
 
     if (boost::iequals(ext, ".fbm"))
     {
-        m_mesh->m_cad = GetEngineFactory().CreateInstance("cfi",name);
+        m_mesh->m_cad = GetEngineFactory().CreateInstance("cfi", name);
 
         if (m_config["usecfimesh"].beenSet)
         {

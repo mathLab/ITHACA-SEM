@@ -49,7 +49,7 @@ class CADSystemCFI : public CADSystem
 public:
     static CADSystemSharedPtr create(std::string name)
     {
-        return MemoryManager<CADSystemCFI>::AllocateSharedPtr(name, "cfi");
+        return MemoryManager<CADSystemCFI>::AllocateSharedPtr(name);
     }
 
     static std::string key;
@@ -57,7 +57,7 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADSystemCFI(std::string name) : CADSystem(name)
+    CADSystemCFI(std::string name) : CADSystem(name, "CFI")
     {
     }
     ~CADSystemCFI() = default;
@@ -68,27 +68,23 @@ public:
 
     cfi::Model *GetCFIModel()
     {
-        return model;
+        return m_model;
     }
     std::map<std::string, int> GetCFICurveId()
     {
-        return nameToCurveId;
+        return m_nameToCurveId;
     }
     std::map<std::string, int> GetCFIFaceId()
     {
-        return nameToFaceId;
+        return m_nameToFaceId;
     }
     std::map<std::string, int> GetCFIVertId()
     {
-        return nameToVertId;
+        return m_nameToVertId;
     }
     NekDouble GetScaling()
     {
         return m_scal;
-    }
-    void UseCFIMesh()
-    {
-        m_useCFIMesh = true;
     }
 
 private:

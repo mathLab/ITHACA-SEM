@@ -275,7 +275,7 @@ void InputCADfix::Process()
 
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::ePrism, conf, n, tags);
-        
+
         E->m_cfiParent = it.parent;
 
         m_mesh->m_element[3].push_back(E);
@@ -301,7 +301,7 @@ void InputCADfix::Process()
         ElmtConfig conf(LibUtilities::eTetrahedron, 1, false, false);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eTetrahedron, conf, n, tags);
-        
+
         E->m_cfiParent = it.parent;
 
         m_mesh->m_element[3].push_back(E);
@@ -327,7 +327,7 @@ void InputCADfix::Process()
         ElmtConfig conf(LibUtilities::eHexahedron, 1, false, false);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eHexahedron, conf, n, tags);
-        
+
         E->m_cfiParent = it.parent;
 
         m_mesh->m_element[3].push_back(E);

@@ -68,6 +68,7 @@ public:
 
     NekDouble DistanceTo(Array<OneD, NekDouble> l)
     {
+        boost::ignore_unused(l);
         ASSERTL0(false, "Not implemented in CFI");
         return 0;
     }

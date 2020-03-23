@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputCAD.h
+//  File: CADElementCFI.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -28,45 +28,43 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Create mesh from CAD.
+//  Description: Storage for CFI element handle.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTMCF
-#define UTILITIES_NEKMESH_INPUTMCF
+#ifndef NEKMESHUTILS_CADSYSTEM_CFI_CADELEMENTCFI
+#define NEKMESHUTILS_CADSYSTEM_CFI_CADELEMENTCFI
 
-#include <NekMeshUtils/Module/Module.h>
+#include "CADSystemCFI.h"
+#include "../CADObject.h"
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMeshUtils
 {
 
-class InputMCF : public NekMeshUtils::InputModule
+class CADElementCFI : public CADObject
 {
 public:
-    InputMCF(NekMeshUtils::MeshSharedPtr m);
-    virtual ~InputMCF();
-    virtual void Process();
-
-    /// Creates an instance of this class
-    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
+    CADElementCFI(cfi::MeshableEntity *cfiEntity) : m_cfiEntity(cfiEntity)
     {
-        return MemoryManager<InputMCF>::AllocateSharedPtr(m);
+        m_type = CADType::eOther;
     }
-    /// %ModuleKey for class.
-    static NekMeshUtils::ModuleKey className;
 
-    void ParseFile(std::string nm);
+    ~CADElementCFI() = default;
+
+    cfi::MeshableEntity *GetCfiPointer()
+    {
+        return m_cfiEntity;
+    }
 
 private:
-    std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order, m_blsurfs,
-        m_blthick, m_blprog, m_bllayers, m_refinement, m_nacadomain, m_periodic,
-        m_adjustment, m_spaceoutblthr, m_nospaceoutsurf;
-
-    bool m_makeBL, m_surfopti, m_varopti, m_refine, m_woct, m_2D, m_splitBL,
-        m_naca, m_adjust, m_adjustall, m_smoothbl, m_manifold, m_spaceoutbl;
+    /// CFI object for surface.
+    cfi::MeshableEntity *m_cfiEntity;
 };
+
+typedef std::shared_ptr<CADElementCFI> CADElementCFISharedPtr;
+
 }
 }
 

@@ -65,7 +65,7 @@ public:
 
     Array<OneD, NekDouble> GetBounds();
 
-    virtual void GetBounds(NekDouble &umin, NekDouble &umax, NekDouble &vmin,
+    void GetBounds(NekDouble &umin, NekDouble &umax, NekDouble &vmin,
                            NekDouble &vmax);
 
     Array<OneD, NekDouble> N(Array<OneD, NekDouble> uv);
@@ -94,10 +94,16 @@ public:
         return false;
     }
 
+    cfi::Face *GetCfiPointer()
+    {
+        return m_cfiSurface;
+    }
+
 private:
     /// Function which tests the the value of uv used is within the surface
     void Test(Array<OneD, NekDouble> uv)
     {
+        boost::ignore_unused(uv);
     }
     /// CFI object for surface.
     cfi::Face *m_cfiSurface;

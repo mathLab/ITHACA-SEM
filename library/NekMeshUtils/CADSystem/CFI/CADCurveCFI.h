@@ -68,11 +68,13 @@ public:
     virtual Array<OneD, NekDouble> D2(NekDouble t);
     virtual NekDouble Curvature(NekDouble t)
     {
+        boost::ignore_unused(t);
         ASSERTL0(false, "Function: Curvature not implemented in CFI engine");
         return 0;
     }
     virtual Array<OneD, NekDouble> N(NekDouble t)
     {
+        boost::ignore_unused(t);
         ASSERTL0(false, "Function: N not implemented in CFI engine");
         return Array<OneD, NekDouble>();
     }
@@ -81,6 +83,11 @@ public:
     virtual NekDouble loct(Array<OneD, NekDouble> xyz, NekDouble &t);
 
     void Initialise(int i, cfi::Line *in, NekDouble s);
+
+    cfi::Line *GetCfiPointer()
+    {
+        return m_cfiEdge;
+    }
 
 private:
     /// cfi object

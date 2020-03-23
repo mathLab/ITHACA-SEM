@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputCAD.h
+//  File: OutputCADfix.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -10,6 +10,7 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
+//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -28,44 +29,42 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Create mesh from CAD.
+//  Description: Export elements and nodes back to CFI.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTMCF
-#define UTILITIES_NEKMESH_INPUTMCF
+#ifndef UTILITIES_NEKMESH_OUTPUTCADFIX
+#define UTILITIES_NEKMESH_OUTPUTCADFIX
 
 #include <NekMeshUtils/Module/Module.h>
+
+#include <NekMeshUtils/CADSystem/CFI/CADSystemCFI.h>
 
 namespace Nektar
 {
 namespace Utilities
 {
 
-class InputMCF : public NekMeshUtils::InputModule
+/// Appends to CADfix database files.
+class OutputCADfix : public NekMeshUtils::OutputModule
 {
 public:
-    InputMCF(NekMeshUtils::MeshSharedPtr m);
-    virtual ~InputMCF();
-    virtual void Process();
-
     /// Creates an instance of this class
-    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
+    static std::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
-        return MemoryManager<InputMCF>::AllocateSharedPtr(m);
+        return MemoryManager<OutputCADfix>::AllocateSharedPtr(m);
     }
-    /// %ModuleKey for class.
     static NekMeshUtils::ModuleKey className;
 
-    void ParseFile(std::string nm);
+    OutputCADfix(NekMeshUtils::MeshSharedPtr m);
+    virtual ~OutputCADfix();
+
+    /// Write mesh to output file.
+    virtual void Process();
 
 private:
-    std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order, m_blsurfs,
-        m_blthick, m_blprog, m_bllayers, m_refinement, m_nacadomain, m_periodic,
-        m_adjustment, m_spaceoutblthr, m_nospaceoutsurf;
-
-    bool m_makeBL, m_surfopti, m_varopti, m_refine, m_woct, m_2D, m_splitBL,
-        m_naca, m_adjust, m_adjustall, m_smoothbl, m_manifold, m_spaceoutbl;
+    NekMeshUtils::CADSystemCFISharedPtr m_cad;
+    cfi::Model *m_model;
 };
 }
 }

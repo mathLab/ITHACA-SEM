@@ -57,10 +57,10 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADSystemCFI(std::string name) : CADSystem(name)
+    CADSystemCFI(std::string name) : CADSystem(name, "CFI")
     {
     }
-    ~CADSystemCFI(){};
+    ~CADSystemCFI() = default;
 
     bool LoadCAD();
 
@@ -68,19 +68,19 @@ public:
 
     cfi::Model *GetCFIModel()
     {
-        return model;
+        return m_model;
     }
     std::map<std::string, int> GetCFICurveId()
     {
-        return nameToCurveId;
+        return m_nameToCurveId;
     }
     std::map<std::string, int> GetCFIFaceId()
     {
-        return nameToFaceId;
+        return m_nameToFaceId;
     }
     std::map<std::string, int> GetCFIVertId()
     {
-        return nameToVertId;
+        return m_nameToVertId;
     }
     NekDouble GetScaling()
     {
@@ -91,14 +91,16 @@ private:
     void AddVert(int i, cfi::Point *in);
     void AddCurve(int i, cfi::Line *in);
     void AddSurf(int i, cfi::Face *in);
-    cfi::Cfi cfiHandel;
-    cfi::Model *model;
-    std::vector<cfi::Body* >bodies;
-    std::map<std::string, int> nameToVertId;
-    std::map<std::string, int> nameToCurveId;
-    std::map<std::string, int> nameToFaceId;
-    std::map<std::string, std::vector<std::string> > mapVertToListEdge;
+
+    cfi::Cfi m_cfiHandle;
+    cfi::Model *m_model;
+    std::vector<cfi::Body* > m_bodies;
+    std::map<std::string, int> m_nameToVertId;
+    std::map<std::string, int> m_nameToCurveId;
+    std::map<std::string, int> m_nameToFaceId;
+    std::map<std::string, std::vector<std::string> > m_mapVertToListEdge;
     NekDouble m_scal;
+    bool m_useCFIMesh = false;
 };
 
 typedef std::shared_ptr<CADSystemCFI> CADSystemCFISharedPtr;

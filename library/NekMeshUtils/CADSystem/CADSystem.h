@@ -71,11 +71,9 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADSystem(std::string name) : m_name(name)
+    CADSystem(std::string name, std::string engine)
+        : m_name(name), m_engine(engine)
     {
-        m_2d      = false;
-        m_cfiMesh = false;
-        m_verbose = false;
     }
 
     virtual ~CADSystem()
@@ -90,29 +88,52 @@ public:
         return m_name;
     }
 
+    /**
+     * @brief Set the CAD engine up to handle 2D geometries explicitly.
+     */
     void Set2D()
     {
         m_2d = true;
     }
 
+    /**
+     * @brief Returns whether the CAD engine is set in 2D mode.
+     */
     bool Is2D()
     {
         return m_2d;
     }
 
-    void SetNACA(std::string i)
+    /**
+     * @brief Gets a configuration option.
+     *
+     * @param key  Configuration key.
+     *
+     * @return The configuration value.
+     */
+    const std::string &GetConfig(const std::string &key) const
     {
-        m_naca = i;
+        auto it = m_config.find(key);
+        return it->second;
     }
 
-    void SetCFIMesh()
+    /**
+     * @brief Sets a configuration option @p key to @p value.
+     *
+     * @param key    Configuration key.
+     * @param value  The configuration value.
+     */
+    void SetConfig(const std::string &key, const std::string &value)
     {
-        m_cfiMesh = true;
+        m_config[key] = value;
     }
 
-    void SetVerbose()
+    /**
+     * @brief Sets the verbose flag for additional output.
+     */
+    void SetVerbose(bool verbose = true)
     {
-        m_verbose = true;
+        m_verbose = verbose;
     }
 
     /**
@@ -120,7 +141,7 @@ public:
      *
      * @return true if completed successfully
      */
-    virtual bool LoadCAD() = 0;
+    NEKMESHUTILS_EXPORT virtual bool LoadCAD() = 0;
 
     /**
      * @brief Returns bounding box of the domain.
@@ -130,7 +151,7 @@ public:
      *
      * @return Array with 6 entries: xmin, xmax, ymin, ymax, zmin and zmax.
      */
-    virtual Array<OneD, NekDouble> GetBoundingBox() = 0;
+    NEKMESHUTILS_EXPORT virtual Array<OneD, NekDouble> GetBoundingBox() = 0;
 
     /**
      * @brief Get the number of surfaces.
@@ -182,7 +203,7 @@ public:
     }
 
     /**
-     * @brief Gets map of all vertices
+     * @brief Gets map of all vertices.
      */
     std::map<int, CADVertSharedPtr> GetVerts()
     {
@@ -192,7 +213,7 @@ public:
     /**
      * @brief Gets number of vertices
      */
-    int GetNumVerts()
+    int GetNumVerts() const
     {
         return m_verts.size();
     }
@@ -205,9 +226,19 @@ public:
     NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetPeriodicTranslationVector(
         int first, int second);
 
+    /**
+     * @brief Return the name of the CAD system engine (e.g. OCE).
+     */
+    std::string GetEngine() const
+    {
+        return m_engine;
+    }
+
 protected:
-    /// Name of cad file
+    /// Name of CAD file
     std::string m_name;
+    /// Name of CAD engine.
+    std::string m_engine;
     /// Map of curves
     std::map<int, CADCurveSharedPtr> m_curves;
     /// Map of surfaces
@@ -215,13 +246,12 @@ protected:
     /// Map of vertices
     std::map<int, CADVertSharedPtr> m_verts;
     /// Verbosity
-    bool m_verbose;
+    bool m_verbose = false;
     /// 2D cad flag
-    bool m_2d;
-    /// Will the CAD be used with a CFI mesh flag
-    bool m_cfiMesh;
-    /// string of 4 digit NACA code to be created
-    std::string m_naca;
+    bool m_2d = false;
+    /// Configuration options which might be used per-engine, serialised in
+    /// strings.
+    std::map<std::string, std::string> m_config;
 
     /**
      * @brief Reports basic properties to screen.

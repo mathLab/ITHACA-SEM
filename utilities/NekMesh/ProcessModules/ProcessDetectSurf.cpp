@@ -224,7 +224,7 @@ void ProcessDetectSurf::FindContiguousSurface(ElementSharedPtr start,
     {
         for (int j = 0; j < edges[i]->m_elLink.size(); ++j)
         {
-	    ElementSharedPtr elmt = (edges[i]->m_elLink[j].first).lock();
+            ElementSharedPtr elmt = (edges[i]->m_elLink[j].first).lock();
             if (elmt == start)
             {
                 continue;

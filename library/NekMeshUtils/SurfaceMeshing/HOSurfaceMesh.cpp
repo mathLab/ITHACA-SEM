@@ -280,7 +280,8 @@ void HOSurfaceMesh::Process()
                     nn->SetCADCurve(c, ti[k]);
                     for (int m = 0; m < s.size(); m++)
                     {
-		        Array<OneD, NekDouble> uv = s[m].first.lock()->locuv(loc);
+                        Array<OneD, NekDouble> uv =
+                            s[m].first.lock()->locuv(loc);
                         nn->SetCADSurf(s[m].first.lock(), uv);
                     }
 

@@ -564,7 +564,7 @@ vector<ElUtilSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
         {
             for (int k = 0; k < f[j]->m_elLink.size(); k++)
             {
-	        if (f[j]->m_elLink[k].first.lock()->GetId() ==
+                if (f[j]->m_elLink[k].first.lock()->GetId() ==
                     elBelowThres[i]->GetId())
                 {
                     continue;
@@ -574,7 +574,7 @@ vector<ElUtilSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
                 if (t.second)
                 {
                     totest.push_back(
-		        m_dataSet[f[j]->m_elLink[k].first.lock()->GetId()]);
+                        m_dataSet[f[j]->m_elLink[k].first.lock()->GetId()]);
                 }
             }
         }
@@ -591,16 +591,18 @@ vector<ElUtilSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
             {
                 for (int l = 0; l < f[k]->m_elLink.size(); l++)
                 {
-		    if (f[k]->m_elLink[l].first.lock()->GetId() == tmp[j]->GetId())
+                    if (f[k]->m_elLink[l].first.lock()->GetId() ==
+                        tmp[j]->GetId())
                     {
                         continue;
                     }
 
-                    auto t = inmesh.insert(f[k]->m_elLink[l].first.lock()->GetId());
+                    auto t = inmesh.insert(
+                        f[k]->m_elLink[l].first.lock()->GetId());
                     if (t.second)
                     {
                         totest.push_back(
-			    m_dataSet[f[k]->m_elLink[l].first.lock()->GetId()]);
+                            m_dataSet[f[k]->m_elLink[l].first.lock()->GetId()]);
                     }
                 }
             }
@@ -639,7 +641,7 @@ void ProcessVarOpti::RemoveLinearCurvature()
         bool rm = true;
         for(int i = 0; i < face->m_elLink.size(); i++)
         {
-	    int id = face->m_elLink[i].first.lock()->GetId();
+            int id = face->m_elLink[i].first.lock()->GetId();
             if(m_dataSet[id]->GetScaledJac() <= 0.999)
             {
                 rm = false;

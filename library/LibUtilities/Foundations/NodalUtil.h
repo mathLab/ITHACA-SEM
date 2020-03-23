@@ -83,7 +83,7 @@ typedef std::shared_ptr<NekMatrix<NekDouble> > SharedMatrix;
 class NodalUtil
 {
 public:
-    LIB_UTILITIES_EXPORT virtual ~NodalUtil(){};
+    LIB_UTILITIES_EXPORT virtual ~NodalUtil() = default;
     LIB_UTILITIES_EXPORT NekVector<NekDouble> GetWeights();
     LIB_UTILITIES_EXPORT SharedMatrix GetVandermonde();
     LIB_UTILITIES_EXPORT SharedMatrix GetVandermondeForDeriv(int dir);

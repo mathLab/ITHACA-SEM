@@ -879,7 +879,7 @@ void Octree::CompileSourcePointList()
 
                     CPointSharedPtr newCPoint =
                         MemoryManager<CPoint>::AllocateSharedPtr(
-			    ss[0].first.lock()->GetId(), uv, loc, del);
+                            ss[0].first.lock()->GetId(), uv, loc, del);
 
                     m_SPList.push_back(newCPoint);
                 }
@@ -887,7 +887,7 @@ void Octree::CompileSourcePointList()
                 {
                     BPointSharedPtr newBPoint =
                         MemoryManager<BPoint>::AllocateSharedPtr(
-			    ss[0].first.lock()->GetId(), uv, loc);
+                            ss[0].first.lock()->GetId(), uv, loc);
 
                     m_SPList.push_back(newBPoint);
                 }

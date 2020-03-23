@@ -579,8 +579,8 @@ void FaceMesh::DiagonalSwap()
                 continue;
             }
 
-	    ElementSharedPtr tri1 = e->m_elLink[0].first.lock();
-	    ElementSharedPtr tri2 = e->m_elLink[1].first.lock();
+            ElementSharedPtr tri1 = e->m_elLink[0].first.lock();
+            ElementSharedPtr tri2 = e->m_elLink[1].first.lock();
 
             NodeSharedPtr n1 = e->m_n1;
             NodeSharedPtr n2 = e->m_n2;

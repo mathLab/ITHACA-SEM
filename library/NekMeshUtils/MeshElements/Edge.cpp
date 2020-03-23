@@ -164,8 +164,8 @@ void Edge::MakeOrder(int order, SpatialDomains::GeometrySharedPtr geom,
                     c->GetAdjSurf();
                 for (int j = 0; j < s.size(); j++)
                 {
-		    Array<OneD, NekDouble> uv = s[j].first.lock()->locuv(loc);
-		    m_edgeNodes[i]->SetCADSurf(s[j].first.lock(), uv);
+                    Array<OneD, NekDouble> uv = s[j].first.lock()->locuv(loc);
+                    m_edgeNodes[i]->SetCADSurf(s[j].first.lock(), uv);
                 }
             }
         }

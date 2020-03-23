@@ -428,7 +428,7 @@ void CurveMesh::PeriodicOverwrite(CurveMeshSharedPtr from)
 
         for (int j = 0; j < surfs.size(); j++)
         {
-	    Array<OneD, NekDouble> uv = surfs[j].first.lock()->locuv(nn->GetLoc());
+            Array<OneD, NekDouble> uv = surfs[j].first.lock()->locuv(nn->GetLoc());
             nn->SetCADSurf(surfs[j].first.lock(), uv);
         }
 

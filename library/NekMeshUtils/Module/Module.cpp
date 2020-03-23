@@ -367,7 +367,7 @@ void Module::ProcessFaces(bool ReprocessFaces)
         // Update 3D element boundary map.
         for (int j = 0; j < (*it)->m_elLink.size(); ++j)
         {
-	    pair<weak_ptr<Element>, int> eMap = (*it)->m_elLink.at(j);
+            pair<weak_ptr<Element>, int> eMap = (*it)->m_elLink.at(j);
             eMap.first.lock()->SetBoundaryLink(eMap.second, i);
         }
 
@@ -836,7 +836,7 @@ void Module::PrismLines(int                       prism,
         nextId = f->m_elLink[0].first.lock()->GetId();
         if (nextId == m_mesh->m_element[3][prism]->GetId())
         {
-	    nextId = f->m_elLink[1].first.lock()->GetId();
+            nextId = f->m_elLink[1].first.lock()->GetId();
         }
 
         PrismLines(nextId, perFaces, prismsDone, line);

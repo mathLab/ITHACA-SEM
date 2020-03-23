@@ -274,7 +274,7 @@ public:
         std::vector<CADCurveSharedPtr> lst;
         for (auto &c : CADCurveList)
         {
-	    lst.push_back(c.second.first.lock());
+            lst.push_back(c.second.first.lock());
         }
         return lst;
     }
@@ -284,7 +284,7 @@ public:
         std::vector<CADSurfSharedPtr> lst;
         for (auto &s : CADSurfList)
         {
-	    lst.push_back(s.second.first.lock());
+            lst.push_back(s.second.first.lock());
         }
         return lst;
     }

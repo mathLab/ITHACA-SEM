@@ -105,6 +105,7 @@ IF(NEKTAR_USE_CFI)
         CADSystem/CFI/CADVertCFI.h
         CADSystem/CFI/CADCurveCFI.h
         CADSystem/CFI/CADSurfCFI.h
+        CADSystem/CFI/CADElementCFI.h
     )
     SET(NEKMESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
         CADSystem/CFI/CADSystemCFI.cpp

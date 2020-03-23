@@ -141,7 +141,7 @@ public:
      *
      * @return true if completed successfully
      */
-    virtual bool LoadCAD() = 0;
+    NEKMESHUTILS_EXPORT virtual bool LoadCAD() = 0;
 
     /**
      * @brief Returns bounding box of the domain.
@@ -151,7 +151,7 @@ public:
      *
      * @return Array with 6 entries: xmin, xmax, ymin, ymax, zmin and zmax.
      */
-    virtual Array<OneD, NekDouble> GetBoundingBox() = 0;
+    NEKMESHUTILS_EXPORT virtual Array<OneD, NekDouble> GetBoundingBox() = 0;
 
     /**
      * @brief Get the number of surfaces.

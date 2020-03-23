@@ -645,7 +645,6 @@ void ProcessBL::BoundaryLayer3D()
     map<LibUtilities::ShapeType, map<int, SplitMapHelper> > splitMap;
 
     ////////////////////////////////////////
-    ////////////////////////////////////////
     // HEX DIR X
     ////////////////////////////////////////
 
@@ -700,7 +699,6 @@ void ProcessBL::BoundaryLayer3D()
     splitMap[LibUtilities::eHexahedron][5] = splitHex5;
 
     ////////////////////////////////////////
-    ////////////////////////////////////////
     // HEX DIR Y
     ////////////////////////////////////////
 
@@ -732,7 +730,8 @@ void ProcessBL::BoundaryLayer3D()
     splitMap[LibUtilities::eHexahedron][1] = splitHex1;
 
     SplitMapHelper splitHex3;
-    int splitMapConnHex1rev[8][2]  = {{3, 1}, {2, 1}, {2, 0}, {3, 0}, {0, 1}, {1, 1}, {1, 0}, {0, 0}};
+    int splitMapConnHex1rev[8][2]  = {{3, 1}, {2, 1}, {2, 0}, {3, 0}, {0, 1},
+                                      {1, 1}, {1, 0}, {0, 0}};
 
     splitHex3.size                         = 8;
     splitHex3.dir                          = 1;
@@ -751,7 +750,6 @@ void ProcessBL::BoundaryLayer3D()
     splitHex3.gll                          = helper2d(8, splithex0gll);
     splitMap[LibUtilities::eHexahedron][3] = splitHex3;
 
-    ////////////////////////////////////////
     ////////////////////////////////////////
     // HEX DIR Z
     ////////////////////////////////////////
@@ -785,7 +783,7 @@ void ProcessBL::BoundaryLayer3D()
 
     SplitMapHelper splitHex2;
     int splitMapConnHex4rev[8][2]  = {{1, 1}, {1, 0}, {2, 0}, {2, 1},
-                                        {0, 1}, {0, 0}, {3, 0}, {3, 1}};
+                                      {0, 1}, {0, 0}, {3, 0}, {3, 1}};
 
     splitHex2.size                         = 8;
     splitHex2.dir                          = 1;
@@ -804,8 +802,6 @@ void ProcessBL::BoundaryLayer3D()
     splitHex2.gll                          = helper2d(8, splithex0gll);
     splitMap[LibUtilities::eHexahedron][2] = splitHex2;
 
-
-    ////////////////////////////////////////
     ////////////////////////////////////////
     // PRISM DIR Y
     ////////////////////////////////////////
@@ -814,7 +810,8 @@ void ProcessBL::BoundaryLayer3D()
     int splitMapBFacesPrism1[3]   = {0, 2, 4};
     int splitedgeprism1[3]        = {3, 1, 8};
     int splitPrism1EdgeVert[3][2] = {{0, 3}, {1, 2}, {4, 5}};
-    int splitMapConnPrism1[6][2]  = {{0, 0}, {1, 0}, {1, 1}, {0, 1}, {2, 0}, {2, 1}};
+    int splitMapConnPrism1[6][2]  = {{0, 0}, {1, 0}, {1, 1}, {0, 1},
+                                     {2, 0}, {2, 1}};
     int splitedgestocurveprism1[6] = {0, 4, 5, 2, 6, 7};
     int splitprism1gll[6][3]       = {{-1, -1, -1}, {1, -1, -1}, {1, 1, -1},
                               {-1, 1, -1},  {-1, -1, 1}, {-1, 1, 1}};
@@ -839,7 +836,8 @@ void ProcessBL::BoundaryLayer3D()
     splitMap[LibUtilities::ePrism][1] = splitprism1;
 
     SplitMapHelper splitprism3;
-    int splitMapConnPrism1rev[6][2]  = {{0, 1}, {1, 1}, {1, 0}, {0, 0}, {2, 1}, {2, 0}};
+    int splitMapConnPrism1rev[6][2]  = {{0, 1}, {1, 1}, {1, 0}, {0, 0},
+                                        {2, 1}, {2, 0}};
     splitprism3.size                  = 6;
     splitprism3.dir                   = 1;
     splitprism3.oppositeFace          = 1;
@@ -857,10 +855,10 @@ void ProcessBL::BoundaryLayer3D()
     splitprism3.gll                   = helper2d(8, splitprism1gll);
     splitMap[LibUtilities::ePrism][3] = splitprism3;
 
-    // edgeMap associates geometry edge IDs to the (nl+1) vertices which
-    // are generated along that edge when a prism is split, and is used
-    // to avoid generation of duplicate vertices. It is stored as an
-    // unordered map for speed.
+    // edgeMap associates geometry edge IDs to the (nl+1) vertices which are
+    // generated along that edge when a prism is split, and is used to avoid
+    // generation of duplicate vertices. It is stored as an unordered map for
+    // speed.
     unordered_map<int, vector<NodeSharedPtr> > edgeMap;
     unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
 
@@ -906,8 +904,8 @@ void ProcessBL::BoundaryLayer3D()
                         splitMap[LibUtilities::eHexahedron].find(j);
                     if (f == splitMap[LibUtilities::eHexahedron].end())
                     {
-                        cout << "hex split on face " << j << " unsupported"
-                             << endl;
+                        cout << "WARNING: hex split on face " << j
+                             << " unsupported"  << endl;
                         continue;
                     }
 
@@ -925,8 +923,8 @@ void ProcessBL::BoundaryLayer3D()
                         splitMap[LibUtilities::ePrism].find(j);
                     if (f == splitMap[LibUtilities::ePrism].end())
                     {
-                        cout << "prism split on face " << j << " unsupported"
-                             << endl;
+                        cout << "WARNING: Prism split on face " << j
+                             << " unsupported" << endl;
                         continue;
                     }
 
@@ -975,7 +973,7 @@ void ProcessBL::BoundaryLayer3D()
         geomMap[elId] = dynamic_pointer_cast<SpatialDomains::Geometry3D>(
             el[i]->GetGeom(m_mesh->m_spaceDim));
 
-        //get all edge geometry too...
+        // Get all edge geometry too for evaluations.
         for(int j = 0; j < el[i]->GetEdgeCount(); j++)
         {
             EdgeSharedPtr e = el[i]->GetEdge(j);
@@ -987,7 +985,7 @@ void ProcessBL::BoundaryLayer3D()
         }
     }
 
-    //node id to element id to para
+    // node id to element id to para
     map<int, map<int, NekDouble> > paraElm; //parametric WRT to element
     map<int, map<int, NekDouble> > paraEdg; //parametric WRT edge
 
@@ -999,6 +997,7 @@ void ProcessBL::BoundaryLayer3D()
         const int elId = el[i]->GetId();
         sIt            = splitEls.find(elId);
 
+        // Any elements we don't process are ignored.
         if (sIt == splitEls.end())
         {
             m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
@@ -1010,7 +1009,7 @@ void ProcessBL::BoundaryLayer3D()
 
         SplitMapHelper &sMap = splitMap[elType][faceNum];
 
-        // Find quadrilateral boundary faces if any
+        // Find boundary faces if any
         std::map<int, int> bLink;
         for (int j = 0; j < sMap.bfacesSize; ++j)
         {
@@ -1037,11 +1036,8 @@ void ProcessBL::BoundaryLayer3D()
             // Determine value of r based on geometry.
             if (ratioIsString)
             {
-                NekDouble x, y, z;
-                NekDouble x1, y1, z1;
+                NekDouble x = 0.0, y = 0.0, z = 0.0, x1, y1, z1;
                 int nverts = geom->GetNumVerts();
-
-                x = y = z = 0.0;
 
                 for (int i = 0; i < nverts; ++i)
                 {
@@ -1056,17 +1052,19 @@ void ProcessBL::BoundaryLayer3D()
                 r = rEval.Evaluate(rExprId, x, y, z, 0.0);
             }
 
-            LibUtilities::PointsKey bkey(nl + 1, LibUtilities::eBoundaryLayerPoints, r);
+            // Grab the boundary layer points distributions.
+            LibUtilities::PointsKey bkey(
+                nl + 1, LibUtilities::eBoundaryLayerPoints, r);
             Array<OneD, NekDouble> blp;
             LibUtilities::PointsManager()[bkey]->GetPoints(blp);
 
-            LibUtilities::PointsKey brkey(nl + 1, LibUtilities::eBoundaryLayerPointsRev,
-                                        r);
+            LibUtilities::PointsKey brkey(
+                nl + 1, LibUtilities::eBoundaryLayerPointsRev, r);
             Array<OneD, NekDouble> blpr;
             LibUtilities::PointsManager()[brkey]->GetPoints(blpr);
 
-            // Determine whether we have already generated vertices
-            // along this edge.
+            // Determine whether we have already generated vertices along this
+            // edge.
             eIt = edgeMap.find(edgeId);
 
             if (eIt == edgeMap.end())
@@ -1079,6 +1077,7 @@ void ProcessBL::BoundaryLayer3D()
                 edgeNodes[j][0]  = el[i]->GetVertex(sMap.edgeVert[j][0]);
                 edgeNodes[j][nl] = el[i]->GetVertex(sMap.edgeVert[j][1]);
 
+                // Evaluate nodal positions using the xmap.
                 StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
                 Array<OneD, NekDouble> coeffs0 = geom->GetCoeffs(0);
                 Array<OneD, NekDouble> coeffs1 = geom->GetCoeffs(1);
@@ -1094,20 +1093,19 @@ void ProcessBL::BoundaryLayer3D()
 
                 NekDouble tb = -1.0;
                 NekDouble te = 1.0;
-                if (sMap.dir == 0)
+                if (sMap.dir != 0)
                 {
-                }
-                else
-                {
-                    swap(edgeNodes[j][0],edgeNodes[j][nl]);
+                    swap(edgeNodes[j][0], edgeNodes[j][nl]);
                     swap(tb, te);
                 }
 
+                // Store parametric positions for the nodes -- i.e. \xi in
+                // [-1,1].
                 paraElm[edgeNodes[j][0]->m_id][el[i]->GetId()]  = tb;
                 paraElm[edgeNodes[j][nl]->m_id][el[i]->GetId()] = te;
 
-                // edgeNodes[j][0] is guarenteed to be the base of the spltting direction
-                //question is, is it the end of the node
+                // edgeNodes[j][0] is guaranteed to be the base of the spltting
+                // direction; determine whether it is the end of the node
                 bool forward = edgeNodes[j][0] == edg->m_n1;
                 NekDouble tb2 = -1.0;
                 NekDouble te2 = 1.0;
@@ -1121,10 +1119,12 @@ void ProcessBL::BoundaryLayer3D()
                 // Create new interior nodes.
                 for (int k = 1; k < nl; ++k)
                 {
-                    NekDouble tElm = tb * (1.0 - blp[k]) / 2.0 + te * (1.0 + blp[k]) / 2.0;
+                    NekDouble tElm = tb * (1.0 - blp[k]) / 2.0 +
+                        te * (1.0 + blp[k]) / 2.0;
                     paraElm[nodeId][el[i]->GetId()] = tElm;
 
-                    NekDouble tEdge = tb2 * (1.0 - blp[k]) / 2.0 + te2 * (1.0 + blp[k]) / 2.0;
+                    NekDouble tEdge = tb2 * (1.0 - blp[k]) / 2.0 +
+                        te2 * (1.0 + blp[k]) / 2.0;
                     paraEdg[nodeId][el[i]->GetId()] = tEdge;
 
                     Array<OneD, NekDouble> xp(1);
@@ -1137,21 +1137,24 @@ void ProcessBL::BoundaryLayer3D()
                     loc[2]          = xmap->PhysEvaluate(xp, zc);
                     edgeNodes[j][k] = NodeSharedPtr(
                         new Node(nodeId++, loc[0], loc[1], loc[2]));
-                    
+
+                    // If this edge is attached to some CAD, then perform a
+                    // reverse projection to determine parametrisation on the
+                    // CAD curve/surface.
                     if (edg->m_parentCAD)
                     {
                         if (edg->m_parentCAD->GetType() == CADType::eCurve)
                         {
-                            CADCurveSharedPtr c =
-                                std::dynamic_pointer_cast<CADCurve>(edg->m_parentCAD);
+                            CADCurveSharedPtr c = std::dynamic_pointer_cast<
+                                CADCurve>(edg->m_parentCAD);
                             NekDouble t;
                             c->loct(loc, t);
                             edgeNodes[j][k]->SetCADCurve(c, t);
                         }
                         else if (edg->m_parentCAD->GetType() == CADType::eSurf)
                         {
-                            CADSurfSharedPtr s =
-                                std::dynamic_pointer_cast<CADSurf>(edg->m_parentCAD);
+                            CADSurfSharedPtr s = std::dynamic_pointer_cast<
+                                CADSurf>(edg->m_parentCAD);
                             Array<OneD, NekDouble> uv = s->locuv(loc);
                             edgeNodes[j][k]->SetCADSurf(s, uv);
                         }
@@ -1172,7 +1175,8 @@ void ProcessBL::BoundaryLayer3D()
                 }
                 for (int k = 0; k < eIt->second.size(); ++k)
                 {
-                    NekDouble tElm = tb * (1.0 - blp[k]) / 2.0 + te * (1.0 + blp[k]) / 2.0;
+                    NekDouble tElm = tb * (1.0 - blp[k]) / 2.0 +
+                        te * (1.0 + blp[k]) / 2.0;
                     paraElm[eIt->second[k]->m_id][el[i]->GetId()] = tElm;
                 }
             }
@@ -1192,9 +1196,7 @@ void ProcessBL::BoundaryLayer3D()
             ElmtConfig conf(elType, 1, false, false, false);
             ElementSharedPtr elmt = GetElementFactory().CreateInstance(
                 elType, conf, nodeList, el[i]->GetTagList());
-#ifdef NEKTAR_USE_CFI
-            elmt->m_cfiParent = el[i]->m_cfiParent;
-#endif
+            elmt->m_parentCAD = el[i]->m_parentCAD;
 
             // Always copy CAD parency from any side faces that are split.
             for (int k = 0; k < sMap.bfacesSize; ++k)
@@ -1316,13 +1318,14 @@ void ProcessBL::BoundaryLayer3D()
         }
     }
 
-    // at this point the split stack has been split linearly and the
-    // stack is is saved in elToStack
-    // vertices are unique but edges are not
-    // but we need the exisiting edgeset
+    // At this point the split stack has been split linearly and the stack is is
+    // saved in elToStack.  The vertices are unique but edges are not, but we
+    // need the existing edgeset.
+
     EdgeSet oldEdgeSet = m_mesh->m_edgeSet;
     ProcessEdges();
-    //edges are now unique
+
+    // Edges are now unique.
 
     for (int i = 0; i < el.size(); ++i)
     {
@@ -1354,9 +1357,7 @@ void ProcessBL::BoundaryLayer3D()
 
         int nSplitEdge = sMap.nEdgeToSplit;
         vector<vector<NodeSharedPtr> > edgeNodes(nSplitEdge);
-
         vector<ElementSharedPtr> stack = elToStack[elId];
-
 
         // make layers high-order
         for(int j = 0; j < sMap.nEdgeToSplit; j++)
@@ -1368,9 +1369,9 @@ void ProcessBL::BoundaryLayer3D()
             {
                 EdgeSharedPtr nwEdg = stack[k]->GetEdge(locEdge);
 
-                //if the edge was in the old mesh we dont want to touch it
-                //likewise if it wasnt but has already been curved we dont want
-                //it but so we will add done edge to the set.
+                // If the edge was in the old mesh we dont want to touch it;
+                // likewise if it wasn't but has already been curved, we don't
+                // want it so we will add done edge to the set.
                 auto f = oldEdgeSet.find(nwEdg);
                 if (f != oldEdgeSet.end())
                 {
@@ -1414,16 +1415,16 @@ void ProcessBL::BoundaryLayer3D()
                     {
                         if (nwEdg->m_parentCAD->GetType() == CADType::eCurve)
                         {
-                            CADCurveSharedPtr c =
-                                std::dynamic_pointer_cast<CADCurve>(nwEdg->m_parentCAD);
+                            CADCurveSharedPtr c = std::dynamic_pointer_cast<
+                                CADCurve>(nwEdg->m_parentCAD);
                             NekDouble t;
                             c->loct(loc, t);
                             nwEdg->m_edgeNodes.back()->SetCADCurve(c, t);
                         }
                         else if (nwEdg->m_parentCAD->GetType() == CADType::eSurf)
                         {
-                            CADSurfSharedPtr s =
-                                std::dynamic_pointer_cast<CADSurf>(nwEdg->m_parentCAD);
+                            CADSurfSharedPtr s = std::dynamic_pointer_cast<
+                                CADSurf>(nwEdg->m_parentCAD);
                             Array<OneD, NekDouble> uv = s->locuv(loc);
                             nwEdg->m_edgeNodes.back()->SetCADSurf(s, uv);
                         }
@@ -1477,7 +1478,8 @@ void ProcessBL::BoundaryLayer3D()
 
                         if(xp[m] < -1.0 || xp[m] > 1.0)
                         {
-                            cout << "weirdness " << xp[m] << endl;
+                            cout << "WARNING: lies outside parameter range: "
+                                 << xp[m] << endl;
                         }
                     }
 

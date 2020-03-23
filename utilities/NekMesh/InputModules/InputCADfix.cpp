@@ -37,6 +37,7 @@
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
+#include <NekMeshUtils/CADSystem/CFI/CADElementCFI.h>
 
 using namespace std;
 namespace Nektar
@@ -276,7 +277,10 @@ void InputCADfix::Process()
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::ePrism, conf, n, tags);
 
-        E->m_cfiParent = it.parent;
+        // Create a CFI parent CAD object to store reference to CFI element.
+        std::shared_ptr<CADElementCFI> cfiParent = MemoryManager<
+            CADElementCFI>::AllocateSharedPtr(it.parent);
+        E->m_parentCAD = cfiParent;
 
         m_mesh->m_element[3].push_back(E);
     }
@@ -302,7 +306,10 @@ void InputCADfix::Process()
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eTetrahedron, conf, n, tags);
 
-        E->m_cfiParent = it.parent;
+        // Create a CFI parent CAD object to store reference to CFI element.
+        std::shared_ptr<CADElementCFI> cfiParent = MemoryManager<
+            CADElementCFI>::AllocateSharedPtr(it.parent);
+        E->m_parentCAD = cfiParent;
 
         m_mesh->m_element[3].push_back(E);
     }
@@ -328,7 +335,10 @@ void InputCADfix::Process()
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eHexahedron, conf, n, tags);
 
-        E->m_cfiParent = it.parent;
+        // Create a CFI parent CAD object to store reference to CFI element.
+        std::shared_ptr<CADElementCFI> cfiParent = MemoryManager<
+            CADElementCFI>::AllocateSharedPtr(it.parent);
+        E->m_parentCAD = cfiParent;
 
         m_mesh->m_element[3].push_back(E);
     }

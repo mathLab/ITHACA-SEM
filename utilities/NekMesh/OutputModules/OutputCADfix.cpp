@@ -35,8 +35,9 @@
 
 #include "OutputCADfix.h"
 
-#include "NekMeshUtils/CADSystem/CFI/CADCurveCFI.h"
-#include "NekMeshUtils/CADSystem/CFI/CADSurfCFI.h"
+#include <NekMeshUtils/CADSystem/CFI/CADCurveCFI.h>
+#include <NekMeshUtils/CADSystem/CFI/CADSurfCFI.h>
+#include <NekMeshUtils/CADSystem/CFI/CADElementCFI.h>
 
 using namespace std;
 using namespace Nektar::NekMeshUtils;
@@ -142,7 +143,10 @@ void OutputCADfix::Process()
             }
 
             // Default: volume parent
-            cfi::MeshableEntity *parent = el->m_cfiParent;
+            CADElementCFISharedPtr cadParent = std::dynamic_pointer_cast<
+                CADElementCFI>(el->m_parentCAD);
+            ASSERTL0(cadParent, "Expected a CFI parent.");
+            cfi::MeshableEntity *parent = cadParent->GetCfiPointer();
 
             // Point parent
             if (node->GetNumCadCurve() > 1)
@@ -317,7 +321,11 @@ void OutputCADfix::Process()
             }
         }
 
-        el->m_cfiParent->createElement(0, cfi::EntitySubtype(type), cfiNodes);
+        CADElementCFISharedPtr cadParent = std::dynamic_pointer_cast<
+            CADElementCFI>(el->m_parentCAD);
+        ASSERTL0(cadParent, "Expected a CFI parent.");
+        cadParent->GetCfiPointer()->createElement(
+            0, cfi::EntitySubtype(type), cfiNodes);
     }
 
     m_model->saveCopy(m_config["outfile"].as<string>());

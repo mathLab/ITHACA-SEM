@@ -35,8 +35,12 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_CFI_CADELEMENTCFI
 #define NEKMESHUTILS_CADSYSTEM_CFI_CADELEMENTCFI
 
-#include "CADSystemCFI.h"
 #include "../CADObject.h"
+
+#ifndef NEK_CADFIXAPI_HXX
+#define NEK_CADFIXAPI_HXX
+#include "cadfixapi.hxx"
+#endif
 
 namespace Nektar
 {

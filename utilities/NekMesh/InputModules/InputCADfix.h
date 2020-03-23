@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CFIMesh.h
+//  File: InputCADfix.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -28,12 +28,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: class which extracts an exisiting mesh from CFI source.
+//  Description: CADfix converter.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CFIMESH_CFIMESH
-#define NEKMESHUTILS_CFIMESH_CFIMESH
+#ifndef UTILITIES_NEKMESH_INPUTCADFIX
+#define UTILITIES_NEKMESH_INPUTCADFIX
 
 #include <NekMeshUtils/Module/Module.h>
 
@@ -41,30 +41,30 @@
 
 namespace Nektar
 {
-namespace NekMeshUtils
+namespace Utilities
 {
 
 /**
- * @brief class containing all surface meshing routines methods and classes
+ * Converter for CADfix files.
  */
-class CFIMesh : public ProcessModule
+class InputCADfix : public NekMeshUtils::InputModule
 {
 public:
-    /// Creates an instance of this class
-    static std::shared_ptr<Module> create(MeshSharedPtr m)
-    {
-        return MemoryManager<CFIMesh>::AllocateSharedPtr(m);
-    }
-    static ModuleKey className;
-
-    CFIMesh(MeshSharedPtr m);
-    virtual ~CFIMesh();
-
+    InputCADfix(NekMeshUtils::MeshSharedPtr m);
+    virtual ~InputCADfix();
     virtual void Process();
+
+    /// Creates an instance of this class
+    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
+    {
+        return MemoryManager<InputCADfix>::AllocateSharedPtr(m);
+    }
+    /// %ModuleKey for class.
+    static NekMeshUtils::ModuleKey className;
 
 private:
 
-    CADSystemCFISharedPtr m_cad;
+    NekMeshUtils::CADSystemCFISharedPtr m_cad;
     cfi::Model *m_model;
     std::map<std::string, int> m_nameToCurveId;
     std::map<std::string, int> m_nameToFaceId;

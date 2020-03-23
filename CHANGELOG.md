@@ -1,6 +1,31 @@
 Changelog
 =========
 
+v5.1.0
+------
+**Library**
+- Refactored time integration code using factory pattern (!1034)
+- Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
+
+**CardiacEPSolver**
+- Added additional parameter sets to Fenton-Karma model (!1119)
+
+**NekMesh**
+- Improved boundary layer splitting and output to CADfix (!938)
+
+v5.0.1
+------
+**Library**
+- Fix incorrect coordinate dimension used in history point filter (!1118)
+v5.0.1
+------
+- Fix compile errors with GCC 9.x (!1108)
+
+v5.0.1
+------
+**CI**
+- Switched to Gitlab CI (!1120, !1120, !1128, !1129)
+
 v5.0.0
 ------
 **Library**

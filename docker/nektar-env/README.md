@@ -24,3 +24,8 @@ or similar.
 ```sh
 docker build -t nektarpp/nektar-env -f Dockerfile .
 ```
+
+# Other environment images
+
+The other dockerfiles for different operating systems and package lists are used
+to provide environment images for the CI system. See .gitlab-ci.yml for details.

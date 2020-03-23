@@ -105,14 +105,13 @@ IF(NEKTAR_USE_CFI)
         CADSystem/CFI/CADVertCFI.h
         CADSystem/CFI/CADCurveCFI.h
         CADSystem/CFI/CADSurfCFI.h
-        CFIMesh/CFIMesh.h
+        CADSystem/CFI/CADElementCFI.h
     )
     SET(NEKMESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
         CADSystem/CFI/CADSystemCFI.cpp
         CADSystem/CFI/CADVertCFI.cpp
         CADSystem/CFI/CADCurveCFI.cpp
         CADSystem/CFI/CADSurfCFI.cpp
-        CFIMesh/CFIMesh.cpp
     )
 ENDIF()
 
@@ -133,8 +132,8 @@ IF(NEKTAR_USE_MESHGEN)
     ADD_DEPENDENCIES(NekMeshUtils oce-0.17 tetgen-1.5 triangle-1.6)
 
     IF(NEKTAR_USE_CFI)
-	TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${CFI_LIBRARY_API})
-	TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${CFI_LIBRARY_CXX})
+	TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${CFI_LIBRARY_API})
+	TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${CFI_LIBRARY_CXX})
     ENDIF()
 ENDIF()
 

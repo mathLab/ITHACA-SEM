@@ -1088,7 +1088,7 @@ void CouplingCwipi::DumpRawFields(const NekDouble time,
     LibUtilities::Timer timer1;
     timer1.Start();
 
-#ifdef _WIN32
+#if (defined _WIN32 && _MSC_VER < 1900)
     // We need this to make sure boost::format has always
     // two digits in the exponents of Scientific notation.
     unsigned int old_exponent_format;

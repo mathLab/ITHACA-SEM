@@ -143,8 +143,7 @@ namespace Nektar
                 m_velocity,
                 m_advObject);
 
-            m_extrapolation->SubSteppingTimeIntegration(
-                m_intScheme->GetIntegrationMethod(), m_intScheme);
+            m_extrapolation->SubSteppingTimeIntegration(m_intScheme);
             m_extrapolation->GenerateHOPBCMap(m_session);
         }
     }
@@ -490,12 +489,10 @@ namespace Nektar
         SolverUtils::AddSummaryItem(s,
                 "Splitting Scheme", "Velocity correction (strong press. form)");
 
-        if (m_extrapolation->GetSubStepIntegrationMethod() !=
-            LibUtilities::eNoTimeIntegrationMethod)
+        if( m_extrapolation->GetSubStepName().size() )
         {
-            SolverUtils::AddSummaryItem(s, "Substepping",
-                             LibUtilities::TimeIntegrationMethodMap[
-                              m_extrapolation->GetSubStepIntegrationMethod()]);
+            SolverUtils::AddSummaryItem( s, "Substepping",
+                                         m_extrapolation->GetSubStepName() );
         }
 
         string dealias = m_homogen_dealiasing ? "Homogeneous1D" : "";

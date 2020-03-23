@@ -1,0 +1,12 @@
+FROM %%BASE_IMAGE%%:env-buster-default
+
+USER root
+COPY docker/nektar-env/buster_documentation_packages.txt packages.txt
+
+RUN echo "deb http://deb.debian.org/debian buster non-free" > \
+        /etc/apt/sources.list.d/debian-non-free.list && \
+        apt-get update && \
+        apt-get install -y $(cat packages.txt) \
+        && rm -rf /var/lib/apt/lists/*
+
+USER nektar:nektar

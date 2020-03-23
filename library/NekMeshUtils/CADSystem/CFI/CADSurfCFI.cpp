@@ -65,7 +65,7 @@ Array<OneD, NekDouble> CADSurfCFI::GetBounds()
 }
 
 void CADSurfCFI::GetBounds(NekDouble &umin, NekDouble &umax,
-                                   NekDouble &vmin, NekDouble &vmax)
+                           NekDouble &vmin, NekDouble &vmax)
 {
     cfi::UVBox bx = m_cfiSurface->calcUVBox();
     umin          = bx.uLower;

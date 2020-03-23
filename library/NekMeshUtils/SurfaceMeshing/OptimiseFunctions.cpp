@@ -93,6 +93,7 @@ Array<OneD, NekDouble> OptiEdge::Getxi()
             break;
 
         case CADType::eVert:
+        case CADType::eOther:
             ASSERTL0(false, "Should not be able to pass vert");
     }
     return xi;
@@ -130,6 +131,7 @@ Array<OneD, NekDouble> OptiEdge::Getli()
             break;
 
         case CADType::eVert:
+        case CADType::eOther:
             ASSERTL0(false, "Should not be able to pass vert");
     }
     return li;
@@ -167,6 +169,7 @@ Array<OneD, NekDouble> OptiEdge::Getui()
             break;
 
         case CADType::eVert:
+        case CADType::eOther:
             ASSERTL0(false, "Should not be able to pass vert");
     }
     return ui;

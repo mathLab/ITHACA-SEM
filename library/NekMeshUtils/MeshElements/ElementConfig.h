@@ -72,6 +72,8 @@ struct ElmtConfig
     {
     }
 
+    ElmtConfig& operator=(const ElmtConfig &) = default;
+
     /// Element type (e.g. triangle, quad, etc).
     LibUtilities::ShapeType m_e;
     /// Denotes whether the element contains face nodes. For 2D elements, if

@@ -1,0 +1,12 @@
+OCE-devel
+arpack-devel
+boost-devel
+boost-python-devel
+hdf5-openmpi-devel
+numpy
+openmpi-devel
+petsc-devel
+ptscotch-openmpi-devel
+python-devel
+scotch-devel
+tetgen-devel

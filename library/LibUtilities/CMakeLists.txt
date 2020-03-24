@@ -26,6 +26,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/Timer.h
     ./BasicUtils/RawType.hpp
     ./BasicUtils/SessionReader.h
+    ./BasicUtils/CheckedCast.hpp
     ./BasicUtils/ShapeType.hpp
     ./BasicUtils/SharedArray.hpp
     ./BasicUtils/Thread.h

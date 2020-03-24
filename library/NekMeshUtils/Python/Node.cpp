@@ -68,6 +68,10 @@ void export_Node()
         .def("Distance", &Node::Distance)
         .def("GetLoc", &Node::GetLoc)
         .def("abs2", &Node::abs2)
+        .def_readwrite("x", &Node::m_x)
+        .def_readwrite("y", &Node::m_y)
+        .def_readwrite("z", &Node::m_z)
+        .def_readwrite("id", &Node::m_id)
         ;
 
     // Create converter for NodeSet

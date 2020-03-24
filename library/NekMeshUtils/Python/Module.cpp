@@ -74,7 +74,7 @@ struct ModuleWrap : public Module, public py::wrapper<Module>
  * @param reprocess  If true then edges will be reprocessed (i.e. match 1D
  *                   elements to 2D element edges to construct boundaries).
  */
-void Module_ProcessEdges(std::shared_ptr<Module> &mod,
+void Module_ProcessEdges(std::shared_ptr<Module> mod,
                          bool reprocess = true)
 {
     mod->ProcessEdges(reprocess);
@@ -87,7 +87,7 @@ void Module_ProcessEdges(std::shared_ptr<Module> &mod,
  * @param reprocess  If true then faces will be reprocessed (i.e. match 2D
  *                   elements to 3D element faces to construct boundaries).
  */
-void Module_ProcessFaces(std::shared_ptr<Module> &mod,
+void Module_ProcessFaces(std::shared_ptr<Module> mod,
                          bool reprocess = true)
 {
     mod->ProcessFaces(reprocess);
@@ -220,6 +220,8 @@ void export_Module()
     // Export ModuleType enum.
     NEKPY_WRAP_ENUM(ModuleType, ModuleTypeMap);
 
+    py::implicitly_convertible<std::shared_ptr<ModuleWrap>,
+                               std::shared_ptr<Module>>();
     // Wrapper for the Module class. Note that since Module contains a pure
     // virtual function, we need the ModuleWrap helper class to handle this for
     // us. In the lightweight wrappers above, we therefore need to ensure we're
@@ -245,9 +247,9 @@ void export_Module()
         // Mesh processing functions.
         .def("ProcessVertices", &Module::ProcessVertices)
         .def("ProcessEdges", Module_ProcessEdges, (
-                 py::arg("mesh"), py::arg("reprocessEdges") = true))
+                 py::arg("reprocessEdges") = true))
         .def("ProcessFaces", Module_ProcessFaces, (
-                 py::arg("mesh"), py::arg("reprocessFaces") = true))
+                 py::arg("reprocessFaces") = true))
         .def("ProcessElements", &Module::ProcessElements)
         .def("ProcessComposites", &Module::ProcessComposites)
         .def("ClearElementLinks", &Module::ClearElementLinks)

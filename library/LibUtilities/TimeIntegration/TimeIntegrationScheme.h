@@ -206,7 +206,7 @@ protected:
     LUE TimeIntegrationScheme(const TimeIntegrationScheme &in)
     {
         boost::ignore_unused(in);
-        
+
         NEKERROR(ErrorUtil::efatal, "Copy Constructor for the "
                                     "TimeIntegrationScheme class should not be "
                                     "called");
@@ -214,12 +214,12 @@ protected:
 
     inline int GetFirstDim(ConstTripleArray &y) const
     {
-        return y[0].num_elements();
+        return y[0].size();
     }
 
     inline int GetSecondDim(ConstTripleArray &y) const
     {
-        return y[0][0].num_elements();
+        return y[0][0].size();
     }
 
 }; // end class TimeIntegrationScheme

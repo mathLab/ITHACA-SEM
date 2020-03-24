@@ -557,7 +557,7 @@ void FieldIOXml::v_Import(const std::string &infilename,
                 }
             }
 
-            for (i = 0; i < ElementIDs.num_elements(); ++i)
+            for (i = 0; i < ElementIDs.size(); ++i)
             {
                 auto it = FileIDs.find(ElementIDs[i]);
                 if (it != FileIDs.end())

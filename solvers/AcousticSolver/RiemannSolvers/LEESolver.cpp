@@ -57,7 +57,7 @@ void LEESolver::v_Solve(const int nDim,
                         const Array<OneD, const Array<OneD, NekDouble>> &Bwd,
                         Array<OneD, Array<OneD, NekDouble>> &flux)
 {
-    int nTracePts = Fwd[0].num_elements();
+    int nTracePts = Fwd[0].size();
 
     Array<OneD, Array<OneD, NekDouble>> bfFwd(nDim + 3);
     Array<OneD, Array<OneD, NekDouble>> bfBwd(nDim + 3);

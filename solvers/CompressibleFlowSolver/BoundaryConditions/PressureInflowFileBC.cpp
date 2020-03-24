@@ -54,7 +54,7 @@ PressureInflowFileBC::PressureInflowFileBC(const LibUtilities::SessionReaderShar
            const int cnt)
     : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
-    int nvariables = m_fields.num_elements();
+    int nvariables = m_fields.size();
     // Loop over Boundary Regions for PressureInflowFileBC
     m_fieldStorage = Array<OneD, Array<OneD, NekDouble> > (nvariables);
 
@@ -79,7 +79,7 @@ void PressureInflowFileBC::v_Apply(
 
     int i, j;
     int nTracePts = m_fields[0]->GetTrace()->GetNpoints();
-    int nVariables = physarray.num_elements();
+    int nVariables = physarray.size();
     int nDimensions = m_spacedim;
 
     const Array<OneD, const int> &traceBndMap

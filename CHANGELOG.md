@@ -6,6 +6,8 @@ v5.1.0
 **Library**
 - Refactored time integration code using factory pattern (!1034)
 - Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
+- Fix type consistency and real comparison in SharedArray.hpp, replaced
+  num_elements with size() (!1127)
 
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)

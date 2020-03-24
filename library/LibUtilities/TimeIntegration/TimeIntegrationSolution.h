@@ -114,11 +114,11 @@ public:
 
     inline int GetFirstDim() const
     {
-        return m_solVector[0].num_elements();
+        return m_solVector[0].size();
     }
     inline int GetSecondDim() const
     {
-        return m_solVector[0][0].num_elements();
+        return m_solVector[0][0].size();
     }
 
     // Return the number of entries in the solution vector that correspond to

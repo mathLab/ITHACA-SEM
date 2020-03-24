@@ -56,6 +56,9 @@ namespace Nektar
         // Tolerances for mesh generation and CAD handling
         static const NekDouble GeomTol = 1E-2;
         static const NekDouble CoinTol = 1E-6;
+
+        // Factor for tolerance for floating point comparison
+        static const unsigned int kNekFloatCompFact = 4;
     }
 } //end of namespace
 

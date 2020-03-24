@@ -129,7 +129,7 @@ void OutputVtk::OutputFromPts(po::variables_map &vm)
     int numBlocks = 0;
     for (i = 0; i < ptsConn.size(); ++i)
     {
-        numBlocks += ptsConn[i].num_elements() / nvert;
+        numBlocks += ptsConn[i].size() / nvert;
     }
 
     // write out pieces of data.
@@ -164,7 +164,7 @@ void OutputVtk::OutputFromPts(po::variables_map &vm)
     int cnt = 1;
     for (i = 0; i < ptsConn.size(); ++i)
     {
-        for (j = 0; j < ptsConn[i].num_elements(); ++j)
+        for (j = 0; j < ptsConn[i].size(); ++j)
         {
             outfile << ptsConn[i][j] << " ";
             if ((!(cnt % nvert)) && cnt)

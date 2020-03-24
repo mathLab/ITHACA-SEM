@@ -542,7 +542,7 @@ void LinearElasticSystem::v_DoSolve()
             DNekMat jacIdeal(nVel, nVel, 0.0, eFULL);
             DNekMat metric  (nVel, nVel, 0.0, eFULL);
 
-            for (j = 0; j < deriv[0][0].num_elements(); ++j)
+            for (j = 0; j < deriv[0][0].size(); ++j)
             {
                 for (k = 0; k < nVel; ++k)
                 {
@@ -592,7 +592,7 @@ void LinearElasticSystem::v_DoSolve()
                 }
             }
 
-            if (deriv[0][0].num_elements() != exp->GetTotPoints())
+            if (deriv[0][0].size() != exp->GetTotPoints())
             {
                 Array<OneD, NekDouble> tmp;
                 for (k = 0; k < nVel; ++k)
@@ -651,8 +651,8 @@ void LinearElasticSystem::v_DoSolve()
         // the comment above.
         for (i = 0; i < m_fields[nv]->GetExpSize(); ++i)
         {
-            int nBnd   = m_bmap[i].num_elements();
-            int nInt   = m_imap[i].num_elements();
+            int nBnd   = m_bmap[i].size();
+            int nInt   = m_imap[i].size();
             int offset = m_fields[nv]->GetCoeff_Offset(i);
 
             for (j = 0; j < nBnd; ++j)
@@ -707,7 +707,7 @@ void LinearElasticSystem::v_DoSolve()
         const Array<OneD, const int> &bndMap
             = m_assemblyMap->GetBndCondCoeffsToGlobalCoeffsMap();
 
-        for (i = 0; i < bndCondExp.num_elements(); ++i)
+        for (i = 0; i < bndCondExp.size(); ++i)
         {
             if (m_fields[nv]->GetBndConditions()[i]->GetBoundaryConditionType()
                 == SpatialDomains::eDirichlet)
@@ -738,7 +738,7 @@ void LinearElasticSystem::v_DoSolve()
     m_assemblyMap->Assemble(forCoeffs, rhs);
 
     // Negate RHS to be consistent with matrix definition.
-    Vmath::Neg(rhs.num_elements(), rhs, 1);
+    Vmath::Neg(rhs.size(), rhs, 1);
 
     // Solve.
     linSys->Solve(rhs, inout, m_assemblyMap);
@@ -756,8 +756,8 @@ void LinearElasticSystem::v_DoSolve()
     {
         for (i = 0; i < m_fields[nv]->GetExpSize(); ++i)
         {
-            int nBnd   = m_bmap[i].num_elements();
-            int nInt   = m_imap[i].num_elements();
+            int nBnd   = m_bmap[i].size();
+            int nInt   = m_imap[i].size();
             int offset = m_fields[nv]->GetCoeff_Offset(i);
 
             for (j = 0; j < nBnd; ++j)
@@ -915,7 +915,7 @@ void LinearElasticSystem::v_ExtraFldOutput(
     const int nVel    = m_fields[0]->GetCoordim(0);
     const int nCoeffs = m_fields[0]->GetNcoeffs();
 
-    if (m_temperature.num_elements() == 0)
+    if (m_temperature.size() == 0)
     {
         return;
     }
@@ -929,7 +929,7 @@ void LinearElasticSystem::v_ExtraFldOutput(
             "ThermStressDiv" + boost::lexical_cast<std::string>(i));
     }
 
-    if (m_stress.num_elements() == 0)
+    if (m_stress.size() == 0)
     {
         return;
     }

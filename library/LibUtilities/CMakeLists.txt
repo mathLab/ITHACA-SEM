@@ -37,7 +37,6 @@ SET(BasicUtilsHeaders
 )
 
 SET(BasicUtilsSources
-    ./BasicUtils/ArrayEqualityComparison.cpp
     ./BasicUtils/CompressData.cpp
     ./BasicUtils/CsvIO.cpp
     ./BasicUtils/Equation.cpp

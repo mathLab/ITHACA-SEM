@@ -156,7 +156,7 @@ StdRegions::Orientation QuadGeom::GetFaceOrientation(
     if(doRot)
     {
         PointGeom rotPt;
-        
+
         for (i = 0; i < 4; ++i)
         {
             rotPt.Rotate((*face1[i]), dir, angle);
@@ -172,9 +172,9 @@ StdRegions::Orientation QuadGeom::GetFaceOrientation(
     }
     else
     {
-        
+
         NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
-        
+
         // For periodic faces, we calculate the vector between the centre
         // points of the two faces. (For connected faces this will be
         // zero). We can then use this to determine alignment later in the
@@ -469,8 +469,8 @@ NekDouble QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
 
         int min_i = Vmath::Imin(npts, tmpx, 1);
 
-        Lcoords[0] = za[min_i % za.num_elements()];
-        Lcoords[1] = zb[min_i / za.num_elements()];
+        Lcoords[0] = za[min_i % za.size()];
+        Lcoords[1] = zb[min_i / za.size()];
 
         // Perform newton iteration to find local coordinates
         NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords, resid);

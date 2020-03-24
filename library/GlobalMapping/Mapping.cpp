@@ -78,7 +78,7 @@ Mapping::Mapping(const LibUtilities::SessionReaderSharedPtr& pSession,
         case MultiRegions::e3DH2D:
         {
             m_nConvectiveFields = 3;
-        }                    
+        }
         break;
 
         default:
@@ -114,7 +114,7 @@ void Mapping::v_InitObject(
         m_coords[i]    = Array<OneD, NekDouble> (phystot);
         m_coordsVel[i] = Array<OneD, NekDouble> (phystot);
         coords[i]      = Array<OneD, NekDouble> (phystot);
-    }      
+    }
 
     // Check if mapping is defined as time-dependent
     const TiXmlElement* timeDep = pMapping->
@@ -130,7 +130,7 @@ void Mapping::v_InitObject(
         m_timeDependent     = false;
     }
 
-    // Load coordinates   
+    // Load coordinates
     string fieldNames[3] = {"x", "y", "z"};
     const TiXmlElement* funcNameElmt = pMapping->FirstChildElement("COORDS");
     if (funcNameElmt)
@@ -142,7 +142,7 @@ void Mapping::v_InitObject(
         // Get coordinates in the domain
         m_fields[0]->GetCoords(coords[0], coords[1], coords[2]);
 
-        std::string s_FieldStr; 
+        std::string s_FieldStr;
         // Check if function from session file defines each component
         //      and evaluate them, otherwise use trivial transformation
         for(int i = 0; i < 3; i++)
@@ -187,7 +187,7 @@ void Mapping::v_InitObject(
         ASSERTL0(m_session->DefinesFunction(m_velFuncName),
                 "Function '" + m_velFuncName + "' not defined.");
 
-        std::string s_FieldStr; 
+        std::string s_FieldStr;
         // Check if function from session file defines each component
         //      and evaluate them, otherwise use 0
         for(int i = 0; i < 3; i++)
@@ -195,7 +195,7 @@ void Mapping::v_InitObject(
             s_FieldStr = velFieldNames[i];
             if ( m_session->DefinesFunction(m_velFuncName, s_FieldStr))
             {
-                EvaluateFunction(m_fields, m_session, s_FieldStr, 
+                EvaluateFunction(m_fields, m_session, s_FieldStr,
                                     m_coordsVel[i], m_velFuncName);
                 if ( i==2 && m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
                 {
@@ -217,7 +217,7 @@ void Mapping::v_InitObject(
             Vmath::Zero(phystot, m_coordsVel[i], 1);
         }
     }
-    
+
     // Initialise workspace variables
     int nvel = m_nConvectiveFields;
     m_wk1 = Array<OneD, Array<OneD, NekDouble> > (nvel*nvel);
@@ -258,12 +258,12 @@ void Mapping::ReplaceField(
 
 /**
  * This function is responsible for loading the Mapping, guaranteeing that a
- * single instance of this class exists. When it is first called, it creates a 
- * Mapping and returns a pointer to it. On subsequent calls, it just returns 
+ * single instance of this class exists. When it is first called, it creates a
+ * Mapping and returns a pointer to it. On subsequent calls, it just returns
  * the pointer.
  * @param pSession Session reader object
  * @param pFields  Fields which will be used by the Mapping
- * @return Pointer to the Mapping 
+ * @return Pointer to the Mapping
  */
 MappingSharedPtr Mapping::Load(
                     const LibUtilities::SessionReaderSharedPtr& pSession,
@@ -274,7 +274,7 @@ MappingSharedPtr Mapping::Load(
         TiXmlElement* vMapping = NULL;
         string vType;
         if (pSession->DefinesElement("Nektar/Mapping"))
-        {                
+        {
             vMapping = pSession->GetElement("Nektar/Mapping");
             vType = vMapping->Attribute("TYPE");
             m_isDefined = true;
@@ -302,7 +302,7 @@ MappingSharedPtr Mapping::Load(
  * @param fieldMetaDataMap Metadata of the output file
  * @param outname          Name of the output file
  */
-void Mapping::Output( 
+void Mapping::Output(
             LibUtilities::FieldMetaDataMap  &fieldMetaDataMap,
             const std::string                    &outname)
 {
@@ -344,7 +344,7 @@ void Mapping::Output(
                 {
                     // Could do a search here to find correct variable
                     FieldDef[i]->m_fields.push_back(fieldNames[j]);
-                    m_fields[0]->AppendFieldData(FieldDef[i], FieldData[i], 
+                    m_fields[0]->AppendFieldData(FieldDef[i], FieldData[i],
                                                                 fieldcoeffs);
                 }
             }
@@ -352,16 +352,16 @@ void Mapping::Output(
             {
                 //copy coordinates velocity Data into FieldData and set variable
                 for(int j = 0; j < expdim; ++j)
-                {                
-                    m_fields[0]->FwdTrans_IterPerExp(m_coordsVel[j], 
+                {
+                    m_fields[0]->FwdTrans_IterPerExp(m_coordsVel[j],
                                                         fieldcoeffs);
 
                     for(int i = 0; i < FieldDef.size(); ++i)
                     {
                         // Could do a search here to find correct variable
                         FieldDef[i]->m_fields.push_back(velFieldNames[j]);
-                        m_fields[0]->AppendFieldData(FieldDef[i], 
-                                                    FieldData[i], 
+                        m_fields[0]->AppendFieldData(FieldDef[i],
+                                                    FieldData[i],
                                                     fieldcoeffs);
                     }
                 }
@@ -415,7 +415,7 @@ void Mapping::EvaluateFunction(
              "Function '" + pFunctionName + "' does not exist.");
 
     unsigned int nq = pFields[0]->GetNpoints();
-    if (pArray.num_elements() != nq)
+    if (pArray.size() != nq)
     {
         pArray = Array<OneD, NekDouble> (nq);
     }
@@ -443,7 +443,7 @@ void Mapping::EvaluateFunction(
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
         std::vector<std::vector<NekDouble> > FieldData;
         Array<OneD, NekDouble> vCoeffs(pFields[0]->GetNcoeffs());
-        Vmath::Zero(vCoeffs.num_elements(), vCoeffs, 1);
+        Vmath::Zero(vCoeffs.size(), vCoeffs, 1);
 
         LibUtilities::FieldIOSharedPtr fld =
             LibUtilities::FieldIO::CreateForFile(pSession, filename);
@@ -480,10 +480,10 @@ void Mapping::EvaluateFunction(
 /**
  * This function converts a contravariant vector in transformed space
  * \f$v^{j}\f$ to the corresponding \f$\bar{v}^{i}\f$ in Cartesian (physical)
- * space using the relation 
+ * space using the relation
  * \f[\bar{v}^{i} = \frac{\partial \bar{x}^i}{\partial x^j}v^{j}\f]
- *  
- * @param inarray  Components of the vector in transformed space (\f$v^{j}\f$) 
+ *
+ * @param inarray  Components of the vector in transformed space (\f$v^{j}\f$)
  * @param outarray Components of the vector in Cartesian space (\f$\bar{v}^{i}\f$)
  */
 void Mapping::ContravarToCartesian(
@@ -510,10 +510,10 @@ void Mapping::ContravarToCartesian(
 /**
  * This function converts a covariant vector in transformed space
  * \f$v_{j}\f$ to the corresponding \f$\bar{v}_{i}\f$ in Cartesian (physical)
- * space using the relation 
+ * space using the relation
  * \f[\bar{v}_{i} = \frac{\partial x^j}{\partial \bar{x}^i}v_{j}\f]
- *  
- * @param inarray  Components of the vector in transformed space (\f$v_{j}\f$) 
+ *
+ * @param inarray  Components of the vector in transformed space (\f$v_{j}\f$)
  * @param outarray Components of the vector in Cartesian space (\f$\bar{v}_{i}\f$)
  */
 void Mapping::CovarToCartesian(
@@ -540,10 +540,10 @@ void Mapping::CovarToCartesian(
 /**
  * This function converts a contravariant vector in Cartesian space
  * \f$\bar{v}^{i}\f$ to the corresponding \f$v^{j}\f$ in transformed
- * space using the relation 
+ * space using the relation
  * \f[v^{j} = \frac{\partial x^j}{\partial \bar{x}^i}\bar{v}^{i}\f]
- *  
- * @param inarray  Components of the vector in Cartesian space (\f$\bar{v}^{i}\f$) 
+ *
+ * @param inarray  Components of the vector in Cartesian space (\f$\bar{v}^{i}\f$)
  * @param outarray Components of the vector in transformed space (\f$v^{j}\f$)
  */
 void Mapping::ContravarFromCartesian(
@@ -570,10 +570,10 @@ void Mapping::ContravarFromCartesian(
 /**
  * This function converts a covariant vector in Cartesian space
  * \f$\bar{v}_{i}\f$ to the corresponding \f$v_{j}\f$ in transformed
- * space using the relation 
+ * space using the relation
  * \f[\bar{v}_{j} = \frac{\partial \bar{x}^i}{\partial x^j}v_{i}\f]
- *  
- * @param inarray  Components of the vector in Cartesian space (\f$\bar{v}_{i}\f$) 
+ *
+ * @param inarray  Components of the vector in Cartesian space (\f$\bar{v}_{i}\f$)
  * @param outarray Components of the vector in transformed space (\f$v_{j}\f$)
  */
 void Mapping::CovarFromCartesian(
@@ -603,8 +603,8 @@ void Mapping::CovarFromCartesian(
  *  according to the relation
  * \f[v_{j} = g_{ij}v^{i}\f]
  * where \f$g_{ij}\f$ is the metric tensor.
- *  
- * @param inarray  Components of the contravariant vector \f$v^{i}\f$ 
+ *
+ * @param inarray  Components of the contravariant vector \f$v^{i}\f$
  * @param outarray Components of the covariant vector \f$v_{j}\f$
  */
 void Mapping::LowerIndex(
@@ -634,8 +634,8 @@ void Mapping::LowerIndex(
  *  according to the relation
  * \f[v^{i} = g^{ij}v_{j}\f]
  * where \f$g^{ij}\f$ is the inverse of the metric tensor.
- *  
- * @param inarray  Components of the contravariant vector \f$v^{i}\f$ 
+ *
+ * @param inarray  Components of the contravariant vector \f$v^{i}\f$
  * @param outarray Components of the covariant vector \f$v_{j}\f$
  */
 void Mapping::RaiseIndex(
@@ -710,7 +710,7 @@ void Mapping::v_DotGradJacobian(
         {
             m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[i],
                                     Jac, wk);
-            Vmath::Vvtvp(physTot, inarray[i], 1, wk, 1, 
+            Vmath::Vvtvp(physTot, inarray[i], 1, wk, 1,
                                     outarray, 1, outarray, 1);
         }
         m_fields[0]->SetWaveSpace(wavespace);
@@ -774,7 +774,7 @@ void Mapping::v_Divergence(
 
     // Set wavespace to false and store current value
     bool wavespace = m_fields[0]->GetWaveSpace();
-    m_fields[0]->SetWaveSpace(false);    
+    m_fields[0]->SetWaveSpace(false);
 
     // Get Mapping Jacobian
     Array<OneD, NekDouble> Jac(physTot, 0.0);
@@ -786,7 +786,7 @@ void Mapping::v_Divergence(
         m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[i],
                                wk, wk);  // (J*Ui)_i
         Vmath::Vadd(physTot, wk, 1, outarray, 1, outarray, 1);
-    }        
+    }
     Vmath::Vdiv(physTot,outarray,1,Jac,1,outarray,1); //1/J*(J*Ui)_i
 
     m_fields[0]->SetWaveSpace(wavespace);
@@ -807,7 +807,7 @@ void Mapping::v_VelocityLaplacian(
     m_fields[0]->SetWaveSpace(false);
 
     // Calculate vector gradient wk2 = u^i_(,k) = du^i/dx^k + {i,jk}*u^j
-    ApplyChristoffelContravar(inarray, m_wk1);        
+    ApplyChristoffelContravar(inarray, m_wk1);
     for (int i=0; i< nvel; i++)
     {
         if(nvel == 2)
@@ -850,7 +850,7 @@ void Mapping::v_VelocityLaplacian(
     //      d(A^(ij) - alpha*du^i/dx^j)/d(x^j)
     for (int i=0; i< nvel; i++)
     {
-        outarray[i] = Array<OneD, NekDouble>(physTot,0.0); 
+        outarray[i] = Array<OneD, NekDouble>(physTot,0.0);
         for (int j=0; j< nvel; j++)
         {
             Vmath::Smul(physTot, alpha, m_wk2[i*nvel+j], 1,
@@ -895,7 +895,7 @@ void Mapping::v_VelocityLaplacian(
         }
     }
 
-    // Restore value of wavespace 
+    // Restore value of wavespace
     m_fields[0]->SetWaveSpace(wavespace);
 }
 
@@ -908,7 +908,7 @@ void Mapping::v_gradgradU(
 
     // Declare variables
     outarray = Array<OneD, Array<OneD, NekDouble> > (nvel*nvel*nvel);
-    Array<OneD, Array<OneD, NekDouble> > tmp(nvel);   
+    Array<OneD, Array<OneD, NekDouble> > tmp(nvel);
     for (int i=0; i< nvel*nvel*nvel; i++)
     {
         outarray[i] = Array<OneD, NekDouble>(physTot,0.0);
@@ -919,7 +919,7 @@ void Mapping::v_gradgradU(
     m_fields[0]->SetWaveSpace(false);
 
     // Calculate vector gradient u^i_(,j) = du^i/dx^j + {i,pj}*u^p
-    ApplyChristoffelContravar(inarray, m_wk1);        
+    ApplyChristoffelContravar(inarray, m_wk1);
     for (int i=0; i< nvel; i++)
     {
         if (nvel == 2)
@@ -948,18 +948,18 @@ void Mapping::v_gradgradU(
 
     // Step 1 : d(u^i_,j))/d(x^k)
     for (int i=0; i< nvel; i++)
-    { 
+    {
         for (int j=0; j< nvel; j++)
         {
             if (nvel == 2)
             {
-                m_fields[0]->PhysDeriv(m_wk1[i*nvel+j], 
+                m_fields[0]->PhysDeriv(m_wk1[i*nvel+j],
                                         outarray[i*nvel*nvel+j*nvel+0],
                                         outarray[i*nvel*nvel+j*nvel+1]);
             }
             else
             {
-                m_fields[0]->PhysDeriv(m_wk1[i*nvel+j], 
+                m_fields[0]->PhysDeriv(m_wk1[i*nvel+j],
                                         outarray[i*nvel*nvel+j*nvel+0],
                                         outarray[i*nvel*nvel+j*nvel+1],
                                         outarray[i*nvel*nvel+j*nvel+2]);
@@ -1005,7 +1005,7 @@ void Mapping::v_gradgradU(
         }
     }
 
-    // Restore value of wavespace 
+    // Restore value of wavespace
     m_fields[0]->SetWaveSpace(wavespace);
 }
 
@@ -1021,7 +1021,7 @@ void Mapping::v_CurlCurlField(
     bool wavespace = m_fields[0]->GetWaveSpace();
     m_fields[0]->SetWaveSpace(false);
 
-    // For implicit treatment of viscous terms, we want the generalized 
+    // For implicit treatment of viscous terms, we want the generalized
     //   curlcurl and for explicit treatment, we want the cartesian one.
     if (generalized)
     {
@@ -1043,7 +1043,7 @@ void Mapping::v_CurlCurlField(
                 RaiseIndex(tmp, m_tmp);
                 for (int p=0; p<nvel; ++p)
                 {
-                   Vmath::Vcopy(physTot, m_tmp[p], 1, 
+                   Vmath::Vcopy(physTot, m_tmp[p], 1,
                                          ddU[i*nvel*nvel+p*nvel+k], 1);
                 }
             }
@@ -1068,7 +1068,7 @@ void Mapping::v_CurlCurlField(
         m_fields[0]->CurlCurl(inarray, outarray);
     }
 
-    // Restore value of wavespace 
+    // Restore value of wavespace
     m_fields[0]->SetWaveSpace(wavespace);
 }
 
@@ -1076,8 +1076,8 @@ void Mapping::v_UpdateBCs( const NekDouble time)
 {
     int physTot = m_fields[0]->GetTotPoints();
     int nvel = m_nConvectiveFields;
-    int nfields = m_fields.num_elements();
-    int nbnds    = m_fields[0]->GetBndConditions().num_elements();
+    int nfields = m_fields.size();
+    int nbnds    = m_fields[0]->GetBndConditions().size();
 
     // Declare variables
     Array<OneD, const SpatialDomains::BoundaryConditionShPtr> BndConds;
@@ -1105,7 +1105,7 @@ void Mapping::v_UpdateBCs( const NekDouble time)
     GetCoordVelocity(tmp);
     ContravarFromCartesian(tmp, coordVel);
 
-    // Get  Cartesian coordinates for evaluating boundary conditions    
+    // Get  Cartesian coordinates for evaluating boundary conditions
     Array<OneD, Array<OneD, NekDouble> > coords(3);
     for (int dir=0; dir < 3; dir++)
     {
@@ -1121,7 +1121,7 @@ void Mapping::v_UpdateBCs( const NekDouble time)
         {
             BndConds   = m_fields[i]->GetBndConditions();
             BndExp     = m_fields[i]->GetBndCondExpansions();
-            if ( BndConds[n]->GetBoundaryConditionType() == 
+            if ( BndConds[n]->GetBoundaryConditionType() ==
                                 SpatialDomains::eDirichlet)
             {
                 isDirichlet[i] = true;
@@ -1132,7 +1132,7 @@ void Mapping::v_UpdateBCs( const NekDouble time)
                     for (int j = 0; j < nvel; ++j)
                     {
                         ASSERTL0(m_fields[j]->GetBndConditions()[n]->
-                                              GetBoundaryConditionType() == 
+                                              GetBoundaryConditionType() ==
                                                 SpatialDomains::eDirichlet,
                             "Mapping only supported when all velocity components have the same type of boundary conditions");
                     }
@@ -1141,7 +1141,7 @@ void Mapping::v_UpdateBCs( const NekDouble time)
                 ASSERTL0( !BndConds[n]->IsTimeDependent(),
                     "Time-dependent Dirichlet boundary conditions not supported with mapping yet.");
 
-                // Get boundary condition 
+                // Get boundary condition
                 LibUtilities::Equation condition =
                     std::static_pointer_cast<
                         SpatialDomains::DirichletBoundaryCondition>
@@ -1201,14 +1201,14 @@ void Mapping::v_UpdateBCs( const NekDouble time)
     }
 
     // Finally, perform FwdTrans in all fields
-    for (int i = 0; i < m_fields.num_elements(); ++i)
+    for (int i = 0; i < m_fields.size(); ++i)
     {
         // Get boundary condition information
         BndConds   = m_fields[i]->GetBndConditions();
         BndExp     = m_fields[i]->GetBndCondExpansions();
-        for(int n = 0 ; n < BndConds.num_elements(); ++n)
-        {   
-            if ( BndConds[n]->GetBoundaryConditionType() == 
+        for(int n = 0 ; n < BndConds.size(); ++n)
+        {
+            if ( BndConds[n]->GetBoundaryConditionType() ==
                     SpatialDomains::eDirichlet)
             {
                 if( BndConds[n]->GetUserDefined() =="" ||
@@ -1234,7 +1234,7 @@ void Mapping::v_UpdateMapping(
 {
     if (m_fromFunction)
     {
-        std::string s_FieldStr; 
+        std::string s_FieldStr;
         string fieldNames[3] = {"x", "y", "z"};
         string velFieldNames[3] = {"vx", "vy", "vz"};
         // Check if function from session file defines each component
@@ -1256,7 +1256,7 @@ void Mapping::v_UpdateMapping(
             s_FieldStr = velFieldNames[i];
             if ( m_session->DefinesFunction(m_velFuncName, s_FieldStr))
              {
-                 EvaluateFunction(m_fields, m_session, s_FieldStr, 
+                 EvaluateFunction(m_fields, m_session, s_FieldStr,
                                      m_coordsVel[i], m_velFuncName, time);
                  if ( i==2 && m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
                  {

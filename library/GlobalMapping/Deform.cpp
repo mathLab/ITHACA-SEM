@@ -410,7 +410,7 @@ namespace GlobalMapping {
         }
 
         // Reset geometry information
-        for (i = 0; i < fields.num_elements(); ++i)
+        for (i = 0; i < fields.size(); ++i)
         {
             fields[i]->Reset();
         }

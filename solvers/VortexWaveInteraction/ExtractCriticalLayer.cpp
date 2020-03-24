@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Extract location of critical layer from streak file 
+// Description: Extract location of critical layer from streak file
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -40,36 +40,36 @@
 
 
 void Computestreakpositions(MultiRegions::ExpListSharedPtr &streak,
-                            Array<OneD, NekDouble> &xc,  
-                            Array<OneD, NekDouble> &yc, 
+                            Array<OneD, NekDouble> &xc,
+                            Array<OneD, NekDouble> &yc,
                             NekDouble cr,
-                            NekDouble trans); 
+                            NekDouble trans);
 
 int main(int argc, char *argv[])
 {
     int i,j;
     NekDouble cr = 0;
-    
+
     if(argc !=3)
     {
         fprintf(stderr,"Usage: ./ExtractCriticalLayer  meshfile fieldfile  \n");
         exit(1);
     }
-    
+
     //------------------------------------------------------------
-    // Create Session file. 
+    // Create Session file.
     LibUtilities::SessionReaderSharedPtr vSession
         = LibUtilities::SessionReader::CreateInstance(argc, argv);
     //-----------------------------------------------------------
-    
+
     //-------------------------------------------------------------
     // Read in mesh from input file
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);
     //------------------------------------------------------------
 
     //-------------------------------------------------------------
-    // Define Streak Expansion   
-    MultiRegions::ExpListSharedPtr streak;   
+    // Define Streak Expansion
+    MultiRegions::ExpListSharedPtr streak;
 
     streak = MemoryManager<MultiRegions::ExpList2D>
         ::AllocateSharedPtr(vSession,graphShPt);
@@ -94,17 +94,17 @@ int main(int argc, char *argv[])
                                     streak_field);
     }
     //----------------------------------------------
-    
+
     int npts;
     vSession->LoadParameter("NumCriticalLayerPts",npts,30);
     Array<OneD, NekDouble> x_c(npts);
-    Array<OneD, NekDouble> y_c(npts);       
+    Array<OneD, NekDouble> y_c(npts);
     NekDouble xc, yc;
-    
+
     NekDouble trans;
     vSession->LoadParameter("WidthOfLayers",trans,0.1);
 
-    Computestreakpositions(streak,x_c, y_c,cr,trans);    
+    Computestreakpositions(streak,x_c, y_c,cr,trans);
 
     cout << "# x_c y_c" << endl;
     for(i = 0; i < npts; ++i)
@@ -112,28 +112,28 @@ int main(int argc, char *argv[])
         fprintf(stdout,"%12.10lf %12.10lf \n",x_c[i],y_c[i]);
         //cout << x_c[i] << " " << y_c[i] << endl;
     }
-    
+
 }
 
 void Computestreakpositions(MultiRegions::ExpListSharedPtr &streak,
-                            Array<OneD, NekDouble> &xc,  
+                            Array<OneD, NekDouble> &xc,
                             Array<OneD, NekDouble> &yc,
                             NekDouble cr,
                             NekDouble trans)
 {
     int i;
-    int npts = xc.num_elements();
+    int npts = xc.size();
 
-    int nq = streak->GetTotPoints();	
+    int nq = streak->GetTotPoints();
     Array<OneD, NekDouble> derstreak(nq);
     Array<OneD, NekDouble> x(nq);
-    Array<OneD, NekDouble> y(nq);    
-    streak->GetCoords(x,y);         
+    Array<OneD, NekDouble> y(nq);
+    streak->GetCoords(x,y);
 
     streak->BwdTrans(streak->GetCoeffs(),streak->UpdatePhys());
     streak->PhysDeriv(MultiRegions::eY, streak->GetPhys(), derstreak);
 
-    // set intiial xc to be equispaced over mesh and yc to be zero 
+    // set intiial xc to be equispaced over mesh and yc to be zero
     NekDouble x_max = Vmath::Vmax(nq,x,1);
     NekDouble x_min = Vmath::Vmin(nq,x,1);
 
@@ -142,9 +142,9 @@ void Computestreakpositions(MultiRegions::ExpListSharedPtr &streak,
         xc[i]  = x_min + (x_max - x_min)*i/((NekDouble)(npts-1));
         yc[i] = 0.0;
     }
-    
-    
-    int elmtid, offset,cnt;    
+
+
+    int elmtid, offset,cnt;
     NekDouble U,dU;
     NekDouble F;
     NekDouble ConvTol  = 1e-9;
@@ -167,7 +167,7 @@ cout<<e<<endl;
         F = 1000;
         cnt = 0;
            	  int its=0;
-                  int  attempt=0;                 
+                  int  attempt=0;
 //cout<<"start guess:  x="<<xc[e]<<"    y="<<yc[e]<<endl;
 		   while( abs(F)> 0.000000001)
 		   {
@@ -176,8 +176,8 @@ cout<<e<<endl;
            	        offset = streak->GetPhys_Offset(elmtid);
 		   	U = streak->GetExp(elmtid)->PhysEvaluate(coord, streak->GetPhys() + offset);
 		   	dU  = streak->GetExp(elmtid)->PhysEvaluate(coord, derstreak + offset);
-		   	coord[1] = coord[1] - (U-cr)/dU;   
-		   	F = U-cr;   
+		   	coord[1] = coord[1] - (U-cr)/dU;
+		   	F = U-cr;
 		   	ASSERTL0( coord[0]==xc[e], " x coordinate must remain the same");
               	        //stvalues[e] = streak->GetExp(elmtid)->PhysEvaluate(coord, streak->GetPhys() +offset );
 //cout<<"elmtid="<<elmtid<<"  x="<<coord[0]<<"   y="<<coord[1]<<"    stvalue="<<U<<"   dU="<<dU<<endl;
@@ -194,7 +194,7 @@ cout<<e<<endl;
                              {
                                   coord[1] = ytmp -0.01;
                              }
-                             
+
                              attempt++;
                         }
                         else
@@ -220,7 +220,7 @@ cout<<e<<endl;
 
     // output to interface file
     FILE *fp = fopen("interfacedat.geo","w");
-    
+
     NekDouble y_max = Vmath::Vmax(nq,y,1);
     NekDouble y_min = Vmath::Vmin(nq,y,1);
 
@@ -233,7 +233,7 @@ cout<<e<<endl;
             cnt++,x_max,y_max);
     fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0}; \n",
             cnt++,x_min,y_max);
-    
+
     for(i = 0; i < npts; ++i)
     {
         fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0};  \n",
@@ -244,10 +244,10 @@ cout<<e<<endl;
 
     // output to interface_up file as bend of vertical shift and 45 degrees shift
     fp = fopen("interfacedat_up.geo","w");
-    
+
 
     NekDouble nx,ny,norm;
-    
+
     fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0};  \n",cnt++,xc[0],yc[0]+trans);
 
     for(i = 1; i < npts-1; ++i)
@@ -255,7 +255,7 @@ cout<<e<<endl;
         norm = sqrt((xc[i+1]-xc[i-1])*(xc[i+1]-xc[i-1])+(yc[i+1]-yc[i-1])*(yc[i+1]-yc[i-1]));
         nx = (yc[i-1]-yc[i+1])/norm;
         ny = (xc[i+1]-xc[i-1])/norm;
-        
+
         fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0};  \n",
                 cnt++,xc[i]+nx*trans,yc[i]+ny*trans);
     }
@@ -265,7 +265,7 @@ cout<<e<<endl;
 
     // output to interface_up file as bend of vertical shift and 45 degrees shift
     fp = fopen("interfacedat_dn.geo","w");
-    
+
     trans = -trans;
 
     fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0};  \n",cnt++,xc[0],yc[0]+trans);
@@ -275,7 +275,7 @@ cout<<e<<endl;
         norm = sqrt((xc[i+1]-xc[i-1])*(xc[i+1]-xc[i-1])+(yc[i+1]-yc[i-1])*(yc[i+1]-yc[i-1]));
         nx = (yc[i-1]-yc[i+1])/norm;
         ny = (xc[i+1]-xc[i-1])/norm;
-        
+
         fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0};  \n",
                 cnt++,xc[i]+nx*trans,yc[i]+ny*trans);
     }

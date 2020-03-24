@@ -159,7 +159,7 @@ public:
     }
     static size_t GetCount(const Array<OneD, elemT> &val)
     {
-        return val.num_elements();
+        return val.size();
     }
     const static bool IsVector = true;
 };

@@ -75,7 +75,7 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
 
-            if (outarray_d0.num_elements() > 0) // calculate du/dx_0
+            if (outarray_d0.size() > 0) // calculate du/dx_0
             {
                 DNekMatSharedPtr D0 = m_base[0]->GetD();
                 if(inarray.data() == outarray_d0.data())
@@ -94,7 +94,7 @@ namespace Nektar
                 }
             }
 
-            if (outarray_d1.num_elements() > 0) // calculate du/dx_1
+            if (outarray_d1.size() > 0) // calculate du/dx_1
             {
                 DNekMatSharedPtr D1 = m_base[1]->GetD();
                 if(inarray.data() == outarray_d1.data())
@@ -123,7 +123,7 @@ namespace Nektar
             ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
 
             LocCoordToLocCollapsed(coords,coll);
-            
+
             I[0] = m_base[0]->GetI(coll);
             I[1] = m_base[1]->GetI(coll+1);
 
@@ -131,7 +131,7 @@ namespace Nektar
         }
 
         NekDouble StdExpansion2D::v_PhysEvaluate(
-            const Array<OneD, DNekMatSharedPtr > &I, 
+            const Array<OneD, DNekMatSharedPtr > &I,
             const Array<OneD, const NekDouble> &physvals)
         {
             NekDouble val;

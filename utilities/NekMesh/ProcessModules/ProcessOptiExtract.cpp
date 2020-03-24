@@ -115,17 +115,18 @@ void ProcessOptiExtract::Process()
             {
                 for (int k = 0; k < f[j]->m_elLink.size(); k++)
                 {
-                    if (f[j]->m_elLink[k].first->GetId() == invalid[i]->GetId())
+                    if (f[j]->m_elLink[k].first.lock()->GetId() ==
+                        invalid[i]->GetId())
                     {
                         continue;
                     }
 
-                    t = inmesh.insert(f[j]->m_elLink[k].first->GetId());
+                    t = inmesh.insert(f[j]->m_elLink[k].first.lock()->GetId());
                     if (t.second)
                     {
                         m_mesh->m_element[m_mesh->m_expDim].push_back(
-                            f[j]->m_elLink[k].first);
-                        totest.push_back(f[j]->m_elLink[k].first);
+                            f[j]->m_elLink[k].first.lock());
+                        totest.push_back(f[j]->m_elLink[k].first.lock());
                     }
                 }
             }
@@ -142,17 +143,18 @@ void ProcessOptiExtract::Process()
                 {
                     for (int l = 0; l < f[k]->m_elLink.size(); l++)
                     {
-                        if (f[k]->m_elLink[l].first->GetId() == tmp[j]->GetId())
+                        if (f[k]->m_elLink[l].first.lock()->GetId() ==
+                            tmp[j]->GetId())
                         {
                             continue;
                         }
 
-                        auto t = inmesh.insert(f[k]->m_elLink[l].first->GetId());
+                        auto t = inmesh.insert(f[k]->m_elLink[l].first.lock()->GetId());
                         if (t.second)
                         {
                             m_mesh->m_element[m_mesh->m_expDim].push_back(
-                                f[k]->m_elLink[l].first);
-                            totest.push_back(f[k]->m_elLink[l].first);
+                                f[k]->m_elLink[l].first.lock());
+                            totest.push_back(f[k]->m_elLink[l].first.lock());
                         }
                     }
                 }

@@ -171,7 +171,7 @@ void FilterHistoryPoints::v_Initialise(
             if(m_isHomogeneous1D)
             {
                 int nplanes     = pFields[0]->GetHomogeneousBasis()
-                                            ->GetZ().num_elements();
+                                            ->GetZ().size();
                 NekDouble lhom  = pFields[0]->GetHomoLen();
                 int plane;
                 if (m_outputPlane == -1)
@@ -223,7 +223,7 @@ void FilterHistoryPoints::v_Initialise(
     // and the process ID.
     for (i = 0; i < vHP; ++i)
     {
-        Array<OneD, NekDouble> locCoords(3);
+        Array<OneD, NekDouble> locCoords(pFields[0]->GetShapeDimension());
         m_historyPoints[i]->GetCoords(  gloCoord[0],
                                         gloCoord[1],
                                         gloCoord[2]);
@@ -301,7 +301,7 @@ void FilterHistoryPoints::v_Initialise(
                 int j;
                 Array<OneD, const unsigned int> IDs
                                             = pFields[0]->GetZIDs();
-                for(j = 0; j < IDs.num_elements(); ++j)
+                for(j = 0; j < IDs.size(); ++j)
                 {
                     if(IDs[j] == planeIDs[i])
                     {
@@ -309,7 +309,7 @@ void FilterHistoryPoints::v_Initialise(
                     }
                 }
 
-                if(j != IDs.num_elements())
+                if(j != IDs.size())
                 {
                     m_planeIDs[i] = j;
                 }
@@ -391,7 +391,7 @@ void FilterHistoryPoints::v_Initialise(
         }
         m_outputStream << "# History data for variables (:";
 
-        for (i = 0; i < pFields.num_elements(); ++i)
+        for (i = 0; i < pFields.size(); ++i)
         {
             m_outputStream << m_session->GetVariable(i) <<",";
         }
@@ -444,7 +444,7 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
     int j         = 0;
     int k         = 0;
     int numPoints = m_historyPoints.size();
-    int numFields = pFields.num_elements();
+    int numFields = pFields.size();
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
     Array<OneD, NekDouble> data(numPoints*numFields, 0.0);
     Array<OneD, NekDouble> physvals;
@@ -493,7 +493,7 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
                 {
                     // Create vector with eIDs across all planes
                     std::vector<unsigned int> eIDs;
-                    int nPlanes = pFields[j]->GetZIDs().num_elements();
+                    int nPlanes = pFields[j]->GetZIDs().size();
                     int elmtsPerPlane = pFields[j]->GetExpSize()/nPlanes;
 
                     for ( int n = 0; n < nPlanes; n++)

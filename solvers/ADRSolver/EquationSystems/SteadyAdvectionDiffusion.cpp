@@ -70,7 +70,7 @@ namespace Nektar
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         GetFunction( "BaseFlow")->Evaluate(vel,  m_velocity);
     }
-       
+
     SteadyAdvectionDiffusion::~SteadyAdvectionDiffusion()
     {
 
@@ -90,7 +90,7 @@ namespace Nektar
 
     void SteadyAdvectionDiffusion::v_DoSolve()
     {
-        for(int i = 0; i < m_fields.num_elements(); ++i)
+        for(int i = 0; i < m_fields.size(); ++i)
         {
 	    // Zero initial guess
             Vmath::Zero(m_fields[i]->GetNcoeffs(),m_fields[i]->UpdateCoeffs(),1);

@@ -58,7 +58,7 @@ void UpwindPulseSolver::v_Solve(
     Array<OneD, Array<OneD, NekDouble>> &flux)
 {
     int i;
-    int nTracePts = Fwd[0].num_elements();
+    int nTracePts = Fwd[0].size();
 
     ASSERTL1(CheckScalars("A0"), "A0 not defined.");
     const Array<OneD, NekDouble> &A0 = m_scalars["A0"]();

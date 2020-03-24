@@ -68,16 +68,16 @@ namespace Nektar
                 m_comm = comm;
             }
 
-            ASSERTL1(m_planes.num_elements() == planes.num_elements(),
+            ASSERTL1(m_planes.size() == planes.size(),
                      "Size of basis number of points and number"
                      "of planes are not the same");
 
             // Set up expansion list with elements from all planes.
             m_exp = MemoryManager<LocalRegions::ExpansionVector>
                 ::AllocateSharedPtr(
-                    planes.num_elements() * planes[0]->GetExpSize());
+                    planes.size() * planes[0]->GetExpSize());
 
-            for(cnt = n = 0; n < planes.num_elements(); ++n)
+            for(cnt = n = 0; n < planes.size(); ++n)
             {
                 m_planes[n] = planes[n];
                 for (i = 0; i < planes[n]->GetExpSize(); ++i)
@@ -117,7 +117,7 @@ namespace Nektar
                 (*m_exp).push_back(m_planes[0]->GetExp(j));
             }
 
-            for (n = 1; n < m_planes.num_elements(); ++n)
+            for (n = 1; n < m_planes.size(); ++n)
             {
                 m_planes[n] = MemoryManager<ExpList1D>::
                     AllocateSharedPtr(*plane_zero, false);
@@ -142,7 +142,7 @@ namespace Nektar
             ExpList1DSharedPtr zero_plane =
                 std::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
 
-            for (int n = 0; n < m_planes.num_elements(); ++n)
+            for (int n = 0; n < m_planes.size(); ++n)
             {
                 m_planes[n] = MemoryManager<ExpList1D>::
                     AllocateSharedPtr(*zero_plane, false);
@@ -164,7 +164,7 @@ namespace Nektar
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
             int npoints_per_plane = m_planes[0]->GetTotPoints();
 
-            int nzplanes = m_planes.num_elements();
+            int nzplanes = m_planes.size();
 
             // Set total coefficients and points
             m_ncoeffs = ncoeffs_per_plane*nzplanes;
@@ -203,7 +203,7 @@ namespace Nektar
         {
             int n, coordim;
             Array<OneD, NekDouble> tmp_xc,xhom;
-            int nyplanes = m_planes.num_elements();
+            int nyplanes = m_planes.size();
             int npoints  = GetTotPoints(eid);
 
             switch(coordim = GetCoordim(0))
@@ -215,7 +215,7 @@ namespace Nektar
                 }
                 break;
             case 2:
-                ASSERTL0(xc1.num_elements() != 0,
+                ASSERTL0(xc1.size() != 0,
                          "output coord_1 is not defined");
                 {
                     (*m_exp)[eid]->GetCoords(xc0,xc1);
@@ -231,10 +231,10 @@ namespace Nektar
             // Fill homogeneous-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
             Array<OneD, NekDouble> z(nyplanes);
-			
-			Array<OneD, NekDouble> local_pts(m_planes.num_elements());
-			
-			for(n = 0; n < m_planes.num_elements(); n++)
+
+			Array<OneD, NekDouble> local_pts(m_planes.size());
+
+			for(n = 0; n < m_planes.size(); n++)
 			{
 				local_pts[n] = pts[m_transposition->GetPlaneID(n)];
 			}
@@ -281,7 +281,7 @@ namespace Nektar
         {
             int n,coordim;
             Array<OneD, NekDouble> tmp_xc, xhom;
-            int nyplanes = m_planes.num_elements();
+            int nyplanes = m_planes.size();
             int npoints = m_planes[0]->GetTotPoints();
 
             m_planes[0]->GetCoords(xc0,xc1);
@@ -298,13 +298,13 @@ namespace Nektar
             // Fill z-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
             Array<OneD, NekDouble> z(nyplanes);
-			Array<OneD, NekDouble> local_pts(m_planes.num_elements());
-			
-			for(n = 0; n < m_planes.num_elements(); n++)
+			Array<OneD, NekDouble> local_pts(m_planes.size());
+
+			for(n = 0; n < m_planes.size(); n++)
 			{
 				local_pts[n] = pts[m_transposition->GetPlaneID(n)];
 			}
-			
+
             Vmath::Smul(nyplanes,m_lhom/2.0,local_pts,1,z,1);
             Vmath::Sadd(nyplanes,m_lhom/2.0,z,1,z,1);
 
@@ -335,7 +335,7 @@ namespace Nektar
             int i, j;
 
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
-            int nquad1 = m_planes.num_elements();
+            int nquad1 = m_planes.size();
 
             Array<OneD,NekDouble> coords[3];
 
@@ -367,7 +367,7 @@ namespace Nektar
             boost::ignore_unused(istrip);
 
             // If there is only one plane (e.g. HalfMode), we write a 2D plane.
-            if (m_planes.num_elements() == 1)
+            if (m_planes.size() == 1)
             {
                 m_planes[0]->WriteVtkPieceHeader(outfile, expansion);
                 return;
@@ -383,7 +383,7 @@ namespace Nektar
             }
             int i, j;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
-            int nquad1 = m_planes.num_elements() + outputExtraPlane;
+            int nquad1 = m_planes.size() + outputExtraPlane;
             int ntot = nquad0*nquad1;
             int ntotminus = (nquad0-1)*(nquad1-1);
 
@@ -402,7 +402,7 @@ namespace Nektar
                 Vmath::Vcopy (nquad0, coords[1], 1,
                                       tmp = coords[1] + (nquad1-1)*nquad0, 1);
                 // Fill coords[2] for extra plane
-                NekDouble z = coords[2][nquad0*m_planes.num_elements()-1] +
+                NekDouble z = coords[2][nquad0*m_planes.size()-1] +
                               (coords[2][nquad0] - coords[2][0]);
                 Vmath::Fill(nquad0, z, tmp = coords[2] + (nquad1-1)*nquad0, 1);
             }
@@ -463,14 +463,14 @@ namespace Nektar
         void ExpList2DHomogeneous1D::v_GetNormals(
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
-            int nPlanes   = m_planes.num_elements();
+            int nPlanes   = m_planes.size();
             int nPtsPlane = m_planes[0]->GetNpoints();
             int nDim      = GetCoordim(0) + 1;
 
-            ASSERTL1(normals.num_elements() >= nDim,
+            ASSERTL1(normals.size() >= nDim,
                      "Output vector does not have sufficient dimensions to"
                      "match coordim");
-            ASSERTL1(normals[0].num_elements() >= nPtsPlane,
+            ASSERTL1(normals[0].size() >= nPtsPlane,
                      "Output vector does not have sufficient dimensions to"
                      "match coordim");
 
@@ -499,7 +499,7 @@ namespace Nektar
                 val += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
             }
             val *= m_lhom/m_homogeneousBasis->GetNumModes();
-            
+
             m_comm->AllReduce(val, LibUtilities::ReduceSum);
 
             return val;

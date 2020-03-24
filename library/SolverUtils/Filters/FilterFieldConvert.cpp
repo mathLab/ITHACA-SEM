@@ -134,9 +134,9 @@ FilterFieldConvert::FilterFieldConvert(
     {
         auto itPeriod = pParams.find("PhaseAveragePeriod");
         auto itPhase = pParams.find("PhaseAveragePhase");
-    
+
         // Error if only one of the required params for PhaseAverage is present
-        ASSERTL0((itPeriod != pParams.end() && itPhase != pParams.end()), 
+        ASSERTL0((itPeriod != pParams.end() && itPhase != pParams.end()),
             "The phase sampling feature requires both 'PhaseAveragePeriod' and "
             "'PhaseAveragePhase' to be set.");
 
@@ -184,11 +184,11 @@ FilterFieldConvert::FilterFieldConvert(
                       << std::endl;
         }
     }
-    
+
     m_numSamples  = 0;
     m_index       = 0;
     m_outputIndex = 0;
-    
+
     //
     // FieldConvert modules
     //
@@ -236,13 +236,13 @@ void FilterFieldConvert::v_Initialise(
 
     for (int n = 0; n < m_variables.size(); ++n)
     {
-        // if n >= pFields.num_elements() assum we have used n=0 field
-        nfield = (n < pFields.num_elements())? n: 0;
+        // if n >= pFields.size() assum we have used n=0 field
+        nfield = (n < pFields.size())? n: 0;
 
         m_outFields[n] =
                 Array<OneD, NekDouble>(pFields[nfield]->GetNcoeffs(), 0.0);
     }
-    
+
     m_fieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);
 
     // Load restart file if necessary
@@ -262,7 +262,7 @@ void FilterFieldConvert::v_Initialise(
         {
             // see if m_variables is part of pFields definition and if
             // so use that field for extract
-            for(k = 0; k < pFields.num_elements(); ++k)
+            for(k = 0; k < pFields.size(); ++k)
             {
                 if(pFields[k]->GetSession()->GetVariable(k)
                    == m_variables[j])
@@ -275,7 +275,7 @@ void FilterFieldConvert::v_Initialise(
             {
                 nfield = 0;
             }
-            
+
             for (int i = 0; i < fieldData.size(); ++i)
             {
                 pFields[nfield]->ExtractDataToCoeffs(
@@ -300,12 +300,12 @@ void FilterFieldConvert::v_Initialise(
         {
             m_fieldMetaData["InitialTime"] = fieldMetaData["InitialTime"];
         }
-        
+
         // Divide by scale
         NekDouble scale = v_GetScale();
         for (int n = 0; n < m_outFields.size(); ++n)
         {
-            Vmath::Smul(m_outFields[n].num_elements(),
+            Vmath::Smul(m_outFields[n].size(),
                         1.0/scale,
                         m_outFields[n],
                         1,
@@ -318,8 +318,8 @@ void FilterFieldConvert::v_Initialise(
 void FilterFieldConvert::v_FillVariablesName(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
 {
-    int nfield = pFields.num_elements();
-    m_variables.resize(pFields.num_elements());
+    int nfield = pFields.size();
+    m_variables.resize(pFields.size());
     for (int n = 0; n < nfield; ++n)
     {
         m_variables[n] = pFields[n]->GetSession()->GetVariable(n);
@@ -348,7 +348,7 @@ void FilterFieldConvert::v_Update(
     }
 
     // Append extra fields
-    int nfield = pFields.num_elements();
+    int nfield = pFields.size();
     std::vector<Array<OneD, NekDouble> > coeffs(nfield);
     for (int n = 0; n < nfield; ++n)
     {
@@ -361,8 +361,8 @@ void FilterFieldConvert::v_Update(
 
     if(m_phaseSample)
     {
-        // The sample is added to the filter only if the current time 
-        // corresponds to the correct phase. Introducing M as number of 
+        // The sample is added to the filter only if the current time
+        // corresponds to the correct phase. Introducing M as number of
         // cycles and N nondimensional phase (between 0 and 1):
         // t = M * m_phaseSamplePeriod + N * m_phaseSamplePeriod
         int currentCycle       = floor(time / m_phaseSamplePeriod);
@@ -393,7 +393,7 @@ void FilterFieldConvert::v_Update(
         m_numSamples++;
         v_ProcessSample(pFields, coeffs, time);
     }
-    
+
     if (m_index % m_outputFrequency == 0)
     {
         m_fieldMetaData["FinalTime"] = boost::lexical_cast<std::string>(time);
@@ -420,7 +420,7 @@ void FilterFieldConvert::v_ProcessSample(
 
     for(int n = 0; n < m_outFields.size(); ++n)
     {
-        Vmath::Vcopy(m_outFields[n].num_elements(),
+        Vmath::Vcopy(m_outFields[n].size(),
                     fieldcoeffs[n],
                     1,
                     m_outFields[n],
@@ -434,7 +434,7 @@ void FilterFieldConvert::OutputField(
     NekDouble scale = v_GetScale();
     for (int n = 0; n < m_outFields.size(); ++n)
     {
-        Vmath::Smul(m_outFields[n].num_elements(),
+        Vmath::Smul(m_outFields[n].size(),
                     scale,
                     m_outFields[n],
                     1,
@@ -488,7 +488,7 @@ void FilterFieldConvert::OutputField(
     {
         for (int n = 0; n < m_outFields.size(); ++n)
         {
-            Vmath::Smul(m_outFields[n].num_elements(),
+            Vmath::Smul(m_outFields[n].size(),
                         1.0 / scale,
                         m_outFields[n],
                         1,
@@ -625,17 +625,17 @@ void FilterFieldConvert::CreateFields(
     int nfield;
     for (int n = 0; n < m_variables.size(); ++n)
     {
-        // if n >= pFields.num_elements() assume we have used n=0 field
-        nfield = (n < pFields.num_elements())? n: 0;
-        
+        // if n >= pFields.size() assume we have used n=0 field
+        nfield = (n < pFields.size())? n: 0;
+
         m_f->m_exp[n] = m_f->AppendExpList(
                             m_f->m_numHomogeneousDir, m_variables[0]);
         m_f->m_exp[n]->SetWaveSpace(false);
 
-        ASSERTL1(pFields[nfield]->GetNcoeffs() == m_outFields[n].num_elements(),
+        ASSERTL1(pFields[nfield]->GetNcoeffs() == m_outFields[n].size(),
                  "pFields[nfield] does not have the "
                  "same number of coefficients as m_outFields[n]");
-        
+
         m_f->m_exp[n]->ExtractCoeffsToCoeffs(pFields[nfield], m_outFields[n],
                                              m_f->m_exp[n]->UpdateCoeffs());
 

@@ -76,7 +76,7 @@ namespace Nektar
                 DisContField2DSharedPtr zero_plane =
                     std::dynamic_pointer_cast<DisContField2D> (In.m_planes[0]);
 
-                for(int n = 0; n < m_planes.num_elements(); ++n)
+                for(int n = 0; n < m_planes.size(); ++n)
                 {
                     m_planes[n] =
                         MemoryManager<DisContField2D>::
@@ -112,7 +112,7 @@ namespace Nektar
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>
                 ::AllocateSharedPtr();
-            
+
             nel = m_planes[0]->GetExpSize();
 
             for (i = 0; i < nel; ++i)
@@ -120,7 +120,7 @@ namespace Nektar
                 (*m_exp).push_back(m_planes[0]->GetExp(i));
             }
 
-            for (n = 1; n < m_planes.num_elements(); ++n)
+            for (n = 1; n < m_planes.size(); ++n)
             {
                 m_planes[n] = MemoryManager<DisContField2D>::
                     AllocateSharedPtr(*plane_zero, graph2D,
@@ -132,8 +132,8 @@ namespace Nektar
             }
 
             // Set up trace object.
-            Array<OneD, ExpListSharedPtr> trace(m_planes.num_elements());
-            for (n = 0; n < m_planes.num_elements(); ++n)
+            Array<OneD, ExpListSharedPtr> trace(m_planes.size());
+            for (n = 0; n < m_planes.size(); ++n)
             {
                 trace[n] = m_planes[n]->GetTrace();
             }
@@ -182,7 +182,7 @@ namespace Nektar
                 bregions.size());
             m_bndConditions = m_planes[0]->UpdateBndConditions();
 
-            int nplanes = m_planes.num_elements();
+            int nplanes = m_planes.size();
             Array<OneD, MultiRegions::ExpListSharedPtr>
                 PlanesBndCondExp(nplanes);
 
@@ -234,7 +234,7 @@ namespace Nektar
             StdRegions::ConstFactorMap new_factors;
 
             Array<OneD, NekDouble> e_out;
-            Array<OneD, NekDouble> fce(inarray.num_elements());
+            Array<OneD, NekDouble> fce(inarray.size());
             Array<OneD, const NekDouble> wfce;
 
             // Transform forcing function in half-physical space if required
@@ -247,7 +247,7 @@ namespace Nektar
                 HomogeneousFwdTrans(inarray,fce);
             }
 
-            for (n = 0; n < m_planes.num_elements(); ++n)
+            for (n = 0; n < m_planes.size(); ++n)
             {
                 if (n != 1 || m_transposition->GetK(n) != 0)
                 {
@@ -280,23 +280,23 @@ namespace Nektar
 	    boost::ignore_unused(x2_in,x3_in);
             int i;
             int npoints;
-            int nbnd = m_bndCondExpansions.num_elements();
+            int nbnd = m_bndCondExpansions.size();
             MultiRegions::ExpListSharedPtr locExpList;
-       
+
             for (i = 0; i < nbnd; ++i)
             {
                 if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();
-                    
+
                     Array<OneD, NekDouble> x0(npoints, 0.0);
                     Array<OneD, NekDouble> x1(npoints, 0.0);
                     Array<OneD, NekDouble> x2(npoints, 0.0);
                     Array<OneD, NekDouble> valuesFile(npoints, 1.0), valuesExp(npoints, 1.0);
-  
+
                     locExpList->GetCoords(x0, x1, x2);
-                    
+
                     if (m_bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eDirichlet)
                     {
@@ -311,23 +311,23 @@ namespace Nektar
                             ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                             valuesFile = locExpList->GetPhys();
                         }
-                        
+
                         if (exprbcs != "")
                         {
                             LibUtilities::Equation  condition =
                                 std::static_pointer_cast<SpatialDomains::
                                     DirichletBoundaryCondition >(
                                     m_bndConditions[i])->m_dirichletCondition;
-                            
+
                             condition.Evaluate(x0, x1, x2, time, valuesExp);
                         }
 
                         Vmath::Vmul(npoints, valuesExp, 1, valuesFile, 1,
                                     locExpList->UpdatePhys(), 1);
-                        
+
                         // set wave space to false since have set up phys values
                         locExpList->SetWaveSpace(false);
-                        
+
                         locExpList->FwdTrans_BndConstrained(
                             locExpList->GetPhys(),
                             locExpList->UpdateCoeffs());
@@ -338,7 +338,7 @@ namespace Nektar
                         SpatialDomains::NeumannBCShPtr bcPtr = std::static_pointer_cast<
                             SpatialDomains::NeumannBoundaryCondition>(
                                 m_bndConditions[i]);
-			
+
 			std::string filebcs = bcPtr->m_filename;
 
                         if (filebcs != "")
@@ -351,10 +351,10 @@ namespace Nektar
                                 static_pointer_cast<SpatialDomains::
                                                     NeumannBoundaryCondition>(
                                     m_bndConditions[i])->m_neumannCondition;
-                        
-                            condition.Evaluate(x0, x1, x2, time, 
+
+                            condition.Evaluate(x0, x1, x2, time,
                                                locExpList->UpdatePhys());
-                            
+
                             locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                         locExpList->UpdateCoeffs());
                         }
@@ -378,14 +378,14 @@ namespace Nektar
                                                     RobinBoundaryCondition>(
                                     m_bndConditions[i])->m_robinFunction;
 
-                            condition.Evaluate(x0, x1, x2, time, 
+                            condition.Evaluate(x0, x1, x2, time,
                                                locExpList->UpdatePhys());
 
                         }
 
                         locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
-                        
+
                     }
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::ePeriodic)
@@ -417,16 +417,16 @@ namespace Nektar
             Array<OneD,int> &EdgeID)
         {
 
-            if(m_BCtoElmMap.num_elements() == 0)
+            if(m_BCtoElmMap.size() == 0)
             {
                 Array<OneD, int> ElmtID_tmp;
                 Array<OneD, int> EdgeID_tmp;
 
                 m_planes[0]->GetBoundaryToElmtMap(ElmtID_tmp, EdgeID_tmp);
                 int nel_per_plane = m_planes[0]->GetExpSize();
-                int nplanes = m_planes.num_elements();
+                int nplanes = m_planes.size();
 
-                int MapSize = ElmtID_tmp.num_elements();
+                int MapSize = ElmtID_tmp.size();
 
                 m_BCtoElmMap = Array<OneD, int>(nplanes*MapSize);
                 m_BCtoEdgMap = Array<OneD, int>(nplanes*MapSize);
@@ -436,7 +436,7 @@ namespace Nektar
                 {
                     int i ,j, n, cnt;
                     int cntPlane = 0;
-                    for (cnt=n=0; n < m_bndCondExpansions.num_elements(); ++n)
+                    for (cnt=n=0; n < m_bndCondExpansions.size(); ++n)
                     {
                         int planeExpSize = m_planes[0]
                                                 ->GetBndCondExpansions()[n]
@@ -445,9 +445,9 @@ namespace Nektar
                         {
                             for(j = 0; j < nplanes; j++)
                             {
-                                m_BCtoElmMap[cnt+i+j*planeExpSize] = 
+                                m_BCtoElmMap[cnt+i+j*planeExpSize] =
                                         ElmtID_tmp[cntPlane]+j*nel_per_plane;
-                                m_BCtoEdgMap[cnt+i+j*planeExpSize] = 
+                                m_BCtoEdgMap[cnt+i+j*planeExpSize] =
                                         EdgeID_tmp[cntPlane];
                             }
                         }
@@ -458,18 +458,18 @@ namespace Nektar
             ElmtID = m_BCtoElmMap;
             EdgeID = m_BCtoEdgMap;
         }
-        
+
         void DisContField3DHomogeneous1D::v_GetBndElmtExpansion(int i,
                             std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;
             int offsetOld, offsetNew;
-            
+
             std::vector<unsigned int> eIDs;
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
-            
+
             // Skip other boundary regions
             for (cnt = n = 0; n < i; ++n)
             {
@@ -481,12 +481,12 @@ namespace Nektar
             {
                 eIDs.push_back(ElmtID[cnt+n]);
             }
-            
+
             // Create expansion list
-            result = 
+            result =
                 MemoryManager<ExpList3DHomogeneous1D>::AllocateSharedPtr
                     (*this, eIDs);
-            
+
             // Copy phys and coeffs to new explist
             if ( DeclareCoeffPhysArrays)
             {
@@ -509,7 +509,7 @@ namespace Nektar
 
             // Set wavespace value
             result->SetWaveSpace(GetWaveSpace());
-        }    
+        }
 
         void DisContField3DHomogeneous1D::GetBCValues(       Array<OneD, NekDouble> & BndVals,
                                                        const Array<OneD, NekDouble> & TotField,
@@ -526,12 +526,12 @@ namespace Nektar
             int exp_size, exp_size_per_plane, elmtID, boundaryID;
             int offset, exp_dim;
 
-            for (int k = 0; k < m_planes.num_elements(); k++)
+            for (int k = 0; k < m_planes.size(); k++)
             {
-                for (int n = 0; n < m_bndConditions.num_elements(); ++n)
+                for (int n = 0; n < m_bndConditions.size(); ++n)
                 {
                     exp_size = m_bndCondExpansions[n]->GetExpSize();
-                    exp_size_per_plane = exp_size/m_planes.num_elements();
+                    exp_size_per_plane = exp_size/m_planes.size();
 
                     for (int i = 0; i < exp_size_per_plane; i++)
                     {
@@ -576,12 +576,12 @@ namespace Nektar
             int cnt = 0;
             int exp_size, exp_size_per_plane, elmtID, Phys_offset, Coef_offset;
 
-            for(int k = 0; k < m_planes.num_elements(); k++)
+            for(int k = 0; k < m_planes.size(); k++)
             {
-                for(int n = 0; n < m_bndConditions.num_elements(); ++n)
+                for(int n = 0; n < m_bndConditions.size(); ++n)
                 {
                     exp_size = m_bndCondExpansions[n]->GetExpSize();
-                    exp_size_per_plane = exp_size/m_planes.num_elements();
+                    exp_size_per_plane = exp_size/m_planes.size();
 
                     for(int i = 0; i < exp_size_per_plane; i++)
                     {
@@ -639,7 +639,7 @@ namespace Nektar
             int nPoints_plane = m_planes[0]->GetTotPoints();
             int nTracePts = m_planes[0]->GetTrace()->GetTotPoints();
 
-            for (int i = 0; i < m_planes.num_elements(); ++i)
+            for (int i = 0; i < m_planes.size(); ++i)
             {
                 Array<OneD, NekDouble> inarray_plane(nPoints_plane, 0.0);
                 Array<OneD, NekDouble> outarray_plane(nPoints_plane, 0.0);
@@ -655,7 +655,7 @@ namespace Nektar
                              &outarray[i*nTracePts], 1);
             }
         }
-        
+
         /**
          */
         void DisContField3DHomogeneous1D::v_GetBoundaryNormals( int                                    i,
@@ -665,30 +665,30 @@ namespace Nektar
             int                              coordim = 3;
             Array<OneD, NekDouble>           tmp;
             LocalRegions::ExpansionSharedPtr elmt;
-            
+
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
-            
+
             // Initialise result
             normals = Array<OneD, Array<OneD, NekDouble> > (coordim);
             for (int j = 0; j < coordim; ++j)
             {
                 normals[j] = Array<OneD, NekDouble> ( GetBndCondExpansions()[i]->GetTotPoints(), 0.0 );
             }
-            
+
             // Skip other boundary regions
             int cnt = 0;
             for( int n = 0; n < i; ++n )
             {
                 cnt += GetBndCondExpansions()[n]->GetExpSize();
             }
-            
+
             int offset;
             for( int n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n )
             {
                 offset = GetBndCondExpansions()[i]->GetPhys_Offset(n);
                 int nq = GetBndCondExpansions()[i]->GetExp(n)->GetTotPoints();
-                
+
                 elmt   = GetExp(ElmtID[cnt+n]);
                 const Array<OneD, const Array<OneD, NekDouble> > normalsElmt
                             = elmt->GetSurfaceNormal(EdgeID[cnt+n]);
@@ -706,21 +706,21 @@ namespace Nektar
         */
         void DisContField3DHomogeneous1D::SetUpDG()
         {
-            const int nPlanes     = m_planes.num_elements();
+            const int nPlanes     = m_planes.size();
             const int nTracePlane = m_planes[0]->GetTrace()->GetExpSize();
 
             // Get trace map from first plane.
             AssemblyMapDGSharedPtr traceMap = m_planes[0]->GetTraceMap();
             const Array<OneD, const int> &traceBndMap
                 = traceMap->GetBndCondIDToGlobalTraceID();
-            int mapSize = traceBndMap.num_elements();
+            int mapSize = traceBndMap.size();
 
             // Set up trace boundary map
             m_traceBndMap = Array<OneD, int>(nPlanes * mapSize);
 
             int i, n, e, cnt = 0, cnt1 = 0;
 
-            for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for (i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 int nExp      = m_bndCondExpansions[i]->GetExpSize();
                 int nPlaneExp = nExp / nPlanes;

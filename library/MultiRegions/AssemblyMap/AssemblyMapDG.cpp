@@ -84,7 +84,7 @@ namespace Nektar
             int i, j, k, cnt, eid, id, id1, gid;
             int order_e   = 0;
             int nTraceExp = trace->GetExpSize();
-            int nbnd      = bndCondExp.num_elements();
+            int nbnd      = bndCondExp.size();
 
             LocalRegions::ExpansionSharedPtr  exp;
             LocalRegions::ExpansionSharedPtr  bndExp;
@@ -154,7 +154,7 @@ namespace Nektar
             m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys  = 0;
 
-            for(i = 0; i < bndCondExp.num_elements(); ++i)
+            for(i = 0; i < bndCondExp.size(); ++i)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
@@ -414,12 +414,12 @@ namespace Nektar
                         expList[i]->GetFaceToElementMap(
                             j,StdRegions::eDir1FwdDir1_Dir2FwdDir2,elmMap2,elmSign2);
 
-                        for (k = 0; k < elmMap1.num_elements(); ++k)
+                        for (k = 0; k < elmMap1.size(); ++k)
                         {
                             // Find the elemental co-efficient in the original
                             // mapping.
                             int idx = -1;
-                            for (int l = 0; l < elmMap2.num_elements(); ++l)
+                            for (int l = 0; l < elmMap2.size(); ++l)
                             {
                                 if (elmMap1[k] == elmMap2[l])
                                 {
@@ -652,12 +652,12 @@ namespace Nektar
                         locExpansion->GetEdgeToElementMap(j, StdRegions::eForwards, map1, sign1);
                         locExpansion->GetEdgeToElementMap(j, locExpansion->GetEorient(j), map2, sign2);
 
-                        for (k = 0; k < map1.num_elements(); ++k)
+                        for (k = 0; k < map1.size(); ++k)
                         {
                             // Find the elemental co-efficient in the original
                             // mapping.
                             int idx = -1;
-                            for (int l = 0; l < map2.num_elements(); ++l)
+                            for (int l = 0; l < map2.size(); ++l)
                             {
                                 if (map1[k] == map2[l])
                                 {
@@ -697,12 +697,12 @@ namespace Nektar
                         locExpansion->GetFaceToElementMap(j, StdRegions::eDir1FwdDir1_Dir2FwdDir2, map1, sign1);
                         locExpansion->GetFaceToElementMap(j, locExpansion->GetForient(j), map2, sign2);
 
-                        for (k = 0; k < map1.num_elements(); ++k)
+                        for (k = 0; k < map1.size(); ++k)
                         {
                             // Find the elemental co-efficient in the original
                             // mapping.
                             int idx = -1;
-                            for (int l = 0; l < map2.num_elements(); ++l)
+                            for (int l = 0; l < map2.size(); ++l)
                             {
                                 if (map1[k] == map2[l])
                                 {
@@ -727,14 +727,14 @@ namespace Nektar
             }
 
             // Initialise GSlib and populate the unique map.
-            Array<OneD, long> tmp(m_globalToUniversalBndMap.num_elements());
-            for (i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
+            Array<OneD, long> tmp(m_globalToUniversalBndMap.size());
+            for (i = 0; i < m_globalToUniversalBndMap.size(); ++i)
             {
                 tmp[i] = m_globalToUniversalBndMap[i];
             }
             m_bndGsh = m_gsh = Gs::Init(tmp, m_comm);
             Gs::Unique(tmp, m_comm);
-            for (i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
+            for (i = 0; i < m_globalToUniversalBndMap.size(); ++i)
             {
                 m_globalToUniversalBndMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
             }
@@ -1058,7 +1058,7 @@ namespace Nektar
         Array<OneD, LocalRegions::ExpansionSharedPtr>&
                     AssemblyMapDG::GetElmtToTrace(const int i)
         {
-            ASSERTL1(i >= 0 && i < m_elmtToTrace.num_elements(),
+            ASSERTL1(i >= 0 && i < m_elmtToTrace.size(),
                      "i is out of range");
             return m_elmtToTrace[i];
         }

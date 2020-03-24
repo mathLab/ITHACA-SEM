@@ -139,8 +139,7 @@ namespace Nektar
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
             std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
-            bool dirForcCalculated = (bool) pDirForcing.num_elements();
-
+            bool dirForcCalculated = (bool) pDirForcing.size();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
             int nLocDofs  = pLocToGloMap->GetNumLocalCoeffs();

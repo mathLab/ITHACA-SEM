@@ -68,7 +68,7 @@ namespace Nektar
       UnsteadySystem::v_InitObject();
 
       int nq = m_fields[0]->GetNpoints();
-      int nvar  =  m_fields.num_elements();
+      int nvar  =  m_fields.size();
       int MFdim = 3;
 
       // Diffusivity coefficient for e^j
@@ -209,7 +209,7 @@ namespace Nektar
             const NekDouble time,
             const NekDouble lambda)
     {
-        int nvariables  = inarray.num_elements();
+        int nvariables  = inarray.size();
         int nq          = m_fields[0]->GetNpoints();
 
 
@@ -523,7 +523,7 @@ namespace Nektar
         }
 
       // forward transform to fill the modal coeffs
-      for(int i = 0; i < m_fields.num_elements(); ++i)
+      for(int i = 0; i < m_fields.size(); ++i)
 	{
 	  m_fields[i]->SetPhysState(true);
 	  m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());

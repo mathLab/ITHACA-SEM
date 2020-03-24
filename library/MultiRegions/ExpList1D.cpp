@@ -90,9 +90,9 @@ namespace Nektar
         {
             SetExpType(e1D);
         }
-        
+
         /**
-         * 
+         *
          */
         ExpList1D::ExpList1D(const ExpList1D &In,
                              const std::vector<unsigned int> &eIDs,
@@ -101,7 +101,7 @@ namespace Nektar
             ExpList(In, eIDs, DeclareCoeffPhysArrays)
         {
             SetExpType(e1D);
-            
+
             // Allocate storage for data and populate element offset lists.
             SetCoeffPhysOffsets();
 
@@ -298,10 +298,10 @@ namespace Nektar
                         if(expIt != expansions.end())
                         {
                             LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
-                            
+
                             if(SetToOneSpaceDimension)
                             {
-                                SpatialDomains::SegGeomSharedPtr OneDSegmentGeom = 
+                                SpatialDomains::SegGeomSharedPtr OneDSegmentGeom =
                                     SegmentGeom->GenerateOneSpaceDimGeom();
 
                                 seg = MemoryManager<LocalRegions::SegExp>
@@ -472,7 +472,7 @@ namespace Nektar
 
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
-            for(i = 0; i < bndCond.num_elements(); ++i)
+            for(i = 0; i < bndCond.size(); ++i)
             {
                 if(bndCond[i]->GetBoundaryConditionType()
                                             == SpatialDomains::eDirichlet)
@@ -711,7 +711,7 @@ namespace Nektar
             Array<OneD,NekDouble> mapped_quad_points(quad_npoints);
 
             // For each evaluation point
-            for(i = 0; i < inarray.num_elements(); i++)
+            for(i = 0; i < inarray.size(); i++)
             {
                 // Move the center of the kernel to the current point
                 kernel->MoveKernelCenter(inarray[i],local_kernel_breaks);
@@ -721,8 +721,8 @@ namespace Nektar
                 kernel->FindMeshUnderKernel(local_kernel_breaks,h,mesh_breaks);
 
                 // Sort the total breaks for integration purposes
-                int total_nbreaks = local_kernel_breaks.num_elements() +
-                                    mesh_breaks.num_elements();
+                int total_nbreaks = local_kernel_breaks.size() +
+                                    mesh_breaks.size();
                                     // number of the total breaks
                 Array<OneD,NekDouble> total_breaks(total_nbreaks);
                 kernel->Sort(local_kernel_breaks,mesh_breaks,total_breaks);
@@ -730,13 +730,13 @@ namespace Nektar
                 // Integrate the product of kernel and function over the total
                 // breaks
                 NekDouble integral_value = 0.0;
-                for(j = 0; j < total_breaks.num_elements()-1; j++)
+                for(j = 0; j < total_breaks.size()-1; j++)
                 {
                     NekDouble a = total_breaks[j];
                     NekDouble b = total_breaks[j+1];
 
                     // Map the quadrature points to the appropriate interval
-                    for(r = 0; r < quad_points.num_elements(); r++)
+                    for(r = 0; r < quad_points.size(); r++)
                     {
                         mapped_quad_points[r]
                                 = (quad_points[r] + 1.0) * 0.5 * (b - a) + a;
@@ -792,13 +792,13 @@ namespace Nektar
             int num_elm = GetExpSize();
 
             // initializing the outarray
-            for(i = 0; i < outarray.num_elements(); i++)
+            for(i = 0; i < outarray.size(); i++)
             {
                 outarray[i] = 0.0;
             }
 
             // Make a copy for further modification
-            int x_size = inarray2.num_elements();
+            int x_size = inarray2.size();
             Array<OneD,NekDouble> x_values_cp(x_size);
 
             // Determining the element to which the x belongs
@@ -882,7 +882,7 @@ namespace Nektar
 //                }
 //            }
 //        }
-		
+
 		//croth
 		void ExpList1D::v_SetUpPhysNormals()
         {
@@ -900,7 +900,7 @@ namespace Nektar
          * Upwind the left and right states given by the Arrays Fwd and Bwd
          * using the vector quantity Vec and ouput the upwinded value in the
          * array upwind.
-         * 
+         *
          * @param   Vec         Velocity field.
          * @param   Fwd         Left state.
          * @param   Bwd         Right state.
@@ -919,7 +919,7 @@ namespace Nektar
             // Assume whole array is of same coordimate dimension
             int coordim = GetCoordim(0);
 
-            ASSERTL1(Vec.num_elements() >= coordim,
+            ASSERTL1(Vec.size() >= coordim,
                     "Input vector does not have sufficient dimensions to "
                     "match coordim");
 
@@ -963,7 +963,7 @@ namespace Nektar
          *           const Array<OneD, const NekDouble>,
          *           const Array<OneD, const NekDouble>,
          *                 Array<OneD, NekDouble>, int)
-         * 
+         *
          * @param   Vn          Velocity field.
          * @param   Fwd         Left state.
          * @param   Bwd         Right state.
@@ -984,7 +984,7 @@ namespace Nektar
                 // Get the number of points and the data offset.
                 e_npoints = (*m_exp)[i]->GetNumPoints(0);
                 offset = m_phys_offset[i];
-                
+
                 // Process each point in the expansion.
                 for(j = 0; j < e_npoints; ++j)
                 {
@@ -1020,22 +1020,22 @@ namespace Nektar
             // Assume whole array is of same coordinate dimension
             int coordim = GetCoordim(0);
 
-            ASSERTL1(normals.num_elements() >= coordim,
+            ASSERTL1(normals.size() >= coordim,
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
 
             for (i = 0; i < m_exp->size(); ++i)
             {
                 LocalRegions::Expansion1DSharedPtr loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion1D>();
-                
+
                 LocalRegions::Expansion2DSharedPtr loc_elmt =
                     loc_exp->GetLeftAdjacentElementExp();
-		
+
                 int edgeNumber = loc_exp->GetLeftAdjacentElementEdge();
-            
+
                 // Get the number of points and normals for this expansion.
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                
+
                 locnormals = loc_elmt->GetEdgeNormal(edgeNumber);
 		int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
                 int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
@@ -1069,7 +1069,7 @@ namespace Nektar
                     {
                         // Parallel case: need to interpolate normal.
                         Array<OneD, Array<OneD, NekDouble> > normal(coordim);
-                        
+
                         for (int p = 0; p < coordim; ++p)
                         {
                             normal[p] = Array<OneD, NekDouble>(e_npoints,0.0);
@@ -1082,7 +1082,7 @@ namespace Nektar
                                                    to_key,
                                                    normal[p]);
                         }
-                        
+
                         offset = m_phys_offset[i];
 
                         // Process each point in the expansion.
@@ -1148,7 +1148,7 @@ namespace Nektar
             {
                 for (j = 0; j < 3; ++j)
                 {
-                    outfile << setprecision(8) << scientific 
+                    outfile << setprecision(8) << scientific
                             << (float)coords[j][i] << " ";
                 }
                 outfile << endl;

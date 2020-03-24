@@ -104,7 +104,7 @@ namespace Nektar
             {
                 // Do not forwards transform initial condition
                 m_homoInitialFwd = false;
-                
+
                 // Define the normal velocity fields
                 if (m_fields[0]->GetTrace())
                 {
@@ -181,7 +181,7 @@ namespace Nektar
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
 
-        for (i = 0; i < m_velocity.num_elements(); ++i)
+        for (i = 0; i < m_velocity.size(); ++i)
         {
             m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
 
@@ -211,7 +211,7 @@ namespace Nektar
         int i;
 
         // Number of fields (variables of the problem)
-        int nVariables = inarray.num_elements();
+        int nVariables = inarray.size();
 
         // Number of solution points
         int nSolutionPts = GetNpoints();
@@ -243,7 +243,7 @@ namespace Nektar
         int i;
 
         // Number of fields (variables of the problem)
-        int nVariables = inarray.num_elements();
+        int nVariables = inarray.size();
 
         // Set the boundary conditions
         SetBoundaryConditions(time);
@@ -295,15 +295,15 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >               &physfield,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
-        ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
+        ASSERTL1(flux[0].size() == m_velocity.size(),
                  "Dimension of flux array and velocity array do not match");
 
         int i , j;
-        int nq = physfield[0].num_elements();
+        int nq = physfield[0].size();
 
-        for (i = 0; i < flux.num_elements(); ++i)
+        for (i = 0; i < flux.size(); ++i)
         {
-            for (j = 0; j < flux[0].num_elements(); ++j)
+            for (j = 0; j < flux[0].size(); ++j)
             {
                 Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
                             flux[i][j], 1);
@@ -323,18 +323,18 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >               &physfield,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
-        ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
+        ASSERTL1(flux[0].size() == m_velocity.size(),
                  "Dimension of flux array and velocity array do not match");
 
         int i, j;
-        int nq = physfield[0].num_elements();
-        int nVariables = physfield.num_elements();
+        int nq = physfield[0].size();
+        int nVariables = physfield.size();
 
         // Factor to rescale 1d points in dealiasing
         NekDouble OneDptscale = 2;
 
         Array<OneD, Array<OneD, NekDouble> >
-            advVel_plane(m_velocity.num_elements());
+            advVel_plane(m_velocity.size());
 
         // Get number of points to dealias a cubic non-linearity
         nq = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
@@ -368,9 +368,9 @@ namespace Nektar
         }
 
         // Evaluation of flux vector in the higher space
-        for (i = 0; i < flux.num_elements(); ++i)
+        for (i = 0; i < flux.size(); ++i)
         {
-            for (j = 0; j < flux[0].num_elements(); ++j)
+            for (j = 0; j < flux[0].size(); ++j)
             {
                 Vmath::Vmul(nq, physfieldInterp[i], 1, velocityInterp[j], 1,
                             fluxInterp[i][j], 1);

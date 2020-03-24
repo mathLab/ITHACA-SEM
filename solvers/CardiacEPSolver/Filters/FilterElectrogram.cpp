@@ -140,7 +140,7 @@ void FilterElectrogram::v_Initialise(
         m_outputStream.open(m_outputFile.c_str());
         m_outputStream << "# Electrogram data for variables (:";
 
-        for (i = 0; i < pFields.num_elements(); ++i)
+        for (i = 0; i < pFields.size(); ++i)
         {
             m_outputStream << m_session->GetVariable(i) <<",";
         }

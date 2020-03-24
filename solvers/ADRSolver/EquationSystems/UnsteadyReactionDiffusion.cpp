@@ -73,7 +73,7 @@ void UnsteadyReactionDiffusion::v_InitObject()
 
     // Forcing terms
     m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
-                                           m_fields, m_fields.num_elements());
+                                           m_fields, m_fields.size());
 
     m_ode.DefineOdeRhs       (&UnsteadyReactionDiffusion::DoOdeRhs,        this);
     m_ode.DefineProjection   (&UnsteadyReactionDiffusion::DoOdeProjection, this);
@@ -101,9 +101,9 @@ void UnsteadyReactionDiffusion::DoOdeRhs(
     const NekDouble time)
 {
     // RHS should be set to zero.
-    for (int i = 0; i < outarray.num_elements(); ++i)
+    for (int i = 0; i < outarray.size(); ++i)
     {
-        Vmath::Zero(outarray[i].num_elements(), &outarray[i][0], 1);
+        Vmath::Zero(outarray[i].size(), &outarray[i][0], 1);
     }
 
     // Add forcing terms for reaction.
@@ -127,7 +127,7 @@ void UnsteadyReactionDiffusion::DoOdeProjection(
     const NekDouble time)
 {
     int i;
-    int nvariables = inarray.num_elements();
+    int nvariables = inarray.size();
     SetBoundaryConditions(time);
 
     Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
@@ -152,7 +152,7 @@ void UnsteadyReactionDiffusion::DoImplicitSolve(
 
     StdRegions::ConstFactorMap factors;
 
-    int nvariables = inarray.num_elements();
+    int nvariables = inarray.size();
     int npoints    = m_fields[0]->GetNpoints();
     factors[StdRegions::eFactorLambda] = 1.0 / lambda / m_epsilon;
 

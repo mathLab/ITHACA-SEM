@@ -185,8 +185,8 @@ void InputDat::ReadTecplotFEBlockZone(std::ifstream &datFile,
     int nelmt = atoi(tag.substr(start + 2, end).c_str());
 
     // set-up or extend m_pts array;
-    int norigpts  = pts[0].num_elements();
-    int totfields = pts.num_elements();
+    int norigpts  = pts[0].size();
+    int totfields = pts.size();
     Array<OneD, Array<OneD, NekDouble> > origpts(totfields);
     for (int i = 0; i < totfields; ++i)
     {

@@ -240,7 +240,7 @@ namespace Nektar
                 = m_expList.lock()->GetSession()->GetComm();
 
             const int nDirDofs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-            const int nHomDofs = glo2uniMap.num_elements() - nDirDofs;
+            const int nHomDofs = glo2uniMap.size() - nDirDofs;
             const int nProc    = vComm->GetSize();
             const int rank     = vComm->GetRank();
 

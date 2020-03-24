@@ -361,7 +361,7 @@ namespace Nektar
                 GetBndCondCoeffsToLocalCoeffsMap();
 
             // Add weak boundary conditions to forcing
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eNeumann ||
@@ -389,7 +389,7 @@ namespace Nektar
 
                 bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
             }
-       
+
             StdRegions::VarCoeffMap varcoeffs;
             varcoeffs[StdRegions::eVarCoeffD00] = variablecoeffs[0];
             varcoeffs[StdRegions::eVarCoeffD11] = variablecoeffs[3];
@@ -442,7 +442,7 @@ namespace Nektar
 
 
 
-        
+
         /**
          * Given a linear system specified by the key \a key,
          * \f[\boldsymbol{M}\boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}},\f]
@@ -595,13 +595,12 @@ namespace Nektar
             int i,j;
             int bndcnt=0;
 
-
             Array<OneD, NekDouble> sign = m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsSign();
             const Array<OneD, const int> map= m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsMap();
             
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eDirichlet)
@@ -648,7 +647,7 @@ namespace Nektar
             const Array<OneD, const int> bndmap= m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsMap();
             
-            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(int i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if (m_bndConditions[i]->GetBoundaryConditionType() ==
                        SpatialDomains::ePeriodic)
@@ -682,7 +681,7 @@ namespace Nektar
         {
             int bndcnt = 0;
 
-            ASSERTL1(nreg < m_bndCondExpansions.num_elements(),
+            ASSERTL1(nreg < m_bndCondExpansions.size(),
                      "nreg is out or range since this many boundary "
                      "regions to not exist");
             
@@ -693,15 +692,15 @@ namespace Nektar
 
             // Now fill in all other Dirichlet coefficients.
             Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[nreg]->UpdateCoeffs();
-                
+
             for(int j = 0; j < nreg; ++j)
-            { 
+            {
                 if (m_bndConditions[j]->GetBoundaryConditionType() ==
                     SpatialDomains::ePeriodic)
                 {
                     continue;
                 }
-                
+
                 bndcnt += m_bndCondExpansions[j]->GetNcoeffs();
             }
             
@@ -722,7 +721,6 @@ namespace Nektar
         }
 
 
-        
         /**
          * This operation is evaluated as:
          * \f{tabbing}
@@ -878,7 +876,7 @@ namespace Nektar
             const Array<OneD, const int> map= m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsMap();
             // Add weak boundary conditions to forcing
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eNeumann ||
@@ -903,7 +901,6 @@ namespace Nektar
                         }
                     }                    
                 }
-
                 bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
             }
 
@@ -971,7 +968,7 @@ namespace Nektar
             const Array<OneD, const int> map= m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsMap();
             // Add weak boundary conditions to forcing
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eNeumann ||
@@ -1055,7 +1052,7 @@ namespace Nektar
 
 
         /**
-         * Reset the GlobalLinSys Manager 
+         * Reset the GlobalLinSys Manager
          */
         void ContField2D::v_ClearGlobalLinSysManager(void)
         {

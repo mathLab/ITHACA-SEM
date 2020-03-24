@@ -27,7 +27,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Nodal triangle routines built upon StdExpansion2D
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -50,9 +50,9 @@ namespace Nektar
         }
 
         StdNodalTriExp::StdNodalTriExp(
-                                       const LibUtilities::BasisKey &Ba, 
-                                       const LibUtilities::BasisKey &Bb, 
-                                       LibUtilities::PointsType Ntype):
+            const LibUtilities::BasisKey &Ba,
+            const LibUtilities::BasisKey &Bb,
+            LibUtilities::PointsType Ntype):
             StdExpansion  (LibUtilities::StdTriData::getNumberOfCoefficients(
                                                                              Ba.GetNumModes(),
                                                                              Bb.GetNumModes()),
@@ -66,7 +66,7 @@ namespace Nektar
         {
             ASSERTL0(m_base[0]->GetNumModes() == m_base[1]->GetNumModes(),
                      "Nodal basis initiated with different orders in the a "
-                     "and b directions");   
+                     "and b directions");
         }
 
         StdNodalTriExp::StdNodalTriExp(const StdNodalTriExp &T):
@@ -78,21 +78,21 @@ namespace Nektar
         }
 
         StdNodalTriExp::~StdNodalTriExp()
-        { 
+        {
         }
-        
+
         bool StdNodalTriExp::v_IsNodalNonTensorialExp()
         {
             return true;
         }
-        
+
         //-------------------------------
         // Nodal basis specific routines
         //-------------------------------
-        
+
         void StdNodalTriExp::NodalToModal(
-                                          const Array<OneD, const NekDouble>& inarray, 
-                                          Array<OneD,       NekDouble>& outarray)
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
         {
             StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
                                 NullConstFactorMap, NullVarCoeffMap,
@@ -106,8 +106,8 @@ namespace Nektar
 
         // Operate with transpose of NodalToModal transformation
         void StdNodalTriExp::NodalToModalTranspose(
-                                                   const Array<OneD, const NekDouble>& inarray, 
-                                                   Array<OneD,       NekDouble>& outarray)
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
         {
             StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
                                 NullConstFactorMap, NullVarCoeffMap,
@@ -120,8 +120,8 @@ namespace Nektar
         }
 
         void StdNodalTriExp::ModalToNodal(
-                                          const Array<OneD, const NekDouble>& inarray, 
-                                          Array<OneD,       NekDouble>& outarray)
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
         {
             StdMatrixKey      Nkey(eNBasisTrans, DetShapeType(), *this,
                                    NullConstFactorMap, NullVarCoeffMap,
@@ -135,8 +135,8 @@ namespace Nektar
         }
 
         void StdNodalTriExp::GetNodalPoints(
-                                            Array<OneD, const NekDouble> &x, 
-                                            Array<OneD, const NekDouble> &y)
+            Array<OneD, const NekDouble> &x,
+            Array<OneD, const NekDouble> &y)
         {
             LibUtilities::PointsManager()[m_nodalPointsKey]->GetPoints(x,y);
         }
@@ -144,7 +144,7 @@ namespace Nektar
         DNekMatSharedPtr StdNodalTriExp::GenNBasisTransMatrix()
         {
             int             i,j;
-            Array<OneD, const NekDouble>  r, s; 
+            Array<OneD, const NekDouble>  r, s;
             Array<OneD, NekDouble> c(2);
             DNekMatSharedPtr Mat;
 
@@ -177,7 +177,7 @@ namespace Nektar
         //---------------------------------------
         // Transforms
         //---------------------------------------
-        
+
         void StdNodalTriExp::v_BwdTrans(
                                         const Array<OneD, const NekDouble>& inarray,
                                         Array<OneD,       NekDouble>& outarray)
@@ -199,7 +199,7 @@ namespace Nektar
                                         Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTBase(inarray,outarray);
-            
+
             // get Mass matrix inverse
             StdMatrixKey      masskey(eInvMass, DetShapeType(), *this,
                                       NullConstFactorMap, NullVarCoeffMap,
@@ -209,7 +209,7 @@ namespace Nektar
             // copy inarray in case inarray == outarray
             NekVector<NekDouble> in(m_ncoeffs,outarray,eCopy);
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
-            
+
             out = (*matsys)*in;
         }
 
@@ -217,50 +217,50 @@ namespace Nektar
         //---------------------------------------
         // Inner product functions
         //---------------------------------------
-        
+
         void StdNodalTriExp::v_IProductWRTBase(
-                                               const Array<OneD, const NekDouble>& inarray, 
-                                               Array<OneD,       NekDouble>& outarray)
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTBase_SumFac(inarray,outarray);
         }
-        
+
         void StdNodalTriExp::v_IProductWRTBase_SumFac(
-                                                      const Array<OneD, const NekDouble>& inarray, 
-                                                      Array<OneD,       NekDouble>& outarray,
-                                                      bool                                multiplybyweights)
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray,
+            bool                                multiplybyweights)
         {
             StdTriExp::v_IProductWRTBase_SumFac(inarray,outarray,multiplybyweights);
-            NodalToModalTranspose(outarray,outarray);    
+            NodalToModalTranspose(outarray,outarray);
         }
 
         void StdNodalTriExp::v_IProductWRTDerivBase(
-                                                    const int                           dir,
-                                                    const Array<OneD, const NekDouble>& inarray, 
-                                                    Array<OneD,       NekDouble>& outarray)
+            const int                           dir,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
         }
-        
+
         void StdNodalTriExp::v_IProductWRTDerivBase_SumFac(
-                                                           const int                           dir, 
-                                                           const Array<OneD, const NekDouble>& inarray, 
-                                                           Array<OneD,       NekDouble>& outarray)
+            const int                           dir,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
         {
             StdTriExp::v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             NodalToModalTranspose(outarray,outarray);
         }
-        
+
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
-        
+
         void StdNodalTriExp::v_FillMode(
-                                        const int               mode, 
-                                        Array<OneD, NekDouble> &outarray)
+            const int               mode,
+            Array<OneD, NekDouble> &outarray)
         {
-            ASSERTL2(mode >= m_ncoeffs, 
-                     "calling argument mode is larger than total expansion order");
+            ASSERTL2(mode >= m_ncoeffs,
+                "calling argument mode is larger than total expansion order");
 
             Vmath::Zero(m_ncoeffs, outarray, 1);
             outarray[mode] = 1.0;
@@ -275,7 +275,7 @@ namespace Nektar
         int StdNodalTriExp::v_NumBndryCoeffs() const
         {
             return 3 + (GetBasisNumModes(0)-2) + 2*(GetBasisNumModes(1)-2);
-        } 
+        }
 
         //--------------------------
         // Mappings
@@ -289,7 +289,7 @@ namespace Nektar
                                                    int                        P)
         {
             ASSERTL0(eid >= 0 && eid <= 2,
-                     "Local Edge ID must be between 0 and 2"); 
+                     "Local Edge ID must be between 0 and 2");
 
             
             const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
@@ -298,12 +298,12 @@ namespace Nektar
                      "Nodal triangle not set up to deal with variable"
                      "polynomial order.");
             
-            if (maparray.num_elements() != nEdgeCoeffs)
+            if (maparray.size() != nEdgeCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
             }
 
-            if (signarray.num_elements() != nEdgeCoeffs)
+            if (signarray.size() != nEdgeCoeffs)
             {
                 signarray = Array<OneD, int>(nEdgeCoeffs,1);
             }
@@ -336,7 +336,7 @@ namespace Nektar
         {
             boost::ignore_unused(useCoeffPacking);
             ASSERTL0(localVertexId >= 0 && localVertexId <= 2,
-                     "Local Vertex ID must be between 0 and 2");                
+                     "Local Vertex ID must be between 0 and 2");
             return localVertexId;
         }
 
@@ -347,16 +347,16 @@ namespace Nektar
             Array<OneD,          int> &signarray)
         {
             ASSERTL0(eid >= 0 && eid <= 2,
-                     "Local Edge ID must be between 0 and 2"); 
-            
+                     "Local Edge ID must be between 0 and 2");
+
             const int nEdgeIntCoeffs = GetEdgeNcoeffs(eid)-2;
-            
-            if (maparray.num_elements() != nEdgeIntCoeffs)
+
+            if (maparray.size() != nEdgeIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
             }
 
-            if (signarray.num_elements() != nEdgeIntCoeffs)
+            if (signarray.size() != nEdgeIntCoeffs)
             {
                 signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
             }
@@ -373,8 +373,8 @@ namespace Nektar
 
             for (int i = 0; i < nEdgeIntCoeffs; i++)
             {
-                maparray[i] = eid*nEdgeIntCoeffs+3+i; 
-            }  
+                maparray[i] = eid*nEdgeIntCoeffs+3+i;
+            }
 
             if (orient == eBackwards)
             {
@@ -386,7 +386,7 @@ namespace Nektar
             Array<OneD, unsigned int>& outarray)
         {
             unsigned int i;
-            if (outarray.num_elements() != GetNcoeffs()-NumBndryCoeffs())
+            if (outarray.size() != GetNcoeffs()-NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(
                     GetNcoeffs()-NumBndryCoeffs());
@@ -397,16 +397,16 @@ namespace Nektar
                 outarray[i-NumBndryCoeffs()] = i;
             }
         }
-        
+
         void StdNodalTriExp::v_GetBoundaryMap(
             Array<OneD, unsigned int>& outarray)
         {
             unsigned int i;
-            if (outarray.num_elements()!=NumBndryCoeffs())
+            if (outarray.size()!=NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
             }
-            
+
             for (i = 0; i < NumBndryCoeffs(); i++)
             {
                 outarray[i] = i;
@@ -417,11 +417,11 @@ namespace Nektar
         //---------------------------------------
         // Wrapper functions
         //---------------------------------------
-        
+
         DNekMatSharedPtr StdNodalTriExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
             DNekMatSharedPtr Mat;
-            
+
             switch(mkey.GetMatrixType())
             {
                 case eNBasisTrans:
@@ -431,10 +431,10 @@ namespace Nektar
                     Mat = StdExpansion::CreateGeneralMatrix(mkey);
                     break;
             }
-            
+
             return Mat;
         }
-        
+
         DNekMatSharedPtr StdNodalTriExp::v_CreateStdMatrix(
             const StdMatrixKey &mkey)
         {
@@ -450,7 +450,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,
             const StdMatrixKey                 &mkey)
-        {              
+        {
             StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
@@ -458,7 +458,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,
             const StdMatrixKey                 &mkey)
-        {                
+        {
             StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(
                 inarray,outarray,mkey);
         }
@@ -469,8 +469,8 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,
             const StdMatrixKey                 &mkey)
-            
-        {           
+
+        {
             StdExpansion::LaplacianMatrixOp_MatFree(
                 k1,k2,inarray,outarray,mkey);
         }
@@ -483,7 +483,7 @@ namespace Nektar
         {
             StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
         }
-        
+
         void StdNodalTriExp::v_HelmholtzMatrixOp(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,
@@ -491,8 +491,8 @@ namespace Nektar
         {
             StdExpansion::HelmholtzMatrixOp_MatFree_GenericImpl(
                 inarray,outarray,mkey);
-        }       
-        
+        }
+
 
         //---------------------------------------
         // Private helper functions

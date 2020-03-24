@@ -41,14 +41,14 @@ namespace Nektar
     namespace SolverUtils
     {
         std::string AdvectionNonConservative::type = GetAdvectionFactory().
-            RegisterCreatorFunction("NonConservative", 
+            RegisterCreatorFunction("NonConservative",
                                     AdvectionNonConservative::create);
 
         AdvectionNonConservative::AdvectionNonConservative()
         {
-            
+
         }
-        
+
         /**
          * @brief Initialise AdvectionNonConservative objects and store them
          * before starting the time-stepping.
@@ -75,17 +75,17 @@ namespace Nektar
         {
             boost::ignore_unused(time, pFwd, pBwd);
 
-            int nDim       = advVel.num_elements();
+            int nDim       = advVel.size();
             int nPointsTot = fields[0]->GetNpoints();
             Array<OneD, NekDouble> grad0,grad1,grad2;
 
             grad0 = Array<OneD, NekDouble> (nPointsTot);
-            
+
             if (nDim > 1)
             {
                 grad1 = Array<OneD,NekDouble>(nPointsTot);
             }
-            
+
             if (nDim > 2)
             {
                 grad2 = Array<OneD,NekDouble>(nPointsTot);
@@ -99,48 +99,48 @@ namespace Nektar
                 {
                     case 1:
                         fields[0]->PhysDeriv(inarray[i], grad0);
-                        
-                        Vmath::Vmul(nPointsTot, 
-                                    grad0,          1, 
-                                    advVel[0],      1, 
+
+                        Vmath::Vmul(nPointsTot,
+                                    grad0,          1,
+                                    advVel[0],      1,
                                     outarray[i],    1);
                         break;
                     case 2:
                         fields[0]->PhysDeriv(inarray[i], grad0, grad1);
-                        
-                        
-                        // Calculate advection terms 
-                        Vmath::Vmul (nPointsTot, 
-                                     grad0, 1, 
-                                     advVel[0], 1, 
+
+
+                        // Calculate advection terms
+                        Vmath::Vmul (nPointsTot,
+                                     grad0, 1,
+                                     advVel[0], 1,
                                      outarray[i], 1);
-                        
-                        Vmath::Vvtvp(nPointsTot, 
-                                     grad1, 1, 
-                                     advVel[1], 1, 
-                                     outarray[i], 1, 
+
+                        Vmath::Vvtvp(nPointsTot,
+                                     grad1, 1,
+                                     advVel[1], 1,
+                                     outarray[i], 1,
                                      outarray[i], 1);
-                        
+
                         break;
                       case 3:
                         fields[0]->PhysDeriv(inarray[i], grad0, grad1, grad2);
-                        
-                        // Calculate advection terms 
-                        Vmath::Vmul (nPointsTot, 
-                                     grad0, 1, 
-                                     advVel[0], 1, 
+
+                        // Calculate advection terms
+                        Vmath::Vmul (nPointsTot,
+                                     grad0, 1,
+                                     advVel[0], 1,
                                      outarray[i], 1);
-                        
-                        Vmath::Vvtvp(nPointsTot, 
-                                     grad1, 1, 
-                                     advVel[1], 1, 
-                                     outarray[i], 1, 
+
+                        Vmath::Vvtvp(nPointsTot,
+                                     grad1, 1,
+                                     advVel[1], 1,
+                                     outarray[i], 1,
                                      outarray[i], 1);
-                        
-                        Vmath::Vvtvp(nPointsTot, 
-                                     grad2, 1, 
-                                     advVel[2], 1, 
-                                     outarray[i], 1, 
+
+                        Vmath::Vvtvp(nPointsTot,
+                                     grad2, 1,
+                                     advVel[2], 1,
+                                     outarray[i], 1,
                                      outarray[i], 1);
                         break;
                     default:

@@ -207,8 +207,8 @@ namespace Nektar
         {
             IProductWRTBase_IterPerExp(inarray,outarray);
         }
-      
-      
+
+
       void ContField3D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,       NekDouble> &outarray)
       {
@@ -221,8 +221,8 @@ namespace Nektar
           
           GlobalSolve(key,wsp,outarray);
       }
-      
-      
+
+
       void ContField3D::v_MultiplyByInvMassMatrix(
                                           const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,       NekDouble> &outarray)
@@ -231,7 +231,7 @@ namespace Nektar
           GlobalLinSysKey key(StdRegions::eMass,m_locToGloMap);
           GlobalSolve(key,inarray,outarray);
       }
-      
+
 
       // Note inout contains initial guess and final output.
       void ContField3D::GlobalSolve(
@@ -242,11 +242,11 @@ namespace Nektar
       {
           int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
           int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-          
+
           // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
           //         IN THE SOLUTION ARRAY
           v_ImposeDirichletConditions(inout);
-          
+
           // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
           if(contNcoeffs - NumDirBcs > 0)
           {
@@ -254,13 +254,13 @@ namespace Nektar
                 LinSys->Solve(locrhs,inout,m_locToGloMap,dirForcing);
           }
       }
-      
+
       GlobalLinSysSharedPtr ContField3D::GetGlobalLinSys(const GlobalLinSysKey &mkey)
       {
           return m_globalLinSysManager[mkey];
       }
-      
-      
+
+
       GlobalLinSysSharedPtr ContField3D::GenGlobalLinSys(const GlobalLinSysKey &mkey)
       {
           ASSERTL1(mkey.LocToGloMapIsDefined(),
@@ -268,7 +268,7 @@ namespace Nektar
                    "attached to key");
           return ExpList::GenGlobalLinSys(mkey, m_locToGloMap);
       }
-      
+
 
       /**
        * Returns the global matrix associated with the given GlobalMatrixKey.
@@ -282,10 +282,10 @@ namespace Nektar
           ASSERTL1(mkey.LocToGloMapIsDefined(),
                    "To use method must have a AssemblyMap "
                    "attached to key");
-          
+
             GlobalMatrixSharedPtr glo_matrix;
             auto matrixIter = m_globalMat->find(mkey);
-            
+
             if(matrixIter == m_globalMat->end())
             {
                 glo_matrix = GenGlobalMatrix(mkey,m_locToGloMap);
@@ -295,11 +295,11 @@ namespace Nektar
             {
                 glo_matrix = matrixIter->second;
             }
-            
+
             return glo_matrix;
       }
-      
-      
+
+
       void ContField3D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
       {
             int i,j;
@@ -310,7 +310,7 @@ namespace Nektar
             const Array<OneD, const int> map= m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsMap();
             
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eDirichlet)
@@ -373,7 +373,7 @@ namespace Nektar
             const Array<OneD, const int> bndmap= m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsMap();
             
-            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(int i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[i]->UpdateCoeffs();
                 
@@ -400,7 +400,7 @@ namespace Nektar
       {
           int bndcnt = 0;
           
-          ASSERTL1(nreg < m_bndCondExpansions.num_elements(),
+          ASSERTL1(nreg < m_bndCondExpansions.size(),
                    "nreg is out or range since this many boundary "
                    "regions to not exist");
           
@@ -412,7 +412,7 @@ namespace Nektar
             // Now fill in all other Dirichlet coefficients.
           Array<OneD, NekDouble>& coeffs =
               m_bndCondExpansions[nreg]->UpdateCoeffs();
-          
+
           for(int j = 0; j < nreg; ++j)
           {
               if(m_bndConditions[j]->GetBoundaryConditionType()
@@ -438,7 +438,7 @@ namespace Nektar
               }
           }
       }
-      
+
       void ContField3D::v_LocalToGlobal(bool useComm)
       {
           m_locToGloMap->LocalToGlobal(m_coeffs, m_coeffs,useComm);
@@ -504,7 +504,7 @@ namespace Nektar
               GetBndCondCoeffsToLocalCoeffsMap();
           int bndcnt = 0; 
           // Add weak boundary conditions to forcing
-          for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+          for(i = 0; i < m_bndCondExpansions.size(); ++i)
           {
               if(m_bndConditions[i]->GetBoundaryConditionType() ==
                  SpatialDomains::eNeumann ||
@@ -538,7 +538,7 @@ namespace Nektar
           
           GlobalSolve(key,wsp,outarray,dirForcing);
       }
-      
+
       void ContField3D::v_GeneralMatrixOp(
           const GlobalMatrixKey             &gkey,
           const Array<OneD,const NekDouble> &inarray,
@@ -580,7 +580,7 @@ namespace Nektar
         const Array<OneD, const int> map= m_locToGloMap->
             GetBndCondCoeffsToLocalCoeffsMap();
         // Add weak boundary conditions to forcing
-        for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+        for (i = 0; i < m_bndCondExpansions.size(); ++i)
         {
             if(m_bndConditions[i]->GetBoundaryConditionType() ==
                SpatialDomains::eNeumann ||
@@ -623,16 +623,16 @@ namespace Nektar
 
         GlobalSolve(key, wsp, outarray, dirForcing);
     }
-      
+
 
       int ContField3D::GetGlobalMatrixNnz(const GlobalMatrixKey &gkey)
       {
           ASSERTL1(gkey.LocToGloMapIsDefined(),
                    "To use method must have a AssemblyMap "
                    "attached to key");
-          
+
           auto matrixIter = m_globalMat->find(gkey);
-          
+
           if(matrixIter == m_globalMat->end())
           {
               return 0;
@@ -641,10 +641,10 @@ namespace Nektar
           {
               return matrixIter->second->GetNumNonZeroEntries();
           }
-          
+
           return 0;
       }
-      
+
 
       /**
        *

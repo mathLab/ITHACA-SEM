@@ -165,7 +165,7 @@ namespace Nektar
         boost::ignore_unused(time);
 
         // Number of fields (variables of the problem)
-        int nVariables = inarray.num_elements();
+        int nVariables = inarray.size();
 
         // RHS computation using the new advection base class
         m_diffusion->Diffuse(nVariables,
@@ -187,7 +187,7 @@ namespace Nektar
         const NekDouble time)
     {
         int i;
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         SetBoundaryConditions(time);
 
         switch(m_projectionType)
@@ -236,7 +236,7 @@ namespace Nektar
 
         StdRegions::ConstFactorMap factors;
 
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         int npoints    = m_fields[0]->GetNpoints();
         factors[StdRegions::eFactorLambda] = 1.0 / lambda / m_epsilon;
         factors[StdRegions::eFactorTau]    = 1.0;
@@ -283,9 +283,9 @@ namespace Nektar
     {
         boost::ignore_unused(inarray);
 
-        unsigned int nDim = qfield.num_elements();
-        unsigned int nConvectiveFields = qfield[0].num_elements();
-        unsigned int nPts = qfield[0][0].num_elements();
+        unsigned int nDim = qfield.size();
+        unsigned int nConvectiveFields = qfield[0].size();
+        unsigned int nPts = qfield[0][0].size();
 
         for (unsigned int j = 0; j < nDim; ++j)
         {

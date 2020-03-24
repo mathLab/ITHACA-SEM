@@ -61,14 +61,14 @@ namespace Nektar
         {
             SetExpType(e0D);
         }
-		
+
         ExpList0D::ExpList0D(const SpatialDomains::PointGeomSharedPtr &geom):
             ExpList()
         {
             SetExpType(e0D);
             m_ncoeffs = 1;
             m_npoints = 1;
-            
+
             // Set up m_coeffs, m_phys.
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
@@ -97,7 +97,7 @@ namespace Nektar
          */
         ExpList0D::ExpList0D(
             const Array<OneD, const ExpListSharedPtr> &bndConstraint,
-            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> 
+            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                       &bndCond,
             const LocalRegions::ExpansionVector       &locexp,
             const SpatialDomains::MeshGraphSharedPtr  &graph1D,
@@ -107,7 +107,7 @@ namespace Nektar
         {
             boost::ignore_unused(graph1D, periodicVerts);
 
-            SetExpType(e0D);            
+            SetExpType(e0D);
 
             int i, j, id, elmtid=0;
             map<int,int> EdgeDone;
@@ -116,9 +116,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr PointGeom;
             LocalRegions::PointExpSharedPtr Point;
 			LocalRegions::Expansion1DSharedPtr exp;
-			
+
             // First loop over boundary conditions to renumber Dirichlet boundaries
-            for(i = 0; i < bndCond.num_elements(); ++i)
+            for(i = 0; i < bndCond.size(); ++i)
             {
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
@@ -134,7 +134,7 @@ namespace Nektar
                     }
                 }
             }
-			
+
             // loop over all other edges and fill out other connectivities
             for(i = 0; i < locexp.size(); ++i)
             {
@@ -143,17 +143,17 @@ namespace Nektar
                     exp = locexp[i]->as<LocalRegions::Expansion1D>();
                     PointGeom = (exp->GetGeom1D())->GetVertex(j);
 					id = PointGeom->GetVid();
-					
+
                     if(EdgeDone.count(id)==0)
-                    {						
+                    {
                         Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(PointGeom);
                         EdgeDone[id] = elmtid;
-                        
+
                         //if (periodicVertices.count(id) > 0)
                         //{
                         //   EdgeDone[periodicVertices.find(id)->second] = elmtid;
                         //}
-						
+
                         Point->SetElmtId(elmtid++);
 						(*m_exp).push_back(Point);
                     }
@@ -161,7 +161,7 @@ namespace Nektar
                     {
                         LibUtilities::BasisKey EdgeBkey
 						= locexp[i]->DetEdgeBasisKey(j);
-						
+
                         if((*m_exp)[EdgeDone[id]]->GetNumPoints(0) >= EdgeBkey.GetNumPoints()
 						   && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0) >= EdgeBkey.GetNumModes())
                         {
@@ -183,10 +183,10 @@ namespace Nektar
                     }*/
 			 }
             }
-		 
+
             // Set up offset information and array sizes
             SetCoeffPhysOffsets();
-			
+
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
@@ -194,8 +194,8 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
         }
-		
-		
+
+
         /**
          *
          */
@@ -213,28 +213,28 @@ namespace Nektar
         {
             int i,j,k,e_npoints,offset;
             Array<OneD,Array<OneD,NekDouble> > locnormals;
-			
+
             // Assume whole array is of same coordinate dimension
             int coordim = (*m_exp)[0]->GetGeom()->GetCoordim();
-			
-            ASSERTL1(normals.num_elements() >= coordim,
+
+            ASSERTL1(normals.size() >= coordim,
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
-            
+
             // Process each expansion.
             for(i = 0; i < m_exp->size(); ++i)
             {
                 LocalRegions::Expansion0DSharedPtr loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion0D>();
 
                 LocalRegions::Expansion1DSharedPtr loc_elmt = loc_exp->GetLeftAdjacentElementExp();
-                
+
                 // Get the number of points and normals for this expansion.
                 e_npoints  = 1;
                 locnormals = loc_elmt->GetVertexNormal(loc_exp->GetLeftAdjacentElementVertex());
-				
+
                 // Get the physical data offset for this expansion.
                 offset = m_phys_offset[i];
-				
+
                 // Process each point in the expansion.
                 for(j = 0; j < e_npoints; ++j)
                 {
@@ -247,11 +247,11 @@ namespace Nektar
                 }
             }
         }
-            
-        
+
+
         /**
          * One-dimensional upwind.
-         * 
+         *
          * @param   Vn          Velocity field.
          * @param   Fwd         Left state.
          * @param   Bwd         Right state.
@@ -263,7 +263,7 @@ namespace Nektar
                                        Array<OneD,       NekDouble> &Upwind)
         {
             // Process each point in the expansion.
-            for(int j = 0; j < Fwd.num_elements(); ++j)
+            for(int j = 0; j < Fwd.size(); ++j)
             {
                 // Upwind based on one-dimensional velocity.
                 if(Vn[j] > 0.0)

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMeshing.cpp
+//  File: InputCADfix.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -28,36 +28,63 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: surfacemeshing object methods.
+//  Description: CADfix converter.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CFIMesh.h"
+#include "InputCADfix.h"
 
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
+#include <NekMeshUtils/CADSystem/CFI/CADElementCFI.h>
 
 using namespace std;
 namespace Nektar
 {
-namespace NekMeshUtils
+namespace Utilities
 {
 
-ModuleKey CFIMesh::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "cfimesh"), CFIMesh::create,
-    "Extracts mesh from cfi");
+using namespace Nektar::NekMeshUtils;
 
-CFIMesh::CFIMesh(MeshSharedPtr m) : ProcessModule(m)
+ModuleKey InputCADfix::className =
+    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eInputModule, "fbm"),
+                                               InputCADfix::create,
+                                               "Reads CADfix FBM file.");
+/**
+ * @brief Set up InputCADfix object.
+ */
+InputCADfix::InputCADfix(MeshSharedPtr m) : InputModule(m)
+{
+    m_config["order"] = ConfigOption(false, "1", "Polynomial order to elevate to");
+    m_config["surfopti"] = ConfigOption(true, "", "Optimise surface mesh");
+    m_config["idfile"] = ConfigOption(false, "", "File with correspondence between surface names and IDs");
+}
+
+InputCADfix::~InputCADfix()
 {
 }
 
-CFIMesh::~CFIMesh()
+/**
+ *
+ */
+void InputCADfix::Process()
 {
-}
+    // Load the CAD system
+    ModuleSharedPtr module = GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "loadcad"), m_mesh);
+    module->RegisterConfig("filename", m_config["infile"].as<string>());
+    if (m_mesh->m_verbose)
+    {
+        module->RegisterConfig("verbose", "");
+    }
 
-void CFIMesh::Process()
-{
+    // Set CFI mesh flag so that we always use the mesh from the CFI file.
+    module->RegisterConfig("usecfimesh", "");
+
+    module->SetDefaults();
+    module->Process();
+
     if (m_mesh->m_verbose)
     {
         cout << endl << "Loading mesh from CFI" << endl;
@@ -65,6 +92,7 @@ void CFIMesh::Process()
 
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
+    m_mesh->m_nummode  = m_config["order"].as<int>() + 1;
 
     m_cad           = std::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad);
     m_nameToCurveId = m_cad->GetCFICurveId();
@@ -72,6 +100,19 @@ void CFIMesh::Process()
     m_nameToVertId  = m_cad->GetCFIVertId();
     m_model         = m_cad->GetCFIModel();
     NekDouble scal  = m_cad->GetScaling();
+
+    if (m_config["idfile"].beenSet)
+    {
+        ofstream idFile;
+        string name = m_config["idfile"].as<string>() + ".csv";
+        idFile.open(name.c_str());
+
+        for (auto &it : m_nameToFaceId)
+        {
+            idFile << it.first << "," << it.second << endl;
+        }
+        idFile.close();
+    }
 
     map<int, NodeSharedPtr> nodes;
     vector<cfi::NodeDefinition> *cfinodes = m_model->getFenodes();
@@ -108,12 +149,12 @@ void CFIMesh::Process()
                 c->loct(xyz, t);
                 n->SetCADCurve(c, t);
 
-                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation>> ss =
+                vector<pair<weak_ptr<CADSurf>, CADOrientation::Orientation>> ss =
                     c->GetAdjSurf();
                 for (int j = 0; j < ss.size(); j++)
                 {
-                    Array<OneD, NekDouble> uv = ss[j].first->locuv(xyz);
-                    n->SetCADSurf(ss[j].first, uv);
+		    Array<OneD, NekDouble> uv = ss[j].first.lock()->locuv(xyz);
+                    n->SetCADSurf(ss[j].first.lock(), uv);
                 }
             }
         }
@@ -133,23 +174,24 @@ void CFIMesh::Process()
             if (f != m_nameToVertId.end())
             {
                 CADVertSharedPtr v = m_mesh->m_cad->GetVert(f->second);
-                vector<CADCurveSharedPtr> cs = v->GetAdjCurves();
+                vector<weak_ptr<CADCurve> > cs = v->GetAdjCurves();
                 for (int i = 0; i < cs.size(); i++)
                 {
                     NekDouble t;
-                    cs[i]->loct(xyz, t);
-                    n->SetCADCurve(cs[i], t);
-                    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation>>
-                        ss = cs[i]->GetAdjSurf();
+                    cs[i].lock()->loct(xyz, t);
+                    n->SetCADCurve(cs[i].lock(), t);
+                    vector<pair<weak_ptr<CADSurf>, CADOrientation::Orientation>>
+		        ss = cs[i].lock()->GetAdjSurf();
                     for (int j = 0; j < ss.size(); j++)
                     {
-                        Array<OneD, NekDouble> uv = ss[j].first->locuv(xyz);
-                        n->SetCADSurf(ss[j].first, uv);
+		        Array<OneD, NekDouble> uv = ss[j].first.lock()->locuv(xyz);
+                        n->SetCADSurf(ss[j].first.lock(), uv);
                     }
                 }
             }
         }
     }
+    delete cfinodes;
 
     ////
     // Really important fact. Nodes must be renumbered as they are read by the
@@ -236,8 +278,14 @@ void CFIMesh::Process()
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::ePrism, conf, n, tags);
 
+        // Create a CFI parent CAD object to store reference to CFI element.
+        std::shared_ptr<CADElementCFI> cfiParent = MemoryManager<
+            CADElementCFI>::AllocateSharedPtr(it.parent);
+        E->m_parentCAD = cfiParent;
+
         m_mesh->m_element[3].push_back(E);
     }
+    delete prisms;
 
     if (m_mesh->m_verbose)
     {
@@ -260,8 +308,14 @@ void CFIMesh::Process()
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eTetrahedron, conf, n, tags);
 
+        // Create a CFI parent CAD object to store reference to CFI element.
+        std::shared_ptr<CADElementCFI> cfiParent = MemoryManager<
+            CADElementCFI>::AllocateSharedPtr(it.parent);
+        E->m_parentCAD = cfiParent;
+
         m_mesh->m_element[3].push_back(E);
     }
+    delete tets;
 
     if (m_mesh->m_verbose)
     {
@@ -284,8 +338,14 @@ void CFIMesh::Process()
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eHexahedron, conf, n, tags);
 
+        // Create a CFI parent CAD object to store reference to CFI element.
+        std::shared_ptr<CADElementCFI> cfiParent = MemoryManager<
+            CADElementCFI>::AllocateSharedPtr(it.parent);
+        E->m_parentCAD = cfiParent;
+
         m_mesh->m_element[3].push_back(E);
     }
+    delete hexs;
 
     ProcessVertices();
     ProcessEdges();
@@ -338,6 +398,7 @@ void CFIMesh::Process()
             }
         }
     }
+    delete tris;
 
     vector<cfi::ElementDefinition> *quads =
         m_model->getElements(cfi::SUBTYPE_QU4, 4);
@@ -385,6 +446,7 @@ void CFIMesh::Process()
             }
         }
     }
+    delete quads;
 
     ProcessVertices();
     ProcessEdges();
@@ -445,6 +507,49 @@ void CFIMesh::Process()
             me->m_parentCAD = m_mesh->m_cad->GetCurve(f->second);
         }
     }
+
+    delete beams;
+
+    // Below is based on InputMCF procedure
+
+    // Make high-order surface mesh
+    module = GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "hosurface"), m_mesh);
+    if (m_config["surfopti"].beenSet)
+    {
+        module->RegisterConfig("opti", "");
+    }
+
+    try
+    {
+        module->SetDefaults();
+        module->Process();
+    }
+    catch (runtime_error &e)
+    {
+        cout << "High-order surface meshing has failed with message:" << endl;
+        cout << e.what() << endl;
+        cout << "The mesh will be written as normal but the incomplete surface "
+                "will remain faceted"
+             << endl;
+        return;
+    }
+
+    // Apply surface label
+    for (auto &it : m_mesh->m_composite)
+    {
+        ElementSharedPtr el = it.second->m_items[0];
+        if (el->m_parentCAD)
+        {
+            string name = el->m_parentCAD->GetName();
+            if (name.size() > 0)
+            {
+                m_mesh->m_faceLabels.insert(
+                    make_pair(el->GetTagList()[0], name));
+            }
+        }
+    }
+    ProcessComposites();
 }
 }
 }

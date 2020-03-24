@@ -171,7 +171,7 @@ void NodalPrismElec::CalculatePoints()
 
     for (unsigned int y = 0, index = 0; y < npts; y++)
     {
-        for (size_t t = 0; t < u1.num_elements(); t++, index++)
+        for (size_t t = 0; t < u1.size(); t++, index++)
         {
             m_points[0][index] = u1[t];
             m_points[1][index] = u[y];

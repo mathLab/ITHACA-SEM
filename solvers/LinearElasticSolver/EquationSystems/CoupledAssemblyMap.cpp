@@ -108,7 +108,6 @@ CoupledAssemblyMap::CoupledAssemblyMap(
     m_localToLocalIntMap    = Array<OneD, int>(m_numLocalCoeffs-
                                                        m_numLocalBndCoeffs,-1);
 
-
     // Only require a sign map if we are using modal polynomials in the
     // expansion and the order is >= 3.
     if (m_signChange)
@@ -216,7 +215,7 @@ CoupledAssemblyMap::CoupledAssemblyMap(
         }
     }
 
-    for (i = 0; i < m_localToGlobalMap.num_elements(); ++i)
+    for (i = 0; i < m_localToGlobalMap.size(); ++i)
     {
         ASSERTL1(m_localToGlobalMap[i] != -1, "Consistency error");
     }

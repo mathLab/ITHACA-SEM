@@ -42,6 +42,10 @@
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
+#include <NekMeshUtils/CADSystem/CADVert.h>
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
+
 #include "CADObject.h"
 
 namespace Nektar

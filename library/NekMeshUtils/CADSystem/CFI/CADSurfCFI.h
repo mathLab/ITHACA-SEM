@@ -36,8 +36,11 @@
 #define NEKMESHUTILS_CADSYSTEM_CFI_CADSURFCFI
 
 #include "../CADSurf.h"
-#include "CADSystemCFI.h"
 
+#ifndef NEK_CADFIXAPI_HXX
+#define NEK_CADFIXAPI_HXX
+#include "cadfixapi.hxx"
+#endif
 namespace Nektar
 {
 namespace NekMeshUtils

@@ -149,12 +149,12 @@ void InputCADfix::Process()
                 c->loct(xyz, t);
                 n->SetCADCurve(c, t);
 
-                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation>> ss =
+                vector<pair<weak_ptr<CADSurf>, CADOrientation::Orientation>> ss =
                     c->GetAdjSurf();
                 for (int j = 0; j < ss.size(); j++)
                 {
-                    Array<OneD, NekDouble> uv = ss[j].first->locuv(xyz);
-                    n->SetCADSurf(ss[j].first, uv);
+		    Array<OneD, NekDouble> uv = ss[j].first.lock()->locuv(xyz);
+                    n->SetCADSurf(ss[j].first.lock(), uv);
                 }
             }
         }
@@ -174,23 +174,24 @@ void InputCADfix::Process()
             if (f != m_nameToVertId.end())
             {
                 CADVertSharedPtr v = m_mesh->m_cad->GetVert(f->second);
-                vector<CADCurveSharedPtr> cs = v->GetAdjCurves();
+                vector<weak_ptr<CADCurve> > cs = v->GetAdjCurves();
                 for (int i = 0; i < cs.size(); i++)
                 {
                     NekDouble t;
-                    cs[i]->loct(xyz, t);
-                    n->SetCADCurve(cs[i], t);
-                    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation>>
-                        ss = cs[i]->GetAdjSurf();
+                    cs[i].lock()->loct(xyz, t);
+                    n->SetCADCurve(cs[i].lock(), t);
+                    vector<pair<weak_ptr<CADSurf>, CADOrientation::Orientation>>
+		        ss = cs[i].lock()->GetAdjSurf();
                     for (int j = 0; j < ss.size(); j++)
                     {
-                        Array<OneD, NekDouble> uv = ss[j].first->locuv(xyz);
-                        n->SetCADSurf(ss[j].first, uv);
+		        Array<OneD, NekDouble> uv = ss[j].first.lock()->locuv(xyz);
+                        n->SetCADSurf(ss[j].first.lock(), uv);
                     }
                 }
             }
         }
     }
+    delete cfinodes;
 
     ////
     // Really important fact. Nodes must be renumbered as they are read by the
@@ -284,6 +285,7 @@ void InputCADfix::Process()
 
         m_mesh->m_element[3].push_back(E);
     }
+    delete prisms;
 
     if (m_mesh->m_verbose)
     {
@@ -313,6 +315,7 @@ void InputCADfix::Process()
 
         m_mesh->m_element[3].push_back(E);
     }
+    delete tets;
 
     if (m_mesh->m_verbose)
     {
@@ -342,6 +345,7 @@ void InputCADfix::Process()
 
         m_mesh->m_element[3].push_back(E);
     }
+    delete hexs;
 
     ProcessVertices();
     ProcessEdges();
@@ -394,6 +398,7 @@ void InputCADfix::Process()
             }
         }
     }
+    delete tris;
 
     vector<cfi::ElementDefinition> *quads =
         m_model->getElements(cfi::SUBTYPE_QU4, 4);
@@ -441,6 +446,7 @@ void InputCADfix::Process()
             }
         }
     }
+    delete quads;
 
     ProcessVertices();
     ProcessEdges();
@@ -501,6 +507,8 @@ void InputCADfix::Process()
             me->m_parentCAD = m_mesh->m_cad->GetCurve(f->second);
         }
     }
+
+    delete beams;
 
     // Below is based on InputMCF procedure
 

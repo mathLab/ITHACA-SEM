@@ -36,7 +36,11 @@
 #define NEKMESHUTILS_CADSYSTEM_CFI_CADVERTCFI
 
 #include "../CADVert.h"
-#include <NekMeshUtils/MeshElements/Node.h>
+
+#ifndef NEK_CADFIXAPI_HXX
+#define NEK_CADFIXAPI_HXX
+#include "cadfixapi.hxx"
+#endif
 
 namespace Nektar
 {

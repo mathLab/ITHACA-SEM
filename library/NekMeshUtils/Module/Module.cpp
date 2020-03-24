@@ -250,8 +250,8 @@ void Module::ProcessEdges(bool ReprocessEdges)
         elmt->SetEdgeLink(*it);
 
         // Update 2D element boundary map.
-        pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
-        eMap.first->SetBoundaryLink(eMap.second, i);
+        pair<weak_ptr<Element>, int> eMap = (*it)->m_elLink.at(0);
+        eMap.first.lock()->SetBoundaryLink(eMap.second, i);
 
         // Update vertices
         elmt->SetVertex(0, (*it)->m_n1, false);
@@ -367,8 +367,8 @@ void Module::ProcessFaces(bool ReprocessFaces)
         // Update 3D element boundary map.
         for (int j = 0; j < (*it)->m_elLink.size(); ++j)
         {
-            pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(j);
-            eMap.first->SetBoundaryLink(eMap.second, i);
+            pair<weak_ptr<Element>, int> eMap = (*it)->m_elLink.at(j);
+            eMap.first.lock()->SetBoundaryLink(eMap.second, i);
         }
 
         // Copy face curvature
@@ -821,7 +821,7 @@ void Module::PrismLines(int                       prism,
         if (it2 != perFaces.end())
         {
             int id2 = it2->second.first->m_id;
-            nextId  = it2->second.first->m_elLink[0].first->GetId();
+            nextId  = it2->second.first->m_elLink[0].first.lock()->GetId();
             perFaces.erase(it2);
             perFaces.erase(id2);
             PrismLines(nextId, perFaces, prismsDone, line);
@@ -833,10 +833,10 @@ void Module::PrismLines(int                       prism,
             continue;
         }
 
-        nextId = f->m_elLink[0].first->GetId();
+        nextId = f->m_elLink[0].first.lock()->GetId();
         if (nextId == m_mesh->m_element[3][prism]->GetId())
         {
-            nextId = f->m_elLink[1].first->GetId();
+            nextId = f->m_elLink[1].first.lock()->GetId();
         }
 
         PrismLines(nextId, perFaces, prismsDone, line);

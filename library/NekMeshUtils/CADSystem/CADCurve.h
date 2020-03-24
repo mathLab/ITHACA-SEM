@@ -154,7 +154,7 @@ public:
      * @brief returns the ids of surfaces bound by this curve as well as their
      *        Orientation with respect to the loop of curves
      */
-    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation>>
+    std::vector<std::pair<std::weak_ptr<CADSurf>, CADOrientation::Orientation>>
     GetAdjSurf()
     {
         return m_adjSurfs;
@@ -214,7 +214,7 @@ protected:
     /// Length of edge
     NekDouble m_length;
     /// List of surfaces which this curve belongs to.
-    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation>>
+    std::vector<std::pair<std::weak_ptr<CADSurf>, CADOrientation::Orientation>>
         m_adjSurfs;
     /// list of end vertices
     std::vector<CADVertSharedPtr> m_mainVerts;

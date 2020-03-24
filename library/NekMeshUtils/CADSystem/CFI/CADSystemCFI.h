@@ -37,7 +37,10 @@
 
 #include "../CADSystem.h"
 
+#ifndef NEK_CADFIXAPI_HXX
+#define NEK_CADFIXAPI_HXX
 #include "cadfixapi.hxx"
+#endif
 
 namespace Nektar
 {
@@ -60,7 +63,14 @@ public:
     CADSystemCFI(std::string name) : CADSystem(name, "CFI")
     {
     }
-    ~CADSystemCFI() = default;
+
+    ~CADSystemCFI()
+    {
+        if (m_model != nullptr)
+        {
+            delete m_model;
+        }
+    }
 
     bool LoadCAD();
 
@@ -93,12 +103,13 @@ private:
     void AddSurf(int i, cfi::Face *in);
 
     cfi::Cfi m_cfiHandle;
-    cfi::Model *m_model;
+    cfi::Model *m_model = nullptr;
     std::vector<cfi::Body* > m_bodies;
     std::map<std::string, int> m_nameToVertId;
     std::map<std::string, int> m_nameToCurveId;
     std::map<std::string, int> m_nameToFaceId;
     std::map<std::string, std::vector<std::string> > m_mapVertToListEdge;
+
     NekDouble m_scal;
     bool m_useCFIMesh = false;
 };

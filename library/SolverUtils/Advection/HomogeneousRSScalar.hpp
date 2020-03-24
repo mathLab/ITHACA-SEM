@@ -61,7 +61,7 @@ namespace Nektar
                     m_tmp = m_func();
                 }
 
-                const int nPts   = m_tmp.num_elements() / m_numPlanes;
+                const int nPts   = m_tmp.size() / m_numPlanes;
                 const int offset = m_planeNumber * nPts;
 
                 m_tmp2 = Array<OneD, NekDouble>(nPts, m_tmp + offset);
@@ -102,12 +102,12 @@ namespace Nektar
                     m_tmp = m_func();
                 }
 
-                const int nDim   = m_tmp.num_elements();
-                const int nPts   = m_tmp[0].num_elements() / m_numPlanes;
+                const int nDim   = m_tmp.size();
+                const int nPts   = m_tmp[0].size() / m_numPlanes;
                 const int offset = m_planeNumber * nPts;
                 m_tmp2 = Array<OneD, Array<OneD, NekDouble> >(nDim);
-                
-                for (int i = 0; i < m_tmp.num_elements(); ++i)
+
+                for (int i = 0; i < m_tmp.size(); ++i)
                 {
                     m_tmp2[i] = Array<OneD, NekDouble>(nPts, m_tmp[i] + offset);
                 }

@@ -246,10 +246,10 @@ int main(int argc, char *argv[])
 
     int nIregions, lastIregion=0;
     const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConditions  = streak->GetBndConditions();
-    Array<OneD, int> Iregions =Array<OneD, int>(bndConditions.num_elements(),-1);
+    Array<OneD, int> Iregions =Array<OneD, int>(bndConditions.size(),-1);
 
     nIregions=0;
-    int nbnd= bndConditions.num_elements();
+    int nbnd= bndConditions.size();
     for(int r=0; r<nbnd; r++)
     {
         if(bndConditions[r]->GetUserDefined()=="CalcBC")
@@ -612,7 +612,7 @@ int main(int argc, char *argv[])
     }
 
 cout<<"xc,yc before tanevaluate"<<endl;
-for(int v=0; v< xcPhys.num_elements(); v++)
+for(int v=0; v< xcPhys.size(); v++)
 {
 cout<<xcPhys[v]<<"     "<<ycPhys[v]<<endl;
 }
@@ -838,11 +838,11 @@ cout<<"nlays="<<nlays<<endl;
     {
        //np_lay = (nvertl-1)*nqedge;//nedges*nqedge   (Q points!!!)
        //extract crit lay normals (through tangents):
-       Array<OneD, NekDouble> xcPhysMOD(xcPhys.num_elements());
-       Array<OneD, NekDouble> ycPhysMOD(ycPhys.num_elements());
+       Array<OneD, NekDouble> xcPhysMOD(xcPhys.size());
+       Array<OneD, NekDouble> ycPhysMOD(ycPhys.size());
        //copy(temporary the xcPhys,ycPhys into xcPhysMOD, ycPhysMOD)
-       Vmath::Vcopy(xcPhys.num_elements(),xcPhys,1,xcPhysMOD,1);
-       Vmath::Vcopy(xcPhys.num_elements(),ycPhys,1,ycPhysMOD,1);
+       Vmath::Vcopy(xcPhys.size(),xcPhys,1,xcPhysMOD,1);
+       Vmath::Vcopy(xcPhys.size(),ycPhys,1,ycPhysMOD,1);
 
        Array<OneD, StdRegions::StdExpansion1DSharedPtr> Edge_newcoords(2);
 
@@ -883,7 +883,7 @@ cout<<"nquad per edge="<<nqedge<<endl;
        Array<OneD, NekDouble>closey(4,0.0);
        Cutrepetitions(nedges, xcPhysMOD,x_tmp);
        Cutrepetitions(nedges, ycPhysMOD,y_tmp);
-       for(int l=0; l< xcQ.num_elements(); l++)
+       for(int l=0; l< xcQ.size(); l++)
        {
 	    Cutrepetitions(nedges, xcPhysMOD,x_tmp);
 	    Cutrepetitions(nedges, ycPhysMOD,y_tmp);
@@ -911,7 +911,7 @@ cout<<"nquad per edge="<<nqedge<<endl;
        Vmath::Vcopy(nquad_lay, Cont_y->GetPhys(),1, ycQ,1);
 
 cout<<"xcQ, ycQ"<<endl;
-for(int s=0; s<xcQ.num_elements(); s++)
+for(int s=0; s<xcQ.size(); s++)
 {
 cout<<xcQ[s]<<"     "<<ycQ[s]<<endl;
 }
@@ -991,7 +991,7 @@ cout<<"wrong="<<wrong<<endl;
 
        Array<OneD, NekDouble> fz(nedges*nqedge,0.0);
        bndfieldx[lastIregion]->PhysDeriv(MultiRegions::eX,ycQ,fz);
-       for(int w=0; w< fz.num_elements(); w++)
+       for(int w=0; w< fz.size(); w++)
        {
            txQ[w] = cos(atan(fz[w]));
            tyQ[w] = sin(atan(fz[w]));
@@ -1175,7 +1175,7 @@ cout<<"wrong="<<wrong<<endl;
        Array<OneD, NekDouble>tmpnyQ(nquad_lay-(nedges-1));
 
        cout<<"nx,yQbefore"<<endl;
-       for(int u=0; u<xcQ.num_elements(); u++)
+       for(int u=0; u<xcQ.size(); u++)
        {
            cout<<xcQ[u]<<"      "<<nyQ[u]<<"     "<<txQ[u]<<endl;
        }
@@ -1184,7 +1184,7 @@ cout<<"wrong="<<wrong<<endl;
        //Cutrepetitions(nedges, nxQ, tmpnxQ);
        Cutrepetitions(nedges, nyQ, tmpnyQ);
        cout<<"nx,yQ"<<endl;
-       for(int u=0; u<x_tmpQ.num_elements(); u++)
+       for(int u=0; u<x_tmpQ.size(); u++)
        {
            cout<<x_tmpQ[u]<<"      "<<tmpnyQ[u]<<endl;
        }
@@ -1644,7 +1644,7 @@ cout<<"edge=="<<h<<endl;
          //----------------------------------------------------------
          /*
            cout<<"notordered"<<endl;
-           for(int g=0; g<tmpx_lay.num_elements(); g++)
+           for(int g=0; g<tmpx_lay.size(); g++)
            {
            cout<<tmpx_lay[g]<<"    "<<tmpy_lay[g]<<endl;
            }
@@ -1667,8 +1667,8 @@ cout<<"edge=="<<h<<endl;
          Cutrepetitions(nedges, tmpy_lay, tmpy);
          //order points in x:
          int index;
-         Array<OneD, NekDouble> copyarray_x(tmpx.num_elements());
-         Array<OneD, NekDouble> copyarray_y(tmpx.num_elements());
+         Array<OneD, NekDouble> copyarray_x(tmpx.size());
+         Array<OneD, NekDouble> copyarray_y(tmpx.size());
          Orderfunctionx(tmpx, tmpy, tmpx, tmpy);
 
          //determine the neighbour points (-3;+3)
@@ -1712,7 +1712,7 @@ cout<<"edge=="<<h<<endl;
          DetermineclosePointxindex( xcPhysMOD[g*npedge +r+1], tmpx);
          //cout<<"  vert+"<<index<<endl;
 
-         ASSERTL0( index<= tmpy.num_elements()-1, " index wrong");
+         ASSERTL0( index<= tmpy.size()-1, " index wrong");
          //generate neighbour arrays Pyinterp,Pxinterp
          GenerateNeighbourArrays(index, closepoints,tmpx,tmpy,Pxinterp,Pyinterp);
 
@@ -2042,14 +2042,14 @@ cout<<"Computestreakpositions"<<endl;
 
            //start guess
            //yc= (yup+ydown)/2
-           Vmath::Vadd(xc.num_elements(), yold_up,1,yold_low,1, yc,1);
-           Vmath::Smul(xc.num_elements(), 0.5,yc,1,yc,1);
-           Vmath::Vcopy(xc.num_elements(),xold_c,1,xc,1);
+           Vmath::Vadd(xc.size(), yold_up,1,yold_low,1, yc,1);
+           Vmath::Smul(xc.size(), 0.5,yc,1,yc,1);
+           Vmath::Vcopy(xc.size(),xold_c,1,xc,1);
      }
      else//case of xQ,yQ
      {
-           Vmath::Vcopy(xc.num_elements(), xold_c,1,xc,1);
-           Vmath::Vcopy(xc.num_elements(), yold_c,1,yc,1);
+           Vmath::Vcopy(xc.size(), xold_c,1,xc,1);
+           Vmath::Vcopy(xc.size(), yold_c,1,yc,1);
      }
 
      int its;
@@ -2298,8 +2298,8 @@ void MappingEVids(Array<OneD, NekDouble> xoldup, Array<OneD, NekDouble> yoldup,
 {
     boost::ignore_unused(xoldup, xolddown);
 
-      int nlay_Eids = xcold.num_elements()-1;
-      int nlay_Vids = xcold.num_elements();
+      int nlay_Eids = xcold.size()-1;
+      int nlay_Vids = xcold.size();
 
       int nVertsTot = mesh->GetNvertices();
 cout<<"nverttot="<<nVertsTot<<endl;
@@ -2351,11 +2351,11 @@ cout<<"nlays="<<nlays<<endl;
       Vmath::Vcopy(nlays, tmpx0,1,tmpx,1);
       Vmath::Vcopy(nlays, tmpy0,1,tmpf,1);
       Vmath::Vcopy(nlays, tmpVids0,1,tmpV,1);
-      NekDouble max = Vmath::Vmax(tmpf.num_elements(), tmpf,1);
+      NekDouble max = Vmath::Vmax(tmpf.size(), tmpf,1);
       int index=0;
       for(int w=0; w< nlays; w++)
       {
-           index = Vmath::Imin(tmpf.num_elements(), tmpf,1);
+           index = Vmath::Imin(tmpf.size(), tmpf,1);
            tmpx0[w]= tmpx[index];
            tmpy0[w]= tmpf[index];
            tmpVids0[w] = tmpV[index];
@@ -2385,7 +2385,7 @@ cout<<"nlays="<<nlays<<endl;
       NekDouble Ubef = 0.0, Utmp = 0.0, Unext = 0.0;
       Array<OneD, NekDouble> coord(2);
       int elmtid,offset;
-      int nTotEdges = V1.num_elements();
+      int nTotEdges = V1.size();
       Array<OneD, int> edgestmp(6);
       for(int m=0; m<nlays; m++)
       {
@@ -2654,7 +2654,7 @@ cout<<"check="<<w<<"   Eid:"<<Eids_lay[w][f]<<endl;
 bool checkcommonvert(Array<OneD, int> Vids_laybefore, Array<OneD, int> Vids_c, int Vid)
 {
      bool check=false;
-     for(int u=0; u< Vids_laybefore.num_elements(); u++)
+     for(int u=0; u< Vids_laybefore.size(); u++)
      {
            if( Vids_laybefore[u]==Vid || Vids_c[u]==Vid)
            {
@@ -2672,8 +2672,8 @@ void  Cutrepetitions(int nedges,Array<OneD, NekDouble> inarray,
 {
 
       //determine npedge:
-      int np_lay = inarray.num_elements();
-      ASSERTL0(inarray.num_elements()%nedges==0," something on number npedge");
+      int np_lay = inarray.size();
+      ASSERTL0(inarray.size()%nedges==0," something on number npedge");
       //cut out the repetitions:
 
       int cnt=0;
@@ -2698,7 +2698,7 @@ void  Cutrepetitions(int nedges,Array<OneD, NekDouble> inarray,
 
 int DetermineclosePointxindex(NekDouble x,Array<OneD, NekDouble> xArray)
 {
-      int npts = xArray.num_elements();
+      int npts = xArray.size();
       Array<OneD, NekDouble> xcopy(npts);
       Vmath::Vcopy(npts,xArray,1,xcopy,1);
       //subtract xpoint and abs
@@ -2732,10 +2732,10 @@ void GenerateNeighbourArrays(int index,int neighpoints, Array<OneD, NekDouble> x
             Vmath::Vcopy(neighpoints, &yArray[0],1,&Neighbour_y[0],1);
             Vmath::Vcopy(neighpoints, &xArray[0],1,&Neighbour_x[0],1);
       }
-      else if( (yArray.num_elements()-1)-index < rightpoints)
+      else if( (yArray.size()-1)-index < rightpoints)
       {
 //cout"case1 closest="<<xArray[index]<<endl;
-            int rpoints = (yArray.num_elements()-1)-index;//
+            int rpoints = (yArray.size()-1)-index;//
             diff = rightpoints-rpoints;
 //cout<"start index="<<index-leftpoints-diff<<endl;
             start = index-leftpoints-diff;
@@ -2796,7 +2796,7 @@ void EvaluateTangent(int npoints, Array<OneD, NekDouble> xcQedge,
                  Array<OneD, NekDouble> & txQedge, Array<OneD, NekDouble> & tyQedge)
 {
       Array<OneD, NekDouble>  yprime(npoints,0.0);
-      int np_pol= coeffsinterp.num_elements();
+      int np_pol= coeffsinterp.size();
 cout<<"evaluatetan with "<<np_pol<<endl;
 
       //calc derivative poly (cut last entry on b array that is the const)
@@ -2839,7 +2839,7 @@ void PolyInterp( Array<OneD, NekDouble> xpol, Array<OneD, NekDouble> ypol,
                  Array<OneD, NekDouble> & xcout, Array<OneD, NekDouble> & ycout,
                  int edge, int npedge)
 {
-      int np_pol = xpol.num_elements();
+      int np_pol = xpol.size();
       int N = np_pol;
       Array<OneD, NekDouble> A (N*N,1.0);
       Array<OneD, NekDouble> b (N);
@@ -2862,7 +2862,7 @@ void PolyInterp( Array<OneD, NekDouble> xpol, Array<OneD, NekDouble> ypol,
     	   row++;
        }
 
-//cout<<"A elements="<<A.num_elements()<<endl;
+//cout<<"A elements="<<A.size()<<endl;
        Array<OneD, int> ipivot (N);
        int info =0;
        //Lapack::Dgesv( N, 1, A.get(), N, ipivot.get(),  b.get(), N, info);
@@ -2969,7 +2969,7 @@ fin[u]<<endl;
 
 
 
-//cout<<"A elements="<<A.num_elements()<<endl;
+//cout<<"A elements="<<A.size()<<endl;
        Array<OneD, int> ipivot (N);
        int info =0;
        //Lapack::Dgesv( N, 1, A.get(), N, ipivot.get(),  b.get(), N, info);
@@ -3047,21 +3047,21 @@ void  Orderfunctionx(Array<OneD, NekDouble> inarray_x,
                  Array<OneD, NekDouble> inarray_y, Array<OneD, NekDouble>& outarray_x,
                  Array<OneD, NekDouble>& outarray_y)
 {
-       Array<OneD, NekDouble>tmpx(inarray_x.num_elements());
-       Array<OneD, NekDouble>tmpy(inarray_x.num_elements());
+       Array<OneD, NekDouble>tmpx(inarray_x.size());
+       Array<OneD, NekDouble>tmpy(inarray_x.size());
        //local copy to prevent overwriting
-       Vmath::Vcopy(inarray_x.num_elements() , inarray_x,1,tmpx,1);
-       Vmath::Vcopy(inarray_x.num_elements() , inarray_y,1,tmpy,1);
+       Vmath::Vcopy(inarray_x.size() , inarray_x,1,tmpx,1);
+       Vmath::Vcopy(inarray_x.size() , inarray_y,1,tmpy,1);
 
        //order function with respect to x
        int index;
-       NekDouble max = Vmath::Vmax(tmpx.num_elements(), tmpx,1);
-       for(int w=0; w<tmpx.num_elements(); w++)
+       NekDouble max = Vmath::Vmax(tmpx.size(), tmpx,1);
+       for(int w=0; w<tmpx.size(); w++)
        {
-            index = Vmath::Imin(tmpx.num_elements(), tmpx,1);
+            index = Vmath::Imin(tmpx.size(), tmpx,1);
             outarray_x[w]= tmpx[index];
             outarray_y[w]= tmpy[index];
-            if(w< tmpx.num_elements()-1)//case of repetitions
+            if(w< tmpx.size()-1)//case of repetitions
             {
                  if(tmpx[index] == tmpx[index+1])
                  {
@@ -3095,7 +3095,7 @@ void MoveLayersvertically(int nlays, int nvertl, int cntlow, int cntup,
     	         Array<OneD, Array<OneD, NekDouble > >& layers_x,
     	         Array<OneD, Array<OneD, NekDouble > >& layers_y)
 {
-       int np_lay = layers_y[0].num_elements();
+       int np_lay = layers_y[0].size();
        // 0<h<nlays-1 to fill only the 'internal' layers(no up,low);
        for(int h=1; h<nlays-1; h++)
        {
@@ -3138,7 +3138,7 @@ void MoveLayerNfixedxpos(int nvertl, int npedge, Array<OneD, NekDouble> xcPhys,
 	         Array<OneD, NekDouble> &xlay, Array<OneD, NekDouble> &ylay,
 	         Array<OneD, NekDouble> &xnew, Array<OneD, NekDouble> &ynew)
 {
-       int np_lay  = xcPhys.num_elements();
+       int np_lay  = xcPhys.size();
        int nedges = nvertl-1;
        Array<OneD, NekDouble>tmpx(np_lay-(nedges-1));
        Array<OneD, NekDouble>tmpy(np_lay-(nedges-1));
@@ -3186,7 +3186,7 @@ void MoveLayerNfixedxpos(int nvertl, int npedge, Array<OneD, NekDouble> xcPhys,
                DetermineclosePointxindex( xcPhys[g*npedge +r+1], tmpx);
 //cout<<"  vert+"<<index<<endl;
 
-               ASSERTL0( index<= tmpy.num_elements()-1, " index wrong");
+               ASSERTL0( index<= tmpy.size()-1, " index wrong");
                //generate neighbour arrays Pyinterp,Pxinterp
                GenerateNeighbourArrays(index, closepoints,tmpx,tmpy,Pxinterp,Pyinterp);
 
@@ -3217,7 +3217,7 @@ void MoveLayerNnormpos(int nvertl, int npedge, Array<OneD, NekDouble> xcPhys,
 	         Array<OneD, NekDouble> &xlay, Array<OneD, NekDouble> &ylay,
 	         Array<OneD, NekDouble> &xnew, Array<OneD, NekDouble> &ynew)
 {
-       int np_lay  = xcPhys.num_elements();
+       int np_lay  = xcPhys.size();
        int nedges = nvertl-1;
        NekDouble x0,x1, xtmp;
        Array<OneD, NekDouble>tmpx(np_lay-(nedges-1));
@@ -3261,7 +3261,7 @@ void MoveLayerNnormpos(int nvertl, int npedge, Array<OneD, NekDouble> xcPhys,
                DetermineclosePointxindex( xtmp, tmpx);
 //cout<<"  vert+"<<index<<endl;
 
-               ASSERTL0( index<= tmpy.num_elements()-1, " index wrong");
+               ASSERTL0( index<= tmpy.size()-1, " index wrong");
                //generate neighbour arrays Pyinterp,Pxinterp
                GenerateNeighbourArrays(index, closepoints,tmpx,tmpy,Pxinterp,Pyinterp);
 
@@ -3287,7 +3287,7 @@ void MoveOutsidePointsfixedxpos(int npedge, SpatialDomains::MeshGraphSharedPtr m
     boost::ignore_unused(xolddown, xoldup);
 
      //update vertices coords outside layers region
-     int nvertl = ycold.num_elements();
+     int nvertl = ycold.size();
      int nVertTot =  mesh->GetNvertices();
      for(int n=0; n<nVertTot; n++)
      {
@@ -3372,7 +3372,7 @@ void MoveOutsidePointsNnormpos(int npedge, SpatialDomains::MeshGraphSharedPtr me
      NekDouble xmin = Vmath::Vmin(nq1D, xlayoldup,1);
 */
      //determine the new verts up/down pos:
-     int nvertl = xoldup.num_elements();
+     int nvertl = xoldup.size();
      int nedges = nvertl-1;
      Array<OneD, NekDouble> xnew_down(nvertl);
      Array<OneD, NekDouble> ynew_down(nvertl);
@@ -3971,7 +3971,7 @@ cout<<"alpha="<<s_alp<<endl;
       int eid;
       int index;
       int indexeid;
-      int neids_lay = lay_eids[0].num_elements();
+      int neids_lay = lay_eids[0].size();
       //if edgenew belongs to the crit lay replace it, else delete it.
       while (edgenew)
       {
@@ -3985,9 +3985,9 @@ cout<<"alpha="<<s_alp<<endl;
        	   iss >> std::dec >> index;
 	   //get the eid
            edgenew->QueryIntAttribute("EDGEID", &eid);
-//cout<<"eid="<<eid<<" neid="<<Eids.num_elements()<<endl;
+//cout<<"eid="<<eid<<" neid="<<Eids.size()<<endl;
 	   //find the corresponding index curve point
-	   for(int u=0; u<Eids.num_elements(); u++)
+	   for(int u=0; u<Eids.size(); u++)
 	   {
 //cout<<"Eids="<<Eids[u]<<"  eid="<<eid<<endl;
 	         if(Eids[u]==eid)
@@ -4063,7 +4063,7 @@ cout<<"alpha="<<s_alp<<endl;
 cout<<"write other curved edges"<<endl;
             TiXmlElement * curved = meshnew->FirstChildElement("CURVED");
             int idcnt = 300;
-            int nlays = lay_eids.num_elements();
+            int nlays = lay_eids.size();
 
             //TiXmlComment * comment = new TiXmlComment();
             //comment->SetValue("   new edges  ");

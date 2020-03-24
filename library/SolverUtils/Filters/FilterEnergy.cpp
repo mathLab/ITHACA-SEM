@@ -164,8 +164,8 @@ void FilterEnergy::v_Update(
     ASSERTL0(fluidEqu, "Energy filter is incompatible with this solver.");
 
     // Store physical values in an array
-    Array<OneD, Array<OneD, NekDouble> > physfields(pFields.num_elements());
-    for(i = 0; i < pFields.num_elements(); ++i)
+    Array<OneD, Array<OneD, NekDouble> > physfields(pFields.size());
+    for(i = 0; i < pFields.size(); ++i)
     {
         physfields[i] = pFields[i]->GetPhys();
     }

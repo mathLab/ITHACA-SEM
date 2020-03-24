@@ -327,7 +327,7 @@ namespace Nektar
             const NekDouble time,
             const NekDouble lambda)
     {
-        int nvariables  = inarray.num_elements();
+        int nvariables  = inarray.size();
         int nq          = m_fields[0]->GetNpoints();
         StdRegions::ConstFactorMap factors;
         // lambda = \Delta t

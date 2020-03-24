@@ -146,7 +146,7 @@ void Equation::Evaluate(
     const Array<OneD, const NekDouble>& z,
     Array<OneD, NekDouble>& result) const
 {
-    Array<OneD, NekDouble>  zero(x.num_elements(), 0.0);
+    Array<OneD, NekDouble>  zero(x.size(), 0.0);
     Evaluate(x,y,z,zero, result);
 }
 
@@ -157,7 +157,7 @@ void Equation::Evaluate(
     const NekDouble t,
     Array<OneD, NekDouble>& result) const
 {
-    Array<OneD, NekDouble>  time(x.num_elements(), t);
+    Array<OneD, NekDouble>  time(x.size(), t);
     Evaluate(x,y,z,time, result);
 }
 

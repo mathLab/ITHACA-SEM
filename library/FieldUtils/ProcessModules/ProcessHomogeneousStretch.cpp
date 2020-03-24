@@ -86,7 +86,7 @@ void ProcessHomogeneousStretch::Process(po::variables_map &vm)
 
     int factor  = m_config["factor"].as<int>();
     int nfields = m_f->m_variables.size();
-    int nplanes = m_f->m_exp[0]->GetHomogeneousBasis()->GetZ().num_elements();
+    int nplanes = m_f->m_exp[0]->GetHomogeneousBasis()->GetZ().size();
 
     ASSERTL0(factor > 1, "Parameter factor must be an int greater than 1.");
 

@@ -125,7 +125,7 @@ void FilterMovingAverage::v_ProcessSample(
     // \bar{u}_n = alpha * u_n + (1-alpha) * \bar{u}_{n-1}
     for (int n = 0; n < m_outFields.size(); ++n)
     {
-        Vmath::Svtsvtp(m_outFields[n].num_elements(),
+        Vmath::Svtsvtp(m_outFields[n].size(),
                        alpha,
                        fieldcoeffs[n],
                        1,

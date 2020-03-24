@@ -58,7 +58,7 @@ void AcousticSolver::v_Solve(
     const Array<OneD, const Array<OneD, NekDouble>> &Bwd,
     Array<OneD, Array<OneD, NekDouble>> &flux)
 {
-    int nTracePts = Fwd[0].num_elements();
+    int nTracePts = Fwd[0].size();
 
     Array<OneD, Array<OneD, NekDouble>> bfFwd(nDim + 2);
     Array<OneD, Array<OneD, NekDouble>> bfBwd(nDim + 2);
@@ -123,8 +123,8 @@ void AcousticSolver::GetRotBasefield(Array<OneD, Array<OneD, NekDouble>> &bfFwd,
     const Array<OneD, const Array<OneD, NekDouble>> basefieldFwdBwd =
         m_vectors["basefieldFwdBwd"]();
 
-    int nBF  = basefieldFwdBwd.num_elements() / 2;
-    int nDim = normals.num_elements();
+    int nBF  = basefieldFwdBwd.size() / 2;
+    int nDim = normals.size();
 
     Array<OneD, Array<OneD, NekDouble>> basefieldFwd(nBF);
     Array<OneD, Array<OneD, NekDouble>> basefieldBwd(nBF);

@@ -88,7 +88,7 @@ namespace Nektar
             // Construct this level
             Initialise(m_locToGloMap.lock());
         }
-        
+
         /**
          *
          */
@@ -96,8 +96,8 @@ namespace Nektar
         {
 
         }
-        
-        
+
+
         /**
          *
          */
@@ -107,10 +107,10 @@ namespace Nektar
             const AssemblyMapSharedPtr         &pLocToGloMap,
             const Array<OneD, const NekDouble> &dirForcing)
         {
-            bool dirForcCalculated = (bool) dirForcing.num_elements();
+            bool dirForcCalculated = (bool) dirForcing.size();
             bool atLastLevel       = pLocToGloMap->AtLastLevel();
             int  scLevel           = pLocToGloMap->GetStaticCondLevel();
-            
+
             int nGlobDofs          = pLocToGloMap->GetNumGlobalCoeffs();
             int nGlobBndDofs       = pLocToGloMap->GetNumGlobalBndCoeffs();
             int nDirBndDofs        = pLocToGloMap->GetNumGlobalDirBndCoeffs();
@@ -129,19 +129,19 @@ namespace Nektar
             {
                 Vmath::Vcopy(nGlobDofs,in.get(),1,F.get(),1);
             }
-            
+
             NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,tmp=F+nDirBndDofs,
                                           eWrapper);
             NekVector<NekDouble> F_GlobBnd(nGlobBndDofs,F,eWrapper);
             NekVector<NekDouble> F_Int(nIntDofs,tmp=F+nGlobBndDofs,eWrapper);
-            
+
             NekVector<NekDouble> V_GlobBnd(nGlobBndDofs,out,eWrapper);
             NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,
                                               tmp=out+nDirBndDofs,
                                               eWrapper);
             NekVector<NekDouble> V_Int(nIntDofs,tmp=out+nGlobBndDofs,eWrapper);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,m_wsp,eWrapper);
-            
+
             NekVector<NekDouble> V_GlobHomBndTmp(
                 nGlobHomBndDofs,tmp = m_wsp + 2*nLocBndDofs,eWrapper);
 
@@ -172,7 +172,7 @@ namespace Nektar
                     DNekScalBlkMat &BinvD      = *m_BinvD;
                     DiagonalBlockFullScalMatrixMultiply( V_LocBnd, BinvD, F_Int);
                 }
-                
+
                 pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndTmp,
                                           nDirBndDofs);
                 Subtract(F_HomBnd, F_HomBnd, V_GlobHomBndTmp);
@@ -499,7 +499,7 @@ namespace Nektar
                             {
                                 ASSERTL0(patchId[i]==patchId[j],
                                          "These values should be equal");
-                                
+
                                 if(isBndDof[j])
                                 {
                                     subMat0[dofId[i]+dofId[j]*subMat0rows] +=
@@ -520,7 +520,7 @@ namespace Nektar
                             {
                                 ASSERTL0(patchId[i]==patchId[j],
                                          "These values should be equal");
-                                
+
                                 if(isBndDof[j])
                                 {
                                     subMat2[dofId[i]+dofId[j]*subMat2rows] +=

@@ -63,7 +63,7 @@ void TimeDependentBC::v_Apply(
 {
     boost::ignore_unused(Fwd);
 
-    int nvariables = physarray.num_elements();
+    int nvariables = physarray.size();
     std::string varName;
     for (int i = 0; i < nvariables; ++i)
     {

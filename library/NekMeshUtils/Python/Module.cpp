@@ -62,10 +62,41 @@ struct ModuleWrap : public Module, public py::wrapper<Module>
         this->get_override("Process")();
     }
 
+    void AddConfigOption(std::string key, std::string def, std::string desc,
+                         bool isBool)
+    {
+        ConfigOption conf(isBool, def, desc);
+        m_config[key] = conf;
+    }
+
     // We expose Module::m_mesh as a public member variable so that we can
     // adjust this using Python attributes.
     using Module::m_mesh;
 };
+
+std::string Module_GetStringConfig(std::shared_ptr<Module> mod,
+                                   const std::string &key)
+{
+    return mod->GetConfigOption(key).as<std::string>();
+}
+
+int Module_GetIntConfig(std::shared_ptr<Module> mod,
+                        const std::string &key)
+{
+    return mod->GetConfigOption(key).as<int>();
+}
+
+double Module_GetFloatConfig(std::shared_ptr<Module> mod,
+                             const std::string &key)
+{
+    return mod->GetConfigOption(key).as<double>();
+}
+
+bool Module_GetBoolConfig(std::shared_ptr<Module> mod,
+                          const std::string &key)
+{
+    return mod->GetConfigOption(key).as<bool>();
+}
 
 /**
  * @brief Lightweight wrapper for NekMeshUtils::Module::ProcessEdges.
@@ -115,11 +146,20 @@ ModuleSharedPtr Module_Create(ModuleType const  &modType,
  * @param key    Configuration key.
  * @param value  Optional value (some configuration options are boolean).
  */
-void Module_RegisterConfig(std::shared_ptr<Module> &mod,
+void Module_RegisterConfig(std::shared_ptr<Module> mod,
                            std::string const &key,
                            std::string const &value)
 {
     mod->RegisterConfig(key, value);
+}
+
+void ModuleWrap_AddConfigOption(std::shared_ptr<ModuleWrap> mod,
+                                std::string const &key,
+                                std::string const &defValue,
+                                std::string const &desc,
+                                bool isBool)
+{
+    mod->AddConfigOption(key, defValue, desc, isBool);
 }
 
 class ModuleRegisterHelper
@@ -220,8 +260,11 @@ void export_Module()
     // Export ModuleType enum.
     NEKPY_WRAP_ENUM(ModuleType, ModuleTypeMap);
 
+    // Define ModuleWrap to be implicitly convertible to a Module, since it
+    // seems that doesn't sometimes get picked up.
     py::implicitly_convertible<std::shared_ptr<ModuleWrap>,
                                std::shared_ptr<Module>>();
+
     // Wrapper for the Module class. Note that since Module contains a pure
     // virtual function, we need the ModuleWrap helper class to handle this for
     // us. In the lightweight wrappers above, we therefore need to ensure we're
@@ -240,6 +283,13 @@ void export_Module()
                  py::arg("key"), py::arg("value") = ""))
         .def("PrintConfig", &Module::PrintConfig)
         .def("SetDefaults", &Module::SetDefaults)
+        .def("GetStringConfig", Module_GetStringConfig)
+        .def("GetFloatConfig", Module_GetFloatConfig)
+        .def("GetIntConfig", Module_GetIntConfig)
+        .def("GetBoolConfig", Module_GetBoolConfig)
+        .def("AddConfigOption", ModuleWrap_AddConfigOption, (
+                 py::arg("key"), py::arg("defValue"), py::arg("desc"),
+                 py::arg("isBool") = false))
 
         // Mesh accessor method.
         .def("GetMesh", &Module::GetMesh)

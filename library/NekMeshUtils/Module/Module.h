@@ -99,7 +99,7 @@ namespace NekMeshUtils
          * boost::lexical_cast.
          */
         template<typename T>
-        T as()
+        T as() const
         {
             try
             {
@@ -117,7 +117,7 @@ namespace NekMeshUtils
          * boost::lexical_cast and return true of false depending on cast
          */
         template<typename T>
-        bool isType()
+        bool isType() const
         {
             bool returnval = true;
             try
@@ -163,9 +163,17 @@ namespace NekMeshUtils
                                                 std::string value = std::string());
         NEKMESHUTILS_EXPORT void PrintConfig();
         NEKMESHUTILS_EXPORT void SetDefaults();
-        NEKMESHUTILS_EXPORT MeshSharedPtr GetMesh()
+
+        MeshSharedPtr GetMesh()
         {
             return m_mesh;
+        }
+
+        const ConfigOption &GetConfigOption(std::string key) const
+        {
+            auto it = m_config.find(key);
+            ASSERTL0(it != m_config.end(), "Configuration key not found!");
+            return it->second;
         }
 
         /// Extract element vertices

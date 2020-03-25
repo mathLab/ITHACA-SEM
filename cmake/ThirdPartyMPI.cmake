@@ -30,9 +30,11 @@ IF( NEKTAR_USE_MPI )
 		# If we're using WIN32, mpiexec is likely to be in a directory with
 		# a space in the path so we need to quote the path so that it is run
 		# correctly by the Tester...
+		# Update based on MPIEXEC_EXECUTABLE so that we don't get extra quotes
+		# added every time CMake is run!
 		MESSAGE(STATUS "Found MPI Executable: ${MPIEXEC}")
 		IF (WIN32)
-			SET(MPIEXEC "\\\"${MPIEXEC}\\\"" CACHE STRING "MPI job launching command")
+			SET(MPIEXEC "\\\"${MPIEXEC_EXECUTABLE}\\\"" CACHE STRING "MPI job launching command")
 			MESSAGE(STATUS "Updated MPIEXEC for Win32 platform: ${MPIEXEC}")
 		ENDIF ()
     ELSE()

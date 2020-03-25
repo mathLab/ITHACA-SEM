@@ -877,7 +877,7 @@ namespace Nektar
 
             if(global.data() == loc.data())
             {
-                local = Array<OneD, NekDouble>(map.num_elements(),loc.data());
+                local = Array<OneD, NekDouble>(map.size(),loc.data());
             }
             else
             {
@@ -885,7 +885,7 @@ namespace Nektar
             }
 
             
-            Vmath::Scatr(map.num_elements(), sign.get(),
+            Vmath::Scatr(map.size(), sign.get(),
                          local.get(), map.get(), global.get());
         }
 
@@ -901,14 +901,14 @@ namespace Nektar
             
             if(global.data() == loc.data())
             {
-                glo = Array<OneD, NekDouble>(global.num_elements(),global.data());
+                glo = Array<OneD, NekDouble>(global.size(),global.data());
             }
             else
             {
                 glo = global; // create reference
             }
 
-            Vmath::Gathr(map.num_elements(),sign.get(),glo.get(),map.get(),loc.get());
+            Vmath::Gathr(map.size(),sign.get(),glo.get(),map.get(),loc.get());
         }
 
         void AssemblyMap::PatchAssemble(
@@ -921,7 +921,7 @@ namespace Nektar
             
             if(global.data() == loc.data())
             {
-                local = Array<OneD, NekDouble>(map.num_elements(),loc.data());
+                local = Array<OneD, NekDouble>(map.size(),loc.data());
             }
             else
             {
@@ -933,7 +933,7 @@ namespace Nektar
             // boundary elements we need to assemble into
             Vmath::Zero(m_numLocalCoeffs,global.get(), 1);
 
-            Vmath::Assmb(map.num_elements(), sign.get(), local.get(),
+            Vmath::Assmb(map.size(), sign.get(), local.get(),
                          map.get(), global.get());
         }
 
@@ -1054,7 +1054,7 @@ namespace Nektar
         int AssemblyMap::GetBndCondIDToGlobalTraceID(
                     const int i)
         {
-            ASSERTL1(i < m_bndCondIDToGlobalTraceID.num_elements(),
+            ASSERTL1(i < m_bndCondIDToGlobalTraceID.size(),
                      "Index out of range.");
             return m_bndCondIDToGlobalTraceID[i];
         }
@@ -1211,8 +1211,8 @@ namespace Nektar
                                           const Array<OneD, const NekDouble>& local,
                                           Array<OneD,NekDouble>& locbnd) const
         {
-            ASSERTL1(locbnd.num_elements() >= m_numLocalBndCoeffs,"LocBnd vector is not of correct dimension");
-            ASSERTL1(local.num_elements() >= m_numLocalCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(locbnd.size() >= m_numLocalBndCoeffs,"LocBnd vector is not of correct dimension");
+            ASSERTL1(local.size() >= m_numLocalCoeffs,"Local vector is not of correct dimension");
 
             Vmath::Gathr(m_numLocalBndCoeffs, local.get(), m_localToLocalBndMap.get(), locbnd.get());
         }
@@ -1221,8 +1221,8 @@ namespace Nektar
                                           const Array<OneD, const NekDouble>& local,
                                           Array<OneD,NekDouble>& locint) const
         {
-            ASSERTL1(locint.num_elements() >= m_numLocalCoeffs-m_numLocalBndCoeffs,"Locint vector is not of correct dimension");
-            ASSERTL1(local.num_elements() >= m_numLocalCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(locint.size() >= m_numLocalCoeffs-m_numLocalBndCoeffs,"Locint vector is not of correct dimension");
+            ASSERTL1(local.size() >= m_numLocalCoeffs,"Local vector is not of correct dimension");
 
             Vmath::Gathr(m_numLocalCoeffs-m_numLocalBndCoeffs, local.get(), m_localToLocalIntMap.get(), locint.get());
         }
@@ -1232,8 +1232,8 @@ namespace Nektar
                                           const Array<OneD, const NekDouble>& locbnd,
                                           Array<OneD,NekDouble>& local) const
         {
-            ASSERTL1(locbnd.num_elements() >= m_numLocalBndCoeffs,"LocBnd vector is not of correct dimension");
-            ASSERTL1(local.num_elements() >= m_numLocalCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(locbnd.size() >= m_numLocalBndCoeffs,"LocBnd vector is not of correct dimension");
+            ASSERTL1(local.size() >= m_numLocalCoeffs,"Local vector is not of correct dimension");
 
             Vmath::Scatr(m_numLocalBndCoeffs, locbnd.get(), m_localToLocalBndMap.get(), local.get());
         }
@@ -1242,8 +1242,8 @@ namespace Nektar
                                           const Array<OneD, const NekDouble>& locint,
                                           Array<OneD,NekDouble>& local) const
         {
-            ASSERTL1(locint.num_elements() >= m_numLocalCoeffs-m_numLocalBndCoeffs,"LocBnd vector is not of correct dimension");
-            ASSERTL1(local.num_elements() >= m_numLocalCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(locint.size() >= m_numLocalCoeffs-m_numLocalBndCoeffs,"LocBnd vector is not of correct dimension");
+            ASSERTL1(local.size() >= m_numLocalCoeffs,"Local vector is not of correct dimension");
 
             Vmath::Scatr(m_numLocalCoeffs-m_numLocalBndCoeffs, locint.get(), m_localToLocalIntMap.get(), local.get());
         }
@@ -1310,7 +1310,7 @@ namespace Nektar
         void AssemblyMap::UniversalAssembleBnd(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
-            ASSERTL1(pGlobal.size() == m_numGlobalBndCoeffs,
+            ASSERTL1(pGlobal.size() >= m_numGlobalBndCoeffs,
                      "Wrong size.");
             Gs::Gather(pGlobal, Gs::gs_add, m_bndGsh);
         }

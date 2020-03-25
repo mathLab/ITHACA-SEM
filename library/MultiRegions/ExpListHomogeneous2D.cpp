@@ -161,32 +161,18 @@ namespace Nektar
         ExpListHomogeneous2D::~ExpListHomogeneous2D()
         {
         }
-<<<<<<< HEAD
         
         void ExpListHomogeneous2D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                          Array<OneD, NekDouble> &outarray, 
-=======
-
-        void ExpListHomogeneous2D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                                         Array<OneD, NekDouble> &outarray,
-                                                         CoeffState coeffstate,
->>>>>>> master
                                                          bool Shuff,
                                                          bool UnShuff)
         {
             // Forwards trans
             Homogeneous2DTrans(inarray,outarray,true,Shuff,UnShuff);
         }
-<<<<<<< HEAD
     
         void ExpListHomogeneous2D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                          Array<OneD, NekDouble> &outarray, 
-=======
-
-        void ExpListHomogeneous2D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                                         Array<OneD, NekDouble> &outarray,
-                                                         CoeffState coeffstate,
->>>>>>> master
                                                          bool Shuff,
                                                          bool UnShuff)
         {
@@ -196,12 +182,7 @@ namespace Nektar
 
         void ExpListHomogeneous2D::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                                    const Array<OneD, NekDouble> &inarray2,
-<<<<<<< HEAD
                                                    Array<OneD, NekDouble> &outarray)
-=======
-                                                   Array<OneD, NekDouble> &outarray,
-                                                   CoeffState coeffstate)
->>>>>>> master
         {
             int npoints = outarray.size(); // number of total physical points
             int nlines  = m_lines.size();  // number of lines == number of Fourier modes = number of Fourier coeff = number of points per slab
@@ -349,13 +330,8 @@ namespace Nektar
                 HomogeneousFwdTrans(outarray,outarray);
             }
         }
-<<<<<<< HEAD
         
         void ExpListHomogeneous2D::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
-=======
-
-        void ExpListHomogeneous2D::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, CoeffState coeffstate)
->>>>>>> master
         {
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
@@ -422,18 +398,10 @@ namespace Nektar
                 cnt1   += m_lines[n]->GetTotPoints();
             }
         }
-<<<<<<< HEAD
         
         void ExpListHomogeneous2D::Homogeneous2DTrans(const Array<OneD, const NekDouble> &inarray, 
                                                       Array<OneD, NekDouble> &outarray, 
                                                       bool IsForwards, 
-=======
-
-        void ExpListHomogeneous2D::Homogeneous2DTrans(const Array<OneD, const NekDouble> &inarray,
-                                                      Array<OneD, NekDouble> &outarray,
-                                                      bool IsForwards,
-                                                      CoeffState coeffstate,
->>>>>>> master
                                                       bool Shuff,
                                                       bool UnShuff)
         {
@@ -554,13 +522,8 @@ namespace Nektar
                 m_transposition->Transpose(sortedoutarrayY,outarray,false,LibUtilities::eYZtoX);
             }
         }
-<<<<<<< HEAD
         
         DNekBlkMatSharedPtr ExpListHomogeneous2D::GetHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype) const
-=======
-
-        DNekBlkMatSharedPtr ExpListHomogeneous2D::GetHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype,  CoeffState coeffstate) const
->>>>>>> master
         {
             auto matrixIter = m_homogeneous2DBlockMat->find(mattype);
 

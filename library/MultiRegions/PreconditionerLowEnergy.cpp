@@ -1107,7 +1107,7 @@ namespace Nektar
         {
             int nLocBndDofs   = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
-            ASSERTL1(pInOut.num_elements() >= nLocBndDofs,
+            ASSERTL1(pInOut.size() >= nLocBndDofs,
                      "Output array is not greater than the nLocBndDofs");
 
             //Block transposed transformation matrix
@@ -1148,9 +1148,9 @@ namespace Nektar
         {
             int nLocBndDofs    = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
-            ASSERTL1(pInput.num_elements() >= nLocBndDofs,
+            ASSERTL1(pInput.size() >= nLocBndDofs,
                      "Input array is smaller than nLocBndDofs");
-            ASSERTL1(pOutput.num_elements() >= nLocBndDofs,
+            ASSERTL1(pOutput.size() >= nLocBndDofs,
                      "Output array is smaller than nLocBndDofs");
 
             //Block inverse transformation matrix
@@ -1187,9 +1187,9 @@ namespace Nektar
         {
             int nLocBndDofs     = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
-            ASSERTL1(pInput.num_elements() >= nLocBndDofs,
+            ASSERTL1(pInput.size() >= nLocBndDofs,
                      "Input array is less than nLocBndDofs");
-            ASSERTL1(pOutput.num_elements() >= nLocBndDofs,
+            ASSERTL1(pOutput.size() >= nLocBndDofs,
                      "Output array is less than nLocBndDofs");
 
             //Block inverse transformation matrix

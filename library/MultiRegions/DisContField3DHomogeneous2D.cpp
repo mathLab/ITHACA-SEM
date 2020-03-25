@@ -129,12 +129,6 @@ namespace Nektar
             // Setup Default optimisation information.
             nel = GetExpSize();
 
-<<<<<<< HEAD
-=======
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
->>>>>>> master
             SetCoeffPhys();
 
             SetupBoundaryConditions(HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,bcs);
@@ -161,7 +155,6 @@ namespace Nektar
 			const SpatialDomains::BoundaryRegionCollection  &bregions = bcs.GetBoundaryRegions();
 
 			int nbnd = bregions.size();
-
 
 			m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(nbnd);
 

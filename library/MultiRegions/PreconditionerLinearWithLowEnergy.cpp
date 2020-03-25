@@ -189,7 +189,7 @@ namespace Nektar
             //Apply Low Energy preconditioner
             m_lowEnergyPrecon->DoPreconditioner(pInput, OutputLowEnergy);
 
-            ASSERTL1(pOutput.num_elements() >= nGlobHomBndDofs, "Output array is not correct");
+            ASSERTL1(pOutput.size() >= nGlobHomBndDofs, "Output array is not correct");
             Vmath::Vadd(nGlobHomBndDofs,pOutput,1,OutputLowEnergy,1,pOutput,1);
         }
 

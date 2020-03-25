@@ -108,7 +108,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &dirForcing)
         {
             boost::ignore_unused(dirForcing);
-            ASSERTL1( dirForcing.num_elements() == 0,
+            ASSERTL1( dirForcing.size() == 0,
                       "GlobalLinSysStaticCond: Not setup for dirForcing");
 
             bool atLastLevel       = pLocToGloMap->AtLastLevel();

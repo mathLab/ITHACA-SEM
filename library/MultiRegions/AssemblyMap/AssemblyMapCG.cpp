@@ -1849,7 +1849,7 @@ namespace Nektar
             
             cnt = 0;
             int offset = 0;
-            for(i = 0; i < bndCondExp.num_elements(); i++)
+            for(i = 0; i < bndCondExp.size(); i++)
             {
                 set<int> foundExtraVerts, foundExtraEdges;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
@@ -1953,7 +1953,7 @@ namespace Nektar
 
                 exp->GetBoundaryMap(bndmap);
                 
-                for(j = 0; j < bndmap.num_elements(); ++j)
+                for(j = 0; j < bndmap.size(); ++j)
                 {
                     k = cnt + bndmap[j];
                     

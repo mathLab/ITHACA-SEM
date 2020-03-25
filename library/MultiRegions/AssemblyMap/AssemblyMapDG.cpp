@@ -477,7 +477,7 @@ namespace Nektar
             m_bndCondIDToGlobalTraceID = Array<OneD, int>(nbndexp);
 
             cnt = 0;
-            for(i = 0; i < bndCondExp.num_elements(); ++i)
+            for(i = 0; i < bndCondExp.size(); ++i)
             {
                 if (bndCond[i]->GetBoundaryConditionType() ==
                     SpatialDomains::ePeriodic)
@@ -518,7 +518,7 @@ namespace Nektar
 
             // reset bndCondCoeffToLocalTraceMap to hold local rather
             // than global reference
-            for(i = 0; i < m_bndCondCoeffsToLocalTraceMap.num_elements(); ++i)
+            for(i = 0; i < m_bndCondCoeffsToLocalTraceMap.size(); ++i)
             {
                 m_bndCondCoeffsToLocalTraceMap[i] =
                     invLocToGloMap[m_bndCondCoeffsToLocalTraceMap[i]];

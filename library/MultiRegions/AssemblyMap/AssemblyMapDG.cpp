@@ -1258,8 +1258,8 @@ namespace Nektar
 
             for (int i = 0; i < testLoopCount; ++i)
             {
-                MPI_Request request[vecPairPartitionTrace.size() * 2];
-                MPI_Status status[vecPairPartitionTrace.size() * 2];
+                Array<OneD, MPI_Request> request(vecPairPartitionTrace.size() * 2);
+                Array<OneD, MPI_Status> status(vecPairPartitionTrace.size() * 2);
                 int count = 0, count2 = 0;
 
                 Array<OneD, NekDouble> recvBuff(totSends, -1);
@@ -1289,7 +1289,7 @@ namespace Nektar
 
                 }
 
-                MPI_Waitall(vecPairPartitionTrace.size() * 2, request, status);
+                MPI_Waitall(vecPairPartitionTrace.size() * 2, request.get(), status.get());
 
                 count = 0;
                 for (auto pairPartitionTrace : vecPairPartitionTrace)
@@ -1315,7 +1315,7 @@ namespace Nektar
             if (myRank == 0)
             {
                 timeAvgPairwise = sumTimePairwise[0]/nRanks;
-                std::cout << "alltoall times (avg, min, max):   " << timeAvgPairwise << " " << minTimePairwise[0] << " " << maxTimePairwise[0] << std::endl;
+                std::cout << "pairwise times (avg, min, max):   " << timeAvgPairwise << " " << minTimePairwise[0] << " " << maxTimePairwise[0] << std::endl;
             }
 
             Array<OneD, long> tmp2(nTracePhys);

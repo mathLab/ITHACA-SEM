@@ -975,7 +975,7 @@ namespace Nektar
                     }
                 }
             }
-            // Setting up MPI neighbor_alltoall
+            // Setting up MPI neighbor_alltoallv
             //Prepare destinations & weights for creation of new distributed
             // MPI communicator for the neighbour communication
             int nNeighbours = rankSharedEdges.size();
@@ -1001,9 +1001,9 @@ namespace Nektar
             cnt = 0;
             for (auto &rankEdgeSet : rankSharedEdges)
             {
-                for (int i = 0; i < rankEdgeSet.second.size(); ++i)
+                for (int i : rankEdgeSet.second)
                 {
-                    std::vector<int> edgeIndex = m_edgeToTrace[rankEdgeSet.second[i]];
+                    std::vector<int> edgeIndex = m_edgeToTrace[i];
                     m_edgeTraceIndex.insert(m_edgeTraceIndex.end(), edgeIndex.begin(), edgeIndex.end());
                     m_sendCount[cnt] += edgeIndex.size();
                 }
@@ -1088,15 +1088,33 @@ namespace Nektar
                 allVSendDisp[i] = allVSendDisp[i-1] + allVSendCount[i-1];
             }
 
+            //Setting up pairwise send/recv between individual partitions
+            std::vector<std::pair<int, std::vector<int>>> vecPairPartitionTrace;
+            int totSends = 0;
+            for (const auto& rankEdgeSet : rankSharedEdges)
+            {
+                std::vector<int> edgeTraceIndex;
+                for (int i : rankEdgeSet.second)
+                {
+                    std::vector<int> edgeIndex = m_edgeToTrace[i];
+                    edgeTraceIndex.insert(edgeTraceIndex.end(), edgeIndex.begin(), edgeIndex.end());
+
+                    totSends += m_edgeToTrace[i].size();
+                }
+
+                vecPairPartitionTrace.emplace_back(std::make_pair(rankEdgeSet.first, edgeTraceIndex));
+            }
+
             //Timing MPI comm methods
             int testLoopCount = 100;
             Array<OneD, double> testFwd(trace->GetNpoints(), 1);
             Array<OneD, double> testBwd(trace->GetNpoints(), -2);
+
             NekDouble timeAvgAll = -1;
             NekDouble timeAvgAllv = -1;
             NekDouble timeAvgNeighbourV = -1;
+            NekDouble timeAvgPairwise = -1;
 
-            std::cout << "Number of shares: " << trace->GetNpoints() << std::endl;
             //Alltoall
             LibUtilities::Timer tAll;
             tAll.Start();
@@ -1232,6 +1250,72 @@ namespace Nektar
                 timeAvgNeighbourV = totalTime/nRanks;
 
                 std::cout << "n_alltoall times (avg, min, max): " << timeAvgNeighbourV << " " << minTime << " " << maxTime << std::endl;
+            }
+
+            //pairwise send/recv
+            LibUtilities::Timer tPairwise;
+            tPairwise.Start();
+
+            for (int i = 0; i < testLoopCount; ++i)
+            {
+                MPI_Request request[vecPairPartitionTrace.size() * 2];
+                MPI_Status status[vecPairPartitionTrace.size() * 2];
+                int count = 0, count2 = 0;
+
+                Array<OneD, NekDouble> recvBuff(totSends, -1);
+                for (auto pairPartitionTrace : vecPairPartitionTrace)
+                {
+                    Array<OneD, NekDouble> sendBuff(pairPartitionTrace.second.size(), -1);
+                    for (int i = 0; i < pairPartitionTrace.second.size(); ++i)
+                    {
+                        sendBuff[i] = testFwd[pairPartitionTrace.second[i]];
+                    }
+
+                    MPI_Isend(sendBuff.get(),
+                            sendBuff.num_elements(),
+                            MPI_DOUBLE,
+                            pairPartitionTrace.first,  // rank of destination
+                            0,                         // message tag
+                            m_commGraph,
+                            &request[count2++]);
+
+                    MPI_Irecv(static_cast<void *>(recvBuff.get() + m_sendDisp[count++]),
+                            sendBuff.num_elements(),
+                            MPI_DOUBLE,
+                            pairPartitionTrace.first,  // rank of source
+                            0,                         // message tag
+                            m_commGraph,
+                            &request[count2++]);
+
+                }
+
+                MPI_Waitall(vecPairPartitionTrace.size() * 2, request, status);
+
+                count = 0;
+                for (auto pairPartitionTrace : vecPairPartitionTrace)
+                {
+                    for (int i = 0; i < pairPartitionTrace.second.size(); ++i)
+                    {
+                        testBwd[pairPartitionTrace.second[i]] = recvBuff[m_sendDisp[count] + i];
+                    }
+                    count++;
+                }
+            }
+
+            tPairwise.Stop();
+            Array<OneD, NekDouble> minTimePairwise(1, tPairwise.TimePerTest(testLoopCount));
+            m_comm->AllReduce(minTimePairwise, LibUtilities::ReduceMin);
+
+            Array<OneD, NekDouble> maxTimePairwise(1, tPairwise.TimePerTest(testLoopCount));
+            m_comm->AllReduce(maxTimePairwise, LibUtilities::ReduceMax);
+
+            Array<OneD, NekDouble> sumTimePairwise(1, tPairwise.TimePerTest(testLoopCount));
+            m_comm->AllReduce(sumTimePairwise, LibUtilities::ReduceSum);
+
+            if (myRank == 0)
+            {
+                timeAvgPairwise = sumTimePairwise[0]/nRanks;
+                std::cout << "alltoall times (avg, min, max):   " << timeAvgPairwise << " " << minTimePairwise[0] << " " << maxTimePairwise[0] << std::endl;
             }
 
             Array<OneD, long> tmp2(nTracePhys);

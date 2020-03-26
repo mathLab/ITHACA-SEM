@@ -1266,15 +1266,21 @@ namespace Nektar
                 for (auto &pairPartitionTrace : vecPairPartitionTrace)
                 {
                     size_t len = pairPartitionTrace.second.size();
-                    Array<OneD, NekDouble> sendBuff(len, -1);
 
-                    MPI_Irecv(static_cast<void *>(recvBuff.get() + m_sendDisp[count++]),
-                              sendBuff.num_elements(),
+                    MPI_Irecv(static_cast<void *>(recvBuff.get() +
+                                                  m_sendDisp[count++]),
+                              len,
                               MPI_DOUBLE,
                               pairPartitionTrace.first,  // rank of source
                               0,                         // message tag
                               m_commGraph,
                               &request[count2++]);
+                }
+
+                for (auto &pairPartitionTrace : vecPairPartitionTrace)
+                {
+                    size_t len = pairPartitionTrace.second.size();
+                    Array <OneD, NekDouble> sendBuff(len, -1);
 
                     for (size_t j = 0; j < len; ++j)
                     {
@@ -1282,7 +1288,7 @@ namespace Nektar
                     }
 
                     MPI_Isend(sendBuff.get(),
-                            sendBuff.num_elements(),
+                            len,
                             MPI_DOUBLE,
                             pairPartitionTrace.first,  // rank of destination
                             0,                         // message tag

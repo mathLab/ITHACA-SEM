@@ -149,10 +149,13 @@ void FilterHistoryPoints::v_Initialise(
     m_index = 0;
     m_historyList.clear();
 
+    LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
+
     vector<unsigned int> planeIDs;
     // Read history points
     Array<OneD, NekDouble>  gloCoord(3,0.0);
     int dim = pFields[0]->GetGraph()->GetSpaceDimension();
+
     if (m_isHomogeneous1D)
     {
         dim++;
@@ -187,9 +190,10 @@ void FilterHistoryPoints::v_Initialise(
                 NekDouble Z = (pFields[0]->GetHomogeneousBasis()
                                             ->GetZ())[plane];
                 Z = (Z+1)*lhom/2;
-                if(fabs(gloCoord[2]-Z) > NekConstants::kVertexTheSameDouble)
+                if(fabs(gloCoord[2]-Z) > NekConstants::kVertexTheSameDouble &&
+                    vComm->GetRank() == 0)
                 {
-                    cout << "Reseting History point from z = " << gloCoord[2]
+                    cout << "Resetting History point from z = " << gloCoord[2]
                          << " to z = " << Z << endl;
                 }
                 gloCoord[2] = Z;
@@ -209,7 +213,6 @@ void FilterHistoryPoints::v_Initialise(
 
     // Determine the unique process responsible for each history point
     // For points on a partition boundary, must select a single process
-    LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
     int vRank = vComm->GetRowComm()->GetRank();
     int vHP   = m_historyPoints.size();
     Array<OneD, int>       procList(vHP, -1   );

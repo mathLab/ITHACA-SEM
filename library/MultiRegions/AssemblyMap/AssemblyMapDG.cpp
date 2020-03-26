@@ -1256,19 +1256,29 @@ namespace Nektar
             LibUtilities::Timer tPairwise;
             tPairwise.Start();
 
-            for (int i = 0; i < testLoopCount; ++i)
+            for (size_t i = 0; i < testLoopCount; ++i)
             {
                 Array<OneD, MPI_Request> request(vecPairPartitionTrace.size() * 2);
                 Array<OneD, MPI_Status> status(vecPairPartitionTrace.size() * 2);
-                int count = 0, count2 = 0;
+                size_t count = 0, count2 = 0;
 
                 Array<OneD, NekDouble> recvBuff(totSends, -1);
-                for (auto pairPartitionTrace : vecPairPartitionTrace)
+                for (auto &pairPartitionTrace : vecPairPartitionTrace)
                 {
-                    Array<OneD, NekDouble> sendBuff(pairPartitionTrace.second.size(), -1);
-                    for (int i = 0; i < pairPartitionTrace.second.size(); ++i)
+                    size_t len = pairPartitionTrace.second.size();
+                    Array<OneD, NekDouble> sendBuff(len, -1);
+
+                    MPI_Irecv(static_cast<void *>(recvBuff.get() + m_sendDisp[count++]),
+                              sendBuff.num_elements(),
+                              MPI_DOUBLE,
+                              pairPartitionTrace.first,  // rank of source
+                              0,                         // message tag
+                              m_commGraph,
+                              &request[count2++]);
+
+                    for (size_t j = 0; j < len; ++j)
                     {
-                        sendBuff[i] = testFwd[pairPartitionTrace.second[i]];
+                        sendBuff[j] = testFwd[pairPartitionTrace.second[j]];
                     }
 
                     MPI_Isend(sendBuff.get(),
@@ -1278,25 +1288,17 @@ namespace Nektar
                             0,                         // message tag
                             m_commGraph,
                             &request[count2++]);
-
-                    MPI_Irecv(static_cast<void *>(recvBuff.get() + m_sendDisp[count++]),
-                            sendBuff.num_elements(),
-                            MPI_DOUBLE,
-                            pairPartitionTrace.first,  // rank of source
-                            0,                         // message tag
-                            m_commGraph,
-                            &request[count2++]);
-
                 }
 
                 MPI_Waitall(vecPairPartitionTrace.size() * 2, request.get(), status.get());
 
                 count = 0;
-                for (auto pairPartitionTrace : vecPairPartitionTrace)
+                for (auto &pairPartitionTrace : vecPairPartitionTrace)
                 {
-                    for (int i = 0; i < pairPartitionTrace.second.size(); ++i)
+                    size_t len = pairPartitionTrace.second.size();
+                    for (size_t j = 0; j < len; ++j)
                     {
-                        testBwd[pairPartitionTrace.second[i]] = recvBuff[m_sendDisp[count] + i];
+                        testBwd[pairPartitionTrace.second[j]] = recvBuff[m_sendDisp[count] + j];
                     }
                     count++;
                 }

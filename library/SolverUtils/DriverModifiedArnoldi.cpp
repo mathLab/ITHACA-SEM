@@ -310,6 +310,7 @@ void DriverModifiedArnoldi::EV_update(
     CopyArnoldiArrayToField(src);
     m_equ[0]->TransCoeffToPhys();
 
+    m_equ[0]->SetTime(0.);
     m_equ[0]->DoSolve();
 
     if(m_EvolutionOperator == eTransientGrowth)
@@ -321,6 +322,7 @@ void DriverModifiedArnoldi::EV_update(
         CopyFwdToAdj();
         m_equ[1]->TransCoeffToPhys();
 
+        m_equ[1]->SetTime(0.);
         m_equ[1]->DoSolve();
     }
 

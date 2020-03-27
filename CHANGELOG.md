@@ -19,13 +19,10 @@ v5.0.1
 ------
 **Library**
 - Fix incorrect coordinate dimension used in history point filter (!1118)
+- Fix compile errors with GCC 9.x (!1108)
 
 **IncNavierStokesSolver**
 - Change the baseflow time in the Adjoint advection (!1133)
-
-v5.0.1
-------
-- Fix compile errors with GCC 9.x (!1108)
 
 **NekMesh**
 - Fix compile errors when using intel cc (!1114)

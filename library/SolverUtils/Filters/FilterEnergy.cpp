@@ -202,7 +202,7 @@ void FilterEnergy::v_Update(
     {
         Array<OneD, NekDouble> tmp2(nPoints, 0.0);
         pFields[0]->HomogeneousFwdTrans(tmp, tmp2);
-        Ek = pFields[0]->GetPlane(0)->Integral(tmp2) * 2.0 * M_PI;
+        Ek = pFields[0]->GetPlane(0)->Integral(tmp2) * m_homogeneousLength;
     }
     else
     {
@@ -256,7 +256,7 @@ void FilterEnergy::v_Update(
             pFields[i]->SetWaveSpace(waveSpace[i]);
         }
         pFields[0]->HomogeneousFwdTrans(tmp, tmp);
-        Ek = pFields[0]->GetPlane(0)->Integral(tmp) * 2 * M_PI;
+        Ek = pFields[0]->GetPlane(0)->Integral(tmp) * m_homogeneousLength;
     }
     else
     {

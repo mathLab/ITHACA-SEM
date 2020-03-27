@@ -20,6 +20,7 @@ v5.0.1
 **Library**
 - Fix incorrect coordinate dimension used in history point filter (!1118)
 - Fix compile errors with GCC 9.x (!1108)
+- Correct the Energy/Enstropy integral for the 3DH1 flow (!1132)
 
 **NekMesh**
 - Fix compile errors when using intel cc (!1114)

@@ -19,12 +19,11 @@ v5.0.1
 ------
 **Library**
 - Fix incorrect coordinate dimension used in history point filter (!1118)
-v5.0.1
-------
 - Fix compile errors with GCC 9.x (!1108)
 
-v5.0.1
-------
+**NekMesh**
+- Fix compile errors when using intel cc (!1114)
+
 **CI**
 - Switched to Gitlab CI (!1120, !1120, !1128, !1129)
 - Added checked conversion from double to int in SessionReader (!1113)

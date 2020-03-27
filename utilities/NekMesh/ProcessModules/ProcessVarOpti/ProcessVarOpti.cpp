@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
@@ -48,6 +49,9 @@
 
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 // Including Timer.h includes Windows.h, which causes GetJob to be set as a
 // macro for some reason.
@@ -289,6 +293,16 @@ void ProcessVarOpti::Process()
 
     int nThreads = m_config["numthreads"].as<int>();
 
+    if (m_mesh->m_cad)
+    {
+        if (boost::equals(m_mesh->m_cad->GetEngine(), "cfi"))
+        {
+            WARNINGL0(false,
+                      "CFI is not thread-safe; forcing to 'numthreads=1'.");
+            nThreads = 1;
+        }
+    }
+
     int ctr = 0;
     Thread::ThreadMaster tms;
     tms.SetThreadingType("ThreadManagerBoost");
@@ -434,7 +448,8 @@ protected:
     virtual NekVector<NekDouble> v_OrthoBasisDeriv(const int dir,
                                                    const int mode)
     {
-        ASSERTL0(false, "not supported");
+        boost::ignore_unused(dir, mode);
+        NEKERROR(ErrorUtil::efatal, "OrthoBasisDeriv: not supported");
         return NekVector<NekDouble>();
     }
 

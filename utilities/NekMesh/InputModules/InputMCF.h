@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -66,8 +65,7 @@ private:
         m_adjustment, m_spaceoutblthr, m_nospaceoutsurf;
 
     bool m_makeBL, m_surfopti, m_varopti, m_refine, m_woct, m_2D, m_splitBL,
-        m_naca, m_adjust, m_adjustall, m_smoothbl, m_manifold, m_cfiMesh,
-        m_spaceoutbl;
+        m_naca, m_adjust, m_adjustall, m_smoothbl, m_manifold, m_spaceoutbl;
 };
 }
 }

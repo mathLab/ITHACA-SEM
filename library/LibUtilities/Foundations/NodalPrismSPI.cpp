@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -44,6 +43,10 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+bool NodalPrismSPI::initPointsManager[] = {
+    PointsManager().RegisterCreator(PointsKey(0, eNodalPrismSPI),          NodalPrismSPI::Create)
+};
+
 void NodalPrismSPI::CalculatePoints()
 {
     // Allocate the storage for points
@@ -56,7 +59,7 @@ void NodalPrismSPI::CalculatePoints()
     PointsKey t(numPoints, eNodalTriSPI);
     PointsManager()[t]->GetPoints(m_t0, m_t1);
     m_tw     = PointsManager()[t]->GetW();
-    m_numtri = m_tw.num_elements();
+    m_numtri = m_tw.size();
 
     for (int i = 0; i < 3; i++)
     {

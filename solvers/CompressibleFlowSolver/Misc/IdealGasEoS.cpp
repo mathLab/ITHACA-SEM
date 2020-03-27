@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include "IdealGasEoS.h"
 
 using namespace std;
@@ -54,6 +55,7 @@ IdealGasEoS::IdealGasEoS(const LibUtilities::SessionReaderSharedPtr& pSession)
 NekDouble IdealGasEoS::v_GetTemperature(
     const NekDouble &rho, const NekDouble &e)
 {
+    boost::ignore_unused(rho);
     return e*(m_gamma-1)/m_gasConstant;
 }
 
@@ -80,12 +82,14 @@ NekDouble IdealGasEoS::v_GetEntropy(
 NekDouble IdealGasEoS::v_GetDPDrho_e(
     const NekDouble &rho, const NekDouble &e)
 {
+    boost::ignore_unused(rho);
     return e*(m_gamma-1);
 }
 
 NekDouble IdealGasEoS::v_GetDPDe_rho(
     const NekDouble &rho, const NekDouble &e)
 {
+    boost::ignore_unused(e);
     return rho*(m_gamma-1);
 }
 

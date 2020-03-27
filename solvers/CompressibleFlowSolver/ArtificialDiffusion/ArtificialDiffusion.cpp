@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -59,8 +58,7 @@ ArtificialDiffusion::ArtificialDiffusion(
 
     m_diffusion = SolverUtils::GetDiffusionFactory()
                                     .CreateInstance("LDG", "LDG");
-    m_diffusion->SetArtificialDiffusionVector(
-                        &ArtificialDiffusion::GetArtificialViscosity, this);
+    m_diffusion->SetFluxVector(&ArtificialDiffusion::GetFluxVector, this);
     m_diffusion->InitObject (m_session, m_fields);
 
     // Get constant scaling
@@ -89,7 +87,7 @@ void ArtificialDiffusion::v_DoArtificialDiffusion(
             Array<OneD,       Array<OneD, NekDouble> > &outarray)
 {
     int i;
-    int nvariables = inarray.num_elements();
+    int nvariables = inarray.size();
     int npoints    = m_fields[0]->GetNpoints();
 
     Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
@@ -127,5 +125,32 @@ void ArtificialDiffusion::SetElmtHP(const Array<OneD, NekDouble> &hOverP)
 {
     m_hOverP = hOverP;
 }
+
+/**
+ * @brief Return the flux vector for the artificial viscosity operator.
+ */
+void ArtificialDiffusion::GetFluxVector(
+    const Array<OneD, Array<OneD, NekDouble> > &inarray,
+    const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
+          Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&viscousTensor)
+{
+    unsigned int nDim = qfield.size();
+    unsigned int nConvectiveFields = qfield[0].size();
+    unsigned int nPts = qfield[0][0].size();
+
+    // Get Artificial viscosity
+    Array<OneD, NekDouble> mu{nPts, 0.0};
+    GetArtificialViscosity(inarray, mu);
+
+    // Compute viscous tensor
+    for (unsigned int j = 0; j < nDim; ++j)
+    {
+        for (unsigned int i = 0; i < nConvectiveFields; ++i)
+        {
+            Vmath::Vmul(nPts, qfield[j][i], 1, mu , 1, viscousTensor[j][i], 1);
+        }
+    }
+}
+
 
 }

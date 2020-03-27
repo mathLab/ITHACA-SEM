@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -58,7 +57,7 @@ void LEESolver::v_Solve(const int nDim,
                         const Array<OneD, const Array<OneD, NekDouble>> &Bwd,
                         Array<OneD, Array<OneD, NekDouble>> &flux)
 {
-    int nTracePts = Fwd[0].num_elements();
+    int nTracePts = Fwd[0].size();
 
     Array<OneD, Array<OneD, NekDouble>> bfFwd(nDim + 3);
     Array<OneD, Array<OneD, NekDouble>> bfBwd(nDim + 3);

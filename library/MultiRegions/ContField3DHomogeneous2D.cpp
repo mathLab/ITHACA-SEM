@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -51,17 +50,17 @@ namespace Nektar
                                    const ContField3DHomogeneous2D &In):
             DisContField3DHomogeneous2D (In,false)
         {
-            
+
             ContField1DSharedPtr zero_line = std::dynamic_pointer_cast<ContField1D> (In.m_lines[0]);
-            
-            for(int n = 0; n < m_lines.num_elements(); ++n)
+
+            for(int n = 0; n < m_lines.size(); ++n)
             {
                 m_lines[n] = MemoryManager<ContField1D>::AllocateSharedPtr(*zero_line);
             }
-            
+
             SetCoeffPhys();
         }
-        
+
         ContField3DHomogeneous2D::~ContField3DHomogeneous2D()
         {
         }
@@ -99,20 +98,20 @@ namespace Nektar
             for(n = 1; n < nylines*nzlines; ++n)
             {
                 m_lines[n] = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
-                
+
                 for(i = 0; i < nel; ++i)
                 {
                     (*m_exp).push_back((*m_exp)[i]);
                 }
-            }            
+            }
 
-            // Setup Default optimisation information. 
+            // Setup Default optimisation information.
             nel = GetExpSize();
 
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
-            
-            SetCoeffPhys(); 
+
+            SetCoeffPhys();
 
             SetupBoundaryConditions(HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,bcs);
         }
@@ -120,39 +119,39 @@ namespace Nektar
 
         void ContField3DHomogeneous2D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
         {
-            Array<OneD, NekDouble> tmp; 
+            Array<OneD, NekDouble> tmp;
             int ncoeffs = m_lines[0]->GetNcoeffs();
 
-            for(int n = 0; n < m_lines.num_elements(); ++n)
+            for(int n = 0; n < m_lines.size(); ++n)
             {
-                m_lines[n]->ImposeDirichletConditions(tmp = outarray + 
+                m_lines[n]->ImposeDirichletConditions(tmp = outarray +
                                                        n*ncoeffs);
             }
         }
 
 
         /**
-         * 
+         *
          */
-        void  ContField3DHomogeneous2D::v_LocalToGlobal(bool useComm) 
+        void  ContField3DHomogeneous2D::v_LocalToGlobal(bool useComm)
         {
-            for(int n = 0; n < m_lines.num_elements(); ++n)
+            for(int n = 0; n < m_lines.size(); ++n)
             {
                 m_lines[n]->LocalToGlobal(useComm);
             }
-        };
+        }
 
 
         /**
-         * 
+         *
          */
-        void  ContField3DHomogeneous2D::v_GlobalToLocal(void) 
+        void  ContField3DHomogeneous2D::v_GlobalToLocal(void)
         {
-            for(int n = 0; n < m_lines.num_elements(); ++n)
+            for(int n = 0; n < m_lines.size(); ++n)
             {
                 m_lines[n]->GlobalToLocal();
             }
-        };
+        }
 
 
         void ContField3DHomogeneous2D::v_HelmSolve(
@@ -176,9 +175,9 @@ namespace Nektar
             StdRegions::ConstFactorMap new_factors;
 
             Array<OneD, NekDouble> e_out;
-            Array<OneD, NekDouble> fce(inarray.num_elements());
+            Array<OneD, NekDouble> fce(inarray.size());
             Array<OneD, const NekDouble> wfce;
-			
+
             if(m_WaveSpace)
             {
                 fce = inarray;
@@ -199,14 +198,14 @@ namespace Nektar
                     beta = beta_y*beta_y + beta_z*beta_z;
                     new_factors = factors;
                     new_factors[StdRegions::eFactorLambda] += beta;
-                    
+
                     wfce = (PhysSpaceForcing)? fce+cnt:fce+cnt1;
                     m_lines[l]->HelmSolve(wfce,
                               e_out = outarray + cnt1,
                               flags, new_factors, varcoeff, varfactors,
                               dirForcing,
                               PhysSpaceForcing);
-                    
+
                     cnt  += m_lines[l]->GetTotPoints();
                     cnt1 += m_lines[l]->GetNcoeffs();
                 }
@@ -214,15 +213,15 @@ namespace Nektar
         }
 
         /**
-         * Reset the GlobalLinSys Manager 
+         * Reset the GlobalLinSys Manager
          */
         void ContField3DHomogeneous2D::v_ClearGlobalLinSysManager(void)
         {
-            for(int n = 0; n < m_lines.num_elements(); ++n)
+            for(int n = 0; n < m_lines.size(); ++n)
             {
                 m_lines[n]->ClearGlobalLinSysManager();
             }
         }
-        
+
     } // end of namespace
 } //end of namespace

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -56,10 +55,10 @@ ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "", "Generate prisms on these surfs");
     m_config["2D"] =
         ConfigOption(true, "", "allow 2d loading");
-    m_config["CFIMesh"] =
-        ConfigOption(true, "", "specifies that the CAD can be multibody");
     m_config["NACA"] =
         ConfigOption(false, "", "naca domain");
+    m_config["usecfimesh"] =
+        ConfigOption(true, "", "Use mesh from CFI file");
     m_config["verbose"] =
         ConfigOption(true, "", "verbose output from cadsystem");
 }
@@ -79,13 +78,18 @@ void ProcessLoadCAD::Process()
 
     string ext = boost::filesystem::extension(name);
 
-    if(boost::iequals(ext,".fbm"))
+    if (boost::iequals(ext, ".fbm"))
     {
-        m_mesh->m_cad = GetEngineFactory().CreateInstance("cfi",name);
+        m_mesh->m_cad = GetEngineFactory().CreateInstance("cfi", name);
+
+        if (m_config["usecfimesh"].beenSet)
+        {
+            m_mesh->m_cad->SetConfig("UseCFIMesh", "1");
+        }
     }
     else
     {
-        m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",name);
+        m_mesh->m_cad = GetEngineFactory().CreateInstance("oce", name);
     }
 
     if(m_config["2D"].beenSet)
@@ -95,12 +99,7 @@ void ProcessLoadCAD::Process()
 
     if(m_config["NACA"].beenSet)
     {
-        m_mesh->m_cad->SetNACA(m_config["NACA"].as<string>());
-    }
-
-    if(m_config["CFIMesh"].beenSet)
-    {
-        m_mesh->m_cad->SetCFIMesh();
+        m_mesh->m_cad->SetConfig("UseNACA", m_config["NACA"].as<std::string>());
     }
 
     if(m_config["verbose"].beenSet)

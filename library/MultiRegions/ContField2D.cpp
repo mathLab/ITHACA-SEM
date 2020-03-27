@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -255,7 +254,7 @@ namespace Nektar
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
-            
+
             if(coeffstate == eGlobal)
             {
                 GlobalSolve(key,wsp,outarray);
@@ -322,8 +321,8 @@ namespace Nektar
 
                 if(inarray.data() == outarray.data())
                 {
-                    Array<OneD,NekDouble> tmp(inarray.num_elements());
-                    Vmath::Vcopy(inarray.num_elements(),inarray,1,tmp,1);
+                    Array<OneD,NekDouble> tmp(inarray.size());
+                    Vmath::Vcopy(inarray.size(),inarray,1,tmp,1);
                     Assemble(tmp,outarray);
                 }
                 else
@@ -403,7 +402,7 @@ namespace Nektar
             // Forcing function with weak boundary conditions
             int i,j;
             int bndcnt=0;
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
                 {
@@ -419,7 +418,7 @@ namespace Nektar
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
-       
+
             StdRegions::VarCoeffMap varcoeffs;
             varcoeffs[StdRegions::eVarCoeffD00] = variablecoeffs[0];
             varcoeffs[StdRegions::eVarCoeffD11] = variablecoeffs[3];
@@ -481,7 +480,7 @@ namespace Nektar
 
 
 
-        
+
         /**
          * Given a linear system specified by the key \a key,
          * \f[\boldsymbol{M}\boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}},\f]
@@ -642,9 +641,9 @@ namespace Nektar
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE IN THE SOLUTION
             // ARRAY
             NekDouble sign;
-            const Array<OneD,const int> &bndMap = 
+            const Array<OneD,const int> &bndMap =
                 m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
-          
+
             Array<OneD, NekDouble> tmp(
                 m_locToGloMap->GetNumGlobalBndCoeffs(), 0.0);
 
@@ -669,7 +668,7 @@ namespace Nektar
             m_locToGloMap->UniversalAssembleBnd(tmp);
 
             // Now fill in all other Dirichlet coefficients.
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eDirichlet)
@@ -697,17 +696,23 @@ namespace Nektar
         {
             NekDouble sign;
             int bndcnt = 0;
-            const Array<OneD,const int> &bndMap = 
+            const Array<OneD,const int> &bndMap =
                 m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
-            
+
             Array<OneD, NekDouble> tmp(m_locToGloMap->GetNumGlobalCoeffs());
             LocalToGlobal(m_coeffs,tmp);
-            
+
             // Now fill in all other Dirichlet coefficients.
-            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(int i = 0; i < m_bndCondExpansions.size(); ++i)
             {
+                if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[i]->UpdateCoeffs();
-                
+
                 for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                 {
                     sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
@@ -721,24 +726,30 @@ namespace Nektar
         {
             NekDouble sign;
             int bndcnt = 0;
-            const Array<OneD,const int> &bndMap = 
+            const Array<OneD,const int> &bndMap =
                 m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
-            
+
             Array<OneD, NekDouble> tmp(m_locToGloMap->GetNumGlobalCoeffs());
             LocalToGlobal(m_coeffs,tmp,false);
 
-            ASSERTL1(nreg < m_bndCondExpansions.num_elements(),
+            ASSERTL1(nreg < m_bndCondExpansions.size(),
                      "nreg is out or range since this many boundary "
                      "regions to not exist");
-            
+
             // Now fill in all other Dirichlet coefficients.
             Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[nreg]->UpdateCoeffs();
-                
+
             for(int j = 0; j < nreg; ++j)
             {
+                if (m_bndConditions[j]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 bndcnt += m_bndCondExpansions[j]->GetNcoeffs();
             }
-            
+
             for(int j = 0; j < (m_bndCondExpansions[nreg])->GetNcoeffs(); ++j)
             {
                 sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
@@ -746,7 +757,7 @@ namespace Nektar
             }
         }
 
-        
+
         /**
          * This operation is evaluated as:
          * \f{tabbing}
@@ -903,7 +914,7 @@ namespace Nektar
             int bndcnt=0;
             Array<OneD, NekDouble> gamma(contNcoeffs, 0.0);
 
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann ||
                    m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
@@ -920,14 +931,14 @@ namespace Nektar
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
-            
+
             m_locToGloMap->UniversalAssemble(gamma);
 
             // Add weak boundary conditions to forcing
             Vmath::Vadd(contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
 
             GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,factors,varcoeff,varfactors);
-            
+
             if(flags.isSet(eUseGlobal))
             {
                 GlobalSolve(key,wsp,outarray,dirForcing);
@@ -1021,7 +1032,7 @@ namespace Nektar
             int i,j;
             int bndcnt=0;
             Array<OneD, NekDouble> gamma(contNcoeffs, 0.0);
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
                 {
@@ -1116,7 +1127,7 @@ namespace Nektar
 
 
         /**
-         * Reset the GlobalLinSys Manager 
+         * Reset the GlobalLinSys Manager
          */
         void ContField2D::v_ClearGlobalLinSysManager(void)
         {

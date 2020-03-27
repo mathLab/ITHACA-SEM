@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -92,9 +91,9 @@ void SkewSymmetricAdvection::v_Advect(
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
     // use dimension of Velocity vector to dictate dimension of operation
-    int ndim             = advVel.num_elements();
+    int ndim             = advVel.size();
     int nqtot            = fields[0]->GetTotPoints();
-    ASSERTL1(nConvectiveFields == inarray.num_elements(),"Number of convective fields and Inarray are not compatible");
+    ASSERTL1(nConvectiveFields == inarray.size(),"Number of convective fields and Inarray are not compatible");
 
     Array<OneD, Array<OneD, NekDouble> > velocity(ndim);
     for(int i = 0; i < ndim; ++i)

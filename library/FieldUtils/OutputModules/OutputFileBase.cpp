@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -49,9 +48,10 @@ namespace FieldUtils
 
 OutputFileBase::OutputFileBase(FieldSharedPtr f) : OutputModule(f)
 {
-    m_requireEquiSpaced = false;
-    m_config["writemultiplefiles"] =
-        ConfigOption(true,"0","Write multiple files in parallel or when using nparts option");
+    m_requireEquiSpaced            = false;
+    m_config["writemultiplefiles"] = ConfigOption(
+        true, "0",
+        "Write multiple files in parallel or when using nparts option");
 }
 
 OutputFileBase::~OutputFileBase()
@@ -62,11 +62,10 @@ void OutputFileBase::Process(po::variables_map &vm)
 {
     string filename = m_config["outfile"].as<string>();
 
-    if(m_f->m_fieldPts != LibUtilities::NullPtsField)
+    if (m_f->m_fieldPts != LibUtilities::NullPtsField)
     {
-        ASSERTL0(!m_f->m_writeBndFld,
-                "Boundary can't be obtained from pts.");
-        if( WriteFile(filename, vm))
+        ASSERTL0(!m_f->m_writeBndFld, "Boundary can't be obtained from pts.");
+        if (WriteFile(filename, vm))
         {
             OutputFromPts(vm);
 
@@ -76,10 +75,10 @@ void OutputFileBase::Process(po::variables_map &vm)
             }
         }
     }
-    else if(m_f->m_exp.size())
+    else if (m_f->m_exp.size())
     {
         // reset expansion definition to use equispaced points if required.
-        if (m_requireEquiSpaced && (vm.count("noequispaced") == 0 ) &&
+        if (m_requireEquiSpaced && (vm.count("noequispaced") == 0) &&
             m_f->m_exp[0]->GetNumElmts() != 0)
         {
             ConvertExpToEquispaced(vm);
@@ -109,13 +108,14 @@ void OutputFileBase::Process(po::variables_map &vm)
             if (m_f->m_addNormals)
             {
                 // Prepare for creating expansions for normals
-                m_f->m_exp.resize(nfields + normdim);;
+                m_f->m_exp.resize(nfields + normdim);
+                ;
 
                 // Include normal name in m_variables
                 string normstr[3] = {"Norm_x", "Norm_y", "Norm_z"};
                 for (int j = 0; j < normdim; ++j)
                 {
-                    m_f->m_exp[nfields+j] =
+                    m_f->m_exp[nfields + j] =
                         m_f->AppendExpList(m_f->m_numHomogeneousDir);
                     m_f->m_variables.push_back(normstr[j]);
                 }
@@ -125,14 +125,14 @@ void OutputFileBase::Process(po::variables_map &vm)
             vector<MultiRegions::ExpListSharedPtr> exp(m_f->m_exp.size());
             exp.swap(m_f->m_exp);
 
-            Array<OneD, Array<OneD, const MultiRegions::ExpListSharedPtr> >
+            Array<OneD, Array<OneD, const MultiRegions::ExpListSharedPtr>>
                 BndExp(exp.size());
             for (int i = 0; i < exp.size(); ++i)
             {
                 BndExp[i] = exp[i]->GetBndCondExpansions();
             }
 
-            // get hold of partition boundary regions so we can match it to 
+            // get hold of partition boundary regions so we can match it to
             // desired region extraction
             SpatialDomains::BoundaryConditions bcs(m_f->m_session,
                                                    exp[0]->GetGraph());
@@ -144,7 +144,8 @@ void OutputFileBase::Process(po::variables_map &vm)
             for (auto &breg_it : bregions)
             {
                 BndRegionMap[breg_it.first] = cnt++;
-                BndRegionComm[breg_it.first] = bcs.GetBoundaryCommunicators()[breg_it.first];
+                BndRegionComm[breg_it.first] =
+                    bcs.GetBoundaryCommunicators()[breg_it.first];
             }
 
             // find ending of output file and insert _b1, _b2
@@ -162,7 +163,7 @@ void OutputFileBase::Process(po::variables_map &vm)
                     boost::lexical_cast<string>(m_f->m_bndRegionsToWrite[i]) +
                     "." + ext;
 
-                if(!WriteFile(outname, vm))
+                if (!WriteFile(outname, vm))
                 {
                     continue;
                 }
@@ -177,27 +178,28 @@ void OutputFileBase::Process(po::variables_map &vm)
                     for (int j = 0; j < exp.size(); ++j)
                     {
                         m_f->m_exp[j] = BndExp[j][Border];
-                        m_f->m_exp[j]->BwdTrans(
-                                    m_f->m_exp[j]->GetCoeffs(),
-                                    m_f->m_exp[j]->UpdatePhys());
+                        m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
+                                                m_f->m_exp[j]->UpdatePhys());
                     }
 
                     if (m_f->m_addNormals)
                     {
                         // Get normals
-                        Array<OneD, Array<OneD, NekDouble> > NormPhys;
+                        Array<OneD, Array<OneD, NekDouble>> NormPhys;
                         exp[0]->GetBoundaryNormals(Border, NormPhys);
 
                         // add normal coefficients to expansions
                         for (int j = 0; j < normdim; ++j)
                         {
-                            m_f->m_exp[nfields+j] = BndExp[nfields+j][Border];
-                            Vmath::Vcopy(m_f->m_exp[nfields+j]->GetTotPoints(),
+                            m_f->m_exp[nfields + j] =
+                                BndExp[nfields + j][Border];
+                            Vmath::Vcopy(
+                                m_f->m_exp[nfields + j]->GetTotPoints(),
                                 NormPhys[j], 1,
-                                m_f->m_exp[nfields+j]->UpdatePhys(), 1);
-                            m_f->m_exp[nfields+j]->FwdTrans_IterPerExp(
-                                    m_f->m_exp[nfields+j]->GetPhys(),
-                                    m_f->m_exp[nfields+j]->UpdateCoeffs());
+                                m_f->m_exp[nfields + j]->UpdatePhys(), 1);
+                            m_f->m_exp[nfields + j]->FwdTrans_IterPerExp(
+                                m_f->m_exp[nfields + j]->GetPhys(),
+                                m_f->m_exp[nfields + j]->UpdateCoeffs());
                         }
                     }
                     OutputFromExp(vm);
@@ -219,7 +221,7 @@ void OutputFileBase::Process(po::variables_map &vm)
         }
         else
         {
-            if( WriteFile(filename, vm))
+            if (WriteFile(filename, vm))
             {
                 OutputFromExp(vm);
                 // output error for regression checking.
@@ -230,11 +232,10 @@ void OutputFileBase::Process(po::variables_map &vm)
             }
         }
     }
-    else if(m_f->m_data.size())
+    else if (m_f->m_data.size())
     {
-        ASSERTL0(!m_f->m_writeBndFld,
-                "Boundary extraction requires xml file.");
-        if( WriteFile(filename, vm))
+        ASSERTL0(!m_f->m_writeBndFld, "Boundary extraction requires xml file.");
+        if (WriteFile(filename, vm))
         {
             OutputFromData(vm);
         }
@@ -246,7 +247,7 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
     // Get path to file. If procid was defined, get the full name
     //     to avoid checking files from other partitions
     fs::path outFile;
-    if(vm.count("nparts"))
+    if (vm.count("nparts"))
     {
         outFile = GetFullOutName(filename, vm);
     }
@@ -262,8 +263,7 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
     }
     else
     {
-        comm = LibUtilities::GetCommFactory().CreateInstance(
-            "Serial", 0, 0);
+        comm = LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
     }
 
     int count = fs::exists(outFile) ? 1 : 0;
@@ -272,11 +272,11 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
     int writeFile = 1;
     if (count && (vm.count("forceoutput") == 0))
     {
-        if(vm.count("nparts") == 0 ) // do not do check if --nparts is enabled. 
+        if (vm.count("nparts") == 0) // do not do check if --nparts is enabled.
         {
 
             writeFile = 0; // set to zero for reduce all to be correct.
-            
+
             if (comm->TreatAsRankZero())
             {
                 string answer;
@@ -305,7 +305,7 @@ void OutputFileBase::ConvertExpToEquispaced(po::variables_map &vm)
     m_f->m_fielddef = m_f->m_exp[0]->GetFieldDefinitions();
 
     // Set points to equispaced
-    int nPointsNew  = 0;
+    int nPointsNew = 0;
     if (vm.count("output-points"))
     {
         nPointsNew = vm["output-points"].as<int>();
@@ -315,40 +315,34 @@ void OutputFileBase::ConvertExpToEquispaced(po::variables_map &vm)
     // Save original expansion
     vector<MultiRegions::ExpListSharedPtr> expOld = m_f->m_exp;
     // Create new expansion
-    m_f->m_exp[0] = m_f->SetUpFirstExpList(m_f->m_numHomogeneousDir,
-                                    true);
-    for(int i = 1; i < numFields; ++i)
+    m_f->m_exp[0] = m_f->SetUpFirstExpList(m_f->m_numHomogeneousDir, true);
+    for (int i = 1; i < numFields; ++i)
     {
-        m_f->m_exp[i] =
-                m_f->AppendExpList(m_f->m_numHomogeneousDir);
+        m_f->m_exp[i] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
     }
     // Extract result to new expansion
-    for(int i = 0; i < numFields; ++i)
+    for (int i = 0; i < numFields; ++i)
     {
-        m_f->m_exp[i]->ExtractCoeffsToCoeffs(
-                expOld[i],
-                expOld[i]->GetCoeffs(),
-                m_f->m_exp[i]->UpdateCoeffs());
-        m_f->m_exp[i]->BwdTrans(
-                m_f->m_exp[i]->GetCoeffs(),
-                m_f->m_exp[i]->UpdatePhys());
+        m_f->m_exp[i]->ExtractCoeffsToCoeffs(expOld[i], expOld[i]->GetCoeffs(),
+                                             m_f->m_exp[i]->UpdateCoeffs());
+        m_f->m_exp[i]->BwdTrans(m_f->m_exp[i]->GetCoeffs(),
+                                m_f->m_exp[i]->UpdatePhys());
     }
     // Extract boundary expansion if needed
     if (m_f->m_writeBndFld)
     {
         Array<OneD, const MultiRegions::ExpListSharedPtr> BndExpOld;
-        MultiRegions::ExpListSharedPtr                    BndExp;
-        for(int i = 0; i < numFields; ++i)
+        MultiRegions::ExpListSharedPtr BndExp;
+        for (int i = 0; i < numFields; ++i)
         {
             BndExpOld = expOld[i]->GetBndCondExpansions();
-            for(int j = 0; j < BndExpOld.num_elements(); ++j)
+            for (int j = 0; j < BndExpOld.size(); ++j)
             {
                 BndExp = m_f->m_exp[i]->UpdateBndCondExpansion(j);
 
-                BndExp->ExtractCoeffsToCoeffs(
-                    BndExpOld[j],
-                    BndExpOld[j]->GetCoeffs(),
-                    BndExp->UpdateCoeffs());
+                BndExp->ExtractCoeffsToCoeffs(BndExpOld[j],
+                                              BndExpOld[j]->GetCoeffs(),
+                                              BndExp->UpdateCoeffs());
             }
         }
     }
@@ -356,34 +350,32 @@ void OutputFileBase::ConvertExpToEquispaced(po::variables_map &vm)
 
 void OutputFileBase::PrintErrorFromPts()
 {
-    int coordim = m_f->m_fieldPts->GetDim();
-    std::string coordVars[] = { "x", "y", "z" };
+    int coordim             = m_f->m_fieldPts->GetDim();
+    std::string coordVars[] = {"x", "y", "z"};
 
     vector<string> variables = m_f->m_variables;
-    variables.insert(variables.begin(),
-                    coordVars,
-                    coordVars + coordim);
+    variables.insert(variables.begin(), coordVars, coordVars + coordim);
     // Get fields and coordinates
-    Array<OneD, Array<OneD, NekDouble> > fields(variables.size());
+    Array<OneD, Array<OneD, NekDouble>> fields(variables.size());
 
     // We can just grab everything from points. This should be a
     // reference, not a copy.
     m_f->m_fieldPts->GetPts(fields);
-    for (int i = 0; i < fields.num_elements(); ++i)
+    for (int i = 0; i < fields.size(); ++i)
     {
         // calculate L2 and Linf value
-        int npts = fields[i].num_elements();
+        int npts = fields[i].size();
 
         NekDouble l2err   = 0.0;
         NekDouble linferr = 0.0;
         for (int j = 0; j < npts; ++j)
         {
-            l2err  += fields[i][j] * fields[i][j];
+            l2err += fields[i][j] * fields[i][j];
             linferr = max(linferr, fabs(fields[i][j]));
         }
 
-        m_f->m_comm->AllReduce(l2err  , LibUtilities::ReduceSum);
-        m_f->m_comm->AllReduce(npts   , LibUtilities::ReduceSum);
+        m_f->m_comm->AllReduce(l2err, LibUtilities::ReduceSum);
+        m_f->m_comm->AllReduce(npts, LibUtilities::ReduceSum);
         m_f->m_comm->AllReduce(linferr, LibUtilities::ReduceMax);
 
         l2err /= npts;
@@ -391,13 +383,11 @@ void OutputFileBase::PrintErrorFromPts()
 
         if (m_f->m_comm->TreatAsRankZero())
         {
-            cout << "L 2 error (variable "
-                 << variables[i] << ") : " << l2err
+            cout << "L 2 error (variable " << variables[i] << ") : " << l2err
                  << endl;
 
-            cout << "L inf error (variable "
-                 << variables[i] << ") : " << linferr
-                 << endl;
+            cout << "L inf error (variable " << variables[i]
+                 << ") : " << linferr << endl;
         }
     }
 }
@@ -406,11 +396,11 @@ void OutputFileBase::PrintErrorFromExp()
 {
     int coordim =
         m_f->m_exp[0]->GetExp(0)->GetCoordim() + m_f->m_numHomogeneousDir;
-    int totpoints = m_f->m_exp[0]->GetTotPoints();
-    std::string coordVars[] = { "x", "y", "z" };
+    int totpoints           = m_f->m_exp[0]->GetTotPoints();
+    std::string coordVars[] = {"x", "y", "z"};
 
     // Set up storage for coordinates
-    Array<OneD, Array<OneD, NekDouble> > coords(coordim);
+    Array<OneD, Array<OneD, NekDouble>> coords(coordim);
     for (int i = 0; i < coordim; ++i)
     {
         coords[i] = Array<OneD, NekDouble>(totpoints);
@@ -432,38 +422,34 @@ void OutputFileBase::PrintErrorFromExp()
 
     for (int j = 0; j < coordim; ++j)
     {
-        NekDouble l2err   = m_f->m_exp[0]->L2  (coords[j]);
+        NekDouble l2err   = m_f->m_exp[0]->L2(coords[j]);
         NekDouble linferr = m_f->m_exp[0]->Linf(coords[j]);
 
         if (m_f->m_comm->TreatAsRankZero())
         {
-            cout << "L 2 error (variable "
-                 << coordVars[j] << ") : " << l2err
+            cout << "L 2 error (variable " << coordVars[j] << ") : " << l2err
                  << endl;
 
-            cout << "L inf error (variable "
-                 << coordVars[j] << ") : " << linferr
-                 << endl;
+            cout << "L inf error (variable " << coordVars[j]
+                 << ") : " << linferr << endl;
         }
     }
 
     for (int j = 0; j < m_f->m_exp.size(); ++j)
     {
-        NekDouble l2err   = m_f->m_exp[j]->L2  (m_f->m_exp[j]->GetPhys());
+        NekDouble l2err   = m_f->m_exp[j]->L2(m_f->m_exp[j]->GetPhys());
         NekDouble linferr = m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys());
 
-        if (m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero() && m_f->m_variables.size() > 0)
         {
-            cout << "L 2 error (variable "
-                 << m_f->m_variables[j] << ") : " << l2err
-                 << endl;
+            cout << "L 2 error (variable " << m_f->m_variables[j]
+                 << ") : " << l2err << endl;
 
-            cout << "L inf error (variable "
-                 << m_f->m_variables[j] << ") : " << linferr
-                 << endl;
+            cout << "L inf error (variable " << m_f->m_variables[j]
+                 << ") : " << linferr << endl;
         }
     }
 }
 
-}
-}
+} // namespace FieldUtils
+} // namespace Nektar

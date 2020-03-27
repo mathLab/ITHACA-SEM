@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -328,8 +327,8 @@ void CommMpi::v_Exscan(Array<OneD, unsigned long long> &pData,
                        const enum ReduceOperator pOp,
                        Array<OneD, unsigned long long> &ans)
 {
-    int n = pData.num_elements();
-    ASSERTL0(n == ans.num_elements(), "Array sizes differ in Exscan");
+    int n = pData.size();
+    ASSERTL0(n == ans.size(), "Array sizes differ in Exscan");
 
     MPI_Op vOp;
     switch (pOp)

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -54,24 +53,24 @@ namespace Nektar
                     "FullLinearSpaceWithLowEnergyBlock",
                     PreconditionerLinearWithLowEnergy::create,
                     "Full Linear space and low energy block preconditioning");
- 
+
        /**
          * @class PreconditionerLinearWithLowEnergy
          *
-         * This class implements preconditioning for the conjugate 
+         * This class implements preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
-        
+
         PreconditionerLinearWithLowEnergy::PreconditionerLinearWithLowEnergy(
             const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
         {
         }
-       
+
         /**
          *
-         */ 
+         */
         void PreconditionerLinearWithLowEnergy::v_InitObject()
         {
             m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap.lock());
@@ -124,7 +123,7 @@ namespace Nektar
             const Array<OneD, NekDouble>& pInput,
             Array<OneD, NekDouble>& pOutput)
         {
-            int nGlobal = pInput.num_elements();
+            int nGlobal = pInput.size();
 
             Array<OneD, NekDouble> OutputLowEnergy(nGlobal, 0.0);
             Array<OneD, NekDouble> tmp(nGlobal, 0.0);

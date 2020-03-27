@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Forcing/ForcingAbsorption.h>
 
 #include <LibUtilities/BasicUtils/Equation.h>
@@ -55,7 +56,7 @@ namespace SolverUtils
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const std::weak_ptr<EquationSystem>      &pEquation)
             : Forcing(pSession, pEquation),
-              m_hasRefFlow(false),	
+              m_hasRefFlow(false),
               m_hasRefFlowTime(false)
     {
     }
@@ -233,8 +234,10 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
-        int nq = m_Forcing[0].num_elements();
-       
+        boost::ignore_unused(fields);
+
+        int nq = m_Forcing[0].size();
+
         std::string s_FieldStr;
         Array<OneD, NekDouble> TimeScale(1);
         Array<OneD, Array<OneD, NekDouble> > RefflowScaled(m_NumVariable);
@@ -254,7 +257,7 @@ namespace SolverUtils
                 {
                     Vmath::Vcopy(nq, m_Refflow[i],1, RefflowScaled[i],1);
                 }
-                
+
 
                 Vmath::Vsub(nq, inarray[i], 1,
                             RefflowScaled[i], 1, m_Forcing[i], 1);
@@ -275,6 +278,6 @@ namespace SolverUtils
             }
         }
     }
-        
+
 }
 }

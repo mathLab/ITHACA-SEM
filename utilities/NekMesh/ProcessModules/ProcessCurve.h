@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,7 +36,7 @@
 #define UTILITIES_NEKMESH_PROCESSPROCESSCURVE
 
 #include "ProcessCurvedEdges.h"
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 #include <LibUtilities/BasicUtils/PtsField.h>
 
 namespace Nektar
@@ -65,7 +64,7 @@ private:
     NekDouble EvaluateCoordinate(NekDouble xCoord);
 
     bool                                        m_fromFile;
-    LibUtilities::AnalyticExpressionEvaluator   m_fEval;
+    LibUtilities::Interpreter                   m_fEval;
     int                                         m_fExprId;
     LibUtilities::PtsFieldSharedPtr             m_fieldPts;
 

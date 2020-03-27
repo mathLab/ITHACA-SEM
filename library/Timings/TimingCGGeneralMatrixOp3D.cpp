@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
         {
             Exp->FwdTrans(Sol->GetPhys(), Exp->UpdateCoeffs(),
                           MultiRegions::eGlobal);
-    
+
             //----------------------------------------------
             // Backward Transform Solution to get solved values at
             Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(),
@@ -351,7 +351,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        for (i = 0; i < Exp->GetCoeffs().num_elements(); ++i)
+        for (i = 0; i < Exp->GetCoeffs().size(); ++i)
         {
             Exp->UpdateCoeffs()[i] = 1.0;
         }
@@ -384,7 +384,7 @@ int main(int argc, char *argv[])
     {
         outfile << setw(10) << NumCalls << " ";
         outfile << setw(10) << fixed << noshowpoint << exeTime << " ";
-        outfile << setw(10) << fixed << noshowpoint 
+        outfile << setw(10) << fixed << noshowpoint
                 << ((NekDouble) (exeTime/((NekDouble)NumCalls))) << " ";
     }
     else
@@ -439,7 +439,7 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     // Do a run to initialise everything (build matrices, etc)
     if (type == StdRegions::eBwdTrans)
     {
-        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), 
+        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(),
                       MultiRegions::eGlobal);
     }
     else if (type == StdRegions::eIProductWRTBase)

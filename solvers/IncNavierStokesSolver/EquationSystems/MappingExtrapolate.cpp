@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -81,11 +80,11 @@ void MappingExtrapolate::v_CorrectPressureBCs(
     {
         int cnt, n;
         int physTot = m_fields[0]->GetTotPoints();
-        int nvel    = m_fields.num_elements() - 1;
+        int nvel    = m_fields.size() - 1;
 
         Array<OneD, NekDouble> Vals;
         // Remove previous correction
-        for (cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
+        for (cnt = n = 0; n < m_PBndConds.size(); ++n)
         {
             if (m_PBndConds[n]->GetUserDefined() == "H")
             {
@@ -169,7 +168,7 @@ void MappingExtrapolate::v_CorrectPressureBCs(
         Array<OneD, Array<OneD, NekDouble> > correctionElmt(m_bnd_dim);
         Array<OneD, Array<OneD, NekDouble> > BndValues(m_bnd_dim);
         MultiRegions::ExpListSharedPtr BndElmtExp;
-        for (n = cnt = 0; n < m_PBndConds.num_elements(); ++n)
+        for (n = cnt = 0; n < m_PBndConds.size(); ++n)
         {
             // High order boundary condition;
             if (boost::iequals(m_PBndConds[n]->GetUserDefined(), "H"))
@@ -198,7 +197,7 @@ void MappingExtrapolate::v_CorrectPressureBCs(
         }
 
         // Apply new correction
-        for (cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
+        for (cnt = n = 0; n < m_PBndConds.size(); ++n)
         {
             if (m_PBndConds[n]->GetUserDefined() == "H")
             {
@@ -228,7 +227,7 @@ void MappingExtrapolate::v_CalcNeumannPressureBCs(
     else
     {
         int physTot = m_fields[0]->GetTotPoints();
-        int nvel    = m_fields.num_elements() - 1;
+        int nvel    = m_fields.size() - 1;
         int i, n, cnt;
 
         Array<OneD, NekDouble> Pvals;
@@ -323,7 +322,7 @@ void MappingExtrapolate::v_CalcNeumannPressureBCs(
         }
 
         MultiRegions::ExpListSharedPtr BndElmtExp;
-        for (n = cnt = 0; n < m_PBndConds.num_elements(); ++n)
+        for (n = cnt = 0; n < m_PBndConds.size(); ++n)
         {
             // High order boundary condition;
             if (boost::iequals(m_PBndConds[n]->GetUserDefined(), "H"))

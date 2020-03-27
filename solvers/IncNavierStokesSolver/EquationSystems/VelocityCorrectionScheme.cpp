@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -76,9 +75,9 @@ namespace Nektar
         m_explicitDiffusion = false;
 
         // Set m_pressure to point to last field of m_fields;
-        if (boost::iequals(m_session->GetVariable(m_fields.num_elements()-1), "p"))
+        if (boost::iequals(m_session->GetVariable(m_fields.size()-1), "p"))
         {
-            m_nConvectiveFields = m_fields.num_elements()-1;
+            m_nConvectiveFields = m_fields.size()-1;
             m_pressure = m_fields[m_nConvectiveFields];
         }
         else
@@ -127,7 +126,8 @@ namespace Nektar
     void VelocityCorrectionScheme::SetUpExtrapolation()
     {
         // creation of the extrapolation object
-        if (m_equationType == eUnsteadyNavierStokes)
+        if (m_equationType == eUnsteadyNavierStokes ||
+            m_equationType == eUnsteadyStokes)
         {
             std::string vExtrapolation = v_GetExtrapolateStr();
             if (m_session->DefinesSolverInfo("Extrapolation"))
@@ -143,8 +143,7 @@ namespace Nektar
                 m_velocity,
                 m_advObject);
 
-            m_extrapolation->SubSteppingTimeIntegration(
-                m_intScheme->GetIntegrationMethod(), m_intScheme);
+            m_extrapolation->SubSteppingTimeIntegration(m_intScheme);
             m_extrapolation->GenerateHOPBCMap(m_session);
         }
     }
@@ -231,10 +230,10 @@ namespace Nektar
 
         // Define flag for case with homogeneous expansion and forcing not in the
         // z-direction
-        m_Hom1DExplicit = false;
+        m_homd1DFlowinPlane = false;
         if (defined && m_HomogeneousType == eHomogeneous1D)
         {
-            m_Hom1DExplicit = true;
+            m_homd1DFlowinPlane = true;
         }
 
         // For 3DH1D simulations, if force isn't defined then assume in
@@ -245,7 +244,7 @@ namespace Nektar
         }
 
         // Find the boundary condition that is tagged as the flowrate boundary.
-        for (int i = 0; i < bcs.num_elements(); ++i)
+        for (int i = 0; i < bcs.size(); ++i)
         {
             if (boost::iequals(bcs[i]->GetUserDefined(), "Flowrate"))
             {
@@ -266,14 +265,14 @@ namespace Nektar
             // For a boundary, extract the boundary itself.
             m_flowrateBnd = m_fields[0]->GetBndCondExpansions()[m_flowrateBndID];
         }
-        else if (m_HomogeneousType == eHomogeneous1D && !m_Hom1DExplicit)
+        else if (m_HomogeneousType == eHomogeneous1D && !m_homd1DFlowinPlane)
         {
             // For 3DH1D simulations with no force specified, find the mean
             // (0th) plane.
             Array<OneD, unsigned int> zIDs = m_fields[0]->GetZIDs();
             int tmpId = -1;
 
-            for (int i = 0; i < zIDs.num_elements(); ++i)
+            for (int i = 0; i < zIDs.size(); ++i)
             {
                 if (zIDs[i] == 0)
                 {
@@ -302,6 +301,36 @@ namespace Nektar
             m_flowrateArea = m_flowrateBnd->Integral(inArea);
         }
         m_comm->AllReduce(m_flowrateArea, LibUtilities::ReduceMax);
+
+        // In homogeneous case with forcing not aligned to the z-direction,
+        // redefine m_flowrateBnd so it is a 1D expansion
+        if (m_HomogeneousType == eHomogeneous1D && m_homd1DFlowinPlane &&
+            m_flowrateBnd)
+        {
+            // For 3DH1D simulations with no force specified, find the mean
+            // (0th) plane.
+            Array<OneD, unsigned int> zIDs = m_fields[0]->GetZIDs();
+            m_planeID = -1;
+
+            for (int i = 0; i < zIDs.size(); ++i)
+            {
+                if (zIDs[i] == 0)
+                {
+                    m_planeID = i;
+                    break;
+                }
+            }
+
+            ASSERTL1(m_planeID <= 0, "Should be either at location 0 or -1 if not "
+                                 "found");
+
+            if (m_planeID != -1)
+            {
+                m_flowrateBnd = m_fields[0]
+                                    ->GetBndCondExpansions()[m_flowrateBndID]
+                                    ->GetPlane(m_planeID);
+            }
+        }
 
         // Set up some storage for the Stokes solution (to be stored in
         // m_flowrateStokes) and its initial condition (inTmp), which holds the
@@ -383,31 +412,49 @@ namespace Nektar
             // the boundary.
             Array<OneD, Array<OneD, NekDouble> > boundary(m_spacedim);
 
-            for (int i = 0; i < m_spacedim; ++i)
+            if(!m_homd1DFlowinPlane)
             {
-                m_fields[i]->ExtractPhysToBnd(
-                    m_flowrateBndID, inarray[i], boundary[i]);
+                // General case
+                for (int i = 0; i < m_spacedim; ++i)
+                {
+                    m_fields[i]->ExtractPhysToBnd(m_flowrateBndID, inarray[i],
+                                                  boundary[i]);
+                }
+                flowrate = m_flowrateBnd->VectorFlux(boundary);
             }
+            else if(m_planeID == 0)
+            {
+                //Homogeneous with forcing in plane. Calculate flux only on
+                // the meanmode - calculateFlux necessary for hybrid
+                // parallelisation.
+                for (int i = 0; i < m_spacedim; ++i)
+                {
+                    m_fields[i]->GetPlane(m_planeID)->ExtractPhysToBnd(
+                        m_flowrateBndID, inarray[i], boundary[i]);
+                }
 
-            flowrate = m_flowrateBnd->VectorFlux(boundary);
+                // the flowrate is calculated on the mean mode so it needs to be
+                // multiplied by LZ to be consistent with the general case.
+                flowrate = m_flowrateBnd->VectorFlux(boundary) *
+                           m_session->GetParameter("LZ");
+            }
         }
-        else if (m_flowrateBnd && !m_Hom1DExplicit)
+        else if (m_flowrateBnd && !m_homd1DFlowinPlane)
         {
-            // 3DH1D case with no Flowrate boundary defined: compute flux through 
-            // the zero-th (mean) plane.
+            // 3DH1D case with no Flowrate boundary defined: compute flux
+            // through the zero-th (mean) plane.
             flowrate = m_flowrateBnd->Integral(inarray[2]);
         }
 
         // Communication to obtain the total flowrate
-        if(!m_Hom1DExplicit && m_HomogeneousType == eHomogeneous1D)
+        if(!m_homd1DFlowinPlane && m_HomogeneousType == eHomogeneous1D)
         {
             m_comm->GetColumnComm()->AllReduce(flowrate, LibUtilities::ReduceSum);
         }
         else
         {
-            m_comm->AllReduce(flowrate, LibUtilities::ReduceSum); 
+            m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
         }
-
         return flowrate / m_flowrateArea;
     }
 
@@ -442,12 +489,10 @@ namespace Nektar
         SolverUtils::AddSummaryItem(s,
                 "Splitting Scheme", "Velocity correction (strong press. form)");
 
-        if (m_extrapolation->GetSubStepIntegrationMethod() !=
-            LibUtilities::eNoTimeIntegrationMethod)
+        if( m_extrapolation->GetSubStepName().size() )
         {
-            SolverUtils::AddSummaryItem(s, "Substepping",
-                             LibUtilities::TimeIntegrationMethodMap[
-                              m_extrapolation->GetSubStepIntegrationMethod()]);
+            SolverUtils::AddSummaryItem( s, "Substepping",
+                                         m_extrapolation->GetSubStepName() );
         }
 
         string dealias = m_homogen_dealiasing ? "Homogeneous1D" : "";
@@ -550,7 +595,7 @@ namespace Nektar
      */
     void VelocityCorrectionScheme:: v_TransCoeffToPhys(void)
     {
-        int nfields = m_fields.num_elements() - 1;
+        int nfields = m_fields.size() - 1;
         for (int k=0 ; k < nfields; ++k)
         {
             //Backward Transformation in physical space for time evolution
@@ -565,7 +610,7 @@ namespace Nektar
     void VelocityCorrectionScheme:: v_TransPhysToCoeff(void)
     {
 
-        int nfields = m_fields.num_elements() - 1;
+        int nfields = m_fields.size() - 1;
         for (int k=0 ; k < nfields; ++k)
         {
             //Forward Transformation in physical space for time evolution
@@ -679,7 +724,7 @@ namespace Nektar
     {
         int i;
         int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_velocity.num_elements();
+        int nvel = m_velocity.size();
 
         m_fields[0]->PhysDeriv(eX,fields[0], Forcing[0]);
 
@@ -707,7 +752,7 @@ namespace Nektar
         // Grad p
         m_pressure->BwdTrans(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
 
-        int nvel = m_velocity.num_elements();
+        int nvel = m_velocity.size();
         if(nvel == 2)
         {
             m_pressure->PhysDeriv(m_pressure->GetPhys(),
@@ -834,7 +879,7 @@ namespace Nektar
                     cout << "Seting up SVV velocity from "
                         "SVVVelocityMagnitude section in session file" << endl;
                 }
-                int nvel = m_velocity.num_elements();
+                int nvel = m_velocity.size();
                 int phystot = m_fields[0]->GetTotPoints();
                 SVVVelFields = Array<OneD, Array<OneD, NekDouble> >(nvel);
                 vector<string> vars;
@@ -910,7 +955,7 @@ namespace Nektar
                 Array<OneD, unsigned int> planes;
                 planes = m_fields[0]->GetZIDs();
 
-                int num_planes = planes.num_elements();
+                int num_planes = planes.size();
                 Array<OneD, NekDouble> SVV(num_planes,0.0);
                 NekDouble fac;
                 int kmodes = m_fields[0]->GetHomogeneousBasis()->GetNumModes();
@@ -928,7 +973,7 @@ namespace Nektar
                     }
                 }
 
-                for(int i = 0; i < m_velocity.num_elements(); ++i)
+                for(int i = 0; i < m_velocity.size(); ++i)
                 {
                     m_fields[m_velocity[i]]->SetHomo1DSpecVanVisc(SVV);
                 }
@@ -953,7 +998,7 @@ namespace Nektar
         if(vel != NullNekDoubleArrayofArray)
         {
             Array<OneD, NekDouble> Velmag(phystot);
-            nvel = vel.num_elements();
+            nvel = vel.size();
             // calculate magnitude of v
             Vmath::Vmul(phystot,vel[0],1,vel[0],1,Velmag,1);
             for(int n = 1; n < nvel; ++n)

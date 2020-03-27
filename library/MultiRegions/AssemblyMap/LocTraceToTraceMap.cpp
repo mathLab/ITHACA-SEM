@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -850,7 +849,7 @@ void LocTraceToTraceMap::Setup3D(
 void LocTraceToTraceMap::LocTracesFromField(
     const Array<OneD, const NekDouble> &field, Array<OneD, NekDouble> faces)
 {
-    Vmath::Gathr(m_fieldToLocTraceMap.num_elements(),
+    Vmath::Gathr(m_fieldToLocTraceMap.size(),
                  field,
                  m_fieldToLocTraceMap,
                  faces);
@@ -892,7 +891,7 @@ void LocTraceToTraceMap::InterpLocEdgesToTrace(
     // tmp space assuming forward map is of size of trace
     Array<OneD, NekDouble> tmp(m_nTracePts);
 
-    for (int i = 0; i < m_interpTrace[dir].num_elements(); ++i)
+    for (int i = 0; i < m_interpTrace[dir].size(); ++i)
     {
         // Check if there are edges to interpolate
         if (m_interpNfaces[dir][i])
@@ -965,7 +964,7 @@ void LocTraceToTraceMap::InterpLocEdgesToTrace(
         }
     }
 
-    Vmath::Scatr(m_LocTraceToTraceMap[dir].num_elements(),
+    Vmath::Scatr(m_LocTraceToTraceMap[dir].size(),
                  tmp.get(),
                  m_LocTraceToTraceMap[dir].get(),
                  edges.get());
@@ -994,7 +993,7 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
     // tmp space assuming forward map is of size of trace
     Array<OneD, NekDouble> tmp(m_nTracePts);
 
-    for (int i = 0; i < m_interpTrace[dir].num_elements(); ++i)
+    for (int i = 0; i < m_interpTrace[dir].size(); ++i)
     {
         // Check if there are faces to interpolate
         if (m_interpNfaces[dir][i])
@@ -1197,7 +1196,7 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
         }
     }
 
-    Vmath::Scatr(m_LocTraceToTraceMap[dir].num_elements(),
+    Vmath::Scatr(m_LocTraceToTraceMap[dir].size(),
                  tmp.get(),
                  m_LocTraceToTraceMap[dir].get(),
                  faces.get());

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/TetExp.h>
 #include <SpatialDomains/SegGeom.h>
 #include <LibUtilities/Foundations/InterpCoeff.h>
@@ -50,8 +51,8 @@ namespace Nektar
          */
 
         /**
-         * \brief Constructor using BasisKey class for quadrature points and 
-         * order definition 
+         * \brief Constructor using BasisKey class for quadrature points and
+         * order definition
          *
          * @param   Ba          Basis key for first coordinate.
          * @param   Bb          Basis key for second coordinate.
@@ -70,7 +71,7 @@ namespace Nektar
                 LibUtilities::StdTetData::getNumberOfCoefficients(
                     Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),
                     Ba, Bb, Bc),
-            StdRegions::StdTetExp(Ba,Bb,Bc),
+            StdTetExp(Ba,Bb,Bc),
             Expansion     (geom),
             Expansion3D   (geom),
             m_matrixManager(
@@ -87,8 +88,8 @@ namespace Nektar
          * \brief Copy Constructor
          */
         TetExp::TetExp(const TetExp &T):
-            StdExpansion(T),
-            StdExpansion3D(T),
+            StdRegions::StdExpansion(T),
+            StdRegions::StdExpansion3D(T),
             StdRegions::StdTetExp(T),
             Expansion(T),
             Expansion3D(T),
@@ -104,7 +105,7 @@ namespace Nektar
         {
         }
 
-        
+
         //-----------------------------
         // Integration Methods
         //-----------------------------
@@ -146,14 +147,14 @@ namespace Nektar
 
             return retrunVal;
         }
-        
+
 
         //-----------------------------
         // Differentiation Methods
         //-----------------------------
         /**
 	 * \brief Differentiate \a inarray in the three coordinate directions.
-	 * 
+	 *
          * @param   inarray     Input array of values at quadrature points to
          *                      be differentiated.
          * @param   out_d0      Derivative in first coordinate direction.
@@ -168,32 +169,32 @@ namespace Nektar
         {
             int  TotPts = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*
                 m_base[2]->GetNumPoints();
-            
+
             Array<TwoD, const NekDouble> df =
                 m_metricinfo->GetDerivFactors(GetPointsKeys());
             Array<OneD,NekDouble> Diff0 = Array<OneD,NekDouble>(3*TotPts);
             Array<OneD,NekDouble> Diff1 = Diff0 + TotPts;
             Array<OneD,NekDouble> Diff2 = Diff1 + TotPts;
-            
+
             StdTetExp::v_PhysDeriv(inarray, Diff0, Diff1, Diff2);
-            
+
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                if(out_d0.num_elements())
+                if(out_d0.size())
                 {
                     Vmath::Vmul  (TotPts,&df[0][0],1,&Diff0[0],1, &out_d0[0], 1);
                     Vmath::Vvtvp (TotPts,&df[1][0],1,&Diff1[0],1, &out_d0[0], 1,&out_d0[0],1);
                     Vmath::Vvtvp (TotPts,&df[2][0],1,&Diff2[0],1, &out_d0[0], 1,&out_d0[0],1);
                 }
-                
-                if(out_d1.num_elements())
+
+                if(out_d1.size())
                 {
                     Vmath::Vmul  (TotPts,&df[3][0],1,&Diff0[0],1, &out_d1[0], 1);
                     Vmath::Vvtvp (TotPts,&df[4][0],1,&Diff1[0],1, &out_d1[0], 1,&out_d1[0],1);
                     Vmath::Vvtvp (TotPts,&df[5][0],1,&Diff2[0],1, &out_d1[0], 1,&out_d1[0],1);
                 }
 
-                if(out_d2.num_elements())
+                if(out_d2.size())
                 {
                     Vmath::Vmul  (TotPts,&df[6][0],1,&Diff0[0],1, &out_d2[0], 1);
                     Vmath::Vvtvp (TotPts,&df[7][0],1,&Diff1[0],1, &out_d2[0], 1, &out_d2[0],1);
@@ -202,21 +203,21 @@ namespace Nektar
             }
             else // regular geometry
             {
-                if(out_d0.num_elements())
+                if(out_d0.size())
                 {
                     Vmath::Smul (TotPts,df[0][0],&Diff0[0],1, &out_d0[0], 1);
                     Blas::Daxpy (TotPts,df[1][0],&Diff1[0],1, &out_d0[0], 1);
                     Blas::Daxpy (TotPts,df[2][0],&Diff2[0],1, &out_d0[0], 1);
                 }
 
-                if(out_d1.num_elements())
+                if(out_d1.size())
                 {
                     Vmath::Smul (TotPts,df[3][0],&Diff0[0],1, &out_d1[0], 1);
                     Blas::Daxpy (TotPts,df[4][0],&Diff1[0],1, &out_d1[0], 1);
                     Blas::Daxpy (TotPts,df[5][0],&Diff2[0],1, &out_d1[0], 1);
                 }
 
-                if(out_d2.num_elements())
+                if(out_d2.size())
                 {
                     Vmath::Smul (TotPts,df[6][0],&Diff0[0],1, &out_d2[0], 1);
                     Blas::Daxpy (TotPts,df[7][0],&Diff1[0],1, &out_d2[0], 1);
@@ -238,7 +239,7 @@ namespace Nektar
          *                      transformed.
          * @param   outarray    Array of coefficients to update.
          */
-        void TetExp::v_FwdTrans( 
+        void TetExp::v_FwdTrans(
                                 const Array<OneD, const NekDouble> & inarray,
                                 Array<OneD,NekDouble> &outarray)
         {
@@ -249,7 +250,7 @@ namespace Nektar
             else
             {
                 IProductWRTBase(inarray,outarray);
-                
+
                 // get Mass matrix inverse
                 MatrixKey             masskey(StdRegions::eInvMass,
                                               DetShapeType(),*this);
@@ -315,7 +316,7 @@ namespace Nektar
             if(multiplybyweights)
             {
                 Array<OneD, NekDouble> tmp(nquad0*nquad1*nquad2);
-                
+
                 MultiplyByQuadratureMetric(inarray, tmp);
                 IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                              m_base[1]->GetBdata(),
@@ -330,42 +331,42 @@ namespace Nektar
                                              m_base[2]->GetBdata(),
                                              inarray,outarray,wsp,
                                              true,true,true);
-            }  
+            }
         }
 
         /**
          * @brief Calculates the inner product \f$ I_{pqr} = (u,
          * \partial_{x_i} \phi_{pqr}) \f$.
-         * 
+         *
          * The derivative of the basis functions is performed using the chain
          * rule in order to incorporate the geometric factors. Assuming that
          * the basis functions are a tensor product
          * \f$\phi_{pqr}(\eta_1,\eta_2,\eta_3) =
          * \phi_1(\eta_1)\phi_2(\eta_2)\phi_3(\eta_3)\f$, this yields the
          * result
-         * 
+         *
          * \f[
          * I_{pqr} = \sum_{j=1}^3 \left(u, \frac{\partial u}{\partial \eta_j}
          * \frac{\partial \eta_j}{\partial x_i}\right)
          * \f]
-         * 
+         *
          * In the prismatic element, we must also incorporate a second set of
          * geometric factors which incorporate the collapsed co-ordinate
          * system, so that
-         * 
+         *
          * \f[ \frac{\partial\eta_j}{\partial x_i} = \sum_{k=1}^3
          * \frac{\partial\eta_j}{\partial\xi_k}\frac{\partial\xi_k}{\partial
          * x_i} \f]
-         * 
+         *
          * These derivatives can be found on p152 of Sherwin & Karniadakis.
-         * 
+         *
          * @param dir       Direction in which to take the derivative.
          * @param inarray   The function \f$ u \f$.
          * @param outarray  Value of the inner product.
          */
         void TetExp::v_IProductWRTDerivBase(
-                                            const int                           dir, 
-                                            const Array<OneD, const NekDouble> &inarray, 
+                                            const int                           dir,
+                                            const Array<OneD, const NekDouble> &inarray,
                                             Array<OneD,       NekDouble> &outarray)
         {
             const int nquad0 = m_base[0]->GetNumPoints();
@@ -379,7 +380,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &z0 = m_base[0]->GetZ();
             const Array<OneD, const NekDouble> &z1 = m_base[1]->GetZ();
             const Array<OneD, const NekDouble> &z2 = m_base[2]->GetZ();
-            
+
             Array<OneD, NekDouble> h0   (nqtot);
             Array<OneD, NekDouble> h1   (nqtot);
             Array<OneD, NekDouble> h2   (nqtot);
@@ -392,12 +393,12 @@ namespace Nektar
             Array<OneD, NekDouble> tmp6 (m_ncoeffs);
             Array<OneD, NekDouble> wsp  (nquad1*nquad2*order0 +
                                          nquad2*order0*(order1+1)/2);
-            
+
             const Array<TwoD, const NekDouble>& df =
                 m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             MultiplyByQuadratureMetric(inarray,tmp1);
-            
+
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 Vmath::Vmul(nqtot,&df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
@@ -410,7 +411,7 @@ namespace Nektar
                 Vmath::Smul(nqtot, df[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
                 Vmath::Smul(nqtot, df[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
             }
-            
+
             const int nq01 = nquad0*nquad1;
             const int nq12 = nquad1*nquad2;
 
@@ -433,7 +434,7 @@ namespace Nektar
             {
                 Blas::Dscal(nq12, 1+z0[i], &h1[0]+i, nquad0);
             }
-            
+
             // Assemble terms for first IP.
             Vmath::Vvtvvtp(nqtot, &tmp2[0], 1, &h0[0], 1,
                            &tmp3[0], 1, &h1[0], 1,
@@ -451,7 +452,7 @@ namespace Nektar
             Vmath::Vvtvvtp(nqtot, &tmp3[0], 1, &h2[0], 1,
                            &tmp4[0], 1, &h3[0], 1,
                            &tmp5[0], 1);
-            
+
             IProductWRTBase_SumFacKernel(m_base[0]->GetBdata (),
                                          m_base[1]->GetDbdata(),
                                          m_base[2]->GetBdata (),
@@ -475,7 +476,7 @@ namespace Nektar
         // Evaluation functions
         //-----------------------------
 
-        /** 
+        /**
          * Given the local cartesian coordinate \a Lcoord evaluate the
          * value of physvals at this point by calling through to the
          * StdExpansion method
@@ -511,7 +512,7 @@ namespace Nektar
 	 * \brief Get the coordinates "coords" at the local coordinates "Lcoords"
 	 */
         void TetExp::v_GetCoord(
-                                const Array<OneD, const NekDouble> &Lcoords, 
+                                const Array<OneD, const NekDouble> &Lcoords,
                                 Array<OneD,NekDouble> &coords)
         {
             int  i;
@@ -567,12 +568,12 @@ namespace Nektar
                            2, m_base[1]->GetPointsKey());
             LibUtilities::BasisKey bkey2(m_base[2]->GetBasisType(),
                            2, m_base[2]->GetPointsKey());
-            
+
             return MemoryManager<StdRegions::StdTetExp>
                 ::AllocateSharedPtr( bkey0, bkey1, bkey2);
         }
 
-        
+
         int TetExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();
@@ -585,6 +586,8 @@ namespace Nektar
                                            NekDouble * coeffs,
                                            std::vector<LibUtilities::BasisType> &fromType)
         {
+            boost::ignore_unused(fromType);
+
             int data_order0 = nummodes[mode_offset];
             int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
             int data_order1 = nummodes[mode_offset+1];
@@ -650,17 +653,17 @@ namespace Nektar
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
 
-            int nq0 = 0; 
-            int nq1 = 0; 
+            int nq0 = 0;
+            int nq1 = 0;
 
-            // get forward aligned faces. 
+            // get forward aligned faces.
             switch(face)
             {
                 case 0:
                 {
-                    nq0 = nquad0; 
+                    nq0 = nquad0;
                     nq1 = nquad1;
-                    if(outarray.num_elements()!=nq0*nq1)
+                    if(outarray.size()!=nq0*nq1)
                     {
                         outarray = Array<OneD, int>(nq0*nq1);
                     }
@@ -674,9 +677,9 @@ namespace Nektar
                 }
                 case 1:
                 {
-                    nq0 = nquad0; 
+                    nq0 = nquad0;
                     nq1 = nquad2;
-                    if(outarray.num_elements()!=nq0*nq1)
+                    if(outarray.size()!=nq0*nq1)
                     {
                         outarray = Array<OneD, int>(nq0*nq1);
                     }
@@ -693,9 +696,9 @@ namespace Nektar
                 }
                 case 2:
                 {
-                    nq0 = nquad1; 
+                    nq0 = nquad1;
                     nq1 = nquad2;
-                    if(outarray.num_elements()!=nq0*nq1)
+                    if(outarray.size()!=nq0*nq1)
                     {
                         outarray = Array<OneD, int>(nq0*nq1);
                     }
@@ -709,13 +712,13 @@ namespace Nektar
                 }
                 case 3:
                 {
-                    nq0 = nquad1; 
+                    nq0 = nquad1;
                     nq1 = nquad2;
-                    if(outarray.num_elements() != nq0*nq1)
+                    if(outarray.size() != nq0*nq1)
                     {
                         outarray = Array<OneD, int>(nq0*nq1);
                     }
-                    
+
                     //Directions A and B positive
                     for(int j = 0; j < nquad1*nquad2; ++j)
                     {
@@ -728,7 +731,7 @@ namespace Nektar
                 break;
             }
         }
-        
+
 
         /**
 	 * \brief Compute the normal of a triangular face
@@ -736,7 +739,7 @@ namespace Nektar
         void TetExp::v_ComputeFaceNormal(const int face)
         {
             int i;
-            const SpatialDomains::GeomFactorsSharedPtr &geomFactors = 
+            const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
                 GetGeom()->GetMetricInfo();
 
             LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
@@ -756,12 +759,12 @@ namespace Nektar
 
             LibUtilities::BasisKey tobasis0 = DetFaceBasisKey(face,0);
             LibUtilities::BasisKey tobasis1 = DetFaceBasisKey(face,1);
-            
-            // number of face quadrature points 
+
+            // number of face quadrature points
             int nq_face = tobasis0.GetNumPoints()*tobasis1.GetNumPoints();
 
             int vCoordDim = GetCoordim();
-            
+
             m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
             Array<OneD, Array<OneD, NekDouble> > &normal = m_faceNormals[face];
             for (i = 0; i < vCoordDim; ++i)
@@ -774,7 +777,7 @@ namespace Nektar
                 type == SpatialDomains::eMovingRegular)
             {
                 NekDouble fac;
-                
+
                 // Set up normals
                 switch (face)
                 {
@@ -782,9 +785,9 @@ namespace Nektar
                     {
                         for (i = 0; i < vCoordDim; ++i)
                         {
-                            normal[i][0] = -df[3*i+2][0]; 
+                            normal[i][0] = -df[3*i+2][0];
                         }
-                        
+
                         break;
                     }
                     case 1:
@@ -793,7 +796,7 @@ namespace Nektar
                         {
                             normal[i][0] = -df[3*i+1][0];
                         }
-                        
+
                         break;
                     }
                     case 2:
@@ -801,9 +804,9 @@ namespace Nektar
                         for (i = 0; i < vCoordDim; ++i)
                         {
                             normal[i][0] = df[3*i][0]+df[3*i+1][0]+
-                                df[3*i+2][0]; 
+                                df[3*i+2][0];
                         }
-                        
+
                         break;
                     }
                     case 3:
@@ -817,7 +820,7 @@ namespace Nektar
                     default:
                         ASSERTL0(false,"face is out of range (edge < 3)");
                 }
-                
+
                 // normalise
                 fac = 0.0;
                 for (i = 0; i < vCoordDim; ++i)
@@ -841,7 +844,7 @@ namespace Nektar
                 int nq2 = ptsKeys[2].GetNumPoints();
                 int nqtot;
                 int nq01 =nq0*nq1;
-                
+
                 // number of elemental quad points
                 if (face == 0)
                 {
@@ -855,7 +858,7 @@ namespace Nektar
                 {
                     nqtot = nq1*nq2;
                 }
-                
+
                 LibUtilities::PointsKey points0;
                 LibUtilities::PointsKey points1;
 
@@ -896,7 +899,7 @@ namespace Nektar
                                 normals[2*nqtot+j+k*nq0]  =
                                     -df[7][tmp]*jac[tmp];
                                 faceJac[j+k*nq0] = jac[tmp];
-                            } 
+                            }
                         }
 
                         points0 = ptsKeys[0];
@@ -1012,7 +1015,7 @@ namespace Nektar
         }
 
         void TetExp::v_LaplacianMatrixOp(
-                  const int k1, 
+                  const int k1,
                   const int k2,
                   const Array<OneD, const NekDouble> &inarray,
                         Array<OneD,NekDouble> &outarray,
@@ -1021,15 +1024,15 @@ namespace Nektar
             StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,
                                                         mkey);
         }
-        
+
         void TetExp::v_SVVLaplacianFilter(
                     Array<OneD, NekDouble> &array,
                     const StdRegions::StdMatrixKey &mkey)
         {
             int nq = GetTotPoints();
-            
+
             // Calculate sqrt of the Jacobian
-            Array<OneD, const NekDouble> jac = 
+            Array<OneD, const NekDouble> jac =
                                     m_metricinfo->GetJac(GetPointsKeys());
             Array<OneD, NekDouble> sqrt_jac(nq);
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
@@ -1040,13 +1043,13 @@ namespace Nektar
             {
                 Vmath::Fill(nq,sqrt(jac[0]),sqrt_jac,1);
             }
-            
+
             // Multiply array by sqrt(Jac)
             Vmath::Vmul(nq,sqrt_jac,1,array,1,array,1);
-            
+
             // Apply std region filter
             StdTetExp::v_SVVLaplacianFilter( array, mkey);
-            
+
             // Divide by sqrt(Jac)
             Vmath::Vdiv(nq,array,1,sqrt_jac,1,array,1);
         }
@@ -1191,7 +1194,7 @@ namespace Nektar
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
-                        
+
                         returnval = MemoryManager<DNekScalMat>
                                                 ::AllocateSharedPtr(one,mat);
                     }
@@ -1283,7 +1286,7 @@ namespace Nektar
             case StdRegions::eInvLaplacianWithUnityMean:
                 {
                     NekDouble one    = 1.0;
-                    
+
                     DNekMatSharedPtr mat = GenMatrix(mkey);
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
@@ -1291,10 +1294,10 @@ namespace Nektar
             case StdRegions::eInvHybridDGHelmholtz:
                 {
                     NekDouble one = 1.0;
-                    
+
                     MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekMatSharedPtr mat = GenMatrix(hkey);
-                    
+
                     mat->Invert();
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
@@ -1352,7 +1355,7 @@ namespace Nektar
                     //ASSERTL0(false, "Missing definition for " + (*StdRegions::MatrixTypeMap[mkey.GetMatrixType()]));
                     NekDouble        one = 1.0;
                     DNekMatSharedPtr mat = GenMatrix(mkey);
-                    
+
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
@@ -1378,7 +1381,7 @@ namespace Nektar
 
             NekDouble factor = 1.0;
             MatrixStorage AMatStorage = eFULL;
-            
+
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eLaplacian:
@@ -1528,7 +1531,7 @@ namespace Nektar
             }
         }
 
-        
+
         void TetExp::v_LaplacianMatrixOp_MatFree_Kernel(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,
@@ -1546,7 +1549,7 @@ namespace Nektar
             int nquad2  = m_base[2]->GetNumPoints();
             int nqtot   = nquad0*nquad1*nquad2;
 
-            ASSERTL1(wsp.num_elements() >= 6*nqtot,
+            ASSERTL1(wsp.size() >= 6*nqtot,
                      "Insufficient workspace size.");
             ASSERTL1(m_ncoeffs <= nqtot,
                      "Workspace not set up for ncoeffs > nqtot");
@@ -1571,7 +1574,7 @@ namespace Nektar
             Array<OneD,NekDouble> wsp3 (  nqtot, wsp+3*nqtot);
             Array<OneD,NekDouble> wsp4 (  nqtot, wsp+4*nqtot);
             Array<OneD,NekDouble> wsp5 (  nqtot, wsp+5*nqtot);
-            
+
             // LAPLACIAN MATRIX OPERATION
             // wsp1 = du_dxi1 = D_xi1 * inarray = D_xi1 * u
             // wsp2 = du_dxi2 = D_xi2 * inarray = D_xi2 * u
@@ -1621,7 +1624,7 @@ namespace Nektar
                     m_metrics[m[i][j]] = Array<OneD, NekDouble>(nqtot);
                 }
             }
-            
+
             // Define shorthand synonyms for m_metrics storage
             Array<OneD,NekDouble> g0   (m_metrics[m[0][0]]);
             Array<OneD,NekDouble> g1   (m_metrics[m[1][1]]);

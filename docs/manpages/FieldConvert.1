@@ -1,0 +1,126 @@
+.\" Manpage for FieldConvert
+.\" Contact c.cantwell@imperial.ac.uk to correct errors or typos
+.TH man 1 "07 Aug 2019" "5.0" "FieldConvert man page"
+.SH NAME
+FieldConvert \- post-process Nektar++ field files
+.SH SYNOPSIS
+FieldConvert [ option(s) ] input output
+.SH DESCRIPTION
+.B FieldConvert
+is a utility primarily for the conversion of
+.B Nektar++
+output binary files into a range of other visualisation formats for analysis.
+It is built on the
+.B Nektar++
+high-order spectral/hp element framework.
+
+It also includes a range of modules for manipulating the output, such as
+computing derived fields, extracting planes and isosurfaces or interpolating
+onto other grids or point distributions.
+
+.SS Further information
+For further details and specific configuration options, please consult the
+.B Nektar++ user guide
+available from the website \(la www.nektar.info \(ra.
+.SH OPTIONS
+.SS General Options
+.TP 4
+.B \-h [ \-\-help ]
+Print the help message.
+.TP 4
+.B \-r [ \-\-range ] arg
+Define output range to process, where
+.I arg
+is specified as
+.I xmin,xmax,ymin,ymax,zmin,zmax
+.TP 4
+.B \-v [ \-\-verbose ]
+Displays additional diagnostic information during the solver execution.
+.TP 4
+.B \-V [ \-\-version ]
+Prints the version of the Nektar++.
+
+.SS Modules and Module Options
+.TP 4
+.B \-l [ \-\-modules-list ]
+Print the list of available modules.
+.TP 4
+.B \-m [ \-\-module ] arg
+Specify module to be used.
+.TP 4
+.B \-p [ \-\-modules-opt ] arg
+Print options for the module given by
+.I arg
+
+.SS Advanced Options
+.TP 4
+.B \-e [ \-\-error ]
+Write error of fields for regression checking.
+.TP 4
+.B \-f [ \-\-forceoutput ]
+Force the output to be written without any checks.
+.TP 4
+.B \-n [ \-\-output-points ] arg
+Output at n equispaced points along the collapsed coordinate (for .dat, .vtu).
+.TP 4
+.B \-\-noequispaced
+Do not use equispaced output.
+.TP 4
+.B \-\-onlyshape arg
+Only use element with defined shape, where
+.I arg
+is, for example,
+.I Tetrahedron
+.TP 4
+.B \-\-output-points-hom-z arg
+Specify number of planes in the z-direction for output of Homogeneous 1D
+expansions (for .dat, .vtu).
+.TP 4
+.B \-\-useSessionVariables
+Use variables defined in session for output.
+.TP 4
+.B \-\-useSessionExpansion
+Use expansion defined in session.
+
+.SS Parallelisation Options
+.TP 4
+.B \-\-nparts arg
+Process partitions of parallel run in serial. The
+.I arg
+parameter specifies the number of partitions in the input field file.
+.TP 4
+.B \-\-npz arg
+Specifies the number of processes in the z-direction.
+.TP 4
+.B \-\-part-only N
+Partitions the input mesh into N partitions and exits.
+.TP 4
+.B \-\-part-only-overlapping N
+Partitions mesh into N overlapping partitions and exits.
+.TP 4
+.B \-\-use-ptscotch
+Use PT-Scotch for parallel mesh partitioning.
+.TP 4
+.B \-\-use-scotch
+Use Scotch for mesh partitioning.
+
+.SH EXAMPLE
+To compute the vorticity field
+.RS
+.B FieldConvert -m vorticity in.xml in.fld out_vorticity.fld
+.RE
+
+To convert a field file to an unstructured VTK file
+.RS
+.B FieldConvert in.xml in.fld out.vtu
+.RE
+
+To compute vorticity and write output to an unstructured VTK file
+.RS
+.B FieldConvert -m vorticity in.xml in.fld out_vorticity.vtu
+.RE
+
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Chris Cantwell (c.cantwell@imperial.ac.uk)

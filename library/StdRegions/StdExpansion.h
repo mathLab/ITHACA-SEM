@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -41,9 +40,10 @@
 #include <vector>
 #include <memory>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdRegionsDeclspec.h>
-#include <StdRegions/SpatialDomainsDeclarations.hpp>
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
@@ -96,7 +96,7 @@ namespace Nektar
              */
             inline int GetNumBases() const
             {
-                return m_base.num_elements();
+                return m_base.size();
             }
 
             /** \brief This function gets the shared point to basis
@@ -116,7 +116,7 @@ namespace Nektar
              */
             inline const LibUtilities::BasisSharedPtr& GetBasis(int dir) const
             {
-                ASSERTL1(dir < m_base.num_elements(),
+                ASSERTL1(dir < m_base.size(),
                          "dir is larger than number of bases");
                 return(m_base[dir]);
             }
@@ -142,7 +142,7 @@ namespace Nektar
                 int i;
                 int nqtot = 1;
 
-                for(i=0; i < m_base.num_elements(); ++i)
+                for(i=0; i < m_base.size(); ++i)
                 {
                     nqtot *= m_base[i]->GetNumPoints();
                 }
@@ -163,7 +163,7 @@ namespace Nektar
              */
             inline  LibUtilities::BasisType GetBasisType(const int dir) const
             {
-                ASSERTL1(dir < m_base.num_elements(), "dir is larger than m_numbases");
+                ASSERTL1(dir < m_base.size(), "dir is larger than m_numbases");
                 return(m_base[dir]->GetBasisType());
             }
 
@@ -176,7 +176,7 @@ namespace Nektar
              */
             inline int GetBasisNumModes(const int dir) const
             {
-                ASSERTL1(dir < m_base.num_elements(),"dir is larger than m_numbases");
+                ASSERTL1(dir < m_base.size(),"dir is larger than m_numbases");
                 return(m_base[dir]->GetNumModes());
             }
 
@@ -192,7 +192,7 @@ namespace Nektar
                 int i;
                 int returnval = 0;
 
-                for(i = 0; i < m_base.num_elements(); ++i)
+                for(i = 0; i < m_base.size(); ++i)
                 {
                     returnval = std::max(returnval, m_base[i]->GetNumModes());
                 }
@@ -214,7 +214,7 @@ namespace Nektar
              */
             inline LibUtilities::PointsType GetPointsType(const int dir)  const
             {
-                ASSERTL1(dir < m_base.num_elements(), "dir is larger than m_numbases");
+                ASSERTL1(dir < m_base.size(), "dir is larger than m_numbases");
                 return(m_base[dir]->GetPointsType());
             }
 
@@ -227,9 +227,9 @@ namespace Nektar
              */
             inline int GetNumPoints(const int dir) const
             {
-                ASSERTL1(dir < m_base.num_elements() || dir == 0,
+                ASSERTL1(dir < m_base.size() || dir == 0,
                          "dir is larger than m_numbases");
-                return(m_base.num_elements() > 0 ? m_base[dir]->GetNumPoints() : 1);
+                return(m_base.size() > 0 ? m_base[dir]->GetNumPoints() : 1);
             }
 
             /** \brief This function returns a pointer to the array containing
@@ -415,7 +415,7 @@ namespace Nektar
             }
 
             /** \brief This function returns the type of expansion
-             *  Nodal point type if defined 
+             *  Nodal point type if defined
              *
              *  This function is a wrapper around the virtual function
              *  \a v_GetNodalPointsKey()
@@ -448,7 +448,7 @@ namespace Nektar
              */
             int GetNtrace() const
             {
-                const int nBase = m_base.num_elements();
+                const size_t nBase = m_base.size();
                 return
                     nBase == 1 ? 2 :
                     nBase == 2 ? GetNedges() :
@@ -470,7 +470,7 @@ namespace Nektar
             {
                 return v_DetShapeType();
             }
-            
+
             std::shared_ptr<StdExpansion> GetStdExp(void) const
             {
                 return v_GetStdExp();
@@ -481,7 +481,7 @@ namespace Nektar
             {
                 return v_GetLinStdExp();
             }
-            
+
 
             int GetShapeDimension() const
             {
@@ -737,7 +737,7 @@ namespace Nektar
             }
 
             STD_REGIONS_EXPORT virtual void SetUpPhysNormals(const int edge);
-            
+
             void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, Array< OneD, NekDouble> &outarray)
             {
                 v_NormVectorIProductWRTBase(Fx,outarray);
@@ -885,7 +885,7 @@ namespace Nektar
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
-            
+
             void GetTracePhysVals(const int edge, const std::shared_ptr<StdExpansion> &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 v_GetTracePhysVals(edge,EdgeExp,inarray,outarray);
@@ -934,7 +934,7 @@ namespace Nektar
             {
                 v_GetEdgePhysMap(edge, outarray);
             }
-            
+
             void GetFacePhysMap(
                 const int           face,
                 Array<OneD, int>   &outarray)
@@ -1202,8 +1202,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, Array< OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(
-                     const Array<OneD, const NekDouble> &Fx, 
-                     const Array<OneD, const NekDouble> &Fy, 
+                     const Array<OneD, const NekDouble> &Fx,
+                     const Array<OneD, const NekDouble> &Fy,
                      Array< OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, const Array<OneD, const NekDouble> &Fz, Array< OneD, NekDouble> &outarray);
@@ -1330,8 +1330,8 @@ namespace Nektar
             const LibUtilities::PointsKeyVector GetPointsKeys() const
             {
                 LibUtilities::PointsKeyVector p;
-                p.reserve(m_base.num_elements());
-                for (int i = 0; i < m_base.num_elements(); ++i)
+                p.reserve(m_base.size());
+                for (int i = 0; i < m_base.size(); ++i)
                 {
                     p.push_back(m_base[i]->GetPointsKey());
                 }
@@ -1356,11 +1356,11 @@ namespace Nektar
                     Array<OneD, unsigned int> &vmap,
                     Array<OneD, Array<OneD, unsigned int> > &emap,
                     Array<OneD, Array<OneD, unsigned int> > &fmap )
-                
+
             {
                 v_GetInverseBoundaryMaps(vmap,emap,fmap);
             }
-            
+
             STD_REGIONS_EXPORT DNekMatSharedPtr BuildInverseTransformationMatrix(
                 const DNekScalMatSharedPtr & m_transformationmatrix)
             {
@@ -1389,9 +1389,9 @@ namespace Nektar
              *   equispaced data points provided by
              *   PhysInterpToSimplexEquiSpaced
              *
-             *  This is a virtual call to the function 
+             *  This is a virtual call to the function
              *  \a v_GetSimplexEquiSpaceConnectivity
-             */ 
+             */
             STD_REGIONS_EXPORT void GetSimplexEquiSpacedConnectivity(
                 Array<OneD, int> &conn,
                 bool              standard = true)
@@ -1402,7 +1402,7 @@ namespace Nektar
             /** \brief This function performs a
              * projection/interpolation from the equispaced points
              * sometimes used in post-processing onto the coefficient
-             * space 
+             * space
              *
              * This is primarily used for output purposes to use a
              * more even distribution of points more suitable for alot of
@@ -1612,12 +1612,12 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
 
-            STD_REGIONS_EXPORT virtual std::shared_ptr<StdExpansion> 
+            STD_REGIONS_EXPORT virtual std::shared_ptr<StdExpansion>
                 v_GetStdExp(void) const;
 
-            STD_REGIONS_EXPORT virtual std::shared_ptr<StdExpansion> 
+            STD_REGIONS_EXPORT virtual std::shared_ptr<StdExpansion>
                 v_GetLinStdExp(void) const;
-            
+
             STD_REGIONS_EXPORT virtual int v_GetShapeDimension() const;
 
             STD_REGIONS_EXPORT virtual bool  v_IsBoundaryInteriorExpansion();
@@ -1650,7 +1650,9 @@ namespace Nektar
                                   Array<OneD,       NekDouble>& outarray,
                                   int coll_check)
             {
-                ASSERTL0(false, "StdExpansion::v_IProductWRTBase has no (and should have no) implementation");
+                boost::ignore_unused(base, inarray, outarray, coll_check);
+                NEKERROR(ErrorUtil::efatal,
+                         "StdExpansion::v_IProductWRTBase has no (and should have no) implementation");
             }
 
             STD_REGIONS_EXPORT virtual void  v_IProductWRTDerivBase (const int dir,
@@ -1783,7 +1785,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysMap(
                 const int       edge,
                 Array<OneD,int> &outarray);
-            
+
             STD_REGIONS_EXPORT virtual void v_GetFacePhysMap(
                 const int       face,
                 Array<OneD,int> &outarray);
@@ -1912,7 +1914,7 @@ namespace Nektar
                     Array<OneD, unsigned int> &vmap,
                     Array<OneD, Array<OneD, unsigned int> > &emap,
                     Array<OneD, Array<OneD, unsigned int> > &fmap );
-            
+
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildInverseTransformationMatrix(const DNekScalMatSharedPtr & m_transformationmatrix);
 
             STD_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(

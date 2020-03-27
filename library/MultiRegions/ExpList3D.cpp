@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/ExpList3D.h>
 
 #include <LocalRegions/HexExp.h>
@@ -477,6 +479,8 @@ namespace Nektar
 
         void ExpList3D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip)
         {
+            boost::ignore_unused(istrip);
+
             int i,j,k;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);

@@ -113,7 +113,7 @@ IF( NEKTAR_USE_HDF5 )
 ENDIF( NEKTAR_USE_HDF5 )
 
 # find and add Nektar++ libraries
-INCLUDE(${NEKTAR++_LIBRARY_DIRS}/cmake/Nektar++Libraries.cmake)
+INCLUDE(@CMAKE_INSTALL_PREFIX@/@NEKTAR_CMAKE_DIR@/Nektar++Libraries.cmake)
 
 # platform dependent options
 IF(${CMAKE_SYSTEM} MATCHES "Linux.*")

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -66,6 +65,7 @@ SegGeom::SegGeom(int id,
 }
 
 SegGeom::SegGeom(const SegGeom &in)
+    : Geometry1D(in)
 {
     // From Geometry class
     m_shapeType = in.m_shapeType;
@@ -133,7 +133,7 @@ SegGeomSharedPtr SegGeom::GenerateOneSpaceDimGeom(void)
     const Array<OneD, const NekDouble> jac = m_geomFactors->GetJac(v);
 
     NekDouble len = 0.0;
-    if (jac.num_elements() == 1)
+    if (jac.size() == 1)
     {
         len = jac[0] * 2.0;
     }
@@ -142,7 +142,7 @@ SegGeomSharedPtr SegGeom::GenerateOneSpaceDimGeom(void)
         Array<OneD, const NekDouble> w0 = base[0]->GetW();
         len = 0.0;
 
-        for (int i = 0; i < jac.num_elements(); ++i)
+        for (int i = 0; i < jac.size(); ++i)
         {
             len += jac[i] * w0[i];
         }
@@ -374,11 +374,26 @@ bool SegGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                               NekDouble tol,
                               NekDouble &resid)
 {
+    //Rough check if within twice min/max point
+    if (GetMetricInfo()->GetGtype() != eRegular)
+    {
+        if (!MinMaxCheck(gloCoord))
+        {
+            return false;
+        }
+    }
+
+    // Convert to the local (eta) coordinates.
     resid = GetLocCoords(gloCoord, stdCoord);
+
     if (stdCoord[0] >= -(1 + tol) && stdCoord[0] <= 1 + tol)
     {
         return true;
     }
+
+    //Clamp local coords
+    ClampLocCoords(stdCoord, tol);
+
     return false;
 }
 

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -115,7 +114,7 @@ namespace Nektar
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
             std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
-            bool vCG;
+            bool vCG = false;
             m_locToGloMap = pLocToGloMap;
 
             if (std::dynamic_pointer_cast<AssemblyMapCG>(pLocToGloMap))
@@ -128,17 +127,17 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(false, "Unknown map type");
+                NEKERROR(ErrorUtil::efatal, "Unknown map type");
             }
 
-            bool dirForcCalculated = (bool) pDirForcing.num_elements();
+            bool dirForcCalculated = (bool) pDirForcing.size();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
             int nDirTotal = nDirDofs;
-            
+
             expList->GetComm()->GetRowComm()
                    ->AllReduce(nDirTotal, LibUtilities::ReduceSum);
-            
+
             Array<OneD, NekDouble> tmp(nGlobDofs), tmp2;
 
             if(nDirTotal)

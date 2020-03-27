@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/NodalPrismElec.h>
@@ -43,6 +44,11 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
+bool NodalPrismElec::initPointsManager[] = {
+    PointsManager().RegisterCreator(PointsKey(0, eNodalPrismElec),         NodalPrismElec::Create)
+};
+
 namespace
 {
 bool isVertex(int t, int y, int npts)
@@ -59,6 +65,7 @@ bool isEdge_01(int t, int y, int npts)
 
 bool isEdge_12(int t, int y, int npts)
 {
+    boost::ignore_unused(y, npts);
     return t == 1;
 }
 
@@ -69,6 +76,7 @@ bool isEdge_23(int t, int y, int npts)
 
 bool isEdge_30(int t, int y, int npts)
 {
+    boost::ignore_unused(y, npts);
     return t == 0;
 }
 
@@ -94,6 +102,7 @@ bool isEdge_35(int t, int y, int npts)
 
 bool isEdge_45(int t, int y, int npts)
 {
+    boost::ignore_unused(y, npts);
     return t == 2;
 }
 
@@ -108,26 +117,31 @@ bool isEdge(int t, int y, int npts)
 
 bool isFace_0123(int t, int y, int npts)
 {
+    boost::ignore_unused(y);
     return t < 3 + (npts - 2);
 }
 
 bool isFace_014(int t, int y, int npts)
 {
+    boost::ignore_unused(t, npts);
     return y == 0;
 }
 
 bool isFace_1254(int t, int y, int npts)
 {
+    boost::ignore_unused(y);
     return t < 3 + 2 * (npts - 2) && t >= 3 + (npts - 2);
 }
 
 bool isFace_325(int t, int y, int npts)
 {
+    boost::ignore_unused(t);
     return y == (npts - 1);
 }
 
 bool isFace_0354(int t, int y, int npts)
 {
+    boost::ignore_unused(y);
     return t < 3 + 3 * (npts - 2) && t >= 3 + 2 * (npts - 2);
 }
 
@@ -155,9 +169,9 @@ void NodalPrismElec::CalculatePoints()
     Array<OneD, NekDouble> u;
     LibUtilities::PointsManager()[pkey2]->GetPoints(u);
 
-    for (int y = 0, index = 0; y < npts; y++)
+    for (unsigned int y = 0, index = 0; y < npts; y++)
     {
-        for (int t = 0; t < u1.num_elements(); t++, index++)
+        for (size_t t = 0; t < u1.size(); t++, index++)
         {
             m_points[0][index] = u1[t];
             m_points[1][index] = u[y];
@@ -193,9 +207,9 @@ void NodalPrismElec::NodalPointReorder3d()
     vector<int> map;
 
     // Build the lattice prism left to right - bottom to top
-    for (int y = 0, index = 0; y < npts; y++)
+    for (unsigned int y = 0, index = 0; y < npts; y++)
     {
-        for (int t = 0; t < npts * (npts + 1) / 2; t++, index++)
+        for (unsigned int t = 0; t < npts * (npts + 1) / 2; t++, index++)
         {
             if (isVertex(t, y, npts))
             {
@@ -271,33 +285,33 @@ void NodalPrismElec::NodalPointReorder3d()
     }
 
     // sort vertices
-    swap(vertex[2], vertex[4]);
+    std::swap(vertex[2], vertex[4]);
     // sort edges
-    reverse(iEdge_23.begin(), iEdge_23.end());
-    reverse(iEdge_30.begin(), iEdge_30.end());
-    reverse(iEdge_04.begin(), iEdge_04.end());
-    reverse(iEdge_35.begin(), iEdge_35.end());
+    std::reverse(iEdge_23.begin(), iEdge_23.end());
+    std::reverse(iEdge_30.begin(), iEdge_30.end());
+    std::reverse(iEdge_04.begin(), iEdge_04.end());
+    std::reverse(iEdge_35.begin(), iEdge_35.end());
 
     // faces
-    for (int i = 0; i < npts - 2; i++)
+    for (unsigned int i = 0; i < npts - 2; i++)
     {
-        for (int j = i + 1; j < npts - 2; j++)
+        for (unsigned int j = i + 1; j < npts - 2; j++)
         {
-            swap(iFace_1254[i * (npts - 2) + j],
-                 iFace_1254[j * (npts - 2) + i]);
+            std::swap(iFace_1254[i * (npts - 2) + j],
+                      iFace_1254[j * (npts - 2) + i]);
         }
     }
     for (int i = 0; i < npts - 2; i++)
     {
-        reverse(iFace_0354.begin() + i * (npts - 2),
-                iFace_0354.begin() + i * (npts - 2) + npts - 2);
+        std::reverse(iFace_0354.begin() + (i * (npts - 2)),
+                     iFace_0354.begin() + (i * (npts - 2) + npts - 2));
     }
-    for (int i = 0; i < npts - 2; i++)
+    for (unsigned int i = 0; i < npts - 2; i++)
     {
-        for (int j = i + 1; j < npts - 2; j++)
+        for (unsigned int j = i + 1; j < npts - 2; j++)
         {
-            swap(iFace_0354[i * (npts - 2) + j],
-                 iFace_0354[j * (npts - 2) + i]);
+            std::swap(iFace_0354[i * (npts - 2) + j],
+                      iFace_0354[j * (npts - 2) + i]);
         }
     }
 

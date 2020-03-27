@@ -1,0 +1,12 @@
+blas-devel
+ccache
+cmake
+fftw-devel
+gcc-c++
+gcc-gfortran
+lapack-devel
+make
+patch
+scotch-devel
+tinyxml-devel
+zlib-devel

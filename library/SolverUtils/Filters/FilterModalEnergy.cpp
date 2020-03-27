@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <SolverUtils/Filters/FilterModalEnergy.h>
@@ -82,7 +83,7 @@ FilterModalEnergy::FilterModalEnergy(
     else
     {
         LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+            m_session->GetInterpreter(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
 
@@ -107,7 +108,7 @@ FilterModalEnergy::FilterModalEnergy(
         else
         {
             LibUtilities::Equation equ(
-                m_session->GetExpressionEvaluator(), it->second);
+                m_session->GetInterpreter(), it->second);
             m_outputPlane = round(equ.Evaluate());
         }
     }
@@ -213,9 +214,9 @@ void FilterModalEnergy::v_Update(
                 SetUpBaseFields(graphShrPtr);
                 string file = m_session->
                     GetFunctionFilename("BaseFlow", 0);
-                ImportFldBase(file, graphShrPtr);
+                ImportFldBase(file);
 
-                for (int i = 0; i < pFields.num_elements()-1; ++i)
+                for (int i = 0; i < pFields.size()-1; ++i)
                 {
                     Vmath::Vsub(pFields[i]->GetNcoeffs(),
                                 pFields[i]->GetCoeffs(), 1,
@@ -242,7 +243,7 @@ void FilterModalEnergy::v_Update(
                 m_EqTypeStr=="NavierStokesCFE")
             {
                 // Extracting kinetic energy
-                for (int i = 1; i < pFields.num_elements()-1; ++i)
+                for (int i = 1; i < pFields.size()-1; ++i)
                 {
                     energy_tmp = pFields[i]->HomogeneousEnergy();
                     Vmath::Vadd(locsize, energy_tmp, 1,
@@ -253,7 +254,7 @@ void FilterModalEnergy::v_Update(
             else
             {
                 // Extracting kinetic energy
-                for (int i = 0; i < pFields.num_elements()-1; ++i)
+                for (int i = 0; i < pFields.size()-1; ++i)
                 {
                     energy_tmp = pFields[i]->HomogeneousEnergy();
                     Vmath::Vadd(locsize, energy_tmp, 1,
@@ -267,7 +268,7 @@ void FilterModalEnergy::v_Update(
         {
             int j, m = 0;
 
-            for (j = 0; j < energy.num_elements(); ++j, ++m)
+            for (j = 0; j < energy.size(); ++j, ++m)
             {
                 m_outputStream << setw(10) << time
                                << setw(5)  << m
@@ -278,7 +279,7 @@ void FilterModalEnergy::v_Update(
             {
                 vComm->GetColumnComm()->Recv(i, energy);
 
-                for (j = 0; j < energy.num_elements(); ++j, ++m)
+                for (j = 0; j < energy.size(); ++j, ++m)
                 {
                     m_outputStream << setw(10) << time
                                    << setw(5)  << m
@@ -307,7 +308,7 @@ void FilterModalEnergy::v_Update(
         {
             // Total energy
             NekDouble energy = 0.0;
-            for (int i = 1; i < pFields.num_elements()-1; ++i)
+            for (int i = 1; i < pFields.size()-1; ++i)
             {
                 pFields[i]->SetPhysState(true);
                 NekDouble norm = L2Error(pFields, i, time);
@@ -324,7 +325,7 @@ void FilterModalEnergy::v_Update(
         {
             // Kinetic energy
             NekDouble energy = 0.0;
-            for (int i = 0; i < pFields.num_elements()-1; ++i)
+            for (int i = 0; i < pFields.size()-1; ++i)
             {
                 pFields[i]->SetPhysState(true);
                 NekDouble norm = L2Error(pFields, i, time);
@@ -345,6 +346,8 @@ void FilterModalEnergy::v_Finalise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     if (pFields[0]->GetComm()->GetRank() == 0)
     {
         m_outputStream.close();
@@ -360,6 +363,8 @@ NekDouble FilterModalEnergy::L2Error(
     unsigned int field,
     const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     NekDouble L2error = -1.0;
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
 
@@ -432,12 +437,6 @@ void FilterModalEnergy::SetUpBaseFields(
     m_session->MatchSolverInfo("DEALIASING", "True",
                                m_homogen_dealiasing, false);
 
-    if (m_homogen_dealiasing == false)
-    {
-        m_session->MatchSolverInfo("DEALIASING", "On",
-                                   m_homogen_dealiasing, false);
-    }
-
     // Stability Analysis flags
     if (m_session->DefinesSolverInfo("ModeType"))
     {
@@ -470,7 +469,7 @@ void FilterModalEnergy::SetUpBaseFields(
         {
             case 1:
             {
-                for(i = 0; i < m_base.num_elements(); i++)
+                for(i = 0; i < m_base.size(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::ContField1D>
                         ::AllocateSharedPtr(m_session, graphShrPtr,
@@ -491,7 +490,7 @@ void FilterModalEnergy::SetUpBaseFields(
                             LibUtilities::eFourier,
                             m_npointsZ, PkeyZ);
 
-                        for (i = 0 ; i < m_base.num_elements(); i++)
+                        for (i = 0 ; i < m_base.size(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::
                                 ContField3DHomogeneous1D>::
@@ -514,7 +513,7 @@ void FilterModalEnergy::SetUpBaseFields(
                             LibUtilities::eFourierHalfModeRe,
                             m_npointsZ,PkeyZ);
 
-                        for (i = 0 ; i < m_base.num_elements(); i++)
+                        for (i = 0 ; i < m_base.size(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::
                                 ContField3DHomogeneous1D>::
@@ -535,7 +534,7 @@ void FilterModalEnergy::SetUpBaseFields(
                         const LibUtilities::BasisKey  BkeyZ(
                             LibUtilities::eFourier, m_npointsZ, PkeyZ);
 
-                        for (i = 0 ; i < m_base.num_elements(); i++)
+                        for (i = 0 ; i < m_base.size(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::
                                 ContField3DHomogeneous1D>::
@@ -560,7 +559,7 @@ void FilterModalEnergy::SetUpBaseFields(
 
                     m_base[0] = firstbase;
 
-                    for (i = 1 ; i < m_base.num_elements(); i++)
+                    for (i = 1 ; i < m_base.size(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions::
                             ContField2D>::AllocateSharedPtr(
@@ -577,7 +576,7 @@ void FilterModalEnergy::SetUpBaseFields(
                         AllocateSharedPtr(m_session, graphShrPtr,
                                           m_session->GetVariable(0));
                 m_base[0] = firstbase;
-                for (i = 1 ; i < m_base.num_elements(); i++)
+                for (i = 1 ; i < m_base.size(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::
                     ContField3D>::AllocateSharedPtr(
@@ -587,7 +586,8 @@ void FilterModalEnergy::SetUpBaseFields(
             }
             break;
             default:
-                ASSERTL0(false, "Expansion dimension not recognised");
+                NEKERROR(ErrorUtil::efatal,
+                         "Expansion dimension not recognised");
                 break;
         }
     }
@@ -599,7 +599,7 @@ void FilterModalEnergy::SetUpBaseFields(
             {
                 // need to use zero for variable as may be more base
                 // flows than variables
-                for (i = 0 ; i < m_base.num_elements(); i++)
+                for (i = 0 ; i < m_base.size(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::
                         DisContField1D>::AllocateSharedPtr(
@@ -610,7 +610,7 @@ void FilterModalEnergy::SetUpBaseFields(
             }
             case 2:
             {
-                for (i = 0 ; i < m_base.num_elements(); i++)
+                for (i = 0 ; i < m_base.size(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::
                         DisContField2D>::AllocateSharedPtr(
@@ -620,9 +620,11 @@ void FilterModalEnergy::SetUpBaseFields(
                 break;
             }
             case 3:
-                ASSERTL0(false, "3D not set up");
+                NEKERROR(ErrorUtil::efatal, "3D not set up");
+                break;
             default:
-                ASSERTL0(false, "Expansion dimension not recognised");
+                NEKERROR(ErrorUtil::efatal,
+                         "Expansion dimension not recognised");
                 break;
         }
     }
@@ -632,8 +634,7 @@ void FilterModalEnergy::SetUpBaseFields(
  *  Import the base flow fld file.
  */
 void FilterModalEnergy::ImportFldBase(
-    std::string pInfile,
-    SpatialDomains::MeshGraphSharedPtr pGraph)
+    std::string pInfile)
 {
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
     std::vector<std::vector<NekDouble> > FieldData;

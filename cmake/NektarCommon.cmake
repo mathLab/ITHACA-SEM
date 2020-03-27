@@ -67,25 +67,42 @@ MACRO(SET_COMMON_PROPERTIES name)
     SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
     SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
     
-    IF( MSVC )
-        # Disable the warnings about duplicate copy/assignment methods 
-        #   (4521, 4522)
-        # Disable the warning that arrays are default intialized (4351)	
-        # Disable "forcing value to bool 'true' or 'false' (performance
-        #   warning)" warning (4800)
-        # 4250 - Inheritance via dominance.  Nektar appears to be handling the 
-        # diamond correctly.
-        # 4373 - Overriding a virtual method with parameters that differ by const
-        #        or volatile conforms to the standard.
-        # /Za is necessary to prevent temporaries being bound to reference
-        #   parameters.
-        SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS 
-                                "/wd4521 /wd4522 /wd4351 /wd4018 /wd4800 /wd4250 /wd4373")
+    IF (MSVC)
+        # Enable production-level warnings
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE /W4)
+        # Temporarily disable signed/unsigned comparison warning
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE /wd4018)
+        # Temporarily disable narrowing warnings
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE /wd4244 /wd4267)
+        # Enable source-level parallel builds
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE /MP)
+        # Specify minimum Windows version (501=WinXP, 601=Windows 7)
+        TARGET_COMPILE_DEFINITIONS(${name} PRIVATE _WIN32_WINNT=0x0601)
+    ELSE ()
+        # Enable all warnings
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wall -Wextra)
+        IF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            # For GNU compilers add pedantic warnings
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wpedantic)
+        ENDIF()
+        # Temporarily disable warnings about comparing signed and unsigned
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wno-sign-compare)
+        # Temporarily disable warnings about narrowing of data types
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wno-narrowing -Wno-conversion)
+        IF (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -fpermissive)
+        ENDIF()
+        
+        # Disable dignostic about partially overloaded virtual functions
+        IF (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -diag-disable 654)
+        ENDIF()
 
-        # Enable source level parallel builds.
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-    ENDIF( MSVC )	
-    
+        IF ( NEKTAR_ERROR_ON_WARNINGS )
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -Werror)
+        ENDIF()
+    ENDIF()
+
     IF (${CMAKE_COMPILER_IS_GNUCXX})
         IF(NEKTAR_ENABLE_PROFILE)
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
@@ -104,19 +121,6 @@ MACRO(SET_COMMON_PROPERTIES name)
                     "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_FULLDEBUG")
         ENDIF( NEKTAR_FULL_DEBUG)
    
-        IF(NOT MSVC)
-            SET(CMAKE_CXX_FLAGS_DEBUG 
-                "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wno-deprecated -Wno-sign-compare")
-            SET(CMAKE_CXX_FLAGS_RELEASE 
-                "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wno-deprecated -Wno-sign-compare")
-            SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO
-                "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -Wall -Wno-deprecated -Wno-sign-compare")
-            IF (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-                SET(CMAKE_CXX_FLAGS_DEBUG 
-                    "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive")
-            ENDIF()
-        ENDIF (NOT MSVC)
-
         # Define version
         SET_PROPERTY(TARGET ${name}
             APPEND PROPERTY COMPILE_DEFINITIONS

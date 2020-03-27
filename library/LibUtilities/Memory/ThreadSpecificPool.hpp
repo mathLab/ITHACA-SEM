@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,7 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
 #define NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
 
-#include <boost/thread/tss.hpp>
 #include <boost/pool/pool.hpp>
 #include <memory>
 #include <map>
@@ -92,9 +90,8 @@ namespace Nektar
 
                 ~ThreadSpecificPool()
                 {
-                    // The documentation isn't particularly clear if delete needs to be called manually
-                    // or if the thread specific pointer will call delete for me.  Looking through the 
-                    // boost code doesn't make it any clearer. 
+                    // Need to call delete manually, otherwise memory is leaking.
+		    delete m_pool;
                 }
 
                 /// \brief Allocate a block of memory of size ByteSize.
@@ -238,7 +235,6 @@ namespace Nektar
     };
 
     LIB_UTILITIES_EXPORT MemPool& GetMemoryPool();
-
 }
 
 

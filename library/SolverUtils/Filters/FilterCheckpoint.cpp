@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Outputs solution fields during time-stepping.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/Filters/FilterCheckpoint.h>
 
@@ -64,7 +65,7 @@ FilterCheckpoint::FilterCheckpoint(
     // OutputFrequency
     it = pParams.find("OutputFrequency");
     ASSERTL0(it != pParams.end(), "Missing parameter 'OutputFrequency'.");
-    LibUtilities::Equation equ(m_session->GetExpressionEvaluator(), it->second);
+    LibUtilities::Equation equ(m_session->GetInterpreter(), it->second);
     m_outputFrequency = round(equ.Evaluate());
 
     m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
@@ -88,6 +89,8 @@ void FilterCheckpoint::v_Update(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     if (m_index++ % m_outputFrequency > 0)
     {
         return;
@@ -101,7 +104,7 @@ void FilterCheckpoint::v_Update(
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
     // copy Data into FieldData and set variable
-    for(int j = 0; j < pFields.num_elements(); ++j)
+    for(int j = 0; j < pFields.size(); ++j)
     {
         for(int i = 0; i < FieldDef.size(); ++i)
         {
@@ -120,7 +123,7 @@ void FilterCheckpoint::v_Finalise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
-
+    boost::ignore_unused(pFields, time);
 }
 
 bool FilterCheckpoint::v_IsTimeDependent()

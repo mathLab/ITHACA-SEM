@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -235,9 +234,9 @@ public:
     void SetCADCurve(CADCurveSharedPtr c, NekDouble t)
     {
         auto it = CADCurveList.find(c->GetId());
-        if(it != CADCurveList.end())
+        if (it != CADCurveList.end())
         {
-            //already in list so remove it
+            // already in list so remove it
             CADCurveList.erase(it);
         }
         CADCurveList.insert(make_pair(c->GetId(), make_pair(c, t)));
@@ -246,9 +245,9 @@ public:
     void SetCADSurf(CADSurfSharedPtr s, Array<OneD, NekDouble> uv)
     {
         auto it = CADSurfList.find(s->GetId());
-        if(it != CADSurfList.end())
+        if (it != CADSurfList.end())
         {
-            //already in list so remove it
+            // already in list so remove it
             CADSurfList.erase(it);
         }
         CADSurfList.insert(make_pair(s->GetId(), make_pair(s, uv)));
@@ -275,7 +274,7 @@ public:
         std::vector<CADCurveSharedPtr> lst;
         for (auto &c : CADCurveList)
         {
-            lst.push_back(c.second.first);
+            lst.push_back(c.second.first.lock());
         }
         return lst;
     }
@@ -285,7 +284,7 @@ public:
         std::vector<CADSurfSharedPtr> lst;
         for (auto &s : CADSurfList)
         {
-            lst.push_back(s.second.first);
+            lst.push_back(s.second.first.lock());
         }
         return lst;
     }
@@ -305,7 +304,17 @@ public:
         m_x                 = l[0];
         m_y                 = l[1];
         m_z                 = l[2];
-        CADSurfSharedPtr su = CADSurfList[s].first;
+        CADSurfSharedPtr su = CADSurfList[s].first.lock();
+        SetCADSurf(su, uv);
+    }
+
+    void Move(NekDouble x, NekDouble y, NekDouble z, int s,
+              Array<OneD, NekDouble> uv)
+    {
+        m_x                 = x;
+        m_y                 = y;
+        m_z                 = z;
+        CADSurfSharedPtr su = CADSurfList[s].first.lock();
         SetCADSurf(su, uv);
     }
 
@@ -314,39 +323,48 @@ public:
         m_x                  = l[0];
         m_y                  = l[1];
         m_z                  = l[2];
-        CADCurveSharedPtr cu = CADCurveList[c].first;
+        CADCurveSharedPtr cu = CADCurveList[c].first.lock();
         SetCADCurve(cu, t);
     }
 
-    void Rotate(string dir, NekDouble angle)
+    void Move(NekDouble x, NekDouble y, NekDouble z, int c, NekDouble t)
     {
-        if(dir == "x")
+        m_x                  = x;
+        m_y                  = y;
+        m_z                  = z;
+        CADCurveSharedPtr cu = CADCurveList[c].first.lock();
+        SetCADCurve(cu, t);
+    }
+
+    void Rotate(std::string dir, NekDouble angle)
+    {
+        if (dir == "x")
         {
-            NekDouble yrot = cos(angle)*m_y - sin(angle)*m_z;
-            NekDouble zrot = sin(angle)*m_y + cos(angle)*m_z;
-            
+            NekDouble yrot = cos(angle) * m_y - sin(angle) * m_z;
+            NekDouble zrot = sin(angle) * m_y + cos(angle) * m_z;
+
             m_y = yrot;
-            m_z = zrot; 
+            m_z = zrot;
         }
         else if (dir == "y")
         {
-            NekDouble zrot = cos(angle)*m_z - sin(angle)*m_x;
-            NekDouble xrot = sin(angle)*m_z + cos(angle)*m_x;
-            
+            NekDouble zrot = cos(angle) * m_z - sin(angle) * m_x;
+            NekDouble xrot = sin(angle) * m_z + cos(angle) * m_x;
+
             m_z = zrot;
-            m_x = xrot; 
+            m_x = xrot;
         }
         else if (dir == "z")
         {
-            NekDouble xrot = cos(angle)*m_x - sin(angle)*m_y;
-            NekDouble yrot = sin(angle)*m_x + cos(angle)*m_y;
-            
+            NekDouble xrot = cos(angle) * m_x - sin(angle) * m_y;
+            NekDouble yrot = sin(angle) * m_x + cos(angle) * m_y;
+
             m_x = xrot;
-            m_y = yrot; 
+            m_y = yrot;
         }
         else
         {
-            ASSERTL0(false,"Unrecognised rotational direction: " + dir);
+            ASSERTL0(false, "Unrecognised rotational direction: " + dir);
         }
     }
 
@@ -394,9 +412,9 @@ public:
     NekDouble m_z;
 
     /// list of cadcurves the node lies on
-    std::map<int, std::pair<CADCurveSharedPtr, NekDouble>> CADCurveList;
+    std::map<int, std::pair<std::weak_ptr<CADCurve>, NekDouble>> CADCurveList;
     /// list of cadsurfs the node lies on
-    std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble>>>
+    std::map<int, std::pair<std::weak_ptr<CADSurf>, Array<OneD, NekDouble>>>
         CADSurfList;
 
 private:
@@ -410,7 +428,8 @@ NEKMESHUTILS_EXPORT bool operator<(NodeSharedPtr const &p1,
                                    NodeSharedPtr const &p2);
 NEKMESHUTILS_EXPORT bool operator!=(NodeSharedPtr const &p1,
                                     NodeSharedPtr const &p2);
-std::ostream &operator<<(std::ostream &os, const NodeSharedPtr &n);
+NEKMESHUTILS_EXPORT std::ostream &operator<<(std::ostream &os,
+                                             const NodeSharedPtr &n);
 
 /**
  * @brief Defines a hash function for nodes.

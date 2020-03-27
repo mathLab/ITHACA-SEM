@@ -7,7 +7,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -113,7 +112,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < phys1.num_elements(); ++i)
+            for(int i = 0; i < phys1.size(); ++i)
             {
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
@@ -160,7 +159,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < phys1.num_elements(); ++i)
+            for(int i = 0; i < phys1.size(); ++i)
             {
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
@@ -215,7 +214,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < phys1.num_elements(); ++i)
+            for(int i = 0; i < phys1.size(); ++i)
             {
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
@@ -262,7 +261,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < phys1.num_elements(); ++i)
+            for(int i = 0; i < phys1.size(); ++i)
             {
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
@@ -310,7 +309,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < phys1.num_elements(); ++i)
+            for(int i = 0; i < phys1.size(); ++i)
             {
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
@@ -363,7 +362,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < phys1.num_elements(); ++i)
+            for(int i = 0; i < phys1.size(); ++i)
             {
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
@@ -416,7 +415,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < phys1.num_elements(); ++i)
+            for(int i = 0; i < phys1.size(); ++i)
             {
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
@@ -471,7 +470,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < phys1.num_elements(); ++i)
+            for(int i = 0; i < phys1.size(); ++i)
             {
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
@@ -525,7 +524,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < phys1.num_elements(); ++i)
+            for(int i = 0; i < phys1.size(); ++i)
             {
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
@@ -582,7 +581,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            for(int i = 0; i < coeffs1.size(); ++i)
             {
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
                 coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -642,7 +641,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            for(int i = 0; i < coeffs1.size(); ++i)
             {
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
                 coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -712,7 +711,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            for(int i = 0; i < coeffs1.size(); ++i)
             {
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
                 coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -770,7 +769,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            for(int i = 0; i < coeffs1.size(); ++i)
             {
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
                 coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -828,7 +827,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            for(int i = 0; i < coeffs1.size(); ++i)
             {
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
                 coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -886,7 +885,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            for(int i = 0; i < coeffs1.size(); ++i)
             {
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
                 coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -944,7 +943,7 @@ namespace Nektar
             c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nq);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < diff1.num_elements(); ++i)
+            for(int i = 0; i < diff1.size(); ++i)
             {
                 BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
             }
@@ -1010,7 +1009,7 @@ namespace Nektar
             c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nelmts*nq);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < diff1.num_elements(); ++i)
+            for(int i = 0; i < diff1.size(); ++i)
             {
                 diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
                 diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
@@ -1069,7 +1068,7 @@ namespace Nektar
             c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nq);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < diff1.num_elements(); ++i)
+            for(int i = 0; i < diff1.size(); ++i)
             {
                 BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
             }
@@ -1137,7 +1136,7 @@ namespace Nektar
             c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nelmts*nq);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < diff1.num_elements(); ++i)
+            for(int i = 0; i < diff1.size(); ++i)
             {
                 diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
                 diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
@@ -1193,7 +1192,7 @@ namespace Nektar
             c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nq);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < diff1.num_elements(); ++i)
+            for(int i = 0; i < diff1.size(); ++i)
             {
                 BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
             }
@@ -1260,7 +1259,7 @@ namespace Nektar
             c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nelmts*nq);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < diff1.num_elements(); ++i)
+            for(int i = 0; i < diff1.size(); ++i)
             {
                 diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
                 diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
@@ -1326,7 +1325,7 @@ namespace Nektar
                             phys1, phys2, coeffs2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            for(int i = 0; i < coeffs1.size(); ++i)
             {
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
                 coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -1383,35 +1382,56 @@ namespace Nektar
 
             Exp->GetCoords(xc, yc);
 
+            std::cout << phys1[0] << '\t' << phys2[0] << '\n';
+
             for (int i = 0; i < nq; ++i)
             {
                 phys1[i] = sin(xc[i])*cos(yc[i]);
                 phys2[i] = cos(xc[i])*sin(yc[i]);
             }
+
+            std::cout << phys1[0] << '\t' << phys2[0] << '\n';
+
             for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
                 Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
             }
 
+            std::cout << phys1[0] << '\t' << phys2[0] << '\n';
+
             for(int i = 0; i < nelmts; ++i)
             {
+                std::cout << i << '\t' << coeffs1[i] << '\t' << coeffs2[i] << '\n';
+
                 // Standard routines
                 Exp->IProductWRTDerivBase(0, phys1 + i*nq,
                                           tmp  = coeffs1 + i*nm);
+
+                std::cout << i << '\t' << coeffs1[i] << '\t' << coeffs2[i] << '\n';
                 Exp->IProductWRTDerivBase(1, phys2 + i*nq,
                                           tmp1 = coeffs2 + i*nm);
+                std::cout << i << '\t' << coeffs1[i] << '\t' << coeffs2[i] << '\n';
                 Vmath::Vadd(nm,coeffs1 +i*nm ,1,coeffs2 + i*nm ,1,
                             tmp = coeffs1 + i*nm,1);
+                std::cout << i << '\t' << coeffs1[i] << '\t' << coeffs2[i] << '\n';
             }
+
+            std::cout << coeffs1[0] << '\t' << coeffs2[0] << '\n';
 
             c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1, phys2, coeffs2);
 
+            std::cout << coeffs1[0] << '\t' << coeffs2[0] << '\n';
+
             double epsilon = 1.0e-8;
-            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            for(size_t i = 0; i < coeffs1.size(); ++i)
             {
+                // std::cout << i << '\t' << coeffs1[i] << '\t' << coeffs2[i] << '\n';
+
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
                 coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+
+                // std::cout << i << '\t' << coeffs1[i] << '\t' << coeffs2[i] << '\n';
                 BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
             }
         }
@@ -1475,7 +1495,7 @@ namespace Nektar
                             phys2, coeffs2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            for(int i = 0; i < coeffs1.size(); ++i)
             {
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
                 coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -1557,7 +1577,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1, phys2, coeffs2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            for(int i = 0; i < coeffs1.size(); ++i)
             {
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
                 coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -1622,7 +1642,7 @@ namespace Nektar
                             phys1, phys2, coeffs2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            for(int i = 0; i < coeffs1.size(); ++i)
             {
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
                 coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -1702,7 +1722,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1, phys2, coeffs2);
 
             double epsilon = 1.0e-8;
-            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            for(int i = 0; i < coeffs1.size(); ++i)
             {
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
                 coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];

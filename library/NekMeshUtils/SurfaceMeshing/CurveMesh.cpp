@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -163,7 +162,7 @@ void CurveMesh::Mesh(bool forceThree)
     Array<OneD, NekDouble> loc;
 
     vector<CADVertSharedPtr> verts = m_cadcurve->GetVertex();
-    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > s =
+    vector<pair<weak_ptr<CADSurf>, CADOrientation::Orientation> > s =
         m_cadcurve->GetAdjSurf();
 
     NodeSharedPtr n = verts[0]->GetNode();
@@ -172,15 +171,15 @@ void CurveMesh::Mesh(bool forceThree)
     loc = n->GetLoc();
     for (int j = 0; j < s.size(); j++)
     {
-        if (verts[0]->IsDegen() == s[j].first->GetId())
+        if (verts[0]->IsDegen() == s[j].first.lock()->GetId())
         {
             // if the degen has been set for this node the node
             // already knows its corrected location
             continue;
         }
 
-        Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
-        n->SetCADSurf(s[j].first, uv);
+        Array<OneD, NekDouble> uv = s[j].first.lock()->locuv(loc);
+        n->SetCADSurf(s[j].first.lock(), uv);
     }
     m_meshpoints.push_back(n);
 
@@ -193,8 +192,8 @@ void CurveMesh::Mesh(bool forceThree)
         n2->SetCADCurve(m_cadcurve, t);
         for (int j = 0; j < s.size(); j++)
         {
-            Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
-            n2->SetCADSurf(s[j].first, uv);
+	    Array<OneD, NekDouble> uv = s[j].first.lock()->locuv(loc);
+            n2->SetCADSurf(s[j].first.lock(), uv);
         }
         m_meshpoints.push_back(n2);
     }
@@ -205,15 +204,15 @@ void CurveMesh::Mesh(bool forceThree)
     loc = n->GetLoc();
     for (int j = 0; j < s.size(); j++)
     {
-        if (verts[1]->IsDegen() == s[j].first->GetId())
+        if (verts[1]->IsDegen() == s[j].first.lock()->GetId())
         {
             // if the degen has been set for this node the node
             // already knows its corrected location
             continue;
         }
 
-        Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
-        n->SetCADSurf(s[j].first, uv);
+        Array<OneD, NekDouble> uv = s[j].first.lock()->locuv(loc);
+        n->SetCADSurf(s[j].first.lock(), uv);
     }
     m_meshpoints.push_back(n);
 
@@ -418,7 +417,7 @@ void CurveMesh::PeriodicOverwrite(CurveMeshSharedPtr from)
 
     vector<NodeSharedPtr> nodes = from->GetMeshPoints();
 
-    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > surfs =
+    vector<pair<weak_ptr<CADSurf>, CADOrientation::Orientation> > surfs =
         m_cadcurve->GetAdjSurf();
 
     for (int i = 1; i < nodes.size() - 1; i++)
@@ -429,8 +428,8 @@ void CurveMesh::PeriodicOverwrite(CurveMeshSharedPtr from)
 
         for (int j = 0; j < surfs.size(); j++)
         {
-            Array<OneD, NekDouble> uv = surfs[j].first->locuv(nn->GetLoc());
-            nn->SetCADSurf(surfs[j].first, uv);
+            Array<OneD, NekDouble> uv = surfs[j].first.lock()->locuv(nn->GetLoc());
+            nn->SetCADSurf(surfs[j].first.lock(), uv);
         }
 
         NekDouble t;

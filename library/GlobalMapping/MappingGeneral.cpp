@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,7 +34,7 @@
 
 #include <GlobalMapping/MappingGeneral.h>
 #include <MultiRegions/ExpList.h>
-#include <iomanip> 
+#include <iomanip>
 
 namespace Nektar
 {
@@ -52,7 +51,7 @@ std::string MappingGeneral::className =
  * \f[ \bar{x} = \bar{x}(x,y,z) \f]
  * \f[ \bar{y} = \bar{y}(x,y,z) \f]
  * \f[ \bar{z} = \bar{z}(x,y,z) \f]
- * where \f$(\bar{x},\bar{y},\bar{z})\f$ are the Cartesian (physical) 
+ * where \f$(\bar{x},\bar{y},\bar{z})\f$ are the Cartesian (physical)
  * coordinates and \f$(x,y,z)\f$ are the transformed (computational)
  *  coordinates.
  */
@@ -71,12 +70,12 @@ void MappingGeneral::v_InitObject(
         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const TiXmlElement                                *pMapping)
 {
-    Mapping::v_InitObject(pFields, pMapping); 
+    Mapping::v_InitObject(pFields, pMapping);
 
     m_constantJacobian = false;
 
     ASSERTL0(m_nConvectiveFields>=2,
-            "General Mapping needs at least 2 velocity components.");   
+            "General Mapping needs at least 2 velocity components.");
 }
 
 void MappingGeneral::v_ContravarToCartesian(
@@ -88,7 +87,7 @@ void MappingGeneral::v_ContravarToCartesian(
 
     for (int i=0; i<nvel; i++)
     {
-        outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
+        outarray[i] = Array<OneD, NekDouble> (physTot, 0.0);
         for (int j=0; j<nvel; j++)
         {
             Vmath::Vvtvp(physTot, inarray[j], 1,
@@ -97,7 +96,7 @@ void MappingGeneral::v_ContravarToCartesian(
                                     outarray[i], 1);
         }
 
-    }    
+    }
 }
 
 void MappingGeneral::v_CovarToCartesian(
@@ -109,7 +108,7 @@ void MappingGeneral::v_CovarToCartesian(
 
     for (int i=0; i<nvel; i++)
     {
-        outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
+        outarray[i] = Array<OneD, NekDouble> (physTot, 0.0);
         for (int j=0; j<nvel; j++)
         {
             Vmath::Vvtvp(physTot, inarray[j], 1,
@@ -118,7 +117,7 @@ void MappingGeneral::v_CovarToCartesian(
                                     outarray[i], 1);
         }
 
-    }           
+    }
 }
 
 void MappingGeneral::v_ContravarFromCartesian(
@@ -130,7 +129,7 @@ void MappingGeneral::v_ContravarFromCartesian(
 
     for (int i=0; i<nvel; i++)
     {
-        outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
+        outarray[i] = Array<OneD, NekDouble> (physTot, 0.0);
         for (int j=0; j<nvel; j++)
         {
             Vmath::Vvtvp(physTot, inarray[j], 1,
@@ -151,7 +150,7 @@ void MappingGeneral::v_CovarFromCartesian(
 
     for (int i=0; i<nvel; i++)
     {
-        outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
+        outarray[i] = Array<OneD, NekDouble> (physTot, 0.0);
         for (int j=0; j<nvel; j++)
         {
             Vmath::Vvtvp(physTot, inarray[j], 1,
@@ -160,7 +159,7 @@ void MappingGeneral::v_CovarFromCartesian(
                                     outarray[i], 1);
         }
 
-    } 
+    }
 }
 
 void MappingGeneral::v_GetJacobian(
@@ -180,7 +179,7 @@ void MappingGeneral::v_GetMetricTensor(
     {
         for (int j=0; j<nvel; j++)
         {
-            outarray[i*nvel+j] = Array<OneD, NekDouble> (physTot, 0.0); 
+            outarray[i*nvel+j] = Array<OneD, NekDouble> (physTot, 0.0);
             Vmath::Vcopy(physTot, m_metricTensor[i*nvel+j], 1,
                                     outarray[i*nvel+j], 1);
         }
@@ -198,12 +197,12 @@ void MappingGeneral::v_GetInvMetricTensor(
     {
         for (int j=0; j<nvel; j++)
         {
-            outarray[i*nvel+j] = Array<OneD, NekDouble> (physTot, 0.0); 
+            outarray[i*nvel+j] = Array<OneD, NekDouble> (physTot, 0.0);
             Vmath::Vcopy(physTot, m_invMetricTensor[i*nvel+j], 1,
                                     outarray[i*nvel+j], 1);
         }
 
-    }            
+    }
 }
 
 void MappingGeneral::v_ApplyChristoffelContravar(
@@ -216,18 +215,18 @@ void MappingGeneral::v_ApplyChristoffelContravar(
     // Calculate {i,jk} u^j
     for (int i = 0; i <nvel; i++)
     {
-        for (int k = 0; k < nvel; k++)            
+        for (int k = 0; k < nvel; k++)
         {
             outarray[i*nvel+k] = Array<OneD, NekDouble>(physTot,0.0);
             for (int j = 0; j < nvel; j++)
             {
-                Vmath::Vvtvp(physTot, inarray[j], 1, 
+                Vmath::Vvtvp(physTot, inarray[j], 1,
                                     m_Christoffel[i*nvel*nvel+j*nvel+k], 1,
                                     outarray[i*nvel+k], 1,
                                     outarray[i*nvel+k], 1);
-            }                
+            }
         }
-    } 
+    }
 
 }
 
@@ -246,13 +245,13 @@ void MappingGeneral::v_ApplyChristoffelCovar(
             outarray[j*nvel+k] = Array<OneD, NekDouble>(physTot,0.0);
             for (int i = 0; i <nvel; i++)
             {
-                Vmath::Vvtvp(physTot, inarray[i], 1, 
+                Vmath::Vvtvp(physTot, inarray[i], 1,
                                     m_Christoffel[i*nvel*nvel+j*nvel+k], 1,
                                     outarray[j*nvel+k], 1,
                                     outarray[j*nvel+k], 1);
-            }                
+            }
         }
-    } 
+    }
 }
 
 void MappingGeneral::v_UpdateGeomInfo()
@@ -275,7 +274,7 @@ void MappingGeneral::CalculateMetricTerms()
     m_invMetricTensor =  Array<OneD, Array<OneD, NekDouble> >(nvel*nvel);
     m_deriv =  Array<OneD, Array<OneD, NekDouble> >(nvel*nvel);
     m_invDeriv =  Array<OneD, Array<OneD, NekDouble> >(nvel*nvel);
-    for (int i = 0; i < m_metricTensor.num_elements(); i++)
+    for (int i = 0; i < m_metricTensor.size(); i++)
     {
         m_metricTensor[i] = Array<OneD, NekDouble>(physTot, 0.0);
         m_invMetricTensor[i] = Array<OneD, NekDouble>(physTot, 0.0);
@@ -314,7 +313,7 @@ void MappingGeneral::CalculateMetricTerms()
                                         m_metricTensor[i*nvel+j], 1);
             }
         }
-    } 
+    }
 
     // Put the adjoint of g in m_invMetricTensor
     switch (nvel)
@@ -325,9 +324,9 @@ void MappingGeneral::CalculateMetricTerms()
         case 2:
             Vmath::Vcopy(physTot,       m_metricTensor[1*nvel+1],    1,
                                         m_invMetricTensor[0*nvel+0], 1);
-            Vmath::Smul (physTot, -1.0, m_metricTensor[0*nvel+1],    1, 
+            Vmath::Smul (physTot, -1.0, m_metricTensor[0*nvel+1],    1,
                                         m_invMetricTensor[1*nvel+0], 1);
-            Vmath::Smul (physTot, -1.0, m_metricTensor[1*nvel+0],    1, 
+            Vmath::Smul (physTot, -1.0, m_metricTensor[1*nvel+0],    1,
                                         m_invMetricTensor[0*nvel+1], 1);
             Vmath::Vcopy(physTot,       m_metricTensor[0*nvel+0],    1,
                                         m_invMetricTensor[1*nvel+1], 1);
@@ -364,7 +363,7 @@ void MappingGeneral::CalculateMetricTerms()
     // temporarily in m_jac.
     for (int i = 0; i < nvel; ++i)
     {
-        Vmath::Vvtvp(physTot, m_metricTensor[i], 1, 
+        Vmath::Vvtvp(physTot, m_metricTensor[i], 1,
                              m_invMetricTensor[i*nvel], 1,
                              m_jac, 1, m_jac, 1);
     }
@@ -377,7 +376,7 @@ void MappingGeneral::CalculateMetricTerms()
     }
 
     // Compute the Jacobian = sqrt(g)
-    Vmath::Vsqrt(physTot, m_jac, 1, m_jac, 1);        
+    Vmath::Vsqrt(physTot, m_jac, 1, m_jac, 1);
 
     // Calculate the derivatives of the inverse transformation
     //          c'^j_i = dx^j/dX^i = sum_k {g^jk c^i_k}
@@ -408,7 +407,7 @@ void MappingGeneral::CalculateChristoffel()
     Array<OneD, Array<OneD, NekDouble> >   tmp(nvel*nvel*nvel);
     m_Christoffel = Array<OneD, Array<OneD, NekDouble> > (nvel*nvel*nvel);
     // Allocate memory
-    for (int i = 0; i < gradG.num_elements(); i++)
+    for (int i = 0; i < gradG.size(); i++)
     {
         gradG[i] = Array<OneD, NekDouble>(physTot, 0.0);
         tmp[i] = Array<OneD, NekDouble>(physTot, 0.0);
@@ -466,13 +465,13 @@ void MappingGeneral::CalculateChristoffel()
                                     m_Christoffel[i*nvel*nvel+j*nvel+k], 1,
                                     m_Christoffel[i*nvel*nvel+j*nvel+k], 1);
                 }
-            }                
+            }
         }
-    }        
+    }
     // Restore wavespace
     m_fields[0]->SetWaveSpace(waveSpace);
 
-}    
+}
 
 }
 }

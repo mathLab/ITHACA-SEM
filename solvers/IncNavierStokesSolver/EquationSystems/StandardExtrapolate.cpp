@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -61,7 +60,6 @@ namespace Nektar
     }
 
 
-	
     /** 
      * Function to extrapolate the new pressure boundary condition.
      * Based on the velocity field and on the advection term.
@@ -100,26 +98,17 @@ namespace Nektar
      * 
      */
     void StandardExtrapolate::v_SubSteppingTimeIntegration(
-        int intMethod,
-        const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
+        const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme )
     {
-        switch(intMethod)
+        if ( IntegrationScheme->GetName() == "IMEX" ||
+             IntegrationScheme->GetName() == "IMEXGear" )
         {
-            case LibUtilities::eIMEXOrder1:
-            {
-                m_intSteps = 1; 
-            }
-            break;
-            case LibUtilities::eIMEXOrder2:
-            {
-                m_intSteps = 2;
-            }
-            break;
-            case LibUtilities::eIMEXOrder3:
-            {
-                m_intSteps = 3;
-            }
-            break;
+            m_intSteps = IntegrationScheme->GetOrder();
+        }
+        else
+        {
+            NEKERROR(ErrorUtil::efatal, "Integration method not suitable: "
+                     "Options include IMEXGear or IMEXOrder{1,2,3,4}");
         }
     }
 
@@ -138,9 +127,9 @@ namespace Nektar
      * 
      */
     void StandardExtrapolate::v_SubStepAdvance(
-        const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-        int nstep, 
-        NekDouble time)
+        const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr & integrationSoln, 
+              int                                                                     nstep, 
+              NekDouble                                                               time )
     {
     }
 
@@ -152,7 +141,7 @@ namespace Nektar
         int nstep)
     {
     }
-	
+
     /** 
      * 
      */
@@ -165,4 +154,3 @@ namespace Nektar
         Vmath::Svtvp(HBCdata,-kinvis,Q,1,Advection,1,Q,1);
     }
 }
-

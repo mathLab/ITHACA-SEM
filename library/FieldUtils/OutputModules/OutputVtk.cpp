@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -35,12 +34,15 @@
 
 #include <set>
 #include <string>
+#include <iomanip>
 using namespace std;
 
-#include "OutputVtk.h"
-#include <LibUtilities/BasicUtils/FileSystem.h>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/format.hpp>
-#include <iomanip>
+
+#include <LibUtilities/BasicUtils/FileSystem.h>
+
+#include "OutputVtk.h"
 
 namespace Nektar
 {
@@ -73,24 +75,27 @@ void OutputVtk::OutputFromPts(po::variables_map &vm)
     int nfields = 0;
     int dim     = fPts->GetDim();
 
-    int nvert, vtktype;
+    int nvert   = 1;
+    int vtktype = 1;
     switch (fPts->GetPtsType())
     {
         case LibUtilities::ePtsFile:
         case LibUtilities::ePtsLine:
         {
-            ASSERTL0(false,
-                "VTK output needs setting up for ePtsFile and ePtsLine");
+            NEKERROR(ErrorUtil::efatal,
+                     "VTK output needs setting up for ePtsFile and ePtsLine");
             break;
         }
         case LibUtilities::ePtsPlane:
         {
-            ASSERTL0(false, "VTK output needs setting up for PtsPlane");
+            NEKERROR(ErrorUtil::efatal,
+                     "VTK output needs setting up for PtsPlane");
             break;
         }
         case LibUtilities::ePtsBox:
         {
-            ASSERTL0(false,"VTK output needs setting up for PtsBox");
+            NEKERROR(ErrorUtil::efatal,
+                     "VTK output needs setting up for PtsBox");
             break;
         }
         case LibUtilities::ePtsSegBlock:
@@ -112,7 +117,7 @@ void OutputVtk::OutputFromPts(po::variables_map &vm)
             break;
         }
         default:
-            ASSERTL0(false, "ptsType not supported yet.");
+            NEKERROR(ErrorUtil::efatal, "ptsType not supported yet.");
     }
 
     vector<Array<OneD, int> > ptsConn;
@@ -124,7 +129,7 @@ void OutputVtk::OutputFromPts(po::variables_map &vm)
     int numBlocks = 0;
     for (i = 0; i < ptsConn.size(); ++i)
     {
-        numBlocks += ptsConn[i].num_elements() / nvert;
+        numBlocks += ptsConn[i].size() / nvert;
     }
 
     // write out pieces of data.
@@ -159,7 +164,7 @@ void OutputVtk::OutputFromPts(po::variables_map &vm)
     int cnt = 1;
     for (i = 0; i < ptsConn.size(); ++i)
     {
-        for (j = 0; j < ptsConn[i].num_elements(); ++j)
+        for (j = 0; j < ptsConn[i].size(); ++j)
         {
             outfile << ptsConn[i][j] << " ";
             if ((!(cnt % nvert)) && cnt)
@@ -272,12 +277,15 @@ void OutputVtk::OutputFromExp(po::variables_map &vm)
 
 void OutputVtk::OutputFromData(po::variables_map &vm)
 {
-    ASSERTL0(false, "OutputVtk can't write using only FieldData.");
+    boost::ignore_unused(vm);
+    NEKERROR(ErrorUtil::efatal, "OutputVtk can't write using only FieldData.");
 }
 
 fs::path OutputVtk::GetPath(std::string &filename,
                             po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nprocs = m_f->m_comm->GetSize();
     fs::path specPath;
     if (nprocs == 1)

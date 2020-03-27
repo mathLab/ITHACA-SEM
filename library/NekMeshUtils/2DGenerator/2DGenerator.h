@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -40,7 +39,7 @@
 #include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
 #include <NekMeshUtils/SurfaceMeshing/FaceMesh.h>
 
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 
 namespace Nektar
 {
@@ -91,7 +90,7 @@ private:
     /// list of BL edges
     std::vector<EdgeSharedPtr> m_blEdges;
     /// BL thickness expression
-    LibUtilities::AnalyticExpressionEvaluator m_thickness;
+    LibUtilities::Interpreter m_thickness;
     /// BL thickness expression ID
     int m_thickness_ID;
     /// map of BL curve nodes to adjacent edges

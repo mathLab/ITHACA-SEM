@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -34,9 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <iomanip>
+
 #include <SpatialDomains/MeshGraphXml.h>
 #include <SpatialDomains/MeshPartition.h>
 
+#include <LibUtilities/Interpreter/Interpreter.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
@@ -44,6 +46,7 @@
 #include <boost/format.hpp>
 
 #include <tinyxml.h>
+
 using namespace std;
 
 namespace Nektar
@@ -199,7 +202,7 @@ void MeshGraphXml::PartitionMesh(
 
                     vector<set<unsigned int>> elmtIDs;
                     vector<unsigned int> parts(nParts);
-                    for (int i = 0; i < nParts; ++i)
+                    for (i = 0; i < nParts; ++i)
                     {
                         vector<unsigned int> elIDs;
                         set<unsigned int> tmp;
@@ -455,8 +458,7 @@ void MeshGraphXml::ReadVertices()
 
     // check to see if any scaling parameters are in
     // attributes and determine these values
-    LibUtilities::AnalyticExpressionEvaluator expEvaluator;
-    // LibUtilities::ExpressionEvaluator expEvaluator;
+    LibUtilities::Interpreter expEvaluator;
     const char *xscal = element->Attribute("XSCALE");
     if (!xscal)
     {
@@ -498,7 +500,6 @@ void MeshGraphXml::ReadVertices()
     // check to see if any moving parameters are in
     // attributes and determine these values
 
-    // LibUtilities::ExpressionEvaluator expEvaluator;
     const char *xmov = element->Attribute("XMOVE");
     if (!xmov)
     {
@@ -617,7 +618,7 @@ void MeshGraphXml::ReadCurves()
 
     NekDouble xscale, yscale, zscale;
 
-    LibUtilities::AnalyticExpressionEvaluator expEvaluator;
+    LibUtilities::Interpreter expEvaluator;
     const char *xscal = element->Attribute("XSCALE");
     if (!xscal)
     {
@@ -659,7 +660,6 @@ void MeshGraphXml::ReadCurves()
     // check to see if any moving parameters are in
     // attributes and determine these values
 
-    // LibUtilities::ExpressionEvaluator expEvaluator;
     const char *xmov = element->Attribute("XMOVE");
     if (!xmov)
     {

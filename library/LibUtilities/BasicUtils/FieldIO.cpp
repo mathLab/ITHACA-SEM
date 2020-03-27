@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -42,6 +41,7 @@
 
 #include <chrono>
 #include <ctime>
+#include <ios>
 #include <iomanip>
 #include <fstream>
 #include <set>
@@ -122,13 +122,13 @@ const std::string FieldIO::GetFileType(const std::string &filename,
         const unsigned char magic[8] = {
             0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a};
 
-        std::ifstream datafile(datafilename.c_str(), ios_base::binary);
+        std::ifstream datafile(datafilename.c_str(), std::ios_base::binary);
         ASSERTL0(datafile.good(), "Unable to open file: " + filename);
 
         ioType = eHDF5;
         for (unsigned i = 0; i < 8 && datafile.good(); ++i)
         {
-            unsigned char byte = datafile.get();
+            int byte = datafile.get();
             if (byte != magic[i])
             {
                 ioType = eXML;
@@ -156,7 +156,7 @@ const std::string FieldIO::GetFileType(const std::string &filename,
     else
     {
         // Error
-        ASSERTL0(false, "Unknown file format");
+        NEKERROR(ErrorUtil::efatal, "Unknown file format");
     }
 
     return iofmt;
@@ -332,7 +332,7 @@ void FieldIO::AddInfoTag(TagWriterSharedPtr root,
     FieldMetaDataMap ProvenanceMap;
 
     // Nektar++ release version from VERSION file
-    ProvenanceMap["NektarVersion"] = string(NEKTAR_VERSION);
+    ProvenanceMap["NektarVersion"] = std::string(NEKTAR_VERSION);
 
     // Date/time stamp
     auto now = std::chrono::system_clock::now();
@@ -410,7 +410,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         {
             bakPath = specPath.parent_path();
             bakPath += specPath.stem();
-            bakPath += fs::path(".bak" + boost::lexical_cast<std::string>(cnt++));
+            bakPath += fs::path(".bak" + std::to_string(cnt++));
             bakPath += specPath.extension();
         }
         std::cout << "renaming " << specPath << " -> " << bakPath << std::endl;
@@ -421,7 +421,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         catch (fs::filesystem_error &e)
         {
             ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                        "Filesystem error: " + string(e.what()));
+                     "Filesystem error: " + std::string(e.what()));
         }
     }
 
@@ -468,7 +468,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
             catch (fs::filesystem_error &e)
             {
                 ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                         "Filesystem error: " + string(e.what()));
+                         "Filesystem error: " + std::string(e.what()));
             }
         }
 
@@ -484,7 +484,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
             catch (fs::filesystem_error &e)
             {
                 ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                         "Filesystem error: " + string(e.what()));
+                         "Filesystem error: " + std::string(e.what()));
             }
         }
 
@@ -501,7 +501,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
 
     if (root)
     {
-        cout << "Writing: " << specPath;
+        std::cout << "Writing: " << specPath;
     }
 
     // serial processing just add ending.
@@ -522,7 +522,8 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         }
         catch (fs::filesystem_error &e)
         {
-            ASSERTL0(false, "Filesystem error: " + string(e.what()));
+            NEKERROR(ErrorUtil::efatal,
+                     "Filesystem error: " + std::string(e.what()));
         }
 
         m_comm->Block();
@@ -589,11 +590,11 @@ int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
             numbasis = 3;
             break;
         default:
-            ASSERTL0(false, "Unsupported shape type.");
+            NEKERROR(ErrorUtil::efatal, "Unsupported shape type.");
             break;
     }
 
-    unsigned int datasize = 0;
+    size_t datasize = 0;
 
     ASSERTL0(fielddefs->m_basis.size() == numbasis,
              "Length of basis vector is incorrect");
@@ -686,7 +687,7 @@ int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
             }
             break;
             default:
-                ASSERTL0(false, "Unsupported shape type.");
+                NEKERROR(ErrorUtil::efatal, "Unsupported shape type.");
                 break;
         }
 
@@ -783,13 +784,13 @@ int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
                 }
                 break;
                 default:
-                    ASSERTL0(false, "Unsupported shape type.");
+                    NEKERROR(ErrorUtil::efatal, "Unsupported shape type.");
                     break;
             }
         }
     }
 
-    return datasize;
+    return (int)datasize;
 }
 }
 }

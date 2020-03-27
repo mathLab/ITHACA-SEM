@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -111,11 +110,11 @@ namespace Nektar
                     const AssemblyMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
-            bool dirForcCalculated = (bool) pDirForcing.num_elements();
+            bool dirForcCalculated = (bool) pDirForcing.size();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
             Array<OneD, NekDouble> tmp(nGlobDofs);
-            
+
             if(nDirDofs)
             {
                 // calculate the dirichlet forcing
@@ -132,8 +131,8 @@ namespace Nektar
                     // Calculate Dirichlet forcing and subtract it from the rhs
                     m_expList.lock()->GeneralMatrixOp(
                         m_linSysKey, pOutput, tmp, eGlobal);
-                    
-                    Vmath::Vsub(nGlobDofs, 
+
+                    Vmath::Vsub(nGlobDofs,
                                 pInput.get(), 1,
                                 tmp.get(),    1,
                                 tmp.get(),    1);
@@ -170,7 +169,7 @@ namespace Nektar
 
             DNekMatSharedPtr Gmat;
             int bwidth = pLocToGloMap->GetFullSystemBandWidth();
-            MatrixStorage matStorage;
+            MatrixStorage matStorage = eFULL;
 
             switch(m_linSysKey.GetMatrixType())
             {

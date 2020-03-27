@@ -8,7 +8,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -40,11 +39,11 @@ namespace Nektar
     template<typename DataType>
     typename boost::call_traits<DataType>::value_type ConstMatrix<DataType>::operator()(unsigned int row, unsigned int column) const
     {
-        ASSERTL2(row < GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(GetRows()) +
+        ASSERTL2(row < GetRows(), std::string("Row ") + std::to_string(row) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(GetRows()) +
             std::string(" rows"));
-        ASSERTL2(column < GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(GetColumns()) +
+        ASSERTL2(column < GetColumns(), std::string("Column ") + std::to_string(column) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(GetColumns()) +
             std::string(" columns"));
         return v_GetValue(row, column);
     }
@@ -280,11 +279,11 @@ namespace Nektar
     template<typename DataType>
     void Matrix<DataType>::SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
     {
-        ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
+        ASSERTL2(row < this->GetRows(), std::string("Row ") + std::to_string(row) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetRows()) +
             std::string(" rows"));
-        ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
+        ASSERTL2(column < this->GetColumns(), std::string("Column ") + std::to_string(column) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetColumns()) +
             std::string(" columns"));
         v_SetValue(row, column, d);
     }

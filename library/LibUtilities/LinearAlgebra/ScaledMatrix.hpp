@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -115,6 +114,8 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT NekMatrix(typename boost::call_traits<NumberType>::const_reference scale, const ThisType& rhs);
            
+
+            LIB_UTILITIES_EXPORT ThisType& operator=(const ThisType&) = default;
 
             LIB_UTILITIES_EXPORT ConstGetValueType operator()(unsigned int row, unsigned int col) const;
 

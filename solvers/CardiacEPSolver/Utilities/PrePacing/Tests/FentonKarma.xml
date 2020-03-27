@@ -13,7 +13,7 @@
         </SOLVERINFO>
 
         <FUNCTION NAME="InitialConditions">
-            <E VAR="u" VALUE="0.0" />
+            <E VAR="u" VALUE="-85.0" />
         </FUNCTION>
     </CONDITIONS>
 

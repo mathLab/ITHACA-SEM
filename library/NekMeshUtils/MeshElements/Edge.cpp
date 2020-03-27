@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -161,12 +160,12 @@ void Edge::MakeOrder(int order, SpatialDomains::GeometrySharedPtr geom,
                 m_edgeNodes[i]->m_y = loc[1];
                 m_edgeNodes[i]->m_z = loc[2];
 
-                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation>> s =
+                vector<pair<weak_ptr<CADSurf>, CADOrientation::Orientation>> s =
                     c->GetAdjSurf();
                 for (int j = 0; j < s.size(); j++)
                 {
-                    Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
-                    m_edgeNodes[i]->SetCADSurf(s[j].first, uv);
+                    Array<OneD, NekDouble> uv = s[j].first.lock()->locuv(loc);
+                    m_edgeNodes[i]->SetCADSurf(s[j].first.lock(), uv);
                 }
             }
         }

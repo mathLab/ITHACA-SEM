@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -34,7 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/ParseUtils.h>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 
 #include "ProcessScalar.h"
@@ -85,7 +84,7 @@ void ProcessScalar::Process()
     const int nq = m_config["nq"].as<int>();
     string expr  = m_config["scalar"].as<string>();
 
-    LibUtilities::AnalyticExpressionEvaluator rEval;
+    LibUtilities::Interpreter rEval;
     int rExprId = rEval.DefineFunction("x y z", expr);
 
     // Make a copy of all existing elements of one dimension lower.

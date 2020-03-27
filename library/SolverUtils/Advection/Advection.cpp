@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Abstract base class for advection.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/Advection/Advection.h>
 
@@ -112,7 +113,8 @@ void Advection::v_InitObject(
         }
         else
         {
-            ASSERTL0(false, "Only 1D homogeneous dimension supported.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Only 1D homogeneous dimension supported.");
         }
     }
 }
@@ -122,10 +124,11 @@ void Advection::v_InitObject(
  *
  */
 void Advection::v_SetBaseFlow(
-        const Array<OneD, Array<OneD, NekDouble> >    &inarray,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
 {
-    ASSERTL0(false,
+    boost::ignore_unused(inarray, fields);
+    NEKERROR(ErrorUtil::efatal,
             "A baseflow is not appropriate for this advection type.");
 }
 

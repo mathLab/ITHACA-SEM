@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -78,7 +77,7 @@ bool CADSystemOCE::LoadCAD()
 
     bool fromStep = false;
 
-    if (m_naca.size() == 0)
+    if (m_config.count("UseNACA") == 0)
     {
         // not a naca profile behave normally
         // could be a geo
@@ -412,9 +411,9 @@ Array<OneD, NekDouble> CADSystemOCE::GetBoundingBox()
 
 TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
 {
-    ASSERTL0(naca.length() == 4, "not a 4 digit code");
+    ASSERTL0(naca.length() == 4, "not a 4 digit code: " + naca);
     vector<NekDouble> data;
-    ParseUtils::GenerateVector(m_naca, data);
+    ParseUtils::GenerateVector(m_config["UseNACA"], data);
     ASSERTL0(data.size() == 5, "not a vaild domain");
 
     int n       = std::stoi(naca);
@@ -609,11 +608,18 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         {
             ellipses[id] = var;
         }
-        else if (boost::iequals(type, "Line Loop"))
+        else if (boost::iequals(type, "Curve Loop"))
         {
-            // line loops sometimes have negative entries for gmsh
+            // curve loops sometimes have negative entries for gmsh
             // orientaton purposes
             // we dont care so remove it
+            boost::erase_all(var, "-");
+            loops[id] = var;
+        }
+        else if (boost::iequals(type, "Line Loop"))
+        {
+            // old name of curve loops before Gmsh v4.0.0
+            // we keep it for backward compatibility
             boost::erase_all(var, "-");
             loops[id] = var;
         }

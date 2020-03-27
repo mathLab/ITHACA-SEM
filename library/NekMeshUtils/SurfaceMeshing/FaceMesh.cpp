@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -580,8 +579,8 @@ void FaceMesh::DiagonalSwap()
                 continue;
             }
 
-            ElementSharedPtr tri1 = e->m_elLink[0].first;
-            ElementSharedPtr tri2 = e->m_elLink[1].first;
+            ElementSharedPtr tri1 = e->m_elLink[0].first.lock();
+            ElementSharedPtr tri2 = e->m_elLink[1].first.lock();
 
             NodeSharedPtr n1 = e->m_n1;
             NodeSharedPtr n2 = e->m_n2;
@@ -756,13 +755,13 @@ void FaceMesh::DiagonalSwap()
                 }
 
                 // now sort out links for the 4 edges surrounding the patch
-                vector<pair<ElementSharedPtr, int> > links;
+                vector<pair<weak_ptr<Element>, int> > links;
 
                 links = CA->m_elLink;
                 CA->m_elLink.clear();
                 for (int i = 0; i < links.size(); i++)
                 {
-                    if (links[i].first->GetId() == tri1->GetId())
+                    if (links[i].first.lock()->GetId() == tri1->GetId())
                     {
                         continue;
                     }
@@ -773,7 +772,7 @@ void FaceMesh::DiagonalSwap()
                 BC->m_elLink.clear();
                 for (int i = 0; i < links.size(); i++)
                 {
-                    if (links[i].first->GetId() == tri1->GetId())
+                    if (links[i].first.lock()->GetId() == tri1->GetId())
                     {
                         continue;
                     }
@@ -784,7 +783,7 @@ void FaceMesh::DiagonalSwap()
                 AD->m_elLink.clear();
                 for (int i = 0; i < links.size(); i++)
                 {
-                    if (links[i].first->GetId() == tri2->GetId())
+                    if (links[i].first.lock()->GetId() == tri2->GetId())
                     {
                         continue;
                     }
@@ -795,7 +794,7 @@ void FaceMesh::DiagonalSwap()
                 DB->m_elLink.clear();
                 for (int i = 0; i < links.size(); i++)
                 {
-                    if (links[i].first->GetId() == tri2->GetId())
+                    if (links[i].first.lock()->GetId() == tri2->GetId())
                     {
                         continue;
                     }

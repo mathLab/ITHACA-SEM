@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -45,16 +44,23 @@ using namespace Nektar::LocalRegions;
 MatrixKey *MatrixKey_Init(const StdRegions::MatrixType matType,
                           const LibUtilities::ShapeType shapeType,
                           const StdRegions::StdExpansionSharedPtr exp,
-                          const py::object &constFactorMap)
+                          const py::object &constFactorMap,
+                          const py::object &varCoeffMap)
 {
     StdRegions::ConstFactorMap tmp = StdRegions::NullConstFactorMap;
+    StdRegions::VarCoeffMap tmp2 = StdRegions::NullVarCoeffMap;
 
     if (!constFactorMap.is_none())
     {
         tmp = py::extract<StdRegions::ConstFactorMap>(constFactorMap);
     }
 
-    return new MatrixKey(matType, shapeType, *exp, tmp);
+    if (!varCoeffMap.is_none())
+    {
+        tmp2 = py::extract<StdRegions::VarCoeffMap>(varCoeffMap);
+    }
+
+    return new MatrixKey(matType, shapeType, *exp, tmp, tmp2);
 }
 
 /**
@@ -68,6 +74,7 @@ void export_MatrixKey()
              py::make_constructor(
                  &MatrixKey_Init, py::default_call_policies(),
                  (py::arg("matType"), py::arg("shapeType"), py::arg("exp"),
-                  py::arg("constFactorMap") = py::object())))
+                  py::arg("constFactorMap") = py::object(),
+                  py::arg("varCoeffMap") = py::object())))
         ;
 }

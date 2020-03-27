@@ -19,7 +19,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/HashUtils.hpp
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
-    ./BasicUtils/OperatorGenerators.hpp
     ./BasicUtils/ParseUtils.h
     ./BasicUtils/Progressbar.hpp
     ./BasicUtils/PtsField.h
@@ -27,6 +26,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/Timer.h
     ./BasicUtils/RawType.hpp
     ./BasicUtils/SessionReader.h
+    ./BasicUtils/CheckedCast.hpp
     ./BasicUtils/ShapeType.hpp
     ./BasicUtils/SharedArray.hpp
     ./BasicUtils/Thread.h
@@ -38,7 +38,6 @@ SET(BasicUtilsHeaders
 )
 
 SET(BasicUtilsSources
-    ./BasicUtils/ArrayEqualityComparison.cpp
     ./BasicUtils/CompressData.cpp
     ./BasicUtils/CsvIO.cpp
     ./BasicUtils/Equation.cpp
@@ -177,11 +176,11 @@ SET(FoundationSources
 )
 
 SET(InterpreterHeaders
-      ./Interpreter/AnalyticExpressionEvaluator.hpp
+    ./Interpreter/Interpreter.h
 )
 
 SET(InterpreterSources
-        ./Interpreter/AnalyticExpressionEvaluator.cpp
+    ./Interpreter/Interpreter.cpp
 )
 
 SET(KernelHeaders
@@ -259,14 +258,29 @@ SET(PolylibSources
 )
 
 SET(TimeIntegrationHeaders
+        ./TimeIntegration/AdamsBashforthTimeIntegrationSchemes.h
+        ./TimeIntegration/AdamsMoultonTimeIntegrationSchemes.h
+        ./TimeIntegration/BDFImplicitTimeIntegrationSchemes.h
+        ./TimeIntegration/EulerTimeIntegrationSchemes.h
+        ./TimeIntegration/CNABTimeIntegrationScheme.h
+        ./TimeIntegration/DIRKTimeIntegrationSchemes.h
+        ./TimeIntegration/IMEXGearTimeIntegrationScheme.h
+        ./TimeIntegration/IMEXTimeIntegrationSchemes.h
+        ./TimeIntegration/IMEXdirkTimeIntegrationSchemes.h
+        ./TimeIntegration/MCNABTimeIntegrationScheme.h
+        ./TimeIntegration/RungeKuttaTimeIntegrationSchemes.h
         ./TimeIntegration/TimeIntegrationScheme.h
-        ./TimeIntegration/TimeIntegrationWrapper.h
+        ./TimeIntegration/TimeIntegrationSchemeData.h
+        ./TimeIntegration/TimeIntegrationSolution.h
 )
 
 SET(TimeIntegrationSources
+        ./TimeIntegration/SchemeInitializer.cpp
         ./TimeIntegration/TimeIntegrationScheme.cpp
-        ./TimeIntegration/TimeIntegrationWrapper.cpp
+        ./TimeIntegration/TimeIntegrationSchemeData.cpp
+        ./TimeIntegration/TimeIntegrationSolution.cpp
 )
+
 
 SET(BaseHeaders
     LibUtilitiesDeclspec.h
@@ -418,7 +432,7 @@ ENDIF()
 IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${PETSC_LIBRARIES})
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${CMAKE_DL_LIBS})
-    ADD_DEPENDENCIES(LibUtilities petsc-3.7.7)
+    ADD_DEPENDENCIES(LibUtilities petsc-3.11.4)
 ENDIF( NEKTAR_USE_PETSC )
 
 IF (NEKTAR_BUILD_PYTHON)

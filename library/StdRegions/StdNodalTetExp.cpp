@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -28,21 +27,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Nodal tetrahedral routines built upon StdExpansion3D
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdNodalTetExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 
-namespace Nektar 
+namespace Nektar
 {
-    namespace StdRegions 
+    namespace StdRegions
     {
         StdNodalTetExp::StdNodalTetExp(
-            const LibUtilities::BasisKey &Ba, 
-            const LibUtilities::BasisKey &Bb, 
+            const LibUtilities::BasisKey &Ba,
+            const LibUtilities::BasisKey &Bb,
             const LibUtilities::BasisKey &Bc,
             LibUtilities::PointsType Ntype):
             StdExpansion  (LibUtilities::StdTetData::getNumberOfCoefficients(
@@ -58,10 +59,10 @@ namespace Nektar
             StdTetExp     (Ba,Bb,Bc),
             m_nodalPointsKey(Ba.GetNumModes(),Ntype)
         {
-            ASSERTL0(Ba.GetNumModes() <= Bb.GetNumModes(), 
+            ASSERTL0(Ba.GetNumModes() <= Bb.GetNumModes(),
                      "order in 'a' direction is higher than order "
                      "in 'b' direction");
-            ASSERTL0(Ba.GetNumModes() <= Bc.GetNumModes(), 
+            ASSERTL0(Ba.GetNumModes() <= Bc.GetNumModes(),
                      "order in 'a' direction is higher than order "
                      "in 'c' direction");
             ASSERTL0(Bb.GetNumModes() <= Bc.GetNumModes(),
@@ -78,20 +79,20 @@ namespace Nektar
         }
 
         StdNodalTetExp::~StdNodalTetExp()
-        { 
+        {
         }
-        
+
         bool StdNodalTetExp::v_IsNodalNonTensorialExp()
         {
             return true;
         }
-        
+
         //-------------------------------
         // Nodal basis specific routines
         //-------------------------------
-        
+
         void StdNodalTetExp::NodalToModal(
-            const Array<OneD, const NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
@@ -106,7 +107,7 @@ namespace Nektar
 
         // Operate with transpose of NodalToModal transformation
         void StdNodalTetExp::NodalToModalTranspose(
-            const Array<OneD, const NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
@@ -120,7 +121,7 @@ namespace Nektar
         }
 
         void StdNodalTetExp::ModalToNodal(
-            const Array<OneD, const NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             StdMatrixKey      Nkey(eNBasisTrans, DetShapeType(), *this,
@@ -135,7 +136,7 @@ namespace Nektar
         }
 
         void StdNodalTetExp::GetNodalPoints(
-            Array<OneD, const NekDouble> &x, 
+            Array<OneD, const NekDouble> &x,
             Array<OneD, const NekDouble> &y,
             Array<OneD, const NekDouble> &z)
         {
@@ -156,7 +157,7 @@ namespace Nektar
             //Store the values of m_phys in a temporary array
             int nqtot = GetTotPoints();
             Array<OneD,NekDouble> tmp_phys(nqtot);
-            
+
             for(i = 0; i < m_ncoeffs; ++i)
             {
                 // fill physical space with mode i
@@ -172,7 +173,7 @@ namespace Nektar
                     (*Mat)(j,i) = StdTetExp::v_PhysEvaluate(c,tmp_phys);
                 }
             }
-            
+
             return Mat;
         }
 
@@ -180,7 +181,7 @@ namespace Nektar
         //---------------------------------------
         // Transforms
         //---------------------------------------
-        
+
         void StdNodalTetExp::v_BwdTrans(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
@@ -202,7 +203,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTBase(inarray,outarray);
-            
+
             // get Mass matrix inverse
             StdMatrixKey      masskey(eInvMass, DetShapeType(), *this,
                                       NullConstFactorMap, NullVarCoeffMap,
@@ -212,7 +213,7 @@ namespace Nektar
             // copy inarray in case inarray == outarray
             NekVector<NekDouble> in(m_ncoeffs,outarray,eCopy);
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
-            
+
             out = (*matsys)*in;
         }
 
@@ -220,56 +221,56 @@ namespace Nektar
         //---------------------------------------
         // Inner product functions
         //---------------------------------------
-        
+
         void StdNodalTetExp::v_IProductWRTBase(
-            const Array<OneD, const NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTBase_SumFac(inarray,outarray);
         }
-        
+
         void StdNodalTetExp::v_IProductWRTBase_SumFac(
-            const Array<OneD, const NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray,
             bool                                multiplybyweights)
         {
             StdTetExp::v_IProductWRTBase_SumFac(inarray,outarray,multiplybyweights);
-            NodalToModalTranspose(outarray,outarray);    
+            NodalToModalTranspose(outarray,outarray);
         }
 
         void StdNodalTetExp::v_IProductWRTDerivBase(
             const int                           dir,
-            const Array<OneD, const NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
         }
-        
+
         void StdNodalTetExp::v_IProductWRTDerivBase_SumFac(
-            const int                           dir, 
-            const Array<OneD, const NekDouble>& inarray, 
+            const int                           dir,
+            const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             StdTetExp::v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             NodalToModalTranspose(outarray,outarray);
         }
-        
+
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
-        
+
         void StdNodalTetExp::v_FillMode(
-            const int               mode, 
+            const int               mode,
             Array<OneD, NekDouble> &outarray)
         {
-            ASSERTL2(mode >= m_ncoeffs, 
+            ASSERTL2(mode >= m_ncoeffs,
                 "calling argument mode is larger than total expansion order");
 
             Vmath::Zero(m_ncoeffs, outarray, 1);
             outarray[mode] = 1.0;
             v_BwdTrans(outarray,outarray);
         }
-        
+
 
         //---------------------------------------
         // Mapping functions
@@ -285,10 +286,10 @@ namespace Nektar
             int                        nummodesB)
         {
             int P, Q, i, j, k, idx = 0, nFaceCoeffs = 0;
-            
+
             ASSERTL0(fid >= 0 && fid <= 3,
-                     "Local face ID must be between 0 and 3"); 
-            
+                     "Local face ID must be between 0 and 3");
+
             if (nummodesA == -1)
             {
                 switch(fid)
@@ -312,13 +313,13 @@ namespace Nektar
             P           = nummodesA;
             Q           = nummodesB;
             nFaceCoeffs = Q + ((P-1)*(1 + 2*(Q-1) - (P-1)))/2;
-            
-            if (maparray.num_elements() != nFaceCoeffs)
+
+            if (maparray.size() != nFaceCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceCoeffs);
             }
 
-            if (signarray.num_elements() != nFaceCoeffs)
+            if (signarray.size() != nFaceCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceCoeffs,1);
             }
@@ -326,7 +327,7 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get()+nFaceCoeffs, 1);
             }
-            
+
             switch(fid)
             {
                 case 0:
@@ -334,7 +335,7 @@ namespace Nektar
                     maparray[idx++] = 0;
                     maparray[idx++] = 1;
                     maparray[idx++] = 2;
-                    
+
                     // Add edges.
                     for (i = 2; i < P; ++i)
                     {
@@ -347,8 +348,9 @@ namespace Nektar
         int StdNodalTetExp::v_GetVertexMap(const int localVertexId,
                                            bool useCoeffPacking)
         {
+            boost::ignore_unused(useCoeffPacking);
             ASSERTL0(localVertexId >= 0 && localVertexId <= 3,
-                     "Local Vertex ID must be between 0 and 3");                
+                     "Local Vertex ID must be between 0 and 3");
             return localVertexId;
         }
 
@@ -357,12 +359,12 @@ namespace Nektar
         {
             unsigned int i;
             const unsigned int nBndryCoeff = NumBndryCoeffs();
-            
-            if (outarray.num_elements() != nBndryCoeff)
+
+            if (outarray.size() != nBndryCoeff)
             {
                 outarray = Array<OneD, unsigned int>(nBndryCoeff);
             }
-            
+
             for (i = 0; i < nBndryCoeff; i++)
             {
                 outarray[i] = i;
@@ -375,7 +377,7 @@ namespace Nektar
             unsigned int i;
             const unsigned int nBndryCoeff = NumBndryCoeffs();
 
-            if (outarray.num_elements() != m_ncoeffs-nBndryCoeff)
+            if (outarray.size() != m_ncoeffs-nBndryCoeff)
             {
                 outarray = Array<OneD, unsigned int>(
                     m_ncoeffs-nBndryCoeff);
@@ -391,11 +393,11 @@ namespace Nektar
         //---------------------------------------
         // Wrapper functions
         //---------------------------------------
-        
+
         DNekMatSharedPtr StdNodalTetExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
             DNekMatSharedPtr Mat;
-            
+
             switch(mkey.GetMatrixType())
             {
                 case eNBasisTrans:
@@ -405,10 +407,10 @@ namespace Nektar
                     Mat = StdExpansion::CreateGeneralMatrix(mkey);
                     break;
             }
-            
+
             return Mat;
         }
-        
+
         DNekMatSharedPtr StdNodalTetExp::v_CreateStdMatrix(
             const StdMatrixKey &mkey)
         {

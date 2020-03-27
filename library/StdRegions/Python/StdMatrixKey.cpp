@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -46,16 +45,23 @@ using namespace Nektar::StdRegions;
 StdMatrixKey *StdMatrixKey_Init(const MatrixType matType,
                                 const LibUtilities::ShapeType shapeType,
                                 const StdExpansionSharedPtr exp,
-                                const py::object &constFactorMap)
+                                const py::object &constFactorMap,
+                                const py::object &varCoeffMap)
 {
     ConstFactorMap tmp = NullConstFactorMap;
+    VarCoeffMap tmp2 = NullVarCoeffMap;
 
     if (!constFactorMap.is_none())
     {
         tmp = py::extract<ConstFactorMap>(constFactorMap);
     }
 
-    return new StdMatrixKey(matType, shapeType, *exp, tmp);
+    if (!varCoeffMap.is_none())
+    {
+        tmp2 = py::extract<VarCoeffMap>(varCoeffMap);
+    }
+
+    return new StdMatrixKey(matType, shapeType, *exp, tmp, tmp2);
 }
 
 /**
@@ -65,16 +71,22 @@ void export_StdMatrixKey()
 {
     NEKPY_WRAP_ENUM(MatrixType, MatrixTypeMap);
     NEKPY_WRAP_ENUM(ConstFactorType, ConstFactorTypeMap);
+    NEKPY_WRAP_ENUM(VarCoeffType, VarCoeffTypeMap);
 
     // Wrapper for constant factor map.
     py::class_<ConstFactorMap>("ConstFactorMap")
-        .def(py::map_indexing_suite<ConstFactorMap, true>());
+        .def(py::map_indexing_suite<ConstFactorMap>());
+
+    // Wrapper for variable coefficients map.
+    py::class_<VarCoeffMap>("VarCoeffMap")
+        .def(py::map_indexing_suite<VarCoeffMap>());
 
     py::class_<StdMatrixKey>("StdMatrixKey", py::no_init)
         .def("__init__", py::make_constructor(
                  &StdMatrixKey_Init, py::default_call_policies(),
                  (py::arg("matType"), py::arg("shapeType"), py::arg("exp"),
-                  py::arg("constFactorMap") = py::object())))
+                  py::arg("constFactorMap") = py::object(),
+                  py::arg("varCoeffMap") = py::object())))
 
         .def("GetMatrixType", &StdMatrixKey::GetMatrixType)
         .def("GetShapeType",  &StdMatrixKey::GetShapeType)

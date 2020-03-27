@@ -12,16 +12,16 @@ OPTION(NEKTAR_USE_ARPACK
 SET(BUILD_ARPACK OFF)
 
 IF (NEKTAR_USE_ARPACK)
-    FIND_LIBRARY(ARPACK_LIBRARY NAMES "arpack.1" "arpack" PATHS /opt/local/lib)
+    FIND_LIBRARY(ARPACK_LIBRARY NAMES "arpack.1" "arpack")
 
     IF (ARPACK_LIBRARY)
         MESSAGE(STATUS "Found Arpack: ${ARPACK_LIBRARY}")
         MARK_AS_ADVANCED(ARPACK_LIBRARY)
     ELSE()
     	IF(CMAKE_Fortran_COMPILER)
-    		SET(BUILD_ARPACK ON)
+    	    SET(BUILD_ARPACK ON)
     	ELSE()
-        	MESSAGE(FATAL_ERROR "Could not find or build Arpack")
+            MESSAGE(FATAL_ERROR "Could not find or build Arpack")
         ENDIF()
     ENDIF()
 

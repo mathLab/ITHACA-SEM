@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -254,8 +253,8 @@ namespace Nektar
                 IProductWRTBase_IterPerExp(inarray,outarray);
             }
         }
-      
-      
+
+
       void ContField3D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,       NekDouble> &outarray,
                                    CoeffState coeffstate)
@@ -264,10 +263,10 @@ namespace Nektar
           int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
           Array<OneD,NekDouble> wsp(contNcoeffs);
           IProductWRTBase(inarray,wsp,eGlobal);
-          
+
           // Solve the system
           GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
-          
+
           if(coeffstate == eGlobal)
           {
               GlobalSolve(key,wsp,outarray);
@@ -279,17 +278,17 @@ namespace Nektar
               GlobalToLocal(tmp,outarray);
           }
       }
-      
-      
+
+
       void ContField3D::v_MultiplyByInvMassMatrix(
                                           const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,       NekDouble> &outarray,
                                           CoeffState coeffstate)
-          
+
       {
           int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
           GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
-          
+
           if(coeffstate == eGlobal)
           {
               if(inarray.data() == outarray.data())
@@ -306,24 +305,24 @@ namespace Nektar
           else
           {
               Array<OneD, NekDouble> globaltmp(contNcoeffs,0.0);
-              
+
               if(inarray.data() == outarray.data())
               {
-                  Array<OneD,NekDouble> tmp(inarray.num_elements());
-                  Vmath::Vcopy(inarray.num_elements(),inarray,1,tmp,1);
+                  Array<OneD,NekDouble> tmp(inarray.size());
+                  Vmath::Vcopy(inarray.size(),inarray,1,tmp,1);
                   Assemble(tmp,outarray);
               }
               else
               {
                   Assemble(inarray,outarray);
               }
-              
+
               GlobalSolve(key,outarray,globaltmp);
               GlobalToLocal(globaltmp,outarray);
           }
       }
-      
-      
+
+
       void ContField3D::GenerateDirBndCondForcing(const GlobalLinSysKey &key,
                                                   Array<OneD, NekDouble> &inout,
                                                   Array<OneD, NekDouble> &outarray)
@@ -331,8 +330,8 @@ namespace Nektar
           int bndcnt=0;
           const Array<OneD,const int>& map = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
           NekDouble sign;
-          
-          for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+
+          for(int i = 0; i < m_bndCondExpansions.size(); ++i)
           {
               if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
               {
@@ -357,7 +356,7 @@ namespace Nektar
             }
           GeneralMatrixOp(key,inout,outarray,eGlobal);
       }
-      
+
 
 
       // Note inout contains initial guess and final output.
@@ -369,12 +368,12 @@ namespace Nektar
       {
           int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
           int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-          
+
           // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
           //         IN THE SOLUTION ARRAY
           v_ImposeDirichletConditions(inout);
-          
-          
+
+
           // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
           if(contNcoeffs - NumDirBcs > 0)
           {
@@ -382,13 +381,13 @@ namespace Nektar
               LinSys->Solve(rhs,inout,m_locToGloMap,dirForcing);
           }
       }
-      
+
       GlobalLinSysSharedPtr ContField3D::GetGlobalLinSys(const GlobalLinSysKey &mkey)
       {
           return m_globalLinSysManager[mkey];
       }
-      
-      
+
+
       GlobalLinSysSharedPtr ContField3D::GenGlobalLinSys(const GlobalLinSysKey &mkey)
       {
           ASSERTL1(mkey.LocToGloMapIsDefined(),
@@ -396,7 +395,7 @@ namespace Nektar
                    "attached to key");
           return ExpList::GenGlobalLinSys(mkey, m_locToGloMap);
       }
-      
+
 
       /**
        * Returns the global matrix associated with the given GlobalMatrixKey.
@@ -410,10 +409,10 @@ namespace Nektar
           ASSERTL1(mkey.LocToGloMapIsDefined(),
                    "To use method must have a AssemblyMap "
                    "attached to key");
-          
+
             GlobalMatrixSharedPtr glo_matrix;
             auto matrixIter = m_globalMat->find(mkey);
-            
+
             if(matrixIter == m_globalMat->end())
             {
                 glo_matrix = GenGlobalMatrix(mkey,m_locToGloMap);
@@ -423,21 +422,21 @@ namespace Nektar
             {
                 glo_matrix = matrixIter->second;
             }
-            
+
             return glo_matrix;
       }
-      
-      
+
+
       void ContField3D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
       {
           int i,j;
           int bndcnt = 0;
           int nDir   = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-          
+
           NekDouble sign;
-          const Array<OneD,const int> &bndMap = 
+          const Array<OneD,const int> &bndMap =
               m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
-          
+
           Array<OneD, NekDouble> tmp(
               m_locToGloMap->GetNumGlobalBndCoeffs(), 0.0);
 
@@ -460,14 +459,14 @@ namespace Nektar
           }
 
           m_locToGloMap->UniversalAssembleBnd(tmp);
-          
+
           // Now fill in all other Dirichlet coefficients.
-          for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+          for(i = 0; i < m_bndCondExpansions.size(); ++i)
           {
-              if(m_bndConditions[i]->GetBoundaryConditionType() == 
+              if(m_bndConditions[i]->GetBoundaryConditionType() ==
                      SpatialDomains::eDirichlet)
               {
-                  const Array<OneD,const NekDouble>& coeffs = 
+                  const Array<OneD,const NekDouble>& coeffs =
                       m_bndCondExpansions[i]->GetCoeffs();
                   for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                   {
@@ -489,22 +488,22 @@ namespace Nektar
                   bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
               }
           }
-          
+
           Vmath::Vcopy(nDir, tmp, 1, outarray, 1);
-      }          
-      
+      }
+
       void ContField3D::v_FillBndCondFromField(void)
       {
           NekDouble sign;
           int bndcnt = 0;
-          const Array<OneD,const int> &bndMap = 
+          const Array<OneD,const int> &bndMap =
               m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
 
           Array<OneD, NekDouble> tmp(m_locToGloMap->GetNumGlobalCoeffs());
           LocalToGlobal(m_coeffs,tmp,false);
-                    
+
           // Now fill in all other Dirichlet coefficients.
-          for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+          for(int i = 0; i < m_bndCondExpansions.size(); ++i)
           {
               Array<OneD, NekDouble>& coeffs =
                   m_bndCondExpansions[i]->UpdateCoeffs();
@@ -514,7 +513,7 @@ namespace Nektar
               {
                   continue;
               }
-              
+
               for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
               {
                   sign = m_locToGloMap->
@@ -528,20 +527,20 @@ namespace Nektar
       {
           NekDouble sign;
           int bndcnt = 0;
-          const Array<OneD,const int> &bndMap = 
+          const Array<OneD,const int> &bndMap =
               m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
 
           Array<OneD, NekDouble> tmp(m_locToGloMap->GetNumGlobalCoeffs());
           LocalToGlobal(m_coeffs,tmp,false);
-                    
-          ASSERTL1(nreg < m_bndCondExpansions.num_elements(),
+
+          ASSERTL1(nreg < m_bndCondExpansions.size(),
                    "nreg is out or range since this many boundary "
                    "regions to not exist");
 
             // Now fill in all other Dirichlet coefficients.
           Array<OneD, NekDouble>& coeffs =
               m_bndCondExpansions[nreg]->UpdateCoeffs();
-          
+
           for(int j = 0; j < nreg; ++j)
           {
               if(m_bndConditions[j]->GetBoundaryConditionType()
@@ -551,7 +550,7 @@ namespace Nektar
               }
               bndcnt += m_bndCondExpansions[j]->GetNcoeffs();
           }
-          
+
           for(int j = 0; j < (m_bndCondExpansions[nreg])->GetNcoeffs(); ++j)
           {
               sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
@@ -559,7 +558,7 @@ namespace Nektar
           }
       }
 
-      
+
       void ContField3D::v_LocalToGlobal(bool useComm)
       {
           m_locToGloMap->LocalToGlobal(m_coeffs, m_coeffs,useComm);
@@ -614,13 +613,13 @@ namespace Nektar
           // Note -1.0 term necessary to invert forcing function to
           // be consistent with matrix definition
           Vmath::Neg(contNcoeffs, wsp, 1);
-          
+
           // Forcing function with weak boundary conditions
           int i,j;
           int bndcnt = 0;
           NekDouble sign;
           Array<OneD, NekDouble> gamma(contNcoeffs, 0.0);
-          for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+          for(i = 0; i < m_bndCondExpansions.size(); ++i)
           {
               if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann ||
                  m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
@@ -638,13 +637,13 @@ namespace Nektar
               }
           }
           m_locToGloMap->UniversalAssemble(gamma);
-          
+
           // Add weak boundary conditions to forcing
           Vmath::Vadd(contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
-          
+
           // Solve the system
           GlobalLinSysKey key(StdRegions::eHelmholtz, m_locToGloMap, factors,varcoeff,varfactors);
-          
+
           if(flags.isSet(eUseGlobal))
           {
               GlobalSolve(key,wsp,outarray,dirForcing);
@@ -657,7 +656,7 @@ namespace Nektar
               GlobalToLocal(tmp,outarray);
           }
       }
-      
+
       void ContField3D::v_GeneralMatrixOp(
           const GlobalMatrixKey             &gkey,
           const Array<OneD,const NekDouble> &inarray,
@@ -667,7 +666,7 @@ namespace Nektar
           if(coeffstate == eGlobal)
           {
               bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(gkey.GetMatrixType());
-              
+
               if(doGlobalOp)
               {
                   GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
@@ -720,7 +719,7 @@ namespace Nektar
         int i, j;
         int bndcnt = 0;
         Array<OneD, NekDouble> gamma(contNcoeffs, 0.0);
-        for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+        for (i = 0; i < m_bndCondExpansions.size(); ++i)
         {
             if (m_bndConditions[i]->GetBoundaryConditionType() !=
                 SpatialDomains::eDirichlet)
@@ -763,16 +762,16 @@ namespace Nektar
             GlobalToLocal(tmp, outarray);
         }
     }
-      
+
 
       int ContField3D::GetGlobalMatrixNnz(const GlobalMatrixKey &gkey)
       {
           ASSERTL1(gkey.LocToGloMapIsDefined(),
                    "To use method must have a AssemblyMap "
                    "attached to key");
-          
+
           auto matrixIter = m_globalMat->find(gkey);
-          
+
           if(matrixIter == m_globalMat->end())
           {
               return 0;
@@ -781,10 +780,10 @@ namespace Nektar
           {
               return matrixIter->second->GetNumNonZeroEntries();
           }
-          
+
           return 0;
       }
-      
+
 
       /**
        *

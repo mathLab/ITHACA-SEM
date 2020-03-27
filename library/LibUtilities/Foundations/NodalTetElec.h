@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -28,8 +27,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: Header file of 2D Nodal Triangle Fekete Points 
+//
+// Description: Header file of 2D Nodal Triangle Fekete Points
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -46,9 +45,9 @@
 
 namespace Nektar
 {
-    namespace LibUtilities 
+    namespace LibUtilities
     {
- 
+
         class NodalTetElec: public Points<NekDouble>
         {
         public:
@@ -56,12 +55,12 @@ namespace Nektar
             {
             }
 
-            LIB_UTILITIES_EXPORT static std::shared_ptr<PointsBaseType> 
+            LIB_UTILITIES_EXPORT static std::shared_ptr<PointsBaseType>
                 Create(const PointsKey &key);
 
             const MatrixSharedPtrType GetI(const PointsKey &pkey)
             {
-                ASSERTL0(pkey.GetPointsDim() == 3, 
+                ASSERTL0(pkey.GetPointsDim() == 3,
                          "NodalTetElec Points can only interp to other 3d "
                          "point distributions");
                 Array<OneD, const NekDouble> x, y, z;
@@ -74,12 +73,12 @@ namespace Nektar
                const Array<OneD, const NekDouble>& y,
                const Array<OneD, const NekDouble>& z)
            {
-                int          numpoints = x.num_elements();
+                size_t       numpoints = x.size();
                 unsigned int np        = GetTotNumPoints();
-                
+
                 Array<OneD, NekDouble> interp(np*numpoints);
                 CalculateInterpMatrix(x, y, z, interp);
-                
+
                 NekDouble* d = interp.data();
                 return MemoryManager<NekMatrix<NekDouble> >
                     ::AllocateSharedPtr(numpoints, np, d);
@@ -87,15 +86,17 @@ namespace Nektar
 
             NodalTetElec(const PointsKey &key) : PointsBaseType(key)
             {
-                
+
             }
 
         private:
+            static bool initPointsManager[];
+
             std::shared_ptr<NodalUtilTetrahedron> m_util;
 
             NodalTetElec():PointsBaseType(NullPointsKey)
             {
-              
+
             }
 
             void CalculatePoints();
@@ -109,6 +110,6 @@ namespace Nektar
                       Array<OneD, NekDouble>       &interp);
         };
    } // end of namespace
-} // end of namespace 
+} // end of namespace
 
 #endif //NODALTETELEC_H

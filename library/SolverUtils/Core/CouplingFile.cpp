@@ -8,7 +8,6 @@
 //
 // Copyright (c) 2017 Kilian Lackhove
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -102,7 +101,7 @@ void CouplingFile::v_Send(
     vector<int> sendVarsToVars =
         GenerateVariableMapping(varNames, m_sendFieldNames);
 
-#ifdef _WIN32
+#if (defined _WIN32 && _MSC_VER < 1900)
     // We need this to make sure boost::format has always
     // two digits in the exponents of Scientific notation.
     unsigned int old_exponent_format;
@@ -163,7 +162,7 @@ void CouplingFile::v_Receive(const int step,
     string filename = m_evalField->GetSession()->GetFunctionFilename(
         m_config["RECEIVEFUNCTION"], m_recvFieldNames[0]);
 
-#ifdef _WIN32
+#if (defined _WIN32 && _MSC_VER < 1900)
     // We need this to make sure boost::format has always
     // two digits in the exponents of Scientific notation.
     unsigned int old_exponent_format;
@@ -189,7 +188,7 @@ void CouplingFile::v_Receive(const int step,
     ASSERTL1(m_nRecvVars == recvVarsToVars.size(), "field size mismatch");
     for (int i = 0; i < recvVarsToVars.size(); ++i)
     {
-        Vmath::Vcopy(recvFields[i].num_elements(),
+        Vmath::Vcopy(recvFields[i].size(),
                      recvFields[i],
                      1,
                      field[recvVarsToVars[i]],

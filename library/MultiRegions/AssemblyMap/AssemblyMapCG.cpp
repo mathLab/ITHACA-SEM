@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -108,7 +107,7 @@ namespace Nektar
             m_numLocalBndCondCoeffs = 0;
             m_systemSingular = checkIfSystemSingular;
 
-            for(i = 0; i < bndCondExp.num_elements(); i++)
+            for(i = 0; i < bndCondExp.size(); i++)
             {
                 if (bndConditions[0][i]->GetBoundaryConditionType() ==
                        SpatialDomains::ePeriodic)
@@ -118,7 +117,7 @@ namespace Nektar
 
                 // Check to see if any value on boundary has Dirichlet value.
                 cnt = 0;
-                for(k = 0; k < bndConditions.num_elements(); ++k)
+                for(k = 0; k < bndConditions.size(); ++k)
                 {
                     if (bndConditions[k][i]->GetBoundaryConditionType() ==
                             SpatialDomains::eDirichlet)
@@ -148,7 +147,7 @@ namespace Nektar
                 }
 
                 // If all boundaries are Dirichlet take out of mask
-                if(cnt == bndConditions.num_elements())
+                if(cnt == bndConditions.size())
                 {
                     for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                     {
@@ -1597,7 +1596,7 @@ namespace Nektar
                 }
             }
 
-            for(i = 1; i < graphVertOffset.num_elements(); i++)
+            for(i = 1; i < graphVertOffset.size(); i++)
             {
                 graphVertOffset[i] += graphVertOffset[i-1];
             }
@@ -1685,7 +1684,7 @@ namespace Nektar
                     {
                         m_localToGlobalMap[cnt+edgeInteriorMap[k]] = 0;
                     }
-                    
+
                     // Fill the sign vector if required
                     if(m_signChange)
                     {
@@ -1742,7 +1741,7 @@ namespace Nektar
                                 }
                                 else
                                 {
-                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =  0; 
+                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =  0;
                                     if(m_signChange)
                                     {
                                         m_localToGlobalSign[cnt+faceInteriorMap[kLoc]] = 0.0;
@@ -1796,7 +1795,7 @@ namespace Nektar
             // Set up the mapping for the boundary conditions
             cnt = 0;
             int offset = 0;
-            for(i = 0; i < bndCondExp.num_elements(); i++)
+            for(i = 0; i < bndCondExp.size(); i++)
             {
                 if (bndConditions[i]->GetBoundaryConditionType() ==
                     SpatialDomains::ePeriodic)
@@ -2236,7 +2235,7 @@ namespace Nektar
                     maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
                 }
                 exp->GetInteriorMap(interiorMap);
-                dof = interiorMap.num_elements();
+                dof = interiorMap.size();
                 maxIntDof = (dof > maxIntDof ? dof : maxIntDof);
             }
 
@@ -2356,7 +2355,7 @@ namespace Nektar
 
                 // Add interior DOFs to complete universal numbering
                 exp->GetInteriorMap(interiorMap);
-                dof = interiorMap.num_elements();
+                dof = interiorMap.size();
                 elementId = (exp->GetGeom())->GetGlobalID();
                 for (k = 0; k < dof; ++k)
                 {
@@ -2480,7 +2479,7 @@ namespace Nektar
             }
 
             // Set up global to universal map
-            if (m_globalToUniversalMap.num_elements())
+            if (m_globalToUniversalMap.size())
             {
                 LibUtilities::CommSharedPtr vCommRow
                     = m_session->GetComm()->GetRowComm();
@@ -2635,7 +2634,7 @@ namespace Nektar
             Array<OneD, const NekDouble> local;
             if(global.data() == loc.data())
             {
-                local = Array<OneD, NekDouble>(loc.num_elements(),loc.data());
+                local = Array<OneD, NekDouble>(loc.size(),loc.data());
             }
             else
             {
@@ -2674,7 +2673,7 @@ namespace Nektar
             Array<OneD, const NekDouble> glo;
             if(global.data() == loc.data())
             {
-                glo = Array<OneD, NekDouble>(global.num_elements(),global.data());
+                glo = Array<OneD, NekDouble>(global.size(),global.data());
             }
             else
             {
@@ -2706,7 +2705,7 @@ namespace Nektar
             Array<OneD, const NekDouble> local;
             if(global.data() == loc.data())
             {
-                local = Array<OneD, NekDouble>(loc.num_elements(),loc.data());
+                local = Array<OneD, NekDouble>(loc.size(),loc.data());
             }
             else
             {

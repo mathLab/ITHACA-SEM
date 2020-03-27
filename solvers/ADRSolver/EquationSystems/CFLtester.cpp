@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -74,7 +73,7 @@ namespace Nektar
             {
                 // Do not forwards transform initial condition
                 m_homoInitialFwd = false;
-                
+
                 // Define the normal velocity fields
                 if (m_fields[0]->GetTrace())
                 {
@@ -141,7 +140,7 @@ namespace Nektar
               Array<OneD,        Array<OneD, NekDouble> >&outarray,
         const NekDouble time)
     {
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         int npoints = GetNpoints();
 
         m_advObject->Advect(nvariables, m_fields, m_velocity, inarray,
@@ -157,7 +156,7 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> >&outarray,
     const NekDouble time)
     {
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         SetBoundaryConditions(time);
 
         switch(m_projectionType)
@@ -205,7 +204,7 @@ namespace Nektar
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
 
-        for (int i = 0; i < m_velocity.num_elements(); ++i)
+        for (int i = 0; i < m_velocity.size(); ++i)
         {
             m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
 
@@ -223,14 +222,14 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >               &physfield,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
-        ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
+        ASSERTL1(flux[0].size() == m_velocity.size(),
                  "Dimension of flux array and velocity array do not match");
 
-        int nq = physfield[0].num_elements();
+        int nq = physfield[0].size();
 
-        for (int i = 0; i < flux.num_elements(); ++i)
+        for (int i = 0; i < flux.size(); ++i)
         {
-            for (int j = 0; j < flux[0].num_elements(); ++j)
+            for (int j = 0; j < flux[0].size(); ++j)
             {
                 Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
                             flux[i][j], 1);
@@ -242,17 +241,17 @@ namespace Nektar
     {
         AdvectionSystem::v_GenerateSummary(s);
     }
-	
-    
-    
+
+
+
 	NekDouble CFLtester::v_GetTimeStep(
-        const Array<OneD,int> ExpOrder, 
-        const Array<OneD,NekDouble> CFL, 
+        const Array<OneD,int> ExpOrder,
+        const Array<OneD,NekDouble> CFL,
         NekDouble timeCFL)
-	{ 
-		
+	{
+
 		int n_element       = m_fields[0]->GetExpSize();
-        
+
 		//const NekDouble minLengthStdTri  = 1.414213;
 		//const NekDouble minLengthStdQuad = 2.0;
 		//const NekDouble cLambda          = 0.2; // Spencer book pag. 317
@@ -260,7 +259,7 @@ namespace Nektar
         Array<OneD, NekDouble> tstep      (n_element, 0.0);
 		Array<OneD, NekDouble> stdVelocity(n_element, 0.0);
 		stdVelocity = GetStdVelocity(m_velocity);
-		
+
 		for (int el = 0; el < n_element; ++el)
 		{
 			int npoints = m_fields[0]->GetExp(el)->GetTotPoints();
@@ -273,23 +272,23 @@ namespace Nektar
 				tstep[el] = CFL[el]/(stdVelocity[el]);
 			}
 			else if(std::dynamic_pointer_cast<LocalRegions::QuadExp>(m_fields[0]->GetExp(el)))
-			{ 
+			{
 				//tstep[el] =  timeCFL/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
 				//tstep[el] =  timeCFL*minLengthStdQuad/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
 				tstep[el] = CFL[el]/(stdVelocity[el]);
 			}
 		}
-		
+
 		NekDouble TimeStep = Vmath::Vmin(n_element, tstep, 1);
-		
+
 		return TimeStep;
 	}
-	
-    
-    
+
+
+
 	NekDouble CFLtester::v_GetTimeStep(
-        int ExpOrder, 
-        NekDouble CFL, 
+        int ExpOrder,
+        NekDouble CFL,
         NekDouble TimeStability)
 	{
 		//================================================================
@@ -297,97 +296,97 @@ namespace Nektar
 		// and it has been implemented in a rude fashion, as the full CFLtester class.
 		// For real CFL calculations refer to the general implementation above. (A.Bolis)
 		//================================================================
-		
+
 		NekDouble TimeStep;
 		NekDouble SpatialStability;
 		int n_elements = m_fields[0]->GetExpSize();
-		
+
 		//solve ambiguity in windows
 		NekDouble n_elem = n_elements;
 		NekDouble DH     = sqrt(n_elem);
-		
+
 		int H = (int)DH;
 		int P = ExpOrder-1;
-		
+
 		//================================================================
 		// Regular meshes
-		
+
 		//SpatialStability = EigenvaluesRegMeshes[H-1][P-1];
-		
+
 		//================================================================
 		// Anisotropic meshes
-		
-		if (TimeStability == 1.0) 
+
+		if (TimeStability == 1.0)
 		{
 			SpatialStability = EigenvaluesAnaMeshesAB2[H/2][P-1];
 		}
-		else if (TimeStability == 2.0) 
+		else if (TimeStability == 2.0)
 		{
 			SpatialStability = EigenvaluesAnaMeshesRK2[H/2][P-1];
 		}
-		else if (TimeStability == 2.784) 
+		else if (TimeStability == 2.784)
 		{
 			SpatialStability = EigenvaluesAnaMeshesRK4[H/2][P-1];
 		}
-		else 
+		else
 		{
 			ASSERTL0(false,"Dominant eigenvalues database not present for this time-stepping scheme")
 		}
-		
+
 		//================================================================
-		
+
 		TimeStep = (TimeStability/SpatialStability)*CFL;
-		
+
 		//================================================================
-		
+
 		return TimeStep;
 	}
-    
-    
-    
+
+
+
     Array<OneD, NekDouble> CFLtester::GetStdVelocity(
         const Array<OneD, Array<OneD,NekDouble> > inarray)
     {
         // Checking if the problem is 2D
         ASSERTL0(m_expdim >= 2, "Method not implemented for 1D");
-        
+
         int nTotQuadPoints  = GetTotPoints();
-        int n_element       = m_fields[0]->GetExpSize();       
-        int nvel            = inarray.num_elements();
-        
+        int n_element       = m_fields[0]->GetExpSize();
+        int nvel            = inarray.size();
+
         NekDouble pntVelocity;
-        
+
         // Getting the standard velocity vector on the 2D normal space
         Array<OneD, Array<OneD, NekDouble> > stdVelocity(nvel);
         Array<OneD, NekDouble> stdV(n_element, 0.0);
-        
+
         for (int i = 0; i < nvel; ++i)
         {
             stdVelocity[i] = Array<OneD, NekDouble>(nTotQuadPoints);
         }
-		
+
         if (nvel == 2)
         {
             for (int el = 0; el < n_element; ++el)
-            { 
+            {
                 LocalRegions::Expansion2DSharedPtr el2D =
                     m_fields[0]->GetExp(el)->as<LocalRegions::Expansion2D>();
                 int n_points = el2D->GetTotPoints();
-                
-                Array<OneD, const NekDouble> jac  = 
+
+                Array<OneD, const NekDouble> jac  =
                         el2D->GetGeom2D()->GetMetricInfo()->GetJac();
-                Array<TwoD, const NekDouble> gmat = 
+                Array<TwoD, const NekDouble> gmat =
                         el2D->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
-                
+
                 if (el2D->GetGeom2D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i] 
+                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i]
                         + gmat[2][i]*inarray[1][i];
-                        
-                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i] 
+
+                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i]
                         + gmat[3][i]*inarray[1][i];
                     }
                 }
@@ -395,20 +394,20 @@ namespace Nektar
                 {
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i] 
+                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i]
                         + gmat[2][0]*inarray[1][i];
-                        
-                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i] 
+
+                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i]
                         + gmat[3][0]*inarray[1][i];
                     }
                 }
-                
-                
+
+
                 for (int i = 0; i < n_points; i++)
                 {
-                    pntVelocity = sqrt(stdVelocity[0][i]*stdVelocity[0][i] 
+                    pntVelocity = sqrt(stdVelocity[0][i]*stdVelocity[0][i]
                                        + stdVelocity[1][i]*stdVelocity[1][i]);
-                    
+
                     if (pntVelocity>stdV[el])
                     {
                         stdV[el] = pntVelocity;
@@ -419,32 +418,32 @@ namespace Nektar
         else
         {
             for (int el = 0; el < n_element; ++el)
-            { 
+            {
                 LocalRegions::Expansion3DSharedPtr el3D =
                     m_fields[0]->GetExp(el)->as<LocalRegions::Expansion3D>();
 
                 int n_points = el3D->GetTotPoints();
-                
+
                 Array<OneD, const NekDouble> jac =
                         el3D->GetGeom3D()->GetMetricInfo()->GetJac();
                 Array<TwoD, const NekDouble> gmat =
                         el3D->GetGeom3D()->GetMetricInfo()->GetDerivFactors();
-                
+
                 if (el3D->GetGeom3D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i] 
-                        + gmat[3][i]*inarray[1][i] 
+                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i]
+                        + gmat[3][i]*inarray[1][i]
                         + gmat[6][i]*inarray[2][i];
-                        
-                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i] 
-                        + gmat[4][i]*inarray[1][i] 
+
+                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i]
+                        + gmat[4][i]*inarray[1][i]
                         + gmat[7][i]*inarray[2][i];
-                        
-                        stdVelocity[2][i] = gmat[2][i]*inarray[0][i] 
-                        + gmat[5][i]*inarray[1][i] 
+
+                        stdVelocity[2][i] = gmat[2][i]*inarray[0][i]
+                        + gmat[5][i]*inarray[1][i]
                         + gmat[8][i]*inarray[2][i];
                     }
                 }
@@ -452,31 +451,31 @@ namespace Nektar
                 {
                     Array<OneD, const NekDouble> jac =
                             el3D->GetGeom3D()->GetMetricInfo()->GetJac();
-                    Array<TwoD, const NekDouble> gmat = 
+                    Array<TwoD, const NekDouble> gmat =
                             el3D->GetGeom3D()->GetMetricInfo()->GetDerivFactors();
-                    
+
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i] 
-                        + gmat[3][0]*inarray[1][i] 
+                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i]
+                        + gmat[3][0]*inarray[1][i]
                         + gmat[6][0]*inarray[2][i];
-                        
-                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i] 
-                        + gmat[4][0]*inarray[1][i] 
+
+                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i]
+                        + gmat[4][0]*inarray[1][i]
                         + gmat[7][0]*inarray[2][i];
-                        
-                        stdVelocity[2][i] = gmat[2][0]*inarray[0][i] 
-                        + gmat[5][0]*inarray[1][i] 
+
+                        stdVelocity[2][i] = gmat[2][0]*inarray[0][i]
+                        + gmat[5][0]*inarray[1][i]
                         + gmat[8][0]*inarray[2][i];
                     }
                 }
-                
+
                 for (int i = 0; i < n_points; i++)
                 {
-                    pntVelocity = sqrt(stdVelocity[0][i]*stdVelocity[0][i] 
-                                       + stdVelocity[1][i]*stdVelocity[1][i] 
+                    pntVelocity = sqrt(stdVelocity[0][i]*stdVelocity[0][i]
+                                       + stdVelocity[1][i]*stdVelocity[1][i]
                                        + stdVelocity[2][i]*stdVelocity[2][i]);
-                    
+
                     if (pntVelocity > stdV[el])
                     {
                         stdV[el] = pntVelocity;
@@ -484,7 +483,7 @@ namespace Nektar
                 }
             }
         }
-		
+
         return stdV;
 	}
 }

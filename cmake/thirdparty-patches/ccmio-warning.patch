@@ -1,0 +1,52 @@
+--- libccmio/ccmioutility.c	2019-09-30 22:56:12.400753340 +0100
++++ libccmio/ccmioutility.c	2019-09-30 22:56:28.004901262 +0100
+@@ -35,7 +35,7 @@
+     #include <direct.h>
+     #include <io.h>
+     #define getcwd _getcwd
+-    #define mktemp _mktemp
++    #define mkstemp _mktemp
+ #else
+     #include <unistd.h>
+     #include <strings.h> /* for rindex() */
+@@ -222,7 +222,7 @@
+ 	basename[bytes++] = 'X';
+     basename[bytes] = '\0';
+     tmpFilename = strdup(basename);
+-    if (!mktemp(tmpFilename))
++    if (!mkstemp(tmpFilename))
+ 	return(*err = kCCMIOIOErr);
+ 
+     *err = CCMIOOpen(filename, kCCMIORead, &origRoot);
+@@ -246,7 +246,7 @@
+     if ((*err) == kCCMIONoErr)
+     {
+ 	moved = strdup(basename);
+-	if (!mktemp(moved))
++	if (!mkstemp(moved))
+ 	    goto error;
+ 	errno = 0;
+ 	rename(filename, moved);
+@@ -299,7 +299,6 @@
+       bytes = (char*)malloc(size);
+ 	if (!bytes)
+ 	{
+-	    free(dims);
+ 	    return(*err = kCCMIONoMemoryErr);
+ 	}
+ 	ADF_Read_All_Data(origNode.node, bytes, &adfErr);
+
+--- libccmio/ccmio.c	2019-10-01 10:52:27.872670035 +0100
++++ libccmio/ccmio.c	2019-10-01 10:52:54.900797471 +0100
+@@ -520,9 +520,9 @@
+ 	type == kCCMIORestartData || type == kCCMIOReferenceData ||
+ 	type == kCCMIOModelConstants)
+ #if kHasSNPrintf
+-	snprintf(name, kCCMIOMaxStringLength, gEntityNames[(int)type]);
++	snprintf(name, kCCMIOMaxStringLength, "%s", gEntityNames[(int)type]);
+ #else
+-	sprintf(name, gEntityNames[(int)type]);
++	sprintf(name, "%s", gEntityNames[(int)type]);
+ #endif
+     else
+ #if kHasSNPrintf

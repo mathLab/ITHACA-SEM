@@ -14,7 +14,7 @@
         </SOLVERINFO>
         <PARAMETERS>
             <P> TimeStep = 0.01   </P>
-            <P> NumSteps = 1.0/TimeStep    </P>
+            <P> NumSteps = 0.5/TimeStep    </P>
             <P> IO_CheckSteps = 25.0/TimeStep  </P>
             <P> IO_InfoSteps  = 0.5/TimeStep   </P>
             <P> IO_CFLSteps   = IO_InfoSteps </P>

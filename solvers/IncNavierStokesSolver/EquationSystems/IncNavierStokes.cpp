@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -80,7 +79,7 @@ namespace Nektar
         AdvectionSystem::v_InitObject();
 
         int i,j;
-        int numfields = m_fields.num_elements();
+        int numfields = m_fields.size();
         std::string velids[] = {"u","v","w"};
 
         // Set up Velocity field to point to the first m_expdim of m_fields;
@@ -174,10 +173,10 @@ namespace Nektar
         // up m_field to boundary condition maps;
         m_fieldsBCToElmtID  = Array<OneD, Array<OneD, int> >(numfields);
         m_fieldsBCToTraceID = Array<OneD, Array<OneD, int> >(numfields);
-        m_fieldsRadiationFactor  = 
+        m_fieldsRadiationFactor  =
                 Array<OneD, Array<OneD, NekDouble> > (numfields);
 
-        for (i = 0; i < m_fields.num_elements(); ++i)
+        for (i = 0; i < m_fields.size(); ++i)
         {
             bool Set = false;
 
@@ -187,7 +186,7 @@ namespace Nektar
 
             BndConds = m_fields[i]->GetBndConditions();
             BndExp   = m_fields[i]->GetBndCondExpansions();
-            for(int n = 0; n < BndConds.num_elements(); ++n)
+            for(int n = 0; n < BndConds.size(); ++n)
             {
                 if(boost::iequals(BndConds[n]->GetUserDefined(),"Radiation"))
                 {
@@ -223,7 +222,7 @@ namespace Nektar
 
             radpts = 0; // reset to use as a counter
 
-            for(int n = 0; n < BndConds.num_elements(); ++n)
+            for(int n = 0; n < BndConds.size(); ++n)
             {
                 if(boost::iequals(BndConds[n]->GetUserDefined(),"Radiation"))
                 {
@@ -250,9 +249,9 @@ namespace Nektar
         }
 
         // Set up maping for womersley BC - and load variables
-        for (int i = 0; i < m_fields.num_elements(); ++i)
+        for (int i = 0; i < m_fields.size(); ++i)
         {
-            for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
+            for(int n = 0; n < m_fields[i]->GetBndConditions().size(); ++n)
             {
                 if(boost::istarts_with(m_fields[i]->GetBndConditions()[n]->GetUserDefined(),"Womersley"))
                 {
@@ -290,7 +289,7 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &outarray)
     {
         int i;
-        int VelDim     = m_velocity.num_elements();
+        int VelDim     = m_velocity.size();
         Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
 
         for(i = 0; i < VelDim; ++i)
@@ -309,11 +308,11 @@ namespace Nektar
     {
         int i, n;
         std::string varName;
-        int nvariables = m_fields.num_elements();
+        int nvariables = m_fields.size();
 
         for (i = 0; i < nvariables; ++i)
         {
-            for(n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
+            for(n = 0; n < m_fields[i]->GetBndConditions().size(); ++n)
             {
                 if(m_fields[i]->GetBndConditions()[n]->IsTimeDependent())
                 {
@@ -356,7 +355,7 @@ namespace Nektar
         Array<OneD, NekDouble> Bvals, U;
         int cnt1 = 0;
 
-        for(cnt = n = 0; n < BndConds.num_elements(); ++n)
+        for(cnt = n = 0; n < BndConds.size(); ++n)
         {
             std::string type = BndConds[n]->GetUserDefined();
 
@@ -435,7 +434,7 @@ namespace Nektar
 
         int fldid = m_velocity[0];
 
-        for(cnt = n = 0; n < BndConds[0].num_elements(); ++n)
+        for(cnt = n = 0; n < BndConds[0].size(); ++n)
         {
             if((BndConds[0][n]->GetBoundaryConditionType() ==
                     SpatialDomains::eDirichlet) &&
@@ -787,7 +786,7 @@ namespace Nektar
      */
     Array<OneD, NekDouble> IncNavierStokes::v_GetMaxStdVelocity(void)
     {
-        int nvel  = m_velocity.num_elements();
+        int nvel  = m_velocity.size();
         int nelmt = m_fields[0]->GetExpSize();
 
         Array<OneD, NekDouble> stdVelocity(nelmt, 0.0);
@@ -834,7 +833,7 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
               Array<OneD, NekDouble>                     &density)
     {
-        int nPts  = physfield[0].num_elements();
+        int nPts  = physfield[0].size();
         Vmath::Fill(nPts, 1.0, density, 1);
     }
 

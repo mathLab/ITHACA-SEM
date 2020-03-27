@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -218,7 +217,10 @@ void Module::ProcessEdges(bool ReprocessEdges)
                         }
                     }
 
-                    e2->m_parentCAD = ed->m_parentCAD;
+                    if (ed->m_parentCAD)
+                    {
+                        e2->m_parentCAD = ed->m_parentCAD;
+                    }
 
                     // Update edge to element map.
                     e2->m_elLink.push_back(
@@ -248,8 +250,8 @@ void Module::ProcessEdges(bool ReprocessEdges)
         elmt->SetEdgeLink(*it);
 
         // Update 2D element boundary map.
-        pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
-        eMap.first->SetBoundaryLink(eMap.second, i);
+        pair<weak_ptr<Element>, int> eMap = (*it)->m_elLink.at(0);
+        eMap.first.lock()->SetBoundaryLink(eMap.second, i);
 
         // Update vertices
         elmt->SetVertex(0, (*it)->m_n1, false);
@@ -355,13 +357,19 @@ void Module::ProcessFaces(bool ReprocessFaces)
             EdgeSet::iterator f = tmp.find(e);
             if(f != tmp.end())
             {
-                e->m_parentCAD = (*f)->m_parentCAD;
+                if ((*f)->m_parentCAD)
+                {
+                    e->m_parentCAD = (*f)->m_parentCAD;
+                }
             }
         }
 
         // Update 3D element boundary map.
-        pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
-        eMap.first->SetBoundaryLink(eMap.second, i);
+        for (int j = 0; j < (*it)->m_elLink.size(); ++j)
+        {
+            pair<weak_ptr<Element>, int> eMap = (*it)->m_elLink.at(j);
+            eMap.first.lock()->SetBoundaryLink(eMap.second, i);
+        }
 
         // Copy face curvature
         if ((*it)->m_faceNodes.size() > 0)
@@ -813,7 +821,7 @@ void Module::PrismLines(int                       prism,
         if (it2 != perFaces.end())
         {
             int id2 = it2->second.first->m_id;
-            nextId  = it2->second.first->m_elLink[0].first->GetId();
+            nextId  = it2->second.first->m_elLink[0].first.lock()->GetId();
             perFaces.erase(it2);
             perFaces.erase(id2);
             PrismLines(nextId, perFaces, prismsDone, line);
@@ -825,10 +833,10 @@ void Module::PrismLines(int                       prism,
             continue;
         }
 
-        nextId = f->m_elLink[0].first->GetId();
+        nextId = f->m_elLink[0].first.lock()->GetId();
         if (nextId == m_mesh->m_element[3][prism]->GetId())
         {
-            nextId = f->m_elLink[1].first->GetId();
+            nextId = f->m_elLink[1].first.lock()->GetId();
         }
 
         PrismLines(nextId, perFaces, prismsDone, line);

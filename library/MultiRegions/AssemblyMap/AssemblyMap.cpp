@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Assembly (e.g. local to global) base mapping routines
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
 
@@ -62,8 +63,8 @@ namespace Nektar
         /// Rounds an array of double precision numbers to integers.
         void RoundNekDoubleToInt(const Array<OneD,const NekDouble> inarray, Array<OneD,int> outarray)
         {
-            int size = inarray.num_elements();
-            ASSERTL1(outarray.num_elements()>=size,"Array sizes not compatible");
+            int size = inarray.size();
+            ASSERTL1(outarray.size()>=size,"Array sizes not compatible");
 
             NekDouble x;
             for(int i = 0; i < size; i++)
@@ -113,7 +114,7 @@ namespace Nektar
             m_preconType = pSession->GetSolverInfoAsEnum<PreconditionerType>(
                                                             "Preconditioner");
 
-            // Override values with data from GlobalSysSolnInfo section 
+            // Override values with data from GlobalSysSolnInfo section
             if(pSession->DefinesGlobalSysSolnInfo(variable, "GlobalSysSoln"))
             {
                 std::string sysSoln = pSession->GetGlobalSysSolnInfo(variable,
@@ -173,8 +174,8 @@ namespace Nektar
             }
 
         }
-        
-        /** 
+
+        /**
          * Create a new level of mapping using the information in
          * multiLevelGraph and performing the following steps:
          */
@@ -234,7 +235,7 @@ namespace Nektar
             //   according to the patch it belongs to (i.e. dofs in first block
             //   all are numbered 0, the second block numbered are 1, etc...)
             multiLevelGraph->MaskPatches(newLevel,globHomPatchMask);
-            
+
             // Map from Global Dofs to Local Dofs
             // As a result, we know for each local dof whether
             // it is mapped to the boundary of the next level, or to which
@@ -254,7 +255,7 @@ namespace Nektar
             // Retrieve the number of patches at the next level
             int numPatchesWithIntNew = multiLevelGraph->GetNpatchesWithInterior(newLevel);
             int numPatchesNew        = numPatchesWithIntNew;
-            
+
             // Allocate memory to store the number of local dofs associated to
             // each of elemental boundaries of these patches
             std::map<int, int> numLocalBndCoeffsPerPatchNew;
@@ -284,7 +285,7 @@ namespace Nektar
                 maxval = *max_element(&locPatchMask[cnt],
                                       &locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
                 ASSERTL0((minval==maxval)||(minval==-1),"These values should never be the same");
-                
+
                 if(maxval == -1)
                 {
                     curPatch = numPatchesNew;
@@ -295,7 +296,7 @@ namespace Nektar
                 {
                     curPatch = maxval;
                 }
-                
+
                 for(j = 0; j < numLocalBndCoeffsPerPatchOld[i]; j++ )
                 {
                     ASSERTL0((locPatchMask[cnt]==maxval)||(locPatchMask[cnt]==minval),
@@ -342,7 +343,7 @@ namespace Nektar
             {
                 m_localToGlobalBndSign    = Array<OneD,NekDouble>(m_numLocalBndCoeffs);
             }
-            
+
             m_patchMapFromPrevLevel = MemoryManager<PatchMap>::AllocateSharedPtr(numLocalBndCoeffsOld);
 
             m_globalToUniversalBndMap = Array<OneD, int>(
@@ -492,52 +493,64 @@ namespace Nektar
 
         int AssemblyMap::v_GetLocalToGlobalMap(const int i) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(i);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetGlobalToUniversalMap(const int i) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(i);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetGlobalToUniversalMapUnique(const int i) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(i);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         const Array<OneD,const int>&  AssemblyMap::v_GetLocalToGlobalMap()
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             static Array<OneD,const int> result;
             return result;
         }
 
         const Array<OneD, const int>& AssemblyMap::v_GetGlobalToUniversalMap()
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             static Array<OneD, const int> result;
             return result;
         }
 
         const Array<OneD, const int>& AssemblyMap::v_GetGlobalToUniversalMapUnique()
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             static Array<OneD, const int> result;
             return result;
         }
 
         NekDouble AssemblyMap::v_GetLocalToGlobalSign(const int i) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(i);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0.0;
         }
 
         const Array<OneD, NekDouble>& AssemblyMap::v_GetLocalToGlobalSign() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             static Array<OneD, NekDouble> result;
             return result;
         }
@@ -547,7 +560,9 @@ namespace Nektar
                 Array<OneD,       NekDouble>& global,
                 bool useComm) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(loc, global, useComm);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
         }
 
         void AssemblyMap::v_LocalToGlobal(
@@ -555,40 +570,51 @@ namespace Nektar
                 NekVector<      NekDouble>& global,
                 bool useComm) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(loc, global, useComm);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
         }
 
         void AssemblyMap::v_GlobalToLocal(
                 const Array<OneD, const NekDouble>& global,
                       Array<OneD,       NekDouble>& loc) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(loc, global);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
         }
 
         void AssemblyMap::v_GlobalToLocal(
                 const NekVector<NekDouble>& global,
                       NekVector<      NekDouble>& loc) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(loc, global);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
         }
 
         void AssemblyMap::v_Assemble(
                 const Array<OneD, const NekDouble> &loc,
                       Array<OneD,       NekDouble> &global) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(loc, global);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
         }
 
         void AssemblyMap::v_Assemble(
                 const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            boost::ignore_unused(loc, global);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
         }
 
         void AssemblyMap::v_UniversalAssemble(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
+            boost::ignore_unused(pGlobal);
             // Do nothing here since multi-level static condensation uses a
             // AssemblyMap and thus will call this routine in serial.
         }
@@ -596,6 +622,7 @@ namespace Nektar
         void AssemblyMap::v_UniversalAssemble(
                       NekVector<      NekDouble>& pGlobal) const
         {
+            boost::ignore_unused(pGlobal);
             // Do nothing here since multi-level static condensation uses a
             // AssemblyMap and thus will call this routine in serial.
         }
@@ -604,69 +631,81 @@ namespace Nektar
                       Array<OneD,     NekDouble>& pGlobal,
                       int                         offset) const
         {
+            boost::ignore_unused(pGlobal, offset);
             // Do nothing here since multi-level static condensation uses a
             // AssemblyMap and thus will call this routine in serial.
         }
 
         int AssemblyMap::v_GetFullSystemBandWidth() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumNonDirVertexModes() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumNonDirEdgeModes() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumNonDirFaceModes() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumDirEdges() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumDirFaces() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumNonDirEdges() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         int AssemblyMap::v_GetNumNonDirFaces() const
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             return 0;
         }
 
         const Array<OneD, const int>& AssemblyMap::v_GetExtraDirEdges()
         {
-            ASSERTL0(false, "Not defined for this type of mapping.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             static Array<OneD, const int> result;
             return result;
         }
-        
+
         std::shared_ptr<AssemblyMap> AssemblyMap::v_LinearSpaceMap(
             const ExpList &locexp, GlobalSysSolnType solnType)
         {
-            ASSERTL0(false, "Not defined for this sub class");
+            boost::ignore_unused(locexp, solnType);
+            NEKERROR(ErrorUtil::efatal,
+                     "Not defined for this type of mapping.");
             static std::shared_ptr<AssemblyMap> result;
             return result;
         }
@@ -890,7 +929,7 @@ namespace Nektar
         int AssemblyMap::GetBndCondTraceToGlobalTraceMap(
                     const int i)
         {
-            ASSERTL1(i < m_bndCondTraceToGlobalTraceMap.num_elements(),
+            ASSERTL1(i < m_bndCondTraceToGlobalTraceMap.size(),
                      "Index out of range.");
             return m_bndCondTraceToGlobalTraceMap[i];
         }
@@ -977,8 +1016,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc, int offset) const
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
 
             // offset input data by length "offset" for Dirichlet boundary conditions.
             Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
@@ -999,8 +1038,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc) const
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
 
             if(m_signChange)
             {
@@ -1026,8 +1065,8 @@ namespace Nektar
                     Array<OneD,NekDouble>& global,
                     int offset) const
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
 
             // offset input data by length "offset" for Dirichlet boundary conditions.
             Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
@@ -1044,7 +1083,7 @@ namespace Nektar
             UniversalAssembleBnd(tmp);
             Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get()+offset, 1, global.get(), 1);
         }
-        
+
         void AssemblyMap::LocalBndToGlobal(
                     const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global) const
@@ -1057,8 +1096,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD,NekDouble>& global)  const
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
 
             if(m_signChange)
             {
@@ -1091,8 +1130,8 @@ namespace Nektar
                     const Array<OneD,const NekDouble>& loc,
                     Array<OneD, NekDouble>& global, int offset) const
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local array is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global array is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local array is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs-offset,"Global array is not of correct dimension");
             Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
 
             if(m_signChange)
@@ -1112,8 +1151,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD, NekDouble>& global) const
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
 
             Vmath::Zero(m_numGlobalBndCoeffs, global.get(), 1);
 
@@ -1132,7 +1171,7 @@ namespace Nektar
         void AssemblyMap::UniversalAssembleBnd(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
-            ASSERTL1(pGlobal.num_elements() == m_numGlobalBndCoeffs,
+            ASSERTL1(pGlobal.size() == m_numGlobalBndCoeffs,
                      "Wrong size.");
             Gs::Gather(pGlobal, Gs::gs_add, m_bndGsh);
         }
@@ -1162,7 +1201,7 @@ namespace Nektar
         {
             return m_staticCondLevel;
         }
-        
+
         int AssemblyMap::GetNumPatches() const
         {
             return m_numPatches;
@@ -1229,8 +1268,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc)
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
 
             Vmath::Gathr(m_numLocalBndCoeffs, global.get(), m_localToGlobalBndMap.get(), loc.get());
         }

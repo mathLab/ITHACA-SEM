@@ -4,38 +4,42 @@
 # projects are marked below.
 ######################################################
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+# Require at least CMake 3.1 for CMAKE_CXX_STANDARD.
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
 # TODO - Put the name of your project here.
-SET(ProjectName ExampleSolver)
-PROJECT(${ProjectName})
+PROJECT(ExampleSolver)
 
-# Setup where CMake will look for modules.  You probably
-# won't need to modify this.
-SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
-
-# Finds Nektar++.  This may introduce other dependencies, such as Boost.
+# Finds Nektar++. This may introduce other dependencies, such as Boost.
 FIND_PACKAGE(Nektar++ REQUIRED)
+
+# Require C++11
+SET(CMAKE_CXX_STANDARD 11)
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Add various definitions from Nektar++ CMake file.
 ADD_DEFINITIONS(${NEKTAR++_DEFINITIONS})
 INCLUDE_DIRECTORIES(${NEKTAR++_INCLUDE_DIRS} ${NEKTAR++_TP_INCLUDE_DIRS})
-LINK_DIRECTORIES(${NEKTAR++_LIBRARY_DIRS} ${NEKTAR++_TP_LIBRARY_DIRS})
 
-# TODO - Add an entry here for every source file in your project. Must not be empty!
-SET(SourceFileNames
+# If your libraries are in a non-standard link location, you might need to add
+# the link directory to the RPATH.
+SET(CMAKE_INSTALL_RPATH "${NEKTAR++_LIBRARY_DIRS}")
+
+# Set a default install location
+IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE PATH "" FORCE)
+ENDIF()
+
+# Add a sample executable based on a driver and equation system.
+ADD_EXECUTABLE(ExampleSolver
     ExampleSolver.cpp
     EquationSystems/Laplace.cpp
-)
+    )
 
-# TODO - Add an entry here for every header file in your project. Must not be empty!
-SET(HeaderFileNames
-    EquationSystems/Laplace.h
-)
-
-ADD_EXECUTABLE(${ProjectName} ${SourceFileNames} ${HeaderFileNames})
-
-# TODO - If your executable needs to link to any other libraries,
-# add them here.
-TARGET_LINK_LIBRARIES(${ProjectName}
+# If your executable needs to link to any other libraries, add them here.
+TARGET_LINK_LIBRARIES(ExampleSolver
     ${NEKTAR++_LIBRARIES}
     ${NEKTAR++_TP_LIBRARIES}
     )
+
+INSTALL(TARGETS ExampleSolver DESTINATION ${CMAKE_BINARY_DIR}/dist)

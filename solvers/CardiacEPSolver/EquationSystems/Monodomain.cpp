@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -278,25 +277,22 @@ namespace Nektar
 
         // Search through the loaded filters and pass the cell model to any
         // CheckpointCellModel filters loaded.
-        int k = 0;
-        const LibUtilities::FilterMap& f = m_session->GetFilters();
-        for (auto &x : f)
+        for (auto &x : m_filters)
         {
             if (x.first == "CheckpointCellModel")
             {
                 std::shared_ptr<FilterCheckpointCellModel> c
                     = std::dynamic_pointer_cast<FilterCheckpointCellModel>(
-                                                                m_filters[k]);
+                        x.second);
                 c->SetCellModel(m_cell);
             }
             if (x.first == "CellHistoryPoints")
             {
                 std::shared_ptr<FilterCellHistoryPoints> c
                     = std::dynamic_pointer_cast<FilterCellHistoryPoints>(
-                                                                m_filters[k]);
+                        x.second);
                 c->SetCellModel(m_cell);
             }
-            ++k;
         }
 
         // Load stimuli
@@ -331,7 +327,7 @@ namespace Nektar
             const NekDouble time,
             const NekDouble lambda)
     {
-        int nvariables  = inarray.num_elements();
+        int nvariables  = inarray.size();
         int nq          = m_fields[0]->GetNpoints();
         StdRegions::ConstFactorMap factors;
         // lambda = \Delta t

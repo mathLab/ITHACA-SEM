@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -87,6 +86,7 @@ QuadGeom::QuadGeom(const int id,
 }
 
 QuadGeom::QuadGeom(const QuadGeom &in)
+    : Geometry2D(in)
 {
     // From Geometry
     m_shapeType = in.m_shapeType;
@@ -156,7 +156,7 @@ StdRegions::Orientation QuadGeom::GetFaceOrientation(
     if(doRot)
     {
         PointGeom rotPt;
-        
+
         for (i = 0; i < 4; ++i)
         {
             rotPt.Rotate((*face1[i]), dir, angle);
@@ -172,9 +172,9 @@ StdRegions::Orientation QuadGeom::GetFaceOrientation(
     }
     else
     {
-        
+
         NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
-        
+
         // For periodic faces, we calculate the vector between the centre
         // points of the two faces. (For connected faces this will be
         // zero). We can then use this to determine alignment later in the
@@ -469,8 +469,8 @@ NekDouble QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
 
         int min_i = Vmath::Imin(npts, tmpx, 1);
 
-        Lcoords[0] = za[min_i % za.num_elements()];
-        Lcoords[1] = zb[min_i / za.num_elements()];
+        Lcoords[0] = za[min_i % za.size()];
+        Lcoords[1] = zb[min_i / za.size()];
 
         // Perform newton iteration to find local coordinates
         NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords, resid);
@@ -483,15 +483,28 @@ bool QuadGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                NekDouble tol,
                                NekDouble &resid)
 {
-    ASSERTL1(gloCoord.num_elements() >= 2,
-             "Two dimensional geometry expects at least two coordinates.");
+    //Rough check if within twice min/max point
+    if (GetMetricInfo()->GetGtype() != eRegular)
+    {
+        if (!MinMaxCheck(gloCoord))
+        {
+            return false;
+        }
+    }
 
+    // Convert to the local (eta) coordinates.
     resid = GetLocCoords(gloCoord, stdCoord);
+
+    // Check local coordinate is within cartesian bounds.
     if (stdCoord[0] >= -(1 + tol) && stdCoord[1] >= -(1 + tol) &&
         stdCoord[0] <= (1 + tol) && stdCoord[1] <= (1 + tol))
     {
         return true;
     }
+
+    //Clamp local coords
+    ClampLocCoords(stdCoord, tol);
+
     return false;
 }
 
@@ -528,5 +541,5 @@ void QuadGeom::v_Setup()
     }
 }
 
-}; // end of namespace
-}; // end of namespace
+} // end of namespace
+} // end of namespace

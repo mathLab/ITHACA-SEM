@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -66,10 +65,14 @@ namespace Nektar
 
   protected:
     std::string                         m_ViscosityType;
-    NekDouble                           m_mu;
-    NekDouble                           m_thermalConductivity;
     NekDouble                           m_Cp;
     NekDouble                           m_Prandtl;
+
+    NekDouble                           m_muRef;
+    NekDouble                           m_thermalConductivityRef;
+    Array<OneD, NekDouble>              m_mu;
+    Array<OneD, NekDouble>              m_thermalConductivity;
+
 
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
                     const SpatialDomains::MeshGraphSharedPtr& pGraph);
@@ -90,6 +93,17 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
+
+    virtual void v_GetFluxPenalty(
+        const Array<OneD, Array<OneD, NekDouble> > &uFwd,
+        const Array<OneD, Array<OneD, NekDouble> > &uBwd,
+              Array<OneD, Array<OneD, NekDouble> > &penaltyCoeff);
+
+    void GetViscosityAndThermalCondFromTemp(
+        const Array<OneD, NekDouble> &temperature,
+              Array<OneD, NekDouble> &mu,
+              Array<OneD, NekDouble> &thermalCond);
+
   };
 }
 #endif

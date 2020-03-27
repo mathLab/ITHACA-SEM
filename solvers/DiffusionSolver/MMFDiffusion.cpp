@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #include <iostream>
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <SolverUtils/Driver.h>
@@ -67,7 +68,7 @@ namespace Nektar
       UnsteadySystem::v_InitObject();
 
       int nq = m_fields[0]->GetNpoints();
-      int nvar  =  m_fields.num_elements();
+      int nvar  =  m_fields.size();
       int MFdim = 3;
 
       // Diffusivity coefficient for e^j
@@ -208,7 +209,7 @@ namespace Nektar
             const NekDouble time,
             const NekDouble lambda)
     {
-        int nvariables  = inarray.num_elements();
+        int nvariables  = inarray.size();
         int nq          = m_fields[0]->GetNpoints();
 
 
@@ -457,6 +458,8 @@ namespace Nektar
                         bool dumpInitialConditions,
                         const int domain)
     {
+        boost::ignore_unused(domain);
+
       int nq  = GetTotPoints();
 
       switch(m_TestType)
@@ -520,7 +523,7 @@ namespace Nektar
         }
 
       // forward transform to fill the modal coeffs
-      for(int i = 0; i < m_fields.num_elements(); ++i)
+      for(int i = 0; i < m_fields.size(); ++i)
 	{
 	  m_fields[i]->SetPhysState(true);
 	  m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
@@ -850,7 +853,7 @@ namespace Nektar
 	  int nq  = GetTotPoints();
 	  outfield = Array<OneD, NekDouble>(nq, 0.0);
 	}
-
+        /* Falls through. */
       default:
         {
 	  EquationSystem::v_EvaluateExactSolution(field,outfield,time);
@@ -877,7 +880,7 @@ int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr session;
     SpatialDomains::MeshGraphSharedPtr graph;
-    Gs::string vDriverModule;
+    std::string vDriverModule;
     DriverSharedPtr drv;
 
     try
@@ -904,7 +907,7 @@ int main(int argc, char *argv[])
     }
     catch (const std::string& eStr)
     {
-       Gs::cout << "Error: " << eStr << Gs::endl;
+        std::cout << "Error: " << eStr << std::endl;
     }
 
     return 0;

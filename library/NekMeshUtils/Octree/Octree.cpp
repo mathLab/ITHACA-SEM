@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -116,7 +115,7 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     }
 
     OctantSharedPtr n = m_masteroct;
-    int quad;
+    int quad = 0;
 
     bool found = false;
 
@@ -861,9 +860,9 @@ void Octree::CompileSourcePointList()
 
                 Array<OneD, NekDouble> loc = curve->P(t);
 
-                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > ss =
+                vector<pair<weak_ptr<CADSurf>, CADOrientation::Orientation> > ss =
                     curve->GetAdjSurf();
-                Array<OneD, NekDouble> uv = ss[0].first->locuv(loc);
+                Array<OneD, NekDouble> uv = ss[0].first.lock()->locuv(loc);
 
                 if (C != 0.0)
                 {
@@ -880,7 +879,7 @@ void Octree::CompileSourcePointList()
 
                     CPointSharedPtr newCPoint =
                         MemoryManager<CPoint>::AllocateSharedPtr(
-                            ss[0].first->GetId(), uv, loc, del);
+                            ss[0].first.lock()->GetId(), uv, loc, del);
 
                     m_SPList.push_back(newCPoint);
                 }
@@ -888,7 +887,7 @@ void Octree::CompileSourcePointList()
                 {
                     BPointSharedPtr newBPoint =
                         MemoryManager<BPoint>::AllocateSharedPtr(
-                            ss[0].first->GetId(), uv, loc);
+                            ss[0].first.lock()->GetId(), uv, loc);
 
                     m_SPList.push_back(newBPoint);
                 }

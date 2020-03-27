@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -66,11 +65,11 @@ void AdjointAdvection::v_Advect(
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
-    ASSERTL1(nConvectiveFields == inarray.num_elements(),
+    ASSERTL1(nConvectiveFields == inarray.size(),
              "Number of convective fields and Inarray are not compatible");
 
     int nPointsTot  = fields[0]->GetNpoints();
-    int ndim        = advVel.num_elements();
+    int ndim        = advVel.size();
     int nBaseDerivs = (m_halfMode || m_singleMode) ? 2 : m_spacedim;
     int nDerivs     = (m_halfMode) ? 2 : m_spacedim;
 

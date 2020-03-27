@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <ShallowWaterSolver/RiemannSolvers/NonlinearSWESolver.h>
 
 namespace Nektar
@@ -50,14 +51,16 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
               Array<OneD,       Array<OneD, NekDouble> > &flux)
     {
+        boost::ignore_unused(nDim);
+
         if (m_pointSolve)
         {
-            int expDim = Fwd.num_elements()-1;
+            int expDim = Fwd.size()-1;
             NekDouble hvf;
 
             if (expDim == 1)
             {
-                for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                for (int i = 0; i < Fwd[0].size(); ++i)
                 {
                     v_PointSolve(
                         Fwd [0][i], Fwd [1][i], 0.0,
@@ -67,7 +70,7 @@ namespace Nektar
             }
             else if (expDim == 2)
             {
-                for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                for (int i = 0; i < Fwd[0].size(); ++i)
                 {
                     v_PointSolve(
                         Fwd [0][i], Fwd [1][i], Fwd [2][i],

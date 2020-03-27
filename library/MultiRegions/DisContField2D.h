@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,6 +36,8 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
@@ -62,20 +63,20 @@ namespace Nektar
                 const bool DeclareCoeffPhysArrays = true,
                 const Collections::ImplementationType ImpType
                                              = Collections::eNoImpType);
-            
+
             MULTI_REGIONS_EXPORT DisContField2D(
                 const DisContField2D                     &In,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const std::string                        &variable,
                 const bool SetUpJustDG            = false,
                 const bool DeclareCoeffPhysArrays = true);
-            
+
             MULTI_REGIONS_EXPORT DisContField2D(
                 const DisContField2D &In,
                 const bool DeclareCoeffPhysArrays = true);
 
             MULTI_REGIONS_EXPORT virtual ~DisContField2D();
-            
+
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
                 const GlobalLinSysKey &mkey);
 
@@ -85,14 +86,14 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(
                 Array<OneD, NekDouble> &outarray);
-            
+
             virtual ExpListSharedPtr &v_GetTrace()
             {
                 if(m_trace == NullExpListSharedPtr)
                 {
                     SetUpDG();
                 }
-                
+
                 return m_trace;
             }
 
@@ -124,7 +125,7 @@ namespace Nektar
              */
             inline  LibUtilities::BasisType GetBasisType(const int dir) const
             {
-                ASSERTL1(dir < m_base.num_elements(), "dir is larger than m_numbases");
+                ASSERTL1(dir < m_base.size(), "dir is larger than m_numbases");
                 return(m_base[dir]->GetBasisType());
             }
 
@@ -139,7 +140,7 @@ namespace Nektar
              * are stored as the coefficients of the one-dimensional expansion.
              */
             Array<OneD,MultiRegions::ExpListSharedPtr> m_bndCondExpansions;
-            
+
             /**
              * @brief An array which contains the information about
              * the boundary condition on the different boundary regions.
@@ -149,7 +150,7 @@ namespace Nektar
             GlobalLinSysMapShPtr   m_globalBndMat;
             ExpListSharedPtr       m_trace;
             AssemblyMapDGSharedPtr m_traceMap;
-            
+
             /**
              * Map of local trace (the points at the face of
              * the element) to the trace space discretisation
@@ -164,7 +165,7 @@ namespace Nektar
              * @brief A set storing the global IDs of any boundary edges.
              */
             std::set<int> m_boundaryEdges;
-            
+
             /**
              * @brief A map which identifies groups of periodic vertices.
              */
@@ -174,8 +175,8 @@ namespace Nektar
              * @brief A map which identifies pairs of periodic edges.
              */
             PeriodicMap m_periodicEdges;
-            
-            
+
+
             /**
              * @brief A vector indicating degress of freedom which need to be
              * copied from forwards to backwards space in case of a periodic
@@ -200,7 +201,7 @@ namespace Nektar
             void FindPeriodicEdges(
                 const SpatialDomains::BoundaryConditions &bcs,
                 const std::string                        &variable);
-            
+
             bool IsLeftAdjacentEdge(const int n, const int e);
 
             virtual void v_GetFwdBwdTracePhys(
@@ -218,11 +219,11 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_AddFwdBwdTraceIntegral(
-                const Array<OneD, const NekDouble> &Fwd, 
-                const Array<OneD, const NekDouble> &Bwd, 
+                const Array<OneD, const NekDouble> &Fwd,
+                const Array<OneD, const NekDouble> &Bwd,
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
-                const Array<OneD, const NekDouble> &inarray, 
+                const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
@@ -257,11 +258,12 @@ namespace Nektar
                 PeriodicMap &periodicEdges,
                 PeriodicMap &periodicFaces)
             {
+                boost::ignore_unused(periodicFaces);
                 periodicVerts = m_periodicVerts;
                 periodicEdges = m_periodicEdges;
             }
 
-            
+
             virtual AssemblyMapDGSharedPtr &v_GetTraceMap()
             {
                 return m_traceMap;
@@ -273,20 +275,20 @@ namespace Nektar
                 return m_bndCondExpansions;
             }
 
-            virtual const 
+            virtual const
                 Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
                 &v_GetBndConditions()
             {
                 return m_bndConditions;
             }
 
-            virtual MultiRegions::ExpListSharedPtr 
+            virtual MultiRegions::ExpListSharedPtr
                 &v_UpdateBndCondExpansion(int i)
             {
                 return m_bndCondExpansions[i];
             }
 
-            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr> 
+            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                 &v_UpdateBndConditions()
             {
                 return m_bndConditions;
@@ -300,7 +302,7 @@ namespace Nektar
 
             virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
         };
-        
+
         typedef std::shared_ptr<DisContField2D>   DisContField2DSharedPtr;
     } //end of namespace
 } //end of namespace

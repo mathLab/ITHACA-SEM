@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -393,7 +392,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
             }
             else
             {
-                stringstream numModesStringStream;
+                std::stringstream numModesStringStream;
                 numModesStringStream << "UNIORDER:";
                 for (std::vector<int>::size_type i = 0;
                      i < elemModes.size(); i++)
@@ -859,7 +858,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     if (m_comm->GetRank() == 0)
     {
         tm1 = m_comm->Wtime();
-        cout << " (" << tm1 - tm0 << "s, HDF5)" << endl;
+        std::cout << " (" << tm1 - tm0 << "s, HDF5)" << std::endl;
     }
 }
 
@@ -960,7 +959,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
     std::unordered_set<uint64_t> toread;
     if (ElementIDs != NullInt1DArray)
     {
-        for (uint64_t i = 0; i < ElementIDs.num_elements(); ++i)
+        for (uint64_t i = 0; i < ElementIDs.size(); ++i)
         {
             toread.insert(ElementIDs[i]);
         }
@@ -973,14 +972,14 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
     size_t cnt = 0, cnt2 = 0;
 
     // Mapping from each decomposition to offsets in the data array.
-    vector<OffsetHelper> decompsToOffsets (nDecomps);
+    std::vector<OffsetHelper> decompsToOffsets (nDecomps);
 
     // Mapping from each group's hash to a vector of element IDs. Note this has
     // to be unsigned int, since that's what we use in FieldDefinitions.
-    map<uint64_t, vector<unsigned int> > groupsToElmts;
+    std::map<uint64_t, std::vector<unsigned int> > groupsToElmts;
 
     // Mapping from each group's hash to each of the decompositions.
-    map<uint64_t, set<uint64_t> > groupsToDecomps;
+    std::map<uint64_t, std::set<uint64_t> > groupsToDecomps;
 
     // True if we are pulling element IDs from ElementIDs.
     bool selective = toread.size() > 0;
@@ -993,7 +992,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
         uint64_t nElmt     = decomps[cnt + ELEM_DCMP_IDX];
         uint64_t groupHash = decomps[cnt + HASH_DCMP_IDX];
 
-        vector<uint64_t> tmp;
+        std::vector<uint64_t> tmp;
 
         if (selective)
         {
@@ -1012,7 +1011,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
                 tmp.begin(), ids.begin() + cnt2, ids.begin() + cnt2 + nElmt);
         }
 
-        vector<unsigned int> tmp2(nElmt);
+        std::vector<unsigned int> tmp2(nElmt);
         for (size_t j = 0; j < nElmt; ++j)
         {
             tmp2[j] = ids[cnt2+j];
@@ -1110,14 +1109,14 @@ void FieldIOHdf5::ImportFieldDef(
             // strip down the shapeString definition
             size_t loc;
             //---> this finds the first location of 'n'!
-            if (shapeString.find("Strips") != string::npos)
+            if (shapeString.find("Strips") != std::string::npos)
             {
                 def->m_homoStrips = true;
             }
 
-            if ((loc = shapeString.find_first_of("-")) != string::npos)
+            if ((loc = shapeString.find_first_of("-")) != std::string::npos)
             {
-                if (shapeString.find("Exp1D") != string::npos)
+                if (shapeString.find("Exp1D") != std::string::npos)
                 {
                     def->m_numHomogeneousDir = 1;
                 }

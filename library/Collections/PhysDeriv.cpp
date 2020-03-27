@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: PhysDeriv operator implementations
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
@@ -392,6 +393,8 @@ class PhysDeriv_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(wsp);
+
             const int nPhys   = m_expList[0]->GetTotPoints();
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
 
@@ -439,6 +442,8 @@ class PhysDeriv_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(wsp);
+
             const int nPhys   = m_expList[0]->GetTotPoints();
             Array<OneD, NekDouble> tmp;
 
@@ -520,9 +525,9 @@ class PhysDeriv_SumFac_Seg : public Operator
         {
             const int nqcol   = m_nquad0*m_numElmt;
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
-            ASSERTL1(input.num_elements() >= nqcol,
+            ASSERTL1(input.size() >= nqcol,
                      "Incorrect input size");
 
             Array<OneD, NekDouble> diff0(nqcol, wsp);
@@ -553,9 +558,9 @@ class PhysDeriv_SumFac_Seg : public Operator
         {
             const int nqcol   = m_nquad0*m_numElmt;
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
-            ASSERTL1(input.num_elements() >= nqcol,
+            ASSERTL1(input.size() >= nqcol,
                      "Incorrect input size");
 
             Array<OneD, NekDouble> diff0(nqcol, wsp);
@@ -622,9 +627,9 @@ class PhysDeriv_SumFac_Quad : public Operator
             const int nqtot   = m_nquad0 * m_nquad1;
             const int nqcol   = nqtot*m_numElmt;
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
-            ASSERTL1(input.num_elements() >= nqcol,
+            ASSERTL1(input.size() >= nqcol,
                      "Incorrect input size");
 
             Array<OneD, NekDouble> diff0(nqcol, wsp             );
@@ -668,9 +673,9 @@ class PhysDeriv_SumFac_Quad : public Operator
             const int nqtot   = m_nquad0 * m_nquad1;
             const int nqcol   = nqtot*m_numElmt;
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
-            ASSERTL1(input.num_elements() >= nqcol,
+            ASSERTL1(input.size() >= nqcol,
                      "Incorrect input size");
 
             Array<OneD, NekDouble> diff0(nqcol, wsp             );
@@ -751,9 +756,9 @@ class PhysDeriv_SumFac_Tri : public Operator
             const int nqtot   = m_nquad0 * m_nquad1;
             const int nqcol   = nqtot*m_numElmt;
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
-            ASSERTL1(input.num_elements() >= nqcol,
+            ASSERTL1(input.size() >= nqcol,
                      "Incorrect input size");
 
             Array<OneD, NekDouble> diff0(nqcol, wsp             );
@@ -808,9 +813,9 @@ class PhysDeriv_SumFac_Tri : public Operator
             const int nqtot   = m_nquad0 * m_nquad1;
             const int nqcol   = nqtot*m_numElmt;
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
-            ASSERTL1(input.num_elements() >= nqcol,
+            ASSERTL1(input.size() >= nqcol,
                      "Incorrect input size");
 
             Array<OneD, NekDouble> diff0(nqcol, wsp             );
@@ -1593,11 +1598,11 @@ class PhysDeriv_SumFac_Pyr : public Operator
                 // dxi1 = 2/(1-eta_2) d Eta_1
                 Vmath::Vmul(nPhys,&m_fac0[0],1,Diff[1].get()+cnt,1,
                             Diff[1].get()+cnt,1);
-                
+
                 // dxi2 = (1+eta0)/(1-eta_2) d Eta_0 + d/dEta2;
                 Vmath::Vvtvp(nPhys,&m_fac1[0],1,Diff[0].get()+cnt,1,
                              Diff[2].get()+cnt,1,Diff[2].get()+cnt,1);
-                // dxi2 += (1+eta1)/(1-eta_2) d Eta_1 
+                // dxi2 += (1+eta1)/(1-eta_2) d Eta_1
                 Vmath::Vvtvp(nPhys,&m_fac2[0],1,Diff[1].get()+cnt,1,
                              Diff[2].get()+cnt,1,Diff[2].get()+cnt,1);
                 cnt += nPhys;
@@ -1662,7 +1667,7 @@ class PhysDeriv_SumFac_Pyr : public Operator
                 // dxi1 = 2/(1-eta_2) d Eta_1
                 Vmath::Vmul(nPhys,&m_fac0[0],1,Diff[1].get()+cnt,1,
                             Diff[1].get()+cnt,1);
-                
+
                 // dxi2 = (1+eta0)/(1-eta_2) d Eta_0 + d/dEta2;
                 Vmath::Vvtvp(nPhys,&m_fac1[0],1,Diff[0].get()+cnt,1,
                              Diff[2].get()+cnt,1,Diff[2].get()+cnt,1);

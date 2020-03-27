@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include "PressureMachTemperatureBC.h"
 
 using namespace std;
@@ -55,7 +56,7 @@ PressureMachTemperatureBC::PressureMachTemperatureBC(
            const int cnt)
     : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
-    int nvariables = m_fields.num_elements();
+    int nvariables = m_fields.size();
     int numBCPts = m_fields[0]->
         GetBndCondExpansions()[m_bcRegion]->GetNpoints();
 
@@ -131,7 +132,9 @@ void PressureMachTemperatureBC::v_Apply(
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
 {
-    int nvariables = m_fields.num_elements();
+    boost::ignore_unused(Fwd, physarray, time);
+
+    int nvariables = m_fields.size();
     int numBCPts = m_fields[0]->
         GetBndCondExpansions()[m_bcRegion]->GetNpoints();
     // Copy conserved variables to boundary condition

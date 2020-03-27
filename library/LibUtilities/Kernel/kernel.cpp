@@ -10,7 +10,6 @@
 // University of Utah (USA) and Department of Aeronautics, Imperial
 // College London (UK).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -54,11 +53,11 @@ namespace Nektar
 			Array<TwoD,NekDouble> out_final(k_order,k_order);
 
 			int i,j;
-				
+
 			if(k_order == 1.0)
 			{
 				b_spline[0][0] = 1.0;
-						
+
 			}else if(k_order == 2)
 			{
 				NekDouble out[2][2] = {{1.0,0.0},
@@ -70,7 +69,7 @@ namespace Nektar
 						out_final[i][j] = out[i][j];
 					}
 				}
-				
+
 			}else if(k_order == 3)
 			{
 				NekDouble out[3][3] = {{0.5, 0.0, 0.0},
@@ -83,7 +82,7 @@ namespace Nektar
 						out_final[i][j] = out[i][j];
 					}
 				}
-				
+
 			}else if(k_order == 4)
 			{
 				NekDouble out[4][4] = {{1.0/6.0, 0, 0, 0},
@@ -163,21 +162,21 @@ namespace Nektar
 						out_final[i][j] = out[i][j];
 					}
 				}
-			
+
 			}
 
 			b_spline = out_final;
-			
+
 			ASSERTL0(k_order <= 8, "Order is not supported");
-			
-			
+
+
 		}
 
 		void Kernel::UpdateKernelCoeffs()
 		{
 			int i;
 			Array<OneD,NekDouble> out_final(k_ncoeffs);
-				
+
 			if (k_order == 2)
 			{
 				NekDouble out[3] = {-1.0/12, 7.0/6, -1.0/12};
@@ -258,7 +257,7 @@ namespace Nektar
 			k_center = x_value;
 		}
 
-		void Kernel::FindMeshUnderKernel(Array<OneD,NekDouble> &inarray, NekDouble h, 
+		void Kernel::FindMeshUnderKernel(Array<OneD,NekDouble> &inarray, NekDouble h,
 										 Array<OneD,NekDouble> &outarray)
 		{
 			int j;
@@ -273,15 +272,15 @@ namespace Nektar
 				mesh_breaks[j] = mesh_breaks[j-1]+h;
 			}
 			outarray = mesh_breaks;
-				
+
 		}
 
-		void Kernel::EvaluateKernel(Array<OneD,NekDouble> inarray,NekDouble h, 
+		void Kernel::EvaluateKernel(Array<OneD,NekDouble> inarray,NekDouble h,
 									Array<OneD,NekDouble> &outarray)
 		{
 			int gamma,i;
 			int degree = k_order - 1;
-			int nvalues = inarray.num_elements();
+			int nvalues = inarray.size();
 			Array<OneD,NekDouble> bs_values(nvalues);
 
 			for(i = 0; i < nvalues; i++ )
@@ -301,7 +300,7 @@ namespace Nektar
 					outarray[i] += k_coeffs[cIndex]*bs_values[i];
 				}
 			}
-			
+
 		}
 
 		void Kernel::EvaluateBspline(Array<OneD,NekDouble> inarray, NekDouble h,
@@ -311,17 +310,17 @@ namespace Nektar
 			NekDouble min_value = -k_order/2.0;
 			NekDouble max_value = k_order/2.0;
 
-			int nvalues = inarray.num_elements();
-			
+			int nvalues = inarray.size();
+
 			// Make a copy for further modifications
 			Array<OneD,NekDouble> inarray_cp(nvalues);
-			
+
 			for(i = 0; i < nvalues; i++)
 			{
 				inarray_cp[i] = inarray[i] - offset;
 				inarray_cp[i] = inarray_cp[i]/h;
 				int interval = (int)floor(inarray_cp[i] - min_value); // determines to which interval of the bspline the value belongs
-				
+
 				if(inarray_cp[i] >= min_value && inarray_cp[i] <= max_value)
 				{
 					if(interval >= k_order)
@@ -335,7 +334,7 @@ namespace Nektar
 				{
 					outarray[i] = 0.0;
 				}
-				
+
 			}
 		}
 
@@ -344,13 +343,13 @@ namespace Nektar
 			int i;
 			int deg = k_order - 1;
 			NekDouble poly_value = b_spline[interval][0];
-			
+
 			for(i = 0; i < deg; i++)
 			{
 				poly_value = poly_value*x_value + b_spline[interval][i+1];
-				
+
 			}
-			
+
 			return poly_value;
 		}
 
@@ -360,17 +359,17 @@ namespace Nektar
 			int j;
 			int kIndex = 0; // Keeps track of the kernel breaks
 			int mIndex = 0; // Keeps track of the mesh breaks
-			for(j = 0; j < outarray.num_elements(); j++)
+			for(j = 0; j < outarray.size(); j++)
 			{
-				if(mIndex >= inarray2.num_elements())
+				if(mIndex >= inarray2.size())
 				{
 					outarray[j] = inarray1[kIndex];
 					kIndex++;
-				}else if(kIndex >= inarray1.num_elements())
+				}else if(kIndex >= inarray1.size())
 				{
 					outarray[j] = inarray2[mIndex];
 					mIndex++;
-					
+
 				}else if(inarray1[kIndex] < inarray2[mIndex])
 				{
 					outarray[j] = inarray1[kIndex];
@@ -380,9 +379,9 @@ namespace Nektar
 					outarray[j] = inarray2[mIndex];
 					mIndex++;
 				}
-			
+
 			}
 		}
-	
+
 	}// end of namespace
 }// end of namespace

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Isentropic vortex boundary condition
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include "IsentropicVortexBC.h"
 
@@ -60,7 +61,7 @@ void IsentropicVortexBC::v_Apply(
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
 {
-    int nvariables = physarray.num_elements();
+    int nvariables = physarray.size();
 
     const Array<OneD, const int> &bndTraceMap = m_fields[0]->GetTraceBndMap();
     // loop over Boundary Regions
@@ -87,7 +88,7 @@ void IsentropicVortexBC::v_Apply(
 
         for (int i = 0; i < nvariables; ++i)
         {
-            Vmath::Vcopy(npoints, &Fwd[i][id2], 1, 
+            Vmath::Vcopy(npoints, &Fwd[i][id2], 1,
                          &(m_fields[i]->GetBndCondExpansions()[m_bcRegion]->
                          UpdatePhys())[id1], 1);
         }
@@ -102,7 +103,9 @@ void IsentropicVortexBC::EvaluateIsentropicVortex(
     NekDouble                                   time,
     const int                                   o)
 {
-    int nq = x.num_elements();
+    boost::ignore_unused(z);
+
+    int nq = x.size();
 
     // Flow parameters
     const NekDouble x0    = 5.0;

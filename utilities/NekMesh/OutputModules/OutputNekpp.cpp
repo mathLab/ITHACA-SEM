@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,6 +36,10 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -44,7 +47,6 @@ using namespace std;
 namespace io = boost::iostreams;
 
 #include <tinyxml.h>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/PointGeom.h>
 #include <NekMeshUtils/MeshElements/Element.h>
@@ -87,9 +89,11 @@ OutputNekpp::~OutputNekpp()
 template <typename T> void TestElmts(
     const std::map<int, std::shared_ptr<T> >  &geomMap,
     SpatialDomains::MeshGraphSharedPtr        &graph,
-    LibUtilities::AnalyticExpressionEvaluator &strEval,
+    LibUtilities::Interpreter                 &strEval,
     int                                        exprId)
 {
+    boost::ignore_unused(graph);
+
     for (auto &geomIt : geomMap)
     {
         SpatialDomains::GeometrySharedPtr geom = geomIt.second;

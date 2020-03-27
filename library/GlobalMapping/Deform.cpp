@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -411,7 +410,7 @@ namespace GlobalMapping {
         }
 
         // Reset geometry information
-        for (i = 0; i < fields.num_elements(); ++i)
+        for (i = 0; i < fields.size(); ++i)
         {
             fields[i]->Reset();
         }

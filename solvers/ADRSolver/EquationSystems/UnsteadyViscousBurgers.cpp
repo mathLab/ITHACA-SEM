@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #include <iostream>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <ADRSolver/EquationSystems/UnsteadyViscousBurgers.h>
 #include <StdRegions/StdQuadExp.h>
 
@@ -46,7 +47,7 @@ namespace Nektar
     = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
                 "UnsteadyViscousBurgers",
                 UnsteadyViscousBurgers::create);
-    
+
     UnsteadyViscousBurgers::UnsteadyViscousBurgers(
         const LibUtilities::SessionReaderSharedPtr& pSession,
         const SpatialDomains::MeshGraphSharedPtr& pGraph)
@@ -56,18 +57,18 @@ namespace Nektar
     {
         m_planeNumber = 0;
     }
-    
+
     /**
-     * @brief Initialisation object for the unsteady linear advection 
+     * @brief Initialisation object for the unsteady linear advection
      * diffusion equation.
      */
     void UnsteadyViscousBurgers::v_InitObject()
     {
         AdvectionSystem::v_InitObject();
-        
+
         m_session->LoadParameter("wavefreq",   m_waveFreq, 0.0);
         m_session->LoadParameter("epsilon",    m_epsilon,  0.0);
-        
+
         m_session->MatchSolverInfo(
             "SpectralVanishingViscosity", "True", m_useSpecVanVisc, false);
         m_session->MatchSolverInfo(
@@ -76,17 +77,17 @@ namespace Nektar
         {
             m_useSpecVanVisc = true;
         }
-        
+
         if(m_useSpecVanVisc)
         {
             m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
             m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
-        }        
+        }
 
         // Type of advection and diffusion classes to be used
         switch(m_projectionType)
         {
-            // Discontinuous field 
+            // Discontinuous field
             case MultiRegions::eDiscontinuous:
             {
                 ASSERTL0(false,"Need to implement for DG");
@@ -95,7 +96,7 @@ namespace Nektar
 
                 // Advection term
                 string advName;
-                string riemName; 
+                string riemName;
                 m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
                 m_advObject = SolverUtils::GetAdvectionFactory().
                     CreateInstance(advName, advName);
@@ -106,7 +107,7 @@ namespace Nektar
                     CreateInstance(riemName, m_session);
                 m_advObject->SetRiemannSolver(m_riemannSolver);
                 m_advObject->InitObject      (m_session, m_fields);
-                
+
                 // Diffusion term
                 std::string diffName;
                 m_session->LoadSolverInfo("DiffusionType", diffName, "LDG");
@@ -117,23 +118,23 @@ namespace Nektar
                 m_diffusion->InitObject(m_session, m_fields);
                 break;
             }
-            // Continuous field 
+            // Continuous field
             case MultiRegions::eGalerkin:
             case MultiRegions::eMixed_CG_Discontinuous:
             {
                 // Advection term
                 std::string advName;
-                m_session->LoadSolverInfo("AdvectionType", advName, 
+                m_session->LoadSolverInfo("AdvectionType", advName,
                                           "NonConservative");
                 m_advObject = SolverUtils::GetAdvectionFactory().
                     CreateInstance(advName, advName);
                 m_advObject->SetFluxVector(&UnsteadyViscousBurgers::
                                            GetFluxVectorAdv, this);
-                
+
                 if(m_useSpecVanViscVarDiff)
                 {
-                    Array<OneD, Array<OneD, NekDouble> > vel(m_fields.num_elements());
-                    for(int i = 0; i < m_fields.num_elements(); ++i)
+                    Array<OneD, Array<OneD, NekDouble> > vel(m_fields.size());
+                    for(int i = 0; i < m_fields.size(); ++i)
                     {
                         vel[i] = m_fields[i]->UpdatePhys();
                     }
@@ -154,35 +155,35 @@ namespace Nektar
                 break;
             }
         }
-        
+
         // Forcing terms
         m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
-                                    m_fields, m_fields.num_elements());
-        
+                                    m_fields, m_fields.size());
+
         m_ode.DefineImplicitSolve (&UnsteadyViscousBurgers::DoImplicitSolve, this);
         m_ode.DefineOdeRhs        (&UnsteadyViscousBurgers::DoOdeRhs,        this);
-        
+
         if (m_projectionType == MultiRegions::eDiscontinuous &&
             m_explicitDiffusion == 1)
-        {    
+        {
             m_ode.DefineProjection(&UnsteadyViscousBurgers::DoOdeProjection, this);
         }
     }
-	
+
     /**
      * @brief Unsteady linear advection diffusion equation destructor.
      */
     UnsteadyViscousBurgers::~UnsteadyViscousBurgers()
     {
     }
-    
+
     /**
-     * @brief Get the normal velocity for the unsteady linear advection 
+     * @brief Get the normal velocity for the unsteady linear advection
      * diffusion equation.
      */
     Array<OneD, NekDouble> &UnsteadyViscousBurgers::GetNormalVelocity(
                    Array<OneD, Array<OneD, NekDouble> >&inarray)
-    {   
+    {
         // Number of trace (interface) points
         int i;
         int nTracePts = GetTraceNpoints();
@@ -194,7 +195,7 @@ namespace Nektar
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
 
-        for (i = 0; i < inarray.num_elements(); ++i)
+        for (i = 0; i < inarray.size(); ++i)
         {
             m_fields[0]->ExtractTracePhys(inarray[i], tmp);
 
@@ -204,14 +205,14 @@ namespace Nektar
                          m_traceVn, 1,
                          m_traceVn, 1);
         }
-        
+
         return m_traceVn;
     }
-    
+
     /**
-     * @brief Compute the right-hand side for the unsteady linear advection 
+     * @brief Compute the right-hand side for the unsteady linear advection
      * diffusion problem.
-     * 
+     *
      * @param inarray    Given fields.
      * @param outarray   Calculated solution.
      * @param time       Time.
@@ -220,30 +221,30 @@ namespace Nektar
                                           const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                                           Array<OneD,        Array<OneD, NekDouble> >&outarray,
                                           const NekDouble time)
-    {  
+    {
         // Number of fields (variables of the problem)
-        int nVariables = inarray.num_elements();
-        
+        int nVariables = inarray.size();
+
         // Number of solution points
         int nSolutionPts = GetNpoints();
-        
+
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nVariables);
-        
+
         for (int i = 0; i < nVariables; ++i)
         {
             outarrayDiff[i] = Array<OneD, NekDouble>(nSolutionPts, 0.0);
         }
-        
+
         // RHS computation using the new advection base class
         m_advObject->Advect(nVariables, m_fields, inarray,
                             inarray, outarray, time);
-        
+
         // Negate the RHS
         for (int i = 0; i < nVariables; ++i)
         {
             Vmath::Neg(nSolutionPts, outarray[i], 1);
         }
-        
+
         // No explicit diffusion for CG
         if (m_projectionType == MultiRegions::eDiscontinuous)
         {
@@ -251,11 +252,11 @@ namespace Nektar
 
             for (int i = 0; i < nVariables; ++i)
             {
-                Vmath::Vadd(nSolutionPts, &outarray[i][0], 1, 
+                Vmath::Vadd(nSolutionPts, &outarray[i][0], 1,
                             &outarrayDiff[i][0], 1, &outarray[i][0], 1);
             }
         }
-        
+
         // Add forcing terms
         for (auto &x : m_forcing)
         {
@@ -263,11 +264,11 @@ namespace Nektar
             x->Apply(m_fields, inarray, outarray, time);
         }
     }
-    
+
     /**
-     * @brief Compute the projection for the unsteady advection 
+     * @brief Compute the projection for the unsteady advection
      * diffusion problem.
-     * 
+     *
      * @param inarray    Given fields.
      * @param outarray   Calculated solution.
      * @param time       Time.
@@ -278,7 +279,7 @@ namespace Nektar
                                                  const NekDouble time)
     {
         int i;
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         SetBoundaryConditions(time);
         switch(m_projectionType)
         {
@@ -286,7 +287,7 @@ namespace Nektar
             {
                 // Just copy over array
                 int npoints = GetNpoints();
-                
+
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
@@ -296,7 +297,7 @@ namespace Nektar
         case MultiRegions::eGalerkin:
         case MultiRegions::eMixed_CG_Discontinuous:
             {
-                // Do nothing for the moment. 
+                // Do nothing for the moment.
             }
         default:
             {
@@ -305,10 +306,10 @@ namespace Nektar
             }
         }
     }
-    
-    
-    /* @brief Compute the diffusion term implicitly. 
-     * 
+
+
+    /* @brief Compute the diffusion term implicitly.
+     *
      * @param inarray    Given fields.
      * @param outarray   Calculated solution.
      * @param time       Time.
@@ -320,12 +321,12 @@ namespace Nektar
                                                  const NekDouble time,
                                                  const NekDouble lambda)
     {
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         int nq = m_fields[0]->GetNpoints();
-		
+
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = 1.0/lambda/m_epsilon;
-        
+
         if(m_useSpecVanVisc)
         {
             factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
@@ -334,12 +335,12 @@ namespace Nektar
 
         Array<OneD, Array< OneD, NekDouble> > F(nvariables);
         F[0] = Array<OneD, NekDouble> (nq*nvariables);
-        
+
         for (int n = 1; n < nvariables; ++n)
         {
             F[n] = F[n-1] + nq;
         }
-        
+
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}
         // outarray = output: nabla^2 \hat{Y}
@@ -347,21 +348,21 @@ namespace Nektar
         for (int i = 0; i < nvariables; ++i)
         {
             // Multiply 1.0/timestep/lambda
-            Vmath::Smul(nq, -factors[StdRegions::eFactorLambda], 
+            Vmath::Smul(nq, -factors[StdRegions::eFactorLambda],
                         inarray[i], 1, F[i], 1);
         }
-        
+
         //Setting boundary conditions
         SetBoundaryConditions(time);
-        
+
         if(m_useSpecVanViscVarDiff)
         {
             static int cnt = 0;
 
             if(cnt %10 == 0)
             {
-                Array<OneD, Array<OneD, NekDouble> > vel(m_fields.num_elements());
-                for(int i = 0; i < m_fields.num_elements(); ++i)
+                Array<OneD, Array<OneD, NekDouble> > vel(m_fields.size());
+                for(int i = 0; i < m_fields.size(); ++i)
                 {
                     m_fields[i]->ClearGlobalLinSysManager();
                     vel[i] = m_fields[i]->UpdatePhys();
@@ -373,16 +374,16 @@ namespace Nektar
         for (int i = 0; i < nvariables; ++i)
         {
             // Solve a system of equations with Helmholtz solver
-            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), 
+            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(),
                                    NullFlagList, factors, m_varCoeffLap);
-            
+
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), outarray[i]);
         }
     }
-    
+
     /**
      * @brief Return the flux vector for the advection part.
-     * 
+     *
      * @param physfield   Fields.
      * @param flux        Resulting flux.
      */
@@ -393,9 +394,9 @@ namespace Nektar
 
         const int nq = m_fields[0]->GetNpoints();
 
-        for (int i = 0; i < flux.num_elements(); ++i)
+        for (int i = 0; i < flux.size(); ++i)
         {
-            for (int j = 0; j < flux[0].num_elements(); ++j)
+            for (int j = 0; j < flux[0].size(); ++j)
             {
                 Vmath::Vmul(nq, physfield[i], 1, physfield[j], 1,
                             flux[i][j], 1);
@@ -405,7 +406,7 @@ namespace Nektar
 
     /**
      * @brief Return the flux vector for the diffusion part.
-     *      
+     *
      * @param i           Equation number.
      * @param j           Spatial direction.
      * @param physfield   Fields.
@@ -413,19 +414,26 @@ namespace Nektar
      * @param flux        Resulting flux.
      */
     void UnsteadyViscousBurgers::GetFluxVectorDiff(
-        const int i, 
-        const int j,
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-              Array<OneD, Array<OneD, NekDouble> > &derivatives,
-              Array<OneD, Array<OneD, NekDouble> > &flux)
+        const Array<OneD, Array<OneD, NekDouble> > &inarray,
+        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&viscousTensor)
     {
-        for (int k = 0; k < flux.num_elements(); ++k)
+        boost::ignore_unused(inarray);
+
+        unsigned int nDim = qfield.size();
+        unsigned int nConvectiveFields = qfield[0].size();
+        unsigned int nPts = qfield[0][0].size();
+
+        for (unsigned int j = 0; j < nDim; ++j)
         {
-            Vmath::Zero(GetNpoints(), flux[k], 1);
+            for (unsigned int i = 0; i < nConvectiveFields; ++i)
+            {
+                Vmath::Smul(nPts, m_epsilon, qfield[j][i], 1,
+                    viscousTensor[j][i], 1 );
+            }
         }
-        Vmath::Vcopy(GetNpoints(), physfield[i], 1, flux[j], 1);
     }
-    
+
     void UnsteadyViscousBurgers::v_GenerateSummary(
             SolverUtils::SummaryList& s)
     {

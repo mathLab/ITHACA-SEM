@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Compressible flow system base class with auxiliary functions
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 
@@ -89,11 +90,11 @@ namespace Nektar
 
         // Forcing terms for the sponge region
         m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
-                                        m_fields, m_fields.num_elements());
+                                        m_fields, m_fields.size());
 
         // User-defined boundary conditions
         int cnt = 0;
-        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+        for (int n = 0; n < m_fields[0]->GetBndConditions().size(); ++n)
         {
             std::string type =
                 m_fields[0]->GetBndConditions()[n]->GetUserDefined();
@@ -224,7 +225,7 @@ namespace Nektar
         const NekDouble                                   time)
     {
         int i;
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         int npoints    = GetNpoints();
         int nTracePts  = GetTraceTotPoints();
 
@@ -300,7 +301,7 @@ namespace Nektar
         const NekDouble                                   time)
     {
         int i;
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
 
         switch(m_projectionType)
         {
@@ -344,7 +345,7 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
         const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
     {
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
 
         m_advObject->Advect(nvariables, m_fields, advVel, inarray,
@@ -375,7 +376,7 @@ namespace Nektar
             NekDouble                                         time)
     {
         int nTracePts  = GetTraceTotPoints();
-        int nvariables = physarray.num_elements();
+        int nvariables = physarray.size();
 
         Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
         for (int i = 0; i < nvariables; ++i)
@@ -405,8 +406,8 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
         int i, j;
-        int nq = physfield[0].num_elements();
-        int nVariables = m_fields.num_elements();
+        int nq = physfield[0].size();
+        int nVariables = m_fields.size();
 
         Array<OneD, NekDouble> pressure(nq);
         Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
@@ -467,8 +468,8 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
         int i, j;
-        int nq = physfield[0].num_elements();
-        int nVariables = m_fields.num_elements();
+        int nq = physfield[0].size();
+        int nVariables = m_fields.size();
 
         // Factor to rescale 1d points in dealiasing
         NekDouble OneDptscale = 2;
@@ -556,6 +557,8 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD, NekDouble> &tstep)
     {
+        boost::ignore_unused(inarray);
+
         int n;
         int nElements = m_fields[0]->GetExpSize();
 
@@ -604,6 +607,8 @@ namespace Nektar
         bool      dumpInitialConditions,
         const int domain)
     {
+        boost::ignore_unused(domain);
+
         EquationSystem::v_SetInitialConditions(initialtime, false);
 
         // insert white noise in initial condition
@@ -612,7 +617,7 @@ namespace Nektar
         Array<OneD, NekDouble> noise(phystot);
 
         m_session->LoadParameter("Noise", Noise,0.0);
-        int m_nConvectiveFields =  m_fields.num_elements();
+        int m_nConvectiveFields =  m_fields.size();
 
         if (Noise > 0.0)
         {
@@ -645,7 +650,7 @@ namespace Nektar
         int nTotQuadPoints = GetTotPoints();
         int n_element      = m_fields[0]->GetExpSize();
         int expdim         = m_fields[0]->GetGraph()->GetMeshDimension();
-        int nfields        = m_fields.num_elements();
+        int nfields        = m_fields.size();
         int offset;
         Array<OneD, NekDouble> tmp;
 
@@ -822,9 +827,9 @@ namespace Nektar
         {
             const int nPhys   = m_fields[0]->GetNpoints();
             const int nCoeffs = m_fields[0]->GetNcoeffs();
-            Array<OneD, Array<OneD, NekDouble> > tmp(m_fields.num_elements());
+            Array<OneD, Array<OneD, NekDouble> > tmp(m_fields.size());
 
-            for (int i = 0; i < m_fields.num_elements(); ++i)
+            for (int i = 0; i < m_fields.size(); ++i)
             {
                 tmp[i] = m_fields[i]->GetPhys();
             }

@@ -8,7 +8,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -126,7 +125,7 @@ namespace Nektar
         m_tempSpace()
     {
         m_data = Array<OneD, DataType>(GetRequiredStorageSize());
-        CopyArrayN(d, m_data, m_data.num_elements());
+        CopyArrayN(d, m_data, m_data.size());
     }
 
     template<typename DataType>
@@ -148,7 +147,7 @@ namespace Nektar
         else
         {
             m_data = Array<OneD, DataType>(GetRequiredStorageSize());
-            CopyArrayN(d, m_data, m_data.num_elements());
+            CopyArrayN(d, m_data, m_data.size());
         }
     }
 
@@ -188,11 +187,11 @@ namespace Nektar
     template<typename DataType>
     typename NekMatrix<DataType, StandardMatrixTag>::ConstGetValueType NekMatrix<DataType, StandardMatrixTag>::operator()(unsigned int row, unsigned int column) const
     {
-        ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
+        ASSERTL2(row < this->GetRows(), std::string("Row ") + std::to_string(row) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetRows()) +
             std::string(" rows"));
-        ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
+        ASSERTL2(column < this->GetColumns(), std::string("Column ") + std::to_string(column) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetColumns()) +
             std::string(" columns"));
 
         return this->GetValue(row, column, this->GetTransposeFlag());
@@ -225,11 +224,11 @@ namespace Nektar
     template<typename DataType>
     typename boost::call_traits<DataType>::const_reference NekMatrix<DataType, StandardMatrixTag>::GetValue(unsigned int row, unsigned int column) const
     {
-        ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
+        ASSERTL2(row < this->GetRows(), std::string("Row ") + std::to_string(row) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetRows()) +
             std::string(" rows"));
-        ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
+        ASSERTL2(column < this->GetColumns(), std::string("Column ") + std::to_string(column) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetColumns()) +
             std::string(" columns"));
 
         return GetValue(row, column, this->GetTransposeFlag());
@@ -279,7 +278,7 @@ namespace Nektar
     {
         if( transpose == 'N' )
         {
-            return const_iterator(m_data.data(), m_data.data() + m_data.num_elements());
+            return const_iterator(m_data.data(), m_data.data() + m_data.size());
         }
         else
         {
@@ -298,7 +297,7 @@ namespace Nektar
     {
         if( transpose == 'N' )
         {
-            return const_iterator(m_data.data(), m_data.data() + m_data.num_elements(), true);
+            return const_iterator(m_data.data(), m_data.data() + m_data.size(), true);
         }
         else
         {
@@ -309,7 +308,7 @@ namespace Nektar
     template<typename DataType>
     unsigned int NekMatrix<DataType, StandardMatrixTag>::GetStorageSize() const
     {
-        return m_data.num_elements();
+        return m_data.size();
     }
 
     template<typename DataType>
@@ -450,7 +449,7 @@ namespace Nektar
     {
         return NekMatrix<DataType, StandardMatrixTag>(rhs, eWrapper);
     }
-    
+
     template<typename DataType>
     std::shared_ptr<NekMatrix<DataType, StandardMatrixTag> > NekMatrix<DataType, StandardMatrixTag>::CreateWrapper(const std::shared_ptr<NekMatrix<DataType, StandardMatrixTag> >& rhs)
     {
@@ -478,7 +477,7 @@ namespace Nektar
         if( m_wrapperType == eCopy )
         {
             unsigned int requiredStorageSize = GetRequiredStorageSize();
-            if( m_data.num_elements() > requiredStorageSize )
+            if( m_data.size() > requiredStorageSize )
             {
                 Array<OneD, DataType> newArray(requiredStorageSize);
                 CopyArrayN(m_data, newArray, requiredStorageSize);
@@ -496,10 +495,10 @@ namespace Nektar
     {
         if( m_wrapperType == eCopy  )
         {
-            if( m_data.num_elements() < requiredStorageSize )
+            if( m_data.size() < requiredStorageSize )
             {
                 Array<OneD, DataType> newData(requiredStorageSize);
-                std::copy(m_data.data(), m_data.data() + m_data.num_elements(), newData.data());
+                std::copy(m_data.data(), m_data.data() + m_data.size(), newData.data());
                 m_data = newData;
             }
         }
@@ -507,7 +506,7 @@ namespace Nektar
         {
             // If the current matrix is wrapped, then just copy over the top,
             // but the sizes of the two matrices must be the same.
-            ASSERTL0(m_data.num_elements() >= requiredStorageSize, "Wrapped NekMatrices must have the same dimension in operator=");
+            ASSERTL0(m_data.size() >= requiredStorageSize, "Wrapped NekMatrices must have the same dimension in operator=");
         }
     }
 
@@ -528,7 +527,7 @@ namespace Nektar
         else
         {
             m_data = Array<OneD, DataType>(GetRequiredStorageSize());
-            CopyArrayN(rhs.m_data, m_data, m_data.num_elements());
+            CopyArrayN(rhs.m_data, m_data, m_data.size());
         }
     }
 
@@ -550,7 +549,7 @@ namespace Nektar
         return NekMatrix<DataType, StandardMatrixTag>::SetValue(row, column, d);
     }
 
-    
+
 
     template<typename DataType>
     void NekMatrix<DataType, StandardMatrixTag>::SetSize(unsigned int rows, unsigned int cols)
@@ -558,23 +557,23 @@ namespace Nektar
         this->Resize(rows, cols);
 
         // Some places in Nektar++ access the matrix data array and
-        // use num_elements() to see how big it is.  When using
+        // use size() to see how big it is.  When using
         // expression templates, the data array's capacity is often larger
         // than the actual number of elements, so this statement is
         // required to report the correct number of elements.
         this->GetData().ChangeSize(this->GetRequiredStorageSize());
-        ASSERTL0(this->GetRequiredStorageSize() <= this->GetData().num_elements(), "Can't resize matrices if there is not enough capacity.");
+        ASSERTL0(this->GetRequiredStorageSize() <= this->GetData().size(), "Can't resize matrices if there is not enough capacity.");
     }
 
 
     template<typename DataType>
     typename NekMatrix<DataType, StandardMatrixTag>::Proxy NekMatrix<DataType, StandardMatrixTag>::operator()(unsigned int row, unsigned int column)
     {
-        ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
+        ASSERTL2(row < this->GetRows(), std::string("Row ") + std::to_string(row) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetRows()) +
             std::string(" rows"));
-        ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
+        ASSERTL2(column < this->GetColumns(), std::string("Column ") + std::to_string(column) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetColumns()) +
             std::string(" columns"));
 
         return (*this)(row, column, this->GetTransposeFlag());
@@ -598,11 +597,11 @@ namespace Nektar
     template<typename DataType>
     void NekMatrix<DataType, StandardMatrixTag>::SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
     {
-        ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
+        ASSERTL2(row < this->GetRows(), std::string("Row ") + std::to_string(row) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetRows()) +
             std::string(" rows"));
-        ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
+        ASSERTL2(column < this->GetColumns(), std::string("Column ") + std::to_string(column) +
+            std::string(" requested in a matrix with a maximum of ") + std::to_string(this->GetColumns()) +
             std::string(" columns"));
         SetValue(row, column, d, this->GetTransposeFlag());
     }
@@ -644,7 +643,7 @@ namespace Nektar
     {
         if( transpose == 'N' )
         {
-            return iterator(this->GetData().data(), this->GetData().data() + this->GetData().num_elements());
+            return iterator(this->GetData().data(), this->GetData().data() + this->GetData().size());
         }
         else
         {
@@ -663,7 +662,7 @@ namespace Nektar
     {
         if( transpose == 'N' )
         {
-            return iterator(this->GetData().data(), this->GetData().data() + this->GetData().num_elements(), true);
+            return iterator(this->GetData().data(), this->GetData().data() + this->GetData().size(), true);
         }
         else
         {
@@ -780,7 +779,7 @@ namespace Nektar
     }
 
     template<typename DataType>
-    NekMatrix<DataType, StandardMatrixTag> NekMatrix<DataType, StandardMatrixTag>::operator-() const 
+    NekMatrix<DataType, StandardMatrixTag> NekMatrix<DataType, StandardMatrixTag>::operator-() const
     {
         NekMatrix<DataType, StandardMatrixTag> result(*this);
         NegateInPlace(result);
@@ -790,14 +789,14 @@ namespace Nektar
     template<typename DataType>
     NekMatrix<DataType, StandardMatrixTag>& NekMatrix<DataType, StandardMatrixTag>::operator*=(const DataType& s)
     {
-        for(unsigned int i = 0; i < this->GetPtr().num_elements(); ++i)
+        for(unsigned int i = 0; i < this->GetPtr().size(); ++i)
         {
             this->GetPtr()[i] *= s;
         }
         return *this;
     }
 
-    
+
     template<typename DataType>
     NekMatrix<DataType, StandardMatrixTag>
     Transpose(NekMatrix<DataType, StandardMatrixTag>& rhs)

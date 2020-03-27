@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
+
 #include <LinearElasticSolver/EquationSystems/CoupledAssemblyMap.h>
 #include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <SpatialDomains/MeshGraph.h>
@@ -40,8 +43,6 @@
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
-
-#include <iomanip>
 
 using namespace std;
 
@@ -70,6 +71,8 @@ CoupledAssemblyMap::CoupledAssemblyMap(
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields) :
     AssemblyMapCG(pSession)
 {
+    boost::ignore_unused(graph, boundaryConditions);
+
     int nVel = fields[0]->GetCoordim(0);
 
     // Multi-level static condensation doesn't work yet.
@@ -100,7 +103,7 @@ CoupledAssemblyMap::CoupledAssemblyMap(
 
     // Set up local to global and boundary condition maps.
     const int nLocBndCondDofs = cgMap->
-        GetBndCondCoeffsToGlobalCoeffsMap().num_elements() * nVel;
+        GetBndCondCoeffsToGlobalCoeffsMap().size() * nVel;
 
     // Allocate storage for local to global maps.
     m_localToGlobalMap               =
@@ -212,7 +215,7 @@ CoupledAssemblyMap::CoupledAssemblyMap(
         }
     }
 
-    for (i = 0; i < m_localToGlobalMap.num_elements(); ++i)
+    for (i = 0; i < m_localToGlobalMap.size(); ++i)
     {
         ASSERTL1(m_localToGlobalMap[i] != -1, "Consistency error");
     }

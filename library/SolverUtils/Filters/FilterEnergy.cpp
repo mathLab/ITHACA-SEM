@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/Filters/FilterEnergy.h>
 #include <SolverUtils/Filters/FilterInterfaces.hpp>
@@ -89,7 +90,7 @@ FilterEnergy::FilterEnergy(
     // OutputFrequency
     it = pParams.find("OutputFrequency");
     ASSERTL0(it != pParams.end(), "Missing parameter 'OutputFrequency'.");
-    LibUtilities::Equation equ(m_session->GetExpressionEvaluator(), it->second);
+    LibUtilities::Equation equ(m_session->GetInterpreter(), it->second);
     m_outputFrequency = round(equ.Evaluate());
 }
 
@@ -105,9 +106,14 @@ void FilterEnergy::v_Initialise(
     m_index = -1;
     MultiRegions::ExpListSharedPtr areaField;
 
+    ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e1D,
+             "1D expansion not supported for energy filter");
+
+    ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e2D,
+             "2D expansion not supported for energy filter");
+
     ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e3DH2D,
-             "Homogeneous 2D expansion not supported"
-             "for energy filter");
+             "Homogeneous 2D expansion not supported for energy filter");
 
     if (pFields[0]->GetExpType() == MultiRegions::e3DH1D)
     {
@@ -158,8 +164,8 @@ void FilterEnergy::v_Update(
     ASSERTL0(fluidEqu, "Energy filter is incompatible with this solver.");
 
     // Store physical values in an array
-    Array<OneD, Array<OneD, NekDouble> > physfields(pFields.num_elements());
-    for(i = 0; i < pFields.num_elements(); ++i)
+    Array<OneD, Array<OneD, NekDouble> > physfields(pFields.size());
+    for(i = 0; i < pFields.size(); ++i)
     {
         physfields[i] = pFields[i]->GetPhys();
     }
@@ -269,6 +275,7 @@ void FilterEnergy::v_Finalise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
+    boost::ignore_unused(pFields, time);
     m_outFile.close();
 }
 

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Laplace.cpp
+// File CheckedCast.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -28,58 +28,42 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Laplace solve routines.
+// Description: simple routines to check if the casting is narrowing
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "Laplace.h"
+#ifndef NEKTAR_LIB_UTILITIES_CHECKEDCAST_H
+#define NEKTAR_LIB_UTILITIES_CHECKEDCAST_H
 
-std::string Laplace::className = GetEquationSystemFactory().
-    RegisterCreatorFunction("Laplace", Laplace::create);
+#include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <limits>
+#include <type_traits>
 
-Laplace::Laplace(
-    const LibUtilities::SessionReaderSharedPtr& pSession,
-    const SpatialDomains::MeshGraphSharedPtr& pGraph)
-    : EquationSystem(pSession, pGraph),
-      m_factors()
+namespace Nektar
 {
-    m_factors[StdRegions::eFactorLambda] = 0.0;
-    m_factors[StdRegions::eFactorTau] = 1.0;
+namespace LibUtilities
+{
+/// checked cast from float types only to int types
+template
+<
+    class To, class Ti,
+    class = typename std::enable_if
+    <
+        std::is_floating_point<typename std::remove_reference<Ti>::type>::value
+        && std::is_integral <typename std::remove_reference<To>::type>::value
+    >::type
+>
+inline LIB_UTILITIES_EXPORT To checked_cast(const Ti param)
+{
+    Ti min = std::numeric_limits<To>::min();
+    Ti max = std::numeric_limits<To>::max();
+    ASSERTL0(param >= min, "Casting would narrow (underflow).");
+    ASSERTL0(param <= max, "Casting would narrow (overflow).");
+    return static_cast<To>(param);
 }
 
-void Laplace::v_InitObject()
-{
-    EquationSystem::v_InitObject();
+}
 }
 
-Laplace::~Laplace()
-{
-
-}
-
-void Laplace::v_GenerateSummary(SolverUtils::SummaryList& s)
-{
-    EquationSystem::SessionSummary(s);
-    SolverUtils::AddSummaryItem(s, "Lambda",
-                                m_factors[StdRegions::eFactorLambda]);
-}
-
-void Laplace::v_DoSolve()
-{
-    for(int i = 0; i < m_fields.size(); ++i)
-    {
-        // Zero field so initial conditions are zero
-        Vmath::Zero(m_fields[i]->GetNcoeffs(),
-                    m_fields[i]->UpdateCoeffs(), 1);
-        m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
-                               m_fields[i]->UpdateCoeffs(),
-                               NullFlagList,
-                               m_factors);
-        m_fields[i]->SetPhysState(false);
-    }
-}
-
-Array<OneD, bool> Laplace::v_GetSystemSingularChecks()
-{
-    return Array<OneD, bool>(m_session->GetVariables().size(), true);
-}
+#endif

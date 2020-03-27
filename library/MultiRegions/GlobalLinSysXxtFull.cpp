@@ -90,7 +90,7 @@ namespace Nektar
                     const AssemblyMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
-            bool dirForcCalculated = (bool) pDirForcing.num_elements();
+            bool dirForcCalculated = (bool) pDirForcing.size();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
 
@@ -254,7 +254,7 @@ namespace Nektar
                             m_Ar[k] *= vMapSign[iCount+i]*vMapSign[iCount+j];
                         }
                     }
-                    
+
                     // Dirichlet DOFs are not included in the solve, so we set
                     // these to the special XXT id=0.
                     if (gid1 < numDirBnd)

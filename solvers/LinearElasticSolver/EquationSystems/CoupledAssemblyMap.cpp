@@ -103,7 +103,7 @@ CoupledAssemblyMap::CoupledAssemblyMap(
 
     // Set up local to global and boundary condition maps.
     const int nLocBndCondDofs = cgMap->
-        GetBndCondCoeffsToGlobalCoeffsMap().num_elements() * nVel;
+        GetBndCondCoeffsToGlobalCoeffsMap().size() * nVel;
 
     // Allocate storage for local to global maps.
     m_localToGlobalMap               =
@@ -215,7 +215,7 @@ CoupledAssemblyMap::CoupledAssemblyMap(
         }
     }
 
-    for (i = 0; i < m_localToGlobalMap.num_elements(); ++i)
+    for (i = 0; i < m_localToGlobalMap.size(); ++i)
     {
         ASSERTL1(m_localToGlobalMap[i] != -1, "Consistency error");
     }

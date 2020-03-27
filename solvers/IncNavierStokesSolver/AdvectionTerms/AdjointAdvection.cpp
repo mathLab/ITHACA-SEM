@@ -65,11 +65,11 @@ void AdjointAdvection::v_Advect(
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
-    ASSERTL1(nConvectiveFields == inarray.num_elements(),
+    ASSERTL1(nConvectiveFields == inarray.size(),
              "Number of convective fields and Inarray are not compatible");
 
     int nPointsTot  = fields[0]->GetNpoints();
-    int ndim        = advVel.num_elements();
+    int ndim        = advVel.size();
     int nBaseDerivs = (m_halfMode || m_singleMode) ? 2 : m_spacedim;
     int nDerivs     = (m_halfMode) ? 2 : m_spacedim;
 

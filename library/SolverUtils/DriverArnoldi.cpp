@@ -76,13 +76,13 @@ void DriverArnoldi::v_InitObject(ostream &out)
     {
         m_period  = m_session->GetParameter("TimeStep")
                   * m_session->GetParameter("NumSteps");
-        m_nfields = m_equ[0]->UpdateFields().num_elements() - 1;
+        m_nfields = m_equ[0]->UpdateFields().size() - 1;
 
     }
     else
     {
         m_period  = 1.0;
-        m_nfields = m_equ[0]->UpdateFields().num_elements();
+        m_nfields = m_equ[0]->UpdateFields().size();
     }
 
     if(m_session->DefinesSolverInfo("ModeType") &&
@@ -264,7 +264,7 @@ void DriverArnoldi::WriteFld(std::string file, Array<OneD, NekDouble> coeffs)
     std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_nfields);
 
     int ncoeffs = m_equ[0]->UpdateFields()[0]->GetNcoeffs();
-    ASSERTL1(coeffs.num_elements() >= ncoeffs*m_nfields,"coeffs is not of sufficient size");
+    ASSERTL1(coeffs.size() >= ncoeffs*m_nfields,"coeffs is not of sufficient size");
 
     for(int i = 0; i < m_nfields; ++i)
     {

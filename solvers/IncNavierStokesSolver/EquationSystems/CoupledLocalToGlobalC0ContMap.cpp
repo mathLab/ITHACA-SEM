@@ -77,7 +77,7 @@ namespace Nektar
         StdRegions::Orientation         edgeOrient;
         Array<OneD, unsigned int>           edgeInteriorMap;
         Array<OneD, int>                    edgeInteriorSign;
-        int nvel = fields.num_elements();
+        int nvel = fields.size();
 
         const LocalRegions::ExpansionVector &locExpVector = *(fields[0]->GetExp());
         int id, diff;
@@ -122,7 +122,7 @@ namespace Nektar
         map<int,int> IsDirEdgeDof;
 
         SpatialDomains::Geometry1DSharedPtr g;
-        for(j = 0; j < bndCondExp.num_elements(); ++j)
+        for(j = 0; j < bndCondExp.size(); ++j)
         {
             map<int,int> BndExpVids;
             // collect unique list of vertex ids for this expansion
@@ -171,10 +171,10 @@ namespace Nektar
                         locnorm = loc_exp->GetLeftAdjacentElementExp()->GetEdgeNormal(loc_exp->GetLeftAdjacentElementEdge());
                         //locnorm = bndCondExp[j]->GetExp(k)->Get GetMetricInfo()->GetNormal();
 
-                        int ndir = locnorm.num_elements();
+                        int ndir = locnorm.size();
                         if(i < ndir) // account for Fourier version where n can be larger then ndir
                         {
-                            for(int l = 0; l < locnorm[0].num_elements(); ++l)
+                            for(int l = 0; l < locnorm[0].size(); ++l)
                             {
                                 if(fabs(locnorm[i][l]) > NekConstants::kNekZeroTol)
                                 {
@@ -205,7 +205,7 @@ namespace Nektar
         if(m_systemSingular)
         {
             id  = -1;
-            for(i = 0; i < bndConditionsVec[0].num_elements(); ++i)
+            for(i = 0; i < bndConditionsVec[0].size(); ++i)
             {
                 if(bndConditionsVec[nvel-1][i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
@@ -340,7 +340,7 @@ namespace Nektar
         /**
          * STEP 2: Count out the number of Dirichlet vertices and edges first
          */
-        for(i = 0; i < bndCondExp.num_elements(); i++)
+        for(i = 0; i < bndCondExp.size(); i++)
         {
             for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
             {
@@ -429,7 +429,7 @@ namespace Nektar
 
         map<int,int> DirVertChk;
 
-        for(i = 0; i < bndConditionsVec[0].num_elements(); ++i)
+        for(i = 0; i < bndConditionsVec[0].size(); ++i)
         {
             cnt = 0;
             for(j = 0; j < nvel; ++j)
@@ -501,7 +501,7 @@ namespace Nektar
         }
 
         // set Dirichlet values with negative values to Dirichlet value
-        for(i = firstNonDirGraphVertId*nvel*nz_loc; i <  graphVertOffset.num_elements(); ++i)
+        for(i = firstNonDirGraphVertId*nvel*nz_loc; i <  graphVertOffset.size(); ++i)
         {
             if(graphVertOffset[i] < 0)
             {
@@ -515,7 +515,7 @@ namespace Nektar
         m_numGlobalDirBndCoeffs = cnt;
 
         // offset values
-        for(i = firstNonDirGraphVertId*nvel*nz_loc; i < graphVertOffset.num_elements(); ++i)
+        for(i = firstNonDirGraphVertId*nvel*nz_loc; i < graphVertOffset.size(); ++i)
         {
             if(graphVertOffset[i] >= 0)
             {
@@ -527,7 +527,7 @@ namespace Nektar
 
         // Finally set negative entries (corresponding to Dirichlet
         // values ) to be positive
-        for(i = firstNonDirGraphVertId*nvel*nz_loc; i < graphVertOffset.num_elements(); ++i)
+        for(i = firstNonDirGraphVertId*nvel*nz_loc; i < graphVertOffset.size(); ++i)
         {
             if(graphVertOffset[i] < 0)
             {
@@ -603,7 +603,7 @@ namespace Nektar
             // up an inverse map
             map<int,int> inv_bmap;
             locExpansion->GetBoundaryMap(bmap);
-            for(j = 0; j < bmap.num_elements(); ++j)
+            for(j = 0; j < bmap.size(); ++j)
             {
                 inv_bmap[bmap[j]] = j;
             }
@@ -676,7 +676,7 @@ namespace Nektar
         offset = cnt = 0;
         for(nv = 0; nv < nvel; ++nv)
         {
-            for(i = 0; i < bndCondExp.num_elements(); i++)
+            for(i = 0; i < bndCondExp.size(); i++)
             {
                 if (bndConditionsVec[nv][i]->GetBoundaryConditionType()==SpatialDomains::ePeriodic)
                 {

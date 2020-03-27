@@ -64,7 +64,7 @@ void APE::v_InitObject()
 
     // Initialize basefield again
     m_bf = Array<OneD, Array<OneD, NekDouble>>(m_bfNames.size());
-    for (int i = 0; i < m_bf.num_elements(); ++i)
+    for (int i = 0; i < m_bf.size(); ++i)
     {
         m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
     }
@@ -73,7 +73,7 @@ void APE::v_InitObject()
 
     // Define the normal velocity fields
     m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble>>(2 * m_bfNames.size());
-    for (int i = 0; i < m_bfFwdBwd.num_elements(); i++)
+    for (int i = 0; i < m_bfFwdBwd.size(); i++)
     {
         m_bfFwdBwd[i] = Array<OneD, NekDouble>(GetTraceNpoints(), 0.0);
     }
@@ -134,11 +134,11 @@ void APE::v_GetFluxVector(
     const Array<OneD, Array<OneD, NekDouble>> &physfield,
     Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux)
 {
-    int nq = physfield[0].num_elements();
+    int nq = physfield[0].size();
     Array<OneD, NekDouble> tmp1(nq);
     Array<OneD, NekDouble> tmp2(nq);
 
-    ASSERTL1(flux[0].num_elements() == m_spacedim,
+    ASSERTL1(flux[0].size() == m_spacedim,
              "Dimension of flux array and velocity array do not match");
 
     // F_{adv,p',j} = \bar{rho}  \bar{c^2} u'_j + p' \bar{u}_j
@@ -157,9 +157,9 @@ void APE::v_GetFluxVector(
         Vmath::Vadd(nq, tmp1, 1, tmp2, 1, flux[0][j], 1);
     }
 
-    for (int i = 1; i < flux.num_elements(); ++i)
+    for (int i = 1; i < flux.size(); ++i)
     {
-        ASSERTL1(flux[i].num_elements() == m_spacedim,
+        ASSERTL1(flux[i].size() == m_spacedim,
                  "Dimension of flux array and velocity array do not match");
 
         // F_{adv,u'_i,j} = (p'/ \bar{rho} + \bar{u}_k u'_k) \delta_{ij}
@@ -197,7 +197,7 @@ void APE::v_RiemannInvariantBC(int bcRegion, int cnt,
                                Array<OneD, Array<OneD, NekDouble>> &physarray)
 {
     int id1, id2, nBCEdgePts;
-    int nVariables = physarray.num_elements();
+    int nVariables = physarray.size();
 
     const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
 

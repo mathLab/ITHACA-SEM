@@ -104,7 +104,7 @@ void FilterCheckpoint::v_Update(
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
     // copy Data into FieldData and set variable
-    for(int j = 0; j < pFields.num_elements(); ++j)
+    for(int j = 0; j < pFields.size(); ++j)
     {
         for(int i = 0; i < FieldDef.size(); ++i)
         {

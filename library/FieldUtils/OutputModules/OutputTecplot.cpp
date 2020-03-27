@@ -139,7 +139,7 @@ template<typename T> void WriteStream(std::ostream &outfile,
                                       Array<OneD, T> data)
 {
     outfile.write(reinterpret_cast<char *>(&data[0]),
-                  data.num_elements() * sizeof(T));
+                  data.size() * sizeof(T));
 }
 
 /**
@@ -201,7 +201,7 @@ void OutputTecplot::OutputFromPts(po::variables_map &vm)
             m_zoneType = eFETriangle;
             for (int i = 0; i < m_conn.size(); ++i)
             {
-                m_numBlocks += m_conn[i].num_elements() / 3;
+                m_numBlocks += m_conn[i].size() / 3;
             }
             break;
         }
@@ -210,7 +210,7 @@ void OutputTecplot::OutputFromPts(po::variables_map &vm)
             m_zoneType = eFETetrahedron;
             for (int i = 0; i < m_conn.size(); ++i)
             {
-                m_numBlocks += m_conn[i].num_elements() / 4;
+                m_numBlocks += m_conn[i].size() / 4;
             }
             break;
         }
@@ -249,7 +249,7 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
 
     if (m_f->m_numHomogeneousDir > 0)
     {
-        int nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
+        int nPlanes = m_f->m_exp[0]->GetZIDs().size();
         if (nPlanes == 1) // halfMode case
         {
             // do nothing
@@ -367,12 +367,12 @@ void OutputTecplot::WriteTecplotFile(po::variables_map &vm)
         // writing in parallel.
         m_rankFieldSizes       = Array<OneD, int>(nprocs, 0);
         m_rankConnSizes        = Array<OneD, int>(nprocs, 0);
-        m_rankFieldSizes[rank] = m_fields[0].num_elements();
+        m_rankFieldSizes[rank] = m_fields[0].size();
 
         m_totConn = 0;
         for (int i = 0; i < m_conn.size(); ++i)
         {
-            m_totConn += m_conn[i].num_elements();
+            m_totConn += m_conn[i].size();
         }
 
         m_rankConnSizes[rank] = m_totConn;
@@ -480,7 +480,7 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
             // Number of points in zone
             int nPoints = m_oneOutputFile ?
                 Vmath::Vsum(m_f->m_comm->GetSize(), m_rankFieldSizes, 1) :
-                m_fields[0].num_elements();
+                m_fields[0].size();
 
             outfile << "Zone, N=" << nPoints << ", E="
                     << m_numBlocks << ", F=FEBlock, ET="
@@ -490,9 +490,9 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
 
         if (m_oneOutputFile && m_f->m_comm->GetRank() == 0)
         {
-            for (int j = 0; j < m_fields.num_elements(); ++j)
+            for (int j = 0; j < m_fields.size(); ++j)
             {
-                for (int i = 0; i < m_fields[j].num_elements(); ++i)
+                for (int i = 0; i < m_fields[j].size(); ++i)
                 {
                     if ((!(i % 1000)) && i)
                     {
@@ -523,9 +523,9 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
         }
         else if (m_oneOutputFile && m_f->m_comm->GetRank() > 0)
         {
-            if(m_fields[0].num_elements())
+            if(m_fields[0].size())
             {
-                for (int i = 0; i < m_fields.num_elements(); ++i)
+                for (int i = 0; i < m_fields.size(); ++i)
                 {
                     m_f->m_comm->Send(0, m_fields[i]);
                 }
@@ -535,9 +535,9 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
         {
             // Write out coordinates and field data: ordered by field
             // and then its data.
-            for (int j = 0; j < m_fields.num_elements(); ++j)
+            for (int j = 0; j < m_fields.size(); ++j)
             {
-                for (int i = 0; i < m_fields[j].num_elements(); ++i)
+                for (int i = 0; i < m_fields[j].size(); ++i)
                 {
                     if ((!(i % 1000)) && i)
                     {
@@ -564,10 +564,10 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
 
         if (m_oneOutputFile && m_f->m_comm->GetRank() == 0)
         {
-            Array<OneD, NekDouble> tmp(m_fields.num_elements());
-            for (int i = 0; i < m_fields[0].num_elements(); ++i)
+            Array<OneD, NekDouble> tmp(m_fields.size());
+            for (int i = 0; i < m_fields[0].size(); ++i)
             {
-                for (int j = 0; j < m_fields.num_elements(); ++j)
+                for (int j = 0; j < m_fields.size(); ++j)
                 {
                     outfile << setw(12) << m_fields[j][i] << " ";
                 }
@@ -579,7 +579,7 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
                 for (int i = 0; i < m_rankFieldSizes[n]; ++i)
                 {
                     m_f->m_comm->Recv(n, tmp);
-                    for (int j = 0; j < m_fields.num_elements(); ++j)
+                    for (int j = 0; j < m_fields.size(); ++j)
                     {
                         outfile << setw(12) << tmp[j] << " ";
                     }
@@ -589,10 +589,10 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
         }
         else if (m_oneOutputFile && m_f->m_comm->GetRank() > 0)
         {
-            Array<OneD, NekDouble> tmp(m_fields.num_elements());
-            for (int i = 0; i < m_fields[0].num_elements(); ++i)
+            Array<OneD, NekDouble> tmp(m_fields.size());
+            for (int i = 0; i < m_fields[0].size(); ++i)
             {
-                for (int j = 0; j < m_fields.num_elements(); ++j)
+                for (int j = 0; j < m_fields.size(); ++j)
                 {
                     tmp[j] = m_fields[j][i];
                 }
@@ -603,9 +603,9 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
         {
             // Write out coordinates and field data: ordered by each
             // point then each field.
-            for (int i = 0; i < m_fields[0].num_elements(); ++i)
+            for (int i = 0; i < m_fields[0].size(); ++i)
             {
-                for (int j = 0; j < m_fields.num_elements(); ++j)
+                for (int j = 0; j < m_fields.size(); ++j)
                 {
                     outfile << setw(12) << m_fields[j][i] << " ";
                 }
@@ -636,8 +636,8 @@ void OutputTecplotBinary::WriteDoubleOrFloat(std::ofstream          &outfile,
     else
     {
         // For single precision, needs typecast first.
-        int nPts = data.num_elements();
-        vector<float> tmp(data.num_elements());
+        int nPts = data.size();
+        vector<float> tmp(data.size());
         std::copy(&data[0], &data[0] + nPts, &tmp[0]);
         WriteStream(outfile, tmp);
     }
@@ -651,8 +651,8 @@ void OutputTecplotBinary::WriteDoubleOrFloat(std::ofstream          &outfile,
  */
 void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
 {
-    Array<OneD, NekDouble> fieldMin(m_fields.num_elements());
-    Array<OneD, NekDouble> fieldMax(m_fields.num_elements());
+    Array<OneD, NekDouble> fieldMin(m_fields.size());
+    Array<OneD, NekDouble> fieldMax(m_fields.size());
 
     // Data format: either double or single depending on user options
     bool useDoubles = m_config["double"].as<bool>();
@@ -696,7 +696,7 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
             // Number of points in zone
             int nPoints = m_oneOutputFile ?
                 Vmath::Vsum(m_f->m_comm->GetSize(), m_rankFieldSizes, 1) :
-                m_fields[0].num_elements();
+                m_fields[0].size();
 
             WriteStream(outfile, nPoints); // Total number of points
             WriteStream(outfile, m_numBlocks); // Number of blocks
@@ -716,7 +716,7 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
         // Data marker
         WriteStream(outfile, 299.0f);
 
-        for (int j = 0; j < m_fields.num_elements(); ++j)
+        for (int j = 0; j < m_fields.size(); ++j)
         {
             WriteStream(outfile, useDoubles ? 2 : 1);
         }
@@ -728,10 +728,10 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
         WriteStream(outfile, -1);
     }
 
-    for (int i = 0; i < m_fields.num_elements(); ++i)
+    for (int i = 0; i < m_fields.size(); ++i)
     {
-        fieldMin[i] = Vmath::Vmin(m_fields[i].num_elements(), m_fields[i], 1);
-        fieldMax[i] = Vmath::Vmax(m_fields[i].num_elements(), m_fields[i], 1);
+        fieldMin[i] = Vmath::Vmin(m_fields[i].size(), m_fields[i], 1);
+        fieldMax[i] = Vmath::Vmax(m_fields[i].size(), m_fields[i], 1);
     }
 
     m_f->m_comm->AllReduce(fieldMin, LibUtilities::ReduceMin);
@@ -740,7 +740,7 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
     // Write out min/max of field data
     if ((m_oneOutputFile && m_f->m_comm->GetRank() == 0) || !m_oneOutputFile)
     {
-        for (int i = 0; i < m_fields.num_elements(); ++i)
+        for (int i = 0; i < m_fields.size(); ++i)
         {
             WriteStream(outfile, fieldMin[i]);
             WriteStream(outfile, fieldMax[i]);
@@ -749,7 +749,7 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
 
     if (m_oneOutputFile && m_f->m_comm->GetRank() == 0)
     {
-        for (int i = 0; i < m_fields.num_elements(); ++i)
+        for (int i = 0; i < m_fields.size(); ++i)
         {
             WriteDoubleOrFloat(outfile, m_fields[i]);
 
@@ -763,14 +763,14 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
     }
     else if (m_oneOutputFile && m_f->m_comm->GetRank() > 0)
     {
-        for (int i = 0; i < m_fields.num_elements(); ++i)
+        for (int i = 0; i < m_fields.size(); ++i)
         {
             m_f->m_comm->Send(0, m_fields[i]);
         }
     }
     else
     {
-        for (int i = 0; i < m_fields.num_elements(); ++i)
+        for (int i = 0; i < m_fields.size(); ++i)
         {
             WriteDoubleOrFloat(outfile, m_fields[i]);
         }
@@ -798,11 +798,11 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
             Array<OneD, int> conn(m_totConn);
             for (int i = 0, cnt = 0; i < m_conn.size(); ++i)
             {
-                if(m_conn[i].num_elements())
+                if(m_conn[i].size())
                 {
-                    Vmath::Vcopy(m_conn[i].num_elements(), &m_conn[i][0], 1,
+                    Vmath::Vcopy(m_conn[i].size(), &m_conn[i][0], 1,
                                  &conn[cnt], 1);
-                    cnt += m_conn[i].num_elements();
+                    cnt += m_conn[i].size();
                 }
             }
             m_f->m_comm->Send(0, conn);
@@ -810,10 +810,10 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
     }
     else
     {
-        int cnt = 1; 
+        int cnt = 1;
         for (int i = 0; i < m_conn.size(); ++i)
         {
-            const int nConn = m_conn[i].num_elements();
+            const int nConn = m_conn[i].size();
             for (int j = 0; j < nConn; ++j,++cnt)
             {
                 outfile << m_conn[i][j] + 1 << " ";
@@ -835,7 +835,7 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
                 {
                     Array<OneD, int> conn(m_rankConnSizes[n]);
                     m_f->m_comm->Recv(n, conn);
-                    for (int j = 0; j < conn.num_elements(); ++j)
+                    for (int j = 0; j < conn.size(); ++j)
                     {
                         outfile << conn[j] + offset + 1 << " ";
                         if ((!(j % 1000)) && j)
@@ -858,9 +858,9 @@ void OutputTecplotBinary::WriteTecplotConnectivity(std::ofstream &outfile)
         Array<OneD, int> conn(m_totConn);
         for (int i = 0, cnt = 0; i < m_conn.size(); ++i)
         {
-            Vmath::Vcopy(m_conn[i].num_elements(), &m_conn[i][0], 1,
+            Vmath::Vcopy(m_conn[i].size(), &m_conn[i][0], 1,
                          &conn[cnt], 1);
-            cnt += m_conn[i].num_elements();
+            cnt += m_conn[i].size();
         }
         m_f->m_comm->Send(0, conn);
     }
@@ -880,7 +880,7 @@ void OutputTecplotBinary::WriteTecplotConnectivity(std::ofstream &outfile)
                 Array<OneD, int> conn(m_rankConnSizes[n]);
                 m_f->m_comm->Recv(n, conn);
 
-                for (int j = 0; j < conn.num_elements(); ++j)
+                for (int j = 0; j < conn.size(); ++j)
                 {
                     conn[j] += offset;
                 }
@@ -954,7 +954,7 @@ void OutputTecplot::CalculateConnectivity()
 
             if (m_f->m_exp[0]->GetExpType() == MultiRegions::e2DH1D)
             {
-                nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
+                nPlanes = m_f->m_exp[0]->GetZIDs().size();
 
                 if (nPlanes > 1)
                 {
@@ -998,7 +998,7 @@ void OutputTecplot::CalculateConnectivity()
 
             if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D)
             {
-                nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
+                nPlanes = m_f->m_exp[0]->GetZIDs().size();
 
                 // default to 2D case for HalfMode when nPlanes = 1
                 if (nPlanes > 1)

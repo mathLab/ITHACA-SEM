@@ -10,7 +10,7 @@ stages:
       - merge_requests
       - master@nektar/nektar
       - tags@nektar/nektar
-      - web@nektar/nektar
+      - web
     changes:
       - "cmake/**/*"
       - "docker/**/*"

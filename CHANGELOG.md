@@ -31,6 +31,7 @@ v5.0.1
 **CI**
 - Switched to Gitlab CI (!1120, !1120, !1128, !1129)
 - Added checked conversion from double to int in SessionReader (!1113)
+- Switched to Gitlab CI (!1120, !1120, !1128, !1129, !1131)
 
 v5.0.0
 ------

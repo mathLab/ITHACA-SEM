@@ -216,9 +216,27 @@ void DiffusionLDGNS::v_InitObject(
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
+    int nCoeffs   = fields[0]->GetNcoeffs();
     Array<OneD, Array<OneD, NekDouble> > tmp2(nConvectiveFields);
     for (int i = 0; i < nConvectiveFields; ++i)
     {
+                tmp2[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
+    }
+    v_Diffuse_coeff(nConvectiveFields,fields,inarray,tmp2,pFwd,pBwd);
+    for (int i = 0; i < nConvectiveFields; ++i)
+    {
+        fields[i]->BwdTrans             (tmp2[i], outarray[i]);
+    }
+}
+
+void DiffusionLDGNS::v_Diffuse_coeff(
+    const std::size_t                                  nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >        &outarray,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+{
     int i, j;
     int nDim      = fields[0]->GetCoordim(0);
     int nScalars  = inarray.num_elements();

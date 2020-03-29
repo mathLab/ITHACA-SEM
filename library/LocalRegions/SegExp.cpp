@@ -771,8 +771,9 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 
                 DNekScalMatSharedPtr mat_gauss = m_matrixManager[key];
                 
-                Vmath::Svtvp(nquad,inarray,mat_gauss->GetOwnedMatrix()->GetPtr().get(), 1,
-                                  &outarray[0],1,&outarray[0],1);
+                Vmath::Svtvp(nquad,inarray,
+                            mat_gauss->GetOwnedMatrix()->GetPtr().get(), 1,
+                            &outarray[0],1,&outarray[0],1);
             }
         }
         
@@ -959,8 +960,10 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
             int nqb = nqe;
             int nbnd= vertex;
-            m_ElmtBndNormalDirctnElmtLength[nbnd] = Array<OneD, NekDouble>(nqb,0.0);
-            Array<OneD, NekDouble>  &length = m_ElmtBndNormalDirctnElmtLength[nbnd];
+            m_ElmtBndNormalDirctnElmtLength[nbnd] = 
+                    Array<OneD, NekDouble>(nqb,0.0);
+            Array<OneD, NekDouble>  &length = 
+                    m_ElmtBndNormalDirctnElmtLength[nbnd];
 
             // Regular geometry case
             if ((type == SpatialDomains::eRegular) ||

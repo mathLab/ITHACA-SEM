@@ -300,7 +300,8 @@ namespace Nektar
                     loc_elmt = LRelmts[nlr];
                     if(bndNumber>=0)
                     {
-                        locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
+                        locLeng  = loc_elmt->
+                                    GetElmtBndNormalDirctnElmtLength(bndNumber);
                         lengAdd  =   locLeng;
                     }
                     for (j = 0; j < e_npoints; ++j)

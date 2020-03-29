@@ -74,10 +74,10 @@ void DiffusionLDG::v_InitObject(
 }
 
 void DiffusionLDG::v_Diffuse(
-    const std::size_t                                  nConvectiveFields,
+    const std::size_t                                 nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >        &outarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray,
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
@@ -89,7 +89,8 @@ void DiffusionLDG::v_Diffuse(
         tmp[i] = Array<OneD, NekDouble>(nCoeffs,0.0);
     }
 
-    DiffusionLDG::v_Diffuse_coeff(nConvectiveFields,fields,inarray,tmp,pFwd,pBwd);
+    DiffusionLDG::v_Diffuse_coeff(nConvectiveFields,fields,inarray,tmp,
+                                    pFwd,pBwd);
     
     for (int i = 0; i < nConvectiveFields; ++i)
     {
@@ -98,10 +99,10 @@ void DiffusionLDG::v_Diffuse(
 }
 
 void DiffusionLDG::v_Diffuse_coeff(
-    const std::size_t                                  nConvectiveFields,
+    const std::size_t                                 nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >        &outarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray,
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {

@@ -646,9 +646,11 @@ namespace Nektar
                 v_IProductWRTBase(base, inarray, outarray, coll_check);
             }
 
-            void IProductWRTDerivBaseElmt(const int nElmt, const int dir,
-                                           const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD, NekDouble> &outarray);
+            void IProductWRTDerivBaseElmt(
+                const int                           nElmt, 
+                const int                           dir,
+                const Array<OneD, const NekDouble>  &inarray,
+                Array<OneD, NekDouble>              &outarray);
 
             void   IProductWRTDerivBase(
                     const int dir,
@@ -1786,7 +1788,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetTracePhysVals(const int edge,  const std::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray, StdRegions::Orientation  orient = eNoOrientation);
 
             STD_REGIONS_EXPORT virtual void v_GetVertexPhysVals(const int vertex, const Array<OneD, const NekDouble> &inarray, NekDouble &outarray);
-            STD_REGIONS_EXPORT virtual void v_AddVertexPhysVals(const int vertex, const NekDouble &inarray, Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_AddVertexPhysVals(
+                const int                   vertex, 
+                const NekDouble             &inarray, 
+                Array<OneD, NekDouble>      &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(const int edge,
                 const Array<OneD, const NekDouble> &inarray,Array<OneD,NekDouble> &outarray);

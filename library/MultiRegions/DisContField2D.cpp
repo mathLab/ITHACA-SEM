@@ -226,7 +226,8 @@ namespace Nektar
                     if(SetUpJustDG)
                     {
                         SetUpDG();
-                        m_locTraceToTraceMap->TracelocToElmtlocCoeffMap(*this, m_trace);
+                        m_locTraceToTraceMap->TracelocToElmtlocCoeffMap(
+                            *this, m_trace);
                     }
                     else
                     {
@@ -1416,17 +1417,20 @@ namespace Nektar
                 Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
                                                GetNLocTracePts(),0.0);
 
-                Array<OneD, NekDouble> invals = edgevals + m_locTraceToTraceMap->
-                                                        GetNFwdLocTracePts();
-                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(1, Bwd, invals);
+                Array<OneD, NekDouble> invals = edgevals + 
+                    m_locTraceToTraceMap->GetNFwdLocTracePts();
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(
+                                        1, Bwd, invals);
                 
-                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(0, Fwd, edgevals);
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(
+                                        0, Fwd, edgevals);
 
                 m_locTraceToTraceMap->AddLocTracesToField(edgevals,field);
             }
             else
             {
-                ASSERTL0(false, "v_AddTraceQuadPhysToField not coded for eGauss_Lagrange");                
+                ASSERTL0(false, 
+                    "v_AddTraceQuadPhysToField not coded for eGauss_Lagrange");                
             }
         }
 
@@ -1511,7 +1515,8 @@ namespace Nektar
                 {
                     for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
+                        npts = m_bndCondExpansions[n]->
+                                GetExp(e)->GetNumPoints(0);
                         // int id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         int id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
@@ -1527,7 +1532,8 @@ namespace Nektar
                 {
                     for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
+                        npts = m_bndCondExpansions[n]->
+                                GetExp(e)->GetNumPoints(0);
                         // int id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         int id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
@@ -1566,11 +1572,13 @@ namespace Nektar
                 {
                     for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
+                        npts = m_bndCondExpansions[n]->
+                                GetExp(e)->GetNumPoints(0);
                         // id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weightave[id2],1);
+                        Vmath::Fill(npts,m_BndCondBwdWeight[n], 
+                                    &weightave[id2],1);
                         Vmath::Fill(npts,0.0, &weightjmp[id2],1);
 
                     }
@@ -1584,11 +1592,14 @@ namespace Nektar
                 {
                     for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
+                        npts = m_bndCondExpansions[n]->
+                                GetExp(e)->GetNumPoints(0);
                         // id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weightave[id2],1);
+                        Vmath::Fill(npts,
+                                    m_BndCondBwdWeight[n], 
+                                    &weightave[id2],1);
                         Vmath::Fill(npts,0.0, &weightjmp[id2],1);
                     }
                     

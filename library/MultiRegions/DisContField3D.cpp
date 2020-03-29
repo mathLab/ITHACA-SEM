@@ -106,7 +106,8 @@ using namespace std;
              if(SetUpJustDG)
              {
                  SetUpDG();
-                 m_locTraceToTraceMap->TracelocToElmtlocCoeffMap(*this, m_trace);
+                 m_locTraceToTraceMap->
+                        TracelocToElmtlocCoeffMap(*this, m_trace);
              }
              else
              {
@@ -163,7 +164,8 @@ using namespace std;
                  if (SetUpJustDG)
                  {
                      SetUpDG(variable);
-                    m_locTraceToTraceMap->TracelocToElmtlocCoeffMap(*this, m_trace);
+                    m_locTraceToTraceMap->
+                            TracelocToElmtlocCoeffMap(*this, m_trace);
                  }
                  else
                  {
@@ -1958,9 +1960,11 @@ using namespace std;
 
             Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->
                                                     GetNFwdLocTracePts();
-            m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(1, Bwd, invals);
+            m_locTraceToTraceMap->
+                    RightIPTWLocFacesToTraceInterpMat(1, Bwd, invals);
             
-            m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(0, Fwd, facevals);
+            m_locTraceToTraceMap->
+                    RightIPTWLocFacesToTraceInterpMat(0, Fwd, facevals);
 
             m_locTraceToTraceMap->AddLocTracesToField(facevals,field);
         }
@@ -2054,7 +2058,8 @@ using namespace std;
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
+                        npts = m_bndCondExpansions[n]->
+                                GetExp(e)->GetTotPoints();
                         // id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
@@ -2073,7 +2078,8 @@ using namespace std;
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
+                        npts = m_bndCondExpansions[n]->
+                                GetExp(e)->GetTotPoints();
                         // id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
@@ -2122,7 +2128,8 @@ using namespace std;
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
+                        npts = m_bndCondExpansions[n]->
+                                GetExp(e)->GetTotPoints();
                         // id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
@@ -2130,7 +2137,9 @@ using namespace std;
                         //     &(m_bndCondExpansions[n]->GetPhys())[id1], 1,
                         //     &Bwd[id2],                                 1);
                         // Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
-                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weightave[id2],1);
+                        Vmath::Fill(npts,
+                                    m_BndCondBwdWeight[n], 
+                                    &weightave[id2],1);
                         Vmath::Fill(npts,0.0, &weightjmp[id2],1);
                     }
 
@@ -2143,7 +2152,8 @@ using namespace std;
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
+                        npts = m_bndCondExpansions[n]->
+                                GetExp(e)->GetTotPoints();
                         // id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
@@ -2155,7 +2165,9 @@ using namespace std;
                         //Neumann " "boundary condition");
                         
                         // Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
-                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weightave[id2],1);
+                        Vmath::Fill(npts,
+                                    m_BndCondBwdWeight[n], 
+                                    &weightave[id2],1);
                         Vmath::Fill(npts,0.0, &weightjmp[id2],1);
                     }
 

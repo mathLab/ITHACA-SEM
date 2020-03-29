@@ -764,9 +764,12 @@ namespace Nektar
             inline const Array<OneD,const NekDouble>
                 &GetBndCondBwdWeight();
 
-            inline void SetBndCondBwdWeight(const int index, const NekDouble value);
+            inline void SetBndCondBwdWeight(
+                const int index, 
+                const NekDouble value);
 
-            inline const Array<OneD, const Array<OneD, std::shared_ptr<ExpList> > >
+            inline const Array<OneD, const Array<OneD, 
+                std::shared_ptr<ExpList> > >
                 &GetDerivBndCondExpansions();
       
             inline std::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
@@ -1077,12 +1080,15 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
 
             
-            MULTI_REGIONS_EXPORT inline const Array<OneD,const std::pair<int,int> > &GetCoeffsToElmt() const
+            MULTI_REGIONS_EXPORT inline const 
+                Array<OneD,const std::pair<int,int> > 
+                &GetCoeffsToElmt() const
             {
                 return m_coeffsToElmt;
             }
 
-            MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr &GetlocTraceToTraceMap() const
+            MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr 
+                &GetlocTraceToTraceMap() const
             {
                 return v_GetlocTraceToTraceMap();
             }
@@ -1254,9 +1260,12 @@ namespace Nektar
             virtual const Array<OneD,const NekDouble>
                 &v_GetBndCondBwdWeight();
 
-            virtual void v_SetBndCondBwdWeight(const int index, const NekDouble value);
+            virtual void v_SetBndCondBwdWeight(
+                const int index, 
+                const NekDouble value);
 
-            virtual const Array<OneD, const Array<OneD, std::shared_ptr<ExpList> > >
+            virtual const Array<OneD, const Array<OneD, 
+                std::shared_ptr<ExpList> > >
                 &v_GetDerivBndCondExpansions();
 
             virtual std::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
@@ -1646,7 +1655,8 @@ namespace Nektar
 
         private:
 
-            virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap() const;
+            virtual const LocTraceToTraceMapSharedPtr 
+                &v_GetlocTraceToTraceMap() const;
 
             virtual const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
             
@@ -2393,7 +2403,9 @@ namespace Nektar
             return v_GetBndCondBwdWeight();
         }
 
-        inline void ExpList::SetBndCondBwdWeight(const int index, const NekDouble value)
+        inline void ExpList::SetBndCondBwdWeight(
+            const int index, 
+            const NekDouble value)
         {
             v_SetBndCondBwdWeight(index, value);
         }

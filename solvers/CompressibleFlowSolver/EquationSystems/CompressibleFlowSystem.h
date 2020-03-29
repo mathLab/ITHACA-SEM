@@ -171,26 +171,31 @@ namespace Nektar
         void SetBoundaryConditionsBwdWeight();
 
         void SetBoundaryConditionsDeriv(
-            const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
-            NekDouble                                                           time,
-            const Array<OneD, const Array<OneD, NekDouble> >                    &pFwd       = NullNekDoubleArrayofArray,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &pDervFwd   = NullNekDoubleArrayofArrayofArray);
+            const Array<OneD, const Array<OneD, NekDouble> >    &physarray,
+            const Array<OneD, const Array<OneD, 
+                Array<OneD, NekDouble> > >                      &dervarray,
+            NekDouble                                           time,
+            const Array<OneD, const Array<OneD, NekDouble> >    
+                &pFwd       = NullNekDoubleArrayofArray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      
+                &pDervFwd   = NullNekDoubleArrayofArrayofArray);
 
         void GetElmtTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD, NekDouble> &tstep);
 
         void GetViscousSymmtrFluxConservVar(
-            const int                                                       nConvectiveFields,
-            const int                                                       nSpaceDim,
-            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
-            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-            Array< OneD, int >                                              &nonZeroIndex,    
-            const Array<OneD, Array<OneD, NekDouble> >                      &normals)
+            const int                                         nConvectiveFields,
+            const int                                         nSpaceDim,
+            const Array<OneD, Array<OneD, NekDouble> >        &inaverg,
+            const Array<OneD, Array<OneD, NekDouble > >       &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&outarray,
+            Array< OneD, int >                                &nonZeroIndex,    
+            const Array<OneD, Array<OneD, NekDouble> >        &normals)
         {
-            v_GetViscousSymmtrFluxConservVar(nConvectiveFields,nSpaceDim,inaverg,inarray,outarray,nonZeroIndex,normals);
+            v_GetViscousSymmtrFluxConservVar(nConvectiveFields,nSpaceDim,
+                                            inaverg,inarray,outarray,
+                                            nonZeroIndex,normals);
         }
 
         virtual NekDouble v_GetTimeStep(
@@ -253,20 +258,21 @@ namespace Nektar
             //Artificial Diffusion need to implement
             if (m_shockCaptureType != "Off")
             {
-                m_artificialDiffusion->DoArtificialDiffusionFlux(inarray, VolumeFlux,TraceFlux);
+                m_artificialDiffusion->DoArtificialDiffusionFlux(inarray, 
+                    VolumeFlux,TraceFlux);
             }
         }
 
         virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
 
         virtual void v_GetViscousSymmtrFluxConservVar(
-            const int                                                       nConvectiveFields,
-            const int                                                       nSpaceDim,
-            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
-            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-            Array< OneD, int >                                              &nonZeroIndex,    
-            const Array<OneD, Array<OneD, NekDouble> >                      &normals);
+            const int                                         nConvectiveFields,
+            const int                                         nSpaceDim,
+            const Array<OneD, Array<OneD, NekDouble> >        &inaverg,
+            const Array<OneD, Array<OneD, NekDouble > >       &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&outarray,
+            Array< OneD, int >                                &nonZeroIndex,    
+            const Array<OneD, Array<OneD, NekDouble> >        &normals);
     };
 }
 #endif

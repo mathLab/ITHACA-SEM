@@ -292,7 +292,8 @@ void DriverArnoldi::WriteEvs(
         NekDouble ang_ev = atan2 (im_ev, re_ev);
 
         evlout << "EV: " << setw(2)  << i
-               <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
+               <<std::scientific<<std::setw(nwidthcolm)
+               <<std::setprecision(ndigits-1) 
                << abs_ev
                << " "
                << ang_ev
@@ -304,7 +305,8 @@ void DriverArnoldi::WriteEvs(
         if(resid != NekConstants::kNekUnsetDouble)
         {
             evlout 
-                    <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
+                    <<std::scientific<<std::setw(nwidthcolm)
+                    <<std::setprecision(ndigits-1) 
                     << " "
                     << resid;
         }
@@ -324,7 +326,8 @@ void DriverArnoldi::WriteEvs(
         }
 
         evlout << "EV: " << setw(2)  <<  i
-               <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
+               <<std::scientific<<std::setw(nwidthcolm)
+               <<std::setprecision(ndigits-1) 
                <<  sign*re_ev
                << " "
                <<  sign*im_ev;
@@ -332,7 +335,8 @@ void DriverArnoldi::WriteEvs(
         if(DumpInverse)
         {
             evlout 
-                    <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
+                    <<std::scientific<<std::setw(nwidthcolm)
+                    <<std::setprecision(ndigits-1) 
                     << " "
                     <<  sign*re_ev*invmag + m_realShift
                     << " "
@@ -342,7 +346,8 @@ void DriverArnoldi::WriteEvs(
         if(resid != NekConstants::kNekUnsetDouble)
         {
             evlout 
-                    <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
+                    <<std::scientific<<std::setw(nwidthcolm)
+                    <<std::setprecision(ndigits-1) 
                     << " "
                     << resid;
         }

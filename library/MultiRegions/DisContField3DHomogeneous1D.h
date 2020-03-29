@@ -298,7 +298,9 @@ namespace Nektar
             {
                 return m_traceBndMap;
             }
-            virtual void v_SetBndCondBwdWeight(const int index, const NekDouble value)
+            virtual void v_SetBndCondBwdWeight(
+                const int index, 
+                const NekDouble value)
             {
                 m_BndCondBwdWeight[index]   =   value;
             }

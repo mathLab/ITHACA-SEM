@@ -434,11 +434,13 @@ void DriverAdaptive::v_Execute(ostream &out)
         {
             out << "L 2 error (variable " << m_equ[0]->GetVariable(i)
                 << ") : " ;
-            out <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
+            out <<std::scientific<<std::setw(nwidthcolm)
+                <<std::setprecision(ndigits-1) 
                 << vL2Error << endl;
             out << "L inf error (variable " << m_equ[0]->GetVariable(i)
                 << ") : " ;
-            out <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
+            out <<std::scientific<<std::setw(nwidthcolm)
+                <<std::setprecision(ndigits-1) 
                 << vLinfError << endl;
         }
     }

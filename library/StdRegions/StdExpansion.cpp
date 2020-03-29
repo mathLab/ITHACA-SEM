@@ -1553,7 +1553,7 @@ namespace Nektar
             {
                 boost::ignore_unused(vertex,inarray,outarray);
 
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape or library" );
             }
 
             void StdExpansion::v_GetEdgeInterpVals(const int edge,const Array<OneD, const NekDouble> &inarray,Array<OneD,NekDouble> &outarray)
@@ -1625,7 +1625,8 @@ namespace Nektar
                     Array<OneD, NekDouble> &outarray)
             {
                 boost::ignore_unused(inarray,outarray);
-                NEKERROR(ErrorUtil::efatal, "v_DividByStdQuadratureMetric does not exist for this shape or library");
+                NEKERROR(ErrorUtil::efatal, 
+                    "v_DividByStdQuadratureMetric does not exist for this shape or library");
             }
 
             void StdExpansion::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,

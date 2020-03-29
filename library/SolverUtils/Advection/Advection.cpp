@@ -96,7 +96,8 @@ void Advection::v_AdvectVolumeFlux(
     Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
     const NekDouble                                   &pTime)
 {
-    boost::ignore_unused(nConvectiveFields,pFields,pAdvVel,pInarray,pVolumeFlux,pTime);
+    boost::ignore_unused(nConvectiveFields,pFields,pAdvVel,pInarray,
+                        pVolumeFlux,pTime);
     ASSERTL0(false, "Not defined for AdvectVolumeFlux.");
 }
 
@@ -113,7 +114,8 @@ void Advection::v_AdvectTraceFlux(
     const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
     const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
 {
-    boost::ignore_unused(nConvectiveFields,pFields,pAdvVel,pInarray,pTraceFlux,pTime,pFwd,pBwd);
+    boost::ignore_unused(nConvectiveFields,pFields,pAdvVel,pInarray,
+                        pTraceFlux,pTime,pFwd,pBwd);
     ASSERTL0(false, "Not defined for AdvectTraceFlux.");
 }
 
@@ -195,7 +197,8 @@ const NekDouble                                   &time,
 const Array<OneD, Array<OneD, NekDouble> > &pFwd,
 const Array<OneD, Array<OneD, NekDouble> > &pBwd)
 {
-    boost::ignore_unused(nConvectiveFields,fields,advVel,inarray,outarray,time,pFwd,pBwd);
+    boost::ignore_unused(nConvectiveFields,fields,advVel,inarray,outarray,
+                        time,pFwd,pBwd);
     ASSERTL0(false, "v_Advect_coeff no defined");
 }
 }

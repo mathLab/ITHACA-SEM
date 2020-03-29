@@ -206,8 +206,10 @@ namespace Nektar
 
 
         //TODO: CHECK WHETHER IT IS POSSIBLE TO ADD A eMetricQuadratureReciprocal
-        void Expansion::v_DividByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
-                                                 Array<OneD, NekDouble> &outarray)
+        void Expansion::v_DividByQuadratureMetric(
+            const Array<OneD, 
+            const NekDouble>& inarray,
+            Array<OneD, NekDouble> &outarray)
         {
             const int nqtot = GetTotPoints();
 
@@ -216,7 +218,9 @@ namespace Nektar
                 ComputeQuadratureMetric();
             }
 
-            Vmath::Vdiv(nqtot, inarray, 1, m_metrics[eMetricQuadrature], 1, outarray, 1);
+            Vmath::Vdiv(nqtot, inarray, 
+                        1, m_metrics[eMetricQuadrature], 
+                        1, outarray, 1);
         }
 
         void Expansion::ComputeLaplacianMetric()
@@ -567,7 +571,8 @@ namespace Nektar
             return 0.0;
         }
 
-        const Array<OneD, const NekDouble > &Expansion::GetElmtBndNormalDirctnElmtLength(const int nbnd) const
+        const Array<OneD, const NekDouble > &Expansion::
+            GetElmtBndNormalDirctnElmtLength(const int nbnd) const
         {
             auto x = m_ElmtBndNormalDirctnElmtLength.find(nbnd);
             ASSERTL0 (x != m_ElmtBndNormalDirctnElmtLength.end(),

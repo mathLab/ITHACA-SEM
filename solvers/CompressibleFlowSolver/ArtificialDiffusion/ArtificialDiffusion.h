@@ -122,7 +122,7 @@ class ArtificialDiffusion
         
         virtual void v_DoArtificialDiffusion_coeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-            Array<OneD,       Array<OneD, NekDouble> > &outarray);
+            Array<OneD, Array<OneD, NekDouble> >             &outarray);
             
         virtual void v_DoArtificialDiffusionFlux(
             const Array<OneD, const Array<OneD, NekDouble>> &inarray,

@@ -184,7 +184,8 @@ namespace Nektar
     }
 
     template<typename DataType>
-    NekMatrix<DataType, StandardMatrixTag>& NekMatrix<DataType, StandardMatrixTag>::operator=(const DataType & rhs)
+    NekMatrix<DataType, StandardMatrixTag>& 
+        NekMatrix<DataType, StandardMatrixTag>::operator=(const DataType & rhs)
     {
 
         unsigned int requiredStorageSize = GetRequiredStorageSize();

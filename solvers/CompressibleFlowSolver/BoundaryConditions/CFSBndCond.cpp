@@ -104,21 +104,21 @@ void CFSBndCond::Apply(
  * @param   time
  */
 void CFSBndCond::ApplyDeriv(
-        const Array<OneD, const Array<OneD, NekDouble> >                    &Fwd,
-        const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
-        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
-        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
-        NekDouble                                                           time)
+    const Array<OneD, const Array<OneD, NekDouble> >               &Fwd,
+    const Array<OneD, const Array<OneD, NekDouble> >               &physarray,
+    const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > > &DervFwd,
+    const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > > &dervarray,
+    NekDouble                                                      time)
 {
     v_ApplyDeriv(Fwd, physarray, DervFwd, dervarray, time);
 }
 
 void CFSBndCond::v_ApplyDeriv(
-        const Array<OneD, const Array<OneD, NekDouble> >                    &Fwd,
-        const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
-        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
-        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
-        NekDouble                                                           time)
+    const Array<OneD, const Array<OneD, NekDouble> >               &Fwd,
+    const Array<OneD, const Array<OneD, NekDouble> >               &physarray,
+    const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > > &DervFwd,
+    const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > > &dervarray,
+    NekDouble                                                      time)
 {
     boost::ignore_unused(Fwd,dervarray,time);
     int i, j;
@@ -158,7 +158,8 @@ void CFSBndCond::v_ApplyDeriv(
                 }
 
                 // Setting up bcs for energy
-                (m_fields[nVariables-1]->GetDerivBndCondExpansions()[m_bcRegion][nd]->
+                (m_fields[nVariables-1]->
+                    GetDerivBndCondExpansions()[m_bcRegion][nd]->
                     UpdatePhys())[id1+i] = DervFwd[nd][nVariables-1][pnt];
 
             }

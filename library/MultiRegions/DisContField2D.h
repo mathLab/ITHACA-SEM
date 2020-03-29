@@ -403,12 +403,15 @@ namespace Nektar
                 return m_BndCondBwdWeight;
             }
 
-            virtual void v_SetBndCondBwdWeight(const int index, const NekDouble value)
+            virtual void v_SetBndCondBwdWeight(
+                const int index, 
+                const NekDouble value)
             {
                 m_BndCondBwdWeight[index]   =   value;
             }
 
-            virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap() const
+            virtual const LocTraceToTraceMapSharedPtr 
+                    &v_GetlocTraceToTraceMap() const
             {
                 return m_locTraceToTraceMap;
             }

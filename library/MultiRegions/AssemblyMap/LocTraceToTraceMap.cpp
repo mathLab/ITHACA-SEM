@@ -875,8 +875,10 @@ void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
         }
     }
     
-    const Array<OneD,const pair<int,int> > field_coeffToElmt  =   locExp.GetCoeffsToElmt();
-    const Array<OneD,const pair<int,int> > trace_coeffToElmt  =   trace->GetCoeffsToElmt();
+    const Array<OneD,const pair<int,int> > field_coeffToElmt  =   
+            locExp.GetCoeffsToElmt();
+    const Array<OneD,const pair<int,int> > trace_coeffToElmt  =   
+            trace->GetCoeffsToElmt();
 
     for(int lr =0; lr<2;lr++)
     {
@@ -1138,7 +1140,9 @@ void LocTraceToTraceMap::RightIPTWLocEdgesToTraceInterpMat(
                                      &locedges[cnt + k * fnp],
                                      1);
 
-                        Vmath::Svtvp(fnp,tmp[cnt1 + k * tnp + tnp - 1],&I0[0], 1,locedges.get() + cnt + k * fnp, 1,locedges.get() + cnt + k * fnp, 1);
+                        Vmath::Svtvp(fnp,tmp[cnt1 + k * tnp + tnp - 1],
+                            &I0[0], 1,locedges.get() + cnt + k * fnp, 1,
+                            locedges.get() + cnt + k * fnp, 1);
                     }
                 }
                 break;
@@ -1481,7 +1485,9 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                     Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
                     for(int k = 0; k< tnp1 * m_interpNfaces[dir][i]; k++)
                     {
-                        Vmath::Svtvp(fnp0,tmp[cnt1 + tnp0-1+k*tnp0],&I0[0],1,&loctraces[cnt],1,&loctraces[cnt],1);
+                        Vmath::Svtvp(fnp0,tmp[cnt1 + tnp0-1+k*tnp0],
+                                    &I0[0],1,&loctraces[cnt],1,
+                                    &loctraces[cnt],1);
                     }
                 }
                 break;
@@ -1520,7 +1526,10 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
 
                         for(int k = 0; k< tnp1; k++)
                         {
-                            Vmath::Svtvp(fnp0,I1[k],&tmp[cnt1 + (j + 1) * tnp0 * tnp1 - tnp0],1,&loctraces[cnt+k*fnp0],1,&loctraces[cnt+k*fnp0],1);
+                            Vmath::Svtvp(fnp0,I1[k],
+                                &tmp[cnt1 + (j + 1) * tnp0 * tnp1 - tnp0],1,
+                                &loctraces[cnt+k*fnp0],1,
+                                &loctraces[cnt+k*fnp0],1);
                         }
                     }
 
@@ -1531,7 +1540,8 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                     DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
                     DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
 
-                    Array<OneD, NekDouble> wsp(m_interpNfaces[dir][i] * fnp0 * tnp1);
+                    Array<OneD, NekDouble> 
+                        wsp(m_interpNfaces[dir][i] * fnp0 * tnp1);
 
                     Blas::Dgemm('T',
                                 'N',
@@ -1588,7 +1598,9 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                     Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
                     for(int k = 0; k< tnp1 * m_interpNfaces[dir][i]; k++)
                     {
-                        Vmath::Svtvp(fnp0,tmp[cnt1 + tnp0-1+k*tnp0],&I0[0],1,&loctraces[cnt],1,&loctraces[cnt],1);
+                        Vmath::Svtvp(fnp0,tmp[cnt1 + tnp0-1+k*tnp0],
+                                    &I0[0],1,&loctraces[cnt],1,
+                                    &loctraces[cnt],1);
                     }
                 }
                 break;

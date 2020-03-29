@@ -79,11 +79,13 @@ class CFSBndCond
             const NekDouble                                    &time = 0);
 
         void ApplyDeriv(
-            const Array<OneD, const Array<OneD, NekDouble> >                    &Fwd,
-            const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
-            NekDouble                                                           time = 0);
+            const Array<OneD, const Array<OneD, NekDouble> >    &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> >    &physarray,
+            const Array<OneD, const Array<OneD, 
+                Array<OneD, NekDouble> > >                      &DervFwd,
+            const Array<OneD, const Array<OneD, 
+                Array<OneD, NekDouble> > >                      &dervarray,
+            NekDouble                                           time = 0);
         void ApplyBwdWeight()
         {
             v_ApplyBwdWeight();
@@ -130,11 +132,13 @@ class CFSBndCond
             const NekDouble                                    &time)=0;
 
         virtual void v_ApplyDeriv(
-            const Array<OneD, const Array<OneD, NekDouble> >                    &Fwd,
-            const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
-            NekDouble                                                           time);
+            const Array<OneD, const Array<OneD, NekDouble> >    &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> >    &physarray,
+            const Array<OneD, const Array<OneD, 
+                Array<OneD, NekDouble> > >                      &DervFwd,
+            const Array<OneD, const Array<OneD, 
+                Array<OneD, NekDouble> > >                      &dervarray,
+            NekDouble                                           time);
 
         virtual void v_ApplyBwdWeight();
 };

@@ -1197,7 +1197,8 @@ namespace Nektar
                     loc_elmt = LRelmts[nlr];
                     if(bndNumber>=0)
                     {
-                        locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
+                        locLeng  = loc_elmt->GetElmtBndNormalDirctnElmtLength(
+                                                bndNumber);
                         lengAdd  =   locLeng;
 
                         int loc_nmodes  = loc_elmt->GetBasis(0)->GetNumModes();

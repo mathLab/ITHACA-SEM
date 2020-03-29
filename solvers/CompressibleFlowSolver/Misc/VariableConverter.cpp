@@ -132,7 +132,8 @@ void VariableConverter::GetVelocityVector(
 
     for (int i = 0; i < m_spacedim; ++i)
     {
-        Vmath::Vdiv(nPts, physfield[1 + i], 1, physfield[0], 1, velocity[noffset+i], 1);
+        Vmath::Vdiv(nPts, physfield[1 + i], 1, physfield[0], 1, 
+                    velocity[noffset+i], 1);
     }
 }
 

@@ -1156,10 +1156,12 @@ namespace Nektar
                     loc_elmt = LRelmts[nlr];
                     if(bndNumber>=0)
                     {
-                        locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
+                        locLeng = loc_elmt->GetElmtBndNormalDirctnElmtLength(
+                                                bndNumber);
                         // Project normals from 3D element onto the same orientation as
                         // the trace expansion.
-                        StdRegions::Orientation orient = loc_elmt->GetForient(bndNumber);
+                        StdRegions::Orientation orient = loc_elmt->GetForient(
+                                                            bndNumber);
 
                         int fromid0,fromid1;
                         if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)

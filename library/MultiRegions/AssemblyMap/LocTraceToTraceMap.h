@@ -233,12 +233,14 @@ public:
         return m_nLocTracePts;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, bool>>  &GetLeftRightAdjacentExpFlag() const
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, bool>>  
+        &GetLeftRightAdjacentExpFlag() const
     {
         return m_LeftRightAdjacentExpFlag;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int >>   &GetLeftRightAdjacentExpId() const 
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int >>   
+        &GetLeftRightAdjacentExpId() const 
     {
         return m_LeftRightAdjacentExpId;
     }
@@ -248,27 +250,35 @@ public:
     //     return m_LeftRightAdjacentExpId[lr];
     // }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, Array<OneD, int > > >  &GetTraceceffToLeftRightExpcoeffMap() const
+    MULTI_REGIONS_EXPORT inline const Array<OneD, 
+        const Array<OneD, Array<OneD, int > > >  
+        &GetTraceceffToLeftRightExpcoeffMap() const
     {
         return m_TraceceffToLeftRightExpcoeffMap;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, Array<OneD, int > > > &GetTraceceffToLeftRightExpcoeffSign() const
+    MULTI_REGIONS_EXPORT inline const Array<OneD, 
+        const Array<OneD, Array<OneD, int > > > 
+        &GetTraceceffToLeftRightExpcoeffSign() const
     {
         return m_TraceceffToLeftRightExpcoeffSign;
     }
 
-    MULTI_REGIONS_EXPORT inline void SetTracephysToLeftRightExpphysMap(const Array<OneD, const Array<OneD, Array<OneD, int > > > & inarray)
+    MULTI_REGIONS_EXPORT inline void SetTracephysToLeftRightExpphysMap(
+        const Array<OneD, const Array<OneD, Array<OneD, int > > > & inarray)
     {
         m_TracephysToLeftRightExpphysMap = inarray;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, Array<OneD, int > > > &GetTracephysToLeftRightExpphysMap() const
+    MULTI_REGIONS_EXPORT inline const Array<OneD, 
+        const Array<OneD, Array<OneD, int > > > 
+        &GetTracephysToLeftRightExpphysMap() const
     {
         return m_TracephysToLeftRightExpphysMap;
     }
 
-    MULTI_REGIONS_EXPORT inline void SetflagTracephysToLeftRightExpphysMap(const bool in)
+    MULTI_REGIONS_EXPORT inline void SetflagTracephysToLeftRightExpphysMap(
+        const bool in)
     {
         m_flagTracephysToLeftRightExpphysMap = in;
     }
@@ -337,16 +347,19 @@ private:
     
 
     // the map of every coeff from current trace to the left&right adjacent expasion coeffs 
-    Array<OneD, Array<OneD, Array<OneD, int > > > m_TraceceffToLeftRightExpcoeffMap;
+    Array<OneD, Array<OneD, Array<OneD, int > > > 
+        m_TraceceffToLeftRightExpcoeffMap;
     // the sign of every coeff from current trace to the left&right adjacent expasion coeffs 
-    Array<OneD, Array<OneD, Array<OneD,int  > > > m_TraceceffToLeftRightExpcoeffSign;
+    Array<OneD, Array<OneD, Array<OneD,int  > > > 
+        m_TraceceffToLeftRightExpcoeffSign;
 
 
     // the map of every phys from current trace to the left&right adjacent expasion phys 
     // This map is only used when no interpolation is needed in getting GetFwdBwdTracePhys   
     // If interpolations is needed it should be determined as the InnerProduct of m_fieldToLocTraceMap matrix and interpolation matrix    
-    Array<OneD, Array<OneD, Array<OneD, int > > >   m_TracephysToLeftRightExpphysMap;
-    bool                                            m_flagTracephysToLeftRightExpphysMap;
+    Array<OneD, Array<OneD, Array<OneD, int > > >   
+        m_TracephysToLeftRightExpphysMap;
+    bool                          m_flagTracephysToLeftRightExpphysMap;
     
 };
 

@@ -394,10 +394,13 @@ void DriverArpack::v_Execute(ostream &out)
         if (m_comm->GetRank() == 0)
         {
             out << "L 2 error (variable " << m_equ[0]->GetVariable(j) << ") : " 
-                <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
+                <<std::scientific<<std::setw(nwidthcolm)
+                <<std::setprecision(ndigits-1) 
                 << vL2Error << endl;
-            out << "L inf error (variable " << m_equ[0]->GetVariable(j) << ") : " 
-                <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
+            out << "L inf error (variable " << m_equ[0]->GetVariable(j) 
+                << ") : " 
+                <<std::scientific<<std::setw(nwidthcolm)
+                <<std::setprecision(ndigits-1) 
                 << vLinfError << endl;
         }
     }

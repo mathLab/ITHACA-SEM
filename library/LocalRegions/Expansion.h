@@ -123,7 +123,8 @@ namespace Nektar
                 LOCAL_REGIONS_EXPORT NekDouble VectorFlux(
                     const Array<OneD, Array<OneD, NekDouble > > &vec);
 
-                LOCAL_REGIONS_EXPORT const Array<OneD, const NekDouble > &GetElmtBndNormalDirctnElmtLength(const int nbnd) const;
+                LOCAL_REGIONS_EXPORT const Array<OneD, const NekDouble > 
+                        &GetElmtBndNormalDirctnElmtLength(const int nbnd) const;
 
             protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;
@@ -132,7 +133,8 @@ namespace Nektar
 
                 // the element length in the each element boundary(Vertex, edge or face) normal direction
                 // calculated based on the local m_metricinfo times the standard element length(which is 2.0)
-                std::map<int, Array<OneD, NekDouble>  > m_ElmtBndNormalDirctnElmtLength;
+                std::map<int, Array<OneD, NekDouble>  > 
+                        m_ElmtBndNormalDirctnElmtLength;
 
                 void ComputeLaplacianMetric();
                 void ComputeQuadratureMetric();

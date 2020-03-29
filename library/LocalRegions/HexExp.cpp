@@ -1000,8 +1000,10 @@ namespace Nektar
 
             int nqb = nq_face;
             int nbnd= face;
-            m_ElmtBndNormalDirctnElmtLength[nbnd] = Array<OneD, NekDouble>(nqb,0.0);
-            Array<OneD, NekDouble>  &length = m_ElmtBndNormalDirctnElmtLength[nbnd];
+            m_ElmtBndNormalDirctnElmtLength[nbnd] = 
+                    Array<OneD, NekDouble>(nqb,0.0);
+            Array<OneD, NekDouble>  &length = 
+                    m_ElmtBndNormalDirctnElmtLength[nbnd];
 
             // Regular geometry case
             if((type == SpatialDomains::eRegular)||(type == SpatialDomains::eMovingRegular))

@@ -421,11 +421,13 @@ namespace Nektar
     }
 
     void CompressibleFlowSystem::SetBoundaryConditionsDeriv(
-            const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
-            NekDouble                                                           time,
-            const Array<OneD, const Array<OneD, NekDouble> >                    &pFwd,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &pDervFwd)
+        const Array<OneD, const Array<OneD, NekDouble> >    &physarray,
+        const Array<OneD, const Array<OneD, 
+            Array<OneD, NekDouble> > >                      &dervarray,
+        NekDouble                                           time,
+        const Array<OneD, const Array<OneD, NekDouble> >    &pFwd,
+        const Array<OneD, const Array<OneD, 
+            Array<OneD, NekDouble> > >                      &pDervFwd)
     {
         int nTracePts  = GetTraceTotPoints();
         int nvariables = physarray.num_elements();
@@ -453,14 +455,15 @@ namespace Nektar
         else
         {
             int nDim      = m_fields[0]->GetCoordim(0);
-            DervFwd =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nDim);
+            DervFwd = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nDim);
             for (int nd = 0; nd < nDim; ++nd)
             {
-                DervFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nvariables);
+                DervFwd[nd] = Array<OneD, Array<OneD, NekDouble> > (nvariables);
                 for (int i = 0; i < nvariables; ++i)
                 {
-                    DervFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
-                    m_fields[i]->ExtractTracePhys(dervarray[nd][i], DervFwd[nd][i]);
+                    DervFwd[nd][i] = Array<OneD, NekDouble>(nTracePts,0.0);
+                    m_fields[i]->ExtractTracePhys(dervarray[nd][i], 
+                                                    DervFwd[nd][i]);
                 }
             }
         }
@@ -988,15 +991,16 @@ namespace Nektar
     }
 
     void CompressibleFlowSystem::v_GetViscousSymmtrFluxConservVar(
-            const int                                                       nConvectiveFields,
-            const int                                                       nSpaceDim,
-            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
-            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-            Array< OneD, int >                                              &nonZeroIndex,    
-            const Array<OneD, Array<OneD, NekDouble> >                      &normals)
+        const int                                           nConvectiveFields,
+        const int                                           nSpaceDim,
+        const Array<OneD, Array<OneD, NekDouble> >          &inaverg,
+        const Array<OneD, Array<OneD, NekDouble > >         &inarray,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &outarray,
+        Array< OneD, int >                                  &nonZeroIndex,    
+        const Array<OneD, Array<OneD, NekDouble> >          &normals)
     {
-        boost::ignore_unused(nConvectiveFields,nSpaceDim,inaverg,inarray,outarray,nonZeroIndex,normals);
+        boost::ignore_unused(nConvectiveFields,nSpaceDim,inaverg,inarray,
+                                outarray,nonZeroIndex,normals);
         ASSERTL0(false, "v_GetViscousSymmtrFluxConservVar not coded");
     }
     /**

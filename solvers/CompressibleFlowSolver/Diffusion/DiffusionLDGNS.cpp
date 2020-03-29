@@ -287,7 +287,8 @@ void DiffusionLDGNS::v_Diffuse_coeff(
 
     // Compute u from q_{\eta} and q_{\xi}
     // Obtain numerical fluxes
-    DiffuseTraceFlux(fields,inarray,derivativesO1,m_viscTensor,viscousFlux,pFwd,pBwd);
+    DiffuseTraceFlux(fields,inarray,derivativesO1,m_viscTensor,viscousFlux,
+                        pFwd,pBwd);
     // v_NumericalFluxO2(fields, inarray, m_viscTensor, viscousFlux);
 
     for (i = 0; i < nConvectiveFields; ++i)
@@ -323,7 +324,8 @@ void DiffusionLDGNS::v_DiffuseCalculateDerivative(
 
     Array<OneD, NekDouble>               tmp1(nCoeffs);
     Array<OneD, Array<OneD, NekDouble> > tmp2(nConvectiveFields);
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > numericalFluxO1(m_spaceDim);
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
+        numericalFluxO1(m_spaceDim);
                                                 
     for (int j = 0; j < m_spaceDim; ++j)
     {

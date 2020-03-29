@@ -93,7 +93,8 @@ namespace Nektar
                 tmp[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
             }
 
-            AdvectionWeakDG::v_Advect_coeff(nConvectiveFields,fields,advVel,inarray,tmp,time,pFwd,pBwd);
+            AdvectionWeakDG::v_Advect_coeff(nConvectiveFields,fields,
+                                            advVel,inarray,tmp,time,pFwd,pBwd);
             
             for(int i = 0; i < nConvectiveFields; ++i)
             {
@@ -116,7 +117,8 @@ namespace Nektar
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
             int i, j;
             
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxvector(nConvectiveFields);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
+                fluxvector(nConvectiveFields);
             // Allocate storage for flux vector F(u).
             for (i = 0; i < nConvectiveFields; ++i)
             {
@@ -128,7 +130,8 @@ namespace Nektar
                 }
             }
 
-            v_AdvectVolumeFlux(nConvectiveFields,fields,advVel,inarray,fluxvector,time);
+            v_AdvectVolumeFlux(nConvectiveFields,fields,advVel,inarray,
+                                fluxvector,time);
             
             // Get the advection part (without numerical flux)
             for(int i = 0; i < nConvectiveFields; ++i)
@@ -144,7 +147,8 @@ namespace Nektar
                 numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
             }
 
-            v_AdvectTraceFlux(nConvectiveFields, fields, advVel, inarray, numflux,time,pFwd,pBwd);
+            v_AdvectTraceFlux(nConvectiveFields, fields, advVel, inarray, 
+                                numflux,time,pFwd,pBwd);
 
             // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
             for(i = 0; i < nConvectiveFields; ++i)
@@ -179,14 +183,16 @@ namespace Nektar
             boost::ignore_unused(advVel,time);
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
 
-            ASSERTL1(m_riemann, "Riemann solver must be provided for AdvectionWeakDG.");
+            ASSERTL1(m_riemann, 
+                "Riemann solver must be provided for AdvectionWeakDG.");
 
             // Store forwards/backwards space along trace space
             Array<OneD, Array<OneD, NekDouble>> Fwd(nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble>> Bwd(nConvectiveFields);
             // Array<OneD, Array<OneD, NekDouble> > numflux(nConvectiveFields);
 
-            if (pFwd == NullNekDoubleArrayofArray || pBwd == NullNekDoubleArrayofArray)
+            if (pFwd == NullNekDoubleArrayofArray || 
+                pBwd == NullNekDoubleArrayofArray)
             {
                 for (int i = 0; i < nConvectiveFields; ++i)
                 {

@@ -92,10 +92,12 @@ int main(int argc, char *argv[])
     for(int i = 0; i < equ->GetNvariables(); ++i)
     {
         cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " 
-             <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
+             <<std::scientific<<std::setw(nwidthcolm)
+             <<std::setprecision(ndigits-1) 
              << equ->L2Error(i,true) << endl;
         cout << "L inf error (variable " << equ->GetVariable(i)  << "): " 
-             <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
+             <<std::scientific<<std::setw(nwidthcolm)
+             <<std::setprecision(ndigits-1) 
              << equ->LinfError(i) << endl;
     }
 

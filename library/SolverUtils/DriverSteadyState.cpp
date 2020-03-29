@@ -315,11 +315,13 @@ void DriverSteadyState::v_Execute(ostream &out)
         {
             out << "L 2 error (variable " << m_equ[m_nequ - 1]->GetVariable(j)
                 << ") : ";
-            out <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
+            out <<std::scientific<<std::setw(nwidthcolm)
+                <<std::setprecision(nwidthcolm-8) 
                 << vL2Error << endl;    
             out << "L inf error (variable " << m_equ[m_nequ - 1]->GetVariable(j)
                 << ") : ";
-            out <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
+            out <<std::scientific<<std::setw(nwidthcolm)
+                <<std::setprecision(nwidthcolm-8) 
                 << vLinfError << endl;
             
         }

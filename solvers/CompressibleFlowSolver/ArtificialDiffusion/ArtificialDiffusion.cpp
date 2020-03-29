@@ -170,7 +170,8 @@ void ArtificialDiffusion::v_DoArtificialDiffusionFlux(
     for (int j = 0; j < nDim; ++j)
     {
         VolumeDiff[j] = Array<OneD, Array<OneD, NekDouble>>(nvariables);
-        inarrayDiffderivative[j]=Array<OneD, Array<OneD, NekDouble>> (nvariables);
+        inarrayDiffderivative[j]=
+            Array<OneD, Array<OneD, NekDouble>> (nvariables);
         for (int i = 0; i < nvariables; ++i)
         {
             VolumeDiff[j][i] = Array<OneD, NekDouble>(npoints, 0.0);
@@ -185,14 +186,17 @@ void ArtificialDiffusion::v_DoArtificialDiffusionFlux(
     // Diffusion term in physical rhs form
     // To notice, needs to firstly calculate volumeflux, traceflux uses it.
     m_diffusion->DiffuseCalculateDerivative(m_fields,inarray,inarrayDiffderivative);
-    m_diffusion->DiffuseVolumeFlux( m_fields, inarray,inarrayDiffderivative, VolumeFlux);
-    m_diffusion->DiffuseTraceFlux(m_fields, inarray,inarrayDiffderivative,VolumeFlux,TraceFlux);
+    m_diffusion->DiffuseVolumeFlux( m_fields, inarray,inarrayDiffderivative, 
+                                    VolumeFlux);
+    m_diffusion->DiffuseTraceFlux(m_fields, inarray,inarrayDiffderivative,
+                                    VolumeFlux,TraceFlux);
 
     for (int j = 0; j < nDim; ++j)
     {
         for (int i = 0; i < nvariables; ++i)
         {
-            Vmath::Vadd(npoints, &VolumeDiff[j][i][0], 1, &VolumeFlux[j][i][0], 1,
+            Vmath::Vadd(npoints, &VolumeDiff[j][i][0], 1, 
+                        &VolumeFlux[j][i][0], 1,
                         &VolumeFlux[j][i][0], 1);
         }
     }

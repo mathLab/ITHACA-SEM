@@ -396,8 +396,9 @@ namespace Nektar
 
             for(i = 0; i < (*m_exp).size(); ++i)
             {
-                (*m_exp)[i]->MultiplyByQuadratureMetric(inarray+m_phys_offset[i],
-                                                  e_outarray = outarray+m_phys_offset[i]);
+                (*m_exp)[i]->MultiplyByQuadratureMetric(
+                                inarray+m_phys_offset[i],
+                                e_outarray = outarray+m_phys_offset[i]);
             }
         }
 
@@ -415,8 +416,9 @@ namespace Nektar
 
             for(i = 0; i < (*m_exp).size(); ++i)
             {
-                (*m_exp)[i]->DividByQuadratureMetric(inarray+m_phys_offset[i],
-                                                  e_outarray = outarray+m_phys_offset[i]);
+                (*m_exp)[i]->DividByQuadratureMetric(
+                                inarray+m_phys_offset[i],
+                                e_outarray = outarray+m_phys_offset[i]);
             }
         }
 
@@ -2795,20 +2797,20 @@ namespace Nektar
                 Array<OneD,       NekDouble>        &field)
         {
             boost::ignore_unused(field,Fwd,Bwd);
-            ASSERTL0(false,
-                     "v_AddTraceQuadPhysToField is not defined or valid for this class type");
+            ASSERTL0(false, "v_AddTraceQuadPhysToField is not defined or valid for this class type");
         }
 
         const Array<OneD,const NekDouble>
                 &ExpList::v_GetBndCondBwdWeight()
         {
-            ASSERTL0(false,
-                     "v_GetBndCondBwdWeight is not defined or valid for this class type");
+            ASSERTL0(false, "v_GetBndCondBwdWeight is not defined or valid for this class type");
             static Array<OneD, NekDouble> tmp;
             return tmp;
         }
 
-        void ExpList::v_SetBndCondBwdWeight(const int index, const NekDouble value)
+        void ExpList::v_SetBndCondBwdWeight(
+            const int index, 
+            const NekDouble value)
         {
             boost::ignore_unused(index,value);
             ASSERTL0(false,
@@ -3637,7 +3639,8 @@ namespace Nektar
             v_ClearGlobalLinSysManager();
         }
 
-        const LocTraceToTraceMapSharedPtr &ExpList::v_GetlocTraceToTraceMap() const
+        const LocTraceToTraceMapSharedPtr 
+                &ExpList::v_GetlocTraceToTraceMap() const
         {
             ASSERTL0(false, "v_GetlocTraceToTraceMap not coded");
             return NullLocTraceToTraceMapSharedPtr;

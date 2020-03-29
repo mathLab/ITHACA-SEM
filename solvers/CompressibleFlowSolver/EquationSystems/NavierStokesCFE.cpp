@@ -157,17 +157,15 @@ namespace Nektar
         }
 
         // Set up penalty term for LDGNS
-        m_diffusion->SetFluxPenaltyNS(&NavierStokesCFE::
-            v_GetFluxPenalty, this);
+        if ("LDGNS" == diffName||
+            "LDGNS3DHomogeneous1D"== diffName)
+        {
+            m_diffusion->SetFluxPenaltyNS(&NavierStokesCFE::
+                v_GetFluxPenalty, this);
+        }
 
         // Concluding initialisation of diffusion operator
         m_diffusion->InitObject         (m_session, m_fields);
-        
-        //Only NavierStokes equation and using weakDG,LDGNS can temparary use the codes
-        string advName;
-        m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
-	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        
     }
 
     void NavierStokesCFE::v_DoDiffusion(
@@ -176,13 +174,12 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
     {
-        int i;
         int nvariables = inarray.size();
         int npoints    = GetNpoints();
         int nTracePts  = GetTraceTotPoints();
 
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
-        for (i = 0; i < nvariables; ++i)
+        for (int i = 0; i < nvariables; ++i)
         {
             outarrayDiff[i] = Array<OneD, NekDouble>(npoints,0.0);
         }
@@ -198,7 +195,7 @@ namespace Nektar
             m_diffusion->Diffuse(nvariables, m_fields, inarray, outarrayDiff,
                                 m_BndEvaluateTime,
                                 pFwd, pBwd);
-            for (i = 0; i < nvariables; ++i)
+            for (int i = 0; i < nvariables; ++i)
             {
                 Vmath::Vadd(npoints,
                             outarrayDiff[i], 1,
@@ -213,7 +210,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > inBwd(nvariables-1);
 
             
-            for (i = 0; i < nvariables-1; ++i)
+            for (int i = 0; i < nvariables-1; ++i)
             {
                 inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
                 inFwd[i]       = Array<OneD, NekDouble>(nTracePts);
@@ -253,7 +250,7 @@ namespace Nektar
             m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, 
                                 outarrayDiff, inFwd, inBwd);
 
-            for (i = 0; i < nvariables; ++i)
+            for (int i = 0; i < nvariables; ++i)
             {
                 Vmath::Vadd(npoints,
                             outarrayDiff[i], 1,
@@ -355,7 +352,6 @@ namespace Nektar
                             outarray[i], 1);
             }
 
-            // m_diffusion->v_Diffuse_coeff(inarray, outarray, pFwd, pBwd);
             if (m_shockCaptureType != "Off")
             {
                 m_artificialDiffusion->DoArtificialDiffusion_coeff(

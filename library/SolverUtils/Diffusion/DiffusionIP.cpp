@@ -214,12 +214,8 @@ namespace Nektar
 
             DiffuseCalculateDerivative(fields,inarray,qfield,vFwd,vBwd);
 
-            // m_FunctorDerivBndCond(inarray,qfield,m_time,vFwd,tmparray3D);
-
             Array<OneD, int > nonZeroIndex;
             DiffuseVolumeFlux(fields,inarray,qfield,elmtFlux,nonZeroIndex);
-
-            //TODO: TO GET TRACE QFIELD FIRST AND RELEASE qfield. AddDiffusionSymmFluxToCoeff DON'T NEED qfield
 
             Array<OneD, Array<OneD, NekDouble> > tmpFluxIprdct(nDim);
             // volume intergration: the nonZeroIndex indicates which flux is nonzero
@@ -254,7 +250,6 @@ namespace Nektar
 
                 fields[j]->AddTraceIntegral     (Traceflux[j], outarray[j]);
                 fields[j]->SetPhysState         (false);
-                // fields[j]->MultiplyByElmtInvMass(outarray[j], outarray[j]);
             }
 
             AddDiffusionSymmFluxToCoeff(nConvectiveFields, fields, inarray,
@@ -315,7 +310,6 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > tmparray2D = 
                 NullNekDoubleArrayofArray;
 
-            // TODO: qfield AND elmtFlux share storage????
             m_FunctorDiffusionfluxCons(nDim,inarray,qfield, VolumeFlux,
                                         nonZeroIndex,tmparray2D,muvar);
         }
@@ -333,7 +327,6 @@ namespace Nektar
             boost::ignore_unused(VolumeFlux);
             int nDim      = fields[0]->GetCoordim(0);
             int nPts      = fields[0]->GetTotPoints();
-            // int nCoeffs   = fields[0]->GetNcoeffs();
             int nTracePts = fields[0]->GetTrace()->GetTotPoints();
 
             Array<OneD, Array<OneD, Array<OneD, NekDouble > > > traceflux3D(1);
@@ -436,7 +429,6 @@ namespace Nektar
         {
             boost::ignore_unused(inarray,qfield,VolumeFlux,pFwd,pBwd);
             int nDim      = fields[0]->GetCoordim(0);
-            // int nTracePts = fields[0]->GetTrace()->GetTotPoints();
 
             CalTraceSymFlux(nConvectiveFields,nDim,fields,m_traceAver,
                             m_traceJump,nonZeroIndex,SymmFlux);
@@ -742,9 +734,6 @@ namespace Nektar
                     numDerivFwd[nd][i] = Array<OneD, NekDouble>(nTracePts,0.0);
                 }
             }
-
-            // Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  tmparray3D = NullNekDoubleArrayofArrayofArray;
-            // m_FunctorDerivBndCond(inarray,qfield,m_time,vFwd,tmparray3D);
 
             Array<OneD, NekDouble> Fwd(nTracePts,0.0);
             Array<OneD, NekDouble> Bwd(nTracePts,0.0);

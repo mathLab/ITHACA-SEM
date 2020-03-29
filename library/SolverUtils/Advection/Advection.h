@@ -119,6 +119,12 @@ public:
                   pTraceFlux, pTime, pFwd, pBwd);
     }
     
+    /**
+     * @brief Similar with Advection::Advect(): calculate the advection flux 
+     * The difference is in the outarray:
+     *  it is the coefficients of basis for Advect_coeff() 
+     *  it is the physics on quadrature points for Advect() 
+     */
     SOLVER_UTILS_EXPORT void Advect_coeff(
         const int nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

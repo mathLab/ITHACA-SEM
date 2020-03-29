@@ -1033,6 +1033,45 @@ namespace Nektar
         m_varConv->GetVelocityVector(physfield, velocity);
     }
 
+    void CompressibleFlowSystem::v_DoDiffusion(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+    {
+        boost::ignore_unused(inarray, outarray, pFwd, pBwd);
+        if (m_shockCaptureType != "Off")
+        {
+            m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
+        }
+    }
+
+    void CompressibleFlowSystem::v_DoDiffusion_coeff(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+    {
+        boost::ignore_unused(inarray,outarray,pFwd,pBwd);
+        // Do nothing by default
+    }
+
+    void CompressibleFlowSystem::v_DoDiffusionFlux(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
+        Array<OneD, Array<OneD, NekDouble>>              &TraceFlux,
+        const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+    {
+        boost::ignore_unused(inarray,VolumeFlux,TraceFlux,pFwd,pBwd);
+        //Artificial Diffusion need to implement
+        if (m_shockCaptureType != "Off")
+        {
+            m_artificialDiffusion->DoArtificialDiffusionFlux(inarray, 
+                VolumeFlux,TraceFlux);
+        }
+    }
+
 /**
  * @brief Compute an estimate of minimum h/p
  * for each element of the expansion.

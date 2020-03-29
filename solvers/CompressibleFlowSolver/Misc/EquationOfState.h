@@ -66,11 +66,7 @@ public:
     {
     }
 
-    /// Calculate the temperature
-    inline NekDouble GetGamma()
-    {
-        return m_gamma;
-    };
+    inline NekDouble GetGamma();
 
     /// Calculate the temperature
     NekDouble GetTemperature(const NekDouble &rho, const NekDouble &e);
@@ -137,6 +133,12 @@ protected:
 
     virtual NekDouble v_GetInternalEnergy(const NekDouble &T);
 };
+
+    /// Get  the Gamma
+    inline NekDouble EquationOfState::GetGamma()
+    {
+        return m_gamma;
+    }
 }
 
 #endif

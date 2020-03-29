@@ -204,8 +204,6 @@ namespace Nektar
             Vmath::Vmul(nqtot, m_metrics[eMetricQuadrature], 1, inarray, 1, outarray, 1);
         }
 
-
-        //TODO: CHECK WHETHER IT IS POSSIBLE TO ADD A eMetricQuadratureReciprocal
         void Expansion::v_DividByQuadratureMetric(
             const Array<OneD, 
             const NekDouble>& inarray,

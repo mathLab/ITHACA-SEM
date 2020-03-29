@@ -840,12 +840,10 @@ void LocTraceToTraceMap::Setup3D(
 }
 
 /**
- * @brief Set up member variables for a two-dimensional problem.
+ * @brief Set up maps between coefficients on trace and in cells.
  *
- * @param locExp         Expansion list of 2D elements
- * @param trace          Expansion list of the one-dimensional trace.
- * @param elmtToTrace    Mapping from elemental edges to trace.
- * @param leftAdjacents  Vector of bools denoting forwards-oriented traces.
+ * @param locExp         Expansion list in elements
+ * @param trace          Expansion list on traces.
  */
 void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
     const ExpList &locExp,
@@ -927,6 +925,12 @@ void LocTraceToTraceMap::LocTracesFromField(
 }
 
 /**
+ * @brief Reverse process of LocTracesFromField() 
+ * Add the local traces in physical space to field using
+ * #m_fieldToLocTraceMap.
+ *
+ * @param field  Solution field in physical space
+ * @param faces  local traces.
  */
 void LocTraceToTraceMap::AddLocTracesToField(
     const Array<OneD, const NekDouble>  &faces, 
@@ -1061,8 +1065,8 @@ void LocTraceToTraceMap::InterpLocEdgesToTrace(
  * 
  *
  * @param dir       Selects forwards (0) or backwards (1) direction.
- * @param locfaces  Local trace edge storage.
- * @param faces     Global trace edge storage
+ * @param locedges  Local trace edge storage.
+ * @param edges     Global trace edge storage
  */
 void LocTraceToTraceMap::RightIPTWLocEdgesToTraceInterpMat(
     const int                           dir,
@@ -1397,9 +1401,9 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
  * @brief Right inner product with localedgetoTrace Interpolation Matrix.
  * 
  *
- * @param dir       Selects forwards (0) or backwards (1) direction.
- * @param locfaces  Local trace edge storage.
- * @param faces     Global trace edge storage
+ * @param dir           Selects forwards (0) or backwards (1) direction.
+ * @param traces        trace .
+ * @param loctraces     Local trace 
  */
 void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
     const int                           dir,

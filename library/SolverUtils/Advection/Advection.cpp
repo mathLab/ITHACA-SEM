@@ -85,9 +85,7 @@ void Advection::Advect(
             pOutarray, pTime, pFwd, pBwd);
 }
 
-// Check if the function is supported
-// To notice, the const pFwd and pBwd are not initialized, need to be
-// initialized in children class
+
 void Advection::v_AdvectVolumeFlux(
     const int nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
@@ -101,9 +99,10 @@ void Advection::v_AdvectVolumeFlux(
     ASSERTL0(false, "Not defined for AdvectVolumeFlux.");
 }
 
-// Check if the function is supported
-// To notice, the const pFwd and pBwd are not initialized, need to be
-// initialized in children class
+/**
+ * @brief calculate the advection flux in the cell the trace  integration
+ * 
+ */
 void Advection::v_AdvectTraceFlux(
     const int nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
@@ -120,6 +119,11 @@ void Advection::v_AdvectTraceFlux(
 }
 
 /**
+ * @brief Similar with Advection::Advect(): calculate the advection flux 
+ * The difference is in the outarray:
+ *  it is the coefficients of basis for Advect_coeff() 
+ *  it is the physics on quadrature points for Advect() 
+ * 
  * @param   nConvectiveFields   Number of velocity components.
  * @param   pFields             Expansion lists for scalar fields.
  * @param   pAdvVel             Advection velocity.

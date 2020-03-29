@@ -61,7 +61,13 @@ namespace Nektar
         {
             v_Diffuse(nConvectiveFields, fields, inarray, outarray, pFwd, pBwd);
         }
-
+        
+        /**
+         * @brief Similar with Diffusion::Diffuse(): calculate the diffusion flux 
+         * The difference is in the outarray:
+         *  it is the coefficients of basis for Diffuse_coeff() 
+         *  it is the physics on quadrature points for Diffuse() 
+         */
         void Diffusion::Diffuse_coeff(
             const std::size_t                                 nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -75,7 +81,7 @@ namespace Nektar
         }
 
         void Diffusion::Diffuse(
-                const std::size_t                             nConvectiveFields,
+            const std::size_t                                 nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray,
@@ -167,7 +173,6 @@ namespace Nektar
             ASSERTL0(false," not defined");
         }
         
-        // No multiply(check if diffsionVolume difined)
         void Diffusion::v_DiffuseCalculateDerivative(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble>>         &inarray,
@@ -180,7 +185,6 @@ namespace Nektar
             ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
         }
 
-        // No multiply(check if diffsionVolume difined)
         void Diffusion::v_DiffuseVolumeFlux(
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
             const Array<OneD, Array<OneD, NekDouble>>           &inarray,
@@ -194,7 +198,6 @@ namespace Nektar
             ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
         }
 
-        // No multiply(check if diffsionTraceFlux difined)
         void Diffusion::v_DiffuseTraceFlux(
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
             const Array<OneD, Array<OneD, NekDouble>>           &inarray,

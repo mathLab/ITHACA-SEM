@@ -22,7 +22,11 @@
 **ITHACA-SEM** is a C++ implementation  of several reduced order modelling techniques. **ITHACA-SEM** is designed to work with [**Nektar++ 4.4.0**](www.nektar.info) simulations.
 
 ## Dependencies and installation
-**ITHACA-SEM** requires a Nektar++ 4.4.0 installation and Eigen header files for the matrix decompositions. Eigen is provided within **ITHACA-SEM**.
+Please see the installHowTo.txt in the root directory.
+
+**ITHACA-SEM** requires a Nektar++ 4.4.0 installation and Eigen header files for the matrix decompositions. 
+
+Eigen is provided within **ITHACA-SEM**.
 
 ## Examples
 Example session files for Nektar++ are provided in the ITHACA_Test_cases subfolder.

@@ -47,16 +47,6 @@
             <P> ref_param_index = 2       </P>
             <P> ref_param_nu = 1       </P>
             <P> POD_tolerance = .9999       </P>
-            <P> A             = 0.65               </P>
-            <P> omega         = 2*PI*f               </P>
-            <P> MappingPressureTolerance  = 1e-5               </P>
-            <P> MappingViscousTolerance   = 1e-5               </P>
-            <P> use_Newton = 0       </P>
-	    <P> globally_connected = 2      </P>
-            <P> kdim = 16 </P>
-            <P> nvec = 2 </P>
-            <P> evtol = 1e-1 </P>
-            <P> nits = 1000 </P>
         </PARAMETERS>
 
         <VARIABLES>

@@ -68,11 +68,21 @@ int main(int argc, char *argv[])
         // Create driver
         drv = GetDriverFactory().CreateInstance(vDriverModule, session); 
 
-	CoupledLinearNS_TT CLNS(session);
-	CLNS.offline_phase();
-	CLNS.online_phase();
+	// check the Solver type
+	cout << "SolverType " << session->GetSolverInfo("SolverType") << endl;
+
+	if (session->GetSolverInfo("SolverType") == "CoupledLinearisedNS_TT")
+	{
+		CoupledLinearNS_TT CLNS(session);
+		CLNS.offline_phase();
+		CLNS.online_phase();
 	
-	cout<<"Online phase finished"<<endl;
+		cout<<"Online phase finished"<<endl;
+	}
+	else
+	{
+		drv->Execute();
+	}
 
         session->Finalise();
     }

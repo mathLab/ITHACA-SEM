@@ -1,0 +1,131 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+
+%opening
+\title{User Guide - ITHACA-SEM}
+\author{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This guide explains functionality added with ITHACA-SEM to Nektar++. These are 
+parametric model reduction routines and a few examples showing the usage.
+Some familiarity with the underlying PDE-solver Nektar++ is assumed. 
+\end{abstract}
+
+\section{Installation and Testing}
+
+-- a copy the install HowTo here
+
+\section{Using ITHACA-SEM}
+
+\subsection{Scope of Added Functionality}
+
+
+\subsection{Setting up a Reduced Order Model}
+
+\subsubsection{A minimal example}
+
+\subsubsection{Overview table of parameters}
+
+\begin{table}
+\centering
+\begin{tabular}{| l | l | l | l|}  
+\hline
+\hline
+parameter & type & range  & default value \\
+\hline
+ \verb|load_snapshot_data_from_files|  & bool  & 0/1 & none \\%&  \\
+ \verb|number_of_snapshots|  & int  & 0-$\infty$ & none \\%&  \\
+ \verb|parameter_space_dimension|  & int  & 1-2 & ?? \\%&  \\
+ \verb|load_cO_snapshot_data_from_files| & bool & 0/1 & ?? \\
+ \verb|do_trafo_check| & bool & 0/1 & ?? \\
+ \verb|compute_smaller_model_errs| &  bool & 0/1 & ?? \\
+ \verb|qoi_dof|  & int  & 0-$\infty$ & -1 \\%&  \\
+ \verb|POD_tolerance|  & nn  & nn & nn \\%&  \\
+ \verb|ref_param_index| & nn  & nn & nn \\%&  \\
+ \verb|ref_param_nu| & nn  & nn & nn \\%&  \\
+ \verb|globally_connected| & nn  & nn & nn \\%&  \\
+ \verb|use_Newton| & nn  & nn & nn \\%&  \\
+ \verb|use_non_unique_up_to_two| & nn  & nn & nn \\%&  \\
+ \verb|debug_mode| & nn  & nn & nn \\%&  \\
+ \verb|write_ROM_field| & nn  & nn & nn \\%&  \\
+ \verb|snapshot_computation_plot_rel_errors| & nn  & nn & nn \\%&  \\
+ \verb|number_of_snapshots_dir0| & nn  & nn & nn \\%&  \\
+ \verb|number_of_snapshots_dir1| & nn  & nn & nn \\%&  \\
+ \verb|use_fine_grid_VV| & nn  & nn & nn \\%&  \\
+ \verb|use_fine_grid_VV_and_load_ref| & nn  & nn & nn \\%&  \\
+ \verb|fine_grid_dir0| & nn  & nn & nn \\%&  \\
+ \verb|fine_grid_dir1| & nn  & nn & nn \\%&  \\
+\hline
+\hline
+\end{tabular}
+\caption{Overview of parameters. A default value of 'none' means that this parameter has to be set by the user.}
+\label{table:parameter_overview}
+\end{table} 
+
+parameters, range, standardwert
+
+\verb|load_snapshot_data_from_files|
+
+
+\verb|number_of_snapshots|
+
+\verb|parameter_space_dimension|
+
+\verb|load_cO_snapshot_data_from_files|
+
+\verb|do_trafo_check|
+
+\verb|compute_smaller_model_errs|
+
+\verb|qoi_dof|
+
+\verb|POD_tolerance|
+
+\verb|ref_param_index|
+
+\verb|ref_param_nu|
+
+\verb|globally_connected|
+
+\verb|use_Newton|
+
+\verb|use_non_unique_up_to_two|
+
+\verb|debug_mode|
+
+\verb|write_ROM_field|
+
+\verb|snapshot_computation_plot_rel_errors|
+
+
+\verb|number_of_snapshots_dir0|
+
+
+\verb|number_of_snapshots_dir1|
+
+\verb|use_fine_grid_VV|
+
+\verb|use_fine_grid_VV_and_load_ref|
+
+
+\verb|fine_grid_dir0|
+
+
+\verb|fine_grid_dir1|
+
+
+
+
+
+\subsubsection{Explanation of parameters}
+
+
+
+\section{Examples}
+
+
+\end{document}

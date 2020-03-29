@@ -145,9 +145,9 @@ void FilterReynoldsStresses::v_Initialise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    int dim          = pFields.num_elements() - 1;
+    int dim          = pFields.size() - 1;
     int nExtraFields = dim == 2 ? 3 : 6;
-    int origFields   = pFields.num_elements();
+    int origFields   = pFields.size();
 
     // Allocate storage
     m_fields.resize(origFields + nExtraFields);
@@ -182,8 +182,8 @@ void FilterReynoldsStresses::v_Initialise(
 void FilterReynoldsStresses::v_FillVariablesName(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
 {
-    int dim          = pFields.num_elements() - 1;
-    int origFields   = pFields.num_elements();
+    int dim          = pFields.size() - 1;
+    int origFields   = pFields.size();
 
     // Fill name of variables
     for (int n = 0; n < origFields; ++n)
@@ -218,7 +218,7 @@ void FilterReynoldsStresses::v_ProcessSample(
 {
     int i, j, n;
     int nq             = pFields[0]->GetTotPoints();
-    int dim            = pFields.num_elements() - 1;
+    int dim            = pFields.size() - 1;
     bool waveSpace     = pFields[0]->GetWaveSpace();
     NekDouble nSamples = (NekDouble)m_numSamples;
 
@@ -265,7 +265,7 @@ void FilterReynoldsStresses::v_ProcessSample(
         Vmath::Svtvm(nq, facDelta, m_fields[n], 1, vel, 1, m_delta[n], 1);
     }
     // Update pressure (directly to outFields)
-    Vmath::Svtsvtp(m_outFields[dim].num_elements(),
+    Vmath::Svtsvtp(m_outFields[dim].size(),
                    facAvg,
                    pFields[dim]->GetCoeffs(),
                    1,
@@ -297,7 +297,7 @@ void FilterReynoldsStresses::v_PrepareOutput(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    int dim = pFields.num_elements() - 1;
+    int dim = pFields.size() - 1;
 
     m_fieldMetaData["NumberOfFieldDumps"] =
         boost::lexical_cast<std::string>(m_numSamples);

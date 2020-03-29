@@ -245,7 +245,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
-            int n_coeffs = inarray.num_elements();
+            int n_coeffs = inarray.size();
 
             Array<OneD, NekDouble> coeff(n_coeffs);
             Array<OneD, NekDouble> coeff_tmp(n_coeffs,0.0);
@@ -793,7 +793,7 @@ namespace Nektar
 
         void StdSegExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
         {
-            if(outarray.num_elements() != NumBndryCoeffs())
+            if(outarray.size() != NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
             }
@@ -823,7 +823,7 @@ namespace Nektar
         void StdSegExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
         {
             int i;
-            if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
+            if(outarray.size()!=GetNcoeffs()-NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());
             }

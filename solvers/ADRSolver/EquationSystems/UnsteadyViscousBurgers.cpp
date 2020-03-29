@@ -133,8 +133,8 @@ namespace Nektar
 
                 if(m_useSpecVanViscVarDiff)
                 {
-                    Array<OneD, Array<OneD, NekDouble> > vel(m_fields.num_elements());
-                    for(int i = 0; i < m_fields.num_elements(); ++i)
+                    Array<OneD, Array<OneD, NekDouble> > vel(m_fields.size());
+                    for(int i = 0; i < m_fields.size(); ++i)
                     {
                         vel[i] = m_fields[i]->UpdatePhys();
                     }
@@ -158,7 +158,7 @@ namespace Nektar
 
         // Forcing terms
         m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
-                                    m_fields, m_fields.num_elements());
+                                    m_fields, m_fields.size());
 
         m_ode.DefineImplicitSolve (&UnsteadyViscousBurgers::DoImplicitSolve, this);
         m_ode.DefineOdeRhs        (&UnsteadyViscousBurgers::DoOdeRhs,        this);
@@ -195,7 +195,7 @@ namespace Nektar
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
 
-        for (i = 0; i < inarray.num_elements(); ++i)
+        for (i = 0; i < inarray.size(); ++i)
         {
             m_fields[0]->ExtractTracePhys(inarray[i], tmp);
 
@@ -223,7 +223,7 @@ namespace Nektar
                                           const NekDouble time)
     {
         // Number of fields (variables of the problem)
-        int nVariables = inarray.num_elements();
+        int nVariables = inarray.size();
 
         // Number of solution points
         int nSolutionPts = GetNpoints();
@@ -279,7 +279,7 @@ namespace Nektar
                                                  const NekDouble time)
     {
         int i;
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         SetBoundaryConditions(time);
         switch(m_projectionType)
         {
@@ -321,7 +321,7 @@ namespace Nektar
                                                  const NekDouble time,
                                                  const NekDouble lambda)
     {
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         int nq = m_fields[0]->GetNpoints();
 
         StdRegions::ConstFactorMap factors;
@@ -361,8 +361,8 @@ namespace Nektar
 
             if(cnt %10 == 0)
             {
-                Array<OneD, Array<OneD, NekDouble> > vel(m_fields.num_elements());
-                for(int i = 0; i < m_fields.num_elements(); ++i)
+                Array<OneD, Array<OneD, NekDouble> > vel(m_fields.size());
+                for(int i = 0; i < m_fields.size(); ++i)
                 {
                     m_fields[i]->ClearGlobalLinSysManager();
                     vel[i] = m_fields[i]->UpdatePhys();
@@ -394,9 +394,9 @@ namespace Nektar
 
         const int nq = m_fields[0]->GetNpoints();
 
-        for (int i = 0; i < flux.num_elements(); ++i)
+        for (int i = 0; i < flux.size(); ++i)
         {
-            for (int j = 0; j < flux[0].num_elements(); ++j)
+            for (int j = 0; j < flux[0].size(); ++j)
             {
                 Vmath::Vmul(nq, physfield[i], 1, physfield[j], 1,
                             flux[i][j], 1);
@@ -420,9 +420,9 @@ namespace Nektar
     {
         boost::ignore_unused(inarray);
 
-        unsigned int nDim = qfield.num_elements();
-        unsigned int nConvectiveFields = qfield[0].num_elements();
-        unsigned int nPts = qfield[0][0].num_elements();
+        unsigned int nDim = qfield.size();
+        unsigned int nConvectiveFields = qfield[0].size();
+        unsigned int nPts = qfield[0][0].size();
 
         for (unsigned int j = 0; j < nDim; ++j)
         {

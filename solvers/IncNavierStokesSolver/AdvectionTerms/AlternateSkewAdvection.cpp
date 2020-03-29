@@ -77,7 +77,7 @@ void AlternateSkewAdvection::v_Advect(
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
     // use dimension of Velocity vector to dictate dimension of operation
-    int ndim       = advVel.num_elements();
+    int ndim       = advVel.size();
     int nPointsTot = fields[0]->GetNpoints();
     Array<OneD, Array<OneD, NekDouble> > velocity(ndim);
     for(int i = 0; i < ndim; ++i)

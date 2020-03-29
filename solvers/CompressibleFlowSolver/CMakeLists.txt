@@ -120,7 +120,8 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
         #ADD_NEKTAR_TEST(Perturbation_NS_M05_square_CBC_par LENGTHY)
         #ADD_NEKTAR_TEST(Perturbation_NS_M15_square_CBC_par LENGTHY)
         ADD_NEKTAR_TEST(RAE5240_BSF_LE_bcsfromfile_par)
-        ADD_NEKTAR_TEST(Couette_WeakDG_LDG_Exact_par)
+        # disabled as intermittently fails
+        #ADD_NEKTAR_TEST(Couette_WeakDG_LDG_Exact_par)
     ENDIF (NEKTAR_USE_MPI)
 
     IF (NEKTAR_USE_FFTW)

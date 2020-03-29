@@ -159,7 +159,7 @@ void DiffusionLDGNS::v_InitObject(
     pFields[0]->GetFwdBwdTracePhys(hElePts, Fwd, Bwd);
     // Fix boundaries
     std::size_t cnt = 0;
-    std::size_t nBndRegions = pFields[0]->GetBndCondExpansions().num_elements();
+    std::size_t nBndRegions = pFields[0]->GetBndCondExpansions().size();
     // Loop on the boundary regions
     for (std::size_t i = 0; i < nBndRegions; ++i)
     {
@@ -216,27 +216,9 @@ void DiffusionLDGNS::v_InitObject(
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
-    int nCoeffs   = fields[0]->GetNcoeffs();
     Array<OneD, Array<OneD, NekDouble> > tmp2(nConvectiveFields);
     for (int i = 0; i < nConvectiveFields; ++i)
     {
-        tmp2[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
-    }
-    v_Diffuse_coeff(nConvectiveFields,fields,inarray,tmp2,pFwd,pBwd);
-    for (int i = 0; i < nConvectiveFields; ++i)
-    {
-        fields[i]->BwdTrans             (tmp2[i], outarray[i]);
-    }
-}
-
-void DiffusionLDGNS::v_Diffuse_coeff(
-    const std::size_t                                  nConvectiveFields,
-    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >        &outarray,
-    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
-    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
-{
     int i, j;
     int nDim      = fields[0]->GetCoordim(0);
     int nScalars  = inarray.num_elements();
@@ -402,7 +384,7 @@ void DiffusionLDGNS::NumericalFluxO1(
     const Array<OneD, Array<OneD, NekDouble> >               &pBwd)
 {
     std::size_t nTracePts = fields[0]->GetTrace()->GetTotPoints();
-    std::size_t nScalars  = inarray.num_elements();
+    std::size_t nScalars  = inarray.size();
 
     //Upwind
     Array<OneD, Array<OneD, NekDouble> > numflux{nScalars};
@@ -412,7 +394,7 @@ void DiffusionLDGNS::NumericalFluxO1(
     }
 
     // Modify the values in case of boundary interfaces
-    if (fields[0]->GetBndCondExpansions().num_elements())
+    if (fields[0]->GetBndCondExpansions().size())
     {
         ApplyBCsO1(fields, inarray, pFwd, pBwd, numflux);
     }
@@ -442,7 +424,7 @@ void DiffusionLDGNS::ApplyBCsO1(
     boost::ignore_unused(pBwd);
 
     std::size_t nTracePts = fields[0]->GetTrace()->GetTotPoints();
-    std::size_t nScalars  = inarray.num_elements();
+    std::size_t nScalars  = inarray.size();
 
     Array<OneD, NekDouble> tmp1{nTracePts, 0.0};
     Array<OneD, NekDouble> tmp2{nTracePts, 0.0};
@@ -463,7 +445,7 @@ void DiffusionLDGNS::ApplyBCsO1(
         // and has to be reset to zero per each equation
         std::size_t cnt = 0;
         std::size_t nBndRegions = fields[i+1]->
-            GetBndCondExpansions().num_elements();
+            GetBndCondExpansions().size();
         for (std::size_t j = 0; j < nBndRegions; ++j)
         {
             if (fields[i+1]->GetBndConditions()[j]->
@@ -590,7 +572,7 @@ void DiffusionLDGNS::ApplyBCsO1(
     // Compute boundary conditions  for temperature
     std::size_t cnt = 0;
     std::size_t nBndRegions = fields[nScalars]->
-    GetBndCondExpansions().num_elements();
+    GetBndCondExpansions().size();
     for (std::size_t j = 0; j < nBndRegions; ++j)
     {
         if (fields[nScalars]->GetBndConditions()[j]->
@@ -682,7 +664,7 @@ void DiffusionLDGNS::NumericalFluxO2(
     const Array<OneD, Array<OneD, NekDouble> >               &uBwd)
 {
     std::size_t nTracePts  = fields[0]->GetTrace()->GetTotPoints();
-    std::size_t nVariables = fields.num_elements();
+    std::size_t nVariables = fields.size();
 
     // Initialize penalty flux
     Array<OneD, Array<OneD, NekDouble> >  fluxPen{nVariables-1};
@@ -723,7 +705,7 @@ void DiffusionLDGNS::NumericalFluxO2(
                 qfluxtemp, 1, qfluxtemp, 1);
 
             // Impose weak boundary condition with flux
-            if (fields[0]->GetBndCondExpansions().num_elements())
+            if (fields[0]->GetBndCondExpansions().size())
             {
                 ApplyBCsO2(fields, i, j, qfield[j][i], qFwd, qBwd, qfluxtemp);
             }
@@ -751,7 +733,7 @@ void DiffusionLDGNS::ApplyBCsO2(
     boost::ignore_unused(qfield, qBwd);
 
     std::size_t cnt = 0;
-    std::size_t nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
+    std::size_t nBndRegions = fields[var]->GetBndCondExpansions().size();
     // Loop on the boundary regions to apply appropriate bcs
     for (std::size_t i = 0; i < nBndRegions; ++i)
     {

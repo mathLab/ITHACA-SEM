@@ -65,7 +65,7 @@ void WallBC::v_Apply(
     boost::ignore_unused(time);
 
     int i;
-    int nVariables = physarray.num_elements();
+    int nVariables = physarray.size();
 
     const Array<OneD, const int> &traceBndMap
         = m_fields[0]->GetTraceBndMap();

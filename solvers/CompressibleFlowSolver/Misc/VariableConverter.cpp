@@ -77,7 +77,7 @@ void VariableConverter::GetInternalEnergy(
     const Array<OneD, const Array<OneD, NekDouble>> &physfield,
     Array<OneD, NekDouble> &energy)
 {
-    int nPts = physfield[0].num_elements();
+    int nPts = physfield[0].size();
     Array<OneD, NekDouble> tmp(nPts, 0.0);
 
     // tmp = (rho * u_i)^2
@@ -103,7 +103,7 @@ void VariableConverter::GetEnthalpy(
     const Array<OneD, const Array<OneD, NekDouble>> &physfield,
     Array<OneD, NekDouble> &enthalpy)
 {
-    int nPts = physfield[0].num_elements();
+    int nPts = physfield[0].size();
     Array<OneD, NekDouble> energy(nPts, 0.0);
     Array<OneD, NekDouble> pressure(nPts, 0.0);
 
@@ -128,7 +128,7 @@ void VariableConverter::GetVelocityVector(
     const int                                   noffset,
           Array<OneD, Array<OneD, NekDouble> >  &velocity)
 {
-    const int nPts = physfield[0].num_elements();
+    const int nPts = physfield[0].size();
 
     for (int i = 0; i < m_spacedim; ++i)
     {
@@ -148,7 +148,7 @@ void VariableConverter::GetMach(Array<OneD, Array<OneD, NekDouble>> &physfield,
                                 Array<OneD, NekDouble> &soundspeed,
                                 Array<OneD, NekDouble> &mach)
 {
-    const int nPts = physfield[0].num_elements();
+    const int nPts = physfield[0].size();
 
     Vmath::Vmul(nPts, physfield[1], 1, physfield[1], 1, mach, 1);
 
@@ -181,7 +181,7 @@ void VariableConverter::GetMach(Array<OneD, Array<OneD, NekDouble>> &physfield,
 void VariableConverter::GetDynamicViscosity(
     const Array<OneD, const NekDouble> &temperature, Array<OneD, NekDouble> &mu)
 {
-    const int nPts    = temperature.num_elements();
+    const int nPts    = temperature.size();
     const NekDouble C = .38175;
     NekDouble mu_star = m_mu;
     NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
@@ -222,12 +222,12 @@ void VariableConverter::GetAbsoluteVelocity(
     const Array<OneD, const Array<OneD, NekDouble>> &physfield,
     Array<OneD, NekDouble> &Vtot)
 {
-    const int nPts = physfield[0].num_elements();
+    const int nPts = physfield[0].size();
 
     // Getting the velocity vector on the 2D normal space
     Array<OneD, Array<OneD, NekDouble>> velocity(m_spacedim);
 
-    Vmath::Zero(Vtot.num_elements(), Vtot, 1);
+    Vmath::Zero(Vtot.size(), Vtot, 1);
 
     for (int i = 0; i < m_spacedim; ++i)
     {
@@ -347,7 +347,7 @@ void VariableConverter::GetPressure(
     const Array<OneD, const Array<OneD, NekDouble>> &physfield,
     Array<OneD, NekDouble> &pressure)
 {
-    int nPts = physfield[0].num_elements();
+    int nPts = physfield[0].size();
 
     Array<OneD, NekDouble> energy(nPts);
     GetInternalEnergy(physfield, energy);
@@ -368,7 +368,7 @@ void VariableConverter::GetTemperature(
     const Array<OneD, const Array<OneD, NekDouble>> &physfield,
     Array<OneD, NekDouble> &temperature)
 {
-    int nPts = physfield[0].num_elements();
+    int nPts = physfield[0].size();
 
     Array<OneD, NekDouble> energy(nPts);
     GetInternalEnergy(physfield, energy);
@@ -389,7 +389,7 @@ void VariableConverter::GetSoundSpeed(
     const Array<OneD, const Array<OneD, NekDouble>> &physfield,
     Array<OneD, NekDouble> &soundspeed)
 {
-    int nPts = physfield[0].num_elements();
+    int nPts = physfield[0].size();
 
     Array<OneD, NekDouble> energy(nPts);
     GetInternalEnergy(physfield, energy);
@@ -410,7 +410,7 @@ void VariableConverter::GetEntropy(
     const Array<OneD, const Array<OneD, NekDouble>> &physfield,
     Array<OneD, NekDouble> &entropy)
 {
-    int nPts = physfield[0].num_elements();
+    int nPts = physfield[0].size();
 
     Array<OneD, NekDouble> energy(nPts);
     GetInternalEnergy(physfield, energy);
@@ -432,7 +432,7 @@ void VariableConverter::GetEFromRhoP(const Array<OneD, NekDouble> &rho,
                                      const Array<OneD, NekDouble> &pressure,
                                      Array<OneD, NekDouble> &energy)
 {
-    int nPts = rho.num_elements();
+    int nPts = rho.size();
 
     for (int i = 0; i < nPts; ++i)
     {
@@ -451,7 +451,7 @@ void VariableConverter::GetRhoFromPT(const Array<OneD, NekDouble> &pressure,
                                      const Array<OneD, NekDouble> &temperature,
                                      Array<OneD, NekDouble> &rho)
 {
-    int nPts = pressure.num_elements();
+    int nPts = pressure.size();
 
     for (int i = 0; i < nPts; ++i)
     {

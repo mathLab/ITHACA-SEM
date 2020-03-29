@@ -238,7 +238,7 @@ NekDouble HexGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         ptdist = sqrt(tmp1[min_i]);
 
         // Get Local coordinates
-        int qa = za.num_elements(), qb = zb.num_elements();
+        int qa = za.size(), qb = zb.size();
         Lcoords[2] = zc[min_i / (qa * qb)];
         min_i = min_i % (qa * qb);
         Lcoords[1] = zb[min_i / qa];
@@ -257,7 +257,7 @@ bool HexGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                               NekDouble &resid)
 {
     boost::ignore_unused(resid);
-    
+
     //Rough check if within twice min/max point
     if (GetMetricInfo()->GetGtype() != eRegular)
     {

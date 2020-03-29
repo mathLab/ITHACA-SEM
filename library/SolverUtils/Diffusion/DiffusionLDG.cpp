@@ -235,7 +235,7 @@ void DiffusionLDG::NumFluxforScalar(
     const Array<OneD, Array<OneD, NekDouble>> &pBwd)
 {
     std::size_t nTracePts  = fields[0]->GetTrace()->GetTotPoints();
-    std::size_t nvariables = fields.num_elements();
+    std::size_t nvariables = fields.size();
     std::size_t nDim       = fields[0]->GetCoordim(0);
 
     Array<OneD, NekDouble> Fwd{nTracePts};
@@ -263,7 +263,7 @@ void DiffusionLDG::NumFluxforScalar(
         Vmath::Vcopy(nTracePts, Fwd, 1, fluxtemp, 1);
 
         // Imposing weak boundary condition with flux
-        if (fields[0]->GetBndCondExpansions().num_elements())
+        if (fields[0]->GetBndCondExpansions().size())
         {
             ApplyScalarBCs(fields, i, ufield[i], Fwd, Bwd, fluxtemp);
         }
@@ -286,7 +286,7 @@ void DiffusionLDG::ApplyScalarBCs(
     boost::ignore_unused(ufield, Bwd);
     // Number of boundary regions
     std::size_t nBndRegions =
-        fields[var]->GetBndCondExpansions().num_elements();
+        fields[var]->GetBndCondExpansions().size();
     std::size_t cnt = 0;
     for (std::size_t i = 0; i < nBndRegions; ++i)
     {
@@ -359,8 +359,8 @@ void DiffusionLDG::NumFluxforVector(
     Array<OneD, Array<OneD, NekDouble>> &qflux)
 {
     std::size_t nTracePts  = fields[0]->GetTrace()->GetTotPoints();
-    std::size_t nvariables = fields.num_elements();
-    std::size_t nDim       = qfield.num_elements();
+    std::size_t nvariables = fields.size();
+    std::size_t nDim       = qfield.size();
 
     Array<OneD, NekDouble> Fwd{nTracePts};
     Array<OneD, NekDouble> Bwd{nTracePts};
@@ -394,7 +394,7 @@ void DiffusionLDG::NumFluxforVector(
             Vmath::Vadd(nTracePts, uterm, 1, qfluxtemp, 1, qfluxtemp, 1);
 
             // Imposing weak boundary condition with flux
-            if (fields[0]->GetBndCondExpansions().num_elements())
+            if (fields[0]->GetBndCondExpansions().size())
             {
                 ApplyVectorBCs(fields, i, j, qfield[j][i], qFwd, qBwd,
                                qfluxtemp);
@@ -424,7 +424,7 @@ void DiffusionLDG::ApplyVectorBCs(
     boost::ignore_unused(qfield, qBwd);
 
     std::size_t nBndRegions =
-        fields[var]->GetBndCondExpansions().num_elements();
+        fields[var]->GetBndCondExpansions().size();
     std::size_t cnt = 0;
 
     for (std::size_t i = 0; i < nBndRegions; ++i)

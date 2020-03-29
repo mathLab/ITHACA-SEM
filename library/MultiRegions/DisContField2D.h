@@ -63,20 +63,20 @@ namespace Nektar
                 const bool DeclareCoeffPhysArrays = true,
                 const Collections::ImplementationType ImpType
                                              = Collections::eNoImpType);
-            
+
             MULTI_REGIONS_EXPORT DisContField2D(
                 const DisContField2D                     &In,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const std::string                        &variable,
                 const bool SetUpJustDG            = false,
                 const bool DeclareCoeffPhysArrays = true);
-            
+
             MULTI_REGIONS_EXPORT DisContField2D(
                 const DisContField2D &In,
                 const bool DeclareCoeffPhysArrays = true);
 
             MULTI_REGIONS_EXPORT virtual ~DisContField2D();
-            
+
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
                 const GlobalLinSysKey &mkey);
 
@@ -86,14 +86,14 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(
                 Array<OneD, NekDouble> &outarray);
-            
+
             virtual ExpListSharedPtr &v_GetTrace()
             {
                 if(m_trace == NullExpListSharedPtr)
                 {
                     SetUpDG();
                 }
-                
+
                 return m_trace;
             }
 
@@ -125,7 +125,7 @@ namespace Nektar
              */
             inline  LibUtilities::BasisType GetBasisType(const int dir) const
             {
-                ASSERTL1(dir < m_base.num_elements(), "dir is larger than m_numbases");
+                ASSERTL1(dir < m_base.size(), "dir is larger than m_numbases");
                 return(m_base[dir]->GetBasisType());
             }
 
@@ -163,7 +163,7 @@ namespace Nektar
             GlobalLinSysMapShPtr   m_globalBndMat;
             ExpListSharedPtr       m_trace;
             AssemblyMapDGSharedPtr m_traceMap;
-            
+
             /**
              * Map of local trace (the points at the face of
              * the element) to the trace space discretisation
@@ -178,7 +178,7 @@ namespace Nektar
              * @brief A set storing the global IDs of any boundary edges.
              */
             std::set<int> m_boundaryEdges;
-            
+
             /**
              * @brief A map which identifies groups of periodic vertices.
              */
@@ -188,8 +188,8 @@ namespace Nektar
              * @brief A map which identifies pairs of periodic edges.
              */
             PeriodicMap m_periodicEdges;
-            
-            
+
+
             /**
              * @brief A vector indicating degress of freedom which need to be
              * copied from forwards to backwards space in case of a periodic
@@ -214,7 +214,7 @@ namespace Nektar
             void FindPeriodicEdges(
                 const SpatialDomains::BoundaryConditions &bcs,
                 const std::string                        &variable);
-            
+
             bool IsLeftAdjacentEdge(const int n, const int e);
 
             virtual void v_AddTraceIntegral(
@@ -225,11 +225,11 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_AddFwdBwdTraceIntegral(
-                const Array<OneD, const NekDouble> &Fwd, 
-                const Array<OneD, const NekDouble> &Bwd, 
+                const Array<OneD, const NekDouble> &Fwd,
+                const Array<OneD, const NekDouble> &Bwd,
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
-                const Array<OneD, const NekDouble> &inarray, 
+                const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
@@ -269,7 +269,7 @@ namespace Nektar
                 periodicEdges = m_periodicEdges;
             }
 
-            
+
             virtual AssemblyMapDGSharedPtr &v_GetTraceMap()
             {
                 return m_traceMap;
@@ -288,13 +288,13 @@ namespace Nektar
                 return m_bndConditions;
             }
 
-            virtual MultiRegions::ExpListSharedPtr 
+            virtual MultiRegions::ExpListSharedPtr
                 &v_UpdateBndCondExpansion(int i)
             {
                 return m_bndCondExpansions[i];
             }
 
-            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr> 
+            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                 &v_UpdateBndConditions()
             {
                 return m_bndConditions;
@@ -416,7 +416,7 @@ namespace Nektar
                 return m_locTraceToTraceMap;
             }
         };
-        
+
         typedef std::shared_ptr<DisContField2D>   DisContField2DSharedPtr;
     } //end of namespace
 } //end of namespace

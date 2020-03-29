@@ -87,7 +87,7 @@ void ArtificialDiffusion::v_DoArtificialDiffusion(
             Array<OneD,       Array<OneD, NekDouble> > &outarray)
 {
     int i;
-    int nvariables = inarray.num_elements();
+    int nvariables = inarray.size();
     int npoints    = m_fields[0]->GetNpoints();
 
     Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
@@ -233,9 +233,9 @@ void ArtificialDiffusion::GetFluxVector(
     const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
           Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&viscousTensor)
 {
-    unsigned int nDim = qfield.num_elements();
-    unsigned int nConvectiveFields = qfield[0].num_elements();
-    unsigned int nPts = qfield[0][0].num_elements();
+    unsigned int nDim = qfield.size();
+    unsigned int nConvectiveFields = qfield[0].size();
+    unsigned int nPts = qfield[0][0].size();
 
     // Get Artificial viscosity
     Array<OneD, NekDouble> mu{nPts, 0.0};

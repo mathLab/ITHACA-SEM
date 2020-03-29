@@ -336,7 +336,7 @@ void OutputFileBase::ConvertExpToEquispaced(po::variables_map &vm)
         for (int i = 0; i < numFields; ++i)
         {
             BndExpOld = expOld[i]->GetBndCondExpansions();
-            for (int j = 0; j < BndExpOld.num_elements(); ++j)
+            for (int j = 0; j < BndExpOld.size(); ++j)
             {
                 BndExp = m_f->m_exp[i]->UpdateBndCondExpansion(j);
 
@@ -361,10 +361,10 @@ void OutputFileBase::PrintErrorFromPts()
     // We can just grab everything from points. This should be a
     // reference, not a copy.
     m_f->m_fieldPts->GetPts(fields);
-    for (int i = 0; i < fields.num_elements(); ++i)
+    for (int i = 0; i < fields.size(); ++i)
     {
         // calculate L2 and Linf value
-        int npts = fields[i].num_elements();
+        int npts = fields[i].size();
 
         NekDouble l2err   = 0.0;
         NekDouble linferr = 0.0;

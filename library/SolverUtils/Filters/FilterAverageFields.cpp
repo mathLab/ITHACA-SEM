@@ -77,7 +77,7 @@ void FilterAverageFields::v_ProcessSample(
 
     for(int n = 0; n < m_outFields.size(); ++n)
     {
-        Vmath::Vadd(m_outFields[n].num_elements(),
+        Vmath::Vadd(m_outFields[n].size(),
                     fieldcoeffs[n],
                     1,
                     m_outFields[n],

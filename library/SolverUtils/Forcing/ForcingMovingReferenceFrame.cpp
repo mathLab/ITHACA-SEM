@@ -56,7 +56,7 @@ std::string ForcingMovingReferenceFrame::classNameField = GetForcingFactory().
                                 "Field Forcing");
 
 /**
- * @brief 
+ * @brief
  * @param pSession
  * @param pEquation
  */
@@ -113,7 +113,7 @@ void ForcingMovingReferenceFrame::v_InitObject(
     for (int i = 0; i < m_spacedim; ++i)
     {
         m_Forcing[i] = Array<OneD, NekDouble>(npoints, 0.0);
-        
+
         std::string s_FieldStr = m_session->GetVariable(i);
 
         ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
@@ -182,7 +182,7 @@ void ForcingMovingReferenceFrame::CalculateGradient(
                 pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                                       pFields[2]->GetPhys(), tmp);
                 pFields[0]->HomogeneousBwdTrans(tmp, m_grad[8]);
-            } 
+            }
             else if (pFields[0]->GetWaveSpace() == true &&
                      pFields[0]->GetExpType()   == MultiRegions::e3DH2D)
             {
@@ -251,9 +251,9 @@ void ForcingMovingReferenceFrame::Update(
 
     int npoints = pFields[0]->GetNpoints();
     Array<OneD, NekDouble> tmp(npoints, 0.0);
-    
+
     CalculateGradient(pFields);
-    
+
     switch (m_spacedim)
     {
         case 1:
@@ -349,7 +349,7 @@ void ForcingMovingReferenceFrame::v_Apply(
 
     for (int i = 0; i < m_spacedim; i++)
     {
-        Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
+        Vmath::Vadd(outarray[i].size(), outarray[i], 1,
                     m_Forcing[i], 1, outarray[i], 1);
     }
 }

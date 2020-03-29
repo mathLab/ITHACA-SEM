@@ -241,7 +241,7 @@ NodalUtilTriangle::NodalUtilTriangle(int                    degree,
     : NodalUtil(degree, 2), m_eta(2)
 {
     // Set up parent variables.
-    m_numPoints = r.num_elements();
+    m_numPoints = r.size();
     m_xi[0] = r;
     m_xi[1] = s;
 
@@ -422,7 +422,7 @@ NodalUtilTetrahedron::NodalUtilTetrahedron(int                    degree,
                                            Array<OneD, NekDouble> t)
     : NodalUtil(degree, 3), m_eta(3)
 {
-    m_numPoints = r.num_elements();
+    m_numPoints = r.size();
     m_xi[0] = r;
     m_xi[1] = s;
     m_xi[2] = t;
@@ -657,7 +657,7 @@ NodalUtilPrism::NodalUtilPrism(int                    degree,
                                Array<OneD, NekDouble> t)
     : NodalUtil(degree, 3), m_eta(3)
 {
-    m_numPoints = r.num_elements();
+    m_numPoints = r.size();
     m_xi[0] = r;
     m_xi[1] = s;
     m_xi[2] = t;
@@ -845,7 +845,7 @@ NodalUtilQuad::NodalUtilQuad(int                    degree,
     : NodalUtil(degree, 2)
 {
     // Set up parent variables.
-    m_numPoints = r.num_elements();
+    m_numPoints = r.size();
     m_xi[0] = r;
     m_xi[1] = s;
 
@@ -959,7 +959,7 @@ NodalUtilHex::NodalUtilHex(int degree,
     : NodalUtil(degree, 3)
 {
     // Set up parent variables.
-    m_numPoints = r.num_elements();
+    m_numPoints = r.size();
     m_xi[0] = r;
     m_xi[1] = s;
     m_xi[2] = t;

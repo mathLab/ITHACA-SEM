@@ -79,8 +79,8 @@ void Geometry2D::NewtonIterationForLocCoord(
     Array<OneD, const NekDouble> Jac =
         m_geomFactors->GetJac(m_xmap->GetPointsKeys());
 
-    NekDouble ScaledTol = Vmath::Vsum(Jac.num_elements(), Jac, 1) /
-                          ((NekDouble)Jac.num_elements());
+    NekDouble ScaledTol = Vmath::Vsum(Jac.size(), Jac, 1) /
+                          ((NekDouble)Jac.size());
     ScaledTol *= Tol;
 
     NekDouble xmap, ymap, F1, F2;
@@ -89,10 +89,10 @@ void Geometry2D::NewtonIterationForLocCoord(
     // save intiial guess for later reference if required.
     NekDouble init0 = Lcoords[0], init1 = Lcoords[1];
 
-    Array<OneD, NekDouble> DxD1(ptsx.num_elements());
-    Array<OneD, NekDouble> DxD2(ptsx.num_elements());
-    Array<OneD, NekDouble> DyD1(ptsx.num_elements());
-    Array<OneD, NekDouble> DyD2(ptsx.num_elements());
+    Array<OneD, NekDouble> DxD1(ptsx.size());
+    Array<OneD, NekDouble> DxD2(ptsx.size());
+    Array<OneD, NekDouble> DyD1(ptsx.size());
+    Array<OneD, NekDouble> DyD2(ptsx.size());
 
     // Ideally this will be stored in m_geomfactors
     m_xmap->PhysDeriv(ptsx, DxD1, DxD2);

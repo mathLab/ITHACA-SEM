@@ -151,21 +151,21 @@ namespace Nektar
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                if(out_d0.num_elements())
+                if(out_d0.size())
                 {
                     Vmath::Vmul  (nqtot,&df[0][0],1,&diff0[0],1,&out_d0[0],1);
                     Vmath::Vvtvp (nqtot,&df[1][0],1,&diff1[0],1,&out_d0[0],1,&out_d0[0],1);
                     Vmath::Vvtvp (nqtot,&df[2][0],1,&diff2[0],1,&out_d0[0],1,&out_d0[0],1);
                 }
 
-                if(out_d1.num_elements())
+                if(out_d1.size())
                 {
                     Vmath::Vmul  (nqtot,&df[3][0],1,&diff0[0],1,&out_d1[0],1);
                     Vmath::Vvtvp (nqtot,&df[4][0],1,&diff1[0],1,&out_d1[0],1,&out_d1[0],1);
                     Vmath::Vvtvp (nqtot,&df[5][0],1,&diff2[0],1,&out_d1[0],1,&out_d1[0],1);
                 }
 
-                if(out_d2.num_elements())
+                if(out_d2.size())
                 {
                     Vmath::Vmul  (nqtot,&df[6][0],1,&diff0[0],1,&out_d2[0],1);
                     Vmath::Vvtvp (nqtot,&df[7][0],1,&diff1[0],1,&out_d2[0],1,&out_d2[0],1);
@@ -174,21 +174,21 @@ namespace Nektar
             }
             else // regular geometry
             {
-                if(out_d0.num_elements())
+                if(out_d0.size())
                 {
                     Vmath::Smul (nqtot,df[0][0],&diff0[0],1,&out_d0[0],1);
                     Blas::Daxpy (nqtot,df[1][0],&diff1[0],1,&out_d0[0],1);
                     Blas::Daxpy (nqtot,df[2][0],&diff2[0],1,&out_d0[0],1);
                 }
 
-                if(out_d1.num_elements())
+                if(out_d1.size())
                 {
                     Vmath::Smul (nqtot,df[3][0],&diff0[0],1,&out_d1[0],1);
                     Blas::Daxpy (nqtot,df[4][0],&diff1[0],1,&out_d1[0],1);
                     Blas::Daxpy (nqtot,df[5][0],&diff2[0],1,&out_d1[0],1);
                 }
 
-                if(out_d2.num_elements())
+                if(out_d2.size())
                 {
                     Vmath::Smul (nqtot,df[6][0],&diff0[0],1,&out_d2[0],1);
                     Blas::Daxpy (nqtot,df[7][0],&diff1[0],1,&out_d2[0],1);
@@ -292,9 +292,9 @@ namespace Nektar
             if(multiplybyweights)
             {
                 Array<OneD, NekDouble> tmp(nquad0*nquad1*nquad2);
-                
+
                 MultiplyByQuadratureMetric(inarray, tmp);
-                
+
                 IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                              m_base[1]->GetBdata(),
                                              m_base[2]->GetBdata(),
@@ -447,7 +447,7 @@ namespace Nektar
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
-        
+
         StdRegions::StdExpansionSharedPtr PrismExp::v_GetStdExp(void) const
         {
             return MemoryManager<StdRegions::StdPrismExp>
@@ -464,7 +464,7 @@ namespace Nektar
                            2, m_base[1]->GetPointsKey());
             LibUtilities::BasisKey bkey2(m_base[2]->GetBasisType(),
                            2, m_base[2]->GetPointsKey());
-            
+
             return MemoryManager<StdRegions::StdPrismExp>
                 ::AllocateSharedPtr( bkey0, bkey1, bkey2);
         }
@@ -603,15 +603,15 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
-            int nq0 = 0; 
-            int nq1 = 0; 
+            int nq0 = 0;
+            int nq1 = 0;
 
             switch(face)
             {
             case 0:
                 nq0 = nquad0;
                 nq1 = nquad1;
-                if(outarray.num_elements()!=nq0*nq1)
+                if(outarray.size()!=nq0*nq1)
                 {
                     outarray = Array<OneD, int>(nq0*nq1);
                 }
@@ -626,11 +626,11 @@ namespace Nektar
 
                 nq0 = nquad0;
                 nq1 = nquad2;
-                if(outarray.num_elements()!=nq0*nq1)
+                if(outarray.size()!=nq0*nq1)
                 {
                     outarray = Array<OneD, int>(nq0*nq1);
                 }
-                
+
                 //Direction A and B positive
                 for (int k=0; k<nquad2; k++)
                 {
@@ -645,7 +645,7 @@ namespace Nektar
 
                 nq0 = nquad1;
                 nq1 = nquad2;
-                if(outarray.num_elements()!=nq0*nq1)
+                if(outarray.size()!=nq0*nq1)
                 {
                     outarray = Array<OneD, int>(nq0*nq1);
                 }
@@ -660,7 +660,7 @@ namespace Nektar
             case 3:
                 nq0 = nquad0;
                 nq1 = nquad2;
-                if(outarray.num_elements()!=nq0*nq1)
+                if(outarray.size()!=nq0*nq1)
                 {
                     outarray = Array<OneD, int>(nq0*nq1);
                 }
@@ -678,7 +678,7 @@ namespace Nektar
 
                 nq0 = nquad1;
                 nq1 = nquad2;
-                if(outarray.num_elements()!=nq0*nq1)
+                if(outarray.size()!=nq0*nq1)
                 {
                     outarray = Array<OneD, int>(nq0*nq1);
                 }
@@ -697,10 +697,10 @@ namespace Nektar
 
         }
 
-        /** \brief  Get the normals along specficied face 
+        /** \brief  Get the normals along specficied face
          * Get the face normals interplated to a points0 x points 0
          * type distribution
-         **/ 
+         **/
         void PrismExp::v_ComputeFaceNormal(const int face)
         {
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
@@ -1049,15 +1049,15 @@ namespace Nektar
                             m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
             }
         }
-        
+
         void PrismExp::v_SVVLaplacianFilter(
                     Array<OneD, NekDouble> &array,
                     const StdRegions::StdMatrixKey &mkey)
         {
             int nq = GetTotPoints();
-            
+
             // Calculate sqrt of the Jacobian
-            Array<OneD, const NekDouble> jac = 
+            Array<OneD, const NekDouble> jac =
                                     m_metricinfo->GetJac(GetPointsKeys());
             Array<OneD, NekDouble> sqrt_jac(nq);
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
@@ -1068,13 +1068,13 @@ namespace Nektar
             {
                 Vmath::Fill(nq,sqrt(jac[0]),sqrt_jac,1);
             }
-            
+
             // Multiply array by sqrt(Jac)
             Vmath::Vmul(nq,sqrt_jac,1,array,1,array,1);
-            
+
             // Apply std region filter
             StdPrismExp::v_SVVLaplacianFilter( array, mkey);
-            
+
             // Divide by sqrt(Jac)
             Vmath::Vdiv(nq,array,1,sqrt_jac,1,array,1);
         }

@@ -50,6 +50,9 @@
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+
 // Including Timer.h includes Windows.h, which causes GetJob to be set as a
 // macro for some reason.
 #if _WIN32
@@ -289,6 +292,16 @@ void ProcessVarOpti::Process()
     }
 
     int nThreads = m_config["numthreads"].as<int>();
+
+    if (m_mesh->m_cad)
+    {
+        if (boost::equals(m_mesh->m_cad->GetEngine(), "cfi"))
+        {
+            WARNINGL0(false,
+                      "CFI is not thread-safe; forcing to 'numthreads=1'.");
+            nThreads = 1;
+        }
+    }
 
     int ctr = 0;
     Thread::ThreadMaster tms;

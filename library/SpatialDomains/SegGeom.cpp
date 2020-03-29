@@ -133,7 +133,7 @@ SegGeomSharedPtr SegGeom::GenerateOneSpaceDimGeom(void)
     const Array<OneD, const NekDouble> jac = m_geomFactors->GetJac(v);
 
     NekDouble len = 0.0;
-    if (jac.num_elements() == 1)
+    if (jac.size() == 1)
     {
         len = jac[0] * 2.0;
     }
@@ -142,7 +142,7 @@ SegGeomSharedPtr SegGeom::GenerateOneSpaceDimGeom(void)
         Array<OneD, const NekDouble> w0 = base[0]->GetW();
         len = 0.0;
 
-        for (int i = 0; i < jac.num_elements(); ++i)
+        for (int i = 0; i < jac.size(); ++i)
         {
             len += jac[i] * w0[i];
         }

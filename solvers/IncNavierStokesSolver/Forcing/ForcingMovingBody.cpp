@@ -92,7 +92,7 @@ void ForcingMovingBody::v_InitObject(
     // m_zta[2] = dd(m_zta)/ddtt            |  m_eta[2] = dd(m_eta)/ddtt             |
     //--------------------------------------------------------------------------------
     int phystot = pFields[0]->GetTotPoints();
-    for(int i = 0; i < m_zta.num_elements(); i++)
+    for(int i = 0; i < m_zta.size(); i++)
     {
         m_zta[i] = Array<OneD, NekDouble>(phystot,0.0);
         m_eta[i] = Array<OneD, NekDouble>(phystot,0.0);
@@ -138,7 +138,7 @@ void ForcingMovingBody::v_Apply(
         // Copy velocities
         Vmath::Vcopy(physTot, m_zta[1], 1, coordsVel[0], 1);
         Vmath::Vcopy(physTot, m_eta[1], 1, coordsVel[1], 1);
-        
+
         // Update mapping
         m_mapping->UpdateMapping(time, coords, coordsVel);
     }
@@ -146,7 +146,7 @@ void ForcingMovingBody::v_Apply(
     {
         // For forced vibration case, load from specified file or function
         int cnt = 0;
-        for(int j = 0; j < m_funcName.num_elements(); j++)
+        for(int j = 0; j < m_funcName.size(); j++)
         {
             if(m_IsFromFile[cnt] && m_IsFromFile[cnt+1])
             {
@@ -160,11 +160,11 @@ void ForcingMovingBody::v_Apply(
                 cnt = cnt + 2;
             }
         }
-        
+
         // Update mapping
         m_mapping->UpdateMapping(time);
 
-        // Convert result from mapping       
+        // Convert result from mapping
         int physTot = pFields[0]->GetTotPoints();
         Array< OneD, Array< OneD, NekDouble> >  coords(3);
         Array< OneD, Array< OneD, NekDouble> >  coordsVel(3);
@@ -202,7 +202,7 @@ void ForcingMovingBody::v_Apply(
     }
     else
     {
-        ASSERTL0(false, 
+        ASSERTL0(false,
                  "Unrecogized vibration type for cable's dynamic model");
     }
 
@@ -211,7 +211,7 @@ void ForcingMovingBody::v_Apply(
     // Pass the variables of the cable's motion to the movingbody filter
     if(colrank == 0)
     {
-        int n = m_MotionVars[0].num_elements();
+        int n = m_MotionVars[0].size();
         Array<OneD, NekDouble> tmpArray(2*n),tmp(n);
         Vmath::Vcopy(n,m_MotionVars[0],1,tmpArray,1);
         Vmath::Vcopy(n,m_MotionVars[1],1,tmp=tmpArray+n,1);
@@ -246,7 +246,7 @@ void ForcingMovingBody::EvaluateStructDynModel(
     {
         m_session->LoadParameter("HomStructModesZ", npts);
         m_session->LoadParameter("Strip_Z", nstrips);
-         
+
         //ASSERTL0(nstrips < = npts,
         //     "the number of struct. modes must be larger than that of the strips.");
     }
@@ -273,7 +273,7 @@ void ForcingMovingBody::EvaluateStructDynModel(
         }
 
         if(!homostrip) //full resolutions
-        { 
+        {
             Array<OneD, NekDouble> tmp(2*m_np);
             for (int i = 1; i < nproc; ++i)
             {
@@ -337,15 +337,15 @@ void ForcingMovingBody::EvaluateStructDynModel(
             m_session->LoadParameter("FictMass", fictrho);
             m_session->LoadParameter("FictDamp", fictdamp);
 
-            static NekDouble Betaq_Coeffs[2][2] = 
+            static NekDouble Betaq_Coeffs[2][2] =
                                 {{1.0,  0.0},{2.0, -1.0}};
 
             // only consider second order approximation for fictitious variables
             int  intOrder= 2;
             int  nint    = min(m_movingBodyCalls+1,intOrder);
-            int  nlevels = m_fV[0].num_elements();
+            int  nlevels = m_fV[0].size();
 
-            for(int i = 0; i < m_motion.num_elements(); ++i)
+            for(int i = 0; i < m_motion.size(); ++i)
             {
                 RollOver(m_fV[i]);
                 RollOver(m_fA[i]);
@@ -357,22 +357,22 @@ void ForcingMovingBody::EvaluateStructDynModel(
                 Vmath::Vcopy(npts, m_MotionVars[i]+Aoffset, 1, m_fA[i][0], 1);
 
                 // Extrapolate to n+1
-                Vmath::Smul(npts, 
+                Vmath::Smul(npts,
                             Betaq_Coeffs[nint-1][nint-1],
                             m_fV[i][nint-1],    1,
                             m_fV[i][nlevels-1], 1);
-                Vmath::Smul(npts, 
+                Vmath::Smul(npts,
                             Betaq_Coeffs[nint-1][nint-1],
                             m_fA[i][nint-1],    1,
                             m_fA[i][nlevels-1], 1);
 
                 for(int n = 0; n < nint-1; ++n)
                 {
-                    Vmath::Svtvp(npts, 
+                    Vmath::Svtvp(npts,
                                  Betaq_Coeffs[nint-1][n],
                                  m_fV[i][n],1,m_fV[i][nlevels-1],1,
                                  m_fV[i][nlevels-1],1);
-                    Vmath::Svtvp(npts, 
+                    Vmath::Svtvp(npts,
                                  Betaq_Coeffs[nint-1][n],
                                  m_fA[i][n],1,m_fA[i][nlevels-1],1,
                                  m_fA[i][nlevels-1],1);
@@ -547,7 +547,7 @@ void ForcingMovingBody::EvaluateStructDynModel(
     }
 }
 
- 
+
 /**
  *
  */
@@ -555,11 +555,11 @@ void ForcingMovingBody::Newmark_betaSolver(
         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
               Array<OneD, NekDouble> &HydroForces,
               Array<OneD, NekDouble> &BodyMotions)
-{  
+{
     std::string supptype = m_session->GetSolverInfo("SupportType");
 
-    int npts = HydroForces.num_elements();
-        
+    int npts = HydroForces.size();
+
     Array<OneD, Array<OneD, NekDouble> > fft_i(4);
     Array<OneD, Array<OneD, NekDouble> > fft_o(4);
 
@@ -572,9 +572,9 @@ void ForcingMovingBody::Newmark_betaSolver(
     Vmath::Vcopy(npts, HydroForces, 1, fft_i[0], 1);
     for(int i = 0; i < 3; i++)
     {
-        Vmath::Vcopy(npts, BodyMotions+i*npts, 1, fft_i[i+1], 1);   
+        Vmath::Vcopy(npts, BodyMotions+i*npts, 1, fft_i[i+1], 1);
     }
-    
+
     // Implement Fourier transformation of the motion variables
     if(boost::iequals(supptype, "Free-Free"))
     {
@@ -586,7 +586,7 @@ void ForcingMovingBody::Newmark_betaSolver(
     else if(boost::iequals(supptype, "Pinned-Pinned"))
     {
         //TODO:
-        int N = fft_i[0].num_elements();
+        int N = fft_i[0].size();
 
         for(int var = 0; var < 4; var++)
         {
@@ -653,7 +653,7 @@ void ForcingMovingBody::Newmark_betaSolver(
     else if(boost::iequals(supptype, "Pinned-Pinned"))
     {
         //TODO:
-        int N = fft_i[0].num_elements();
+        int N = fft_i[0].size();
 
         for(int var = 0; var < 3; var++)
         {
@@ -675,7 +675,7 @@ void ForcingMovingBody::Newmark_betaSolver(
         ASSERTL0(false,
                     "Unrecognized support type for cable's motion");
     }
-    
+
 
     for(int i = 0; i < 3; i++)
     {
@@ -683,7 +683,7 @@ void ForcingMovingBody::Newmark_betaSolver(
         Vmath::Vcopy(npts, fft_o[i], 1, tmp = BodyMotions+i*npts, 1);
     }
 }
-  
+
 /**
  *
  */
@@ -712,14 +712,14 @@ void ForcingMovingBody::InitialiseCableModel(
     {
         m_session->LoadParameter("HomStructModesZ", npts);
     }
-  
+
     m_MotionVars = Array<OneD, Array<OneD, NekDouble> > (2);
     m_MotionVars[0] = Array<OneD, NekDouble>(3*npts,0.0);
     m_MotionVars[1] = Array<OneD, NekDouble>(3*npts,0.0);
 
     Array<OneD, unsigned int> ZIDs;
     ZIDs = pFields[0]->GetZIDs();
-    m_np = ZIDs.num_elements();
+    m_np = ZIDs.size();
 
     std::string vibtype = m_session->GetSolverInfo("VibrationType");
 
@@ -741,7 +741,7 @@ void ForcingMovingBody::InitialiseCableModel(
     {
         m_session->LoadParameter("LZ", m_lhom);
         int nplanes = m_session->GetParameter("HomModesZ");
-        m_FFT = 
+        m_FFT =
             LibUtilities::GetNektarFFTFactory().CreateInstance(
                                             "NekFFTW", nplanes);
     }
@@ -753,7 +753,7 @@ void ForcingMovingBody::InitialiseCableModel(
         m_session->LoadParameter("DistStrip", DistStrip);
         m_session->LoadParameter("Strip_Z", nstrips);
         m_lhom = nstrips * DistStrip;
-        m_FFT = 
+        m_FFT =
             LibUtilities::GetNektarFFTFactory().CreateInstance(
                                             "NekFFTW", nstrips);
     }
@@ -779,7 +779,7 @@ void ForcingMovingBody::InitialiseCableModel(
         // extrapolation of fictitious force
         m_fV = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (2);
         m_fA = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (2);
-        for (int i = 0; i < m_motion.num_elements(); ++i)
+        for (int i = 0; i < m_motion.size(); ++i)
         {
             m_fV[i] = Array<OneD, Array<OneD, NekDouble> > (2);
             m_fA[i] = Array<OneD, Array<OneD, NekDouble> > (2);
@@ -797,8 +797,8 @@ void ForcingMovingBody::InitialiseCableModel(
 
     // Set initial condition for cable's motion
     int cnt = 0;
-    
-    for(int j = 0; j < m_funcName.num_elements(); j++)
+
+    for(int j = 0; j < m_funcName.size(); j++)
     {
         // loading from the specified files through inputstream
         if(m_IsFromFile[cnt] && m_IsFromFile[cnt+1])
@@ -811,7 +811,7 @@ void ForcingMovingBody::InitialiseCableModel(
                 m_session->LoadParameter("HomStructModesZ", nzpoints);
             }
             else
-            { 
+            {
                 nzpoints = pFields[0]->GetHomogeneousBasis()->GetNumModes();
             }
 
@@ -819,13 +819,13 @@ void ForcingMovingBody::InitialiseCableModel(
             {
                 std::string filename = m_session->GetFunctionFilename(
                     m_funcName[j], m_motion[0]);
-                
+
                 // Open intputstream for cable motions
                 inputStream.open(filename.c_str());
 
                 // Import the head string from the file
                 Array<OneD, std::string> tmp(9);
-                for(int n = 0; n < tmp.num_elements(); n++)
+                for(int n = 0; n < tmp.size(); n++)
                 {
                     inputStream >> tmp[n];
                 }
@@ -899,16 +899,16 @@ void ForcingMovingBody::InitialiseCableModel(
                 }
             }
             else
-            {  
+            {
                 if(colrank == 0)
-                { 
+                {
                     int nstrips;
                     m_session->LoadParameter("Strip_Z", nstrips);
 
                     ASSERTL0(m_session->DefinesSolverInfo("USEFFT"),
                             "Fourier transformation of cable motion is currently "
                             "implemented only for FFTW module.");
-                
+
                     NekDouble DistStrip;
                     m_session->LoadParameter("DistStrip", DistStrip);
 
@@ -916,7 +916,7 @@ void ForcingMovingBody::InitialiseCableModel(
                     Array<OneD, NekDouble> x1(npts, 0.0);
                     Array<OneD, NekDouble> x2(npts, 0.0);
                     Array<OneD, NekDouble> tmp (npts,0.0);
-                    Array<OneD, NekDouble> tmp0(npts,0.0); 
+                    Array<OneD, NekDouble> tmp0(npts,0.0);
                     Array<OneD, NekDouble> tmp1(npts,0.0);
                     for (int plane = 0; plane < npts; plane++)
                     {
@@ -930,8 +930,8 @@ void ForcingMovingBody::InitialiseCableModel(
 
                     int offset = j*npts;
                     Vmath::Vcopy(npts, tmp0, 1, tmp = m_MotionVars[0]+offset,1);
-                    Vmath::Vcopy(npts, tmp1, 1, tmp = m_MotionVars[1]+offset,1);     
-                }      
+                    Vmath::Vcopy(npts, tmp1, 1, tmp = m_MotionVars[1]+offset,1);
+                }
             }
 
            cnt = cnt + 2;
@@ -953,7 +953,7 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
 
     if(!homostrip)
     {
-        nplanes = m_session->GetParameter("HomModesZ"); 
+        nplanes = m_session->GetParameter("HomModesZ");
     }
     else
     {
@@ -1052,7 +1052,7 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
  */
 void ForcingMovingBody::RollOver(Array<OneD, Array<OneD, NekDouble> > &input)
 {
-    int nlevels = input.num_elements();
+    int nlevels = input.size();
 
     Array<OneD, NekDouble> tmp;
     tmp = input[nlevels-1];
@@ -1080,7 +1080,7 @@ void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pForce)
     // Loading the x-dispalcement (m_zta) and the y-displacement (m_eta)
     // Those two variables are bith functions of z and t and the may come
     // from an equation (forced vibration) or from another solver which, given
-    // the aerodynamic forces at the previous step, calculates the 
+    // the aerodynamic forces at the previous step, calculates the
     // displacements.
 
     //Get the body displacement: m_zta and m_eta
@@ -1224,7 +1224,7 @@ void ForcingMovingBody::InitialiseFilter(
         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const TiXmlElement* pForce)
 {
-    // Get the outputfile name, output frequency and 
+    // Get the outputfile name, output frequency and
     // the boundary's ID for the cable's wall
     std::string typeStr = pForce->Attribute("TYPE");
     std::map<std::string, std::string> vParams;

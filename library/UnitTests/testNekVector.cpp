@@ -57,6 +57,7 @@ namespace Nektar
             public:
                 VectorTestClass() : m_dataValue(0) {}
                 explicit VectorTestClass(int data) : m_dataValue(data) {}
+                VectorTestClass(const VectorTestClass& in) = default;
                 ~VectorTestClass(){}
 
                 VectorTestClass operator=(const VectorTestClass& rhs)

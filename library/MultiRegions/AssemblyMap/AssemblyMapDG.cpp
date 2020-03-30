@@ -344,7 +344,7 @@ namespace Nektar
                     else if (nDim == 2)
                     {
                         order_e = expList[eid]->GetEdgeNcoeffs(j);
-                    
+
                         if(expList[eid]->GetEorient(j) == StdRegions::eForwards)
                         {
                             for(k = 0; k < order_e; ++k)
@@ -741,7 +741,7 @@ namespace Nektar
             Array<OneD, int> tmp;
             LocalRegions::ExpansionSharedPtr locExpansion;
             int i;
-            int maxQuad = 0, quad = 0, nDim = 0, eid = 0, offset = 0;
+            int quad = 0, nDim = 0, eid = 0, offset = 0;
 
             const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
 
@@ -759,20 +759,20 @@ namespace Nektar
 
             if (nDim == 1)
             {
-                maxQuad = (1 > maxQuad ? 1 : maxQuad);
+                m_maxQuad = (1 > m_maxQuad ? 1 : m_maxQuad);
             }
             else
             {
                 for (i = 0; i < trace->GetExpSize(); ++i)
                 {
                     quad = trace->GetExp(i)->GetTotPoints();
-                    if (quad > maxQuad)
+                    if (quad > m_maxQuad)
                     {
-                        maxQuad = quad;
+                        m_maxQuad = quad;
                     }
                 }
             }
-            m_comm->AllReduce(maxQuad, LibUtilities::ReduceMax);
+            m_comm->AllReduce(m_maxQuad, LibUtilities::ReduceMax);
 
             if (nDim == 1)
             {
@@ -793,7 +793,7 @@ namespace Nektar
                         }
                     }
 
-                    m_traceToUniversalMap[offset] = eid*maxQuad+1;
+                    m_traceToUniversalMap[offset] = eid * m_maxQuad + 1;
                     m_edgeToTrace[eid].emplace_back(offset);
                 }
             }
@@ -823,7 +823,7 @@ namespace Nektar
 
                     for (int j = 0; j < quad; ++j)
                     {
-                        m_traceToUniversalMap[j+offset] = eid*maxQuad+j+1;
+                        m_traceToUniversalMap[j+offset] = eid * m_maxQuad + j + 1;
                         m_edgeToTrace[eid].emplace_back(offset + j);
                     }
 
@@ -847,14 +847,82 @@ namespace Nektar
                 }
             }
 
-            //Set up graph topology for MPI
-            //This creates a list of all geometry of problem dimension - 1
-            std::vector<int> localEdgeIds; //
-            for (int i = 0; i < locExpVector.size(); ++i)
+            // Initialsing graph structure
+            MPIInitialiseStructure(locExpVector, bndCondExp, bndCond);
+
+            // Setting up MPI comm methods
+            MPISetupAllToAll();
+            MPISetupAllToAllV();
+            MPISetupNeighborAllToAllV();
+            MPISetupPairwise();
+
+            /*
+            //Timing MPI comm methods, warm up with 2 iterations then time over 10
+            Array<OneD, double> testFwd(trace->GetNpoints(), 1);
+            Array<OneD, double> testBwd(trace->GetNpoints(), -2);
+            NekDouble min, max, avg;
+
+            //AllToAll
+            MPITiming(2, testFwd, testBwd, MPIPerformAllToAll);
+            std::tie(avg, min, max) = MPITiming(10, testFwd, testBwd, MPIPerformAllToAll);
+            if (m_comm->GetRank() == 0)
             {
-                eid = i;
-                locExpansion = locExpVector[eid];
-                nDim = locExpansion->GetShapeDimension();
+                std::cout << "AllToAll times (avg, min, max): " << avg << " "
+                          << min << " " << max << std::endl;
+            }
+
+            //AllToAllV
+            MPITiming(2, testFwd, testBwd, MPIPerformAllToAllV);
+            std::tie(avg, min, max) = MPITiming(10, testFwd, testBwd, MPIPerformAllToAllV);
+            if (m_comm->GetRank() == 0)
+            {
+                std::cout << "AllToAllV times (avg, min, max): " << avg << " "
+                          << min << " " << max << std::endl;
+            }
+
+            //Neighbor_AllToAllv
+            MPITiming(2, testFwd, testBwd, MPIPerformNeighborAllToAllV);
+            std::tie(avg, min, max) = MPITiming(10, testFwd, testBwd, MPIPerformNeighborAllToAllV);
+            if (m_comm->GetRank() == 0)
+            {
+                std::cout << "Neighbor AllToAllV times (avg, min, max): " << avg
+                          << " " << min << " " << max << std::endl;
+            }
+
+            //Pairwise send/recv
+            MPITiming(2, testFwd, testBwd, MPIPerformNeighborAllToAllV);
+            std::tie(avg, min, max) = MPITiming(10, testFwd, testBwd, MPIPerformPairwise);
+            if (m_comm->GetRank() == 0)
+            {
+                std::cout << "Pairwise Isend/Irecv times (avg, min, max): "
+                          << avg << " " << min << " " << max << std::endl;
+            }
+             */
+
+            Array<OneD, long> tmp2(nTracePhys);
+            for (int i = 0; i < nTracePhys; ++i)
+            {
+                tmp2[i] = m_traceToUniversalMap[i];
+            }
+            m_traceGsh = Gs::Init(tmp2, m_comm);
+            Gs::Unique(tmp2, m_comm);
+            for (int i = 0; i < nTracePhys; ++i)
+            {
+                m_traceToUniversalMapUnique[i] = tmp2[i];
+            }
+        }
+
+        void AssemblyMapDG::MPIInitialiseStructure(
+                const LocalRegions::ExpansionVector &locExpVector,
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
+                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond)
+        {
+            //This creates a list of all geometry of problem dimension - 1
+            std::vector<int> localEdgeIds;
+            for (int eid = 0; eid < locExpVector.size(); ++eid)
+            {
+                auto locExpansion = locExpVector[eid];
+                int nDim = locExpansion->GetShapeDimension();
                 if (nDim == 1)
                 {
                     int nVerts = locExpansion->GetNverts();
@@ -922,19 +990,19 @@ namespace Nektar
             }
 
             // Send uniqueEdgeIds size so all partitions can prepare buffers
-            int nRanks =  m_comm->GetSize();
-            Array<OneD, int> rankNumEdges(nRanks);
+            m_nRanks =  m_comm->GetSize();
+            Array<OneD, int> rankNumEdges(m_nRanks);
             Array<OneD, int> localEdgeSize(1, uniqueEdgeIds.size());
             m_comm->AllGather(localEdgeSize, rankNumEdges);
 
-            Array<OneD, int> rankLocalEdgeDisp(nRanks, 0);
-            for (i = 1; i < nRanks; ++i)
+            Array<OneD, int> rankLocalEdgeDisp(m_nRanks, 0);
+            for (int i = 1; i < m_nRanks; ++i)
             {
                 rankLocalEdgeDisp[i] = rankLocalEdgeDisp[i-1] + rankNumEdges[i-1];
             }
 
             Array<OneD, int> localEdgeIdsArray(uniqueEdgeIds.size());
-            for (i = 0; i < uniqueEdgeIds.size(); ++i)
+            for (int i = 0; i < uniqueEdgeIds.size(); ++i)
             {
                 localEdgeIdsArray[i] = uniqueEdgeIds[i];
             }
@@ -951,8 +1019,8 @@ namespace Nektar
             //Create an array of other rank IDs (all except mine)
             int myRank = m_comm->GetRank();
             int cnt = 0;
-            Array<OneD, int> otherRanks(nRanks - 1);
-            for(i = 0; i < nRanks; ++i)
+            Array<OneD, int> otherRanks(m_nRanks - 1);
+            for(int i = 0; i < m_nRanks; ++i)
             {
                 if (i != myRank)
                 {
@@ -962,7 +1030,6 @@ namespace Nektar
             }
 
             //Find what edge Ids match with other ranks
-            std::map<int, std::vector<int>> rankSharedEdges;
             for (auto &rank : otherRanks)
             {
                 for (int j = 0; j < rankNumEdges[rank]; ++j)
@@ -971,18 +1038,91 @@ namespace Nektar
                     int *found = std::find(localEdgeIdsArray.begin(), localEdgeIdsArray.end(), edgeId);
                     if (found != localEdgeIdsArray.end())
                     {
-                        rankSharedEdges[rank].emplace_back(edgeId);
+                        m_rankSharedEdges[rank].emplace_back(edgeId);
                     }
                 }
             }
-            // Setting up MPI neighbor_alltoallv
-            //Prepare destinations & weights for creation of new distributed
-            // MPI communicator for the neighbour communication
-            int nNeighbours = rankSharedEdges.size();
+        }
+
+        void AssemblyMapDG::MPISetupAllToAll()
+        {
+            // Get maxCount which is the largest shared partition edge
+            for (int i = 0; i < m_nRanks; ++i)
+            {
+                if (m_rankSharedEdges.find(i) != m_rankSharedEdges.end())
+                {
+                    m_maxCount = (m_rankSharedEdges[i].size() > m_maxCount) ? m_rankSharedEdges[i].size() : m_maxCount;
+                }
+            }
+
+            m_comm->AllReduce(m_maxCount, LibUtilities::ReduceMax);
+
+            // Creates the edge index vector where value -1 indicates
+            // padding of value 0 to be inserted instead of value from Fwd
+            for (int i = 0; i < m_nRanks; ++i)
+            {
+                if (m_rankSharedEdges.find(i) != m_rankSharedEdges.end())
+                {
+                    for (int j = 0; j < m_rankSharedEdges[i].size(); ++j)
+                    {
+                        std::vector<int> edgeIndex = m_edgeToTrace[m_rankSharedEdges[i][j]];
+                        if (edgeIndex.size() < m_maxQuad)
+                        {
+                            std::vector<int> diff(m_maxQuad - edgeIndex.size(), -1);
+                            edgeIndex.insert(edgeIndex.end(), diff.begin(), diff.end());
+                        }
+
+                        m_allEdgeIndex.insert(m_allEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
+                    }
+
+                    if (m_rankSharedEdges[i].size() < m_maxCount)
+                    {
+                        std::vector<int> edgeIndex(m_maxQuad * (m_maxCount - m_rankSharedEdges[i].size()), -1);
+                        m_allEdgeIndex.insert(m_allEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
+                    }
+                }
+                else
+                {
+                    std::vector<int> edgeIndex(m_maxQuad * m_maxCount, -1);
+                    m_allEdgeIndex.insert(m_allEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
+                }
+            }
+        }
+
+        void AssemblyMapDG::MPISetupAllToAllV()
+        {
+            m_allVSendCount = Nektar::Array<OneD, int>(m_nRanks, 0);
+            for (int i = 0; i < m_nRanks; ++i)
+            {
+                if (m_rankSharedEdges.find(i) != m_rankSharedEdges.end())
+                {
+                    for (int j = 0; j < m_rankSharedEdges[i].size(); ++j)
+                    {
+                        std::vector<int> edgeIndex = m_edgeToTrace[m_rankSharedEdges[i][j]];
+                        m_allVEdgeIndex.insert(m_allVEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
+                        m_allVSendCount[i] += edgeIndex.size();
+                    }
+                }
+                else
+                {
+                    m_allVSendCount[i] = 0;
+                }
+            }
+
+            m_allVSendDisp = Nektar::Array<OneD, int>(m_nRanks, 0);
+            for (int i = 1; i < m_nRanks; ++i)
+            {
+                m_allVSendDisp[i] = m_allVSendDisp[i-1] + m_allVSendCount[i-1];
+            }
+        }
+
+        void AssemblyMapDG::MPISetupNeighborAllToAllV()
+        {
+            int nNeighbours = m_rankSharedEdges.size();
             Array<OneD,int> destinations(nNeighbours, 0);
             Array<OneD,int> weights(nNeighbours, 0);
-            cnt = 0;
-            for (auto &rankEdgeVec : rankSharedEdges)
+            int cnt = 0;
+            for (auto &rankEdgeVec : m_rankSharedEdges)
             {
                 destinations[cnt] = rankEdgeVec.first;
                 weights[cnt] = rankEdgeVec.second.size();
@@ -999,7 +1139,7 @@ namespace Nektar
             //Setting up indices
             m_sendCount = Array<OneD, int>(nNeighbours, 0);
             cnt = 0;
-            for (auto &rankEdgeSet : rankSharedEdges)
+            for (auto &rankEdgeSet : m_rankSharedEdges)
             {
                 for (int i : rankEdgeSet.second)
                 {
@@ -1012,86 +1152,15 @@ namespace Nektar
             }
 
             m_sendDisp = Nektar::Array<OneD, int>(nNeighbours, 0);
-            for (i = 1; i < nNeighbours; ++i)
+            for (int i = 1; i < nNeighbours; ++i)
             {
                 m_sendDisp[i] = m_sendDisp[i-1] + m_sendCount[i-1];
             }
+        }
 
-            // Setting up standard MPI alltoall
-            // Get maxCount which is the largest shared partition edge
-            int maxCount = 0;
-            for (int i = 0; i < nRanks; ++i)
-            {
-                if (rankSharedEdges.find(i) != rankSharedEdges.end())
-                {
-                    maxCount = (rankSharedEdges[i].size() > maxCount) ? rankSharedEdges[i].size() : maxCount;
-                }
-            }
-
-            m_comm->AllReduce(maxCount, LibUtilities::ReduceMax);
-
-            // Creates the edge index vector where value -1 indicates
-            // padding of value 0 to be inserted instead of value from Fwd
-            std::vector<int> allEdgeIndex;
-            for (int i = 0; i < nRanks; ++i)
-            {
-                if (rankSharedEdges.find(i) != rankSharedEdges.end())
-                {
-                    for (int j = 0; j < rankSharedEdges[i].size(); ++j)
-                    {
-                        std::vector<int> edgeIndex = m_edgeToTrace[rankSharedEdges[i][j]];
-                        if (edgeIndex.size() < maxQuad)
-                        {
-                            std::vector<int> diff(maxQuad - edgeIndex.size(), -1);
-                            edgeIndex.insert(edgeIndex.end(), diff.begin(), diff.end());
-                        }
-
-                        allEdgeIndex.insert(allEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
-                    }
-
-                    if (rankSharedEdges[i].size() < maxCount)
-                    {
-                        std::vector<int> edgeIndex(maxQuad * (maxCount - rankSharedEdges[i].size()), -1);
-                        allEdgeIndex.insert(allEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
-                    }
-                }
-                else
-                {
-                    std::vector<int> edgeIndex(maxQuad * maxCount, -1);
-                    allEdgeIndex.insert(allEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
-                }
-            }
-
-            // Setting up standard MPI alltoallv
-            std::vector<int> allVEdgeIndex;
-            Array<OneD, int> allVSendCount(nRanks, 0);
-            for (int i = 0; i < nRanks; ++i)
-            {
-                if (rankSharedEdges.find(i) != rankSharedEdges.end())
-                {
-                    for (int j = 0; j < rankSharedEdges[i].size(); ++j)
-                    {
-                        std::vector<int> edgeIndex = m_edgeToTrace[rankSharedEdges[i][j]];
-                        allVEdgeIndex.insert(allVEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
-                        allVSendCount[i] += edgeIndex.size();
-                    }
-                }
-                else
-                {
-                    allVSendCount[i] = 0;
-                }
-            }
-
-            Array<OneD, int> allVSendDisp(nRanks, 0);
-            for (i = 1; i < nRanks; ++i)
-            {
-                allVSendDisp[i] = allVSendDisp[i-1] + allVSendCount[i-1];
-            }
-
-            //Setting up pairwise send/recv between individual partitions
-            std::vector<std::pair<int, std::vector<int>>> vecPairPartitionTrace;
-            int totSends = 0;
-            for (const auto& rankEdgeSet : rankSharedEdges)
+        void AssemblyMapDG::MPISetupPairwise()
+        {
+            for (const auto& rankEdgeSet : m_rankSharedEdges)
             {
                 std::vector<int> edgeTraceIndex;
                 for (int i : rankEdgeSet.second)
@@ -1099,251 +1168,176 @@ namespace Nektar
                     std::vector<int> edgeIndex = m_edgeToTrace[i];
                     edgeTraceIndex.insert(edgeTraceIndex.end(), edgeIndex.begin(), edgeIndex.end());
 
-                    totSends += m_edgeToTrace[i].size();
+                    m_totSends += m_edgeToTrace[i].size();
                 }
 
-                vecPairPartitionTrace.emplace_back(std::make_pair(rankEdgeSet.first, edgeTraceIndex));
-            }
-
-            //Timing MPI comm methods
-            int testLoopCount = 100;
-            Array<OneD, double> testFwd(trace->GetNpoints(), 1);
-            Array<OneD, double> testBwd(trace->GetNpoints(), -2);
-
-            NekDouble timeAvgAll = -1;
-            NekDouble timeAvgAllv = -1;
-            NekDouble timeAvgNeighbourV = -1;
-            NekDouble timeAvgPairwise = -1;
-
-            //Alltoall
-            LibUtilities::Timer tAll;
-            tAll.Start();
-
-            for (int i = 0; i < testLoopCount; ++i)
-            {
-                int size = maxQuad * maxCount * nRanks;
-                Array<OneD, double> sendBuff(size, -1);
-                Array<OneD, double> recvBuff(size, -1);
-
-                for (int j = 0; j < size; ++j)
-                {
-                    if (allEdgeIndex[j] == -1)
-                    {
-                        sendBuff[j] = 0;
-                    }
-                    else
-                    {
-                        sendBuff[j] = testFwd[allEdgeIndex[j]];
-                    }
-                }
-
-                m_comm->AlltoAll(sendBuff, recvBuff);
-
-                for (int j = 0; j < size; ++j)
-                {
-                    if (allEdgeIndex[j] != -1)
-                    {
-                        testBwd[allEdgeIndex[j]] = recvBuff[j];
-                    }
-                }
-            }
-
-            tAll.Stop();
-            Array<OneD, NekDouble> minTimeAll(1, tAll.TimePerTest(testLoopCount));
-            m_comm->AllReduce(minTimeAll, LibUtilities::ReduceMin);
-
-            Array<OneD, NekDouble> maxTimeAll(1, tAll.TimePerTest(testLoopCount));
-            m_comm->AllReduce(maxTimeAll, LibUtilities::ReduceMax);
-
-            Array<OneD, NekDouble> sumTimeAll(1, tAll.TimePerTest(testLoopCount));
-            m_comm->AllReduce(sumTimeAll, LibUtilities::ReduceSum);
-
-            if (myRank == 0)
-            {
-                timeAvgAll = sumTimeAll[0]/nRanks;
-                std::cout << "alltoall times (avg, min, max):   " << timeAvgAll << " " << minTimeAll[0] << " " << maxTimeAll[0] << std::endl;
-            }
-
-            //Alltoallv
-            LibUtilities::Timer tAllv;
-            tAllv.Start();
-
-            for (int i = 0; i < testLoopCount; ++i)
-            {
-                Array<OneD, double> sendBuff(allVEdgeIndex.size(), -1);
-                Array<OneD, double> recvBuff(allVEdgeIndex.size(), -1);
-
-                for (int i = 0; i < allVEdgeIndex.size(); ++i)
-                {
-                    sendBuff[i] = testFwd[allVEdgeIndex[i]];
-                }
-
-                m_comm->AlltoAllv(sendBuff, allVSendCount, allVSendDisp,
-                                  recvBuff, allVSendCount, allVSendDisp);
-
-                for (int i = 0; i < allVEdgeIndex.size(); ++i)
-                {
-                    testBwd[allVEdgeIndex[i]] = recvBuff[i];
-                }
-            }
-
-            tAllv.Stop();
-
-            Array<OneD, NekDouble> minTimeAllv(1, tAllv.TimePerTest(testLoopCount));
-            m_comm->AllReduce(minTimeAllv, LibUtilities::ReduceMin);
-
-            Array<OneD, NekDouble> maxTimeAllv(1, tAllv.TimePerTest(testLoopCount));
-            m_comm->AllReduce(maxTimeAllv, LibUtilities::ReduceMax);
-
-            Array<OneD, NekDouble> sumTimeAllv(1, tAllv.TimePerTest(testLoopCount));
-            m_comm->AllReduce(sumTimeAllv, LibUtilities::ReduceSum);
-
-            if (myRank == 0)
-            {
-                timeAvgAllv = sumTimeAllv[0]/nRanks;
-                std::cout << "alltoallv times (avg, min, max):  " << timeAvgAllv << " " << minTimeAllv[0] << " " << maxTimeAllv[0] << std::endl;
-            }
-
-            //neighbor_alltoallv
-            LibUtilities::Timer tNeighbourAllv;
-            tNeighbourAllv.Start();
-
-            for (int i = 0; i < testLoopCount; ++i)
-            {
-                Array<OneD, double> sendBuff(m_edgeTraceIndex.size(), -1);
-                Array<OneD, double> recvBuff(m_edgeTraceIndex.size(), -1);
-                for (int i = 0; i < m_edgeTraceIndex.size(); ++i)
-                {
-                    sendBuff[i] = testFwd[m_edgeTraceIndex[i]];
-                }
-
-
-                MPI_Neighbor_alltoallv(sendBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
-                                       recvBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
-                                       m_commGraph);
-
-                for (int i = 0; i < m_edgeTraceIndex.size(); ++i)
-                {
-                    testBwd[m_edgeTraceIndex[i]] = recvBuff[i];
-                }
-            }
-
-            tNeighbourAllv.Stop();
-            NekDouble timeNeighbourAllvLocal = tNeighbourAllv.TimePerTest(testLoopCount);
-
-            Array<OneD, NekDouble> timeNeighbourAllv(nRanks, 0.0);
-            MPI_Gather(&timeNeighbourAllvLocal, 1, MPI_DOUBLE, timeNeighbourAllv.get(), 1, MPI_DOUBLE, 0, m_commGraph);
-
-            if (myRank == 0)
-            {
-                NekDouble totalTime = timeNeighbourAllv[0];
-                NekDouble minTime = timeNeighbourAllv[0];
-                NekDouble maxTime = timeNeighbourAllv[0];
-
-                for (int i = 1; i < nRanks; ++i)
-                {
-                    totalTime += timeNeighbourAllv[i];
-                    minTime = (timeNeighbourAllv[i] < minTime) ? timeNeighbourAllv[i] : minTime;
-                    maxTime = (timeNeighbourAllv[i] > maxTime) ? timeNeighbourAllv[i] : maxTime;
-                }
-
-                timeAvgNeighbourV = totalTime/nRanks;
-
-                std::cout << "n_alltoall times (avg, min, max): " << timeAvgNeighbourV << " " << minTime << " " << maxTime << std::endl;
-            }
-
-            //pairwise send/recv
-            LibUtilities::Timer tPairwise;
-            tPairwise.Start();
-
-            for (size_t i = 0; i < testLoopCount; ++i)
-            {
-                Array<OneD, MPI_Request> request(vecPairPartitionTrace.size() * 2);
-                Array<OneD, MPI_Status> status(vecPairPartitionTrace.size() * 2);
-                size_t count = 0, count2 = 0;
-
-                Array<OneD, NekDouble> recvBuff(totSends, -1);
-                for (auto &pairPartitionTrace : vecPairPartitionTrace)
-                {
-                    size_t len = pairPartitionTrace.second.size();
-
-                    MPI_Irecv(static_cast<void *>(recvBuff.get() +
-                                                  m_sendDisp[count++]),
-                              len,
-                              MPI_DOUBLE,
-                              pairPartitionTrace.first,  // rank of source
-                              0,                         // message tag
-                              m_commGraph,
-                              &request[count2++]);
-                }
-
-                for (auto &pairPartitionTrace : vecPairPartitionTrace)
-                {
-                    size_t len = pairPartitionTrace.second.size();
-                    Array <OneD, NekDouble> sendBuff(len, -1);
-
-                    for (size_t j = 0; j < len; ++j)
-                    {
-                        sendBuff[j] = testFwd[pairPartitionTrace.second[j]];
-                    }
-
-                    MPI_Isend(sendBuff.get(),
-                            len,
-                            MPI_DOUBLE,
-                            pairPartitionTrace.first,  // rank of destination
-                            0,                         // message tag
-                            m_commGraph,
-                            &request[count2++]);
-                }
-
-                MPI_Waitall(vecPairPartitionTrace.size() * 2, request.get(), status.get());
-
-                count = 0;
-                for (auto &pairPartitionTrace : vecPairPartitionTrace)
-                {
-                    size_t len = pairPartitionTrace.second.size();
-                    for (size_t j = 0; j < len; ++j)
-                    {
-                        testBwd[pairPartitionTrace.second[j]] = recvBuff[m_sendDisp[count] + j];
-                    }
-                    count++;
-                }
-            }
-
-            tPairwise.Stop();
-            Array<OneD, NekDouble> minTimePairwise(1, tPairwise.TimePerTest(testLoopCount));
-            m_comm->AllReduce(minTimePairwise, LibUtilities::ReduceMin);
-
-            Array<OneD, NekDouble> maxTimePairwise(1, tPairwise.TimePerTest(testLoopCount));
-            m_comm->AllReduce(maxTimePairwise, LibUtilities::ReduceMax);
-
-            Array<OneD, NekDouble> sumTimePairwise(1, tPairwise.TimePerTest(testLoopCount));
-            m_comm->AllReduce(sumTimePairwise, LibUtilities::ReduceSum);
-
-            if (myRank == 0)
-            {
-                timeAvgPairwise = sumTimePairwise[0]/nRanks;
-                std::cout << "pairwise times (avg, min, max):   " << timeAvgPairwise << " " << minTimePairwise[0] << " " << maxTimePairwise[0] << std::endl;
-            }
-
-            Array<OneD, long> tmp2(nTracePhys);
-            for (int i = 0; i < nTracePhys; ++i)
-            {
-                tmp2[i] = m_traceToUniversalMap[i];
-            }
-            m_traceGsh = Gs::Init(tmp2, m_comm);
-            Gs::Unique(tmp2, m_comm);
-            for (int i = 0; i < nTracePhys; ++i)
-            {
-                m_traceToUniversalMapUnique[i] = tmp2[i];
+                m_vecPairPartitionTrace.emplace_back(std::make_pair(rankEdgeSet.first, edgeTraceIndex));
             }
         }
 
+        void AssemblyMapDG::MPIPerformAllToAll(
+                const Array<OneD, double> &testFwd,
+                Array<OneD, double> &testBwd)
+        {
+            int size = m_maxQuad * m_maxCount * m_nRanks;
+            Array<OneD, double> sendBuff(size, -1);
+            Array<OneD, double> recvBuff(size, -1);
+
+            for (int j = 0; j < size; ++j)
+            {
+                if (m_allEdgeIndex[j] == -1)
+                {
+                    sendBuff[j] = 0;
+                }
+                else
+                {
+                    sendBuff[j] = testFwd[m_allEdgeIndex[j]];
+                }
+            }
+
+            m_comm->AlltoAll(sendBuff, recvBuff);
+
+            for (int j = 0; j < size; ++j)
+            {
+                if (m_allEdgeIndex[j] != -1)
+                {
+                    testBwd[m_allEdgeIndex[j]] = recvBuff[j];
+                }
+            }
+        }
+
+        void AssemblyMapDG::MPIPerformAllToAllV(
+                const Array<OneD, double> &testFwd,
+                Array<OneD, double> &testBwd)
+        {
+            Array<OneD, double> sendBuff(m_allVEdgeIndex.size(), -1);
+            Array<OneD, double> recvBuff(m_allVEdgeIndex.size(), -1);
+
+            for (int i = 0; i < m_allVEdgeIndex.size(); ++i)
+            {
+                sendBuff[i] = testFwd[m_allVEdgeIndex[i]];
+            }
+
+            m_comm->AlltoAllv(sendBuff, m_allVSendCount, m_allVSendDisp,
+                              recvBuff, m_allVSendCount, m_allVSendDisp);
+
+            for (int i = 0; i < m_allVEdgeIndex.size(); ++i)
+            {
+                testBwd[m_allVEdgeIndex[i]] = recvBuff[i];
+            }
+        }
+
+        void AssemblyMapDG::MPIPerformNeighborAllToAllV(
+                const Array<OneD, double> &testFwd,
+                Array<OneD, double> &testBwd)
+        {
+            Array<OneD, double> sendBuff(m_edgeTraceIndex.size(), -1);
+            Array<OneD, double> recvBuff(m_edgeTraceIndex.size(), -1);
+            for (int i = 0; i < m_edgeTraceIndex.size(); ++i)
+            {
+                sendBuff[i] = testFwd[m_edgeTraceIndex[i]];
+            }
+
+
+            MPI_Neighbor_alltoallv(sendBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
+                                   recvBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
+                                   m_commGraph);
+
+            for (int i = 0; i < m_edgeTraceIndex.size(); ++i)
+            {
+                testBwd[m_edgeTraceIndex[i]] = recvBuff[i];
+            }
+        }
+
+        void AssemblyMapDG::MPIPerformPairwise(
+                const Array<OneD, double> &testFwd,
+                Array<OneD, double> &testBwd)
+        {
+            Array<OneD, MPI_Request> request(m_vecPairPartitionTrace.size() * 2);
+            Array<OneD, MPI_Status> status(m_vecPairPartitionTrace.size() * 2);
+            size_t count = 0, count2 = 0;
+
+            Array<OneD, NekDouble> recvBuff(m_totSends, -1);
+            for (auto &pairPartitionTrace : m_vecPairPartitionTrace)
+            {
+                size_t len = pairPartitionTrace.second.size();
+
+                MPI_Irecv(static_cast<void *>(recvBuff.get() +
+                                              m_sendDisp[count++]),
+                          len,
+                          MPI_DOUBLE,
+                          pairPartitionTrace.first,  // rank of source
+                          0,                         // message tag
+                          m_commGraph,
+                          &request[count2++]);
+            }
+
+            for (auto &pairPartitionTrace : m_vecPairPartitionTrace)
+            {
+                size_t len = pairPartitionTrace.second.size();
+                Array <OneD, NekDouble> sendBuff(len, -1);
+
+                for (size_t j = 0; j < len; ++j)
+                {
+                    sendBuff[j] = testFwd[pairPartitionTrace.second[j]];
+                }
+
+                MPI_Isend(sendBuff.get(),
+                          len,
+                          MPI_DOUBLE,
+                          pairPartitionTrace.first,  // rank of destination
+                          0,                         // message tag
+                          m_commGraph,
+                          &request[count2++]);
+            }
+
+            MPI_Waitall(m_vecPairPartitionTrace.size() * 2, request.get(), status.get());
+
+            count = 0;
+            for (auto &pairPartitionTrace : m_vecPairPartitionTrace)
+            {
+                size_t len = pairPartitionTrace.second.size();
+                for (size_t j = 0; j < len; ++j)
+                {
+                    testBwd[pairPartitionTrace.second[j]] = recvBuff[m_sendDisp[count] + j];
+                }
+                count++;
+            }
+        }
+
+        std::tuple<NekDouble, NekDouble, NekDouble>  AssemblyMapDG::MPITiming(
+                const int &count,
+                const Array<OneD, double> &testFwd,
+                Array<OneD, double> &testBwd,
+                void *f(Array<OneD, double>, Array<OneD, double>))
+        {
+            LibUtilities::Timer t;
+            t.Start();
+
+            for (size_t i = 0; i < count; ++i)
+            {
+                f(testFwd, testBwd);
+            }
+
+            t.Stop();
+
+            Array<OneD, NekDouble> minTime(1, t.TimePerTest(count));
+            m_comm->AllReduce(minTime, LibUtilities::ReduceMin);    // These can just be 'reduce' but need to setup the wrapper in comm.h
+
+            Array<OneD, NekDouble> maxTime(1, t.TimePerTest(count));
+            m_comm->AllReduce(maxTime, LibUtilities::ReduceMax);
+
+            Array<OneD, NekDouble> sumTime(1, t.TimePerTest(count));
+            m_comm->AllReduce(sumTime, LibUtilities::ReduceSum);
+
+            return {sumTime[0]/m_comm->GetSize(), minTime[0], maxTime[0]};
+        }
+
         void AssemblyMapDG::RealignTraceElement(
-            Array<OneD, int>        &toAlign,
-            StdRegions::Orientation  orient,
-            int                      nquad1,
-            int                      nquad2)
+                Array<OneD, int>        &toAlign,
+                StdRegions::Orientation  orient,
+                int                      nquad1,
+                int                      nquad2)
         {
             if (orient == StdRegions::eBackwards)
             {
@@ -1419,23 +1413,11 @@ namespace Nektar
             }
         }
 
-        void AssemblyMapDG::UniversalTraceAssemble(Array<OneD, NekDouble> &Fwd, Array<OneD, NekDouble> &Bwd)
+        void AssemblyMapDG::UniversalTraceAssemble(
+                Array<OneD, NekDouble> &Fwd,
+                Array<OneD, NekDouble> &Bwd)
         {
-            Array<OneD, double> sendBuff(m_edgeTraceIndex.size(), -1);
-            Array<OneD, double> recvBuff(m_edgeTraceIndex.size(), -1);
-            for (int i = 0; i < m_edgeTraceIndex.size(); ++i)
-            {
-                sendBuff[i] = Fwd[m_edgeTraceIndex[i]];
-            }
-
-            MPI_Neighbor_alltoallv(sendBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
-                                   recvBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
-                                   m_commGraph);
-
-            for (int i = 0; i < m_edgeTraceIndex.size(); ++i)
-            {
-                Bwd[m_edgeTraceIndex[i]] = recvBuff[i];
-            }
+            MPIPerformAllToAllV(Fwd, Bwd);
         }
 
         void AssemblyMapDG::UniversalTraceAssembleGS(Array<OneD, NekDouble> &pGlobal) const

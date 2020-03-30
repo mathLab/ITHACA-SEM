@@ -110,21 +110,59 @@ namespace Nektar
             /// universal space (signed).
             Array<OneD,int> m_traceToUniversalMapUnique;
 
-
-            ///Distributed graph communicator
-            MPI_Comm m_commGraph;
-
-            /// List of trace map indices of the quad points to exchange
-            std::vector<int> m_edgeTraceIndex;
-
-            /// List of counts for MPI_neighbor_alltoallv in UniversalTraceAssemble
-            Array<OneD,int> m_sendCount;
-
-            /// List of displacements for MPI_neighbor_alltoallv in UniversalTraceAssemble
-            Array<OneD, int> m_sendDisp;
-
             /// Map of ID to quad point trace indices
             std::map<int, std::vector<int>> m_edgeToTrace;
+
+            void MPIInitialiseStructure(
+                    const LocalRegions::ExpansionVector &locExpVector,
+                    const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
+                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond);
+            /// Map of process to shared edge IDs
+            std::map<int, std::vector<int>> m_rankSharedEdges;
+
+            void MPISetupAllToAll();
+            /// List of trace map indices of the quad points to exchange
+            std::vector<int> m_allEdgeIndex;
+            /// Max number of quadrature points in an element
+            int m_maxQuad = 0;
+            /// Largest shared partition edge
+            int m_maxCount = 0;
+            /// Number of ranks/processes/partitions
+            int m_nRanks = 0;
+            void MPIPerformAllToAll(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd);
+
+            void MPISetupAllToAllV();
+            /// List of trace map indices of the quad points to exchange
+            std::vector<int> m_allVEdgeIndex;
+            /// List of counts for MPI_alltoallv
+            Array<OneD, int> m_allVSendCount;
+            /// List of displacements for MPI_alltoallv
+            Array<OneD, int> m_allVSendDisp;
+            void MPIPerformAllToAllV(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd);
+
+            void MPISetupNeighborAllToAllV();
+            ///Distributed graph communicator
+            MPI_Comm m_commGraph;
+            /// List of trace map indices of the quad points to exchange
+            std::vector<int> m_edgeTraceIndex;
+            /// List of counts
+            Array<OneD,int> m_sendCount;
+            /// List of displacements
+            Array<OneD, int> m_sendDisp;
+            void MPIPerformNeighborAllToAllV(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd);
+
+            void MPISetupPairwise();
+            /// List of partition to trace map indices of the quad points to exchange
+            std::vector<std::pair<int, std::vector<int>>> m_vecPairPartitionTrace;
+            /// Total quadrature points to send/recv
+            int m_totSends = 0;
+            void MPIPerformPairwise(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd);
+
+            std::tuple<NekDouble, NekDouble, NekDouble> MPITiming(
+                    const int &count,
+                    const Array<OneD, double> &testFwd,
+                    Array<OneD, double> &testBwd,
+                    void *f(Array<OneD, double>, Array<OneD, double>));
 
             void SetUpUniversalDGMap(const ExpList &locExp);
 

@@ -170,8 +170,8 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
 
             p = point_xy(P[0], P[1]);
 
-            //ASSERTL0(boost::geometry::within(p, polygons[i]),
-            //         "point is not side loop");
+            ASSERTL0(boost::geometry::within(p, polygons[i]),
+                     "point is not side loop");
         }
     }
 }

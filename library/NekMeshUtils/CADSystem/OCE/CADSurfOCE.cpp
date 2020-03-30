@@ -33,6 +33,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/CADSystem/OCE/CADSurfOCE.h>
+#include <NekMeshUtils/CADSystem/OCE/TransfiniteSurface.hpp>
+#include <GeomAPI_ProjectPointOnSurf.hxx>
 
 using namespace std;
 
@@ -47,6 +49,12 @@ std::string CADSurfOCE::key = GetCADSurfFactory().RegisterCreatorFunction(
 void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
 {
     m_s = BRep_Tool::Surface(TopoDS::Face(in));
+
+    // Test to see if this surface is a transfinite surface, since some OCC
+    // functions will not work on our custom type.
+    Geom_TransfiniteSurface *geom = dynamic_cast<Geom_TransfiniteSurface *>(
+        m_s.get());
+    m_isTransfiniteSurf = geom ? true : false;
 
     if (in.Orientation() == 1)
     {
@@ -116,25 +124,38 @@ Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p,
     gp_Pnt loc(p[0] * 1000.0, p[1] * 1000.0, p[2] * 1000.0);
     Array<OneD, NekDouble> uv(2);
 
-    gp_Pnt2d p2 = m_sas->ValueOfUV(loc, Precision::Confusion());
-
-    TopAbs_State s = m_2Dclass->Perform(p2);
-
-    if (s == TopAbs_OUT)
+    if (!m_isTransfiniteSurf)
     {
-        BRepBuilderAPI_MakeVertex v(loc);
-        BRepExtrema_DistShapeShape dss(
-            BRepTools::OuterWire(TopoDS::Face(m_shape)), v.Shape());
-        dss.Perform();
-        gp_Pnt np = dss.PointOnShape1(1);
-        p2        = m_sas->ValueOfUV(np, Precision::Confusion());
+        gp_Pnt2d p2 = m_sas->ValueOfUV(loc, Precision::Confusion());
+
+        TopAbs_State s = m_2Dclass->Perform(p2);
+
+        if (s == TopAbs_OUT)
+        {
+            BRepBuilderAPI_MakeVertex v(loc);
+            BRepExtrema_DistShapeShape dss(
+                BRepTools::OuterWire(TopoDS::Face(m_shape)), v.Shape());
+            dss.Perform();
+            gp_Pnt np = dss.PointOnShape1(1);
+            p2        = m_sas->ValueOfUV(np, Precision::Confusion());
+        }
+
+        uv[0] = p2.X();
+        uv[1] = p2.Y();
+
+        gp_Pnt p3 = m_sas->Value(p2);
+
+        dist = p3.Distance(loc) / 1000.0;
     }
-
-    uv[0]     = p2.X();
-    uv[1]     = p2.Y();
-    gp_Pnt p3 = m_sas->Value(p2);
-
-    dist = p3.Distance(loc) / 1000.0;
+    else
+    {
+        Array<OneD, NekDouble> out(3);
+        GeomAPI_ProjectPointOnSurf proj(loc, m_s);
+        proj.Perform(loc);
+        ASSERTL1(proj.NbPoints() > 0, "Unable to find a projection!");
+        proj.LowerDistanceParameters(uv[0], uv[1]);
+        dist = proj.LowerDistance();
+    }
 
     return uv;
 }
@@ -147,6 +168,11 @@ NekDouble CADSurfOCE::Curvature(Array<OneD, NekDouble> uv)
 
     GeomLProp_SLProps d(m_s, 2, Precision::Confusion());
     d.SetParameters(uv[0], uv[1]);
+
+    if (!d.IsCurvatureDefined())
+    {
+        return -1.0;
+    }
 
     return d.MaxCurvature() * 1000.0;
 }
@@ -315,5 +341,7 @@ void CADSurfOCE::Test(Array<OneD, NekDouble> uv)
     //ASSERTL1(passed, "Warning: " + error.str());
     (void)passed; // suppress warning
 }
+
+
 } // namespace NekMeshUtils
 } // namespace Nektar

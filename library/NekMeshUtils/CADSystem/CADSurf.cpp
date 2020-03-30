@@ -54,7 +54,7 @@ Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
     NekDouble dist;
     Array<OneD, NekDouble> uv = locuv(p, dist);
 
-    WARNINGL1(dist < 1e-3, "large locuv distance");
+    WARNINGL1(dist < 1e-3, "large locuv distance: "+ std::to_string(dist));
 
     return uv;
 }

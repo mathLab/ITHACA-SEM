@@ -41,6 +41,7 @@
 #include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
 
 #include <NekMeshUtils/CADSystem/OCE/GeoParser.hpp>
+#include <NekMeshUtils/CADSystem/OCE/TransfiniteSurface.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -254,8 +255,8 @@ bool CADSystemOCE::LoadCAD()
         AddSurf(i, f);
     }
 
-    // attemps to extract patch names from STEP file
-    if(fromStep)
+    // Attempts to extract patch names from STEP file
+    if (fromStep)
     {
         int nb = Model->NbEntities();
         for (int i = 1; i <= nb; i++)
@@ -623,9 +624,10 @@ inline void CheckWarning(std::string                name,
     }
 }
 
-
 TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 {
+    using ast::Geom;
+
     ifstream f(geo.c_str());
     const std::string str((std::istreambuf_iterator<char>(f)),
                           std::istreambuf_iterator<char>());
@@ -661,6 +663,9 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
     // Build edges.
     map<unsigned int, TopoDS_Edge> cEdges;
+    map<unsigned int, std::string> cEdgeTypes;
+    map<unsigned int, Geom> edgeMap;
+
     for (auto &line : geoFile.lines)
     {
         if (line.ids.size() != 2)
@@ -676,8 +681,11 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
             continue;
         }
 
+
         BRepBuilderAPI_MakeEdge em(cPoints[line.ids[0]], cPoints[line.ids[1]]);
         cEdges[line.id] = em.Edge();
+        edgeMap[line.id] = line;
+        cEdgeTypes[line.id] = "line";
     }
 
     for (auto &spline : geoFile.splines)
@@ -706,6 +714,8 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
         BRepBuilderAPI_MakeEdge em(curve);
         cEdges[spline.id] = em.Edge();
+        edgeMap[spline.id] = spline;
+        cEdgeTypes[spline.id] = "spline";
     }
 
     for (auto &bspline : geoFile.bsplines)
@@ -734,6 +744,8 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
         BRepBuilderAPI_MakeEdge em(curve);
         cEdges[bspline.id] = em.Edge();
+        edgeMap[bspline.id] = bspline;
+        cEdgeTypes[bspline.id] = "bspline";
     }
 
     for (auto &circle : geoFile.circles)
@@ -775,6 +787,8 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         BRepBuilderAPI_MakeEdge em(tc);
         em.Build();
         cEdges[circle.id] = em.Edge();
+        edgeMap[circle.id] = circle;
+        cEdgeTypes[circle.id] = "circle";
     }
 
     for (auto &ellipse : geoFile.ellipses)
@@ -839,10 +853,13 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         BRepBuilderAPI_MakeEdge em(tc);
         em.Build();
         cEdges[ellipse.id] = em.Edge();
+        edgeMap[ellipse.id] = ellipse;
+        cEdgeTypes[ellipse.id] = "ellipse";
     }
 
     // build wires
     map<unsigned int, TopoDS_Wire> cWires;
+    map<unsigned int, Geom> loopMap;
     for (auto &loop : geoFile.lineLoops)
     {
         // Make IDs all positive since we don't care about the orientations.
@@ -863,10 +880,12 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
             wm.Add(cEdges[edgeId]);
         }
         cWires[loop.id] = wm.Wire();
+        loopMap[loop.id] = loop;
     }
 
     // Build faces
     map<unsigned int, TopoDS_Face> cFaces;
+    map<unsigned int, Geom> faceMap;
     for (auto &planeSurf : geoFile.planeSurfs)
     {
         BRepBuilderAPI_MakeFace face(cWires[planeSurf.ids[0]], true);
@@ -881,6 +900,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         sf.FixOrientation();
 
         cFaces[planeSurf.id] = sf.Face();
+        faceMap[planeSurf.id] = planeSurf;
     }
 
     // Build Ruled Surfaces
@@ -899,17 +919,125 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
             continue;
         }
 
-        BRepFill_Filling fill(2, 30);
+        Geom &loop = loopMap[surf.ids[0]];
+
+        // Get edges
+        const int nEdges = loop.ids.size();
+
+        // Special case: 3 or 4 circular edges should define a spherical
+        // surface. This is what the built-in geo kernel supports, but
+        // OpenCASCADE engine gives a regular filling.
+        bool isSphere = true;
+        if (nEdges == 3 || nEdges == 4)
+        {
+            for (int i = 0; i < nEdges; ++i)
+            {
+                if (cEdgeTypes[loop.ids[i]] != "circle")
+                {
+                    isSphere = false;
+                    break;
+                }
+            }
+
+            // Now check circle origins are defined at the same point.
+            if (isSphere)
+            {
+                int originId = edgeMap[loop.ids[0]].ids[1];
+                for (int i = 1; i < nEdges; ++i)
+                {
+                    if (originId != edgeMap[loop.ids[i]].ids[1])
+                    {
+                        isSphere = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (isSphere)
+        {
+            gp_Pnt origin;
+            for (int i = 0; i < nEdges; ++i)
+            {
+                auto edge = edgeMap[loop.ids[i]];
+                origin = cPoints[edge.ids[1]];
+            }
+
+            gp_Sphere sph;
+            sph.SetLocation(origin);
+            sph.SetRadius(origin.Distance(cPoints[edgeMap[loop.ids[0]].ids[0]]));
+            BRepBuilderAPI_MakeFace makeFace(sph, cWires[surf.ids[0]]);
+
+            ShapeFix_Face sf(makeFace.Face());
+            sf.Perform();
+            cFaces[surf.id] = sf.Face();
+
+            continue;
+        }
+
+        // Otherwise we will construct a filling from OpenCASCADE.
+        BRepOffsetAPI_MakeFilling fill;
         TopExp_Explorer ex;
 
+        // Add all edges from our line loop.
         for (ex.Init(cWires[surf.ids[0]], TopAbs_EDGE); ex.More(); ex.Next())
         {
             const TopoDS_Edge &shape = TopoDS::Edge(ex.Current());
             fill.Add(shape, GeomAbs_C0);
         }
 
+        // Attempt to emulate the built-in CAD kernel, which performs a
+        // transfinite interpolation.
+        bool builtIn = true;
+        if ((loop.ids.size() == 3 || loop.ids.size() == 4) && builtIn)
+        {
+            const int nEdges = loop.ids.size();
+
+            // Attempt to reconstruct shape from standard Gmsh kernel by
+            // creating a custom transfinite surface. So far only 4 edges are
+            // supported.
+            std::vector<Handle(Geom_Curve)>   edges    (nEdges);
+            std::vector<TopoDS_Edge>          topoEdges(nEdges);
+            std::vector<pair<double, double>> clims    (nEdges);
+            std::vector<int>                  vertIds  (nEdges);
+            std::vector<bool>                 fwd      (nEdges);
+            std::vector<gp_Pnt>               verts    (nEdges);
+
+            for (int i = 0; i < nEdges; ++i)
+            {
+                auto edge = edgeMap[loop.ids[i]];
+                auto nextEdge = edgeMap[loop.ids[(i + 1) % nEdges]];
+
+                TopoDS_Edge &topoEdge = cEdges[loop.ids[i]];
+                std::pair<double, double> clim;
+                topoEdges[i] = topoEdge;
+                edges[i] = BRep_Tool::Curve(topoEdge, clim.first, clim.second);
+                clims[i] = clim;
+
+                fwd[i] = true;
+                if ((edge.ids[0] == nextEdge.ids[0]) ||
+                    (edge.ids[0] == nextEdge.ids.back()))
+                {
+                    fwd[i] = false;
+                }
+                else if ((edge.ids.back() != nextEdge.ids[0]) &&
+                         (edge.ids.back() != nextEdge.ids.back()))
+                {
+                    ASSERTL0(false, "connectivity issue");
+                }
+
+                verts[i] = fwd[i] ? cPoints[edge.ids[0]] : cPoints[edge.ids.back()];
+            }
+
+            Handle(Geom_TransfiniteSurface) asd = new Geom_TransfiniteSurface(
+                edges, fwd, clims, verts);
+            BRepBuilderAPI_MakeFace mkFace(asd, cWires[surf.ids[0]]);
+            cFaces[surf.id] = mkFace.Face();
+            continue;
+        }
+
         fill.Build();
-        cFaces[surf.id] = fill.Face();
+        cFaces[surf.id] = TopoDS::Face(fill.Shape());
     }
 
     map<unsigned int, TopoDS_Shell> cShells;
@@ -970,9 +1098,10 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         TopoDS_Solid s = solidMaker.Solid();
 
         // Perform fix on solid
-        ShapeFix_Solid solidFix(s);
-        solidFix.Perform();
-        cVolumes[vol.id] = solidFix.Solid();
+        //ShapeFix_Solid solidFix(s);
+        //solidFix.Perform();
+        //cVolumes[vol.id] = solidFix.Solid();
+        cVolumes[vol.id] = s;
     }
 
     return cVolumes.begin()->second;

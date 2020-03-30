@@ -993,6 +993,11 @@ void Octree::CompileSourcePointList()
 
                     // create new point based on smallest R, flat surfaces have
                     // k=0 but still need a point for element estimation
+                    if (C == -1.0)
+                    {
+                        // Curvature not defined
+                        continue;
+                    }
                     if (C != 0.0)
                     {
                         NekDouble del =

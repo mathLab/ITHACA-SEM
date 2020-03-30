@@ -116,7 +116,8 @@ namespace Nektar
             void MPIInitialiseStructure(
                     const LocalRegions::ExpansionVector &locExpVector,
                     const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
-                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond);
+                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
+                    const PeriodicMap &perMap);
             /// Map of process to shared edge IDs
             std::map<int, std::vector<int>> m_rankSharedEdges;
 

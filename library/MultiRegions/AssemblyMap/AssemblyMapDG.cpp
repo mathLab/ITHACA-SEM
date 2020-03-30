@@ -847,8 +847,20 @@ namespace Nektar
                 }
             }
 
-            // Initialsing graph structure
-            MPIInitialiseStructure(locExpVector, bndCondExp, bndCond);
+            Array<OneD, long> tmp2(nTracePhys);
+            for (int i = 0; i < nTracePhys; ++i)
+            {
+                tmp2[i] = m_traceToUniversalMap[i];
+            }
+            m_traceGsh = Gs::Init(tmp2, m_comm);
+            Gs::Unique(tmp2, m_comm);
+            for (int i = 0; i < nTracePhys; ++i)
+            {
+                m_traceToUniversalMapUnique[i] = tmp2[i];
+            }
+
+            // Initialising graph structure
+            MPIInitialiseStructure(locExpVector, bndCondExp, bndCond, perMap);
 
             // Setting up MPI comm methods
             MPISetupAllToAll();
@@ -890,7 +902,7 @@ namespace Nektar
             }
 
             //Pairwise send/recv
-            MPITiming(2, testFwd, testBwd, MPIPerformNeighborAllToAllV);
+            MPITiming(2, testFwd, testBwd, MPIPerformPairwise);
             std::tie(avg, min, max) = MPITiming(10, testFwd, testBwd, MPIPerformPairwise);
             if (m_comm->GetRank() == 0)
             {
@@ -898,24 +910,13 @@ namespace Nektar
                           << avg << " " << min << " " << max << std::endl;
             }
              */
-
-            Array<OneD, long> tmp2(nTracePhys);
-            for (int i = 0; i < nTracePhys; ++i)
-            {
-                tmp2[i] = m_traceToUniversalMap[i];
-            }
-            m_traceGsh = Gs::Init(tmp2, m_comm);
-            Gs::Unique(tmp2, m_comm);
-            for (int i = 0; i < nTracePhys; ++i)
-            {
-                m_traceToUniversalMapUnique[i] = tmp2[i];
-            }
         }
 
         void AssemblyMapDG::MPIInitialiseStructure(
                 const LocalRegions::ExpansionVector &locExpVector,
                 const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
-                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond)
+                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
+                const PeriodicMap &perMap)
         {
             //This creates a list of all geometry of problem dimension - 1
             std::vector<int> localEdgeIds;
@@ -963,28 +964,47 @@ namespace Nektar
             {
                 for (int j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
-                    bndIdList.insert(bndCondExp[i]->GetExp(j)->GetGeom()->GetGlobalID());
+                    int eid = bndCondExp[i]->GetExp(j)->GetGeom()->GetGlobalID();
+                    if (perMap.find(eid) == perMap.end())  // Don't add if periodic boundary
+                    {
+                        bndIdList.insert(eid);
+                    }
                 }
             }
 
-            //Get unique edges to send (could be a better way of doing this? or is it even worth doing?)
-            std::vector<int> uniqueEdgeIds;
+            //Get unique edges to send
+            std::vector<int> uniqueEdgeIds, uniqueEdgeIdsLocal;
             std::vector<bool> duplicated(localEdgeIds.size(), false);
             for (int i = 0; i < localEdgeIds.size(); ++i)
             {
+                int eid = localEdgeIds[i];
                 for (int j = i + 1; j < localEdgeIds.size(); ++j)
                 {
-                    if (localEdgeIds[i] == localEdgeIds[j])
+                    if (eid == localEdgeIds[j])
                     {
                         duplicated[i] = duplicated[j] = true;
                     }
                 }
 
-                if (!duplicated[i])
+                if (!duplicated[i])  // Not duplicated in local partition
                 {
-                    if (bndIdList.find(localEdgeIds[i]) == bndIdList.end())
+                    if (bndIdList.find(eid) == bndIdList.end())  // Not a boundary edge
                     {
-                        uniqueEdgeIds.emplace_back(localEdgeIds[i]);
+                        // Check if periodic and if not local set eid to other side
+                        auto it = perMap.find(eid);
+                        if (it != perMap.end())
+                        {
+                            if (!it->second[0].isLocal)
+                            {
+                                uniqueEdgeIds.emplace_back(it->second[0].id);
+                            }
+                        }
+                        else
+                        {
+                            uniqueEdgeIds.emplace_back(eid);
+                        }
+
+                        uniqueEdgeIdsLocal.emplace_back(eid); // Separate local edge ID list where periodic edge IDs aren't swapped
                     }
                 }
             }
@@ -1029,19 +1049,42 @@ namespace Nektar
                 }
             }
 
-            //Find what edge Ids match with other ranks
+            // Find what edge Ids match with other ranks
             for (auto &rank : otherRanks)
             {
                 for (int j = 0; j < rankNumEdges[rank]; ++j)
                 {
                     int edgeId = rankLocalEdgeIds[rankLocalEdgeDisp[rank] + j];
-                    int *found = std::find(localEdgeIdsArray.begin(), localEdgeIdsArray.end(), edgeId);
-                    if (found != localEdgeIdsArray.end())
+                    if (std::find(uniqueEdgeIdsLocal.begin(), uniqueEdgeIdsLocal.end(), edgeId) != uniqueEdgeIdsLocal.end())
                     {
-                        m_rankSharedEdges[rank].emplace_back(edgeId);
+                        // If periodic then set location in ordered list as where minimum of the two eids would be
+                        auto it = perMap.find(edgeId);
+                        if (it != perMap.end())
+                        {
+                            std::cout << "MY RANK: " << m_comm->GetRank() << " " << edgeId << " -> " << it->second[0].id << std::endl;
+                            int locVal = min(edgeId, it->second[0].id);
+                            auto it2 = std::upper_bound(m_rankSharedEdges[rank].cbegin(), m_rankSharedEdges[rank].cend(), locVal);
+                            m_rankSharedEdges[rank].insert(it2, edgeId);
+                        }
+                        else
+                        {
+                            m_rankSharedEdges[rank].emplace_back(edgeId);
+                        }
                     }
                 }
             }
+
+            std::cout << "MY RANK: " << m_comm->GetRank() << " SHARES WITH: \n";
+            for (auto rank : m_rankSharedEdges)
+            {
+                std::cout << "\t " << rank.first << " : ";
+                for (auto edges : rank.second)
+                {
+                    std::cout << edges << ", ";
+                }
+                std::cout << " \n";
+            }
+            std::cout << "\n" << std::endl;
         }
 
         void AssemblyMapDG::MPISetupAllToAll()

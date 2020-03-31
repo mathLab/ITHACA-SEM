@@ -1052,19 +1052,20 @@ namespace Nektar
             // Find what edge Ids match with other ranks
             for (auto &rank : otherRanks)
             {
+                std::vector<int> periodicEdgeList;
+                //std::map<int, int> perMapMinToLocalId;
                 for (int j = 0; j < rankNumEdges[rank]; ++j)
                 {
                     int edgeId = rankLocalEdgeIds[rankLocalEdgeDisp[rank] + j];
                     if (std::find(uniqueEdgeIdsLocal.begin(), uniqueEdgeIdsLocal.end(), edgeId) != uniqueEdgeIdsLocal.end())
                     {
-                        // If periodic then set location in ordered list as where minimum of the two eids would be
+                        // If periodic then create separate list of minimum of the two ids to be appended on to the end
                         auto it = perMap.find(edgeId);
                         if (it != perMap.end())
                         {
-                            std::cout << "MY RANK: " << m_comm->GetRank() << " " << edgeId << " -> " << it->second[0].id << std::endl;
                             int locVal = min(edgeId, it->second[0].id);
-                            auto it2 = std::upper_bound(m_rankSharedEdges[rank].cbegin(), m_rankSharedEdges[rank].cend(), locVal);
-                            m_rankSharedEdges[rank].insert(it2, edgeId);
+                            //perMapMinToLocalId[locVal] = edgeId;
+                            periodicEdgeList.emplace_back(locVal);
                         }
                         else
                         {
@@ -1072,19 +1073,27 @@ namespace Nektar
                         }
                     }
                 }
+
+                // Sort periodic edges, keep IDs as is, the m_edgeToTrace is constructed using the min IDs also
+                std::sort(periodicEdgeList.begin(), periodicEdgeList.end());
+                if(!periodicEdgeList.empty())
+                {
+                    m_rankSharedEdges[rank].insert(m_rankSharedEdges[rank].end(),periodicEdgeList.begin(), periodicEdgeList.end());
+                }
             }
 
-            std::cout << "MY RANK: " << m_comm->GetRank() << " SHARES WITH: \n";
+            //DEBUG
+            std::cout << "MY RANK " << m_comm->GetRank() << " SHARES WITH: \n";
             for (auto rank : m_rankSharedEdges)
             {
-                std::cout << "\t " << rank.first << " : ";
+                std::cout << "\t RANK " << rank.first << " : ";
                 for (auto edges : rank.second)
                 {
                     std::cout << edges << ", ";
                 }
-                std::cout << " \n";
+                std::cout << "\n";
             }
-            std::cout << "\n" << std::endl;
+            std::cout << std::endl;
         }
 
         void AssemblyMapDG::MPISetupAllToAll()

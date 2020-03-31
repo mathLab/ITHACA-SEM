@@ -923,21 +923,19 @@ namespace Nektar
             {
                 case eAllToAll:
                 {
-                    m_MPIFunction = std::bind(&AssemblyMapDG::MPIPerformAllToAll, this, _1, _2);
+                    MPITraceAssemble = std::bind(&AssemblyMapDG::MPIPerformAllToAll, this, _1, _2);
                 }
                 case eAllToAllV:
                 {
-                    m_MPIFunction = std::bind(&AssemblyMapDG::MPIPerformAllToAllV, this, _1, _2);
-
+                    MPITraceAssemble = std::bind(&AssemblyMapDG::MPIPerformAllToAllV, this, _1, _2);
                 }
                 case eNeighborAllToAll:
                 {
-                    m_MPIFunction = std::bind(&AssemblyMapDG::MPIPerformNeighborAllToAllV, this, _1, _2);
-
+                    MPITraceAssemble = std::bind(&AssemblyMapDG::MPIPerformNeighborAllToAllV, this, _1, _2);
                 }
                 case ePairwise:
                 {
-                    m_MPIFunction = std::bind(&AssemblyMapDG::MPIPerformPairwise, this, _1, _2);
+                    MPITraceAssemble = std::bind(&AssemblyMapDG::MPIPerformPairwise, this, _1, _2);
                 }
             }
         }
@@ -1469,7 +1467,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &Fwd,
                 Array<OneD, NekDouble> &Bwd)
         {
-            m_MPIFunction(Fwd, Bwd);
+            MPITraceAssemble(Fwd, Bwd);
         }
 
         void AssemblyMapDG::UniversalTraceAssembleGS(Array<OneD, NekDouble> &pGlobal) const

@@ -95,6 +95,9 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void UniversalTraceAssembleGS(
                     Array<OneD, NekDouble> &pGlobal) const;
 
+            MULTI_REGIONS_EXPORT std::function<void(const Array<OneD, NekDouble> &, Array<OneD, NekDouble> &)> MPITraceAssemble;
+
+
         protected:
             Gs::gs_data * m_traceGsh;
             
@@ -158,8 +161,6 @@ namespace Nektar
             /// Total quadrature points to send/recv
             int m_totSends = 0;
             void MPIPerformPairwise(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd);
-
-            std::function<void(const Array<OneD, NekDouble> &, Array<OneD, NekDouble> &)> m_MPIFunction;
 
             void SetUpUniversalDGMap(const ExpList &locExp);
 

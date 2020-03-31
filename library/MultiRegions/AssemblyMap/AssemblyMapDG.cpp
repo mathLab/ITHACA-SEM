@@ -871,50 +871,74 @@ namespace Nektar
             //Timing MPI comm methods, warm up with 2 iterations then time over 10
             Array<OneD, double> testFwd(trace->GetNpoints(), 1);
             Array<OneD, double> testBwd(trace->GetNpoints(), -2);
-            NekDouble min, max, avg;
-
-            //AllToAll
+            NekDouble min, max;
+            std::vector<NekDouble> avg(4, -1);
             using std::placeholders::_1;
             using std::placeholders::_2;
+
+            //AllToAll
             MPITiming(m_comm, 2, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAll, this, _1, _2));
-            std::tie(avg, min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAll, this, _1, _2));
+            std::tie(avg[0], min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAll, this, _1, _2));
             if (m_comm->GetRank() == 0)
             {
                 std::cout << "AllToAll times (avg, min, max): "
-                << avg << " " << min << " " << max << std::endl;
+                << avg[0] << " " << min << " " << max << std::endl;
             }
 
             //AllToAllV
-            using std::placeholders::_1;
-            using std::placeholders::_2;
             MPITiming(m_comm, 2, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAllV, this, _1, _2));
-            std::tie(avg, min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAllV, this, _1, _2));
+            std::tie(avg[1], min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAllV, this, _1, _2));
             if (m_comm->GetRank() == 0)
             {
                 std::cout << "AllToAllV times (avg, min, max): "
-                << avg << " " << min << " " << max << std::endl;
+                << avg[1] << " " << min << " " << max << std::endl;
             }
 
             //Neighbor_AllToAllv
-            using std::placeholders::_1;
-            using std::placeholders::_2;
             MPITiming(m_comm, 2, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformNeighborAllToAllV, this, _1, _2));
-            std::tie(avg, min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformNeighborAllToAllV, this, _1, _2));
+            std::tie(avg[2], min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformNeighborAllToAllV, this, _1, _2));
             if (m_comm->GetRank() == 0)
             {
                 std::cout << "Neighbor AllToAllV times (avg, min, max): "
-                << avg << " " << min << " " << max << std::endl;
+                << avg[2] << " " << min << " " << max << std::endl;
             }
 
             //Pairwise send/recv
-            using std::placeholders::_1;
-            using std::placeholders::_2;
             MPITiming(m_comm, 2, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformPairwise, this, _1, _2));
-            std::tie(avg, min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformPairwise, this, _1, _2));
+            std::tie(avg[3], min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformPairwise, this, _1, _2));
             if (m_comm->GetRank() == 0)
             {
                 std::cout << "Pairwise Isend/Irecv times (avg, min, max): "
-                << avg << " " << min << " " << max << std::endl;
+                << avg[3] << " " << min << " " << max << std::endl;
+            }
+
+            auto fastestMPI = MPIType(std::distance(avg.begin(), std::min_element(avg.begin(), avg.end())));
+
+            if (m_comm->GetRank() == 0)
+            {
+                std::cout << "Chosen fastest method: " << MPITypeMap[fastestMPI] << std::endl;
+            }
+
+            switch(fastestMPI)
+            {
+                case eAllToAll:
+                {
+                    m_MPIFunction = std::bind(&AssemblyMapDG::MPIPerformAllToAll, this, _1, _2);
+                }
+                case eAllToAllV:
+                {
+                    m_MPIFunction = std::bind(&AssemblyMapDG::MPIPerformAllToAllV, this, _1, _2);
+
+                }
+                case eNeighborAllToAll:
+                {
+                    m_MPIFunction = std::bind(&AssemblyMapDG::MPIPerformNeighborAllToAllV, this, _1, _2);
+
+                }
+                case ePairwise:
+                {
+                    m_MPIFunction = std::bind(&AssemblyMapDG::MPIPerformPairwise, this, _1, _2);
+                }
             }
         }
 
@@ -1232,8 +1256,8 @@ namespace Nektar
         }
 
         void AssemblyMapDG::MPIPerformAllToAll(
-                const Array<OneD, double> &testFwd,
-                Array<OneD, double> &testBwd)
+                const Array<OneD, NekDouble> &testFwd,
+                Array<OneD, NekDouble> &testBwd)
         {
             int size = m_maxQuad * m_maxCount * m_nRanks;
             Array<OneD, double> sendBuff(size, -1);
@@ -1263,8 +1287,8 @@ namespace Nektar
         }
 
         void AssemblyMapDG::MPIPerformAllToAllV(
-                const Array<OneD, double> &testFwd,
-                Array<OneD, double> &testBwd)
+                const Array<OneD, NekDouble> &testFwd,
+                Array<OneD, NekDouble> &testBwd)
         {
             Array<OneD, double> sendBuff(m_allVEdgeIndex.size(), -1);
             Array<OneD, double> recvBuff(m_allVEdgeIndex.size(), -1);
@@ -1284,8 +1308,8 @@ namespace Nektar
         }
 
         void AssemblyMapDG::MPIPerformNeighborAllToAllV(
-                const Array<OneD, double> &testFwd,
-                Array<OneD, double> &testBwd)
+                const Array<OneD, NekDouble> &testFwd,
+                Array<OneD, NekDouble> &testBwd)
         {
             Array<OneD, double> sendBuff(m_edgeTraceIndex.size(), -1);
             Array<OneD, double> recvBuff(m_edgeTraceIndex.size(), -1);
@@ -1306,8 +1330,8 @@ namespace Nektar
         }
 
         void AssemblyMapDG::MPIPerformPairwise(
-                const Array<OneD, double> &testFwd,
-                Array<OneD, double> &testBwd)
+                const Array<OneD, NekDouble> &testFwd,
+                Array<OneD, NekDouble> &testBwd)
         {
             Array<OneD, MPI_Request> request(m_vecPairPartitionTrace.size() * 2);
             Array<OneD, MPI_Status> status(m_vecPairPartitionTrace.size() * 2);
@@ -1445,7 +1469,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &Fwd,
                 Array<OneD, NekDouble> &Bwd)
         {
-            MPIPerformAllToAllV(Fwd, Bwd);
+            m_MPIFunction(Fwd, Bwd);
         }
 
         void AssemblyMapDG::UniversalTraceAssembleGS(Array<OneD, NekDouble> &pGlobal) const

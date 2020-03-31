@@ -159,6 +159,8 @@ namespace Nektar
             int m_totSends = 0;
             void MPIPerformPairwise(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd);
 
+            std::function<void(const Array<OneD, NekDouble> &, Array<OneD, NekDouble> &)> m_MPIFunction;
+
             void SetUpUniversalDGMap(const ExpList &locExp);
 
             void SetUpUniversalTraceMap(
@@ -255,6 +257,22 @@ namespace Nektar
 
             return {sumTime[0]/comm->GetSize(), minTime[0], maxTime[0]};
         }
+
+        enum MPIType
+        {
+            eAllToAll ,
+            eAllToAllV,
+            eNeighborAllToAll,
+            ePairwise
+        };
+
+        const char* const MPITypeMap[] =
+        {
+                "AllToAll",
+                "AllToAllV",
+                "NeighborAllToAllV",
+                "PairwiseSendRecv"
+        };
 
     } // end of namespace
 } // end of namespace

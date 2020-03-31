@@ -41,8 +41,8 @@
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList0D.h>
 
-#include <LibUtilities/Communication/CommMpi.h>  // TODO: Implement the graph constructor using virtual functions so can remove this include I added
-
+#include <LibUtilities/Communication/CommMpi.h>  // TODO: Implement the graph constructor using virtual functions / wrappers so can remove this include
+#include <LibUtilities/BasicUtils/Timer.h>
 namespace Nektar
 {
     namespace MultiRegions
@@ -159,12 +159,6 @@ namespace Nektar
             int m_totSends = 0;
             void MPIPerformPairwise(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd);
 
-            std::tuple<NekDouble, NekDouble, NekDouble> MPITiming(
-                    const int &count,
-                    const Array<OneD, double> &testFwd,
-                    Array<OneD, double> &testBwd,
-                    void *f(Array<OneD, double>, Array<OneD, double>));
-
             void SetUpUniversalDGMap(const ExpList &locExp);
 
             void SetUpUniversalTraceMap(
@@ -229,6 +223,38 @@ namespace Nektar
                 int                      nquad2 = 0);
         }; // class
 
+        using func_t = std::function<void
+                (const Array<OneD, NekDouble> &, Array<OneD, NekDouble> &)>;
+
+        static inline std::tuple<NekDouble, NekDouble, NekDouble>  MPITiming(
+                const LibUtilities::CommSharedPtr &comm,
+                const int &count,
+                const Array<OneD, double> &testFwd,
+                Array<OneD, double> &testBwd,
+                const func_t &f)
+        {
+            LibUtilities::Timer t;
+            t.Start();
+
+            for (size_t i = 0; i < count; ++i)
+            {
+                f(testFwd, testBwd);
+            }
+
+            t.Stop();
+
+            // These can just be 'reduce' but need to setup the wrapper in comm.h
+            Array<OneD, NekDouble> minTime(1, t.TimePerTest(count));
+            comm->AllReduce(minTime, LibUtilities::ReduceMin);
+
+            Array<OneD, NekDouble> maxTime(1, t.TimePerTest(count));
+            comm->AllReduce(maxTime, LibUtilities::ReduceMax);
+
+            Array<OneD, NekDouble> sumTime(1, t.TimePerTest(count));
+            comm->AllReduce(sumTime, LibUtilities::ReduceSum);
+
+            return {sumTime[0]/comm->GetSize(), minTime[0], maxTime[0]};
+        }
 
     } // end of namespace
 } // end of namespace

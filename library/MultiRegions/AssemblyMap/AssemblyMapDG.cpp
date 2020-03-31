@@ -33,7 +33,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/HashUtils.hpp>
-#include <LibUtilities/BasicUtils/Timer.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
@@ -868,48 +867,55 @@ namespace Nektar
             MPISetupNeighborAllToAllV();
             MPISetupPairwise();
 
-            /*
+
             //Timing MPI comm methods, warm up with 2 iterations then time over 10
             Array<OneD, double> testFwd(trace->GetNpoints(), 1);
             Array<OneD, double> testBwd(trace->GetNpoints(), -2);
             NekDouble min, max, avg;
 
             //AllToAll
-            MPITiming(2, testFwd, testBwd, MPIPerformAllToAll);
-            std::tie(avg, min, max) = MPITiming(10, testFwd, testBwd, MPIPerformAllToAll);
+            using std::placeholders::_1;
+            using std::placeholders::_2;
+            MPITiming(m_comm, 2, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAll, this, _1, _2));
+            std::tie(avg, min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAll, this, _1, _2));
             if (m_comm->GetRank() == 0)
             {
-                std::cout << "AllToAll times (avg, min, max): " << avg << " "
-                          << min << " " << max << std::endl;
+                std::cout << "AllToAll times (avg, min, max): "
+                << avg << " " << min << " " << max << std::endl;
             }
 
             //AllToAllV
-            MPITiming(2, testFwd, testBwd, MPIPerformAllToAllV);
-            std::tie(avg, min, max) = MPITiming(10, testFwd, testBwd, MPIPerformAllToAllV);
+            using std::placeholders::_1;
+            using std::placeholders::_2;
+            MPITiming(m_comm, 2, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAllV, this, _1, _2));
+            std::tie(avg, min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAllV, this, _1, _2));
             if (m_comm->GetRank() == 0)
             {
-                std::cout << "AllToAllV times (avg, min, max): " << avg << " "
-                          << min << " " << max << std::endl;
+                std::cout << "AllToAllV times (avg, min, max): "
+                << avg << " " << min << " " << max << std::endl;
             }
 
             //Neighbor_AllToAllv
-            MPITiming(2, testFwd, testBwd, MPIPerformNeighborAllToAllV);
-            std::tie(avg, min, max) = MPITiming(10, testFwd, testBwd, MPIPerformNeighborAllToAllV);
+            using std::placeholders::_1;
+            using std::placeholders::_2;
+            MPITiming(m_comm, 2, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformNeighborAllToAllV, this, _1, _2));
+            std::tie(avg, min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformNeighborAllToAllV, this, _1, _2));
             if (m_comm->GetRank() == 0)
             {
-                std::cout << "Neighbor AllToAllV times (avg, min, max): " << avg
-                          << " " << min << " " << max << std::endl;
+                std::cout << "Neighbor AllToAllV times (avg, min, max): "
+                << avg << " " << min << " " << max << std::endl;
             }
 
             //Pairwise send/recv
-            MPITiming(2, testFwd, testBwd, MPIPerformPairwise);
-            std::tie(avg, min, max) = MPITiming(10, testFwd, testBwd, MPIPerformPairwise);
+            using std::placeholders::_1;
+            using std::placeholders::_2;
+            MPITiming(m_comm, 2, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformPairwise, this, _1, _2));
+            std::tie(avg, min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformPairwise, this, _1, _2));
             if (m_comm->GetRank() == 0)
             {
                 std::cout << "Pairwise Isend/Irecv times (avg, min, max): "
-                          << avg << " " << min << " " << max << std::endl;
+                << avg << " " << min << " " << max << std::endl;
             }
-             */
         }
 
         void AssemblyMapDG::MPIInitialiseStructure(
@@ -1053,7 +1059,6 @@ namespace Nektar
             for (auto &rank : otherRanks)
             {
                 std::vector<int> periodicEdgeList;
-                //std::map<int, int> perMapMinToLocalId;
                 for (int j = 0; j < rankNumEdges[rank]; ++j)
                 {
                     int edgeId = rankLocalEdgeIds[rankLocalEdgeDisp[rank] + j];
@@ -1064,7 +1069,6 @@ namespace Nektar
                         if (it != perMap.end())
                         {
                             int locVal = min(edgeId, it->second[0].id);
-                            //perMapMinToLocalId[locVal] = edgeId;
                             periodicEdgeList.emplace_back(locVal);
                         }
                         else
@@ -1083,7 +1087,7 @@ namespace Nektar
             }
 
             //DEBUG
-            std::cout << "MY RANK " << m_comm->GetRank() << " SHARES WITH: \n";
+            /*std::cout << "MY RANK " << m_comm->GetRank() << " SHARES WITH: \n";
             for (auto rank : m_rankSharedEdges)
             {
                 std::cout << "\t RANK " << rank.first << " : ";
@@ -1093,7 +1097,7 @@ namespace Nektar
                 }
                 std::cout << "\n";
             }
-            std::cout << std::endl;
+            std::cout << std::endl;*/
         }
 
         void AssemblyMapDG::MPISetupAllToAll()
@@ -1355,34 +1359,6 @@ namespace Nektar
                 }
                 count++;
             }
-        }
-
-        std::tuple<NekDouble, NekDouble, NekDouble>  AssemblyMapDG::MPITiming(
-                const int &count,
-                const Array<OneD, double> &testFwd,
-                Array<OneD, double> &testBwd,
-                void *f(Array<OneD, double>, Array<OneD, double>))
-        {
-            LibUtilities::Timer t;
-            t.Start();
-
-            for (size_t i = 0; i < count; ++i)
-            {
-                f(testFwd, testBwd);
-            }
-
-            t.Stop();
-
-            Array<OneD, NekDouble> minTime(1, t.TimePerTest(count));
-            m_comm->AllReduce(minTime, LibUtilities::ReduceMin);    // These can just be 'reduce' but need to setup the wrapper in comm.h
-
-            Array<OneD, NekDouble> maxTime(1, t.TimePerTest(count));
-            m_comm->AllReduce(maxTime, LibUtilities::ReduceMax);
-
-            Array<OneD, NekDouble> sumTime(1, t.TimePerTest(count));
-            m_comm->AllReduce(sumTime, LibUtilities::ReduceSum);
-
-            return {sumTime[0]/m_comm->GetSize(), minTime[0], maxTime[0]};
         }
 
         void AssemblyMapDG::RealignTraceElement(

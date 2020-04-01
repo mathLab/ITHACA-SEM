@@ -9,8 +9,10 @@
 #include "Operator.hpp"
 #include "AVXBwdTransKernels.hpp"
 
-namespace Nektar {
-namespace AVX {
+namespace Nektar
+{
+namespace AVX
+{
 
 template<int VW>
 struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>

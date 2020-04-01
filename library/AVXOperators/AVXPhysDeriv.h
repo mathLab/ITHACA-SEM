@@ -9,6 +9,11 @@
 #include "Operator.hpp"
 #include "AVXPhysDerivKernels.hpp"
 
+namespace Nektar
+{
+namespace AVX
+{
+
 template<int VW, bool DEFORMED = false>
 struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
 {
@@ -945,5 +950,8 @@ struct AVXPhysDerivTet : public PhysDeriv, public AVXHelper<VW,3, DEFORMED>
 private:
     int m_nmTot;
 };
+
+} // namespace AVX
+} // namespace Nektar
 
 #endif

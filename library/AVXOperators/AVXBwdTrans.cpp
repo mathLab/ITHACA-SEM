@@ -1,7 +1,9 @@
 #include "AVXBwdTrans.h"
 
-namespace Nektar {
-namespace AVX {
+namespace Nektar
+{
+namespace AVX
+{
 
 #if defined(__AVX2__)
 std::string __register_BwdTrans_Quad_AVX = GetOperatorFactory().RegisterCreatorFunction(

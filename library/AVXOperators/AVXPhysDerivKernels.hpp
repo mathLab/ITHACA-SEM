@@ -3,6 +3,11 @@
 
 #include "VecData.hpp"
 
+namespace Nektar
+{
+namespace AVX
+{
+
 template<int NUMQUAD0, int NUMQUAD1,
          int VW, class BasisType>
 inline static void AVXPhysDerivTensor2DKernel(
@@ -71,9 +76,9 @@ static void AVXPhysDerivQuadKernel(
 
     AVXPhysDerivTensor2DKernel<NUMQUAD0, NUMQUAD1, VW>(
         inptr,
-        D0, D1, 
+        D0, D1,
         outptr_d0, outptr_d1); //Results written to outptr_d0, outptr_d1
-    
+
     T df0, df1, df2, df3;
     if(!DEFORMED){
         df0 = df_ptr[0];
@@ -128,7 +133,7 @@ static void AVXPhysDerivTriKernel(
 
     AVXPhysDerivTensor2DKernel<NUMQUAD0, NUMQUAD1, VW>(
         inptr,
-        D0, D1, 
+        D0, D1,
         outptr_d0, outptr_d1); //Results written to outptr_d0, outptr_d1
 
     int cnt_ji = 0;
@@ -547,5 +552,8 @@ static void AVXPhysDerivTetKernel(
     }
 
 }
+
+} // namespace AVX
+} // namespace Nektar
 
 #endif

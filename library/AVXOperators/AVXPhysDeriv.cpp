@@ -1,5 +1,10 @@
 #include "AVXPhysDeriv.h"
 
+namespace Nektar
+{
+namespace AVX
+{
+
 #if defined(__AVX2__)
 std::string __register_PhysDeriv_Quad_AVX = GetOperatorFactory().RegisterCreatorFunction(
     std::string("PhysDeriv_Quad_Regular_AVX"), &AVXPhysDerivQuad<4>::Create);
@@ -63,3 +68,6 @@ std::string __register_PhysDeriv_Prism_AVX512 = GetOperatorFactory().RegisterCre
 std::string __register_PhysDeriv_Prism_Deformed_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
     std::string("PhysDeriv_Prism_Deformed_AVX512"), &AVXPhysDerivPrism<8, true>::Create);
 #endif
+
+} // namespace AVX
+} // namespace Nektar

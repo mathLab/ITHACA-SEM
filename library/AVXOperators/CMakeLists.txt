@@ -1,7 +1,8 @@
 SET(AVXOPERATORS_SOURCES
-    # AVXIProduct.cpp
     AVXBwdTrans.cpp
-    # AVXPhysDeriv.cpp
+    # AVXIProduct.cpp
+    # AVXIProductDeriv.cpp
+    AVXPhysDeriv.cpp
     # AVXHelmholtz.cpp
     # AVXHelmholtzGlobal.cpp
     Operator.cpp
@@ -9,17 +10,19 @@ SET(AVXOPERATORS_SOURCES
 
 SET(AVXOPERATORS_HEADERS
     # AVXAssembly.h
-    # AVXIProduct.h
-    # AVXIProductKernels.hpp
     AVXBwdTrans.h
     AVXBwdTransKernels.hpp
-    # AVXPhysDeriv.h
-    # AVXPhysDerivKernels.hpp
+    # AVXIProduct.h
+    # AVXIProductKernels.hpp
+    # AVXIProductDeriv.h
+    # AVXIProductDerivKernels.hpp
+    AVXPhysDeriv.h
+    AVXPhysDerivKernels.hpp
     # AVXHelmholtz.h
     # AVXHelmholtzGlobal.h
     AVXUtil.hpp
-    VecData.hpp
     Operator.hpp
+    VecData.hpp
 )
 
 ADD_NEKTAR_LIBRARY(AVXOperators

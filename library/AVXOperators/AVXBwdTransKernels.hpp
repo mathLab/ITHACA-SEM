@@ -3,8 +3,10 @@
 
 #include "VecData.hpp"
 
-namespace Nektar {
-namespace AVX {
+namespace Nektar
+{
+namespace AVX
+{
 
 template<int NUMMODE0, int NUMMODE1,
          int NUMQUAD0, int NUMQUAD1,

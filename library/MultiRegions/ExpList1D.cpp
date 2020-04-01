@@ -524,47 +524,6 @@ namespace Nektar
                 }
             }
 
-            /*std::set<int> allBndEdges;
-            // populate that with all BC edge IDs
-            for (i = 0; i < bndCond.num_elements(); ++i)
-            {
-                for (j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
-                {
-                    allBndEdges.insert(bndConstraint[i]->GetExp(j)->GetGeom()->GetGlobalID());
-                }
-            }
-
-            // All Dirichlet edge IDs are now stored in edgesDone.
-            for (i = 0; i < locexp.size(); ++i)
-            {
-                for (int e = 0; e < locexp[i]->GetNedges(); ++e)
-                {
-                    int edgeId = locexp[i]->GetGeom()->GetEid(e);
-
-                    // Skip any Dirichlet or boundary edges
-                    if (allBndEdges.find(edgeId) == allBndEdges.end())
-                    {
-                        continue;
-                    }
-
-                    // Query the MeshGraph to find the number of elements we're connected to.
-                    auto links = graph2D->GetElementsFromEdge(
-                            locexp[i]->GetGeom()->GetEdge(e));
-
-                    if (links->size() > 1)
-                    {
-                        // This edge is connected to two elements, i.e. is interior
-                        continue;
-                    }
-
-                    // This is probably a partitioned edge
-                    seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, segGeom);
-                    edgesDone.insert(segGeom->GetGlobalID());
-                    seg->SetElmtId(elmtid++);
-                    (*m_exp).push_back(seg);
-                }
-            }*/
-
             map<int, pair<SpatialDomains::Geometry1DSharedPtr,
                           LibUtilities::BasisKey> > edgeOrders;
 

@@ -1826,9 +1826,7 @@ using namespace std;
             LocalRegions::Expansion2DSharedPtr traceEl = 
                     m_traceMap->GetElmtToTrace()[n][e]->
                          as<LocalRegions::Expansion2D>();
-            
-            int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
-            
+
             bool fwd = true;
             if (traceEl->GetLeftAdjacentElementFace () == -1 ||
                 traceEl->GetRightAdjacentElementFace() == -1)

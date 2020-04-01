@@ -85,16 +85,6 @@ namespace Nektar
                 Array<OneD,Array<OneD,LocalRegions::ExpansionSharedPtr> >
                 &GetElmtToTrace();
 
-            MULTI_REGIONS_EXPORT int GetTraceToUniversalMap(int i);
-
-            MULTI_REGIONS_EXPORT int GetTraceToUniversalMapUnique(int i);
-
-            MULTI_REGIONS_EXPORT void UniversalTraceAssemble(
-                    Array<OneD, NekDouble>& Fwd, Array<OneD, NekDouble>& Bwd);
-
-            MULTI_REGIONS_EXPORT void UniversalTraceAssembleGS(
-                    Array<OneD, NekDouble> &pGlobal) const;
-
             MULTI_REGIONS_EXPORT std::function<void(const Array<OneD, NekDouble> &, Array<OneD, NekDouble> &)> MPITraceAssemble;
 
 
@@ -106,12 +96,6 @@ namespace Nektar
 
             /// list of edge expansions for a given element
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> > m_elmtToTrace;
-            /// Integer map of process trace space quadrature points to
-            /// universal space.
-            Array<OneD,int> m_traceToUniversalMap;
-            /// Integer map of unique process trace space quadrature points to
-            /// universal space (signed).
-            Array<OneD,int> m_traceToUniversalMapUnique;
 
             /// Map of ID to quad point trace indices
             std::map<int, std::vector<int>> m_edgeToTrace;
@@ -166,7 +150,7 @@ namespace Nektar
 
             void SetUpUniversalTraceMap(
                 const ExpList         &locExp,
-                const ExpListSharedPtr trace,
+                const ExpListSharedPtr &trace,
                 const Array<OneD, const MultiRegions::ExpListSharedPtr>         &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
                 const PeriodicMap     &perMap = NullPeriodicMap);
@@ -231,10 +215,13 @@ namespace Nektar
         static inline std::tuple<NekDouble, NekDouble, NekDouble>  MPITiming(
                 const LibUtilities::CommSharedPtr &comm,
                 const int &count,
-                const Array<OneD, double> &testFwd,
-                Array<OneD, double> &testBwd,
+                const int &num,
                 const func_t &f)
         {
+
+            Array<OneD, double> testFwd(num, 1);
+            Array<OneD, double> testBwd(num, -2);
+
             LibUtilities::Timer t;
             t.Start();
 

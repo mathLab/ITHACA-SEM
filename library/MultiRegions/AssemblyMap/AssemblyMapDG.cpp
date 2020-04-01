@@ -732,25 +732,16 @@ namespace Nektar
 
         void AssemblyMapDG::SetUpUniversalTraceMap(
             const ExpList         &locExp,
-            const ExpListSharedPtr trace,
+            const ExpListSharedPtr &trace,
             const Array<OneD, const MultiRegions::ExpListSharedPtr>         &bndCondExp,
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
             const PeriodicMap     &perMap)
         {
             Array<OneD, int> tmp;
             LocalRegions::ExpansionSharedPtr locExpansion;
-            int i;
             int quad = 0, nDim = 0, eid = 0, offset = 0;
 
             const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
-
-            int nTracePhys = trace->GetTotPoints();
-
-            // Initialise the trace to universal maps.
-            m_traceToUniversalMap       =
-                Nektar::Array<OneD, int>(nTracePhys, -1);
-            m_traceToUniversalMapUnique =
-                Nektar::Array<OneD, int>(nTracePhys, -1);
 
             // Assume that each element of the expansion is of the same
             // dimension.
@@ -758,24 +749,7 @@ namespace Nektar
 
             if (nDim == 1)
             {
-                m_maxQuad = (1 > m_maxQuad ? 1 : m_maxQuad);
-            }
-            else
-            {
-                for (i = 0; i < trace->GetExpSize(); ++i)
-                {
-                    quad = trace->GetExp(i)->GetTotPoints();
-                    if (quad > m_maxQuad)
-                    {
-                        m_maxQuad = quad;
-                    }
-                }
-            }
-            m_comm->AllReduce(m_maxQuad, LibUtilities::ReduceMax);
-
-            if (nDim == 1)
-            {
-                for (int i = 0; i < trace->GetExpSize(); ++i)
+                for (size_t i = 0; i < trace->GetExpSize(); ++i)
                 {
                     eid = trace->GetExp(i)->GetGeom()->GetGlobalID();
                     offset = trace->GetPhys_Offset(i);
@@ -786,19 +760,18 @@ namespace Nektar
                     if (perMap.count(eid) > 0)
                     {
                         PeriodicEntity ent = it->second[0];
-                        if (ent.isLocal == false) // Not sure if true in 1D
+                        if (!ent.isLocal) // Not sure if true in 1D
                         {
                             eid = min(eid, ent.id);
                         }
                     }
 
-                    m_traceToUniversalMap[offset] = eid * m_maxQuad + 1;
                     m_edgeToTrace[eid].emplace_back(offset);
                 }
             }
             else
             {
-                for (int i = 0; i < trace->GetExpSize(); ++i)
+                for (size_t i = 0; i < trace->GetExpSize(); ++i)
                 {
                     eid    = trace->GetExp(i)->GetGeom()->GetGlobalID();
                     offset = trace->GetPhys_Offset(i);
@@ -806,31 +779,30 @@ namespace Nektar
 
                     // Check to see if this edge is periodic. If it is, then we
                     // need to reverse the trace order of one edge only in the
-                    // universal map so that the data are reversed w.r.t each
+                    // edge to trace map so that the data are reversed w.r.t each
                     // other. We do this by using the minimum of the two IDs.
                     auto it = perMap.find(eid);
                     bool realign = false;
                     if (perMap.count(eid) > 0)
                     {
                         PeriodicEntity ent = it->second[0];
-                        if (ent.isLocal == false)
+                        if (!ent.isLocal)
                         {
                             realign = eid == min(eid, ent.id);
                             eid = min(eid, ent.id);
                         }
                     }
 
-                    for (int j = 0; j < quad; ++j)
+                    for (size_t j = 0; j < quad; ++j)
                     {
-                        m_traceToUniversalMap[j+offset] = eid * m_maxQuad + j + 1;
                         m_edgeToTrace[eid].emplace_back(offset + j);
                     }
 
                     if (realign)
                     {
-                        // Realign some periodic edges in m_edgeToTrace and m_traceToUniversalMap
+                        // Realign some periodic edges in m_edgeToTrace
                         Array<OneD, int> tmpArray(m_edgeToTrace[eid].size());
-                        for (int j = 0; j < m_edgeToTrace[eid].size(); ++j)
+                        for (size_t j = 0; j < m_edgeToTrace[eid].size(); ++j)
                         {
                             tmpArray[j] = m_edgeToTrace[eid][j];
                         }
@@ -838,29 +810,19 @@ namespace Nektar
                         if (nDim == 2)
                         {
                             RealignTraceElement(
-                                tmp = m_traceToUniversalMap+offset,
-                                it->second[0].orient, quad);
-
-                            RealignTraceElement(
                                 tmpArray,
                                 it->second[0].orient, quad);
                         }
                         else
                         {
                             RealignTraceElement(
-                                tmp = m_traceToUniversalMap+offset,
-                                it->second[0].orient,
-                                trace->GetExp(i)->GetNumPoints(0),
-                                trace->GetExp(i)->GetNumPoints(1));
-
-                            RealignTraceElement(
                                 tmpArray,
                                 it->second[0].orient,
                                 trace->GetExp(i)->GetNumPoints(0),
                                 trace->GetExp(i)->GetNumPoints(1));
                         }
 
-                        for (int j = 0; j < m_edgeToTrace[eid].size(); ++j)
+                        for (size_t j = 0; j < m_edgeToTrace[eid].size(); ++j)
                         {
                             m_edgeToTrace[eid][j] = tmpArray[j];
                         }
@@ -868,19 +830,7 @@ namespace Nektar
                 }
             }
 
-            Array<OneD, long> tmp2(nTracePhys);
-            for (int i = 0; i < nTracePhys; ++i)
-            {
-                tmp2[i] = m_traceToUniversalMap[i];
-            }
-            m_traceGsh = Gs::Init(tmp2, m_comm);
-            Gs::Unique(tmp2, m_comm);
-            for (int i = 0; i < nTracePhys; ++i)
-            {
-                m_traceToUniversalMapUnique[i] = tmp2[i];
-            }
-
-            // Initialising graph structure
+            // Initialise graph structure and link processes across partition boundaries
             MPIInitialiseStructure(locExpVector, bndCondExp, bndCond, perMap);
 
             // Setting up MPI comm methods
@@ -888,7 +838,6 @@ namespace Nektar
             MPISetupAllToAllV();
             MPISetupNeighborAllToAllV();
             MPISetupPairwise();
-
 
             //Timing MPI comm methods, warm up with 10 iterations then time over 50
             const char* const MPITypeMap[] =
@@ -907,19 +856,23 @@ namespace Nektar
             MPIFuncMap[2] = std::bind(&AssemblyMapDG::MPIPerformNeighborAllToAllV, this, _1, _2);
             MPIFuncMap[3] = std::bind(&AssemblyMapDG::MPIPerformPairwise, this, _1, _2);
 
-            Array<OneD, double> testFwd(trace->GetNpoints(), 1);
-            Array<OneD, double> testBwd(trace->GetNpoints(), -2);
+            int numPoints = trace->GetNpoints();
             int warmup = 10, iter = 50;
             NekDouble min, max;
             std::vector<NekDouble> avg(4);
 
-            for (auto const func : MPIFuncMap)
+            if (m_comm->GetRank() == 0)
             {
-                MPITiming(m_comm, warmup, testFwd, testBwd, func.second);
-                std::tie(avg[func.first], min, max) = MPITiming(m_comm, iter, testFwd, testBwd, func.second);
+                std::cout << "MPI setup: " << std::endl;
+            }
+
+            for (auto const &func : MPIFuncMap)
+            {
+                MPITiming(m_comm, warmup, numPoints, func.second);
+                std::tie(avg[func.first], min, max) = MPITiming(m_comm, iter, numPoints, func.second);
                 if (m_comm->GetRank() == 0)
                 {
-                    std::cout << MPITypeMap[func.first] <<" times (avg, min, max): "
+                    std::cout << "  " << MPITypeMap[func.first] <<" times (avg, min, max): "
                               << avg[func.first] << " " << min << " " << max << std::endl;
                 }
             }
@@ -928,7 +881,7 @@ namespace Nektar
 
             if (m_comm->GetRank() == 0)
             {
-                std::cout << "Chosen fastest method: " << MPITypeMap[fastestMPI] << std::endl;
+                std::cout << "  Chosen fastest method: " << MPITypeMap[fastestMPI] << std::endl;
             }
 
             MPITraceAssemble = MPIFuncMap[fastestMPI];
@@ -940,51 +893,68 @@ namespace Nektar
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
                 const PeriodicMap &perMap)
         {
-            //This creates a list of all geometry of problem dimension - 1
+
+            // This creates a list of all geometry of problem dimension - 1
+            // and populates the maxQuad member variable
             std::vector<int> localEdgeIds;
-            for (int eid = 0; eid < locExpVector.size(); ++eid)
+            for (size_t eid = 0; eid < locExpVector.size(); ++eid)
             {
                 auto locExpansion = locExpVector[eid];
                 int nDim = locExpansion->GetShapeDimension();
+
                 if (nDim == 1)
                 {
                     int nVerts = locExpansion->GetNverts();
-                    for (int j = 0; j < nVerts; ++j)
+                    for (size_t j = 0; j < nVerts; ++j)
                     {
                         LocalRegions::PointExpSharedPtr locPointExp =
                                 m_elmtToTrace[eid][j]->as<LocalRegions::PointExp>();
                         int id = locPointExp->GetGeom()->GetGlobalID();
                         localEdgeIds.emplace_back(id);
                     }
+
+                    m_maxQuad = (1 > m_maxQuad ? 1 : m_maxQuad);
                 }
-                else if (nDim == 2)
+                else
                 {
-                    for (int j = 0; j < locExpansion->GetNedges(); ++j)
+                    if (nDim == 2)
                     {
-                        LocalRegions::SegExpSharedPtr locSegExp =
-                                m_elmtToTrace[eid][j]->as<LocalRegions::SegExp>();
-                        int id  = locSegExp->GetGeom()->GetGlobalID();
-                        localEdgeIds.emplace_back(id);
+                        for (size_t j = 0; j < locExpansion->GetNedges(); ++j)
+                        {
+                            LocalRegions::SegExpSharedPtr locSegExp =
+                                    m_elmtToTrace[eid][j]->as<LocalRegions::SegExp>();
+                            int id = locSegExp->GetGeom()->GetGlobalID();
+                            localEdgeIds.emplace_back(id);
+                        }
                     }
-                }
-                else if (nDim == 3)
-                {
-                    for(int j = 0; j < locExpansion->GetNfaces(); ++j)
+                    else if (nDim == 3)
                     {
-                        LocalRegions::Expansion2DSharedPtr locFaceExp =
-                                m_elmtToTrace[eid][j]
-                                        ->as<LocalRegions::Expansion2D>();
-                        int id  = locFaceExp->GetGeom()->GetGlobalID();
-                        localEdgeIds.emplace_back(id);
+                        for (size_t j = 0; j < locExpansion->GetNfaces(); ++j)
+                        {
+                            LocalRegions::Expansion2DSharedPtr locFaceExp =
+                                    m_elmtToTrace[eid][j]
+                                            ->as<LocalRegions::Expansion2D>();
+                            int id = locFaceExp->GetGeom()->GetGlobalID();
+                            localEdgeIds.emplace_back(id);
+                        }
+                    }
+
+                    size_t quad = locExpansion->GetTotPoints();
+                    if (quad > m_maxQuad)
+                    {
+                        m_maxQuad = quad;
                     }
                 }
             }
 
+            // Find max quadrature points across all processes
+            m_comm->AllReduce(m_maxQuad, LibUtilities::ReduceMax);
+
             //Create list of boundary edge IDs
             std::set<int> bndIdList;
-            for (int i = 0; i < bndCond.num_elements(); ++i)
+            for (size_t i = 0; i < bndCond.num_elements(); ++i)
             {
-                for (int j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
+                for (size_t j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     int eid = bndCondExp[i]->GetExp(j)->GetGeom()->GetGlobalID();
                     if (perMap.find(eid) == perMap.end())  // Don't add if periodic boundary
@@ -997,10 +967,10 @@ namespace Nektar
             //Get unique edges to send
             std::vector<int> uniqueEdgeIds, uniqueEdgeIdsLocal;
             std::vector<bool> duplicated(localEdgeIds.size(), false);
-            for (int i = 0; i < localEdgeIds.size(); ++i)
+            for (size_t i = 0; i < localEdgeIds.size(); ++i)
             {
                 int eid = localEdgeIds[i];
-                for (int j = i + 1; j < localEdgeIds.size(); ++j)
+                for (size_t j = i + 1; j < localEdgeIds.size(); ++j)
                 {
                     if (eid == localEdgeIds[j])
                     {
@@ -1038,13 +1008,13 @@ namespace Nektar
             m_comm->AllGather(localEdgeSize, rankNumEdges);
 
             Array<OneD, int> rankLocalEdgeDisp(m_nRanks, 0);
-            for (int i = 1; i < m_nRanks; ++i)
+            for (size_t i = 1; i < m_nRanks; ++i)
             {
                 rankLocalEdgeDisp[i] = rankLocalEdgeDisp[i-1] + rankNumEdges[i-1];
             }
 
             Array<OneD, int> localEdgeIdsArray(uniqueEdgeIds.size());
-            for (int i = 0; i < uniqueEdgeIds.size(); ++i)
+            for (size_t i = 0; i < uniqueEdgeIds.size(); ++i)
             {
                 localEdgeIdsArray[i] = uniqueEdgeIds[i];
             }
@@ -1075,7 +1045,7 @@ namespace Nektar
             for (auto &rank : otherRanks)
             {
                 std::vector<int> periodicEdgeList;
-                for (int j = 0; j < rankNumEdges[rank]; ++j)
+                for (size_t j = 0; j < rankNumEdges[rank]; ++j)
                 {
                     int edgeId = rankLocalEdgeIds[rankLocalEdgeDisp[rank] + j];
                     if (std::find(uniqueEdgeIdsLocal.begin(), uniqueEdgeIdsLocal.end(), edgeId) != uniqueEdgeIdsLocal.end())
@@ -1101,25 +1071,12 @@ namespace Nektar
                     m_rankSharedEdges[rank].insert(m_rankSharedEdges[rank].end(),periodicEdgeList.begin(), periodicEdgeList.end());
                 }
             }
-
-            //DEBUG
-            /*std::cout << "MY RANK " << m_comm->GetRank() << " SHARES WITH: \n";
-            for (auto rank : m_rankSharedEdges)
-            {
-                std::cout << "\t RANK " << rank.first << " : ";
-                for (auto edges : rank.second)
-                {
-                    std::cout << edges << ", ";
-                }
-                std::cout << "\n";
-            }
-            std::cout << std::endl;*/
         }
 
         void AssemblyMapDG::MPISetupAllToAll()
         {
             // Get maxCount which is the largest shared partition edge
-            for (int i = 0; i < m_nRanks; ++i)
+            for (size_t i = 0; i < m_nRanks; ++i)
             {
                 if (m_rankSharedEdges.find(i) != m_rankSharedEdges.end())
                 {
@@ -1131,11 +1088,11 @@ namespace Nektar
 
             // Creates the edge index vector where value -1 indicates
             // padding of value 0 to be inserted instead of value from Fwd
-            for (int i = 0; i < m_nRanks; ++i)
+            for (size_t i = 0; i < m_nRanks; ++i)
             {
                 if (m_rankSharedEdges.find(i) != m_rankSharedEdges.end())
                 {
-                    for (int j = 0; j < m_rankSharedEdges[i].size(); ++j)
+                    for (size_t j = 0; j < m_rankSharedEdges[i].size(); ++j)
                     {
                         std::vector<int> edgeIndex = m_edgeToTrace[m_rankSharedEdges[i][j]];
                         if (edgeIndex.size() < m_maxQuad)
@@ -1164,11 +1121,11 @@ namespace Nektar
         void AssemblyMapDG::MPISetupAllToAllV()
         {
             m_allVSendCount = Nektar::Array<OneD, int>(m_nRanks, 0);
-            for (int i = 0; i < m_nRanks; ++i)
+            for (size_t i = 0; i < m_nRanks; ++i)
             {
                 if (m_rankSharedEdges.find(i) != m_rankSharedEdges.end())
                 {
-                    for (int j = 0; j < m_rankSharedEdges[i].size(); ++j)
+                    for (size_t j = 0; j < m_rankSharedEdges[i].size(); ++j)
                     {
                         std::vector<int> edgeIndex = m_edgeToTrace[m_rankSharedEdges[i][j]];
                         m_allVEdgeIndex.insert(m_allVEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
@@ -1182,7 +1139,7 @@ namespace Nektar
             }
 
             m_allVSendDisp = Nektar::Array<OneD, int>(m_nRanks, 0);
-            for (int i = 1; i < m_nRanks; ++i)
+            for (size_t i = 1; i < m_nRanks; ++i)
             {
                 m_allVSendDisp[i] = m_allVSendDisp[i-1] + m_allVSendCount[i-1];
             }
@@ -1206,14 +1163,14 @@ namespace Nektar
                                                         nNeighbours, destinations.get(), weights.get(),  // Destinations
                                                         MPI_INFO_NULL, 1, &m_commGraph);
 
-            ASSERTL0(retval == MPI_SUCCESS, "MPI error creating the distributed graph.");
+            ASSERTL0(retval == MPI_SUCCESS, "MPI error creating the distributed graph.")
 
             //Setting up indices
             m_sendCount = Array<OneD, int>(nNeighbours, 0);
             cnt = 0;
             for (auto &rankEdgeSet : m_rankSharedEdges)
             {
-                for (int i : rankEdgeSet.second)
+                for (size_t i : rankEdgeSet.second)
                 {
                     std::vector<int> edgeIndex = m_edgeToTrace[i];
                     m_edgeTraceIndex.insert(m_edgeTraceIndex.end(), edgeIndex.begin(), edgeIndex.end());
@@ -1224,7 +1181,7 @@ namespace Nektar
             }
 
             m_sendDisp = Nektar::Array<OneD, int>(nNeighbours, 0);
-            for (int i = 1; i < nNeighbours; ++i)
+            for (size_t i = 1; i < nNeighbours; ++i)
             {
                 m_sendDisp[i] = m_sendDisp[i-1] + m_sendCount[i-1];
             }
@@ -1235,7 +1192,7 @@ namespace Nektar
             for (const auto& rankEdgeSet : m_rankSharedEdges)
             {
                 std::vector<int> edgeTraceIndex;
-                for (int i : rankEdgeSet.second)
+                for (size_t i : rankEdgeSet.second)
                 {
                     std::vector<int> edgeIndex = m_edgeToTrace[i];
                     edgeTraceIndex.insert(edgeTraceIndex.end(), edgeIndex.begin(), edgeIndex.end());
@@ -1255,7 +1212,7 @@ namespace Nektar
             Array<OneD, double> sendBuff(size, -1);
             Array<OneD, double> recvBuff(size, -1);
 
-            for (int j = 0; j < size; ++j)
+            for (size_t j = 0; j < size; ++j)
             {
                 if (m_allEdgeIndex[j] == -1)
                 {
@@ -1269,7 +1226,7 @@ namespace Nektar
 
             m_comm->AlltoAll(sendBuff, recvBuff);
 
-            for (int j = 0; j < size; ++j)
+            for (size_t j = 0; j < size; ++j)
             {
                 if (m_allEdgeIndex[j] != -1)
                 {
@@ -1285,7 +1242,7 @@ namespace Nektar
             Array<OneD, double> sendBuff(m_allVEdgeIndex.size(), -1);
             Array<OneD, double> recvBuff(m_allVEdgeIndex.size(), -1);
 
-            for (int i = 0; i < m_allVEdgeIndex.size(); ++i)
+            for (size_t i = 0; i < m_allVEdgeIndex.size(); ++i)
             {
                 sendBuff[i] = testFwd[m_allVEdgeIndex[i]];
             }
@@ -1293,7 +1250,7 @@ namespace Nektar
             m_comm->AlltoAllv(sendBuff, m_allVSendCount, m_allVSendDisp,
                               recvBuff, m_allVSendCount, m_allVSendDisp);
 
-            for (int i = 0; i < m_allVEdgeIndex.size(); ++i)
+            for (size_t i = 0; i < m_allVEdgeIndex.size(); ++i)
             {
                 testBwd[m_allVEdgeIndex[i]] = recvBuff[i];
             }
@@ -1305,7 +1262,7 @@ namespace Nektar
         {
             Array<OneD, double> sendBuff(m_edgeTraceIndex.size(), -1);
             Array<OneD, double> recvBuff(m_edgeTraceIndex.size(), -1);
-            for (int i = 0; i < m_edgeTraceIndex.size(); ++i)
+            for (size_t i = 0; i < m_edgeTraceIndex.size(); ++i)
             {
                 sendBuff[i] = testFwd[m_edgeTraceIndex[i]];
             }
@@ -1315,7 +1272,7 @@ namespace Nektar
                                    recvBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
                                    m_commGraph);
 
-            for (int i = 0; i < m_edgeTraceIndex.size(); ++i)
+            for (size_t i = 0; i < m_edgeTraceIndex.size(); ++i)
             {
                 testBwd[m_edgeTraceIndex[i]] = recvBuff[i];
             }
@@ -1457,18 +1414,6 @@ namespace Nektar
             }
         }
 
-        void AssemblyMapDG::UniversalTraceAssemble(
-                Array<OneD, NekDouble> &Fwd,
-                Array<OneD, NekDouble> &Bwd)
-        {
-            MPITraceAssemble(Fwd, Bwd);
-        }
-
-        void AssemblyMapDG::UniversalTraceAssembleGS(Array<OneD, NekDouble> &pGlobal) const
-        {
-            Gs::Gather(pGlobal, Gs::gs_add, m_traceGsh);
-
-        }
         int AssemblyMapDG::v_GetLocalToGlobalMap(const int i) const
         {
             return m_localToGlobalBndMap[i];
@@ -1566,16 +1511,6 @@ namespace Nektar
         int AssemblyMapDG::v_GetFullSystemBandWidth() const
         {
             return GetBndSystemBandWidth();
-        }
-
-        int AssemblyMapDG::GetTraceToUniversalMap(int i)
-        {
-            return m_traceToUniversalMap[i];
-        }
-
-        int AssemblyMapDG::GetTraceToUniversalMapUnique(int i)
-        {
-            return m_traceToUniversalMapUnique[i];
         }
 
         int AssemblyMapDG::GetNumDirichletBndPhys()

@@ -830,9 +830,9 @@ namespace Nektar
                     {
                         // Realign some periodic edges in m_edgeToTrace and m_traceToUniversalMap
                         Array<OneD, int> tmpArray(m_edgeToTrace[eid].size());
-                        for (int i = 0; i < m_edgeToTrace[eid].size(); ++i)
+                        for (int j = 0; j < m_edgeToTrace[eid].size(); ++j)
                         {
-                            tmpArray[i] = m_edgeToTrace[eid][i];
+                            tmpArray[j] = m_edgeToTrace[eid][j];
                         }
 
                         if (nDim == 2)
@@ -844,7 +844,6 @@ namespace Nektar
                             RealignTraceElement(
                                 tmpArray,
                                 it->second[0].orient, quad);
-
                         }
                         else
                         {
@@ -861,9 +860,9 @@ namespace Nektar
                                 trace->GetExp(i)->GetNumPoints(1));
                         }
 
-                        for (int i = 0; i < m_edgeToTrace[eid].size(); ++i)
+                        for (int j = 0; j < m_edgeToTrace[eid].size(); ++j)
                         {
-                            m_edgeToTrace[eid][i] = tmpArray[i];
+                            m_edgeToTrace[eid][j] = tmpArray[j];
                         }
                     }
                 }

@@ -362,31 +362,6 @@ using namespace std;
              // Set up physical normals
              SetUpPhysNormals();
 
-             // Set up information for parallel jobs.
-             for (int i = 0; i < m_trace->GetExpSize(); ++i)
-             {
-                 LocalRegions::Expansion2DSharedPtr traceEl = 
-                         m_trace->GetExp(i)->as<LocalRegions::Expansion2D>();
-
-                 int offset      = m_trace->GetPhys_Offset(i);
-                 int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
-                 auto pIt = m_periodicFaces.find(traceGeomId);
-
-                 if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
-                 {
-                     if (traceGeomId != min(pIt->second[0].id, traceGeomId))
-                     {
-                         traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
-                             traceEl->GetLeftAdjacentElementFace());
-                     }
-                 }
-                 else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
-                 {
-                     traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
-                         traceEl->GetLeftAdjacentElementFace());
-                 }
-             }
-
              int cnt, n, e;
 
              // Identify boundary faces
@@ -1866,18 +1841,7 @@ using namespace std;
                 // it, then assume it is a partition edge.
                 if (it == m_boundaryFaces.end())
                 {
-                    int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
-                    auto pIt = m_periodicFaces.find(traceGeomId);
-
-                    if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
-                    {
-                        fwd = traceGeomId == min(traceGeomId,pIt->second[0].id);
-                    }
-                    else
-                    {
-                        fwd = m_traceMap->
-                            GetTraceToUniversalMapUnique(offset) >= 0;
-                    }
+                    fwd = true; // Partition edge is always fwd
                 }
             }
             else if (traceEl->GetLeftAdjacentElementFace () != -1 &&
@@ -2007,10 +1971,9 @@ using namespace std;
             {
                 Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
             }
-            
+
             // Do parallel exchange for forwards/backwards spaces.
-            //m_traceMap->UniversalTraceAssemble(Fwd);
-            //m_traceMap->UniversalTraceAssemble(Bwd);
+            m_traceMap->MPITraceAssemble(Fwd, Bwd);
         }
 
          const vector<bool> &DisContField3D::v_GetLeftAdjacentFaces(void) const
@@ -2040,8 +2003,7 @@ using namespace std;
 
             // gather entries along parallel partitions which have
             // only filled in Fwd part on their own partition
-            //m_traceMap->UniversalTraceAssemble(outarray);
-
+            m_traceMap->MPITraceAssemble(outarray, outarray);
         }
         
         /**

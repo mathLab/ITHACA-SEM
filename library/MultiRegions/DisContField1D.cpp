@@ -188,31 +188,6 @@ namespace Nektar
             
             SetUpPhysNormals();
 
-            // Set up information for parallel and periodic problems.
-            for (int i = 0; i < m_trace->GetExpSize(); ++i)
-            {
-                LocalRegions::Expansion0DSharedPtr traceEl =
-                        m_trace->GetExp(i)->as<LocalRegions::Expansion0D>();
-
-                int offset      = m_trace->GetPhys_Offset(i);
-                int traceGeomId = traceEl->GetGeom0D()->GetGlobalID();
-                PeriodicMap::iterator pIt = m_periodicVerts.find(traceGeomId);
-
-                if (pIt != m_periodicVerts.end() && !pIt->second[0].isLocal)
-                {
-                    if (traceGeomId != min(pIt->second[0].id, traceGeomId))
-                    {
-                        traceEl->GetLeftAdjacentElementExp()->NegateVertexNormal(
-                            traceEl->GetLeftAdjacentElementVertex());
-                    }
-                }
-                else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
-                {
-                    traceEl->GetLeftAdjacentElementExp()->NegateVertexNormal(
-                        traceEl->GetLeftAdjacentElementVertex());
-                }
-            }
-
             int cnt, n, e;
 
             // Identify boundary verts
@@ -318,19 +293,7 @@ namespace Nektar
                 // it, then assume it is a partition edge or periodic.
                 if (it == m_boundaryVerts.end())
                 {
-                    int traceGeomId = traceEl->GetGeom0D()->GetGlobalID();
-                    auto pIt = m_periodicVerts.find(traceGeomId);
-
-                    if (pIt != m_periodicVerts.end() && !pIt->second[0].isLocal)
-                    {
-                        fwd = traceGeomId == min(traceGeomId,pIt->second[0].id);
-                    }
-                    else
-                    {
-                        int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
-                        fwd = m_traceMap->
-                            GetTraceToUniversalMapUnique(offset) >= 0;
-                    }
+                    fwd = true;
                 }
             }
             else if (traceEl->GetLeftAdjacentElementVertex () != -1 &&
@@ -951,8 +914,7 @@ namespace Nektar
             }
 
             // Do parallel exchange for forwards/backwards spaces.
-            //m_traceMap->UniversalTraceAssemble(Fwd);
-            //m_traceMap->UniversalTraceAssemble(Bwd);
+            m_traceMap->MPITraceAssemble(Fwd, Bwd);
 
         }
         

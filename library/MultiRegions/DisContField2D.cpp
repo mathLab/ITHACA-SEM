@@ -435,25 +435,6 @@ namespace Nektar
                 
             // Set up physical normals
             SetUpPhysNormals();
-            
-            // Set up information for periodic problems.
-            for (int i = 0; i < m_trace->GetExpSize(); ++i)
-            {
-                LocalRegions::Expansion1DSharedPtr traceEl = 
-                        m_trace->GetExp(i)->as<LocalRegions::Expansion1D>();
-                    
-                int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
-                auto pIt = m_periodicEdges.find(traceGeomId);
-
-                if (pIt != m_periodicEdges.end() && !pIt->second[0].isLocal)
-                {
-                    if (traceGeomId != min(pIt->second[0].id, traceGeomId))
-                    {
-                        traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
-                            traceEl->GetLeftAdjacentElementEdge());
-                    }
-                }
-            }
                 
             int cnt, n, e;
                 
@@ -1267,17 +1248,7 @@ namespace Nektar
                 // it, then assume it is a partition edge.
                 if (it == m_boundaryEdges.end())
                 {
-                    int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
-                    auto pIt = m_periodicEdges.find(traceGeomId);
-
-                    if (pIt != m_periodicEdges.end() && !pIt->second[0].isLocal)
-                    {
-                        fwd = traceGeomId == min(traceGeomId,pIt->second[0].id);
-                    }
-                    else
-                    {
-                        fwd = true; // Partition edge is always fwd
-                    }
+                    fwd = true; // Partition edge is always fwd
                 }
             }
             else if ( traceEl->GetLeftAdjacentElementEdge () != -1 &&

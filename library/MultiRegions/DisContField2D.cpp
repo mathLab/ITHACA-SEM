@@ -1478,7 +1478,7 @@ namespace Nektar
                   Array<OneD,       NekDouble> &outarray)
         {
             LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
-            if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange && false)
+            if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
             {
                 Vmath::Zero(outarray.num_elements(), outarray, 1);
 
@@ -1487,7 +1487,7 @@ namespace Nektar
                 m_locTraceToTraceMap->FwdLocTracesFromField(inarray,tracevals);
                 m_locTraceToTraceMap->
                             InterpLocEdgesToTrace(0,tracevals,outarray);
-                m_traceMap->UniversalTraceAssembleGS(outarray);
+                m_traceMap->MPITraceAssemble(outarray, outarray);
             }
             else
             {

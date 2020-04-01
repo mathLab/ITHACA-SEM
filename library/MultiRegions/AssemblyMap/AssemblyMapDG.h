@@ -226,8 +226,7 @@ namespace Nektar
                 int                      nquad2 = 0);
         }; // class
 
-        using func_t = std::function<void
-                (const Array<OneD, NekDouble> &, Array<OneD, NekDouble> &)>;
+        typedef std::function<void(const Array<OneD, NekDouble> &, Array<OneD, NekDouble> &)> func_t;
 
         static inline std::tuple<NekDouble, NekDouble, NekDouble>  MPITiming(
                 const LibUtilities::CommSharedPtr &comm,
@@ -258,23 +257,6 @@ namespace Nektar
 
             return {sumTime[0]/comm->GetSize(), minTime[0], maxTime[0]};
         }
-
-        enum MPIType
-        {
-            eAllToAll ,
-            eAllToAllV,
-            eNeighborAllToAll,
-            ePairwise
-        };
-
-        const char* const MPITypeMap[] =
-        {
-                "AllToAll",
-                "AllToAllV",
-                "NeighborAllToAllV",
-                "PairwiseSendRecv"
-        };
-
     } // end of namespace
 } // end of namespace
 

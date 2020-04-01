@@ -868,76 +868,48 @@ namespace Nektar
             MPISetupPairwise();
 
 
-            //Timing MPI comm methods, warm up with 2 iterations then time over 10
-            Array<OneD, double> testFwd(trace->GetNpoints(), 1);
-            Array<OneD, double> testBwd(trace->GetNpoints(), -2);
-            NekDouble min, max;
-            std::vector<NekDouble> avg(4, -1);
+            //Timing MPI comm methods, warm up with 10 iterations then time over 50
+            const char* const MPITypeMap[] =
+            {
+                "AllToAll",
+                "AllToAllV",
+                "NeighborAllToAllV",
+                "PairwiseSendRecv"
+            };
+
             using std::placeholders::_1;
             using std::placeholders::_2;
+            std::map<int, func_t> MPIFuncMap;
+            MPIFuncMap[0] = std::bind(&AssemblyMapDG::MPIPerformAllToAll, this, _1, _2);
+            MPIFuncMap[1] = std::bind(&AssemblyMapDG::MPIPerformAllToAllV, this, _1, _2);
+            MPIFuncMap[2] = std::bind(&AssemblyMapDG::MPIPerformNeighborAllToAllV, this, _1, _2);
+            MPIFuncMap[3] = std::bind(&AssemblyMapDG::MPIPerformPairwise, this, _1, _2);
 
-            //AllToAll
-            MPITiming(m_comm, 2, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAll, this, _1, _2));
-            std::tie(avg[0], min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAll, this, _1, _2));
-            if (m_comm->GetRank() == 0)
+            Array<OneD, double> testFwd(trace->GetNpoints(), 1);
+            Array<OneD, double> testBwd(trace->GetNpoints(), -2);
+            int warmup = 10, iter = 50;
+            NekDouble min, max;
+            std::vector<NekDouble> avg(4);
+
+            for (auto const func : MPIFuncMap)
             {
-                std::cout << "AllToAll times (avg, min, max): "
-                << avg[0] << " " << min << " " << max << std::endl;
+                MPITiming(m_comm, warmup, testFwd, testBwd, func.second);
+                std::tie(avg[func.first], min, max) = MPITiming(m_comm, iter, testFwd, testBwd, func.second);
+                if (m_comm->GetRank() == 0)
+                {
+                    std::cout << MPITypeMap[func.first] <<" times (avg, min, max): "
+                              << avg[func.first] << " " << min << " " << max << std::endl;
+                }
             }
 
-            //AllToAllV
-            MPITiming(m_comm, 2, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAllV, this, _1, _2));
-            std::tie(avg[1], min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformAllToAllV, this, _1, _2));
-            if (m_comm->GetRank() == 0)
-            {
-                std::cout << "AllToAllV times (avg, min, max): "
-                << avg[1] << " " << min << " " << max << std::endl;
-            }
-
-            //Neighbor_AllToAllv
-            MPITiming(m_comm, 2, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformNeighborAllToAllV, this, _1, _2));
-            std::tie(avg[2], min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformNeighborAllToAllV, this, _1, _2));
-            if (m_comm->GetRank() == 0)
-            {
-                std::cout << "Neighbor AllToAllV times (avg, min, max): "
-                << avg[2] << " " << min << " " << max << std::endl;
-            }
-
-            //Pairwise send/recv
-            MPITiming(m_comm, 2, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformPairwise, this, _1, _2));
-            std::tie(avg[3], min, max) = MPITiming(m_comm, 10, testFwd, testBwd, std::bind(&AssemblyMapDG::MPIPerformPairwise, this, _1, _2));
-            if (m_comm->GetRank() == 0)
-            {
-                std::cout << "Pairwise Isend/Irecv times (avg, min, max): "
-                << avg[3] << " " << min << " " << max << std::endl;
-            }
-
-            auto fastestMPI = MPIType(std::distance(avg.begin(), std::min_element(avg.begin(), avg.end())));
+            int fastestMPI = std::distance(avg.begin(), std::min_element(avg.begin(), avg.end()));
 
             if (m_comm->GetRank() == 0)
             {
                 std::cout << "Chosen fastest method: " << MPITypeMap[fastestMPI] << std::endl;
             }
 
-            switch(fastestMPI)
-            {
-                case eAllToAll:
-                {
-                    MPITraceAssemble = std::bind(&AssemblyMapDG::MPIPerformAllToAll, this, _1, _2);
-                }
-                case eAllToAllV:
-                {
-                    MPITraceAssemble = std::bind(&AssemblyMapDG::MPIPerformAllToAllV, this, _1, _2);
-                }
-                case eNeighborAllToAll:
-                {
-                    MPITraceAssemble = std::bind(&AssemblyMapDG::MPIPerformNeighborAllToAllV, this, _1, _2);
-                }
-                case ePairwise:
-                {
-                    MPITraceAssemble = std::bind(&AssemblyMapDG::MPIPerformPairwise, this, _1, _2);
-                }
-            }
+            MPITraceAssemble = MPIFuncMap[fastestMPI];
         }
 
         void AssemblyMapDG::MPIInitialiseStructure(

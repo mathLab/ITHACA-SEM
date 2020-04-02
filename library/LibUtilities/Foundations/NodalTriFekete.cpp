@@ -285,10 +285,10 @@ namespace Nektar
             //which will put them into sets of ever decreasing size
             //which can be bubble sorted by x to obtain the distrobution
 
-            Array<OneD, NekDouble> xc(m_points[0].num_elements() - iend);
-            Array<OneD, NekDouble> yc(m_points[0].num_elements() - iend);
+            Array<OneD, NekDouble> xc(m_points[0].size() - iend);
+            Array<OneD, NekDouble> yc(m_points[0].size() - iend);
             int ct = 0;
-            for(i = iend; i < m_points[0].num_elements(); i++, ct++)
+            for(i = iend; i < m_points[0].size(); i++, ct++)
             {
                 xc[ct] = m_points[0][i];
                 yc[ct] = m_points[1][i];
@@ -299,7 +299,7 @@ namespace Nektar
             while(repeat)
             {
                 repeat = false;
-                for(i = 0; i < xc.num_elements() - 1; i++)
+                for(i = 0; i < xc.size() - 1; i++)
                 {
                     if(yc[i] > yc[i+1])
                     {
@@ -334,7 +334,7 @@ namespace Nektar
 
             //copy back in
             ct = 0;
-            for(i = iend; i < m_points[0].num_elements(); i++, ct++)
+            for(i = iend; i < m_points[0].size(); i++, ct++)
             {
                 m_points[0][i] = xc[ct];
                 m_points[1][i] = yc[ct];

@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Laplace solve routines 
+// Description: Laplace solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -70,7 +70,7 @@ namespace Nektar
 
     void Laplace::v_DoSolve()
     {
-        for(int i = 0; i < m_fields.num_elements(); ++i)
+        for(int i = 0; i < m_fields.size(); ++i)
         {
             // Zero field so initial conditions are zero
             Vmath::Zero(m_fields[i]->GetNcoeffs(),

@@ -435,7 +435,7 @@ std::array<NekDouble, 6> Geometry::GetBoundingBox()
 bool Geometry::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
 {
     // Validation checks
-    ASSERTL1(gloCoord.num_elements() >= m_coordim,
+    ASSERTL1(gloCoord.size() >= m_coordim,
              "Expects number of global coordinates supplied to be greater than "
              "or equal to the mesh dimension.");
 
@@ -451,8 +451,8 @@ bool Geometry::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
     for (i = 0; i < m_coordim; ++i)
     {
         m_xmap->BwdTrans(m_coeffs[i], pts);
-        mincoord[i] = Vmath::Vmin(pts.num_elements(), pts, 1);
-        maxcoord[i] = Vmath::Vmax(pts.num_elements(), pts, 1);
+        mincoord[i] = Vmath::Vmin(pts.size(), pts, 1);
+        maxcoord[i] = Vmath::Vmax(pts.size(), pts, 1);
 
         diff = std::max(maxcoord[i] - mincoord[i], diff);
     }
@@ -479,7 +479,7 @@ void Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
                                   NekDouble tol)
 {
     // Validation checks
-    ASSERTL1(locCoord.num_elements() == GetShapeDim(),
+    ASSERTL1(locCoord.size() == GetShapeDim(),
              "Expects same number of local coordinates as shape dimension.");
 
     // If out of range clamp locCoord to be within [-1,1]^dim

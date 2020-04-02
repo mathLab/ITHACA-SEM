@@ -115,6 +115,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT NekMatrix(typename boost::call_traits<NumberType>::const_reference scale, const ThisType& rhs);
            
 
+            LIB_UTILITIES_EXPORT ThisType& operator=(const ThisType&) = default;
+
             LIB_UTILITIES_EXPORT ConstGetValueType operator()(unsigned int row, unsigned int col) const;
 
             LIB_UTILITIES_EXPORT unsigned int GetStorageSize() const ;

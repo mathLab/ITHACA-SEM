@@ -77,7 +77,7 @@ struct OneDArrayToPython
         PyObject *tmp = py::incref(
             np::from_data(
                 arr.data(), np::dtype::get_builtin<T>(),
-                py::make_tuple(arr.num_elements()), py::make_tuple(sizeof(T)),
+                py::make_tuple(arr.size()), py::make_tuple(sizeof(T)),
                 capsule).ptr());
 
         return tmp;

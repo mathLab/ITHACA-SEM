@@ -116,7 +116,7 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
     // set any nan values to default value if requested
     if (setnantovalue)
     {
-        for (int i = 0; i < pts[0].num_elements(); ++i)
+        for (int i = 0; i < pts[0].size(); ++i)
         {
             for (int j = 0; j < nFields; ++j)
             {
@@ -132,7 +132,7 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
     {
         int totcoeffs = m_f->m_exp[0]->GetNcoeffs();
 
-        ASSERTL0(pts[0].num_elements() != totcoeffs,
+        ASSERTL0(pts[0].size() != totcoeffs,
                  "length of points in .pts file is different "
                  "to the number of coefficients in expansion ");
 
@@ -166,11 +166,11 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
 
         m_f->m_exp[0]->GetCoords(coords[0], coords[1], coords[2]);
 
-        if (pts[0].num_elements() != totpoints)
+        if (pts[0].size() != totpoints)
         {
             WARNINGL0(false, "length of points in .pts file is different to "
                              "the number of quadrature points in xml file");
-            totpoints = min(totpoints, (int)pts[0].num_elements());
+            totpoints = min(totpoints, (int)pts[0].size());
         }
 
         int mismatch = 0;

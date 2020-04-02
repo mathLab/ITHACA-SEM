@@ -55,6 +55,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicUtils/CheckedCast.hpp>
 #include <LibUtilities/Interpreter/Interpreter.h>
 
 #include <boost/program_options.hpp>
@@ -207,7 +208,7 @@ namespace Nektar
             }
 
             m_interpreter = MemoryManager<Interpreter>::AllocateSharedPtr();
-            m_interpreter->SetRandomSeed((m_comm->GetRank() + 1) 
+            m_interpreter->SetRandomSeed((m_comm->GetRank() + 1)
                                             * (unsigned int)time(NULL));
 
             // Split up the communicator
@@ -253,7 +254,7 @@ namespace Nektar
             }
 
             m_interpreter = MemoryManager<Interpreter>::AllocateSharedPtr();
-            m_interpreter->SetRandomSeed((m_comm->GetRank() + 1) 
+            m_interpreter->SetRandomSeed((m_comm->GetRank() + 1)
                                             * (unsigned int)time(NULL));
 
             // Split up the communicator
@@ -736,7 +737,8 @@ namespace Nektar
             auto paramIter = m_parameters.find(vName);
             ASSERTL0(paramIter != m_parameters.end(), "Required parameter '" +
                      pName + "' not specified in session.");
-            pVar = (int)round(paramIter->second);
+            NekDouble param = round(paramIter->second);
+            pVar = checked_cast<int>(param);
         }
 
 
@@ -750,7 +752,8 @@ namespace Nektar
             auto paramIter = m_parameters.find(vName);
             if(paramIter != m_parameters.end())
             {
-                pVar = (int)round(paramIter->second);
+                NekDouble param = round(paramIter->second);
+                pVar = checked_cast<int>(param);
             }
             else
             {

@@ -178,7 +178,7 @@ public:
         {
             phase->m_V[n][n-1] = 1.0; // constant 1
         }
-        
+
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = phase->m_order-1;
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
@@ -200,7 +200,7 @@ public:
         // matrix thus values are non zero if and only i=j. As such,
         // the diagonal Lambda values are stored as two vectors so to
         // accomodate complex numbers m_L[0] real, m_L[1] imaginary.
-        ASSERTL1(phase->m_nvars == phase->m_L.num_elements(),
+        ASSERTL1(phase->m_nvars == phase->m_L.size(),
                  "The number of variables does not match "
                  "the number of exponential coefficents.");
 
@@ -208,7 +208,7 @@ public:
         phase->m_B_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
         phase->m_U_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
         phase->m_V_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
-        
+
         for( unsigned int k=0; k<phase->m_nvars; ++k )
         {
             Array<OneD, NekDouble> phi = Array<OneD, NekDouble>(phase->m_nvars);

@@ -132,7 +132,7 @@ StdRegions::Orientation TriGeom::GetFaceOrientation(
     if(doRot)
     {
         PointGeom rotPt;
-        
+
         for (i = 0; i < 3; ++i)
         {
             rotPt.Rotate((*face1[i]), dir, angle);
@@ -148,7 +148,7 @@ StdRegions::Orientation TriGeom::GetFaceOrientation(
     }
     else
     {
-        
+
         NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
 
         // For periodic faces, we calculate the vector between the centre
@@ -164,7 +164,7 @@ StdRegions::Orientation TriGeom::GetFaceOrientation(
         cx /= 3;
         cy /= 3;
         cz /= 3;
-        
+
         // Now construct a mapping which takes us from the vertices of one
         // face to the other. That is, vertex j of face2 corresponds to
         // vertex vmap[j] of face1.
@@ -187,7 +187,7 @@ StdRegions::Orientation TriGeom::GetFaceOrientation(
             }
         }
     }
-    
+
     if (vmap[1] == (vmap[0] + 1) % 3)
     {
         switch (vmap[0])
@@ -218,7 +218,7 @@ StdRegions::Orientation TriGeom::GetFaceOrientation(
             break;
         }
     }
-    
+
     ASSERTL0(false, "Unable to determine triangle orientation");
     return StdRegions::eNoOrientation;
 }
@@ -531,8 +531,8 @@ NekDouble TriGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
 
         int min_i = Vmath::Imin(npts, tmpx, 1);
 
-        Lcoords[0] = za[min_i % za.num_elements()];
-        Lcoords[1] = zb[min_i / za.num_elements()];
+        Lcoords[0] = za[min_i % za.size()];
+        Lcoords[1] = zb[min_i / za.size()];
 
         // recover cartesian coordinate from collapsed coordinate.
         Lcoords[0] = (1.0 + Lcoords[0]) * (1.0 - Lcoords[1]) / 2 - 1.0;

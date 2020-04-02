@@ -188,7 +188,7 @@ void CouplingFile::v_Receive(const int step,
     ASSERTL1(m_nRecvVars == recvVarsToVars.size(), "field size mismatch");
     for (int i = 0; i < recvVarsToVars.size(); ++i)
     {
-        Vmath::Vcopy(recvFields[i].num_elements(),
+        Vmath::Vcopy(recvFields[i].size(),
                      recvFields[i],
                      1,
                      field[recvVarsToVars[i]],

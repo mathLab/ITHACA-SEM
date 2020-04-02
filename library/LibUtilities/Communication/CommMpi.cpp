@@ -327,8 +327,8 @@ void CommMpi::v_Exscan(Array<OneD, unsigned long long> &pData,
                        const enum ReduceOperator pOp,
                        Array<OneD, unsigned long long> &ans)
 {
-    int n = pData.num_elements();
-    ASSERTL0(n == ans.num_elements(), "Array sizes differ in Exscan");
+    int n = pData.size();
+    ASSERTL0(n == ans.size(), "Array sizes differ in Exscan");
 
     MPI_Op vOp;
     switch (pOp)

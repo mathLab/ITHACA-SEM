@@ -316,8 +316,8 @@ void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
                 e->GetSimplexEquiSpacedConnectivity(conn);
             }
         }
-        Array<OneD, int> newconn(conn.num_elements());
-        for (int j = 0; j < conn.num_elements(); ++j)
+        Array<OneD, int> newconn(conn.size());
+        for (int j = 0; j < conn.size(); ++j)
         {
             newconn[j] = conn[j] + cnt;
         }
@@ -420,7 +420,7 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
 {
     LocalRegions::ExpansionSharedPtr e;
     int nel          = m_f->m_exp[0]->GetPlane(0)->GetExpSize();
-    int nPlanes      = m_f->m_exp[0]->GetZIDs().num_elements();
+    int nPlanes      = m_f->m_exp[0]->GetZIDs().size();
     int npts         = m_f->m_fieldPts->GetNpoints();
     int nptsPerPlane = npts / nPlanes;
     int coordim      = 3;
@@ -433,8 +433,8 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
         // Write points with extra plane
         Array<OneD, Array<OneD, NekDouble> > pts;
         m_f->m_fieldPts->GetPts(pts);
-        Array<OneD, Array<OneD, NekDouble> > newPts(pts.num_elements());
-        for (int i = 0; i < pts.num_elements(); i++)
+        Array<OneD, Array<OneD, NekDouble> > newPts(pts.size());
+        for (int i = 0; i < pts.size(); i++)
         {
             newPts[i] = Array<OneD, NekDouble>(npts + nptsPerPlane);
             // Copy old points
@@ -482,8 +482,8 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
         int connPerPlane = oldConn.size() / nPlanes;
         for (int i = 0; i < connPerPlane; i++)
         {
-            conn = Array<OneD, int>(oldConn[i].num_elements());
-            for (int j = 0; j < conn.num_elements(); j++)
+            conn = Array<OneD, int>(oldConn[i].size());
+            for (int j = 0; j < conn.size(); j++)
             {
                 conn[j] = oldConn[i][j] + npts;
             }
@@ -505,7 +505,7 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
     {
         for(int i = 0; i < nel; ++i)
         {
-            int nLines = oldConn[i].num_elements()/2;
+            int nLines = oldConn[i].size()/2;
             // Create array for new connectivity
             // (2 triangles between each plane for each line)
             conn = Array<OneD, int> (2*3*nLines*(nPlanes-1));
@@ -716,7 +716,7 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
         // Crete new connectivity using homogeneous information
         for(int i = 0; i < nel; ++i)
         {
-            int nTris = oldConn[i].num_elements()/3;
+            int nTris = oldConn[i].size()/3;
             // Create array for new connectivity
             // (3 tetrahedra between each plane for each triangle)
             conn = Array<OneD, int> (4*3*nTris*(nPlanes-1));

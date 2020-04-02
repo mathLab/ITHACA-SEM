@@ -42,25 +42,25 @@ namespace Nektar
     {
         std::string UpwindSolver::solverName = GetRiemannSolverFactory().
             RegisterCreatorFunction("Upwind", UpwindSolver::create, "Upwind solver");
-        
+
         /**
          * @class UpwindSolver
-         * 
+         *
          * @brief Upwind scheme Riemann solver.
-         * 
+         *
          * The upwind solver determines the flux based upon an advection
          * velocity \f$\mathbf{V}\f$ and trace normal \f$\mathbf{n}\f$. In
          * particular, the flux for each component of the velocity field is
          * deterined by:
-         * 
+         *
          * \f[ \mathbf{f}(u^+,u^-) = \begin{cases} \mathbf{V}u^+, &
          * \mathbf{V}\cdot\mathbf{n} \geq 0,\\ \mathbf{V}u^-, &
          * \mathbf{V}\cdot\mathbf{n} < 0.\end{cases} \f]
-         * 
+         *
          * Here the superscript + and - denotes forwards and backwards spaces
          * respectively.
          */
-        
+
         /**
          * @brief Default constructor.
          */
@@ -69,16 +69,16 @@ namespace Nektar
             : RiemannSolver(pSession)
         {
         }
-        
+
         /**
          * @brief Implementation of the upwind solver.
-         * 
+         *
          * The upwind solver assumes that a scalar field Vn is defined, which
          * corresponds with the dot product \f$\mathbf{V}\cdot\mathbf{n}\f$,
          * where \f$\mathbf{V}\f$ is the advection velocity and \f$\mathbf{n}\f$
          * defines the normal of a vertex, edge or face at each quadrature point
          * of the trace space.
-         * 
+         *
          * @param Fwd   Forwards trace space.
          * @param Bwd   Backwards trace space.
          * @param flux  Resulting flux.
@@ -93,12 +93,12 @@ namespace Nektar
 
             ASSERTL1(CheckScalars("Vn"), "Vn not defined.");
             const Array<OneD, NekDouble> &traceVel = m_scalars["Vn"]();
-            
-            for (int j = 0; j < traceVel.num_elements(); ++j)
+
+            for (int j = 0; j < traceVel.size(); ++j)
             {
-                const Array<OneD, const Array<OneD, NekDouble> > &tmp = 
+                const Array<OneD, const Array<OneD, NekDouble> > &tmp =
                     traceVel[j] >= 0 ? Fwd : Bwd;
-                for (int i = 0; i < Fwd.num_elements(); ++i)
+                for (int i = 0; i < Fwd.size(); ++i)
                 {
                     flux[i][j] = traceVel[j]*tmp[i][j];
                 }

@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
     }
 
     ASSERTL1(util, "Unknown shape type!");
-    const int nPoints = r.num_elements();
+    const int nPoints = r.size();
     const int dim = (shape == eTriangle || shape == eQuadrilateral) ? 2 : 3;
 
     if (vm.count("integral"))

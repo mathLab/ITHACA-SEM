@@ -56,7 +56,7 @@ namespace SolverUtils
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const std::weak_ptr<EquationSystem>      &pEquation)
             : Forcing(pSession, pEquation),
-              m_hasRefFlow(false),	
+              m_hasRefFlow(false),
               m_hasRefFlowTime(false)
     {
     }
@@ -236,8 +236,8 @@ namespace SolverUtils
     {
         boost::ignore_unused(fields);
 
-        int nq = m_Forcing[0].num_elements();
-       
+        int nq = m_Forcing[0].size();
+
         std::string s_FieldStr;
         Array<OneD, NekDouble> TimeScale(1);
         Array<OneD, Array<OneD, NekDouble> > RefflowScaled(m_NumVariable);
@@ -257,7 +257,7 @@ namespace SolverUtils
                 {
                     Vmath::Vcopy(nq, m_Refflow[i],1, RefflowScaled[i],1);
                 }
-                
+
 
                 Vmath::Vsub(nq, inarray[i], 1,
                             RefflowScaled[i], 1, m_Forcing[i], 1);
@@ -278,6 +278,6 @@ namespace SolverUtils
             }
         }
     }
-        
+
 }
 }

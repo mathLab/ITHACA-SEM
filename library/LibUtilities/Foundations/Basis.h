@@ -79,6 +79,9 @@ namespace Nektar
             {
             }
 
+            /// Assignment operator
+            BasisKey& operator=(const BasisKey &) = default;
+
             /// Returns the order of the basis.
             inline int GetNumModes() const
             {

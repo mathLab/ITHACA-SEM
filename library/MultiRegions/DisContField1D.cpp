@@ -914,7 +914,7 @@ namespace Nektar
             }
 
             // Do parallel exchange for forwards/backwards spaces.
-            m_traceMap->MPITraceAssemble(Fwd, Bwd);
+            m_traceMap->PerformExchange(Fwd, Bwd);
 
         }
         

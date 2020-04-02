@@ -1971,7 +1971,7 @@ using namespace std;
             }
 
             // Do parallel exchange for forwards/backwards spaces.
-            m_traceMap->MPITraceAssemble(Fwd, Bwd);
+            m_traceMap->PerformExchange(Fwd, Bwd);
         }
 
          const vector<bool> &DisContField3D::v_GetLeftAdjacentFaces(void) const

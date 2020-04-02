@@ -41,8 +41,6 @@
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList0D.h>
 
-#include <LibUtilities/Communication/CommMpi.h>  // TODO: Implement the graph constructor using virtual functions / wrappers so can remove this include
-#include <LibUtilities/BasicUtils/Timer.h>
 namespace Nektar
 {
     namespace MultiRegions
@@ -54,7 +52,6 @@ namespace Nektar
         class AssemblyMapDG: public AssemblyMap
         {
         public:
-            NekDouble m_mpiTime;
             /// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMapDG();
 
@@ -85,75 +82,20 @@ namespace Nektar
                 Array<OneD,Array<OneD,LocalRegions::ExpansionSharedPtr> >
                 &GetElmtToTrace();
 
-            MULTI_REGIONS_EXPORT std::function<void(const Array<OneD, NekDouble> &, Array<OneD, NekDouble> &)> MPITraceAssemble;
-
+                static void RealignTraceElement(
+                Array<OneD, int>        &toAlign,
+                StdRegions::Orientation  orient,
+                int                      nquad1,
+                int                      nquad2 = 0);
 
         protected:
-            Gs::gs_data * m_traceGsh;
-            
             /// Number of physical dirichlet boundary values in trace
             int m_numDirichletBndPhys;
 
             /// list of edge expansions for a given element
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> > m_elmtToTrace;
 
-            /// Map of ID to quad point trace indices
-            std::map<int, std::vector<int>> m_edgeToTrace;
-
-            void MPIInitialiseStructure(
-                    const LocalRegions::ExpansionVector &locExpVector,
-                    const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
-                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
-                    const PeriodicMap &perMap);
-            /// Map of process to shared edge IDs
-            std::map<int, std::vector<int>> m_rankSharedEdges;
-
-            void MPISetupAllToAll();
-            /// List of trace map indices of the quad points to exchange
-            std::vector<int> m_allEdgeIndex;
-            /// Max number of quadrature points in an element
-            int m_maxQuad = 0;
-            /// Largest shared partition edge
-            int m_maxCount = 0;
-            /// Number of ranks/processes/partitions
-            int m_nRanks = 0;
-            void MPIPerformAllToAll(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd);
-
-            void MPISetupAllToAllV();
-            /// List of trace map indices of the quad points to exchange
-            std::vector<int> m_allVEdgeIndex;
-            /// List of counts for MPI_alltoallv
-            Array<OneD, int> m_allVSendCount;
-            /// List of displacements for MPI_alltoallv
-            Array<OneD, int> m_allVSendDisp;
-            void MPIPerformAllToAllV(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd);
-
-            void MPISetupNeighborAllToAllV();
-            ///Distributed graph communicator
-            MPI_Comm m_commGraph;
-            /// List of trace map indices of the quad points to exchange
-            std::vector<int> m_edgeTraceIndex;
-            /// List of counts
-            Array<OneD,int> m_sendCount;
-            /// List of displacements
-            Array<OneD, int> m_sendDisp;
-            void MPIPerformNeighborAllToAllV(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd);
-
-            void MPISetupPairwise();
-            /// List of partition to trace map indices of the quad points to exchange
-            std::vector<std::pair<int, std::vector<int>>> m_vecPairPartitionTrace;
-            /// Total quadrature points to send/recv
-            int m_totSends = 0;
-            void MPIPerformPairwise(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd);
-
             void SetUpUniversalDGMap(const ExpList &locExp);
-
-            void SetUpUniversalTraceMap(
-                const ExpList         &locExp,
-                const ExpListSharedPtr &trace,
-                const Array<OneD, const MultiRegions::ExpListSharedPtr>         &bndCondExp,
-                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
-                const PeriodicMap     &perMap = NullPeriodicMap);
 
             virtual int v_GetLocalToGlobalMap(const int i) const;
 
@@ -202,48 +144,7 @@ namespace Nektar
                           NekVector<      NekDouble>& pGlobal) const;
 
             virtual int v_GetFullSystemBandWidth() const;
-
-            void RealignTraceElement(
-                Array<OneD, int>        &toAlign,
-                StdRegions::Orientation  orient,
-                int                      nquad1,
-                int                      nquad2 = 0);
         }; // class
-
-        typedef std::function<void(const Array<OneD, NekDouble> &, Array<OneD, NekDouble> &)> func_t;
-
-        static inline std::tuple<NekDouble, NekDouble, NekDouble>  MPITiming(
-                const LibUtilities::CommSharedPtr &comm,
-                const int &count,
-                const int &num,
-                const func_t &f)
-        {
-
-            Array<OneD, double> testFwd(num, 1);
-            Array<OneD, double> testBwd(num, -2);
-
-            LibUtilities::Timer t;
-            t.Start();
-
-            for (size_t i = 0; i < count; ++i)
-            {
-                f(testFwd, testBwd);
-            }
-
-            t.Stop();
-
-            // These can just be 'reduce' but need to setup the wrapper in comm.h
-            Array<OneD, NekDouble> minTime(1, t.TimePerTest(count));
-            comm->AllReduce(minTime, LibUtilities::ReduceMin);
-
-            Array<OneD, NekDouble> maxTime(1, t.TimePerTest(count));
-            comm->AllReduce(maxTime, LibUtilities::ReduceMax);
-
-            Array<OneD, NekDouble> sumTime(1, t.TimePerTest(count));
-            comm->AllReduce(sumTime, LibUtilities::ReduceSum);
-
-            return {sumTime[0]/comm->GetSize(), minTime[0], maxTime[0]};
-        }
     } // end of namespace
 } // end of namespace
 

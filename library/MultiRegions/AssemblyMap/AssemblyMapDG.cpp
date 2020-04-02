@@ -1042,6 +1042,7 @@ namespace Nektar
             }
 
             // Find what edge Ids match with other ranks
+            Array<OneD, int> perTraceSend(m_nRanks, 0);
             for (auto &rank : otherRanks)
             {
                 std::vector<int> periodicEdgeList;
@@ -1070,7 +1071,19 @@ namespace Nektar
                 {
                     m_rankSharedEdges[rank].insert(m_rankSharedEdges[rank].end(),periodicEdgeList.begin(), periodicEdgeList.end());
                 }
+
+                // List of number of quad points in periodic conditions for each rank
+                for (auto edgeId : periodicEdgeList)
+                {
+                    perTraceSend[rank] += m_edgeToTrace[edgeId].size();
+                }
             }
+
+            // Check that periodic trace edges being communicated are of same order
+            Array<OneD, int> perTraceRecv(m_nRanks);
+            m_comm->AlltoAll(perTraceSend, perTraceRecv);
+
+            ASSERTL0(perTraceSend == perTraceRecv, "Periodic boundary conditions require the same basis order.")
         }
 
         void AssemblyMapDG::MPISetupAllToAll()

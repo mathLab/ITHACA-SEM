@@ -428,3 +428,20 @@ win10-default-build-and-test:
   after_script:
     - Remove-Item -Recurse -Force build
   needs: []
+
+win10-mpi-default-build-and-test:
+  <<: *build-and-test-template
+  tags:
+    - win10
+  script:
+    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;$CI_PROJECT_DIR\build\ThirdParty\dist\bin;" + $Env:path
+    - echo $Env:path
+    - mkdir build
+    - cd build
+    - cmake.exe -G "Visual Studio 14 2015 Win64" -DNEKTAR_USE_MPI=ON --config Debug ..
+    - cmake.exe --build . --target ALL_BUILD --config Debug
+    - cmake.exe --build . --target INSTALL --config Debug
+    - ctest --output-on-failure -C Debug -j3
+  after_script:
+    - Remove-Item -Recurse -Force build
+  needs: []

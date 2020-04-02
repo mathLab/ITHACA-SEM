@@ -69,7 +69,7 @@ IF (NEKTAR_USE_METIS)
 			EXTERNALPROJECT_ADD_STEP(metis-5.1.0 patch-install-path
 				COMMAND powershell -Command "(Get-Content ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h) -replace '(#define rint\\(x\\)[\\w\\(\\) \\+\\.]+)',( \"#if (_MSC_VER " < " 1800)`n\"+'$1'+\"`n#endif\") | Out-File -filepath ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h -encoding ASCII"
 				COMMAND powershell -Command "(Get-Content ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h) -replace '(#define INFINITY FLT_MAX)',(\"#if (_MSC_VER " < " 1800)`n\"+'$1'+\"`n#endif\") | Out-File -filepath ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h -encoding ASCII"
-				COMMAND powershell -Command (Add-Content ${TPSRC}/metis-5.1.0/CMakeLists.txt "`nINSTALL`(TARGETS` metis` DESTINATION` lib`)`nINSTALL`(FILES` include/metis.h` DESTINATION` include`)`n")
+				COMMAND powershell -Command "(Get-Content ${TPSRC}/metis-5.1.0/CMakeLists.txt) -replace 'set\\(METIS_INSTALL FALSE\\)','set(METIS_INSTALL TRUE)' | Out-File -filepath ${TPSRC}/metis-5.1.0/CMakeLists.txt -encoding ASCII"
 				DEPENDERS build
 				DEPENDEES download)
 		ENDIF ()

@@ -45,18 +45,6 @@ namespace Nektar
 {
 namespace MultiRegions
 {
-AssemblyCommDG::AssemblyCommDG()
-{
-}
-
-AssemblyCommDG::~AssemblyCommDG()
-{
-}
-
-ExchangeMethod::ExchangeMethod()
-{
-}
-
 AllToAll::AllToAll(
     const std::map<int, std::vector<int>> &rankSharedEdges,
     const std::map<int, std::vector<int>> &edgeToTrace,
@@ -98,14 +86,17 @@ AllToAll::AllToAll(
 
             if (rankSharedEdges.at(i).size() < m_maxCount)
             {
-                std::vector<int> edgeIndex(maxQuad * (m_maxCount - rankSharedEdges.at(i).size()), -1);
-                m_allEdgeIndex.insert(m_allEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
+                std::vector<int> edgeIndex(
+                    maxQuad * (m_maxCount - rankSharedEdges.at(i).size()), -1);
+                m_allEdgeIndex.insert(
+                    m_allEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
             }
         }
         else
         {
             std::vector<int> edgeIndex(maxQuad * m_maxCount, -1);
-            m_allEdgeIndex.insert(m_allEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
+            m_allEdgeIndex.insert(
+                m_allEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
         }
     }
 }
@@ -124,8 +115,10 @@ AllToAllV::AllToAllV(
         {
             for (size_t j = 0; j < rankSharedEdges.at(i).size(); ++j)
             {
-                std::vector<int> edgeIndex = edgeToTrace.at(rankSharedEdges.at(i)[j]);
-                m_allVEdgeIndex.insert(m_allVEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
+                std::vector<int> edgeIndex = edgeToTrace.at(
+                    rankSharedEdges.at(i)[j]);
+                m_allVEdgeIndex.insert(
+                    m_allVEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
                 m_allVSendCount[i] += edgeIndex.size();
             }
         }
@@ -157,10 +150,11 @@ NeighborAllToAllV::NeighborAllToAllV(
         ++cnt;
     }
 
-    int retval = MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD,
-                                                nNeighbours, destinations.get(), weights.get(),  // Sources
-                                                nNeighbours, destinations.get(), weights.get(),  // Destinations
-                                                MPI_INFO_NULL, 1, &m_commGraph);
+    int retval = MPI_Dist_graph_create_adjacent(
+        MPI_COMM_WORLD,
+        nNeighbours, destinations.get(), weights.get(),  // Sources
+        nNeighbours, destinations.get(), weights.get(),  // Destinations
+        MPI_INFO_NULL, 1, &m_commGraph);
 
     ASSERTL0(retval == MPI_SUCCESS, "MPI error creating the distributed graph.")
 
@@ -172,7 +166,8 @@ NeighborAllToAllV::NeighborAllToAllV(
         for (size_t i : rankEdgeSet.second)
         {
             std::vector<int> edgeIndex = edgeToTrace.at(i);
-            m_edgeTraceIndex.insert(m_edgeTraceIndex.end(), edgeIndex.begin(), edgeIndex.end());
+            m_edgeTraceIndex.insert(
+                m_edgeTraceIndex.end(), edgeIndex.begin(), edgeIndex.end());
             m_sendCount[cnt] += edgeIndex.size();
         }
 
@@ -199,12 +194,14 @@ Pairwise::Pairwise(
         for (size_t i : rankEdgeSet.second)
         {
             std::vector<int> edgeIndex = edgeToTrace.at(i);
-            edgeTraceIndex.insert(edgeTraceIndex.end(), edgeIndex.begin(), edgeIndex.end());
+            edgeTraceIndex.insert(
+                edgeTraceIndex.end(), edgeIndex.begin(), edgeIndex.end());
             sendCount[cnt] += edgeIndex.size();
             m_totSends += edgeToTrace.at(i).size();
         }
 
-        m_vecPairPartitionTrace.emplace_back(std::make_pair(rankEdgeSet.first, edgeTraceIndex));
+        m_vecPairPartitionTrace.emplace_back(
+            std::make_pair(rankEdgeSet.first, edgeTraceIndex));
         ++cnt;
     }
 
@@ -279,9 +276,10 @@ void NeighborAllToAllV::PerformExchange(
     }
 
 
-    MPI_Neighbor_alltoallv(sendBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
-                           recvBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
-                           m_commGraph);
+    MPI_Neighbor_alltoallv(
+        sendBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
+        recvBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
+        m_commGraph);
 
     for (size_t i = 0; i < m_edgeTraceIndex.size(); ++i)
     {
@@ -331,7 +329,8 @@ void Pairwise::PerformExchange(
                    &request[count2++]);
     }
 
-    MPI_Waitall(m_vecPairPartitionTrace.size() * 2, request.get(), MPI_STATUSES_IGNORE);
+    MPI_Waitall(
+        m_vecPairPartitionTrace.size() * 2, request.get(), MPI_STATUSES_IGNORE);
 
     count = 0;
     for (auto &pairPartitionTrace : m_vecPairPartitionTrace)
@@ -354,15 +353,29 @@ AssemblyCommDG::AssemblyCommDG(
     const PeriodicMap     &perMap)
 {
     auto comm = locExp.GetSession()->GetComm();
+
     // Initialise graph structure and link processes across partition boundaries
-    AssemblyCommDG::InitialiseStructure(locExp, trace, elmtToTrace, bndCondExp, bndCond, perMap, comm);
+    AssemblyCommDG::InitialiseStructure(
+        locExp, trace, elmtToTrace, bndCondExp, bndCond, perMap, comm);
 
     //Timing MPI comm methods, warm up with 10 iterations then time over 50
-    std::map<int, ExchangeMethod*> MPIFuncMap;
-    MPIFuncMap[0] = new AllToAll(m_rankSharedEdges, m_edgeToTrace, m_nRanks, m_maxQuad, comm);
-    MPIFuncMap[1] = new AllToAllV(m_rankSharedEdges, m_edgeToTrace, m_nRanks, comm);
-    MPIFuncMap[2] = new NeighborAllToAllV(m_rankSharedEdges, m_edgeToTrace);
-    MPIFuncMap[3] = new Pairwise(m_rankSharedEdges, m_edgeToTrace);
+    std::map<int, ExchangeMethodSharedPtr> MPIFuncMap;
+
+    MPIFuncMap[0] = ExchangeMethodSharedPtr(
+        MemoryManager<AllToAll>::AllocateSharedPtr(
+            m_rankSharedEdges, m_edgeToTrace, m_nRanks, m_maxQuad, comm));
+
+    MPIFuncMap[1] = ExchangeMethodSharedPtr(
+        MemoryManager<AllToAllV>::AllocateSharedPtr(
+            m_rankSharedEdges, m_edgeToTrace, m_nRanks, comm));
+
+    MPIFuncMap[2] = ExchangeMethodSharedPtr(
+        MemoryManager<NeighborAllToAllV>::AllocateSharedPtr(
+            m_rankSharedEdges, m_edgeToTrace));
+
+    MPIFuncMap[3] = ExchangeMethodSharedPtr(
+        MemoryManager<Pairwise>::AllocateSharedPtr(
+            m_rankSharedEdges, m_edgeToTrace));
 
     const char* MPITypeMap[] =
     {
@@ -393,7 +406,8 @@ AssemblyCommDG::AssemblyCommDG(
         }
     }
 
-    int fastestMPI = std::distance(avg.begin(), std::min_element(avg.begin(), avg.end()));
+    int fastestMPI = std::distance(
+        avg.begin(), std::min_element(avg.begin(), avg.end()));
 
     if (comm->GetRank() == 0)
     {
@@ -606,7 +620,8 @@ void AssemblyCommDG::InitialiseStructure(
                     uniqueEdgeIds.emplace_back(eid);
                 }
 
-                uniqueEdgeIdsLocal.emplace_back(eid); // Separate local edge ID list where periodic edge IDs aren't swapped
+                // Separate local edge ID list where periodic edge IDs aren't swapped
+                uniqueEdgeIdsLocal.emplace_back(eid);
             }
         }
     }
@@ -659,9 +674,12 @@ void AssemblyCommDG::InitialiseStructure(
         for (size_t j = 0; j < rankNumEdges[rank]; ++j)
         {
             int edgeId = rankLocalEdgeIds[rankLocalEdgeDisp[rank] + j];
-            if (std::find(uniqueEdgeIdsLocal.begin(), uniqueEdgeIdsLocal.end(), edgeId) != uniqueEdgeIdsLocal.end())
+            if (std::find(
+                uniqueEdgeIdsLocal.begin(), uniqueEdgeIdsLocal.end(), edgeId)
+                != uniqueEdgeIdsLocal.end())
             {
-                // If periodic then create separate list of minimum of the two ids to be appended on to the end
+                // If periodic then create separate list of minimum
+                // of the two ids to be appended on to the end
                 auto it = perMap.find(edgeId);
                 if (it != perMap.end())
                 {
@@ -675,11 +693,13 @@ void AssemblyCommDG::InitialiseStructure(
             }
         }
 
-        // Sort periodic edges, keep IDs as is becausethe edgeToTrace is constructed using the min IDs also
+        // Sort periodic edges, keep IDs as is becausethe edgeToTrace
+        // is constructed using the min IDs also
         std::sort(periodicEdgeList.begin(), periodicEdgeList.end());
         if(!periodicEdgeList.empty())
         {
-            m_rankSharedEdges[rank].insert(m_rankSharedEdges[rank].end(),periodicEdgeList.begin(), periodicEdgeList.end());
+            m_rankSharedEdges[rank].insert(
+                m_rankSharedEdges[rank].end(),periodicEdgeList.begin(), periodicEdgeList.end());
         }
 
         // List of number of quad points in periodic conditions for each rank
@@ -693,14 +713,15 @@ void AssemblyCommDG::InitialiseStructure(
     Array<OneD, int> perTraceRecv(m_nRanks);
     comm->AlltoAll(perTraceSend, perTraceRecv);
 
-    ASSERTL0(perTraceSend == perTraceRecv, "Periodic boundary conditions require the same basis order.")
+    ASSERTL0(perTraceSend == perTraceRecv,
+        "Periodic boundary conditions require the same basis order.")
 }
 
 std::tuple<NekDouble, NekDouble, NekDouble> AssemblyCommDG::Timing(
     const LibUtilities::CommSharedPtr &comm,
     const int &count,
     const int &num,
-    ExchangeMethod *f)
+    ExchangeMethodSharedPtr f)
 {
 
     Array<OneD, double> testFwd(num, 1);

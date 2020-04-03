@@ -47,10 +47,15 @@ class ExchangeMethod
 {
 public:
     /// Default constructor
-    ExchangeMethod();
+    ExchangeMethod() = default;
+    /// Default deconstructor
+    virtual  ~ExchangeMethod() = default;
     /// Perform MPI comm exchange
-    virtual void PerformExchange(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) = 0;
+    virtual void PerformExchange(
+        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) = 0;
 };
+
+typedef std::shared_ptr<ExchangeMethod>  ExchangeMethodSharedPtr;
 
 class AllToAll: public ExchangeMethod
 {
@@ -63,14 +68,14 @@ public:
             const int &maxQuad,
             const LibUtilities::CommSharedPtr &comm);
 
-    virtual void PerformExchange(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
+    virtual void PerformExchange(
+        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
 
 private:
     /// List of trace map indices of the quad points to exchange
     std::vector<int> m_allEdgeIndex;
     /// Largest shared partition edge
     int m_maxCount = 0;
-
     /// Max number of quadrature points in an element
     int m_maxQuad = 0;
     /// Number of ranks/processes/partitions
@@ -88,7 +93,8 @@ public:
             const int &nRanks,
             const LibUtilities::CommSharedPtr &comm);
 
-    virtual void PerformExchange(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
+    virtual void PerformExchange(
+        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
 
 private:
     /// List of trace map indices of the quad points to exchange
@@ -97,7 +103,6 @@ private:
     Array<OneD, int> m_allVSendCount;
     /// List of displacements for MPI_alltoallv
     Array<OneD, int> m_allVSendDisp;
-
     LibUtilities::CommSharedPtr m_comm;
 };
 
@@ -109,7 +114,8 @@ public:
             const std::map<int, std::vector<int>> &rankSharedEdges,
             const std::map<int, std::vector<int>> &edgeToTrace);
 
-    virtual void PerformExchange(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
+    virtual void PerformExchange(
+        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
 
 private:
     /// List of displacements
@@ -129,7 +135,8 @@ public:
             const std::map<int, std::vector<int>> &rankSharedEdges,
             const std::map<int, std::vector<int>> &edgeToTrace);
 
-    virtual void PerformExchange(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
+    virtual void PerformExchange(
+        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
 
 private:
     /// List of partition to trace map indices of the quad points to exchange
@@ -143,13 +150,10 @@ private:
 class AssemblyCommDG
 {
     public:
-        /// Default constructor.
-        MULTI_REGIONS_EXPORT AssemblyCommDG();
-
-        /// Destructor.
-        MULTI_REGIONS_EXPORT ~AssemblyCommDG();
-
+        /// Default deconstructor
+        MULTI_REGIONS_EXPORT ~AssemblyCommDG() = default;
         // Constructor for MPI communication methods
+
         MULTI_REGIONS_EXPORT AssemblyCommDG(
             const ExpList &locExp, const ExpListSharedPtr &trace,
             const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> > elmtToTrace,
@@ -158,13 +162,14 @@ class AssemblyCommDG
             const PeriodicMap &perMap);
 
         /// Main function that performs MPI exchange using timed fastest method
-        MULTI_REGIONS_EXPORT inline void PerformExchange(const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd)
+        MULTI_REGIONS_EXPORT inline void PerformExchange(
+            const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd)
         {
             m_exchange->PerformExchange(testFwd, testBwd);
         }
 
     private:
-        ExchangeMethod *m_exchange;
+        ExchangeMethodSharedPtr m_exchange;
         /// Max number of quadrature points in an element
         int m_maxQuad = 0;
         /// Number of ranks/processes/partitions
@@ -184,12 +189,12 @@ class AssemblyCommDG
             const PeriodicMap &perMap,
             const LibUtilities::CommSharedPtr &comm);
 
-        /// Times the MPI exchange method provided
+        /// Timing of the MPI exchange method f
         static std::tuple<NekDouble, NekDouble, NekDouble> Timing(
             const LibUtilities::CommSharedPtr &comm,
             const int &count,
             const int &num,
-            ExchangeMethod *f);
+            ExchangeMethodSharedPtr f);
 };
 
 typedef std::shared_ptr<AssemblyCommDG>  AssemblyCommDGSharedPtr;

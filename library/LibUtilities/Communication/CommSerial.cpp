@@ -227,6 +227,22 @@ void CommSerial::v_Scatter(void *sendbuf, int sendcount, CommDataType sendtype,
     boost::ignore_unused(recvcount, recvtype, root);
     std::memcpy(recvbuf, sendbuf, sendcount * CommDataTypeGetSize(sendtype));
 }
+
+void CommSerial::v_DistGraphCreateAdjacent(int indegree, const int sources[],
+                                           const int sourceweights[],
+                                           int reorder)
+{
+    boost::ignore_unused(indegree, sources, sourceweights, reorder);
+}
+
+void CommSerial::v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
+                                    int senddispls[], CommDataType sendtype,
+                                    void *recvbuf, int recvcounts[],
+                                    int rdispls[], CommDataType recvtype)
+{
+    boost::ignore_unused(sendbuf, sendcounts, senddispls, sendtype, recvbuf,
+                         recvcounts, rdispls, recvtype);
+}
 /**
  *
  */

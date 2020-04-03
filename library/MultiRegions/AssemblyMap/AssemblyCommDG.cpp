@@ -34,7 +34,6 @@
 
 #include <MultiRegions/AssemblyMap/AssemblyCommDG.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <LibUtilities/Communication/CommMpi.h>  // TODO: Implement using wrappers so can remove this include
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/PointExp.h>
@@ -46,15 +45,15 @@ namespace Nektar
 namespace MultiRegions
 {
 AllToAll::AllToAll(
-    const std::map<int, std::vector<int>> &rankSharedEdges,
-    const std::map<int, std::vector<int>> &edgeToTrace,
-    const int &nRanks,
+    const LibUtilities::CommSharedPtr &comm,
     const int &maxQuad,
-    const LibUtilities::CommSharedPtr &comm)
+    const int &nRanks,
+    const std::map<int, std::vector<int>> &rankSharedEdges,
+    const std::map<int, std::vector<int>> &edgeToTrace)
+    : m_comm(comm),
+    m_maxQuad(maxQuad),
+    m_nRanks(nRanks)
 {
-    m_maxQuad = maxQuad;
-    m_nRanks = nRanks;
-    m_comm = comm;
     // Get maxCount which is the largest shared partition edge
     for (size_t i = 0; i < nRanks; ++i)
     {
@@ -102,12 +101,11 @@ AllToAll::AllToAll(
 }
 
 AllToAllV::AllToAllV(
+    const LibUtilities::CommSharedPtr &comm,
     const std::map<int, std::vector<int>> &rankSharedEdges,
     const std::map<int, std::vector<int>> &edgeToTrace,
-    const int &nRanks,
-    const LibUtilities::CommSharedPtr &comm)
+    const int &nRanks) : m_comm(comm)
 {
-    m_comm = comm;
     m_allVSendCount = Nektar::Array<OneD, int>(nRanks, 0);
     for (size_t i = 0; i < nRanks; ++i)
     {
@@ -136,8 +134,9 @@ AllToAllV::AllToAllV(
 }
 
 NeighborAllToAllV::NeighborAllToAllV(
+    const LibUtilities::CommSharedPtr &comm,
     const std::map<int, std::vector<int>> &rankSharedEdges,
-    const std::map<int, std::vector<int>> &edgeToTrace)
+    const std::map<int, std::vector<int>> &edgeToTrace) : m_comm(comm)
 {
     int nNeighbours = rankSharedEdges.size();
     Array<OneD,int> destinations(nNeighbours, 0);
@@ -150,13 +149,7 @@ NeighborAllToAllV::NeighborAllToAllV(
         ++cnt;
     }
 
-    int retval = MPI_Dist_graph_create_adjacent(
-        MPI_COMM_WORLD,
-        nNeighbours, destinations.get(), weights.get(),  // Sources
-        nNeighbours, destinations.get(), weights.get(),  // Destinations
-        MPI_INFO_NULL, 1, &m_commGraph);
-
-    ASSERTL0(retval == MPI_SUCCESS, "MPI error creating the distributed graph.")
+    comm->DistGraphCreateAdjacent(destinations, weights, 1);
 
     //Setting up indices
     m_sendCount = Array<OneD, int>(nNeighbours, 0);
@@ -182,8 +175,9 @@ NeighborAllToAllV::NeighborAllToAllV(
 }
 
 Pairwise::Pairwise(
+    const LibUtilities::CommSharedPtr &comm,
     const std::map<int, std::vector<int>> &rankSharedEdges,
-    const std::map<int, std::vector<int>> &edgeToTrace)
+    const std::map<int, std::vector<int>> &edgeToTrace) : m_comm(comm)
 {
     int cnt = 0;
     int nNeighbours = rankSharedEdges.size();
@@ -275,11 +269,7 @@ void NeighborAllToAllV::PerformExchange(
         sendBuff[i] = testFwd[m_edgeTraceIndex[i]];
     }
 
-
-    MPI_Neighbor_alltoallv(
-        sendBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
-        recvBuff.get(), m_sendCount.get(), m_sendDisp.get(), MPI_DOUBLE,
-        m_commGraph);
+    m_comm->NeighborAlltoAllv(sendBuff, m_sendCount, m_sendDisp, recvBuff, m_sendCount, m_sendDisp);
 
     for (size_t i = 0; i < m_edgeTraceIndex.size(); ++i)
     {
@@ -363,19 +353,19 @@ AssemblyCommDG::AssemblyCommDG(
 
     MPIFuncMap[0] = ExchangeMethodSharedPtr(
         MemoryManager<AllToAll>::AllocateSharedPtr(
-            m_rankSharedEdges, m_edgeToTrace, m_nRanks, m_maxQuad, comm));
+            comm, m_maxQuad, m_nRanks, m_rankSharedEdges, m_edgeToTrace));
 
     MPIFuncMap[1] = ExchangeMethodSharedPtr(
         MemoryManager<AllToAllV>::AllocateSharedPtr(
-            m_rankSharedEdges, m_edgeToTrace, m_nRanks, comm));
+            comm, m_rankSharedEdges, m_edgeToTrace, m_nRanks));
 
     MPIFuncMap[2] = ExchangeMethodSharedPtr(
         MemoryManager<NeighborAllToAllV>::AllocateSharedPtr(
-            m_rankSharedEdges, m_edgeToTrace));
+            comm, m_rankSharedEdges, m_edgeToTrace));
 
     MPIFuncMap[3] = ExchangeMethodSharedPtr(
         MemoryManager<Pairwise>::AllocateSharedPtr(
-            m_rankSharedEdges, m_edgeToTrace));
+            comm, m_rankSharedEdges, m_edgeToTrace));
 
     const char* MPITypeMap[] =
     {

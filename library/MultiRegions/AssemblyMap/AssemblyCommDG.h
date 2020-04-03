@@ -62,55 +62,9 @@ class AllToAll: public ExchangeMethod
 public:
     /// Default constructor.
     AllToAll(
-            const std::map<int, std::vector<int>> &rankSharedEdges,
-            const std::map<int, std::vector<int>> &edgeToTrace,
-            const int &nRanks,
+            const LibUtilities::CommSharedPtr &comm,
             const int &maxQuad,
-            const LibUtilities::CommSharedPtr &comm);
-
-    virtual void PerformExchange(
-        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
-
-private:
-    /// List of trace map indices of the quad points to exchange
-    std::vector<int> m_allEdgeIndex;
-    /// Largest shared partition edge
-    int m_maxCount = 0;
-    /// Max number of quadrature points in an element
-    int m_maxQuad = 0;
-    /// Number of ranks/processes/partitions
-    int m_nRanks = 0;
-    LibUtilities::CommSharedPtr m_comm;
-};
-
-class AllToAllV: public ExchangeMethod
-{
-public:
-    /// Default constructor.
-    AllToAllV(
-            const std::map<int, std::vector<int>> &rankSharedEdges,
-            const std::map<int, std::vector<int>> &edgeToTrace,
             const int &nRanks,
-            const LibUtilities::CommSharedPtr &comm);
-
-    virtual void PerformExchange(
-        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
-
-private:
-    /// List of trace map indices of the quad points to exchange
-    std::vector<int> m_allVEdgeIndex;
-    /// List of counts for MPI_alltoallv
-    Array<OneD, int> m_allVSendCount;
-    /// List of displacements for MPI_alltoallv
-    Array<OneD, int> m_allVSendDisp;
-    LibUtilities::CommSharedPtr m_comm;
-};
-
-class NeighborAllToAllV: public ExchangeMethod
-{
-public:
-    /// Default constructor.
-    NeighborAllToAllV(
             const std::map<int, std::vector<int>> &rankSharedEdges,
             const std::map<int, std::vector<int>> &edgeToTrace);
 
@@ -118,10 +72,59 @@ public:
         const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
 
 private:
+    /// Communicator
+    LibUtilities::CommSharedPtr m_comm;
+    /// Max number of quadrature points in an element
+    int m_maxQuad = 0;
+    /// Number of ranks/processes/partitions
+    int m_nRanks = 0;
+    /// List of trace map indices of the quad points to exchange
+    std::vector<int> m_allEdgeIndex;
+    /// Largest shared partition edge
+    int m_maxCount = 0;
+};
+
+class AllToAllV: public ExchangeMethod
+{
+public:
+    /// Default constructor.
+    AllToAllV(
+            const LibUtilities::CommSharedPtr &comm,
+            const std::map<int, std::vector<int>> &rankSharedEdges,
+            const std::map<int, std::vector<int>> &edgeToTrace,
+            const int &nRanks);
+
+    virtual void PerformExchange(
+        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
+
+private:
+    /// Communicator
+    LibUtilities::CommSharedPtr m_comm;
+    /// List of trace map indices of the quad points to exchange
+    std::vector<int> m_allVEdgeIndex;
+    /// List of counts for MPI_alltoallv
+    Array<OneD, int> m_allVSendCount;
+    /// List of displacements for MPI_alltoallv
+    Array<OneD, int> m_allVSendDisp;
+};
+
+class NeighborAllToAllV: public ExchangeMethod
+{
+public:
+    /// Default constructor.
+    NeighborAllToAllV(
+            const LibUtilities::CommSharedPtr &comm,
+            const std::map<int, std::vector<int>> &rankSharedEdges,
+            const std::map<int, std::vector<int>> &edgeToTrace);
+
+    virtual void PerformExchange(
+        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
+
+private:
+    /// Communicator
+    LibUtilities::CommSharedPtr m_comm;
     /// List of displacements
     Array<OneD, int> m_sendDisp;
-    ///Distributed graph communicator
-    MPI_Comm m_commGraph;
     /// List of trace map indices of the quad points to exchange
     std::vector<int> m_edgeTraceIndex;
     /// List of counts
@@ -132,6 +135,7 @@ class Pairwise: public ExchangeMethod
 {
 public:
     Pairwise(
+            const LibUtilities::CommSharedPtr &comm,
             const std::map<int, std::vector<int>> &rankSharedEdges,
             const std::map<int, std::vector<int>> &edgeToTrace);
 
@@ -139,6 +143,8 @@ public:
         const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
 
 private:
+    /// Communicator
+    LibUtilities::CommSharedPtr m_comm;
     /// List of partition to trace map indices of the quad points to exchange
     std::vector<std::pair<int, std::vector<int>>> m_vecPairPartitionTrace;
     /// Total quadrature points to send/recv

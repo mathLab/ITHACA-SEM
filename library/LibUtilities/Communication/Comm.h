@@ -134,6 +134,13 @@ public:
     template <class T> T Gather(const int rootProc, T &val);
     template <class T> T Scatter(const int rootProc, T &pData);
 
+    template <class T>
+    void DistGraphCreateAdjacent(T &sources, T &sourceweights, int reorder);
+    template <class T1, class T2>
+    void NeighborAlltoAllv(T1 &pSendData, T2 &pSendDataSizeMap,
+                           T2 &pSendDataOffsetMap, T1 &pRecvData,
+                           T2 &pRecvDataSizeMap, T2 &pRecvDataOffsetMap);
+
     LIB_UTILITIES_EXPORT inline CommSharedPtr CommCreateIf(int flag);
 
     LIB_UTILITIES_EXPORT inline void SplitComm(int pRows, int pColumns);
@@ -195,6 +202,16 @@ protected:
                            int root) = 0;
 
     virtual CommSharedPtr v_CommCreateIf(int flag) = 0;
+
+    virtual void v_DistGraphCreateAdjacent(int indegree, const int sources[],
+                                           const int sourceweights[],
+                                           int reorder) = 0;
+
+    virtual void v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
+                                    int sensdispls[], CommDataType sendtype,
+                                    void *recvbuf, int recvcounts[],
+                                    int rdispls[], CommDataType recvtype) = 0;
+
     virtual void v_SplitComm(int pRows, int pColumns) = 0;
     virtual bool v_TreatAsRankZero(void) = 0;
     virtual bool v_IsSerial(void) = 0;
@@ -468,6 +485,54 @@ template <class T> T Comm::Scatter(const int rootProc, T &pData)
               CommDataTypeTraits<T>::GetPointer(ans), nEl,
               CommDataTypeTraits<T>::GetDataType(), rootProc);
     return ans;
+}
+
+/**
+ * Creates a distributed graph network replacing the current MPI communicator
+ */
+template <class T>
+void Comm::DistGraphCreateAdjacent(T &sources, T &sourceweights, int reorder)
+{
+
+    static_assert(
+        CommDataTypeTraits<T>::IsVector,
+        "DistGraphCreateAdjacent only valid with Array or vector arguments.");
+
+    ASSERTL0(CommDataTypeTraits<T>::GetCount(sources) ==
+                 CommDataTypeTraits<T>::GetCount(sourceweights),
+             "Sources and weights array sizes don't match");
+
+    int indegree = CommDataTypeTraits<T>::GetCount(sources);
+
+    v_DistGraphCreateAdjacent(
+        indegree, (const int *)CommDataTypeTraits<T>::GetPointer(sources),
+        (const int *)CommDataTypeTraits<T>::GetPointer(sourceweights), reorder);
+}
+
+/**
+ *
+ */
+template <class T1, class T2>
+void Comm::NeighborAlltoAllv(
+    T1 &pSendData, T2 &pSendDataSizeMap, T2 &pSendDataOffsetMap, T1 &pRecvData,
+    T2 &pRecvDataSizeMap,
+    T2 &pRecvDataOffsetMap)
+{
+    static_assert(
+        CommDataTypeTraits<T1>::IsVector,
+        "NeighbourAlltoAllv only valid with Array or vector arguments.");
+    static_assert(
+        std::is_same<T2, std::vector<int>>::value ||
+        std::is_same<T2, Array<OneD, int>>::value,
+        "NeighborAlllltAallv size and offset maps should be integer vectors.");
+    v_NeighborAlltoAllv(CommDataTypeTraits<T1>::GetPointer(pSendData),
+        (int *)CommDataTypeTraits<T2>::GetPointer(pSendDataSizeMap),
+        (int *)CommDataTypeTraits<T2>::GetPointer(pSendDataOffsetMap),
+        CommDataTypeTraits<T1>::GetDataType(),
+        CommDataTypeTraits<T1>::GetPointer(pRecvData),
+        (int *)CommDataTypeTraits<T2>::GetPointer(pRecvDataSizeMap),
+        (int *)CommDataTypeTraits<T2>::GetPointer(pRecvDataOffsetMap),
+        CommDataTypeTraits<T1>::GetDataType());
 }
 
 /**

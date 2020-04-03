@@ -123,6 +123,15 @@ protected:
                                                 CommDataType recvtype,
                                                 int root);
 
+    virtual void v_DistGraphCreateAdjacent(int indegree, const int sources[],
+                                           const int sourceweights[],
+                                           int reorder);
+
+    virtual void v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
+                                     int sensdispls[], CommDataType sendtype,
+                                     void *recvbuf, int recvcounts[],
+                                     int rdispls[], CommDataType recvtype);
+
     LIB_UTILITIES_EXPORT virtual void v_SplitComm(int pRows, int pColumns);
     LIB_UTILITIES_EXPORT virtual CommSharedPtr v_CommCreateIf(int flag);
 };

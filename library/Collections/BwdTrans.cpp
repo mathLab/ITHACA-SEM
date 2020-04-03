@@ -144,7 +144,7 @@ OperatorKey BwdTrans_StdMat::m_typeArr[] = {
 
 
 /**
- * @brief Backward transform operator using AVX vector instructions approach.
+ * @brief Backward transform operator using AVX operators.
  */
 class BwdTrans_AVX final : public Operator
 {

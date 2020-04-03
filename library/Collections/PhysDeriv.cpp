@@ -222,6 +222,62 @@ OperatorKey PhysDeriv_StdMat::m_typeArr[] =
         PhysDeriv_StdMat::create, "PhysDeriv_SumFac_Pyr")
 };
 
+/**
+ * @brief Phys deriv operator using AVX operators.
+ */
+class PhysDeriv_AVX : public Operator
+{
+    public:
+        OPERATOR_CREATE(PhysDeriv_AVX)
+
+        virtual ~PhysDeriv_AVX()
+        {
+        }
+
+        virtual void operator()(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output0,
+                      Array<OneD,       NekDouble> &output1,
+                      Array<OneD,       NekDouble> &output2,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+
+        }
+
+    protected:
+        Array<OneD, DNekMatSharedPtr>   m_derivMat;
+        Array<TwoD, const NekDouble>    m_derivFac;
+        int                             m_dim;
+        int                             m_coordim;
+
+    private:
+        PhysDeriv_AVX(
+                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                CoalescedGeomDataSharedPtr                pGeomData)
+            : Operator(pCollExp, pGeomData)
+        {
+            ASSERTL0(false, "AVX PhysDeriv Not implemented yet")
+        }
+};
+
+/// Factory initialisation for the PhysDeriv_AVX operators
+OperatorKey PhysDeriv_AVX::m_typeArr[] =
+{
+    GetOperatorFactory().RegisterCreatorFunction(
+        // OperatorKey(eQuadrilateral, eBwdTrans, eAVX, false),
+        // BwdTrans_AVX::create, "BwdTrans_AVX_Quad"),
+        OperatorKey(eQuadrilateral, ePhysDeriv, eAVX, false),
+        PhysDeriv_AVX::create, "PhysDeriv_AVX_Quad")
+};
 
 /**
  * @brief Phys deriv operator using element-wise operation
@@ -1598,11 +1654,11 @@ class PhysDeriv_SumFac_Pyr : public Operator
                 // dxi1 = 2/(1-eta_2) d Eta_1
                 Vmath::Vmul(nPhys,&m_fac0[0],1,Diff[1].get()+cnt,1,
                             Diff[1].get()+cnt,1);
-                
+
                 // dxi2 = (1+eta0)/(1-eta_2) d Eta_0 + d/dEta2;
                 Vmath::Vvtvp(nPhys,&m_fac1[0],1,Diff[0].get()+cnt,1,
                              Diff[2].get()+cnt,1,Diff[2].get()+cnt,1);
-                // dxi2 += (1+eta1)/(1-eta_2) d Eta_1 
+                // dxi2 += (1+eta1)/(1-eta_2) d Eta_1
                 Vmath::Vvtvp(nPhys,&m_fac2[0],1,Diff[1].get()+cnt,1,
                              Diff[2].get()+cnt,1,Diff[2].get()+cnt,1);
                 cnt += nPhys;
@@ -1667,7 +1723,7 @@ class PhysDeriv_SumFac_Pyr : public Operator
                 // dxi1 = 2/(1-eta_2) d Eta_1
                 Vmath::Vmul(nPhys,&m_fac0[0],1,Diff[1].get()+cnt,1,
                             Diff[1].get()+cnt,1);
-                
+
                 // dxi2 = (1+eta0)/(1-eta_2) d Eta_0 + d/dEta2;
                 Vmath::Vvtvp(nPhys,&m_fac1[0],1,Diff[0].get()+cnt,1,
                              Diff[2].get()+cnt,1,Diff[2].get()+cnt,1);

@@ -34,11 +34,7 @@
 
 #include <MultiRegions/AssemblyMap/AssemblyCommDG.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <MultiRegions/ExpList.h>
-#include <LocalRegions/SegExp.h>
-#include <LocalRegions/PointExp.h>
 #include <LocalRegions/Expansion2D.h>
-#include <LocalRegions/Expansion3D.h>
 
 namespace Nektar
 {

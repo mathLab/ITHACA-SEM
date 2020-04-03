@@ -42,16 +42,15 @@ namespace Nektar
 {
 namespace MultiRegions
 {
-
 class ExchangeMethod
 {
 public:
     /// Default constructor
-    ExchangeMethod() = default;
+    MULTI_REGIONS_EXPORT ExchangeMethod() = default;
     /// Default deconstructor
-    virtual  ~ExchangeMethod() = default;
+    MULTI_REGIONS_EXPORT virtual  ~ExchangeMethod() = default;
     /// Perform MPI comm exchange
-    virtual void PerformExchange(
+    MULTI_REGIONS_EXPORT virtual void PerformExchange(
         const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) = 0;
 };
 
@@ -61,14 +60,14 @@ class AllToAll: public ExchangeMethod
 {
 public:
     /// Default constructor.
-    AllToAll(
+    MULTI_REGIONS_EXPORT AllToAll(
             const LibUtilities::CommSharedPtr &comm,
             const int &maxQuad,
             const int &nRanks,
             const std::map<int, std::vector<int>> &rankSharedEdges,
             const std::map<int, std::vector<int>> &edgeToTrace);
 
-    virtual void PerformExchange(
+    MULTI_REGIONS_EXPORT virtual void PerformExchange(
         const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
 
 private:
@@ -88,13 +87,13 @@ class AllToAllV: public ExchangeMethod
 {
 public:
     /// Default constructor.
-    AllToAllV(
+    MULTI_REGIONS_EXPORT AllToAllV(
             const LibUtilities::CommSharedPtr &comm,
             const std::map<int, std::vector<int>> &rankSharedEdges,
             const std::map<int, std::vector<int>> &edgeToTrace,
             const int &nRanks);
 
-    virtual void PerformExchange(
+    MULTI_REGIONS_EXPORT virtual void PerformExchange(
         const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
 
 private:
@@ -112,12 +111,12 @@ class NeighborAllToAllV: public ExchangeMethod
 {
 public:
     /// Default constructor.
-    NeighborAllToAllV(
+    MULTI_REGIONS_EXPORT NeighborAllToAllV(
             const LibUtilities::CommSharedPtr &comm,
             const std::map<int, std::vector<int>> &rankSharedEdges,
             const std::map<int, std::vector<int>> &edgeToTrace);
 
-    virtual void PerformExchange(
+    MULTI_REGIONS_EXPORT virtual void PerformExchange(
         const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
 
 private:
@@ -134,12 +133,12 @@ private:
 class Pairwise: public ExchangeMethod
 {
 public:
-    Pairwise(
+    MULTI_REGIONS_EXPORT Pairwise(
             const LibUtilities::CommSharedPtr &comm,
             const std::map<int, std::vector<int>> &rankSharedEdges,
             const std::map<int, std::vector<int>> &edgeToTrace);
 
-    virtual void PerformExchange(
+    MULTI_REGIONS_EXPORT virtual void PerformExchange(
         const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
 
 private:

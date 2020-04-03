@@ -35,12 +35,12 @@
 #ifndef MULTIREGIONS_ASSEMBLY_MAP_DG_H
 #define MULTIREGIONS_ASSEMBLY_MAP_DG_H
 
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
 #include <MultiRegions/AssemblyMap/AssemblyCommDG.h>
-#include <MultiRegions/ExpList0D.h>
-#include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/MultiRegionsDeclspec.h>
+#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList0D.h>
 
 namespace Nektar
 {
@@ -83,11 +83,11 @@ namespace Nektar
                 Array<OneD,Array<OneD,LocalRegions::ExpansionSharedPtr> >
                 &GetElmtToTrace();
 
-                static void RealignTraceElement(
-                Array<OneD, int>        &toAlign,
-                StdRegions::Orientation  orient,
-                int                      nquad1,
-                int                      nquad2 = 0);
+            MULTI_REGIONS_EXPORT static void RealignTraceElement(
+                    Array<OneD, int>        &toAlign,
+                    StdRegions::Orientation  orient,
+                    int                      nquad1,
+                    int                      nquad2 = 0);
 
             MULTI_REGIONS_EXPORT AssemblyCommDGSharedPtr GetAssemblyCommDG();
 
@@ -150,6 +150,8 @@ namespace Nektar
 
             virtual int v_GetFullSystemBandWidth() const;
         }; // class
+
+
     } // end of namespace
 } // end of namespace
 

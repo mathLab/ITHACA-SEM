@@ -335,7 +335,6 @@ namespace Nektar
                     else if (nDim == 2)
                     {
                         order_e = expList[eid]->GetEdgeNcoeffs(j);
-
                         if(expList[eid]->GetEorient(j) == StdRegions::eForwards)
                         {
                             for(k = 0; k < order_e; ++k)
@@ -505,6 +504,7 @@ namespace Nektar
                         meshTraceId.find(id)->second;
                 }
             }
+
             // Now set up mapping from global coefficients to universal.
             ExpListSharedPtr tr = std::dynamic_pointer_cast<ExpList>(trace);
             SetUpUniversalDGMap   (locExp);
@@ -725,10 +725,10 @@ namespace Nektar
         }
 
         void AssemblyMapDG::RealignTraceElement(
-                Array<OneD, int>        &toAlign,
-                StdRegions::Orientation  orient,
-                int                      nquad1,
-                int                      nquad2)
+            Array<OneD, int>        &toAlign,
+            StdRegions::Orientation  orient,
+            int                      nquad1,
+            int                      nquad2)
         {
             if (orient == StdRegions::eBackwards)
             {

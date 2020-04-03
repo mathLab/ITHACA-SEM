@@ -42,7 +42,6 @@
 #include <SpatialDomains/Conditions.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <MultiRegions/AssemblyMap/AssemblyCommDG.h>
 
 
 namespace Nektar

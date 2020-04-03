@@ -35,11 +35,12 @@
 #ifndef MULTIREGIONS_ASSEMBLY_MAP_DG_H
 #define MULTIREGIONS_ASSEMBLY_MAP_DG_H
 
-#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
-#include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/AssemblyMap/AssemblyCommDG.h>
 #include <MultiRegions/ExpList0D.h>
+#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList2D.h>
+#include <MultiRegions/MultiRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -88,9 +89,13 @@ namespace Nektar
                 int                      nquad1,
                 int                      nquad2 = 0);
 
+            MULTI_REGIONS_EXPORT AssemblyCommDGSharedPtr GetAssemblyCommDG();
+
         protected:
             /// Number of physical dirichlet boundary values in trace
             int m_numDirichletBndPhys;
+
+            AssemblyCommDGSharedPtr m_assemblyComm;
 
             /// list of edge expansions for a given element
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> > m_elmtToTrace;

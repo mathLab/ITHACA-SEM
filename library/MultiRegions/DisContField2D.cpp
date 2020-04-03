@@ -1420,7 +1420,7 @@ namespace Nektar
             }
 
             // Do parallel exchange for forwards/backwards spaces.
-            m_traceMap->PerformExchange(Fwd, Bwd);
+            m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);
         }
         
 
@@ -1458,7 +1458,7 @@ namespace Nektar
                 m_locTraceToTraceMap->FwdLocTracesFromField(inarray,tracevals);
                 m_locTraceToTraceMap->
                             InterpLocEdgesToTrace(0,tracevals,outarray);
-                m_traceMap->MPITraceAssemble(outarray, outarray);
+                m_traceMap->GetAssemblyCommDG()->PerformExchange(outarray, outarray);
             }
             else
             {

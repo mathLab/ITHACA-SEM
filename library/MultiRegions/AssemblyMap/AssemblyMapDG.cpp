@@ -505,11 +505,14 @@ namespace Nektar
                         meshTraceId.find(id)->second;
                 }
             }
-
             // Now set up mapping from global coefficients to universal.
             ExpListSharedPtr tr = std::dynamic_pointer_cast<ExpList>(trace);
             SetUpUniversalDGMap   (locExp);
-            m_assemblyComm = AssemblyCommDG(locExp, tr, bndCondExp, bndCond, periodicTrace);
+
+            m_assemblyComm = AssemblyCommDGSharedPtr(
+                MemoryManager<AssemblyCommDG>::AllocateSharedPtr(
+                    locExp, tr, m_elmtToTrace, bndCondExp, bndCond, periodicTrace));
+
             if ((m_solnType == eDirectMultiLevelStaticCond ||
                  m_solnType == eIterativeMultiLevelStaticCond ||
                  m_solnType == eXxtMultiLevelStaticCond ||
@@ -918,5 +921,11 @@ namespace Nektar
         {
             return m_elmtToTrace;
         }
+
+        AssemblyCommDGSharedPtr AssemblyMapDG::GetAssemblyCommDG()
+        {
+            return m_assemblyComm;
+        }
+
     } //namespace
 } // namespace

@@ -140,6 +140,10 @@ public:
     void NeighborAlltoAllv(T1 &pSendData, T2 &pSendDataSizeMap,
                            T2 &pSendDataOffsetMap, T1 &pRecvData,
                            T2 &pRecvDataSizeMap, T2 &pRecvDataOffsetMap);
+    template <class T>
+    void Irsend(int pProc, T &pData, int count, MPI_Request &request);
+    template <class T>
+    void Irecv(int pProc, T &pData, int count, MPI_Request &request);
 
     LIB_UTILITIES_EXPORT inline CommSharedPtr CommCreateIf(int flag);
 
@@ -212,6 +216,11 @@ protected:
                                     void *recvbuf, int recvcounts[],
                                     int rdispls[], CommDataType recvtype) = 0;
 
+    virtual void v_Irsend(void *buf, int count, CommDataType dt, int dest,
+                          MPI_Request *request)   = 0;
+    virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
+                          MPI_Request *request)   = 0;
+
     virtual void v_SplitComm(int pRows, int pColumns) = 0;
     virtual bool v_TreatAsRankZero(void) = 0;
     virtual bool v_IsSerial(void) = 0;
@@ -219,7 +228,7 @@ protected:
 };
 
 /**
- *
+ *s
  */
 inline void Comm::Finalise()
 {
@@ -533,6 +542,18 @@ void Comm::NeighborAlltoAllv(
         (int *)CommDataTypeTraits<T2>::GetPointer(pRecvDataSizeMap),
         (int *)CommDataTypeTraits<T2>::GetPointer(pRecvDataOffsetMap),
         CommDataTypeTraits<T1>::GetDataType());
+}
+
+template <class T> void Comm::Irsend(int pProc, T &pData, int count, MPI_Request &request)
+{
+    v_Irsend(CommDataTypeTraits<T>::GetPointer(pData), count,
+           CommDataTypeTraits<T>::GetDataType(), pProc, request);
+}
+
+template <class T> void Comm::Irecv(int pProc, T &pData, int count, MPI_Request &request)
+{
+    v_Irecv(CommDataTypeTraits<T>::GetPointer(pData), count,
+           CommDataTypeTraits<T>::GetDataType(), pProc, request);
 }
 
 /**

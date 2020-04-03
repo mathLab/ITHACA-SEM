@@ -243,6 +243,18 @@ void CommSerial::v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
     boost::ignore_unused(sendbuf, sendcounts, senddispls, sendtype, recvbuf,
                          recvcounts, rdispls, recvtype);
 }
+
+void CommSerial::v_Irsend(void *buf, int count, CommDataType dt, int dest,
+                      MPI_Request *request)
+{
+    boost::ignore_unused(buf, count, dt, dest, request);
+}
+
+void CommSerial::v_Irecv(void *buf, int count, CommDataType dt, int source,
+                          MPI_Request *request)
+{
+    boost::ignore_unused(buf, count, dt, source, request);
+}
 /**
  *
  */

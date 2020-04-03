@@ -127,11 +127,14 @@ protected:
     virtual void v_DistGraphCreateAdjacent(int indegree, const int sources[],
                                            const int sourceweights[],
                                            int reorder);
-
     virtual void v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
                                      int sensdispls[], CommDataType sendtype,
                                      void *recvbuf, int recvcounts[],
                                      int rdispls[], CommDataType recvtype);
+    virtual void v_Irsend(void *buf, int count, CommDataType dt, int dest,
+                          MPI_Request *request);
+    virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
+                          MPI_Request *request);
 
     virtual void v_SplitComm(int pRows, int pColumns);
     virtual CommSharedPtr v_CommCreateIf(int flag);

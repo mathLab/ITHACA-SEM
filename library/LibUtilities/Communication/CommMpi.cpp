@@ -397,6 +397,18 @@ void CommMpi::v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
     ASSERTL0(retval == MPI_SUCCESS, "MPI error performing NeighborAllToAllV.");
 }
 
+void CommMpi::v_Irsend(void *buf, int count, CommDataType dt, int dest,
+                      MPI_Request *request)
+{
+    MPI_Irsend(buf, count, dt, dest, 0, m_comm, request);
+}
+
+void CommMpi::v_Irecv(void *buf, int count, CommDataType dt, int source,
+                       MPI_Request *request)
+{
+    MPI_Irecv(buf, count, dt, source, 0, m_comm, request);
+}
+
 /**
  * Processes are considered as a grid of size pRows*pColumns. Comm
  * objects are created corresponding to the rows and columns of this

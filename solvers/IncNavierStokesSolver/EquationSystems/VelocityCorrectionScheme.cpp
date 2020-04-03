@@ -580,7 +580,7 @@ namespace Nektar
         SetBoundaryConditions(m_time);
 
 	// Ensure the initial conditions have correct BCs  
-        for(int i = 0; i < m_fields.num_elements(); ++i)
+        for(int i = 0; i < m_fields.size(); ++i)
         {
             m_fields[i]->ImposeDirichletConditions(m_fields[i]->UpdateCoeffs());
 	    m_fields[i]->LocalToGlobal();

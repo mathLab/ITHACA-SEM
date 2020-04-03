@@ -376,7 +376,7 @@ namespace Nektar
 
     void CoupledLinearNS::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation,const int HomogeneousMode, CoupledSolverMatrices &mat, CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap, const NekDouble lambda_imag)
     {
-        int  n,i,j,k,eid;
+        int  n,i,j,k;
         int  nel  = m_fields[m_velocity[0]]->GetNumElmts();
         int  nvel   = m_velocity.size();
 
@@ -423,11 +423,10 @@ namespace Nektar
         // Set up block matrix sizes -
         for(n = 0; n < nel; ++n)
         {
-            eid = n;
-            nsize_bndry[n] = nvel*m_fields[m_velocity[0]]->GetExp(eid)->NumBndryCoeffs()*nz_loc;
+            nsize_bndry[n] = nvel*m_fields[m_velocity[0]]->GetExp(n)->NumBndryCoeffs()*nz_loc;
             nsize_bndry_p1[n] = nsize_bndry[n]+nz_loc;
-            nsize_int  [n] = (nvel*m_fields[m_velocity[0]]->GetExp(eid)->GetNcoeffs()*nz_loc - nsize_bndry[n]);
-            nsize_p[n] = m_pressure->GetExp(eid)->GetNcoeffs()*nz_loc;
+            nsize_int  [n] = (nvel*m_fields[m_velocity[0]]->GetExp(n)->GetNcoeffs()*nz_loc - nsize_bndry[n]);
+            nsize_p[n] = m_pressure->GetExp(n)->GetNcoeffs()*nz_loc;
             nsize_p_m1[n] = nsize_p[n]-nz_loc;
         }
 
@@ -460,7 +459,6 @@ namespace Nektar
 
         for(n = 0; n < nel; ++n)
         {
-            eid = n;
             nbndry = nsize_bndry[n];
             nint   = nsize_int[n];
             k = nsize_bndry_p1[n];
@@ -477,7 +475,7 @@ namespace Nektar
             DNekMatSharedPtr Dbnd = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p[n],nsize_bndry[n],zero);
             DNekMatSharedPtr Dint = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p[n],nsize_int[n],zero);
 
-            locExp = m_fields[m_velocity[0]]->GetExp(eid);
+            locExp = m_fields[m_velocity[0]]->GetExp(n);
             locExp->GetBoundaryMap(bmap);
             locExp->GetInteriorMap(imap);
             StdRegions::ConstFactorMap factors;
@@ -488,15 +486,15 @@ namespace Nektar
                                             factors);
 
 
-            int ncoeffs = m_fields[m_velocity[0]]->GetExp(eid)->GetNcoeffs();
-            int nphys   = m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints();
+            int ncoeffs = m_fields[m_velocity[0]]->GetExp(n)->GetNcoeffs();
+            int nphys   = m_fields[m_velocity[0]]->GetExp(n)->GetTotPoints();
             int nbmap = bmap.size();
             int nimap = imap.size();
 
             Array<OneD, NekDouble> coeffs(ncoeffs);
             Array<OneD, NekDouble> phys  (nphys);
-            int psize   = m_pressure->GetExp(eid)->GetNcoeffs();
-            int pqsize  = m_pressure->GetExp(eid)->GetTotPoints();
+            int psize   = m_pressure->GetExp(n)->GetNcoeffs();
+            int pqsize  = m_pressure->GetExp(n)->GetTotPoints();
 
             Array<OneD, NekDouble> deriv  (pqsize);
             Array<OneD, NekDouble> pcoeffs(psize);
@@ -561,7 +559,7 @@ namespace Nektar
                     // Fill element with mode
                     Vmath::Zero(ncoeffs,coeffs,1);
                     coeffs[bmap[i]] = 1.0;
-                    m_fields[m_velocity[0]]->GetExp(eid)->BwdTrans(coeffs,phys);
+                    m_fields[m_velocity[0]]->GetExp(n)->BwdTrans(coeffs,phys);
 
                     // Differentiation & Inner product wrt base.
                     for(j = 0; j < nvel; ++j)
@@ -570,9 +568,9 @@ namespace Nektar
                         {
                             NekDouble beta =  -2*M_PI*HomogeneousMode/m_LhomZ;
 
-                            Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), beta, phys,1,deriv,1);
+                            Vmath::Smul(m_fields[m_velocity[0]]->GetExp(n)->GetTotPoints(), beta, phys,1,deriv,1);
 
-                            m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
+                            m_pressure->GetExp(n)->IProductWRTBase(deriv,pcoeffs);
 
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
                                         Dbnd->GetRawPtr() +
@@ -589,7 +587,7 @@ namespace Nektar
                             if(j < 2) // required for mean mode of homogeneous expansion
                             {
                                 locExp->PhysDeriv(MultiRegions::DirCartesianMap[j],phys,deriv);
-                                m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
+                                m_pressure->GetExp(n)->IProductWRTBase(deriv,pcoeffs);
                                 // copy into column major storage.
                                 for(k = 0; k < nz_loc; ++k)
                                 {
@@ -607,7 +605,7 @@ namespace Nektar
                     // Fill element with mode
                     Vmath::Zero(ncoeffs,coeffs,1);
                     coeffs[imap[i]] = 1.0;
-                    m_fields[m_velocity[0]]->GetExp(eid)->BwdTrans(coeffs,phys);
+                    m_fields[m_velocity[0]]->GetExp(n)->BwdTrans(coeffs,phys);
 
                     // Differentiation & Inner product wrt base.
                     for(j = 0; j < nvel; ++j)
@@ -616,9 +614,9 @@ namespace Nektar
                         {
                             NekDouble beta = -2*M_PI*HomogeneousMode/m_LhomZ;
 
-                            Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), beta, phys,1,deriv,1);
+                            Vmath::Smul(m_fields[m_velocity[0]]->GetExp(n)->GetTotPoints(), beta, phys,1,deriv,1);
 
-                            m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
+                            m_pressure->GetExp(n)->IProductWRTBase(deriv,pcoeffs);
 
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
                                         Dint->GetRawPtr() +
@@ -634,10 +632,10 @@ namespace Nektar
                         {
                             if(j < 2) // required for mean mode of homogeneous expansion
                             {
-                                //m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(j,phys, deriv);
+                                //m_fields[m_velocity[0]]->GetExp(n)->PhysDeriv(j,phys, deriv);
                                 locExp->PhysDeriv(MultiRegions::DirCartesianMap[j],phys,deriv);
 
-                                m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
+                                m_pressure->GetExp(n)->IProductWRTBase(deriv,pcoeffs);
 
                                 // copy into column major storage.
                                 for(k = 0; k < nz_loc; ++k)
@@ -678,7 +676,7 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > AdvDeriv(nvel*nvel);
                 // Use ExpList phys array for temporaary storage
                 Array<OneD, NekDouble> tmpphys = m_fields[0]->UpdatePhys();
-                int phys_offset = m_fields[m_velocity[0]]->GetPhys_Offset(eid);
+                int phys_offset = m_fields[m_velocity[0]]->GetPhys_Offset(n);
                 int nv;
                 int npoints = locExp->GetTotPoints();
 
@@ -771,7 +769,7 @@ namespace Nektar
                             // Real Component
                             Vmath::Smul(npoints,beta,phys,1,deriv,1);
 
-                            m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
+                            m_pressure->GetExp(n)->IProductWRTBase(deriv,pcoeffs);
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
                                         Dbnd->GetRawPtr() +
                                         ((nz_loc*k+1)*bmap.size()+i)*nsize_p[n],1);
@@ -850,7 +848,7 @@ namespace Nektar
                                 }
 
                                 // copy into column major storage.
-                                m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
+                                m_pressure->GetExp(n)->IProductWRTBase(deriv,pcoeffs);
                                 for(j = 0; j < nz_loc; ++j)
                                 {
                                     Blas::Dcopy(psize,&(pcoeffs)[0],1,
@@ -947,7 +945,7 @@ namespace Nektar
 
                             // Real Component
                             Vmath::Smul(npoints,beta,phys,1,deriv,1);
-                            m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
+                            m_pressure->GetExp(n)->IProductWRTBase(deriv,pcoeffs);
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
                                         Dint->GetRawPtr() +
                                         ((nz_loc*k+1)*imap.size()+i)*nsize_p[n],1);
@@ -1023,7 +1021,7 @@ namespace Nektar
                                     }
                                 }
                                 // copy into column major storage.
-                                m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
+                                m_pressure->GetExp(n)->IProductWRTBase(deriv,pcoeffs);
                                 for(j = 0; j < nz_loc; ++j)
                                 {
                                     Blas::Dcopy(psize,&(pcoeffs)[0],1,
@@ -1870,6 +1868,13 @@ namespace Nektar
         Array<OneD,  MultiRegions::ExpListSharedPtr> vel_fields(m_velocity.size());
         Array<OneD, Array<OneD, NekDouble> > force(m_velocity.size());
 
+        // Impose Dirichlet conditions on velocity fields
+        for(i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            Vmath::Zero(m_fields[i]->GetNcoeffs(), m_fields[i]->UpdateCoeffs(),1);
+            m_fields[i]->ImposeDirichletConditions(m_fields[i]->UpdateCoeffs());
+        }
+
         if(m_HomogeneousType == eHomogeneous1D)
         {
             int ncoeffsplane = m_fields[m_velocity[0]]->GetPlane(0)->GetNcoeffs();
@@ -2151,8 +2156,8 @@ namespace Nektar
         {
             fields[0]->GetExp(i)->GetBoundaryMap(bmap);
             fields[0]->GetExp(i)->GetInteriorMap(imap);
-            nbnd   = bmap.num_elements();
-            nint   = imap.num_elements();
+            nbnd   = bmap.size();
+            nint   = imap.size();
             offset = fields[0]->GetCoeff_Offset(i);
             
             for(j = 0; j < nvel; ++j) // loop over velocity fields 

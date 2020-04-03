@@ -103,8 +103,7 @@ void ProcessStreamFunction::Process(po::variables_map &vm)
     factor[StdRegions::eFactorLambda] = 0.0;
 
     m_f->m_exp[1]->HelmSolve(vortNeg,
-                            m_f->m_exp[nfields]->UpdateCoeffs(),
-                            NullFlagList, factor);
+                            m_f->m_exp[nfields]->UpdateCoeffs(), factor);
     m_f->m_exp[1]->BwdTrans(m_f->m_exp[nfields]->GetCoeffs(),
                             m_f->m_exp[nfields]->UpdatePhys());
 }

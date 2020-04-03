@@ -4,11 +4,9 @@ Changelog
 v5.1.0
 ------
 **Library**
-- Added IMEXOrder4, RK5 and AB4 time integration schemes (!1037)
 - Restructure library to use local coefficient storage down to the GlobalLinSys level. Removed GlobalCeoffs functionality (!963)
 
 **FieldConvert**
-- Add field conversion from Halfmode to SingleMode (!1032)
 - Refactored time integration code using factory pattern (!1034)
 - Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
 - Fix type consistency and real comparison in SharedArray.hpp, replaced

@@ -2673,14 +2673,13 @@ namespace Nektar
         void ExpList::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
-            boost::ignore_unused(inarray, outarray, flags, factors, varcoeff,
+            boost::ignore_unused(inarray, outarray, factors, varcoeff,
                                  varfactors, dirForcing, PhysSpaceForcing);
             NEKERROR(ErrorUtil::efatal, "HelmSolve not implemented.");
         }

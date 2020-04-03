@@ -220,7 +220,6 @@ namespace Nektar
         void DisContField3DHomogeneous1D::v_HelmSolve(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,
-            const FlagList &flags,
             const StdRegions::ConstFactorMap &factors,
             const StdRegions::VarCoeffMap &varcoeff,
             const MultiRegions::VarFactorsMap &varfactors,
@@ -261,7 +260,7 @@ namespace Nektar
                     m_planes[n]->HelmSolve(
                         wfce,
                         e_out = outarray + cnt1,
-                        flags, new_factors, varcoeff, varfactors,
+                        new_factors, varcoeff, varfactors,
                         dirForcing,
                         PhysSpaceForcing);
                 }

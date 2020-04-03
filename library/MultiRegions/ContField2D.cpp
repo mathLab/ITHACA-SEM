@@ -626,9 +626,8 @@ namespace Nektar
                 bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
             }
             
-            Gs::Gather(outarray, Gs::gs_amax, m_locToGloMap->GetDirBndGsh());
-
-
+            m_locToGloMap->UniversalAbsMaxBnd(outarray);
+            
             set<ExtraDirDof> &copyLocalDirDofs = m_locToGloMap->GetCopyLocalDirDofs();
             for (auto &it : copyLocalDirDofs)
             {
@@ -842,7 +841,6 @@ namespace Nektar
         void ContField2D::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const MultiRegions::VarFactorsMap &varfactors,
@@ -850,7 +848,6 @@ namespace Nektar
                 const bool PhysSpaceForcing)
 
         {
-	    boost::ignore_unused(flags);
             int i,j;
 
             //----------------------------------

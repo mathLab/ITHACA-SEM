@@ -130,7 +130,7 @@ namespace Nektar
                 m_preconType = pSession->GetValueAsEnum<PreconditionerType>(
                                                     "Preconditioner", precon);
             }
-
+            
             if(pSession->DefinesGlobalSysSolnInfo(variable,
                                                   "IterativeSolverTolerance"))
             {
@@ -798,10 +798,6 @@ namespace Nektar
             return v_GetLocalToGlobalSign();
         }
 
-        Gs::gs_data * AssemblyMap::GetDirBndGsh()
-        {
-            return m_dirBndGsh;
-        }
         
         void AssemblyMap::LocalToGlobal(
                 const Array<OneD, const NekDouble>& loc,
@@ -1177,7 +1173,7 @@ namespace Nektar
                 Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), tmp.get());
             }
 
-            // Ensure each propessor has unique value with a max gather. 
+            // Ensure each processor has unique value with a max gather. 
             if(UseComm)
             {
                 Gs::Gather(tmp, Gs::gs_max, m_bndGsh);
@@ -1329,6 +1325,11 @@ namespace Nektar
             if (offset > 0)  Vmath::Vcopy(offset, pGlobal, 1, tmp, 1);
             UniversalAssembleBnd(pGlobal);
             if (offset > 0)  Vmath::Vcopy(offset, tmp, 1, pGlobal, 1);
+        }
+
+        void AssemblyMap::UniversalAbsMaxBnd(Array<OneD, NekDouble> &bndvals)
+        {
+            Gs::Gather(bndvals, Gs::gs_amax, m_dirBndGsh);
         }
 
         int AssemblyMap::GetBndSystemBandWidth() const

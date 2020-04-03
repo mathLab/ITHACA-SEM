@@ -2232,14 +2232,13 @@ using namespace std;
         void DisContField3D::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
-            boost::ignore_unused(flags, varfactors, dirForcing);
+            boost::ignore_unused(varfactors, dirForcing);
 
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();

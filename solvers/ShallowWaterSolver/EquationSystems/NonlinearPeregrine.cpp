@@ -909,7 +909,6 @@ void NonlinearPeregrine::WCESolve(
 
     m_fields[3]->HelmSolve(m_fields[3]->GetPhys(),
                            m_fields[3]->UpdateCoeffs(),
-                           NullFlagList,
                            m_factors);
 
     m_fields[3]->BwdTrans(m_fields[3]->GetCoeffs(), m_fields[3]->UpdatePhys());

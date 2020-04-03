@@ -346,7 +346,7 @@ namespace Nektar
                 outarray[it] *= -1;
             }
                 
-            Gs::Gather(outarray, Gs::gs_amax, m_locToGloMap->GetDirBndGsh());
+            m_locToGloMap->UniversalAbsMaxBnd(outarray);
 
             for (auto &it : ParallelDirBndSign)
             {
@@ -471,14 +471,12 @@ namespace Nektar
       void ContField3D::v_HelmSolve(
                                     const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD,       NekDouble> &outarray,
-                                    const FlagList &flags,
                                     const StdRegions::ConstFactorMap &factors,
                                     const StdRegions::VarCoeffMap &varcoeff,
                                     const MultiRegions::VarFactorsMap &varfactors,
                                     const Array<OneD, const NekDouble> &dirForcing,
                                     const bool PhysSpaceForcing)
       {
-          boost::ignore_unused(flags);
           int i,j;
 
           //----------------------------------

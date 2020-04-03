@@ -283,7 +283,6 @@ namespace Nektar
             inline void HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff =
                                 StdRegions::NullVarCoeffMap,
@@ -1207,7 +1206,6 @@ namespace Nektar
             virtual void v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const MultiRegions::VarFactorsMap &varfactors,
@@ -1767,7 +1765,6 @@ namespace Nektar
         inline void ExpList::HelmSolve(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,
-            const FlagList &flags,
             const StdRegions::ConstFactorMap &factors,
             const StdRegions::VarCoeffMap &varcoeff,
             const MultiRegions::VarFactorsMap &varfactors,
@@ -1775,7 +1772,7 @@ namespace Nektar
             const bool PhysSpaceForcing)
 
         {
-            v_HelmSolve(inarray, outarray, flags, factors, varcoeff,
+            v_HelmSolve(inarray, outarray, factors, varcoeff,
                         varfactors, dirForcing, PhysSpaceForcing);
         }
 

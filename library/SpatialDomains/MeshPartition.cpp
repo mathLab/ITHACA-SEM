@@ -649,7 +649,7 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
                 if (m_weightBnd)
                 {
                     vwgt[ncon * (vcnt - 1) + ccnt] =
-                        pow(m_graph[*vertit].bndWeight[0],2);
+                        m_graph[*vertit].bndWeight[0];
                 }
             }
         }

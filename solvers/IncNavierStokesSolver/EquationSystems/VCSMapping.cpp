@@ -535,7 +535,7 @@ namespace Nektar
                 // Solve system
                 //
                 m_pressure->HelmSolve(F_corrected, m_pressure->UpdateCoeffs(),
-                                        NullFlagList, factors);
+                                      factors);
                 m_pressure->BwdTrans(m_pressure->GetCoeffs(),
                                     m_pressure->UpdatePhys());
 
@@ -693,8 +693,7 @@ namespace Nektar
                     // Solve System
                     //
                     m_fields[i]->HelmSolve(F_corrected[i],
-                                    m_fields[i]->UpdateCoeffs(),
-                                    NullFlagList, factors);
+                                    m_fields[i]->UpdateCoeffs(),factors);
                     m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
 
                     //

@@ -801,8 +801,7 @@ namespace Nektar
         factors[StdRegions::eFactorLambda] = 0.0;
 
         // Solver Pressure Poisson Equation
-        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(),
-                              NullFlagList, factors);
+        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(), factors);
 
         // Add presure to outflow bc if using convective like BCs
         m_extrapolation->AddPressureToOutflowBCs(m_kinvis);
@@ -829,7 +828,7 @@ namespace Nektar
             // Setup coefficients for equation
             factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_diffCoeff[i];
             m_fields[i]->HelmSolve(Forcing[i], m_fields[i]->UpdateCoeffs(),
-                                   NullFlagList,  factors, varCoeffMap,
+                                   factors, varCoeffMap,
                                    varFactorsMap);
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
         }

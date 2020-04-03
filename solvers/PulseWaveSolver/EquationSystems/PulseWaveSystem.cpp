@@ -34,7 +34,7 @@
 
 #include <iostream>
 
-#include <MultiRegions/ContField1D.h>
+#include <MultiRegions/ContField.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <PulseWaveSolver/EquationSystems/PulseWaveSystem.h>
 #include <LibUtilities/BasicUtils/Timer.h>

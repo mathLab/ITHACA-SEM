@@ -348,7 +348,6 @@ namespace Nektar
             impTypes[Collections::eBwdTrans] = Collections::eAVX;
             Collections::Collection     c(CollExp, impTypes);
 
-
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
             Array<OneD, NekDouble> phys2(Exp->GetTotPoints());
@@ -1062,6 +1061,64 @@ namespace Nektar
             {
                 diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
                 diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
+                BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestQuadPhysDeriv_AVX_UniformP)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  1.0, 1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 1.0, 0.0));
+
+            SpatialDomains::QuadGeomSharedPtr quadGeom = CreateQuad(v0, v1, v2, v3);
+
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            unsigned int numQuadPoints = 6;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+
+            Nektar::LocalRegions::QuadExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::QuadExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir1, quadGeom);
+
+            Nektar::StdRegions::StdQuadExpSharedPtr stdExp =
+                MemoryManager<Nektar::StdRegions::StdQuadExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir1);
+
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            CollExp.push_back(Exp);
+
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            // So far only BwDTrans is implemented...
+            impTypes[Collections::ePhysDeriv] = Collections::eAVX;
+            Collections::Collection     c(CollExp, impTypes);
+
+
+
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq);
+            Array<OneD, NekDouble> phys(nq),tmp,tmp1;
+            Array<OneD, NekDouble> diff1(2*nq);
+            Array<OneD, NekDouble> diff2(2*nq);
+
+            Exp->GetCoords(xc, yc);
+
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i]);
+            }
+
+            Exp->PhysDeriv(phys,diff1,tmp = diff1+nq);
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nq);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < diff1.num_elements(); ++i)
+            {
                 BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
             }
         }

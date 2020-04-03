@@ -34,7 +34,6 @@
 
 #include <boost/core/ignore_unused.hpp>
 
-
 #include <AVXOperators/Operator.hpp>
 #include <AVXOperators/AVXUtil.hpp>
 

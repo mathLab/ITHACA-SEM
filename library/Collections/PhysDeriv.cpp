@@ -34,6 +34,9 @@
 
 #include <boost/core/ignore_unused.hpp>
 
+#include <AVXOperators/Operator.hpp>
+#include <AVXOperators/AVXUtil.hpp>
+
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 
@@ -241,7 +244,8 @@ class PhysDeriv_AVX : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
-
+            NEKERROR(ErrorUtil::efatal,
+                "PhysDeriv_AVX: Not implemented yet.");
         }
 
         virtual void operator()(
@@ -250,7 +254,8 @@ class PhysDeriv_AVX : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-
+            NEKERROR(ErrorUtil::efatal,
+                "PhysDeriv_AVX: Not valid for this operator.");
         }
 
     protected:
@@ -265,7 +270,6 @@ class PhysDeriv_AVX : public Operator
                 CoalescedGeomDataSharedPtr                pGeomData)
             : Operator(pCollExp, pGeomData)
         {
-            ASSERTL0(false, "AVX PhysDeriv Not implemented yet")
         }
 };
 
@@ -273,8 +277,6 @@ class PhysDeriv_AVX : public Operator
 OperatorKey PhysDeriv_AVX::m_typeArr[] =
 {
     GetOperatorFactory().RegisterCreatorFunction(
-        // OperatorKey(eQuadrilateral, eBwdTrans, eAVX, false),
-        // BwdTrans_AVX::create, "BwdTrans_AVX_Quad"),
         OperatorKey(eQuadrilateral, ePhysDeriv, eAVX, false),
         PhysDeriv_AVX::create, "PhysDeriv_AVX_Quad")
 };

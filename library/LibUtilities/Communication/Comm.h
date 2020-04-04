@@ -141,9 +141,9 @@ public:
                            T2 &pSendDataOffsetMap, T1 &pRecvData,
                            T2 &pRecvDataSizeMap, T2 &pRecvDataOffsetMap);
     template <class T>
-    void Irsend(int pProc, T &pData, int count, MPI_Request &request);
+    void Irsend(int pProc, T &pData, int count, MPI_Request *request);
     template <class T>
-    void Irecv(int pProc, T &pData, int count, MPI_Request &request);
+    void Irecv(int pProc, T &pData, int count, MPI_Request *request);
 
     LIB_UTILITIES_EXPORT inline CommSharedPtr CommCreateIf(int flag);
 
@@ -544,13 +544,13 @@ void Comm::NeighborAlltoAllv(
         CommDataTypeTraits<T1>::GetDataType());
 }
 
-template <class T> void Comm::Irsend(int pProc, T &pData, int count, MPI_Request &request)
+template <class T> void Comm::Irsend(int pProc, T &pData, int count, MPI_Request *request)
 {
     v_Irsend(CommDataTypeTraits<T>::GetPointer(pData), count,
            CommDataTypeTraits<T>::GetDataType(), pProc, request);
 }
 
-template <class T> void Comm::Irecv(int pProc, T &pData, int count, MPI_Request &request)
+template <class T> void Comm::Irecv(int pProc, T &pData, int count, MPI_Request *request)
 {
     v_Irecv(CommDataTypeTraits<T>::GetPointer(pData), count,
            CommDataTypeTraits<T>::GetDataType(), pProc, request);

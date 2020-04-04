@@ -278,19 +278,18 @@ void Pairwise::PerformExchange(
     const Array<OneD, NekDouble> &testFwd,
     Array<OneD, NekDouble> &testBwd)
 {
-    Array<OneD, MPI_Request> request(m_vecPairPartitionTrace.size());
-    Array<OneD, MPI_Status> status(m_vecPairPartitionTrace.size(), 0);
-    Array<OneD, NekDouble> recvBuff(m_totSends, -1);
-    Array<OneD, NekDouble> sendBuff(m_totSends, -1);
+    Array<OneD, MPI_Request> request(m_vecPairPartitionTrace.size() * 2);
 
+    Array<OneD, NekDouble> recvBuff(m_totSends, -1);
     // Perform receive operations
     for (size_t i = 0; i < m_vecPairPartitionTrace.size(); ++i)
     {
         size_t len = m_vecPairPartitionTrace[i].second.size();
-        m_comm->Irecv(m_vecPairPartitionTrace[i].first, recvBuff[m_sendDisp[i]], len, request[2*i]);
+        m_comm->Irecv(m_vecPairPartitionTrace[i].first, recvBuff[m_sendDisp[i]], len, &request[2*i]);
     }
 
     // Can't reuse buffer until previous send has completed so we store all
+    Array<OneD, NekDouble> sendBuff(m_totSends, -1);
     for (size_t i = 0; i < m_vecPairPartitionTrace.size(); ++i)
     {
         size_t len = m_vecPairPartitionTrace[i].second.size();
@@ -300,12 +299,11 @@ void Pairwise::PerformExchange(
         }
 
         // Perform send operations
-        m_comm->Irsend(m_vecPairPartitionTrace[i].first, sendBuff[m_sendDisp[i]], len, request[2*i + 1]);
+        m_comm->Irsend(m_vecPairPartitionTrace[i].first, sendBuff[m_sendDisp[i]], len, &request[2*i + 1]);
     }
 
-    std::cout << "BEFORE WAIT" << std::endl;
-    MPI_Waitall(request.num_elements(), request.get(), status.get());
-    std::cout << "AFTER WAIT" << std::endl;
+    //Wait for all send/recvs to complete
+    MPI_Waitall(request.num_elements(), request.get(), MPI_STATUSES_IGNORE);
 
     for (size_t i = 0; i < m_vecPairPartitionTrace.size(); ++i)
     {

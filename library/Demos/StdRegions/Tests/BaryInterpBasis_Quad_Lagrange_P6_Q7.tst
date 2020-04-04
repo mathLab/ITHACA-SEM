@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>BaryInterp Quadrilateral Lagrange basis P=6 Q=7</description>
-    <executable>BaryInterp</executable>
+    <description>BaryInterpBasis Quadrilateral Lagrange basis P=6 Q=7</description>
+    <executable>BaryInterpBasis</executable>
     <parameters>-s quadrilateral -b GLL_Lagrange GLL_Lagrange -o 6 6 -p 7 7</parameters>
     <metrics>
         <metric type="L2" id="1">

@@ -2,11 +2,15 @@ ADD_NEKTAR_EXECUTABLE(StdProject
     COMPONENT demos DEPENDS StdRegions SOURCES StdProject.cpp)
 ADD_NEKTAR_EXECUTABLE(BaryInterp
     COMPONENT demos DEPENDS StdRegions SOURCES BaryInterp.cpp)
+ADD_NEKTAR_EXECUTABLE(BaryInterpBasis
+    COMPONENT demos DEPENDS StdRegions SOURCES BaryInterpBasis.cpp)
 ADD_NEKTAR_EXECUTABLE(StdEquiToCoeff2D
     COMPONENT demos DEPENDS StdRegions SOURCES StdEquiToCoeff2D.cpp)
 
 ADD_NEKTAR_TEST(BaryInterp2D_Tri_Mod_P6_Q7)
 ADD_NEKTAR_TEST(BaryInterp2D_Quad_Lagrange_P6_Q7)
+ADD_NEKTAR_TEST(BaryInterpBasis_Quad_Lagrange_P6_Q7)
+ADD_NEKTAR_TEST(BaryInterpBasis_Tri_Mod_P7_Q8)
 ADD_NEKTAR_TEST(StdProject1D_Seg_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject1D_Seg_Mod_P6_Q7)
 ADD_NEKTAR_TEST(StdProject1D_Single_Mode_Fourier_P2_Q2)

@@ -36,7 +36,7 @@
 #include <boost/core/ignore_unused.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
-//#include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 #include <StdRegions/StdPointExp.h>
 #include <StdRegions/StdSegExp.h>
@@ -58,50 +58,64 @@ using namespace Nektar::StdRegions;
 namespace po = boost::program_options;
 
 template <class myType>
-Array<OneD, NekDouble> commoncode(myType*E,
-                                 Array<OneD, NekDouble> &physvals,
-                             	  Array< OneD, Array<OneD, NekDouble> >evalPtsxy)
+Array< OneD, Array<OneD, NekDouble> > commoncode(myType*E,
+                                                 int ind_coeffs,
+                                                 Array<OneD, Array<OneD, NekDouble> > evalPtsxy)
 {
-    int numevalvals = evalPtsxy[0].num_elements();
 
-    Array<OneD, NekDouble> ret(numevalvals);
-    for(int i = 0; i < numevalvals; i++)
-    {
-
-        Array<OneD, NekDouble> coords(2);
-        coords[0] = evalPtsxy[0][i];
-        coords[1] = evalPtsxy[1][i];
+    Array<OneD, Array<OneD, NekDouble> > ret(ind_coeffs);
         
-        NekDouble val1 = E->PhysEvaluate(coords,physvals);
-        ret[i] = val1;
-
+    for(int i = 0; i < ind_coeffs; i++)
+    {
+        ret[i] = Array<OneD, NekDouble>(evalPtsxy[0].num_elements());
+        for(int kk = 0; kk < evalPtsxy[0].num_elements(); kk++)
+        {
+            //case (1Ba)
+            Timer t1;
+            t1.Start();
+            Array<OneD, NekDouble> temp(2);
+            temp[0] = evalPtsxy[0][kk];
+            temp[1] = evalPtsxy[1][kk];
+            
+            NekDouble val1 = E->PhysEvaluateBasis(temp, i);
+            t1.Stop();
+            ret[i][kk] = val1;
+            
+        }
     }
-
     return ret;
 }
 
-
-
-
-// Evaluate polynomial for testing and save in ret (size same as pts[0])
-// if tensorp = 0, we need tensorprod
-// else just eval at pts
-Array<OneD, NekDouble> EvalPoly(
-                                Array< OneD, Array< OneD, NekDouble > >&pts
-                                )
+// Flattens 2D array to 1D for Linf and L2 calc
+Array<OneD, NekDouble> flatten(Array<OneD, Array<OneD, NekDouble> > temp)
 {
-    Array<OneD, NekDouble> ret(pts[0].num_elements());
-    
-    // check if pts[0] and pts[1] have same size
-    
-    
-    //polynomial = x^2 + y^2 - 3x - 4
-    for(int i = 0; i < pts[0].num_elements(); i++)
+    int cols = temp[0].num_elements();
+    int rows = temp.num_elements();
+    int ctr = 0;
+
+    Array<OneD, NekDouble> ret(cols*rows);
+    for(int i = 0; i < rows; i++)
     {
-        ret[i] = pow(pts[0][i],2) + pow(pts[1][i],2) - 3*pts[0][i] - 4.0;
+        for(int j = 0; j < cols; j++) 
+        {
+            ret[ctr++] = temp[i][j];
+        }
     }
     return ret;
-    
+}
+
+// Given \phi_1(x) and \phi_2(x) return tensor prod if tensorp = 1
+template <class myType>
+
+Array<OneD, NekDouble> EvalBasis(
+                                 myType *expobj,
+                                 int m_ncoeffs,
+                                 int tot_coeffs
+                                 )
+{
+    Array<OneD, NekDouble> vals(tot_coeffs);
+    expobj->FillMode(m_ncoeffs,vals);
+    return vals;
 }
 
 
@@ -505,116 +519,84 @@ int main(int argc, char *argv[])
             break;
     }
 
+    Array<OneD, Array<OneD,NekDouble> >sol;
+    Array<OneD, Array<OneD,NekDouble> >phys;
 
-    Array<OneD, PointsKey> pkey1(2);
-    Array<OneD, PointsType> ptype1(2);
-    vector<BasisKey> bkey1;
-  
-    int numpts = 3;
-    
-    ptype1[0] =  eFourierEvenlySpaced;;
-    ptype1[1] =  eFourierEvenlySpaced;
-    pkey1[0] = PointsKey(numpts, ptype[0]);
-    pkey1[1] = PointsKey(numpts, ptype[1]);
-    bkey1.emplace_back(BasisKey(btype[0], order[0], pkey1[0]));
-    bkey1.emplace_back(BasisKey(btype[1], order[1], pkey1[1]));
+    int n_coeffs;
 
-    Array< OneD, Array<OneD, NekDouble> >evalPtsxy(2);
-    Array<OneD, Array< OneD, NekDouble > > allQuadxy(2);
-    
-    //evalPtsxy[0] = Array<OneD, NekDouble>(numpts);
-    //evalPtsxy[1] = Array<OneD, NekDouble>(numpts);
+    int numpts = E->GetTotPoints();;
    
-    Array<OneD,NekDouble> sol(numpts);
-    Array<OneD,NekDouble> phys(numpts);
+    Array<OneD, Array< OneD, NekDouble > > allQuadxy(2);
+    allQuadxy[0] = x; 
+    allQuadxy[1] = y; 
 
-
-    Array<OneD, NekDouble> ret;
+    Array< OneD, Array<OneD, NekDouble> >evalPtsxy = allQuadxy;
+    Array<OneD, Array<OneD, NekDouble> >ret;
     if(( strcmp(ShapeTypeMap[stype],"Triangle") == 0
-	 || strcmp(ShapeTypeMap[stype],"Quadrilateral") == 0 ) &&( baryinterp == 1))
+         || strcmp(ShapeTypeMap[stype],"Quadrilateral") == 0 ) 
+       &&( baryinterp == 1))
     {
         if( strcmp(ShapeTypeMap[stype], "Triangle") == 0 )
         {
-
             StdTriExp exp1(bkey[0],bkey[1]);
-            StdTriExp exp2(bkey1[0],bkey1[1]);
+            int nmodes0 = E->GetBasis(0)->GetNumModes();
+            int nmodes1 = E->GetBasis(1)->GetNumModes();
+            n_coeffs = LibUtilities::StdTriData::getNumberOfCoefficients
+                (nmodes0,nmodes1);
+            
+            sol = Array<OneD,Array< OneD, NekDouble > >(n_coeffs);
+            ret = commoncode(E,n_coeffs,allQuadxy);
 
-            allQuadxy[0] = x;
-            allQuadxy[1] = y;
-            evalPtsxy[0] = Array<OneD, NekDouble>(exp2.GetTotPoints());
-            evalPtsxy[1] = Array<OneD, NekDouble>(exp2.GetTotPoints());
-            exp2.GetCoords(evalPtsxy[0], evalPtsxy[1]);
-
-
-            Array<OneD, NekDouble> temp = EvalPoly(allQuadxy);
-            for(int ii = 0; ii<evalPtsxy[0].num_elements(); ii++)
-            {
-                Array<OneD, NekDouble> xy(2);
-                xy[0] = evalPtsxy[0][ii];
-                xy[1] = evalPtsxy[1][ii];
-                Array<OneD, NekDouble> c(2);
-                //exp2.LocCoordToLocCollapsed(xy,c);
-                c = xy;
-                evalPtsxy[0][ii] = c[0];
-                evalPtsxy[1][ii] = c[1];
-
+            for(int k = 0; k < n_coeffs; k++)
+            {            
+                sol[k] = Array<OneD,NekDouble>(numpts);
+                Array<OneD, NekDouble> retvals = EvalBasis(E, k, n_coeffs);
+                for(int l = 0; l < numpts; l++)
+                {
+                    sol[k][l] = retvals[l];
+                }
             }
-
             
-            ret = commoncode(&exp1, temp, evalPtsxy);
-            
-            sol  = EvalPoly(evalPtsxy);
-
-            phys = ret;
-            
-            cout << "\nL infinity error: \t" << exp2.Linf(ret, sol) << endl;
-            cout << "L 2 error: \t \t" << exp2.L2(ret, sol) << endl;
-    
-
-
         }
         else  if( strcmp(ShapeTypeMap[stype], "Quadrilateral") == 0 )
         {
-            StdQuadExp exp1(bkey[0],bkey[1]);
-            StdQuadExp exp2(bkey1[0],bkey1[1]);
+            //            StdQuadExp exp1(bkey[0],bkey[1]);
 
-            allQuadxy[0] = x;
-            allQuadxy[1] = y;
-            evalPtsxy[0] = Array<OneD, NekDouble>(exp2.GetTotPoints());
-            evalPtsxy[1] = Array<OneD, NekDouble>(exp2.GetTotPoints());
-            exp2.GetCoords(evalPtsxy[0], evalPtsxy[1]);
+            int nmodes0 = E->GetBasis(0)->GetNumModes();
+            int nmodes1 = E->GetBasis(1)->GetNumModes();
+            n_coeffs = LibUtilities::StdQuadData::getNumberOfCoefficients
+                (nmodes0,nmodes1);
 
+            sol = Array<OneD,Array< OneD, NekDouble > >(n_coeffs);
+                
+            ret = commoncode(E,n_coeffs,allQuadxy);
+         
+            for(int k = 0; k < n_coeffs; k++)
+            {            
+                sol[k] = Array<OneD,NekDouble>(numpts);
 
-            Array<OneD, NekDouble> temp = EvalPoly(allQuadxy);
-            for(int ii = 0; ii<evalPtsxy[0].num_elements(); ii++)
-            {
-                Array<OneD, NekDouble> xy(2);
-                xy[0] = evalPtsxy[0][ii];
-                xy[1] = evalPtsxy[1][ii];
-                Array<OneD, NekDouble> c(2);
-                exp2.LocCoordToLocCollapsed(xy,c);
-                evalPtsxy[0][ii] = c[0];
-                evalPtsxy[1][ii] = c[1];
+                Array<OneD, NekDouble> retvals = EvalBasis(E, k, n_coeffs);
+                for(int l = 0; l < numpts; l++)
+                {
+                    sol[k][l] = retvals[l];
+                }
             }
-
-            
-            ret = commoncode(&exp1, temp, evalPtsxy);
-            
-            sol  = EvalPoly(evalPtsxy);
-
-            phys = ret;
-    
-            cout << "\nL infinity error: \t" << exp2.Linf(ret, sol) << endl;
-            cout << "L 2 error: \t \t" << exp2.L2(ret, sol) << endl;
-
+           
         }
         else
         {
             cout<<"\n Error! Please enter Triangle or Quads only";
             exit(0);
         }
-
+         
     }
+    
+    phys = ret;
+    Array<OneD, NekDouble> flatp = flatten(phys);
+    Array<OneD, NekDouble> flats = flatten(sol);
+    
+    cout << "\nL infinity error: \t" << E->Linf(flatp, flats) << endl;
+    cout << "L 2 error: \t \t" << E->L2(flatp, flats) << endl;
     return 0;
 }
 

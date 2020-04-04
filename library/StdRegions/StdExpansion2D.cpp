@@ -127,18 +127,17 @@ namespace Nektar
 
             Array<OneD, NekDouble> coll(2);
             LocCoordToLocCollapsed(coords,coll);
-
             const int nq0 = m_base[0]->GetNumPoints();
             const int nq1 = m_base[1]->GetNumPoints();
-
+            
             Array<OneD, NekDouble> wsp(nq1);
             for (int i = 0; i < nq1; ++i)
             {
                 wsp[i] = StdExpansion::BaryEvaluate<0>(
                     coll[0], &physvals[0] + i * nq0);
             }
-
-            return StdExpansion::BaryEvaluate<1>(coll[1], &wsp[0]);
+            NekDouble rr = StdExpansion::BaryEvaluate<1>(coll[1], &wsp[0]); 
+            return rr;
         }
 
         NekDouble StdExpansion2D::v_PhysEvaluate(

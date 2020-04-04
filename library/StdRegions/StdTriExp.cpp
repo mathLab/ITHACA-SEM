@@ -756,18 +756,27 @@ namespace Nektar
                      "coord[1] >  1");
 
             LocCoordToLocCollapsed(coords, coll);
-
             // From mode we need to determine mode0 and mode1 in the (p,q)
             // direction.
             const int    nm1    = m_base[1]->GetNumModes();
             const double c      = 1 + 2*nm1;
             const int    mode0  = floor(0.5*(c - sqrt(c*c - 8*mode)));
-            const int    mode1  = mode - mode0 * nm1 + mode0*(mode0-1)/2;
+            //const int    mode1  = mode - mode0 * nm1 + mode0*(mode0-1)/2;
 
-            return
-                StdExpansion::BaryEvaluateBasis<0>(coll[0], mode0) *
-                StdExpansion::BaryEvaluateBasis<1>(
-                    coll[1], mode0 * nm1 + mode0*(mode0-1)/2 + mode1);
+            if (mode == 1)
+            {
+                return  
+                    (StdExpansion::BaryEvaluateBasis<0>(coll[0], 0) +
+                     StdExpansion::BaryEvaluateBasis<0>(coll[0], 1))*
+                    StdExpansion::BaryEvaluateBasis<1>(coll[1], 1);
+            }
+            else
+            {  
+                return
+                    StdExpansion::BaryEvaluateBasis<0>(coll[0], mode0) *
+                    StdExpansion::BaryEvaluateBasis<1>(coll[1], mode);
+                //mode0 * nm1 + mode0*(mode0-1)/2 + mode1);
+            }
         }
 
         int StdTriExp::v_GetNverts() const

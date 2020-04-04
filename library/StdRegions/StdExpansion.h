@@ -1618,6 +1618,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &z = m_base[DIR]->GetZ();
                 const Array<OneD, const NekDouble> &bw =
                     m_base[DIR]->GetBaryWeights();
+
                 const int nquad = z.num_elements();
 
                 for (int i = 0; i < nquad; ++i)
@@ -1629,7 +1630,7 @@ namespace Nektar
                     {
                         return pval;
                     }
-
+                    //                    std::cout<<"\n bw[i] = "<<bw[i]<<" ";
                     NekDouble tmp = bw[i] / xdiff;
                     numer += tmp * pval;
                     denom += tmp;

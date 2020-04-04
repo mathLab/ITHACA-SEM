@@ -123,7 +123,6 @@ namespace Nektar
             }
 
             val = Vmath::Vamax(ntot, wsp, 1);
-
             return  val;
         }
 
@@ -133,7 +132,6 @@ namespace Nektar
             NekDouble  val;
             int     ntot = GetTotPoints();
             Array<OneD, NekDouble> wsp(ntot);
-
             if (sol.num_elements() == 0)
             {
                 Vmath::Vmul(ntot, phys, 1, phys, 1, wsp, 1);
@@ -143,7 +141,7 @@ namespace Nektar
                 Vmath::Vsub(ntot, sol, 1, phys, 1, wsp, 1);
                 Vmath::Vmul(ntot, wsp, 1, wsp, 1, wsp, 1);
             }
-
+            
             val = v_Integral(wsp);
 
             // if val too small, sqrt returns nan.

@@ -186,14 +186,15 @@ Pairwise::Pairwise(
             std::vector<int> edgeIndex = edgeToTrace.at(i);
             edgeTraceIndex.insert(
                 edgeTraceIndex.end(), edgeIndex.begin(), edgeIndex.end());
-            sendCount[cnt] += edgeIndex.size();
-            m_totSends += edgeToTrace.at(i).size();
         }
 
         m_vecPairPartitionTrace.emplace_back(
             std::make_pair(rankEdgeSet.first, edgeTraceIndex));
-        ++cnt;
+
+        sendCount[cnt++] = edgeTraceIndex.size();
     }
+
+    m_totSends = std::accumulate(sendCount.begin(), sendCount.end(), 0);
 
     m_sendDisp = Nektar::Array<OneD, int>(nNeighbours, 0);
     for (size_t i = 1; i < nNeighbours; ++i)
@@ -360,7 +361,7 @@ AssemblyCommDG::AssemblyCommDG(
     int numPoints = trace->GetNpoints();
     int warmup = 10, iter = 50;
     NekDouble min, max;
-    std::vector<NekDouble> avg(4);
+    std::vector<NekDouble> avg(4, -1);
 
     if (comm->GetRank() == 0)
     {
@@ -378,8 +379,11 @@ AssemblyCommDG::AssemblyCommDG(
         }
     }
 
+    // Gets the fastest MPI method greater than 0
     int fastestMPI = std::distance(
-        avg.begin(), std::min_element(avg.begin(), avg.end()));
+        avg.begin(), std::min_element(avg.begin(), avg.end(),
+            [](NekDouble a, NekDouble b)
+            { return (a < 0) ? false : (b < 0) ? true : (a < b); }));
 
     if (comm->GetRank() == 0)
     {

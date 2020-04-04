@@ -90,8 +90,7 @@ namespace Nektar
                     const AssemblyMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
-            bool dirForcCalculated = (bool) pDirForcing.num_elements();
-
+            bool dirForcCalculated = (bool) pDirForcing.size();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
             int nLocDofs  = pLocToGloMap->GetNumLocalCoeffs();
@@ -106,7 +105,7 @@ namespace Nektar
                 if(dirForcCalculated)
                 {
                     // assume pDirForcing is in local space
-                    ASSERTL0(pDirForcing.num_elements() >= nLocDofs,
+                    ASSERTL0(pDirForcing.size() >= nLocDofs,
                              "DirForcing is not of sufficient size. Is it in local space?");
                     Vmath::Vsub(nLocDofs, pLocInput, 1,
                                 pDirForcing, 1,tmp1, 1);
@@ -250,7 +249,7 @@ namespace Nektar
                             m_Ar[k] *= vMapSign[iCount+i]*vMapSign[iCount+j];
                         }
                     }
-                    
+
                     // Dirichlet DOFs are not included in the solve, so we set
                     // these to the special XXT id=0.
                     if (gid1 < numDirBnd)

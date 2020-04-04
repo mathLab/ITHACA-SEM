@@ -54,24 +54,24 @@ namespace Nektar
                     "FullLinearSpaceWithLowEnergyBlock",
                     PreconditionerLinearWithLowEnergy::create,
                     "Full Linear space and low energy block preconditioning");
- 
+
        /**
          * @class PreconditionerLinearWithLowEnergy
          *
-         * This class implements preconditioning for the conjugate 
+         * This class implements preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
-        
+
         PreconditionerLinearWithLowEnergy::PreconditionerLinearWithLowEnergy(
             const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
         {
         }
-       
+
         /**
          *
-         */ 
+         */
         void PreconditionerLinearWithLowEnergy::v_InitObject()
         {
             m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap.lock());
@@ -189,7 +189,7 @@ namespace Nektar
             //Apply Low Energy preconditioner
             m_lowEnergyPrecon->DoPreconditioner(pInput, OutputLowEnergy);
 
-            ASSERTL1(pOutput.num_elements() >= nGlobHomBndDofs, "Output array is not correct");
+            ASSERTL1(pOutput.size() >= nGlobHomBndDofs, "Output array is not correct");
             Vmath::Vadd(nGlobHomBndDofs,pOutput,1,OutputLowEnergy,1,pOutput,1);
         }
 

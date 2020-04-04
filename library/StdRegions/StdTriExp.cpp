@@ -149,7 +149,7 @@ namespace Nektar
             Vmath::Sadd(nquad1, -1.0, z1, 1, wsp, 1);
             Vmath::Sdiv(nquad1, -2.0, wsp, 1, wsp, 1);
 
-            if (out_d0.num_elements() > 0)
+            if (out_d0.size() > 0)
             {
                 PhysTensorDeriv(inarray, out_d0, out_d1);
 
@@ -159,7 +159,7 @@ namespace Nektar
                 }
 
                 // if no d1 required do not need to calculate both deriv
-                if (out_d1.num_elements() > 0)
+                if (out_d1.size() > 0)
                 {
                     // set up geometric factor: (1_z0)/(1-z1)
                     Vmath::Sadd(nquad0, 1.0, z0, 1, wsp, 1);
@@ -173,7 +173,7 @@ namespace Nektar
                     }
                 }
             }
-            else if (out_d1.num_elements() > 0)
+            else if (out_d1.size() > 0)
             {
                 Array<OneD, NekDouble> diff0(nquad0*nquad1);
                 PhysTensorDeriv(inarray, diff0, out_d1);
@@ -286,7 +286,7 @@ namespace Nektar
             int  nmodes0 = m_base[0]->GetNumModes();
             int  nmodes1 = m_base[1]->GetNumModes();
 
-            ASSERTL1(wsp.num_elements() >= nquad0*nmodes1,
+            ASSERTL1(wsp.size() >= nquad0*nmodes1,
                      "Workspace size is not sufficient");
             ASSERTL2((m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)||
                      (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
@@ -530,7 +530,7 @@ namespace Nektar
             int nmodes0 = m_base[0]->GetNumModes();
             int nmodes1 = m_base[1]->GetNumModes();
 
-            ASSERTL1(wsp.num_elements() >= nquad1*nmodes0,
+            ASSERTL1(wsp.size() >= nquad1*nmodes0,
                      "Workspace size is not sufficient");
 
             Blas::Dgemm('T','N',nquad1,nmodes0,nquad0,1.0,inarray.get(),nquad0,
@@ -962,12 +962,12 @@ namespace Nektar
             }
 
 
-            if(maparray.num_elements() != P)
+            if(maparray.size() != P)
             {
                 maparray = Array<OneD, unsigned int>(P);
             }
 
-            if(signarray.num_elements() != P)
+            if(signarray.size() != P)
             {
                 signarray = Array<OneD, int>(P,1);
             }
@@ -1130,12 +1130,12 @@ namespace Nektar
             const int nummodes1 = m_base[1]->GetNumModes();
             const int nEdgeIntCoeffs = GetEdgeNcoeffs(eid)-2;
 
-            if(maparray.num_elements() != nEdgeIntCoeffs)
+            if(maparray.size() != nEdgeIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
             }
 
-            if(signarray.num_elements() != nEdgeIntCoeffs)
+            if(signarray.size() != nEdgeIntCoeffs)
             {
                 signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
             }
@@ -1213,7 +1213,7 @@ namespace Nektar
             int cnt = 0;
             int nummodes0, nummodes1;
             int startvalue;
-            if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
+            if(outarray.size()!=GetNcoeffs()-NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());
             }
@@ -1243,7 +1243,7 @@ namespace Nektar
             int nummodes0, nummodes1;
             int value;
 
-            if (outarray.num_elements()!=NumBndryCoeffs())
+            if (outarray.size()!=NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
             }
@@ -1417,7 +1417,7 @@ namespace Nektar
             LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
             LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B,nmodes_b,pb);
             StdTriExp OrthoExp(Ba,Bb);
-            
+
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
 
             // project onto physical space.
@@ -1425,7 +1425,7 @@ namespace Nektar
 
             if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff)) // Rodrigo's power kern
             {
-                NekDouble cutoff =  mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                NekDouble cutoff =  mkey.GetConstFactor(eFactorSVVCutoffRatio);
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVPowerKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);
@@ -1452,7 +1452,7 @@ namespace Nektar
                                  nmodes_b-kSVVDGFiltermodesmin);
                 max_ab = max(max_ab,0);
                 max_ab = min(max_ab,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
-                
+
                 int cnt = 0;
                 for(int j = 0; j < nmodes_a; ++j)
                 {
@@ -1460,7 +1460,7 @@ namespace Nektar
                     {
                         int maxjk = max(j,k);
                         maxjk = min(maxjk,kSVVDGFiltermodesmax-1);
-                        
+
                         orthocoeffs[cnt] *= SvvDiffCoeff *
                             kSVVDGFilter[max_ab][maxjk];
                     }
@@ -1473,7 +1473,7 @@ namespace Nektar
 
                 int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*
                                                         min(nmodes_a,nmodes_b));
-                
+
                 NekDouble epsilon = 1.0;
                 int nmodes = min(nmodes_a,nmodes_b);
 
@@ -1510,7 +1510,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
-            int n_coeffs = inarray.num_elements();
+            int n_coeffs = inarray.size();
             int nquad0   = m_base[0]->GetNumPoints();
             int nquad1   = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> coeff(n_coeffs);

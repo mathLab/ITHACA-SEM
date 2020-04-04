@@ -72,7 +72,7 @@ void RinglebFlowBC::v_Apply(
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
 {
-    int nvariables      = physarray.num_elements();
+    int nvariables      = physarray.size();
 
     // For 3DHomogenoeus1D
     int n_planes = 1;
@@ -153,8 +153,8 @@ void RinglebFlowBC::v_Apply(
                 k    = V / sint;
                 phi  = 1.0 / k;
                 pp   = phi * phi;
-                J    = 1.0 / c + 1.0 / (3.0 * c * c * c) + 
-                1.0 / (5.0 * c * c * c * c * c) - 
+                J    = 1.0 / c + 1.0 / (3.0 * c * c * c) +
+                1.0 / (5.0 * c * c * c * c * c) -
                 0.5 * log((1.0 + c) / (1.0 - c));
 
                 r    = pow(c, 1.0 / gamma_1_2);
@@ -166,34 +166,34 @@ void RinglebFlowBC::v_Apply(
                 Fx   = xi - x0[j];
                 Fy   = yi - x1[j];
 
-                J11 = 39062.5 / pow(par1, 3.5) * 
-                (1.0 / VV - 2.0 / VV * ss) * V + 1562.5 / 
-                pow(par1, 2.5) * (-2.0 / (VV * V) + 4.0 / 
-                (VV * V) * ss) + 12.5 / pow(par1, 1.5) * V + 
-                312.5 / pow(par1, 2.5) * V + 7812.5 / 
-                pow(par1, 3.5) * V - 0.25 * 
-                (-1.0 / pow(par1, 0.5) * V / (1.0 - 0.2 * 
-                pow(par1, 0.5)) - (1.0 + 0.2 * pow(par1, 0.5)) / 
-                pow((1.0 - 0.2 * pow(par1, 0.5)), 2.0) / 
+                J11 = 39062.5 / pow(par1, 3.5) *
+                (1.0 / VV - 2.0 / VV * ss) * V + 1562.5 /
+                pow(par1, 2.5) * (-2.0 / (VV * V) + 4.0 /
+                (VV * V) * ss) + 12.5 / pow(par1, 1.5) * V +
+                312.5 / pow(par1, 2.5) * V + 7812.5 /
+                pow(par1, 3.5) * V - 0.25 *
+                (-1.0 / pow(par1, 0.5) * V / (1.0 - 0.2 *
+                pow(par1, 0.5)) - (1.0 + 0.2 * pow(par1, 0.5)) /
+                pow((1.0 - 0.2 * pow(par1, 0.5)), 2.0) /
                 pow(par1, 0.5) * V) / (1.0 + 0.2 * pow(par1, 0.5)) *
                 (1.0 - 0.2 * pow(par1, 0.5));
 
                 J12 = -6250.0 / pow(par1, 2.5) / VV * sint * cos(theta);
-                J21 = -6250.0 / (VV * V) * sint / pow(par1, 2.5) * 
-                pow((1.0 - ss), 0.5) + 78125.0 / V * sint / 
+                J21 = -6250.0 / (VV * V) * sint / pow(par1, 2.5) *
+                pow((1.0 - ss), 0.5) + 78125.0 / V * sint /
                 pow(par1, 3.5) * pow((1.0 - ss), 0.5);
 
                 // the matrix is singular when theta = pi/2
                 if (abs(x1[j]) < toll && abs(cos(theta)) < toll)
                 {
-                    J22 = -39062.5 / pow(par1, 3.5) / V + 3125 / 
-                    pow(par1, 2.5) / (VV * V) + 12.5 / 
-                    pow(par1, 1.5) * V + 312.5 / pow(par1, 2.5) * 
-                    V + 7812.5 / pow(par1, 3.5) * V - 0.25 * 
-                    (-1.0 / pow(par1, 0.5) * V / (1.0 - 0.2 * 
+                    J22 = -39062.5 / pow(par1, 3.5) / V + 3125 /
+                    pow(par1, 2.5) / (VV * V) + 12.5 /
+                    pow(par1, 1.5) * V + 312.5 / pow(par1, 2.5) *
+                    V + 7812.5 / pow(par1, 3.5) * V - 0.25 *
+                    (-1.0 / pow(par1, 0.5) * V / (1.0 - 0.2 *
                     pow(par1, 0.5)) - (1.0 + 0.2 * pow(par1, 0.5)) /
-                    pow((1.0 - 0.2 * pow(par1, 0.5)), 2.0) / 
-                    pow(par1, 0.5) * V) / (1.0 + 0.2 * 
+                    pow((1.0 - 0.2 * pow(par1, 0.5)), 2.0) /
+                    pow(par1, 0.5) * V) / (1.0 + 0.2 *
                     pow(par1, 0.5)) * (1.0 - 0.2 * pow(par1, 0.5));
 
                     // dV = -dV/dx * Fx
@@ -203,9 +203,9 @@ void RinglebFlowBC::v_Apply(
                 }
                 else
                 {
-                    J22 = 3125.0 / VV * cos(theta) / pow(par1, 2.5) * 
-                    pow((1.0 - ss), 0.5) - 3125.0 / VV * ss / 
-                    pow(par1, 2.5) / pow((1.0 - ss), 0.5) * 
+                    J22 = 3125.0 / VV * cos(theta) / pow(par1, 2.5) *
+                    pow((1.0 - ss), 0.5) - 3125.0 / VV * ss /
+                    pow(par1, 2.5) / pow((1.0 - ss), 0.5) *
                     cos(theta);
 
                     det = -1.0 / (J11 * J22 - J12 * J21);
@@ -230,13 +230,13 @@ void RinglebFlowBC::v_Apply(
                 m_session->GetFunctionType("InitialConditions", 0) ==
                 LibUtilities::eFunctionTypeFile))
             {
-                Fwd[0][kk] = pow(c, 1.0 / gamma_1_2) * 
+                Fwd[0][kk] = pow(c, 1.0 / gamma_1_2) *
                 exp(-1.0 + time /timeramp);
 
-                Fwd[1][kk] = Fwd[0][kk] * V * cos(theta) * 
+                Fwd[1][kk] = Fwd[0][kk] * V * cos(theta) *
                 exp(-1 + time / timeramp);
 
-                Fwd[2][kk] = Fwd[0][kk] * V * sin(theta) * 
+                Fwd[2][kk] = Fwd[0][kk] * V * sin(theta) *
                 exp(-1 + time / timeramp);
             }
             else
@@ -247,8 +247,8 @@ void RinglebFlowBC::v_Apply(
             }
 
             P  = (c * c) * Fwd[0][kk] / gamma;
-            Fwd[3][kk]  = P / (gamma - 1.0) + 0.5 * 
-            (Fwd[1][kk] * Fwd[1][kk] / Fwd[0][kk] + 
+            Fwd[3][kk]  = P / (gamma - 1.0) + 0.5 *
+            (Fwd[1][kk] * Fwd[1][kk] / Fwd[0][kk] +
             Fwd[2][kk] * Fwd[2][kk] / Fwd[0][kk]);
 
             errV     = 1.0;
@@ -259,7 +259,7 @@ void RinglebFlowBC::v_Apply(
 
         for (int i = 0; i < nvariables; ++i)
         {
-            Vmath::Vcopy(npoints, &Fwd[i][id2], 1, 
+            Vmath::Vcopy(npoints, &Fwd[i][id2], 1,
                          &(m_fields[i]->GetBndCondExpansions()[m_bcRegion]->
                          UpdatePhys())[id1],1);
         }

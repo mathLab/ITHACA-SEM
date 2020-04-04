@@ -107,7 +107,7 @@ namespace Nektar
             m_numLocalBndCondCoeffs = 0;
             m_systemSingular = checkIfSystemSingular;
 
-            for(i = 0; i < bndCondExp.num_elements(); i++)
+            for(i = 0; i < bndCondExp.size(); i++)
             {
 
                 m_numLocalBndCondCoeffs += bndCondExp[i]->GetNcoeffs();
@@ -122,7 +122,7 @@ namespace Nektar
                 // value.  note this is a vector to manage coupled
                 // solver but for scalar will just be a vector of size 11
                 cnt = 0;
-                for(k = 0; k < bndConditions.num_elements(); ++k)
+                for(k = 0; k < bndConditions.size(); ++k)
                 {
                     if (bndConditions[k][i]->GetBoundaryConditionType() ==
                             SpatialDomains::eDirichlet)
@@ -151,7 +151,7 @@ namespace Nektar
                 }
 
                 // If all boundaries are Dirichlet fill in graph
-                if(cnt == bndConditions.num_elements())
+                if(cnt == bndConditions.size())
                 {
                     for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                     {
@@ -1599,7 +1599,7 @@ namespace Nektar
                 }
             }
 
-            for(i = 1; i < graphVertOffset.num_elements(); i++)
+            for(i = 1; i < graphVertOffset.size(); i++)
             {
                 graphVertOffset[i] += graphVertOffset[i-1];
             }
@@ -1717,7 +1717,7 @@ namespace Nektar
                     {
                         m_localToGlobalMap[cnt+edgeInteriorMap[k]] = 0;
                     }
-                    
+
                     // Fill the sign vector if required
                     if(m_signChange)
                     {
@@ -1774,7 +1774,7 @@ namespace Nektar
                                 }
                                 else
                                 {
-                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =  0; 
+                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =  0;
                                     if(m_signChange)
                                     {
                                         m_localToGlobalSign[cnt+faceInteriorMap[kLoc]] = 0.0;
@@ -1849,7 +1849,7 @@ namespace Nektar
             
             cnt = 0;
             int offset = 0;
-            for(i = 0; i < bndCondExp.num_elements(); i++)
+            for(i = 0; i < bndCondExp.size(); i++)
             {
                 set<int> foundExtraVerts, foundExtraEdges;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
@@ -1953,7 +1953,7 @@ namespace Nektar
 
                 exp->GetBoundaryMap(bndmap);
                 
-                for(j = 0; j < bndmap.num_elements(); ++j)
+                for(j = 0; j < bndmap.size(); ++j)
                 {
                     k = cnt + bndmap[j];
                     
@@ -2316,7 +2316,7 @@ namespace Nektar
                     maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
                 }
                 exp->GetInteriorMap(interiorMap);
-                dof = interiorMap.num_elements();
+                dof = interiorMap.size();
                 maxIntDof = (dof > maxIntDof ? dof : maxIntDof);
             }
 
@@ -2436,7 +2436,7 @@ namespace Nektar
 
                 // Add interior DOFs to complete universal numbering
                 exp->GetInteriorMap(interiorMap);
-                dof = interiorMap.num_elements();
+                dof = interiorMap.size();
                 elementId = (exp->GetGeom())->GetGlobalID();
                 for (k = 0; k < dof; ++k)
                 {
@@ -2560,7 +2560,7 @@ namespace Nektar
             }
 
             // Set up global to universal map
-            if (m_globalToUniversalMap.num_elements())
+            if (m_globalToUniversalMap.size())
             {
                 LibUtilities::CommSharedPtr vCommRow
                     = m_session->GetComm()->GetRowComm();

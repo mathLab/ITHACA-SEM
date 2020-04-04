@@ -85,7 +85,7 @@ namespace Nektar
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const ExpListHomogeneous1D &In);
-            
+
             MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const ExpListHomogeneous1D &In,
                                                       const std::vector<unsigned int> &eIDs);
 
@@ -95,17 +95,15 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, 
                                                          Array<OneD, NekDouble> &outarray, 
                                                          bool IsForwards, 
-                                                         
                                                          bool Shuff = true,
                                                          bool UnShuff = true);
 
             inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                             Array<OneD, NekDouble> &outarray, 
-                                            
                                             bool Shuff = true,
                                             bool UnShuff = true);
 
-            inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+            inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray,
                                             Array<OneD, NekDouble> &outarray,
                                             bool Shuff = true,
                                             bool UnShuff = true);
@@ -114,25 +112,25 @@ namespace Nektar
             {
                 return m_homogeneousBasis;
             }
-            
+
             MULTI_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                                 Array<OneD, NekDouble> &out_d0,
-                                                Array<OneD, NekDouble> &out_d1, 
+                                                Array<OneD, NekDouble> &out_d1,
                                                 Array<OneD, NekDouble> &out_d2);
-            
+
             MULTI_REGIONS_EXPORT void PhysDeriv(Direction edir,
                                                 const Array<OneD, const NekDouble> &inarray,
                                                 Array<OneD, NekDouble> &out_d);
-            
+
             ExpListSharedPtr &GetPlane(int n)
             {
                 return m_planes[n];
             }
-            
+
             LibUtilities::TranspositionSharedPtr      m_transposition;
             LibUtilities::CommSharedPtr               m_StripZcomm;
         protected:
-            
+
             /// FFT variables
             bool                                    m_useFFT;
             LibUtilities::NektarFFTSharedPtr        m_FFT;
@@ -141,7 +139,7 @@ namespace Nektar
 
             Array<OneD,NekDouble>                   m_tmpIN;
             Array<OneD,NekDouble>                   m_tmpOUT;
-            
+
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.
@@ -156,19 +154,18 @@ namespace Nektar
             
             DNekBlkMatSharedPtr GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype) const;
 
-            
             NekDouble GetSpecVanVisc(const int k)
             {
                 NekDouble returnval = 0.0;
 
-                if(m_specVanVisc.num_elements())
+                if(m_specVanVisc.size())
                 {
                     returnval = m_specVanVisc[k];
                 }
-                
-                return returnval; 
+
+                return returnval;
             }
-            
+
             //  virtual functions
             virtual void v_SetHomo1DSpecVanVisc(Array<OneD, NekDouble> visc)
             {
@@ -187,7 +184,7 @@ namespace Nektar
 
             virtual void v_FwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray);
-            
+
             virtual void v_FwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray,
                                                Array<OneD,      NekDouble> &outarray);
 
@@ -205,17 +202,17 @@ namespace Nektar
             
             virtual void v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
                                                       Array<OneD, NekDouble> &outarray);
-                        
+
             virtual std::vector<LibUtilities::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
-            
+
             virtual void v_GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef);
-            
+
             virtual void v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
-            
+
             virtual void v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
-            
+
             virtual void v_ExtractDataToCoeffs(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs);
-            
+
             virtual void v_ExtractCoeffsToCoeffs(
                                                  const std::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
 
@@ -236,7 +233,7 @@ namespace Nektar
                                                Array<OneD, NekDouble> &outarray, 
                                                bool Shuff = true,
                                                bool UnShuff = true);
-            
+
             virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                          const Array<OneD, NekDouble> &inarray2,
                                          Array<OneD, NekDouble> &outarray);
@@ -248,36 +245,36 @@ namespace Nektar
 
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d0,
-                                     Array<OneD, NekDouble> &out_d1, 
+                                     Array<OneD, NekDouble> &out_d1,
                                      Array<OneD, NekDouble> &out_d2);
-            
+
             virtual void v_PhysDeriv(Direction edir,
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d);
-            
+
             virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
 
             virtual Array<OneD, const unsigned int> v_GetZIDs(void);
-            
+
             virtual ExpListSharedPtr &v_GetPlane(int n)
             {
                 return GetPlane(n);
             }
-            
+
             virtual NekDouble v_GetHomoLen(void);
-            
+
             virtual void v_SetHomoLen(const NekDouble lhom);
 
         private:
-            
+
             //Padding operations variables
             bool m_dealiasing;
             int m_padsize;
 
-            /// Spectral vanishing Viscosity coefficient for stabilisation 
+            /// Spectral vanishing Viscosity coefficient for stabilisation
             Array<OneD, NekDouble> m_specVanVisc;
         };
-        
+
         inline void ExpListHomogeneous1D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                               Array<OneD, NekDouble> &outarray, 
                                                               bool Shuff,

@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Helmholtz solution taking physical forcing
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors);
     //----------------------------------------------
 
     Timing("Helmholtz Solve ..");
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 #ifdef TIMING
     for(i = 0; i < 100; ++i)
     {
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors);
     }
 
     Timing("100 Helmholtz Solves:... ");

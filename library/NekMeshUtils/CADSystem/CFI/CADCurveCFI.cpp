@@ -133,7 +133,7 @@ Array<OneD, NekDouble> CADCurveCFI::P(NekDouble t)
     return out;
 }
 
-void P(NekDouble t, NekDouble &x, NekDouble &y, NekDouble &z)
+void CADCurveCFI::P(NekDouble t, NekDouble &x, NekDouble &y, NekDouble &z)
 {
     cfi::Position p = m_cfiEdge->calcXYZAtT(t);
 

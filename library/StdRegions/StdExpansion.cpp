@@ -65,7 +65,7 @@ namespace Nektar
                 std::bind(&StdExpansion::CreateIndexMap,this, std::placeholders::_1),
                 std::string("StdExpansionIndexMap"))
         {
-            switch(m_base.num_elements())
+            switch(m_base.size())
             {
             case 3:
                 ASSERTL2(Bc!=LibUtilities::NullBasisKey,
@@ -134,7 +134,7 @@ namespace Nektar
             int     ntot = GetTotPoints();
             Array<OneD, NekDouble> wsp(ntot);
 
-            if (sol.num_elements() == 0)
+            if (sol.size() == 0)
             {
                 Vmath::Vmul(ntot, phys, 1, phys, 1, wsp, 1);
             }
@@ -310,9 +310,9 @@ namespace Nektar
                 }
             }
 
-            returnval = MemoryManager<IndexMapValues>::AllocateSharedPtr(map.num_elements());
+            returnval = MemoryManager<IndexMapValues>::AllocateSharedPtr(map.size());
 
-            for(int i = 0; i < map.num_elements(); i++)
+            for(int i = 0; i < map.size(); i++)
             {
                 (*returnval)[i].index =  map[i];
                 (*returnval)[i].sign  =  sign[i];
@@ -450,7 +450,7 @@ namespace Nektar
                     // check to see if equispaced basis
                     int nummodes = m_base[0]->GetNumModes();
                     bool equispaced = true;
-                    for(int i = 1; i < m_base.num_elements(); ++i)
+                    for(int i = 1; i < m_base.size(); ++i)
                     {
                         if(m_base[i]->GetNumModes() != nummodes)
                         {
@@ -679,7 +679,7 @@ namespace Nektar
             {
                 Vmath::Vmul(nq, mkey.GetVarCoeff(eVarCoeffMass), 1, tmp, 1, tmp, 1);
             }
-            
+
             v_IProductWRTBase(tmp, outarray);
         }
 
@@ -843,7 +843,7 @@ namespace Nektar
             //          NekDouble checkweight=0.0;
             //          Array<OneD, NekDouble> tmp(nqtot), tan(nqtot), dtan0(nqtot), dtan1(nqtot), weight(nqtot,0.0);
             //
-            //          int gmatnumber = (mkey.GetVariableCoefficient(1)).num_elements();
+            //          int gmatnumber = (mkey.GetVariableCoefficient(1)).size();
             //
             //          v_BwdTrans(inarray,tmp);
             //
@@ -1169,8 +1169,8 @@ namespace Nektar
         {
             ASSERTL0(false, "This function is not valid or not defined");
             return 0;
-        }        
-        
+        }
+
         int StdExpansion::v_GetTraceNcoeffs(const int i) const
         {
             boost::ignore_unused(i);
@@ -1190,7 +1190,7 @@ namespace Nektar
         {
             boost::ignore_unused(i);
             ASSERTL0(false, "This function is not valid or not defined");
-            
+
             return LibUtilities::eNoBasisType;
         }
 
@@ -1207,7 +1207,7 @@ namespace Nektar
             return LibUtilities::eNoShapeType;
         }
 
-        std::shared_ptr<StdExpansion> 
+        std::shared_ptr<StdExpansion>
         StdExpansion::v_GetStdExp(void) const
         {
             ASSERTL0(false,"This method is not defined for this expansion");
@@ -1215,14 +1215,14 @@ namespace Nektar
             return returnval;
         }
 
-        std::shared_ptr<StdExpansion> 
+        std::shared_ptr<StdExpansion>
         StdExpansion::v_GetLinStdExp(void) const
         {
             ASSERTL0(false,"This method is not defined for this expansion");
             StdExpansionSharedPtr returnval;
             return returnval;
         }
-        
+
         int StdExpansion::v_GetShapeDimension() const
         {
             ASSERTL0(false, "This function is not valid or not defined");
@@ -1546,7 +1546,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,
                      "Method does not exist for this shape or library");
             }
-        
+
             void StdExpansion::v_GetFacePhysVals( const int                                face,
                                              const std::shared_ptr<StdExpansion>   &FaceExp,
                 const Array<OneD, const NekDouble>      &inarray,
@@ -1556,7 +1556,7 @@ namespace Nektar
                 boost::ignore_unused(face, FaceExp, inarray, outarray, orient);
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
-        
+
             void StdExpansion::v_GetEdgePhysMap(
                 const int  edge,
                 Array<OneD, int>   &outarray)
@@ -1580,7 +1580,7 @@ namespace Nektar
                 boost::ignore_unused(inarray, outarray);
                 v_MultiplyByStdQuadratureMetric(inarray,outarray);
             }
-        
+
             void StdExpansion::v_MultiplyByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
@@ -1785,7 +1785,7 @@ namespace Nektar
             boost::ignore_unused(vmap, emap, fmap);
             ASSERTL0(false, "Not implemented.");
         }
-        
+
         DNekMatSharedPtr
         StdExpansion::v_BuildInverseTransformationMatrix(
             const DNekScalMatSharedPtr & m_transformationmatrix)
@@ -1803,25 +1803,25 @@ namespace Nektar
             LibUtilities::ShapeType shape = DetShapeType();
             DNekMatSharedPtr  intmat;
 
-            int nqtot = GetTotPoints(); 
+            int nqtot = GetTotPoints();
             int np = 0;
             if(npset == -1) // use values from basis num points()
             {
                 int nqbase;
-                for(int i = 0; i < m_base.num_elements(); ++i)
+                for(int i = 0; i < m_base.size(); ++i)
                 {
                     nqbase = m_base[i]->GetNumPoints();
                     np     = std::max(np,nqbase);
                 }
-                
+
                 StdMatrixKey Ikey(ePhysInterpToEquiSpaced, shape, *this);
                 intmat = GetStdMatrix(Ikey);
             }
             else
             {
                 np = npset;
-                
-                ConstFactorMap cmap; 
+
+                ConstFactorMap cmap;
                 cmap[eFactorConst] = np;
                 StdMatrixKey Ikey(ePhysInterpToEquiSpaced, shape, *this, cmap);
                 intmat = GetStdMatrix(Ikey);
@@ -1855,7 +1855,7 @@ namespace Nektar
             cmap[eFactorConst] = m_base[0]->GetNumModes();
             StdMatrixKey      Ikey(eEquiSpacedToCoeffs, shape, *this,cmap);
             DNekMatSharedPtr  intmat = GetStdMatrix(Ikey);
-            
+
             NekVector<NekDouble> in (m_ncoeffs, inarray, eWrapper);
             NekVector<NekDouble> out(m_ncoeffs, outarray,eWrapper);
             out = (*intmat) * in;

@@ -131,14 +131,14 @@ namespace Nektar
 
             /// Solves the two-dimensional Laplace equation, subject to the
             /// boundary conditions specified.
-            MULTI_REGIONS_EXPORT void LaplaceSolve
-                (const Array<OneD, const NekDouble> &inarray,
-                 Array<OneD,       NekDouble> &outarray,
-                 const Array<OneD, const NekDouble> &dirForcing
-                 = NullNekDouble1DArray,
-                 const Array<OneD,       Array<OneD,NekDouble> >&
-                 variablecoeffs = NullNekDoubleArrayofArray,
-                 NekDouble time = 0.0);
+            MULTI_REGIONS_EXPORT void LaplaceSolve(
+                               const Array<OneD, const NekDouble> &inarray,
+                               Array<OneD,       NekDouble> &outarray,
+                               const Array<OneD, const NekDouble> &dirForcing
+                               = NullNekDouble1DArray,
+                               const Array<OneD,       Array<OneD,NekDouble> >&
+                               variablecoeffs = NullNekDoubleArrayofArray,
+                               NekDouble time = 0.0);
 
             /// Compute the eigenvalues of the linear advection operator.
             MULTI_REGIONS_EXPORT void LinearAdvectionEigs(const NekDouble ax,
@@ -247,7 +247,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
-                    const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
                     const MultiRegions::VarFactorsMap &varfactors,

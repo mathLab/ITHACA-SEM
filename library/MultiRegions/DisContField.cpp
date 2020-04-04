@@ -3310,7 +3310,6 @@ namespace Nektar
 
             ASSERTL0(m_expType != e1D, "This method is not setup or "
                      "tested for 1D expansion"); 
-#if 1 //This is routtine from DisContfield3D which should probably work in 2D as well
 
             Array<OneD, NekDouble> Coeffs(m_trace->GetNcoeffs());
 
@@ -3318,50 +3317,18 @@ namespace Nektar
             m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(0,Coeffs,outarray);
             m_trace->IProductWRTBase(Bwd,Coeffs);
             m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(1,Coeffs,outarray);
-#else
-            int e,n,offset, t_offset;
-            Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
-                &elmtToTrace = m_traceMap->GetElmtToTrace();
-
-            for (n = 0; n < GetExpSize(); ++n)
-            {
-                offset = GetCoeff_Offset(n);
-                for (e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
-                {
-                    t_offset = GetTrace()->GetPhys_Offset(
-                                            elmtToTrace[n][e]->GetElmtId());
-                    
-                    // Evaluate upwind flux less local edge 
-                    if (IsLeftAdjacentTrace(n, e))
-                    {
-                        (*m_exp)[n]->AddEdgeNormBoundaryInt(
-                        e, elmtToTrace[n][e], Fwd+t_offset,
-                        e_outarray = outarray+offset);
-                    }
-                    else
-                    {
-                        (*m_exp)[n]->AddEdgeNormBoundaryInt(
-                        e, elmtToTrace[n][e], Bwd+t_offset,
-                        e_outarray = outarray+offset);
-                    }
-
-                }
-            }
-#endif
         }
 
         void DisContField::v_HelmSolve
             (const Array<OneD, const NekDouble> &inarray,
              Array<OneD,       NekDouble>       &outarray,
-             const FlagList                     &flags,
              const StdRegions::ConstFactorMap   &factors,
              const StdRegions::VarCoeffMap      &varcoeff,
              const MultiRegions::VarFactorsMap  &varfactors,
              const Array<OneD, const NekDouble> &dirForcing,
              const bool                          PhysSpaceForcing)
         {
-            boost::ignore_unused(flags,varfactors,dirForcing);
+            boost::ignore_unused(varfactors,dirForcing);
             int i,n,cnt,nbndry;
             int nexp = GetExpSize();
 

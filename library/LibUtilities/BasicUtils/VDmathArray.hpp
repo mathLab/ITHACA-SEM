@@ -50,9 +50,9 @@ namespace VDmath
                               const Array<OneD, const T> &x,
                               const Array<OneD, const int> &y)
     {
-        ASSERTL1(n <= w.num_elements()+w.GetOffset(),"Array out of bounds");
-        ASSERTL1(n <= x.num_elements()+x.GetOffset(),"Array out of bounds");
-        ASSERTL1(n <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+        ASSERTL1(n <= w.size()+w.GetOffset(),"Array out of bounds");
+        ASSERTL1(n <= x.size()+x.GetOffset(),"Array out of bounds");
+        ASSERTL1(n <= y.size()+y.GetOffset(),"Array out of bounds");
 
         return Ddot2(pComm, n,&w[0],&x[0],&y[0]);
     }
@@ -63,9 +63,9 @@ namespace VDmath
                               const Array<OneD, const T> &x, const int incx,
                               const Array<OneD, const int> &y, const int incy)
     {
-        ASSERTL1(n*incw <= w.num_elements()+w.GetOffset(),"Array out of bounds");
-        ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
-        ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+        ASSERTL1(n*incw <= w.size()+w.GetOffset(),"Array out of bounds");
+        ASSERTL1(n*incx <= x.size()+x.GetOffset(),"Array out of bounds");
+        ASSERTL1(n*incy <= y.size()+y.GetOffset(),"Array out of bounds");
 
         return Ddot2(pComm, n,&w[0],incw,&x[0],incx,&y[0],incy);
     }

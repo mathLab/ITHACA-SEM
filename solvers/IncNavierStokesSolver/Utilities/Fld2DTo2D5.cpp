@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
         }
     }
     Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(vSession3d->GetVariables().size());
-    for(j = 0; j < fieldcoeffs.num_elements(); ++j)
+    for(j = 0; j < fieldcoeffs.size(); ++j)
     {
         fieldcoeffs[j] = Exp3d[j]->UpdateCoeffs();
         for(int i = 0; i < field3ddef.size(); ++i)

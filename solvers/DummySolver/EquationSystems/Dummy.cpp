@@ -68,7 +68,7 @@ void Dummy::v_InitObject()
     m_ode.DefineProjection(&Dummy::DoOdeProjection, this);
 
     m_forcing = SolverUtils::Forcing::Load(
-        m_session, shared_from_this(), m_fields, m_fields.num_elements());
+        m_session, shared_from_this(), m_fields, m_fields.size());
 
     if (m_session->DefinesElement("Nektar/Coupling"))
     {
@@ -112,12 +112,12 @@ bool Dummy::v_PreIntegrate(int step)
         int numForceFields = 0;
         for (auto &x : m_forcing)
         {
-            numForceFields += x->GetForces().num_elements();
+            numForceFields += x->GetForces().size();
         }
         vector<string> varNames;
-        Array<OneD, Array<OneD, NekDouble> > phys(m_fields.num_elements() +
+        Array<OneD, Array<OneD, NekDouble> > phys(m_fields.size() +
                                                   numForceFields);
-        for (int i = 0; i < m_fields.num_elements(); ++i)
+        for (int i = 0; i < m_fields.size(); ++i)
         {
             varNames.push_back(m_session->GetVariable(i));
             phys[i] = m_fields[i]->UpdatePhys();
@@ -126,9 +126,9 @@ bool Dummy::v_PreIntegrate(int step)
         int f = 0;
         for (auto &x : m_forcing)
         {
-            for (int i = 0; i < x->GetForces().num_elements(); ++i)
+            for (int i = 0; i < x->GetForces().size(); ++i)
             {
-                phys[m_fields.num_elements() + f + i] = x->GetForces()[i];
+                phys[m_fields.size() + f + i] = x->GetForces()[i];
                 varNames.push_back("F_" + boost::lexical_cast<string>(f) + "_" +
                                    m_session->GetVariable(i));
             }
@@ -194,7 +194,7 @@ void Dummy::v_Output()
     int f = 0;
     for (auto &x : m_forcing)
     {
-        for (int i = 0; i < x->GetForces().num_elements(); ++i)
+        for (int i = 0; i < x->GetForces().size(); ++i)
         {
             int npts = GetTotPoints();
 
@@ -239,7 +239,7 @@ void Dummy::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
 {
     boost::ignore_unused(time);
 
-    int nVariables = inarray.num_elements();
+    int nVariables = inarray.size();
     int nq         = GetTotPoints();
 
     for (int i = 0; i < nVariables; ++i)
@@ -259,7 +259,7 @@ void Dummy::DoOdeProjection(
 {
     boost::ignore_unused(time);
 
-    int nvariables = inarray.num_elements();
+    int nvariables = inarray.size();
     int nq         = m_fields[0]->GetNpoints();
 
     // deep copy

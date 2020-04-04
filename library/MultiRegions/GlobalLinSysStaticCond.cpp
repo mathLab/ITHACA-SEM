@@ -88,7 +88,7 @@ namespace Nektar
             // Construct this level
             Initialise(m_locToGloMap.lock());
         }
-        
+
         /**
          *
          */
@@ -96,8 +96,8 @@ namespace Nektar
         {
 
         }
-        
-        
+
+
         /**
          *
          */
@@ -107,9 +107,8 @@ namespace Nektar
             const AssemblyMapSharedPtr         &pLocToGloMap,
             const Array<OneD, const NekDouble> &dirForcing)
         {
-
             boost::ignore_unused(dirForcing);
-            ASSERTL1( dirForcing.num_elements() == 0,
+            ASSERTL1( dirForcing.size() == 0,
                       "GlobalLinSysStaticCond: Not setup for dirForcing");
 
             bool atLastLevel       = pLocToGloMap->AtLastLevel();
@@ -125,7 +124,7 @@ namespace Nektar
             {
                 return; //nothing to solve; 
             }
-            
+
             Array<OneD, NekDouble> F_bnd, F_bnd1, F_int, V_bnd; 
             Array<OneD, NekDouble> tmp;
 
@@ -164,8 +163,6 @@ namespace Nektar
                     F_Bnd = BinvD*F_Int; 
 
                     Vmath::Vsub(nLocBndDofs, F_bnd,1, F_bnd1,1, F_bnd,1);
-
-
                }
 
                 if(atLastLevel)
@@ -484,7 +481,7 @@ namespace Nektar
                             {
                                 ASSERTL0(patchId[i]==patchId[j],
                                          "These values should be equal");
-                                
+
                                 if(isBndDof[j])
                                 {
                                     subMat0[dofId[i]+dofId[j]*subMat0rows] +=
@@ -505,7 +502,7 @@ namespace Nektar
                             {
                                 ASSERTL0(patchId[i]==patchId[j],
                                          "These values should be equal");
-                                
+
                                 if(isBndDof[j])
                                 {
                                     subMat2[dofId[i]+dofId[j]*subMat2rows] +=

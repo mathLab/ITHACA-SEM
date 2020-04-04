@@ -92,7 +92,7 @@ namespace Nektar
 
             // Initialising arrays
             int i, j;
-            int nConvectiveFields = pFields.num_elements();
+            int nConvectiveFields = pFields.size();
             int nDim         = pFields[0]->GetCoordim(0);
             int nSolutionPts = pFields[0]->GetTotPoints();
             int nTracePts    = pFields[0]->GetTrace()->GetTotPoints();
@@ -1170,7 +1170,7 @@ namespace Nektar
         {
             int i, j;
             int nTracePts  = fields[0]->GetTrace()->GetTotPoints();
-            int nvariables = fields.num_elements();
+            int nvariables = fields.size();
             int nDim       = fields[0]->GetCoordim(0);
 
             Array<OneD, NekDouble > Fwd     (nTracePts);
@@ -1214,7 +1214,7 @@ namespace Nektar
                     // edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uFwd
                     // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uFwd
 
-                    if(fields[0]->GetBndCondExpansions().num_elements())
+                    if(fields[0]->GetBndCondExpansions().size())
                     {
                         v_WeakPenaltyforScalar(fields, i, ufield[i], fluxtemp);
                     }
@@ -1248,7 +1248,7 @@ namespace Nektar
             int i, e, id1, id2;
             int nBndEdgePts, nBndEdges;
             int cnt         = 0;
-            int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
+            int nBndRegions = fields[var]->GetBndCondExpansions().size();
             int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
 
             // Extract physical values of the fields at the trace space
@@ -1314,7 +1314,7 @@ namespace Nektar
 
             int i, j;
             int nTracePts  = fields[0]->GetTrace()->GetTotPoints();
-            int nvariables = fields.num_elements();
+            int nvariables = fields.size();
             int nDim       = fields[0]->GetCoordim(0);
 
             NekDouble C11 = 0.0;
@@ -1381,7 +1381,7 @@ namespace Nektar
                     */
 
                     // Imposing weak boundary condition with flux
-                    if (fields[0]->GetBndCondExpansions().num_elements())
+                    if (fields[0]->GetBndCondExpansions().size())
                     {
                         v_WeakPenaltyforVector(fields, i, j, qfield[i][j],
                                                qfluxtemp, C11);
@@ -1414,7 +1414,7 @@ namespace Nektar
 
             int i, e, id1, id2;
             int nBndEdges, nBndEdgePts;
-            int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
+            int nBndRegions = fields[var]->GetBndCondExpansions().size();
             int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
 
             Array<OneD, NekDouble > uterm(nTracePts);

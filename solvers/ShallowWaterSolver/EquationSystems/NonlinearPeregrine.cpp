@@ -273,7 +273,7 @@ void NonlinearPeregrine::DoOdeRhs(
         Array<OneD, Array<OneD, NekDouble> >&outarray, const NekDouble time)
 {
     int i;
-    int nvariables = inarray.num_elements();
+    int nvariables = inarray.size();
     int ncoeffs = GetNcoeffs();
     int nq = GetTotPoints();
 
@@ -315,7 +315,7 @@ void NonlinearPeregrine::DoOdeRhs(
             // Input and output in physical space
 
             // Coriolis forcing
-            if (m_coriolis.num_elements() != 0)
+            if (m_coriolis.size() != 0)
             {
                 AddCoriolis(inarray, outarray);
             }
@@ -497,7 +497,7 @@ void NonlinearPeregrine::DoOdeProjection(
         const NekDouble time)
 {
     int i;
-    int nvariables = inarray.num_elements();
+    int nvariables = inarray.size();
 
     switch (m_projectionType)
     {
@@ -541,7 +541,7 @@ void NonlinearPeregrine::SetBoundaryConditions(
         NekDouble time)
 {
 
-    int nvariables = m_fields.num_elements();
+    int nvariables = m_fields.size();
     int cnt = 0;
     int nTracePts  = GetTraceTotPoints();
 
@@ -555,7 +555,7 @@ void NonlinearPeregrine::SetBoundaryConditions(
     }
 
     // loop over Boundary Regions
-    for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+    for (int n = 0; n < m_fields[0]->GetBndConditions().size(); ++n)
     {
 
         // Wall Boundary Condition
@@ -585,7 +585,7 @@ void NonlinearPeregrine::WallBoundary(int bcRegion, int cnt,
         Array<OneD, Array<OneD, NekDouble> > &physarray)
 {
     int i;
-    int nvariables = physarray.num_elements();
+    int nvariables = physarray.size();
 
     // Adjust the physical values of the trace to take
     // user defined boundaries into account
@@ -875,7 +875,7 @@ void NonlinearPeregrine::GetVelocityVector(
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
         Array<OneD, Array<OneD, NekDouble> > &velocity)
 {
-    const int npts = physfield[0].num_elements();
+    const int npts = physfield[0].size();
 
     for (int i = 0; i < m_spacedim; ++i)
     {
@@ -909,7 +909,6 @@ void NonlinearPeregrine::WCESolve(
 
     m_fields[3]->HelmSolve(m_fields[3]->GetPhys(),
                            m_fields[3]->UpdateCoeffs(),
-                           NullFlagList,
                            m_factors);
 
     m_fields[3]->BwdTrans(m_fields[3]->GetCoeffs(), m_fields[3]->UpdatePhys());
@@ -966,7 +965,7 @@ void NonlinearPeregrine::SetBoundaryConditionsForcing(
     int cnt = 0;
 
     // loop over Boundary Regions
-    for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+    for (int n = 0; n < m_fields[0]->GetBndConditions().size(); ++n)
     {
         // Use wall for all BC...
         // Wall Boundary Condition
@@ -1078,7 +1077,7 @@ void NonlinearPeregrine::SetBoundaryConditionsContVariables(
     int cnt = 0;
 
     // loop over Boundary Regions
-    for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+    for (int n = 0; n < m_fields[0]->GetBndConditions().size(); ++n)
     {
         // Use wall for all
         // Wall Boundary Condition

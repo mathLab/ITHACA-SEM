@@ -130,8 +130,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "Unknown map type");
             }
 
-            bool dirForcCalculated = (bool) pDirForcing.num_elements();
-
+            bool dirForcCalculated = (bool) pDirForcing.size();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
             int nLocDofs  = pLocToGloMap->GetNumLocalCoeffs();

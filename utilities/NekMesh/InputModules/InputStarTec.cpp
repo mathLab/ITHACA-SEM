@@ -434,12 +434,12 @@ void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
 
     // Determine Prism triangular face connectivity.
     vector<vector<int> > FaceToPrisms(FaceNodes.size());
-    vector<vector<int> > PrismToFaces(ElementFaces.num_elements());
+    vector<vector<int> > PrismToFaces(ElementFaces.size());
     map<int, int> Prisms;
 
     // generate map of prism-faces to prisms and prism to
     // triangular-faces as well as ids of each prism.
-    for (i = 0; i < ElementFaces.num_elements(); ++i)
+    for (i = 0; i < ElementFaces.size(); ++i)
     {
         // Find Prism (and pyramids!).
         if (ElementFaces[i].size() == 5)
@@ -468,7 +468,7 @@ void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
     }
 
     vector<bool> FacesDone(FaceNodes.size(), false);
-    vector<bool> PrismDone(ElementFaces.num_elements(), false);
+    vector<bool> PrismDone(ElementFaces.size(), false);
 
     // For every prism find the list of prismatic elements
     // that represent an aligned block of cells. Then renumber
@@ -603,7 +603,7 @@ void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
     }
 
     // fill in any unset nodes at from other shapes
-    for (i = 0; i < NodeReordering.num_elements(); ++i)
+    for (i = 0; i < NodeReordering.size(); ++i)
     {
         if (NodeReordering[i] == -1)
         {
@@ -611,7 +611,7 @@ void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
         }
     }
 
-    ASSERTL1(nodeid == NodeReordering.num_elements(),
+    ASSERTL1(nodeid == NodeReordering.size(),
              "Have not renumbered all nodes");
 
     // Renumbering successfull so resort nodes and faceNodes;
@@ -699,7 +699,7 @@ void InputTec::GenElement2D(vector<NodeSharedPtr> &VertNodes,
     // make unique node list
     vector<NodeSharedPtr> nodeList;
     Array<OneD, int> Nodes = SortEdgeNodes(VertNodes, ElementFaces, FaceNodes);
-    for (int j = 0; j < Nodes.num_elements(); ++j)
+    for (int j = 0; j < Nodes.size(); ++j)
     {
         nodeList.push_back(VertNodes[Nodes[j]]);
     }
@@ -724,7 +724,7 @@ void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
     LibUtilities::ShapeType elType = (LibUtilities::ShapeType)0;
     // set up Node list
     Array<OneD, int> Nodes = SortFaceNodes(VertNodes, ElementFaces, FaceNodes);
-    int nnodes             = Nodes.num_elements();
+    int nnodes             = Nodes.size();
     map<LibUtilities::ShapeType, int> domainComposite;
 
     // Set Nodes  -- Not sure we need this so could
@@ -756,7 +756,7 @@ void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
 
     // make unique node list
     vector<NodeSharedPtr> nodeList;
-    for (int j = 0; j < Nodes.num_elements(); ++j)
+    for (int j = 0; j < Nodes.size(); ++j)
     {
         nodeList.push_back(VertNodes[Nodes[j]]);
     }

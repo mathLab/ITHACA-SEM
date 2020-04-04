@@ -114,11 +114,11 @@ public:
 
     inline int GetFirstDim() const
     {
-        return m_solVector[0].num_elements();
+        return m_solVector[0].size();
     }
     inline int GetSecondDim() const
     {
-        return m_solVector[0][0].num_elements();
+        return m_solVector[0][0].size();
     }
 
     // Return the number of entries in the solution vector that correspond to
@@ -147,7 +147,8 @@ public:
     inline DoubleArray &GetValue(const unsigned int timeLevelOffset)
     {
         int nMultiStepVals = m_schemeData->GetNmultiStepValues();
-        const Array<OneD, const unsigned int> &offsetvec = GetTimeLevelOffset();
+        const Array<OneD, const unsigned int> &offsetvec =
+	    m_schemeData->GetTimeLevelOffset();
 
         for (int i = 0; i < nMultiStepVals; i++)
         {
@@ -167,7 +168,8 @@ public:
     {
         int nMultiStepVals = m_schemeData->GetNmultiStepValues();
         int size           = m_schemeData->m_numsteps;
-        const Array<OneD, const unsigned int> &offsetvec = GetTimeLevelOffset();
+        const Array<OneD, const unsigned int> &offsetvec =
+	    m_schemeData->GetTimeLevelOffset();
 
         for (int i = nMultiStepVals; i < size; i++)
         {
@@ -186,7 +188,8 @@ public:
     inline NekDouble GetValueTime(const unsigned int timeLevelOffset)
     {
         int nMultiStepVals = m_schemeData->GetNmultiStepValues();
-        const Array<OneD, const unsigned int> &offsetvec = GetTimeLevelOffset();
+        const Array<OneD, const unsigned int> &offsetvec =
+	     m_schemeData->GetTimeLevelOffset();
 
         for (int i = 0; i < nMultiStepVals; i++)
         {
@@ -207,7 +210,8 @@ public:
                          const DoubleArray &y, const NekDouble t)
     {
         int nMultiStepVals = m_schemeData->GetNmultiStepValues();
-        const Array<OneD, const unsigned int> &offsetvec = GetTimeLevelOffset();
+        const Array<OneD, const unsigned int> &offsetvec =
+	    m_schemeData->GetTimeLevelOffset();
 
         for (int i = 0; i < nMultiStepVals; i++)
         {
@@ -228,7 +232,8 @@ public:
     {
         int nMultiStepVals = m_schemeData->GetNmultiStepValues();
         int size           = m_schemeData->m_numsteps;
-        const Array<OneD, const unsigned int> &offsetvec = GetTimeLevelOffset();
+        const Array<OneD, const unsigned int> &offsetvec =
+	    m_schemeData->GetTimeLevelOffset();
 
         for (int i = nMultiStepVals; i < size; i++)
         {

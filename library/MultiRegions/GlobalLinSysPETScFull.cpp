@@ -139,8 +139,7 @@ namespace Nektar
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
             std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
-            bool dirForcCalculated = (bool) pDirForcing.num_elements();
-
+            bool dirForcCalculated = (bool) pDirForcing.size();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
             int nLocDofs  = pLocToGloMap->GetNumLocalCoeffs();
@@ -160,7 +159,7 @@ namespace Nektar
                 if(dirForcCalculated)
                 {
                     // assume pDirForcing is in local space
-                    ASSERTL0(pDirForcing.num_elements() >= nLocDofs,
+                    ASSERTL0(pDirForcing.size() >= nLocDofs,
                              "DirForcing is not of sufficient size. Is it in local space?");
                     Vmath::Vsub(nLocDofs, pLocInput, 1,
                                 pDirForcing, 1,tmp1, 1);

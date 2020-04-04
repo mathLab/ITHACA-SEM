@@ -93,10 +93,10 @@ namespace Nektar
             {
                 (*m_exp).push_back(m_lines[0]->GetExp(j));
             }
-			
+
             int ny = m_homogeneousBasis_y->GetNumPoints();
             int nz = m_homogeneousBasis_z->GetNumPoints();
-            
+
             for(n = 1; n < (ny*nz); ++n)
             {
                 m_lines[n] = MemoryManager<ExpList>::AllocateSharedPtr(*line_zero,False);
@@ -123,7 +123,7 @@ namespace Nektar
                 bool False = false;
                 ExpListSharedPtr zero_line = In.m_lines[0];
 
-                for(int n = 0; n < m_lines.num_elements(); ++n)
+                for(int n = 0; n < m_lines.size(); ++n)
                 {
                     m_lines[n] = MemoryManager<ExpList>::AllocateSharedPtr(*zero_line,False);
                 }
@@ -131,9 +131,9 @@ namespace Nektar
                 SetCoeffPhys();
             }
         }
-        
+
         /**
-         * 
+         *
          */
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(
                        const ExpList3DHomogeneous2D &In,
@@ -146,8 +146,8 @@ namespace Nektar
             {
                 bool False = false;
                 std::vector<unsigned int> eIDsLine;
-                int nel = eIDs.size()/m_lines.num_elements();
-                
+                int nel = eIDs.size()/m_lines.size();
+
                 for (int i = 0; i < nel; ++i)
                 {
                     eIDsLine.push_back(eIDs[i]);
@@ -160,7 +160,7 @@ namespace Nektar
                     MemoryManager<ExpList>::AllocateSharedPtr(*(zero_line_old),
                                                               eIDsLine, ImpType);
 
-                for(int n = 0; n < m_lines.num_elements(); ++n)
+                for(int n = 0; n < m_lines.size(); ++n)
                 {
                     m_lines[n] = MemoryManager<ExpList>::AllocateSharedPtr(*zero_line,False);
                 }
@@ -182,7 +182,7 @@ namespace Nektar
             int ncoeffs_per_line = m_lines[0]->GetNcoeffs();
             int npoints_per_line = m_lines[0]->GetTotPoints();
 
-            int nyzlines = m_lines.num_elements();
+            int nyzlines = m_lines.size();
 
             // Set total coefficients and points
             m_ncoeffs = ncoeffs_per_line*nyzlines;
@@ -218,25 +218,25 @@ namespace Nektar
             Array<OneD, NekDouble> tmp_xc;
 			int nylines = m_homogeneousBasis_y->GetNumPoints();
 			int nzlines = m_homogeneousBasis_z->GetNumPoints();
-            
+
 			int npoints  = GetTotPoints(eid);
 
 			// Fill x-y-z-direction
             Array<OneD, const NekDouble> pts_y =  m_homogeneousBasis_y->GetZ();
 			Array<OneD, const NekDouble> pts_z =  m_homogeneousBasis_z->GetZ();
-            
+
 			Array<OneD, NekDouble> x(npoints);
 			Array<OneD, NekDouble> y(nylines);
 			Array<OneD, NekDouble> z(nzlines);
 
             Vmath::Smul(nylines,m_lhom_y/2.0,pts_y,1,y,1);
             Vmath::Sadd(nylines,m_lhom_y/2.0,y,1,y,1);
-			
+
 			Vmath::Smul(nzlines,m_lhom_z/2.0,pts_z,1,z,1);
             Vmath::Sadd(nzlines,m_lhom_z/2.0,z,1,z,1);
-			
+
 			(*m_exp)[eid]->GetCoords(x);
-			
+
 
             for(m = 0; m < nzlines; ++m)
             {
@@ -286,12 +286,12 @@ namespace Nektar
             Array<OneD, NekDouble> x(npoints);
 			Array<OneD, NekDouble> y(nylines);
 			Array<OneD, NekDouble> z(nzlines);
-			
+
 			m_lines[0]->GetCoords(x);
-			
+
             Vmath::Smul(nylines,m_lhom_y/2.0,pts_y,1,y,1);
             Vmath::Sadd(nylines,m_lhom_y/2.0,y,1,y,1);
-			
+
 			Vmath::Smul(nzlines,m_lhom_z/2.0,pts_z,1,z,1);
             Vmath::Sadd(nzlines,m_lhom_z/2.0,z,1,z,1);
 
@@ -429,10 +429,10 @@ namespace Nektar
             NekDouble errL2,err = 0.0;
             Array<OneD, const NekDouble> w_y = m_homogeneousBasis_y->GetW();
             Array<OneD, const NekDouble> w_z = m_homogeneousBasis_z->GetW();
-            
+
             int nylines = m_homogeneousBasis_y->GetNumPoints();
             int nzlines = m_homogeneousBasis_z->GetNumPoints();
-            
+
             for(int m = 0; m < nzlines; ++m)
             {
                 for(int n = 0; n < nylines; ++n)
@@ -442,7 +442,7 @@ namespace Nektar
                     err  += errL2*errL2*w_y[n]*m_lhom_y*0.5*w_z[m]*m_lhom_z*0.5;
                 }
             }
-            
+
             return sqrt(err);
         }
     } //end of namespace

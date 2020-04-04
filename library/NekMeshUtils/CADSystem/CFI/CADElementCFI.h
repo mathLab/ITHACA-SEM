@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CFIMesh.h
+//  File: CADElementCFI.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -28,48 +28,47 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: class which extracts an exisiting mesh from CFI source.
+//  Description: Storage for CFI element handle.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CFIMESH_CFIMESH
-#define NEKMESHUTILS_CFIMESH_CFIMESH
+#ifndef NEKMESHUTILS_CADSYSTEM_CFI_CADELEMENTCFI
+#define NEKMESHUTILS_CADSYSTEM_CFI_CADELEMENTCFI
 
-#include <NekMeshUtils/Module/Module.h>
+#include "../CADObject.h"
 
-#include <NekMeshUtils/CADSystem/CFI/CADSystemCFI.h>
+#ifndef NEK_CADFIXAPI_HXX
+#define NEK_CADFIXAPI_HXX
+#include "cadfixapi.hxx"
+#endif
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-/**
- * @brief class containing all surface meshing routines methods and classes
- */
-class CFIMesh : public ProcessModule
+class CADElementCFI : public CADObject
 {
 public:
-    /// Creates an instance of this class
-    static std::shared_ptr<Module> create(MeshSharedPtr m)
+    CADElementCFI(cfi::MeshableEntity *cfiEntity) : m_cfiEntity(cfiEntity)
     {
-        return MemoryManager<CFIMesh>::AllocateSharedPtr(m);
+        m_type = CADType::eOther;
     }
-    static ModuleKey className;
 
-    CFIMesh(MeshSharedPtr m);
-    virtual ~CFIMesh();
+    ~CADElementCFI() = default;
 
-    virtual void Process();
+    cfi::MeshableEntity *GetCfiPointer()
+    {
+        return m_cfiEntity;
+    }
 
 private:
-
-    CADSystemCFISharedPtr m_cad;
-    cfi::Model *m_model;
-    std::map<std::string, int> m_nameToCurveId;
-    std::map<std::string, int> m_nameToFaceId;
-    std::map<std::string, int> m_nameToVertId;
+    /// CFI object for surface.
+    cfi::MeshableEntity *m_cfiEntity;
 };
+
+typedef std::shared_ptr<CADElementCFI> CADElementCFISharedPtr;
+
 }
 }
 

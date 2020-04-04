@@ -61,7 +61,7 @@ Projection::~Projection()
 
 void Projection::v_DoSolve()
 {
-    for (int i = 0; i < m_fields.num_elements(); ++i)
+    for (int i = 0; i < m_fields.size(); ++i)
     {
         // Zero field so initial conditions are zero
         Vmath::Zero(m_fields[i]->GetNcoeffs(), m_fields[i]->UpdateCoeffs(), 1);
@@ -74,7 +74,7 @@ void Projection::v_DoSolve()
 void Projection::v_GenerateSummary(SolverUtils::SummaryList &s)
 {
     EquationSystem::SessionSummary(s);
-    for (int i = 0; i < m_fields.num_elements(); ++i)
+    for (int i = 0; i < m_fields.size(); ++i)
     {
         stringstream name;
         name << "Forcing func [" << i << "]";

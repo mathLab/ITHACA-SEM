@@ -101,7 +101,7 @@ namespace Nektar
 
             // Initialising arrays
             int i, j;
-            int nConvectiveFields = pFields.num_elements();
+            int nConvectiveFields = pFields.size();
             int nScalars     = nConvectiveFields - 1;
             int nDim         = pFields[0]->GetCoordim(0);
             int nSolutionPts = pFields[0]->GetTotPoints();
@@ -925,7 +925,7 @@ namespace Nektar
 
             int nElements    = fields[0]->GetExpSize();
             int nDim         = fields[0]->GetCoordim(0);
-            int nScalars     = inarray.num_elements();
+            int nScalars     = inarray.size();
             int nSolutionPts = fields[0]->GetTotPoints();
             int nCoeffs      = fields[0]->GetNcoeffs();
 
@@ -1247,7 +1247,7 @@ namespace Nektar
         {
             int i, j;
             int nTracePts = fields[0]->GetTrace()->GetTotPoints();
-            int nScalars  = inarray.num_elements();
+            int nScalars  = inarray.size();
             int nDim      = fields[0]->GetCoordim(0);
 
             Array<OneD, NekDouble > Vn      (nTracePts, 0.0);
@@ -1276,7 +1276,7 @@ namespace Nektar
             }
 
             // Modify the values in case of boundary interfaces
-            if (fields[0]->GetBndCondExpansions().num_elements())
+            if (fields[0]->GetBndCondExpansions().size())
             {
                 v_WeakPenaltyO1(fields, inarray, numflux);
             }
@@ -1308,7 +1308,7 @@ namespace Nektar
             int nBndEdgePts, nBndEdges, nBndRegions;
 
             int nTracePts = fields[0]->GetTrace()->GetTotPoints();
-            int nScalars  = inarray.num_elements();
+            int nScalars  = inarray.size();
 
             Array<OneD, NekDouble> tmp1(nTracePts, 0.0);
             Array<OneD, NekDouble> tmp2(nTracePts, 0.0);
@@ -1333,7 +1333,7 @@ namespace Nektar
                 // and has to be reset to zero per each equation
                 cnt = 0;
                 nBndRegions = fields[i+1]->
-                GetBndCondExpansions().num_elements();
+                GetBndCondExpansions().size();
                 for (j = 0; j < nBndRegions; ++j)
                 {
                     if (fields[i+1]->GetBndConditions()[j]->
@@ -1422,7 +1422,7 @@ namespace Nektar
             // Compute boundary conditions  for temperature
             cnt = 0;
             nBndRegions = fields[nScalars]->
-            GetBndCondExpansions().num_elements();
+            GetBndCondExpansions().size();
             for (j = 0; j < nBndRegions; ++j)
             {
                 nBndEdges = fields[nScalars]->
@@ -1525,7 +1525,7 @@ namespace Nektar
         {
             int i, j;
             int nTracePts  = fields[0]->GetTrace()->GetTotPoints();
-            int nVariables = fields.num_elements();
+            int nVariables = fields.size();
             int nDim       = fields[0]->GetCoordim(0);
 
             Array<OneD, NekDouble > Fwd(nTracePts);
@@ -1563,7 +1563,7 @@ namespace Nektar
                                 qfluxtemp, 1);
 
                     // Impose weak boundary condition with flux
-                    if (fields[0]->GetBndCondExpansions().num_elements())
+                    if (fields[0]->GetBndCondExpansions().size())
                     {
                         v_WeakPenaltyO2(fields, i, j, qfield[j][i], qfluxtemp);
                     }
@@ -1593,7 +1593,7 @@ namespace Nektar
             int id2;
 
             int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
-            int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
+            int nBndRegions = fields[var]->GetBndCondExpansions().size();
 
             Array<OneD, NekDouble > uterm(nTracePts);
             Array<OneD, NekDouble > qtemp(nTracePts);

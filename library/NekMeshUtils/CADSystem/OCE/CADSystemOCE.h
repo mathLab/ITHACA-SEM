@@ -57,7 +57,7 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADSystemOCE(std::string name) : CADSystem(name) {}
+    CADSystemOCE(std::string name) : CADSystem(name, "oce") {}
     ~CADSystemOCE(){};
 
     bool LoadCAD();

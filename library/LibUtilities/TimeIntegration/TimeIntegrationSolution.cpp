@@ -49,10 +49,12 @@ TimeIntegrationSolution::TimeIntegrationSolution(
 
     int nsteps = m_schemeData->m_numsteps;
 
-    int nvar           = y.num_elements();
-    int npoints        = y[0].num_elements();
+    int nvar           = y.size();
+    int npoints        = y[0].size();
     int nMultiStepVals = m_schemeData->GetNmultiStepValues();
-    const Array<OneD, const unsigned int> &timeLevels = GetTimeLevelOffset();
+    const Array<OneD, const unsigned int> &timeLevels =
+        m_schemeData->GetTimeLevelOffset();
+
     for (int i = 1; i < nsteps; i++)
     {
         m_solVector[i] = Array<OneD, Array<OneD, NekDouble>>(nvar);
@@ -76,7 +78,7 @@ TimeIntegrationSolution::TimeIntegrationSolution(
     const Array<OneD, NekDouble> &t)
     : m_schemeData(schemeData), m_solVector(y), m_t(t)
 {
-    ASSERTL1(y.num_elements() == m_schemeData->m_numsteps,
+    ASSERTL1(y.size() == m_schemeData->m_numsteps,
              "Amount of Entries does not match number of (multi-) steps");
 }
 
@@ -106,7 +108,7 @@ TimeIntegrationSolution::TimeIntegrationSolution(
 
 std::string TimeIntegrationSolution::GetName() const
 {
-    return m_schemeData->m_parent->GetName();
+    return m_schemeData->m_parent->GetFullName();
 }
 
 } // end namespace LibUtilities

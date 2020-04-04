@@ -452,7 +452,7 @@ void MMFMaxwell::v_DoSolve()
     int i, nchk = 1;
     int nq         = GetTotPoints();
     int nvariables = 0;
-    int nfields    = m_fields.num_elements();
+    int nfields    = m_fields.size();
 
     if (m_intVariables.empty())
     {
@@ -894,7 +894,7 @@ void MMFMaxwell::DoOdeRhs(
     Array<OneD, Array<OneD, NekDouble>> &outarray, const NekDouble time)
 {
     int i;
-    int nvar    = inarray.num_elements();
+    int nvar    = inarray.size();
     int ncoeffs = GetNcoeffs();
     int nq      = GetTotPoints();
 
@@ -1176,8 +1176,8 @@ void MMFMaxwell::AddGreenDerivCompensate(
     Array<OneD, Array<OneD, NekDouble>> &outarray)
 {
     // routine works for both primitive and conservative formulations
-    int ncoeffs = outarray[0].num_elements();
-    int nq      = physarray[0].num_elements();
+    int ncoeffs = outarray[0].size();
+    int nq      = physarray[0].size();
 
     Array<OneD, NekDouble> tmp(nq);
     Array<OneD, NekDouble> tmpc(ncoeffs);
@@ -1326,7 +1326,7 @@ void MMFMaxwell::DoOdeProjection(
 {
     boost::ignore_unused(time);
 
-    int var = inarray.num_elements();
+    int var = inarray.size();
 
     // SetBoundaryConditions(time);
 
@@ -1344,7 +1344,7 @@ void MMFMaxwell::v_SetInitialConditions(const NekDouble initialtime,
     boost::ignore_unused(domain);
 
     int nq   = GetTotPoints();
-    int nvar = m_fields.num_elements();
+    int nvar = m_fields.size();
 
     switch (m_TestMaxwellType)
     {
@@ -2564,7 +2564,7 @@ void MMFMaxwell::Checkpoint_TotalFieldOutput(
     const int n, const NekDouble time,
     const Array<OneD, const Array<OneD, NekDouble>> &fieldphys)
 {
-    int nvar    = m_fields.num_elements();
+    int nvar    = m_fields.size();
     int nq      = m_fields[0]->GetTotPoints();
     int ncoeffs = m_fields[0]->GetNcoeffs();
 
@@ -2596,7 +2596,7 @@ void MMFMaxwell::Checkpoint_TotalFieldOutput(
 void MMFMaxwell::Checkpoint_PlotOutput(
     const int n, const Array<OneD, const Array<OneD, NekDouble>> &fieldphys)
 {
-    int nvar    = m_fields.num_elements();
+    int nvar    = m_fields.size();
     int nq      = m_fields[0]->GetTotPoints();
     int ncoeffs = m_fields[0]->GetNcoeffs();
 
@@ -2632,7 +2632,7 @@ void MMFMaxwell::Checkpoint_TotPlotOutput(
     const int n, const NekDouble time,
     const Array<OneD, const Array<OneD, NekDouble>> &fieldphys)
 {
-    int nvar    = m_fields.num_elements();
+    int nvar    = m_fields.size();
     int nq      = m_fields[0]->GetTotPoints();
     int ncoeffs = m_fields[0]->GetNcoeffs();
 
@@ -2688,7 +2688,7 @@ void MMFMaxwell::Checkpoint_EDFluxOutput(
 {
     boost::ignore_unused(time);
 
-    int nvar    = m_fields.num_elements();
+    int nvar    = m_fields.size();
     int nq      = m_fields[0]->GetTotPoints();
     int ncoeffs = m_fields[0]->GetNcoeffs();
 
@@ -2740,7 +2740,7 @@ void MMFMaxwell::Checkpoint_EnergyOutput(
 {
     boost::ignore_unused(time);
 
-    int nvar    = m_fields.num_elements();
+    int nvar    = m_fields.size();
     int nq      = m_fields[0]->GetTotPoints();
     int ncoeffs = m_fields[0]->GetNcoeffs();
 
@@ -2870,7 +2870,7 @@ Array<OneD, NekDouble> MMFMaxwell::EvaluateCoriolis()
 void MMFMaxwell::AddCoriolis(Array<OneD, Array<OneD, NekDouble>> &physarray,
                              Array<OneD, Array<OneD, NekDouble>> &outarray)
 {
-    int nq = physarray[0].num_elements();
+    int nq = physarray[0].size();
 
     Array<OneD, NekDouble> tmp(nq);
 
@@ -3139,7 +3139,7 @@ void MMFMaxwell::v_GenerateSummary(SolverUtils::SummaryList &s)
 }
 void MMFMaxwell::print_MMF(Array<OneD, Array<OneD, NekDouble>> &inarray)
 {
-    int Ntot = inarray.num_elements();
+    int Ntot = inarray.size();
 
     NekDouble reval = 0.0;
     for (int i = 0; i < Ntot; ++i)

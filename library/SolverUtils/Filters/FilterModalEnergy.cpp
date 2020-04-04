@@ -216,7 +216,7 @@ void FilterModalEnergy::v_Update(
                     GetFunctionFilename("BaseFlow", 0);
                 ImportFldBase(file);
 
-                for (int i = 0; i < pFields.num_elements()-1; ++i)
+                for (int i = 0; i < pFields.size()-1; ++i)
                 {
                     Vmath::Vsub(pFields[i]->GetNcoeffs(),
                                 pFields[i]->GetCoeffs(), 1,
@@ -243,7 +243,7 @@ void FilterModalEnergy::v_Update(
                 m_EqTypeStr=="NavierStokesCFE")
             {
                 // Extracting kinetic energy
-                for (int i = 1; i < pFields.num_elements()-1; ++i)
+                for (int i = 1; i < pFields.size()-1; ++i)
                 {
                     energy_tmp = pFields[i]->HomogeneousEnergy();
                     Vmath::Vadd(locsize, energy_tmp, 1,
@@ -254,7 +254,7 @@ void FilterModalEnergy::v_Update(
             else
             {
                 // Extracting kinetic energy
-                for (int i = 0; i < pFields.num_elements()-1; ++i)
+                for (int i = 0; i < pFields.size()-1; ++i)
                 {
                     energy_tmp = pFields[i]->HomogeneousEnergy();
                     Vmath::Vadd(locsize, energy_tmp, 1,
@@ -268,7 +268,7 @@ void FilterModalEnergy::v_Update(
         {
             int j, m = 0;
 
-            for (j = 0; j < energy.num_elements(); ++j, ++m)
+            for (j = 0; j < energy.size(); ++j, ++m)
             {
                 m_outputStream << setw(10) << time
                                << setw(5)  << m
@@ -279,7 +279,7 @@ void FilterModalEnergy::v_Update(
             {
                 vComm->GetColumnComm()->Recv(i, energy);
 
-                for (j = 0; j < energy.num_elements(); ++j, ++m)
+                for (j = 0; j < energy.size(); ++j, ++m)
                 {
                     m_outputStream << setw(10) << time
                                    << setw(5)  << m
@@ -308,7 +308,7 @@ void FilterModalEnergy::v_Update(
         {
             // Total energy
             NekDouble energy = 0.0;
-            for (int i = 1; i < pFields.num_elements()-1; ++i)
+            for (int i = 1; i < pFields.size()-1; ++i)
             {
                 pFields[i]->SetPhysState(true);
                 NekDouble norm = L2Error(pFields, i, time);
@@ -325,7 +325,7 @@ void FilterModalEnergy::v_Update(
         {
             // Kinetic energy
             NekDouble energy = 0.0;
-            for (int i = 0; i < pFields.num_elements()-1; ++i)
+            for (int i = 0; i < pFields.size()-1; ++i)
             {
                 pFields[i]->SetPhysState(true);
                 NekDouble norm = L2Error(pFields, i, time);
@@ -469,7 +469,7 @@ void FilterModalEnergy::SetUpBaseFields(
         {
             case 1:
             {
-                for(i = 0; i < m_base.num_elements(); i++)
+                for(i = 0; i < m_base.size(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::ContField>
                         ::AllocateSharedPtr(m_session, graphShrPtr,
@@ -490,7 +490,7 @@ void FilterModalEnergy::SetUpBaseFields(
                             LibUtilities::eFourier,
                             m_npointsZ, PkeyZ);
 
-                        for (i = 0 ; i < m_base.num_elements(); i++)
+                        for (i = 0 ; i < m_base.size(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::
                                 ContField3DHomogeneous1D>::
@@ -513,7 +513,7 @@ void FilterModalEnergy::SetUpBaseFields(
                             LibUtilities::eFourierHalfModeRe,
                             m_npointsZ,PkeyZ);
 
-                        for (i = 0 ; i < m_base.num_elements(); i++)
+                        for (i = 0 ; i < m_base.size(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::
                                 ContField3DHomogeneous1D>::
@@ -534,7 +534,7 @@ void FilterModalEnergy::SetUpBaseFields(
                         const LibUtilities::BasisKey  BkeyZ(
                             LibUtilities::eFourier, m_npointsZ, PkeyZ);
 
-                        for (i = 0 ; i < m_base.num_elements(); i++)
+                        for (i = 0 ; i < m_base.size(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::
                                 ContField3DHomogeneous1D>::
@@ -559,7 +559,7 @@ void FilterModalEnergy::SetUpBaseFields(
 
                     m_base[0] = firstbase;
 
-                    for (i = 1 ; i < m_base.num_elements(); i++)
+                    for (i = 1 ; i < m_base.size(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions::
                             ContField>::AllocateSharedPtr(
@@ -576,7 +576,7 @@ void FilterModalEnergy::SetUpBaseFields(
                         AllocateSharedPtr(m_session, graphShrPtr,
                                           m_session->GetVariable(0));
                 m_base[0] = firstbase;
-                for (i = 1 ; i < m_base.num_elements(); i++)
+                for (i = 1 ; i < m_base.size(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::
                     ContField>::AllocateSharedPtr(
@@ -599,7 +599,7 @@ void FilterModalEnergy::SetUpBaseFields(
             {
                 // need to use zero for variable as may be more base
                 // flows than variables
-                for (i = 0 ; i < m_base.num_elements(); i++)
+                for (i = 0 ; i < m_base.size(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::
                         DisContField>::AllocateSharedPtr(
@@ -610,7 +610,7 @@ void FilterModalEnergy::SetUpBaseFields(
             }
             case 2:
             {
-                for (i = 0 ; i < m_base.num_elements(); i++)
+                for (i = 0 ; i < m_base.size(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::
                         DisContField>::AllocateSharedPtr(

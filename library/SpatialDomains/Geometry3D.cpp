@@ -96,8 +96,8 @@ void Geometry3D::NewtonIterationForLocCoord(
     Array<OneD, const NekDouble> Jac =
         m_geomFactors->GetJac(m_xmap->GetPointsKeys());
 
-    NekDouble ScaledTol = Vmath::Vsum(Jac.num_elements(), Jac, 1) /
-                          ((NekDouble)Jac.num_elements());
+    NekDouble ScaledTol = Vmath::Vsum(Jac.size(), Jac, 1) /
+                          ((NekDouble)Jac.size());
     ScaledTol *= Tol;
 
     NekDouble xmap, ymap, zmap, F1, F2, F3;
@@ -108,15 +108,15 @@ void Geometry3D::NewtonIterationForLocCoord(
     // save intiial guess for later reference if required.
     NekDouble init0 = Lcoords[0], init1 = Lcoords[1], init2 = Lcoords[2];
 
-    Array<OneD, NekDouble> DxD1(ptsx.num_elements());
-    Array<OneD, NekDouble> DxD2(ptsx.num_elements());
-    Array<OneD, NekDouble> DxD3(ptsx.num_elements());
-    Array<OneD, NekDouble> DyD1(ptsx.num_elements());
-    Array<OneD, NekDouble> DyD2(ptsx.num_elements());
-    Array<OneD, NekDouble> DyD3(ptsx.num_elements());
-    Array<OneD, NekDouble> DzD1(ptsx.num_elements());
-    Array<OneD, NekDouble> DzD2(ptsx.num_elements());
-    Array<OneD, NekDouble> DzD3(ptsx.num_elements());
+    Array<OneD, NekDouble> DxD1(ptsx.size());
+    Array<OneD, NekDouble> DxD2(ptsx.size());
+    Array<OneD, NekDouble> DxD3(ptsx.size());
+    Array<OneD, NekDouble> DyD1(ptsx.size());
+    Array<OneD, NekDouble> DyD2(ptsx.size());
+    Array<OneD, NekDouble> DyD3(ptsx.size());
+    Array<OneD, NekDouble> DzD1(ptsx.size());
+    Array<OneD, NekDouble> DzD2(ptsx.size());
+    Array<OneD, NekDouble> DzD3(ptsx.size());
 
     // Ideally this will be stored in m_geomfactors
     m_xmap->PhysDeriv(ptsx, DxD1, DxD2, DxD3);

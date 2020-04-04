@@ -407,14 +407,14 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
 
     vector<Array<OneD, int> > ptsConn;
     m_f->m_fieldPts->GetConnectivity(ptsConn);
-    
+
     for(int zone = 0; zone < ptsConn.size(); ++zone)
     {
         IsoSharedPtr iso;
 
         iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
 
-        int nelmt = ptsConn[zone].num_elements()
+        int nelmt = ptsConn[zone].size()
             /(coordim+1);
 
         Array<OneD, int> conn = ptsConn[zone];
@@ -531,18 +531,18 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
                 }
             }
         }
-        
+
         if(n)
-        {   
+        {
             iso->SetNTris(n);
 
             // condense the information in this elemental extraction.
             iso->Condense();
-        
+
             returnval.push_back(iso);
         }
     }
-    
+
     return returnval;
 }
 
@@ -639,14 +639,14 @@ void ProcessIsoContour::SetupIsoFromFieldPts(vector<IsoSharedPtr> &isovec)
         IsoSharedPtr iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-dim);
 
         int nelmt = 0;
-        nelmt = ptsConn[c].num_elements()/3;
+        nelmt = ptsConn[c].size()/3;
 
         iso->SetNTris(nelmt);
         iso->ResizeVId(3*nelmt);
 
         // fill in connectivity values.
         int nvert = 0;
-        for(int i = 0; i < ptsConn[c].num_elements(); ++i)
+        for(int i = 0; i < ptsConn[c].size(); ++i)
         {
             int cid = ptsConn[c][i]-cnt;
             iso->SetVId(i,cid);

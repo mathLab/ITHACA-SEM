@@ -135,6 +135,8 @@ protected:
                           MPI_Request *request);
     virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
                           MPI_Request *request);
+    virtual void v_WaitAll(int count, MPI_Request *array_of_requests);
+
 
     virtual void v_SplitComm(int pRows, int pColumns);
     virtual CommSharedPtr v_CommCreateIf(int flag);

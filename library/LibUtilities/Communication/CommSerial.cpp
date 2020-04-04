@@ -255,6 +255,12 @@ void CommSerial::v_Irecv(void *buf, int count, CommDataType dt, int source,
 {
     boost::ignore_unused(buf, count, dt, source, request);
 }
+
+void CommSerial::v_WaitAll(int count, MPI_Request *array_of_requests)
+{
+    boost::ignore_unused(count, array_of_requests);
+}
+
 /**
  *
  */

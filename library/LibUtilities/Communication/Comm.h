@@ -144,6 +144,7 @@ public:
     void Irsend(int pProc, T &pData, int count, MPI_Request *request);
     template <class T>
     void Irecv(int pProc, T &pData, int count, MPI_Request *request);
+    inline void WaitAll(Array<OneD, MPI_Request> &array_of_requests);
 
     LIB_UTILITIES_EXPORT inline CommSharedPtr CommCreateIf(int flag);
 
@@ -220,6 +221,7 @@ protected:
                           MPI_Request *request)   = 0;
     virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
                           MPI_Request *request)   = 0;
+    virtual void v_WaitAll(int count, MPI_Request *array_of_requests) = 0;
 
     virtual void v_SplitComm(int pRows, int pColumns) = 0;
     virtual bool v_TreatAsRankZero(void) = 0;
@@ -555,6 +557,13 @@ template <class T> void Comm::Irecv(int pProc, T &pData, int count, MPI_Request 
     v_Irecv(CommDataTypeTraits<T>::GetPointer(pData), count,
            CommDataTypeTraits<T>::GetDataType(), pProc, request);
 }
+
+inline void Comm::WaitAll(Array<OneD, MPI_Request> &array_of_requests)
+{
+    v_WaitAll(array_of_requests.num_elements(),
+        array_of_requests.get());
+}
+
 
 /**
  * @brief If the flag is non-zero create a new communicator.

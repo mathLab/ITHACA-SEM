@@ -303,7 +303,7 @@ void Pairwise::PerformExchange(
     }
 
     //Wait for all send/recvs to complete
-    MPI_Waitall(request.num_elements(), request.get(), MPI_STATUSES_IGNORE);
+    m_comm->WaitAll(request);
 
     for (size_t i = 0; i < m_vecPairPartitionTrace.size(); ++i)
     {

@@ -409,6 +409,11 @@ void CommMpi::v_Irecv(void *buf, int count, CommDataType dt, int source,
     MPI_Irecv(buf, count, dt, source, 0, m_comm, request);
 }
 
+void CommMpi::v_WaitAll(int count, MPI_Request *array_of_requests)
+{
+    MPI_Waitall(count, array_of_requests, MPI_STATUSES_IGNORE);
+}
+
 /**
  * Processes are considered as a grid of size pRows*pColumns. Comm
  * objects are created corresponding to the rows and columns of this

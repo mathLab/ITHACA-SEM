@@ -633,8 +633,10 @@ void AssemblyCommDG::InitialiseStructure(
     //Sort localEdgeIdsArray before sending (this is important!)
     std::sort(localEdgeIdsArray.begin(), localEdgeIdsArray.end());
 
-    Array<OneD, int> rankLocalEdgeIds(std::accumulate(
-        rankNumEdges.begin(), rankNumEdges.end(), 0), 0);
+    // If only one rank set array size to 1 to avoid undefined behaviour
+    int size = (m_nRanks != 1) ?
+        std::accumulate(rankNumEdges.begin(), rankNumEdges.end(), 0) : 1;
+    Array<OneD, int> rankLocalEdgeIds(size, 0);
 
     //Send all unique edge IDs to all partitions
     comm->AllGatherv(localEdgeIdsArray, rankLocalEdgeIds,

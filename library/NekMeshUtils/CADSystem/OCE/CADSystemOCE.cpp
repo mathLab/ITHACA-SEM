@@ -54,10 +54,12 @@
 #include <BRepBuilderAPI_MakeShell.hxx>
 #include <BRepBuilderAPI_MakeSolid.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
+#include <ShapeFix_Shell.hxx>
 #include <ShapeFix_Solid.hxx>
 #include <GC_MakeArcOfCircle.hxx>
 #include <StlAPI_Writer.hxx>
 #include <TopoDS_Solid.hxx>
+#include <BRepClass3d_SolidClassifier.hxx>
 
 using namespace std;
 
@@ -101,7 +103,7 @@ bool CADSystemOCE::LoadCAD()
 
         if (boost::iequals(ext, ".geo"))
         {
-            shape = BuildGeo(m_name);
+            m_shape = BuildGeo(m_name);
         }
         else
         {
@@ -126,8 +128,8 @@ bool CADSystemOCE::LoadCAD()
 
             reader.NbRootsForTransfer();
             reader.TransferRoots();
-            shape = reader.OneShape();
-            if (shape.IsNull())
+            m_shape = reader.OneShape();
+            if (m_shape.IsNull())
             {
                 return false;
             }
@@ -136,7 +138,7 @@ bool CADSystemOCE::LoadCAD()
     }
     else
     {
-        shape = BuildNACA(m_name);
+        m_shape = BuildNACA(m_name);
     }
 
     TopExp_Explorer explr;
@@ -147,14 +149,14 @@ bool CADSystemOCE::LoadCAD()
     {
         BRepBuilderAPI_Sewing sew(1e-1);
 
-        for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
+        for (explr.Init(m_shape, TopAbs_FACE); explr.More(); explr.Next())
         {
             sew.Add(explr.Current());
         }
 
         sew.Perform();
 
-        for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
+        for (explr.Init(m_shape, TopAbs_FACE); explr.More(); explr.Next())
         {
             if (sew.IsModified(explr.Current()))
             {
@@ -162,95 +164,44 @@ bool CADSystemOCE::LoadCAD()
             }
         }
 
-        shape = sew.SewedShape();
-
-        int shell = 0;
-        for (explr.Init(shape, TopAbs_SHELL); explr.More(); explr.Next())
-        {
-            shell++;
-        }
-
-        ASSERTL0(shell == 1,
-                 "Was not able to form a topological water tight shell");
-
-        /*
-        // Construct bounding box (hacky hack hack) 10% larger than geom
-        Bnd_Box B;
-        BRepBndLib::Add(shape, B);
-
-        // Add 10%
-        NekDouble xmin, xmax, ymin, ymax, zmin, zmax;
-        B.Get(xmin, ymin, zmin, xmax, ymax, zmax);
-
-        NekDouble xpad = (xmax - xmin) * 0.2;
-        NekDouble ypad = (ymax - ymin) * 0.2;
-        NekDouble zpad = (zmax - zmin) * 0.2;
-
-        xmin -= xpad; xmax += xpad;
-        ymin -= ypad; ymax += ypad;
-        zmin -= zpad; zmax += zpad;
-
-        TopoDS_Shell ext_box = BRepPrimAPI_MakeBox(
-            gp_Pnt(xmin, ymin, zmin), gp_Pnt(xmax, ymax, zmax)).Shell();
-
-        BRepBuilderAPI_MakeSolid solidMaker;
-        solidMaker.Add(ext_box);
-
-        GProp_GProps props;
-        BRepGProp::VolumeProperties(shape, props);
-        gp_Pnt centroid = props.CentreOfMass();
-
-        Array<OneD, NekDouble> voidPt(3);
-        voidPt[0] = centroid.X();
-        voidPt[1] = centroid.Y();
-        voidPt[2] = centroid.Z();
-        m_voidPoints.push_back(voidPt);
-        solidMaker.Add(TopoDS::Shell(shape));
-
-        TopoDS_Solid lol = solidMaker.Solid();
-
-        // Perform fix on solid
-        ShapeFix_Solid solidFix(lol);
-        solidFix.Perform();
-        shape = solidFix.Solid();
-        */
+        m_shape = sew.SewedShape();
     }
 
     // build map of verticies
-    for (explr.Init(shape, TopAbs_VERTEX); explr.More(); explr.Next())
+    for (explr.Init(m_shape, TopAbs_VERTEX); explr.More(); explr.Next())
     {
         TopoDS_Shape v = explr.Current();
-        if (mapOfVerts.Contains(v))
+        if (m_mapOfVerts.Contains(v))
         {
             continue;
         }
-        int i = mapOfVerts.Add(v);
+        int i = m_mapOfVerts.Add(v);
         AddVert(i, v);
     }
 
     // For each face of the geometry, get the local edges which bound it. If
     // they are valid (their type != 7), then add them to an edge map. This
     // filters out the dummy edges which OCC uses.
-    for (explr.Init(shape, TopAbs_EDGE); explr.More(); explr.Next())
+    for (explr.Init(m_shape, TopAbs_EDGE); explr.More(); explr.Next())
     {
         TopoDS_Shape e = explr.Current().Oriented(TopAbs_FORWARD);
-        if (mapOfEdges.Contains(e))
+        if (m_mapOfEdges.Contains(e))
         {
             continue;
         }
 
         if (!BRep_Tool::Degenerated(TopoDS::Edge(e)))
         {
-            int i = mapOfEdges.Add(e);
+            int i = m_mapOfEdges.Add(e);
             AddCurve(i, e);
         }
     }
 
-    for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
+    for (explr.Init(m_shape, TopAbs_FACE); explr.More(); explr.Next())
     {
         TopoDS_Shape f = explr.Current();
-        ASSERTL0(!mapOfFaces.Contains(f), "duplicated faces");
-        int i = mapOfFaces.Add(f);
+        ASSERTL0(!m_mapOfFaces.Contains(f), "duplicated faces");
+        int i = m_mapOfFaces.Add(f);
 
         AddSurf(i, f);
     }
@@ -285,18 +236,18 @@ bool CADSystemOCE::LoadCAD()
             {
                 string s(name->ToCString());
 
-                if (mapOfFaces.Contains(S))
+                if (m_mapOfFaces.Contains(S))
                 {
-                    int id = mapOfFaces.FindIndex(S);
+                    int id = m_mapOfFaces.FindIndex(S);
 
                     m_surfs[id]->SetName(s);
                 }
                 else
                 {
                     filterModShape(modShape, S);
-                    if (mapOfFaces.Contains(S))
+                    if (m_mapOfFaces.Contains(S))
                     {
-                        int id = mapOfFaces.FindIndex(S);
+                        int id = m_mapOfFaces.FindIndex(S);
                         m_surfs[id]->SetName(s);
                     }
                     else
@@ -309,9 +260,9 @@ bool CADSystemOCE::LoadCAD()
     }
 
     // attempts to identify properties of the vertex on the degen edge
-    for (int i = 1; i <= mapOfFaces.Extent(); i++)
+    for (int i = 1; i <= m_mapOfFaces.Extent(); i++)
     {
-        TopoDS_Shape face = mapOfFaces.FindKey(i).Oriented(TopAbs_FORWARD);
+        TopoDS_Shape face = m_mapOfFaces.FindKey(i).Oriented(TopAbs_FORWARD);
 
         TopTools_IndexedMapOfShape localEdges;
         TopExp::MapShapes(face, TopAbs_EDGE, localEdges);
@@ -326,7 +277,7 @@ bool CADSystemOCE::LoadCAD()
                 BRep_Tool::UVPoints(TopoDS::Edge(edge), TopoDS::Face(face), p1,
                                     p2);
 
-                m_verts[mapOfVerts.FindIndex(TopExp::FirstVertex(
+                m_verts[m_mapOfVerts.FindIndex(TopExp::FirstVertex(
                             TopoDS::Edge(edge), Standard_True))]
                     ->SetDegen(i, m_surfs[i], (p1.X() + p2.X()) / 2.0,
                                (p1.Y() + p2.Y()) / 2.0);
@@ -370,8 +321,8 @@ void CADSystemOCE::AddCurve(int i, TopoDS_Shape in)
     TopoDS_Vertex lv = TopExp::LastVertex(TopoDS::Edge(in));
 
     vector<CADVertSharedPtr> vs;
-    vs.push_back(m_verts[mapOfVerts.FindIndex(fv)]);
-    vs.push_back(m_verts[mapOfVerts.FindIndex(lv)]);
+    vs.push_back(m_verts[m_mapOfVerts.FindIndex(fv)]);
+    vs.push_back(m_verts[m_mapOfVerts.FindIndex(lv)]);
     newCurve->SetVert(vs);
 
     m_curves[i] = newCurve;
@@ -402,9 +353,9 @@ void CADSystemOCE::AddSurf(int i, TopoDS_Shape in)
         {
             TopoDS_Shape edge = exp.Current();
 
-            if (mapOfEdges.Contains(edge))
+            if (m_mapOfEdges.Contains(edge))
             {
-                int e = mapOfEdges.FindIndex(edge);
+                int e = m_mapOfEdges.FindIndex(edge);
                 edgeloop->edges.push_back(m_curves[e]);
                 edgeloop->edgeo.push_back(exp.Orientation() == TopAbs_FORWARD
                                               ? CADOrientation::eForwards
@@ -590,6 +541,9 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
     return sf.Face();
 }
 
+/**
+ * @brief Helper function for Gmsh file construction.
+ */
 template<typename T>
 inline bool ContainsIDs(std::string                name,
                         unsigned int               id,
@@ -611,6 +565,9 @@ inline bool ContainsIDs(std::string                name,
     return valid;
 }
 
+/**
+ * @brief Helper function for Gmsh file construction.
+ */
 template<typename T>
 inline void CheckWarning(std::string                name,
                          unsigned int               id,
@@ -624,31 +581,134 @@ inline void CheckWarning(std::string                name,
     }
 }
 
+/**
+ * @brief For a given shell @p shell, attempt to find a point that is strictly
+ * on the interior of the shape.
+ */
+gp_Pnt FindInteriorPoint(TopoDS_Shell &shell)
+{
+    // Grab a face.
+    TopExp_Explorer ex;
+    ex.Init(shell, TopAbs_FACE);
+
+    BRepBuilderAPI_MakeSolid makeSolid(shell);
+    TopoDS_Solid solid;
+    solid = makeSolid.Solid();
+
+    // Compute solid volume. if it's negative, then the shell was constructed
+    // inside-out, so reverse the solid.
+    GProp_GProps solidProps;
+    BRepGProp::VolumeProperties(solid, solidProps);
+    if (solidProps.Mass() < 0.0)
+    {
+        solid.Reverse();
+    }
+
+    BRepClass3d_SolidClassifier cls(solid);
+
+    for (ex.Init(shell, TopAbs_FACE); ex.More(); ex.Next())
+    {
+        // Get bounds for the face and grab a handle to a Geom_Surface.
+        TopoDS_Face face = TopoDS::Face(ex.Current());
+        Handle(Geom_Surface) s = BRep_Tool::Surface(face);
+
+        NekDouble umin, umax, vmin, vmax;
+        BRepTools::UVBounds(face, umin, umax, vmin, vmax);
+
+        // Take central point on parametrisation and compute normal, which
+        // should be outwards facing assuming the shell has been fixed.
+        GeomLProp_SLProps d(s, 2, Precision::Confusion());
+        d.SetParameters(0.5 * (umin + umax), 0.5 * (vmin + vmax));
+
+        gp_XYZ pnt = s->Value(0.5 * (umin + umax), 0.5 * (vmin + vmax)).XYZ();
+
+        // If for some reason we don't have a normal for this face, continue to
+        // the next one.
+        if (!d.IsNormalDefined())
+        {
+            continue;
+        }
+
+        // Compute inwards facing normal and multiply by a scale factor which is
+        // hopefully somewhat proportional to the direction we care about.
+        GProp_GProps faceProp;
+        BRepGProp::SurfaceProperties(face, faceProp);
+
+        // Follow the inwards normal direction and backtrack. Use the classifier
+        // to figure out if we're inside the volume (or not).
+        gp_XYZ n = d.Normal().XYZ() * sqrt(faceProp.Mass());
+        NekDouble alpha = 1.0;
+
+        for (int i = 0; i < 2; ++i)
+        {
+            // Try inwards and outwards facing directions.
+            n *= -1.0;
+
+            while (alpha > 1e-4)
+            {
+                gp_Pnt testPnt(pnt + n * alpha);
+                cls.Perform(testPnt, Precision::Confusion());
+                TopAbs_State state = cls.State();
+
+                if (state == TopAbs_IN)
+                {
+                    return testPnt;
+                }
+
+                alpha /= 2.0;
+            }
+        }
+
+        // Failed on this face, try the next one.
+    }
+
+    ASSERTL0(false, "Failed to find point internal to geometry.");
+    return gp_Pnt();
+}
+
+/**
+ * @brief Create a OpenCASCADE object from a Gmsh file @p geo.
+ *
+ * This routine implements a reader for simple Gmsh .geo files. Currently, it
+ * supports:
+ *
+ * - 0D: points;
+ * - 1D: lines, splines, bsplines, circles, ellipses and line loops;
+ * - 2D: surfaces and ruled surfaces;
+ * - 3D: volumes
+ *
+ * Most other information, including physical lines, surfaces and volumes is all
+ * ignored at present.
+ *
+ * @param geo   Name of the .geo file to read.
+ * @return      An OpenCASCADE TopoDS_Shape that defines the geometry.
+ */
 TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 {
-    using ast::Geom;
+    using GeoAst::Geom;
 
     ifstream f(geo.c_str());
     const std::string str((std::istreambuf_iterator<char>(f)),
                           std::istreambuf_iterator<char>());
 
-    // Construct a parser for the geo file. Ensure we use the correct skipper so
-    // that comments are ignored.
+    // Construct a parser for the geo file. Ensure that we use the correct
+    // skipper so that comments are ignored.
     LibUtilities::Interpreter interp;
     GeoParser<std::string::const_iterator> geoParser(interp);
     CommentSkipper<std::string::const_iterator> skip;
-    ast::GeoFile geoFile;
+    GeoAst::GeoFile geoFile;
 
     // Run parser.
     std::string::const_iterator iter = str.begin();
     std::string::const_iterator end = str.end();
     bool r = qi::phrase_parse(iter, end, geoParser, skip, geoFile);
 
+    // If parsing failed, output an error.
     if (!r)
     {
         std::string::const_iterator some = iter+30;
         std::string context(iter, (some>end)?end:some);
-        std::cout << "Parsing failed\n";
+        std::cout << "Parsing of geo file failed\n";
         std::cout << "stopped at: \": " << context << "...\"\n";
     }
 
@@ -661,11 +721,14 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
             gp_Pnt(point.x * 1000.0, point.y * 1000.0, point.z * 1000.0);
     }
 
+    //
     // Build edges.
+    //
     map<unsigned int, TopoDS_Edge> cEdges;
     map<unsigned int, std::string> cEdgeTypes;
     map<unsigned int, Geom> edgeMap;
 
+    // Get straight lines.
     for (auto &line : geoFile.lines)
     {
         if (line.ids.size() != 2)
@@ -681,13 +744,13 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
             continue;
         }
 
-
         BRepBuilderAPI_MakeEdge em(cPoints[line.ids[0]], cPoints[line.ids[1]]);
         cEdges[line.id] = em.Edge();
         edgeMap[line.id] = line;
         cEdgeTypes[line.id] = "line";
     }
 
+    // Get splines.
     for (auto &spline : geoFile.splines)
     {
         if (spline.ids.size() < 2)
@@ -718,6 +781,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         cEdgeTypes[spline.id] = "spline";
     }
 
+    // Get B-Splines.
     for (auto &bspline : geoFile.bsplines)
     {
         if (bspline.ids.size() < 2)
@@ -748,6 +812,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         cEdgeTypes[bspline.id] = "bspline";
     }
 
+    // Get circles.
     for (auto &circle : geoFile.circles)
     {
         if (circle.ids.size() != 3)
@@ -791,6 +856,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         cEdgeTypes[circle.id] = "circle";
     }
 
+    // Get ellipses.
     for (auto &ellipse : geoFile.ellipses)
     {
         if (ellipse.ids.size() != 4)
@@ -857,12 +923,15 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         cEdgeTypes[ellipse.id] = "ellipse";
     }
 
-    // build wires
+    //
+    // Build wires.
+    //
     map<unsigned int, TopoDS_Wire> cWires;
     map<unsigned int, Geom> loopMap;
     for (auto &loop : geoFile.lineLoops)
     {
-        // Make IDs all positive since we don't care about the orientations.
+        // Make IDs all positive since we don't care about the orientations and
+        // will get OCC to construct this for us.
         for (auto &id : loop.ids)
         {
             id = std::abs(id);
@@ -883,9 +952,13 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         loopMap[loop.id] = loop;
     }
 
-    // Build faces
+    //
+    // Build faces.
+    //
     map<unsigned int, TopoDS_Face> cFaces;
     map<unsigned int, Geom> faceMap;
+
+    // Construct plane surfaces.
     for (auto &planeSurf : geoFile.planeSurfs)
     {
         BRepBuilderAPI_MakeFace face(cWires[planeSurf.ids[0]], true);
@@ -903,7 +976,32 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         faceMap[planeSurf.id] = planeSurf;
     }
 
-    // Build Ruled Surfaces
+    // At this point, 2D simulations should be good because we have (at most)
+    // one surface.
+    if (m_2d)
+    {
+        ASSERTL0(cFaces.size() == 1,
+                 "2D simulations should define at most one plane surface in "
+                 "the .geo file.");
+
+        return cFaces.begin()->second;
+    }
+
+    // Build ruled surfaces. This is probably amongst the most complex parts of
+    // this code, since we need to construct a filling for the wire which may be
+    // based off a couple of different approaches:
+    //
+    // 1) If Gmsh is using the OpenCASCADE kernel, then we should always use the
+    //    BRepFill_Filling class, which uses some kind of magic to blend
+    //    curvature of the edges to construct a filling.
+    // 2) If Gmsh is using its built-in kernel, then ruled surfaces are must
+    //    have either three of four curves, and then the filling is defined
+    //    using a transfinite interpolation.
+    // 3) ...unless those three or four curves are circle arcs, in which case we
+    //    test to see if we're on a sphere first.
+    //
+    // Most of this is straightforward, asides from (2) which requires a custom
+    // OpenCASCADE class to handle the transfinite interpolation.
     for (auto &surf : geoFile.ruledSurfs)
     {
         CheckWarning("surface", surf.id, cFaces);
@@ -921,11 +1019,11 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
         Geom &loop = loopMap[surf.ids[0]];
 
-        // Get edges
+        // Get edges.
         const int nEdges = loop.ids.size();
 
-        // Special case: 3 or 4 circular edges should define a spherical
-        // surface. This is what the built-in geo kernel supports, but
+        // Special case (3) above: 3 or 4 circular edges should define a
+        // spherical surface. This is what the built-in geo kernel supports, but
         // OpenCASCADE engine gives a regular filling.
         bool isSphere = true;
         if (nEdges == 3 || nEdges == 4)
@@ -954,6 +1052,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
             }
         }
 
+        // If we're a sphere, all is good and construct a spherical surface.
         if (isSphere)
         {
             gp_Pnt origin;
@@ -975,17 +1074,6 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
             continue;
         }
 
-        // Otherwise we will construct a filling from OpenCASCADE.
-        BRepOffsetAPI_MakeFilling fill;
-        TopExp_Explorer ex;
-
-        // Add all edges from our line loop.
-        for (ex.Init(cWires[surf.ids[0]], TopAbs_EDGE); ex.More(); ex.Next())
-        {
-            const TopoDS_Edge &shape = TopoDS::Edge(ex.Current());
-            fill.Add(shape, GeomAbs_C0);
-        }
-
         // Attempt to emulate the built-in CAD kernel, which performs a
         // transfinite interpolation.
         bool builtIn = true;
@@ -995,7 +1083,16 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
             // Attempt to reconstruct shape from standard Gmsh kernel by
             // creating a custom transfinite surface. So far only 4 edges are
-            // supported.
+            // supported. This requires a few things:
+            //
+            // - edges are handles to our OCC curves
+            // - topoEdges are the same, but topological
+            // - clims define the start and end parameter for each curve
+            // - vertIds define the vertex IDs for the patch
+            // - fwd[i] is true if the CCW-orientated edge i on the patch is the
+            //   same direction of curve[i].
+            // - verts[i] are the coordinate points of the vertex given by
+            //   vertIds[i].
             std::vector<Handle(Geom_Curve)>   edges    (nEdges);
             std::vector<TopoDS_Edge>          topoEdges(nEdges);
             std::vector<pair<double, double>> clims    (nEdges);
@@ -1014,6 +1111,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
                 edges[i] = BRep_Tool::Curve(topoEdge, clim.first, clim.second);
                 clims[i] = clim;
 
+                // Determine orientation.
                 fwd[i] = true;
                 if ((edge.ids[0] == nextEdge.ids[0]) ||
                     (edge.ids[0] == nextEdge.ids.back()))
@@ -1026,20 +1124,37 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
                     ASSERTL0(false, "connectivity issue");
                 }
 
-                verts[i] = fwd[i] ? cPoints[edge.ids[0]] : cPoints[edge.ids.back()];
+                verts[i] = fwd[i] ? cPoints[edge.ids[0]] :
+                    cPoints[edge.ids.back()];
             }
 
-            Handle(Geom_TransfiniteSurface) asd = new Geom_TransfiniteSurface(
+            // Create new transfinite surface.
+            Handle(Geom_TransfiniteSurface) tf = new Geom_TransfiniteSurface(
                 edges, fwd, clims, verts);
-            BRepBuilderAPI_MakeFace mkFace(asd, cWires[surf.ids[0]]);
+            BRepBuilderAPI_MakeFace mkFace(tf, cWires[surf.ids[0]]);
             cFaces[surf.id] = mkFace.Face();
             continue;
+        }
+
+        // Otherwise we will just go ahead and construct a filling from
+        // OpenCASCADE.
+        BRepOffsetAPI_MakeFilling fill;
+        TopExp_Explorer ex;
+
+        // Add all edges from our line loop.
+        for (ex.Init(cWires[surf.ids[0]], TopAbs_EDGE); ex.More(); ex.Next())
+        {
+            const TopoDS_Edge &shape = TopoDS::Edge(ex.Current());
+            fill.Add(shape, GeomAbs_C0);
         }
 
         fill.Build();
         cFaces[surf.id] = TopoDS::Face(fill.Shape());
     }
 
+    //
+    // Construct shells.
+    //
     map<unsigned int, TopoDS_Shell> cShells;
     for (auto &sloop : geoFile.surfLoops)
     {
@@ -1057,12 +1172,20 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         }
 
         shellMaker.Perform();
+
+        //ShapeFix_Shell shellFix(TopoDS::Shell(shellMaker.SewedShape()));
+        //shellFix.Perform();
         cShells[sloop.id] = TopoDS::Shell(shellMaker.SewedShape());
     }
 
     map<unsigned int, TopoDS_Shape> cVolumes;
     for (auto &vol : geoFile.volumes)
     {
+        for (auto &id : vol.ids)
+        {
+            id = std::abs(id);
+        }
+
         CheckWarning("volume", vol.id, cVolumes);
         if (!ContainsIDs("Volume", vol.id, "surface loop", vol.ids, cShells))
         {
@@ -1080,162 +1203,29 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
                 continue;
             }
 
-            // For each shell that's being removed from the solid, add centroid
-            // for tetrahedralisation purposes. In general this won't work so
-            // well because we could have a non-convex shell, but let's assume
-            // it is a decent guess for now.
-            GProp_GProps props;
-            BRepGProp::VolumeProperties(cShells[vol.ids[i]], props);
-            gp_Pnt centroid = props.CentreOfMass();
+            // For each shell that's being removed from the solid, try to find
+            // an internal point to pass to TetGen.
+            gp_Pnt interior = FindInteriorPoint(cShells[vol.ids[i]]);
 
             Array<OneD, NekDouble> voidPt(3);
-            voidPt[0] = centroid.X();
-            voidPt[1] = centroid.Y();
-            voidPt[2] = centroid.Z();
+            voidPt[0] = interior.X();
+            voidPt[1] = interior.Y();
+            voidPt[2] = interior.Z();
             m_voidPoints.push_back(voidPt);
         }
 
         TopoDS_Solid s = solidMaker.Solid();
 
-        // Perform fix on solid
+        // Perform fix on resulting solid.
         //ShapeFix_Solid solidFix(s);
         //solidFix.Perform();
-        //cVolumes[vol.id] = solidFix.Solid();
         cVolumes[vol.id] = s;
     }
 
+    ASSERTL0(cVolumes.size() == 1,
+             "3D .geo file should define exactly one volume.");
+
     return cVolumes.begin()->second;
-
-    /*
-    //Check if 2D
-    if (ruledSurfs.size() == 0)
-    {
-        if (planeSurfs.size() == 1)
-        {
-            //Build Plane Surface
-            it = planeSurfs.begin();
-            vector<unsigned int> data;
-            ParseUtils::GenerateVector(it->second, data);
-            BRepBuilderAPI_MakeFace face(cWires[data[0]], true);
-            for (int i = 1; i < data.size(); i++)
-            {
-                face.Add(cWires[data[i]]);
-            }
-
-            ASSERTL0(face.Error() == BRepBuilderAPI_FaceDone, "build geo failed");
-
-            ShapeFix_Face sf(face.Face());
-            sf.FixOrientation();
-
-            return sf.Face();
-        }
-    }
-    //Run 3D
-    else
-    {
-        // Build Surfaces
-        map<int, TopoDS_Face> cFaces;
-        // Build Place Surfaces
-        for (auto &surf : planeSurfs)
-        {
-            vector<unsigned int> data;
-            ParseUtils::GenerateVector(surf.second, data);
-            ASSERTL0(data.size() == 1,
-                    "Ruled surface should have only one curve loop");
-
-            BRepBuilderAPI_MakeFace faceBuilder(cWires[data[0]]);
-
-            cFaces[surf.first] = faceBuilder.Face();
-        }
-        // Build Ruled Surfaces
-        for (auto &surf : ruledSurfs)
-        {
-            vector<unsigned int> data;
-            ParseUtils::GenerateVector(surf.second, data);
-            ASSERTL0(data.size() == 1,
-                    "Ruled surface should have only one curve loop");
-
-            BRepFill_Filling fill(2, 30);
-            TopExp_Explorer ex;
-
-            for (ex.Init(cWires[data[0]], TopAbs_EDGE); ex.More(); ex.Next())
-            {
-                const TopoDS_Edge &shape = TopoDS::Edge(ex.Current());
-                fill.Add(shape, GeomAbs_C0);
-            }
-
-            fill.Build();
-            TopoDS_Face fixedFace = fill.Face();
-            cFaces[surf.first] = fixedFace;
-        }
-        // Build Shells
-        map<int, TopoDS_Shell> cShells;
-        for (auto &sloop : surfLoops)
-        {
-            vector<unsigned int> data;
-            ParseUtils::GenerateVector(sloop.second, data);
-
-            BRepBuilderAPI_Sewing shellMaker;
-
-            for (int i = 0; i < data.size(); ++i)
-            {
-                shellMaker.Add(cFaces[data[i]]);
-            }
-
-            shellMaker.Perform();
-
-            cShells[sloop.first] = TopoDS::Shell(shellMaker.SewedShape());
-
-            // BRepMesh_IncrementalMesh Mesh( shell, 200.0 );
-            // Mesh.Perform();
-            // StlAPI_Writer asd;
-            // std::string outfname = "out.stl";
-            // asd.Write(shell, outfname.c_str());
-        }
-        // Build Volumes
-        map<int, TopoDS_Shape> cVolumes;
-        for (auto &vol : volumes)
-        {
-            vector<unsigned int> data;
-            ParseUtils::GenerateVector(vol.second, data);
-
-            BRepBuilderAPI_MakeSolid solidMaker;
-
-            for (int i = 0; i < data.size(); ++i)
-            {
-                solidMaker.Add(cShells[data[i]]);
-
-                if (i == 0)
-                {
-                    continue;
-                }
-
-                // For each shell that's being removed from the solid, add centroid
-                // for tetrahedralisation purposes. In general this won't work so
-                // well because we could have a non-convex shell, but let's assume
-                // it is a decent guess for now.
-                GProp_GProps props;
-                BRepGProp::VolumeProperties(cShells[data[i]], props);
-                gp_Pnt centroid = props.CentreOfMass();
-
-                Array<OneD, NekDouble> voidPt(3);
-                voidPt[0] = centroid.X();
-                voidPt[1] = centroid.Y();
-                voidPt[2] = centroid.Z();
-                m_voidPoints.push_back(voidPt);
-            }
-
-            TopoDS_Solid s = solidMaker.Solid();
-
-            // Perform fix on solid
-            ShapeFix_Solid solidFix(s);
-
-            solidFix.Perform();
-
-            return solidFix.Solid();
-        }
-    }
-    */
 }
 
 }

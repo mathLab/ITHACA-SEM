@@ -56,7 +56,7 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
         m_s.get());
     m_isTransfiniteSurf = geom ? true : false;
 
-    if (in.Orientation() == 1)
+    if (in.Orientation() == TopAbs_REVERSED)
     {
         m_orientation = CADOrientation::eBackwards;
     }
@@ -150,7 +150,7 @@ Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p,
     else
     {
         Array<OneD, NekDouble> out(3);
-        GeomAPI_ProjectPointOnSurf proj(loc, m_s);
+        GeomAPI_ProjectPointOnSurf proj(loc, m_s, Precision::Confusion());
         proj.Perform(loc);
         ASSERTL1(proj.NbPoints() > 0, "Unable to find a projection!");
         proj.LowerDistanceParameters(uv[0], uv[1]);
@@ -338,7 +338,7 @@ void CADSurfOCE::Test(Array<OneD, NekDouble> uv)
     }
 
     error << " On Surface: " << GetId();
-    ASSERTL1(passed, "Warning: " + error.str());
+    //ASSERTL1(passed, "Warning: " + error.str());
     (void)passed; // suppress warning
 }
 

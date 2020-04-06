@@ -150,6 +150,8 @@ private:
     int m_totSends = 0;
     /// List of displacements
     Array<OneD,int> m_sendDisp;
+    /// List of requests
+    LibUtilities::CommRequestSharedPtr m_requests;
 };
 
 class AssemblyCommDG

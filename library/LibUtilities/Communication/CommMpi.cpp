@@ -43,6 +43,11 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+CommRequestMpi::CommRequestMpi(int num) : m_num(num)
+{
+    m_request = new MPI_Request[m_num];
+}
+
 std::string CommMpi::className = GetCommFactory().RegisterCreatorFunction(
     "ParallelMPI", CommMpi::create, "Parallel communication using MPI.");
 
@@ -398,21 +403,30 @@ void CommMpi::v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
 }
 
 void CommMpi::v_Irsend(void *buf, int count, CommDataType dt, int dest,
-                      MPI_Request *request)
+                       CommRequestSharedPtr request, int loc)
 {
-    MPI_Irsend(buf, count, dt, dest, 0, m_comm, request);
+    CommRequestMpiSharedPtr req = std::static_pointer_cast<CommRequestMpi>(request);
+    MPI_Irsend(buf, count, dt, dest, 0, m_comm, &req->GetRequest()[loc]);
 }
 
 void CommMpi::v_Irecv(void *buf, int count, CommDataType dt, int source,
-                       MPI_Request *request)
+                      CommRequestSharedPtr request, int loc)
 {
-    MPI_Irecv(buf, count, dt, source, 0, m_comm, request);
+    CommRequestMpiSharedPtr req = std::static_pointer_cast<CommRequestMpi>(request);
+    MPI_Irecv(buf, count, dt, source, 0, m_comm, &req->GetRequest()[loc]);
 }
 
-void CommMpi::v_WaitAll(int count, MPI_Request *array_of_requests)
+void CommMpi::v_WaitAll(CommRequestSharedPtr request)
 {
-    MPI_Waitall(count, array_of_requests, MPI_STATUSES_IGNORE);
+    CommRequestMpiSharedPtr req = std::static_pointer_cast<CommRequestMpi>(request);
+    MPI_Waitall(req->GetNumRequest(), &req->GetRequest()[0], MPI_STATUSES_IGNORE);
 }
+
+CommRequestSharedPtr CommMpi::v_CreateRequest(int num)
+{
+    return std::shared_ptr<CommRequest>(new CommRequestMpi(num));
+}
+
 
 /**
  * Processes are considered as a grid of size pRows*pColumns. Comm

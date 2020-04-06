@@ -245,21 +245,28 @@ void CommSerial::v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
 }
 
 void CommSerial::v_Irsend(void *buf, int count, CommDataType dt, int dest,
-                          MPI_Request *request)
+                          CommRequestSharedPtr request, int loc)
 {
-    boost::ignore_unused(buf, count, dt, dest, request);
+    boost::ignore_unused(buf, count, dt, dest, request, loc);
 }
 
 void CommSerial::v_Irecv(void *buf, int count, CommDataType dt, int source,
-                         MPI_Request *request)
+                         CommRequestSharedPtr request, int loc)
 {
-    boost::ignore_unused(buf, count, dt, source, request);
+    boost::ignore_unused(buf, count, dt, source, request, loc);
 }
 
-void CommSerial::v_WaitAll(int count, MPI_Request *array_of_requests)
+void CommSerial::v_WaitAll(CommRequestSharedPtr request)
 {
-    boost::ignore_unused(count, array_of_requests);
+    boost::ignore_unused(request);
 }
+
+CommRequestSharedPtr CommSerial::v_CreateRequest(int num)
+{
+    boost::ignore_unused(num);
+    return std::shared_ptr<CommRequest>(new CommRequest);
+}
+
 
 /**
  *

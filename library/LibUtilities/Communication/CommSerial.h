@@ -132,10 +132,11 @@ protected:
                                      void *recvbuf, int recvcounts[],
                                      int rdispls[], CommDataType recvtype);
     virtual void v_Irsend(void *buf, int count, CommDataType dt, int dest,
-                          MPI_Request *request);
+                          CommRequestSharedPtr request, int loc);
     virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
-                         MPI_Request *request);
-    virtual void v_WaitAll(int count, MPI_Request *array_of_requests);
+                         CommRequestSharedPtr request, int loc);
+    virtual void v_WaitAll(CommRequestSharedPtr request);
+    virtual CommRequestSharedPtr v_CreateRequest(int num);
 
     LIB_UTILITIES_EXPORT virtual void v_SplitComm(int pRows, int pColumns);
     LIB_UTILITIES_EXPORT virtual CommSharedPtr v_CommCreateIf(int flag);

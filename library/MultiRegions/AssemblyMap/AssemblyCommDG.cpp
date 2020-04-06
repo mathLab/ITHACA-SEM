@@ -203,6 +203,8 @@ Pairwise::Pairwise(
     {
         m_sendDisp[i] = m_sendDisp[i-1] + sendCount[i-1];
     }
+
+    m_requests = m_comm->CreateRequest(m_vecPairPartitionTrace.size() * 2);
 }
 
 void AllToAll::PerformExchange(
@@ -281,15 +283,13 @@ void Pairwise::PerformExchange(
     const Array<OneD, NekDouble> &testFwd,
     Array<OneD, NekDouble> &testBwd)
 {
-    Array<OneD, MPI_Request> request(m_vecPairPartitionTrace.size() * 2);
-
     Array<OneD, NekDouble> recvBuff(m_totSends, -1);
     // Perform receive operations
     for (size_t i = 0; i < m_vecPairPartitionTrace.size(); ++i)
     {
         size_t len = m_vecPairPartitionTrace[i].second.size();
         m_comm->Irecv(m_vecPairPartitionTrace[i].first,
-                      recvBuff[m_sendDisp[i]], len, &request[2*i]);
+                      recvBuff[m_sendDisp[i]], len, m_requests, 2*i);
     }
 
     // Can't reuse buffer until previous send has completed so we store all
@@ -305,11 +305,11 @@ void Pairwise::PerformExchange(
 
         // Perform send operations
         m_comm->Irsend(m_vecPairPartitionTrace[i].first,
-                       sendBuff[m_sendDisp[i]], len, &request[2*i + 1]);
+                       sendBuff[m_sendDisp[i]], len, m_requests, 2*i + 1);
     }
 
     //Wait for all send/recvs to complete
-    m_comm->WaitAll(request);
+    m_comm->WaitAll(m_requests);
 
     for (size_t i = 0; i < m_vecPairPartitionTrace.size(); ++i)
     {
@@ -698,7 +698,7 @@ void AssemblyCommDG::InitialiseStructure(
     }
 
     // Check that periodic trace edges being communicated are of same order
-    Array<OneD, int> perTraceRecv(m_nRanks);
+    Array<OneD, int> perTraceRecv(m_nRanks, 0);
     comm->AlltoAll(perTraceSend, perTraceRecv);
 
     ASSERTL0(perTraceSend == perTraceRecv,
@@ -711,7 +711,6 @@ std::tuple<NekDouble, NekDouble, NekDouble> AssemblyCommDG::Timing(
     const int &num,
     ExchangeMethodSharedPtr f)
 {
-
     Array<OneD, double> testFwd(num, 1);
     Array<OneD, double> testBwd(num, -2);
 

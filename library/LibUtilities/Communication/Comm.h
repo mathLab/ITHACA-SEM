@@ -77,6 +77,17 @@ const char* const ReduceOperatorMap[] =
     "ReduceMin"
 };
 
+/// Class for communicator request type
+class CommRequest {
+public:
+    /// Default constructor
+    CommRequest() = default;
+    /// Default deconstructor
+    virtual  ~CommRequest() = default;
+};
+
+typedef std::shared_ptr<CommRequest> CommRequestSharedPtr;
+
 /// Base communications class
 class Comm : public std::enable_shared_from_this<Comm>
 {
@@ -141,10 +152,11 @@ public:
                            T2 &pSendDataOffsetMap, T1 &pRecvData,
                            T2 &pRecvDataSizeMap, T2 &pRecvDataOffsetMap);
     template <class T>
-    void Irsend(int pProc, T &pData, int count, MPI_Request *request);
+    void Irsend(int pProc, T &pData, int count, CommRequestSharedPtr request, int loc);
     template <class T>
-    void Irecv(int pProc, T &pData, int count, MPI_Request *request);
-    inline void WaitAll(Array<OneD, MPI_Request> &array_of_requests);
+    void Irecv(int pProc, T &pData, int count, CommRequestSharedPtr request, int loc);
+    inline void WaitAll(CommRequestSharedPtr request);
+    inline CommRequestSharedPtr CreateRequest(int num);
 
     LIB_UTILITIES_EXPORT inline CommSharedPtr CommCreateIf(int flag);
 
@@ -218,10 +230,11 @@ protected:
                                     int rdispls[], CommDataType recvtype) = 0;
 
     virtual void v_Irsend(void *buf, int count, CommDataType dt, int dest,
-                          MPI_Request *request)   = 0;
+                          CommRequestSharedPtr request, int loc)   = 0;
     virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
-                          MPI_Request *request)   = 0;
-    virtual void v_WaitAll(int count, MPI_Request *array_of_requests) = 0;
+                         CommRequestSharedPtr request, int loc)   = 0;
+    virtual void v_WaitAll(CommRequestSharedPtr request) = 0;
+    virtual CommRequestSharedPtr v_CreateRequest(int num) = 0;
 
     virtual void v_SplitComm(int pRows, int pColumns) = 0;
     virtual bool v_TreatAsRankZero(void) = 0;
@@ -546,23 +559,28 @@ void Comm::NeighborAlltoAllv(
         CommDataTypeTraits<T1>::GetDataType());
 }
 
-template <class T> void Comm::Irsend(int pProc, T &pData, int count, MPI_Request *request)
+template <class T> void Comm::Irsend(int pProc, T &pData, int count, CommRequestSharedPtr request, int loc)
 {
     v_Irsend(CommDataTypeTraits<T>::GetPointer(pData), count,
-           CommDataTypeTraits<T>::GetDataType(), pProc, request);
+           CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
 }
 
-template <class T> void Comm::Irecv(int pProc, T &pData, int count, MPI_Request *request)
+template <class T> void Comm::Irecv(int pProc, T &pData, int count, CommRequestSharedPtr request, int loc)
 {
     v_Irecv(CommDataTypeTraits<T>::GetPointer(pData), count,
-           CommDataTypeTraits<T>::GetDataType(), pProc, request);
+           CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
 }
 
-inline void Comm::WaitAll(Array<OneD, MPI_Request> &array_of_requests)
+inline void Comm::WaitAll(CommRequestSharedPtr request)
 {
-    v_WaitAll(array_of_requests.num_elements(),
-        array_of_requests.get());
+    v_WaitAll(request);
 }
+
+inline CommRequestSharedPtr Comm::CreateRequest(int num)
+{
+    return v_CreateRequest(num);
+}
+
 
 
 /**

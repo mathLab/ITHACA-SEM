@@ -56,6 +56,33 @@ class CommMpi;
 /// Pointer to a Communicator object.
 typedef std::shared_ptr<CommMpi> CommMpiSharedPtr;
 
+/// Class for communicator request type
+class CommRequestMpi : public CommRequest {
+public:
+    /// Default constructor
+    CommRequestMpi(int num);
+    /// Default deconstructor
+    ~CommRequestMpi() = default;
+
+    inline MPI_Request* &GetRequest()
+    {
+        return m_request;
+    }
+
+    inline int &GetNumRequest()
+    {
+        return m_num;
+    }
+
+private:
+    int m_num;
+    MPI_Request* m_request;
+
+};
+
+typedef std::shared_ptr<CommRequestMpi> CommRequestMpiSharedPtr;
+
+
 /// A global linear system.
 class CommMpi : public Comm
 {
@@ -132,10 +159,11 @@ protected:
                                      void *recvbuf, int recvcounts[],
                                      int rdispls[], CommDataType recvtype);
     virtual void v_Irsend(void *buf, int count, CommDataType dt, int dest,
-                          MPI_Request *request);
+                          CommRequestSharedPtr request, int loc);
     virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
-                          MPI_Request *request);
-    virtual void v_WaitAll(int count, MPI_Request *array_of_requests);
+                         CommRequestSharedPtr request, int loc);
+    virtual void v_WaitAll(CommRequestSharedPtr request);
+    virtual CommRequestSharedPtr v_CreateRequest(int num);
 
 
     virtual void v_SplitComm(int pRows, int pColumns);

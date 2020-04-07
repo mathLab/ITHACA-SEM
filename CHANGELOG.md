@@ -15,6 +15,9 @@ v5.1.0
 **NekMesh**
 - Improved boundary layer splitting and output to CADfix (!938)
 
+**BuildSystem**
+- Toggle build type (!1135)
+
 v5.0.1
 ------
 **Library**

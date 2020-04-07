@@ -87,9 +87,14 @@ public:
                           std::vector<bool>                      fwd,
                           std::vector<std::pair<double, double>> clims,
                           std::vector<gp_Pnt>                    verts)
-        : m_uvDir(uvDir), m_val(val), m_edges(edges), m_fwd(fwd),
-          m_clims(clims), m_verts(verts)
+        : m_uvDir(uvDir), m_val(val), m_fwd(fwd), m_clims(clims), m_verts(verts)
     {
+        // Take a copy, just to be on the safe side...
+        m_edges.resize(edges.size());
+        for (int i = 0; i < edges.size(); ++i)
+        {
+            m_edges[i] = Handle(Geom_Curve)::DownCast(edges[i]->Copy());
+        }
     }
 
     /**
@@ -421,15 +426,17 @@ public:
     virtual void Transform (const gp_Trsf& T)
     {
         abort();
+
         // Transform our constituent parts.
-        m_verts[0].Transform(T);
-        m_verts[1].Transform(T);
-        m_verts[2].Transform(T);
-        m_verts[3].Transform(T);
-        m_edges[0]->Transform(T);
-        m_edges[1]->Transform(T);
-        m_edges[2]->Transform(T);
-        m_edges[3]->Transform(T);
+        for (int i = 0; i < m_edges.size(); ++i)
+        {
+            m_verts[i].Transform(T);
+            m_edges[i]->Transform(T);
+            m_clims[i].first =
+                m_edges[i]->TransformedParameter(m_clims[i].first, T);
+            m_clims[i].second =
+                m_edges[i]->TransformedParameter(m_clims[i].second, T);
+        }
     }
 };
 
@@ -492,8 +499,14 @@ public:
                             std::vector<bool>                      fwd,
                             std::vector<std::pair<double, double>> clims,
                             std::vector<gp_Pnt>                    verts)
-        : m_edges(edges), m_fwd(fwd), m_clims(clims), m_verts(verts)
+        : m_fwd(fwd), m_clims(clims), m_verts(verts)
     {
+        // Take a copy, just to be on the safe side...
+        m_edges.resize(edges.size());
+        for (int i = 0; i < edges.size(); ++i)
+        {
+            m_edges[i] = Handle(Geom_Curve)::DownCast(edges[i]->Copy());
+        }
     }
 
     /**
@@ -553,15 +566,17 @@ public:
     virtual void Transform(const gp_Trsf& T)
     {
         abort();
+
         // Transform our constituent parts.
-        m_verts[0].Transform(T);
-        m_verts[1].Transform(T);
-        m_verts[2].Transform(T);
-        m_verts[3].Transform(T);
-        m_edges[0]->Transform(T);
-        m_edges[1]->Transform(T);
-        m_edges[2]->Transform(T);
-        m_edges[3]->Transform(T);
+        for (int i = 0; i < m_edges.size(); ++i)
+        {
+            m_verts[i].Transform(T);
+            m_edges[i]->Transform(T);
+            m_clims[i].first =
+                m_edges[i]->TransformedParameter(m_clims[i].first, T);
+            m_clims[i].second =
+                m_edges[i]->TransformedParameter(m_clims[i].second, T);
+        }
     }
 
     virtual Handle(Geom_Geometry) Copy() const
@@ -899,18 +914,85 @@ public:
     /**
      * @brief Compute a point on the curve @p P, alongside its first-, second-
      * and third-order derivatives.
-     *
-     * Since we're lazy and D3 isn't called in the mesh generation pipeline,
-     * this isn't implemented in this class (even though it is well-defined).
      */
     virtual void D3 (const Standard_Real U, const Standard_Real V, gp_Pnt& P,
                      gp_Vec& D1U, gp_Vec& D1V, gp_Vec& D2U, gp_Vec& D2V,
                      gp_Vec& D2UV, gp_Vec& D3U, gp_Vec& D3V, gp_Vec& D3UUV,
                      gp_Vec& D3UVV) const
     {
-        boost::ignore_unused(
-            U, V, P, D1U, D1V, D2U, D2V, D2UV, D3U, D3V, D3UUV, D3UVV);
-        abort();
+        gp_Pnt t0, t1, t2, t3;
+        gp_Vec d0, d1, d2, d3, dd0, dd1, dd2, dd3;
+        gp_Vec ddd0, ddd1, ddd2, ddd3;
+
+        m_edges[0]->D3(Map(0, U), t0, d0, dd0, ddd0);
+        m_edges[1]->D3(Map(1, V), t1, d1, dd1, ddd1);
+        m_edges[2]->D3(Map(2, 1-U), t2, d2, dd2, ddd2);
+        m_edges[3]->D3(Map(3, 1-V), t3, d3, dd3, ddd3);
+
+        gp_XYZ c0 = t0.XYZ(), c1 = t1.XYZ(), c2 = t2.XYZ(), c3 = t3.XYZ();
+        gp_XYZ c0p = d0.XYZ(), c1p = d1.XYZ(), c2p = d2.XYZ(), c3p = d3.XYZ();
+        gp_XYZ c0pp = dd0.XYZ(), c1pp = dd1.XYZ(), c2pp = dd2.XYZ();
+        gp_XYZ c3pp = dd3.XYZ();
+        gp_XYZ c0ppp = ddd0.XYZ(), c1ppp = ddd1.XYZ(), c2ppp = ddd2.XYZ();
+        gp_XYZ c3ppp = ddd3.XYZ();
+        gp_XYZ v0 = m_verts[0].XYZ(), v1 = m_verts[1].XYZ();
+        gp_XYZ v2 = m_verts[2].XYZ(), v3 = m_verts[3].XYZ();
+
+        gp_XYZ pnt = (1-U) * c3 + U * c1 + (1-V) * c0 + V * c2 - (
+            (1-U) * (1-V) * v0 + U * (1-V) * v1 + U * V * v2 + (1-U) * V * v3);
+        P = gp_Pnt(pnt);
+
+        // Multiply by chain rule factors.
+        c0p *= (m_clims[0].second - m_clims[0].first);
+        c1p *= (m_clims[1].second - m_clims[1].first);
+        c2p *= (m_clims[2].second - m_clims[2].first);
+        c3p *= (m_clims[3].second - m_clims[3].first);
+        c0p *= m_fwd[0] ? 1.0 : -1.0;
+        c1p *= m_fwd[1] ? 1.0 : -1.0;
+        c2p *= m_fwd[2] ? -1.0 : 1.0; // These two edges are flipped
+        c3p *= m_fwd[3] ? -1.0 : 1.0; // so negate here.
+
+        // Second order derivative chain rule factors.
+        c0pp *= (m_clims[0].second - m_clims[0].first) *
+                (m_clims[0].second - m_clims[0].first);
+        c1pp *= (m_clims[1].second - m_clims[1].first) *
+                (m_clims[1].second - m_clims[1].first);
+        c2pp *= (m_clims[2].second - m_clims[2].first) *
+                (m_clims[2].second - m_clims[2].first);
+        c3pp *= (m_clims[3].second - m_clims[3].first) *
+                (m_clims[3].second - m_clims[3].first);
+        c0ppp *= pow(m_clims[0].second - m_clims[0].first, 3);
+        c1ppp *= pow(m_clims[1].second - m_clims[1].first, 3);
+        c2ppp *= pow(m_clims[2].second - m_clims[2].first, 3);
+        c3ppp *= pow(m_clims[3].second - m_clims[3].first, 3);
+        c0ppp *= m_fwd[0] ? 1.0 : -1.0;
+        c1ppp *= m_fwd[1] ? 1.0 : -1.0;
+        c2ppp *= m_fwd[2] ? -1.0 : 1.0; // These two edges are flipped
+        c3ppp *= m_fwd[3] ? -1.0 : 1.0; // so negate here.
+
+        // Analytic derivatives of the transfinite surface.
+        gp_XYZ du = -1.0 * c3 + c1 + (1-V) * c0p + V * c2p - (
+            -(1-V) * v0 + (1-V) * v1 + V * v2 - V * v3);
+        gp_XYZ dv = (1-U) * c3p + U * c1p - c0 + c2 - (
+            -(1-U) * v0 - U * v1 + U * v2 + (1-U) * v3);
+        gp_XYZ duu = (1-V) * c0pp + V * c2pp;
+        gp_XYZ dvv = (1-U) * c3pp + U * c1pp;
+        gp_XYZ duv = -1.0 * c3p + c1p - c0p + c2p - (v0 - v1 + v2 - v3);
+
+        gp_XYZ duuu = (1-V) * c0ppp + V * c2ppp;
+        gp_XYZ dvvv = (1-U) * c3ppp + U * c1ppp;
+        gp_XYZ duuv = -1.0 * c0pp + c2pp;
+        gp_XYZ duvv = -1.0 * c3pp + c1pp;
+
+        D1U = gp_Vec(du);
+        D1V = gp_Vec(dv);
+        D2U = gp_Vec(duu);
+        D2V = gp_Vec(dvv);
+        D2UV = gp_Vec(duv);
+        D3U = gp_Vec(duuu);
+        D3V = gp_Vec(dvvv);
+        D3UUV = gp_Vec(duuv);
+        D3UVV = gp_Vec(duvv);
     }
 
     /**

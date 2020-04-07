@@ -61,6 +61,8 @@
 #include <TopoDS_Solid.hxx>
 #include <BRepClass3d_SolidClassifier.hxx>
 
+#include <Geom2d_Line.hxx>
+
 using namespace std;
 
 namespace Nektar

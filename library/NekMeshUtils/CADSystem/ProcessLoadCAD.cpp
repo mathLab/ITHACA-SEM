@@ -61,6 +61,8 @@ ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(true, "", "Use mesh from CFI file");
     m_config["verbose"] =
         ConfigOption(true, "", "verbose output from cadsystem");
+    m_config["voidpoints"] =
+        ConfigOption(false, "", "Void points");
 }
 
 ProcessLoadCAD::~ProcessLoadCAD()
@@ -105,6 +107,34 @@ void ProcessLoadCAD::Process()
     if(m_config["verbose"].beenSet)
     {
         m_mesh->m_cad->SetVerbose();
+    }
+
+    std::string voidPoints = m_config["voidpoints"].as<std::string>();
+    if (voidPoints.length() > 0)
+    {
+        std::vector<std::string> splitStr;
+        std::vector<Array<OneD, NekDouble>> voidPts;
+
+        boost::split(splitStr, voidPoints, boost::is_any_of(";"));
+
+        for (auto &tosplit : splitStr)
+        {
+            std::vector<std::string> coords;
+            boost::split(coords, tosplit, boost::is_any_of(" "));
+            std::cout << tosplit << std::endl;
+
+            ASSERTL0(coords.size() == 3,
+                     "Void points should contain exactly three coordinates.");
+
+            Array<OneD, NekDouble> tmp(3);
+            tmp[0] = std::stod(coords[0]);
+            tmp[1] = std::stod(coords[1]);
+            tmp[2] = std::stod(coords[2]);
+
+            voidPts.push_back(tmp);
+        }
+
+        m_mesh->m_cad->SetVoidPoints(voidPts);
     }
 
     ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");

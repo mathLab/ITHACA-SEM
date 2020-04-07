@@ -56,6 +56,19 @@ public:
 
 typedef std::shared_ptr<ExchangeMethod>  ExchangeMethodSharedPtr;
 
+class Serial: public ExchangeMethod
+{
+public:
+    /// Default constructor
+    MULTI_REGIONS_EXPORT Serial() = default;
+
+    MULTI_REGIONS_EXPORT inline virtual void PerformExchange(
+        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override
+    {
+        boost::ignore_unused(testFwd, testBwd);
+    }
+};
+
 class AllToAll: public ExchangeMethod
 {
 public:

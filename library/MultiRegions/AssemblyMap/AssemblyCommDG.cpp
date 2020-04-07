@@ -332,74 +332,79 @@ AssemblyCommDG::AssemblyCommDG(
 {
     auto comm = locExp.GetSession()->GetComm();
 
-    // Initialise graph structure and link processes across partition boundaries
-    AssemblyCommDG::InitialiseStructure(
-        locExp, trace, elmtToTrace, bndCondExp, bndCond, perMap, comm);
-
-    //Timing MPI comm methods, warm up with 10 iterations then time over 50
-    std::map<int, ExchangeMethodSharedPtr> MPIFuncMap;
-
-    MPIFuncMap[0] = ExchangeMethodSharedPtr(
-        MemoryManager<AllToAll>::AllocateSharedPtr(
-            comm, m_maxQuad, m_nRanks, m_rankSharedEdges, m_edgeToTrace));
-
-    MPIFuncMap[1] = ExchangeMethodSharedPtr(
-        MemoryManager<AllToAllV>::AllocateSharedPtr(
-            comm, m_rankSharedEdges, m_edgeToTrace, m_nRanks));
-
-    MPIFuncMap[2] = ExchangeMethodSharedPtr(
-        MemoryManager<NeighborAllToAllV>::AllocateSharedPtr(
-            comm, m_rankSharedEdges, m_edgeToTrace));
-
-    MPIFuncMap[3] = ExchangeMethodSharedPtr(
-        MemoryManager<Pairwise>::AllocateSharedPtr(
-            comm, m_rankSharedEdges, m_edgeToTrace));
-
-    const char* MPITypeMap[] =
+    // If serial then skip initialising graph structure and the MPI timing
+    if(comm->IsSerial())
     {
-        "AllToAll",
-        "AllToAllV",
-        "NeighborAllToAllV",
-        "PairwiseSendRecv"
-    };
-
-    int numPoints = trace->GetNpoints();
-    int warmup = 10, iter = 50;
-    NekDouble min, max;
-    std::vector<NekDouble> avg(4, -1);
-
-    if (comm->GetRank() == 0)
-    {
-        std::cout << "MPI setup: " << std::endl;
+        m_exchange = ExchangeMethodSharedPtr(
+            MemoryManager<Serial>::AllocateSharedPtr());
     }
-
-    for (auto &func : MPIFuncMap)
+    else
     {
-        Timing(comm, warmup, numPoints, func.second);
-        std::tie(avg[func.first], min, max) =
-            Timing(comm, iter, numPoints, func.second);
+        // Initialise graph structure and link processes across partition boundaries
+        AssemblyCommDG::InitialiseStructure(locExp, trace, elmtToTrace,
+                                            bndCondExp, bndCond, perMap, comm);
+
+        // Timing MPI comm methods, warm up with 10 iterations then time over 50
+        std::map<int, ExchangeMethodSharedPtr> MPIFuncMap;
+
+        MPIFuncMap[0] =
+            ExchangeMethodSharedPtr(MemoryManager<AllToAll>::AllocateSharedPtr(
+                comm, m_maxQuad, m_nRanks, m_rankSharedEdges, m_edgeToTrace));
+
+        MPIFuncMap[1] =
+            ExchangeMethodSharedPtr(MemoryManager<AllToAllV>::AllocateSharedPtr(
+                comm, m_rankSharedEdges, m_edgeToTrace, m_nRanks));
+
+        MPIFuncMap[2] = ExchangeMethodSharedPtr(
+            MemoryManager<NeighborAllToAllV>::AllocateSharedPtr(
+                comm, m_rankSharedEdges, m_edgeToTrace));
+
+        MPIFuncMap[3] =
+            ExchangeMethodSharedPtr(MemoryManager<Pairwise>::AllocateSharedPtr(
+                comm, m_rankSharedEdges, m_edgeToTrace));
+
+        const char *MPITypeMap[] = {"AllToAll", "AllToAllV",
+                                    "NeighborAllToAllV", "PairwiseSendRecv"};
+
+        int numPoints = trace->GetNpoints();
+        int warmup = 10, iter = 50;
+        NekDouble min, max;
+        std::vector<NekDouble> avg(4, -1);
+
         if (comm->GetRank() == 0)
         {
-            std::cout << "  " << MPITypeMap[func.first]
-                      << " times (avg, min, max): "
-                      << avg[func.first] << " " << min
-                      << " " << max << std::endl;
+            std::cout << "MPI setup: " << std::endl;
         }
+
+        for (auto &func : MPIFuncMap)
+        {
+            Timing(comm, warmup, numPoints, func.second);
+            std::tie(avg[func.first], min, max) =
+                Timing(comm, iter, numPoints, func.second);
+            if (comm->GetRank() == 0)
+            {
+                std::cout << "  " << MPITypeMap[func.first]
+                          << " times (avg, min, max): " << avg[func.first]
+                          << " " << min << " " << max << std::endl;
+            }
+        }
+
+        // Gets the fastest MPI method greater than 0
+        int fastestMPI = std::distance(
+            avg.begin(),
+            std::min_element(
+                avg.begin(), avg.end(), [](NekDouble a, NekDouble b) {
+                    return (a < 0) ? false : (b < 0) ? true : (a < b);
+                }));
+
+        if (comm->GetRank() == 0)
+        {
+            std::cout << "  Chosen fastest method: " << MPITypeMap[fastestMPI]
+                      << std::endl;
+        }
+
+        m_exchange = MPIFuncMap[fastestMPI];
     }
-
-    // Gets the fastest MPI method greater than 0
-    int fastestMPI = std::distance(
-        avg.begin(), std::min_element(avg.begin(), avg.end(),
-            [](NekDouble a, NekDouble b)
-            { return (a < 0) ? false : (b < 0) ? true : (a < b); }));
-
-    if (comm->GetRank() == 0)
-    {
-        std::cout << "  Chosen fastest method: " << MPITypeMap[fastestMPI]
-                  << std::endl;
-    }
-
-    m_exchange = MPIFuncMap[fastestMPI];
 }
 
 void AssemblyCommDG::InitialiseStructure(
@@ -633,10 +638,7 @@ void AssemblyCommDG::InitialiseStructure(
     //Sort localEdgeIdsArray before sending (this is important!)
     std::sort(localEdgeIdsArray.begin(), localEdgeIdsArray.end());
 
-    // If only one rank set array size to 1 to avoid undefined behaviour
-    int size = (m_nRanks != 1) ?
-        std::accumulate(rankNumEdges.begin(), rankNumEdges.end(), 0) : 1;
-    Array<OneD, int> rankLocalEdgeIds(size, 0);
+    Array<OneD, int> rankLocalEdgeIds(std::accumulate(rankNumEdges.begin(), rankNumEdges.end(), 0), 0);
 
     //Send all unique edge IDs to all partitions
     comm->AllGatherv(localEdgeIdsArray, rankLocalEdgeIds,

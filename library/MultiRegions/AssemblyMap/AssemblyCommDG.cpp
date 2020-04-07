@@ -737,7 +737,7 @@ std::tuple<NekDouble, NekDouble, NekDouble> AssemblyCommDG::Timing(
     comm->AllReduce(sumTime, LibUtilities::ReduceSum);
 
     NekDouble avgTime = sumTime[0]/comm->GetSize();
-    return {avgTime, minTime[0], maxTime[0]};
+    return std::make_tuple(avgTime, minTime[0], maxTime[0]);
 }
 
 } // namespace

@@ -45,7 +45,7 @@ void TetMesh::Mesh()
 {
     if (m_mesh->m_verbose)
     {
-        cout << endl << endl << "Tetrahdral mesh generation" << endl;
+        cout << endl << endl << "Tetrahedral mesh generation" << endl;
     }
 
     vector<Array<OneD, NekDouble>> voidPts = m_mesh->m_cad->GetVoidPoints();

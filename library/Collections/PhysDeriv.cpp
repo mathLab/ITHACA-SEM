@@ -301,23 +301,34 @@ class PhysDeriv_AVX : public Operator
                 m_output1 = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
             }
 
+            // Check if deformed
+            bool deformed{false};
+
+
+
+            // Check if the collection is deformed or not
+            int jacSizePad{nElmtPad};
+            if (deformed)
+            {
+                deformed = true;
+                jacSizePad = nElmtPad * nqElmt;
+            }
+
             // Store Jacobian
-            Array<OneD, NekDouble> jac{nElmtPad, 0.0};
+            Array<OneD, NekDouble> jac{jacSizePad, 0.0};
             Vmath::Vcopy(nElmtNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
 
             // Store derivative factors
-            // Array<TwoD, NekDouble> df;
-            // df = pGeomData->GetDerivFactors(pCollExp);
-
-            // Check if the collection is deformed or not
-            bool deformed{false};
-            if (jac.num_elements() == nElmtPad * nqElmt)
+            const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
+            Array<TwoD, NekDouble> df(dim * dim, jacSizePad, 0.0);
+            for (int j = 0; j < dim * dim; ++j)
             {
-                deformed = true;
+                Vmath::Vcopy(nElmtNoPad,
+                    &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
+                    &df[j][0], 1);
             }
 
             // Basis vector.
-            const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
             std::vector<LibUtilities::BasisSharedPtr> basis(dim);
             for (auto i = 0; i < dim; ++i)
             {
@@ -339,11 +350,11 @@ class PhysDeriv_AVX : public Operator
                 oper->SetJac(jac);
             }
 
-            // // If the operator needs the derivative factors, provide it here
-            // if (oper->NeedsDF())
-            // {
-            //     oper->SetDF(df);
-            // }
+            // If the operator needs the derivative factors, provide it here
+            if (oper->NeedsDF())
+            {
+                oper->SetDF(df);
+            }
 
             m_oper = std::dynamic_pointer_cast<AVX::PhysDeriv>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");

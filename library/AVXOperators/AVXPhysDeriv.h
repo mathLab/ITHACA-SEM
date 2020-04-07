@@ -163,19 +163,25 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
         constexpr int nq = NQ0*NQ1;
 
         AlignedVector<T> tmpIn(nq), tmpOut_d0(nq), tmpOut_d1(nq);
+
+        // Get size of derivative factor block
+        int dfSize{};
+        if(DEFORMED)
+        {
+            dfSize = ndf*nq;
+        }
+        else
+        {
+            dfSize = ndf;
+        }
+
         for (int e = 0; e < this->m_nBlocks; e++)
         {
             // Load and transpose data
             T::load_interleave(inptr, nq, tmpIn);
 
-
             const VecData<double, VW> *df_ptr;
-            if(DEFORMED){
-                df_ptr = &(this->m_df[e*ndf*nq]);
-            }
-            else{
-                df_ptr = &(this->m_df[e*ndf]);
-            }
+            df_ptr = &(this->m_df[e*dfSize]);
 
             AVXPhysDerivQuadKernel<NQ0, NQ1, VW, DEFORMED>(
                 tmpIn,

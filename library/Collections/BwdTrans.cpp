@@ -156,7 +156,7 @@ class BwdTrans_AVX final : public Operator
 
         void operator()(
                 const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &output0,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp) final
@@ -169,11 +169,11 @@ class BwdTrans_AVX final : public Operator
                 // call op
                 (*m_oper)(m_input, m_output);
                 // copy out of padded vector
-                Vmath::Vcopy(output.num_elements(), m_output, 1, output, 1);
+                Vmath::Vcopy(output0.num_elements(), m_output, 1, output0, 1);
             }
             else
             {
-                (*m_oper)(input, output);
+                (*m_oper)(input, output0);
             }
         }
 

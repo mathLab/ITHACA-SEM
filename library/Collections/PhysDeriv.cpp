@@ -244,8 +244,21 @@ class PhysDeriv_AVX : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
-            NEKERROR(ErrorUtil::efatal,
-                "PhysDeriv_AVX: Not implemented yet.");
+            boost::ignore_unused(output2, wsp);
+            if (m_isPadded)
+            {
+                // copy into padded vector
+                Vmath::Vcopy(input.num_elements(), input, 1, m_input, 1);
+                // call op
+                (*m_oper)(m_input, m_output0, m_output1);
+                // copy out of padded vector
+                Vmath::Vcopy(output0.num_elements(), m_output0, 1, output0, 1);
+                Vmath::Vcopy(output1.num_elements(), m_output1, 1, output1, 1);
+            }
+            else
+            {
+                (*m_oper)(input, output0, output1);
+            }
         }
 
         virtual void operator()(
@@ -254,22 +267,87 @@ class PhysDeriv_AVX : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
+            boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal,
                 "PhysDeriv_AVX: Not valid for this operator.");
         }
 
-    protected:
-        Array<OneD, DNekMatSharedPtr>   m_derivMat;
-        Array<TwoD, const NekDouble>    m_derivFac;
-        int                             m_dim;
-        int                             m_coordim;
-
     private:
+        std::shared_ptr<AVX::PhysDeriv> m_oper;
+        /// flag for padding
+        bool m_isPadded{false};
+        /// padded input/output vectors
+        Array<OneD, NekDouble> m_input, m_output0, m_output1;
+
         PhysDeriv_AVX(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
             : Operator(pCollExp, pGeomData)
         {
+
+            const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
+            // const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
+
+            // Padding if needed
+            const auto nElmtNoPad = pCollExp.size();
+            auto nElmtPad = nElmtNoPad;
+            if (nElmtNoPad % AVX::SIMD_WIDTH_SIZE != 0)
+            {
+                m_isPadded = true;
+                nElmtPad = nElmtNoPad + AVX::SIMD_WIDTH_SIZE -
+                    (nElmtNoPad % AVX::SIMD_WIDTH_SIZE);
+                m_input = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                m_output0 = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                m_output1 = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+            }
+
+            // Store Jacobian
+            Array<OneD, NekDouble> jac{nElmtPad, 0.0};
+            Vmath::Vcopy(nElmtNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
+
+            // Store derivative factors
+            // Array<TwoD, NekDouble> df;
+            // df = pGeomData->GetDerivFactors(pCollExp);
+
+            // Check if the collection is deformed or not
+            bool deformed{false};
+            if (jac.num_elements() == nElmtPad * nqElmt)
+            {
+                deformed = true;
+            }
+
+            // Basis vector.
+            const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
+            std::vector<LibUtilities::BasisSharedPtr> basis(dim);
+            for (auto i = 0; i < dim; ++i)
+            {
+                basis[i] = pCollExp[0]->GetBasis(i);
+            }
+
+            // Get shape type
+            auto shapeType = pCollExp[0]->GetStdExp()->DetShapeType();
+
+            // Generate operator string and create operator.
+            std::string op_string = "PhysDeriv";  // For now hardcoded PhysDeriv
+            op_string += AVX::GetOpstring(shapeType, deformed);
+            auto oper = AVX::GetOperatorFactory().
+                CreateInstance(op_string, basis, nElmtPad);
+
+            // If the operator needs the Jacobian, provide it here
+            if (oper->NeedsJac())
+            {
+                oper->SetJac(jac);
+            }
+
+            // // If the operator needs the derivative factors, provide it here
+            // if (oper->NeedsDF())
+            // {
+            //     oper->SetDF(df);
+            // }
+
+            m_oper = std::dynamic_pointer_cast<AVX::PhysDeriv>(oper);
+            ASSERTL0(m_oper, "Failed to cast pointer.");
+
         }
 };
 

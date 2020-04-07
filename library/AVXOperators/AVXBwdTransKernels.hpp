@@ -18,6 +18,8 @@ inline static void AVXBwdTransQuadKernel(
     VecData<double, VW> *wsp,
     AlignedVector<VecData<double, VW>> &out)
 {
+    using T = VecData<double, VW>;
+
     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1;
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
 
@@ -25,12 +27,13 @@ inline static void AVXBwdTransQuadKernel(
     {
         for (int q = 0, cnt_pq = 0; q < nm1; ++q, ++cnt_iq)
         {
-            wsp[cnt_iq] = in[cnt_pq] * bdata0[i];
+            T tmp =  in[cnt_pq] * bdata0[i]; //Load 2x
             ++cnt_pq;
             for (int p = 1; p < nm0; ++p, ++cnt_pq)
             {
-                wsp[cnt_iq].fma(in[cnt_pq], bdata0[p * nq0 + i]);
+                tmp.fma(in[cnt_pq], bdata0[p * nq0 + i]); //Load 2x
             }
+            wsp[cnt_iq] = tmp; //Store 1x
         }
     }
 
@@ -38,12 +41,13 @@ inline static void AVXBwdTransQuadKernel(
     {
         for (int i = 0, cnt_iq = 0; i < nq0; ++i, ++cnt_ij)
         {
-            out[cnt_ij] = wsp[cnt_iq] * bdata1[j];
+            T tmp = wsp[cnt_iq] * bdata1[j]; //Load 2x
             ++cnt_iq;
             for (int q = 1; q < nm1; ++q, ++cnt_iq)
             {
-                out[cnt_ij].fma(wsp[cnt_iq], bdata1[q * nq1 + j]);
+                tmp.fma(wsp[cnt_iq], bdata1[q * nq1 + j]); //Load 2x
             }
+            out[cnt_ij] = tmp; //Store 1x
         }
     }
 

@@ -8,11 +8,18 @@ stages:
   only:
     refs:
       - merge_requests
-      - master
-      - tags
+      - master@nektar/nektar
+      - tags@nektar/nektar
       - web
     changes:
-      - "**/*"
+      - "cmake/**/*"
+      - "docker/**/*"
+      - "docs/**/*"
+      - "library/**/*"
+      - "solvers/**/*"
+      - "tests/**/*"
+      - "utilities/**/*"
+      - ".gitlab-ci/*"
       - .dockerignore
       - .gitmodules
       - .gitlab-ci.yml
@@ -24,6 +31,7 @@ stages:
   <<: *execution-conditions
   stage: build-env
   image: docker:19.03.6
+  timeout: 30m
 
 .build-and-test-template: &build-and-test-template
   <<: *execution-conditions
@@ -64,8 +72,10 @@ stages:
     - docker rm $CONTAINER_NAME
     - exit $exit_code;
   artifacts:
+    expire_in: 1 month
     paths:
       - log/
+  timeout: 3h
 
 .compiler-warning-template: &compiler-warning-template
   <<: *execution-conditions
@@ -83,6 +93,7 @@ stages:
         exit 1;
       fi
   allow_failure: true
+  timeout: 15m
 
 ################################################
 ###################  DEBIAN  ###################
@@ -186,6 +197,7 @@ user-guide-build:
     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
     - make -C build -j 4 user-guide-pdf user-guide-html developer-guide-pdf developer-guide-html
   artifacts:
+    expire_in: 1 month
     paths:
       - build/docs/user-guide/user-guide.pdf
       - build/docs/user-guide/html
@@ -198,6 +210,7 @@ doxygen-build:
     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
     - make -C build doc
   artifacts:
+    expire_in: 1 month
     paths:
       - build/docs/doxygen/html/
 
@@ -209,6 +222,7 @@ tutorials-build:
     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release .
     - make -C build -j 2 tutorials-pdf tutorials-html
   artifacts:
+    expire_in: 1 month
     paths:
       - build/docs/tutorial/
 
@@ -411,4 +425,6 @@ win10-default-build-and-test:
     - cmake.exe --build . --target ALL_BUILD --config Debug
     - cmake.exe --build . --target INSTALL --config Debug
     - ctest --output-on-failure -C Debug -j3
+  after_script:
+    - Remove-Item -Recurse -Force build
   needs: []

@@ -113,8 +113,8 @@ void CouplingCwipi::InterpCallback(
     sst << entities_dim << "," << n_local_vertex << "," << stride;
     SendCallbackMap[sst.str()](interpField, distCoords);
 
-    ASSERTL0(interpField.num_elements() == stride, "size mismatch");
-    ASSERTL0(interpField[0].num_elements() == n_distant_point, "size mismatch");
+    ASSERTL0(interpField.size() == stride, "size mismatch");
+    ASSERTL0(interpField[0].size() == n_distant_point, "size mismatch");
 
     for (int i = 0; i < n_distant_point; i++)
     {
@@ -379,7 +379,7 @@ void CouplingCwipi::EvaluateFields(
     Array<OneD, Array<OneD, NekDouble> > interpField,
     Array<OneD, Array<OneD, NekDouble> > distCoords)
 {
-    int nOutPts = distCoords.num_elements();
+    int nOutPts = distCoords.size();
 
     Array<OneD, NekDouble> Lcoords(m_spacedim, 0.0);
     for (int i = 0; i < nOutPts; ++i)
@@ -598,11 +598,11 @@ void CouplingCwipi::SendCallback(
     Array<OneD, Array<OneD, NekDouble> > &interpField,
     Array<OneD, Array<OneD, NekDouble> > &distCoords)
 {
-    ASSERTL0(interpField.num_elements() == m_nSendVars, "size mismatch");
+    ASSERTL0(interpField.size() == m_nSendVars, "size mismatch");
 
     for (int i = 0; i < m_nSendVars; ++i)
     {
-        interpField[i] = Array<OneD, NekDouble>(distCoords.num_elements());
+        interpField[i] = Array<OneD, NekDouble>(distCoords.size());
     }
 
     if (boost::to_upper_copy(m_config["SENDMETHOD"]) == "NEARESTNEIGHBOUR" ||
@@ -800,7 +800,7 @@ void CouplingCwipi::ReceiveCwipi(const int step,
                                  const NekDouble time,
                                  Array<OneD, Array<OneD, NekDouble> > &field)
 {
-    ASSERTL1(m_nRecvVars == field.num_elements(), "field size mismatch");
+    ASSERTL1(m_nRecvVars == field.size(), "field size mismatch");
 
     if (m_nRecvVars < 1 || m_recvSteps < 1)
     {
@@ -963,7 +963,7 @@ void CouplingCwipi::ExtrapolateFields(
     timer1.Start();
 
     int totvars = 3 + m_nRecvVars;
-    int nNotLoc = notLoc.num_elements();
+    int nNotLoc = notLoc.size();
     int nranks  = m_evalField->GetSession()->GetComm()->GetSize();
 
     Array<OneD, int> thisNLoc(1, m_nPoints - nNotLoc);

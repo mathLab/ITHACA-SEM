@@ -235,7 +235,7 @@ NekDouble PyrGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         ptdist = sqrt(tmp1[min_i]);
 
         // Get collapsed coordinate
-        int qa = za.num_elements(), qb = zb.num_elements();
+        int qa = za.size(), qb = zb.size();
         Lcoords[2] = zc[min_i / (qa * qb)];
         min_i = min_i % (qa * qb);
         Lcoords[1] = zb[min_i / qa];
@@ -249,7 +249,7 @@ NekDouble PyrGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         NekDouble resid = 0.0;
         NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords, resid);
     }
-    
+
     return ptdist;
 }
 

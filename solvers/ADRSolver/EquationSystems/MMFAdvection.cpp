@@ -212,7 +212,7 @@ void MMFAdvection::v_DoSolve()
 
     int i, nchk = 1;
     int nvariables = 0;
-    int nfields    = m_fields.num_elements();
+    int nfields    = m_fields.size();
     int nq         = m_fields[0]->GetNpoints();
 
     if (m_intVariables.empty())
@@ -373,7 +373,7 @@ Array<OneD, NekDouble> &MMFAdvection::GetNormalVelocity()
     // Reset the normal velocity
     Vmath::Zero(nTracePts, m_traceVn, 1);
 
-    for (i = 0; i < m_velocity.num_elements(); ++i)
+    for (i = 0; i < m_velocity.size(); ++i)
     {
         m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
 
@@ -398,14 +398,14 @@ void MMFAdvection::DoOdeRhs(
     boost::ignore_unused(time);
 
     int i;
-    int nvariables = inarray.num_elements();
+    int nvariables = inarray.size();
     int npoints    = GetNpoints();
 
     switch (m_projectionType)
     {
         case MultiRegions::eDiscontinuous:
         {
-            int ncoeffs = inarray[0].num_elements();
+            int ncoeffs = inarray[0].size();
 
             if (m_spacedim == 3)
             {
@@ -469,7 +469,7 @@ void MMFAdvection::DoOdeProjection(
     int i;
 
     // Number of fields (variables of the problem)
-    int nVariables = inarray.num_elements();
+    int nVariables = inarray.size();
 
     // Set the boundary conditions
     SetBoundaryConditions(time);
@@ -521,15 +521,15 @@ void MMFAdvection::GetFluxVector(
     const Array<OneD, Array<OneD, NekDouble>> &physfield,
     Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux)
 {
-    ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
+    ASSERTL1(flux[0].size() == m_velocity.size(),
              "Dimension of flux array and velocity array do not match");
 
     int i, j;
-    int nq = physfield[0].num_elements();
+    int nq = physfield[0].size();
 
-    for (i = 0; i < flux.num_elements(); ++i)
+    for (i = 0; i < flux.size(); ++i)
     {
-        for (j = 0; j < flux[0].num_elements(); ++j)
+        for (j = 0; j < flux[0].size(); ++j)
         {
             Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1, flux[i][j], 1);
         }
@@ -543,7 +543,7 @@ void MMFAdvection::WeakDGDirectionalAdvection(
     int i, j;
     int ncoeffs         = GetNcoeffs();
     int nTracePointsTot = GetTraceNpoints();
-    int nvariables      = m_fields.num_elements();
+    int nvariables      = m_fields.size();
 
     Array<OneD, Array<OneD, NekDouble>> physfield(nvariables);
 
@@ -1018,7 +1018,7 @@ void MMFAdvection::v_SetInitialConditions(const NekDouble initialtime,
             m_Mass0 = m_fields[0]->PhysIntegral(u);
 
             // forward transform to fill the modal coeffs
-            for (int i = 0; i < m_fields.num_elements(); ++i)
+            for (int i = 0; i < m_fields.size(); ++i)
             {
                 m_fields[i]->SetPhysState(true);
                 m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),
@@ -1035,7 +1035,7 @@ void MMFAdvection::v_SetInitialConditions(const NekDouble initialtime,
             m_Mass0 = m_fields[0]->PhysIntegral(u);
 
             // forward transform to fill the modal coeffs
-            for (int i = 0; i < m_fields.num_elements(); ++i)
+            for (int i = 0; i < m_fields.size(); ++i)
             {
                 m_fields[i]->SetPhysState(true);
                 m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),
@@ -1053,7 +1053,7 @@ void MMFAdvection::v_SetInitialConditions(const NekDouble initialtime,
             std::cout << "m_Mass0 = " << m_Mass0 << std::endl;
 
             // forward transform to fill the modal coeffs
-            for (int i = 0; i < m_fields.num_elements(); ++i)
+            for (int i = 0; i < m_fields.size(); ++i)
             {
                 m_fields[i]->SetPhysState(true);
                 m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),
@@ -1068,7 +1068,7 @@ void MMFAdvection::v_SetInitialConditions(const NekDouble initialtime,
             m_fields[0]->SetPhys(u);
 
             // forward transform to fill the modal coeffs
-            for (int i = 0; i < m_fields.num_elements(); ++i)
+            for (int i = 0; i < m_fields.size(); ++i)
             {
                 m_fields[i]->SetPhysState(true);
                 m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),

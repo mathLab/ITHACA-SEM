@@ -86,7 +86,7 @@ void NoAdvection::v_Advect(
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
     int nPointsTot = fields[0]->GetNpoints();
-    for (int i = 0; i < inarray.num_elements(); ++i)
+    for (int i = 0; i < inarray.size(); ++i)
     {
         Vmath::Zero(nPointsTot,outarray[i],1);
     }

@@ -49,7 +49,7 @@ namespace Nektar
      * define shallow water solvers, e.g. SWE, Boussinesq, linear and nonlinear versions.
      *
      * For details on implementing unsteady solvers see
-     * \ref sectionADRSolverModuleImplementation 
+     * \ref sectionADRSolverModuleImplementation
      */
 
     /**
@@ -58,12 +58,12 @@ namespace Nektar
      * @param   pSession        Session object to read parameters from.
      */
 
-   string ShallowWaterSystem::className = 
+   string ShallowWaterSystem::className =
         SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-            "ShallowWaterSystem", 
-            ShallowWaterSystem::create, 
+            "ShallowWaterSystem",
+            ShallowWaterSystem::create,
             "Auxiliary functions for the shallow water system.");
-    
+
 
     ShallowWaterSystem::ShallowWaterSystem(
         const LibUtilities::SessionReaderSharedPtr& pSession,
@@ -82,7 +82,7 @@ namespace Nektar
 	    ASSERTL0(m_session->DefinesSolverInfo("UPWINDTYPE"),
 		     "No UPWINDTYPE defined in session.");
 	  }
-		   
+
 	 // Set up locations of velocity vector.
 	 m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(1);
 	 m_vecLocs[0] = Array<OneD, NekDouble>(m_spacedim);
@@ -101,7 +101,7 @@ namespace Nektar
 	m_primitive = true;
 
        	EvaluateWaterDepth();
-	
+
 	m_constantDepth = true;
 	NekDouble depth = m_depth[0];
 	for (int i = 0; i < GetTotPoints(); ++i)
@@ -151,14 +151,14 @@ namespace Nektar
 	    SolverUtils::AddSummaryItem(s, "Depth", "variable");
 	  }
 
-	
+
     }
 
    void ShallowWaterSystem::v_PrimitiveToConservative()
   {
     ASSERTL0(false, "This function is not implemented for this equation.");
   }
-  
+
   void ShallowWaterSystem::v_ConservativeToPrimitive()
   {
     ASSERTL0(false, "This function is not implemented for this equation.");
@@ -168,8 +168,8 @@ namespace Nektar
   {
     GetFunction("WaterDepth")->Evaluate("d", m_depth);
   }
-  
-  
+
+
   void ShallowWaterSystem::EvaluateCoriolis(void)
   {
     GetFunction("Coriolis")->Evaluate("f", m_coriolis);
@@ -180,8 +180,8 @@ namespace Nektar
 
     int cnt = 0;
     // loop over Boundary Regions
-    for(int bcRegion = 0; bcRegion < m_fields[0]->GetBndConditions().num_elements(); ++bcRegion)
-      {	
+    for(int bcRegion = 0; bcRegion < m_fields[0]->GetBndConditions().size(); ++bcRegion)
+      {
         if (m_fields[0]->GetBndConditions()[bcRegion]->GetBoundaryConditionType()
             == SpatialDomains::ePeriodic)
         {
@@ -190,7 +190,7 @@ namespace Nektar
 
 	// Copy the forward trace of the field to the backward trace
         int e, id2, npts;
-        
+
         for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]
                  ->GetExpSize(); ++e)
         {
@@ -199,7 +199,7 @@ namespace Nektar
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                         m_fields[0]->GetTraceMap()->
                                     GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
-	
+
 	    Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
 	}
 

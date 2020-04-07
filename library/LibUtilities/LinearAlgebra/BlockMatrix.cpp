@@ -121,11 +121,11 @@ namespace Nektar
                  std::accumulate(columnsPerBlock.begin(), columnsPerBlock.end(), 0),
                  type),
         m_data(),
-        m_rowSizes(rowsPerBlock.num_elements()),
-        m_columnSizes(columnsPerBlock.num_elements()),
+        m_rowSizes(rowsPerBlock.size()),
+        m_columnSizes(columnsPerBlock.size()),
         m_storageSize(0),
-        m_numberOfBlockRows(rowsPerBlock.num_elements()),
-        m_numberOfBlockColumns(columnsPerBlock.num_elements())
+        m_numberOfBlockRows(rowsPerBlock.size()),
+        m_numberOfBlockColumns(columnsPerBlock.size())
     {
         m_storageSize = GetRequiredStorageSize();
         m_data = Array<OneD, std::shared_ptr<InnerType> >(m_storageSize, std::shared_ptr<InnerType>());
@@ -135,14 +135,14 @@ namespace Nektar
     template<typename DataType, typename InnerMatrixType>
     NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::NekMatrix(const NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>& rhs) :
         BaseType(rhs),
-        m_data(rhs.m_data.num_elements()),
+        m_data(rhs.m_data.size()),
         m_rowSizes(rhs.m_rowSizes),
         m_columnSizes(rhs.m_columnSizes),
         m_storageSize(rhs.m_storageSize),
         m_numberOfBlockRows(rhs.m_numberOfBlockRows),
         m_numberOfBlockColumns(rhs.m_numberOfBlockColumns)
     {
-        for(unsigned int i = 0; i < rhs.m_data.num_elements(); ++i)
+        for(unsigned int i = 0; i < rhs.m_data.size(); ++i)
         {
             m_data[i] = InnerType::CreateWrapper(rhs.m_data[i]);
         }

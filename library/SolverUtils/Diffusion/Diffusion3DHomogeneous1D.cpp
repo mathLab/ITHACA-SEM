@@ -95,7 +95,7 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
-            int nConvectiveFields = pFields.num_elements();
+            int nConvectiveFields = pFields.size();
 
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields_plane0(
                 nConvectiveFields);
@@ -109,7 +109,7 @@ namespace Nektar
 
             m_numPoints      = pFields[0]->GetTotPoints();
             m_planes         = pFields[0]->GetZIDs();
-            m_numPlanes      = m_planes.num_elements();
+            m_numPlanes      = m_planes.size();
             m_numPointsPlane = m_numPoints/m_numPlanes;
             m_homoLen        = pFields[0]->GetHomoLen();
             m_trans          = pFields[0]->GetTransposition();
@@ -218,7 +218,7 @@ namespace Nektar
             {
                 // Set up memory references for fields, inarray and outarray for
                 // this plane.
-                for (int j = 0; j < inarray.num_elements(); ++j)
+                for (int j = 0; j < inarray.size(); ++j)
                 {
                     m_inarrayPlane [j] = Array<OneD, NekDouble>(
                         m_numPointsPlane, tmp2 = inarray [j] + m_planePos[i]);
@@ -243,7 +243,7 @@ namespace Nektar
                     // Store plane Fwd/Bwd traces
                     std::size_t nTracePts = m_fieldsPlane[0]->GetTrace()
                         ->GetTotPoints();
-                    std::size_t nScalar = m_inarrayPlane.num_elements();
+                    std::size_t nScalar = m_inarrayPlane.size();
                     Array<OneD, Array<OneD, NekDouble> > Fwd(nScalar);
                     Array<OneD, Array<OneD, NekDouble> > Bwd(nScalar);
                     {

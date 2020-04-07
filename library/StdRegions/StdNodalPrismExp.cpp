@@ -27,7 +27,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Nodal prismatic routines built upon StdExpansion3D
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -37,13 +37,13 @@
 #include <StdRegions/StdNodalPrismExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 
-namespace Nektar 
+namespace Nektar
 {
-    namespace StdRegions 
+    namespace StdRegions
     {
         StdNodalPrismExp::StdNodalPrismExp(
-            const LibUtilities::BasisKey &Ba, 
-            const LibUtilities::BasisKey &Bb, 
+            const LibUtilities::BasisKey &Ba,
+            const LibUtilities::BasisKey &Bb,
             const LibUtilities::BasisKey &Bc,
             LibUtilities::PointsType Ntype):
             StdExpansion  (LibUtilities::StdPrismData::getNumberOfCoefficients(
@@ -59,7 +59,7 @@ namespace Nektar
             StdPrismExp   (Ba,Bb,Bc),
             m_nodalPointsKey(Ba.GetNumModes(),Ntype)
         {
-            ASSERTL0(Ba.GetNumModes() <= Bc.GetNumModes(), 
+            ASSERTL0(Ba.GetNumModes() <= Bc.GetNumModes(),
                      "order in 'a' direction is higher than order "
                      "in 'c' direction");
         }
@@ -73,11 +73,11 @@ namespace Nektar
         }
 
         StdNodalPrismExp::~StdNodalPrismExp()
-        { 
+        {
         }
-        
-        
-        
+
+
+
         bool StdNodalPrismExp::v_IsNodalNonTensorialExp()
         {
             return true;
@@ -86,9 +86,9 @@ namespace Nektar
         //-------------------------------
         // Nodal basis specific routines
         //-------------------------------
-        
+
         void StdNodalPrismExp::NodalToModal(
-            const Array<OneD, const NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
@@ -103,7 +103,7 @@ namespace Nektar
 
         // Operate with transpose of NodalToModal transformation
         void StdNodalPrismExp::NodalToModalTranspose(
-            const Array<OneD, const NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
@@ -117,7 +117,7 @@ namespace Nektar
         }
 
         void StdNodalPrismExp::ModalToNodal(
-            const Array<OneD, const NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             StdMatrixKey      Nkey(eNBasisTrans, DetShapeType(), *this,
@@ -132,7 +132,7 @@ namespace Nektar
         }
 
         void StdNodalPrismExp::GetNodalPoints(
-            Array<OneD, const NekDouble> &x, 
+            Array<OneD, const NekDouble> &x,
             Array<OneD, const NekDouble> &y,
             Array<OneD, const NekDouble> &z)
         {
@@ -150,16 +150,16 @@ namespace Nektar
             Mat = MemoryManager<DNekMat>::AllocateSharedPtr(
                 m_ncoeffs, m_ncoeffs);
             GetNodalPoints(r,s,t);
-            
+
             //Store the values of m_phys in a temporary array
             int nqtot = GetTotPoints();
             Array<OneD,NekDouble> tmp_phys(nqtot);
-            
+
             for(i = 0; i < m_ncoeffs; ++i)
             {
                 // fill physical space with mode i
                 StdPrismExp::v_FillMode(i,tmp_phys);
-                
+
                 // interpolate mode i to the Nodal points 'j' and
                 // store in outarray
                 for(j = 0; j < m_ncoeffs; ++j)
@@ -170,15 +170,15 @@ namespace Nektar
                     (*Mat)(j,i) = StdPrismExp::v_PhysEvaluate(c,tmp_phys);
                 }
             }
-            
+
             return Mat;
         }
- 
+
 
         //---------------------------------------
         // Transforms
         //---------------------------------------
-        
+
         void StdNodalPrismExp::v_BwdTrans(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
@@ -200,7 +200,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTBase(inarray,outarray);
-            
+
             // get Mass matrix inverse
             StdMatrixKey      masskey(eInvMass, DetShapeType(), *this,
                                       NullConstFactorMap, NullVarCoeffMap,
@@ -210,7 +210,7 @@ namespace Nektar
             // copy inarray in case inarray == outarray
             NekVector<NekDouble> in(m_ncoeffs,outarray,eCopy);
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
-            
+
             out = (*matsys)*in;
         }
 
@@ -218,56 +218,56 @@ namespace Nektar
         //---------------------------------------
         // Inner product functions
         //---------------------------------------
-        
+
         void StdNodalPrismExp::v_IProductWRTBase(
-            const Array<OneD, const NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTBase_SumFac(inarray,outarray);
         }
-        
+
         void StdNodalPrismExp::v_IProductWRTBase_SumFac(
-            const Array<OneD, const NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray,
             Array<OneD,       NekDouble>& outarray,
             bool multiplybyweights)
         {
             StdPrismExp::v_IProductWRTBase_SumFac(inarray,outarray,multiplybyweights);
-            NodalToModalTranspose(outarray,outarray);    
+            NodalToModalTranspose(outarray,outarray);
         }
 
         void StdNodalPrismExp::v_IProductWRTDerivBase(
             const int                           dir,
-            const Array<OneD, const NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
         }
-        
+
         void StdNodalPrismExp::v_IProductWRTDerivBase_SumFac(
-            const int                           dir, 
-            const Array<OneD, const NekDouble>& inarray, 
+            const int                           dir,
+            const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             StdPrismExp::v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             NodalToModalTranspose(outarray,outarray);
         }
-        
+
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
-        
+
         void StdNodalPrismExp::v_FillMode(
-            const int               mode, 
+            const int               mode,
             Array<OneD, NekDouble> &outarray)
         {
-            ASSERTL2(mode >= m_ncoeffs, 
+            ASSERTL2(mode >= m_ncoeffs,
                 "calling argument mode is larger than total expansion order");
 
             Vmath::Zero(m_ncoeffs, outarray, 1);
             outarray[mode] = 1.0;
             v_BwdTrans(outarray,outarray);
         }
-        
+
 
         //---------------------------------------
         // Mapping functions
@@ -283,10 +283,10 @@ namespace Nektar
             int                        nummodesB)
         {
             int P, Q, i, j, k, idx = 0, nFaceCoeffs = 0;
-            
+
             ASSERTL0(fid >= 0 && fid <= 3,
-                     "Local face ID must be between 0 and 3"); 
-            
+                     "Local face ID must be between 0 and 3");
+
             if (nummodesA == -1)
             {
                 switch(fid)
@@ -310,13 +310,13 @@ namespace Nektar
             P           = nummodesA;
             Q           = nummodesB;
             nFaceCoeffs = Q + ((P-1)*(1 + 2*(Q-1) - (P-1)))/2;
-            
-            if (maparray.num_elements() != nFaceCoeffs)
+
+            if (maparray.size() != nFaceCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceCoeffs);
             }
 
-            if (signarray.num_elements() != nFaceCoeffs)
+            if (signarray.size() != nFaceCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceCoeffs,1);
             }
@@ -324,7 +324,7 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get()+nFaceCoeffs, 1);
             }
-            
+
             switch(fid)
             {
                 case 0:
@@ -332,7 +332,7 @@ namespace Nektar
                     maparray[idx++] = 0;
                     maparray[idx++] = 1;
                     maparray[idx++] = 2;
-                    
+
                     // Add edges.
                     for (i = 2; i < P; ++i)
                     {
@@ -355,12 +355,12 @@ namespace Nektar
         {
             unsigned int i;
             const unsigned int nBndryCoeff = NumBndryCoeffs();
-            
-            if (outarray.num_elements() != nBndryCoeff)
+
+            if (outarray.size() != nBndryCoeff)
             {
                 outarray = Array<OneD, unsigned int>(nBndryCoeff);
             }
-            
+
             for (i = 0; i < nBndryCoeff; i++)
             {
                 outarray[i] = i;
@@ -373,7 +373,7 @@ namespace Nektar
             unsigned int i;
             const unsigned int nBndryCoeff = NumBndryCoeffs();
 
-            if (outarray.num_elements() != m_ncoeffs-nBndryCoeff)
+            if (outarray.size() != m_ncoeffs-nBndryCoeff)
             {
                 outarray = Array<OneD, unsigned int>(
                     m_ncoeffs-nBndryCoeff);
@@ -389,11 +389,11 @@ namespace Nektar
         //---------------------------------------
         // Wrapper functions
         //---------------------------------------
-        
+
         DNekMatSharedPtr StdNodalPrismExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
             DNekMatSharedPtr Mat;
-            
+
             switch(mkey.GetMatrixType())
             {
                 case eNBasisTrans:
@@ -403,10 +403,10 @@ namespace Nektar
                     Mat = StdExpansion::CreateGeneralMatrix(mkey);
                     break;
             }
-            
+
             return Mat;
         }
-        
+
         DNekMatSharedPtr StdNodalPrismExp::v_CreateStdMatrix(
             const StdMatrixKey &mkey)
         {

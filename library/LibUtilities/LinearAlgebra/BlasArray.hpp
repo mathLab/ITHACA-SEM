@@ -56,18 +56,18 @@ namespace Blas
 
     static inline void Dcopy (const int& n, const Nektar::Array <Nektar::OneD, const double> &x, const int& incx,  Nektar::Array<Nektar::OneD,double> &y, const int& incy)
     {
-        ASSERTL1(static_cast<unsigned int>(n*incx) <= x.num_elements()+x.GetOffset(),"Array out of bounds");
-        ASSERTL1(static_cast<unsigned int>(n*incy) <= y.num_elements()+y.GetOffset(),"Array out of bounds");
-        
+        ASSERTL1(static_cast<unsigned int>(n*incx) <= x.size()+x.GetOffset(),"Array out of bounds");
+        ASSERTL1(static_cast<unsigned int>(n*incy) <= y.size()+y.GetOffset(),"Array out of bounds");
+
         F77NAME(dcopy)(n,&x[0],incx,&y[0],incy);
     }
 
     /// \brief  BLAS level 1: y = alpha \a x plus \a y
     static inline void Daxpy (const int& n, const double& alpha, const Nektar::Array <Nektar::OneD,const double> &x, const int& incx,  Nektar::Array<Nektar::OneD,double> &y, const int& incy)
     {
-        ASSERTL1(static_cast<unsigned int>(n*incx) <= x.num_elements()+x.GetOffset(),"Array out of bounds");
-        ASSERTL1(static_cast<unsigned int>(n*incy) <= y.num_elements()+y.GetOffset(),"Array out of bounds");
-        
+        ASSERTL1(static_cast<unsigned int>(n*incx) <= x.size()+x.GetOffset(),"Array out of bounds");
+        ASSERTL1(static_cast<unsigned int>(n*incy) <= y.size()+y.GetOffset(),"Array out of bounds");
+
         F77NAME(daxpy)(n,alpha,&x[0],incx,&y[0],incy);
     }
 

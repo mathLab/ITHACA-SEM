@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Definition of a Point expansion 
+// Description: Definition of a Point expansion
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +48,7 @@ namespace Nektar
         {
             m_ncoeffs = 1;
         }
-        
+
         PointExp::~PointExp(void)
         {
         }
@@ -57,11 +57,11 @@ namespace Nektar
                 Array<OneD, NekDouble> &coords_1,
                 Array<OneD, NekDouble> &coords_2)
         {
-            ASSERTL1(coords_0.num_elements() > 0,
+            ASSERTL1(coords_0.size() > 0,
                      "Coords_0 is of insufficient size.");
-            ASSERTL1(GetCoordim() < 2 || coords_1.num_elements() > 0,
+            ASSERTL1(GetCoordim() < 2 || coords_1.size() > 0,
                      "Coords_1 is of insufficient size.");
-            ASSERTL1(GetCoordim() < 3 || coords_2.num_elements() > 0,
+            ASSERTL1(GetCoordim() < 3 || coords_2.size() > 0,
                      "Coords_2 is of insufficient size.");
 
             SpatialDomains::PointGeomSharedPtr v = std::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
@@ -79,7 +79,7 @@ namespace Nektar
                     break;
             }
         }
-        
+
         void PointExp::v_NormVectorIProductWRTBase(
             const Array<OneD, const NekDouble> &Fx,
                   Array<OneD,       NekDouble> &outarray)

@@ -107,9 +107,9 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
         Array<OneD, NekDouble> q = GetQ(Elmt,m_config["scaled"].as<bool>());
         Array<OneD, NekDouble> out = phys + offset;
 
-        ASSERTL0(q.num_elements() == Elmt->GetTotPoints(),
+        ASSERTL0(q.size() == Elmt->GetTotPoints(),
                  "number of points mismatch");
-        Vmath::Vcopy(q.num_elements(), q, 1, out, 1);
+        Vmath::Vcopy(q.size(), q, 1, out, 1);
     }
 
     exp->FwdTrans_IterPerExp(phys, coeffs);
@@ -460,7 +460,7 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(
 
     SpatialDomains::DerivStorage deriv = gfac->GetDeriv(pElem);
 
-    const int pts = deriv[0][0].num_elements();
+    const int pts = deriv[0][0].size();
     const int nq  = chiMod->GetTotPoints();
 
     ASSERTL0(pts == nq, "what");

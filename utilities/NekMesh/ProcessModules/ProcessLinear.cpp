@@ -266,7 +266,7 @@ bool ProcessLinear::Invalid(ElementSharedPtr el, NekDouble thr)
     LibUtilities::PointsKeyVector p = geom->GetXmap()->GetPointsKeys();
     SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
     SpatialDomains::DerivStorage derivL = gfacL->GetDeriv(p);
-    const int pts = deriv[0][0].num_elements();
+    const int pts = deriv[0][0].size();
     Array<OneD,NekDouble> jc(pts);
     Array<OneD,NekDouble> jcL(pts);
     for (int k = 0; k < pts; ++k)
@@ -300,10 +300,10 @@ bool ProcessLinear::Invalid(ElementSharedPtr el, NekDouble thr)
     }
 
     Array<OneD, NekDouble> j(pts);
-    Vmath::Vdiv(jc.num_elements(),jc,1,jcL,1,j,1);
+    Vmath::Vdiv(jc.size(),jc,1,jcL,1,j,1);
 
-    NekDouble scaledJac = Vmath::Vmin(j.num_elements(),j,1) /
-                          Vmath::Vmax(j.num_elements(),j,1);
+    NekDouble scaledJac = Vmath::Vmin(j.size(),j,1) /
+                          Vmath::Vmax(j.size(),j,1);
 
     //cout << scaledJac << endl;
 

@@ -55,7 +55,7 @@ namespace Nektar
         /**
          * @class Preconditioner
          *
-         * This class implements diagonal preconditioning for the conjugate 
+         * This class implements diagonal preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
 
@@ -90,14 +90,14 @@ namespace Nektar
                 ASSERTL0(0,"Unsupported solver type");
             }
         }
-        
+
         /**
          * Diagonal preconditioner computed by summing the relevant elements of
          * the local matrix system.
          */
          void PreconditionerDiagonal::DiagonalPreconditionerSum()
          {
-             std::shared_ptr<MultiRegions::ExpList> expList = 
+             std::shared_ptr<MultiRegions::ExpList> expList =
                  ((m_linsys.lock())->GetLocMat()).lock();
 
              LocalRegions::ExpansionSharedPtr locExpansion;
@@ -203,7 +203,7 @@ namespace Nektar
             int nNonDir = nGlobal-nDir;
             Vmath::Vmul(nNonDir, &pInput[0], 1, &m_diagonals[0], 1, &pOutput[0], 1);
 	}
-        
+
         string PreconditionerNull::className
         = GetPreconFactory().RegisterCreatorFunction(
             "Null",
@@ -213,7 +213,7 @@ namespace Nektar
         /**
          * @class Null Preconditioner
          *
-         * This class implements no preconditioning for the conjugate 
+         * This class implements no preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
          PreconditionerNull::PreconditionerNull(
@@ -244,7 +244,7 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            Vmath::Vcopy(pInput.num_elements(), pInput, 1, pOutput, 1);
+            Vmath::Vcopy(pInput.size(), pInput, 1, pOutput, 1);
 	}
 
 

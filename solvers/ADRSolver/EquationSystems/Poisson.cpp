@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Poisson solve routines 
+// Description: Poisson solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +63,7 @@ namespace Nektar
     void Poisson::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         Laplace::v_GenerateSummary(s);
-        for (int i = 0; i < m_fields.num_elements(); ++i)
+        for (int i = 0; i < m_fields.size(); ++i)
         {
             stringstream name;
             name << "Forcing func [" << i << "]";

@@ -54,11 +54,11 @@ namespace Nektar
                                              sparseStoragePtrVector):
         m_rows(0),
         m_cols(0),
-        m_rowoffset(sparseStoragePtrVector.num_elements()+1, 0.0),
+        m_rowoffset(sparseStoragePtrVector.size()+1, 0.0),
         m_mulCallsCounter(0),
-        m_submatrix(sparseStoragePtrVector.num_elements(),sparseStoragePtrVector)
+        m_submatrix(sparseStoragePtrVector.size(),sparseStoragePtrVector)
     {
-        for (int i = 0; i < sparseStoragePtrVector.num_elements(); i++)
+        for (int i = 0; i < sparseStoragePtrVector.size(); i++)
         {
             const IndexType rows    = sparseStoragePtrVector[i]->GetRows();
             m_rows += rows;
@@ -111,14 +111,14 @@ namespace Nektar
     template<typename SparseStorageType>
     IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetNumberOfMatrixBlocks() const
     {
-        return m_submatrix.num_elements();
+        return m_submatrix.size();
     }
 
     template<typename SparseStorageType>
     IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetNumNonZeroEntries()
     {
         IndexType nnz = 0;
-        for (int i = 0; i < m_submatrix.num_elements(); i++)
+        for (int i = 0; i < m_submatrix.size(); i++)
         {
             nnz += m_submatrix[i]->GetNumNonZeroEntries();
         }
@@ -143,7 +143,7 @@ namespace Nektar
     {
         IndexType stored = 0;
         IndexType nnz = 0;
-        for (int i = 0; i < m_submatrix.num_elements(); i++)
+        for (int i = 0; i < m_submatrix.size(); i++)
         {
             stored += m_submatrix[i]->GetNumStoredDoubles();
             nnz    += m_submatrix[i]->GetNumNonZeroEntries();
@@ -188,7 +188,7 @@ namespace Nektar
                   const DataVectorType  &in,
                         DataVectorType &out)
     {
-        for (int i = 0; i < m_submatrix.num_elements(); ++i)
+        for (int i = 0; i < m_submatrix.size(); ++i)
         {
             m_submatrix[i]->Multiply(&in[m_rowoffset[i]], &out[m_rowoffset[i]]);
         }
@@ -199,7 +199,7 @@ namespace Nektar
     void NekSparseDiagBlkMatrix<SparseStorageType>::Multiply(
                                   const DataType* in, DataType* out)
     {
-        for (int i = 0; i < m_submatrix.num_elements(); ++i)
+        for (int i = 0; i < m_submatrix.size(); ++i)
         {
             m_submatrix[i]->Multiply(&in[m_rowoffset[i]], &out[m_rowoffset[i]]);
         }
@@ -223,10 +223,10 @@ namespace Nektar
                        sizeof(IndexType)*2 +      // sizes
                        sizeof(unsigned long)  +   // mulCallsCounter
                        sizeof(IndexVector) +
-                       sizeof(IndexType)*m_rowoffset.capacity() + 
-                       sizeof(SparseStorageSharedPtrVector) + 
+                       sizeof(IndexType)*m_rowoffset.capacity() +
+                       sizeof(SparseStorageSharedPtrVector) +
                        sizeof(SparseStorageSharedPtr)*m_submatrix.capacity();
-        for (int i = 0; i < m_submatrix.num_elements(); i++)
+        for (int i = 0; i < m_submatrix.size(); i++)
         {
             bytes += m_submatrix[i]->GetMemoryUsage();
         }
@@ -249,12 +249,12 @@ namespace Nektar
     typename SparseStorageType::DataType  NekSparseDiagBlkMatrix<SparseStorageType>::GetAvgRowDensity()
     {
         DataType avgRowDensity = 0.0;
-        for (int i = 0; i < m_submatrix.num_elements(); i++)
+        for (int i = 0; i < m_submatrix.size(); i++)
         {
             avgRowDensity += (DataType) m_submatrix[i]->GetNumNonZeroEntries() /
                              (DataType) m_submatrix[i]->GetRows();
         }
-        return avgRowDensity / m_submatrix.num_elements();
+        return avgRowDensity / m_submatrix.size();
     }
 
     template<typename SparseStorageType>
@@ -268,7 +268,7 @@ namespace Nektar
     IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetBandwidth()
     {
         IndexType bandwidth = 0;
-        for (int i = 0; i < m_submatrix.num_elements(); i++)
+        for (int i = 0; i < m_submatrix.size(); i++)
         {
             typename SparseStorageType::const_iterator entry = m_submatrix[i]->begin();
             for (; entry != m_submatrix[i]->end(); ++entry)
@@ -313,7 +313,7 @@ namespace Nektar
         COOMatTypeSharedPtr coo (new COOMatType());
         IndexType row_offset = 0;
         IndexType col_offset = 0;
-        for (IndexType i = 0; i < m_submatrix.num_elements(); i++)
+        for (IndexType i = 0; i < m_submatrix.size(); i++)
         {
             typename SparseStorageType::const_iterator entry = m_submatrix[i]->begin();
             for (; entry != m_submatrix[i]->end(); entry++)
@@ -391,7 +391,7 @@ namespace Nektar
 
         IndexType row_offset = 0;
         IndexType col_offset = 0;
-        for (int i = 0; i < m_submatrix.num_elements(); i++)
+        for (int i = 0; i < m_submatrix.size(); i++)
         {
             typename SparseStorageType::const_iterator entry = m_submatrix[i]->begin();
             typename SparseStorageType::const_iterator stop  = m_submatrix[i]->end();
@@ -420,7 +420,7 @@ namespace Nektar
     /// Complementary routine to the previous. It generates
     /// exact non-zero pattern of a given block matrix entry
     /// to *this object. E.g., for a 6x6 matrix defined as
-    /// A(i,i):=i, A(i,j):=0, block size = 2 and 
+    /// A(i,i):=i, A(i,j):=0, block size = 2 and
     /// blk_row=blk_col=2 it produces 2x2 matrix with 5 and 6
     /// along the diagonal.
     template<typename SparseStorageType>
@@ -478,7 +478,7 @@ namespace Nektar
 
         IndexType row_offset = 0;
         IndexType col_offset = 0;
-        for (int i = 0; i < m_submatrix.num_elements(); i++)
+        for (int i = 0; i < m_submatrix.size(); i++)
         {
             typename SparseStorageType::const_iterator entry =
                                         m_submatrix[i]->begin();

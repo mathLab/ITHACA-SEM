@@ -80,7 +80,7 @@ class Iso
             m_y[loc] = intfields[1][j];
             m_z[loc] = intfields[2][j];
 
-            for(int i = 0; i < intfields.num_elements()-3; ++i)
+            for(int i = 0; i < intfields.size()-3; ++i)
             {
                 m_fields[i][loc] = intfields[i+3][j];
             }

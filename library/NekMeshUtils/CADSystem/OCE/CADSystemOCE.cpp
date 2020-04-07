@@ -971,7 +971,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         ASSERTL0(face.Error() == BRepBuilderAPI_FaceDone, "build geo failed");
 
         ShapeFix_Face sf(face.Face());
-        sf.Perform();
+        sf.FixOrientation();
 
         cFaces[planeSurf.id] = sf.Face();
         faceMap[planeSurf.id] = planeSurf;
@@ -1063,7 +1063,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
             BRepBuilderAPI_MakeFace makeFace(sph, cWires[surf.ids[0]]);
 
             ShapeFix_Face sf(makeFace.Face());
-            sf.Perform();
+            sf.FixOrientation();
             cFaces[surf.id] = sf.Face();
             continue;
         }

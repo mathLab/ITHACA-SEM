@@ -42,7 +42,7 @@ using namespace std;
 
 namespace Nektar
 {
-    namespace LocalRegions 
+    namespace LocalRegions
     {
         Expansion::Expansion(SpatialDomains::GeometrySharedPtr pGeom) :
                     m_geom(pGeom),
@@ -55,7 +55,7 @@ namespace Nektar
 
             if (!m_metricinfo->IsValid())
             {
-                int nDim = m_base.num_elements();
+                int nDim = m_base.size();
                 string type = "regular";
                 if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                 {
@@ -69,7 +69,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::ewarning, err.str());
             }
         }
-        
+
         Expansion::Expansion(const Expansion &pSrc) :
                 StdExpansion(pSrc),
                 m_geom(pSrc.m_geom),
@@ -88,13 +88,13 @@ namespace Nektar
         }
 
         DNekMatSharedPtr Expansion::BuildTransformationMatrix(
-            const DNekScalMatSharedPtr &r_bnd, 
+            const DNekScalMatSharedPtr &r_bnd,
             const StdRegions::MatrixType matrixType)
         {
             return v_BuildTransformationMatrix(r_bnd,matrixType);
         }
 
-        
+
         DNekMatSharedPtr Expansion::BuildVertexMatrix(
             const DNekScalMatSharedPtr &r_bnd)
         {
@@ -238,7 +238,7 @@ namespace Nektar
             // get physical points defined in Geom
             m_geom->FillGeom();
 
-            const int expDim = m_base.num_elements();
+            const int expDim = m_base.size();
             int       nqGeom = 1;
             bool      doCopy = true;
 
@@ -314,9 +314,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &direction,
                 Array<OneD, Array<OneD, NekDouble> > &dfdir)
         {
-            int shapedim = dfdir.num_elements();
+            int shapedim = dfdir.size();
             int coordim = GetCoordim();
-            int nqtot = direction.num_elements()/coordim;
+            int nqtot = direction.size()/coordim;
 
             for(int j = 0; j < shapedim; j++)
             {
@@ -474,7 +474,7 @@ namespace Nektar
 
 
         DNekMatSharedPtr Expansion::v_BuildTransformationMatrix(
-            const DNekScalMatSharedPtr &r_bnd, 
+            const DNekScalMatSharedPtr &r_bnd,
             const StdRegions::MatrixType matrixType)
         {
             boost::ignore_unused(r_bnd, matrixType);

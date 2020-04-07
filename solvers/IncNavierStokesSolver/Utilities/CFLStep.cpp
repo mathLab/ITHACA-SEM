@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     SpatialDomains::MeshGraphSharedPtr graph;
 
     string vDriverModule;
-    DriverSharedPtr drv;  
+    DriverSharedPtr drv;
     try
     {
         // Create session reader.
@@ -31,27 +31,27 @@ int main(int argc, char *argv[])
 
         // Create MeshGraph.
         graph = SpatialDomains::MeshGraph::Read(session);
-        
+
         // Create driver
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");
         drv = GetDriverFactory().CreateInstance(vDriverModule, session, graph);
 
         EquationSystemSharedPtr EqSys = drv->GetEqu()[0];
         IncNavierStokesSharedPtr IncNav = EqSys->as<IncNavierStokes>();
-        
+
         IncNav->SetInitialConditions(0.0,false);
         Array<OneD, NekDouble> cfl = IncNav->GetElmtCFLVals();
 
         // Reset Pressure field with CFL values
         Array<OneD, MultiRegions::ExpListSharedPtr> fields = IncNav->UpdateFields();
         int i,n,nquad,cnt;
-        int nfields = fields.num_elements();
+        int nfields = fields.size();
         int nexp = fields[0]->GetExpSize();
-        
+
         int elmtid = Vmath::Imax(nexp,cfl,1);
 
         cout << "Max CFL: "<< cfl[elmtid] << " In element " << elmtid << endl;
-        
+
 
         for(n = 0; n < nfields; ++n)
         {
@@ -62,25 +62,25 @@ int main(int argc, char *argv[])
         }
 
         ASSERTL0(n != nfields, "Could not find field named p in m_fields");
-        
+
         Array<OneD, NekDouble> phys = fields[n]->UpdatePhys();
 
-        cnt = 0; 
+        cnt = 0;
         for(i = 0; i < fields[n]->GetExpSize(); ++i)
         {
             nquad = fields[n]->GetExp(i)->GetTotPoints();
             Vmath::Fill(nquad,cfl[i],&phys[cnt],1);
-            cnt += nquad; 
+            cnt += nquad;
         }
 
         fields[n]->FwdTrans_IterPerExp(fields[n]->GetPhys(),fields[n]->UpdateCoeffs());
-        
+
         // Need to reset varibale name for output
         session->SetVariable(n,"CFL");
 
         // Reset session name for output file
         std::string outname = IncNav->GetSessionName();
-        
+
         outname += "_CFLStep";
         IncNav->ResetSessionName(outname);
         IncNav->Output();

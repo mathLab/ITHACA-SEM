@@ -83,7 +83,7 @@ void AcousticSystem::v_InitObject()
     m_bfNames.resize(m_spacedim + 2);
 
     m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
-                                           m_fields, m_fields.num_elements());
+                                           m_fields, m_fields.size());
 
     // Do not forwards transform initial condition
     m_homoInitialFwd = false;
@@ -134,12 +134,12 @@ bool AcousticSystem::v_PreIntegrate(int step)
         int numForceFields = 0;
         for (auto &x : m_forcing)
         {
-            numForceFields += x->GetForces().num_elements();
+            numForceFields += x->GetForces().size();
         }
         vector<string> varNames;
         Array<OneD, Array<OneD, NekDouble>> phys(
-            m_fields.num_elements() + m_bfNames.size() + numForceFields);
-        for (int i = 0; i < m_fields.num_elements(); ++i)
+            m_fields.size() + m_bfNames.size() + numForceFields);
+        for (int i = 0; i < m_fields.size(); ++i)
         {
             varNames.push_back(m_session->GetVariable(i));
             phys[i] = m_fields[i]->UpdatePhys();
@@ -147,15 +147,15 @@ bool AcousticSystem::v_PreIntegrate(int step)
         for (int i = 0; i < m_bfNames.size(); ++i)
         {
             varNames.push_back(m_bfNames[i]);
-            phys[m_fields.num_elements() + i] = m_bf[i];
+            phys[m_fields.size() + i] = m_bf[i];
         }
 
         int f = 0;
         for (auto &x : m_forcing)
         {
-            for (int i = 0; i < x->GetForces().num_elements(); ++i)
+            for (int i = 0; i < x->GetForces().size(); ++i)
             {
-                phys[m_fields.num_elements() + m_bfNames.size() + f + i] =
+                phys[m_fields.size() + m_bfNames.size() + f + i] =
                     x->GetForces()[i];
                 varNames.push_back("F_" + boost::lexical_cast<string>(f) + "_" +
                                    m_session->GetVariable(i));
@@ -187,7 +187,7 @@ void AcousticSystem::DoOdeRhs(
     const Array<OneD, const Array<OneD, NekDouble>> &inarray,
     Array<OneD, Array<OneD, NekDouble>> &outarray, const NekDouble time)
 {
-    int nVariables = inarray.num_elements();
+    int nVariables = inarray.size();
     int nq         = GetTotPoints();
 
     // WeakDG does not use advVel, so we only provide a dummy array
@@ -216,7 +216,7 @@ void AcousticSystem::DoOdeProjection(
     const Array<OneD, const Array<OneD, NekDouble>> &inarray,
     Array<OneD, Array<OneD, NekDouble>> &outarray, const NekDouble time)
 {
-    int nvariables = inarray.num_elements();
+    int nvariables = inarray.size();
     int nq         = m_fields[0]->GetNpoints();
 
     // deep copy
@@ -237,7 +237,7 @@ void AcousticSystem::SetBoundaryConditions(
     Array<OneD, Array<OneD, NekDouble>> &inarray, NekDouble time)
 {
     std::string varName;
-    int nvariables = m_fields.num_elements();
+    int nvariables = m_fields.size();
     int cnt        = 0;
     int nTracePts  = GetTraceTotPoints();
 
@@ -252,7 +252,7 @@ void AcousticSystem::SetBoundaryConditions(
     Array<OneD, Array<OneD, NekDouble>> bfFwd = GetBasefieldFwdBwd();
 
     // loop over Boundary Regions
-    for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+    for (int n = 0; n < m_fields[0]->GetBndConditions().size(); ++n)
     {
         std::string userDefStr =
             m_fields[0]->GetBndConditions()[n]->GetUserDefined();
@@ -307,7 +307,7 @@ void AcousticSystem::v_WallBC(int bcRegion, int cnt,
                               Array<OneD, Array<OneD, NekDouble>> &Fwd,
                               Array<OneD, Array<OneD, NekDouble>> &physarray)
 {
-    int nVariables = physarray.num_elements();
+    int nVariables = physarray.size();
 
     const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
 
@@ -368,7 +368,7 @@ void AcousticSystem::v_WhiteNoiseBC(
     boost::ignore_unused(Fwd);
 
     int id1, id2, nBCEdgePts;
-    int nVariables = physarray.num_elements();
+    int nVariables = physarray.size();
 
     const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
 
@@ -575,7 +575,7 @@ void AcousticSystem::v_ExtraFldOutput(
     int f = 0;
     for (auto &x : m_forcing)
     {
-        for (int i = 0; i < x->GetForces().num_elements(); ++i)
+        for (int i = 0; i < x->GetForces().size(); ++i)
         {
             variables.push_back("F_" + boost::lexical_cast<string>(f) + "_" +
                                 m_session->GetVariable(i));
@@ -629,7 +629,7 @@ void AcousticSystem::CopyBoundaryTrace(const Array<OneD, NekDouble> &Fwd,
     int cnt = 0;
     // loop over Boundary Regions
     for (int bcRegion = 0;
-         bcRegion < m_fields[0]->GetBndConditions().num_elements(); ++bcRegion)
+         bcRegion < m_fields[0]->GetBndConditions().size(); ++bcRegion)
     {
 
         // Copy the forward trace of the field to the backward trace

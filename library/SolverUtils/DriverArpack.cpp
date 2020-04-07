@@ -276,7 +276,7 @@ void DriverArpack::v_Execute(ostream &out)
                 m_equ[0]->TransCoeffToPhys();
 
                 Array<OneD, MultiRegions::ExpListSharedPtr>  fields = m_equ[0]->UpdateFields();
-                for (int i = 0; i < fields.num_elements(); ++i)
+                for (int i = 0; i < fields.size(); ++i)
                 {
                     fields[i]->IProductWRTBase(fields[i]->GetPhys(),
                                                fields[i]->UpdateCoeffs());

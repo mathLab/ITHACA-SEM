@@ -70,7 +70,7 @@ namespace Nektar
         /**
          * @class Preconditioner
          *
-         * This class implements preconditioning for the conjugate 
+         * This class implements preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
 
@@ -82,7 +82,7 @@ namespace Nektar
               m_locToGloMap(pLocToGloMap)
         {
         }
-        
+
         /**
          *
          */
@@ -99,7 +99,7 @@ namespace Nektar
 
         /**
          * \brief Apply a preconditioner to the conjugate gradient method
-         */ 
+         */
         void Preconditioner::v_DoPreconditioner(
             const Array<OneD, NekDouble>& pInput,
                   Array<OneD, NekDouble>& pOutput)
@@ -111,7 +111,7 @@ namespace Nektar
         /**
          * \brief Apply a preconditioner to the conjugate gradient method with
          * an output for non-vertex degrees of freedom.
-         */ 
+         */
         void Preconditioner::v_DoPreconditionerWithNonVertOutput(
             const Array<OneD, NekDouble> &pInput,
                   Array<OneD, NekDouble> &pOutput,
@@ -124,7 +124,7 @@ namespace Nektar
 
         /**
          * \brief Transform from original basis to low energy basis
-         */ 
+         */
         void Preconditioner::v_DoTransformToLowEnergy(
             Array<OneD, NekDouble>& pInOut,
             int offset)
@@ -134,7 +134,7 @@ namespace Nektar
 
         /**
          * \brief Transform from original basis to low energy basis
-         */ 
+         */
         void Preconditioner::v_DoTransformToLowEnergy(
             const Array<OneD, NekDouble> &pInOut,
                   Array<OneD, NekDouble> &pOutput)
@@ -144,16 +144,16 @@ namespace Nektar
 
         /**
          * \brief Transform from low energy basis to orignal basis
-         */ 
+         */
         void Preconditioner::v_DoTransformFromLowEnergy(
             Array<OneD, NekDouble>& pInput)
         {
-            Vmath::Smul(pInput.num_elements(), 1.0, pInput, 1, pInput, 1);
+            Vmath::Smul(pInput.size(), 1.0, pInput, 1, pInput, 1);
         }
 
         /**
          * \brief Multiply by the block inverse transformation matrix
-         */ 
+         */
         void Preconditioner::v_DoMultiplybyInverseTransformationMatrix(
             const Array<OneD, NekDouble> &pInput,
                   Array<OneD, NekDouble> &pOutput)
@@ -164,7 +164,7 @@ namespace Nektar
 
         /**
          * \brief Multiply by the block transposed inverse transformation matrix
-         */ 
+         */
         void Preconditioner::v_DoMultiplybyInverseTransposedTransformationMatrix(
             const Array<OneD, NekDouble> &pInput,
                   Array<OneD, NekDouble> &pOutput)

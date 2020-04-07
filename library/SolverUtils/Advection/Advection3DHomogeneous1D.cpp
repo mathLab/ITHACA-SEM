@@ -90,7 +90,7 @@ namespace Nektar
                 LibUtilities::SessionReaderSharedPtr        pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
-            int nConvectiveFields = pFields.num_elements();
+            int nConvectiveFields = pFields.size();
 
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields_plane0(
                 nConvectiveFields);
@@ -104,7 +104,7 @@ namespace Nektar
 
             m_numPoints      = pFields[0]->GetTotPoints();
             m_planes         = pFields[0]->GetZIDs();
-            m_numPlanes      = m_planes.num_elements();
+            m_numPlanes      = m_planes.size();
             m_numPointsPlane = m_numPoints/m_numPlanes;
 
             // Set Riemann solver and flux vector callback for this plane.
@@ -200,7 +200,7 @@ namespace Nektar
             boost::ignore_unused(pFwd, pBwd);
 
             Array<OneD, NekDouble> tmp(m_numPoints), tmp2;
-            int nVel = advVel.num_elements();
+            int nVel = advVel.size();
 
             // Call solver's flux vector function to compute the flux vector on
             // the entire domain.
@@ -222,7 +222,7 @@ namespace Nektar
 
                 for (int j = 0; j < nVel; ++j)
                 {
-                    if (advVel[j].num_elements() != 0)
+                    if (advVel[j].size() != 0)
                     {
                         m_advVelPlane[j] = Array<OneD, NekDouble>(
                             m_numPointsPlane, tmp2 = advVel[j] + m_planePos[i]);

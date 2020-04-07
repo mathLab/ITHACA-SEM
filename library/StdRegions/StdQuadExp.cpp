@@ -222,7 +222,7 @@ namespace Nektar
             }
             else
             {
-                ASSERTL1(wsp.num_elements()>=nquad0*nmodes1,"Workspace size is not sufficient");
+                ASSERTL1(wsp.size()>=nquad0*nmodes1,"Workspace size is not sufficient");
 
                 // Those two calls correpsond to the operation
                 // out = B0*in*Transpose(B1);
@@ -543,7 +543,7 @@ namespace Nektar
                 }
                 else
                 {
-                    ASSERTL1(wsp.num_elements()>=nquad1*nmodes0,"Workspace size is not sufficient");
+                    ASSERTL1(wsp.size()>=nquad1*nmodes0,"Workspace size is not sufficient");
 
 #if 1
                     Blas::Dgemm('T','N',nmodes0,nquad1,nquad0,1.0,base0.get(),
@@ -789,7 +789,7 @@ namespace Nektar
             int cnt=0;
             int nummodes0, nummodes1;
             int value1 = 0, value2 = 0;
-            if(outarray.num_elements()!=NumBndryCoeffs())
+            if(outarray.size()!=NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
             }
@@ -856,7 +856,7 @@ namespace Nektar
             int cnt=0;
             int nummodes0, nummodes1;
             int startvalue = 0;
-            if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
+            if(outarray.size()!=GetNcoeffs()-NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());
             }
@@ -1022,12 +1022,12 @@ namespace Nektar
             const int nEdgeIntCoeffs = GetEdgeNcoeffs(eid)-2;
             const LibUtilities::BasisType bType = GetEdgeBasisType(eid);
 
-            if(maparray.num_elements() != nEdgeIntCoeffs)
+            if(maparray.size() != nEdgeIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
             }
 
-            if(signarray.num_elements() != nEdgeIntCoeffs)
+            if(signarray.size() != nEdgeIntCoeffs)
             {
                 signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
             }
@@ -1199,12 +1199,12 @@ namespace Nektar
             const LibUtilities::BasisType bType = GetEdgeBasisType(eid);
 
 
-            if (maparray.num_elements() != P)
+            if (maparray.size() != P)
             {
                 maparray = Array<OneD, unsigned int>(P);
             }
 
-            if(signarray.num_elements() != P)
+            if(signarray.size() != P)
             {
                 signarray = Array<OneD, int>(P, 1);
             }
@@ -1563,14 +1563,14 @@ namespace Nektar
 
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
-            
+
             if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff)) // Rodrigo's power kernel
             {
-                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio);
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVPowerKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);
-                
+
                 for(int j = 0; j < nmodes_a; ++j)
                 {
                     for(int k = 0; k < nmodes_b; ++k)
@@ -1593,14 +1593,14 @@ namespace Nektar
                                  nmodes_b-kSVVDGFiltermodesmin);
                 max_ab = max(max_ab,0);
                 max_ab = min(max_ab,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
-                
+
                 for(int j = 0; j < nmodes_a; ++j)
                 {
                     for(int k = 0; k < nmodes_b; ++k)
                     {
                         int maxjk = max(j,k);
                         maxjk = min(maxjk,kSVVDGFiltermodesmax-1);
-                        
+
                         orthocoeffs[j*nmodes_b+k] *= SvvDiffCoeff *
                             kSVVDGFilter[max_ab][maxjk];
                     }
@@ -1698,7 +1698,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
-            int n_coeffs = inarray.num_elements();
+            int n_coeffs = inarray.size();
 
 
             Array<OneD, NekDouble> coeff(n_coeffs);

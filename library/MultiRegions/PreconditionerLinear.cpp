@@ -61,7 +61,7 @@ namespace Nektar
                     "FullLinearSpace",
                     PreconditionerLinear::create,
                     "Full Linear space inverse Preconditioning");
- 
+
         std::string PreconditionerLinear::solveType =
             LibUtilities::SessionReader::RegisterDefaultSolverInfo(
                 "LinearPreconSolver",
@@ -80,17 +80,17 @@ namespace Nektar
         /**
          * @class PreconditionerLinear
          *
-         * This class implements preconditioning for the conjugate 
+         * This class implements preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
-        
+
         PreconditionerLinear::PreconditionerLinear(
             const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
         {
         }
-        
+
         void PreconditionerLinear::v_InitObject()
         {
         }
@@ -196,10 +196,10 @@ namespace Nektar
 
                     // Global to local for linear solver (different from above)
                     Array<OneD, int> LocToGlo = m_vertLocToGloMap->GetLocalToGlobalMap();
-                    
+
                     // number of Dir coeffs in from full problem
                     int nDirFull = m_locToGloMap.lock()->GetNumGlobalDirBndCoeffs();
-                    
+
                     Array<OneD,NekDouble> In(nglo,0.0);
                     Array<OneD,NekDouble> Out(nglo,0.0);
 
@@ -212,29 +212,29 @@ namespace Nektar
                             In[LocToGlo[i]] = pInput[val-nDirFull];
                         }
                     }
-                    
-                    // Do solve without enforcing any boundary conditions. 
+
+                    // Do solve without enforcing any boundary conditions.
                     m_vertLinsys->SolveLinearSystem(
                         m_vertLocToGloMap->GetNumGlobalCoeffs(),
                         In,Out,m_vertLocToGloMap,
                         m_vertLocToGloMap->GetNumGlobalDirBndCoeffs());
-                    
-                    
+
+
                     if(pNonVertOutput != NullNekDouble1DArray)
                     {
-                        ASSERTL1(pNonVertOutput.num_elements() >= pOutput.num_elements(),"Non Vert output is not of sufficient length");
-                        Vmath::Vcopy(pOutput.num_elements(),pNonVertOutput,1,pOutput,1);
+                        ASSERTL1(pNonVertOutput.size() >= pOutput.size(),"Non Vert output is not of sufficient length");
+                        Vmath::Vcopy(pOutput.size(),pNonVertOutput,1,pOutput,1);
                     }
                     else
                     {
                         //Copy input to output as a unit preconditioner on
                         //any other value
-                        Vmath::Vcopy(pInput.num_elements(),pInput,1,pOutput,1);
+                        Vmath::Vcopy(pInput.size(),pInput,1,pOutput,1);
                     }
-                    
+
                     if(pVertForce != NullNekDouble1DArray)
                     {
-                        Vmath::Zero(pVertForce.num_elements(),pVertForce,1);
+                        Vmath::Zero(pVertForce.size(),pVertForce,1);
                         // Scatter back soln from linear solve
                         for(i = 0; i < nloc; ++i)
                         {

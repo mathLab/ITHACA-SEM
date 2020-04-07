@@ -29,7 +29,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // Description: Copy velocity field into forcing terms for stability
-// analysis of coupled solver. 
+// analysis of coupled solver.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -64,14 +64,14 @@ void ForcingStabilityCoupledLNS::v_Apply(
         const NekDouble&                                    time)
 {
     int npts = fields[0]->GetTotPoints();
-    
-    ASSERTL1(fields.num_elements() == outarray.num_elements(),
+
+    ASSERTL1(fields.size() == outarray.size(),
              "Fields and outarray are of different size");
-        
+
     // Apply m_forcing terms
-    for (int i = 0; i < fields.num_elements(); i++)
+    for (int i = 0; i < fields.size(); i++)
     {
-        Vmath::Vadd(npts, fields[i]->GetPhys(), 1, outarray[i], 1, 
+        Vmath::Vadd(npts, fields[i]->GetPhys(), 1, outarray[i], 1,
                     outarray[i], 1);
     }
 

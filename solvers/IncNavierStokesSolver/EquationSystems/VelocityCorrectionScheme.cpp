@@ -75,9 +75,9 @@ namespace Nektar
         m_explicitDiffusion = false;
 
         // Set m_pressure to point to last field of m_fields;
-        if (boost::iequals(m_session->GetVariable(m_fields.num_elements()-1), "p"))
+        if (boost::iequals(m_session->GetVariable(m_fields.size()-1), "p"))
         {
-            m_nConvectiveFields = m_fields.num_elements()-1;
+            m_nConvectiveFields = m_fields.size()-1;
             m_pressure = m_fields[m_nConvectiveFields];
         }
         else
@@ -244,7 +244,7 @@ namespace Nektar
         }
 
         // Find the boundary condition that is tagged as the flowrate boundary.
-        for (int i = 0; i < bcs.num_elements(); ++i)
+        for (int i = 0; i < bcs.size(); ++i)
         {
             if (boost::iequals(bcs[i]->GetUserDefined(), "Flowrate"))
             {
@@ -272,7 +272,7 @@ namespace Nektar
             Array<OneD, unsigned int> zIDs = m_fields[0]->GetZIDs();
             int tmpId = -1;
 
-            for (int i = 0; i < zIDs.num_elements(); ++i)
+            for (int i = 0; i < zIDs.size(); ++i)
             {
                 if (zIDs[i] == 0)
                 {
@@ -312,7 +312,7 @@ namespace Nektar
             Array<OneD, unsigned int> zIDs = m_fields[0]->GetZIDs();
             m_planeID = -1;
 
-            for (int i = 0; i < zIDs.num_elements(); ++i)
+            for (int i = 0; i < zIDs.size(); ++i)
             {
                 if (zIDs[i] == 0)
                 {
@@ -453,7 +453,7 @@ namespace Nektar
         }
         else
         {
-            m_comm->AllReduce(flowrate, LibUtilities::ReduceSum); 
+            m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
         }
         return flowrate / m_flowrateArea;
     }
@@ -595,7 +595,7 @@ namespace Nektar
      */
     void VelocityCorrectionScheme:: v_TransCoeffToPhys(void)
     {
-        int nfields = m_fields.num_elements() - 1;
+        int nfields = m_fields.size() - 1;
         for (int k=0 ; k < nfields; ++k)
         {
             //Backward Transformation in physical space for time evolution
@@ -610,7 +610,7 @@ namespace Nektar
     void VelocityCorrectionScheme:: v_TransPhysToCoeff(void)
     {
 
-        int nfields = m_fields.num_elements() - 1;
+        int nfields = m_fields.size() - 1;
         for (int k=0 ; k < nfields; ++k)
         {
             //Forward Transformation in physical space for time evolution
@@ -724,7 +724,7 @@ namespace Nektar
     {
         int i;
         int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_velocity.num_elements();
+        int nvel = m_velocity.size();
 
         m_fields[0]->PhysDeriv(eX,fields[0], Forcing[0]);
 
@@ -752,7 +752,7 @@ namespace Nektar
         // Grad p
         m_pressure->BwdTrans(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
 
-        int nvel = m_velocity.num_elements();
+        int nvel = m_velocity.size();
         if(nvel == 2)
         {
             m_pressure->PhysDeriv(m_pressure->GetPhys(),
@@ -879,7 +879,7 @@ namespace Nektar
                     cout << "Seting up SVV velocity from "
                         "SVVVelocityMagnitude section in session file" << endl;
                 }
-                int nvel = m_velocity.num_elements();
+                int nvel = m_velocity.size();
                 int phystot = m_fields[0]->GetTotPoints();
                 SVVVelFields = Array<OneD, Array<OneD, NekDouble> >(nvel);
                 vector<string> vars;
@@ -955,7 +955,7 @@ namespace Nektar
                 Array<OneD, unsigned int> planes;
                 planes = m_fields[0]->GetZIDs();
 
-                int num_planes = planes.num_elements();
+                int num_planes = planes.size();
                 Array<OneD, NekDouble> SVV(num_planes,0.0);
                 NekDouble fac;
                 int kmodes = m_fields[0]->GetHomogeneousBasis()->GetNumModes();
@@ -973,7 +973,7 @@ namespace Nektar
                     }
                 }
 
-                for(int i = 0; i < m_velocity.num_elements(); ++i)
+                for(int i = 0; i < m_velocity.size(); ++i)
                 {
                     m_fields[m_velocity[i]]->SetHomo1DSpecVanVisc(SVV);
                 }
@@ -998,7 +998,7 @@ namespace Nektar
         if(vel != NullNekDoubleArrayofArray)
         {
             Array<OneD, NekDouble> Velmag(phystot);
-            nvel = vel.num_elements();
+            nvel = vel.size();
             // calculate magnitude of v
             Vmath::Vmul(phystot,vel[0],1,vel[0],1,Velmag,1);
             for(int n = 1; n < nvel; ++n)

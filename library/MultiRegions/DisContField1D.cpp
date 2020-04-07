@@ -106,7 +106,7 @@ namespace Nektar
                 Array<OneD, int> ElmtID, VertexID;
                 GetBoundaryToElmtMap(ElmtID, VertexID);
 
-                for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                for(i = 0; i < m_bndCondExpansions.size(); ++i)
                 {
                     MultiRegions::ExpListSharedPtr locExpList;
                     locExpList = m_bndCondExpansions[i];
@@ -120,7 +120,7 @@ namespace Nektar
 
                     exp0d->SetAdjacentElementExp(VertexID[i], exp1d);
                 }
-                
+
                 SetUpPhysNormals();
             }
 
@@ -147,7 +147,7 @@ namespace Nektar
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
                 AllocateSharedPtr(m_session, m_graph, trace, *this,
-                                  m_bndCondExpansions, m_bndConditions, 
+                                  m_bndCondExpansions, m_bndConditions,
                                   m_periodicVerts, variable);
 
             if (m_session->DefinesCmdLineArgument("verbose"))
@@ -160,7 +160,7 @@ namespace Nektar
             // retains a pointer to the trace space points, to ensure
             // uniqueness of normals when retrieving from two adjoining
             // elements which do not lie in a plane.
-            
+
             int ElmtPointGeom  = 0;
             int TracePointGeom = 0;
             LocalRegions::Expansion0DSharedPtr exp0d;
@@ -171,11 +171,11 @@ namespace Nektar
                 for (int j = 0; j < exp1d->GetNverts(); ++j)
                 {
                     ElmtPointGeom  = (exp1d->GetGeom1D())->GetVid(j);
-                    
+
                     for (int k = 0; k < m_trace->GetExpSize(); ++k)
                     {
                         TracePointGeom = m_trace->GetExp(k)->GetGeom()->GetVid(0);
-                        
+
                         if (TracePointGeom == ElmtPointGeom)
                         {
                             exp0d = m_trace->GetExp(k)->as<LocalRegions::Expansion0D>();
@@ -185,15 +185,15 @@ namespace Nektar
                     }
                 }
             }
-            
+
             SetUpPhysNormals();
 
             int cnt, n, e;
 
             // Identify boundary verts
-            for(cnt = 0, n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for(cnt = 0, n = 0; n < m_bndCondExpansions.size(); ++n)
             {
-                if (m_bndConditions[n]->GetBoundaryConditionType() != 
+                if (m_bndConditions[n]->GetBoundaryConditionType() !=
                     SpatialDomains::ePeriodic)
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
@@ -207,7 +207,7 @@ namespace Nektar
 
             // Set up left-adjacent edge list.
             m_leftAdjacentVerts.resize(2*((*m_exp).size()));
-            
+
             // count size of trace
             for (cnt = n = 0; n < m_exp->size(); ++n)
             {
@@ -278,7 +278,7 @@ namespace Nektar
 
         bool DisContField1D::IsLeftAdjacentVertex(const int n, const int e)
         {
-            LocalRegions::Expansion0DSharedPtr traceEl = 
+            LocalRegions::Expansion0DSharedPtr traceEl =
                 m_traceMap->GetElmtToTrace()[n][e]->as<LocalRegions::Expansion0D>();
 
             bool fwd = true;
@@ -288,7 +288,7 @@ namespace Nektar
                 // Boundary edge (1 connected element). Do nothing in
                 // serial.
                 auto it = m_boundaryVerts.find(traceEl->GetElmtId());
-                
+
                 // If the edge does not have a boundary condition set on
                 // it, then assume it is a partition edge or periodic.
                 if (it == m_boundaryVerts.end())
@@ -306,23 +306,23 @@ namespace Nektar
             {
                 ASSERTL2(false, "Unconnected trace element!");
             }
-            
+
             return fwd;
         }
-		
-        
+
+
         // Given all boundary regions for the whole solution determine
         // which ones (if any) are part of domain and ensure all other
-        // conditions are given as UserDefined Dirichlet. 
+        // conditions are given as UserDefined Dirichlet.
         SpatialDomains::BoundaryConditionsSharedPtr DisContField1D::GetDomainBCs(
             const SpatialDomains::CompositeMap &domain,
             const SpatialDomains::BoundaryConditions &Allbcs,
             const std::string &variable)
-        {            
+        {
             SpatialDomains::BoundaryConditionsSharedPtr returnval;
-            
+
             returnval = MemoryManager<SpatialDomains::BoundaryConditions>::AllocateSharedPtr();
-            
+
             map<int,int> GeometryToRegionsMap;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
@@ -347,7 +347,7 @@ namespace Nektar
             // Now find out which points in domain have only one vertex
             for(auto &domIt : domain)
             {
-                SpatialDomains::CompositeSharedPtr geomvector = domIt.second; 
+                SpatialDomains::CompositeSharedPtr geomvector = domIt.second;
                 for(int i = 0; i < geomvector->m_geomVec.size(); ++i)
                 {
                     for(int j = 0; j < 2; ++j)
@@ -393,11 +393,11 @@ namespace Nektar
                         bconditionsIter->second;
                     returnval->AddBoundaryConditions(regionId,bcond);
                 }
-                else // Set up an undefined region. 
+                else // Set up an undefined region.
                 {
                     SpatialDomains::BoundaryRegionShPtr breg(MemoryManager<SpatialDomains::BoundaryRegion>::AllocateSharedPtr());
-                    
-                    // Set up Composite (GemetryVector) to contain vertex and put into bRegion 
+
+                    // Set up Composite (GemetryVector) to contain vertex and put into bRegion
                     SpatialDomains::CompositeSharedPtr gvec =
                         MemoryManager<SpatialDomains::Composite>
                         ::AllocateSharedPtr();
@@ -408,23 +408,23 @@ namespace Nektar
 
                     SpatialDomains::BoundaryConditionMapShPtr bCondition = MemoryManager<SpatialDomains::BoundaryConditionMap>::AllocateSharedPtr();
 
-                    // Set up just boundary condition for this variable. 
+                    // Set up just boundary condition for this variable.
                     SpatialDomains::BoundaryConditionShPtr notDefinedCondition(MemoryManager<SpatialDomains::NotDefinedBoundaryCondition>::AllocateSharedPtr(m_session, "0"));
                     (*bCondition)[variable] = notDefinedCondition;
-                    
+
                     returnval->AddBoundaryConditions(bregions.size()+numNewBc,bCondition);
 		    ++numNewBc;
 
                 }
             }
-            
-            return returnval; 
-        } 
-        
+
+            return returnval;
+        }
+
         /**
          * Constructor for use in multidomain computations where a
          * domain list can be passed instead of graph1D
-         * 
+         *
          * @param	domain	Subdomain specified in the inputfile from
          *       	      	which the DisContField1D is set up
          */
@@ -432,7 +432,7 @@ namespace Nektar
                     const LibUtilities::SessionReaderSharedPtr &pSession,
                     const SpatialDomains::MeshGraphSharedPtr &graph1D,
                     const SpatialDomains::CompositeMap &domain,
-                    const SpatialDomains::BoundaryConditions &Allbcs, 
+                    const SpatialDomains::BoundaryConditions &Allbcs,
                     const std::string &variable,
                     bool SetToOneSpaceDimension,
                     const Collections::ImplementationType ImpType):
@@ -452,7 +452,7 @@ namespace Nektar
 
             SetUpDG(variable);
         }
-        
+
         /**
          * Constructs a field as a copy of an existing field.
          * @param   In          Existing DisContField1D object to copy.
@@ -471,8 +471,8 @@ namespace Nektar
             m_leftAdjacentVerts(In.m_leftAdjacentVerts)
         {
         }
-        
-        
+
+
         /**
          * Constructs a field as a copy of an existing explist1D field.
          * @param   In          Existing ExpList1D object to copy.
@@ -557,7 +557,7 @@ namespace Nektar
             int i, region1ID, region2ID;
 
             SpatialDomains::BoundaryConditionShPtr locBCond;
-            
+
             map<int,int> BregionToVertMap;
 
             // Construct list of all periodic Region and their global vertex on
@@ -565,7 +565,7 @@ namespace Nektar
             for (auto &it : bregions)
             {
                 locBCond = GetBoundaryCondition(bconditions, it.first, variable);
-                
+
                 if (locBCond->GetBoundaryConditionType()
                         != SpatialDomains::ePeriodic)
                 {
@@ -617,7 +617,7 @@ namespace Nektar
             for (auto &it : bregions)
             {
                 locBCond = GetBoundaryCondition(bconditions, it.first, variable);
-                
+
                 if (locBCond->GetBoundaryConditionType()
                         != SpatialDomains::ePeriodic)
                 {
@@ -630,10 +630,10 @@ namespace Nektar
                     SpatialDomains::PeriodicBoundaryCondition>(
                         locBCond)->m_connectedBoundaryRegion;
 
-                ASSERTL0(BregionToVertMap.count(region1ID) != 0, 
+                ASSERTL0(BregionToVertMap.count(region1ID) != 0,
                          "Cannot determine vertex of region1ID");
 
-                ASSERTL0(BregionToVertMap.count(region2ID) != 0, 
+                ASSERTL0(BregionToVertMap.count(region2ID) != 0,
                          "Cannot determine vertex of region2ID");
 
                 PeriodicEntity ent(BregionToVertMap[region2ID],
@@ -752,13 +752,13 @@ namespace Nektar
                     &elmtToTrace = m_traceMap->GetElmtToTrace();
 
                 m_negatedFluxNormal.resize(2*GetExpSize());
-                
+
                 for(int i = 0; i < GetExpSize(); ++i)
                 {
 
                     for(int v = 0; v < 2; ++v)
                     {
-                        
+
                         LocalRegions::Expansion0DSharedPtr vertExp =
                             elmtToTrace[i][v]->as<LocalRegions::Expansion0D>();
 
@@ -795,21 +795,21 @@ namespace Nektar
         {
             v_GetFwdBwdTracePhys(m_phys,Fwd,Bwd);
         }
-        
-        
+
+
         /**
          * @brief This method extracts the "forward" and "backward" trace data
          * from the array @a field and puts the data into output vectors @a Fwd
          * and @a Bwd.
-         * 
+         *
          * We first define the convention which defines "forwards" and
          * "backwards". First an association is made between the vertex of each
          * element and its corresponding vertex in the trace space using the
          * mapping #m_traceMap. The element can either be left-adjacent or
          * right-adjacent to this trace edge (see
-         * Expansion0D::GetLeftAdjacentElementExp). Boundary edges are never 
+         * Expansion0D::GetLeftAdjacentElementExp). Boundary edges are never
          * left-adjacent since elemental left-adjacency is populated first.
-         * 
+         *
          * If the element is left-adjacent we extract the vertex trace data from
          * @a field into the forward trace space @a Fwd; otherwise, we place it
          * in the backwards trace space @a Bwd. In this way, we form a unique
@@ -830,20 +830,20 @@ namespace Nektar
         {
             // Counter variables
             int  n, v;
-            
+
             // Number of elements
-            int nElements = GetExpSize(); 
-            
+            int nElements = GetExpSize();
+
             // Initial index of each element
             int phys_offset;
-            
+
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             // Set forward and backard state to zero
-            Vmath::Zero(Fwd.num_elements(), Fwd, 1);
-            Vmath::Zero(Bwd.num_elements(), Bwd, 1);
-			
+            Vmath::Zero(Fwd.size(), Fwd, 1);
+            Vmath::Zero(Bwd.size(), Bwd, 1);
+
             int cnt;
 
             // Loop on the elements
@@ -855,7 +855,7 @@ namespace Nektar
                 for(v = 0; v < 2; ++v, ++cnt)
                 {
                     int offset = m_trace->GetPhys_Offset(elmtToTrace[n][v]->GetElmtId());
-                    
+
                     if (m_leftAdjacentVerts[cnt])
                     {
                         (*m_exp)[n]->GetVertexPhysVals(v, field + phys_offset,
@@ -868,22 +868,22 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // Fill boundary conditions into missing elements.
             int id = 0;
-            
-            for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {	
-                if (m_bndConditions[n]->GetBoundaryConditionType() == 
+
+            for(cnt = n = 0; n < m_bndCondExpansions.size(); ++n)
+            {
+                if (m_bndConditions[n]->GetBoundaryConditionType() ==
                         SpatialDomains::eDirichlet)
                 {
                     id  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
                     Bwd[id] = m_bndCondExpansions[n]->GetPhys()[0]; //this is not getting the correct value?
                     cnt++;
                 }
-                else if (m_bndConditions[n]->GetBoundaryConditionType() == 
-                         SpatialDomains::eNeumann || 
-                         m_bndConditions[n]->GetBoundaryConditionType() == 
+                else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                         SpatialDomains::eNeumann ||
+                         m_bndConditions[n]->GetBoundaryConditionType() ==
                          SpatialDomains::eRobin)
                 {
                     ASSERTL0((m_bndCondExpansions[n]->GetPhys())[0]==0.0,
@@ -891,7 +891,7 @@ namespace Nektar
                              "boundary condition");
                     id  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
                     Bwd[id] = Fwd[id];
-                    
+
                     cnt++;
                 }
                 else if (m_bndConditions[n]->GetBoundaryConditionType() ==
@@ -906,7 +906,7 @@ namespace Nektar
                              "Method not set up for this boundary condition.");
                 }
             }
-            
+
             // Copy any periodic boundary conditions.
             for (n = 0; n < m_periodicFwdCopy.size(); ++n)
             {
@@ -917,15 +917,15 @@ namespace Nektar
             m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);
 
         }
-        
-	
+
+
         void DisContField1D::v_ExtractTracePhys(
             Array<OneD, NekDouble> &outarray)
         {
             ASSERTL1(m_physState == true,"local physical space is not true ");
             v_ExtractTracePhys(m_phys, outarray);
         }
-        
+
         /**
          * @brief This method extracts the trace (verts in 1D) from the field @a
          * inarray and puts the values in @a outarray.
@@ -940,20 +940,20 @@ namespace Nektar
          * This will not work for non-boundary expansions
          */
         void DisContField1D::v_ExtractTracePhys(
-            const Array<OneD, const NekDouble> &inarray, 
+            const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
             int n,p,offset,phys_offset;
-            
-            ASSERTL1(outarray.num_elements() >= m_trace->GetExpSize(),
+
+            ASSERTL1(outarray.size() >= m_trace->GetExpSize(),
                 "input array is of insufficient length");
-            
+
             for (n  = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
-		
+
                 for (p = 0; p < (*m_exp)[n]->GetNverts(); ++p)
                 {
                     offset = m_trace->GetPhys_Offset(
@@ -962,10 +962,10 @@ namespace Nektar
                                                    outarray[offset]);
                 }
             }
-        }		 
-	
+        }
+
         void DisContField1D::v_AddTraceIntegral(
-            const Array<OneD, const NekDouble> &Fn, 
+            const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {
             int n,offset, t_offset;
@@ -974,14 +974,14 @@ namespace Nektar
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             vector<bool> negatedFluxNormal = GetNegatedFluxNormal();
-            
+
             for (n = 0; n < GetExpSize(); ++n)
             {
                 // Number of coefficients on each element
                 int e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
-                
+
                 offset = GetCoeff_Offset(n);
-                
+
                 // Implementation for every points except Gauss points
                 if ((*m_exp)[n]->GetBasis(0)->GetBasisType() !=
                      LibUtilities::eGauss_Lagrange)
@@ -995,7 +995,7 @@ namespace Nektar
                     {
                         outarray[offset] += Fn[t_offset];
                     }
-                    
+
                     t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][1]->GetElmtId());
 
                     if(negatedFluxNormal[2*n+1])
@@ -1010,48 +1010,48 @@ namespace Nektar
                 }
                 else
                 {
-#if 0           
+#if 0
                     DNekMatSharedPtr             m_Ixm;
                     LibUtilities::BasisSharedPtr BASE;
                     const LibUtilities::PointsKey
                             BS_p(e_ncoeffs,LibUtilities::eGaussGaussLegendre);
                     const LibUtilities::BasisKey
                             BS_k(LibUtilities::eGauss_Lagrange,e_ncoeffs,BS_p);
-                    
+
                     BASE  = LibUtilities::BasisManager()[BS_k];
-                    
+
                     Array<OneD, NekDouble> coords(3, 0.0);
-                    
+
                     int j;
-                    
+
                     for(p = 0; p < 2; ++p)
                     {
                         NekDouble vertnorm = 0.0;
                         for (int i=0; i<((*m_exp)[n]->
-                             GetVertexNormal(p)).num_elements(); i++)
+                             GetVertexNormal(p)).size(); i++)
                         {
                             vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
                             coords[0] = vertnorm ;
                         }
-                        
+
                         t_offset = GetTrace()->GetPhys_Offset(n+p);
-                        
+
                         if (vertnorm >= 0.0)
                         {
                             m_Ixm = BASE->GetI(coords);
-                            
-                            
+
+
                             for (j = 0; j < e_ncoeffs; j++)
                             {
                                 outarray[offset + j]  +=
                                     (m_Ixm->GetPtr())[j] * Fn[t_offset];
                             }
                         }
-                        
+
                         if (vertnorm < 0.0)
                         {
                             m_Ixm = BASE->GetI(coords);
-                            
+
                             for (j = 0; j < e_ncoeffs; j++)
                             {
                                 outarray[offset + j] -=
@@ -1070,20 +1070,20 @@ namespace Nektar
                             BS_p(e_ncoeffs,LibUtilities::eGaussGaussLegendre);
                         const LibUtilities::BasisKey
                             BS_k(LibUtilities::eGauss_Lagrange,e_ncoeffs,BS_p);
-                        
+
                         BASE  = LibUtilities::BasisManager()[BS_k];
-                        
+
                         Array<OneD, NekDouble> coords(1, 0.0);
-                    
+
                         coords[0] = -1.0;
-                        m_Ixm = BASE->GetI(coords); 
+                        m_Ixm = BASE->GetI(coords);
 
                         coords[0] = 1.0;
-                        m_Ixp = BASE->GetI(coords); 
+                        m_Ixp = BASE->GetI(coords);
 
-                        sav_ncoeffs = e_ncoeffs; 
+                        sav_ncoeffs = e_ncoeffs;
                     }
-                    
+
                     t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][0]->GetElmtId());
                     if(negatedFluxNormal[2*n])
                     {
@@ -1101,7 +1101,7 @@ namespace Nektar
                                 (m_Ixm->GetPtr())[j] * Fn[t_offset];
                         }
                     }
-                        
+
                     t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][1]->GetElmtId());
                     if (negatedFluxNormal[2*n+1])
                     {
@@ -1123,8 +1123,8 @@ namespace Nektar
                 }
             }
         }
-	
-	
+
+
         void DisContField1D::v_HelmSolve(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,
@@ -1175,8 +1175,8 @@ namespace Nektar
             // Retrieve global trace space storage, \Lambda, from trace expansion
             Array<OneD,NekDouble> BndSol =  Array<OneD,NekDouble>
                 (m_traceMap->GetNumLocalBndCoeffs());
-            
-			
+
+
             Array<OneD,NekDouble> BndRhs(GloBndDofs,0.0);
             // Zero trace space
             Vmath::Zero(GloBndDofs,BndSol,1);
@@ -1210,7 +1210,7 @@ namespace Nektar
 
             cnt = 0;
             // Copy Dirichlet boundary conditions into trace space
-            for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for (i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if (m_bndConditions[i]->GetBoundaryConditionType() ==
                     SpatialDomains::eDirichlet)
@@ -1287,19 +1287,19 @@ namespace Nektar
             Array<OneD, NekDouble> x1(1);
             Array<OneD, NekDouble> x2(1);
 
-            for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for (i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
                     m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
-                    
+
                     if (x2_in != NekConstants::kNekUnsetDouble && x3_in !=
                         NekConstants::kNekUnsetDouble)
                     {
                         x1[0] = x2_in;
                         x2[0] = x3_in;
                     }
-                    
+
                     if (m_bndConditions[i]->GetBoundaryConditionType() ==
                         SpatialDomains::eDirichlet)
                     {
@@ -1324,7 +1324,7 @@ namespace Nektar
                             (std::static_pointer_cast<SpatialDomains
                              ::RobinBoundaryCondition>(m_bndConditions[i])
                              ->m_robinFunction).Evaluate(x0[0],x1[0],x2[0],time));
-                        
+
                     }
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                             == SpatialDomains::ePeriodic)
@@ -1351,10 +1351,10 @@ namespace Nektar
             map<int, int> VertGID;
             int i,n,id;
             int bid,cnt,Vid;
-            int nbcs = m_bndConditions.num_elements();
+            int nbcs = m_bndConditions.size();
 
             // make sure arrays are of sufficient length
-            if (ElmtID.num_elements() != nbcs)
+            if (ElmtID.size() != nbcs)
             {
                 ElmtID = Array<OneD, int>(nbcs,-1);
             }
@@ -1363,13 +1363,13 @@ namespace Nektar
                 fill(ElmtID.get(), ElmtID.get()+nbcs, -1);
             }
 
-            if (VertID.num_elements() != nbcs)
+            if (VertID.size() != nbcs)
             {
                 VertID = Array<OneD, int>(nbcs);
             }
 
             // setup map of all global ids along boundary
-            for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (cnt = n = 0; n < m_bndCondExpansions.size(); ++n)
             {
                 Vid =  m_bndCondExpansions[n]->GetExp(0)->GetGeom()->GetVertex(0)->GetVid();
                 VertGID[Vid] = cnt++;
@@ -1397,7 +1397,7 @@ namespace Nektar
 
             ASSERTL1(cnt == nbcs,"Failed to visit all boundary condtiions");
         }
-        
+
         void DisContField1D::v_GetBndElmtExpansion(int i,
                             std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
@@ -1405,10 +1405,10 @@ namespace Nektar
             int n, cnt, nq;
             int offsetOld, offsetNew;
             std::vector<unsigned int> eIDs;
-            
+
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
-            
+
             // Skip other boundary regions
             for (cnt = n = 0; n < i; ++n)
             {
@@ -1420,12 +1420,12 @@ namespace Nektar
             {
                 eIDs.push_back(ElmtID[cnt+n]);
             }
-            
+
             // Create expansion list
-            result = 
+            result =
                 MemoryManager<ExpList1D>::AllocateSharedPtr
                     (*this, eIDs, DeclareCoeffPhysArrays);
-            
+
             // Copy phys and coeffs to new explist
             if( DeclareCoeffPhysArrays)
             {
@@ -1455,7 +1455,7 @@ namespace Nektar
             ExpList::v_Reset();
 
             // Reset boundary condition expansions.
-            for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (int n = 0; n < m_bndCondExpansions.size(); ++n)
             {
                 m_bndCondExpansions[n]->Reset();
             }
@@ -1482,7 +1482,7 @@ namespace Nektar
             Array<OneD, int> ElmtID,VertID;
             GetBoundaryToElmtMap(ElmtID,VertID);
 
-            for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for (i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if (m_bndConditions[i]->GetBoundaryConditionType() ==
                     SpatialDomains::eRobin)
@@ -1493,13 +1493,13 @@ namespace Nektar
                     Array<OneD, NekDouble> x1(1);
                     Array<OneD, NekDouble> x2(1);
                     Array<OneD, NekDouble> coeffphys(1);
-                    
+
                     m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
 
                     coeffphys[0]  = (std::static_pointer_cast<SpatialDomains
                          ::RobinBoundaryCondition>(m_bndConditions[i])
                          ->m_robinPrimitiveCoeff).Evaluate(x0[0],x1[0],x2[0],0.0);
-                        
+
                     RobinBCInfoSharedPtr rInfo =
                         MemoryManager<RobinBCInfo>::
                             AllocateSharedPtr(VertID[i],coeffphys);

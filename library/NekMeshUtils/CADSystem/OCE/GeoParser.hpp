@@ -176,7 +176,7 @@ struct CommentSkipper : public qi::grammar<Iterator>
         // Inline comments.
         line = "//" >> *(qi::char_ - qi::eol) >> (qi::eol | qi::eoi);
         // Block comments.
-        block = "/*" >> *(block | qi::char_ - "*/") > "*/";
+        block = "/*" >> *(block | (qi::char_ - "*/")) > "*/";
         // Also skip all whitespace.
         skip = boost::spirit::ascii::space | line | block;
     }

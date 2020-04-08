@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: TransfiniteSurface.gpp
+//  File: TransfiniteSurface.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -28,14 +28,28 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: OCC subclases that define transfinite surfaces of 3 or 4
-//  curves.
+//  Description: OCC subclases that define transfinite surfaces of 4 curves.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <Geom_BoundedCurve.hxx>
 #include <Geom_BoundedSurface.hxx>
+#include <Standard_Type.hxx>
+#include <Standard_Version.hxx>
 #include <gp_GTrsf2d.hxx>
+
+#include <boost/core/ignore_unused.hpp>
+#include <vector>
+
+#if OCC_VERSION_HEX < 0x070000
+  #define DEFINE_STANDARD_RTTIEXT(C1,C2) DEFINE_STANDARD_RTTI(C1)
+  #define DEFINE_STANDARD_RTTI_INLINE(C1,C2) DEFINE_STANDARD_RTTI(C1)
+#endif
+
+class Geom_TransfiniteCurve;
+DEFINE_STANDARD_HANDLE(Geom_TransfiniteCurve, Geom_BoundedCurve)
+class Geom_TransfiniteSurface;
+DEFINE_STANDARD_HANDLE(Geom_TransfiniteSurface, Geom_BoundedSurface)
 
 /**
  * @brief A class to describe an isoline of a transfinite surface.
@@ -77,7 +91,10 @@ class Geom_TransfiniteCurve : public Geom_BoundedCurve
         }
     }
 
+    DEFINE_STANDARD_RTTIEXT(Geom_TransfiniteCurve, Geom_BoundedCurve)
+
 public:
+
     /**
      * @brief Default constructor.
      */
@@ -102,7 +119,7 @@ public:
      * then given a value #m_val \f$ a \f$ this will be defined by \f$
      * \mathbf{c}_2(1-a) \f$.
      */
-    virtual gp_Pnt EndPoint() const
+    virtual gp_Pnt EndPoint() const override
     {
         return m_uvDir ? m_edges[2]->Value(Map(0, 1-m_val))
             : m_edges[1]->Value(Map(0, m_val));
@@ -113,7 +130,7 @@ public:
      * true, then given a value #m_val \f$ a \f$ this will be defined by \f$
      * \mathbf{c}_0(a) \f$.
      */
-    virtual gp_Pnt StartPoint() const
+    virtual gp_Pnt StartPoint() const override
     {
         return m_uvDir ? m_edges[0]->Value(Map(0, m_val))
             : m_edges[3]->Value(Map(0, 1-m_val));
@@ -122,7 +139,7 @@ public:
     /**
      * @brief Reverses the direction of the curve. Unimplemented in this class.
      */
-    virtual void Reverse()
+    virtual void Reverse() override
     {
         abort();
     }
@@ -131,7 +148,8 @@ public:
      * @brief Returns the reversed parameter for this curve. Unimplemented in
      * this class.
      */
-    virtual Standard_Real ReversedParameter (const Standard_Real U) const
+    virtual Standard_Real ReversedParameter (
+        const Standard_Real U) const override
     {
         boost::ignore_unused(U);
         abort();
@@ -143,7 +161,7 @@ public:
      * this class.
      */
     virtual Standard_Real TransformedParameter (
-        const Standard_Real U, const gp_Trsf& T) const
+        const Standard_Real U, const gp_Trsf& T) const override
     {
         boost::ignore_unused(U, T);
         abort();
@@ -154,7 +172,8 @@ public:
      * @brief Returns a parametric transformation for this curve. Unimplemented
      * in this class.
      */
-    virtual Standard_Real ParametricTransformation (const gp_Trsf& T) const
+    virtual Standard_Real ParametricTransformation (
+        const gp_Trsf& T) const override
     {
         boost::ignore_unused(T);
         abort();
@@ -165,7 +184,7 @@ public:
      * @brief Defines the lower range of the parametrisation. Always `0.0` for
      * this class.
      */
-    virtual Standard_Real FirstParameter() const
+    virtual Standard_Real FirstParameter() const override
     {
         return 0.0;
     }
@@ -174,7 +193,7 @@ public:
      * @brief Defines the upper range of the parametrisation. Always `1.0` for
      * this class.
      */
-    virtual Standard_Real LastParameter() const
+    virtual Standard_Real LastParameter() const override
     {
         return 1.0;
     }
@@ -183,7 +202,7 @@ public:
      * @brief Determines whether this curve is closed; always true for this
      * class.
      */
-    virtual Standard_Boolean IsClosed() const
+    virtual Standard_Boolean IsClosed() const override
     {
         return true;
     }
@@ -192,7 +211,7 @@ public:
      * @brief Determines whether this curve is periodic; always false for this
      * class.
      */
-    virtual Standard_Boolean IsPeriodic() const
+    virtual Standard_Boolean IsPeriodic() const override
     {
         return false;
     }
@@ -201,7 +220,7 @@ public:
      * @brief Determines the period of this curve, which is not defined for this
      * class.
      */
-    virtual Standard_Real Period() const
+    virtual Standard_Real Period() const override
     {
         abort();
         return 0.0;
@@ -211,7 +230,7 @@ public:
      * @brief Returns the continuity of this curve; we only define up to
      * second-order derivatives, so return C^2 continuity.
      */
-    virtual GeomAbs_Shape Continuity() const
+    virtual GeomAbs_Shape Continuity() const override
     {
         return GeomAbs_C2;
     }
@@ -221,7 +240,7 @@ public:
      * differentiable for a given order \f$ N \f$; we only define up to
      * second-order derivatives, so return true only if \f$ 0\leq N\leq 2 \f$.
      */
-    virtual Standard_Boolean IsCN (const Standard_Integer N) const
+    virtual Standard_Boolean IsCN (const Standard_Integer N) const override
     {
         if (N > 2 || N < 0)
         {
@@ -236,7 +255,7 @@ public:
      *
      * This evaluates the expression from Geom_TransfiniteSurface::D0.
      */
-    virtual void D0 (const Standard_Real U1, gp_Pnt& P) const
+    virtual void D0 (const Standard_Real U1, gp_Pnt& P) const override
     {
         double U = m_uvDir ? m_val : U1;
         double V = m_uvDir ? U1 : m_val;
@@ -259,7 +278,8 @@ public:
      *
      * This evaluates the expression from Geom_TransfiniteSurface::D1.
      */
-    virtual void D1 (const Standard_Real U1, gp_Pnt& P, gp_Vec& V1) const
+    virtual void D1 (
+        const Standard_Real U1, gp_Pnt& P, gp_Vec& V1) const override
     {
         double U = m_uvDir ? m_val : U1;
         double V = m_uvDir ? U1 : m_val;
@@ -317,7 +337,8 @@ public:
      * This evaluates the expression from Geom_TransfiniteSurface::D2.
      */
     virtual void D2 (
-        const Standard_Real U1, gp_Pnt& P, gp_Vec& V1, gp_Vec& V2) const
+        const Standard_Real U1, gp_Pnt& P, gp_Vec& V1,
+        gp_Vec& V2) const override
     {
         double U = m_uvDir ? m_val : U1;
         double V = m_uvDir ? U1 : m_val;
@@ -389,7 +410,7 @@ public:
      * this isn't implemented in this class (even though it is well-defined).
      */
     virtual void D3 (const Standard_Real U, gp_Pnt& P, gp_Vec& V1, gp_Vec& V2,
-                     gp_Vec& V3) const
+                     gp_Vec& V3) const override
     {
         boost::ignore_unused(U, P, V1, V2, V3);
         abort();
@@ -402,7 +423,8 @@ public:
      * Since we're lazy and DN isn't called in the mesh generation pipeline,
      * this isn't implemented in this class (even though it is well-defined).
      */
-    virtual gp_Vec DN (const Standard_Real U, const Standard_Integer N) const
+    virtual gp_Vec DN (
+        const Standard_Real U, const Standard_Integer N) const override
     {
         boost::ignore_unused(U, N);
         abort();
@@ -412,7 +434,7 @@ public:
     /**
      * @brief Returns a copy of this geometry.
      */
-    virtual Handle(Geom_Geometry) Copy() const
+    virtual Handle(Geom_Geometry) Copy() const override
     {
         Handle(Geom_TransfiniteCurve) tmp = new Geom_TransfiniteCurve(
             m_uvDir, m_val, m_edges, m_fwd, m_clims, m_verts);
@@ -423,7 +445,7 @@ public:
      * @brief Transform this shape according to the transformation @p
      * T. Unimplemented in this class.
      */
-    virtual void Transform (const gp_Trsf& T)
+    virtual void Transform (const gp_Trsf& T) override
     {
         abort();
 
@@ -491,6 +513,8 @@ class Geom_TransfiniteSurface : public Geom_BoundedSurface
         }
     }
 
+    DEFINE_STANDARD_RTTIEXT(Geom_TransfiniteSurface, Geom_BoundedSurface)
+
 public:
     /**
      * @brief Default constructor.
@@ -512,22 +536,13 @@ public:
     /**
      * @brief Reverses the direction of U. Unimplemented in this class.
      */
-    virtual void UReverse()
+    virtual void UReverse() override
     {
         abort();
     }
 
-    /**
-     * @brief Determines whether U is reversed or not. Unimplemented in this
-     * class.
-     */
-    Handle(Geom_Surface) UReversed() const
-    {
-        abort();
-        return Handle(Geom_Surface)();
-    }
-
-    virtual Standard_Real UReversedParameter(const Standard_Real U) const
+    virtual Standard_Real UReversedParameter(
+        const Standard_Real U) const override
     {
         boost::ignore_unused(U);
         abort();
@@ -537,22 +552,13 @@ public:
     /**
      * @brief Reverses the direction of V. Unimplemented in this class.
      */
-    virtual void VReverse()
+    virtual void VReverse() override
     {
         abort();
     }
 
-    /**
-     * @brief Determines whether U is reversed or not. Unimplemented in this
-     * class.
-     */
-    Handle(Geom_Surface) VReversed() const
-    {
-        abort();
-        return Handle(Geom_Surface)();
-    }
-
-    virtual Standard_Real VReversedParameter(const Standard_Real V) const
+    virtual Standard_Real VReversedParameter(
+        const Standard_Real V) const override
     {
         boost::ignore_unused(V);
         abort();
@@ -563,7 +569,7 @@ public:
      * @brief Transform this shape according to the transformation @p
      * T. Unimplemented in this class.
      */
-    virtual void Transform(const gp_Trsf& T)
+    virtual void Transform(const gp_Trsf& T) override
     {
         abort();
 
@@ -579,7 +585,7 @@ public:
         }
     }
 
-    virtual Handle(Geom_Geometry) Copy() const
+    virtual Handle(Geom_Geometry) Copy() const override
     {
         Handle(Geom_TransfiniteSurface) tmp = new Geom_TransfiniteSurface(
             m_edges, m_fwd, m_clims, m_verts);
@@ -587,13 +593,14 @@ public:
     }
 
     virtual void TransformParameters (
-        Standard_Real& U, Standard_Real& V, const gp_Trsf& T) const
+        Standard_Real& U, Standard_Real& V, const gp_Trsf& T) const override
     {
         boost::ignore_unused(U, V, T);
         abort();
     }
 
-    virtual gp_GTrsf2d ParametricTransformation (const gp_Trsf& T) const
+    virtual gp_GTrsf2d ParametricTransformation (
+        const gp_Trsf& T) const override
     {
         boost::ignore_unused(T);
         abort();
@@ -606,7 +613,7 @@ public:
      * = 1 \f$.
      */
     virtual void Bounds (Standard_Real& U1, Standard_Real& U2,
-                         Standard_Real& V1, Standard_Real& V2) const
+                         Standard_Real& V1, Standard_Real& V2) const override
     {
         U1 = V1 = 0.0;
         U2 = V2 = 1.0;
@@ -616,7 +623,7 @@ public:
      * @brief Returns whether the surface is closed in the \f$ u\f$ direction,
      * which is always true for this surface.
      */
-    virtual Standard_Boolean IsUClosed() const
+    virtual Standard_Boolean IsUClosed() const override
     {
         return true;
     }
@@ -625,7 +632,7 @@ public:
      * @brief Returns whether the surface is closed in the \f$ v\f$ direction,
      * which is always true for this surface.
      */
-    virtual Standard_Boolean IsVClosed() const
+    virtual Standard_Boolean IsVClosed() const override
     {
         return true;
     }
@@ -634,7 +641,7 @@ public:
      * @brief Returns whether the surface is periodic in the \f$ u\f$ direction,
      * which is always false for this surface.
      */
-    virtual Standard_Boolean IsUPeriodic() const
+    virtual Standard_Boolean IsUPeriodic() const override
     {
         return false;
     }
@@ -643,7 +650,7 @@ public:
      * @brief Returns the period of this surface in the \f$ u\f$ direction,
      * which is not defined for this surface.
      */
-    virtual Standard_Real UPeriod() const
+    virtual Standard_Real UPeriod() const override
     {
         abort();
         return 0.0;
@@ -653,7 +660,7 @@ public:
      * @brief Returns whether the surface is periodic in the \f$ v\f$ direction,
      * which is always false for this surface.
      */
-    virtual Standard_Boolean IsVPeriodic() const
+    virtual Standard_Boolean IsVPeriodic() const override
     {
         return false;
     }
@@ -662,7 +669,7 @@ public:
      * @brief Returns the period of this surface in the \f$ v\f$ direction,
      * which is not defined for this surface.
      */
-    virtual Standard_Real VPeriod() const
+    virtual Standard_Real VPeriod() const override
     {
         abort();
         return 0.0;
@@ -672,7 +679,7 @@ public:
      * @brief Construct an isoline in the \f$ v\f$ direction of the surface
      * according to a fixed parameter @p U.
      */
-    virtual Handle(Geom_Curve) UIso (const Standard_Real U) const
+    virtual Handle(Geom_Curve) UIso (const Standard_Real U) const override
     {
         Handle(Geom_Curve) c = new Geom_TransfiniteCurve(
             true, U, m_edges, m_fwd, m_clims, m_verts);
@@ -683,7 +690,7 @@ public:
      * @brief Construct an isoline in the \f$ u\f$ direction of the surface
      * according to a fixed parameter @p V.
      */
-    virtual Handle(Geom_Curve) VIso (const Standard_Real V) const
+    virtual Handle(Geom_Curve) VIso (const Standard_Real V) const override
     {
         Handle(Geom_Curve) c = new Geom_TransfiniteCurve(
             false, V, m_edges, m_fwd, m_clims, m_verts);
@@ -694,7 +701,7 @@ public:
      * @brief Returns the continuity of this curve; we only define up to
      * second-order derivatives, so return C^2 continuity.
      */
-    virtual GeomAbs_Shape Continuity() const
+    virtual GeomAbs_Shape Continuity() const override
     {
         return GeomAbs_C2;
     }
@@ -705,7 +712,7 @@ public:
      * only define up to second-order derivatives, so return true only if \f$
      * 0\leq N\leq 2 \f$.
      */
-    virtual Standard_Boolean IsCNu (const Standard_Integer N) const
+    virtual Standard_Boolean IsCNu (const Standard_Integer N) const override
     {
         if (N > 2 || N < 0)
         {
@@ -720,7 +727,7 @@ public:
      * only define up to second-order derivatives, so return true only if \f$
      * 0\leq N\leq 2 \f$.
      */
-    virtual Standard_Boolean IsCNv (const Standard_Integer N) const
+    virtual Standard_Boolean IsCNv (const Standard_Integer N) const override
     {
         if (N > 2 || N < 0)
         {
@@ -742,7 +749,7 @@ public:
      * \f}
      */
     virtual void D0 (
-        const Standard_Real U, const Standard_Real V, gp_Pnt& P) const
+        const Standard_Real U, const Standard_Real V, gp_Pnt& P) const override
     {
         gp_XYZ c0 = m_edges[0]->Value(Map(0, U)).XYZ();
         gp_XYZ c1 = m_edges[1]->Value(Map(1, V)).XYZ();
@@ -785,7 +792,7 @@ public:
      * which can be obtained from the D1 routines of each curve.
      */
     virtual void D1 (const Standard_Real U, const Standard_Real V, gp_Pnt& P,
-                     gp_Vec& D1U, gp_Vec& D1V) const
+                     gp_Vec& D1U, gp_Vec& D1V) const override
     {
         // Compute first-order derivatives from OCC curves.
         gp_Pnt t0, t1, t2, t3;
@@ -854,7 +861,7 @@ public:
      */
     virtual void D2 (const Standard_Real U, const Standard_Real V, gp_Pnt& P,
                      gp_Vec& D1U, gp_Vec& D1V, gp_Vec& D2U, gp_Vec& D2V,
-                     gp_Vec& D2UV) const
+                     gp_Vec& D2UV) const override
     {
         gp_Pnt t0, t1, t2, t3;
         gp_Vec d0, d1, d2, d3, dd0, dd1, dd2, dd3;
@@ -918,7 +925,7 @@ public:
     virtual void D3 (const Standard_Real U, const Standard_Real V, gp_Pnt& P,
                      gp_Vec& D1U, gp_Vec& D1V, gp_Vec& D2U, gp_Vec& D2V,
                      gp_Vec& D2UV, gp_Vec& D3U, gp_Vec& D3V, gp_Vec& D3UUV,
-                     gp_Vec& D3UVV) const
+                     gp_Vec& D3UVV) const override
     {
         gp_Pnt t0, t1, t2, t3;
         gp_Vec d0, d1, d2, d3, dd0, dd1, dd2, dd3;
@@ -1005,7 +1012,7 @@ public:
     virtual gp_Vec DN (const Standard_Real U,
                        const Standard_Real V,
                        const Standard_Integer Nu,
-                       const Standard_Integer Nv) const
+                       const Standard_Integer Nv) const override
     {
         boost::ignore_unused(U, V, Nu, Nv);
         abort();

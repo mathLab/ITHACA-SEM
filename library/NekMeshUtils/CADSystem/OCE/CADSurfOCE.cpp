@@ -33,7 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/CADSystem/OCE/CADSurfOCE.h>
-#include <NekMeshUtils/CADSystem/OCE/TransfiniteSurface.hpp>
+#include <NekMeshUtils/CADSystem/OCE/TransfiniteSurface.h>
 #include <GeomAPI_ProjectPointOnSurf.hxx>
 
 using namespace std;
@@ -52,9 +52,9 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
 
     // Test to see if this surface is a transfinite surface, since some OCC
     // functions will not work on our custom type.
-    Geom_TransfiniteSurface *geom = dynamic_cast<Geom_TransfiniteSurface *>(
-        m_s.get());
-    m_isTransfiniteSurf = geom ? true : false;
+    Handle(Geom_TransfiniteSurface) tf = Handle(Geom_TransfiniteSurface)::
+        DownCast(m_s);
+    m_isTransfiniteSurf = !tf.IsNull();
 
     if (in.Orientation() == TopAbs_REVERSED)
     {

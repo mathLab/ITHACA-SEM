@@ -41,7 +41,7 @@
 #include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
 
 #include <NekMeshUtils/CADSystem/OCE/GeoParser.hpp>
-#include <NekMeshUtils/CADSystem/OCE/TransfiniteSurface.hpp>
+#include <NekMeshUtils/CADSystem/OCE/TransfiniteSurface.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>

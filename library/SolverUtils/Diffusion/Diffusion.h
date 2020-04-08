@@ -329,15 +329,6 @@ namespace Nektar
             }
 
             template<typename FuncPointerT, typename ObjectPointerT>
-            void SetFunctorDerivBndCond(FuncPointerT func, ObjectPointerT obj)
-            {
-                m_FunctorDerivBndCond = std::bind(
-                    func, obj, std::placeholders::_1, std::placeholders::_2,
-                               std::placeholders::_3, std::placeholders::_4,
-                                std::placeholders::_5);
-            }
-
-            template<typename FuncPointerT, typename ObjectPointerT>
             void SetArtificialDiffusionVector(
                 FuncPointerT func, ObjectPointerT obj)
             {
@@ -359,12 +350,6 @@ namespace Nektar
                     func, obj, std::placeholders::_1, std::placeholders::_2,
                                std::placeholders::_3, std::placeholders::_4,
                                std::placeholders::_5, std::placeholders::_6);
-            }
-
-            SOLVER_UTILS_EXPORT void SetFunctorDerivBndCond(
-                FunctorDerivBndCond DerivBndCond)
-            {
-                m_FunctorDerivBndCond = DerivBndCond;
             }
 
             SOLVER_UTILS_EXPORT inline void SetHomoDerivs(
@@ -408,7 +393,6 @@ namespace Nektar
             DiffusionFluxPenaltyNS          m_fluxPenaltyNS;
             DiffusionArtificialDiffusion    m_ArtificialDiffusionVector;
             DiffusionFluxCons               m_FunctorDiffusionfluxCons;
-            FunctorDerivBndCond             m_FunctorDerivBndCond;
             SpecialBndTreat                 m_SpecialBndTreat;
             DiffusionSymmFluxCons           m_FunctorSymmetricfluxCons;
 

@@ -93,6 +93,13 @@ namespace Nektar
             &normal             =   NullNekDoubleArrayofArray,           
         const Array<OneD, NekDouble>                             
             &ArtifDiffFactor    =   NullNekDouble1DArray);
+    void GetViscousSymmtrFluxConservVar(
+            const int                                           nSpaceDim,
+            const Array<OneD, Array<OneD, NekDouble> >          &inaverg,
+            const Array<OneD, Array<OneD, NekDouble > >         &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &outarray,
+            Array< OneD, int >                                  &nonZeroIndex,    
+            const Array<OneD, Array<OneD, NekDouble> >          &normals);
     
     void GetPrimDerivFromConsDeriv(
         const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
@@ -126,13 +133,6 @@ namespace Nektar
                Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
-    
-    virtual void v_DoDiffusionFlux(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
-            Array<OneD, Array<OneD, NekDouble>>              &TraceFlux,
-            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
 
     virtual void v_GetViscousFluxVector(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
@@ -143,14 +143,6 @@ namespace Nektar
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
 
-    
-    virtual void v_GetViscousSymmtrFluxConservVar(
-            const int                                           nSpaceDim,
-            const Array<OneD, Array<OneD, NekDouble> >          &inaverg,
-            const Array<OneD, Array<OneD, NekDouble > >         &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &outarray,
-            Array< OneD, int >                                  &nonZeroIndex,    
-            const Array<OneD, Array<OneD, NekDouble> >          &normals);
     virtual void v_GetFluxPenalty(
         const Array<OneD, Array<OneD, NekDouble> > &uFwd,
         const Array<OneD, Array<OneD, NekDouble> > &uBwd,

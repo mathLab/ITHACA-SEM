@@ -119,14 +119,12 @@ namespace Nektar
                 this);
             m_diffusion->SetDiffusionFluxCons(
                 &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
-            m_diffusion->SetFunctorDerivBndCond(
-                &NavierStokesCFE::SetBoundaryConditionsDeriv, this);
             
             m_diffusion->SetSpecialBndTreat(
                 &NavierStokesCFE::SpecialBndTreat, this);
 
             m_diffusion->SetDiffusionSymmFluxCons(
-                &NavierStokesCFE::v_GetViscousSymmtrFluxConservVar, this);
+                &NavierStokesCFE::GetViscousSymmtrFluxConservVar, this);
 
             if (m_shockCaptureType != "Off")
             {
@@ -140,14 +138,12 @@ namespace Nektar
                                           v_GetViscousFluxVector, this);
             m_diffusion->SetDiffusionFluxCons(
                 &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
-            m_diffusion->SetFunctorDerivBndCond(
-                &NavierStokesCFE::SetBoundaryConditionsDeriv, this);
 
             m_diffusion->SetSpecialBndTreat(
                 &NavierStokesCFE::SpecialBndTreat, this);
 
             m_diffusion->SetDiffusionSymmFluxCons(
-                &NavierStokesCFE::v_GetViscousSymmtrFluxConservVar, this);
+                &NavierStokesCFE::GetViscousSymmtrFluxConservVar, this);
 
             if (m_shockCaptureType != "Off")
             {
@@ -356,127 +352,6 @@ namespace Nektar
             {
                 m_artificialDiffusion->DoArtificialDiffusion_coeff(
                     inarray, outarray);
-            }
-        }
-    }
-
-    void NavierStokesCFE::v_DoDiffusionFlux(
-        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>&VolumeFlux,
-        Array<OneD, Array<OneD, NekDouble>>             &TraceFlux,
-        const Array<OneD, Array<OneD, NekDouble>>       &pFwd,
-        const Array<OneD, Array<OneD, NekDouble>>       &pBwd)
-    {
-        int nDim= m_fields[0]->GetCoordim(0);
-        int nvariables = inarray.num_elements();
-        int npoints    = GetNpoints();
-        int nTracePts  = GetTraceTotPoints();
-
-        Array<OneD, Array<OneD, NekDouble>> outarrayDiff(nvariables);
-        for (int i = 0; i < nvariables; ++i)
-        {
-            outarrayDiff[i] = Array<OneD, NekDouble>(npoints,0.0);
-        }
-        
-        string diffName;
-        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if("InteriorPenalty"==diffName)
-        {
-            Array<OneD,Array<OneD, Array<OneD, NekDouble>>> 
-                inarrayDiffderivative(nDim);
-            for (int i = 0; i < nDim; i++)
-            {
-                inarrayDiffderivative[i]=
-                    Array<OneD, Array<OneD, NekDouble>> (nvariables);
-                for(int j=0;j<nvariables;j++)
-                {
-                    inarrayDiffderivative[i][j]=
-                        Array<OneD, NekDouble>(npoints,0.0);
-                }
-            }
-            m_diffusion->DiffuseCalculateDerivative(m_fields,inarray,
-                inarrayDiffderivative,pFwd,pBwd);
-            m_diffusion->DiffuseVolumeFlux(m_fields, inarray,
-                inarrayDiffderivative, VolumeFlux);
-            m_diffusion->DiffuseTraceFlux(m_fields, inarray,
-                inarrayDiffderivative,VolumeFlux,TraceFlux,pFwd,pBwd);
-        }
-        else
-        {
-            Array<OneD, Array<OneD, NekDouble>> inarrayDiff;
-            Array<OneD, Array<OneD, NekDouble>> inFwd;
-            Array<OneD, Array<OneD, NekDouble>> inBwd;
-            Array<OneD,Array<OneD, Array<OneD, NekDouble>>> 
-                inarrayDiffderivative(nDim);
-            
-            //Allocate memory
-            inarrayDiff=Array<OneD, Array<OneD, NekDouble>> (nvariables - 1);
-            inFwd=Array<OneD, Array<OneD, NekDouble>>(nvariables - 1);
-            inBwd=Array<OneD, Array<OneD, NekDouble>> (nvariables - 1);
-            inarrayDiffderivative=
-                Array<OneD,Array<OneD, Array<OneD, NekDouble>>> (nDim);
-
-            for (int i = 0; i < nvariables-1; ++i)
-            {
-                inarrayDiff[i] = Array<OneD, NekDouble>(npoints,0.0);
-                inFwd[i]       = Array<OneD, NekDouble>(nTracePts,0.0);
-                inBwd[i]       = Array<OneD, NekDouble>(nTracePts,0.0);
-            }
-
-            for (int i = 0; i < nDim; i++)
-            {
-                inarrayDiffderivative[i]=
-                    Array<OneD, Array<OneD, NekDouble>> (nvariables-1);
-                for(int j=0;j<nvariables-1;j++)
-                {
-                    inarrayDiffderivative[i][j]=
-                        Array<OneD, NekDouble>(npoints,0.0);
-                }
-            }
-
-            // Extract pressure
-            //    (use inarrayDiff[0] as a temporary storage for the pressure)
-            m_varConv->GetPressure(inarray, inarrayDiff[0]);
-
-            // Extract temperature
-            m_varConv->GetTemperature(inarray, inarrayDiff[nvariables - 2]);
-
-            // Extract velocities
-            m_varConv->GetVelocityVector(inarray, inarrayDiff);
-
-            // Repeat calculation for trace space
-            if (pFwd == NullNekDoubleArrayofArray || 
-                pBwd == NullNekDoubleArrayofArray)
-            {
-                inFwd = NullNekDoubleArrayofArray;
-                inBwd = NullNekDoubleArrayofArray;
-            }
-            else
-            {
-                m_varConv->GetPressure(pFwd, inFwd[0]);
-                m_varConv->GetPressure(pBwd, inBwd[0]);
-
-                m_varConv->GetTemperature(pFwd, inFwd[nvariables - 2]);
-                m_varConv->GetTemperature(pBwd, inBwd[nvariables - 2]);
-
-                m_varConv->GetVelocityVector(pFwd, inFwd);
-                m_varConv->GetVelocityVector(pBwd, inBwd);
-            }
-
-            // Diffusion term in physical rhs form
-            // To notice, needs to firstly calculate volumeflux, traceflux uses it.
-            m_diffusion->DiffuseCalculateDerivative(m_fields,inarrayDiff,
-                inarrayDiffderivative,inFwd,inBwd);
-            m_diffusion->DiffuseVolumeFlux(m_fields, inarrayDiff,
-                inarrayDiffderivative, VolumeFlux);
-            m_diffusion->DiffuseTraceFlux(m_fields, inarrayDiff,
-                inarrayDiffderivative,VolumeFlux,TraceFlux, inFwd, inBwd);
-
-            //Artificial Diffusion need to implement
-            if (m_shockCaptureType != "Off")
-            {
-                m_artificialDiffusion->DoArtificialDiffusionFlux(inarray, 
-                    VolumeFlux,TraceFlux);
             }
         }
     }
@@ -702,8 +577,8 @@ namespace Nektar
     }
 
     /**
-     * @brief Return the flux vector for the IP diffusion problem.
-     * \TODO:: RECODE USING VARIABLE CONVERTORS
+     * @brief Calculate derivatives of primitive variables based on derivatives of 
+     * conservative variables
      */
     void NavierStokesCFE::GetPrimDerivFromConsDeriv(
         const Array<OneD, Array<OneD, NekDouble> >          &inarray,
@@ -784,8 +659,8 @@ namespace Nektar
     }
 
       /**
-     * @brief Return the flux vector for the IP diffusion problem.
-     * \todo Complete the viscous flux vector
+     * @brief Return the flux vector for the IP diffusion problem, based on 
+     * conservative variables
      */
     void NavierStokesCFE::GetViscousFluxVectorConservVar(
         const int                                              nDim,
@@ -890,8 +765,12 @@ namespace Nektar
     }
 
     /**
-     * @brief For very special treatment. For general boundaries it should do nothing
-     * TODO: check WallViscous Boundary and Twall setting and remove the special treatment here
+     * @brief For very special treatment. For general boundaries it does nothing
+     * But for WallViscous and WallAdiabatic, special treatment is needed 
+     * because they get the same Bwd value, special treatment is needed for 
+     * boundary treatment of diffusion flux
+     * Note: This special treatment could be removed by seperating 
+     * WallViscous and WallAdiabatic into two different classes.
      *
      */
     void NavierStokesCFE::SpecialBndTreat(
@@ -973,6 +852,9 @@ namespace Nektar
         }
     }
 
+    /**
+     * @brief Calculate and return the ArtificialViscosity for shock-capturing.
+     */
     void NavierStokesCFE::GetArtificialViscosity(
         const Array<OneD, Array<OneD, NekDouble> >  &inarray,
               Array<OneD,             NekDouble  >  &muav)
@@ -980,7 +862,10 @@ namespace Nektar
         m_artificialDiffusion->GetArtificialViscosity(inarray,muav);
     }
 
-    void NavierStokesCFE::v_GetViscousSymmtrFluxConservVar(
+    /**
+     * @brief Calculate and return the Symmetric flux in IP method.
+     */
+    void NavierStokesCFE::GetViscousSymmtrFluxConservVar(
         const int                                           nSpaceDim,
         const Array<OneD, Array<OneD, NekDouble> >          &inaverg,
         const Array<OneD, Array<OneD, NekDouble > >         &inarray,
@@ -1015,6 +900,10 @@ namespace Nektar
             }
         }
     }
+
+    /**
+     * @brief Calculate diffusion flux using the bilinear form.
+     */
     void NavierStokesCFE::GetViscousFluxBilinearForm(
         const int                                           nSpaceDim,
         const int                                           FluxDirection,
@@ -1026,19 +915,7 @@ namespace Nektar
         int nConvectiveFields   = inaverg.num_elements();
         int nPts                = inaverg[nConvectiveFields-1].num_elements();
         int nDim=nSpaceDim;
-        // Auxiliary variables
 
-        // // Variable viscosity through the Sutherland's law
-        // if (m_ViscosityType == "Variable")
-        // {
-        //     Array<OneD, NekDouble > temperature        (nPts, 0.0);
-        //     m_varConv->GetTemperature(inaverg,temperature);
-        //     m_varConv->GetDynamicViscosity(temperature, mu);
-        // }
-        // else
-        // {
-        //     Vmath::Fill(nPts, m_mu, mu, 1);
-        // }
         Array<OneD, NekDouble > temperature        (nPts, 0.0);
         Array<OneD, NekDouble > mu                 (nPts, 0.0);
         Array<OneD, NekDouble > thermalConductivity        (nPts, 0.0);
@@ -1050,10 +927,8 @@ namespace Nektar
         for(int i=0; i<nConvectiveFields;i++)
         {
             Vmath::Zero(nPts,&outarray[i][0],1);
-            // outtmp[i]=Array<OneD,NekDouble> (nPts,0.0);
         }
 
-        //TODO: to get primary variable outside.(even in the beginning of DoODERhs)
         Array<OneD,Array<OneD,NekDouble>> u(nDim);
         Array<OneD,Array<OneD,NekDouble>> u2(nDim);
         for(int i=0;i<nDim;i++)
@@ -1159,9 +1034,7 @@ namespace Nektar
                         &injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1,
                         &tmp1[0],1);
             Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[nDim_plus_one][0],1);
-            
         }
- 
     }
 
     /**

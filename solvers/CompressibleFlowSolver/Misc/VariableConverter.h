@@ -61,16 +61,7 @@ public:
         Array<OneD, NekDouble> &energy);
     void GetEnthalpy(const Array<OneD, const Array<OneD, NekDouble>> &physfield,
                      Array<OneD, NekDouble> &enthalpy);
-    void GetVelocityVector(
-        const Array<OneD, Array<OneD, NekDouble>> &physfield,
-              Array<OneD, Array<OneD, NekDouble>> &velocity)
-    {
-        GetVelocityVector(physfield,0,velocity);
-    }
-    
-    void GetVelocityVector(
-        const Array<OneD, Array<OneD, NekDouble>> &physfield,
-        const int                                   noffset,
+    void GetVelocityVector(const Array<OneD, Array<OneD, NekDouble>> &physfield,
               Array<OneD, Array<OneD, NekDouble>> &velocity);
     void GetMach(Array<OneD, Array<OneD, NekDouble>> &physfield,
                  Array<OneD, NekDouble> &soundspeed,
@@ -102,17 +93,10 @@ public:
     void GetRhoFromPT(const Array<OneD, NekDouble> &pressure,
                       const Array<OneD, NekDouble> &temperature,
                       Array<OneD, NekDouble> &rho);
-    void GetDmuDT(
-        const Array<OneD, const NekDouble>  &temperature, 
-        const Array<OneD, const NekDouble>  &mu, 
-              Array<OneD, NekDouble>        &DmuDT);
 
-    NekDouble GetGasconstant();
+    inline NekDouble GetGasconstant();
 
-    EquationOfStateSharedPtr Geteos()
-    {
-        return m_eos;
-    }
+    inline EquationOfStateSharedPtr Geteos();
 
 protected:
     LibUtilities::SessionReaderSharedPtr m_session;
@@ -125,5 +109,17 @@ protected:
     NekDouble m_Skappa;
     NekDouble m_Kappa;
 };
+
+// return the Gasconstant
+NekDouble VariableConverter::GetGasconstant()
+{
+    return m_gasConstant;
+}
+
+// return the EquationOfState
+EquationOfStateSharedPtr VariableConverter::Geteos()
+{
+    return m_eos;
+}
 }
 #endif

@@ -66,6 +66,7 @@ public:
     {
     }
 
+    /// Calculate the Gamma
     inline NekDouble GetGamma();
 
     /// Calculate the temperature
@@ -96,7 +97,7 @@ public:
     /// Obtain the density from P and T
     NekDouble GetRhoFromPT(const NekDouble &p, const NekDouble &T);
 
-     /// Calculate the enthalpy
+     /// Calculate the InternalEnergy
     NekDouble GetInternalEnergy(const NekDouble &T);
 
 protected:

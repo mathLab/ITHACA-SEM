@@ -229,7 +229,7 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         int npoints    = GetNpoints();
         int nTracePts  = GetTraceTotPoints();
 
@@ -374,6 +374,7 @@ namespace Nektar
 
     /**
      * @brief Add the diffusions terms to the right-hand side
+     * Similar to DoDiffusion() but with outarray in coefficient space
      */
     void CompressibleFlowSystem::DoDiffusion_coeff(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
@@ -407,7 +408,10 @@ namespace Nektar
             }
         }
     }
-
+    /**
+     * @brief Set up a weight on physical boundaries for boundary condition 
+     * applications
+     */
     void CompressibleFlowSystem::SetBoundaryConditionsBwdWeight()
     {
         if (m_bndConds.size())
@@ -416,64 +420,6 @@ namespace Nektar
             for (auto &x : m_bndConds)
             {
                 x->ApplyBwdWeight();
-            }
-        }
-    }
-
-    void CompressibleFlowSystem::SetBoundaryConditionsDeriv(
-        const Array<OneD, const Array<OneD, NekDouble> >    &physarray,
-        const Array<OneD, const Array<OneD, 
-            Array<OneD, NekDouble> > >                      &dervarray,
-        NekDouble                                           time,
-        const Array<OneD, const Array<OneD, NekDouble> >    &pFwd,
-        const Array<OneD, const Array<OneD, 
-            Array<OneD, NekDouble> > >                      &pDervFwd)
-    {
-        int nTracePts  = GetTraceTotPoints();
-        int nvariables = physarray.num_elements();
-
-        Array<OneD, Array<OneD, NekDouble> > Fwd;
-        if(pFwd.num_elements())
-        {
-            Fwd = pFwd;
-        }
-        else
-        {
-            Fwd = Array<OneD, Array<OneD, NekDouble> >(nvariables);
-            for (int i = 0; i < nvariables; ++i)
-            {
-                Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-                m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-            }
-        }
-
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > DervFwd;
-        if(pDervFwd.num_elements())
-        {
-            DervFwd = pDervFwd;
-        }
-        else
-        {
-            int nDim      = m_fields[0]->GetCoordim(0);
-            DervFwd = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nDim);
-            for (int nd = 0; nd < nDim; ++nd)
-            {
-                DervFwd[nd] = Array<OneD, Array<OneD, NekDouble> > (nvariables);
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    DervFwd[nd][i] = Array<OneD, NekDouble>(nTracePts,0.0);
-                    m_fields[i]->ExtractTracePhys(dervarray[nd][i], 
-                                                    DervFwd[nd][i]);
-                }
-            }
-        }
-
-        if (m_bndConds.size())
-        {
-            // Loop over user-defined boundary conditions
-            for (auto &x : m_bndConds)
-            {
-                x->ApplyDeriv(Fwd, physarray, DervFwd, dervarray, time);
             }
         }
     }
@@ -990,19 +936,6 @@ namespace Nektar
         }
     }
 
-    void CompressibleFlowSystem::v_GetViscousSymmtrFluxConservVar(
-        const int                                           nConvectiveFields,
-        const int                                           nSpaceDim,
-        const Array<OneD, Array<OneD, NekDouble> >          &inaverg,
-        const Array<OneD, Array<OneD, NekDouble > >         &inarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &outarray,
-        Array< OneD, int >                                  &nonZeroIndex,    
-        const Array<OneD, Array<OneD, NekDouble> >          &normals)
-    {
-        boost::ignore_unused(nConvectiveFields,nSpaceDim,inaverg,inarray,
-                                outarray,nonZeroIndex,normals);
-        ASSERTL0(false, "v_GetViscousSymmtrFluxConservVar not coded");
-    }
     /**
      *
      */
@@ -1054,22 +987,6 @@ namespace Nektar
     {
         boost::ignore_unused(inarray,outarray,pFwd,pBwd);
         // Do nothing by default
-    }
-
-    void CompressibleFlowSystem::v_DoDiffusionFlux(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
-        Array<OneD, Array<OneD, NekDouble>>              &TraceFlux,
-        const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
-    {
-        boost::ignore_unused(inarray,VolumeFlux,TraceFlux,pFwd,pBwd);
-        //Artificial Diffusion need to implement
-        if (m_shockCaptureType != "Off")
-        {
-            m_artificialDiffusion->DoArtificialDiffusionFlux(inarray, 
-                VolumeFlux,TraceFlux);
-        }
     }
 
 /**

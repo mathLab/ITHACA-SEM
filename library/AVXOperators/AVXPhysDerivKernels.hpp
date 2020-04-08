@@ -32,12 +32,12 @@ inline static void AVXPhysDerivTensor2DKernel(
             for (int k = 0; k < nq0; ++k)
             { //Col index of D0, row index of IN
                 T v1 = D0[k * nq0 + i]; //Load 1x
-                T v2 = in[j*nq0 + k]; //Load 1x
+                T v2 = in[j * nq0 + k]; //Load 1x
 
-                prod_sum.fma(v1,v2);
+                prod_sum.fma(v1, v2);
             }
 
-            outptr_d0[j*nq0+i] = prod_sum; //Store 1x
+            outptr_d0[j * nq0 + i] = prod_sum; //Store 1x
         }
     }
 
@@ -50,13 +50,13 @@ inline static void AVXPhysDerivTensor2DKernel(
             T prod_sum = T(0.0);
             for(int k = 0; k < nq1; ++k)
             {
-                T v1 = in[k*nq0+i]; //Load 1x
-                T v2 = D1[k*nq1 + j]; //Load 1x
+                T v1 = in[k * nq0 + i]; //Load 1x
+                T v2 = D1[k * nq1 + j]; //Load 1x
 
-                prod_sum.fma(v1,v2);
+                prod_sum.fma(v1, v2);
             }
 
-            outptr_d1[j*nq0+i]; //Store 1x
+            outptr_d1[j * nq0 + i]; //Store 1x
 
         }
     }
@@ -103,10 +103,10 @@ static void AVXPhysDerivQuadKernel(
             T d1 = outptr_d1[cnt_ji]; //Load 1x
 
             if(DEFORMED){
-                df0 = df_ptr[cnt_ji*ndf];
-                df1 = df_ptr[cnt_ji*ndf + 1];
-                df2 = df_ptr[cnt_ji*ndf + 2];
-                df3 = df_ptr[cnt_ji*ndf + 3];
+                df0 = df_ptr[cnt_ji * ndf];
+                df1 = df_ptr[cnt_ji * ndf + 1];
+                df2 = df_ptr[cnt_ji * ndf + 2];
+                df3 = df_ptr[cnt_ji * ndf + 3];
             }
 
             //Multiply by derivative factors

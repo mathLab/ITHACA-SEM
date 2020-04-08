@@ -302,28 +302,28 @@ class PhysDeriv_AVX : public Operator
             }
 
             // Check if deformed
+            // for now assume always deformed
             bool deformed{false};
 
-
-
             // Check if the collection is deformed or not
+            int jacSizeNoPad{nElmtNoPad};
             int jacSizePad{nElmtPad};
             if (deformed)
             {
-                deformed = true;
+                jacSizeNoPad = nElmtNoPad * nqElmt;
                 jacSizePad = nElmtPad * nqElmt;
             }
 
             // Store Jacobian
             Array<OneD, NekDouble> jac{jacSizePad, 0.0};
-            Vmath::Vcopy(nElmtNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
+            Vmath::Vcopy(jacSizeNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
 
             // Store derivative factors
             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
             Array<TwoD, NekDouble> df(dim * dim, jacSizePad, 0.0);
             for (int j = 0; j < dim * dim; ++j)
             {
-                Vmath::Vcopy(nElmtNoPad,
+                Vmath::Vcopy(jacSizeNoPad,
                     &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
                     &df[j][0], 1);
             }

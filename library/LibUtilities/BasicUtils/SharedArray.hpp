@@ -40,6 +40,7 @@
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+#include <LibUtilities/BasicUtils/Deprecated.hpp>
 
 #include <boost/core/ignore_unused.hpp>
 #include <boost/multi_array.hpp>
@@ -314,10 +315,11 @@ namespace Nektar
 
             /// \brief Returns the array's size.
             /// Deprecated
-            size_type num_elements() const
+            DEPRECATED size_type num_elements() const
             {
-                WARNINGL1(false, "member function num_elements() is deprecated,\
-                 use size() instead.");
+                WARNINGL1(false,
+                          "member function num_elements() is deprecated, "
+                          "use size() instead.");
                 return m_size;
             }
 

@@ -109,11 +109,12 @@ template <class myType>
 
 Array<OneD, NekDouble> EvalBasis(
                                  myType *expobj,
-                                 int m_ncoeffs,
-                                 int tot_coeffs
+                                 int m_ncoeffs
                                  )
 {
-    Array<OneD, NekDouble> vals(tot_coeffs);
+    int numpts = expobj->GetTotPoints();;
+    Array<OneD, NekDouble> vals(numpts);
+    
     expobj->FillMode(m_ncoeffs,vals);
     return vals;
 }
@@ -550,7 +551,7 @@ int main(int argc, char *argv[])
             for(int k = 0; k < n_coeffs; k++)
             {            
                 sol[k] = Array<OneD,NekDouble>(numpts);
-                Array<OneD, NekDouble> retvals = EvalBasis(E, k, n_coeffs);
+                Array<OneD, NekDouble> retvals = EvalBasis(E, k);
                 for(int l = 0; l < numpts; l++)
                 {
                     sol[k][l] = retvals[l];
@@ -575,7 +576,7 @@ int main(int argc, char *argv[])
             {            
                 sol[k] = Array<OneD,NekDouble>(numpts);
 
-                Array<OneD, NekDouble> retvals = EvalBasis(E, k, n_coeffs);
+                Array<OneD, NekDouble> retvals = EvalBasis(E, k);
                 for(int l = 0; l < numpts; l++)
                 {
                     sol[k][l] = retvals[l];

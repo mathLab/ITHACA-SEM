@@ -212,10 +212,12 @@ namespace Nektar
                 const Array<OneD,
                 const NekDouble> &inarray);
 
+            /// multiply the metric jacobi and quadrature weights
             MULTI_REGIONS_EXPORT void MultiplyByQuadratureMetric(
                 const Array<OneD, const NekDouble>  &inarray,
                 Array<OneD, NekDouble>              &outarray);
 
+            /// Divided by the metric jacobi and quadrature weights
             MULTI_REGIONS_EXPORT void DividByQuadratureMetric(
                 const Array<OneD, const NekDouble>  &inarray,
                 Array<OneD, NekDouble>              &outarray);
@@ -761,16 +763,14 @@ namespace Nektar
             inline const Array<OneD, const  std::shared_ptr<ExpList> >
                 &GetBndCondExpansions();
 
+            /// Get the weight value for boundary conditions
             inline const Array<OneD,const NekDouble>
                 &GetBndCondBwdWeight();
 
+            /// Set the weight value for boundary conditions
             inline void SetBndCondBwdWeight(
                 const int index, 
                 const NekDouble value);
-
-            inline const Array<OneD, const Array<OneD, 
-                std::shared_ptr<ExpList> > >
-                &GetDerivBndCondExpansions();
       
             inline std::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
 
@@ -798,10 +798,13 @@ namespace Nektar
 
             inline void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
+            /// Get the length of elements in boundary normal direction
             inline void GetElmtNormalLength(
                 Array<OneD, NekDouble>  &lengthsFwd,
                 Array<OneD, NekDouble>  &lengthsBwd);
 
+            /// Get the weight value for boundary conditions
+            /// for boundary average and jump calculations
             MULTI_REGIONS_EXPORT void GetBwdWeight(
                 Array<OneD, NekDouble>  &weightAver,
                 Array<OneD, NekDouble>  &weightJump);
@@ -829,46 +832,56 @@ namespace Nektar
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
 
+            /// GetFwdBwdTracePhys without parallel communication
             inline void GetFwdBwdTracePhys_serial(
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
 
+            /// GetFwdBwdTracePhys of derivatives
             inline void GetFwdBwdTracePhysDeriv(
                 const int                          Dir,
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
             
+            /// GetFwdBwdTracePhysDeriv without parallel communication
             inline void GetFwdBwdTracePhysDeriv_serial(
                 const int                          Dir,
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
             
+            /// GetFwdBwdTracePhys without filling boundary conditions
             inline void GetFwdBwdTracePhysNoBndFill(
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
 
+            /// Add Fwd and Bwd value to field, 
+            /// a reverse procedure of GetFwdBwdTracePhys
             inline void AddTraceQuadPhysToField(
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &field);
 
+            /// Fill Bwd with boundary conditions
             inline void FillBwdWITHBound(
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
             
+            /// Fill Bwd with boundary conditions for derivatives 
             inline void FillBwdWITHBoundDeriv(
                 const int                          Dir,
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
 
+            /// Fill Bwd with boundary conditions
             inline void FillBwdWITHBwdWeight(
                     Array<OneD,       NekDouble> &weightave,
                     Array<OneD,       NekDouble> &weightjmp);
 
+            /// Copy and fill the Periodic boundaries
             inline void PeriodicBwdCopy(
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
@@ -1079,7 +1092,7 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
 
-            
+            /// Get m_coeffs to elemental value map
             MULTI_REGIONS_EXPORT inline const 
                 Array<OneD,const std::pair<int,int> > 
                 &GetCoeffsToElmt() const
@@ -1263,10 +1276,6 @@ namespace Nektar
             virtual void v_SetBndCondBwdWeight(
                 const int index, 
                 const NekDouble value);
-
-            virtual const Array<OneD, const Array<OneD, 
-                std::shared_ptr<ExpList> > >
-                &v_GetDerivBndCondExpansions();
 
             virtual std::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
 
@@ -2396,7 +2405,6 @@ namespace Nektar
             return v_GetBndCondExpansions();
         }
 
-        // functions associated with DisContField
         inline const Array<OneD, const  NekDouble >
             &ExpList::GetBndCondBwdWeight()
         {
@@ -2408,12 +2416,6 @@ namespace Nektar
             const NekDouble value)
         {
             v_SetBndCondBwdWeight(index, value);
-        }
-
-        inline const Array<OneD, const Array<OneD, std::shared_ptr<ExpList> > >
-            &ExpList::GetDerivBndCondExpansions()
-        {
-            return v_GetDerivBndCondExpansions();
         }
         
         inline std::shared_ptr<ExpList>  &ExpList::UpdateBndCondExpansion(int i)

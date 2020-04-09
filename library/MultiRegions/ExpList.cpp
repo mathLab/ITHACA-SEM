@@ -403,7 +403,7 @@ namespace Nektar
         }
 
         /**
-         * multiply the metric jacobi and quadrature weights
+         * Divided by the metric jacobi and quadrature weights
          *
          */
         void ExpList::DividByQuadratureMetric(
@@ -2518,6 +2518,10 @@ namespace Nektar
             }
         }
 
+        /**
+         * Get the weight value on boundaries
+         *
+         */
         void ExpList::GetBwdWeight(
             Array<OneD, NekDouble>  &weightAver,
             Array<OneD, NekDouble>  &weightJump)
@@ -2815,15 +2819,6 @@ namespace Nektar
             boost::ignore_unused(index,value);
             ASSERTL0(false,
                      "v_setBndCondBwdWeight is not defined or valid for this class type");
-        }
-
-        const Array<OneD, const Array<OneD, std::shared_ptr<ExpList> > >
-                &ExpList::v_GetDerivBndCondExpansions()
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static Array<OneD, Array<OneD, std::shared_ptr<ExpList>>> tmp;
-            return tmp;
         }
         
         const vector<bool> &ExpList::v_GetLeftAdjacentFaces(void) const

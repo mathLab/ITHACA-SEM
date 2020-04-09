@@ -245,11 +245,6 @@ public:
         return m_LeftRightAdjacentExpId;
     }
 
-    // MULTI_REGIONS_EXPORT inline const Array<OneD, const int >>   &GetLeftRightAdjacentExpId(const int lr) const 
-    // {
-    //     return m_LeftRightAdjacentExpId[lr];
-    // }
-
     MULTI_REGIONS_EXPORT inline const Array<OneD, 
         const Array<OneD, Array<OneD, int > > >  
         &GetTraceceffToLeftRightExpcoeffMap() const
@@ -339,24 +334,30 @@ private:
     /// local trace storage.
     Array<OneD, Array<OneD, int> > m_traceCoeffsToElmtSign;
 
-    // flag indicates whether the Expasion that are the left&right adjacent to current trace exists 
+    // flag indicates whether the Expasion that are the left&right adjacent 
+    // to current trace exists 
     Array<OneD, Array<OneD, bool>> m_LeftRightAdjacentExpFlag;
     
     // the Expasion id that are the left&right adjacent to current trace 
     Array<OneD, Array<OneD, int >> m_LeftRightAdjacentExpId;
     
 
-    // the map of every coeff from current trace to the left&right adjacent expasion coeffs 
+    // the map of every coeff from current trace to the left&right adjacent 
+    // expasion coeffs 
     Array<OneD, Array<OneD, Array<OneD, int > > > 
         m_TraceceffToLeftRightExpcoeffMap;
-    // the sign of every coeff from current trace to the left&right adjacent expasion coeffs 
+    // the sign of every coeff from current trace to the left&right adjacent 
+    // expasion coeffs 
     Array<OneD, Array<OneD, Array<OneD,int  > > > 
         m_TraceceffToLeftRightExpcoeffSign;
 
 
-    // the map of every phys from current trace to the left&right adjacent expasion phys 
-    // This map is only used when no interpolation is needed in getting GetFwdBwdTracePhys   
-    // If interpolations is needed it should be determined as the InnerProduct of m_fieldToLocTraceMap matrix and interpolation matrix    
+    // the map of every phys from current trace to the left&right adjacent 
+    // expasion phys 
+    // This map is only used when no interpolation is needed in getting 
+    // GetFwdBwdTracePhys   
+    // If interpolations is needed it should be determined as the InnerProduct 
+    // of m_fieldToLocTraceMap matrix and interpolation matrix    
     Array<OneD, Array<OneD, Array<OneD, int > > >   
         m_TracephysToLeftRightExpphysMap;
     bool                          m_flagTracephysToLeftRightExpphysMap;

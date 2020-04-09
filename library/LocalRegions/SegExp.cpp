@@ -739,7 +739,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             }
         }
 
-        // Get vertex value from the 1D Phys space.
+        // Add vertex value of the 1D Phys space to outarray.
         void SegExp::v_AddVertexPhysVals(
             const int                 vertex,
             const NekDouble           &inarray,

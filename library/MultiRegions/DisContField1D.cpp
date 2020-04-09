@@ -964,7 +964,6 @@ namespace Nektar
                 {
                     id  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
-                    // Bwd[id] = m_bndCondExpansions[n]->GetPhys()[0]; //this is not getting the correct value?
                     Bwd[id] = Fwd[id];
                     cnt++;
                 }
@@ -1011,7 +1010,6 @@ namespace Nektar
                 {
                     id  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
-                    // Bwd[id] = m_bndCondExpansions[n]->GetPhys()[0]; //this is not getting the correct value?
                     weightave[id] = m_BndCondBwdWeight[n];
                     weightjmp[id] = 0.0;
                     cnt++;
@@ -1026,7 +1024,6 @@ namespace Nektar
                              "boundary condition");
                     id  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
-                    // Bwd[id] = Fwd[id];
                     weightave[id] = m_BndCondBwdWeight[n];
                     weightjmp[id] = 0.0;
                     cnt++;
@@ -1081,17 +1078,12 @@ namespace Nektar
                     
                     if (m_leftAdjacentVerts[cnt])
                     {
-                        // (*m_exp)[n]->GetVertexPhysVals(v, field + phys_offset,
-                        //                                Fwd[offset]);
                         (*m_exp)[n]->AddVertexPhysVals(v,
                                     Fwd[offset], 
                                     tmparray = field + phys_offset);
                     }
                     else
                     {
-                        // (*m_exp)[n]->GetVertexPhysVals(v, field + phys_offset,
-                        //                                Bwd[offset]);
-
                         (*m_exp)[n]->AddVertexPhysVals(v, 
                                         Bwd[offset],
                                         tmparray = field + phys_offset);

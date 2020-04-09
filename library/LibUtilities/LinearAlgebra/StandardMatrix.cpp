@@ -187,7 +187,6 @@ namespace Nektar
     NekMatrix<DataType, StandardMatrixTag>& 
         NekMatrix<DataType, StandardMatrixTag>::operator=(const DataType & rhs)
     {
-
         unsigned int requiredStorageSize = GetRequiredStorageSize();
         
         DataType* lhs_array = m_data.data();

@@ -2060,12 +2060,8 @@ using namespace std;
                     {
                         npts = m_bndCondExpansions[n]->
                                 GetExp(e)->GetTotPoints();
-                        // id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        // Vmath::Vcopy(npts,
-                        //     &(m_bndCondExpansions[n]->GetPhys())[id1], 1,
-                        //     &Bwd[id2],                                 1);
                         Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
                     }
 
@@ -2080,15 +2076,11 @@ using namespace std;
                     {
                         npts = m_bndCondExpansions[n]->
                                 GetExp(e)->GetTotPoints();
-                        // id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                         
                         // Turning this off since we can have non-zero
                         //Neumann in mixed CG-DG method
-                        //ASSERTL1((m_bndCondExpansions[n]->GetPhys())[id1]
-                        //== 0.0, "method not set up for non-zero
-                        //Neumann " "boundary condition");
                         
                         Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
                     }
@@ -2130,13 +2122,8 @@ using namespace std;
                     {
                         npts = m_bndCondExpansions[n]->
                                 GetExp(e)->GetTotPoints();
-                        // id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        // Vmath::Vcopy(npts,
-                        //     &(m_bndCondExpansions[n]->GetPhys())[id1], 1,
-                        //     &Bwd[id2],                                 1);
-                        // Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
                         Vmath::Fill(npts,
                                     m_BndCondBwdWeight[n], 
                                     &weightave[id2],1);
@@ -2154,17 +2141,9 @@ using namespace std;
                     {
                         npts = m_bndCondExpansions[n]->
                                 GetExp(e)->GetTotPoints();
-                        // id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                         
-                        // Turning this off since we can have non-zero
-                        //Neumann in mixed CG-DG method
-                        //ASSERTL1((m_bndCondExpansions[n]->GetPhys())[id1]
-                        //== 0.0, "method not set up for non-zero
-                        //Neumann " "boundary condition");
-                        
-                        // Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
                         Vmath::Fill(npts,
                                     m_BndCondBwdWeight[n], 
                                     &weightave[id2],1);

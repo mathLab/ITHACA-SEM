@@ -1222,8 +1222,6 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
                 case eInterpDir0:
                 {
                     DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
-                    // TODO: CHECK WHETHER a loop is missing here!!!
-                    //for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
                     Blas::Dgemm('N',
                                 'N',
                                 tnp0,
@@ -1315,7 +1313,6 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
                 {
                     DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
                     DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
-                    // TODO:: WSP seems fnp0 times larger than needed
                     Array<OneD, NekDouble> wsp(m_interpNfaces[dir][i] * fnp0 *
                                                tnp1 * fnp0);
 

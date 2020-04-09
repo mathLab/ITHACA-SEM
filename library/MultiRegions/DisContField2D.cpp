@@ -73,22 +73,21 @@ namespace Nektar
         }
 
         DisContField2D::DisContField2D(
-            const DisContField2D        &In, 
-            const bool                  DeclareCoeffPhysArrays)
-            : ExpList2D                 (In,DeclareCoeffPhysArrays),
-              m_bndCondExpansions       (In.m_bndCondExpansions),
-              m_BndCondBwdWeight        (In.m_BndCondBwdWeight),
-              m_bndConditions           (In.m_bndConditions),
-              m_globalBndMat            (In.m_globalBndMat),
-              m_traceMap                (In.m_traceMap),
-              m_locTraceToTraceMap      (In.m_locTraceToTraceMap),
-              m_boundaryEdges           (In.m_boundaryEdges),
-              m_periodicVerts           (In.m_periodicVerts),
-              m_periodicEdges           (In.m_periodicEdges),
-              m_periodicFwdCopy         (In.m_periodicFwdCopy),
-              m_periodicBwdCopy         (In.m_periodicBwdCopy),
-              m_leftAdjacentEdges       (In.m_leftAdjacentEdges)
-
+            const DisContField2D &In, 
+            const bool            DeclareCoeffPhysArrays)
+            : ExpList2D            (In,DeclareCoeffPhysArrays),
+              m_bndCondExpansions  (In.m_bndCondExpansions),
+              m_BndCondBwdWeight   (In.m_BndCondBwdWeight),
+              m_bndConditions      (In.m_bndConditions),
+              m_globalBndMat       (In.m_globalBndMat),
+              m_traceMap           (In.m_traceMap),
+              m_locTraceToTraceMap (In.m_locTraceToTraceMap),
+              m_boundaryEdges      (In.m_boundaryEdges),
+              m_periodicVerts      (In.m_periodicVerts),
+              m_periodicEdges      (In.m_periodicEdges),
+              m_periodicFwdCopy    (In.m_periodicFwdCopy),
+              m_periodicBwdCopy    (In.m_periodicBwdCopy),
+              m_leftAdjacentEdges  (In.m_leftAdjacentEdges)
         {
             if (In.m_trace)
             {
@@ -434,7 +433,6 @@ namespace Nektar
                             (*m_exp)[i]->as<LocalRegions::Expansion2D>();
                     LocalRegions::Expansion1DSharedPtr exp1d =
                             elmtToTrace[i][j]->as<LocalRegions::Expansion1D>();
-                    ///LocalRegions::ExpansionSharedPtr exp = elmtToTrace[i][j];;
                     exp2d->SetEdgeExp           (j, exp1d);
                     exp1d->SetAdjacentElementExp(j, exp2d);
                 }
@@ -1508,7 +1506,6 @@ namespace Nektar
             int cnt, n, e, npts;
 
             // Fill boundary conditions into missing elements
-            
             for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 if (m_bndConditions[n]->GetBoundaryConditionType() == 
@@ -1518,7 +1515,6 @@ namespace Nektar
                     {
                         npts = m_bndCondExpansions[n]->
                                 GetExp(e)->GetNumPoints(0);
-                        // int id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         int id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
                         Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
@@ -1535,7 +1531,6 @@ namespace Nektar
                     {
                         npts = m_bndCondExpansions[n]->
                                 GetExp(e)->GetNumPoints(0);
-                        // int id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         int id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
                         Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
@@ -1575,7 +1570,6 @@ namespace Nektar
                     {
                         npts = m_bndCondExpansions[n]->
                                 GetExp(e)->GetNumPoints(0);
-                        // id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
                         Vmath::Fill(npts,m_BndCondBwdWeight[n], 
@@ -1595,7 +1589,6 @@ namespace Nektar
                     {
                         npts = m_bndCondExpansions[n]->
                                 GetExp(e)->GetNumPoints(0);
-                        // id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
                         Vmath::Fill(npts,

@@ -78,14 +78,7 @@ class CFSBndCond
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time = 0);
 
-        void ApplyDeriv(
-            const Array<OneD, const Array<OneD, NekDouble> >    &Fwd,
-            const Array<OneD, const Array<OneD, NekDouble> >    &physarray,
-            const Array<OneD, const Array<OneD, 
-                Array<OneD, NekDouble> > >                      &DervFwd,
-            const Array<OneD, const Array<OneD, 
-                Array<OneD, NekDouble> > >                      &dervarray,
-            NekDouble                                           time = 0);
+        /// Apply the Weight of boundary condition
         void ApplyBwdWeight()
         {
             v_ApplyBwdWeight();
@@ -103,7 +96,6 @@ class CFSBndCond
         /// Auxiliary object to convert variables
         VariableConverterSharedPtr           m_varConv;
 
-        //
         NekDouble m_diffusionAveWeight;
 
         /// Parameters of the flow
@@ -130,15 +122,6 @@ class CFSBndCond
             Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time)=0;
-
-        virtual void v_ApplyDeriv(
-            const Array<OneD, const Array<OneD, NekDouble> >    &Fwd,
-            const Array<OneD, const Array<OneD, NekDouble> >    &physarray,
-            const Array<OneD, const Array<OneD, 
-                Array<OneD, NekDouble> > >                      &DervFwd,
-            const Array<OneD, const Array<OneD, 
-                Array<OneD, NekDouble> > >                      &dervarray,
-            NekDouble                                           time);
 
         virtual void v_ApplyBwdWeight();
 };

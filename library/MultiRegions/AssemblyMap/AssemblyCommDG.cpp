@@ -424,7 +424,6 @@ void AssemblyCommDG::InitialiseStructure(
     // dimension.
     nDim = locExpVector[0]->GetShapeDimension();
 
-    // @todo combine the two GetExpSize() loops into one.
     // This sets up the edge to trace mapping and realigns periodic edges
     if (nDim == 1)
     {
@@ -486,17 +485,30 @@ void AssemblyCommDG::InitialiseStructure(
                     tmpArray[j] = m_edgeToTrace[eid][j];
                 }
 
+                StdRegions::Orientation orient = it->second[0].orient;
+
                 if (nDim == 2)
                 {
-                    AssemblyMapDG::RealignTraceElement(
-                        tmpArray,
-                        it->second[0].orient, quad);
+                    AssemblyMapDG::RealignTraceElement(tmpArray, orient, quad);
                 }
                 else
                 {
+                    // Orient is going from face 2 -> face 1 but we want face 1
+                    // -> face 2; in all cases except below these are equivalent.
+                    // However below is not equivalent so we use the reverse of the
+                    // mapping.
+                    if (orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
+                    {
+                        orient = StdRegions::eDir1BwdDir2_Dir2FwdDir1;
+                    }
+                    else if (orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
+                    {
+                        orient = StdRegions::eDir1FwdDir2_Dir2BwdDir1;
+                    }
+
                     AssemblyMapDG::RealignTraceElement(
                         tmpArray,
-                        it->second[0].orient,
+                        orient,
                         trace->GetExp(i)->GetNumPoints(0),
                         trace->GetExp(i)->GetNumPoints(1));
                 }

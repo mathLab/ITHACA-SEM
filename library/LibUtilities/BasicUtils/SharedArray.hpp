@@ -315,7 +315,7 @@ namespace Nektar
 
             /// \brief Returns the array's size.
             /// Deprecated
-            DEPRECATED size_type num_elements() const
+            DEPRECATED(5.1.0, size) size_type num_elements() const
             {
                 WARNINGL1(false,
                           "member function num_elements() is deprecated, "
@@ -503,7 +503,7 @@ namespace Nektar
             // m_data is a shared_ptr to a boost::multi_array_ref
             size_type size() const { return m_data->num_elements(); }
             // deprecated interface
-            DEPRECATED size_type num_elements() const
+            DEPRECATED(5.1.0, size) size_type num_elements() const
             {
                 WARNINGL1(false,
                           "member function num_elements() is deprecated, "

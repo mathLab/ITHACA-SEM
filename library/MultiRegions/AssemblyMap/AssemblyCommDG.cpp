@@ -579,7 +579,7 @@ void AssemblyCommDG::InitialiseStructure(
     }
 
     //Get unique edges to send
-    std::vector<int> uniqueEdgeIds, uniqueEdgeIdsLocal;
+    std::vector<int> uniqueEdgeIds;
     std::vector<bool> duplicated(localEdgeIds.size(), false);
     for (size_t i = 0; i < localEdgeIds.size(); ++i)
     {
@@ -602,17 +602,13 @@ void AssemblyCommDG::InitialiseStructure(
                 {
                     if (!it->second[0].isLocal)
                     {
-                        uniqueEdgeIds.emplace_back(it->second[0].id);
+                        uniqueEdgeIds.emplace_back(std::min(eid, it->second[0].id));
                     }
                 }
                 else
                 {
                     uniqueEdgeIds.emplace_back(eid);
                 }
-
-                // Separate local edge ID list where periodic edge IDs
-                // aren't swapped
-                uniqueEdgeIdsLocal.emplace_back(eid);
             }
         }
     }
@@ -661,52 +657,17 @@ void AssemblyCommDG::InitialiseStructure(
     Array<OneD, int> perTraceSend(m_nRanks, 0);
     for (auto &rank : otherRanks)
     {
-        std::vector<int> periodicEdgeList;
         for (size_t j = 0; j < rankNumEdges[rank]; ++j)
         {
             int edgeId = rankLocalEdgeIds[rankLocalEdgeDisp[rank] + j];
             if (std::find(
-                uniqueEdgeIdsLocal.begin(), uniqueEdgeIdsLocal.end(), edgeId)
-                != uniqueEdgeIdsLocal.end())
+                uniqueEdgeIds.begin(), uniqueEdgeIds.end(), edgeId)
+                != uniqueEdgeIds.end())
             {
-                // If periodic then create separate list of minimum
-                // of the two ids to be appended on to the end
-                auto it = perMap.find(edgeId);
-                if (it != perMap.end())
-                {
-                    int locVal = std::min(edgeId, it->second[0].id);
-                    periodicEdgeList.emplace_back(locVal);
-                }
-                else
-                {
-                    m_rankSharedEdges[rank].emplace_back(edgeId);
-                }
+                m_rankSharedEdges[rank].emplace_back(edgeId);
             }
         }
-
-        // Sort periodic edges, keep IDs as is becausethe edgeToTrace
-        // is constructed using the min IDs also
-        std::sort(periodicEdgeList.begin(), periodicEdgeList.end());
-        if(!periodicEdgeList.empty())
-        {
-            m_rankSharedEdges[rank].insert(m_rankSharedEdges[rank].end(),
-                                           periodicEdgeList.begin(),
-                                           periodicEdgeList.end());
-        }
-
-        // List of number of quad points in periodic conditions for each rank
-        for (auto edgeId : periodicEdgeList)
-        {
-            perTraceSend[rank] += m_edgeToTrace[edgeId].size();
-        }
     }
-
-    // Check that periodic trace edges being communicated are of same order
-    Array<OneD, int> perTraceRecv(m_nRanks, 0);
-    comm->AlltoAll(perTraceSend, perTraceRecv);
-
-    ASSERTL0(perTraceSend == perTraceRecv,
-        "Periodic boundary conditions require the same basis order.")
 }
 
 std::tuple<NekDouble, NekDouble, NekDouble> AssemblyCommDG::Timing(

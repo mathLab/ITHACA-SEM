@@ -595,11 +595,13 @@ namespace Nektar
             int   mode0 = mode%btmp0;
             int   mode1 = mode/btmp0;
 
-
+            cout<<"\n mode1 ="<<mode1;
+            cout<<"\n (int)floor((1.0*mode)/btmp0 ="<<(int)floor((1.0*mode)/btmp0);
+            cout<<"\n m_ncoeffs "<<m_ncoeffs<<" mode= "<<mode;
             ASSERTL2(mode1 == (int)floor((1.0*mode)/btmp0),
                      "Integer Truncation not Equiv to Floor");
 
-            ASSERTL2(m_ncoeffs <= mode,
+            ASSERTL2(m_ncoeffs > mode,
                      "calling argument mode is larger than total expansion order");
 
             for(i = 0; i < nquad1; ++i)

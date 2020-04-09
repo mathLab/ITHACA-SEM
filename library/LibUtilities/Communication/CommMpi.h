@@ -62,9 +62,12 @@ public:
     /// Default constructor
     CommRequestMpi(int num);
     /// Default deconstructor
-    ~CommRequestMpi() = default;
+    inline ~CommRequestMpi()
+    {
+        delete m_request;
+    }
 
-    inline MPI_Request* &GetRequest()
+    inline MPI_Request* GetRequest()
     {
         return m_request;
     }

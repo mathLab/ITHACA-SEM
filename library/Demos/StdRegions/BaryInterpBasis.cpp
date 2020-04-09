@@ -114,7 +114,6 @@ Array<OneD, NekDouble> EvalBasis(
 {
     int numpts = expobj->GetTotPoints();;
     Array<OneD, NekDouble> vals(numpts);
-    
     expobj->FillMode(m_ncoeffs,vals);
     return vals;
 }

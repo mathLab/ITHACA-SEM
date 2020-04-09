@@ -582,7 +582,7 @@ void AssemblyCommDG::InitialiseStructure(
 
     //Create list of boundary edge IDs
     std::set<int> bndIdList;
-    for (size_t i = 0; i < bndCond.num_elements(); ++i)
+    for (size_t i = 0; i < bndCond.size(); ++i)
     {
         for (size_t j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
         {

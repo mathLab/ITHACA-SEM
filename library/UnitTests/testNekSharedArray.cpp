@@ -157,8 +157,6 @@ namespace Nektar
 
                 BOOST_CHECK_EQUAL(a.size(), 0);
                 BOOST_CHECK_EQUAL(b.size(), 0);
-                BOOST_CHECK_EQUAL(a.size(), 0);
-                BOOST_CHECK_EQUAL(b.size(), 0);
 
                 BOOST_CHECK_EQUAL(a.num_dimensions(), 1);
                 BOOST_CHECK_EQUAL(b.num_dimensions(), 1);
@@ -174,8 +172,6 @@ namespace Nektar
                 BOOST_CHECK(a.begin() == a.end());
                 BOOST_CHECK(b.begin() == b.end());
 
-                BOOST_CHECK_EQUAL(a.size(), 0);
-                BOOST_CHECK_EQUAL(b.size(), 0);
                 BOOST_CHECK_EQUAL(a.size(), 0);
                 BOOST_CHECK_EQUAL(b.size(), 0);
 
@@ -199,8 +195,6 @@ namespace Nektar
 
                 BOOST_CHECK_EQUAL(a.size(), 5);
                 BOOST_CHECK_EQUAL(b.size(), 10);
-                BOOST_CHECK_EQUAL(a.size(), 5);
-                BOOST_CHECK_EQUAL(b.size(), 10);
 
                 BOOST_CHECK_EQUAL(a.num_dimensions(), 1);
                 BOOST_CHECK_EQUAL(b.num_dimensions(), 1);
@@ -217,8 +211,6 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
 
-                BOOST_CHECK_EQUAL(a.size(), 50);
-                BOOST_CHECK_EQUAL(b.size(), 100);
                 BOOST_CHECK_EQUAL(a.size(), 50);
                 BOOST_CHECK_EQUAL(b.size(), 100);
 
@@ -246,8 +238,6 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
 
-                BOOST_CHECK_EQUAL(a.size(), 5);
-                BOOST_CHECK_EQUAL(b.size(), 10);
                 BOOST_CHECK_EQUAL(a.size(), 5);
                 BOOST_CHECK_EQUAL(b.size(), 10);
 
@@ -280,8 +270,6 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
 
-                BOOST_CHECK_EQUAL(a.size(), 50);
-                BOOST_CHECK_EQUAL(b.size(), 100);
                 BOOST_CHECK_EQUAL(a.size(), 50);
                 BOOST_CHECK_EQUAL(b.size(), 100);
 
@@ -337,8 +325,6 @@ namespace Nektar
 
                 BOOST_CHECK_EQUAL(a.size(), 4);
                 BOOST_CHECK_EQUAL(b.size(), 5);
-                BOOST_CHECK_EQUAL(a.size(), 4);
-                BOOST_CHECK_EQUAL(b.size(), 5);
 
                 BOOST_CHECK_EQUAL(a.num_dimensions(), 1);
                 BOOST_CHECK_EQUAL(b.num_dimensions(), 1);
@@ -362,8 +348,6 @@ namespace Nektar
                 Array<OneD, double> a(4, a_array);
                 Array<OneD, double> b(5, b_array);
 
-                BOOST_CHECK(a.size() == 4);
-                BOOST_CHECK(b.size() == 5);
                 BOOST_CHECK(a.size() == 4);
                 BOOST_CHECK(b.size() == 5);
 
@@ -406,9 +390,6 @@ namespace Nektar
                     BOOST_CHECK_EQUAL(c.size(), a.size());
                     BOOST_CHECK_EQUAL(e.size(), a.size());
                     BOOST_CHECK_EQUAL(d.size(), b.size());
-                    BOOST_CHECK_EQUAL(c.size(), a.size());
-                    BOOST_CHECK_EQUAL(e.size(), a.size());
-                    BOOST_CHECK_EQUAL(d.size(), b.size());
                     BOOST_CHECK(c.data() == a.data());
                     BOOST_CHECK(e.data() == a.data());
                     BOOST_CHECK(d.data() == b.data());
@@ -443,19 +424,16 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(a_off[1].value, a[2].value);
                 BOOST_CHECK_EQUAL(a_off[2].value, a[3].value);
                 BOOST_CHECK_EQUAL(a_off.size(), 3);
-                BOOST_CHECK_EQUAL(a_off.size(), 3);
 
                 BOOST_CHECK_EQUAL(b_off[0].value, b[2].value);
                 BOOST_CHECK_EQUAL(b_off[1].value, b[3].value);
                 BOOST_CHECK_EQUAL(b_off[2].value, b[4].value);
-                BOOST_CHECK_EQUAL(b_off.size(), 3);
                 BOOST_CHECK_EQUAL(b_off.size(), 3);
 
 
                 BOOST_CHECK_EQUAL(bb_off[0].value, b[2].value);
                 BOOST_CHECK_EQUAL(bb_off[1].value, b[3].value);
                 BOOST_CHECK_EQUAL(bb_off[2].value, b[4].value);
-                BOOST_CHECK_EQUAL(bb_off.size(), 3);
                 BOOST_CHECK_EQUAL(bb_off.size(), 3);
 
             }
@@ -495,9 +473,6 @@ namespace Nektar
                         lhs_b2 = b;
                         CountedObject<double>::Check(0, 0, 0, 9, 0, 0);
 
-                        BOOST_CHECK_EQUAL(lhs_a.size(), a.size());
-                        BOOST_CHECK_EQUAL(lhs_b1.size(), b.size());
-                        BOOST_CHECK_EQUAL(lhs_b2.size(), b.size());
                         BOOST_CHECK_EQUAL(lhs_a.size(), a.size());
                         BOOST_CHECK_EQUAL(lhs_b1.size(), b.size());
                         BOOST_CHECK_EQUAL(lhs_b2.size(), b.size());
@@ -565,9 +540,6 @@ namespace Nektar
                     BOOST_CHECK_EQUAL(lhs_a.size(), a.size());
                     BOOST_CHECK_EQUAL(lhs_b1.size(), b.size());
                     BOOST_CHECK_EQUAL(lhs_b2.size(), b.size());
-                    BOOST_CHECK_EQUAL(lhs_a.size(), a.size());
-                    BOOST_CHECK_EQUAL(lhs_b1.size(), b.size());
-                    BOOST_CHECK_EQUAL(lhs_b2.size(), b.size());
                     BOOST_CHECK_EQUAL(lhs_a.shape()[0], a.shape()[0]);
                     BOOST_CHECK_EQUAL(lhs_a.shape()[1], a.shape()[1]);
 
@@ -620,8 +592,6 @@ namespace Nektar
             lhs_a = offset_a;
             lhs_b = offset_b;
 
-            BOOST_CHECK_EQUAL(lhs_a.size(), offset_a.size());
-            BOOST_CHECK_EQUAL(lhs_b.size(), offset_b.size());
             BOOST_CHECK_EQUAL(lhs_a.size(), offset_a.size());
             BOOST_CHECK_EQUAL(lhs_b.size(), offset_b.size());
 

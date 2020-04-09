@@ -503,10 +503,11 @@ namespace Nektar
             // m_data is a shared_ptr to a boost::multi_array_ref
             size_type size() const { return m_data->num_elements(); }
             // deprecated interface
-            size_type num_elements() const
+            DEPRECATED size_type num_elements() const
             {
-                WARNINGL1(false, "member function num_elements() is deprecated,\
-                 use size() instead.");
+                WARNINGL1(false,
+                          "member function num_elements() is deprecated, "
+                          "use size() instead.");
                 return m_data->num_elements();
             }
 

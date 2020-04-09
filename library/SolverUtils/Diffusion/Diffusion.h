@@ -74,22 +74,22 @@ namespace Nektar
                   Array<OneD,             NekDouble  >&)>
                                             DiffusionArtificialDiffusion;
 
-        /**
-         * Parameter list meaning:
-         *  1th: Devrivatives of field conservative varialbes
-         *  2rd: the current time for time-dependent boundary
-         *  3th: Fwd of field conservative variables        optional
-         *  4th: Fwd of Devrivatives(2nd)                   optional 
-         * 
-         * a null pointer need to be passed for optional parameters
-         */
-        typedef std::function<void (
-            const Array<OneD, const Array<OneD, NekDouble> >                &,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &,
-            NekDouble                                                        ,
-            const Array<OneD, const Array<OneD, NekDouble> >                &,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &)> 
-                FunctorDerivBndCond;
+        // /**
+        //  * Parameter list meaning:
+        //  *  1th: Devrivatives of field conservative varialbes
+        //  *  2rd: the current time for time-dependent boundary
+        //  *  3th: Fwd of field conservative variables        optional
+        //  *  4th: Fwd of Devrivatives(2nd)                   optional 
+        //  * 
+        //  * a null pointer need to be passed for optional parameters
+        //  */
+        // typedef std::function<void (
+        //     const Array<OneD, const Array<OneD, NekDouble> >                &,
+        //     const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &,
+        //     NekDouble                                                        ,
+        //     const Array<OneD, const Array<OneD, NekDouble> >                &,
+        //     const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &)> 
+        //         FunctorDerivBndCond;
         
         /**
          * Parameter list meaning:
@@ -239,6 +239,7 @@ namespace Nektar
                                     TraceFlux,pFwd, pBwd,nonZeroIndex);
             }
 
+            // Add symmetric flux to field in coeff space
             SOLVER_UTILS_EXPORT void AddDiffusionSymmFluxToCoeff(
                 const std::size_t                             nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
@@ -254,6 +255,7 @@ namespace Nektar
                                                 pFwd,pBwd);
             }
 
+            // Add symmetric flux to field in coeff physical space
             SOLVER_UTILS_EXPORT void AddDiffusionSymmFluxToPhys(
                 const std::size_t                             nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
@@ -352,24 +354,23 @@ namespace Nektar
                                std::placeholders::_5, std::placeholders::_6);
             }
 
-            SOLVER_UTILS_EXPORT inline void SetHomoDerivs(
-                Array<OneD, Array<OneD, NekDouble> > &deriv)
+            inline void SetHomoDerivs(Array<OneD, Array<OneD, NekDouble> > &deriv)
             {
                 v_SetHomoDerivs(deriv);
             }
 
-            SOLVER_UTILS_EXPORT virtual 
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                &GetFluxTensor()
+            virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &GetFluxTensor()
             {
                 return v_GetFluxTensor();
             }
+            // Get the mu of artifical viscosity(AV)
             SOLVER_UTILS_EXPORT void GetAVmu(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, NekDouble >                           &muvar,
                 Array<OneD, NekDouble >                           &MuVarTrace);
 
+            // Get the average and jump value of conservative variables on trace
             SOLVER_UTILS_EXPORT void ConsVarAveJump(
                 const std::size_t                             nConvectiveFields,
                 const int                                           npnts,
@@ -381,6 +382,7 @@ namespace Nektar
                 v_ConsVarAveJump(nConvectiveFields,npnts,vFwd,vBwd,aver,jump);
             }
 
+            // Get trace normal
             SOLVER_UTILS_EXPORT const Array<OneD, const Array<OneD, NekDouble> > 
                 &GetTraceNormal()
             {
@@ -490,15 +492,13 @@ namespace Nektar
 
             }
             
-            SOLVER_UTILS_EXPORT virtual void v_SetHomoDerivs(
+            virtual void v_SetHomoDerivs(
                 Array<OneD, Array<OneD, NekDouble> > &deriv)
             {
                 boost::ignore_unused(deriv);
             }
 
-            SOLVER_UTILS_EXPORT virtual 
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                &v_GetFluxTensor()
+            virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &v_GetFluxTensor()
             {
                 static Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmp;
                 return tmp;

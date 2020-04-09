@@ -646,11 +646,6 @@ namespace Nektar
                 v_IProductWRTBase(base, inarray, outarray, coll_check);
             }
 
-            void IProductWRTDerivBaseElmt(
-                const int                           nElmt, 
-                const int                           dir,
-                const Array<OneD, const NekDouble>  &inarray,
-                Array<OneD, NekDouble>              &outarray);
 
             void   IProductWRTDerivBase(
                     const int dir,
@@ -903,6 +898,7 @@ namespace Nektar
                 v_GetVertexPhysVals(vertex, inarray, outarray);
             }
 
+            // Add vertex value of the 1D Phys space to outarray.
             void AddVertexPhysVals(
                 const int                 vertex,
                 const NekDouble           &inarray,
@@ -963,6 +959,7 @@ namespace Nektar
                 v_MultiplyByQuadratureMetric(inarray, outarray);
             }
 
+            /// Divided by the metric jacobi and quadrature weights
             void DividByQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD, NekDouble> &outarray)

@@ -333,7 +333,7 @@ namespace Nektar
             traceflux3D[0]  =   TraceFlux;
 
             int nConvectiveFields = fields.num_elements();
-            CalTraceNumFlux_ReduceComm(
+            CalTraceNumFlux(
                 nConvectiveFields, nDim, nPts, nTracePts, m_IP2ndDervCoeff,
                 fields, inarray, qfield, pFwd, pBwd, m_MuVarTrace,
                 nonZeroIndex, traceflux3D, m_traceAver, m_traceJump);
@@ -695,7 +695,7 @@ namespace Nektar
             }
         }
 
-        void DiffusionIP::CalTraceNumFlux_ReduceComm(
+        void DiffusionIP::CalTraceNumFlux(
             const std::size_t                                 nConvectiveFields,
             const int                                         nDim,
             const int                                         nPts,
@@ -740,7 +740,7 @@ namespace Nektar
 
             if(abs(PenaltyFactor2)>1.0E-12)
             {
-                AddSecondDerivTOTrace_ReduceComm(nConvectiveFields,nDim,nPts,
+                AddSecondDerivToTrace(nConvectiveFields,nDim,nPts,
                                                 nTracePts,PenaltyFactor2,
                                                 fields,qfield,numDerivFwd,
                                                 numDerivBwd);
@@ -803,7 +803,7 @@ namespace Nektar
                                         MuVarTrace);
         }
         
-        void DiffusionIP::AddSecondDerivTOTrace_ReduceComm(
+        void DiffusionIP::AddSecondDerivToTrace(
             const std::size_t                                 nConvectiveFields,
             const int                                           nDim,
             const int                                           nPts,

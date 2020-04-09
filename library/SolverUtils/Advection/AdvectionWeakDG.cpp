@@ -115,16 +115,15 @@ namespace Nektar
             int nPointsTot      = fields[0]->GetTotPoints();
             int nCoeffs         = fields[0]->GetNcoeffs();
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
-            int i, j;
             
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
                 fluxvector(nConvectiveFields);
             // Allocate storage for flux vector F(u).
-            for (i = 0; i < nConvectiveFields; ++i)
+            for (int i = 0; i < nConvectiveFields; ++i)
             {
                 fluxvector[i] =
                     Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
-                for (j = 0; j < m_spaceDim; ++j)
+                for (int j = 0; j < m_spaceDim; ++j)
                 {
                     fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot);
                 }
@@ -140,9 +139,8 @@ namespace Nektar
                 fields[i]->IProductWRTDerivBase(fluxvector[i],outarray[i]);
             }
 
-            // Store forwards/backwards space along trace space
             Array<OneD, Array<OneD, NekDouble> > numflux(nConvectiveFields);
-            for(i = 0; i < nConvectiveFields; ++i)
+            for(int i = 0; i < nConvectiveFields; ++i)
             {
                 numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
             }
@@ -150,26 +148,14 @@ namespace Nektar
             v_AdvectTraceFlux(nConvectiveFields, fields, advVel, inarray, 
                                 numflux,time,pFwd,pBwd);
 
-            // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
-            for(i = 0; i < nConvectiveFields; ++i)
+            for(int i = 0; i < nConvectiveFields; ++i)
             {
                 Vmath::Neg                      (nCoeffs, outarray[i], 1);
                 fields[i]->AddTraceIntegral     (numflux[i], outarray[i]);
                 fields[i]->MultiplyByElmtInvMass(outarray[i], outarray[i]);
             }
         }
-
-           /**
-         * @brief Compute the advection term at each time-step using the
-         * Discontinuous Galerkin approach (DG).
-         *
-         * @param nConvectiveFields   Number of fields.
-         * @param fields              Pointer to fields.
-         * @param advVel              Advection velocities.
-         * @param inarray             Solution at the previous time-step.
-         * @param TraceFlux         Advection Trace flux
-         *                            time integration class.
-         */
+          
         void AdvectionWeakDG::v_AdvectTraceFlux(
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -189,7 +175,6 @@ namespace Nektar
             // Store forwards/backwards space along trace space
             Array<OneD, Array<OneD, NekDouble>> Fwd(nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble>> Bwd(nConvectiveFields);
-            // Array<OneD, Array<OneD, NekDouble> > numflux(nConvectiveFields);
 
             if (pFwd == NullNekDoubleArrayofArray || 
                 pBwd == NullNekDoubleArrayofArray)
@@ -198,7 +183,6 @@ namespace Nektar
                 {
                     Fwd[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
                     Bwd[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
-                    // numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
                     fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
                 }
             }
@@ -208,7 +192,6 @@ namespace Nektar
                 {
                     Fwd[i] = pFwd[i];
                     Bwd[i] = pBwd[i];
-                    // numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
                 }
             }
 

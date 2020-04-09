@@ -155,7 +155,6 @@ void DiffusionLDG::v_Diffuse_coeff(
         }
         fields[i]->IProductWRTDerivBase(qdbase,tmp);
 
-        // Evaulate  <\phi, \hat{F}\cdot n> - outarray[i]
         Vmath::Neg                      (nCoeffs, tmp, 1);
         fields[i]->AddTraceIntegral     (traceflux[i], tmp);
         fields[i]->SetPhysState         (false);

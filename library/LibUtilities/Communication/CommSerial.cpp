@@ -94,6 +94,11 @@ bool CommSerial::v_IsSerial(void)
     return true;
 }
 
+NekDouble CommSerial::v_GetVersion(void)
+{
+    return -1;
+}
+
 /**
  *
  */

@@ -166,6 +166,7 @@ public:
 
     LIB_UTILITIES_EXPORT inline bool TreatAsRankZero(void);
     LIB_UTILITIES_EXPORT inline bool IsSerial(void);
+    LIB_UTILITIES_EXPORT inline NekDouble GetVersion(void);
     LIB_UTILITIES_EXPORT inline bool RemoveExistingFiles(void);
 
 protected:
@@ -239,6 +240,8 @@ protected:
     virtual void v_SplitComm(int pRows, int pColumns) = 0;
     virtual bool v_TreatAsRankZero(void) = 0;
     virtual bool v_IsSerial(void) = 0;
+    virtual NekDouble v_GetVersion(void) = 0;
+
     LIB_UTILITIES_EXPORT virtual bool v_RemoveExistingFiles(void);
 };
 
@@ -640,6 +643,11 @@ inline bool Comm::TreatAsRankZero(void)
 inline bool Comm::IsSerial(void)
 {
     return v_IsSerial();
+}
+
+inline NekDouble Comm::GetVersion(void)
+{
+    return v_GetVersion();
 }
 
 inline bool Comm::RemoveExistingFiles(void)

@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Local to Global DG mapping routines, header file
+// Description: Parallel communication methods for DG with MPI, header file
 //
 ///////////////////////////////////////////////////////////////////////////////
 

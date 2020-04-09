@@ -120,6 +120,7 @@ protected:
     virtual double v_Wtime();
     virtual bool v_TreatAsRankZero(void);
     virtual bool v_IsSerial(void);
+    virtual NekDouble v_GetVersion(void);
     virtual void v_Send(void *buf, int count, CommDataType dt, int dest);
     virtual void v_Recv(void *buf, int count, CommDataType dt, int source);
     virtual void v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype,

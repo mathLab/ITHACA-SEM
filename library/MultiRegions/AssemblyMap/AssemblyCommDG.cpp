@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Local to Global DG mapping routines, header file
+// Description: Parallel communication methods for DG with MPI
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -355,9 +355,13 @@ AssemblyCommDG::AssemblyCommDG(
             ExchangeMethodSharedPtr(MemoryManager<AllToAllV>::AllocateSharedPtr(
                 comm, m_rankSharedEdges, m_edgeToTrace, m_nRanks));
 
-        MPIFuncMap[2] = ExchangeMethodSharedPtr(
-            MemoryManager<NeighborAllToAllV>::AllocateSharedPtr(
-                comm, m_rankSharedEdges, m_edgeToTrace));
+        // Disable neighbor MPI method on unsupported MPI version (below 3.0)
+        if (comm->GetVersion() >= 3)
+        {
+            MPIFuncMap[2] = ExchangeMethodSharedPtr(
+                MemoryManager<NeighborAllToAllV>::AllocateSharedPtr(
+                    comm, m_rankSharedEdges, m_edgeToTrace));
+        }
 
         MPIFuncMap[3] =
             ExchangeMethodSharedPtr(MemoryManager<Pairwise>::AllocateSharedPtr(

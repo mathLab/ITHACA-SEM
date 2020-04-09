@@ -153,14 +153,14 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
               Array<OneD,       NekDouble> &out_d0,
               Array<OneD,       NekDouble> &out_d1)
     {
-        using T = VecData<double, VW>;
+        using T = VecData<NekDouble, VW>;
         auto *inptr = &input[0];
         auto *outptr_d0 = &out_d0[0];
         auto *outptr_d1 = &out_d1[0];
 
         constexpr int ndf = 4;
-        constexpr int nqBlocks = NQ0 * NQ1 * VW;
-        constexpr int nq = NQ0*NQ1;
+        constexpr int nq = NQ0 * NQ1;
+        constexpr int nqBlocks = nq * VW;
 
         AlignedVector<T> tmpIn(nq), tmpOut_d0(nq), tmpOut_d1(nq);
 
@@ -175,13 +175,13 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
             dfSize = ndf;
         }
 
+        const T *df_ptr;
         for (int e = 0; e < this->m_nBlocks; e++)
         {
+            df_ptr = &(this->m_df[e*dfSize]);
+
             // Load and transpose data
             T::load_interleave(inptr, nq, tmpIn);
-
-            const VecData<double, VW> *df_ptr;
-            df_ptr = &(this->m_df[e*dfSize]);
 
             AVXPhysDerivQuadKernel<NQ0, NQ1, VW, DEFORMED>(
                 tmpIn,

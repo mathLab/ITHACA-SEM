@@ -56,7 +56,7 @@ inline static void AVXPhysDerivTensor2DKernel(
                 prod_sum.fma(v1, v2);
             }
 
-            outptr_d1[j * nq0 + i]; //Store 1x
+            outptr_d1[j * nq0 + i] = prod_sum; //Store 1x
 
         }
     }

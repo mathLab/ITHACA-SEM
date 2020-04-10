@@ -42,20 +42,40 @@ namespace Nektar
 {
 namespace MultiRegions
 {
+/**
+ * The ExchangeMethod classes contain the required structure to distribute the
+ * Fwd trace of partition edges to the matching locations in the Bwd trace in
+ * the corresponding adjacent partitions. This allows for communication between
+ * neighbouring partitions in the physical mesh by exchanging quadrature point
+ * values.
+ */
 class ExchangeMethod
 {
 public:
     /// Default constructor
     MULTI_REGIONS_EXPORT ExchangeMethod() = default;
-    /// Default deconstructor
+
+    /// Default destructor
     MULTI_REGIONS_EXPORT virtual  ~ExchangeMethod() = default;
-    /// Perform MPI comm exchange
+
+    /**
+     * Perform MPI comm exchange taking the Fwd trace and
+     * sending partition edge trace values to the matching locations in the
+     * Bwd trace of corresponding adjacent partitions.
+     *
+     * @param[in] testFwd The values to send to adjacent partitions
+     * @param[out] testBwd The values received from adjacent partitions
+     */
     MULTI_REGIONS_EXPORT virtual void PerformExchange(
         const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) = 0;
 };
 
 typedef std::shared_ptr<ExchangeMethod>  ExchangeMethodSharedPtr;
 
+/**
+ * If parallel operation is not indicated then use the Serial subclass which
+ * does not perform any exchange.
+ */
 class Serial: public ExchangeMethod
 {
 public:
@@ -69,6 +89,13 @@ public:
     }
 };
 
+/**
+ * Uses the MPI_AllToAll collective operation to perform the exchange of
+ * quadrature values. This does not allow for varying exchange array sizes so
+ * padding is used to ensure all partitions send/receive the same length array.
+ * All ranks communicate full array sizes to all other ranks. One collective
+ * operation is posted on each rank which requires communication.
+ */
 class AllToAll: public ExchangeMethod
 {
 public:
@@ -96,6 +123,13 @@ private:
     int m_maxCount = 0;
 };
 
+/**
+ * Uses the MPI_AllToAllV collective operation to perform the exchange of
+ * quadrature values. This allows for varying exchange array sizes to minimise
+ * communication data size. All ranks communicate to all other ranks, however
+ * the array size can be 0 to avoid unnecessary data transfer. One collective
+ * peration is posted on each rank which requires communication.
+ */
 class AllToAllV: public ExchangeMethod
 {
 public:
@@ -120,6 +154,15 @@ private:
     Array<OneD, int> m_allVSendDisp;
 };
 
+/**
+ * Uses the MPI_NeighborAllToAllV collective operation to perform the exchange
+ * of quadrature values. This allows for varying exchange array sizes to
+ * minimise communication data size. Ranks only communicate with ranks with
+ * which they need to exchange data, i.e. are adjacent in the mesh or share a
+ * periodic boundary condition, this further minimises unnecessary data transfer
+ * over just reducing array sizes to 0 such as in MPI_AllToAllV. One collective
+ * operation is posted on each rank which requires communication.
+ */
 class NeighborAllToAllV: public ExchangeMethod
 {
 public:
@@ -143,6 +186,15 @@ private:
     Array<OneD,int> m_sendCount;
 };
 
+/**
+ * Uses the MPI_Irecv and MPI_Irsend operations to perform the exchange of
+ * quadrature values. This allows for varying exchange array sizes to minimise
+ * communication data size. Ranks only communicate with ranks with which they
+ * need to exchange data, i.e. are adjacent in the mesh or share a periodic
+ * boundary condition. On each rank there are 'n' receives and 'n' sends posted
+ * where 'n' is the number of other ranks with which communication is needed. As
+ * n increases communication overhead can increase due to the increased postings.
+ */
 class Pairwise: public ExchangeMethod
 {
 public:
@@ -167,6 +219,13 @@ private:
     LibUtilities::CommRequestSharedPtr m_requests;
 };
 
+/**
+ * This class initialises the structure for all exchange methods and then times
+ * to determine the fastest method for the particular system configuration, if
+ * running in serial configuration it assigns the Serial exchange method. It
+ * then acts as a pass through to the chosen exchange method for the
+ * PerformExchange function.
+ */
 class AssemblyCommDG
 {
     public:
@@ -189,6 +248,7 @@ class AssemblyCommDG
         }
 
     private:
+        /// Chosen exchange method (either fastest parallel or serial)
         ExchangeMethodSharedPtr m_exchange;
         /// Max number of quadrature points in an element
         int m_maxQuad = 0;

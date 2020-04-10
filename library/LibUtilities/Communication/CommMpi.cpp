@@ -43,10 +43,6 @@ namespace Nektar
 {
 namespace LibUtilities
 {
-CommRequestMpi::CommRequestMpi(int num) : m_num(num)
-{
-    m_request = new MPI_Request[m_num];
-}
 
 std::string CommMpi::className = GetCommFactory().RegisterCreatorFunction(
     "ParallelMPI", CommMpi::create, "Parallel communication using MPI.");
@@ -380,27 +376,13 @@ void CommMpi::v_Scatter(void *sendbuf, int sendcount, CommDataType sendtype,
     ASSERTL0(retval == MPI_SUCCESS, "MPI error performing Scatter.");
 }
 
+void CommMpi::v_DistGraphCreateAdjacent(int indegree, const int sources[],
+                                        const int sourceweights[],
+                                        int reorder)
+{
 #if MPI_VERSION < 3
-void CommMpi::v_DistGraphCreateAdjacent(int indegree, const int sources[],
-                                        const int sourceweights[],
-                                        int reorder)
-{
     boost::ignore_unused(indegree, sources, sourceweights, reorder);
-}
-
-void CommMpi::v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
-                                  int senddispls[], CommDataType sendtype,
-                                  void *recvbuf, int recvcounts[],
-                                  int rdispls[], CommDataType recvtype)
-{
-    boost::ignore_unused(sendbuf, sendcounts, senddispls, sendtype, recvbuf,
-                         recvcounts, rdispls, recvtype);
-}
 #else
-void CommMpi::v_DistGraphCreateAdjacent(int indegree, const int sources[],
-                                        const int sourceweights[],
-                                        int reorder)
-{
     // This replaces the current MPI communicator m_comm so if reordering is
     // enabled using this might break some stuff where process numbers are
     // assumed to remain constant. This also assumes that the graph is
@@ -412,6 +394,7 @@ void CommMpi::v_DistGraphCreateAdjacent(int indegree, const int sources[],
 
     ASSERTL0(retval == MPI_SUCCESS,
              "MPI error performing Dist_graph_create_adjacent.")
+#endif
 }
 
 void CommMpi::v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
@@ -419,12 +402,16 @@ void CommMpi::v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
                                   void *recvbuf, int recvcounts[],
                                   int rdispls[], CommDataType recvtype)
 {
+#if MPI_VERSION < 3
+    boost::ignore_unused(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                         recvcounts, rdispls, recvtype);
+#else
     int retval = MPI_Neighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
                                         recvcounts, rdispls, recvtype, m_comm);
 
     ASSERTL0(retval == MPI_SUCCESS, "MPI error performing NeighborAllToAllV.");
-}
 #endif
+}
 
 void CommMpi::v_Irsend(void *buf, int count, CommDataType dt, int dest,
                        CommRequestSharedPtr request, int loc)

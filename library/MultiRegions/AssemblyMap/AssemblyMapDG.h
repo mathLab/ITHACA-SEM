@@ -83,6 +83,16 @@ namespace Nektar
                 Array<OneD,Array<OneD,LocalRegions::ExpansionSharedPtr> >
                 &GetElmtToTrace();
 
+            /**
+             * Changes toAlign quadrature point order, where the realignment is
+             * given by orient, which defines the mapping needed to go between
+             * the original ordering and the new desired ordering.
+             *
+             * @param[in,out] toAlign Data to reorder
+             * @param[in] orient The transformation to perform
+             * @param[in] nquad1 Quadrature points in direction 1
+             * @param[in] nquad2 Quadrature points in direction 2
+             */
             MULTI_REGIONS_EXPORT static void RealignTraceElement(
                     Array<OneD, int>        &toAlign,
                     StdRegions::Orientation  orient,

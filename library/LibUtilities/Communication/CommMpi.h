@@ -57,11 +57,15 @@ class CommMpi;
 typedef std::shared_ptr<CommMpi> CommMpiSharedPtr;
 
 /// Class for communicator request type
-class CommRequestMpi : public CommRequest {
+class CommRequestMpi : public CommRequest
+{
 public:
     /// Default constructor
-    CommRequestMpi(int num);
-    /// Default deconstructor
+    inline CommRequestMpi(int num) : m_num(num)
+    {
+        m_request = new MPI_Request[m_num];
+    }
+    /// Default destructor
     inline ~CommRequestMpi()
     {
         delete m_request;
@@ -80,7 +84,6 @@ public:
 private:
     int m_num;
     MPI_Request* m_request;
-
 };
 
 typedef std::shared_ptr<CommRequestMpi> CommRequestMpiSharedPtr;

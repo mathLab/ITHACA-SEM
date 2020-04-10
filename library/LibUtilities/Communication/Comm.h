@@ -82,7 +82,7 @@ class CommRequest {
 public:
     /// Default constructor
     CommRequest() = default;
-    /// Default deconstructor
+    /// Default destructor
     virtual  ~CommRequest() = default;
 };
 
@@ -226,7 +226,7 @@ protected:
                                            int reorder) = 0;
 
     virtual void v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
-                                    int sensdispls[], CommDataType sendtype,
+                                    int sdispls[], CommDataType sendtype,
                                     void *recvbuf, int recvcounts[],
                                     int rdispls[], CommDataType recvtype) = 0;
 
@@ -246,7 +246,7 @@ protected:
 };
 
 /**
- *s
+ *
  */
 inline void Comm::Finalise()
 {
@@ -541,7 +541,10 @@ void Comm::DistGraphCreateAdjacent(T &sources, T &sourceweights, int reorder)
  */
 template <class T1, class T2>
 void Comm::NeighborAlltoAllv(
-    T1 &pSendData, T2 &pSendDataSizeMap, T2 &pSendDataOffsetMap, T1 &pRecvData,
+    T1 &pSendData,
+    T2 &pSendDataSizeMap,
+    T2 &pSendDataOffsetMap,
+    T1 &pRecvData,
     T2 &pRecvDataSizeMap,
     T2 &pRecvDataOffsetMap)
 {
@@ -562,13 +565,15 @@ void Comm::NeighborAlltoAllv(
         CommDataTypeTraits<T1>::GetDataType());
 }
 
-template <class T> void Comm::Irsend(int pProc, T &pData, int count, CommRequestSharedPtr request, int loc)
+template <class T> void Comm::Irsend(int pProc, T &pData, int count,
+                      CommRequestSharedPtr request, int loc)
 {
     v_Irsend(CommDataTypeTraits<T>::GetPointer(pData), count,
            CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
 }
 
-template <class T> void Comm::Irecv(int pProc, T &pData, int count, CommRequestSharedPtr request, int loc)
+template <class T> void Comm::Irecv(int pProc, T &pData, int count,
+                     CommRequestSharedPtr request, int loc)
 {
     v_Irecv(CommDataTypeTraits<T>::GetPointer(pData), count,
            CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);

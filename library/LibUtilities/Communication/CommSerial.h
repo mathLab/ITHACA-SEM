@@ -125,18 +125,28 @@ protected:
                                                 CommDataType recvtype,
                                                 int root);
 
-    LIB_UTILITIES_EXPORT virtual void v_DistGraphCreateAdjacent(int indegree, const int sources[],
-                                           const int sourceweights[],
-                                           int reorder);
+    LIB_UTILITIES_EXPORT virtual void v_DistGraphCreateAdjacent(int indegree,
+                                                                const int sources[],
+                                                                const int sourceweights[],
+                                                                int reorder);
 
-    LIB_UTILITIES_EXPORT virtual void v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
-                                     int sensdispls[], CommDataType sendtype,
-                                     void *recvbuf, int recvcounts[],
-                                     int rdispls[], CommDataType recvtype);
-    LIB_UTILITIES_EXPORT virtual void v_Irsend(void *buf, int count, CommDataType dt, int dest,
+    LIB_UTILITIES_EXPORT virtual void v_NeighborAlltoAllv(void *sendbuf,
+                                                          int sendcounts[],
+                                                          int sdispls[],
+                                                          CommDataType sendtype,
+                                                          void *recvbuf,
+                                                          int recvcounts[],
+                                                          int rdispls[],
+                                                          CommDataType recvtype);
+
+    LIB_UTILITIES_EXPORT virtual void v_Irsend(void *buf, int count,
+                                               CommDataType dt, int dest,
                           CommRequestSharedPtr request, int loc);
-    LIB_UTILITIES_EXPORT virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
+
+    LIB_UTILITIES_EXPORT virtual void v_Irecv(void *buf, int count,
+                                              CommDataType dt, int source,
                          CommRequestSharedPtr request, int loc);
+
     LIB_UTILITIES_EXPORT virtual void v_WaitAll(CommRequestSharedPtr request);
     LIB_UTILITIES_EXPORT virtual CommRequestSharedPtr v_CreateRequest(int num);
 

@@ -172,12 +172,12 @@ void CommSerial::v_AlltoAll(void *sendbuf, int sendcount, CommDataType sendtype,
 /**
  *
  */
-void CommSerial::v_AlltoAllv(void *sendbuf, int sendcounts[], int senddispls[],
+void CommSerial::v_AlltoAllv(void *sendbuf, int sendcounts[], int sdispls[],
                              CommDataType sendtype, void *recvbuf,
                              int recvcounts[], int rdispls[],
                              CommDataType recvtype)
 {
-    boost::ignore_unused(sendbuf, sendcounts, senddispls, sendtype, recvbuf,
+    boost::ignore_unused(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
                          recvcounts, rdispls, recvtype);
 }
 

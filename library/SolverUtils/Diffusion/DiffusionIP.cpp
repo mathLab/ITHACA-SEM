@@ -192,7 +192,7 @@ namespace Nektar
             {
                 for (int i = 0; i < nConvectiveFields; ++i)
                 {
-                    vFwd[i] =  Array<OneD, NekDouble> {ctstnTracePts, 0.0};
+                    vFwd[i] =  Array<OneD, NekDouble> {nTracePts, 0.0};
                     vBwd[i] =  Array<OneD, NekDouble> {nTracePts, 0.0};
                 }
                 for (int i = 0; i < nConvectiveFields; ++i)

@@ -66,9 +66,14 @@ class CoalescedGeomData
         const Array<TwoD, const NekDouble> &GetDerivFactors(
                 std::vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
 
+        bool IsDeformed(
+                std::vector<StdRegions::StdExpansionSharedPtr> &pCollExp);
+
     private:
         std::map<GeomData,Array<OneD, NekDouble> > m_oneDGeomData;
         std::map<GeomData,Array<TwoD, NekDouble> > m_twoDGeomData;
+        bool m_deformed;
+        bool m_isDeformedSet{false};
 };
 
 typedef std::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;

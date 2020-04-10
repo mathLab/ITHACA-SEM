@@ -1068,7 +1068,7 @@ namespace QuadCollectionTests
     BOOST_AUTO_TEST_CASE(TestQuadPhysDeriv_AVX_UniformP)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
-            0u, -1.0, -1.0, 0.0));
+            0u, -1.5, -1.5, 0.0));
         SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u,
             1u,  1.0, -1.0, 0.0));
         SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u,
@@ -1082,11 +1082,12 @@ namespace QuadCollectionTests
             Nektar::LibUtilities::eGaussLobattoLegendre;
         Nektar::LibUtilities::BasisType basisTypeDir1 =
             Nektar::LibUtilities::eModified_A;
-        unsigned int numQuadPoints = 6;
+        unsigned int numQuadPoints = 3;
+        int numModes = 2;
         const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints,
             quadPointsTypeDir1);
-        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1, 4,
-            quadPointsKeyDir1);
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
+            numModes, quadPointsKeyDir1);
 
         Nektar::LocalRegions::QuadExpSharedPtr Exp =
             MemoryManager<Nektar::LocalRegions::QuadExp>::AllocateSharedPtr(

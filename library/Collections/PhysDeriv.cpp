@@ -302,10 +302,9 @@ class PhysDeriv_AVX : public Operator
             }
 
             // Check if deformed
-            // for now assume always deformed
-            bool deformed{false};
+            bool deformed{pGeomData->IsDeformed(pCollExp)};
 
-            // Check if the collection is deformed or not
+            // Size of jacobian
             int jacSizeNoPad{nElmtNoPad};
             int jacSizePad{nElmtPad};
             if (deformed)
@@ -339,7 +338,7 @@ class PhysDeriv_AVX : public Operator
             auto shapeType = pCollExp[0]->GetStdExp()->DetShapeType();
 
             // Generate operator string and create operator.
-            std::string op_string = "PhysDeriv";  // For now hardcoded PhysDeriv
+            std::string op_string = "PhysDeriv";
             op_string += AVX::GetOpstring(shapeType, deformed);
             auto oper = AVX::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmtPad);

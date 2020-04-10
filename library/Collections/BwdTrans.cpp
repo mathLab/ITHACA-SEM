@@ -215,21 +215,6 @@ class BwdTrans_AVX final : public Operator
                 m_output = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
             }
 
-            // Store Jacobian
-            Array<OneD, NekDouble> jac{nElmtPad, 0.0};
-            Vmath::Vcopy(nElmtNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
-
-            // Store derivative factors
-            // Array<TwoD, NekDouble> df;
-            // df = pGeomData->GetDerivFactors(pCollExp);
-
-            // Check if the collection is deformed or not
-            bool deformed{false};
-            if (jac.num_elements() == nElmtPad * nqElmt)
-            {
-                deformed = true;
-            }
-
             // Basis vector.
             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
             std::vector<LibUtilities::BasisSharedPtr> basis(dim);
@@ -242,22 +227,10 @@ class BwdTrans_AVX final : public Operator
             auto shapeType = pCollExp[0]->GetStdExp()->DetShapeType();
 
             // Generate operator string and create operator.
-            std::string op_string = "BwdTrans";  // For now hardcoded BwdTrans
-            op_string += AVX::GetOpstring(shapeType, deformed);
+            std::string op_string = "BwdTrans";
+            op_string += AVX::GetOpstring(shapeType, false);
             auto oper = AVX::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmtPad);
-
-            // If the operator needs the Jacobian, provide it here
-            if (oper->NeedsJac())
-            {
-                oper->SetJac(jac);
-            }
-
-            // // If the operator needs the derivative factors, provide it here
-            // if (oper->NeedsDF())
-            // {
-            //     oper->SetDF(df);
-            // }
 
             m_oper = std::dynamic_pointer_cast<AVX::BwdTrans>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");

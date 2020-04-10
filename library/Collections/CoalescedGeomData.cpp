@@ -76,7 +76,7 @@ const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(
         {
             const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
             const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
-          
+
             const Array<OneD, const NekDouble> jac = lep->GetMetricInfo()->GetJac( ptsKeys );
 
             if( lep->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed )
@@ -198,6 +198,32 @@ const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(
     }
 
     return m_twoDGeomData[eDerivFactors];
+}
+
+bool CoalescedGeomData::IsDeformed(
+    vector<StdRegions::StdExpansionSharedPtr> &pCollExp)
+{
+    if (!m_isDeformedSet)
+    {
+        LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();
+        const StdRegions::StdExpansion * sep = &(*pCollExp[0]);
+        const LocalRegions::Expansion  * lep =
+            dynamic_cast<const LocalRegions::Expansion*>( sep );
+
+        const Array<OneD, const NekDouble> jac =
+            lep->GetMetricInfo()->GetJac(ptsKeys);
+
+        if( lep->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed )
+        {
+            m_deformed = true;
+        }
+        else
+        {
+           m_deformed = false;
+        }
+    }
+
+    return m_deformed;
 }
 
 }

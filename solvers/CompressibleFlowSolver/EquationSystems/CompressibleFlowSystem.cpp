@@ -105,7 +105,7 @@ namespace Nektar
                 continue;
             }
 
-            if(!type.empty())
+            if (!type.empty())
             {
                 m_bndConds.push_back(GetCFSBndCondFactory().CreateInstance(
                         type,
@@ -158,7 +158,7 @@ namespace Nektar
         // Load parameters for exponential filtering
         m_session->MatchSolverInfo("ExponentialFiltering","True",
                                    m_useFiltering, false);
-        if(m_useFiltering)
+        if (m_useFiltering)
         {
             m_session->LoadParameter ("FilterAlpha", m_filterAlpha, 36);
             m_session->LoadParameter ("FilterExponent", m_filterExponent, 16);
@@ -168,7 +168,7 @@ namespace Nektar
         // Load CFL for local time-stepping (for steady state)
         m_session->MatchSolverInfo("LocalTimeStep","True",
                                    m_useLocalTimeStep, false);
-        if(m_useLocalTimeStep)
+        if (m_useLocalTimeStep)
         {
             ASSERTL0(m_cflSafetyFactor != 0,
                     "Local time stepping requires CFL parameter.");
@@ -246,7 +246,7 @@ namespace Nektar
         }
         else
         {
-            for(int i = 0; i < nvariables; ++i)
+            for (int i = 0; i < nvariables; ++i)
             {
                 Fwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
                 Bwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
@@ -284,12 +284,12 @@ namespace Nektar
             GetElmtTimeStep(inarray, tstep);
 
             // Loop over elements
-            for(int n = 0; n < nElements; ++n)
+            for (int n = 0; n < nElements; ++n)
             {
                 nq     = m_fields[0]->GetExp(n)->GetTotPoints();
                 offset = m_fields[0]->GetPhys_Offset(n);
                 fac    = tstep[n] / m_timestep;
-                for(int i = 0; i < nvariables; ++i)
+                for (int i = 0; i < nvariables; ++i)
                 {
                     Vmath::Smul(nq, fac, outarray[i] + offset, 1,
                                          tmp = outarray[i] + offset, 1);
@@ -307,7 +307,6 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
-        int i;
         int nvariables = inarray.size();
 
         switch(m_projectionType)
@@ -317,10 +316,10 @@ namespace Nektar
                 // Just copy over array
                 int npoints = GetNpoints();
 
-                for(i = 0; i < nvariables; ++i)
+                for (int i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
-                    if(m_useFiltering)
+                    if (m_useFiltering)
                     {
                         m_fields[i]->ExponentialFilter(outarray[i],
                             m_filterAlpha, m_filterExponent, m_filterCutoff);
@@ -588,7 +587,6 @@ namespace Nektar
     {
         boost::ignore_unused(inarray);
 
-        int n;
         int nElements = m_fields[0]->GetExpSize();
 
         // Change value of m_timestep (in case it is set to zero)
@@ -602,7 +600,7 @@ namespace Nektar
         NekDouble alpha     = MaxTimeStepEstimator();
 
         // Loop over elements to compute the time-step limit for each element
-        for(n = 0; n < nElements; ++n)
+        for (int n = 0; n < nElements; ++n)
         {
             tstep[n] = m_cflSafetyFactor * alpha / cfl[n];
         }
@@ -708,7 +706,7 @@ namespace Nektar
         m_varConv->GetVelocityVector(physfields, velocity);
         m_varConv->GetSoundSpeed    (physfields, soundspeed);
 
-        for(int el = 0; el < n_element; ++el)
+        for (int el = 0; el < n_element; ++el)
         {
             ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
             offset  = m_fields[0]->GetPhys_Offset(el);
@@ -723,7 +721,7 @@ namespace Nektar
             // Convert to standard element
             //    consider soundspeed in all directions
             //    (this might overestimate the cfl)
-            if(metricInfo->GetGtype() == SpatialDomains::eDeformed)
+            if (metricInfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 // d xi/ dx = gmat = 1/J * d x/d xi
                 for (int i = 0; i < expdim; ++i)
@@ -1009,7 +1007,7 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
             {
                 LocalRegions::Expansion3DSharedPtr exp3D;
                 exp3D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion3D>();
-                for(int i = 0; i < exp3D->GetNedges(); ++i)
+                for (int i = 0; i < exp3D->GetNedges(); ++i)
                 {
                     h = min(h, exp3D->GetGeom3D()->GetEdge(i)->GetVertex(0)->
                         dist(*(exp3D->GetGeom3D()->GetEdge(i)->GetVertex(1))));
@@ -1021,7 +1019,7 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
             {
                 LocalRegions::Expansion2DSharedPtr exp2D;
                 exp2D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion2D>();
-                for(int i = 0; i < exp2D->GetNedges(); ++i)
+                for (int i = 0; i < exp2D->GetNedges(); ++i)
                 {
                     h = min(h, exp2D->GetGeom2D()->GetEdge(i)->GetVertex(0)->
                         dist(*(exp2D->GetGeom2D()->GetEdge(i)->GetVertex(1))));

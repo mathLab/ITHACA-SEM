@@ -853,23 +853,23 @@ void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
         trace->GetExp();
     int ntrace    = exptrac->size();
 
-    Array<OneD, Array<OneD, int >> LRAdjExpid(2);
-    Array<OneD, Array<OneD, bool>> LRAdjflag(2);
+    Array<OneD, Array<OneD, int >> LRAdjExpid{2};
+    Array<OneD, Array<OneD, bool>> LRAdjflag{2};
 
-    Array<OneD, Array<OneD, Array<OneD,          int > > > elmtLRMap(2);
-    Array<OneD, Array<OneD, Array<OneD,          int > > > elmtLRSign(2);
+    Array<OneD, Array<OneD, Array<OneD, int > > > elmtLRMap{2};
+    Array<OneD, Array<OneD, Array<OneD, int > > > elmtLRSign{2};
 
-    for(int lr =0; lr<2;lr++)
+    for (int lr =0; lr<2;++lr)
     {
-        LRAdjExpid[lr]  =   Array<OneD, int >(ntrace,0);
-        LRAdjflag[lr]   =   Array<OneD, bool>(ntrace,false);
-        elmtLRMap[lr]   =   Array<OneD, Array<OneD, int > >(ntrace);
-        elmtLRSign[lr]  =   Array<OneD, Array<OneD, int > >(ntrace);
-        for(int i =0; i<ntrace;i++)
+        LRAdjExpid[lr]  =   Array<OneD, int >{ntrace,0};
+        LRAdjflag[lr]   =   Array<OneD, bool>{ntrace,false};
+        elmtLRMap[lr]   =   Array<OneD, Array<OneD, int > >{ntrace};
+        elmtLRSign[lr]  =   Array<OneD, Array<OneD, int > >{ntrace};
+        for (int i =0; i<ntrace;++i)
         {
             int ncoeff  =   trace->GetNcoeffs(i);
-            elmtLRMap[lr][i]      =   Array<OneD, int >(ncoeff,0);
-            elmtLRSign[lr][i]     =   Array<OneD, int >(ncoeff,0);
+            elmtLRMap[lr][i]      =   Array<OneD, int >{ncoeff,0};
+            elmtLRSign[lr][i]     =   Array<OneD, int >{ncoeff,0};
         }
     }
     
@@ -878,10 +878,10 @@ void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
     const Array<OneD,const pair<int,int> > trace_coeffToElmt  =   
             trace->GetCoeffsToElmt();
 
-    for(int lr =0; lr<2;lr++)
+    for (int lr =0; lr<2;++lr)
     {
         int ntotcoeffs = m_nTraceCoeffs[lr];
-        for(int  i = 0; i < ntotcoeffs; i++)
+        for (int  i = 0; i < ntotcoeffs; ++i)
         {
             int ncoeffField =   m_traceCoeffsToElmtMap[lr][i];
             int ncoeffTrace =   m_traceCoeffsToElmtTrace[lr][i];
@@ -893,10 +893,8 @@ void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
             int nfieldelmt   = field_coeffToElmt[ncoeffField].first;
             int nfieldlocN   = field_coeffToElmt[ncoeffField].second;
 
-
             LRAdjflag[lr][ntraceelmt]    =   true;
             LRAdjExpid[lr][ntraceelmt]   =   nfieldelmt;
-
 
             elmtLRMap[lr][ntraceelmt][ntracelocN]  =   nfieldlocN;
             elmtLRSign[lr][ntraceelmt][ntracelocN]  =   sign;
@@ -937,7 +935,7 @@ void LocTraceToTraceMap::AddLocTracesToField(
     Array<OneD, NekDouble>              &field)
 {
     int nfield  =   field.num_elements();
-    Array<OneD, NekDouble> tmp(nfield,0.0);
+    Array<OneD, NekDouble> tmp{nfield,0.0};
     Vmath::Scatr(m_fieldToLocTraceMap.num_elements(),
                  faces,
                  m_fieldToLocTraceMap,
@@ -1081,7 +1079,7 @@ void LocTraceToTraceMap::RightIPTWLocEdgesToTraceInterpMat(
     int cnt1 = 0;
 
     // tmp space assuming forward map is of size of trace
-    Array<OneD, NekDouble> tmp(m_nTracePts);
+    Array<OneD, NekDouble> tmp{m_nTracePts};
     Vmath::Gathr(m_LocTraceToTraceMap[dir].num_elements(),
                  edges.get(),
                  m_LocTraceToTraceMap[dir].get(),
@@ -1415,7 +1413,7 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
     int cnt1 = 0;
 
     // tmp space assuming forward map is of size of trace
-    Array<OneD, NekDouble> tmp(m_nTracePts);
+    Array<OneD, NekDouble> tmp{m_nTracePts};
     Vmath::Gathr(m_LocTraceToTraceMap[dir].num_elements(),
                  traces.get(),
                  m_LocTraceToTraceMap[dir].get(),
@@ -1542,7 +1540,7 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                     DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
 
                     Array<OneD, NekDouble> 
-                        wsp(m_interpNfaces[dir][i] * fnp0 * tnp1);
+                        wsp{m_interpNfaces[dir][i] * fnp0 * tnp1};
 
                     Blas::Dgemm('T',
                                 'N',

@@ -1973,7 +1973,7 @@ using namespace std;
          * @brief Fill the Bwd based on corresponding boundary conditions.
          * NOTE: periodic boundary is considered interior traces and is not treated here.
          */
-        void DisContField3D::v_FillBwdWITHBound(
+        void DisContField3D::v_FillBwdWithBound(
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
@@ -2040,7 +2040,7 @@ using namespace std;
          * @brief Fill the Bwd based on corresponding boundary conditions for derivatives.
          * NOTE: periodic boundary is considered interior traces and is not treated here.
          */
-        void DisContField3D::v_FillBwdWITHBoundDeriv(
+        void DisContField3D::v_FillBwdWithBoundDeriv(
             const int                          Dir,
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)

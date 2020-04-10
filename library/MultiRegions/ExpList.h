@@ -866,12 +866,12 @@ namespace Nektar
                 Array<OneD,       NekDouble>        &field);
 
             /// Fill Bwd with boundary conditions
-            inline void FillBwdWITHBound(
+            inline void FillBwdWithBound(
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
             
             /// Fill Bwd with boundary conditions for derivatives 
-            inline void FillBwdWITHBoundDeriv(
+            inline void FillBwdWithBoundDeriv(
                 const int                          Dir,
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
@@ -1095,16 +1095,10 @@ namespace Nektar
             /// Get m_coeffs to elemental value map
             MULTI_REGIONS_EXPORT inline const 
                 Array<OneD,const std::pair<int,int> > 
-                &GetCoeffsToElmt() const
-            {
-                return m_coeffsToElmt;
-            }
+                &GetCoeffsToElmt() const;
 
             MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr 
-                &GetlocTraceToTraceMap() const
-            {
-                return v_GetlocTraceToTraceMap();
-            }
+                &GetlocTraceToTraceMap() const;
         protected:
             /// Definition of the total number of degrees of freedom and
             /// quadrature points and offsets to access data
@@ -1358,11 +1352,11 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &field);
                       
-            virtual void v_FillBwdWITHBound(
+            virtual void v_FillBwdWithBound(
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
             
-            virtual void v_FillBwdWITHBoundDeriv(
+            virtual void v_FillBwdWithBoundDeriv(
                 const int                          Dir,
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
@@ -2405,6 +2399,20 @@ namespace Nektar
             return v_GetBndCondExpansions();
         }
 
+        /// Get m_coeffs to elemental value map
+        MULTI_REGIONS_EXPORT inline const 
+            Array<OneD,const std::pair<int,int> > 
+            &ExpList::GetCoeffsToElmt() const
+        {
+            return m_coeffsToElmt;
+        }
+
+        MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr 
+            &ExpList::GetlocTraceToTraceMap() const
+        {
+            return v_GetlocTraceToTraceMap();
+        }
+
         inline const Array<OneD, const  NekDouble >
             &ExpList::GetBndCondBwdWeight()
         {
@@ -2549,19 +2557,19 @@ namespace Nektar
             v_AddTraceQuadPhysToField(Fwd,Bwd,field);
         }
 
-        inline void ExpList::FillBwdWITHBound(
+        inline void ExpList::FillBwdWithBound(
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            v_FillBwdWITHBound(Fwd,Bwd);
+            v_FillBwdWithBound(Fwd,Bwd);
         }
 
-        inline void ExpList::FillBwdWITHBoundDeriv(
+        inline void ExpList::FillBwdWithBoundDeriv(
             const int                          Dir,
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            v_FillBwdWITHBoundDeriv(Dir,Fwd,Bwd);
+            v_FillBwdWithBoundDeriv(Dir,Fwd,Bwd);
         }
 
         inline void ExpList::FillBwdWITHBwdWeight(

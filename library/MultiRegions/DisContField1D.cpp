@@ -567,7 +567,7 @@ namespace Nektar
             m_bndConditions
                     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
 
-            m_BndCondBwdWeight  =   Array<OneD, NekDouble>(cnt,0.0);
+            m_BndCondBwdWeight = Array<OneD, NekDouble>{cnt,0.0};
 
             SetBoundaryConditionExpansion(graph1D,bcs,variable,
                                            m_bndCondExpansions,
@@ -901,7 +901,7 @@ namespace Nektar
         }
 
 
-        void DisContField1D::v_FillBwdWITHBound(
+        void DisContField1D::v_FillBwdWithBound(
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
@@ -947,7 +947,7 @@ namespace Nektar
             }
         }
 
-        void DisContField1D::v_FillBwdWITHBoundDeriv(
+        void DisContField1D::v_FillBwdWithBoundDeriv(
             const int                          Dir,
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
@@ -957,7 +957,7 @@ namespace Nektar
             // Fill boundary conditions into missing elements.
             int id = 0;
             
-            for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {	
                 if (m_bndConditions[n]->GetBoundaryConditionType() == 
                         SpatialDomains::eDirichlet)
@@ -1003,7 +1003,7 @@ namespace Nektar
             // Fill boundary conditions into missing elements.
             int id = 0;
             
-            for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {	
                 if (m_bndConditions[n]->GetBoundaryConditionType() == 
                         SpatialDomains::eDirichlet)
@@ -1071,7 +1071,7 @@ namespace Nektar
                 // Set the offset of each element
                 phys_offset = GetPhys_Offset(n);
 
-                for(v = 0; v < 2; ++v, ++cnt)
+                for (v = 0; v < 2; ++v, ++cnt)
                 {
                     int offset = m_trace->GetPhys_Offset(
                                     elmtToTrace[n][v]->GetElmtId());
@@ -1464,7 +1464,7 @@ namespace Nektar
             {
                 if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
-                    m_BndCondBwdWeight[i]   =   1.0;
+                    m_BndCondBwdWeight[i] = 1.0;
                     m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
 
                     if (x2_in != NekConstants::kNekUnsetDouble && x3_in !=
@@ -1631,7 +1631,7 @@ namespace Nektar
             // Reset boundary condition expansions.
             for (int n = 0; n < m_bndCondExpansions.size(); ++n)
             {
-                m_BndCondBwdWeight[n]   =   0.0;
+                m_BndCondBwdWeight[n] = 0.0;
                 m_bndCondExpansions[n]->Reset();
             }
         }

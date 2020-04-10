@@ -378,7 +378,7 @@ namespace Nektar
         }
 
         void DiffusionIP::v_AddDiffusionSymmFluxToPhys(
-            const std::size_t                                   nConvectiveFields,
+            const std::size_t                                 nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
             const Array<OneD, Array<OneD, NekDouble> >          &inarray,
             Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
@@ -398,7 +398,7 @@ namespace Nektar
                 for (int nd = 0; nd < nDim; ++nd)
                 {
                     traceSymflux[nd]    = 
-                        Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+                        Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
                     for (int j = 0; j < nConvectiveFields; ++j)
                     {
                         traceSymflux[nd][j]   = 

@@ -3368,21 +3368,21 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        void ExpList::v_FillBwdWITHBound(
+        void ExpList::v_FillBwdWithBound(
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
             boost::ignore_unused(Fwd, Bwd);
-            ASSERTL0(false,"v_FillBwdWITHBound not defined");
+            ASSERTL0(false,"v_FillBwdWithBound not defined");
         }
 
-        void ExpList::v_FillBwdWITHBoundDeriv(
+        void ExpList::v_FillBwdWithBoundDeriv(
             const int                          Dir,
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
             boost::ignore_unused(Dir,Fwd, Bwd);
-            ASSERTL0(false,"v_FillBwdWITHBoundDeriv not defined");
+            ASSERTL0(false,"v_FillBwdWithBoundDeriv not defined");
         }
 
         void ExpList::v_FillBwdWITHBwdWeight(

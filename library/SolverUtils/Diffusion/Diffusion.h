@@ -74,23 +74,6 @@ namespace Nektar
                   Array<OneD,             NekDouble  >&)>
                                             DiffusionArtificialDiffusion;
 
-        // /**
-        //  * Parameter list meaning:
-        //  *  1th: Devrivatives of field conservative varialbes
-        //  *  2rd: the current time for time-dependent boundary
-        //  *  3th: Fwd of field conservative variables        optional
-        //  *  4th: Fwd of Devrivatives(2nd)                   optional 
-        //  * 
-        //  * a null pointer need to be passed for optional parameters
-        //  */
-        // typedef std::function<void (
-        //     const Array<OneD, const Array<OneD, NekDouble> >                &,
-        //     const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &,
-        //     NekDouble                                                        ,
-        //     const Array<OneD, const Array<OneD, NekDouble> >                &,
-        //     const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &)> 
-        //         FunctorDerivBndCond;
-        
         /**
          * Parameter list meaning:
          *  1nd: nspaceDimension

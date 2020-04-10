@@ -1437,7 +1437,7 @@ namespace Nektar
          * @brief Fill the Bwd based on corresponding boundary conditions.
          * NOTE: periodic boundary is considered interior traces and is not treated here.
          */
-        void DisContField2D::v_FillBwdWITHBound(
+        void DisContField2D::v_FillBwdWithBound(
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
@@ -1497,7 +1497,7 @@ namespace Nektar
          * @brief Fill the Bwd based on corresponding boundary conditions for derivatives.
          * NOTE: periodic boundary is considered interior traces and is not treated here.
          */
-        void DisContField2D::v_FillBwdWITHBoundDeriv(
+        void DisContField2D::v_FillBwdWithBoundDeriv(
             const int                          Dir,
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
@@ -1928,7 +1928,7 @@ namespace Nektar
             for (int n = 0; n < m_bndCondExpansions.size(); ++n)
             {
                 m_bndCondExpansions[n]->Reset();
-                m_BndCondBwdWeight[n]   =   0.0;
+                m_BndCondBwdWeight[n] = 0.0;
             }
         }
 
@@ -2418,7 +2418,7 @@ namespace Nektar
                 if (time == 0.0 ||
                     m_bndConditions[i]->IsTimeDependent())
                 {
-                    m_BndCondBwdWeight[i]   =   1.0;
+                    m_BndCondBwdWeight[i] = 1.0;
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();
                     Array<OneD, NekDouble> x0(npoints, 0.0);

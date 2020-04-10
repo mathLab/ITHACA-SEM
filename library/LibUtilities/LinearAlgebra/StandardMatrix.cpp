@@ -183,6 +183,7 @@ namespace Nektar
         return *this;
     }
 
+    /// Fill matrix with scalar
     template<typename DataType>
     NekMatrix<DataType, StandardMatrixTag>& 
         NekMatrix<DataType, StandardMatrixTag>::operator=(const DataType & rhs)
@@ -191,7 +192,7 @@ namespace Nektar
         
         DataType* lhs_array = m_data.data();
         
-        for(unsigned int i = 0; i < requiredStorageSize; ++i)
+        for (unsigned int i = 0; i < requiredStorageSize; ++i)
         {
             lhs_array[i] = rhs;
         }

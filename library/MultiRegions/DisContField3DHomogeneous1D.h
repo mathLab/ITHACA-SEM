@@ -298,12 +298,9 @@ namespace Nektar
             {
                 return m_traceBndMap;
             }
-            virtual void v_SetBndCondBwdWeight(
+            inline virtual void v_SetBndCondBwdWeight(
                 const int index, 
-                const NekDouble value)
-            {
-                m_BndCondBwdWeight[index]   =   value;
-            }
+                const NekDouble value);
         };
 
         typedef std::shared_ptr<DisContField3DHomogeneous1D>
@@ -331,6 +328,12 @@ namespace Nektar
             &DisContField3DHomogeneous1D::UpdateBndConditions()
         {
             return m_bndConditions;
+        }
+        inline void DisContField3DHomogeneous1D::v_SetBndCondBwdWeight(
+            const int index, 
+            const NekDouble value)
+        {
+            m_BndCondBwdWeight[index]   =   value;
         }
     } //end of namespace
 } //end of namespace

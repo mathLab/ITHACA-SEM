@@ -159,12 +159,9 @@ namespace Nektar
 			
 			virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>& v_UpdateBndConditions();
 
-            virtual void v_SetBndCondBwdWeight(
+            inline virtual void v_SetBndCondBwdWeight(
                 const int index, 
-                const NekDouble value)
-            {
-                m_BndCondBwdWeight[index]   =   value;
-            }
+                const NekDouble value);
         };
 
         typedef std::shared_ptr<DisContField3DHomogeneous2D>  
@@ -189,6 +186,13 @@ namespace Nektar
 		{
 			return m_bndConditions;
 		}
+
+        inline void DisContField3DHomogeneous2D::v_SetBndCondBwdWeight(
+            const int index, 
+            const NekDouble value)
+        {
+            m_BndCondBwdWeight[index]   =   value;
+        }
     } //end of namespace
 } //end of namespace
 

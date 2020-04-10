@@ -95,7 +95,7 @@ class CFSBndCond
         int m_spacedim;
         /// Auxiliary object to convert variables
         VariableConverterSharedPtr           m_varConv;
-
+        /// Weight for average calculation of diffusion term
         NekDouble m_diffusionAveWeight;
 
         /// Parameters of the flow

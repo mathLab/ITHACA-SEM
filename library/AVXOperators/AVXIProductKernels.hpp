@@ -1,7 +1,12 @@
-#ifndef AVXIPRODUCTKERNELS_HPP
-#define AVXIPRODUCTKERNELS_HPP
+#ifndef NEKTAR_LIBRARY_AVXIPRODUCTKERNELS_HPP
+#define NEKTAR_LIBRARY_AVXIPRODUCTKERNELS_HPP
 
 #include "VecData.hpp"
+
+namespace Nektar
+{
+namespace AVX
+{
 
 template<int VW, bool SCALE, bool APPEND>
 inline static void ScaleAppend(
@@ -118,7 +123,7 @@ inline static void AVXIProductTriKernel(
             T eta0_sum = T(0.0);
 
             for(int eta0 = 0; eta0 < nq0; eta0++, eta_idx += VW){
-                //eta0_sum += phi_p(eta0) * fn(eta0, eta1) * J * w0(eta0) 
+                //eta0_sum += phi_p(eta0) * fn(eta0, eta1) * J * w0(eta0)
                 T jac_val;
                 if(DEFORMED){
                     jac_val = jac[eta1*nq0 + eta0];
@@ -164,7 +169,7 @@ inline static void AVXIProductTriKernel(
             else{
                 preweight_eta1 = w1[eta1] * jac[0] * basis1[nq1 + eta1];
             }
-        
+
             for(int eta0 = 0; eta0 < nq0; eta0++, eta_idx += VW){
                 T prod = T(inptr + eta_idx) * preweight_eta1 * w0[eta0];
 
@@ -539,5 +544,8 @@ inline static void AVXIProductTetKernel(
         }
     }
 }
+
+} // namespace AVX
+} // namespace Nektar
 
 #endif

@@ -1,6 +1,6 @@
 SET(AVXOPERATORS_SOURCES
     AVXBwdTrans.cpp
-    # AVXIProduct.cpp
+    AVXIProduct.cpp
     # AVXIProductDeriv.cpp
     AVXPhysDeriv.cpp
     # AVXHelmholtz.cpp
@@ -12,8 +12,8 @@ SET(AVXOPERATORS_HEADERS
     # AVXAssembly.h
     AVXBwdTrans.h
     AVXBwdTransKernels.hpp
-    # AVXIProduct.h
-    # AVXIProductKernels.hpp
+    AVXIProduct.h
+    AVXIProductKernels.hpp
     # AVXIProductDeriv.h
     # AVXIProductDerivKernels.hpp
     AVXPhysDeriv.h

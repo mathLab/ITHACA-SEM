@@ -1,5 +1,5 @@
-#ifndef AVXIPRODUCT_H
-#define AVXIPRODUCT_H
+#ifndef NEKTAR_LIBRARY_AVXIPRODUCT_H
+#define NEKTAR_LIBRARY_AVXIPRODUCT_H
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
@@ -9,7 +9,10 @@
 #include "Operator.hpp"
 #include "AVXIProductKernels.hpp"
 
-using namespace Nektar;
+namespace Nektar
+{
+namespace AVX
+{
 
 template<int VW, bool DEFORMED = false>
 struct AVXIProductQuad : public IProduct, public AVXHelper<VW, 2, DEFORMED>
@@ -105,7 +108,7 @@ public:
     virtual NekDouble NStores() override
     {
         const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
+        // const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
 
         int store_pj = nm * nq1;
@@ -277,7 +280,7 @@ public:
     virtual NekDouble NStores() override
     {
         const int nm0 = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
+        // const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
 
         int store_pj = nm0*nq1;
@@ -425,7 +428,7 @@ public:
         const int nm0 = m_basis[0]->GetNumModes();
         const int nm1 = m_basis[1]->GetNumModes();
         const int nm2 = m_basis[2]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
+        // const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
         const int nq2 = m_basis[2]->GetNumPoints();
 
@@ -569,7 +572,7 @@ public:
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
         const int nq2 = m_basis[2]->GetNumPoints();
-        
+
         int flops = m_nElmt * AVXIProductPrism::FlopsPerElement(nm, nq0, nq1, nq2);
         return flops * 1e-9;
     }
@@ -578,7 +581,7 @@ public:
     {
         const int nm0 = m_basis[0]->GetNumModes();
         const int nm1 = m_basis[1]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
+        // const int nm2 = m_basis[2]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
         const int nq2 = m_basis[2]->GetNumPoints();
@@ -598,8 +601,8 @@ public:
     {
         const int nm0 = m_basis[0]->GetNumModes();
         const int nm1 = m_basis[1]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
+        // const int nm2 = m_basis[2]->GetNumModes();
+        // const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
         const int nq2 = m_basis[2]->GetNumPoints();
 
@@ -750,7 +753,7 @@ public:
     virtual NekDouble NLoads() override
     {
         const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
+        // const int nm1 = m_basis[1]->GetNumModes();
         const int nm2 = m_basis[2]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
@@ -769,7 +772,7 @@ public:
     virtual NekDouble NStores() override
     {
         const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
+        // const int nm1 = m_basis[1]->GetNumModes();
         const int nm2 = m_basis[2]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
@@ -794,5 +797,8 @@ private:
     /// Padded basis
     int m_nmTot;
 };
+
+} // namespace AVX
+} // namespace Nektar
 
 #endif

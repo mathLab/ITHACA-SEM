@@ -1,5 +1,10 @@
 #include "AVXIProduct.h"
 
+namespace Nektar
+{
+namespace AVX
+{
+
 #if defined(__AVX2__)
 std::string __register_IProduct_Quad_AVX = GetOperatorFactory().RegisterCreatorFunction(
     std::string("IProduct_Quad_Regular_AVX"), &AVXIProductQuad<4>::Create);
@@ -63,3 +68,6 @@ std::string __register_IProduct_Hex_AVX512 = GetOperatorFactory().RegisterCreato
 std::string __register_IProduct_Hex_Deformed_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
     std::string("IProduct_Hex_Deformed_AVX512"), &AVXIProductHex<8,true>::Create);
 #endif
+
+} // namespace AVX
+} // namespace Nektar

@@ -1,5 +1,5 @@
-#ifndef AVXBWDTRANS_H
-#define AVXBWDTRANS_H
+#ifndef NEKTAR_LIBRARY_AVXBWDTRANS_H
+#define NEKTAR_LIBRARY_AVXBWDTRANS_H
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>

@@ -123,9 +123,9 @@ struct AVXHelmholtzQuad : public Helmholtz, public AVXHelper<VW, 2, DEFORMED>
         T wsp[wspSize];
 
         // Aligned stack storage
-        std::aligned_storage<sizeof(double), 64>::type bwd_storage[nqBlocks];
-        std::aligned_storage<sizeof(double), 64>::type deriv0_storage[nqBlocks];
-        std::aligned_storage<sizeof(double), 64>::type deriv1_storage[nqBlocks];
+        std::aligned_storage<sizeof(double), SIMD_WIDTH_BYTES>::type bwd_storage[nqBlocks];
+        std::aligned_storage<sizeof(double), SIMD_WIDTH_BYTES>::type deriv0_storage[nqBlocks];
+        std::aligned_storage<sizeof(double), SIMD_WIDTH_BYTES>::type deriv1_storage[nqBlocks];
         double *bwd = reinterpret_cast<double *>(&bwd_storage[0]);
         double *deriv0 = reinterpret_cast<double *>(&deriv0_storage[0]);
         double *deriv1 = reinterpret_cast<double *>(&deriv1_storage[0]);

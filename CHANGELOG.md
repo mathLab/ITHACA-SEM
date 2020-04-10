@@ -12,9 +12,6 @@ v5.1.0
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)
 
-**FieldConvert**
-- Fix OutputTecplot skipping final plane in 3DH1D (!1016)
-
 **NekMesh**
 - Improved boundary layer splitting and output to CADfix (!938)
 
@@ -30,6 +27,9 @@ v5.0.1
 
 **IncNavierStokesSolver**
 - Change the baseflow time in the Adjoint advection (!1133)
+
+**FieldConvert**
+- Fix OutputTecplot skipping final plane in 3DH1D (!1016)
 
 **NekMesh**
 - Fix compile errors when using intel cc (!1114)

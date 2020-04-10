@@ -12,13 +12,13 @@ template<int NUMMODE0, int NUMMODE1,
          int NUMQUAD0, int NUMQUAD1,
          int VW>
 inline static void AVXBwdTransQuadKernel(
-    const AlignedVector<VecData<double, VW>> &in,
-    const AlignedVector<VecData<double, VW>> &bdata0,
-    const AlignedVector<VecData<double, VW>> &bdata1,
-    VecData<double, VW> *wsp,
-    AlignedVector<VecData<double, VW>> &out)
+    const AlignedVector<VecData<NekDouble, VW>> &in,
+    const AlignedVector<VecData<NekDouble, VW>> &bdata0,
+    const AlignedVector<VecData<NekDouble, VW>> &bdata1,
+    VecData<NekDouble, VW> *wsp,
+    AlignedVector<VecData<NekDouble, VW>> &out)
 {
-    using T = VecData<double, VW>;
+    using T = VecData<NekDouble, VW>;
 
     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1;
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
@@ -57,13 +57,13 @@ template<int NUMMODE0, int NUMMODE1,
          int NUMQUAD0, int NUMQUAD1,
          int VW, bool CORRECT>
 inline static void AVXBwdTransTriKernel(
-    const AlignedVector<VecData<double, VW>> &in,
-    const AlignedVector<VecData<double, VW>> &bdata0,
-    const AlignedVector<VecData<double, VW>> &bdata1,
-    VecData<double, VW> *p_sums,
-    AlignedVector<VecData<double, VW>> &out)
+    const AlignedVector<VecData<NekDouble, VW>> &in,
+    const AlignedVector<VecData<NekDouble, VW>> &bdata0,
+    const AlignedVector<VecData<NekDouble, VW>> &bdata1,
+    VecData<NekDouble, VW> *p_sums,
+    AlignedVector<VecData<NekDouble, VW>> &out)
 {
-    using T = VecData<double, VW>;
+    using T = VecData<NekDouble, VW>;
 
     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1;
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
@@ -109,15 +109,15 @@ template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
          int VW, bool CORRECT, class BasisType>
 inline static void AVXBwdTransPrismKernel(
-    const double *inptr,
+    const NekDouble *inptr,
     const AlignedVector<BasisType> &bdata0,
     const AlignedVector<BasisType> &bdata1,
     const AlignedVector<BasisType> &bdata2,
-    VecData<double, VW> *fpq,
-    VecData<double, VW> *fp,
-    double *outptr)
+    VecData<NekDouble, VW> *fpq,
+    VecData<NekDouble, VW> *fp,
+    NekDouble *outptr)
 {
-    using T = VecData<double, VW>;
+    using T = VecData<NekDouble, VW>;
 
     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
@@ -196,10 +196,10 @@ template <int VW,
           bool add,
           class BasisType>
 inline void TensorContractDealII(const AlignedVector<BasisType> &bdata,
-                                 const VecData<double, VW> *in,
-                                 VecData<double, VW> *out)
+                                 const VecData<NekDouble, VW> *in,
+                                 VecData<NekDouble, VW> *out)
 {
-    using T = VecData<double, VW>;
+    using T = VecData<NekDouble, VW>;
 
     constexpr int mm        = contract_over_rows ? n_rows : n_columns;
     constexpr int nn        = contract_over_rows ? n_columns : n_rows;
@@ -262,15 +262,15 @@ template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
          int VW>
 inline static void AVXBwdTransHexKernel(
-    const AlignedVector<VecData<double, VW>> &in,
-    const AlignedVector<VecData<double, VW>> &bdata0,
-    const AlignedVector<VecData<double, VW>> &bdata1,
-    const AlignedVector<VecData<double, VW>> &bdata2,
-    VecData<double, VW> *sum_irq,
-    VecData<double, VW> *sum_jir,
-    AlignedVector<VecData<double, VW>> &out)
+    const AlignedVector<VecData<NekDouble, VW>> &in,
+    const AlignedVector<VecData<NekDouble, VW>> &bdata0,
+    const AlignedVector<VecData<NekDouble, VW>> &bdata1,
+    const AlignedVector<VecData<NekDouble, VW>> &bdata2,
+    VecData<NekDouble, VW> *sum_irq,
+    VecData<NekDouble, VW> *sum_jir,
+    AlignedVector<VecData<NekDouble, VW>> &out)
 {
-    using T = VecData<double, VW>;
+    using T = VecData<NekDouble, VW>;
 
     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD1;
@@ -344,15 +344,15 @@ template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
          int VW, bool CORRECT, class BasisType>
 inline static void AVXBwdTransTetKernel(
-    const double *inptr,
+    const NekDouble *inptr,
     const AlignedVector<BasisType> &bdata0,
     const AlignedVector<BasisType> &bdata1,
     const AlignedVector<BasisType> &bdata2,
-    VecData<double, VW> *fpq,
-    VecData<double, VW> *fp,
-    double *outptr)
+    VecData<NekDouble, VW> *fpq,
+    VecData<NekDouble, VW> *fp,
+    NekDouble *outptr)
 {
-    using T = VecData<double, VW>;
+    using T = VecData<NekDouble, VW>;
 
     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD1;

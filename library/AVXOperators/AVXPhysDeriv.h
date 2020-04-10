@@ -135,29 +135,28 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
         auto *outptr_d1 = &out_d1[0];
 
         constexpr int ndf = 4;
-        constexpr int nq = NQ0 * NQ1;
-        constexpr int nqBlocks = nq * VW;
-
-        AlignedVector<T> tmpIn(nq), tmpOut_d0(nq), tmpOut_d1(nq);
+        constexpr int nqTot = NQ0 * NQ1;
+        constexpr int nqBlocks = nqTot * VW;
 
         // Get size of derivative factor block
         int dfSize{};
         if(DEFORMED)
         {
-            dfSize = ndf*nq;
+            dfSize = ndf*nqTot;
         }
         else
         {
             dfSize = ndf;
         }
 
+        AlignedVector<T> tmpIn(nqTot), tmpOut_d0(nqTot), tmpOut_d1(nqTot);
         const T *df_ptr;
         for (int e = 0; e < this->m_nBlocks; e++)
         {
             df_ptr = &(this->m_df[e*dfSize]);
 
             // Load and transpose data
-            T::load_interleave(inptr, nq, tmpIn);
+            T::load_interleave(inptr, nqTot, tmpIn);
 
             AVXPhysDerivQuadKernel<NQ0, NQ1, VW, DEFORMED>(
                 tmpIn,
@@ -167,8 +166,8 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
                 tmpOut_d0, tmpOut_d1);
 
             // de-interleave and store data
-            T::deinterleave_store(tmpOut_d0, nq, outptr_d0);
-            T::deinterleave_store(tmpOut_d1, nq, outptr_d1);
+            T::deinterleave_store(tmpOut_d0, nqTot, outptr_d0);
+            T::deinterleave_store(tmpOut_d1, nqTot, outptr_d1);
 
             inptr += nqBlocks;
             outptr_d0 += nqBlocks;

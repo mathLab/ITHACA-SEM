@@ -247,7 +247,6 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
 
     m_coordim = m_f->m_exp[0]->GetExp(0)->GetCoordim();
     int totpoints = m_f->m_exp[0]->GetTotPoints();
-    int nPlanes = 0;
 
     if (m_f->m_numHomogeneousDir > 0)
     {

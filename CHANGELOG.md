@@ -12,6 +12,9 @@ v5.1.0
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)
 
+**FieldConvert**
+- Fix OutputTecplot skipping final plane in 3DH1D (!1016)
+
 **NekMesh**
 - Improved boundary layer splitting and output to CADfix (!938)
 
@@ -193,7 +196,6 @@ v5.0.0
 - Fixed nparts option in FieldConvert and automated Info.xml generation (!995)
 - Added if statement to fix case of 1D/2D manifold interpolation in 1D/2D space,
   added check on dimensions for interpolation, fixed seg interp (!999)
-- Fix OutputTecplot in 3DH1 (!1016)
 - Fixed scaling for compressed xml, fixed error printout for mesh only (!1040)
 - Add field conversion from Halfmode to SingleMode (!1032)
 - Fix double precision output in .dat format (!1059)

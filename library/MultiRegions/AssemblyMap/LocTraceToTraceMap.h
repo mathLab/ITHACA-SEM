@@ -338,10 +338,10 @@ private:
 
     // flag indicates whether the Expasion that are the left&right adjacent 
     // to current trace exists 
-    Array<OneD, Array<OneD, bool>> m_LeftRightAdjacentExpFlag;
+    Array<OneD, Array<OneD, bool> > m_LeftRightAdjacentExpFlag;
     
     // the Expasion id that are the left&right adjacent to current trace 
-    Array<OneD, Array<OneD, int >> m_LeftRightAdjacentExpId;
+    Array<OneD, Array<OneD, int> > m_LeftRightAdjacentExpId;
     
 
     // the map of every coeff from current trace to the left&right adjacent 
@@ -350,7 +350,7 @@ private:
         m_TraceceffToLeftRightExpcoeffMap;
     // the sign of every coeff from current trace to the left&right adjacent 
     // expasion coeffs 
-    Array<OneD, Array<OneD, Array<OneD,int  > > > 
+    Array<OneD, Array<OneD, Array<OneD, int  > > > 
         m_TraceceffToLeftRightExpcoeffSign;
 
 

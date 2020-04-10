@@ -114,15 +114,15 @@ namespace Nektar
         {
             int nTracePts = fields[0]->GetTrace()->GetTotPoints();
 
-            Array<OneD, NekDouble> Fwd(nTracePts,0.0);
-            Array<OneD, NekDouble> Bwd(nTracePts,0.0);
+            Array<OneD, NekDouble> Fwd{nTracePts, 0.0};
+            Array<OneD, NekDouble> Bwd{nTracePts, 0.0};
             
             m_ArtificialDiffusionVector(inarray, muvar);
 
             // BwdMuvar is left to be 0.0 according to DiffusionLDG.cpp
-            fields[0]->GetFwdBwdTracePhysNoBndFill(muvar,Fwd,Bwd);
+            fields[0]->GetFwdBwdTracePhysNoBndFill(muvar, Fwd, Bwd);
 
-            for(int k = 0; k < nTracePts; ++k)
+            for (int k = 0; k < nTracePts; ++k)
             {
                 MuVarTrace[k] = 0.5 * (Fwd[k] + Bwd[k]) ;
             }
@@ -136,9 +136,9 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> > &pFwd,
             const Array<OneD, Array<OneD, NekDouble> > &pBwd)
         {
-            boost::ignore_unused(nConvectiveFields,fields,inarray,outarray,
-                                    pFwd,pBwd);
-            ASSERTL0(false,"v_Diffuse_coeff not defined");
+            boost::ignore_unused(nConvectiveFields, fields, inarray, outarray,
+                                    pFwd, pBwd);
+            ASSERTL0(false, "v_Diffuse_coeff not defined");
         }
         
         void Diffusion::v_Diffuse_coeff(
@@ -149,15 +149,15 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> > &pFwd,
             const Array<OneD, Array<OneD, NekDouble> > &pBwd)
         {
-            boost::ignore_unused(nConvectiveFields,fields,inarray,
-                                    outarray,pFwd,pBwd);
-            ASSERTL0(false,"v_Diffuse_coeff not defined");
+            boost::ignore_unused(nConvectiveFields, fields, inarray,
+                                    outarray, pFwd, pBwd);
+            ASSERTL0(false, "v_Diffuse_coeff not defined");
         }
 
         const Array<OneD, const Array<OneD, NekDouble> > 
                 &Diffusion::v_GetTraceNormal()
         {
-            ASSERTL0(false," not defined");
+            ASSERTL0(false,"v_GetTraceNormal not defined");
             return NullNekDoubleArrayofArray;
         }
 
@@ -169,8 +169,9 @@ namespace Nektar
                       Array<OneD,       Array<OneD, NekDouble> >    &aver,
                       Array<OneD,       Array<OneD, NekDouble> >    &jump)
         {
-            boost::ignore_unused(nConvectiveFields,npnts,vFwd,vBwd,aver,jump);
-            ASSERTL0(false," not defined");
+            boost::ignore_unused(nConvectiveFields, npnts, vFwd, vBwd, 
+                    aver, jump);
+            ASSERTL0(false, "v_ConsVarAveJump not defined");
         }
         
         void Diffusion::v_DiffuseCalculateDerivative(
@@ -181,7 +182,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
             const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
         {
-            boost::ignore_unused(fields,inarray,inarrayderivative,pFwd,pBwd);
+            boost::ignore_unused(fields, inarray, inarrayderivative,
+                pFwd, pBwd);
             ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
         }
 
@@ -193,7 +195,7 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
             Array< OneD, int >                                  &nonZeroIndex)       
         {
-            boost::ignore_unused(fields,inarray,inarrayderivative,VolumeFlux,
+            boost::ignore_unused(fields, inarray, inarrayderivative, VolumeFlux,
                                 nonZeroIndex);
             ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
         }
@@ -209,8 +211,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
             Array< OneD, int >                                  &nonZeroIndex)     
         {
-            boost::ignore_unused(fields,inarray,inarrayderivative,VolumeFlux,
-                                TraceFlux,pFwd,pBwd,nonZeroIndex);
+            boost::ignore_unused(fields, inarray, inarrayderivative, VolumeFlux,
+                                TraceFlux, pFwd, pBwd, nonZeroIndex);
             ASSERTL0(false, "Not defined function DiffuseTraceFLux.");
         }
 

@@ -745,7 +745,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             const NekDouble           &inarray,
              Array<OneD, NekDouble>   &outarray)
         {
-            int     nquad = m_base[0]->GetNumPoints();
+            int nquad = m_base[0]->GetNumPoints();
             
             if (m_base[0]->GetPointsType() != LibUtilities::eGaussGaussLegendre)
             {
@@ -773,7 +773,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 
                 Vmath::Svtvp(nquad,inarray,
                             mat_gauss->GetOwnedMatrix()->GetPtr().get(), 1,
-                            &outarray[0],1,&outarray[0],1);
+                            &outarray[0], 1, &outarray[0], 1);
             }
         }
         // Get vertex value from the 1D Phys space.
@@ -960,7 +960,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             int nqb = nqe;
             int nbnd= vertex;
             m_ElmtBndNormalDirctnElmtLength[nbnd] = 
-                    Array<OneD, NekDouble>(nqb,0.0);
+                    Array<OneD, NekDouble> {nqb, 0.0};
             Array<OneD, NekDouble>  &length = 
                     m_ElmtBndNormalDirctnElmtLength[nbnd];
 
@@ -997,7 +997,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 }
                 vert = 1.0/sqrt(vert);
 
-                Vmath::Fill(nqb,vert,length,1);
+                Vmath::Fill(nqb, vert, length, 1);
 
                 for (i = 0; i < vCoordDim; ++i)
                 {

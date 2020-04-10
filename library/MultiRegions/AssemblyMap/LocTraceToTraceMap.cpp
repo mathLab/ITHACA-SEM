@@ -851,7 +851,7 @@ void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
 {
     const std::shared_ptr<LocalRegions::ExpansionVector> exptrac =
         trace->GetExp();
-    int ntrace    = exptrac->size();
+    int ntrace = exptrac->size();
 
     Array<OneD, Array<OneD, int >> LRAdjExpid{2};
     Array<OneD, Array<OneD, bool>> LRAdjflag{2};
@@ -859,26 +859,26 @@ void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
     Array<OneD, Array<OneD, Array<OneD, int > > > elmtLRMap{2};
     Array<OneD, Array<OneD, Array<OneD, int > > > elmtLRSign{2};
 
-    for (int lr =0; lr<2;++lr)
+    for (int lr = 0; lr < 2; ++lr)
     {
-        LRAdjExpid[lr]  =   Array<OneD, int >{ntrace,0};
-        LRAdjflag[lr]   =   Array<OneD, bool>{ntrace,false};
-        elmtLRMap[lr]   =   Array<OneD, Array<OneD, int > >{ntrace};
-        elmtLRSign[lr]  =   Array<OneD, Array<OneD, int > >{ntrace};
-        for (int i =0; i<ntrace;++i)
+        LRAdjExpid[lr]  =   Array<OneD, int > {ntrace, 0};
+        LRAdjflag[lr]   =   Array<OneD, bool> {ntrace, false};
+        elmtLRMap[lr]   =   Array<OneD, Array<OneD, int > > {ntrace};
+        elmtLRSign[lr]  =   Array<OneD, Array<OneD, int > > {ntrace};
+        for (int i = 0; i < ntrace; ++i)
         {
             int ncoeff  =   trace->GetNcoeffs(i);
-            elmtLRMap[lr][i]      =   Array<OneD, int >{ncoeff,0};
-            elmtLRSign[lr][i]     =   Array<OneD, int >{ncoeff,0};
+            elmtLRMap[lr][i]      =   Array<OneD, int >{ncoeff, 0};
+            elmtLRSign[lr][i]     =   Array<OneD, int >{ncoeff, 0};
         }
     }
     
-    const Array<OneD,const pair<int,int> > field_coeffToElmt  =   
+    const Array<OneD, const pair<int, int> > field_coeffToElmt  =   
             locExp.GetCoeffsToElmt();
-    const Array<OneD,const pair<int,int> > trace_coeffToElmt  =   
+    const Array<OneD, const pair<int, int> > trace_coeffToElmt  =   
             trace->GetCoeffsToElmt();
 
-    for (int lr =0; lr<2;++lr)
+    for (int lr = 0; lr < 2; ++lr)
     {
         int ntotcoeffs = m_nTraceCoeffs[lr];
         for (int  i = 0; i < ntotcoeffs; ++i)
@@ -934,13 +934,13 @@ void LocTraceToTraceMap::AddLocTracesToField(
     const Array<OneD, const NekDouble>  &faces, 
     Array<OneD, NekDouble>              &field)
 {
-    int nfield  =   field.num_elements();
-    Array<OneD, NekDouble> tmp{nfield,0.0};
-    Vmath::Scatr(m_fieldToLocTraceMap.num_elements(),
+    size_t nfield  =   field.size();
+    Array<OneD, NekDouble> tmp {nfield, 0.0};
+    Vmath::Scatr(m_fieldToLocTraceMap.size(),
                  faces,
                  m_fieldToLocTraceMap,
                  tmp);
-    Vmath::Vadd(nfield,tmp,1,field,1,field,1);
+    Vmath::Vadd(nfield, tmp, 1, field, 1, field, 1);
 }
 
 /**
@@ -1080,12 +1080,12 @@ void LocTraceToTraceMap::RightIPTWLocEdgesToTraceInterpMat(
 
     // tmp space assuming forward map is of size of trace
     Array<OneD, NekDouble> tmp{m_nTracePts};
-    Vmath::Gathr(m_LocTraceToTraceMap[dir].num_elements(),
+    Vmath::Gathr(m_LocTraceToTraceMap[dir].size(),
                  edges.get(),
                  m_LocTraceToTraceMap[dir].get(),
                  tmp.get());
 
-    for (int i = 0; i < m_interpTrace[dir].num_elements(); ++i)
+    for (int i = 0; i < m_interpTrace[dir].size(); ++i)
     {
         // Check if there are edges to interpolate
         if (m_interpNfaces[dir][i])
@@ -1414,12 +1414,12 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
 
     // tmp space assuming forward map is of size of trace
     Array<OneD, NekDouble> tmp{m_nTracePts};
-    Vmath::Gathr(m_LocTraceToTraceMap[dir].num_elements(),
+    Vmath::Gathr(m_LocTraceToTraceMap[dir].size(),
                  traces.get(),
                  m_LocTraceToTraceMap[dir].get(),
                  tmp.get());
 
-    for (int i = 0; i < m_interpTrace[dir].num_elements(); ++i)
+    for (int i = 0; i < m_interpTrace[dir].size(); ++i)
     {
         // Check if there are elementboundaries to interpolate
         if (m_interpNfaces[dir][i])

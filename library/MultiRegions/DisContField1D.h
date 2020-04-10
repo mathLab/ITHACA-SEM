@@ -380,7 +380,7 @@ namespace Nektar
                 Array<OneD,       NekDouble> &Bwd)
         {
             v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-            v_FillBwdWithBoundDeriv(Dir,Fwd,Bwd);
+            v_FillBwdWithBoundDeriv(Dir, Fwd, Bwd);
         }
 
         void DisContField1D::v_GetFwdBwdTracePhys_serial(
@@ -389,7 +389,7 @@ namespace Nektar
                 Array<OneD,       NekDouble> &Bwd)
         {
             v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-            v_FillBwdWithBound(Fwd,Bwd);
+            v_FillBwdWithBound(Fwd, Bwd);
         }
 
         void DisContField1D::v_PeriodicBwdCopy(

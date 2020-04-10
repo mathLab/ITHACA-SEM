@@ -248,15 +248,13 @@ namespace Nektar
          */
         void ExpList::SetCoeffPhysOffsets()
         {
-            int i;
-
             // Set up offset information and array sizes
-            m_coeff_offset   = Array<OneD,int>(m_exp->size());
-            m_phys_offset    = Array<OneD,int>(m_exp->size());
+            m_coeff_offset   = Array<OneD, int>{m_exp->size()};
+            m_phys_offset    = Array<OneD, int>{m_exp->size()};
 
             m_ncoeffs = m_npoints = 0;
 
-            for(i = 0; i < m_exp->size(); ++i)
+            for (int i = 0; i < m_exp->size(); ++i)
             {
                 m_coeff_offset[i]   = m_ncoeffs;
                 m_phys_offset [i]   = m_npoints;
@@ -264,9 +262,9 @@ namespace Nektar
                 m_npoints += (*m_exp)[i]->GetTotPoints();
             }
 
-            m_coeffsToElmt   =   Array<OneD,pair<int,int> >(m_ncoeffs);
+            m_coeffsToElmt   =   Array<OneD, pair<int, int> > {m_ncoeffs};
 
-            for(i = 0; i < m_exp->size(); ++i)
+            for (int i = 0; i < m_exp->size(); ++i)
             {
                 int coeffs_offset   =   m_coeff_offset[i];
 
@@ -390,15 +388,13 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &inarray,
                 Array<OneD, NekDouble>              &outarray)
         {
-            int    i;
-
             Array<OneD,NekDouble> e_outarray;
 
-            for(i = 0; i < (*m_exp).size(); ++i)
+            for (int i = 0; i < (*m_exp).size(); ++i)
             {
                 (*m_exp)[i]->MultiplyByQuadratureMetric(
                                 inarray+m_phys_offset[i],
-                                e_outarray = outarray+m_phys_offset[i]);
+                                e_outarray = outarray + m_phys_offset[i]);
             }
         }
 
@@ -410,15 +406,13 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &inarray,
                 Array<OneD, NekDouble>              &outarray)
         {
-            int    i;
-
             Array<OneD,NekDouble> e_outarray;
 
-            for(i = 0; i < (*m_exp).size(); ++i)
+            for (int i = 0; i < (*m_exp).size(); ++i)
             {
                 (*m_exp)[i]->DividByQuadratureMetric(
                                 inarray+m_phys_offset[i],
-                                e_outarray = outarray+m_phys_offset[i]);
+                                e_outarray = outarray + m_phys_offset[i]);
             }
         }
 
@@ -2526,14 +2520,14 @@ namespace Nektar
             Array<OneD, NekDouble>  &weightAver,
             Array<OneD, NekDouble>  &weightJump)
         {
-            int nTracePts = weightAver.num_elements();
+            size_t nTracePts = weightAver.size();
             // average for interior traces
             for(int i = 0; i < nTracePts; ++i)
             {
-                weightAver[i]       =   0.5;
-                weightJump[i]       =   1.0;
+                weightAver[i] = 0.5;
+                weightJump[i] = 1.0;
             }
-            FillBwdWITHBwdWeight(weightAver,weightJump);
+            FillBwdWITHBwdWeight(weightAver, weightJump);
         }
 
         void ExpList::v_GetMovingFrames(
@@ -2744,70 +2738,72 @@ namespace Nektar
         }
 
         void ExpList::v_GetFwdBwdTracePhysDeriv(
-                                const int                          Dir,
-                                const Array<OneD,const NekDouble>  &field,
-                                      Array<OneD,NekDouble> &Fwd,
-                                      Array<OneD,NekDouble> &Bwd)
+            const int                           Dir,
+            const Array<OneD, const NekDouble>  &field,
+            Array<OneD, NekDouble>              &Fwd,
+            Array<OneD, NekDouble>              &Bwd)
         {
-            boost::ignore_unused(Dir, field,Fwd,Bwd);
+            boost::ignore_unused(Dir, field, Fwd, Bwd);
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
 
         void ExpList::v_GetFwdBwdTracePhysDeriv_serial(
-                                const int                          Dir,
-                                const Array<OneD,const NekDouble>  &field,
-                                      Array<OneD,NekDouble> &Fwd,
-                                      Array<OneD,NekDouble> &Bwd)
+            const int                           Dir,
+            const Array<OneD, const NekDouble>  &field,
+            Array<OneD, NekDouble>              &Fwd,
+            Array<OneD, NekDouble>              &Bwd)
         {
-            boost::ignore_unused(Dir, field,Fwd,Bwd);
+            boost::ignore_unused(Dir, field, Fwd, Bwd);
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
 
         void ExpList::v_GetFwdBwdTracePhysNoBndFill(
-                                const Array<OneD,const NekDouble>  &field,
-                                      Array<OneD,NekDouble> &Fwd,
-                                      Array<OneD,NekDouble> &Bwd)
+            const Array<OneD, const NekDouble>  &field,
+            Array<OneD, NekDouble>              &Fwd,
+            Array<OneD, NekDouble>              &Bwd)
         {
-            boost::ignore_unused(field,Fwd,Bwd);
+            boost::ignore_unused(field, Fwd, Bwd);
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
 
         void ExpList::v_GetFwdBwdTracePhys_serial(
-                                const Array<OneD,const NekDouble>  &field,
-                                      Array<OneD,NekDouble> &Fwd,
-                                      Array<OneD,NekDouble> &Bwd)
+            const Array<OneD, const NekDouble>  &field,
+            Array<OneD, NekDouble>              &Fwd,
+            Array<OneD, NekDouble>              &Bwd)
         {
-            boost::ignore_unused(field,Fwd,Bwd);
+            boost::ignore_unused(field, Fwd, Bwd);
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
 
         void ExpList::v_GetFwdBwdTracePhysInterior(
-                                const Array<OneD,const NekDouble>  &field,
-                                      Array<OneD,NekDouble> &Fwd,
-                                      Array<OneD,NekDouble> &Bwd)
+            const Array<OneD, const NekDouble>  &field,
+            Array<OneD, NekDouble>              &Fwd,
+            Array<OneD, NekDouble>              &Bwd)
         {
-            boost::ignore_unused(field,Fwd,Bwd);
+            boost::ignore_unused(field, Fwd, Bwd);
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
 
         void ExpList::v_AddTraceQuadPhysToField(
-                const Array<OneD, const NekDouble>  &Fwd,
-                const Array<OneD, const NekDouble>  &Bwd,
-                Array<OneD,       NekDouble>        &field)
+            const Array<OneD, const NekDouble>  &Fwd,
+            const Array<OneD, const NekDouble>  &Bwd,
+            Array<OneD,       NekDouble>        &field)
         {
-            boost::ignore_unused(field,Fwd,Bwd);
-            ASSERTL0(false, "v_AddTraceQuadPhysToField is not defined or valid for this class type");
+            boost::ignore_unused(field, Fwd, Bwd);
+            ASSERTL0(false, 
+                "v_AddTraceQuadPhysToField is not defined for this class type");
         }
 
         const Array<OneD,const NekDouble>
                 &ExpList::v_GetBndCondBwdWeight()
         {
-            ASSERTL0(false, "v_GetBndCondBwdWeight is not defined or valid for this class type");
+            ASSERTL0(false, 
+                "v_GetBndCondBwdWeight is not defined for this class type");
             static Array<OneD, NekDouble> tmp;
             return tmp;
         }
@@ -2816,9 +2812,9 @@ namespace Nektar
             const int index, 
             const NekDouble value)
         {
-            boost::ignore_unused(index,value);
+            boost::ignore_unused(index, value);
             ASSERTL0(false,
-                     "v_setBndCondBwdWeight is not defined or valid for this class type");
+                    "v_setBndCondBwdWeight is not defined for this class type");
         }
         
         const vector<bool> &ExpList::v_GetLeftAdjacentFaces(void) const
@@ -3373,7 +3369,7 @@ namespace Nektar
                   Array<OneD,       NekDouble> &Bwd)
         {
             boost::ignore_unused(Fwd, Bwd);
-            ASSERTL0(false,"v_FillBwdWithBound not defined");
+            ASSERTL0(false, "v_FillBwdWithBound not defined");
         }
 
         void ExpList::v_FillBwdWithBoundDeriv(
@@ -3381,8 +3377,8 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            boost::ignore_unused(Dir,Fwd, Bwd);
-            ASSERTL0(false,"v_FillBwdWithBoundDeriv not defined");
+            boost::ignore_unused(Dir, Fwd, Bwd);
+            ASSERTL0(false, "v_FillBwdWithBoundDeriv not defined");
         }
 
         void ExpList::v_FillBwdWITHBwdWeight(
@@ -3390,7 +3386,7 @@ namespace Nektar
             Array<OneD,       NekDouble> &weightjmp)
         {
             boost::ignore_unused(weightave, weightjmp);
-            ASSERTL0(false,"v_FillBwdWITHBwdWeight not defined");
+            ASSERTL0(false, "v_FillBwdWITHBwdWeight not defined");
         }
 
         void ExpList::v_PeriodicBwdCopy(
@@ -3398,7 +3394,7 @@ namespace Nektar
                       Array<OneD,       NekDouble> &Bwd)
         {
             boost::ignore_unused(Fwd, Bwd);
-            ASSERTL0(false,"v_PeriodicBwdCopy not defined");
+            ASSERTL0(false, "v_PeriodicBwdCopy not defined");
         }
 
         /**

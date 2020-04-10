@@ -165,7 +165,7 @@ namespace Nektar
 
 
 			m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(nbnd);
-			m_BndCondBwdWeight  = Array<OneD,NekDouble>(nbnd,0.0);
+			m_BndCondBwdWeight  = Array<OneD, NekDouble> {nbnd, 0.0};
 			
 			Array<OneD, MultiRegions::ExpListSharedPtr> LinesBndCondExp(nlines);
 

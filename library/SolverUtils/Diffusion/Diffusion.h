@@ -185,7 +185,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble>>         
                     &pBwd =NullNekDoubleArrayofArray)
             {
-                v_DiffuseCalculateDerivative(fields, inarray,inarrayderivative,
+                v_DiffuseCalculateDerivative(fields, inarray, inarrayderivative,
                                             pFwd, pBwd);
             }
             
@@ -199,8 +199,8 @@ namespace Nektar
                 Array< OneD, int >                                  
                     &nonZeroIndex       =   NullInt1DArray)    
             {
-                v_DiffuseVolumeFlux(fields, inarray,inarrayderivative,
-                                    VolumeFlux,nonZeroIndex);
+                v_DiffuseVolumeFlux(fields, inarray, inarrayderivative,
+                                    VolumeFlux, nonZeroIndex);
             }
             
             // Diffusion term Trace Flux
@@ -218,8 +218,8 @@ namespace Nektar
                 Array< OneD, int >                                  
                     &nonZeroIndex   =   NullInt1DArray)    
             {
-                v_DiffuseTraceFlux(fields, inarray,inarrayderivative,VolumeFlux,
-                                    TraceFlux,pFwd, pBwd,nonZeroIndex);
+                v_DiffuseTraceFlux(fields, inarray, inarrayderivative, 
+                    VolumeFlux, TraceFlux, pFwd, pBwd, nonZeroIndex);
             }
 
             // Add symmetric flux to field in coeff space
@@ -233,9 +233,8 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
             {
-                v_AddDiffusionSymmFluxToCoeff(nConvectiveFields,fields,inarray,
-                                                qfield,VolumeFlux,outarray,
-                                                pFwd,pBwd);
+                v_AddDiffusionSymmFluxToCoeff(nConvectiveFields, fields, 
+                    inarray, qfield, VolumeFlux, outarray, pFwd, pBwd);
             }
 
             // Add symmetric flux to field in coeff physical space
@@ -249,9 +248,8 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
             {
-                v_AddDiffusionSymmFluxToPhys(nConvectiveFields,fields,inarray,
-                                            qfield,VolumeFlux,outarray,
-                                            pFwd,pBwd);
+                v_AddDiffusionSymmFluxToPhys(nConvectiveFields, fields, inarray,
+                    qfield, VolumeFlux, outarray, pFwd, pBwd);
             }
 
             SOLVER_UTILS_EXPORT void FluxVec(
@@ -362,7 +360,8 @@ namespace Nektar
                       Array<OneD,       Array<OneD, NekDouble> >    &aver,
                       Array<OneD,       Array<OneD, NekDouble> >    &jump)
             {
-                v_ConsVarAveJump(nConvectiveFields,npnts,vFwd,vBwd,aver,jump);
+                v_ConsVarAveJump(nConvectiveFields, npnts, vFwd, vBwd, aver, 
+                    jump);
             }
 
             // Get trace normal
@@ -456,8 +455,8 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
             {
-                boost::ignore_unused(nConvectiveFields,fields,inarray,qfield,
-                                        VolumeFlux,outarray,pFwd,pBwd);
+                boost::ignore_unused(nConvectiveFields, fields, inarray, qfield,
+                                        VolumeFlux, outarray, pFwd, pBwd);
 
             }
             SOLVER_UTILS_EXPORT virtual void v_AddDiffusionSymmFluxToPhys(
@@ -470,8 +469,8 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
             {
-                boost::ignore_unused(nConvectiveFields,fields,inarray,qfield,
-                                        VolumeFlux,outarray,pFwd,pBwd);
+                boost::ignore_unused(nConvectiveFields, fields, inarray, qfield,
+                                        VolumeFlux, outarray, pFwd, pBwd);
 
             }
             

@@ -113,8 +113,8 @@ namespace Nektar
             m_ncoeffs = ncoeffs_per_line*nyzlines;
             m_npoints = npoints_per_line*nyzlines;
 
-            m_coeffs = Array<OneD, NekDouble> (m_ncoeffs,0.0);
-            m_phys   = Array<OneD, NekDouble> (m_npoints,0.0);
+            m_coeffs = Array<OneD, NekDouble> {m_ncoeffs, 0.0};
+            m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
 
             int nel = m_lines[0]->GetExpSize();
             m_coeff_offset   = Array<OneD,int>(nel*nyzlines);

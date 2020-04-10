@@ -172,8 +172,8 @@ namespace Nektar
             // Allocate storage for data and populate element offset lists.
             SetCoeffPhysOffsets();
 
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-            m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+            m_coeffs = Array<OneD, NekDouble>{m_ncoeffs, 0.0};
+            m_phys   = Array<OneD, NekDouble>{m_npoints, 0.0};
 
             ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
@@ -252,8 +252,8 @@ namespace Nektar
             if(DeclareCoeffPhysArrays)
             {
                 // Set up m_coeffs, m_phys.
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+                m_coeffs = Array<OneD, NekDouble> {m_ncoeffs, 0.0};
+                m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
             }
 
             ReadGlobalOptimizationParameters();
@@ -360,8 +360,8 @@ namespace Nektar
             if(DeclareCoeffPhysArrays)
             {
                 // Set up m_coeffs, m_phys.
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+                m_coeffs = Array<OneD, NekDouble> {m_ncoeffs, 0.0};
+                m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
             }
 
             ReadGlobalOptimizationParameters();
@@ -445,8 +445,8 @@ namespace Nektar
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+                m_coeffs = Array<OneD, NekDouble> {m_ncoeffs, 0.0};
+                m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
             }
 
             CreateCollections(ImpType);
@@ -692,8 +692,8 @@ namespace Nektar
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+                m_coeffs = Array<OneD, NekDouble> {m_ncoeffs, 0.0};
+                m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
             }
 
             CreateCollections(ImpType);
@@ -1154,29 +1154,29 @@ namespace Nektar
             Array<OneD, NekDouble>  &lengthsFwd,
             Array<OneD, NekDouble>  &lengthsBwd)
         {
-            int i,j,e_npoints,offset;
+            int e_npoints;
 
-            Array<OneD,NekDouble> locLeng;
-            Array<OneD,NekDouble> lengintp;
-            Array<OneD,NekDouble> lengAdd;
-            Array<OneD,int      > LRbndnumbs(2);
+            Array<OneD, NekDouble> locLeng;
+            Array<OneD, NekDouble> lengintp;
+            Array<OneD, NekDouble> lengAdd;
+            Array<OneD, int      > LRbndnumbs(2);
             Array<OneD, Array<OneD,NekDouble> > lengLR(2);
             lengLR[0]   =   lengthsFwd;
             lengLR[1]   =   lengthsBwd;
-            Array<OneD,LocalRegions::Expansion2DSharedPtr> LRelmts(2);
+            Array<OneD, LocalRegions::Expansion2DSharedPtr> LRelmts(2);
             LocalRegions::Expansion2DSharedPtr loc_elmt;
             LocalRegions::Expansion1DSharedPtr loc_exp;
             int e_npoints0  =   -1; 
-            for (i = 0; i < m_exp->size(); ++i)
+            for (int i = 0; i < m_exp->size(); ++i)
             {
                 loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion1D>();
-                offset = m_phys_offset[i];
+                int offset = m_phys_offset[i];
                 
                 int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                if(e_npoints0<e_npoints)
+                if ( e_npoints0 < e_npoints)
                 {
-                    lengintp = Array<OneD, NekDouble>(e_npoints,0.0);
+                    lengintp = Array<OneD, NekDouble>{e_npoints, 0.0};
                     e_npoints0 = e_npoints;
                 }
                 
@@ -1185,13 +1185,13 @@ namespace Nektar
 
                 LRbndnumbs[0]   =   loc_exp->GetLeftAdjacentElementEdge();
                 LRbndnumbs[1]   =   loc_exp->GetRightAdjacentElementEdge();
-                for(int nlr=0;nlr<2;nlr++)
+                for (int nlr = 0; nlr < 2; ++nlr)
                 {
-                    Vmath::Zero(e_npoints0,lengintp,1);
+                    Vmath::Zero(e_npoints0, lengintp, 1);
                     lengAdd     =   lengintp;
                     int bndNumber = LRbndnumbs[nlr];
                     loc_elmt = LRelmts[nlr];
-                    if(bndNumber>=0)
+                    if (bndNumber >= 0)
                     {
                         locLeng  = loc_elmt->GetElmtBndNormalDirctnElmtLength(
                                                 bndNumber);
@@ -1213,7 +1213,7 @@ namespace Nektar
                             lengAdd     =   lengintp;
                         }
                     }
-                    for (j = 0; j < e_npoints; ++j)
+                    for (int j = 0; j < e_npoints; ++j)
                     {
                         lengLR[nlr][offset + j] = lengAdd[j];
                     }

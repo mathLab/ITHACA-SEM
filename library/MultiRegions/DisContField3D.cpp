@@ -628,7 +628,7 @@ using namespace std;
             m_bndConditions     =
                 Array<OneD,SpatialDomains::BoundaryConditionShPtr>(bregions.size());
 
-            m_BndCondBwdWeight  =   Array<OneD, NekDouble>(bregions.size(),0.0);
+            m_BndCondBwdWeight = Array<OneD, NekDouble> {bregions.size(), 0.0};
             
             // list Dirichlet boundaries first
             for (auto &it : bregions)
@@ -1945,7 +1945,7 @@ using namespace std;
                                                         GetNFwdLocTracePts();
             m_locTraceToTraceMap->InterpLocFacesToTrace(1, invals, Bwd);
 
-            DisContField3D::v_PeriodicBwdCopy(Fwd,Bwd);
+            DisContField3D::v_PeriodicBwdCopy(Fwd, Bwd);
         }
 
         /**
@@ -1956,7 +1956,7 @@ using namespace std;
                   Array<OneD,       NekDouble> &field)
         {
             Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->
-                                            GetNLocTracePts(),0.0);
+                                            GetNLocTracePts(), 0.0);
 
             Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->
                                                     GetNFwdLocTracePts();
@@ -1966,7 +1966,7 @@ using namespace std;
             m_locTraceToTraceMap->
                     RightIPTWLocFacesToTraceInterpMat(0, Fwd, facevals);
 
-            m_locTraceToTraceMap->AddLocTracesToField(facevals,field);
+            m_locTraceToTraceMap->AddLocTracesToField(facevals, field);
         }
 
         /**
@@ -1977,12 +1977,13 @@ using namespace std;
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            int cnt, n, e, npts;
-            // Fill boundary conditions into missing elements
-            int id1, id2 = 0;
-            cnt = 0;
+            int cnt = 0;
+            int npts = 0;
+            int e = 0;
+            int id1 = 0;
+            int id2 = 0;
 
-            for(n = 0; n < m_bndCondExpansions.size(); ++n)
+            for (int n = 0; n < m_bndCondExpansions.size(); ++n)
             {
                 if(m_bndConditions[n]->GetBoundaryConditionType() ==
                        SpatialDomains::eDirichlet)
@@ -2046,12 +2047,12 @@ using namespace std;
                   Array<OneD,       NekDouble> &Bwd)
         {
             boost::ignore_unused(Dir);
-            int cnt, n, e, npts;
-            // Fill boundary conditions into missing elements
+            int cnt = 0;
+            int e = 0;
+            int npts = 0;
             int id2 = 0;
-            cnt = 0;
             
-            for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for(int n = 0; n < m_bndCondExpansions.size(); ++n)
             {
                 if(m_bndConditions[n]->GetBoundaryConditionType() == 
                        SpatialDomains::eDirichlet)
@@ -2062,7 +2063,7 @@ using namespace std;
                                 GetExp(e)->GetTotPoints();
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
+                        Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
                     }
 
                     cnt += e;
@@ -2082,7 +2083,7 @@ using namespace std;
                         // Turning this off since we can have non-zero
                         //Neumann in mixed CG-DG method
                         
-                        Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
+                        Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
                     }
 
                     cnt += e;
@@ -2108,12 +2109,12 @@ using namespace std;
                   Array<OneD,       NekDouble> &weightave,
                   Array<OneD,       NekDouble> &weightjmp)
         {
-            int cnt, n, e, npts;
-            // Fill boundary conditions into missing elements
+            int cnt = 0;
+            int e = 0;
+            int npts = 0;
             int id2 = 0;
-            cnt = 0;
             
-            for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for(int n = 0; n < m_bndCondExpansions.size(); ++n)
             {
                 if(m_bndConditions[n]->GetBoundaryConditionType() == 
                        SpatialDomains::eDirichlet)
@@ -2126,8 +2127,8 @@ using namespace std;
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                         Vmath::Fill(npts,
                                     m_BndCondBwdWeight[n], 
-                                    &weightave[id2],1);
-                        Vmath::Fill(npts,0.0, &weightjmp[id2],1);
+                                    &weightave[id2], 1);
+                        Vmath::Fill(npts, 0.0, &weightjmp[id2], 1);
                     }
 
                     cnt += e;
@@ -2146,8 +2147,8 @@ using namespace std;
                         
                         Vmath::Fill(npts,
                                     m_BndCondBwdWeight[n], 
-                                    &weightave[id2],1);
-                        Vmath::Fill(npts,0.0, &weightjmp[id2],1);
+                                    &weightave[id2], 1);
+                        Vmath::Fill(npts, 0.0, &weightjmp[id2], 1);
                     }
 
                     cnt += e;

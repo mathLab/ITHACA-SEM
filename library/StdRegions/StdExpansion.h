@@ -904,7 +904,6 @@ namespace Nektar
                 const NekDouble           &inarray,
                 Array<OneD, NekDouble>   &outarray)
             {
-                boost::ignore_unused(vertex,inarray,outarray);
                 v_AddVertexPhysVals(vertex, inarray, outarray);
             }
 

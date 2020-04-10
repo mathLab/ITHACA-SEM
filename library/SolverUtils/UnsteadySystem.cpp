@@ -137,7 +137,7 @@ namespace Nektar
                 }
 
                 // Ensure that there is no conflict of parameters
-                if(m_CFLGrowth > 1.0)
+                if (m_CFLGrowth > 1.0)
                 {
                     // Check final condition
                     ASSERTL0(m_CFLEnd >= m_cflSafetyFactor,
@@ -257,10 +257,10 @@ namespace Nektar
                    m_time < m_fintime - NekConstants::kNekZeroTol) &&
                    abortFlags[1] == 0)
             {
-                if(m_CFLGrowth > 1.0&&m_cflSafetyFactor<m_CFLEnd)
+                if (m_CFLGrowth > 1.0 && m_cflSafetyFactor < m_CFLEnd)
                 {
                     m_cflSafetyFactor = min(
-                        m_CFLEnd,m_CFLGrowth*m_cflSafetyFactor);
+                        m_CFLEnd, m_CFLGrowth * m_cflSafetyFactor);
                 }
                 
                 if (m_cflSafetyFactor)
@@ -302,29 +302,29 @@ namespace Nektar
                 if (m_session->GetComm()->GetRank() == 0 &&
                     !((step+1) % m_infosteps))
                 {
-                    cout <<right<<scientific<<setw(nwidthcolm)
-                         <<setprecision(nwidthcolm-6)
-                         << "Steps: " << setw(8)  << left << step+1 << " "
+                    cout << right << scientific << setw(nwidthcolm)
+                         << setprecision(nwidthcolm - 6)
+                         << "Steps: " << setw(8) << left << step+1 << " "
                          << "Time: "  << setw(8) << left << m_time;
 
                     if (m_cflSafetyFactor)
                     {
-                        cout <<right<<scientific<<setw(nwidthcolm)
-                             <<setprecision(nwidthcolm-6)
+                        cout << right << scientific << setw(nwidthcolm)
+                             << setprecision(nwidthcolm - 6)
                              << " CFL: " << m_cflSafetyFactor
                              << " Time-step: " << m_timestep;
                     }
 
                     stringstream ss;
                     ss << cpuTime << "s";
-                    cout <<right<<scientific<<setw(nwidthcolm)
-                         <<setprecision(nwidthcolm-6)
+                    cout << right << scientific << setw(nwidthcolm)
+                         << setprecision(nwidthcolm - 6)
                          << " CPU Time: " << left
                          << ss.str();
 
-                    cout <<right<<scientific<<setw(nwidthcolm)
-                         <<setprecision(nwidthcolm-6)
-                         <<" INT Time: "<< intTime<<"s"<<endl;
+                    cout << right << scientific << setw(nwidthcolm)
+                         << setprecision(nwidthcolm - 6)
+                         <<" INT Time: "<< intTime << "s" << endl;
                     cpuPrevious = cpuTime;
                     cpuTime = 0.0;
                 }
@@ -484,16 +484,16 @@ namespace Nektar
             {
                 if (m_cflSafetyFactor > 0.0)
                 {
-                    cout <<right<<scientific<<setw(nwidthcolm)
-                         <<setprecision(nwidthcolm-6)
+                    cout << right << scientific << setw(nwidthcolm)
+                         << setprecision(nwidthcolm - 6)
                          << "CFL safety factor : " << m_cflSafetyFactor << endl
                          << "CFL time-step     : " << m_timestep        << endl;
                 }
 
                 if (m_session->GetSolverInfo("Driver") != "SteadyState")
                 {
-                    cout <<right<<scientific<<setw(nwidthcolm)
-                         <<setprecision(nwidthcolm-6)
+                    cout << right << scientific << setw(nwidthcolm)
+                         << setprecision(nwidthcolm - 6)
                          << "Time-integration  : " << intTime  << "s"   << endl;
                 }
             }

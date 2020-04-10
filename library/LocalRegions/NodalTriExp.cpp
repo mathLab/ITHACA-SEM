@@ -722,7 +722,7 @@ namespace Nektar
             int nqb = nqe;
             int nbnd= edge;
             m_ElmtBndNormalDirctnElmtLength[nbnd] = 
-                    Array<OneD, NekDouble>{nqb,0.0};
+                    Array<OneD, NekDouble> {nqb, 0.0};
             Array<OneD, NekDouble>  &length = 
                     m_ElmtBndNormalDirctnElmtLength[nbnd];
 
@@ -763,7 +763,7 @@ namespace Nektar
                 }
                 fac = 1.0/sqrt(fac);
 
-                Vmath::Fill(nqb,fac,length,1);
+                Vmath::Fill(nqb, fac, length, 1);
 
                 for (i = 0; i < GetCoordim(); ++i)
                 {
@@ -849,7 +849,7 @@ namespace Nektar
                 Vmath::Vsqrt(nqe,work,1,work,1);
                 Vmath::Sdiv(nqe,1.0,work,1,work,1);
 
-                Vmath::Vcopy(nqb,work,1,length,1);
+                Vmath::Vcopy(nqb, work, 1, length, 1);
 
                 for(i = 0; i < GetCoordim(); ++i)
                 {

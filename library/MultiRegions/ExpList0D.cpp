@@ -70,8 +70,8 @@ namespace Nektar
             m_npoints = 1;
 
             // Set up m_coeffs, m_phys.
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-            m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+            m_coeffs = Array<OneD, NekDouble> {m_ncoeffs, 0.0};
+            m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
 
             LocalRegions::PointExpSharedPtr Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(geom);
             (*m_exp).push_back(Point);
@@ -196,8 +196,8 @@ namespace Nektar
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+                m_coeffs = Array<OneD, NekDouble> {m_ncoeffs,0.0};
+                m_phys   = Array<OneD, NekDouble> {m_npoints,0.0};
             }
         }
 
@@ -258,49 +258,49 @@ namespace Nektar
             Array<OneD, NekDouble>  &lengthsFwd,
             Array<OneD, NekDouble>  &lengthsBwd)
         {
-            int i,j,e_npoints,offset;
+            int e_npoints;
 
-            Array<OneD,NekDouble> locLeng;
-            Array<OneD,NekDouble> lengintp;
-            Array<OneD,NekDouble> lengAdd;
-            Array<OneD,int      > LRbndnumbs(2);
+            Array<OneD, NekDouble> locLeng;
+            Array<OneD, NekDouble> lengintp;
+            Array<OneD, NekDouble> lengAdd;
+            Array<OneD, int      > LRbndnumbs(2);
             Array<OneD, Array<OneD,NekDouble> > lengLR(2);
             lengLR[0]   =   lengthsFwd;
             lengLR[1]   =   lengthsBwd;
-            Array<OneD,LocalRegions::Expansion1DSharedPtr> LRelmts(2);
+            Array<OneD, LocalRegions::Expansion1DSharedPtr> LRelmts(2);
             LocalRegions::Expansion1DSharedPtr loc_elmt;
             LocalRegions::Expansion0DSharedPtr loc_exp;
             int e_npoints0  =   -1; 
-            for (i = 0; i < m_exp->size(); ++i)
+            for (int i = 0; i < m_exp->size(); ++i)
             {
                 loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion0D>();
-                offset = m_phys_offset[i];
+                int offset = m_phys_offset[i];
                 
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                if(e_npoints0<e_npoints)
+                if (e_npoints0 < e_npoints)
                 {
-                    lengintp = Array<OneD, NekDouble>(e_npoints,0.0);
+                    lengintp = Array<OneD, NekDouble> {e_npoints, 0.0};
                     e_npoints0 = e_npoints;
                 }
                 
                 LRelmts[0] = loc_exp->GetLeftAdjacentElementExp();
                 LRelmts[1] = loc_exp->GetRightAdjacentElementExp();
 
-                LRbndnumbs[0]   =   loc_exp->GetLeftAdjacentElementVertex();
-                LRbndnumbs[1]   =   loc_exp->GetRightAdjacentElementVertex();
-                for(int nlr=0;nlr<2;nlr++)
+                LRbndnumbs[0] = loc_exp->GetLeftAdjacentElementVertex();
+                LRbndnumbs[1] = loc_exp->GetRightAdjacentElementVertex();
+                for (int nlr = 0; nlr < 2; ++nlr)
                 {
-                    Vmath::Zero(e_npoints0,lengintp,1);
+                    Vmath::Zero(e_npoints0, lengintp, 1);
                     lengAdd     =   lengintp;
                     int bndNumber = LRbndnumbs[nlr];
                     loc_elmt = LRelmts[nlr];
-                    if(bndNumber>=0)
+                    if (bndNumber >= 0)
                     {
                         locLeng  = loc_elmt->
                                     GetElmtBndNormalDirctnElmtLength(bndNumber);
                         lengAdd  =   locLeng;
                     }
-                    for (j = 0; j < e_npoints; ++j)
+                    for (int j = 0; j < e_npoints; ++j)
                     {
                         lengLR[nlr][offset + j] = lengAdd[j];
                     }

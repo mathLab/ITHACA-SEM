@@ -189,7 +189,7 @@ namespace Nektar
                 bregions.size());
             m_bndConditions = m_planes[0]->UpdateBndConditions();
 
-            m_BndCondBwdWeight   = Array<OneD,NekDouble>(bregions.size(),0.0);
+            m_BndCondBwdWeight = Array<OneD, NekDouble> {bregions.size(),0.0};
 
             int nplanes = m_planes.size();
             Array<OneD, MultiRegions::ExpListSharedPtr>

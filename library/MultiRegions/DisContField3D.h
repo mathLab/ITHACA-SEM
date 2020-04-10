@@ -105,7 +105,7 @@ namespace Nektar
              */
             Array<OneD,MultiRegions::ExpListSharedPtr> m_bndCondExpansions;
 
-            Array<OneD,NekDouble> m_BndCondBwdWeight;
+            Array<OneD, NekDouble> m_BndCondBwdWeight;
 
             /**
              * @brief An array which contains the information about
@@ -377,7 +377,7 @@ namespace Nektar
                 Array<OneD,       NekDouble> &Bwd)
         {
             v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-            v_FillBwdWithBoundDeriv(Dir,Fwd,Bwd);
+            v_FillBwdWithBoundDeriv(Dir, Fwd, Bwd);
         }
 
         void DisContField3D::v_GetFwdBwdTracePhys_serial(
@@ -386,7 +386,7 @@ namespace Nektar
                 Array<OneD,       NekDouble> &Bwd)
         {
             v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-            v_FillBwdWithBound(Fwd,Bwd);
+            v_FillBwdWithBound(Fwd, Bwd);
         }
 
         void DisContField3D::v_PeriodicBwdCopy(

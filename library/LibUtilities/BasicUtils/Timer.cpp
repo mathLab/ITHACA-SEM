@@ -83,7 +83,7 @@ void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm)
     {
         std::cout
             << "-------------------------------------------\n"
-            << "Region\t\t Elapsed time Ave (s)"
+            << "Region\t\t Elapsed time Avg (s)"
             << "\t Min (s)"
             << "\t Max (s)"
             << "\t Count\n";

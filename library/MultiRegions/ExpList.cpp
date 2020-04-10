@@ -745,6 +745,9 @@ namespace Nektar
             Array<OneD, NekDouble> e_out_d1;
             Array<OneD, NekDouble> e_out_d2;
             int offset;
+
+            LibUtilities::Timer timer;
+            timer.Start();
             for (int i = 0; i < m_collections.size(); ++i)
             {
                 offset   = m_coll_phys_offset[i];
@@ -752,11 +755,16 @@ namespace Nektar
                 e_out_d1 = out_d1  + offset;
                 e_out_d2 = out_d2  + offset;
 
+
                 m_collections[i].ApplyOperator(Collections::ePhysDeriv,
                                                inarray + offset,
                                                e_out_d0,e_out_d1, e_out_d2);
 
+
             }
+            timer.Stop();
+            // Elapsed time
+            timer.AccumulateRegion("v_PhysDeriv");
         }
 
         void ExpList::v_PhysDeriv(const int dir,

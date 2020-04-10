@@ -501,13 +501,13 @@ void ProcessProjectCAD::Process()
         vector<CADSurfSharedPtr> v2 = (*i)->m_n2->GetCADSurfs();
 
         vector<int> vi1, vi2;
-        for (int i = 0; i < v1.size();i++)
+        for (size_t j = 0; j < v1.size(); ++j)
         {
-            vi1.push_back(v1[i]->GetId());
+            vi1.push_back(v1[j]->GetId());
         }
-        for (int i = 0; i < v2.size();i++)
+        for (size_t j = 0; j < v2.size(); ++j)
         {
-            vi2.push_back(v2[i]->GetId());
+            vi2.push_back(v2[j]->GetId());
         }
 
         sort(vi1.begin(), vi1.end());

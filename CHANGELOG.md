@@ -15,19 +15,29 @@ v5.1.0
 **NekMesh**
 - Improved boundary layer splitting and output to CADfix (!938)
 
+**BuildSystem**
+- Toggle build type (!1135)
+
 v5.0.1
 ------
 **Library**
 - Fix incorrect coordinate dimension used in history point filter (!1118)
-v5.0.1
-------
 - Fix compile errors with GCC 9.x (!1108)
+- Correct the Energy/Enstropy integral for the 3DH1 flow (!1132)
 
-v5.0.1
-------
+**IncNavierStokesSolver**
+- Change the baseflow time in the Adjoint advection (!1133)
+
+**NekMesh**
+- Fix compile errors when using intel cc (!1114)
+
+**Documentation**
+- Fix error in compilation of developer guide (!1136)
+
 **CI**
 - Switched to Gitlab CI (!1120, !1120, !1128, !1129)
 - Added checked conversion from double to int in SessionReader (!1113)
+- Switched to Gitlab CI (!1120, !1120, !1128, !1129, !1131)
 
 v5.0.0
 ------

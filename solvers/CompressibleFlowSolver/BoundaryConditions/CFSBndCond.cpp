@@ -102,10 +102,10 @@ void CFSBndCond::Apply(
 void CFSBndCond::v_ApplyBwdWeight()
 {
     NekDouble weight = m_diffusionAveWeight;
-    int nVariables = m_fields.num_elements();
+    size_t nVariables = m_fields.num_elements();
     for (int i=0;i < nVariables; ++i)
     {
-        m_fields[i]->SetBndCondBwdWeight(m_bcRegion,weight);
+        m_fields[i]->SetBndCondBwdWeight(m_bcRegion, weight);
     }
 }
 

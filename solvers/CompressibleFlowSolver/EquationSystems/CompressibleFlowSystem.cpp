@@ -983,7 +983,7 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
         const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
     {
-        boost::ignore_unused(inarray,outarray,pFwd,pBwd);
+        boost::ignore_unused(inarray, outarray, pFwd, pBwd);
         // Do nothing by default
     }
 

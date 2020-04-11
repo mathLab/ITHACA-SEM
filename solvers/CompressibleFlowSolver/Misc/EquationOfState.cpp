@@ -124,14 +124,14 @@ NekDouble EquationOfState::v_GetSoundSpeed(const NekDouble &rho,
 NekDouble EquationOfState::v_GetEnthalpy(const NekDouble &T)
 {
     boost::ignore_unused(T);
-    ASSERTL0(false,"v_GetEnthalpy not defined");
+    ASSERTL0(false, "v_GetEnthalpy not defined");
     return -1.0;
 }
 
 NekDouble EquationOfState::v_GetInternalEnergy(const NekDouble &T)
 {
     boost::ignore_unused(T);
-    ASSERTL0(false,"v_GetInternalEnergy not defined");
+    ASSERTL0(false, "v_GetInternalEnergy not defined");
     return -1.0;
 }
 

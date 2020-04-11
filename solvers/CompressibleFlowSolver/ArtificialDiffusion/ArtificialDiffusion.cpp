@@ -119,10 +119,10 @@ void ArtificialDiffusion::v_DoArtificialDiffusion_coeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             Array<OneD,       Array<OneD, NekDouble> > &outarray)
 {
-    int nvariables = inarray.num_elements();
+    size_t nvariables = inarray.size();
     int ncoeffs    = m_fields[0]->GetNcoeffs();
 
-    Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
+    Array<OneD, Array<OneD, NekDouble> > outarrayDiff {nvariables};
 
     for (int i = 0; i < nvariables; ++i)
     {

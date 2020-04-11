@@ -82,7 +82,7 @@ NekDouble IdealGasEoS::v_GetEntropy(
 NekDouble IdealGasEoS::v_GetEnthalpy(
     const NekDouble &T)
 {
-    return m_gasConstant * T * m_gamma / (m_gamma-1.0);
+    return m_gasConstant * T * m_gamma / (m_gamma - 1.0);
 }
 
 NekDouble IdealGasEoS::v_GetDPDrho_e(
@@ -114,7 +114,7 @@ NekDouble IdealGasEoS::v_GetRhoFromPT(
 NekDouble IdealGasEoS::v_GetInternalEnergy(
     const NekDouble &T)
 {
-    return m_gasConstant * T / (m_gamma-1.0);
+    return m_gasConstant * T / (m_gamma - 1.0);
 }
 
 }

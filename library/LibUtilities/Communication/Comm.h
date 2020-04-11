@@ -166,7 +166,7 @@ public:
 
     LIB_UTILITIES_EXPORT inline bool TreatAsRankZero(void);
     LIB_UTILITIES_EXPORT inline bool IsSerial(void);
-    LIB_UTILITIES_EXPORT inline NekDouble GetVersion(void);
+    LIB_UTILITIES_EXPORT inline std::tuple<int, int, int> GetVersion(void);
     LIB_UTILITIES_EXPORT inline bool RemoveExistingFiles(void);
 
 protected:
@@ -240,7 +240,7 @@ protected:
     virtual void v_SplitComm(int pRows, int pColumns) = 0;
     virtual bool v_TreatAsRankZero(void) = 0;
     virtual bool v_IsSerial(void) = 0;
-    virtual NekDouble v_GetVersion(void) = 0;
+    virtual std::tuple<int, int, int> v_GetVersion(void) = 0;
 
     LIB_UTILITIES_EXPORT virtual bool v_RemoveExistingFiles(void);
 };
@@ -515,7 +515,17 @@ template <class T> T Comm::Scatter(const int rootProc, T &pData)
 }
 
 /**
- * Creates a distributed graph network replacing the current MPI communicator
+ * This replaces the current MPI communicator with a new one that also holds
+ * the distributed graph topology information. If reordering is enabled using
+ * this might break code where process/rank numbers are assumed to remain
+ * constant. This also assumes that the graph is bi-directional, so all
+ * sources are also destinations with equal weighting.
+ *
+ * @param sources Ranks of processes for which the calling process is the
+ * destination/source
+ * @param sourceweights Weights of the corresponding edges into the
+ * calling process
+ * @param reorder Ranks may be reordered (true) or not (false)
  */
 template <class T>
 void Comm::DistGraphCreateAdjacent(T &sources, T &sourceweights, int reorder)
@@ -537,7 +547,20 @@ void Comm::DistGraphCreateAdjacent(T &sources, T &sourceweights, int reorder)
 }
 
 /**
+ * Sends data to neighboring processes in a virtual topology communicator. All
+ * processes send different amounts of data to, and receive different amounts
+ * of data from, all neighbors
  *
+ * @param pSendData Array/vector to send to neighbors
+ * @param pSendDataSizeMap Array/vector where entry i specifies the number
+ * of elements to send to neighbor i
+ * @param pSendDataOffsetMap Array/vector where entry i specifies the
+ * displacement (offset from pSendData) from which to send data to neighbor i
+ * @param pRecvData Array/vector to place incoming data in to
+ * @param pRecvDataSizeMap Array/vector where entry i specifies the number
+ * of elements to receive from neighbor i
+ * @param pRecvDataOffsetMap  Array/vector where entry i specifies the
+ * displacement (offset from pRecvData) from which to receive data from neighbor i
  */
 template <class T1, class T2>
 void Comm::NeighborAlltoAllv(
@@ -554,7 +577,7 @@ void Comm::NeighborAlltoAllv(
     static_assert(
         std::is_same<T2, std::vector<int>>::value ||
         std::is_same<T2, Array<OneD, int>>::value,
-        "NeighborAlllltAallv size and offset maps should be integer vectors.");
+        "NeighborAllToAllv size and offset maps should be integer vectors.");
     v_NeighborAlltoAllv(CommDataTypeTraits<T1>::GetPointer(pSendData),
         (int *)CommDataTypeTraits<T2>::GetPointer(pSendDataSizeMap),
         (int *)CommDataTypeTraits<T2>::GetPointer(pSendDataOffsetMap),
@@ -565,6 +588,15 @@ void Comm::NeighborAlltoAllv(
         CommDataTypeTraits<T1>::GetDataType());
 }
 
+/**
+ * Starts a ready-mode nonblocking send
+ *
+ * @param pProc Rank of destination
+ * @param pData Array/vector to send
+ * @param count Number of elements to send in pData
+ * @param request Communication request array
+ * @param loc Location in request to use
+ */
 template <class T> void Comm::Irsend(int pProc, T &pData, int count,
                       CommRequestSharedPtr request, int loc)
 {
@@ -572,6 +604,15 @@ template <class T> void Comm::Irsend(int pProc, T &pData, int count,
            CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
 }
 
+/**
+* Begins a nonblocking receive
+*
+* @param pProc Rank of source
+* @param pData Array/vector to place incoming data in to
+* @param count Number of elements to receive in to pData
+* @param request Communication request object
+* @param loc Location in request to use
+*/
 template <class T> void Comm::Irecv(int pProc, T &pData, int count,
                      CommRequestSharedPtr request, int loc)
 {
@@ -579,11 +620,22 @@ template <class T> void Comm::Irecv(int pProc, T &pData, int count,
            CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
 }
 
+/**
+ * Waits for all MPI Requests in the request object to complete
+ *
+ * @param request Communication request object
+ */
 inline void Comm::WaitAll(CommRequestSharedPtr request)
 {
     v_WaitAll(request);
 }
 
+/**
+ *
+ * @param num Number of MPI_Requests to generate in the communication request
+ * object
+ * @return Communication request object
+ */
 inline CommRequestSharedPtr Comm::CreateRequest(int num)
 {
     return v_CreateRequest(num);
@@ -650,7 +702,10 @@ inline bool Comm::IsSerial(void)
     return v_IsSerial();
 }
 
-inline NekDouble Comm::GetVersion(void)
+/**
+ * @return tuple of {major, minor, patch} version numbers
+ */
+inline std::tuple<int, int, int> Comm::GetVersion(void)
 {
     return v_GetVersion();
 }

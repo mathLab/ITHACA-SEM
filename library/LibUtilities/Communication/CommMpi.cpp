@@ -161,9 +161,15 @@ bool CommMpi::v_IsSerial(void)
     }
 }
 
-NekDouble CommMpi::v_GetVersion(void)
+std::tuple<int, int, int> CommMpi::v_GetVersion(void)
 {
-    return MPI_VERSION + (NekDouble)MPI_SUBVERSION/10;
+    int version, subversion;
+    int retval = MPI_Get_version(&version, &subversion);
+
+    ASSERTL0(retval == MPI_SUCCESS,
+             "MPI error performing GetVersion.");
+
+    return std::make_tuple(version, subversion, 0);
 }
 
 
@@ -383,10 +389,7 @@ void CommMpi::v_DistGraphCreateAdjacent(int indegree, const int sources[],
 #if MPI_VERSION < 3
     boost::ignore_unused(indegree, sources, sourceweights, reorder);
 #else
-    // This replaces the current MPI communicator m_comm so if reordering is
-    // enabled using this might break some stuff where process numbers are
-    // assumed to remain constant. This also assumes that the graph is
-    // bi-directional, so all sources are also destinations with equal weighting.
+
     int retval = MPI_Dist_graph_create_adjacent(m_comm,
                                                 indegree, sources, sourceweights,
                                                 indegree, sources, sourceweights,

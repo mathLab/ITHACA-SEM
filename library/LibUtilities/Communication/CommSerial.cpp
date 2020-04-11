@@ -94,9 +94,9 @@ bool CommSerial::v_IsSerial(void)
     return true;
 }
 
-NekDouble CommSerial::v_GetVersion(void)
+std::tuple<int, int, int> CommSerial::v_GetVersion(void)
 {
-    return -1;
+    return std::make_tuple(0, 0, 0);
 }
 
 /**

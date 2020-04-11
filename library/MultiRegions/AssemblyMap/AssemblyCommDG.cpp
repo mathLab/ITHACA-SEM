@@ -359,7 +359,7 @@ AssemblyCommDG::AssemblyCommDG(
         MPIFuncsNames.emplace_back("AllToAllV");
 
         // Disable neighbor MPI method on unsupported MPI version (below 3.0)
-        if (comm->GetVersion() >= 3)
+        if (std::get<0>(comm->GetVersion()) > 3)
         {
             MPIFuncs.emplace_back(ExchangeMethodSharedPtr(
                 MemoryManager<NeighborAllToAllV>::AllocateSharedPtr(
@@ -381,7 +381,7 @@ AssemblyCommDG::AssemblyCommDG(
 
         if (verbose && comm->GetRank() == 0)
         {
-            std::cout << "MPI setup: " << std::endl;
+            std::cout << "MPI setup for trace exchange: " << std::endl;
         }
 
         for (size_t i = 0; i < MPIFuncs.size(); ++i)
@@ -397,13 +397,9 @@ AssemblyCommDG::AssemblyCommDG(
             }
         }
 
-        // Gets the fastest MPI method greater than 0
+        // Gets the fastest MPI method
         int fastestMPI = std::distance(
-            avg.begin(),
-            std::min_element(
-                avg.begin(), avg.end(), [](NekDouble a, NekDouble b) {
-                    return (a < 0) ? false : (b < 0) ? true : (a < b);
-                }));
+            avg.begin(), std::min_element(avg.begin(), avg.end()));
 
         if (verbose && comm->GetRank() == 0)
         {
@@ -417,25 +413,26 @@ AssemblyCommDG::AssemblyCommDG(
 
 /**
  * This function sets up the initial structure to allow for the exchange methods
- * to be setup. This structure is contained within the member variable
- * m_rankSharedEdges which is a map of rank to a vector of the shared edges with
+ * to be created. This structure is contained within the member variable
+ * m_rankSharedEdges which is a map of rank to vector of the shared edges with
  * that rank. This is filled by:
  * -# Create an edge to trace mapping, and realign periodic edges within this
- * mapping so that they have the same data layout for both ranks
+ * mapping so that they have the same data layout for ranks sharing periodic
+ * boundaries
  * -# Create a list of all local edge IDs and calculate the maximum number of
- * quadrature points used locally
- * -# Perform an AllReduce to find the maximum number of quadrature points across
- * all ranks
+ * quadrature points used locally, then perform an AllReduce to find the
+ * maximum number of quadrature points across all ranks (for the AllToAll method)
  * -# Create a list of all boundary edge IDs except for those which are periodic
  * -# Using the boundary ID list, and all local ID list we can construct a unique
  * list of IDs which are on a partition boundary (e.g. if doesn't occur in the
  * local list twice, and doesn't occur in the boundary list it is on a parition
- * boundary). We also check if it is a periodic edge whether the other side is
+ * boundary). We also check, if it is a periodic edge, whether the other side is
  * local, if not we add the minimum of the two periodic IDs to the unique list
- * as we must have consistent numbering across ranks.
+ * as we must have a consistent numbering scheme across ranks.
  * -# We send the unique list to all other ranks/partitions. Each ranks unique
  * list is then compared with the local unique edge ID list, if a match is found
- * then the member variable m_rankSharedEdges is filled.
+ * then the member variable m_rankSharedEdges is filled with the matching rank
+ * and unique edge ID.
  */
 void AssemblyCommDG::InitialiseStructure(
     const ExpList &locExp,
@@ -707,8 +704,8 @@ void AssemblyCommDG::InitialiseStructure(
 }
 
 /**
- * Times the exchange method given using the structure of the partitioning
- * and test values of the length num.
+ * Timing of the exchange method, 'f',  performing the exchange 'count' times
+ * for array of length 'num'.
  *
  * @param comm Communicator
  * @param count Number of timing iterations to run

@@ -770,13 +770,6 @@ namespace Nektar
                         {
                             m_negatedFluxNormal[2*i+v] = false;
                         }
-
-                        if(vertExp->GetLeftAdjacentElementExp()->
-                            VertexNormalNegated(vertExp->GetLeftAdjacentElementVertex()))
-                        {
-                            m_negatedFluxNormal[2*i+v] =
-                                (!m_negatedFluxNormal[2*i+v]);
-                        }
                     }
                 }
 

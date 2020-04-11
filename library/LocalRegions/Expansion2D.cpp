@@ -76,11 +76,6 @@ namespace Nektar
                 for (int i = 0; i < GetNedges(); ++i)
                 {
                     m_requireNeg[i] = false;
-                    if (m_negatedNormals[i])
-                    {
-                        m_requireNeg[i] = true;
-                        continue;
-                    }
 
                     Expansion1DSharedPtr edgeExp =
                                     m_edgeExp[i].lock()->as<Expansion1D>();
@@ -111,14 +106,10 @@ namespace Nektar
 
             Expansion1DSharedPtr locExp = EdgeExp->as<Expansion1D>();
 
-            if (m_negatedNormals[edge])
+            if (m_requireNeg[edge])
             {
-                Vmath::Neg(nquad_e, edgePhys, 1);
-            }
-            else if (locExp->GetRightAdjacentElementEdge() != -1)
-            {
-                if (locExp->GetRightAdjacentElementExp()->GetGeom2D()->GetGlobalID()
-                    == GetGeom2D()->GetGlobalID())
+                if (locExp->GetRightAdjacentElementExp()->GetGeom()->GetGlobalID()
+                    == m_geom->GetGlobalID())
                 {
                     Vmath::Neg(nquad_e, edgePhys, 1);
                 }
@@ -142,11 +133,6 @@ namespace Nektar
                 for (i = 0; i < GetNedges(); ++i)
                 {
                     m_requireNeg[i] = false;
-                    if (m_negatedNormals[i])
-                    {
-                        m_requireNeg[i] = true;
-                        continue;
-                    }
 
                     Expansion1DSharedPtr edgeExp =
                                 m_edgeExp[i].lock()->as<Expansion1D>();
@@ -390,11 +376,6 @@ namespace Nektar
                                          edgePhys,     1);
                 }
 
-                if (m_negatedNormals[e])
-                {
-                    Vmath::Neg(nquad_e, edgePhys, 1);
-                }
-
                 AddEdgeBoundaryInt(e, EdgeExp[e], edgePhys, outarray, varcoeffs);
             }
         }
@@ -420,11 +401,6 @@ namespace Nektar
                 EdgeExp[e]->BwdTrans(edgeCoeffs[e], edgePhys);
 
                 Vmath::Vmul(nquad_e, normals[dir], 1, edgePhys, 1, edgePhys, 1);
-
-                if (m_negatedNormals[e])
-                {
-                    Vmath::Neg(nquad_e, edgePhys, 1);
-                }
 
                 AddEdgeBoundaryInt(e, EdgeExp[e], edgePhys, outarray);
             }
@@ -606,11 +582,6 @@ namespace Nektar
                 {
                     Vmath::Vmul(nquad_e, normals[n], 1, edgePhys, 1, inval, 1);
                     invMass = GetLocMatrix(StdRegions::eInvMass);
-                }
-
-                if (m_negatedNormals[edge])
-                {
-                    Vmath::Neg(nquad_e, inval, 1);
                 }
 
                 // Multiply by variable coefficient
@@ -1222,11 +1193,6 @@ namespace Nektar
                                                       work,       1, work,     1);
                             }
 
-                            if (m_negatedNormals[e])
-                            {
-                                Vmath::Neg(nquad_e, work, 1);
-                            }
-
                             // - tau (ulam - lam)
                             // Corresponds to the G and BU terms.
                             for(j = 0; j < order_e; ++j)
@@ -1581,21 +1547,6 @@ namespace Nektar
                 const int id) const
         {
             return v_GetEdgeNormal(id);
-        }
-
-        void Expansion2D::v_NegateEdgeNormal(const int edge)
-        {
-            m_negatedNormals[edge] = true;
-            for (int i = 0; i < GetCoordim(); ++i)
-            {
-                Vmath::Neg(m_edgeNormals[edge][i].size(),
-                           m_edgeNormals[edge][i], 1);
-            }
-        }
-
-        bool Expansion2D::v_EdgeNormalNegated(const int edge)
-        {
-            return m_negatedNormals[edge];
         }
 
         void Expansion2D::ReOrientEdgePhysMap(

@@ -56,6 +56,9 @@ public:
     ~VariableConverter();
 
     // Variable manipulations valid for all fluids
+    void GetDynamicEnergy(
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+        Array<OneD, NekDouble> &energy);
     void GetInternalEnergy(
         const Array<OneD, const Array<OneD, NekDouble>> &physfield,
         Array<OneD, NekDouble> &energy);
@@ -94,10 +97,6 @@ public:
                       const Array<OneD, NekDouble> &temperature,
                       Array<OneD, NekDouble> &rho);
 
-    inline NekDouble GetGasconstant();
-
-    inline EquationOfStateSharedPtr Geteos();
-
 protected:
     LibUtilities::SessionReaderSharedPtr m_session;
     EquationOfStateSharedPtr m_eos;
@@ -109,17 +108,5 @@ protected:
     NekDouble m_Skappa;
     NekDouble m_Kappa;
 };
-
-// return the Gasconstant
-NekDouble VariableConverter::GetGasconstant()
-{
-    return m_gasConstant;
-}
-
-// return the EquationOfState
-EquationOfStateSharedPtr VariableConverter::Geteos()
-{
-    return m_eos;
-}
 }
 #endif

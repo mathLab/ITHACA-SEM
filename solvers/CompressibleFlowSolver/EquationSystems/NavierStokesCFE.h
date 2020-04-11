@@ -36,7 +36,6 @@
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NAVIERSTOKESCFE_H
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
-#include <CompressibleFlowSolver/Misc/EquationOfState.h>
 
 namespace Nektar
 {
@@ -71,8 +70,6 @@ namespace Nektar
     NekDouble                           m_Prandtl;
 
     NekDouble                            m_Twall;
-    /// Equation of system for computing temperature
-    EquationOfStateSharedPtr             m_eos;
     NekDouble                           m_muRef;
     NekDouble                           m_thermalConductivityRef;
     Array<OneD, NekDouble>              m_mu;
@@ -100,11 +97,6 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &outarray,
             Array< OneD, int >                                  &nonZeroIndex,    
             const Array<OneD, Array<OneD, NekDouble> >          &normals);
-    
-    void GetPrimDerivFromConsDeriv(
-        const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &qfields,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &outarray);
     
     void SpecialBndTreat(
               Array<OneD,       Array<OneD, NekDouble> >    &consvar);

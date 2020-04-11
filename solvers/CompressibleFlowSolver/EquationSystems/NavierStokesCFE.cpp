@@ -71,13 +71,6 @@ namespace Nektar
 
         m_session->LoadParameter ("Twall", m_Twall, 300.15);
 
-        // Create equation of state object
-        std::string eosType;
-        m_session->LoadSolverInfo("EquationOfState", 
-                                  eosType, "IdealGas");
-        m_eos = GetEquationOfStateFactory()
-                                .CreateInstance(eosType, m_session);
-
         // Viscosity
         int nPts = m_fields[0]->GetNpoints();
         m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
@@ -576,89 +569,6 @@ namespace Nektar
         }
     }
 
-    /**
-     * @brief Calculate derivatives of primitive variables based on derivatives of 
-     * conservative variables
-     */
-    void NavierStokesCFE::GetPrimDerivFromConsDeriv(
-        const Array<OneD, Array<OneD, NekDouble> >          &inarray, 
-        const Array<OneD, Array<OneD, 
-            Array<OneD, NekDouble> > >                      &qfields, 
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &physderivatives)
-    {
-        //can be nPoints/nTracePoints
-        size_t nPts                = inarray[0].size();
-        size_t nConvectiveFields   = inarray.size();
-        size_t nDim                = qfields.size();
-        Array<OneD, NekDouble> tmp{nPts, 0.0};
-        int nScalars=nConvectiveFields-1;
-        Array<OneD, Array<OneD, NekDouble>> physfield{nScalars};
-        for (int i = 0; i < nScalars; ++i)
-        {
-            physfield[i]=Array<OneD, NekDouble> {nPts, 0.0};
-        }
-
-        //Transfer conservative variables to primal variables u, v, w
-        //E
-        Array<OneD, NekDouble> E{nPts, 0.0};
-        Vmath::Vdiv(nPts, &inarray[nConvectiveFields - 1][0], 1, 
-                    &inarray[0][0], 1, &E[0], 1);
-        //q2
-        for (int i = 0; i < nScalars - 1; ++i)
-        {
-            Vmath::Vdiv(nPts, &inarray[i + 1][0], 1, &inarray[0][0], 1, 
-                        &physfield[i][0], 1);
-            Vmath::Vvtvp(nPts, &physfield[i][0], 1, &physfield[i][0], 1, 
-                        &tmp[0], 1, &tmp[0], 1);
-        }
-        //e=E-0.5q2
-        Vmath::Smul(nPts, 0.5, &tmp[0], 1, &tmp[0], 1);
-        Vmath::Vsub(nPts, &E[0], 1, &tmp[0], 1, &physfield[nScalars - 1][0], 1);
-        //T=e/Cv
-        NekDouble oCv = 1. / m_Cv;
-        Vmath::Smul(nPts, oCv, &physfield[nScalars - 1][0], 1, 
-                        &physfield[nScalars - 1][0], 1);
-
-        //Transfer conservative variable derivatives to primal variables du, dv, dw
-        Array<OneD, NekDouble> orho1{nPts, 0.0};
-        Array<OneD, NekDouble> orho2{nPts, 0.0};
-        Vmath::Sdiv(nPts, 1.0, &inarray[0][0], 1, &orho1[0], 1);
-        Vmath::Vmul(nPts, &orho1[0], 1, &orho1[0], 1, &orho2[0], 1);
-        for (int i = 0; i < nDim; ++i)
-        {
-            for (int j = 0; j < nScalars - 1; ++j)
-            {
-                Vmath::Vmul(nPts, &qfields[i][0][0], 1, 
-                            &physfield[j][0], 1, &tmp[0], 1);
-                Vmath::Vsub(nPts, &qfields[i][j + 1][0], 1, &tmp[0], 1, 
-                            &physderivatives[i][j][0], 1);
-                Vmath::Vmul(nPts, &orho1[0], 1, &physderivatives[i][j][0], 1, 
-                            &physderivatives[i][j][0], 1);
-            }
-        }
-
-        //Construct dT_dx, dT_dy, dT_dz
-        for (int i = 0; i < nDim; ++i)
-        {
-            Vmath::Vmul(nPts, &qfields[i][0][0], 1, &E[0], 1, &tmp[0], 1);
-            Vmath::Vsub(nPts, &qfields[i][nConvectiveFields - 1][0], 1,  
-                        &tmp[0], 1, &physderivatives[i][nScalars - 1][0], 1);
-            Vmath::Vmul(nPts, &orho1[0], 1,  
-                            &physderivatives[i][nScalars - 1][0], 1, 
-                            &physderivatives[i][nScalars - 1][0], 1);
-
-            for (int j = 0; j < nScalars - 1; ++j)
-            {
-               Vmath::Vmul(nPts, &physfield[j][0], 1, 
-                    &physderivatives[i][j][0], 1, &tmp[0], 1);
-               Vmath::Vsub(nPts, &physderivatives[i][nScalars - 1][0], 1, 
-                        &tmp[0], 1, &physderivatives[i][nScalars - 1][0], 1);
-            }
-            Vmath::Smul(nPts, oCv, &physderivatives[i][nScalars - 1][0], 1, 
-                            &physderivatives[i][nScalars - 1][0], 1);
-        }
-    }
-
       /**
      * @brief Return the flux vector for the IP diffusion problem, based on 
      * conservative variables
@@ -781,26 +691,19 @@ namespace Nektar
     void NavierStokesCFE::SpecialBndTreat(
               Array<OneD,       Array<OneD, NekDouble> >    &consvar)
     {            
-        size_t nConvectiveFields   = consvar.size();
+        size_t nConvectiveFields = consvar.size();
         int ndens       = 0;
         int nengy       = nConvectiveFields - 1;
-        int nvelst      = ndens + 1;
-        int nveled      = nengy;
-        
-        int cnt;
-        int id2;
 
-        int nBndEdgePts, nBndEdges;
-        size_t nBndRegions;
+        Array<OneD, Array<OneD, NekDouble>> bndCons {nConvectiveFields};         
+        Array<OneD, NekDouble> bndTotEngy;
+        Array<OneD, NekDouble> bndPressure;          
+        Array<OneD, NekDouble> bndRho;      
+        Array<OneD, NekDouble> bndIntEndy; 
+        int nLengthArray = 0;
 
-        NekDouble InternalEnergy  =   m_eos->GetInternalEnergy(m_Twall);
-        
-        Array<OneD, NekDouble> wallTotEngy;
-        int nLengthArray    =0;
-
-        // Compute boundary conditions  for Energy
-        cnt = 0;
-        nBndRegions = m_fields[nengy]->
+        int cnt = 0;
+        int nBndRegions = m_fields[nengy]->
             GetBndCondExpansions().size();
         for (int j = 0; j < nBndRegions; ++j)
         {
@@ -811,14 +714,14 @@ namespace Nektar
                 continue;
             }
 
-            nBndEdges = m_fields[nengy]->
+            int nBndEdges = m_fields[nengy]->
             GetBndCondExpansions()[j]->GetExpSize();
             for (int e = 0; e < nBndEdges; ++e)
             {
-                nBndEdgePts = m_fields[nengy]->
+                int nBndEdgePts = m_fields[nengy]->
                 GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
 
-                id2 = m_fields[0]->GetTrace()->
+                int id2 = m_fields[0]->GetTrace()->
                 GetPhys_Offset(m_fields[0]->GetTraceMap()->
                             GetBndCondTraceToGlobalTraceMap(cnt++));
 
@@ -826,31 +729,45 @@ namespace Nektar
                 if (boost::iequals(m_fields[nengy]->GetBndConditions()[j]->
                     GetUserDefined(), "WallViscous"))
                 {
-                    if (nBndEdgePts > nLengthArray)
+                    if (nBndEdgePts != nLengthArray)
                     {
-                        wallTotEngy = Array<OneD, NekDouble> {nBndEdgePts, 0.0};
+                        for (int i = 0; i < nConvectiveFields; ++i)
+                        {
+                            bndCons[i] = Array<OneD, NekDouble>
+                                        {nBndEdgePts, 0.0};
+                        }
+                        bndTotEngy  = Array<OneD, NekDouble> {nBndEdgePts, 0.0};
+                        bndPressure = Array<OneD, NekDouble> {nBndEdgePts, 0.0};
+                        bndRho      = Array<OneD, NekDouble> {nBndEdgePts, 0.0};
+                        bndIntEndy  = Array<OneD, NekDouble> {nBndEdgePts, 0.0};
                         nLengthArray = nBndEdgePts;
                     }
                     else
                     {
-                        Vmath::Fill(nLengthArray, 0.0, wallTotEngy, 1);
+                        Vmath::Zero(nLengthArray, bndPressure, 1);
+                        Vmath::Zero(nLengthArray, bndRho     , 1);
+                        Vmath::Zero(nLengthArray, bndIntEndy , 1);
                     }
 
-                    for (int k = nvelst; k < nveled; ++k)
+                    for (int k = 0; k < nConvectiveFields; ++k)
                     {
-                        Vmath::Vvtvp(nBndEdgePts, &consvar[k][id2], 1, 
-                                    &consvar[k][id2], 1, &wallTotEngy[0], 1, 
-                                    &wallTotEngy[0], 1);
+                        Vmath::Vcopy(nBndEdgePts, &consvar[k][id2], 1, 
+                                    &bndCons[k][0], 1);
                     }
-                    Vmath::Vdiv(nBndEdgePts, &wallTotEngy[0], 1, 
-                                &consvar[ndens][id2], 1, &wallTotEngy[0], 1);
-                    Vmath::Svtvp(nBndEdgePts, InternalEnergy, 
-                                &consvar[ndens][id2], 1, &wallTotEngy[0], 1, 
-                                &wallTotEngy[0], 1);
+
+                    m_varConv->GetPressure(bndCons, bndPressure);
+                    Vmath::Fill(nLengthArray, m_Twall, bndTotEngy, 1);
+                    m_varConv->GetRhoFromPT(bndPressure, bndTotEngy, bndRho);
+                    m_varConv->GetEFromRhoP(bndRho, bndPressure, bndIntEndy);
+                    m_varConv->GetDynamicEnergy(bndCons, bndTotEngy);
+
+                    Vmath::Vvtvp(nBndEdgePts, &bndIntEndy[0], 1, 
+                                &bndCons[ndens][0], 1, &bndTotEngy[0], 1, 
+                                &bndTotEngy[0], 1);
                     
 
                     Vmath::Vcopy(nBndEdgePts, 
-                                &wallTotEngy[0], 1, 
+                                &bndTotEngy[0], 1, 
                                 &consvar[nengy][id2], 1);
                 }                    
             }
@@ -959,9 +876,9 @@ namespace Nektar
         const NekDouble FourThird = 4. * OneThird;
 
         Vmath::Sdiv(nPts, 1.0, &inaverg[0][0], 1, &orho[0], 1);
+        m_varConv->GetVelocityVector(inaverg, u);
         for (int i = 0; i < nDim; ++i)
         {
-            Vmath::Vmul(nPts, &inaverg[i + 1][0], 1, &orho[0], 1, &u[i][0], 1);
             Vmath::Vmul(nPts, &u[i][0], 1, &u[i][0], 1, &u2[i][0], 1);
             Vmath::Vadd(nPts, &q2[0], 1, &u2[i][0], 1, &q2[0], 1);
         }

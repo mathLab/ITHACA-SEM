@@ -386,7 +386,9 @@ void DriverArpack::v_Execute(ostream &out)
 
     pFile.close();
 
-    int ndigits=6, nothers= 8, nwidthcolm=nothers+ndigits-1; // the second value determines the number of sigificant digits
+    int ndigits= 6; //determines the number of sigificant digits
+    int nothers = 8; 
+    int nwidthcolm = nothers+ndigits - 1;
     for(int j = 0; j < m_equ[0]->GetNvariables(); ++j)
     {
         NekDouble vL2Error = m_equ[0]->L2Error(j,false);
@@ -394,13 +396,13 @@ void DriverArpack::v_Execute(ostream &out)
         if (m_comm->GetRank() == 0)
         {
             out << "L 2 error (variable " << m_equ[0]->GetVariable(j) << ") : " 
-                <<std::scientific<<std::setw(nwidthcolm)
-                <<std::setprecision(ndigits-1) 
+                << std::scientific << std::setw(nwidthcolm)
+                << std::setprecision(ndigits - 1) 
                 << vL2Error << endl;
             out << "L inf error (variable " << m_equ[0]->GetVariable(j) 
                 << ") : " 
-                <<std::scientific<<std::setw(nwidthcolm)
-                <<std::setprecision(ndigits-1) 
+                << std::scientific << std::setw(nwidthcolm)
+                << std::setprecision(ndigits - 1) 
                 << vLinfError << endl;
         }
     }

@@ -261,7 +261,9 @@ void DriverModifiedArnoldi::v_Execute(ostream &out)
 
     m_equ[0]->Output();
 
-    int ndigits=6, nothers= 8, nwidthcolm=nothers+ndigits-1; // the second value determines the number of sigificant digits
+    int ndigits= 6; //determines the number of sigificant digits
+    int nothers = 8; 
+    int nwidthcolm = nothers+ndigits - 1;
     // Evaluate and output computation time and solution accuracy.
     // The specific format of the error output is essential for the
     // regression tests to work.
@@ -274,13 +276,13 @@ void DriverModifiedArnoldi::v_Execute(ostream &out)
         {
             out << "L 2 error (variable " << m_equ[0]->GetVariable(j)
             << ") : " 
-            <<std::scientific<<std::setw(nwidthcolm)
-            <<std::setprecision(ndigits-1) 
+            << std::scientific << std::setw(nwidthcolm)
+            << std::setprecision(ndigits - 1) 
             << vL2Error << endl;
             out << "L inf error (variable " << m_equ[0]->GetVariable(j)
             << ") : " 
-            <<std::scientific<<std::setw(nwidthcolm)
-            <<std::setprecision(ndigits-1) 
+            << std::scientific << std::setw(nwidthcolm)
+            << std::setprecision(ndigits - 1) 
             << vLinfError << endl;
         }
     }

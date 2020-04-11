@@ -283,17 +283,17 @@ void DriverArnoldi::WriteEvs(
         NekDouble resid,
         bool DumpInverse)
 {
-    int ndigits     = 6;  // the number of sigificant digits
-    int nothers     = 10; // extra width to place -, E, and power
-    int nwidthcolm  = nothers+ndigits-1; // the second value determines the number of sigificant digits
+    int ndigits= 6; //determines the number of sigificant digits
+    int nothers = 8; 
+    int nwidthcolm = nothers+ndigits - 1;
     if (m_timeSteppingAlgorithm)
     {
         NekDouble abs_ev = hypot (re_ev, im_ev);
         NekDouble ang_ev = atan2 (im_ev, re_ev);
 
         evlout << "EV: " << setw(2)  << i
-               <<std::scientific<<std::setw(nwidthcolm)
-               <<std::setprecision(ndigits-1) 
+               << std::scientific << std::setw(nwidthcolm)
+               << std::setprecision(ndigits - 1) 
                << abs_ev
                << " "
                << ang_ev
@@ -305,8 +305,8 @@ void DriverArnoldi::WriteEvs(
         if(resid != NekConstants::kNekUnsetDouble)
         {
             evlout 
-                    <<std::scientific<<std::setw(nwidthcolm)
-                    <<std::setprecision(ndigits-1) 
+                    << std::scientific << std::setw(nwidthcolm)
+                    << std::setprecision(ndigits - 1) 
                     << " "
                     << resid;
         }

@@ -34,6 +34,12 @@ SET(NekMeshSources
     ProcessModules/ProcessVarOpti/ElUtil.cpp
 )
 
+IF (NEKTAR_USE_CFI)
+    ADD_DEFINITIONS(-DNEKTAR_USE_CFI)
+    SET(NekMeshSources ${NekMeshSources} InputModules/InputCADfix.cpp)
+    SET(NekMeshSources ${NekMeshSources} OutputModules/OutputCADfix.cpp)
+ENDIF (NEKTAR_USE_CFI)
+
 IF (NEKTAR_USE_CCM)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputStar.cpp)
 ENDIF (NEKTAR_USE_CCM)

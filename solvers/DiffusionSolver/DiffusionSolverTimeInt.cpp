@@ -38,7 +38,9 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
+
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ContField2D.h>
 
@@ -48,16 +50,15 @@ using namespace Nektar;
 class Diffusion
 {
     public:
-        Diffusion(int argc, char* argv[]);
+        Diffusion( int argc, char* argv[] );
         ~Diffusion();
 
         void TimeIntegrate();
 
-        void DoImplicitSolve(
-                const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                      Array<OneD, Array<OneD, NekDouble> >&outarray,
-                const NekDouble time,
-                const NekDouble lambda);
+        void DoImplicitSolve( const Array<OneD, const Array<OneD, NekDouble> > & inarray,
+                                    Array<OneD, Array<OneD, NekDouble> >       & outarray,
+                              const NekDouble                                    time,
+                              const NekDouble                                    lambda );
 
     private:
         LibUtilities::SessionReaderSharedPtr            session;
@@ -66,12 +67,12 @@ class Diffusion
         SpatialDomains::MeshGraphSharedPtr              graph;
         MultiRegions::ContField2DSharedPtr              field;
 
-        LibUtilities::TimeIntegrationWrapperSharedPtr   IntScheme;
-        LibUtilities::TimeIntegrationSolutionSharedPtr  u;
+        LibUtilities::TimeIntegrationSchemeSharedPtr    m_IntScheme;
+        LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr  m_u;
         LibUtilities::TimeIntegrationSchemeOperators    ode;
         Array<OneD, Array<OneD, NekDouble> >            fields;
 
-        string                                          scheme;
+        string                                          m_scheme_name;
         unsigned int                                    nSteps;
         NekDouble                                       delta_t;
         NekDouble                                       epsilon;
@@ -82,10 +83,10 @@ class Diffusion
 };
 
 
-Diffusion::Diffusion(int argc, char* argv[])
+Diffusion::Diffusion( int argc, char* argv[] )
 {
     // Create session reader.
-    session     = LibUtilities::SessionReader::CreateInstance(argc, argv);
+    session     = LibUtilities::SessionReader::CreateInstance( argc, argv );
 
     // Read the geometry and the expansion information
     graph       = SpatialDomains::MeshGraph::Read(session);
@@ -94,12 +95,12 @@ Diffusion::Diffusion(int argc, char* argv[])
     fld         = LibUtilities::FieldIO::CreateDefault(session);
 
     // Get some information from the session
-    sessionName = session->GetSessionName();
-    scheme      = session->GetSolverInfo("TimeIntegrationMethod");
-    nSteps      = session->GetParameter("NumSteps");
-    delta_t     = session->GetParameter("TimeStep");
-    epsilon     = session->GetParameter("epsilon");
-    lambda      = 1.0/delta_t/epsilon;
+    sessionName   = session->GetSessionName();
+    m_scheme_name = session->GetSolverInfo( "TimeIntegrationMethod" );
+    nSteps        = session->GetParameter( "NumSteps" );
+    delta_t       = session->GetParameter( "TimeStep" );
+    epsilon       = session->GetParameter( "epsilon" );
+    lambda        = 1.0 / delta_t / epsilon;
 
     // Set up the field
     field       = MemoryManager<MultiRegions::ContField2D>::
@@ -114,7 +115,7 @@ Diffusion::Diffusion(int argc, char* argv[])
     field->GetCoords(x0,x1,x2);
 
     // Evaluate initial condition
-    LibUtilities::EquationSharedPtr icond 
+    LibUtilities::EquationSharedPtr icond
         = session->GetFunction("InitialConditions", "u");
     icond->Evaluate(x0,x1,x2,0.0,field->UpdatePhys());
 }
@@ -126,26 +127,28 @@ Diffusion::~Diffusion()
 
 void Diffusion::TimeIntegrate()
 {
-    IntScheme = LibUtilities::GetTimeIntegrationWrapperFactory().
-                    CreateInstance(scheme);
+    LibUtilities::TimeIntegrationSchemeFactory & fac =
+        LibUtilities::GetTimeIntegrationSchemeFactory();
 
-    ode.DefineImplicitSolve(&Diffusion::DoImplicitSolve, this);
+    m_IntScheme = fac.CreateInstance( m_scheme_name, "", 0,
+				      std::vector<NekDouble>() );
+
+    ode.DefineImplicitSolve( &Diffusion::DoImplicitSolve, this );
 
     // Initialise the scheme for actual time integration scheme
-    u = IntScheme->InitializeScheme(delta_t, fields, 0.0, ode);
+    m_u = m_IntScheme->InitializeScheme( delta_t, fields, 0.0, ode );
 
     // Zero field coefficients for initial guess for linear solver.
     Vmath::Zero(field->GetNcoeffs(), field->UpdateCoeffs(), 1);
 
     for (int n = 0; n < nSteps; ++n)
     {
-        fields = IntScheme->TimeIntegrate(n, delta_t, u, ode);
+      fields = m_IntScheme->TimeIntegrate( n, delta_t, m_u, ode );
     }
     Vmath::Vcopy(field->GetNpoints(), fields[0], 1, field->UpdatePhys(), 1);
 
     WriteSolution();
     ExactSolution();
-
 }
 
 
@@ -160,7 +163,7 @@ void Diffusion::DoImplicitSolve(
     StdRegions::ConstFactorMap factors;
     factors[StdRegions::eFactorLambda] = 1.0/lambda/epsilon;
 
-    for (int i = 0; i < inarray.num_elements(); ++i)
+    for (int i = 0; i < inarray.size(); ++i)
     {
         // Multiply RHS by 1.0/timestep/lambda
         Vmath::Smul(field->GetNpoints(), -factors[StdRegions::eFactorLambda],
@@ -209,11 +212,11 @@ void Diffusion::ExactSolution()
         ex_sol->Evaluate(x0, x1, x2, (nSteps)*delta_t, exact);
 
         // Calculate errors
-        cout << "L inf error:      " 
+        cout << "L inf error:      "
              << field->Linf(field->GetPhys(), exact) << endl;
-        cout << "L 2 error:        " 
+        cout << "L 2 error:        "
              << field->L2(field->GetPhys(), exact) << endl;
-        cout << "H 1 error:        " 
+        cout << "H 1 error:        "
              << field->H1(field->GetPhys(), exact) << endl;
     }
 
@@ -236,4 +239,3 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 }
-

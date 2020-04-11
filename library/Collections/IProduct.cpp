@@ -441,14 +441,14 @@ void PyrIProduct(bool sortTopVertex, int numElmt,
     int cnt;
     int mode, mode1;
 
-    ASSERTL1(wsp.num_elements() >= numElmt*(nquad1*nquad2*nmodes0 +
+    ASSERTL1(wsp.size() >= numElmt*(nquad1*nquad2*nmodes0 +
                                             nquad2*max(nquad0*nquad1,nmodes0*nmodes1)),
              "Insufficient workspace size");
-    
+
     Vmath::Vmul(numElmt*totpoints,jac,1,input,1,wsp,1);
 
     Array<OneD, NekDouble> wsp1 = wsp + numElmt * nquad2
-                                                * (max(nquad0*nquad1, 
+                                                * (max(nquad0*nquad1,
                                                        nmodes0*nmodes1));
 
     // Perform iproduct  with respect to the  '0' direction
@@ -489,7 +489,7 @@ void PyrIProduct(bool sortTopVertex, int numElmt,
             mode += nmodes2-ijmax;
         }
     }
-    
+
     // fix for modified basis for top singular vertex component
     // Already have evaluated (1+c)/2 (1-b)/2 (1-a)/2
     if(sortTopVertex)

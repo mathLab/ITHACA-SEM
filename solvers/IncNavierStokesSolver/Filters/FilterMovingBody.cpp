@@ -146,7 +146,7 @@ void FilterMovingBody::v_Initialise(
 
     // determine what boundary regions need to be considered
     unsigned int numBoundaryRegions
-                    = pFields[0]->GetBndConditions().num_elements();
+                    = pFields[0]->GetBndConditions().size();
 
     m_boundaryRegionIsInList.insert(m_boundaryRegionIsInList.end(),
                                     numBoundaryRegions, 0);
@@ -228,7 +228,7 @@ void FilterMovingBody::UpdateForce(
 {
     int n, cnt, elmtid, nq, offset, boundary;
     int nt  = pFields[0]->GetNpoints();
-    int dim = pFields.num_elements()-1;
+    int dim = pFields.size()-1;
 
     StdRegions::StdExpansionSharedPtr elmt;
     Array<OneD, int> BoundarytoElmtID;
@@ -270,7 +270,7 @@ void FilterMovingBody::UpdateForce(
             : 1;
     NekDouble mu = rho*pSession->GetParameter("Kinvis");
 
-    for(int i = 0; i < pFields.num_elements(); ++i)
+    for(int i = 0; i < pFields.size(); ++i)
     {
         pFields[i]->SetWaveSpace(false);
         pFields[i]->BwdTrans(pFields[i]->GetCoeffs(),
@@ -282,7 +282,7 @@ void FilterMovingBody::UpdateForce(
     // to properly locate the forces in the Fx, Fy etc. vectors.
     Array<OneD, unsigned int> ZIDs;
     ZIDs = pFields[0]->GetZIDs();
-    int local_planes = ZIDs.num_elements();
+    int local_planes = ZIDs.size();
 
     // Homogeneous 1D case  Compute forces on all WALL boundaries
     // This only has to be done on the zero (mean) Fourier mode.
@@ -294,7 +294,7 @@ void FilterMovingBody::UpdateForce(
         StdRegions::StdExpansionSharedPtr bc;
 
         // loop over the types of boundary conditions
-        for(cnt = n = 0; n < BndExp.num_elements(); ++n)
+        for(cnt = n = 0; n < BndExp.size(); ++n)
         {
             if(m_boundaryRegionIsInList[n] == 1)
             {
@@ -437,7 +437,7 @@ void FilterMovingBody::UpdateForce(
         }
     }
 
-    for(int i = 0; i < pFields.num_elements(); ++i)
+    for(int i = 0; i < pFields.size(); ++i)
     {
         pFields[i]->SetWaveSpace(true);
         pFields[i]->BwdTrans(pFields[i]->GetCoeffs(),
@@ -706,7 +706,7 @@ void FilterMovingBody::UpdateMotion(
     int npts;
     // Length of the cable
     NekDouble Length;
-    
+
     if(!pSession->DefinesSolverInfo("HomoStrip"))
     {
         pSession->LoadParameter("LZ", Length);
@@ -718,7 +718,7 @@ void FilterMovingBody::UpdateMotion(
         npts = m_session->GetParameter("HomStructModesZ");
     }
 
-    NekDouble z_coords;        
+    NekDouble z_coords;
     for(int n = 0; n < npts; n++)
     {
         z_coords = Length/npts*n;

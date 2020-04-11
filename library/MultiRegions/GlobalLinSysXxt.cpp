@@ -73,7 +73,7 @@ namespace Nektar
         {
             boost::ignore_unused(pNumRows, pLocToGloMap, pNumDir);
 
-            int nLocal = m_map.num_elements();
+            int nLocal = m_map.size();
             Array<OneD, NekDouble> vLocalIn(nLocal, 0.0);
             Array<OneD, NekDouble> vLocalOut(nLocal, 0.0);
             GlobalToLocalNoSign(pInput, vLocalIn);
@@ -84,13 +84,13 @@ namespace Nektar
         void GlobalLinSysXxt::GlobalToLocalNoSign(const Array<OneD, const NekDouble> &global,
                                        Array<OneD, NekDouble> &local)
         {
-            Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), global.get(), m_map.get(), local.get());
+            Vmath::Gathr(m_map.size(), m_locToGloSignMult.get(), global.get(), m_map.get(), local.get());
         }
 
         void GlobalLinSysXxt::LocalToGlobalNoSign(const Array<OneD, const NekDouble> &local,
                                        Array<OneD, NekDouble> &global)
         {
-            Vmath::Scatr(m_map.num_elements(), local.get(), m_map.get(), global.get());
+            Vmath::Scatr(m_map.size(), local.get(), m_map.get(), global.get());
         }
 
     }

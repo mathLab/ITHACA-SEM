@@ -47,25 +47,25 @@ namespace Nektar
 
     string NavierStokesAdvection::className  = SolverUtils::GetAdvectionFactory().RegisterCreatorFunction("Convective", NavierStokesAdvection::create);
     string NavierStokesAdvection::className2 = SolverUtils::GetAdvectionFactory().RegisterCreatorFunction("NonConservative", NavierStokesAdvection::create);
-    
+
     /**
      * Constructor. Creates ...
      *
-     * \param 
+     * \param
      * \param
      */
 
     NavierStokesAdvection::NavierStokesAdvection():
         Advection()
-	
+
     {
-        
+
     }
-    
+
     NavierStokesAdvection::~NavierStokesAdvection()
     {
     }
-    
+
 
     void NavierStokesAdvection::v_InitObject(
                     LibUtilities::SessionReaderSharedPtr        pSession,
@@ -93,11 +93,11 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
     {
         int nqtot            = fields[0]->GetTotPoints();
-        ASSERTL1(nConvectiveFields == inarray.num_elements(),"Number of convective fields and Inarray are not compatible");
+        ASSERTL1(nConvectiveFields == inarray.size(),"Number of convective fields and Inarray are not compatible");
 
         // use dimension of Velocity vector to dictate dimension of operation
-        int ndim       = advVel.num_elements();
-        Array<OneD, Array<OneD, NekDouble> > AdvVel   (advVel.num_elements());
+        int ndim       = advVel.size();
+        Array<OneD, Array<OneD, NekDouble> > AdvVel   (advVel.size());
 
         Array<OneD, Array<OneD, NekDouble> > velocity(ndim);
         for(int i = 0; i < ndim; ++i)

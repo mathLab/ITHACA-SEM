@@ -837,7 +837,7 @@ void MeshPartition::CheckPartitions(int nParts, Array<OneD, int> &pPart)
     // not be too inefficient communication-wise.
     if (!valid)
     {
-        for (i = 0; i < pPart.num_elements(); ++i)
+        for (i = 0; i < pPart.size(); ++i)
         {
             pPart[i] = i % nParts;
         }

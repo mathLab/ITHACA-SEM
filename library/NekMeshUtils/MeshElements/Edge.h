@@ -125,7 +125,7 @@ public:
     /// Distributions of points along edge.
     LibUtilities::PointsType m_curveType;
     /// Element(s) which are linked to this edge.
-    std::vector<std::pair<ElementSharedPtr, int> > m_elLink;
+    std::vector<std::pair<std::weak_ptr<Element>, int> > m_elLink;
 
     CADObjectSharedPtr m_parentCAD;
 

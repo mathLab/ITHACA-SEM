@@ -348,12 +348,12 @@ void DriverSteadyState::ComputeSFD(const int i,
     qBar1[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(),0.0);
 
     ///Encapsulated SFD method
-    Vmath::Svtvp(q1[i].num_elements(), M11, q0[i],    1, q1[i], 1, q1[i], 1 );
-    Vmath::Svtvp(q1[i].num_elements(), M12, qBar0[i], 1, q1[i], 1, q1[i], 1 );
+    Vmath::Svtvp(q1[i].size(), M11, q0[i],    1, q1[i], 1, q1[i], 1 );
+    Vmath::Svtvp(q1[i].size(), M12, qBar0[i], 1, q1[i], 1, q1[i], 1 );
 
-    Vmath::Svtvp(qBar1[i].num_elements(), M21, q0[i],    1, qBar1[i], 1,
+    Vmath::Svtvp(qBar1[i].size(), M21, q0[i],    1, qBar1[i], 1,
                                                             qBar1[i], 1 );
-    Vmath::Svtvp(qBar1[i].num_elements(), M22, qBar0[i], 1, qBar1[i], 1,
+    Vmath::Svtvp(qBar1[i].size(), M22, qBar0[i], 1, qBar1[i], 1,
                                                             qBar1[i], 1 );
 }
 

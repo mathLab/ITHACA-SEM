@@ -93,14 +93,14 @@ using namespace std;
              if (variable.compare("DefaultVar") != 0)
              {
                  SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
-                
+
                  GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
                  EvaluateBoundaryConditions(0.0, variable);
 
                  // Find periodic edges for this variable.
                  FindPeriodicFaces(bcs, variable);
              }
-            
+
              if(SetUpJustDG)
              {
                  SetUpDG();
@@ -112,7 +112,7 @@ using namespace std;
                  Array<OneD, int> ElmtID, FaceID;
                  GetBoundaryToElmtMap(ElmtID, FaceID);
 
-                 for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                 for(cnt = i = 0; i < m_bndCondExpansions.size(); ++i)
                  {
                      MultiRegions::ExpListSharedPtr locExpList;
                      locExpList = m_bndCondExpansions[i];
@@ -138,12 +138,12 @@ using namespace std;
           * @brief Copy type constructor which declares new boundary conditions
           * and re-uses mapping info and trace space if possible
           */
-         DisContField3D::DisContField3D( 
+         DisContField3D::DisContField3D(
              const DisContField3D                     &In,
              const SpatialDomains::MeshGraphSharedPtr &graph3D,
              const std::string                        &variable,
-             const bool                                SetUpJustDG) 
-             : ExpList3D(In), 
+             const bool                                SetUpJustDG)
+             : ExpList3D(In),
                m_trace(NullExpListSharedPtr)
          {
              SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
@@ -167,7 +167,7 @@ using namespace std;
                      Array<OneD, int> ElmtID,FaceID;
                      GetBoundaryToElmtMap(ElmtID,FaceID);
 
-                     for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                     for(cnt = i = 0; i < m_bndCondExpansions.size(); ++i)
                      {
                          MultiRegions::ExpListSharedPtr locExpList;
                          locExpList = m_bndCondExpansions[i];
@@ -205,14 +205,14 @@ using namespace std;
                  if(SetUpJustDG)
                  {
                  }
-                 else 
+                 else
                  {
                      int i,cnt,f;
                      Array<OneD, int> ElmtID,FaceID;
                      GetBoundaryToElmtMap(ElmtID,FaceID);
 
                      for (cnt = i = 0;
-                          i < m_bndCondExpansions.num_elements(); ++i)
+                          i < m_bndCondExpansions.size(); ++i)
                      {
                          MultiRegions::ExpListSharedPtr locExpList;
                          locExpList = m_bndCondExpansions[i];
@@ -235,7 +235,7 @@ using namespace std;
 
                      if (m_session->DefinesSolverInfo("PROJECTION"))
                      {
-                         std::string ProjectStr = 
+                         std::string ProjectStr =
                              m_session->GetSolverInfo("PROJECTION");
                          if (ProjectStr == "MixedCGDG"           ||
                              ProjectStr == "Mixed_CG_Discontinuous")
@@ -250,7 +250,7 @@ using namespace std;
                      else
                      {
                          SetUpPhysNormals();
-                     }                       
+                     }
                  }
              }
          }
@@ -284,7 +284,7 @@ using namespace std;
          {
              ASSERTL0(mkey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam,
                       "Routine currently only tested for HybridDGHelmholtz");
-             ASSERTL1(mkey.GetGlobalSysSolnType() == 
+             ASSERTL1(mkey.GetGlobalSysSolnType() ==
                       m_traceMap->GetGlobalSysSolnType(),
                       "The local to global map is not set up for the requested "
                       "solution type");
@@ -365,7 +365,7 @@ using namespace std;
              // Set up information for parallel jobs.
              for (int i = 0; i < m_trace->GetExpSize(); ++i)
              {
-                 LocalRegions::Expansion2DSharedPtr traceEl = 
+                 LocalRegions::Expansion2DSharedPtr traceEl =
                          m_trace->GetExp(i)->as<LocalRegions::Expansion2D>();
 
                  int offset      = m_trace->GetPhys_Offset(i);
@@ -390,9 +390,9 @@ using namespace std;
              int cnt, n, e;
 
              // Identify boundary faces
-             for(cnt = 0, n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+             for(cnt = 0, n = 0; n < m_bndCondExpansions.size(); ++n)
              {
-                 if (m_bndConditions[n]->GetBoundaryConditionType() != 
+                 if (m_bndConditions[n]->GetBoundaryConditionType() !=
                      SpatialDomains::ePeriodic)
                  {
                      for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
@@ -447,7 +447,7 @@ using namespace std;
 
                      // Check to see if this face is periodic.
                      auto it = m_periodicFaces.find(faceGeomId);
-                     
+
                      if (it != m_periodicFaces.end())
                      {
                          const PeriodicEntity &ent = it->second[0];
@@ -557,7 +557,7 @@ using namespace std;
         /**
          * For each boundary region, checks that the types and number of
          * boundary expansions in that region match.
-         * 
+         *
          * @param   In          ContField3D to compare with.
          * @return true if boundary conditions match.
          */
@@ -567,7 +567,7 @@ using namespace std;
             int i;
             bool returnval = true;
 
-            for(i = 0; i < m_bndConditions.num_elements(); ++i)
+            for(i = 0; i < m_bndConditions.size(); ++i)
             {
 
                 // check to see if boundary condition type is the same
@@ -646,7 +646,7 @@ using namespace std;
         /**
          * @brief Determine the periodic faces, edges and vertices for the given
          * graph.
-         * 
+         *
          * @param   bcs         Information about the boundary conditions.
          * @param   variable    Specifies the field.
          */
@@ -693,7 +693,7 @@ using namespace std;
             int region1ID, region2ID, i, j, k, cnt;
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
-            // Set up a set of all local verts and edges. 
+            // Set up a set of all local verts and edges.
             for(i = 0; i < (*m_exp).size(); ++i)
             {
                 for(j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
@@ -707,14 +707,14 @@ using namespace std;
                     int id = (*m_exp)[i]->GetGeom()->GetEid(j);
                     locEdges.insert(id);
                 }
-            }    
+            }
 
             // Begin by populating the perComps map. We loop over all periodic
             // boundary conditions and determine the composite associated with
             // it, then fill out the all* maps.
             for (auto &it : bregions)
             {
-                
+
                 locBCond = GetBoundaryCondition(
                     bconditions, it.first, variable);
 
@@ -756,10 +756,10 @@ using namespace std;
                 if(boost::icontains(locBCond->GetUserDefined(),"Rotated"))
                 {
                     vector<string> tmpstr;
-                    
+
                     boost::split(tmpstr,locBCond->GetUserDefined(),
                                  boost::is_any_of(":"));
-                    
+
                     if(boost::iequals(tmpstr[0],"Rotated"))
                     {
                         ASSERTL1(tmpstr.size() > 2,
@@ -772,7 +772,7 @@ using namespace std;
                         ASSERTL1((tmpstr[1] == "x")||(tmpstr[1] == "y")
                                   ||(tmpstr[1] == "z"), "Rotated Dir is "
                                   "not specified as x,y or z");
-                        
+
                         RotPeriodicInfo RotInfo;
                         RotInfo.m_dir = (tmpstr[1] == "x")? 0:
                             (tmpstr[1] == "y")? 1:2;
@@ -806,8 +806,8 @@ using namespace std;
 
                 vector<unsigned int> tmpOrder;
 
-                // store the rotation info of this 
-                
+                // store the rotation info of this
+
                 // From the composite, we now construct the allVerts, allEdges
                 // and allCoord map so that they can be transferred across
                 // processors. We also populate the locFaces set to store a
@@ -915,13 +915,13 @@ using namespace std;
 
                 // fill in rotational informaiton
                 auto rIt = rotComp.begin();
-                
+
                 for(i = 0; rIt != rotComp.end(); ++rIt)
                 {
-                    compid  [rotoffset[p] + i  ] = rIt->first; 
-                    rotdir  [rotoffset[p] + i  ] = rIt->second.m_dir; 
-                    rotangle[rotoffset[p] + i  ] = rIt->second.m_angle; 
-                    rottol  [rotoffset[p] + i++] = rIt->second.m_tol; 
+                    compid  [rotoffset[p] + i  ] = rIt->first;
+                    rotdir  [rotoffset[p] + i  ] = rIt->second.m_dir;
+                    rotangle[rotoffset[p] + i  ] = rIt->second.m_angle;
+                    rottol  [rotoffset[p] + i++] = rIt->second.m_tol;
                 }
 
                 vComm->AllReduce(compid, LibUtilities::ReduceSum);
@@ -934,7 +934,7 @@ using namespace std;
                 {
                     RotPeriodicInfo rinfo(rotdir[i],rotangle[i], rottol[i]);
 
-                    rotComp[compid[i]] = rinfo; 
+                    rotComp[compid[i]] = rinfo;
                 }
             }
 
@@ -1166,7 +1166,7 @@ using namespace std;
             emap[4] = quadEdgeMap;
 
             map<int,int> allCompPairs;
-            
+
             // Collect composite ides of each periodic face for use if rotation is required
             map<int,int> fIdToCompId;
 
@@ -1226,7 +1226,7 @@ using namespace std;
                         ASSERTL0(compPairs[eId2] == eId1, "Pairing incorrect");
                     }
                     compPairs[eId1] = eId2;
-                    
+
                     // store  a map of face ids to composite ids
                     fIdToCompId[eId1] = id1;
                     fIdToCompId[eId2] = id2;
@@ -1291,7 +1291,7 @@ using namespace std;
 
                         // angle is set up for i = 0 to i = 1
                         sign = (i == 0)? 1.0:-1.0;
-                        
+
                         // Calculate relative face orientation.
                         if (tmpVec[0].size() == 3)
                         {
@@ -1498,7 +1498,7 @@ using namespace std;
                 first [cnt  ] = pIt.first;
                 second[cnt++] = pIt.second;
             }
-            
+
             vComm->AllReduce(first,  LibUtilities::ReduceSum);
             vComm->AllReduce(second, LibUtilities::ReduceSum);
 
@@ -1510,25 +1510,25 @@ using namespace std;
             }
 
             // make global list of faces to composite ids if rotComp is non-zero
-            
+
             if(rotComp.size())
             {
                 Vmath::Zero(totPairSizes,first,1);
                 Vmath::Zero(totPairSizes,second,1);
-                
+
                 cnt = pairOffsets[p];
-                
+
                 for (auto &pIt : fIdToCompId)
                 {
                     first [cnt  ] = pIt.first;
                     second[cnt++] = pIt.second;
                 }
-                
+
                 vComm->AllReduce(first,  LibUtilities::ReduceSum);
                 vComm->AllReduce(second, LibUtilities::ReduceSum);
-                
+
                 fIdToCompId.clear();
-                
+
                 for(cnt = 0; cnt < totPairSizes; ++cnt)
                 {
                     fIdToCompId[first[cnt]] = second[cnt];
@@ -1536,7 +1536,7 @@ using namespace std;
             }
 
             // also will need an edge id to composite id at end of routine
-            map<int,int> eIdToCompId; 
+            map<int,int> eIdToCompId;
 
             // Search for periodic vertices and edges which are not
             // in a periodic composite but lie in this process. First,
@@ -1548,9 +1548,9 @@ using namespace std;
                 int dir         = 0;
                 NekDouble angle = 0.0;
                 NekDouble tol   = 1e-8;
-                
+
                 int faceId    = faceIds[i];
-                
+
                 ASSERTL0(allCompPairs.count(faceId) > 0,
                          "Unable to find matching periodic face.");
 
@@ -1576,7 +1576,7 @@ using namespace std;
 
                     if (perId == periodicVerts.end())
                     {
-                        
+
                         // This vertex is not included in the
                         // map. Figure out which vertex it is supposed
                         // to be periodic with. perFaceId is the face
@@ -1584,23 +1584,23 @@ using namespace std;
                         // is much the same as the loop above.
                         SpatialDomains::PointGeomVector tmpVec[2]
                             = { coordMap[faceId], coordMap[perFaceId] };
-                        
+
                         int nFaceVerts = tmpVec[0].size();
-                        StdRegions::Orientation o = nFaceVerts == 3 ? 
+                        StdRegions::Orientation o = nFaceVerts == 3 ?
                             SpatialDomains::TriGeom::GetFaceOrientation(
                                   tmpVec[0], tmpVec[1], rotbnd, dir, angle, tol):
                             SpatialDomains::QuadGeom::GetFaceOrientation(
                                    tmpVec[0], tmpVec[1], rotbnd, dir, angle, tol);
-                            
+
                         // Use vmap to determine which vertex of the other face
                         // should be periodic with this one.
                         int perVertexId = vertMap[perFaceId][vmap[nFaceVerts][o][j]];
-                        
-                        
+
+
                         PeriodicEntity ent(perVertexId,
                                            StdRegions::eNoOrientation,
                                            locVerts.count(perVertexId) > 0);
-                        
+
                         periodicVerts[vId].push_back(ent);
                     }
 
@@ -1608,12 +1608,12 @@ using namespace std;
 
                     perId = periodicEdges.find(eId);
 
-                    // this map is required at very end to determine rotation of edges. 
+                    // this map is required at very end to determine rotation of edges.
                     if(rotbnd)
                     {
                         eIdToCompId[eId] = fIdToCompId[faceId];
                     }
-                    
+
                     if (perId == periodicEdges.end())
                     {
                         // This edge is not included in the map. Figure
@@ -1623,24 +1623,24 @@ using namespace std;
                         // same as the loop above.
                         SpatialDomains::PointGeomVector tmpVec[2]
                             = { coordMap[faceId], coordMap[perFaceId] };
-                        
+
                         int nFaceEdges = tmpVec[0].size();
-                        StdRegions::Orientation o = nFaceEdges == 3 ? 
+                        StdRegions::Orientation o = nFaceEdges == 3 ?
                             SpatialDomains::TriGeom::GetFaceOrientation(
                                         tmpVec[0], tmpVec[1], rotbnd, dir, angle, tol):
                         SpatialDomains::QuadGeom::GetFaceOrientation(
                                         tmpVec[0], tmpVec[1], rotbnd, dir, angle, tol);
-                        
+
                         // Use emap to determine which edge of the other
                         // face should be periodic with this one.
                         int perEdgeId = edgeMap[perFaceId][emap[nFaceEdges][o][j]];
-                        
+
                         PeriodicEntity ent(perEdgeId,
                                            StdRegions::eForwards,
                                            locEdges.count(perEdgeId) > 0);
-                        
+
                         periodicEdges[eId].push_back(ent);
-                        
+
 
                         // this map is required at very end to
                         // determine rotation of edges.
@@ -1728,7 +1728,7 @@ using namespace std;
                 int dir         = 0;
                 NekDouble angle = 0.0;
                 NekDouble tol   = 1e-8;
-                
+
 
                 // Find edge coordinates
                 auto eIt = eIdMap.find(perIt.first);
@@ -1761,11 +1761,11 @@ using namespace std;
                     int vMap[2] = {-1,-1};
                     if(rotbnd)
                     {
-                        
+
                         SpatialDomains::PointGeom r;
 
                         r.Rotate(v[0],dir,angle);
-                        
+
                         if(r.dist(w[0])< tol)
                         {
                             vMap[0] = 0;
@@ -1799,7 +1799,7 @@ using namespace std;
                                 NekDouble x1 = w[k](0)-cx;
                                 NekDouble y1 = w[k](1)-cy;
                                 NekDouble z1 = w[k](2)-cz;
-                                
+
                                 if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z))
                                     < 1e-8)
                                 {
@@ -1808,7 +1808,7 @@ using namespace std;
                                 }
                             }
                         }
-                    
+
                         // Sanity check the map.
                         ASSERTL0(vMap[0] >= 0 && vMap[1] >= 0,
                                  "Unable to align periodic edge vertex.");
@@ -1817,7 +1817,7 @@ using namespace std;
                                  (vMap[0] != vMap[1]),
                                  "Unable to align periodic edge vertex.");
                     }
-                    
+
                     // If 0 -> 0 then edges are aligned already; otherwise
                     // reverse the orientation.
                     if (vMap[0] != 0)
@@ -1848,12 +1848,12 @@ using namespace std;
 
         bool DisContField3D::IsLeftAdjacentFace(const int n, const int e)
         {
-            LocalRegions::Expansion2DSharedPtr traceEl = 
+            LocalRegions::Expansion2DSharedPtr traceEl =
                     m_traceMap->GetElmtToTrace()[n][e]->
                          as<LocalRegions::Expansion2D>();
-            
+
             int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
-            
+
             bool fwd = true;
             if (traceEl->GetLeftAdjacentElementFace () == -1 ||
                 traceEl->GetRightAdjacentElementFace() == -1)
@@ -1898,7 +1898,7 @@ using namespace std;
          * \brief This method extracts the "forward" and "backward" trace
          * data from the array \a field and puts the data into output
          * vectors \a Fwd and \a Bwd.
-         * 
+         *
          * We first define the convention which defines "forwards" and
          * "backwards". First an association is made between the face of
          * each element and its corresponding face in the trace space
@@ -1906,7 +1906,7 @@ using namespace std;
          * left-adjacent or right-adjacent to this trace face (see
          * Expansion2D::GetLeftAdjacentElementExp). Boundary faces are
          * always left-adjacent since left-adjacency is populated first.
-         * 
+         *
          * If the element is left-adjacent we extract the face trace data
          * from \a field into the forward trace space \a Fwd; otherwise,
          * we place it in the backwards trace space \a Bwd. In this way,
@@ -1933,25 +1933,25 @@ using namespace std;
             int n, cnt, npts, e;
 
             // Zero vectors.
-            Vmath::Zero(Fwd.num_elements(), Fwd, 1);
-            Vmath::Zero(Bwd.num_elements(), Bwd, 1);
-             
+            Vmath::Zero(Fwd.size(), Fwd, 1);
+            Vmath::Zero(Bwd.size(), Bwd, 1);
+
             Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->
                                             GetNLocTracePts());
             m_locTraceToTraceMap->LocTracesFromField(field,facevals);
             m_locTraceToTraceMap->InterpLocFacesToTrace(0, facevals, Fwd);
-            
+
             Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->
                                                         GetNFwdLocTracePts();
             m_locTraceToTraceMap->InterpLocFacesToTrace(1, invals, Bwd);
-            
+
             // Fill boundary conditions into missing elements
             int id1, id2 = 0;
             cnt = 0;
-            
-            for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+
+            for(n = 0; n < m_bndCondExpansions.size(); ++n)
             {
-                if(m_bndConditions[n]->GetBoundaryConditionType() == 
+                if(m_bndConditions[n]->GetBoundaryConditionType() ==
                        SpatialDomains::eDirichlet)
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
@@ -1967,9 +1967,9 @@ using namespace std;
 
                     cnt += e;
                 }
-                else if (m_bndConditions[n]->GetBoundaryConditionType() == 
-                             SpatialDomains::eNeumann || 
-                         m_bndConditions[n]->GetBoundaryConditionType() == 
+                else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                             SpatialDomains::eNeumann ||
+                         m_bndConditions[n]->GetBoundaryConditionType() ==
                              SpatialDomains::eRobin)
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
@@ -1978,13 +1978,13 @@ using namespace std;
                         id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        
+
                         // Turning this off since we can have non-zero
                         //Neumann in mixed CG-DG method
                         //ASSERTL1((m_bndCondExpansions[n]->GetPhys())[id1]
                         //== 0.0, "method not set up for non-zero
                         //Neumann " "boundary condition");
-                        
+
                         Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
                     }
 
@@ -2001,13 +2001,13 @@ using namespace std;
                              "and Robin conditions.");
                 }
             }
-            
+
             // Copy any periodic boundary conditions.
             for (n = 0; n < m_periodicFwdCopy.size(); ++n)
             {
                 Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
             }
-            
+
             // Do parallel exchange for forwards/backwards spaces.
             m_traceMap->UniversalTraceAssemble(Fwd);
             m_traceMap->UniversalTraceAssemble(Bwd);
@@ -2017,13 +2017,13 @@ using namespace std;
         {
             return m_leftAdjacentFaces;
         }
-         
+
         void DisContField3D::v_ExtractTracePhys(
             Array<OneD, NekDouble> &outarray)
         {
             ASSERTL1(m_physState == true,
                      "Field is not in physical space.");
-            
+
             v_ExtractTracePhys(m_phys, outarray);
         }
 
@@ -2032,7 +2032,7 @@ using namespace std;
                   Array<OneD,       NekDouble> &outarray)
         {
 
-            Vmath::Zero(outarray.num_elements(), outarray, 1);
+            Vmath::Zero(outarray.size(), outarray, 1);
 
             Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->GetNFwdLocTracePts());
             m_locTraceToTraceMap->FwdLocTracesFromField(inarray,facevals);
@@ -2043,21 +2043,21 @@ using namespace std;
             m_traceMap->UniversalTraceAssemble(outarray);
 
         }
-        
+
         /**
          * @brief Add trace contributions into elemental coefficient spaces.
-         * 
+         *
          * Given some quantity \f$ \vec{Fn} \f$, which conatins this
          * routine calculates the integral
-         * 
-         * \f[ 
+         *
+         * \f[
          * \int_{\Omega^e} \vec{Fn}, \mathrm{d}S
-         * \f] 
-         * 
+         * \f]
+         *
          * and adds this to the coefficient space provided by outarray.
-         * 
+         *
          * @see Expansion3D::AddFaceNormBoundaryInt
-         * 
+         *
          * @param Fn        The trace quantities.
          * @param outarray  Resulting 3D coefficient space.
          *
@@ -2069,27 +2069,27 @@ using namespace std;
 
             Array<OneD, NekDouble> Fcoeffs(m_trace->GetNcoeffs());
             m_trace->IProductWRTBase(Fn, Fcoeffs);
-            
+
             m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,
                                                               outarray);
         }
         /**
          * @brief Add trace contributions into elemental coefficient spaces.
-         * 
+         *
          * Given some quantity \f$ \vec{Fn} \f$, which conatins this
          * routine calculates the integral
-         * 
-         * \f[ 
+         *
+         * \f[
          * \int_{\Omega^e} \vec{Fn}, \mathrm{d}S
-         * \f] 
-         * 
+         * \f]
+         *
          * and adds this to the coefficient space provided by
          * outarray. The value of q is determined from the routine
          * IsLeftAdjacentFace() which if true we use Fwd else we use
          * Bwd
          *
          * @see Expansion3D::AddFaceNormBoundaryInt
-         * 
+         *
          * @param Fwd       The trace quantities associated with left (fwd)
          *                  adjancent elmt.
          * @param Bwd       The trace quantities associated with right (bwd)
@@ -2097,8 +2097,8 @@ using namespace std;
          * @param outarray  Resulting 3D coefficient space.
          */
         void DisContField3D::v_AddFwdBwdTraceIntegral(
-            const Array<OneD, const NekDouble> &Fwd, 
-            const Array<OneD, const NekDouble> &Bwd, 
+            const Array<OneD, const NekDouble> &Fwd,
+            const Array<OneD, const NekDouble> &Bwd,
                   Array<OneD,       NekDouble> &outarray)
         {
             Array<OneD, NekDouble> Coeffs(m_trace->GetNcoeffs());
@@ -2117,7 +2117,7 @@ using namespace std;
             Array<OneD, int> &ElmtID,
             Array<OneD, int> &FaceID)
         {
-            if (m_BCtoElmMap.num_elements() == 0)
+            if (m_BCtoElmMap.size() == 0)
             {
                 map<int,int> globalIdMap;
                 int i, n;
@@ -2134,7 +2134,7 @@ using namespace std;
                 }
 
                 // Determine number of boundary condition expansions.
-                for(i = 0; i < m_bndConditions.num_elements(); ++i)
+                for(i = 0; i < m_bndConditions.size(); ++i)
                 {
                     nbcs += m_bndCondExpansions[i]->GetExpSize();
                 }
@@ -2144,7 +2144,7 @@ using namespace std;
                 m_BCtoFaceMap = Array<OneD, int>(nbcs);
 
                 LocalRegions::Expansion2DSharedPtr exp2d;
-                for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+                for(cnt = n = 0; n < m_bndCondExpansions.size(); ++n)
                 {
                     for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i, ++cnt)
                     {
@@ -2162,7 +2162,7 @@ using namespace std;
             ElmtID = m_BCtoElmMap;
             FaceID = m_BCtoFaceMap;
         }
-        
+
         void DisContField3D::v_GetBndElmtExpansion(int i,
                             std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
@@ -2170,10 +2170,10 @@ using namespace std;
             int n, cnt, nq;
             int offsetOld, offsetNew;
             std::vector<unsigned int> eIDs;
-            
+
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
-            
+
             // Skip other boundary regions
             for (cnt = n = 0; n < i; ++n)
             {
@@ -2185,12 +2185,12 @@ using namespace std;
             {
                 eIDs.push_back(ElmtID[cnt+n]);
             }
-            
+
             // Create expansion list
-            result = 
+            result =
                 MemoryManager<ExpList3D>::AllocateSharedPtr
                     (*this, eIDs, DeclareCoeffPhysArrays);
-            
+
             // Copy phys and coeffs to new explist
             if (DeclareCoeffPhysArrays)
             {
@@ -2220,7 +2220,7 @@ using namespace std;
             ExpList::v_Reset();
 
             // Reset boundary condition expansions.
-            for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (int n = 0; n < m_bndCondExpansions.size(); ++n)
             {
                 m_bndCondExpansions[n]->Reset();
             }
@@ -2318,7 +2318,7 @@ using namespace std;
             // Copy Dirichlet boundary conditions and weak forcing into trace
             // space
             cnt = 0;
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                        SpatialDomains::eDirichlet)
@@ -2379,7 +2379,7 @@ using namespace std;
         /**
          * @brief Calculates the result of the multiplication of a global matrix
          * of type specified by @a mkey with a vector given by @a inarray.
-         * 
+         *
          * @param mkey      Key representing desired matrix multiplication.
          * @param inarray   Input vector.
          * @param outarray  Resulting multiplication.
@@ -2422,7 +2422,7 @@ using namespace std;
             Array<OneD, int> ElmtID,FaceID;
             GetBoundaryToElmtMap(ElmtID,FaceID);
 
-            for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(cnt = i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 MultiRegions::ExpListSharedPtr locExpList;
 
@@ -2440,13 +2440,13 @@ using namespace std;
                     Array<OneD, NekDouble> coeffphys(npoints);
 
                     locExpList->GetCoords(x0, x1, x2);
-                    
+
                     LibUtilities::Equation coeffeqn =
                         std::static_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition>
                         (m_bndConditions[i])->m_robinPrimitiveCoeff;
-                    
-                    // evalaute coefficient 
+
+                    // evalaute coefficient
                     coeffeqn.Evaluate(x0, x1, x2, 0.0, coeffphys);
 
                     for(e = 0; e < locExpList->GetExpSize(); ++e)
@@ -2456,7 +2456,7 @@ using namespace std;
                             ::AllocateSharedPtr(FaceID[cnt+e],
                               Array_tmp = coeffphys +
                               locExpList->GetPhys_Offset(e));
-                        
+
                         elmtid = ElmtID[cnt+e];
                         // make link list if necessary
                         if(returnval.count(elmtid) != 0)
@@ -2471,25 +2471,25 @@ using namespace std;
 
             return returnval;
         }
-        
+
         /**
          * @brief Evaluate HDG post-processing to increase polynomial order of
          * solution.
-         * 
+         *
          * This function takes the solution (assumed to be one order lower) in
          * physical space, and postprocesses at the current polynomial order by
          * solving the system:
-         * 
+         *
          * \f[
          * \begin{aligned}
          *   (\nabla w, \nabla u^*) &= (\nabla w, u), \\
          *   \langle \nabla u^*, 1 \rangle &= \langle \nabla u, 1 \rangle
          * \end{aligned}
          * \f]
-         * 
+         *
          * where \f$ u \f$ corresponds with the current solution as stored
          * inside #m_coeffs.
-         * 
+         *
          * @param outarray  The resulting field \f$ u^* \f$.
          */
         void  DisContField3D::EvaluateHDGPostProcessing(
@@ -2497,9 +2497,9 @@ using namespace std;
         {
             int    i,cnt,f,ncoeff_face;
             Array<OneD, NekDouble> force, out_tmp,qrhs,qrhs1;
-            Array<OneD, Array< OneD, LocalRegions::ExpansionSharedPtr> > 
+            Array<OneD, Array< OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
-            
+
             int     nq_elmt, nm_elmt;
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs), face_lambda;
@@ -2588,7 +2588,7 @@ using namespace std;
                 };
 
 
-                //DGDeriv	
+                //DGDeriv
                 // (d/dx w, q_0)
                 (*m_exp)[i]->DGDeriv(
                     0,tmp_coeffs = m_coeffs + m_coeff_offset[i],
@@ -2622,7 +2622,7 @@ using namespace std;
                 // multiply by inverse Laplacian matrix
                 // get matrix inverse
                 LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean, ppExp->DetShapeType(), *ppExp);
-                DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey); 
+                DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey);
 
                 NekVector<NekDouble> in (nm_elmt, force, eWrapper);
                 NekVector<NekDouble> out(nm_elmt);
@@ -2679,23 +2679,23 @@ using namespace std;
 
             int i;
             int npoints;
-            int nbnd = m_bndCondExpansions.num_elements();
+            int nbnd = m_bndCondExpansions.size();
             MultiRegions::ExpListSharedPtr locExpList;
-       
+
             for (i = 0; i < nbnd; ++i)
             {
                 if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();
-                    
+
                     Array<OneD, NekDouble> x0(npoints, 0.0);
                     Array<OneD, NekDouble> x1(npoints, 0.0);
                     Array<OneD, NekDouble> x2(npoints, 0.0);
                     Array<OneD, NekDouble> valuesFile(npoints, 1.0), valuesExp(npoints, 1.0);
-  
+
                     locExpList->GetCoords(x0, x1, x2);
-                    
+
                     if (m_bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eDirichlet)
                     {
@@ -2710,18 +2710,18 @@ using namespace std;
                             ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                             valuesFile = locExpList->GetPhys();
                         }
-                        
+
                         if (exprbcs != "")
                         {
                             LibUtilities::Equation  condition = std::static_pointer_cast<SpatialDomains::
                                     DirichletBoundaryCondition >(
                                     m_bndConditions[i])->m_dirichletCondition;
-                            
+
                             condition.Evaluate(x0, x1, x2, time, valuesExp);
                         }
 
                         Vmath::Vmul(npoints, valuesExp, 1, valuesFile, 1, locExpList->UpdatePhys(), 1);
-                        
+
                         locExpList->FwdTrans_BndConstrained(
                             locExpList->GetPhys(),
                             locExpList->UpdateCoeffs());
@@ -2740,15 +2740,15 @@ using namespace std;
                         }
                         else
                         {
-                            
+
                             LibUtilities::Equation condition = std::
                                 static_pointer_cast<SpatialDomains::
                                                     NeumannBoundaryCondition>(
                                     m_bndConditions[i])->m_neumannCondition;
-                        
-                            condition.Evaluate(x0, x1, x2, time, 
+
+                            condition.Evaluate(x0, x1, x2, time,
                                                locExpList->UpdatePhys());
-                            
+
                             locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                         locExpList->UpdateCoeffs());
                         }
@@ -2772,14 +2772,14 @@ using namespace std;
                                                     RobinBoundaryCondition>(
                                     m_bndConditions[i])->m_robinFunction;
 
-                            condition.Evaluate(x0, x1, x2, time, 
+                            condition.Evaluate(x0, x1, x2, time,
                                                locExpList->UpdatePhys());
 
                         }
 
                         locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
-                        
+
                     }
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::ePeriodic)

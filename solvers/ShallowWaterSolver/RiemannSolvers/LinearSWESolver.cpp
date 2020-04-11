@@ -61,23 +61,23 @@ namespace Nektar
 
         if (m_pointSolve)
         {
-                    
-            int expDim = Fwd.num_elements()-1;
+
+            int expDim = Fwd.size()-1;
             NekDouble vf;
 
             if (expDim == 1)
             {
-                for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                for (int i = 0; i < Fwd[0].size(); ++i)
                 {
                     v_PointSolve(
-                        Fwd [0][i], Fwd [1][i], 0.0, dFwd[i], 
+                        Fwd [0][i], Fwd [1][i], 0.0, dFwd[i],
                           Bwd [0][i], Bwd [1][i], 0.0, dBwd[i],
                         flux[0][i], flux[1][i], vf);
                 }
             }
             else if (expDim == 2)
             {
-                for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                for (int i = 0; i < Fwd[0].size(); ++i)
                 {
                   v_PointSolve(
                         Fwd [0][i], Fwd [1][i], Fwd [2][i], dFwd[i],

@@ -66,7 +66,7 @@ void Laplace::v_GenerateSummary(SolverUtils::SummaryList& s)
 
 void Laplace::v_DoSolve()
 {
-    for(int i = 0; i < m_fields.num_elements(); ++i)
+    for(int i = 0; i < m_fields.size(); ++i)
     {
         // Zero field so initial conditions are zero
         Vmath::Zero(m_fields[i]->GetNcoeffs(),

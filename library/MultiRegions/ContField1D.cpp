@@ -102,7 +102,7 @@ namespace Nektar
          * constructs the mapping array (contained in #m_locToGloMap) for the
          * transformation between local elemental level and global level, it
          * calculates the total number global expansion coefficients
-         * \f$\hat{u}_n\f$. 
+         * \f$\hat{u}_n\f$.
          * The constructor also discretises the boundary conditions, specified
          * by the argument \a bcs, by expressing them in terms of the
          * coefficient of the expansion on  the boundary.
@@ -199,7 +199,7 @@ namespace Nektar
             // Inner product of forcing
             Array<OneD,NekDouble> wsp(m_ncoeffs);
             IProductWRTBase(inarray,wsp,eGlobal);
-            
+
             // Solve the system
             GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
 
@@ -245,7 +245,7 @@ namespace Nektar
             BwdTrans_IterPerExp(tmpinarray,outarray);
         }
 
-        
+
         /**
          *
          */
@@ -345,7 +345,7 @@ namespace Nektar
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
             //         IN THE SOLUTION ARRAY
             v_ImposeDirichletConditions(inout);
-            
+
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
             if(contNcoeffs - NumDirBcs > 0)
             {
@@ -410,8 +410,8 @@ namespace Nektar
                 IProductWRTBase_IterPerExp(inarray,outarray);
             }
         }
-		
-        
+
+
         void ContField1D::v_FwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
@@ -430,14 +430,14 @@ namespace Nektar
 
         void ContField1D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
         {
-            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(int i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     outarray[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(i)]
                         = m_bndCondExpansions[i]->GetCoeff(0);
                 }
-            }            
+            }
         }
 
         /**
@@ -532,7 +532,7 @@ namespace Nektar
          * @param   lambda      Parameter value.
          * @param   Sigma       Coefficients of lambda.
          * @param   varcoeff    Variable diffusivity coefficients.
-         * @param   coeffstate 
+         * @param   coeffstate
          * @param   dirForcing  Dirichlet Forcing.
          */
         void ContField1D::v_HelmSolve(
@@ -562,7 +562,7 @@ namespace Nektar
 
             // Forcing function with weak boundary conditions
             int i;
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                        SpatialDomains::eNeumann ||
@@ -651,7 +651,7 @@ namespace Nektar
 
 
         /**
-         * Reset the GlobalLinSys Manager 
+         * Reset the GlobalLinSys Manager
          */
         void ContField1D::v_ClearGlobalLinSysManager(void)
         {

@@ -50,17 +50,17 @@ namespace Nektar
                                 const ContField3DHomogeneous1D &In):
                                 DisContField3DHomogeneous1D (In,false)
         {
-            
+
             bool False = false;
             ContField2DSharedPtr zero_plane =
                     std::dynamic_pointer_cast<ContField2D> (In.m_planes[0]);
-            
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+
+            for(int n = 0; n < m_planes.size(); ++n)
             {
                 m_planes[n] =   MemoryManager<ContField2D>::
                                         AllocateSharedPtr(*zero_plane,False);
             }
-            
+
             SetCoeffPhys();
         }
 
@@ -78,7 +78,7 @@ namespace Nektar
                                     AllocateSharedPtr(*zero_plane_old,graph2D,
                                                             variable);
 
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            for(int n = 0; n < m_planes.size(); ++n)
             {
                 m_planes[n] =   MemoryManager<ContField2D>::
                                         AllocateSharedPtr(*zero_plane,graph2D,
@@ -132,7 +132,7 @@ namespace Nektar
             m_exp = MemoryManager<LocalRegions::ExpansionVector>
                                         ::AllocateSharedPtr();
 
-            for(n = 0; n < m_planes.num_elements(); ++n)
+            for(n = 0; n < m_planes.size(); ++n)
             {
                 // Plane zero and one (k=0 - cos and sin) - singularaty check
                 // required for Poisson problems
@@ -179,19 +179,19 @@ namespace Nektar
         void ContField3DHomogeneous1D::v_ImposeDirichletConditions(
                                                 Array<OneD,NekDouble>& outarray)
         {
-            Array<OneD, NekDouble> tmp; 
+            Array<OneD, NekDouble> tmp;
             int ncoeffs = m_planes[0]->GetNcoeffs();
 
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            for(int n = 0; n < m_planes.size(); ++n)
             {
-                m_planes[n]->ImposeDirichletConditions(tmp = outarray + 
+                m_planes[n]->ImposeDirichletConditions(tmp = outarray +
                                                        n*ncoeffs);
             }
         }
 
         void ContField3DHomogeneous1D::v_FillBndCondFromField(void)
         {
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            for(int n = 0; n < m_planes.size(); ++n)
             {
                 m_planes[n]->FillBndCondFromField();
             }
@@ -199,18 +199,18 @@ namespace Nektar
 
         void ContField3DHomogeneous1D::v_FillBndCondFromField(const int nreg)
         {
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            for(int n = 0; n < m_planes.size(); ++n)
             {
                 m_planes[n]->FillBndCondFromField(nreg);
             }
         }
-        
+
         /**
-         * 
+         *
          */
-        void  ContField3DHomogeneous1D::v_LocalToGlobal(bool useComm) 
+        void  ContField3DHomogeneous1D::v_LocalToGlobal(bool useComm)
         {
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            for(int n = 0; n < m_planes.size(); ++n)
             {
                 m_planes[n]->LocalToGlobal(useComm);
             }
@@ -218,11 +218,11 @@ namespace Nektar
 
 
         /**
-         * 
+         *
          */
-        void  ContField3DHomogeneous1D::v_GlobalToLocal(void) 
+        void  ContField3DHomogeneous1D::v_GlobalToLocal(void)
         {
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            for(int n = 0; n < m_planes.size(); ++n)
             {
                 m_planes[n]->GlobalToLocal();
             }
@@ -238,7 +238,7 @@ namespace Nektar
             int cnt = 0;
             Array<OneD, NekDouble> tmp;
 
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            for(int n = 0; n < m_planes.size(); ++n)
             {
                 m_planes[n]->SmoothField(tmp = field + cnt);
 
@@ -257,30 +257,30 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
-			
+
             int n;
             int cnt = 0;
             int cnt1 = 0;
             NekDouble beta;
             StdRegions::ConstFactorMap new_factors;
-			
+
             Array<OneD, NekDouble> e_out;
-            Array<OneD, NekDouble> fce(inarray.num_elements());
+            Array<OneD, NekDouble> fce(inarray.size());
             Array<OneD, const NekDouble> wfce;
-            
+
             // Fourier transform forcing function
             if(m_WaveSpace)
             {
                 fce = inarray;
             }
-            else 
+            else
             {
                 HomogeneousFwdTrans(inarray, fce,
                                     (flags.isSet(eUseGlobal))?eGlobal:eLocal);
             }
-			
+
             bool smode = false;
-            
+
             if (m_homogeneousBasis->GetBasisType() ==
                 LibUtilities::eFourierHalfModeRe ||
                 m_homogeneousBasis->GetBasisType() ==
@@ -288,18 +288,18 @@ namespace Nektar
             {
                 smode = true;
             }
-            
-            for(n = 0; n < m_planes.num_elements(); ++n)
+
+            for(n = 0; n < m_planes.size(); ++n)
             {
                 if(n != 1 || m_transposition->GetK(n) != 0 || smode)
                 {
-                    
+
                     beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
                     new_factors = factors;
                     // add in Homogeneous Fourier direction and SVV if turned on
                     new_factors[StdRegions::eFactorLambda] +=
                                                 beta*beta*(1+GetSpecVanVisc(n));
-                    
+
                     wfce = (PhysSpaceForcing)? fce+cnt:fce+cnt1;
                     m_planes[n]->HelmSolve(wfce,
                                            e_out = outarray + cnt1,
@@ -307,18 +307,18 @@ namespace Nektar
                                            varfactors, dirForcing,
                                            PhysSpaceForcing);
                 }
-                
+
                 cnt  += m_planes[n]->GetTotPoints();
                 cnt1 += m_planes[n]->GetNcoeffs();
             }
         }
-        
+
         /**
-         * Reset the GlobalLinSys Manager 
+         * Reset the GlobalLinSys Manager
          */
         void ContField3DHomogeneous1D::v_ClearGlobalLinSysManager(void)
         {
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            for(int n = 0; n < m_planes.size(); ++n)
             {
                 m_planes[n]->ClearGlobalLinSysManager();
             }

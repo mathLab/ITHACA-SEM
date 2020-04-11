@@ -59,7 +59,7 @@ void NodalPrismSPI::CalculatePoints()
     PointsKey t(numPoints, eNodalTriSPI);
     PointsManager()[t]->GetPoints(m_t0, m_t1);
     m_tw     = PointsManager()[t]->GetW();
-    m_numtri = m_tw.num_elements();
+    m_numtri = m_tw.size();
 
     for (int i = 0; i < 3; i++)
     {

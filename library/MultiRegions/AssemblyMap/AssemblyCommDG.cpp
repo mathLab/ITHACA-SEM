@@ -359,7 +359,7 @@ AssemblyCommDG::AssemblyCommDG(
         MPIFuncsNames.emplace_back("AllToAllV");
 
         // Disable neighbor MPI method on unsupported MPI version (below 3.0)
-        if (std::get<0>(comm->GetVersion()) > 3)
+        if (std::get<0>(comm->GetVersion()) >= 3)
         {
             MPIFuncs.emplace_back(ExchangeMethodSharedPtr(
                 MemoryManager<NeighborAllToAllV>::AllocateSharedPtr(

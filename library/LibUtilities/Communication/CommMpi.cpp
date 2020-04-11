@@ -388,6 +388,8 @@ void CommMpi::v_DistGraphCreateAdjacent(int indegree, const int sources[],
 {
 #if MPI_VERSION < 3
     boost::ignore_unused(indegree, sources, sourceweights, reorder);
+    ASSERTL0(false, "MPI_Dist_graph_create_adjacent is not supported in your "
+             "installed MPI version.");
 #else
 
     int retval = MPI_Dist_graph_create_adjacent(m_comm,
@@ -408,6 +410,8 @@ void CommMpi::v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
 #if MPI_VERSION < 3
     boost::ignore_unused(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
                          recvcounts, rdispls, recvtype);
+    ASSERTL0(false, "MPI_Neighbor_alltoallv is not supported in your "
+             "installed MPI version.");
 #else
     int retval = MPI_Neighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
                                         recvcounts, rdispls, recvtype, m_comm);

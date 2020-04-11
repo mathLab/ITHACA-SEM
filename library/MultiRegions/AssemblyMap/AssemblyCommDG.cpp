@@ -32,30 +32,28 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LocalRegions/Expansion2D.h>
 #include <MultiRegions/AssemblyMap/AssemblyCommDG.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <LocalRegions/Expansion2D.h>
 
 namespace Nektar
 {
 namespace MultiRegions
 {
-AllToAll::AllToAll(
-    const LibUtilities::CommSharedPtr &comm,
-    const int &maxQuad,
-    const int &nRanks,
-    const std::map<int, std::vector<int>> &rankSharedEdges,
-    const std::map<int, std::vector<int>> &edgeToTrace)
-    : m_comm(comm),
-    m_maxQuad(maxQuad),
-    m_nRanks(nRanks)
+
+AllToAll::AllToAll(const LibUtilities::CommSharedPtr &comm, const int &maxQuad,
+                   const int &nRanks,
+                   const std::map<int, std::vector<int>> &rankSharedEdges,
+                   const std::map<int, std::vector<int>> &edgeToTrace)
+    : m_comm(comm), m_maxQuad(maxQuad), m_nRanks(nRanks)
 {
     for (size_t i = 0; i < nRanks; ++i)
     {
         if (rankSharedEdges.find(i) != rankSharedEdges.end())
         {
             m_maxCount = (rankSharedEdges.at(i).size() > m_maxCount)
-                ? rankSharedEdges.at(i).size() : m_maxCount;
+                             ? rankSharedEdges.at(i).size()
+                             : m_maxCount;
         }
     }
 
@@ -69,40 +67,40 @@ AllToAll::AllToAll(
         {
             for (size_t j = 0; j < rankSharedEdges.at(i).size(); ++j)
             {
-                std::vector<int> edgeIndex
-                = edgeToTrace.at(rankSharedEdges.at(i)[j]);
+                std::vector<int> edgeIndex =
+                    edgeToTrace.at(rankSharedEdges.at(i)[j]);
                 if (edgeIndex.size() < maxQuad)
                 {
                     std::vector<int> diff(maxQuad - edgeIndex.size(), -1);
                     edgeIndex.insert(edgeIndex.end(), diff.begin(), diff.end());
                 }
 
-                m_allEdgeIndex.insert(m_allEdgeIndex.end(),
-                    edgeIndex.begin(), edgeIndex.end());
+                m_allEdgeIndex.insert(m_allEdgeIndex.end(), edgeIndex.begin(),
+                                      edgeIndex.end());
             }
 
             if (rankSharedEdges.at(i).size() < m_maxCount)
             {
                 std::vector<int> edgeIndex(
                     maxQuad * (m_maxCount - rankSharedEdges.at(i).size()), -1);
-                m_allEdgeIndex.insert(
-                    m_allEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
+                m_allEdgeIndex.insert(m_allEdgeIndex.end(), edgeIndex.begin(),
+                                      edgeIndex.end());
             }
         }
         else
         {
             std::vector<int> edgeIndex(maxQuad * m_maxCount, -1);
-            m_allEdgeIndex.insert(
-                m_allEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
+            m_allEdgeIndex.insert(m_allEdgeIndex.end(), edgeIndex.begin(),
+                                  edgeIndex.end());
         }
     }
 }
 
-AllToAllV::AllToAllV(
-    const LibUtilities::CommSharedPtr &comm,
-    const std::map<int, std::vector<int>> &rankSharedEdges,
-    const std::map<int, std::vector<int>> &edgeToTrace,
-    const int &nRanks) : m_comm(comm)
+AllToAllV::AllToAllV(const LibUtilities::CommSharedPtr &comm,
+                     const std::map<int, std::vector<int>> &rankSharedEdges,
+                     const std::map<int, std::vector<int>> &edgeToTrace,
+                     const int &nRanks)
+    : m_comm(comm)
 {
     m_allVSendCount = Array<OneD, int>(nRanks, 0);
     for (size_t i = 0; i < nRanks; ++i)
@@ -111,10 +109,10 @@ AllToAllV::AllToAllV(
         {
             for (size_t j = 0; j < rankSharedEdges.at(i).size(); ++j)
             {
-                std::vector<int> edgeIndex = edgeToTrace.at(
-                    rankSharedEdges.at(i)[j]);
-                m_allVEdgeIndex.insert(
-                    m_allVEdgeIndex.end(), edgeIndex.begin(), edgeIndex.end());
+                std::vector<int> edgeIndex =
+                    edgeToTrace.at(rankSharedEdges.at(i)[j]);
+                m_allVEdgeIndex.insert(m_allVEdgeIndex.end(), edgeIndex.begin(),
+                                       edgeIndex.end());
                 m_allVSendCount[i] += edgeIndex.size();
             }
         }
@@ -127,38 +125,40 @@ AllToAllV::AllToAllV(
     m_allVSendDisp = Array<OneD, int>(nRanks, 0);
     for (size_t i = 1; i < nRanks; ++i)
     {
-        m_allVSendDisp[i] = m_allVSendDisp[i-1] + m_allVSendCount[i-1];
+        m_allVSendDisp[i] = m_allVSendDisp[i - 1] + m_allVSendCount[i - 1];
     }
 }
 
 NeighborAllToAllV::NeighborAllToAllV(
     const LibUtilities::CommSharedPtr &comm,
     const std::map<int, std::vector<int>> &rankSharedEdges,
-    const std::map<int, std::vector<int>> &edgeToTrace) : m_comm(comm)
+    const std::map<int, std::vector<int>> &edgeToTrace)
+    : m_comm(comm)
 {
     int nNeighbours = rankSharedEdges.size();
-    Array<OneD,int> destinations(nNeighbours, 0);
-    Array<OneD,int> weights(nNeighbours, 0);
+    Array<OneD, int> destinations(nNeighbours, 0);
+    Array<OneD, int> weights(nNeighbours, 0);
     int cnt = 0;
     for (auto &rankEdgeVec : rankSharedEdges)
     {
         destinations[cnt] = rankEdgeVec.first;
-        weights[cnt] = rankEdgeVec.second.size();
+        weights[cnt]      = rankEdgeVec.second.size();
         ++cnt;
     }
 
     comm->DistGraphCreateAdjacent(destinations, weights, 1);
 
-    //Setting up indices
+    // Setting up indices
     m_sendCount = Array<OneD, int>(nNeighbours, 0);
-    cnt = 0;
+    cnt         = 0;
+
     for (const auto &rankEdgeSet : rankSharedEdges)
     {
         for (size_t i : rankEdgeSet.second)
         {
             std::vector<int> edgeIndex = edgeToTrace.at(i);
-            m_edgeTraceIndex.insert(
-                m_edgeTraceIndex.end(), edgeIndex.begin(), edgeIndex.end());
+            m_edgeTraceIndex.insert(m_edgeTraceIndex.end(), edgeIndex.begin(),
+                                    edgeIndex.end());
             m_sendCount[cnt] += edgeIndex.size();
         }
 
@@ -168,26 +168,27 @@ NeighborAllToAllV::NeighborAllToAllV(
     m_sendDisp = Array<OneD, int>(nNeighbours, 0);
     for (size_t i = 1; i < nNeighbours; ++i)
     {
-        m_sendDisp[i] = m_sendDisp[i-1] + m_sendCount[i-1];
+        m_sendDisp[i] = m_sendDisp[i - 1] + m_sendCount[i - 1];
     }
 }
 
-Pairwise::Pairwise(
-    const LibUtilities::CommSharedPtr &comm,
-    const std::map<int, std::vector<int>> &rankSharedEdges,
-    const std::map<int, std::vector<int>> &edgeToTrace) : m_comm(comm)
+Pairwise::Pairwise(const LibUtilities::CommSharedPtr &comm,
+                   const std::map<int, std::vector<int>> &rankSharedEdges,
+                   const std::map<int, std::vector<int>> &edgeToTrace)
+    : m_comm(comm)
 {
-    int cnt = 0;
+    int cnt         = 0;
     int nNeighbours = rankSharedEdges.size();
-    Array<OneD,int> sendCount(nNeighbours, -1);
-    for (const auto& rankEdgeSet : rankSharedEdges)
+    Array<OneD, int> sendCount(nNeighbours, -1);
+
+    for (const auto &rankEdgeSet : rankSharedEdges)
     {
         std::vector<int> edgeTraceIndex;
         for (size_t i : rankEdgeSet.second)
         {
             std::vector<int> edgeIndex = edgeToTrace.at(i);
-            edgeTraceIndex.insert(
-                edgeTraceIndex.end(), edgeIndex.begin(), edgeIndex.end());
+            edgeTraceIndex.insert(edgeTraceIndex.end(), edgeIndex.begin(),
+                                  edgeIndex.end());
         }
 
         m_vecPairPartitionTrace.emplace_back(
@@ -197,19 +198,18 @@ Pairwise::Pairwise(
     }
 
     m_totSends = std::accumulate(sendCount.begin(), sendCount.end(), 0);
-
     m_sendDisp = Array<OneD, int>(nNeighbours, 0);
+
     for (size_t i = 1; i < nNeighbours; ++i)
     {
-        m_sendDisp[i] = m_sendDisp[i-1] + sendCount[i-1];
+        m_sendDisp[i] = m_sendDisp[i - 1] + sendCount[i - 1];
     }
 
     m_requests = m_comm->CreateRequest(m_vecPairPartitionTrace.size() * 2);
 }
 
-void AllToAll::PerformExchange(
-    const Array<OneD, NekDouble> &testFwd,
-    Array<OneD, NekDouble> &testBwd)
+void AllToAll::PerformExchange(const Array<OneD, NekDouble> &testFwd,
+                               Array<OneD, NekDouble> &testBwd)
 {
     int size = m_maxQuad * m_maxCount * m_nRanks;
     Array<OneD, NekDouble> sendBuff(size, -1);
@@ -238,11 +238,10 @@ void AllToAll::PerformExchange(
     }
 }
 
-void AllToAllV::PerformExchange(
-    const Array<OneD, NekDouble> &testFwd,
-    Array<OneD, NekDouble> &testBwd)
+void AllToAllV::PerformExchange(const Array<OneD, NekDouble> &testFwd,
+                                Array<OneD, NekDouble> &testBwd)
 {
-    Array<OneD,NekDouble> sendBuff(m_allVEdgeIndex.size(), -1);
+    Array<OneD, NekDouble> sendBuff(m_allVEdgeIndex.size(), -1);
     Array<OneD, NekDouble> recvBuff(m_allVEdgeIndex.size(), -1);
 
     for (size_t i = 0; i < m_allVEdgeIndex.size(); ++i)
@@ -250,8 +249,8 @@ void AllToAllV::PerformExchange(
         sendBuff[i] = testFwd[m_allVEdgeIndex[i]];
     }
 
-    m_comm->AlltoAllv(sendBuff, m_allVSendCount, m_allVSendDisp,
-                      recvBuff, m_allVSendCount, m_allVSendDisp);
+    m_comm->AlltoAllv(sendBuff, m_allVSendCount, m_allVSendDisp, recvBuff,
+                      m_allVSendCount, m_allVSendDisp);
 
     for (size_t i = 0; i < m_allVEdgeIndex.size(); ++i)
     {
@@ -259,9 +258,8 @@ void AllToAllV::PerformExchange(
     }
 }
 
-void NeighborAllToAllV::PerformExchange(
-    const Array<OneD, NekDouble> &testFwd,
-    Array<OneD, NekDouble> &testBwd)
+void NeighborAllToAllV::PerformExchange(const Array<OneD, NekDouble> &testFwd,
+                                        Array<OneD, NekDouble> &testBwd)
 {
     Array<OneD, NekDouble> sendBuff(m_edgeTraceIndex.size(), -1);
     Array<OneD, NekDouble> recvBuff(m_edgeTraceIndex.size(), -1);
@@ -270,8 +268,8 @@ void NeighborAllToAllV::PerformExchange(
         sendBuff[i] = testFwd[m_edgeTraceIndex[i]];
     }
 
-    m_comm->NeighborAlltoAllv(
-        sendBuff, m_sendCount, m_sendDisp, recvBuff, m_sendCount, m_sendDisp);
+    m_comm->NeighborAlltoAllv(sendBuff, m_sendCount, m_sendDisp, recvBuff,
+                              m_sendCount, m_sendDisp);
 
     for (size_t i = 0; i < m_edgeTraceIndex.size(); ++i)
     {
@@ -279,17 +277,16 @@ void NeighborAllToAllV::PerformExchange(
     }
 }
 
-void Pairwise::PerformExchange(
-    const Array<OneD, NekDouble> &testFwd,
-    Array<OneD, NekDouble> &testBwd)
+void Pairwise::PerformExchange(const Array<OneD, NekDouble> &testFwd,
+                               Array<OneD, NekDouble> &testBwd)
 {
     Array<OneD, NekDouble> recvBuff(m_totSends, -1);
     // Perform receive operations
     for (size_t i = 0; i < m_vecPairPartitionTrace.size(); ++i)
     {
         size_t len = m_vecPairPartitionTrace[i].second.size();
-        m_comm->Irecv(m_vecPairPartitionTrace[i].first,
-                      recvBuff[m_sendDisp[i]], len, m_requests, 2*i);
+        m_comm->Irecv(m_vecPairPartitionTrace[i].first, recvBuff[m_sendDisp[i]],
+                      len, m_requests, 2 * i);
     }
 
     // Can't reuse buffer until previous send has completed so we store all
@@ -305,10 +302,10 @@ void Pairwise::PerformExchange(
 
         // Perform send operations
         m_comm->Irsend(m_vecPairPartitionTrace[i].first,
-                       sendBuff[m_sendDisp[i]], len, m_requests, 2*i + 1);
+                       sendBuff[m_sendDisp[i]], len, m_requests, 2 * i + 1);
     }
 
-    //Wait for all send/recvs to complete
+    // Wait for all send/recvs to complete
     m_comm->WaitAll(m_requests);
 
     for (size_t i = 0; i < m_vecPairPartitionTrace.size(); ++i)
@@ -323,9 +320,9 @@ void Pairwise::PerformExchange(
 }
 
 AssemblyCommDG::AssemblyCommDG(
-    const ExpList         &locExp,
-    const ExpListSharedPtr &trace,
-    const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr>> elmtToTrace,
+    const ExpList &locExp, const ExpListSharedPtr &trace,
+    const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr>>
+        &elmtToTrace,
     const Array<OneD, const ExpListSharedPtr> &bndCondExp,
     const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
     const PeriodicMap &perMap)
@@ -333,14 +330,15 @@ AssemblyCommDG::AssemblyCommDG(
     auto comm = locExp.GetSession()->GetComm();
 
     // If serial then skip initialising graph structure and the MPI timing
-    if(comm->IsSerial())
+    if (comm->IsSerial())
     {
-        m_exchange = ExchangeMethodSharedPtr(
-            MemoryManager<Serial>::AllocateSharedPtr());
+        m_exchange =
+            ExchangeMethodSharedPtr(MemoryManager<Serial>::AllocateSharedPtr());
     }
     else
     {
-        // Initialise graph structure and link processes across partition boundaries
+        // Initialise graph structure and link processes across partition
+        // boundaries
         AssemblyCommDG::InitialiseStructure(locExp, trace, elmtToTrace,
                                             bndCondExp, bndCond, perMap, comm);
 
@@ -348,13 +346,13 @@ AssemblyCommDG::AssemblyCommDG(
         std::vector<ExchangeMethodSharedPtr> MPIFuncs;
         std::vector<std::string> MPIFuncsNames;
 
-        MPIFuncs.emplace_back(ExchangeMethodSharedPtr(
-            MemoryManager<AllToAll>::AllocateSharedPtr(
+        MPIFuncs.emplace_back(
+            ExchangeMethodSharedPtr(MemoryManager<AllToAll>::AllocateSharedPtr(
                 comm, m_maxQuad, m_nRanks, m_rankSharedEdges, m_edgeToTrace)));
         MPIFuncsNames.emplace_back("AllToAll");
 
-        MPIFuncs.emplace_back(ExchangeMethodSharedPtr(
-            MemoryManager<AllToAllV>::AllocateSharedPtr(
+        MPIFuncs.emplace_back(
+            ExchangeMethodSharedPtr(MemoryManager<AllToAllV>::AllocateSharedPtr(
                 comm, m_rankSharedEdges, m_edgeToTrace, m_nRanks)));
         MPIFuncsNames.emplace_back("AllToAllV");
 
@@ -367,11 +365,10 @@ AssemblyCommDG::AssemblyCommDG(
             MPIFuncsNames.emplace_back("NeighborAllToAllV");
         }
 
-        MPIFuncs.emplace_back(ExchangeMethodSharedPtr(
-            MemoryManager<Pairwise>::AllocateSharedPtr(
+        MPIFuncs.emplace_back(
+            ExchangeMethodSharedPtr(MemoryManager<Pairwise>::AllocateSharedPtr(
                 comm, m_rankSharedEdges, m_edgeToTrace)));
         MPIFuncsNames.emplace_back("PairwiseSendRecv");
-
 
         int numPoints = trace->GetNpoints();
         int warmup = 10, iter = 50;
@@ -392,8 +389,8 @@ AssemblyCommDG::AssemblyCommDG(
             if (verbose && comm->GetRank() == 0)
             {
                 std::cout << "  " << MPIFuncsNames[i]
-                          << " times (avg, min, max): " << avg[i]
-                          << " " << min << " " << max << std::endl;
+                          << " times (avg, min, max): " << avg[i] << " " << min
+                          << " " << max << std::endl;
             }
         }
 
@@ -403,8 +400,8 @@ AssemblyCommDG::AssemblyCommDG(
 
         if (verbose && comm->GetRank() == 0)
         {
-            std::cout << "  Chosen fastest method: " << MPIFuncsNames[fastestMPI]
-                      << std::endl;
+            std::cout << "  Chosen fastest method: "
+                      << MPIFuncsNames[fastestMPI] << std::endl;
         }
 
         m_exchange = MPIFuncs[fastestMPI];
@@ -414,34 +411,35 @@ AssemblyCommDG::AssemblyCommDG(
 /**
  * This function sets up the initial structure to allow for the exchange methods
  * to be created. This structure is contained within the member variable
- * m_rankSharedEdges which is a map of rank to vector of the shared edges with
+ * #m_rankSharedEdges which is a map of rank to vector of the shared edges with
  * that rank. This is filled by:
- * -# Create an edge to trace mapping, and realign periodic edges within this
- * mapping so that they have the same data layout for ranks sharing periodic
- * boundaries
- * -# Create a list of all local edge IDs and calculate the maximum number of
- * quadrature points used locally, then perform an AllReduce to find the
- * maximum number of quadrature points across all ranks (for the AllToAll method)
- * -# Create a list of all boundary edge IDs except for those which are periodic
- * -# Using the boundary ID list, and all local ID list we can construct a unique
- * list of IDs which are on a partition boundary (e.g. if doesn't occur in the
- * local list twice, and doesn't occur in the boundary list it is on a parition
- * boundary). We also check, if it is a periodic edge, whether the other side is
- * local, if not we add the minimum of the two periodic IDs to the unique list
- * as we must have a consistent numbering scheme across ranks.
- * -# We send the unique list to all other ranks/partitions. Each ranks unique
- * list is then compared with the local unique edge ID list, if a match is found
- * then the member variable m_rankSharedEdges is filled with the matching rank
- * and unique edge ID.
+ *
+ * - Create an edge to trace mapping, and realign periodic edges within this
+ *   mapping so that they have the same data layout for ranks sharing periodic
+ *   boundaries.
+ * - Create a list of all local edge IDs and calculate the maximum number of
+ *   quadrature points used locally, then perform an AllReduce to find the
+ *   maximum number of quadrature points across all ranks (for the AllToAll
+ *   method).
+ * - Create a list of all boundary edge IDs except for those which are periodic
+ * - Using the boundary ID list, and all local ID list we can construct a unique
+ *   list of IDs which are on a partition boundary (e.g. if doesn't occur in the
+ *   local list twice, and doesn't occur in the boundary list it is on a
+ *   partition boundary). We also check, if it is a periodic edge, whether the
+ *   other side is local, if not we add the minimum of the two periodic IDs to
+ *   the unique list as we must have a consistent numbering scheme across ranks.
+ * - We send the unique list to all other ranks/partitions. Each ranks unique
+ *   list is then compared with the local unique edge ID list, if a match is
+ *   found then the member variable #m_rankSharedEdges is filled with the
+ *   matching rank and unique edge ID.
  */
 void AssemblyCommDG::InitialiseStructure(
-    const ExpList &locExp,
-    const ExpListSharedPtr &trace,
-    const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr>> elmtToTrace,
+    const ExpList &locExp, const ExpListSharedPtr &trace,
+    const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr>>
+        &elmtToTrace,
     const Array<OneD, const ExpListSharedPtr> &bndCondExp,
     const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
-    const PeriodicMap &perMap,
-    const LibUtilities::CommSharedPtr &comm)
+    const PeriodicMap &perMap, const LibUtilities::CommSharedPtr &comm)
 {
     Array<OneD, int> tmp;
     int quad = 0, nDim = 0, eid = 0, offset = 0;
@@ -456,7 +454,7 @@ void AssemblyCommDG::InitialiseStructure(
     {
         for (size_t i = 0; i < trace->GetExpSize(); ++i)
         {
-            eid = trace->GetExp(i)->GetGeom()->GetGlobalID();
+            eid    = trace->GetExp(i)->GetGeom()->GetGlobalID();
             offset = trace->GetPhys_Offset(i);
 
             // Check to see if this vert is periodic. If it is, then we
@@ -486,7 +484,7 @@ void AssemblyCommDG::InitialiseStructure(
             // need to reverse the trace order of one edge only in the
             // edge to trace map so that the data are reversed w.r.t each
             // other. We do this by using the minimum of the two IDs.
-            auto it = perMap.find(eid);
+            auto it      = perMap.find(eid);
             bool realign = false;
             if (perMap.count(eid) > 0)
             {
@@ -494,7 +492,7 @@ void AssemblyCommDG::InitialiseStructure(
                 if (!ent.isLocal)
                 {
                     realign = eid == std::min(eid, ent.id);
-                    eid = std::min(eid, ent.id);
+                    eid     = std::min(eid, ent.id);
                 }
             }
 
@@ -521,9 +519,9 @@ void AssemblyCommDG::InitialiseStructure(
                 else
                 {
                     // Orient is going from face 2 -> face 1 but we want face 1
-                    // -> face 2; in all cases except below these are equivalent.
-                    // However below is not equivalent so we use the reverse of the
-                    // mapping.
+                    // -> face 2; in all cases except below these are
+                    // equivalent. However below is not equivalent so we use the
+                    // reverse of the mapping.
                     if (orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
                     {
                         orient = StdRegions::eDir1BwdDir2_Dir2FwdDir1;
@@ -534,9 +532,7 @@ void AssemblyCommDG::InitialiseStructure(
                     }
 
                     AssemblyMapDG::RealignTraceElement(
-                        tmpArray,
-                        orient,
-                        trace->GetExp(i)->GetNumPoints(0),
+                        tmpArray, orient, trace->GetExp(i)->GetNumPoints(0),
                         trace->GetExp(i)->GetNumPoints(1));
                 }
 
@@ -603,21 +599,22 @@ void AssemblyCommDG::InitialiseStructure(
     // Find max quadrature points across all processes
     comm->AllReduce(m_maxQuad, LibUtilities::ReduceMax);
 
-    //Create list of boundary edge IDs
+    // Create list of boundary edge IDs
     std::set<int> bndIdList;
     for (size_t i = 0; i < bndCond.size(); ++i)
     {
         for (size_t j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
         {
             eid = bndCondExp[i]->GetExp(j)->GetGeom()->GetGlobalID();
-            if (perMap.find(eid) == perMap.end())  // Don't add if periodic boundary
+            if (perMap.find(eid) ==
+                perMap.end()) // Don't add if periodic boundary
             {
                 bndIdList.insert(eid);
             }
         }
     }
 
-    //Get unique edges to send
+    // Get unique edges to send
     std::vector<int> uniqueEdgeIds;
     std::vector<bool> duplicated(localEdgeIds.size(), false);
     for (size_t i = 0; i < localEdgeIds.size(); ++i)
@@ -631,9 +628,9 @@ void AssemblyCommDG::InitialiseStructure(
             }
         }
 
-        if (!duplicated[i])  // Not duplicated in local partition
+        if (!duplicated[i]) // Not duplicated in local partition
         {
-            if (bndIdList.find(eid) == bndIdList.end())  // Not a boundary edge
+            if (bndIdList.find(eid) == bndIdList.end()) // Not a boundary edge
             {
                 // Check if periodic and if not local set eid to other side
                 auto it = perMap.find(eid);
@@ -641,7 +638,8 @@ void AssemblyCommDG::InitialiseStructure(
                 {
                     if (!it->second[0].isLocal)
                     {
-                        uniqueEdgeIds.emplace_back(std::min(eid, it->second[0].id));
+                        uniqueEdgeIds.emplace_back(
+                            std::min(eid, it->second[0].id));
                     }
                 }
                 else
@@ -653,7 +651,7 @@ void AssemblyCommDG::InitialiseStructure(
     }
 
     // Send uniqueEdgeIds size so all partitions can prepare buffers
-    m_nRanks =  comm->GetSize();
+    m_nRanks = comm->GetSize();
     Array<OneD, int> rankNumEdges(m_nRanks);
     Array<OneD, int> localEdgeSize(1, uniqueEdgeIds.size());
     comm->AllGather(localEdgeSize, rankNumEdges);
@@ -661,7 +659,7 @@ void AssemblyCommDG::InitialiseStructure(
     Array<OneD, int> rankLocalEdgeDisp(m_nRanks, 0);
     for (size_t i = 1; i < m_nRanks; ++i)
     {
-        rankLocalEdgeDisp[i] = rankLocalEdgeDisp[i-1] + rankNumEdges[i-1];
+        rankLocalEdgeDisp[i] = rankLocalEdgeDisp[i - 1] + rankNumEdges[i - 1];
     }
 
     Array<OneD, int> localEdgeIdsArray(uniqueEdgeIds.size());
@@ -670,15 +668,15 @@ void AssemblyCommDG::InitialiseStructure(
         localEdgeIdsArray[i] = uniqueEdgeIds[i];
     }
 
-    //Sort localEdgeIdsArray before sending (this is important!)
+    // Sort localEdgeIdsArray before sending (this is important!)
     std::sort(localEdgeIdsArray.begin(), localEdgeIdsArray.end());
 
-    Array<OneD, int> rankLocalEdgeIds(std::accumulate(rankNumEdges.begin(),
-                                      rankNumEdges.end(), 0), 0);
+    Array<OneD, int> rankLocalEdgeIds(
+        std::accumulate(rankNumEdges.begin(), rankNumEdges.end(), 0), 0);
 
-    //Send all unique edge IDs to all partitions
-    comm->AllGatherv(localEdgeIdsArray, rankLocalEdgeIds,
-                     rankNumEdges, rankLocalEdgeDisp);
+    // Send all unique edge IDs to all partitions
+    comm->AllGatherv(localEdgeIdsArray, rankLocalEdgeIds, rankNumEdges,
+                     rankLocalEdgeDisp);
 
     // Find what edge Ids match with other ranks
     size_t myRank = comm->GetRank();
@@ -693,9 +691,8 @@ void AssemblyCommDG::InitialiseStructure(
         for (size_t j = 0; j < rankNumEdges[i]; ++j)
         {
             int edgeId = rankLocalEdgeIds[rankLocalEdgeDisp[i] + j];
-            if (std::find(
-                uniqueEdgeIds.begin(), uniqueEdgeIds.end(), edgeId)
-                != uniqueEdgeIds.end())
+            if (std::find(uniqueEdgeIds.begin(), uniqueEdgeIds.end(), edgeId) !=
+                uniqueEdgeIds.end())
             {
                 m_rankSharedEdges[i].emplace_back(edgeId);
             }
@@ -704,19 +701,18 @@ void AssemblyCommDG::InitialiseStructure(
 }
 
 /**
- * Timing of the exchange method, 'f',  performing the exchange 'count' times
- * for array of length 'num'.
+ * Timing of the exchange method @p f, performing the exchange @p count times
+ * for array of length @p num.
  *
- * @param comm Communicator
- * @param count Number of timing iterations to run
- * @param num Number of quadrature points to communicate
- * @param f ExchangeMethod to time
+ * @param comm   Communicator
+ * @param count  Number of timing iterations to run
+ * @param num    Number of quadrature points to communicate
+ * @param f      #ExchangeMethod to time
+ *
  * @return tuple of loop times {avg, min, max}
  */
 std::tuple<NekDouble, NekDouble, NekDouble> AssemblyCommDG::Timing(
-    const LibUtilities::CommSharedPtr &comm,
-    const int &count,
-    const int &num,
+    const LibUtilities::CommSharedPtr &comm, const int &count, const int &num,
     ExchangeMethodSharedPtr f)
 {
     Array<OneD, NekDouble> testFwd(num, 1);
@@ -740,9 +736,9 @@ std::tuple<NekDouble, NekDouble, NekDouble> AssemblyCommDG::Timing(
     Array<OneD, NekDouble> sumTime(1, t.TimePerTest(count));
     comm->AllReduce(sumTime, LibUtilities::ReduceSum);
 
-    NekDouble avgTime = sumTime[0]/comm->GetSize();
+    NekDouble avgTime = sumTime[0] / comm->GetSize();
     return std::make_tuple(avgTime, minTime[0], maxTime[0]);
 }
 
-} // namespace
-} // namespace
+} // namespace MultiRegions
+} // namespace Nektar

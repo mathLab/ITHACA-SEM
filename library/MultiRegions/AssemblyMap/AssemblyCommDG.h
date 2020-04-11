@@ -35,13 +35,14 @@
 #ifndef MULTIREGIONS_ASSEMBLY_COMM_DG_H
 #define MULTIREGIONS_ASSEMBLY_COMM_DG_H
 
-#include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
 namespace MultiRegions
 {
+
 /**
  * The ExchangeMethod classes contain the required structure to distribute the
  * Fwd trace of partition edges to the matching locations in the Bwd trace in
@@ -56,7 +57,7 @@ public:
     MULTI_REGIONS_EXPORT ExchangeMethod() = default;
 
     /// Default destructor
-    MULTI_REGIONS_EXPORT virtual  ~ExchangeMethod() = default;
+    MULTI_REGIONS_EXPORT virtual ~ExchangeMethod() = default;
 
     /**
      * Perform MPI comm exchange taking the Fwd trace and
@@ -67,23 +68,25 @@ public:
      * @param[out] testBwd The values received from adjacent partitions
      */
     MULTI_REGIONS_EXPORT virtual void PerformExchange(
-        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) = 0;
+        const Array<OneD, NekDouble> &testFwd,
+        Array<OneD, NekDouble> &testBwd) = 0;
 };
 
-typedef std::shared_ptr<ExchangeMethod>  ExchangeMethodSharedPtr;
+typedef std::shared_ptr<ExchangeMethod> ExchangeMethodSharedPtr;
 
 /**
  * If parallel operation is not indicated then use the Serial subclass which
  * does not perform any exchange.
  */
-class Serial: public ExchangeMethod
+class Serial : public ExchangeMethod
 {
 public:
     /// Default constructor
     MULTI_REGIONS_EXPORT Serial() = default;
 
     MULTI_REGIONS_EXPORT inline virtual void PerformExchange(
-        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override
+        const Array<OneD, NekDouble> &testFwd,
+        Array<OneD, NekDouble> &testBwd) override
     {
         boost::ignore_unused(testFwd, testBwd);
     }
@@ -96,19 +99,19 @@ public:
  * All ranks communicate full array sizes to all other ranks. One collective
  * operation is posted on each rank which requires communication.
  */
-class AllToAll: public ExchangeMethod
+class AllToAll : public ExchangeMethod
 {
 public:
     /// Default constructor.
     MULTI_REGIONS_EXPORT AllToAll(
-            const LibUtilities::CommSharedPtr &comm,
-            const int &maxQuad,
-            const int &nRanks,
-            const std::map<int, std::vector<int>> &rankSharedEdges,
-            const std::map<int, std::vector<int>> &edgeToTrace);
+        const LibUtilities::CommSharedPtr &comm, const int &maxQuad,
+        const int &nRanks,
+        const std::map<int, std::vector<int>> &rankSharedEdges,
+        const std::map<int, std::vector<int>> &edgeToTrace);
 
     MULTI_REGIONS_EXPORT virtual void PerformExchange(
-        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
+        const Array<OneD, NekDouble> &testFwd,
+        Array<OneD, NekDouble> &testBwd) override;
 
 private:
     /// Communicator
@@ -130,18 +133,18 @@ private:
  * the array size can be 0 to avoid unnecessary data transfer. One collective
  * peration is posted on each rank which requires communication.
  */
-class AllToAllV: public ExchangeMethod
+class AllToAllV : public ExchangeMethod
 {
 public:
     /// Default constructor.
     MULTI_REGIONS_EXPORT AllToAllV(
-            const LibUtilities::CommSharedPtr &comm,
-            const std::map<int, std::vector<int>> &rankSharedEdges,
-            const std::map<int, std::vector<int>> &edgeToTrace,
-            const int &nRanks);
+        const LibUtilities::CommSharedPtr &comm,
+        const std::map<int, std::vector<int>> &rankSharedEdges,
+        const std::map<int, std::vector<int>> &edgeToTrace, const int &nRanks);
 
     MULTI_REGIONS_EXPORT virtual void PerformExchange(
-        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
+        const Array<OneD, NekDouble> &testFwd,
+        Array<OneD, NekDouble> &testBwd) override;
 
 private:
     /// Communicator
@@ -163,17 +166,18 @@ private:
  * over just reducing array sizes to 0 such as in MPI_AllToAllV. One collective
  * operation is posted on each rank which requires communication.
  */
-class NeighborAllToAllV: public ExchangeMethod
+class NeighborAllToAllV : public ExchangeMethod
 {
 public:
     /// Default constructor.
     MULTI_REGIONS_EXPORT NeighborAllToAllV(
-            const LibUtilities::CommSharedPtr &comm,
-            const std::map<int, std::vector<int>> &rankSharedEdges,
-            const std::map<int, std::vector<int>> &edgeToTrace);
+        const LibUtilities::CommSharedPtr &comm,
+        const std::map<int, std::vector<int>> &rankSharedEdges,
+        const std::map<int, std::vector<int>> &edgeToTrace);
 
     MULTI_REGIONS_EXPORT virtual void PerformExchange(
-        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
+        const Array<OneD, NekDouble> &testFwd,
+        Array<OneD, NekDouble> &testBwd) override;
 
 private:
     /// Communicator
@@ -183,7 +187,7 @@ private:
     /// List of trace map indices of the quad points to exchange
     std::vector<int> m_edgeTraceIndex;
     /// List of counts
-    Array<OneD,int> m_sendCount;
+    Array<OneD, int> m_sendCount;
 };
 
 /**
@@ -193,18 +197,20 @@ private:
  * need to exchange data, i.e. are adjacent in the mesh or share a periodic
  * boundary condition. On each rank there are 'n' receives and 'n' sends posted
  * where 'n' is the number of other ranks with which communication is needed. As
- * n increases communication overhead can increase due to the increased postings.
+ * n increases communication overhead can increase due to the increased
+ * postings.
  */
-class Pairwise: public ExchangeMethod
+class Pairwise : public ExchangeMethod
 {
 public:
     MULTI_REGIONS_EXPORT Pairwise(
-            const LibUtilities::CommSharedPtr &comm,
-            const std::map<int, std::vector<int>> &rankSharedEdges,
-            const std::map<int, std::vector<int>> &edgeToTrace);
+        const LibUtilities::CommSharedPtr &comm,
+        const std::map<int, std::vector<int>> &rankSharedEdges,
+        const std::map<int, std::vector<int>> &edgeToTrace);
 
     MULTI_REGIONS_EXPORT virtual void PerformExchange(
-        const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd) override;
+        const Array<OneD, NekDouble> &testFwd,
+        Array<OneD, NekDouble> &testBwd) override;
 
 private:
     /// Communicator
@@ -214,72 +220,87 @@ private:
     /// Total quadrature points to send/recv
     int m_totSends = 0;
     /// List of displacements
-    Array<OneD,int> m_sendDisp;
+    Array<OneD, int> m_sendDisp;
     /// List of requests
     LibUtilities::CommRequestSharedPtr m_requests;
 };
 
 /**
+ * @brief Implements communication for populating forward and backwards spaces
+ * across processors in the discontinuous Galerkin routines.
+ *
+ * The AssemblyCommDG class constructs various exchange methods for performing
+ * the action of communicating trace data from the forwards space of one
+ * processor to the backwards space of the corresponding neighbour element, and
+ * vice versa.
+ *
  * This class initialises the structure for all exchange methods and then times
  * to determine the fastest method for the particular system configuration, if
- * running in serial configuration it assigns the Serial exchange method. It
+ * running in serial configuration it assigns the #Serial exchange method. It
  * then acts as a pass through to the chosen exchange method for the
- * PerformExchange function.
+ * #PerformExchange function.
  */
 class AssemblyCommDG
 {
-    public:
-        /// Default deconstructor
-        MULTI_REGIONS_EXPORT ~AssemblyCommDG() = default;
-        // Constructor for MPI communication methods
+public:
+    /// Default destructor
+    MULTI_REGIONS_EXPORT ~AssemblyCommDG() = default;
 
-        MULTI_REGIONS_EXPORT AssemblyCommDG(
-            const ExpList &locExp, const ExpListSharedPtr &trace,
-            const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> > elmtToTrace,
-            const Array<OneD, const ExpListSharedPtr> &bndCondExp,
-            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
-            const PeriodicMap &perMap);
+    // Constructor for MPI communication methods
+    MULTI_REGIONS_EXPORT AssemblyCommDG(
+        const ExpList &locExp, const ExpListSharedPtr &trace,
+        const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr>>
+            &elmtToTrace,
+        const Array<OneD, const ExpListSharedPtr> &bndCondExp,
+        const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
+            &bndCond,
+        const PeriodicMap &perMap);
 
-        /// Main function that performs MPI exchange using timed fastest method
-        MULTI_REGIONS_EXPORT inline void PerformExchange(
-            const Array<OneD, double> &testFwd, Array<OneD, double> &testBwd)
-        {
-            m_exchange->PerformExchange(testFwd, testBwd);
-        }
+    /**
+     * @brief Perform the trace exchange between processors, given the forwards
+     * and backwards spaces.
+     *
+     * @param testFwd  Local forwards space of the trace (which will be sent)
+     * @param testBwd  Local bacwards space of the trace (which will receive
+     *                 contributions)
+     */
+    MULTI_REGIONS_EXPORT inline void PerformExchange(
+        const Array<OneD, NekDouble> &testFwd, Array<OneD, NekDouble> &testBwd)
+    {
+        m_exchange->PerformExchange(testFwd, testBwd);
+    }
 
-    private:
-        /// Chosen exchange method (either fastest parallel or serial)
-        ExchangeMethodSharedPtr m_exchange;
-        /// Max number of quadrature points in an element
-        int m_maxQuad = 0;
-        /// Number of ranks/processes/partitions
-        int m_nRanks = 0;
-        /// Map of process to shared edge IDs
-        std::map<int, std::vector<int>> m_rankSharedEdges;
-        /// Map of edge ID to quad point trace indices
-        std::map<int, std::vector<int>> m_edgeToTrace;
+private:
+    /// Chosen exchange method (either fastest parallel or serial)
+    ExchangeMethodSharedPtr m_exchange;
+    /// Max number of quadrature points in an element
+    int m_maxQuad = 0;
+    /// Number of ranks/processes/partitions
+    int m_nRanks = 0;
+    /// Map of process to shared edge IDs
+    std::map<int, std::vector<int>> m_rankSharedEdges;
+    /// Map of edge ID to quad point trace indices
+    std::map<int, std::vector<int>> m_edgeToTrace;
 
-        /// Initalises the structure for the MPI communication
-        void InitialiseStructure(
-            const ExpList &locExp,
-            const ExpListSharedPtr &trace,
-            const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> > elmtToTrace,
-            const Array<OneD, const ExpListSharedPtr> &bndCondExp,
-            const Array< OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
-            const PeriodicMap &perMap,
-            const LibUtilities::CommSharedPtr &comm);
+    /// Initalises the structure for the MPI communication
+    void InitialiseStructure(
+        const ExpList &locExp, const ExpListSharedPtr &trace,
+        const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr>>
+            &elmtToTrace,
+        const Array<OneD, const ExpListSharedPtr> &bndCondExp,
+        const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
+            &bndCond,
+        const PeriodicMap &perMap, const LibUtilities::CommSharedPtr &comm);
 
-        /// Timing of the MPI exchange method f
-        static std::tuple<NekDouble, NekDouble, NekDouble> Timing(
-            const LibUtilities::CommSharedPtr &comm,
-            const int &count,
-            const int &num,
-            ExchangeMethodSharedPtr f);
+    /// Timing of the MPI exchange method.
+    static std::tuple<NekDouble, NekDouble, NekDouble> Timing(
+        const LibUtilities::CommSharedPtr &comm, const int &count,
+        const int &num, ExchangeMethodSharedPtr f);
 };
 
-typedef std::shared_ptr<AssemblyCommDG>  AssemblyCommDGSharedPtr;
+typedef std::shared_ptr<AssemblyCommDG> AssemblyCommDGSharedPtr;
 
-} // end of namespace
-} // end of namespace
+} // namespace MultiRegions
+} // namespace Nektar
 
 #endif

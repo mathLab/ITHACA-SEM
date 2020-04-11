@@ -521,16 +521,15 @@ template <class T> T Comm::Scatter(const int rootProc, T &pData)
  * constant. This also assumes that the graph is bi-directional, so all
  * sources are also destinations with equal weighting.
  *
- * @param sources Ranks of processes for which the calling process is the
- * destination/source
- * @param sourceweights Weights of the corresponding edges into the
- * calling process
- * @param reorder Ranks may be reordered (true) or not (false)
+ * @param sources       Ranks of processes for which the calling process is the
+ *                      destination/source
+ * @param sourceweights Weights of the corresponding edges into the calling
+ *                      process
+ * @param reorder       Ranks may be reordered (true) or not (false)
  */
 template <class T>
 void Comm::DistGraphCreateAdjacent(T &sources, T &sourceweights, int reorder)
 {
-
     static_assert(
         CommDataTypeTraits<T>::IsVector,
         "DistGraphCreateAdjacent only valid with Array or vector arguments.");
@@ -551,16 +550,18 @@ void Comm::DistGraphCreateAdjacent(T &sources, T &sourceweights, int reorder)
  * processes send different amounts of data to, and receive different amounts
  * of data from, all neighbors
  *
- * @param pSendData Array/vector to send to neighbors
- * @param pSendDataSizeMap Array/vector where entry i specifies the number
- * of elements to send to neighbor i
+ * @param pSendData          Array/vector to send to neighbors
+ * @param pSendDataSizeMap   Array/vector where entry i specifies the number
+ *                           of elements to send to neighbor i
  * @param pSendDataOffsetMap Array/vector where entry i specifies the
- * displacement (offset from pSendData) from which to send data to neighbor i
- * @param pRecvData Array/vector to place incoming data in to
- * @param pRecvDataSizeMap Array/vector where entry i specifies the number
- * of elements to receive from neighbor i
- * @param pRecvDataOffsetMap  Array/vector where entry i specifies the
- * displacement (offset from pRecvData) from which to receive data from neighbor i
+ *                           displacement (offset from pSendData) from which to
+ *                           send data to neighbor i
+ * @param pRecvData          Array/vector to place incoming data in to
+ * @param pRecvDataSizeMap   Array/vector where entry i specifies the number
+ *                           of elements to receive from neighbor i
+ * @param pRecvDataOffsetMap Array/vector where entry i specifies the
+ *                           displacement (offset from pRecvData) from which to
+ *                           receive data from neighbor i
  */
 template <class T1, class T2>
 void Comm::NeighborAlltoAllv(
@@ -591,11 +592,11 @@ void Comm::NeighborAlltoAllv(
 /**
  * Starts a ready-mode nonblocking send
  *
- * @param pProc Rank of destination
- * @param pData Array/vector to send
- * @param count Number of elements to send in pData
+ * @param pProc   Rank of destination
+ * @param pData   Array/vector to send
+ * @param count   Number of elements to send in pData
  * @param request Communication request array
- * @param loc Location in request to use
+ * @param loc     Location in request to use
  */
 template <class T> void Comm::Irsend(int pProc, T &pData, int count,
                       CommRequestSharedPtr request, int loc)
@@ -605,14 +606,14 @@ template <class T> void Comm::Irsend(int pProc, T &pData, int count,
 }
 
 /**
-* Begins a nonblocking receive
-*
-* @param pProc Rank of source
-* @param pData Array/vector to place incoming data in to
-* @param count Number of elements to receive in to pData
-* @param request Communication request object
-* @param loc Location in request to use
-*/
+ * Begins a nonblocking receive
+ *
+ * @param pProc   Rank of source
+ * @param pData   Array/vector to place incoming data in to
+ * @param count   Number of elements to receive in to pData
+ * @param request Communication request object
+ * @param loc     Location in request to use
+ */
 template <class T> void Comm::Irecv(int pProc, T &pData, int count,
                      CommRequestSharedPtr request, int loc)
 {
@@ -621,7 +622,7 @@ template <class T> void Comm::Irecv(int pProc, T &pData, int count,
 }
 
 /**
- * Waits for all MPI Requests in the request object to complete
+ * Waits for all CommRequests in the request object to complete.
  *
  * @param request Communication request object
  */
@@ -631,17 +632,16 @@ inline void Comm::WaitAll(CommRequestSharedPtr request)
 }
 
 /**
+ * Creates a number of CommRequests.
  *
- * @param num Number of MPI_Requests to generate in the communication request
- * object
+ * @param num Number of requests to generate in the communication request object
+ *
  * @return Communication request object
  */
 inline CommRequestSharedPtr Comm::CreateRequest(int num)
 {
     return v_CreateRequest(num);
 }
-
-
 
 /**
  * @brief If the flag is non-zero create a new communicator.

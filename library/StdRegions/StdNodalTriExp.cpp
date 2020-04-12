@@ -330,10 +330,10 @@ namespace Nektar
             }
 
             maparray[0] = eid;
-            maparray[1] = eid == 2 ? 0 : eid+1;
+            maparray[nEdgeCoeffs-1] = eid == 2 ? 0 : eid+1;
             for (int i = 2; i < nEdgeCoeffs; i++)
             {
-                maparray[i] = eid*(nEdgeCoeffs-2)+1+i; 
+                maparray[i-1] = eid*(nEdgeCoeffs-2)+1+i; 
             }  
 
             if (orient == eBackwards)

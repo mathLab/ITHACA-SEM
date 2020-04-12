@@ -155,7 +155,7 @@ public:
     void Irsend(int pProc, T &pData, int count, CommRequestSharedPtr request,
                 int loc);
     template <class T>
-    void RsendInit(int pProc, T &pData, int count, CommRequestSharedPtr request,
+    void SendInit(int pProc, T &pData, int count, CommRequestSharedPtr request,
                    int loc);
     template <class T>
     void Irecv(int pProc, T &pData, int count, CommRequestSharedPtr request,
@@ -241,7 +241,7 @@ protected:
 
     virtual void v_Irsend(void *buf, int count, CommDataType dt, int dest,
                           CommRequestSharedPtr request, int loc)   = 0;
-    virtual void v_RsendInit(void *buf, int count, CommDataType dt, int dest,
+    virtual void v_SendInit(void *buf, int count, CommDataType dt, int dest,
                           CommRequestSharedPtr request, int loc)   = 0;
     virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
                          CommRequestSharedPtr request, int loc)   = 0;
@@ -620,7 +620,7 @@ template <class T> void Comm::Irsend(int pProc, T &pData, int count,
 }
 
 /**
- * Creates a persistent request for a ready send
+ * Creates a persistent request for a send
  *
  * @param pProc   Rank of destination
  * @param pData   Array/vector to send
@@ -628,10 +628,10 @@ template <class T> void Comm::Irsend(int pProc, T &pData, int count,
  * @param request Communication request object
  * @param loc     Location in request to use
  */
-template <class T> void Comm::RsendInit(int pProc, T &pData, int count,
+template <class T> void Comm::SendInit(int pProc, T &pData, int count,
                                      CommRequestSharedPtr request, int loc)
 {
-    v_RsendInit(CommDataTypeTraits<T>::GetPointer(pData), count,
+    v_SendInit(CommDataTypeTraits<T>::GetPointer(pData), count,
              CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
 }
 

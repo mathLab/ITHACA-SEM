@@ -165,7 +165,7 @@ protected:
                                      int rdispls[], CommDataType recvtype);
     virtual void v_Irsend(void *buf, int count, CommDataType dt, int dest,
                           CommRequestSharedPtr request, int loc);
-    virtual void v_RsendInit(void *buf, int count, CommDataType dt, int dest,
+    virtual void v_SendInit(void *buf, int count, CommDataType dt, int dest,
                           CommRequestSharedPtr request, int loc);
     virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
                          CommRequestSharedPtr request, int loc);

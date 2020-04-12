@@ -222,7 +222,7 @@ Pairwise::Pairwise(const LibUtilities::CommSharedPtr &comm,
                          m_recvBuff[m_sendDisp[i]], len, m_recvRequest, i);
 
         //Initialise send requests
-        m_comm->RsendInit(m_vecPairPartitionTrace[i].first,
+        m_comm->SendInit(m_vecPairPartitionTrace[i].first,
                           m_sendBuff[m_sendDisp[i]], len, m_sendRequest, i);
     }
 }

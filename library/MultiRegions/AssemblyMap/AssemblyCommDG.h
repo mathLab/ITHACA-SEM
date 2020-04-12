@@ -191,7 +191,7 @@ private:
 };
 
 /**
- * Uses persistent MPI_Irecv and MPI_Irsend operations to perform the exchange of
+ * Uses persistent MPI_Irecv and MPI_Isend operations to perform the exchange of
  * quadrature values. This allows for varying exchange array sizes to minimise
  * communication data size. Ranks only communicate with ranks with which they
  * need to exchange data, i.e. are adjacent in the mesh or share a periodic

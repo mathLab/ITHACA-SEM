@@ -143,7 +143,7 @@ protected:
                                                CommDataType dt, int dest,
                           CommRequestSharedPtr request, int loc);
 
-    LIB_UTILITIES_EXPORT virtual void v_RsendInit(void *buf, int count,
+    LIB_UTILITIES_EXPORT virtual void v_SendInit(void *buf, int count,
                                                CommDataType dt, int dest,
                            CommRequestSharedPtr request, int loc);
 

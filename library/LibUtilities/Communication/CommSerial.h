@@ -143,10 +143,19 @@ protected:
                                                CommDataType dt, int dest,
                           CommRequestSharedPtr request, int loc);
 
+    LIB_UTILITIES_EXPORT virtual void v_RsendInit(void *buf, int count,
+                                               CommDataType dt, int dest,
+                           CommRequestSharedPtr request, int loc);
+
     LIB_UTILITIES_EXPORT virtual void v_Irecv(void *buf, int count,
                                               CommDataType dt, int source,
                          CommRequestSharedPtr request, int loc);
 
+    LIB_UTILITIES_EXPORT virtual void v_RecvInit(void *buf, int count,
+                                                 CommDataType dt, int source,
+                            CommRequestSharedPtr request, int loc);
+
+    LIB_UTILITIES_EXPORT virtual void v_StartAll(CommRequestSharedPtr request);
     LIB_UTILITIES_EXPORT virtual void v_WaitAll(CommRequestSharedPtr request);
     LIB_UTILITIES_EXPORT virtual CommRequestSharedPtr v_CreateRequest(int num);
 

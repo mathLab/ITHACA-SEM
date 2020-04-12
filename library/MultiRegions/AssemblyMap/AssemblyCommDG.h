@@ -191,14 +191,13 @@ private:
 };
 
 /**
- * Uses the MPI_Irecv and MPI_Irsend operations to perform the exchange of
+ * Uses persistent MPI_Irecv and MPI_Irsend operations to perform the exchange of
  * quadrature values. This allows for varying exchange array sizes to minimise
  * communication data size. Ranks only communicate with ranks with which they
  * need to exchange data, i.e. are adjacent in the mesh or share a periodic
  * boundary condition. On each rank there are 'n' receives and 'n' sends posted
- * where 'n' is the number of other ranks with which communication is needed. As
- * n increases communication overhead can increase due to the increased
- * postings.
+ * where 'n' is the number of other ranks with which communication is needed.
+ * We use persistent communication methods to reduce overhead.
  */
 class Pairwise : public ExchangeMethod
 {
@@ -217,12 +216,16 @@ private:
     LibUtilities::CommSharedPtr m_comm;
     /// List of partition to trace map indices of the quad points to exchange
     std::vector<std::pair<int, std::vector<int>>> m_vecPairPartitionTrace;
-    /// Total quadrature points to send/recv
-    int m_totSends = 0;
     /// List of displacements
     Array<OneD, int> m_sendDisp;
-    /// List of requests
-    LibUtilities::CommRequestSharedPtr m_requests;
+    /// Receive buffer for exchange
+    Array<OneD, NekDouble> m_recvBuff;
+    /// Send buffer for exchange
+    Array<OneD, NekDouble> m_sendBuff;
+    /// List of receive requests
+    LibUtilities::CommRequestSharedPtr m_recvRequest;
+    /// List of send requests
+    LibUtilities::CommRequestSharedPtr m_sendRequest;
 };
 
 /**

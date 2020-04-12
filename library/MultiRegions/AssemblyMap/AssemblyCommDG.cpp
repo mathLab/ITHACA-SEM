@@ -197,7 +197,6 @@ Pairwise::Pairwise(const LibUtilities::CommSharedPtr &comm,
         sendCount[cnt++] = edgeTraceIndex.size();
     }
 
-    m_totSends = std::accumulate(sendCount.begin(), sendCount.end(), 0);
     m_sendDisp = Array<OneD, int>(nNeighbours, 0);
 
     for (size_t i = 1; i < nNeighbours; ++i)
@@ -205,7 +204,27 @@ Pairwise::Pairwise(const LibUtilities::CommSharedPtr &comm,
         m_sendDisp[i] = m_sendDisp[i - 1] + sendCount[i - 1];
     }
 
-    m_requests = m_comm->CreateRequest(m_vecPairPartitionTrace.size() * 2);
+    size_t totSends = std::accumulate(sendCount.begin(), sendCount.end(), 0);
+
+    m_recvBuff = Array<OneD, NekDouble>(totSends, -1);
+    m_sendBuff = Array<OneD, NekDouble>(totSends, -1);
+
+    m_recvRequest = m_comm->CreateRequest(m_vecPairPartitionTrace.size());
+    m_sendRequest = m_comm->CreateRequest(m_vecPairPartitionTrace.size());
+
+    // Construct persistent requests
+    for (size_t i = 0; i < m_vecPairPartitionTrace.size(); ++i)
+    {
+        size_t len = m_vecPairPartitionTrace[i].second.size();
+
+        // Initialise receive requests
+        m_comm->RecvInit(m_vecPairPartitionTrace[i].first,
+                         m_recvBuff[m_sendDisp[i]], len, m_recvRequest, i);
+
+        //Initialise send requests
+        m_comm->RsendInit(m_vecPairPartitionTrace[i].first,
+                          m_sendBuff[m_sendDisp[i]], len, m_sendRequest, i);
+    }
 }
 
 void AllToAll::PerformExchange(const Array<OneD, NekDouble> &testFwd,
@@ -280,41 +299,35 @@ void NeighborAllToAllV::PerformExchange(const Array<OneD, NekDouble> &testFwd,
 void Pairwise::PerformExchange(const Array<OneD, NekDouble> &testFwd,
                                Array<OneD, NekDouble> &testBwd)
 {
-    Array<OneD, NekDouble> recvBuff(m_totSends, -1);
-    // Perform receive operations
-    for (size_t i = 0; i < m_vecPairPartitionTrace.size(); ++i)
-    {
-        size_t len = m_vecPairPartitionTrace[i].second.size();
-        m_comm->Irecv(m_vecPairPartitionTrace[i].first, recvBuff[m_sendDisp[i]],
-                      len, m_requests, 2 * i);
-    }
+    // Perform receive posts
+    m_comm->StartAll(m_recvRequest);
 
-    // Can't reuse buffer until previous send has completed so we store all
-    Array<OneD, NekDouble> sendBuff(m_totSends, -1);
+    // Fill send buffer from Fwd trace
     for (size_t i = 0; i < m_vecPairPartitionTrace.size(); ++i)
     {
         size_t len = m_vecPairPartitionTrace[i].second.size();
         for (size_t j = 0; j < len; ++j)
         {
-            sendBuff[m_sendDisp[i] + j] =
+            m_sendBuff[m_sendDisp[i] + j] =
                 testFwd[m_vecPairPartitionTrace[i].second[j]];
         }
-
-        // Perform send operations
-        m_comm->Irsend(m_vecPairPartitionTrace[i].first,
-                       sendBuff[m_sendDisp[i]], len, m_requests, 2 * i + 1);
     }
 
-    // Wait for all send/recvs to complete
-    m_comm->WaitAll(m_requests);
+    // Perform send posts
+    m_comm->StartAll(m_sendRequest);
 
+    // Wait for all send/recvs to complete
+    m_comm->WaitAll(m_sendRequest);
+    m_comm->WaitAll(m_recvRequest);
+
+    // Fill Bwd trace from recv buffer
     for (size_t i = 0; i < m_vecPairPartitionTrace.size(); ++i)
     {
         size_t len = m_vecPairPartitionTrace[i].second.size();
         for (size_t j = 0; j < len; ++j)
         {
             testBwd[m_vecPairPartitionTrace[i].second[j]] =
-                recvBuff[m_sendDisp[i] + j];
+                m_recvBuff[m_sendDisp[i] + j];
         }
     }
 }
@@ -356,19 +369,19 @@ AssemblyCommDG::AssemblyCommDG(
                 comm, m_rankSharedEdges, m_edgeToTrace, m_nRanks)));
         MPIFuncsNames.emplace_back("AllToAllV");
 
-        // Disable neighbor MPI method on unsupported MPI version (below 3.0)
-        if (std::get<0>(comm->GetVersion()) >= 3)
-        {
-            MPIFuncs.emplace_back(ExchangeMethodSharedPtr(
-                MemoryManager<NeighborAllToAllV>::AllocateSharedPtr(
-                    comm, m_rankSharedEdges, m_edgeToTrace)));
-            MPIFuncsNames.emplace_back("NeighborAllToAllV");
-        }
-
         MPIFuncs.emplace_back(
             ExchangeMethodSharedPtr(MemoryManager<Pairwise>::AllocateSharedPtr(
                 comm, m_rankSharedEdges, m_edgeToTrace)));
         MPIFuncsNames.emplace_back("PairwiseSendRecv");
+
+        // Disable neighbor MPI method on unsupported MPI version (below 3.0)
+        if (std::get<0>(comm->GetVersion()) >= 3)
+        {
+            MPIFuncs.emplace_back(ExchangeMethodSharedPtr(
+                    MemoryManager<NeighborAllToAllV>::AllocateSharedPtr(
+                            comm, m_rankSharedEdges, m_edgeToTrace)));
+            MPIFuncsNames.emplace_back("NeighborAllToAllV");
+        }
 
         int numPoints = trace->GetNpoints();
         int warmup = 10, iter = 50;

@@ -63,17 +63,15 @@ public:
     /// Default constructor
     inline CommRequestMpi(int num) : m_num(num)
     {
-        m_request = new MPI_Request[m_num];
-    }
-    /// Default destructor
-    inline ~CommRequestMpi()
-    {
-        delete m_request;
+        m_request = Array<OneD, MPI_Request>(num, MPI_REQUEST_NULL);
     }
 
-    inline MPI_Request* GetRequest()
+    /// Default destructor
+    inline ~CommRequestMpi() = default;
+
+    inline MPI_Request* GetRequest(int i)
     {
-        return m_request;
+        return &m_request[i];
     }
 
     inline int &GetNumRequest()
@@ -83,7 +81,7 @@ public:
 
 private:
     int m_num;
-    MPI_Request* m_request;
+    Array<OneD, MPI_Request> m_request;
 };
 
 typedef std::shared_ptr<CommRequestMpi> CommRequestMpiSharedPtr;
@@ -167,8 +165,13 @@ protected:
                                      int rdispls[], CommDataType recvtype);
     virtual void v_Irsend(void *buf, int count, CommDataType dt, int dest,
                           CommRequestSharedPtr request, int loc);
+    virtual void v_RsendInit(void *buf, int count, CommDataType dt, int dest,
+                          CommRequestSharedPtr request, int loc);
     virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
                          CommRequestSharedPtr request, int loc);
+    virtual void v_RecvInit(void *buf, int count, CommDataType dt, int source,
+                         CommRequestSharedPtr request, int loc);
+    virtual void v_StartAll(CommRequestSharedPtr request);
     virtual void v_WaitAll(CommRequestSharedPtr request);
     virtual CommRequestSharedPtr v_CreateRequest(int num);
 

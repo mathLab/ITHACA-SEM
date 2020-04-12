@@ -152,9 +152,18 @@ public:
                            T2 &pSendDataOffsetMap, T1 &pRecvData,
                            T2 &pRecvDataSizeMap, T2 &pRecvDataOffsetMap);
     template <class T>
-    void Irsend(int pProc, T &pData, int count, CommRequestSharedPtr request, int loc);
+    void Irsend(int pProc, T &pData, int count, CommRequestSharedPtr request,
+                int loc);
     template <class T>
-    void Irecv(int pProc, T &pData, int count, CommRequestSharedPtr request, int loc);
+    void RsendInit(int pProc, T &pData, int count, CommRequestSharedPtr request,
+                   int loc);
+    template <class T>
+    void Irecv(int pProc, T &pData, int count, CommRequestSharedPtr request,
+               int loc);
+    template <class T>
+    void RecvInit(int pProc, T &pData, int count, CommRequestSharedPtr request,
+                  int loc);
+    inline void StartAll(CommRequestSharedPtr request);
     inline void WaitAll(CommRequestSharedPtr request);
     inline CommRequestSharedPtr CreateRequest(int num);
 
@@ -232,8 +241,13 @@ protected:
 
     virtual void v_Irsend(void *buf, int count, CommDataType dt, int dest,
                           CommRequestSharedPtr request, int loc)   = 0;
+    virtual void v_RsendInit(void *buf, int count, CommDataType dt, int dest,
+                          CommRequestSharedPtr request, int loc)   = 0;
     virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
                          CommRequestSharedPtr request, int loc)   = 0;
+    virtual void v_RecvInit(void *buf, int count, CommDataType dt, int source,
+                         CommRequestSharedPtr request, int loc)   = 0;
+    virtual void v_StartAll(CommRequestSharedPtr request) = 0;
     virtual void v_WaitAll(CommRequestSharedPtr request) = 0;
     virtual CommRequestSharedPtr v_CreateRequest(int num) = 0;
 
@@ -595,7 +609,7 @@ void Comm::NeighborAlltoAllv(
  * @param pProc   Rank of destination
  * @param pData   Array/vector to send
  * @param count   Number of elements to send in pData
- * @param request Communication request array
+ * @param request Communication request object
  * @param loc     Location in request to use
  */
 template <class T> void Comm::Irsend(int pProc, T &pData, int count,
@@ -603,6 +617,22 @@ template <class T> void Comm::Irsend(int pProc, T &pData, int count,
 {
     v_Irsend(CommDataTypeTraits<T>::GetPointer(pData), count,
            CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
+}
+
+/**
+ * Creates a persistent request for a ready send
+ *
+ * @param pProc   Rank of destination
+ * @param pData   Array/vector to send
+ * @param count   Number of elements to send in pData
+ * @param request Communication request object
+ * @param loc     Location in request to use
+ */
+template <class T> void Comm::RsendInit(int pProc, T &pData, int count,
+                                     CommRequestSharedPtr request, int loc)
+{
+    v_RsendInit(CommDataTypeTraits<T>::GetPointer(pData), count,
+             CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
 }
 
 /**
@@ -620,6 +650,33 @@ template <class T> void Comm::Irecv(int pProc, T &pData, int count,
     v_Irecv(CommDataTypeTraits<T>::GetPointer(pData), count,
            CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
 }
+
+/**
+ * Create a persistent request for a receive
+ *
+ * @param pProc   Rank of source
+ * @param pData   Array/vector to place incoming data in to
+ * @param count   Number of elements to receive in to pData
+ * @param request Communication request object
+ * @param loc     Location in request to use
+ */
+template <class T> void Comm::RecvInit(int pProc, T &pData, int count,
+                                    CommRequestSharedPtr request, int loc)
+{
+    v_RecvInit(CommDataTypeTraits<T>::GetPointer(pData), count,
+            CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
+}
+
+/**
+ * Starts a collection of persistent requests
+ *
+ * @param request Communication request object
+ */
+inline void Comm::StartAll(CommRequestSharedPtr request)
+{
+    v_StartAll(request);
+}
+
 
 /**
  * Waits for all CommRequests in the request object to complete.

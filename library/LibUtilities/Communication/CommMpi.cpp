@@ -413,8 +413,9 @@ void CommMpi::v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
     ASSERTL0(false, "MPI_Neighbor_alltoallv is not supported in your "
              "installed MPI version.");
 #else
-    int retval = MPI_Neighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
-                                        recvcounts, rdispls, recvtype, m_comm);
+    int retval = MPI_Neighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype,
+                                        recvbuf, recvcounts, rdispls, recvtype,
+                                        m_comm);
 
     ASSERTL0(retval == MPI_SUCCESS, "MPI error performing NeighborAllToAllV.");
 #endif
@@ -424,20 +425,40 @@ void CommMpi::v_Irsend(void *buf, int count, CommDataType dt, int dest,
                        CommRequestSharedPtr request, int loc)
 {
     CommRequestMpiSharedPtr req = std::static_pointer_cast<CommRequestMpi>(request);
-    MPI_Irsend(buf, count, dt, dest, 0, m_comm, &req->GetRequest()[loc]);
+    MPI_Irsend(buf, count, dt, dest, 0, m_comm, req->GetRequest(loc));
+}
+
+void CommMpi::v_RsendInit(void *buf, int count, CommDataType dt, int dest,
+                       CommRequestSharedPtr request, int loc)
+{
+    CommRequestMpiSharedPtr req = std::static_pointer_cast<CommRequestMpi>(request);
+    MPI_Rsend_init(buf, count, dt, dest, 0, m_comm, req->GetRequest(loc));
 }
 
 void CommMpi::v_Irecv(void *buf, int count, CommDataType dt, int source,
                       CommRequestSharedPtr request, int loc)
 {
     CommRequestMpiSharedPtr req = std::static_pointer_cast<CommRequestMpi>(request);
-    MPI_Irecv(buf, count, dt, source, 0, m_comm, &req->GetRequest()[loc]);
+    MPI_Irecv(buf, count, dt, source, 0, m_comm, req->GetRequest(loc));
+}
+
+void CommMpi::v_RecvInit(void *buf, int count, CommDataType dt, int source,
+                      CommRequestSharedPtr request, int loc)
+{
+    CommRequestMpiSharedPtr req = std::static_pointer_cast<CommRequestMpi>(request);
+    MPI_Recv_init(buf, count, dt, source, 0, m_comm, req->GetRequest(loc));
+}
+
+void CommMpi::v_StartAll(CommRequestSharedPtr request)
+{
+    CommRequestMpiSharedPtr req = std::static_pointer_cast<CommRequestMpi>(request);
+    MPI_Startall(req->GetNumRequest(), req->GetRequest(0));
 }
 
 void CommMpi::v_WaitAll(CommRequestSharedPtr request)
 {
     CommRequestMpiSharedPtr req = std::static_pointer_cast<CommRequestMpi>(request);
-    MPI_Waitall(req->GetNumRequest(), &req->GetRequest()[0], MPI_STATUSES_IGNORE);
+    MPI_Waitall(req->GetNumRequest(), req->GetRequest(0), MPI_STATUSES_IGNORE);
 }
 
 CommRequestSharedPtr CommMpi::v_CreateRequest(int num)

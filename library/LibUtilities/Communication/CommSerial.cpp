@@ -255,13 +255,30 @@ void CommSerial::v_Irsend(void *buf, int count, CommDataType dt, int dest,
     boost::ignore_unused(buf, count, dt, dest, request, loc);
 }
 
+void CommSerial::v_RsendInit(void *buf, int count, CommDataType dt, int dest,
+                          CommRequestSharedPtr request, int loc)
+{
+    boost::ignore_unused(buf, count, dt, dest, request, loc);
+}
+
 void CommSerial::v_Irecv(void *buf, int count, CommDataType dt, int source,
                          CommRequestSharedPtr request, int loc)
 {
     boost::ignore_unused(buf, count, dt, source, request, loc);
 }
 
+void CommSerial::v_RecvInit(void *buf, int count, CommDataType dt, int source,
+                         CommRequestSharedPtr request, int loc)
+{
+    boost::ignore_unused(buf, count, dt, source, request, loc);
+}
+
 void CommSerial::v_WaitAll(CommRequestSharedPtr request)
+{
+    boost::ignore_unused(request);
+}
+
+void CommSerial::v_StartAll(CommRequestSharedPtr request)
 {
     boost::ignore_unused(request);
 }

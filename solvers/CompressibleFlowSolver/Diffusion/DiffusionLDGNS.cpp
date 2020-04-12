@@ -104,7 +104,7 @@ void DiffusionLDGNS::v_InitObject(
             {
                 LocalRegions::Expansion3DSharedPtr exp3D;
                 exp3D = pFields[0]->GetExp(e)->as<LocalRegions::Expansion3D>();
-                for(std::size_t i = 0; i < exp3D->GetNedges(); ++i)
+                for(std::size_t i = 0; i < exp3D->GetNtraces(); ++i)
                 {
                     h = std::min(h, exp3D->GetGeom3D()->GetEdge(i)->GetVertex(0)->
                         dist(*(exp3D->GetGeom3D()->GetEdge(i)->GetVertex(1))));
@@ -116,7 +116,7 @@ void DiffusionLDGNS::v_InitObject(
             {
                 LocalRegions::Expansion2DSharedPtr exp2D;
                 exp2D = pFields[0]->GetExp(e)->as<LocalRegions::Expansion2D>();
-                for(std::size_t i = 0; i < exp2D->GetNedges(); ++i)
+                for(std::size_t i = 0; i < exp2D->GetNtraces(); ++i)
                 {
                     h = std::min(h, exp2D->GetGeom2D()->GetEdge(i)->GetVertex(0)->
                         dist(*(exp2D->GetGeom2D()->GetEdge(i)->GetVertex(1))));

@@ -294,25 +294,6 @@ namespace Nektar
         typedef std::map<ConstFactorType, NekDouble> ConstFactorMap;
         static ConstFactorMap NullConstFactorMap;
 
-        enum IndexMapType
-            {
-                eEdgeToElement,
-                eFaceToElement,
-                eEdgeInterior,
-                eFaceInterior,
-                eBoundary,
-                eVertex
-		};
-        
-        const char* const IndexMapTypeMap[] =
-            {
-                "EdgeToElement",
-                "FaceToElement",
-                "EdgeInterior",
-                "FaceInterior",
-                "Boundary",
-                "Vertex"
-            };
 	
         enum Orientation
         {

@@ -117,7 +117,7 @@ namespace Nektar
                 Array<OneD, int> ElmtID, TraceID;
                 GetBoundaryToElmtMap(ElmtID, TraceID);
 
-                for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                for(cnt = i = 0; i < m_bndCondExpansions.size(); ++i)
                 {
                     MultiRegions::ExpListSharedPtr locExpList;
                     locExpList = m_bndCondExpansions[i];
@@ -238,7 +238,7 @@ namespace Nektar
             int cnt, n;
 
             // Identify boundary trace
-            for(cnt = 0, n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for(cnt = 0, n = 0; n < m_bndCondExpansions.size(); ++n)
             {
                 if (m_bndConditions[n]->GetBoundaryConditionType() != 
                     SpatialDomains::ePeriodic)
@@ -717,7 +717,7 @@ namespace Nektar
                         Array<OneD, int> ElmtID,TraceID;
                         GetBoundaryToElmtMap(ElmtID,TraceID);
                         
-                        for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                        for (i = 0; i < m_bndCondExpansions.size(); ++i)
                         {
                             MultiRegions::ExpListSharedPtr locExpList;
                             
@@ -790,7 +790,7 @@ namespace Nektar
                         Array<OneD, int> ElmtID, TraceID;
                         GetBoundaryToElmtMap(ElmtID, TraceID);
                         
-                        for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                        for (i = 0; i < m_bndCondExpansions.size(); ++i)
                         {
                             MultiRegions::ExpListSharedPtr locExpList;
                             
@@ -1621,7 +1621,7 @@ namespace Nektar
                         locVerts.insert(id);
                     }
                     
-                    for(j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
+                    for(j = 0; j < (*m_exp)[i]->GetGeom()->GetNumEdges(); ++j)
                     {
                         int id = (*m_exp)[i]->GetGeom()->GetEid(j);
                         locEdges.insert(id);
@@ -2814,7 +2814,7 @@ namespace Nektar
             int i;
             bool returnval = true;
 
-            for(i = 0; i < m_bndConditions.num_elements(); ++i)
+            for(i = 0; i < m_bndConditions.size(); ++i)
             {
                 // check to see if boundary condition type is the same
                 // and there are the same number of boundary
@@ -2927,8 +2927,8 @@ namespace Nektar
             int cnt, n, e, npts, phys_offset;
 
             // Zero forward/backward vectors.
-            Vmath::Zero(Fwd.num_elements(), Fwd, 1);
-            Vmath::Zero(Bwd.num_elements(), Bwd, 1);
+            Vmath::Zero(Fwd.size(), Fwd, 1);
+            Vmath::Zero(Bwd.size(), Bwd, 1);
 
             // Basis definition on each element
             LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
@@ -2978,7 +2978,7 @@ namespace Nektar
             // Fill boundary conditions into missing elements
             int id1, id2 = 0;
 
-            for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (cnt = n = 0; n < m_bndCondExpansions.size(); ++n)
             {
                 if (m_bndConditions[n]->GetBoundaryConditionType() == 
                         SpatialDomains::eDirichlet)
@@ -3072,7 +3072,7 @@ namespace Nektar
             if ((m_expType != e1D)&&
                 (basis->GetBasisType() != LibUtilities::eGauss_Lagrange))
             {
-                Vmath::Zero(outarray.num_elements(), outarray, 1);
+                Vmath::Zero(outarray.size(), outarray, 1);
 
                 Array<OneD, NekDouble> tracevals(
                                     m_locTraceToTraceMap->GetNFwdLocTracePts());
@@ -3091,7 +3091,7 @@ namespace Nektar
                 Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                     &elmtToTrace = m_traceMap->GetElmtToTrace();
 
-                ASSERTL1(outarray.num_elements() >= m_trace->GetNpoints(),
+                ASSERTL1(outarray.size() >= m_trace->GetNpoints(),
                          "input array is of insufficient length");
                 
                 for (n  = 0; n < nexp; ++n)
@@ -3268,7 +3268,7 @@ namespace Nektar
                     for(n = 0; n < GetExpSize(); ++n)
                     {
                         offset = GetCoeff_Offset(n);
-                        for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                        for(e = 0; e < (*m_exp)[n]->GetNtraces(); ++e)
                         {
                             t_offset = GetTrace()->GetPhys_Offset
                                 (elmtToTrace[n][e]->GetElmtId());
@@ -3398,7 +3398,7 @@ namespace Nektar
             // into trace space
             int locid;
             cnt = 0;
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 Array<OneD, const NekDouble> bndcoeffs =
                     m_bndCondExpansions[i]->GetCoeffs();
@@ -3506,7 +3506,7 @@ namespace Nektar
 
             MultiRegions::ExpListSharedPtr locExpList;
             
-            for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for (i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
@@ -3702,7 +3702,7 @@ namespace Nektar
                              Array<OneD,int>  &TraceID)
         {
 
-            if (m_BCtoElmMap.num_elements() == 0)
+            if (m_BCtoElmMap.size() == 0)
             {
                 switch(m_expType)
                 {
@@ -3711,7 +3711,7 @@ namespace Nektar
                     map<int, int> VertGID;
                     int i,n,id;
                     int bid,cnt,Vid;
-                    int nbcs = m_bndConditions.num_elements();
+                    int nbcs = m_bndConditions.size();
                     
                     // make sure arrays are of sufficient length
                     m_BCtoElmMap   = Array<OneD, int>(nbcs,-1);
@@ -3719,7 +3719,7 @@ namespace Nektar
 
                     // setup map of all global ids along boundary
                     cnt = 0;
-                    for (n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+                    for (n = 0; n < m_bndCondExpansions.size(); ++n)
                     {
                         Vid =  m_bndCondExpansions[n]->GetExp(0)->
                             GetGeom()->GetVertex(0)->GetVid();
@@ -3765,7 +3765,7 @@ namespace Nektar
                     }
                     
                     // Determine number of boundary condition expansions.
-                    for(i = 0; i < m_bndConditions.num_elements(); ++i)
+                    for(i = 0; i < m_bndConditions.size(); ++i)
                     {
                         nbcs += m_bndCondExpansions[i]->GetExpSize();
                     }
@@ -3776,7 +3776,7 @@ namespace Nektar
 
                     LocalRegions::Expansion1DSharedPtr exp1d;
                     cnt = 0; 
-                    for (n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+                    for (n = 0; n < m_bndCondExpansions.size(); ++n)
                     {
                         for (i = 0; i < m_bndCondExpansions[n]->GetExpSize(); 
                              ++i, ++cnt)
@@ -3811,7 +3811,7 @@ namespace Nektar
                     }
 
                     // Determine number of boundary condition expansions.
-                    for(i = 0; i < m_bndConditions.num_elements(); ++i)
+                    for(i = 0; i < m_bndConditions.size(); ++i)
                     {
                         nbcs += m_bndCondExpansions[i]->GetExpSize();
                     }
@@ -3821,7 +3821,7 @@ namespace Nektar
                     m_BCtoTraceMap = Array<OneD, int>(nbcs);
 
                     LocalRegions::Expansion2DSharedPtr exp2d;
-                    for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+                    for(cnt = n = 0; n < m_bndCondExpansions.size(); ++n)
                     {
                         for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i, ++cnt)
                         {
@@ -3904,7 +3904,7 @@ namespace Nektar
             ExpList::v_Reset();
 
             // Reset boundary condition expansions.
-            for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (int n = 0; n < m_bndCondExpansions.size(); ++n)
             {
                 m_bndCondExpansions[n]->Reset();
             }
@@ -3931,7 +3931,7 @@ namespace Nektar
             Array<OneD, int> ElmtID,TraceID;
             GetBoundaryToElmtMap(ElmtID,TraceID);
 
-            for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(cnt = i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 MultiRegions::ExpListSharedPtr locExpList;
 
@@ -4021,12 +4021,12 @@ namespace Nektar
                 // Probably a better way of setting up lambda than this.
                 // Note cannot use PutCoeffsInToElmts since lambda space
                 // is mapped during the solve.
-                int nEdges = (*m_exp)[i]->GetNedges();
+                int nEdges = (*m_exp)[i]->GetGeom()->GetNumEdges();
                 Array<OneD, Array<OneD, NekDouble> > edgeCoeffs(nEdges);
 
                 for(e = 0; e < nEdges; ++e)
                 {
-                    edgedir = (*m_exp)[i]->GetEorient(e);
+                    edgedir = (*m_exp)[i]->GetTraceOrient(e);
                     ncoeff_edge = elmtToTrace[i][e]->GetNcoeffs();
                     edgeCoeffs[e] = Array<OneD, NekDouble>(ncoeff_edge);
                     Vmath::Vcopy(ncoeff_edge, edge_lambda, 1, edgeCoeffs[e], 1);
@@ -4116,7 +4116,7 @@ namespace Nektar
 
                 for(e = 0; e < (*m_exp)[i]->GetNtraces(); ++e)
                 {
-                    edgedir = (*m_exp)[i]->GetEorient(e);
+                    edgedir = (*m_exp)[i]->GetTraceOrient(e);
                     ncoeff_trace = elmtToTrace[i][e]->GetNcoeffs();
                     traceCoeffs[e] = Array<OneD, NekDouble>(ncoeff_trace);
                     Vmath::Vcopy(ncoeff_trace, trace_lambda, 1, traceCoeffs[e], 1);

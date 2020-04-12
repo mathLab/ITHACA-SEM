@@ -911,11 +911,11 @@ namespace Nektar
             StdTetExp::v_BwdTrans(tmp, outarray);
         }
 
-        void StdTetExp::v_GetFaceNumModes(
-                    const int                  fid,
-                    const Orientation          faceOrient,
+        void StdTetExp::v_GetTraceNumModes(
+                    const int          fid,
                     int &numModes0,
-                    int &numModes1)
+                    int &numModes1,
+                    Orientation  faceOrient)
         {
             boost::ignore_unused(faceOrient);
 
@@ -959,12 +959,7 @@ namespace Nektar
         {
             return 6;
         }
-
-        int StdTetExp::v_GetNfaces() const
-        {
-            return 4;
-        }
-
+        
         int StdTetExp::v_GetNtraces() const
         {
             return 4;
@@ -1017,37 +1012,7 @@ namespace Nektar
                 + 2*(R+1) + Q*(1 + 2*R - Q);   // back two faces
         }
 
-        int StdTetExp::v_GetEdgeNcoeffs(const int i) const
-        {
-            ASSERTL2((i >= 0) && (i <= 5), "edge id is out of range");
-            int P = m_base[0]->GetNumModes();
-            int Q = m_base[1]->GetNumModes();
-            int R = m_base[2]->GetNumModes();
-
-            if (i == 0)
-            {
-                return P;
-            }
-            else if (i == 1 || i == 2)
-            {
-                return Q;
-            }
-            else
-            {
-                return R;
-            }
-        }
-
-        int StdTetExp::v_GetTotalEdgeIntNcoeffs() const
-        {
-            int P = m_base[0]->GetNumModes()-2;
-            int Q = m_base[1]->GetNumModes()-2;
-            int R = m_base[2]->GetNumModes()-2;
-
-            return P+Q+4*R;
-	}
-
-        int StdTetExp::v_GetFaceNcoeffs(const int i) const
+        int StdTetExp::v_GetTraceNcoeffs(const int i) const
         {
             ASSERTL2((i >= 0) && (i <= 3), "face id is out of range");
             int nFaceCoeffs = 0;
@@ -1073,7 +1038,7 @@ namespace Nektar
             return nFaceCoeffs;
         }
 
-        int StdTetExp::v_GetFaceIntNcoeffs(const int i) const
+        int StdTetExp::v_GetTraceIntNcoeffs(const int i) const
         {
             ASSERTL2((i >= 0) && (i <= 3), "face id is out of range");
             int Pi = m_base[0]->GetNumModes() - 2;
@@ -1094,7 +1059,7 @@ namespace Nektar
             }
         }
 
-        int StdTetExp::v_GetTotalFaceIntNcoeffs() const
+        int StdTetExp::v_GetTotalTraceIntNcoeffs() const
         {
             int Pi = m_base[0]->GetNumModes() - 2;
             int Qi = m_base[1]->GetNumModes() - 2;
@@ -1105,7 +1070,7 @@ namespace Nektar
 	           Qi * (2*Ri - Qi - 1);
 	}
 
-        int StdTetExp::v_GetFaceNumPoints(const int i) const
+        int StdTetExp::v_GetTraceNumPoints(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 3, "face id is out of range");
 
@@ -1126,7 +1091,29 @@ namespace Nektar
             }
         }
 
-        LibUtilities::PointsKey StdTetExp::v_GetFacePointsKey(
+
+        int StdTetExp::v_GetEdgeNcoeffs(const int i) const
+        {
+            ASSERTL2((i >= 0) && (i <= 5), "edge id is out of range");
+            int P = m_base[0]->GetNumModes();
+            int Q = m_base[1]->GetNumModes();
+            int R = m_base[2]->GetNumModes();
+
+            if (i == 0)
+            {
+                return P;
+            }
+            else if (i == 1 || i == 2)
+            {
+                return Q;
+            }
+            else
+            {
+                return R;
+            }
+        }
+        
+        LibUtilities::PointsKey StdTetExp::v_GetTracePointsKey(
             const int i, const int j) const
         {
             ASSERTL2(i >= 0 && i <= 3, "face id is out of range");
@@ -1159,7 +1146,7 @@ namespace Nektar
             return nmodes;
         }
 
-        const LibUtilities::BasisKey StdTetExp::v_DetFaceBasisKey(
+        const LibUtilities::BasisKey StdTetExp::v_GetTraceBasisKey(
             const int i, const int k) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
@@ -1189,23 +1176,6 @@ namespace Nektar
             return LibUtilities::NullBasisKey;
         }
 
-        LibUtilities::BasisType StdTetExp::v_GetEdgeBasisType(const int i) const
-        {
-            ASSERTL2(i >= 0 && i <= 5, "edge id is out of range");
-
-            if (i == 0)
-            {
-                return GetBasisType(0);
-            }
-            else if (i == 1 || i == 2)
-            {
-                return GetBasisType(1);
-            }
-            else
-            {
-                return GetBasisType(2);
-            }
-        }
 
         void StdTetExp::v_GetCoords(
             Array<OneD, NekDouble> &xi_x,
@@ -1244,58 +1214,179 @@ namespace Nektar
         //--------------------------
         // Mappings
         //--------------------------
-
-        void StdTetExp::v_GetEdgeToElementMap(
-            const int                  eid,
-            const Orientation          edgeOrient,
-            Array<OneD, unsigned int>& maparray,
-            Array<OneD,          int>& signarray,
-            int                        P)
+        int StdTetExp::v_GetVertexMap(const int localVertexId, bool useCoeffPacking)
         {
-            boost::ignore_unused(P);
+            ASSERTL0((GetBasisType(0)==LibUtilities::eModified_A)||
+                     (GetBasisType(1)==LibUtilities::eModified_B)||
+                     (GetBasisType(2)==LibUtilities::eModified_C),
+                     "Mapping not defined for this type of basis");
 
-            ASSERTL2(eid >= 0 && eid < 6, "Invalid edge");
-            ASSERTL2(v_IsBoundaryInteriorExpansion(),
-                     "Method only implemented for Modified_A BasisType (x "
-                     "direction), Modified_B BasisType (y direction), and "
-                     "Modified_C BasisType(z direction)");
-
-            int edgeVerts[6][2] = {{0,1},{1,2},{0,2},{0,3},{1,3},{2,3}};
-            int nEdgeModes = v_GetEdgeNcoeffs(eid);
-
-            if (maparray.size() != nEdgeModes)
+            int localDOF = 0;
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
             {
-                maparray  = Array<OneD, unsigned int>(nEdgeModes);
-            }
-
-            if (signarray.size() != nEdgeModes)
-            {
-                signarray = Array<OneD, int>(nEdgeModes, 1.0);
-            }
-
-            if (edgeOrient == StdRegions::eForwards)
-            {
-                maparray[0] = v_GetVertexMap(edgeVerts[eid][0]);
-                maparray[1] = v_GetVertexMap(edgeVerts[eid][1]);
-            }
-            else if (edgeOrient == StdRegions::eBackwards)
-            {
-                maparray[0] = v_GetVertexMap(edgeVerts[eid][1]);
-                maparray[1] = v_GetVertexMap(edgeVerts[eid][0]);
+                switch(localVertexId)
+                {
+                case 0:
+                    {
+                        localDOF = GetMode(0,0,0);
+                        break;
+                    }
+                case 1:
+                    {
+                        localDOF = GetMode(0,0,1);
+                        break;
+                    }
+                case 2:
+                    {
+                        localDOF = GetMode(0,1,0);
+                        break;
+                    }
+                case 3:
+                    {
+                        localDOF = GetMode(1,0,0);
+                        break;
+                    }
+                default:
+                    {
+                        ASSERTL0(false,"Vertex ID must be between 0 and 3");
+                        break;
+                    }
+                }
             }
             else
             {
-                ASSERTL2(false, "Unsupported edge orientation");
+                switch(localVertexId)
+                {
+                case 0:
+                    {
+                        localDOF = GetMode(0,0,0);
+                        break;
+                    }
+                case 1:
+                    {
+                        localDOF = GetMode(1,0,0);
+                        break;
+                    }
+                case 2:
+                    {
+                        localDOF = GetMode(0,1,0);
+                        break;
+                    }
+                case 3:
+                    {
+                    localDOF = GetMode(0,0,1);
+                    break;
+                    }
+                default:
+                    {
+                        ASSERTL0(false,"Vertex ID must be between 0 and 3");
+                        break;
+                    }
+                }
+
             }
 
-            Array<OneD, unsigned int> tmp1(nEdgeModes-2);
-            Array<OneD,          int> tmp2(nEdgeModes-2);
-            v_GetEdgeInteriorMap(eid, edgeOrient, tmp1, tmp2);
+            return localDOF;
+        }
 
-            for (int i = 0; i < nEdgeModes-2; ++i)
+        /**
+         * Maps interior modes of an edge to the elemental modes.
+         */
+
+        /**
+         * List of all interior modes in the expansion.
+         */
+        void StdTetExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_B ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int P = m_base[0]->GetNumModes();
+            int Q = m_base[1]->GetNumModes();
+            int R = m_base[2]->GetNumModes();
+
+            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
+
+            if(outarray.size() != nIntCoeffs)
             {
-                maparray[i+2] = tmp1[i];
-                signarray[i+2] = tmp2[i];
+                outarray = Array<OneD, unsigned int>(nIntCoeffs);
+            }
+
+            int idx = 0;
+            for (int i = 2; i < P-2; ++i)
+            {
+            	for (int j = 1; j < Q-i-1; ++j)
+            	{
+                    for (int k = 1; k < R-i-j; ++k)
+                    {
+                        outarray[idx++] = GetMode(i,j,k);
+                    }
+            	}
+            }
+        }
+
+        /**
+         * List of all boundary modes in the the expansion.
+         */
+        void StdTetExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_B ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int P = m_base[0]->GetNumModes();
+            int Q = m_base[1]->GetNumModes();
+            int R = m_base[2]->GetNumModes();
+
+            int i,j,k;
+            int idx = 0;
+
+            int nBnd = NumBndryCoeffs();
+
+            if (outarray.size() != nBnd)
+            {
+                outarray = Array<OneD, unsigned int>(nBnd);
+            }
+
+            for (i = 0; i < P; ++i)
+            {
+            	// First two Q-R planes are entirely boundary modes
+            	if (i < 2)
+            	{
+                    for (j = 0; j < Q-i; j++)
+                    {
+                        for (k = 0; k < R-i-j; ++k)
+                        {
+                            outarray[idx++] = GetMode(i,j,k);
+                        }
+                    }
+            	}
+            	// Remaining Q-R planes contain boundary modes on bottom and
+            	// left edge.
+            	else
+            	{
+                    for (k = 0; k < R-i; ++k)
+                    {
+                        outarray[idx++] = GetMode(i,0,k);
+                    }
+                    for (j = 1; j < Q-i; ++j)
+                    {
+                        outarray[idx++] = GetMode(i,j,0);
+                    }
+            	}
             }
         }
 
@@ -1303,11 +1394,11 @@ namespace Nektar
          * Maps Expansion2D modes of a 2D face to the corresponding expansion
          * modes.
          */
-        void StdTetExp::v_GetFaceToElementMap(
+        void StdTetExp::v_GetTraceToElementMap(
             const int                  fid,
-            const Orientation          faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
+            const Orientation          faceOrient,
             int                        P,
             int                        Q)
         {
@@ -1477,89 +1568,14 @@ namespace Nektar
             }
         }
 
-        int StdTetExp::v_GetVertexMap(const int localVertexId, bool useCoeffPacking)
-        {
-            ASSERTL0((GetEdgeBasisType(localVertexId)==LibUtilities::eModified_A)||
-                     (GetEdgeBasisType(localVertexId)==LibUtilities::eModified_B)||
-                     (GetEdgeBasisType(localVertexId)==LibUtilities::eModified_C),
-                     "Mapping not defined for this type of basis");
-
-            int localDOF = 0;
-            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
-            {
-                switch(localVertexId)
-                {
-                case 0:
-                    {
-                        localDOF = GetMode(0,0,0);
-                        break;
-                    }
-                case 1:
-                    {
-                        localDOF = GetMode(0,0,1);
-                        break;
-                    }
-                case 2:
-                    {
-                        localDOF = GetMode(0,1,0);
-                        break;
-                    }
-                case 3:
-                    {
-                        localDOF = GetMode(1,0,0);
-                        break;
-                    }
-                default:
-                    {
-                        ASSERTL0(false,"Vertex ID must be between 0 and 3");
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                switch(localVertexId)
-                {
-                case 0:
-                    {
-                        localDOF = GetMode(0,0,0);
-                        break;
-                    }
-                case 1:
-                    {
-                        localDOF = GetMode(1,0,0);
-                        break;
-                    }
-                case 2:
-                    {
-                        localDOF = GetMode(0,1,0);
-                        break;
-                    }
-                case 3:
-                    {
-                    localDOF = GetMode(0,0,1);
-                    break;
-                    }
-                default:
-                    {
-                        ASSERTL0(false,"Vertex ID must be between 0 and 3");
-                        break;
-                    }
-                }
-
-            }
-
-            return localDOF;
-        }
-
         /**
          * Maps interior modes of an edge to the elemental modes.
          */
-        void StdTetExp::v_GetEdgeInteriorMap(
+        void StdTetExp::v_GetEdgeInteriorToElementMap(
             const int                  eid,
-            const Orientation      edgeOrient,
             Array<OneD, unsigned int> &maparray,
-            Array<OneD,          int> &signarray)
+            Array<OneD,          int> &signarray,
+            const Orientation      edgeOrient)
         {
             int i;
             const int P = m_base[0]->GetNumModes();
@@ -1672,18 +1688,18 @@ namespace Nektar
             }
         }
 
-        void StdTetExp::v_GetFaceInteriorMap(
+        void StdTetExp::v_GetTraceInteriorToElementMap(
             const int                  fid,
-            const Orientation      faceOrient,
             Array<OneD, unsigned int> &maparray,
-            Array<OneD,          int> &signarray)
+            Array<OneD,          int> &signarray,
+            const Orientation      faceOrient)
         {
             int i, j, idx, k;
             const int P = m_base[0]->GetNumModes();
             const int Q = m_base[1]->GetNumModes();
             const int R = m_base[2]->GetNumModes();
 
-            const int nFaceIntCoeffs = v_GetFaceIntNcoeffs(fid);
+            const int nFaceIntCoeffs = v_GetTraceIntNcoeffs(fid);
 
             if(maparray.size() != nFaceIntCoeffs)
             {
@@ -1762,105 +1778,6 @@ namespace Nektar
                     break;
             }
         }
-
-        /**
-         * List of all interior modes in the expansion.
-         */
-        void StdTetExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
-        {
-            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_B ||
-                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
-                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-
-            int P = m_base[0]->GetNumModes();
-            int Q = m_base[1]->GetNumModes();
-            int R = m_base[2]->GetNumModes();
-
-            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
-
-            if(outarray.size() != nIntCoeffs)
-            {
-                outarray = Array<OneD, unsigned int>(nIntCoeffs);
-            }
-
-            int idx = 0;
-            for (int i = 2; i < P-2; ++i)
-            {
-            	for (int j = 1; j < Q-i-1; ++j)
-            	{
-                    for (int k = 1; k < R-i-j; ++k)
-                    {
-                        outarray[idx++] = GetMode(i,j,k);
-                    }
-            	}
-            }
-        }
-
-        /**
-         * List of all boundary modes in the the expansion.
-         */
-        void StdTetExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
-        {
-            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_B ||
-                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
-                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-
-            int P = m_base[0]->GetNumModes();
-            int Q = m_base[1]->GetNumModes();
-            int R = m_base[2]->GetNumModes();
-
-            int i,j,k;
-            int idx = 0;
-
-            int nBnd = NumBndryCoeffs();
-
-            if (outarray.size() != nBnd)
-            {
-                outarray = Array<OneD, unsigned int>(nBnd);
-            }
-
-            for (i = 0; i < P; ++i)
-            {
-            	// First two Q-R planes are entirely boundary modes
-            	if (i < 2)
-            	{
-                    for (j = 0; j < Q-i; j++)
-                    {
-                        for (k = 0; k < R-i-j; ++k)
-                        {
-                            outarray[idx++] = GetMode(i,j,k);
-                        }
-                    }
-            	}
-            	// Remaining Q-R planes contain boundary modes on bottom and
-            	// left edge.
-            	else
-            	{
-                    for (k = 0; k < R-i; ++k)
-                    {
-                        outarray[idx++] = GetMode(i,0,k);
-                    }
-                    for (j = 1; j < Q-i; ++j)
-                    {
-                        outarray[idx++] = GetMode(i,j,0);
-                    }
-            	}
-            }
-        }
-
-
         //---------------------------------------
         // Wrapper functions
         //---------------------------------------

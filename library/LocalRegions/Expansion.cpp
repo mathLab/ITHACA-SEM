@@ -45,10 +45,13 @@ namespace Nektar
     namespace LocalRegions
     {
         Expansion::Expansion(SpatialDomains::GeometrySharedPtr pGeom) :
-                    m_geom(pGeom),
-                    m_metricinfo(m_geom->GetGeomFactors()),
-                    m_elementTraceLeft(-1),
-                    m_elementTraceRight(-1)
+            m_IndexMapManager
+               (std::bind(&Expansion::CreateIndexMap,this, std::placeholders::_1),
+                std::string("ExpansionIndexMap")),
+            m_geom(pGeom),
+            m_metricinfo(m_geom->GetGeomFactors()),
+            m_elementTraceLeft(-1),
+            m_elementTraceRight(-1)
         {
             if (!m_metricinfo)
             {
@@ -74,10 +77,10 @@ namespace Nektar
 
         Expansion::Expansion(const Expansion &pSrc) :
                 StdExpansion(pSrc),
+                m_IndexMapManager(pSrc.m_IndexMapManager),
                 m_geom(pSrc.m_geom),
                 m_metricinfo(pSrc.m_metricinfo)
         {
-
         }
 
         Expansion::~Expansion()
@@ -178,6 +181,71 @@ namespace Nektar
 
             // Regenerate geometry factors
             m_metricinfo = m_geom->GetGeomFactors();
+        }
+
+        IndexMapValuesSharedPtr Expansion::CreateIndexMap(const IndexMapKey &ikey)
+        {
+            IndexMapValuesSharedPtr returnval;
+
+            IndexMapType itype = ikey.GetIndexMapType();
+
+            int entity = ikey.GetIndexEntity();
+
+            StdRegions::Orientation orient = ikey.GetIndexOrientation();
+
+            Array<OneD,unsigned int>     map;
+            Array<OneD,int>             sign;
+
+            switch(itype)
+            {
+            case eEdgeToElement:
+                {
+                    GetTraceToElementMap(entity,map,sign,orient);
+                }
+                break;
+            case eFaceToElement:
+                {
+                    GetTraceToElementMap(entity,map,sign,orient);
+                }
+                break;
+            case eEdgeInterior:
+                {
+                    ASSERTL0(false,"Boundary Index Map not implemented yet.");
+                    //v_GetEdgeInteriorMap(entity,orient,map,sign);
+                }
+                break;
+            case eFaceInterior:
+                {
+                    ASSERTL0(false,"Boundary Index Map not implemented yet.");
+                    //v_GetFaceInteriorMap(entity,orient,map,sign);
+                }
+                break;
+            case eBoundary:
+                {
+                    ASSERTL0(false,"Boundary Index Map not implemented yet.");
+                }
+                break;
+            case eVertex:
+                {
+                    ASSERTL0(false,"Vertex Index Map not implemented yet.");
+                }
+                break;
+            default:
+                {
+                    ASSERTL0(false,"The Index Map you are requiring "
+                             "is not between the possible options.");
+                }
+            }
+            
+            returnval = MemoryManager<IndexMapValues>::AllocateSharedPtr(map.size());
+            
+            for(int i = 0; i < map.size(); i++)
+            {
+                (*returnval)[i].index =  map[i];
+                (*returnval)[i].sign  =  sign[i];
+            }
+
+            return returnval;
         }
 
         const SpatialDomains::GeomFactorsSharedPtr& Expansion::GetMetricInfo() const
@@ -554,6 +622,60 @@ namespace Nektar
             return 0.0;
         }
 
+        StdRegions::Orientation Expansion::v_GetTraceOrient(int trace)
+
+        {
+            boost::ignore_unused(trace);
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for three-dimensional  LocalRegions");
+            return StdRegions::eForwards;
+        }
+
+        void Expansion::v_SetCoeffsToOrientation(StdRegions::Orientation dir,
+                                                 Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD, NekDouble> &outarray)
+        {
+            boost::ignore_unused(dir, inarray, outarray);
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+        }
+
+        void Expansion::v_GetTraceQFactors(const int trace,
+                                          Array<OneD, NekDouble> &outarray)
+        {
+            boost::ignore_unused(trace, outarray);
+            NEKERROR(ErrorUtil::efatal,
+                     "Method does not exist for this shape or library");
+        }
+        
+        void Expansion::v_GetTracePhysVals
+                    (const int trace,
+                     const StdRegions::StdExpansionSharedPtr &TraceExp,
+                     const Array<OneD, const NekDouble> &inarray,
+                     Array<OneD,       NekDouble> &outarray,
+                     StdRegions::Orientation  orient)
+        {
+            boost::ignore_unused(trace,TraceExp,inarray,outarray,orient);
+            NEKERROR(ErrorUtil::efatal,
+                     "Method does not exist for this shape or library" );
+        }
+
+        void Expansion::v_GetTracePhysMap(const int  edge,
+                                         Array<OneD, int>   &outarray)
+        {
+            boost::ignore_unused(edge, outarray);
+            NEKERROR(ErrorUtil::efatal,
+                     "Method does not exist for this shape or library" );
+        }
+        
+        void Expansion::v_ReOrientTracePhysMap
+                                (const StdRegions::Orientation orient,
+                                 Array<OneD, int> &idmap,
+                                 const int nq0,  const int nq1)
+        {
+            boost::ignore_unused(orient,idmap,nq0,nq1);
+            NEKERROR(ErrorUtil::efatal,
+                     "Method does not exist for this shape or library" );
+        }
+ 
         const NormalVector & Expansion::v_GetTraceNormal(const int id) const
         {
             boost::ignore_unused(id);
@@ -599,7 +721,26 @@ namespace Nektar
             boost::ignore_unused(edge);
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
-        
+
+        void Expansion::v_AddRobinMassMatrix(
+            const int                            trace,
+            const Array<OneD, const NekDouble > &primCoeffs,
+                  DNekMatSharedPtr              &inoutmat)
+        {
+            boost::ignore_unused(trace,primCoeffs,inoutmat);
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+        }
+
+        void Expansion::v_AddRobinTraceContribution(
+                const int traceid,
+                const Array<OneD, const NekDouble> &primCoeffs,
+                const Array<OneD, NekDouble> &incoeffs,
+                Array<OneD, NekDouble> &coeffs)
+        {
+            boost::ignore_unused(traceid,primCoeffs,incoeffs, coeffs);
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+        }
+
     } //end of namespace
 } //end of namespace
 

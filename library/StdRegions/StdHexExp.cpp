@@ -49,7 +49,6 @@ namespace Nektar
         {
         }
 
-
         StdHexExp::StdHexExp(const LibUtilities::BasisKey &Ba,
                         const LibUtilities::BasisKey &Bb,
                         const LibUtilities::BasisKey &Bc):
@@ -60,13 +59,11 @@ namespace Nektar
         {
         }
 
-
         StdHexExp::StdHexExp(const StdHexExp &T):
             StdExpansion(T),
             StdExpansion3D(T)
         {
         }
-
 
         StdHexExp::~StdHexExp()
         {
@@ -83,7 +80,6 @@ namespace Nektar
                  m_base[1]->GetBasisType() == LibUtilities::eGLL_Lagrange);
         }
 
-
         ///////////////////////////////
         /// Differentiation Methods
         ///////////////////////////////
@@ -98,7 +94,6 @@ namespace Nektar
         {
             StdExpansion3D::PhysTensorDeriv(inarray, out_d0, out_d1, out_d2);
         }
-
 
         /**
          * @param   dir         Direction in which to compute derivative.
@@ -146,7 +141,6 @@ namespace Nektar
         {
             StdHexExp::v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
-
 
         void StdHexExp::v_StdPhysDeriv(const int dir,
                                const Array<OneD, const NekDouble>& inarray,
@@ -218,7 +212,6 @@ namespace Nektar
                                     inarray,outarray,wsp,true,true,true);
         }
 
-
         /**
          * @param   base0       x-dirn basis matrix
          * @param   base1       y-dirn basis matrix
@@ -285,7 +278,6 @@ namespace Nektar
                             0.0, &outarray[0],  nquad0*nquad1);
             }
         }
-
 
         /**
          * Solves the system
@@ -376,8 +368,9 @@ namespace Nektar
         /**
          * Implementation of the local matrix inner product operation.
          */
-        void StdHexExp::v_IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray,
-                                               Array<OneD, NekDouble> &outarray)
+        void StdHexExp::v_IProductWRTBase_MatOp
+                               (const Array<OneD, const NekDouble>& inarray,
+                                Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
             StdMatrixKey      iprodmatkey(eIProductWRTBase,DetShapeType(),*this);
@@ -428,15 +421,16 @@ namespace Nektar
          * Implementation of the sum-factorisation inner product operation.
          * @todo    Implement cases where only some directions are collocated.
          */
-        void StdHexExp::v_IProductWRTBase_SumFacKernel(const Array<OneD, const NekDouble>& base0,
-                                                     const Array<OneD, const NekDouble>& base1,
-                                                     const Array<OneD, const NekDouble>& base2,
-                                                     const Array<OneD, const NekDouble>& inarray,
-                                                     Array<OneD, NekDouble> &outarray,
-                                                     Array<OneD, NekDouble> &wsp,
-                                                     bool doCheckCollDir0,
-                                                     bool doCheckCollDir1,
-                                                     bool doCheckCollDir2)
+        void StdHexExp::v_IProductWRTBase_SumFacKernel
+                              (const Array<OneD, const NekDouble>& base0,
+                               const Array<OneD, const NekDouble>& base1,
+                               const Array<OneD, const NekDouble>& base2,
+                               const Array<OneD, const NekDouble>& inarray,
+                               Array<OneD, NekDouble> &outarray,
+                               Array<OneD, NekDouble> &wsp,
+                               bool doCheckCollDir0,
+                               bool doCheckCollDir1,
+                               bool doCheckCollDir2)
         {
             int  nquad0  = m_base[0]->GetNumPoints();
             int  nquad1  = m_base[1]->GetNumPoints();
@@ -523,9 +517,10 @@ namespace Nektar
         }
 
 
-        void StdHexExp::v_IProductWRTDerivBase_MatOp(const int dir,
-                                                    const Array<OneD, const NekDouble>& inarray,
-                                                    Array<OneD, NekDouble> &outarray)
+        void StdHexExp::v_IProductWRTDerivBase_MatOp
+                               (const int dir,
+                                const Array<OneD, const NekDouble>& inarray,
+                                Array<OneD, NekDouble> &outarray)
         {
             ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
 
@@ -553,9 +548,10 @@ namespace Nektar
         }
 
 
-        void StdHexExp::v_IProductWRTDerivBase_SumFac(const int dir,
-                                                     const Array<OneD, const NekDouble>& inarray,
-                                                     Array<OneD, NekDouble> &outarray)
+        void StdHexExp::v_IProductWRTDerivBase_SumFac
+                              (const int dir,
+                               const Array<OneD, const NekDouble>& inarray,
+                               Array<OneD, NekDouble> &outarray)
         {
             ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
 
@@ -604,8 +600,9 @@ namespace Nektar
             }
         }
 
-        void StdHexExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
-                                      Array<OneD, NekDouble>& eta)
+        void StdHexExp::v_LocCoordToLocCollapsed
+                          (const Array<OneD, const NekDouble>& xi,
+                           Array<OneD, NekDouble>& eta)
         {
             eta[0] = xi[0];
             eta[1] = xi[1];
@@ -671,16 +668,9 @@ namespace Nektar
             return 8;
         }
 
-
         int StdHexExp::v_GetNedges() const
         {
             return 12;
-        }
-
-
-        int StdHexExp::v_GetNfaces() const
-        {
-            return 6;
         }
 
         int StdHexExp::v_GetNtraces() const
@@ -735,31 +725,7 @@ namespace Nektar
                         + nmodes1*nmodes2 );
         }
 
-        int StdHexExp::v_GetEdgeNcoeffs(const int i) const
-        {
-            ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");
-
-            if((i == 0)||(i == 2)||(i == 8)||(i == 10))
-            {
-                return  GetBasisNumModes(0);
-            }
-            else if((i == 1)||(i == 3)||(i == 9)||(i == 11))
-            {
-                return  GetBasisNumModes(1);
-            }
-            else
-            {
-                return GetBasisNumModes(2);
-            }
-        }
-
-        int StdHexExp::v_GetTotalEdgeIntNcoeffs() const
-        {
-            return 4*(GetBasisNumModes(0)+GetBasisNumModes(1)+GetBasisNumModes(2));
-        }
-
-
-        int StdHexExp::v_GetFaceNcoeffs(const int i) const
+        int StdHexExp::v_GetTraceNcoeffs(const int i) const
         {
             ASSERTL2((i >= 0) && (i <= 5), "face id is out of range");
             if((i == 0) || (i == 5))
@@ -776,8 +742,7 @@ namespace Nektar
             }
         }
 
-
-        int StdHexExp::v_GetFaceIntNcoeffs(const int i) const
+        int StdHexExp::v_GetTraceIntNcoeffs(const int i) const
         {
             ASSERTL2((i >= 0) && (i <= 5), "face id is out of range");
             if((i == 0) || (i == 5))
@@ -795,14 +760,14 @@ namespace Nektar
 
         }
 
-        int StdHexExp::v_GetTotalFaceIntNcoeffs() const
+        int StdHexExp::v_GetTotalTraceIntNcoeffs() const
         {
             return 2*((GetBasisNumModes(0)-2)*(GetBasisNumModes(1)-2)+
                       (GetBasisNumModes(0)-2)*(GetBasisNumModes(2)-2)+
                 (GetBasisNumModes(1)-2)*(GetBasisNumModes(2)-2));
         }
 
-        int StdHexExp::v_GetFaceNumPoints(const int i) const
+        int StdHexExp::v_GetTraceNumPoints(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 5, "face id is out of range");
 
@@ -823,7 +788,7 @@ namespace Nektar
             }
         }
 
-        LibUtilities::PointsKey StdHexExp::v_GetFacePointsKey(
+        LibUtilities::PointsKey StdHexExp::v_GetTracePointsKey(
             const int i, const int j) const
         {
             ASSERTL2(i >= 0 && i <= 5, "face id is out of range");
@@ -851,8 +816,7 @@ namespace Nektar
             return nmodes;
         }
 
-
-        const LibUtilities::BasisKey StdHexExp::v_DetFaceBasisKey(
+        const LibUtilities::BasisKey StdHexExp::v_GetTraceBasisKey(
             const int i, const int k) const
         {
             ASSERTL2(i >= 0 && i <= 5, "face id is out of range");
@@ -881,24 +845,6 @@ namespace Nektar
                                             m_base[dir]->GetNumModes());
         }
 
-        LibUtilities::BasisType StdHexExp::v_GetEdgeBasisType(const int i) const
-        {
-            ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");
-
-            if((i == 0)||(i == 2)||(i==8)||(i==10))
-            {
-                return  GetBasisType(0);
-            }
-            else if((i == 1)||(i == 3)||(i == 9)||(i == 11))
-            {
-                return  GetBasisType(1);
-            }
-            else
-            {
-                return GetBasisType(2);
-            }
-        }
-
         void StdHexExp::v_GetCoords( Array<OneD, NekDouble> & xi_x,
                                 Array<OneD, NekDouble> & xi_y,
                                 Array<OneD, NekDouble> & xi_z)
@@ -925,11 +871,11 @@ namespace Nektar
             }
         }
 
-        void StdHexExp::v_GetFaceNumModes(
-                    const int                  fid,
-                    const Orientation          faceOrient,
+        void StdHexExp::v_GetTraceNumModes(
+                    const int    fid,
                     int &numModes0,
-                    int &numModes1)
+                    int &numModes1,
+                    Orientation  faceOrient)
         {
             int nummodes [3] = {m_base[0]->GetNumModes(),
                                 m_base[1]->GetNumModes(),
@@ -970,27 +916,322 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * Expansions in each of the three dimensions must be of type
+         * LibUtilities#eModified_A or LibUtilities#eGLL_Lagrange.
+         *
+         * @param   localVertexId   ID of vertex (0..7)
+         * @returns Position of vertex in local numbering scheme.
+         */
+        int StdHexExp::v_GetVertexMap(const int localVertexId, bool useCoeffPacking)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            ASSERTL1((localVertexId>=0)&&(localVertexId<8),
+                     "local vertex id must be between 0 and 7");
+
+            int p = 0;
+            int q = 0;
+            int r = 0;
+
+            // Retrieve the number of modes in each dimension.
+            int nummodes [3] = {m_base[0]->GetNumModes(),
+                                m_base[1]->GetNumModes(),
+                                m_base[2]->GetNumModes()};
+
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
+            {
+                if(localVertexId > 3)
+                {
+                    if( GetBasisType(2) == LibUtilities::eGLL_Lagrange)
+                    {
+                        r = nummodes[2]-1;
+                    }
+                    else
+                    {
+                        r = 1;
+                    }
+                }
+
+                switch(localVertexId % 4)
+                {
+                case 0:
+                    break;
+                case 1:
+                    {
+                        if( GetBasisType(0) == LibUtilities::eGLL_Lagrange)
+                        {
+                            p = nummodes[0]-1;
+                        }
+                        else
+                        {
+                            p = 1;
+                        }
+                    }
+                    break;
+                case 2:
+                    {
+                        if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
+                        {
+                            q = nummodes[1]-1;
+                        }
+                        else
+                        {
+                            q = 1;
+                        }
+                    }
+                    break;
+                case 3:
+                    {
+                        if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
+                        {
+                            p = nummodes[0]-1;
+                            q = nummodes[1]-1;
+                        }
+                        else
+                        {
+                            p = 1;
+                            q = 1;
+                        }
+                    }
+                    break;
+                }
+            }
+            else
+            {
+                // Right face (vertices 1,2,5,6)
+                if( (localVertexId % 4) % 3 > 0 )
+                {
+                    if( GetBasisType(0) == LibUtilities::eGLL_Lagrange)
+                    {
+                        p = nummodes[0]-1;
+                    }
+                    else
+                    {
+                        p = 1;
+                    }
+                }
+
+                // Back face (vertices 2,3,6,7)
+                if( localVertexId % 4 > 1 )
+                {
+                    if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
+                    {
+                        q = nummodes[1]-1;
+                    }
+                    else
+                    {
+                        q = 1;
+                    }
+                }
+
+                // Top face (vertices 4,5,6,7)
+                if( localVertexId > 3)
+                {
+                    if( GetBasisType(2) == LibUtilities::eGLL_Lagrange)
+                    {
+                        r = nummodes[2]-1;
+                    }
+                    else
+                    {
+                        r = 1;
+                    }
+                }
+            }
+            // Compute the local number.
+            return r*nummodes[0]*nummodes[1] + q*nummodes[0] + p;
+        }
+
+
+        /**
+         * @param   outarray    Storage area for computed map.
+         */
+        void StdHexExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int i;
+            int nummodes [3] = {m_base[0]->GetNumModes(),
+                                m_base[1]->GetNumModes(),
+                                m_base[2]->GetNumModes()};
+
+            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
+
+            if(outarray.size() != nIntCoeffs)
+            {
+                outarray = Array<OneD, unsigned int>(nIntCoeffs);
+            }
+
+            const LibUtilities::BasisType Btype [3] = {GetBasisType(0),
+                                                       GetBasisType(1),
+                                                       GetBasisType(2)};
+
+            int p,q,r;
+            int cnt = 0;
+
+            int IntIdx [3][2];
+
+            for(i = 0; i < 3; i++)
+            {
+                if( Btype[i] == LibUtilities::eModified_A)
+                {
+                    IntIdx[i][0]  = 2;
+                    IntIdx[i][1]  = nummodes[i];
+                }
+                else
+                {
+                    IntIdx[i][0]  = 1;
+                    IntIdx[i][1]  = nummodes[i]-1;
+                }
+            }
+
+            for(r = IntIdx[2][0]; r < IntIdx[2][1]; r++)
+            {
+                for( q = IntIdx[1][0]; q < IntIdx[1][1]; q++)
+                {
+                    for( p = IntIdx[0][0]; p < IntIdx[0][1]; p++)
+                    {
+                        outarray[cnt++] = r*nummodes[0]*nummodes[1] +
+                            q*nummodes[0] + p;
+                    }
+                }
+            }
+        }
+
+
+        /**
+         * @param   outarray    Storage for computed map.
+         */
+        void StdHexExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int i;
+            int nummodes [3] = {m_base[0]->GetNumModes(),
+                                m_base[1]->GetNumModes(),
+                                m_base[2]->GetNumModes()};
+
+            int nBndCoeffs = NumBndryCoeffs();
+
+            if(outarray.size()!=nBndCoeffs)
+            {
+                outarray = Array<OneD, unsigned int>(nBndCoeffs);
+            }
+
+            const LibUtilities::BasisType Btype [3] = {GetBasisType(0),
+                                                       GetBasisType(1),
+                                                       GetBasisType(2)};
+
+            int p,q,r;
+            int cnt = 0;
+
+            int BndIdx [3][2];
+            int IntIdx [3][2];
+
+            for(i = 0; i < 3; i++)
+            {
+                BndIdx[i][0] = 0;
+
+                if( Btype[i] == LibUtilities::eModified_A)
+                {
+                    BndIdx[i][1] = 1;
+                    IntIdx[i][0]  = 2;
+                    IntIdx[i][1]  = nummodes[i];
+                }
+                else
+                {
+                    BndIdx[i][1] = nummodes[i]-1;
+                    IntIdx[i][0]  = 1;
+                    IntIdx[i][1]  = nummodes[i]-1;
+                }
+            }
+
+
+            for(i = 0; i < 2; i++)
+            {
+                r = BndIdx[2][i];
+                for( q = 0; q < nummodes[1]; q++)
+                {
+                    for( p = 0; p < nummodes[0]; p++)
+                    {
+                        outarray[cnt++] = r*nummodes[0]*nummodes[1]+q*nummodes[0] + p;
+                    }
+                }
+            }
+
+            for(r = IntIdx[2][0]; r < IntIdx[2][1]; r++)
+            {
+                for( i = 0; i < 2; i++)
+                {
+                    q = BndIdx[1][i];
+                    for( p = 0; p < nummodes[0]; p++)
+                    {
+                        outarray[cnt++] = r*nummodes[0]*nummodes[1] +
+                            q*nummodes[0] + p;
+                    }
+                }
+
+                for( q = IntIdx[1][0]; q < IntIdx[1][1]; q++)
+                {
+                    for( i = 0; i < 2; i++)
+                    {
+                        p = BndIdx[0][i];
+                        outarray[cnt++] = r*nummodes[0]*nummodes[1] +
+                            q*nummodes[0] + p;
+                    }
+                }
+            }
+
+            sort(outarray.get(), outarray.get() + nBndCoeffs);
+        }
+
         /**
          * Only for basis type Modified_A or GLL_LAGRANGE in all directions.
          */
-        void StdHexExp::v_GetFaceToElementMap(
+        void StdHexExp::v_GetTraceToElementMap(
             const int                  fid,
-            const Orientation          faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
+            Orientation                faceOrient,
             int                        P,
             int                        Q)
         {
             int i,j;
             int nummodesA=0, nummodesB=0;
 
-            ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1) &&
-                     GetEdgeBasisType(0) == GetEdgeBasisType(2),
+            ASSERTL1(GetBasisType(0) == GetBasisType(1) &&
+                     GetBasisType(0) == GetBasisType(2),
                      "Method only implemented if BasisType is indentical in "
                      "all directions");
-            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A ||
-                     GetEdgeBasisType(0) == LibUtilities::eGLL_Lagrange,
-                     "Method only implemented for Modified_A or GLL_Lagrange BasisType");
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "Method only implemented for Modified_A or "
+                     "GLL_Lagrange BasisType");
 
             const int nummodes0 = m_base[0]->GetNumModes();
             const int nummodes1 = m_base[1]->GetNumModes();
@@ -1030,7 +1271,7 @@ namespace Nektar
                 CheckForZeroedModes = true;
             }
 
-            bool modified = (GetEdgeBasisType(0) == LibUtilities::eModified_A);
+            bool modified = (GetBasisType(0) == LibUtilities::eModified_A);
             int nFaceCoeffs = P*Q;
 
             if(maparray.size() != nFaceCoeffs)
@@ -1325,153 +1566,17 @@ namespace Nektar
             }
         }
 
-
-
-        /**
-         * Expansions in each of the three dimensions must be of type
-         * LibUtilities#eModified_A or LibUtilities#eGLL_Lagrange.
-         *
-         * @param   localVertexId   ID of vertex (0..7)
-         * @returns Position of vertex in local numbering scheme.
-         */
-        int StdHexExp::v_GetVertexMap(const int localVertexId, bool useCoeffPacking)
-        {
-            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
-                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
-                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-
-            ASSERTL1((localVertexId>=0)&&(localVertexId<8),
-                     "local vertex id must be between 0 and 7");
-
-            int p = 0;
-            int q = 0;
-            int r = 0;
-
-            // Retrieve the number of modes in each dimension.
-            int nummodes [3] = {m_base[0]->GetNumModes(),
-                                m_base[1]->GetNumModes(),
-                                m_base[2]->GetNumModes()};
-
-            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
-            {
-                if(localVertexId > 3)
-                {
-                    if( GetBasisType(2) == LibUtilities::eGLL_Lagrange)
-                    {
-                        r = nummodes[2]-1;
-                    }
-                    else
-                    {
-                        r = 1;
-                    }
-                }
-
-                switch(localVertexId % 4)
-                {
-                case 0:
-                    break;
-                case 1:
-                    {
-                        if( GetBasisType(0) == LibUtilities::eGLL_Lagrange)
-                        {
-                            p = nummodes[0]-1;
-                        }
-                        else
-                        {
-                            p = 1;
-                        }
-                    }
-                    break;
-                case 2:
-                    {
-                        if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
-                        {
-                            q = nummodes[1]-1;
-                        }
-                        else
-                        {
-                            q = 1;
-                        }
-                    }
-                    break;
-                case 3:
-                    {
-                        if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
-                        {
-                            p = nummodes[0]-1;
-                            q = nummodes[1]-1;
-                        }
-                        else
-                        {
-                            p = 1;
-                            q = 1;
-                        }
-                    }
-                    break;
-                }
-            }
-            else
-            {
-                // Right face (vertices 1,2,5,6)
-                if( (localVertexId % 4) % 3 > 0 )
-                {
-                    if( GetBasisType(0) == LibUtilities::eGLL_Lagrange)
-                    {
-                        p = nummodes[0]-1;
-                    }
-                    else
-                    {
-                        p = 1;
-                    }
-                }
-
-                // Back face (vertices 2,3,6,7)
-                if( localVertexId % 4 > 1 )
-                {
-                    if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
-                    {
-                        q = nummodes[1]-1;
-                    }
-                    else
-                    {
-                        q = 1;
-                    }
-                }
-
-                // Top face (vertices 4,5,6,7)
-                if( localVertexId > 3)
-                {
-                    if( GetBasisType(2) == LibUtilities::eGLL_Lagrange)
-                    {
-                        r = nummodes[2]-1;
-                    }
-                    else
-                    {
-                        r = 1;
-                    }
-                }
-            }
-            // Compute the local number.
-            return r*nummodes[0]*nummodes[1] + q*nummodes[0] + p;
-        }
-
-
         /**
          * @param   eid         The edge to compute the numbering for.
          * @param   edgeOrient  Orientation of the edge.
          * @param   maparray    Storage for computed mapping array.
          * @param   signarray   ?
          */
-        void StdHexExp::v_GetEdgeInteriorMap(const int eid,
-                                const Orientation edgeOrient,
+        void StdHexExp::v_GetEdgeInteriorToElementMap
+                               (const int eid,
                                 Array<OneD, unsigned int> &maparray,
-                                Array<OneD, int> &signarray)
+                                Array<OneD, int> &signarray,
+                                const Orientation edgeOrient)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
                      GetBasisType(0) == LibUtilities::eGLL_Lagrange,
@@ -1752,7 +1857,7 @@ namespace Nektar
                 reverse( maparray.get() , maparray.get()+nEdgeIntCoeffs );
             }
 
-            if( signChange )
+            if(signChange)
             {
                 for(p = 1; p < nEdgeIntCoeffs; p+=2)
                 {
@@ -1766,10 +1871,10 @@ namespace Nektar
          * Generate mapping describing which elemental modes lie on the
          * interior of a given face. Accounts for face orientation.
          */
-        void StdHexExp::v_GetFaceInteriorMap(const int fid,
-                                const Orientation faceOrient,
-                                Array<OneD, unsigned int> &maparray,
-                                Array<OneD, int>& signarray)
+        void StdHexExp::v_GetTraceInteriorToElementMap(const int fid,
+                                              Array<OneD, unsigned int> &maparray,
+                                              Array<OneD, int>& signarray,
+                                              const Orientation faceOrient)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
                      GetBasisType(0) == LibUtilities::eGLL_Lagrange,
@@ -1784,7 +1889,7 @@ namespace Nektar
             ASSERTL1((fid>=0)&&(fid<6),
                      "local face id must be between 0 and 5");
 
-            int nFaceIntCoeffs = GetFaceIntNcoeffs(fid);
+            int nFaceIntCoeffs = v_GetTraceIntNcoeffs(fid);
 
             if(maparray.size()!=nFaceIntCoeffs)
             {
@@ -2102,163 +2207,22 @@ namespace Nektar
             }
         }
 
-
-        /**
-         * @param   outarray    Storage area for computed map.
-         */
-        void StdHexExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+        int StdHexExp::v_GetEdgeNcoeffs(const int i) const
         {
-            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
-                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
-                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
+            ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");
 
-            int i;
-            int nummodes [3] = {m_base[0]->GetNumModes(),
-                                m_base[1]->GetNumModes(),
-                                m_base[2]->GetNumModes()};
-
-            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
-
-            if(outarray.size() != nIntCoeffs)
+            if((i == 0)||(i == 2)||(i == 8)||(i == 10))
             {
-                outarray = Array<OneD, unsigned int>(nIntCoeffs);
+                return  GetBasisNumModes(0);
             }
-
-            const LibUtilities::BasisType Btype [3] = {GetBasisType(0),
-                                                       GetBasisType(1),
-                                                       GetBasisType(2)};
-
-            int p,q,r;
-            int cnt = 0;
-
-            int IntIdx [3][2];
-
-            for(i = 0; i < 3; i++)
+            else if((i == 1)||(i == 3)||(i == 9)||(i == 11))
             {
-                if( Btype[i] == LibUtilities::eModified_A)
-                {
-                    IntIdx[i][0]  = 2;
-                    IntIdx[i][1]  = nummodes[i];
-                }
-                else
-                {
-                    IntIdx[i][0]  = 1;
-                    IntIdx[i][1]  = nummodes[i]-1;
-                }
+                return  GetBasisNumModes(1);
             }
-
-            for(r = IntIdx[2][0]; r < IntIdx[2][1]; r++)
+            else
             {
-                for( q = IntIdx[1][0]; q < IntIdx[1][1]; q++)
-                {
-                    for( p = IntIdx[0][0]; p < IntIdx[0][1]; p++)
-                    {
-                        outarray[cnt++] = r*nummodes[0]*nummodes[1] +
-                            q*nummodes[0] + p;
-                    }
-                }
+                return GetBasisNumModes(2);
             }
-        }
-
-
-        /**
-         * @param   outarray    Storage for computed map.
-         */
-        void StdHexExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
-        {
-            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
-                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
-                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-
-            int i;
-            int nummodes [3] = {m_base[0]->GetNumModes(),
-                                m_base[1]->GetNumModes(),
-                                m_base[2]->GetNumModes()};
-
-            int nBndCoeffs = NumBndryCoeffs();
-
-            if(outarray.size()!=nBndCoeffs)
-            {
-                outarray = Array<OneD, unsigned int>(nBndCoeffs);
-            }
-
-            const LibUtilities::BasisType Btype [3] = {GetBasisType(0),
-                                                       GetBasisType(1),
-                                                       GetBasisType(2)};
-
-            int p,q,r;
-            int cnt = 0;
-
-            int BndIdx [3][2];
-            int IntIdx [3][2];
-
-            for(i = 0; i < 3; i++)
-            {
-                BndIdx[i][0] = 0;
-
-                if( Btype[i] == LibUtilities::eModified_A)
-                {
-                    BndIdx[i][1] = 1;
-                    IntIdx[i][0]  = 2;
-                    IntIdx[i][1]  = nummodes[i];
-                }
-                else
-                {
-                    BndIdx[i][1] = nummodes[i]-1;
-                    IntIdx[i][0]  = 1;
-                    IntIdx[i][1]  = nummodes[i]-1;
-                }
-            }
-
-
-            for(i = 0; i < 2; i++)
-            {
-                r = BndIdx[2][i];
-                for( q = 0; q < nummodes[1]; q++)
-                {
-                    for( p = 0; p < nummodes[0]; p++)
-                    {
-                        outarray[cnt++] = r*nummodes[0]*nummodes[1]+q*nummodes[0] + p;
-                    }
-                }
-            }
-
-            for(r = IntIdx[2][0]; r < IntIdx[2][1]; r++)
-            {
-                for( i = 0; i < 2; i++)
-                {
-                    q = BndIdx[1][i];
-                    for( p = 0; p < nummodes[0]; p++)
-                    {
-                        outarray[cnt++] = r*nummodes[0]*nummodes[1] +
-                            q*nummodes[0] + p;
-                    }
-                }
-
-                for( q = IntIdx[1][0]; q < IntIdx[1][1]; q++)
-                {
-                    for( i = 0; i < 2; i++)
-                    {
-                        p = BndIdx[0][i];
-                        outarray[cnt++] = r*nummodes[0]*nummodes[1] +
-                            q*nummodes[0] + p;
-                    }
-                }
-            }
-
-            sort(outarray.get(), outarray.get() + nBndCoeffs);
         }
 
         DNekMatSharedPtr StdHexExp::v_GenMatrix(const StdMatrixKey &mkey)

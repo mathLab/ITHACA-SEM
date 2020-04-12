@@ -90,15 +90,6 @@ namespace Nektar
                 return 1;
             }
 
-            virtual int v_GetNedges() const
-            {
-                return 0;
-            }
-
-            virtual int v_GetNfaces() const
-            {
-                return 0;
-            }
         };
 
         typedef std::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;

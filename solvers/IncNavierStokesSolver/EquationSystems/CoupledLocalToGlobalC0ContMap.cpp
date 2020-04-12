@@ -71,7 +71,7 @@ namespace Nektar
         int nLocBndCondDofs = 0;
         int nLocDirBndCondDofs = 0;
         int nExtraDirichlet = 0;
-        StdRegions::StdExpansion2DSharedPtr locExpansion;
+        LocalRegions::Expansion2DSharedPtr  locExpansion;
         LocalRegions::SegExpSharedPtr       bndSegExp;
         LibUtilities::BasisType             bType;
         StdRegions::Orientation         edgeOrient;
@@ -263,13 +263,15 @@ namespace Nektar
                                            ->GetGeom2D())->GetEid(j);
                 if(Dofs[1].count(edgeId) == 0)
                 {
-                    Dofs[1][edgeId] = nvel*(locExpVector[i]->GetEdgeNcoeffs(j)-2)*nz_loc;
+                    Dofs[1][edgeId] = nvel*(locExpVector[i]->
+                                            GetTraceNcoeffs(j)-2)*nz_loc;
                 }
 
                 // Adjust for Dirichlet boundary conditions to give number to be solved
                 if(IsDirEdgeDof.count(edgeId) != 0)
                 {
-                    Dofs[1][edgeId] -= IsDirEdgeDof[edgeId]*nz_loc*(locExpVector[i]->GetEdgeNcoeffs(j)-2);
+                    Dofs[1][edgeId] -= IsDirEdgeDof[edgeId]*nz_loc*(locExpVector[i]->
+                                                                  GetTraceNcoeffs(j)-2);
                 }
             }
         }
@@ -388,27 +390,25 @@ namespace Nektar
 
         for(i = 0; i < nel; ++i)
         {
-            locExpansion = locExpVector[i]->as<StdRegions::StdExpansion2D>();
+            locExpansion = locExpVector[i]->as<LocalRegions::Expansion2D>();
 
-            for(j = 0; j < locExpansion->GetNedges(); ++j)
+            for(j = 0; j < locExpansion->GetNtraces(); ++j)
             {
-                nEdgeCoeffs = locExpansion->GetEdgeNcoeffs(j);
-                meshEdgeId = (locExpansion->as<LocalRegions::Expansion2D>()
-                                          ->GetGeom2D())->GetEid(j);
-                meshVertId = (locExpansion->as<LocalRegions::Expansion2D>()
-                                          ->GetGeom2D())->GetVid(j);
+                nEdgeCoeffs = locExpansion->GetTraceNcoeffs(j);
+                meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
+                meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
 
                 for(k = 0; k < nvel*nz_loc; ++k)
                 {
-                    graphVertOffset[ReorderedGraphVertId[0][meshVertId]*nvel*nz_loc+k] = 1;
-                    graphVertOffset[ReorderedGraphVertId[1][meshEdgeId]*nvel*nz_loc+k] = (nEdgeCoeffs-2);
+                    graphVertOffset[ReorderedGraphVertId[0]
+                                    [meshVertId]*nvel*nz_loc+k] = 1;
+                    graphVertOffset[ReorderedGraphVertId[1]
+                                    [meshEdgeId]*nvel*nz_loc+k] = (nEdgeCoeffs-2);
                 }
 
-                bType = locExpansion->GetEdgeBasisType(j);
+                bType = locExpansion->GetBasisType(0);
                 // need a sign vector for modal expansions if nEdgeCoeffs >=4
-                if( (nEdgeCoeffs >= 4)&&
-                    ( (bType == LibUtilities::eModified_A)||
-                      (bType == LibUtilities::eModified_B) ) )
+                if( (nEdgeCoeffs >= 4)&&(bType == LibUtilities::eModified_A))
                 {
                     m_signChange = true;
                 }
@@ -619,7 +619,7 @@ namespace Nektar
         // ordering (element type consistency)
         for(i = 0; i < nel; ++i)
         {
-            locExpansion = locExpVector[i]->as<StdRegions::StdExpansion2D>();
+            locExpansion = locExpVector[i]->as<LocalRegions::Expansion2D>();
 
             velnbndry = locExpansion->NumBndryCoeffs();
 
@@ -634,15 +634,12 @@ namespace Nektar
             }
 
             // Loop over all edges (and vertices) of element i
-            for(j = 0; j < locExpansion->GetNedges(); ++j)
+            for(j = 0; j < locExpansion->GetNtraces(); ++j)
             {
-                nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j)-2;
-                edgeOrient = (locExpansion->as<LocalRegions::Expansion2D>()
-                                            ->GetGeom2D())->GetEorient(j);
-                meshEdgeId = (locExpansion->as<LocalRegions::Expansion2D>()
-                                            ->GetGeom2D())->GetEid(j);
-                meshVertId = (locExpansion->as<LocalRegions::Expansion2D>()
-                                            ->GetGeom2D())->GetVid(j);
+                nEdgeInteriorCoeffs = locExpansion->GetTraceNcoeffs(j)-2;
+                edgeOrient = (locExpansion->GetGeom())->GetEorient(j);
+                meshEdgeId = (locExpansion->GetGeom())->GetEid(j);
+                meshVertId = (locExpansion->GetGeom())->GetVid(j);
 
                 auto pIt = periodicEdges.find(meshEdgeId);
 
@@ -657,8 +654,8 @@ namespace Nektar
                     edgeOrient = idOrient.second;
                 }
 
-                locExpansion->GetEdgeInteriorMap(j,edgeOrient,
-                                          edgeInteriorMap,edgeInteriorSign);
+                locExpansion->GetTraceInteriorToElementMap(j,edgeInteriorMap,
+                                                          edgeInteriorSign,edgeOrient);
 
                 // Set the global DOF for vertex j of element i
                 for(nv = 0; nv < nvel*nz_loc; ++nv)
@@ -800,16 +797,11 @@ namespace Nektar
                     Dofs[0].size()+Dofs[1].size()-firstNonDirGraphVertId);
                 for(i = 0; i < locExpVector.size(); ++i)
                 {
-                    locExpansion = locExpVector[i]
-                                            ->as<StdRegions::StdExpansion2D>();
+                    locExpansion = locExpVector[i]->as<LocalRegions::Expansion2D>();
                     for(j = 0; j < locExpansion->GetNverts(); ++j)
                     {
-                        meshEdgeId = (locExpansion
-                                        ->as<LocalRegions::Expansion2D>()
-                                        ->GetGeom2D())->GetEid(j);
-                        meshVertId = (locExpansion
-                                        ->as<LocalRegions::Expansion2D>()
-                                        ->GetGeom2D())->GetVid(j);
+                        meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
+                        meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
 
                         if(ReorderedGraphVertId[0][meshVertId] >=
                            firstNonDirGraphVertId)

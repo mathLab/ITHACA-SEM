@@ -773,66 +773,23 @@ void FilterAeroForces::CalculateForces(
 
                         // Dimension specific part for obtaining values
                         //   at boundary and normal vector
-                        Array<OneD, Array<OneD, NekDouble> > normals;
-                        int nbc = 0;
-                        switch(expdim)
+                        Array<OneD, Array<OneD, NekDouble> > normals = 
+                            elmt->GetTraceNormal(boundary);
+                        
+                        // Get expansion on boundary
+                        LocalRegions::ExpansionSharedPtr bc = BndExp[n]->GetExp(i); 
+
+                        // Get number of points on the boundary
+                        int nbc = bc->GetTotPoints();
+
+                        // Extract values at boundary
+                        Pb = Array<OneD, NekDouble>(nbc,0.0);
+                        elmt->GetTracePhysVals(boundary,bc,pElmt,Pb);
+
+                        for(int j = 0; j < expdim*expdim; ++j)
                         {
-                            case 2:
-                            {
-                                // Get expansion on boundary
-                                LocalRegions::Expansion1DSharedPtr bc;
-                                bc =  BndExp[n]->GetExp(i)->
-                                       as<LocalRegions::Expansion1D> ();
-
-                                // Get number of points on the boundary
-                                nbc = bc->GetTotPoints();
-
-                                // Get normals
-                                normals = elmt->GetTraceNormal(boundary);
-
-                                // Extract values at boundary
-                                Pb = Array<OneD, NekDouble>(nbc,0.0);
-                                elmt->GetEdgePhysVals(boundary,bc,pElmt,Pb);
-                                for(int j = 0; j < expdim*expdim; ++j)
-                                {
-                                    gradb[j] = Array<OneD, NekDouble>
-                                                    (nbc,0.0);
-                                    elmt->GetEdgePhysVals(boundary,
-                                                   bc,grad[j],gradb[j]);
-                                }
-                            }
-                            break;
-
-                            case 3:
-                            {
-                                // Get expansion on boundary
-                                LocalRegions::Expansion2DSharedPtr bc;
-                                bc =  BndExp[n]->GetExp(i)->
-                                       as<LocalRegions::Expansion2D> ();
-
-                                // Get number of points on the boundary
-                                nbc = bc->GetTotPoints();
-
-                                // Get normals
-                                normals = elmt->GetTraceNormal(boundary);
-
-                                // Extract values at boundary
-                                Pb = Array<OneD, NekDouble>(nbc,0.0);
-                                elmt->GetFacePhysVals(boundary,bc,pElmt,Pb);
-                                for(int j = 0; j < expdim*expdim; ++j)
-                                {
-                                    gradb[j] = Array<OneD, NekDouble>
-                                                    (nbc,0.0);
-                                    elmt->GetFacePhysVals(boundary,
-                                                   bc,grad[j],gradb[j]);
-                                }
-                            }
-                            break;
-
-                            default:
-                                ASSERTL0(false,
-                                    "Expansion not supported by FilterForces");
-                            break;
+                            gradb[j] = Array<OneD, NekDouble>(nbc,0.0);
+                            elmt->GetTracePhysVals(boundary,bc,grad[j],gradb[j]);
                         }
 
                         // Calculate forces per unit length
@@ -1261,97 +1218,32 @@ void FilterAeroForces::CalculateForcesMapping(
                         // Dimension specific part for obtaining values
                         //   at boundary and normal vector
                         Array<OneD, Array<OneD, NekDouble> > normals;
-                        int nbc = 0;
-                        switch(expdim)
+                        // Get normals
+                        normals = elmt->GetTraceNormal(boundary);
+
+                        // Get expansion on boundary
+                        LocalRegions::ExpansionSharedPtr bc = 
+                            BndExp[n]->GetExp(i);
+                        
+                        // Get number of points on the boundary
+                        int nbc = bc->GetTotPoints();
+
+                        // Extract values at boundary
+                        for(int j = 0; j < nVel*nVel; ++j)
                         {
-                            case 2:
-                            {
-                                // Get expansion on boundary
-                                LocalRegions::Expansion1DSharedPtr bc;
-                                bc =  BndExp[n]->GetExp(i)->
-                                       as<LocalRegions::Expansion1D> ();
+                            gradBnd[j] = Array<OneD, NekDouble>(nbc,0.0);
+                            elmt->GetTracePhysVals(boundary,bc,gradElmt[j],gradBnd[j]);
+                            
+                            PBnd[j] = Array<OneD, NekDouble>(nbc,0.0);
+                            elmt->GetTracePhysVals(boundary,bc,PElmt[j],PBnd[j]);
 
-                                // Get number of points on the boundary
-                                nbc = bc->GetTotPoints();
-
-                                // Get normals
-                                normals = elmt->GetTraceNormal(boundary);
-
-                                // Extract values at boundary
-                                for(int j = 0; j < nVel*nVel; ++j)
-                                {
-                                    gradBnd[j] = Array<OneD, NekDouble>
-                                                    (nbc,0.0);
-                                    elmt->GetEdgePhysVals(boundary,
-                                                 bc,gradElmt[j],
-                                                    gradBnd[j]);
-
-                                    PBnd[j] = Array<OneD, NekDouble>
-                                                    (nbc,0.0);
-                                    elmt->GetEdgePhysVals(boundary,
-                                                 bc,PElmt[j],
-                                                    PBnd[j]);
-                                    CBnd[j] = Array<OneD, NekDouble>
-                                                    (nbc,0.0);
-                                    elmt->GetEdgePhysVals(boundary,
-                                                 bc,CElmt[j],
-                                                    CBnd[j]);
-                                }
-                                JacBnd = Array<OneD, NekDouble>
-                                                    (nbc,0.0);
-                                elmt->GetEdgePhysVals(boundary,
-                                                 bc,JacElmt,
-                                                    JacBnd);
-                            }
-                            break;
-
-                            case 3:
-                            {
-                                // Get expansion on boundary
-                                LocalRegions::Expansion2DSharedPtr bc;
-                                bc =  BndExp[n]->GetExp(i)->
-                                       as<LocalRegions::Expansion2D> ();
-
-                                // Get number of points on the boundary
-                                nbc = bc->GetTotPoints();
-
-                                // Get normals
-                                normals = elmt->GetTraceNormal(boundary);
-
-                                // Extract values at boundary
-                                for(int j = 0; j < nVel*nVel; ++j)
-                                {
-                                    gradBnd[j] = Array<OneD, NekDouble>
-                                                    (nbc,0.0);
-                                    elmt->GetFacePhysVals(boundary,
-                                                 bc,gradElmt[j],
-                                                    gradBnd[j]);
-
-                                    PBnd[j] = Array<OneD, NekDouble>
-                                                    (nbc,0.0);
-                                    elmt->GetFacePhysVals(boundary,
-                                                 bc,PElmt[j],
-                                                    PBnd[j]);
-
-                                    CBnd[j] = Array<OneD, NekDouble>
-                                                    (nbc,0.0);
-                                    elmt->GetFacePhysVals(boundary,
-                                                 bc,CElmt[j],
-                                                    CBnd[j]);
-                                }
-                                JacBnd = Array<OneD, NekDouble>
-                                                (nbc,0.0);
-                                elmt->GetFacePhysVals(boundary,
-                                             bc,JacElmt,
-                                                JacBnd);
-                            }
-                            break;
-
-                            default:
-                                ASSERTL0(false,
-                                    "Expansion not supported by FilterForces");
-                            break;
+                            CBnd[j] = Array<OneD, NekDouble>(nbc,0.0);
+                            elmt->GetTracePhysVals(boundary,bc,CElmt[j],CBnd[j]);
                         }
+
+                        JacBnd = Array<OneD, NekDouble>(nbc,0.0);
+                        elmt->GetTracePhysVals(boundary,bc,JacElmt,JacBnd);
+
 
                         // Calculate forces per unit length
 

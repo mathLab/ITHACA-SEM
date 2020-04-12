@@ -348,20 +348,20 @@ void FilterMovingBody::UpdateForce(
                     Array<OneD, NekDouble>  lift_t(nbc,0.0);
                     Array<OneD, NekDouble>  drag_p(nbc,0.0);
                     Array<OneD, NekDouble>  lift_p(nbc,0.0);
-                    Array<OneD, NekDouble>  temp(nbc,0.0);
-                    Array<OneD, NekDouble>  temp2(nbc,0.0);
+                    Array<OneD, NekDouble>  temp  (nbc,0.0);
+                    Array<OneD, NekDouble>  temp2 (nbc,0.0);
 
                     // identify boundary of element .
                     boundary = BoundarytoTraceID[cnt];
 
                     // extraction of the pressure and wss on the
                     // boundary of the element
-                    elmt->GetEdgePhysVals(boundary,bc,P,Pb);
+                    elmt->GetTracePhysVals(boundary,bc,P,Pb);
 
                     for(int j = 0; j < dim; ++j)
                     {
-                        elmt->GetEdgePhysVals(boundary,bc,gradU[j],fgradU[j]);
-                        elmt->GetEdgePhysVals(boundary,bc,gradV[j],fgradV[j]);
+                        elmt->GetTracePhysVals(boundary,bc,gradU[j],fgradU[j]);
+                        elmt->GetTracePhysVals(boundary,bc,gradV[j],fgradV[j]);
                     }
 
                     //normals of the element

@@ -2219,10 +2219,11 @@ void GenerateMapEidsv1v2(MultiRegions::ExpListSharedPtr field,
       {
            if((locQuadExp = (*exp2D)[i]->as<LocalRegions::QuadExp>()))
            {
-                for(int j = 0; j < locQuadExp->GetNedges(); ++j)
+                for(int j = 0; j < locQuadExp->GetNtraces(); ++j)
                 {
                     SegGeom = (locQuadExp->GetGeom2D())->GetEdge(j);
                     id = SegGeom->GetGlobalID();
+
                     if( V1tmp[id] == 10000)
                     {
                          V1tmp[id]= SegGeom->GetVertex(0)->GetVid();
@@ -2235,7 +2236,7 @@ void GenerateMapEidsv1v2(MultiRegions::ExpListSharedPtr field,
 
            else if((locTriExp = (*exp2D)[i]->as<LocalRegions::TriExp>()))
            {
-                for(int j = 0; j < locTriExp->GetNedges(); ++j)
+                for(int j = 0; j < locTriExp->GetNtraces(); ++j)
                 {
                      SegGeom = (locTriExp->GetGeom2D())->GetEdge(j);
                      id = SegGeom->GetGlobalID();
@@ -3656,7 +3657,7 @@ void CheckSingularQuads( MultiRegions::ExpListSharedPtr Exp,
                 }
 //cout<<"00 V1 x="<<xnew[  V1[idbef] ]<<"   y="<<ynew[  V1[idbef] ]<<endl;
 //cout<<"00 V2 x="<<xnew[  V2[idbef] ]<<"   y="<<ynew[  V2[idbef] ]<<endl;
-                for(int j = 1; j < locQuadExp->GetNedges(); ++j)
+                for(int j = 1; j < locQuadExp->GetNtraces(); ++j)
                 {
                     SegGeom = (locQuadExp->GetGeom2D())->GetEdge(j);
                     idnext = SegGeom->GetGlobalID();

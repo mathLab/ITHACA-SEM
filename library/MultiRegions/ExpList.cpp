@@ -2848,7 +2848,7 @@ namespace Nektar
                 // Assume whole array is of same coordimate dimension
                 int coordim = GetCoordim(0);
 
-                ASSERTL1(Vec.num_elements() >= coordim,
+                ASSERTL1(Vec.size() >= coordim,
                      "Input vector does not have sufficient dimensions to "
                      "match coordim");
                 
@@ -2911,10 +2911,10 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Bwd,
                   Array<OneD,       NekDouble> &Upwind)
         {
-            ASSERTL1(Vn.num_elements() >= m_npoints,"Vn is not of sufficient length");
-            ASSERTL1(Fwd.num_elements() >= m_npoints,"Fwd is not of sufficient length");
-            ASSERTL1(Bwd.num_elements() >= m_npoints,"Bwd is not of sufficient length");
-            ASSERTL1(Upwind.num_elements() >= m_npoints,
+            ASSERTL1(Vn.size() >= m_npoints,"Vn is not of sufficient length");
+            ASSERTL1(Fwd.size() >= m_npoints,"Fwd is not of sufficient length");
+            ASSERTL1(Bwd.size() >= m_npoints,"Bwd is not of sufficient length");
+            ASSERTL1(Upwind.size() >= m_npoints,
                      "Upwind is not of sufficient length");
 
             // Process each point in the expansion.
@@ -3037,7 +3037,7 @@ namespace Nektar
             // Assume whole array is of same coordinate dimension
             int coordim = GetCoordim(0);
 
-            ASSERTL1(normals.num_elements() >= coordim,
+            ASSERTL1(normals.size() >= coordim,
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
 
@@ -3195,7 +3195,8 @@ namespace Nektar
 
                     // Project normals from 3D element onto the same orientation as
                     // the trace expansion.
-                    StdRegions::Orientation orient = exp3D->GetForient(faceNum);
+                    StdRegions::Orientation orient = exp3D->
+                        GetTraceOrient(faceNum);
                     
 
                     int fromid0,fromid1;
@@ -3212,9 +3213,9 @@ namespace Nektar
                     }
                     
                     LibUtilities::BasisKey faceBasis0 
-                        = exp3D->DetFaceBasisKey(faceNum, fromid0);
+                        = exp3D->GetTraceBasisKey(faceNum, fromid0);
                     LibUtilities::BasisKey faceBasis1 
-                        = exp3D->DetFaceBasisKey(faceNum, fromid1);
+                        = exp3D->GetTraceBasisKey(faceNum, fromid1);
                     LibUtilities::BasisKey traceBasis0
                         = traceExp->GetBasis(0)->GetBasisKey();
                     LibUtilities::BasisKey traceBasis1
@@ -3650,8 +3651,8 @@ namespace Nektar
         /**
          */
         void ExpList::v_ExtractElmtToBndPhys(const int i,
-                                             const Array<OneD, NekDouble> &element,
-                                             Array<OneD, NekDouble> &boundary)
+                                            const Array<OneD, NekDouble> &element,
+                                            Array<OneD, NekDouble> &boundary)
         {
             int n, cnt;
             Array<OneD, NekDouble> tmp1, tmp2;
@@ -3734,7 +3735,7 @@ namespace Nektar
         {
             int n, cnt;
             Array<OneD, NekDouble> tmp1;
-            StdRegions::StdExpansionSharedPtr elmt;
+            LocalRegions::ExpansionSharedPtr elmt;
 
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
@@ -4094,7 +4095,7 @@ namespace Nektar
             Array<OneD,NekDouble> mapped_quad_points(quad_npoints);
 
             // For each evaluation point
-            for(i = 0; i < inarray.num_elements(); i++)
+            for(i = 0; i < inarray.size(); i++)
             {
                 // Move the center of the kernel to the current point
                 kernel->MoveKernelCenter(inarray[i],local_kernel_breaks);
@@ -4104,8 +4105,8 @@ namespace Nektar
                 kernel->FindMeshUnderKernel(local_kernel_breaks,h,mesh_breaks);
 
                 // Sort the total breaks for integration purposes
-                int total_nbreaks = local_kernel_breaks.num_elements() +
-                                    mesh_breaks.num_elements();
+                int total_nbreaks = local_kernel_breaks.size() +
+                                    mesh_breaks.size();
                                     // number of the total breaks
                 Array<OneD,NekDouble> total_breaks(total_nbreaks);
                 kernel->Sort(local_kernel_breaks,mesh_breaks,total_breaks);
@@ -4113,13 +4114,13 @@ namespace Nektar
                 // Integrate the product of kernel and function over the total
                 // breaks
                 NekDouble integral_value = 0.0;
-                for(j = 0; j < total_breaks.num_elements()-1; j++)
+                for(j = 0; j < total_breaks.size()-1; j++)
                 {
                     NekDouble a = total_breaks[j];
                     NekDouble b = total_breaks[j+1];
 
                     // Map the quadrature points to the appropriate interval
-                    for(r = 0; r < quad_points.num_elements(); r++)
+                    for(r = 0; r < quad_points.size(); r++)
                     {
                         mapped_quad_points[r]
                                 = (quad_points[r] + 1.0) * 0.5 * (b - a) + a;
@@ -4178,13 +4179,13 @@ namespace Nektar
             int num_elm = GetExpSize();
 
             // initializing the outarray
-            for(i = 0; i < outarray.num_elements(); i++)
+            for(i = 0; i < outarray.size(); i++)
             {
                 outarray[i] = 0.0;
             }
 
             // Make a copy for further modification
-            int x_size = inarray2.num_elements();
+            int x_size = inarray2.size();
             Array<OneD,NekDouble> x_values_cp(x_size);
 
             // Determining the element to which the x belongs

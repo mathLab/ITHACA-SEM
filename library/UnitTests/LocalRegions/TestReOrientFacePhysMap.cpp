@@ -46,14 +46,13 @@ BOOST_AUTO_TEST_CASE(TestReOrientQuadFacePhysMap)
     // Initialiaze 3*3 face id map for quad
     int nq0 = 3;
     int nq1 = 3;
-    int nvert = 4;
     Array<OneD,int> idmap(nq0*nq1, -1);
 
     // Test different orientations
     StdRegions::Orientation orient;
 
     orient = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
-    exp3d->ReOrientFacePhysMap(nvert, orient, nq0, nq1, idmap);
+    exp3d->ReOrientTracePhysMap(orient, idmap, nq0, nq1);
     BOOST_CHECK_EQUAL(idmap[0], 0);
     BOOST_CHECK_EQUAL(idmap[1], 1);
     BOOST_CHECK_EQUAL(idmap[2], 2);
@@ -65,7 +64,7 @@ BOOST_AUTO_TEST_CASE(TestReOrientQuadFacePhysMap)
     BOOST_CHECK_EQUAL(idmap[8], 8);
 
     orient = StdRegions::eDir1FwdDir1_Dir2BwdDir2;
-    exp3d->ReOrientFacePhysMap(nvert, orient, nq0, nq1, idmap);
+    exp3d->ReOrientTracePhysMap(orient, idmap, nq0, nq1);
     BOOST_CHECK_EQUAL(idmap[0], 6);
     BOOST_CHECK_EQUAL(idmap[1], 7);
     BOOST_CHECK_EQUAL(idmap[2], 8);
@@ -77,7 +76,7 @@ BOOST_AUTO_TEST_CASE(TestReOrientQuadFacePhysMap)
     BOOST_CHECK_EQUAL(idmap[8], 2);
 
     orient = StdRegions::eDir1BwdDir1_Dir2FwdDir2;
-    exp3d->ReOrientFacePhysMap(nvert, orient, nq0, nq1, idmap);
+    exp3d->ReOrientTracePhysMap(orient, idmap, nq0, nq1);
     BOOST_CHECK_EQUAL(idmap[0], 2);
     BOOST_CHECK_EQUAL(idmap[1], 1);
     BOOST_CHECK_EQUAL(idmap[2], 0);
@@ -89,7 +88,7 @@ BOOST_AUTO_TEST_CASE(TestReOrientQuadFacePhysMap)
     BOOST_CHECK_EQUAL(idmap[8], 6);
 
     orient = StdRegions::eDir1BwdDir1_Dir2BwdDir2;
-    exp3d->ReOrientFacePhysMap(nvert, orient, nq0, nq1, idmap);
+    exp3d->ReOrientTracePhysMap(orient, idmap, nq0, nq1);
     BOOST_CHECK_EQUAL(idmap[0], 8);
     BOOST_CHECK_EQUAL(idmap[1], 7);
     BOOST_CHECK_EQUAL(idmap[2], 6);
@@ -101,7 +100,7 @@ BOOST_AUTO_TEST_CASE(TestReOrientQuadFacePhysMap)
     BOOST_CHECK_EQUAL(idmap[8], 0);
 
     orient = StdRegions::eDir1FwdDir2_Dir2FwdDir1;
-    exp3d->ReOrientFacePhysMap(nvert, orient, nq0, nq1, idmap);
+    exp3d->ReOrientTracePhysMap(orient, idmap, nq0, nq1);
     BOOST_CHECK_EQUAL(idmap[0], 0);
     BOOST_CHECK_EQUAL(idmap[1], 3);
     BOOST_CHECK_EQUAL(idmap[2], 6);
@@ -113,7 +112,7 @@ BOOST_AUTO_TEST_CASE(TestReOrientQuadFacePhysMap)
     BOOST_CHECK_EQUAL(idmap[8], 8);
 
     orient = StdRegions::eDir1FwdDir2_Dir2BwdDir1;
-    exp3d->ReOrientFacePhysMap(nvert, orient, nq0, nq1, idmap);
+    exp3d->ReOrientTracePhysMap(orient, idmap, nq0, nq1);
     BOOST_CHECK_EQUAL(idmap[0], 2);
     BOOST_CHECK_EQUAL(idmap[1], 5);
     BOOST_CHECK_EQUAL(idmap[2], 8);
@@ -125,7 +124,7 @@ BOOST_AUTO_TEST_CASE(TestReOrientQuadFacePhysMap)
     BOOST_CHECK_EQUAL(idmap[8], 6);
 
     orient = StdRegions::eDir1BwdDir2_Dir2FwdDir1;
-    exp3d->ReOrientFacePhysMap(nvert, orient, nq0, nq1, idmap);
+    exp3d->ReOrientTracePhysMap(orient, idmap, nq0, nq1);
     BOOST_CHECK_EQUAL(idmap[0], 6);
     BOOST_CHECK_EQUAL(idmap[1], 3);
     BOOST_CHECK_EQUAL(idmap[2], 0);
@@ -137,7 +136,7 @@ BOOST_AUTO_TEST_CASE(TestReOrientQuadFacePhysMap)
     BOOST_CHECK_EQUAL(idmap[8], 2);
 
     orient = StdRegions::eDir1BwdDir2_Dir2BwdDir1;
-    exp3d->ReOrientFacePhysMap(nvert, orient, nq0, nq1, idmap);
+    exp3d->ReOrientTracePhysMap(orient, idmap, nq0, nq1);
     BOOST_CHECK_EQUAL(idmap[0], 8);
     BOOST_CHECK_EQUAL(idmap[1], 5);
     BOOST_CHECK_EQUAL(idmap[2], 2);

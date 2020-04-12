@@ -549,7 +549,7 @@ namespace Nektar
                                         i + k * exp_size_per_plane )
                                 );
 
-                            elmt->GetEdgePhysVals(boundaryID, temp_BC_exp,
+                            elmt->GetTracePhysVals(boundaryID, temp_BC_exp,
                                                   tmp_Tot = TotField + offset,
                                                   tmp_BC = BndVals + pos);
                             pos        += exp_dim;

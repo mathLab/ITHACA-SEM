@@ -696,6 +696,18 @@ namespace Nektar
             return 2;
         }
 
+        int StdSegExp::v_GetTraceNcoeffs(const int i) const
+        {
+            boost::ignore_unused(i);
+            return 1;
+        }
+
+        int StdSegExp::v_GetTraceNumPoints(const int i) const
+        {
+            boost::ignore_unused(i);
+            return 1;
+        }
+        
         int StdSegExp::v_NumBndryCoeffs() const
         {
             return 2;

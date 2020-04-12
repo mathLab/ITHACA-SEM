@@ -203,9 +203,10 @@ namespace Nektar
             //----------------------------
             // Helper functions
             //---------------------------
-
             STD_REGIONS_EXPORT virtual int v_GetNverts() const;
             STD_REGIONS_EXPORT virtual int v_GetNtraces() const;
+            STD_REGIONS_EXPORT virtual int v_GetTraceNcoeffs(const int i) const;
+            STD_REGIONS_EXPORT virtual int v_GetTraceNumPoints(const int i) const;
             STD_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual bool v_IsBoundaryInteriorExpansion();

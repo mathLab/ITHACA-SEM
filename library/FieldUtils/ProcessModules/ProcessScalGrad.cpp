@@ -185,7 +185,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
 
                             for (j = 0; j < ngrad; ++j)
                             {
-                                elmt->GetFacePhysVals(boundary, bc, grad[j],
+                                elmt->GetTracePhysVals(boundary, bc, grad[j],
                                                       fgrad[j]);
                             }
 

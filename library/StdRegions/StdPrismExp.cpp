@@ -735,11 +735,11 @@ namespace Nektar
             StdPrismExp::v_BwdTrans(tmp, outarray);
         }
 
-        void StdPrismExp::v_GetFaceNumModes(
-                    const int                  fid,
-                    const Orientation          faceOrient,
+        void StdPrismExp::v_GetTraceNumModes(
+                    const int      fid,
                     int &numModes0,
-                    int &numModes1)
+                    int &numModes1,
+                    Orientation   faceOrient)
         {
             int nummodes [3] = {m_base[0]->GetNumModes(),
                                 m_base[1]->GetNumModes(),
@@ -777,6 +777,24 @@ namespace Nektar
             }
         }
 
+        int StdPrismExp::v_GetEdgeNcoeffs(const int i) const
+        {
+            ASSERTL2(i >= 0 && i <= 8, "edge id is out of range");
+
+            if (i == 0 || i == 2)
+            {
+                return GetBasisNumModes(0);
+            }
+            else if (i == 1 || i == 3 || i == 8)
+            {
+                return GetBasisNumModes(1);
+            }
+            else
+            {
+                return GetBasisNumModes(2);
+            }
+        }
+
         //---------------------------------------
         // Helper functions
         //---------------------------------------
@@ -790,12 +808,6 @@ namespace Nektar
         {
             return 9;
         }
-
-        int StdPrismExp::v_GetNfaces() const
-        {
-            return 5;
-        }
-
 
         int StdPrismExp::v_GetNtraces() const
         {
@@ -852,34 +864,8 @@ namespace Nektar
                 + 2*(R+1) + P*(1 + 2*R - P); // 2 tri. faces
         }
 
-        int StdPrismExp::v_GetEdgeNcoeffs(const int i) const
-        {
-            ASSERTL2(i >= 0 && i <= 8, "edge id is out of range");
 
-            if (i == 0 || i == 2)
-            {
-                return GetBasisNumModes(0);
-            }
-            else if (i == 1 || i == 3 || i == 8)
-            {
-                return GetBasisNumModes(1);
-            }
-            else
-            {
-                return GetBasisNumModes(2);
-            }
-        }
-
-        int StdPrismExp::v_GetTotalEdgeIntNcoeffs() const
-        {
-            int P = GetBasisNumModes(0)-2;
-            int Q = GetBasisNumModes(1)-2;
-            int R = GetBasisNumModes(2)-2;
-
-            return 2*P+3*Q+3*R;
-	}
-
-        int StdPrismExp::v_GetFaceNcoeffs(const int i) const
+        int StdPrismExp::v_GetTraceNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
             if (i == 0)
@@ -897,7 +883,7 @@ namespace Nektar
             }
         }
 
-        int StdPrismExp::v_GetFaceIntNcoeffs(const int i) const
+        int StdPrismExp::v_GetTraceIntNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
 
@@ -919,7 +905,7 @@ namespace Nektar
             }
         }
 
-        int StdPrismExp::v_GetTotalFaceIntNcoeffs() const
+        int StdPrismExp::v_GetTotalTraceIntNcoeffs() const
         {
             int Pi = GetBasisNumModes(0) - 2;
             int Qi = GetBasisNumModes(1) - 2;
@@ -930,7 +916,7 @@ namespace Nektar
                 2* Qi * Ri;
 	}
 
-        int StdPrismExp::v_GetFaceNumPoints(const int i) const
+        int StdPrismExp::v_GetTraceNumPoints(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
 
@@ -951,7 +937,7 @@ namespace Nektar
             }
         }
 
-        LibUtilities::PointsKey StdPrismExp::v_GetFacePointsKey(
+        LibUtilities::PointsKey StdPrismExp::v_GetTracePointsKey(
             const int i, const int j) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
@@ -971,7 +957,7 @@ namespace Nektar
             }
         }
 
-        const LibUtilities::BasisKey StdPrismExp::v_DetFaceBasisKey(
+        const LibUtilities::BasisKey StdPrismExp::v_GetTraceBasisKey(
             const int i, const int k) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
@@ -1022,23 +1008,6 @@ namespace Nektar
             return nmodes;
         }
 
-        LibUtilities::BasisType StdPrismExp::v_GetEdgeBasisType(const int i) const
-        {
-            ASSERTL2(i >= 0 && i <= 8, "edge id is out of range");
-            if (i == 0 || i == 2)
-            {
-                return GetBasisType(0);
-            }
-            else if (i == 1 || i == 3 || i == 8)
-            {
-                return GetBasisType(1);
-            }
-            else
-            {
-                return GetBasisType(2);
-            }
-        }
-
         bool StdPrismExp::v_IsBoundaryInteriorExpansion()
         {
             return (m_base[0]->GetBasisType() == LibUtilities::eModified_A) &&
@@ -1050,20 +1019,182 @@ namespace Nektar
         // Mappings
         //---------------------------------------
 
+        int StdPrismExp::v_GetVertexMap(const int vId, bool useCoeffPacking)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(2) == LibUtilities::eModified_B,
+                     "Mapping not defined for this type of basis");
 
-        void StdPrismExp::v_GetFaceToElementMap(
+            int l = 0;
+
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
+            {
+                switch (vId)
+                {
+                case 0:
+                    l = GetMode(0,0,0);
+                    break;
+                case 1:
+                    l = GetMode(0,0,1);
+                    break;
+                case 2:
+                    l = GetMode(0,1,0);
+                    break;
+                case 3:
+                    l = GetMode(0,1,1);
+                    break;
+                case 4:
+                    l = GetMode(1,0,0);
+                    break;
+                case 5:
+                    l = GetMode(1,1,0);
+                    break;
+                default:
+                    ASSERTL0(false, "local vertex id must be between 0 and 5");
+                }
+            }
+            else
+            {
+                switch (vId)
+                {
+                case 0:
+                    l = GetMode(0,0,0);
+                    break;
+                case 1:
+                    l = GetMode(1,0,0);
+                    break;
+                case 2:
+                    l = GetMode(1,1,0);
+                    break;
+                case 3:
+                    l = GetMode(0,1,0);
+                    break;
+                case 4:
+                    l = GetMode(0,0,1);
+                    break;
+                case 5:
+                    l = GetMode(0,1,1);
+                    break;
+                default:
+                    ASSERTL0(false, "local vertex id must be between 0 and 5");
+                }
+            }
+
+            return l;
+        }
+
+        void StdPrismExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_B ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int P   = m_base[0]->GetNumModes() - 1, p;
+            int Q   = m_base[1]->GetNumModes() - 1, q;
+            int R   = m_base[2]->GetNumModes() - 1, r;
+
+            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
+
+            if(outarray.size()!=nIntCoeffs)
+            {
+                outarray = Array<OneD, unsigned int>(nIntCoeffs);
+            }
+
+            int idx = 0;
+
+            // Loop over all interior modes.
+            for (p = 2; p <= P; ++p)
+            {
+            	for (q = 2; q <= Q; ++q)
+            	{
+                    for (r = 1; r <= R-p; ++r)
+                    {
+                        outarray[idx++] = GetMode(p,q,r);
+                    }
+                }
+            }
+        }
+
+        void StdPrismExp::v_GetBoundaryMap(Array<OneD, unsigned int> &maparray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_B ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int P   = m_base[0]->GetNumModes() - 1, p;
+            int Q   = m_base[1]->GetNumModes() - 1, q;
+            int R   = m_base[2]->GetNumModes() - 1, r;
+            int idx = 0;
+
+            int nBnd = NumBndryCoeffs();
+
+            if (maparray.size() != nBnd)
+            {
+                maparray = Array<OneD, unsigned int>(nBnd);
+            }
+
+            // Loop over all boundary modes (in ascending order).
+            for (p = 0; p <= P; ++p)
+            {
+                // First two q-r planes are entirely boundary modes.
+                if (p <= 1)
+                {
+                    for (q = 0; q <= Q; ++q)
+                    {
+                        for (r = 0; r <= R-p; ++r)
+                        {
+                            maparray[idx++] = GetMode(p,q,r);
+                        }
+                    }
+                }
+                else
+                {
+                    // Remaining q-r planes contain boundary modes on the two
+                    // left-hand sides and bottom edge.
+                    for (q = 0; q <= Q; ++q)
+                    {
+                        if (q <= 1)
+                        {
+                            for (r = 0; r <= R-p; ++r)
+                            {
+                                maparray[idx++] = GetMode(p,q,r);
+                            }
+                        }
+                        else
+                        {
+                            maparray[idx++] = GetMode(p,q,0);
+                        }
+                    }
+                }
+            }
+        }
+
+        void StdPrismExp::v_GetTraceToElementMap(
             const int                  fid,
-            const Orientation      faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
+            const Orientation         faceOrient,
             int                        P,
             int                        Q)
         {
-            ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1),
+            ASSERTL1(GetBasisType(0) == GetBasisType(1),
                      "Method only implemented if BasisType is identical"
                      "in x and y directions");
-            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A &&
-                     GetEdgeBasisType(4) == LibUtilities::eModified_B,
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A &&
+                     GetBasisType(2) == LibUtilities::eModified_B,
                      "Method only implemented for Modified_A BasisType"
                      "(x and y direction) and Modified_B BasisType (z "
                      "direction)");
@@ -1097,7 +1228,7 @@ namespace Nektar
             {
                 P = nummodesA;
                 Q = nummodesB;
-                nFaceCoeffs = GetFaceNcoeffs(fid);
+                nFaceCoeffs = GetTraceNcoeffs(fid);
             }
             else if (fid == 1 || fid == 3)
             {
@@ -1366,76 +1497,12 @@ namespace Nektar
             }
         }
 
-        int StdPrismExp::v_GetVertexMap(const int vId, bool useCoeffPacking)
-        {
-            ASSERTL0(GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
-                     GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
-                     GetEdgeBasisType(vId) == LibUtilities::eModified_B,
-                     "Mapping not defined for this type of basis");
 
-            int l = 0;
-
-            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
-            {
-                switch (vId)
-                {
-                case 0:
-                    l = GetMode(0,0,0);
-                    break;
-                case 1:
-                    l = GetMode(0,0,1);
-                    break;
-                case 2:
-                    l = GetMode(0,1,0);
-                    break;
-                case 3:
-                    l = GetMode(0,1,1);
-                    break;
-                case 4:
-                    l = GetMode(1,0,0);
-                    break;
-                case 5:
-                    l = GetMode(1,1,0);
-                    break;
-                default:
-                    ASSERTL0(false, "local vertex id must be between 0 and 5");
-                }
-            }
-            else
-            {
-                switch (vId)
-                {
-                case 0:
-                    l = GetMode(0,0,0);
-                    break;
-                case 1:
-                    l = GetMode(1,0,0);
-                    break;
-                case 2:
-                    l = GetMode(1,1,0);
-                    break;
-                case 3:
-                    l = GetMode(0,1,0);
-                    break;
-                case 4:
-                    l = GetMode(0,0,1);
-                    break;
-                case 5:
-                    l = GetMode(0,1,1);
-                    break;
-                default:
-                    ASSERTL0(false, "local vertex id must be between 0 and 5");
-                }
-            }
-
-            return l;
-        }
-
-        void StdPrismExp::v_GetEdgeInteriorMap(
+        void StdPrismExp::v_GetEdgeInteriorToElementMap(
             const int                  eid,
-            const Orientation      edgeOrient,
             Array<OneD, unsigned int> &maparray,
-            Array<OneD, int>          &signarray)
+            Array<OneD, int>          &signarray,
+            const Orientation      edgeOrient)
         {
             int       i;
             bool      signChange;
@@ -1545,16 +1612,16 @@ namespace Nektar
             }
         }
 
-        void StdPrismExp::v_GetFaceInteriorMap(
+        void StdPrismExp::v_GetTraceInteriorToElementMap(
             const int                  fid,
-            const Orientation      faceOrient,
             Array<OneD, unsigned int> &maparray,
-            Array<OneD, int>          &signarray)
+            Array<OneD, int>          &signarray,
+            const Orientation      faceOrient)
         {
             const int P              = m_base[0]->GetNumModes() - 1;
             const int Q              = m_base[1]->GetNumModes() - 1;
             const int R              = m_base[2]->GetNumModes() - 1;
-            const int nFaceIntCoeffs = v_GetFaceIntNcoeffs(fid);
+            const int nFaceIntCoeffs = v_GetTraceIntNcoeffs(fid);
             int       p, q, r, idx   = 0;
             int       nummodesA      = 0;
             int       nummodesB      = 0;
@@ -1726,106 +1793,6 @@ namespace Nektar
                 }
             }
         }
-
-        void StdPrismExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
-        {
-            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
-                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_B ||
-                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-
-            int P   = m_base[0]->GetNumModes() - 1, p;
-            int Q   = m_base[1]->GetNumModes() - 1, q;
-            int R   = m_base[2]->GetNumModes() - 1, r;
-
-            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
-
-            if(outarray.size()!=nIntCoeffs)
-            {
-                outarray = Array<OneD, unsigned int>(nIntCoeffs);
-            }
-
-            int idx = 0;
-
-            // Loop over all interior modes.
-            for (p = 2; p <= P; ++p)
-            {
-            	for (q = 2; q <= Q; ++q)
-            	{
-                    for (r = 1; r <= R-p; ++r)
-                    {
-                        outarray[idx++] = GetMode(p,q,r);
-                    }
-                }
-            }
-        }
-
-        void StdPrismExp::v_GetBoundaryMap(Array<OneD, unsigned int> &maparray)
-        {
-            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
-                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_B ||
-                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-
-            int P   = m_base[0]->GetNumModes() - 1, p;
-            int Q   = m_base[1]->GetNumModes() - 1, q;
-            int R   = m_base[2]->GetNumModes() - 1, r;
-            int idx = 0;
-
-            int nBnd = NumBndryCoeffs();
-
-            if (maparray.size() != nBnd)
-            {
-                maparray = Array<OneD, unsigned int>(nBnd);
-            }
-
-            // Loop over all boundary modes (in ascending order).
-            for (p = 0; p <= P; ++p)
-            {
-                // First two q-r planes are entirely boundary modes.
-                if (p <= 1)
-                {
-                    for (q = 0; q <= Q; ++q)
-                    {
-                        for (r = 0; r <= R-p; ++r)
-                        {
-                            maparray[idx++] = GetMode(p,q,r);
-                        }
-                    }
-                }
-                else
-                {
-                    // Remaining q-r planes contain boundary modes on the two
-                    // left-hand sides and bottom edge.
-                    for (q = 0; q <= Q; ++q)
-                    {
-                        if (q <= 1)
-                        {
-                            for (r = 0; r <= R-p; ++r)
-                            {
-                                maparray[idx++] = GetMode(p,q,r);
-                            }
-                        }
-                        else
-                        {
-                            maparray[idx++] = GetMode(p,q,0);
-                        }
-                    }
-                }
-            }
-        }
-
-
 
         //---------------------------------------
         // Wrapper functions

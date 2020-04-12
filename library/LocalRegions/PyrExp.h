@@ -148,7 +148,7 @@ namespace Nektar
             //---------------------------------------
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
-            LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysMap(
+            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysMap(
                 const int               face,
                 Array<OneD, int>        &outarray);
 

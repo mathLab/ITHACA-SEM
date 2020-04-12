@@ -131,7 +131,7 @@ namespace MultiRegions
         
         // First loop over boundary conditions to reorder
         // Dirichlet boundaries
-        for(i = 0; i < bndCond.num_elements(); ++i)
+        for(i = 0; i < bndCond.size(); ++i)
         {
             if(bndCond[i]->GetBoundaryConditionType() == 
                                      SpatialDomains::eDirichlet)
@@ -244,7 +244,7 @@ namespace MultiRegions
                 LocalRegions::Expansion2D>(locexp[i])))
             {
                 m_expType = e1D;
-                for(j = 0; j < locexp[i]->GetNedges(); ++j)
+                for(j = 0; j < locexp[i]->GetNtraces(); ++j)
                 {
                     segGeom = exp2D->GetGeom2D()->GetEdge(j);
                     id      = segGeom->GetGlobalID();
@@ -259,12 +259,12 @@ namespace MultiRegions
                     if (it == edgeOrders.end())
                     {
                         edgeOrders.insert(std::make_pair(id, std::make_pair(
-                                                                            segGeom, locexp[i]->DetEdgeBasisKey(j))));
+                                                                            segGeom, locexp[i]->GetTraceBasisKey(j))));
                     }
                     else // variable modes/points
                     {
                         LibUtilities::BasisKey edge
-                            = locexp[i]->DetEdgeBasisKey(j);
+                            = locexp[i]->GetTraceBasisKey(j);
                         LibUtilities::BasisKey existing
                             = it->second.second;
                         
@@ -295,7 +295,7 @@ namespace MultiRegions
                      LocalRegions::Expansion3D>(locexp[i])))
             {
                 m_expType = e2D;
-                for (j = 0; j < exp3D->GetNfaces(); ++j)
+                for (j = 0; j < exp3D->GetNtraces(); ++j)
                 {
                     FaceGeom = exp3D->GetGeom3D()->GetFace(j);
                     id       = FaceGeom->GetGlobalID();
@@ -309,9 +309,9 @@ namespace MultiRegions
                     if (it == faceOrders.end())
                     {
                         LibUtilities::BasisKey face_dir0
-                            = locexp[i]->DetFaceBasisKey(j,0);
+                            = locexp[i]->GetTraceBasisKey(j,0);
                         LibUtilities::BasisKey face_dir1
-                            = locexp[i]->DetFaceBasisKey(j,1);
+                            = locexp[i]->GetTraceBasisKey(j,1);
 
                         faceOrders.insert(
                             std::make_pair(
@@ -322,9 +322,9 @@ namespace MultiRegions
                     else // variable modes/points
                     {
                         LibUtilities::BasisKey face0     =
-                            locexp[i]->DetFaceBasisKey(j,0);
+                            locexp[i]->GetTraceBasisKey(j,0);
                         LibUtilities::BasisKey face1     =
-                            locexp[i]->DetFaceBasisKey(j,1);
+                            locexp[i]->GetTraceBasisKey(j,1);
                         LibUtilities::BasisKey existing0 =
                             it->second.second.first;
                         LibUtilities::BasisKey existing1 =
@@ -403,12 +403,12 @@ namespace MultiRegions
                 if((exp2D = locexp[i]->as<LocalRegions::Expansion2D>()))
                 {
                     
-                    int nedges = locexp[i]->GetNedges();
+                    int nedges = locexp[i]->GetNtraces();
                 
                     for(j = 0; j < nedges; ++j, ++cntr)
                     {
                         LibUtilities::BasisKey bkeyEdge =
-                            locexp[i]->DetEdgeBasisKey(j);
+                            locexp[i]->GetTraceBasisKey(j);
                         TracesTotID   [cntr] = exp2D->GetGeom2D()->GetEid(j);
                         TracesTotNm0  [cntr] = bkeyEdge.GetNumModes();
                         TracesTotPnts0[cntr] = bkeyEdge.GetNumPoints();
@@ -416,14 +416,14 @@ namespace MultiRegions
                 }
                 else if((exp3D = locexp[i]->as<LocalRegions::Expansion3D>()))
                 {
-                    int nfaces = locexp[i]->GetNfaces();
+                    int nfaces = locexp[i]->GetNtraces();
                     
                     for(j = 0; j < nfaces; ++j, ++cntr)
                     {
                         LibUtilities::BasisKey face_dir0
-                            = locexp[i]->DetFaceBasisKey(j,0);
+                            = locexp[i]->GetTraceBasisKey(j,0);
                         LibUtilities::BasisKey face_dir1
-                            = locexp[i]->DetFaceBasisKey(j,1);
+                            = locexp[i]->GetTraceBasisKey(j,1);
 
                         TracesTotID[cntr]    = exp3D->GetGeom3D()->GetFid(j);
                         TracesTotNm0[cntr]   = face_dir0.GetNumModes ();

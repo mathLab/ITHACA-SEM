@@ -315,7 +315,7 @@ namespace Nektar
                 {
                     physEdge[i]  = Array<OneD, NekDouble>(npoints[i%2]);
                     coeffEdge[i] = Array<OneD, NekDouble>(nmodes[i%2]);
-                    orient[i]    = GetEorient(i);
+                    orient[i]    = GetTraceOrient(i);
                 }
 
                 for (i = 0; i < npoints[0]; i++)
@@ -358,7 +358,7 @@ namespace Nektar
                     segexp[i%2]->FwdTrans_BndConstrained(
                         physEdge[i],coeffEdge[i]);
 
-                    GetEdgeToElementMap(i,orient[i],mapArray,signArray);
+                    GetTraceToElementMap(i,mapArray,signArray,orient[i]);
                     for (j=0; j < nmodes[i%2]; j++)
                     {
                         sign = (NekDouble) signArray[j];
@@ -699,7 +699,7 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
 
-            StdRegions::Orientation edgedir = GetEorient(edge);
+            StdRegions::Orientation edgedir = GetTraceOrient(edge);
             switch(edge)
             {
             case 0:
@@ -763,17 +763,6 @@ namespace Nektar
              Array<OneD,NekDouble> &outarray,
              StdRegions::Orientation  orient)
         {
-            boost::ignore_unused(orient);
-            v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
-        }
-
-
-        void QuadExp::v_GetEdgePhysVals(
-            const int edge,
-            const StdRegions::StdExpansionSharedPtr &EdgeExp,
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,NekDouble> &outarray)
-        {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
 
@@ -823,8 +812,12 @@ namespace Nektar
                     EdgeExp->GetBasis(0)->GetPointsKey(), outarray);
             }
 
+            if (orient == StdRegions::eNoOrientation)
+            {
+                orient = GetTraceOrient(edge);
+            }
             //Reverse data if necessary
-            if(GetEorient(edge) == StdRegions::eBackwards)
+            if(orient == StdRegions::eBackwards)
             {
                 Vmath::Reverse(EdgeExp->GetNumPoints(0),&outarray[0], 1,
                                &outarray[0], 1);
@@ -897,7 +890,7 @@ namespace Nektar
         }
 
 
-        void QuadExp::v_GetEdgePhysMap(
+        void QuadExp::v_GetTracePhysMap(
             const int                edge,
             Array<OneD, int>        &outarray)
         {
@@ -945,7 +938,7 @@ namespace Nektar
 
 
 
-        void QuadExp::v_GetEdgeQFactors(
+        void QuadExp::v_GetTraceQFactors(
                 const int edge,
                 Array<OneD, NekDouble> &outarray)
         {
@@ -1599,7 +1592,7 @@ namespace Nektar
         }
 
 
-        StdRegions::Orientation QuadExp::v_GetEorient(int edge)
+        StdRegions::Orientation QuadExp::v_GetTraceOrient(int edge)
         {
             return m_geom->GetEorient(edge);
         }

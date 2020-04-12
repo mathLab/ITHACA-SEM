@@ -198,7 +198,7 @@ namespace Nektar
             return value;
         }
 
-
+        
         /**
          * @param   inarray     Input coefficients.
          * @param   output      Output coefficients.
@@ -315,6 +315,29 @@ namespace Nektar
             Array<OneD, NekDouble> tmp(GetTotPoints());
             MultiplyByStdQuadratureMetric(inarray, tmp);
             return Vmath::Vsum(nqtot, tmp, 1);
+        }
+
+        int StdExpansion3D::v_GetNedges(void) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        int StdExpansion3D::v_GetEdgeNcoeffs(const int i) const
+        {
+            boost::ignore_unused(i);
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        void StdExpansion3D::v_GetEdgeInteriorToElementMap(
+               const int                  tid,
+               Array<OneD, unsigned int> &maparray,
+               Array<OneD,          int> &signarray,
+               Orientation                traceOrient)
+        {
+            boost::ignore_unused(tid,maparray,signarray,traceOrient);
+            NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
         }
 
         LibUtilities::BasisKey EvaluateQuadFaceBasisKey(

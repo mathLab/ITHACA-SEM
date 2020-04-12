@@ -171,10 +171,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
             LOCAL_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(
-                Array<OneD, NekDouble> &coeffs,
-                StdRegions::Orientation dir);
-
-            LOCAL_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(
                 StdRegions::Orientation dir,
                 Array<OneD, const NekDouble> &inarray,
                 Array<OneD, NekDouble> &outarray);

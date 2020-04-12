@@ -1064,7 +1064,7 @@ namespace Nektar
             {
                 exp2D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion2D>();
                 NekDouble h = 0;
-                for(int i = 0; i < exp2D->GetNedges(); ++i)
+                for(int i = 0; i < exp2D->GetNtraces(); ++i)
                 {
 
                    h = max(h, exp2D->GetGeom2D()->GetEdge(i)->GetVertex(0)->dist(

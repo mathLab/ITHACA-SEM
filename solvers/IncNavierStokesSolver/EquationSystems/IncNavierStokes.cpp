@@ -347,7 +347,7 @@ namespace Nektar
         BndConds = m_fields[fieldid]->GetBndConditions();
         BndExp   = m_fields[fieldid]->GetBndCondExpansions();
 
-        StdRegions::StdExpansionSharedPtr elmt;
+        LocalRegions::ExpansionSharedPtr elmt;
         StdRegions::StdExpansionSharedPtr Bc;
 
         int cnt;

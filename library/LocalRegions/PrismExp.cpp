@@ -597,7 +597,7 @@ namespace Nektar
             }
         }
 
-        void PrismExp::v_GetFacePhysMap(const int               face,
+        void PrismExp::v_GetTracePhysMap(const int               face,
                                         Array<OneD, int>        &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
@@ -728,8 +728,8 @@ namespace Nektar
             int nqtot;
 
 
-            LibUtilities::BasisKey tobasis0 = DetFaceBasisKey(face,0);
-            LibUtilities::BasisKey tobasis1 = DetFaceBasisKey(face,1);
+            LibUtilities::BasisKey tobasis0 = GetTraceBasisKey(face,0);
+            LibUtilities::BasisKey tobasis1 = GetTraceBasisKey(face,1);
 
             // Number of quadrature points in face expansion.
             int nq_face = tobasis0.GetNumPoints()*tobasis1.GetNumPoints();

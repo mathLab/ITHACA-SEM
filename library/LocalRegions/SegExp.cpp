@@ -758,13 +758,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         //-----------------------------
 
         void SegExp::v_SetCoeffsToOrientation(
-            Array<OneD, NekDouble> &coeffs,
-            StdRegions::Orientation dir)
-        {
-            v_SetCoeffsToOrientation(dir,coeffs,coeffs);
-        }
-
-        void SegExp::v_SetCoeffsToOrientation(
                 StdRegions::Orientation dir,
                 Array<OneD, const NekDouble> &inarray,
                 Array<OneD, NekDouble> &outarray)

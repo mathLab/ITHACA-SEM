@@ -340,9 +340,9 @@ namespace Nektar
                     }
                     else if (nDim == 2)
                     {
-                        order_e = exp->GetEdgeNcoeffs(j);
+                        order_e = exp->GetTraceNcoeffs(j);
                     
-                        if(exp->GetEorient(j) == StdRegions::eForwards)
+                        if(exp->GetTraceOrient(j) == StdRegions::eForwards)
                         {
                             for(k = 0; k < order_e; ++k)
                             {
@@ -397,7 +397,7 @@ namespace Nektar
                     }
                     else if (nDim == 3)
                     {
-                        order_e = exp->GetFaceNcoeffs(j);
+                        order_e = exp->GetTraceNcoeffs(j);
 
                         std::map<int, int> orientMap;
 
@@ -406,13 +406,13 @@ namespace Nektar
                         Array<OneD, unsigned int> elmMap2 (order_e);
                         Array<OneD,          int> elmSign2(order_e);
 
-                        StdRegions::Orientation fo = exp->GetForient(j);
+                        StdRegions::Orientation fo = exp->GetTraceOrient(j);
 
                         // Construct mapping which will permute global IDs
                         // according to face orientations.
-                        exp->GetFaceToElementMap(j,fo,elmMap1,elmSign1);
-                        exp->GetFaceToElementMap(
-                            j,StdRegions::eDir1FwdDir1_Dir2FwdDir2,elmMap2,elmSign2);
+                        exp->GetTraceToElementMap(j,elmMap1,elmSign1,fo);
+                        exp->GetTraceToElementMap(j,elmMap2,elmSign2,
+                                       StdRegions::eDir1FwdDir1_Dir2FwdDir2);
 
                         for (k = 0; k < elmMap1.size(); ++k)
                         {
@@ -596,19 +596,11 @@ namespace Nektar
                 {
                     maxDof = (1 > maxDof ? 1 : maxDof);
                 }
-                else if (nDim == 2)
+                else
                 {
-                    for (j = 0; j < locExpansion->GetNedges(); ++j)
+                    for (j = 0; j < locExpansion->GetNtraces(); ++j)
                     {
-                        dof    = locExpansion->GetEdgeNcoeffs(j);
-                        maxDof = (dof > maxDof ? dof : maxDof);
-                    }
-                }
-                else if (nDim == 3)
-                {
-                    for (j = 0; j < locExpansion->GetNfaces(); ++j)
-                    {
-                        dof    = locExpansion->GetFaceNcoeffs(j);
+                        dof    = locExpansion->GetTraceNcoeffs(j);
                         maxDof = (dof > maxDof ? dof : maxDof);
                     }
                 }
@@ -639,20 +631,22 @@ namespace Nektar
                 }
                 else if (nDim == 2)
                 {
-                    for(j = 0; j < locExpansion->GetNedges(); ++j)
+                    for(j = 0; j < locExpansion->GetNtraces(); ++j)
                     {
                         LocalRegions::SegExpSharedPtr locSegExp =
                             m_elmtToTrace[i][j]->as<LocalRegions::SegExp>();
 
                         id  = locSegExp->GetGeom()->GetGlobalID();
-                        order_e = locExpansion->GetEdgeNcoeffs(j);
+                        order_e = locExpansion->GetTraceNcoeffs(j);
 
                         map<int,int> orientMap;
                         Array<OneD, unsigned int> map1(order_e), map2(order_e);
                         Array<OneD, int> sign1(order_e), sign2(order_e);
 
-                        locExpansion->GetEdgeToElementMap(j, StdRegions::eForwards, map1, sign1);
-                        locExpansion->GetEdgeToElementMap(j, locExpansion->GetEorient(j), map2, sign2);
+                        locExpansion->GetTraceToElementMap(j, map1, sign1,
+                                                        StdRegions::eForwards);
+                        locExpansion->GetTraceToElementMap(j, map2, sign2,
+                                              locExpansion->GetTraceOrient(j));
 
                         for (k = 0; k < map1.size(); ++k)
                         {
@@ -668,7 +662,8 @@ namespace Nektar
                                 }
                             }
 
-                            ASSERTL2(idx != -1, "Problem with face to element map!");
+                            ASSERTL2(idx != -1, "Problem with face to"
+                                     " element map!");
                             orientMap[k] = idx;
                         }
 
@@ -681,23 +676,25 @@ namespace Nektar
                         cnt += order_e;
                     }
                 }
-                else if (nDim == 3)
+                else if (nDim == 3) //This could likely be combined with nDim == 2
                 {
-                    for(j = 0; j < locExpansion->GetNfaces(); ++j)
+                    for(j = 0; j < locExpansion->GetNtraces(); ++j)
                     {
                         LocalRegions::Expansion2DSharedPtr locFaceExp =
                                 m_elmtToTrace[i][j]
                                            ->as<LocalRegions::Expansion2D>();
 
                         id  = locFaceExp->GetGeom()->GetGlobalID();
-                        order_e = locExpansion->GetFaceNcoeffs(j);
+                        order_e = locExpansion->GetTraceNcoeffs(j);
 
                         map<int,int> orientMap;
                         Array<OneD, unsigned int> map1(order_e), map2(order_e);
                         Array<OneD, int> sign1(order_e), sign2(order_e);
 
-                        locExpansion->GetFaceToElementMap(j, StdRegions::eDir1FwdDir1_Dir2FwdDir2, map1, sign1);
-                        locExpansion->GetFaceToElementMap(j, locExpansion->GetForient(j), map2, sign2);
+                        locExpansion->GetTraceToElementMap(j, map1, sign1,
+                                         StdRegions::eDir1FwdDir1_Dir2FwdDir2);
+                        locExpansion->GetTraceToElementMap(j, map2, sign2,
+                                           locExpansion->GetTraceOrient(j));
 
                         for (k = 0; k < map1.size(); ++k)
                         {
@@ -713,7 +710,8 @@ namespace Nektar
                                 }
                             }
 
-                            ASSERTL2(idx != -1, "Problem with face to element map!");
+                            ASSERTL2(idx != -1, "Problem with face to "
+                                     "element map!");
                             orientMap[k] = idx;
                         }
 

@@ -164,13 +164,20 @@ public:
     // Destructor
     MULTI_REGIONS_EXPORT virtual ~LocTraceToTraceMap();
 
+    MULTI_REGIONS_EXPORT void Setup(
+        const ExpList &locExp,
+        const ExpListSharedPtr &trace,
+        const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
+        &elmtToTrace,
+        const std::vector<bool> &LeftAdjacents);
+        
     MULTI_REGIONS_EXPORT void Setup2D(
         const ExpList &locExp,
         const ExpListSharedPtr &trace,
         const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
-            &elmtToTrace,
+        &elmtToTrace,
         const std::vector<bool> &LeftAdjacents);
-
+    
     MULTI_REGIONS_EXPORT void Setup3D(
         const ExpList &locExp,
         const ExpListSharedPtr &trace,

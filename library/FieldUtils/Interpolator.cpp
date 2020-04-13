@@ -194,6 +194,20 @@ void Interpolator::Interpolate(
     int nOutPts  = m_ptsOutField->GetNpoints();
     int lastProg = 0;
 
+    // Array<OneD, NekDouble> xvec(m_expInField[0]->GetPlane(0)->GetTotPoints(), 0.0);
+    // Array<OneD, NekDouble> yvec(m_expInField[0]->GetPlane(0)->GetTotPoints(), 0.0);
+    // Array<OneD, NekDouble> zvec(m_expInField[0]->GetPlane(0)->GetTotPoints(), 0.0);
+    // for (int npl = 0; npl < 4; ++npl)
+    // {
+    //     m_expInField[0]->GetPlane(npl)->GetCoords(xvec, yvec, zvec);
+    //     cout << "Plane " << npl << endl << endl;
+    //     for (int i = 0; i < m_expInField[0]->GetPlane(0)->GetTotPoints(); ++i)
+    //     {
+    //         cout << std::left << std::setw(6) << "x = " << std::setw(8) << xvec[i] << std::setw(6) << "y = " << std::setw(8) << yvec[i] << std::setw(6) << "z = " << std::setw(8) << zvec[i] <<  std::setw(6) << "u = " << std::setw(8) << m_expInField[0]->GetPlane(npl)->GetPhys()[i] << endl;
+    //     }
+    // }
+
+
     for (int i = 0; i < nOutPts; ++i)
     {
         Array<OneD, NekDouble> Lcoords(nInDim, 0.0);
@@ -204,8 +218,23 @@ void Interpolator::Interpolate(
         }
 
         // Obtain Element and LocalCoordinate to interpolate
-        int elmtid = m_expInField[0]->GetExpIndex(coords, Lcoords,
-                                                  NekConstants::kGeomFactorsTol);
+        int elmtid = m_expInField[0]->GetExpIndex(
+            coords, Lcoords,
+            NekConstants::kGeomFactorsTol); // seems to be fine. but we need to
+                                            // shift onto the right plane
+
+        int plane;
+        if (m_expInField[0]->GetHomoLen() && m_ptsOutField->GetDim()==3) // Homogeneous case, need to find the
+                                           // right plane
+        {
+            int nPlanes    = m_expInField[0]->GetHomogeneousBasis()->GetZ().size();
+            NekDouble lHom = m_expInField[0]->GetHomoLen();
+            plane = std::round((coords[2]*nPlanes)/lHom);
+            if(plane==nPlanes) // Reset to plane 0
+            {
+                plane = 0;
+            }
+        }
 
         // we use kGeomFactorsTol as tolerance, while StdPhysEvaluate has
         // kNekZeroTol hardcoded, so we need to limit Lcoords to not produce
@@ -222,9 +251,23 @@ void Interpolator::Interpolate(
 
             for (int f = 0; f < m_expInField.size(); ++f)
             {
-                NekDouble value =
-                    m_expInField[f]->GetExp(elmtid)->StdPhysEvaluate(
+                               NekDouble value;
+                if(m_expInField[0]->GetHomoLen() && m_ptsOutField->GetDim()==3)
+                {
+                    value =
+                        m_expInField[f]
+                            ->GetPlane(plane)
+                            ->GetExp(elmtid)
+                            ->StdPhysEvaluate(
+                                Lcoords,
+                                m_expInField[f]->GetPlane(plane)->GetPhys() +
+                                    offset);
+                }
+                else
+                {
+                    value = m_expInField[f]->GetExp(elmtid)->StdPhysEvaluate(
                         Lcoords, m_expInField[f]->GetPhys() + offset);
+                }
 
                 if ((boost::math::isnan)(value))
                 {

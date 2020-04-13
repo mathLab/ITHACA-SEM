@@ -158,7 +158,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             rng->m_xmax     = Vmath::Vmax(npts, pts[0], 1);
             break;
         default:
-            NEKERROR(ErrorUtil::efatal, "too many values specfied in range");
+            NEKERROR(ErrorUtil::efatal, "Too many values specified in range");
     }
     // setup rng parameters.
     fromField->m_graph =
@@ -173,10 +173,10 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     {
         ElementGIDs[i++] = expIt.second->m_geomShPtr->GetGlobalID();
     }
-    // check to see that we do have some elmement in teh domain since
+    // check to see that we do have some element in the domain since
     // possibly all points could be outside of the domain
     ASSERTL0(i > 0, "No elements are set. Are the interpolated points "
-                    "wihtin the domain given by the xml files?");
+                    "within the domain given by the xml files?");
     string fromfld = m_config["fromfld"].as<string>();
     m_f->FieldIOForFile(fromfld)->Import(
         fromfld, fromField->m_fielddef, fromField->m_data,
@@ -215,6 +215,43 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     NekDouble clamp_low = m_config["clamptolowervalue"].as<NekDouble>();
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
+    
+   // If 3DH1D must ensure that z-coordinate of all points corresponds to a
+    // Fourier plane. Therefore (for now) we reset all points that lie outside
+    // of a plane to the nearest plane. This means care must be taken when
+    // analysing the points after interpolation. Hopefully this also works after
+    // having set up rng as the bounding box doesn't seem to affect the 3rd
+    // direction in 3DH1D cases.
+    // Need to check for parallelisation too.
+    if (NumHomogeneousDir == 1 && coordim == 3)
+    {
+        int nPlanes = fromField->m_exp[0]->GetHomogeneousBasis()->GetZ().size();
+        NekDouble lHom = fromField->m_exp[0]->GetHomoLen();
+        for (int pt = 0; pt < npts; ++pt)
+        {
+            int targetPlane = std::round((m_f->m_fieldPts->GetPts(2)[pt] * nPlanes) / lHom);
+            if(targetPlane==nPlanes) // Reset to plane 0
+            {
+                targetPlane = 0;
+            }
+            NekDouble targetZ = (fromField->m_exp[0]->GetHomogeneousBasis()->GetZ())[targetPlane];
+            targetZ           = (targetZ + 1) * lHom / 2;
+            if (fabs(m_f->m_fieldPts->GetPts(2)[pt] - targetZ) > NekConstants::kVertexTheSameDouble)
+            {
+                if(m_f->m_comm->GetRank()==0)
+                {
+                    cout << "Resetting point from (x,y,z) = ("
+                         << m_f->m_fieldPts->GetPts(0)[pt] << ", "
+                         << m_f->m_fieldPts->GetPts(1)[pt] << ", "
+                         << m_f->m_fieldPts->GetPts(2)[pt] << ") to (x,y,z) = ("
+                         << m_f->m_fieldPts->GetPts(0)[pt] << ", "
+                         << m_f->m_fieldPts->GetPts(1)[pt] << ", " << targetZ
+                         << ")" << endl;
+                }
+                m_f->m_fieldPts->GetPts(2)[pt] = targetZ;
+            }
+        }
+    }
 
     InterpolateFieldToPts(fromField->m_exp, m_f->m_fieldPts, clamp_low,
                           clamp_up, def_value);

@@ -68,6 +68,9 @@ namespace Nektar
                 Array<OneD, ExpansionSharedPtr> &EdgeExp,
                 Array<OneD, NekDouble>          &inout);
 
+            LOCAL_REGIONS_EXPORT Array<OneD, unsigned int>
+                              GetTraceInverseBoundaryMap(int eid);
+
             inline void AddNormTraceInt(
                 const int                             dir,
                 Array<OneD, ExpansionSharedPtr>      &EdgeExp,
@@ -106,8 +109,6 @@ namespace Nektar
 
             inline SpatialDomains::Geometry2DSharedPtr GetGeom2D() const;
             
-            Array<OneD, unsigned int> GetTraceInverseBoundaryMap(int eid);
-
         protected:
             std::vector<bool>                       m_requireNeg;
             std::map<int, NormalVector>             m_edgeNormals;

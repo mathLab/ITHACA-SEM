@@ -93,12 +93,15 @@ public:
                  NekDouble filtWidth = 0.0,
                  int maxPts          = 1000)
         : m_method(method), m_filtWidth(filtWidth), m_maxPts(maxPts),
-          m_coordId(coordId){};
+          m_coordId(coordId)
+    {
+    }
 
     /// Compute interpolation weights without doing any interpolation
     LIB_UTILITIES_EXPORT void CalcWeights(
         const LibUtilities::PtsFieldSharedPtr ptsInField,
-        LibUtilities::PtsFieldSharedPtr &ptsOutField);
+        LibUtilities::PtsFieldSharedPtr &ptsOutField,
+        bool reuseTree = false);
 
     /// Interpolate from a pts field to a pts field
     LIB_UTILITIES_EXPORT void Interpolate(

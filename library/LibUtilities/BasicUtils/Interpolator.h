@@ -93,12 +93,15 @@ public:
                  NekDouble filtWidth = 0.0,
                  int maxPts          = 1000)
         : m_method(method), m_filtWidth(filtWidth), m_maxPts(maxPts),
-          m_coordId(coordId), m_isSetUp(false){};
+          m_coordId(coordId)
+    {
+    }
 
     /// Compute interpolation weights without doing any interpolation
     LIB_UTILITIES_EXPORT void CalcWeights(
         const LibUtilities::PtsFieldSharedPtr ptsInField,
-        LibUtilities::PtsFieldSharedPtr &ptsOutField);
+        LibUtilities::PtsFieldSharedPtr &ptsOutField,
+        bool reuseTree = false);
 
     /// Interpolate from a pts field to a pts field
     LIB_UTILITIES_EXPORT void Interpolate(
@@ -193,9 +196,6 @@ private:
     int m_maxPts;
     /// coordinate id along which the interpolation should be performed
     short int m_coordId;
-    /// flag when r-tree is constructed and weights must be recomputed
-    bool m_isSetUp;
-
 
     LIB_UTILITIES_EXPORT void CalcW_Gauss(const PtsPoint &searchPt,
                                           const NekDouble sigma,

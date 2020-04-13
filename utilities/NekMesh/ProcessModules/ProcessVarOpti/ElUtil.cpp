@@ -764,9 +764,11 @@ void ElUtil::UpdateMapping()
             vector<string> fieldNames;
             fieldNames.push_back("");
 
-            map<LibUtilities::PtsInfo, int> ptsInfo = LibUtilities::NullPtsInfoMap;
+            map<LibUtilities::PtsInfo, int> ptsInfo =
+                LibUtilities::NullPtsInfoMap;
 
-            m_interpField = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(m_dim, fieldNames, centre, ptsInfo);
+            m_interpField = MemoryManager<LibUtilities::PtsField>
+                ::AllocateSharedPtr(m_dim, fieldNames, centre, ptsInfo);
         }
 
         vector<NodeSharedPtr> nodes = m_el->GetVertexList();
@@ -789,6 +791,7 @@ void ElUtil::UpdateMapping()
             m_interpField->SetPointVal(2, 0, centre[2] / nodes.size());
         }
 
+        m_interp.CalcWeights(m_interp.GetInField(), m_interpField);
         m_interp.Interpolate(m_interp.GetInField(), m_interpField);
     }
 

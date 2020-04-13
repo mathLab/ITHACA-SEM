@@ -51,12 +51,15 @@ namespace LibUtilities
  *
  * @param ptsInField    input field
  * @param ptsOutField   output field
+ * @param reuseTree     if an r-tree has been constructed already, reuse it
+ *                      (e.g. for repeated calls over the same input points).
  *
  * In and output fields must have the same dimension.  The most suitable
  * algorithm is chosen automatically if it wasnt set explicitly.
  */
 void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
-                               LibUtilities::PtsFieldSharedPtr &ptsOutField)
+                               LibUtilities::PtsFieldSharedPtr &ptsOutField,
+                               bool reuseTree)
 {
     ASSERTL0(ptsInField->GetDim() <= m_dim, "too many dimesions in inField");
     ASSERTL0(ptsOutField->GetDim() <= m_dim, "too many dimesions in outField");
@@ -80,7 +83,7 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
         }
     }
 
-    if (!m_isSetUp && m_method != eQuadratic)
+    if ((!m_rtree || !reuseTree) && m_method != eQuadratic)
     {
         SetupTree();
     }
@@ -220,8 +223,6 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
             NEKERROR(ErrorUtil::efatal, "Invalid interpolation m_method");
             break;
     }
-
-    m_isSetUp = true;
 }
 
 /**
@@ -245,7 +246,7 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
     m_ptsInField  = ptsInField;
     m_ptsOutField = ptsOutField;
 
-    if (m_isSetUp || m_weights.GetRows() == 0)
+    if (m_weights.GetRows() == 0)
     {
         CalcWeights(m_ptsInField, m_ptsOutField);
     }

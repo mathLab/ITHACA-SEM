@@ -72,7 +72,7 @@ public:
         return m_el->GetId();
     }
 
-    //leaving these varibles as public for sake of efficency 
+    // Leaving these varibles as public for sake of efficiency
     std::vector<std::vector<NekDouble *> > nodes;
     std::vector<std::vector<NekDouble> > maps, mapsStd;
 

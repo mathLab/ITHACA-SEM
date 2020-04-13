@@ -199,7 +199,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
         }
     }
 
-    // create set of nodes which are at the boundary and hence not included in the colourset
+    // create set of nodes which are at the boundary and hence not included in
+    // the colourset
     NodeSet boundaryNodes;
 
     switch (m_mesh->m_spaceDim)
@@ -256,7 +257,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
             }
             else
             {
-                //if we have CAD therefore the only fixed nodes exist on vertices only
+                // If we have CAD therefore the only fixed nodes exist on
+                // vertices only
                 for (auto &node : m_mesh->m_vertexSet)
                 {
                     if(node->GetNumCadCurve() > 1)
@@ -271,14 +273,15 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
             ASSERTL0(false,"space dim issue");
     }
 
-
-    //create vector of free nodes which "remain", hence will be included in the coloursets
+    // Create vector of free nodes which "remain", hence will be included in the
+    // coloursets
     vector<NodeSharedPtr> remainEdgeVertex;
     vector<NodeSharedPtr> remainFace;
     vector<NodeSharedPtr> remainVolume;
     m_res->nDoF = 0;
 
-    // check if vertex nodes are in boundary or ignored nodes, otherwise add to EDGE-VERTEX remain nodes
+    // check if vertex nodes are in boundary or ignored nodes, otherwise add to
+    // EDGE-VERTEX remain nodes
     for (auto &node : m_mesh->m_vertexSet)
     {
         if (boundaryNodes.find(node) == boundaryNodes.end() &&
@@ -300,7 +303,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
         }
     }
 
-    // check if edge nodes are in boundary or ignored nodes, otherwise add to EDGE-VERTEX remain nodes
+    // check if edge nodes are in boundary or ignored nodes, otherwise add to
+    // EDGE-VERTEX remain nodes
     for (auto &edge : m_mesh->m_edgeSet)
     {
         vector<NodeSharedPtr> &n = edge->m_edgeNodes;
@@ -326,7 +330,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
         }
     }
 
-    // check if face nodes are in boundary or ignored nodes, otherwise add to FACE remain nodes
+    // check if face nodes are in boundary or ignored nodes, otherwise add to
+    // FACE remain nodes
     for (auto &face : m_mesh->m_faceSet)
     {
         vector<NodeSharedPtr> &n = face->m_faceNodes;
@@ -348,7 +353,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
         }
     }
 
-    // check if volume nodes are in boundary or ignored nodes, otherwise add to VOLUME remain nodes
+    // check if volume nodes are in boundary or ignored nodes, otherwise add to
+    // VOLUME remain nodes
     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         vector<NodeSharedPtr> ns =
@@ -368,7 +374,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
     m_res->n = remainEdgeVertex.size()
                 + remainFace.size() + remainVolume.size();
 
-    // data structure for coloursets, that will ultimately contain all free nodes
+    // data structure for coloursets, that will ultimately contain all free
+    // nodes
     vector<vector<NodeSharedPtr> > ret;
     vector<vector<NodeSharedPtr> > retPart;
 
@@ -530,7 +537,8 @@ void ProcessVarOpti::GetElementMap(
     if (m_config["scalingfile"].beenSet)
     {
         LibUtilities::Interpolator interp =
-            GetScalingFieldFromFile(m_config["scalingfile"].as<string>().c_str());
+            GetScalingFieldFromFile(
+                m_config["scalingfile"].as<string>().c_str());
 
         for (int i = 0; i < m_dataSet.size(); ++i)
         {
@@ -752,7 +760,8 @@ LibUtilities::Interpolator ProcessVarOpti::GetScalingFieldFromFile(string file)
     return GetField(inPts);
 }
 
-LibUtilities::Interpolator ProcessVarOpti::GetField(Array<OneD, Array<OneD, NekDouble> > inPts)
+LibUtilities::Interpolator ProcessVarOpti::GetField(
+    Array<OneD, Array<OneD, NekDouble> > inPts)
 {
     int dim = m_mesh->m_expDim;
 
@@ -761,7 +770,8 @@ LibUtilities::Interpolator ProcessVarOpti::GetField(Array<OneD, Array<OneD, NekD
 
     map<LibUtilities::PtsInfo, int> ptsInfo = LibUtilities::NullPtsInfoMap;
 
-    PtsFieldSharedPtr inField = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, fieldNames, inPts, ptsInfo);
+    PtsFieldSharedPtr inField = MemoryManager<LibUtilities::PtsField>
+        ::AllocateSharedPtr(dim, fieldNames, inPts, ptsInfo);
 
     Array<OneD, Array<OneD, NekDouble> > dummyPts(dim + 1);
     for (int i = 0; i < dim + 1; ++i)
@@ -769,7 +779,8 @@ LibUtilities::Interpolator ProcessVarOpti::GetField(Array<OneD, Array<OneD, NekD
         dummyPts[i] = Array<OneD, NekDouble>(0);
     }
 
-    PtsFieldSharedPtr dummyField = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, fieldNames, dummyPts, ptsInfo);
+    PtsFieldSharedPtr dummyField = MemoryManager<LibUtilities::PtsField>
+        ::AllocateSharedPtr(dim, fieldNames, dummyPts, ptsInfo);
 
     LibUtilities::Interpolator ret;
     ret.Interpolate(inField, dummyField);

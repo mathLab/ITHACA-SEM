@@ -1034,51 +1034,26 @@ namespace Nektar
             nvel = m_expdim;
         }
 
-        if(m_expdim == 3)
+
+        for (int e = 0; e < nel; e++)
         {
-            LocalRegions::Expansion3DSharedPtr exp3D;
-            for (int e = 0; e < nel; e++)
+            LocalRegions::ExpansionSharedPtr exp = m_fields[0]->GetExp(e);
+            NekDouble h = 0;
+
+            // Find maximum length of edge. 
+            for(int i = 0; i < exp->GetGeom()->GetNumEdges(); ++i)
             {
-                exp3D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion3D>();
-                NekDouble h = 0;
-                for(int i = 0; i < exp3D->GetNedges(); ++i)
-                {
-
-                    h = max(h, exp3D->GetGeom3D()->GetEdge(i)->GetVertex(0)->dist(
-                             *(exp3D->GetGeom3D()->GetEdge(i)->GetVertex(1))));
-                }
-
-                int p = 0;
-                for(int i = 0; i < 3; ++i)
-                {
-                    p = max(p,exp3D->GetBasisNumModes(i)-1);
-                }
-
-                diffcoeff[e] *= h/p;
+                h = max(h, exp->GetGeom()->GetEdge(i)->GetVertex(0)->dist
+                        (*(exp->GetGeom()->GetEdge(i)->GetVertex(1))));
             }
-        }
-        else
-        {
-            LocalRegions::Expansion2DSharedPtr exp2D;
-            for (int e = 0; e < nel; e++)
+
+            int p = 0;
+            for(int i = 0; i < m_expdim; ++i)
             {
-                exp2D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion2D>();
-                NekDouble h = 0;
-                for(int i = 0; i < exp2D->GetNtraces(); ++i)
-                {
-
-                   h = max(h, exp2D->GetGeom2D()->GetEdge(i)->GetVertex(0)->dist(
-                             *(exp2D->GetGeom2D()->GetEdge(i)->GetVertex(1))));
-                }
-
-                int p = 0;
-                for(int i = 0; i < 2; ++i)
-                {
-                    p = max(p,exp2D->GetBasisNumModes(i)-1);
-                }
-
-                diffcoeff[e] *= h/p;
+                p = max(p,exp->GetBasisNumModes(i)-1);
             }
+            
+            diffcoeff[e] *= h/p;
         }
     }
 

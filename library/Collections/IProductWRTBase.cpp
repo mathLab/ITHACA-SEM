@@ -148,6 +148,60 @@ OperatorKey IProductWRTBase_StdMat::m_typeArr[] = {
         IProductWRTBase_StdMat::create, "IProductWRTBase_SumFac_Pyr")
 };
 
+/**
+ * @brief Inner product operator using operator using AVX operators.
+ */
+class IProductWRTBase_AVX : public Operator
+{
+    public:
+        OPERATOR_CREATE(IProductWRTBase_AVX)
+
+        virtual ~IProductWRTBase_AVX()
+        {
+        }
+
+        virtual void operator()(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &output1,
+                      Array<OneD,       NekDouble> &output2,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            boost::ignore_unused(input, output, output1, output2, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not implemented yet.");
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
+        }
+
+    protected:
+        DNekMatSharedPtr                m_mat;
+        Array<OneD, const NekDouble>    m_jac;
+
+    private:
+        IProductWRTBase_AVX(
+                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                CoalescedGeomDataSharedPtr                pGeomData)
+            : Operator(pCollExp, pGeomData)
+        {
+           NEKERROR(ErrorUtil::efatal, "Not implemented yet.");
+        }
+};
+
+/// Factory initialisation for the IProductWRTBase_AVX operators
+OperatorKey IProductWRTBase_AVX::m_typeArr[] = {
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eQuadrilateral, eIProductWRTBase, eAVX, false),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_AVX_Quad")
+};
+
 
 /**
  * @brief Inner product operator using element-wise operation

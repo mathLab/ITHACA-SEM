@@ -4,6 +4,9 @@ Changelog
 v5.1.0
 ------
 **Library**
+- Restructure library to use local coefficient storage down to the GlobalLinSys level. Removed GlobalCeoffs functionality (!963)
+
+**FieldConvert**
 - Refactored time integration code using factory pattern (!1034)
 - Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
 - Fix type consistency and real comparison in SharedArray.hpp, replaced

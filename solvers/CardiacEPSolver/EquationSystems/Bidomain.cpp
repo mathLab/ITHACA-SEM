@@ -229,7 +229,7 @@ namespace Nektar
                 Vmath::Vadd(nq, ggrad, 1, temp, 1, m_fields[i]->UpdatePhys(), 1);
                 // Solve a system of equations with Helmholtz solver and transform
                 // back into physical space.
-                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(),NullFlagList,factors);
+                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), factors);
                 m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
                 m_fields[i]->SetPhysState(true);
                 // Copy the solution vector (required as m_fields must be set).
@@ -256,7 +256,7 @@ namespace Nektar
                 Vmath::Vadd(nq, ggrad, 1, temp, 1, m_fields[i]->UpdatePhys(), 1);
                 // Solve a system of equations with Helmholtz solver and transform
                 // back into physical space.
-                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(),NullFlagList,factors,m_vardiffi);
+                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(),factors,m_vardiffi);
                 m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
                 m_fields[i]->SetPhysState(true);
                 // Copy the solution vector (required as m_fields must be set).
@@ -286,7 +286,7 @@ namespace Nektar
                 Vmath::Vadd(nq, ggrad, 1, temp, 1, m_fields[i]->UpdatePhys(), 1);
                 // Solve a system of equations with Helmholtz solver and transform
                 // back into physical space.
-                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(),NullFlagList,factors,m_vardiffi);
+                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(),factors,m_vardiffi);
                 m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
                 m_fields[i]->SetPhysState(true);
                 // Copy the solution vector (required as m_fields must be set).
@@ -312,7 +312,7 @@ namespace Nektar
                 Vmath::Smul(nq, (-1.0*m_session->GetParameter("sigmaix"))/(m_session->GetParameter("sigmaix")+m_session->GetParameter("sigmaix")), grad, 1, grad, 1);
                 // Now solve Poisson problem for \phi_e
                 m_fields[i]->SetPhys(grad);
-                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), NullFlagList, factors);
+                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), factors);
                 m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
                 m_fields[i]->SetPhysState(true);
                 // Copy the solution vector (required as m_fields must be set).
@@ -336,7 +336,7 @@ namespace Nektar
                 Vmath::Smul(nq, -1.0, grad, 1, grad, 1);
                 // Now solve Poisson problem for \phi_e
                 m_fields[i]->SetPhys(grad);
-                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), NullFlagList, factors, m_vardiffie);
+                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), factors, m_vardiffie);
                 m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
                 m_fields[i]->SetPhysState(true);
                 // Copy the solution vector (required as m_fields must be set).
@@ -363,7 +363,7 @@ namespace Nektar
                 Vmath::Smul(nq, -1.0, grad, 1, grad, 1);
                 // Now solve Poisson problem for \phi_e
                 m_fields[i]->SetPhys(grad);
-                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), NullFlagList, factors, m_vardiffie);
+                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), factors, m_vardiffie);
                 m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
                 m_fields[i]->SetPhysState(true);
                 // Copy the solution vector (required as m_fields must be set).

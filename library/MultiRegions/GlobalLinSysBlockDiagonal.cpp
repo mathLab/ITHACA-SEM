@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Laplace.cpp
+// File GlobalVecLinSys.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -28,62 +28,56 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Laplace solve routines
+// Description: GlobalVecLinSysBlockDiagonal definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ADRSolver/EquationSystems/Laplace.h>
+#include <boost/core/ignore_unused.hpp>
 
-using namespace std;
+#include <MultiRegions/GlobalVecLinSysBlockDiagonal.h>
+
 
 namespace Nektar
 {
-    string Laplace::className = GetEquationSystemFactory().
-        RegisterCreatorFunction("Laplace", Laplace::create);
-
-    Laplace::Laplace(
-        const LibUtilities::SessionReaderSharedPtr& pSession,
-        const SpatialDomains::MeshGraphSharedPtr& pGraph)
-        : EquationSystem(pSession, pGraph),
-          m_factors()
-    {
-        m_factors[StdRegions::eFactorLambda] = 0.0;
-        m_factors[StdRegions::eFactorTau] = 1.0;
-    }
-
-    void Laplace::v_InitObject()
-    {
-        EquationSystem::v_InitObject();
-    }
-
-    Laplace::~Laplace()
+    namespace MultiRegions
     {
 
-    }
-
-    void Laplace::v_GenerateSummary(SolverUtils::SummaryList& s)
-    {
-        EquationSystem::SessionSummary(s);
-        SolverUtils::AddSummaryItem(s, "Lambda",
-                                    m_factors[StdRegions::eFactorLambda]);
-    }
-
-    void Laplace::v_DoSolve()
-    {
-        for(int i = 0; i < m_fields.size(); ++i)
+        /**
+         * Registers the class with the Factory.
+         */
+        string GlobalVecLinSysDirectFull::className
+                = GetGlobalVecLinSysFactory().RegisterCreatorFunction(
+                    "BlockDiagonal",
+                    GlobalLinSysDirectFull::create,
+                    "BlockDiagonal.");
+        
+        /**
+         * Given a block matrix, construct a global matrix system according to
+         * a local to global mapping. #m_linSys is constructed by
+         * AssembleFullMatrix().
+         * @param   pkey        Associated linear system key.
+         * @param   locToGloMap Local to global mapping.
+         */
+        GlobalVecLinSys::GlobalVecLinSys(const GlobalLinSysKey &pKey,
+                const std::weak_ptr<VecExpList> &pExpList,
+                const std::shared_ptr<AssemblyMap>
+                                   &pLocToGloMap):
+            m_linSysKey(pKey),
+            m_expList(pExpList),
+            m_verbose(true)
         {
-            // Zero field so initial conditions are zero
-            Vmath::Zero(m_fields[i]->GetNcoeffs(),
-                        m_fields[i]->UpdateCoeffs(), 1);
-            m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
-                                   m_fields[i]->UpdateCoeffs(),
-                                   m_factors);
-            m_fields[i]->SetPhysState(false);
+            boost::ignore_unused(pLocToGloMap);
         }
-    }
 
-    Array<OneD, bool> Laplace::v_GetSystemSingularChecks()
-    {
-        return Array<OneD, bool>(m_session->GetVariables().size(), true);
-    }
-}
+        /**
+         *
+         */
+        GlobalVecLinSysFactory& GetGlobalVecLinSysFactory()
+        {
+            static GlobalVecLinSysFactory instance;
+            return instance;
+        }
+
+    } //end of namespace
+} //end of namespace
+

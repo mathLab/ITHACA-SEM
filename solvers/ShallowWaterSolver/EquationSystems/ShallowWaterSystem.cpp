@@ -88,7 +88,7 @@ namespace Nektar
 	 m_vecLocs[0] = Array<OneD, NekDouble>(m_spacedim);
 	 for (int i = 0; i < m_spacedim; ++i)
 	 {
-			m_vecLocs[0][i] = 1 + i;
+             m_vecLocs[0][i] = 1 + i;
 	 }
 
  	// Load generic input parameters
@@ -105,29 +105,29 @@ namespace Nektar
 	m_constantDepth = true;
 	NekDouble depth = m_depth[0];
 	for (int i = 0; i < GetTotPoints(); ++i)
-	  {
+        {
 	    if (m_depth[i] != depth)
-	      {
+            {
 		m_constantDepth = false;
 		break;
-	      }
-	  }
-
+            }
+        }
+        
 	// Compute the bottom slopes
 	int nq = GetTotPoints();
 	if (m_constantDepth != true)
-	  {
+        {
 	    m_bottomSlope = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
 	    for (int i = 0; i < m_spacedim; ++i)
-	      {
+            {
 		m_bottomSlope[i] = Array<OneD, NekDouble>(nq);
-		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[i],m_depth,m_bottomSlope[i]);
+		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[i],
+                                       m_depth,m_bottomSlope[i]);
 		Vmath::Neg(nq,m_bottomSlope[i],1);
-	      }
-	  }
-
+            }
+        }
+        
 	EvaluateCoriolis();
-
     }
 
 
@@ -198,7 +198,7 @@ namespace Nektar
                 GetExp(e)->GetTotPoints();
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                         m_fields[0]->GetTraceMap()->
-                                    GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+                                    GetBndCondIDToGlobalTraceID(cnt+e));
 
 	    Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
 	}

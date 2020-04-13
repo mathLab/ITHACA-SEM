@@ -162,8 +162,7 @@ namespace Nektar
             Vmath::Smul(npoints, 1/m_alpha/m_alpha, m_fields[i+2]->GetPhys().get(), 1,
                         m_fields[i+2]->UpdatePhys().get(), 1);
             m_fields[i+2]->HelmSolve(m_fields[i+2]->GetPhys(),
-                                     m_fields[i+2]->UpdateCoeffs(),
-                                     NullFlagList, factors);
+                                     m_fields[i+2]->UpdateCoeffs(), factors);
             m_fields[i+2]->BwdTrans(m_fields[i+2]->GetCoeffs(),
                                     m_velocity[i]);
         }

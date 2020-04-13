@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>Helmholtz 2D CG with P=7, all BCs, iterative sc, par(3)</description>
+    <description>Helmholtz 2D CG with P=7, all BCs, iterative full</description>
     <executable>Helmholtz2D</executable>
-    <parameters>--use-scotch -I GlobalSysSoln=IterativeStaticCond Helmholtz2D_P7_AllBCs.xml</parameters>
-    <processes>3</processes>
+    <parameters>-I GlobalSysSoln=IterativeFull Helmholtz2D_P7_AllBCs.xml</parameters>
     <files>
         <file description="Session File">Helmholtz2D_P7_AllBCs.xml</file>
     </files>
 
     <metrics>
         <metric type="L2" id="1">
-            <value tolerance="1e-7">0.00888037</value>
+            <value tolerance="1e-7">0.00888406</value>
         </metric>
         <metric type="Linf" id="2">
-            <value tolerance="1e-6">0.0101781</value>
+            <value tolerance="1e-6">0.0102587</value>
         </metric>
     </metrics>
 </test>

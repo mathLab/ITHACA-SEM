@@ -223,16 +223,16 @@ void Interpolator::Interpolate(
             NekConstants::kGeomFactorsTol); // seems to be fine. but we need to
                                             // shift onto the right plane
 
-        int plane;
+        int targetPlane = -1;
         if (m_expInField[0]->GetHomoLen() && m_ptsOutField->GetDim()==3) // Homogeneous case, need to find the
                                            // right plane
         {
             int nPlanes    = m_expInField[0]->GetHomogeneousBasis()->GetZ().size();
             NekDouble lHom = m_expInField[0]->GetHomoLen();
-            plane = std::round((coords[2]*nPlanes)/lHom);
-            if(plane==nPlanes) // Reset to plane 0
+            targetPlane = std::round((coords[2]*nPlanes)/lHom);
+            if(targetPlane==nPlanes) // Reset to plane 0
             {
-                plane = 0;
+                targetPlane = 0;
             }
         }
 
@@ -251,17 +251,18 @@ void Interpolator::Interpolate(
 
             for (int f = 0; f < m_expInField.size(); ++f)
             {
-                               NekDouble value;
-                if(m_expInField[0]->GetHomoLen() && m_ptsOutField->GetDim()==3)
+                NekDouble value;
+                if (m_expInField[0]->GetHomoLen() &&
+                    m_ptsOutField->GetDim() == 3)
                 {
-                    value =
-                        m_expInField[f]
-                            ->GetPlane(plane)
-                            ->GetExp(elmtid)
-                            ->StdPhysEvaluate(
-                                Lcoords,
-                                m_expInField[f]->GetPlane(plane)->GetPhys() +
-                                    offset);
+                    value = m_expInField[f]
+                                ->GetPlane(targetPlane)
+                                ->GetExp(elmtid)
+                                ->StdPhysEvaluate(
+                                    Lcoords, m_expInField[f]
+                                                     ->GetPlane(targetPlane)
+                                                     ->GetPhys() +
+                                                 offset);
                 }
                 else
                 {

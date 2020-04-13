@@ -791,7 +791,7 @@ void ElUtil::UpdateMapping()
             m_interpField->SetPointVal(2, 0, centre[2] / nodes.size());
         }
 
-        m_interp.CalcWeights(m_interp.GetInField(), m_interpField);
+        m_interp.CalcWeights(m_interp.GetInField(), m_interpField, true);
         m_interp.Interpolate(m_interp.GetInField(), m_interpField);
     }
 

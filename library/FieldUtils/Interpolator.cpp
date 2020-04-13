@@ -224,7 +224,7 @@ void Interpolator::Interpolate(
                                             // shift onto the right plane
 
         int targetPlane = -1;
-        if (m_expInField[0]->GetHomoLen() && m_ptsOutField->GetDim()==3) // Homogeneous case, need to find the
+        if (m_expInField[0]->GetExpType() == MultiRegions::e3DH1D) // Homogeneous case, need to find the
                                            // right plane
         {
             int nPlanes    = m_expInField[0]->GetHomogeneousBasis()->GetZ().size();
@@ -252,8 +252,7 @@ void Interpolator::Interpolate(
             for (int f = 0; f < m_expInField.size(); ++f)
             {
                 NekDouble value;
-                if (m_expInField[0]->GetHomoLen() &&
-                    m_ptsOutField->GetDim() == 3)
+                if (m_expInField[0]->GetExpType() == MultiRegions::e3DH1D)
                 {
                     value = m_expInField[f]
                                 ->GetPlane(targetPlane)

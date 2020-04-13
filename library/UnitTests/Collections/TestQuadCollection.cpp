@@ -342,7 +342,7 @@ namespace QuadCollectionTests
         CollExp.push_back(Exp);
 
         LibUtilities::SessionReaderSharedPtr dummySession;
-        Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+        Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         // So far only BwDTrans is implemented...
         impTypes[Collections::eBwdTrans] = Collections::eAVX;
@@ -941,64 +941,64 @@ namespace QuadCollectionTests
         }
     }
 
-    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTBase_AVX_UniformP)
-    {
-        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
-        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  1.0, 1.0, 0.0));
-        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 1.0, 0.0));
+    // BOOST_AUTO_TEST_CASE(TestQuadIProductWRTBase_AVX_UniformP)
+    // {
+    //     SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
+    //     SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+    //     SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  1.0, 1.0, 0.0));
+    //     SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 1.0, 0.0));
 
-        SpatialDomains::QuadGeomSharedPtr quadGeom = CreateQuad(v0, v1, v2, v3);
+    //     SpatialDomains::QuadGeomSharedPtr quadGeom = CreateQuad(v0, v1, v2, v3);
 
-        Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
-        Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
-        unsigned int numQuadPoints = 6;
-        const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
-        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+    //     Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+    //     Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+    //     unsigned int numQuadPoints = 6;
+    //     const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
+    //     const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
 
-        Nektar::LocalRegions::QuadExpSharedPtr Exp =
-            MemoryManager<Nektar::LocalRegions::QuadExp>::AllocateSharedPtr(basisKeyDir1,
-            basisKeyDir1, quadGeom);
+    //     Nektar::LocalRegions::QuadExpSharedPtr Exp =
+    //         MemoryManager<Nektar::LocalRegions::QuadExp>::AllocateSharedPtr(basisKeyDir1,
+    //         basisKeyDir1, quadGeom);
 
-        Nektar::StdRegions::StdQuadExpSharedPtr stdExp =
-            MemoryManager<Nektar::StdRegions::StdQuadExp>::AllocateSharedPtr(basisKeyDir1,
-            basisKeyDir1);
+    //     Nektar::StdRegions::StdQuadExpSharedPtr stdExp =
+    //         MemoryManager<Nektar::StdRegions::StdQuadExp>::AllocateSharedPtr(basisKeyDir1,
+    //         basisKeyDir1);
 
-        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
-        CollExp.push_back(Exp);
+    //     std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+    //     CollExp.push_back(Exp);
 
-        LibUtilities::SessionReaderSharedPtr dummySession;
-        Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
-        Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-        // So far not all ops are implemented...
-        impTypes[Collections::eIProductWRTBase] = Collections::eAVX;
-        Collections::Collection     c(CollExp, impTypes);
+    //     LibUtilities::SessionReaderSharedPtr dummySession;
+    //     Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+    //     Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+    //     // So far not all ops are implemented...
+    //     impTypes[Collections::eIProductWRTBase] = Collections::eAVX;
+    //     Collections::Collection     c(CollExp, impTypes);
 
-        const int nq = Exp->GetTotPoints();
-        Array<OneD, NekDouble> phys(nq);
-        Array<OneD, NekDouble> coeffs1(Exp->GetNcoeffs());
-        Array<OneD, NekDouble> coeffs2(Exp->GetNcoeffs());
+    //     const int nq = Exp->GetTotPoints();
+    //     Array<OneD, NekDouble> phys(nq);
+    //     Array<OneD, NekDouble> coeffs1(Exp->GetNcoeffs());
+    //     Array<OneD, NekDouble> coeffs2(Exp->GetNcoeffs());
 
-        Array<OneD, NekDouble> xc(nq), yc(nq);
+    //     Array<OneD, NekDouble> xc(nq), yc(nq);
 
-        Exp->GetCoords(xc, yc);
+    //     Exp->GetCoords(xc, yc);
 
-        for (int i = 0; i < nq; ++i)
-        {
-            phys[i] = sin(xc[i])*cos(yc[i]);
-        }
+    //     for (int i = 0; i < nq; ++i)
+    //     {
+    //         phys[i] = sin(xc[i])*cos(yc[i]);
+    //     }
 
-        Exp->IProductWRTBase(phys, coeffs1);
-        c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+    //     Exp->IProductWRTBase(phys, coeffs1);
+    //     c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
 
-        double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
-        {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
-            BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
-        }
-    }
+    //     double epsilon = 1.0e-8;
+    //     for(int i = 0; i < coeffs1.num_elements(); ++i)
+    //     {
+    //         coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+    //         coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+    //         BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+    //     }
+    // }
 
 
 

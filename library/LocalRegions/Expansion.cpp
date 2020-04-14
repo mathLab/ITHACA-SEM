@@ -623,10 +623,8 @@ namespace Nektar
         }
 
         StdRegions::Orientation Expansion::v_GetTraceOrient(int trace)
-
         {
             boost::ignore_unused(trace);
-            NEKERROR(ErrorUtil::efatal, "This function is only valid for three-dimensional  LocalRegions");
             return StdRegions::eForwards;
         }
 

@@ -105,6 +105,11 @@ namespace Nektar
                 virtual bool v_TraceNormalNegated(const int vertex);
 
                 virtual const NormalVector &v_GetTraceNormal(const int edge) const;
+                virtual void v_ReOrientTracePhysMap
+                        (const StdRegions::Orientation orient,
+                         Array<OneD, int> &idmap,
+                         const int nq0,  const int nq1);
+
             private:
 
         };

@@ -444,12 +444,9 @@ namespace Nektar
                 }
             }
 
-            if(m_expType != e1D)
-            {
-                m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::
-                    AllocateSharedPtr(*this, m_trace, elmtToTrace,
-                                      m_leftAdjacentTraces);
-            }
+            m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::
+                AllocateSharedPtr(*this, m_trace, elmtToTrace,
+                                  m_leftAdjacentTraces);
         }
 
 
@@ -2932,8 +2929,7 @@ namespace Nektar
 
             // Basis definition on each element
             LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
-            if ((m_expType != e1D)&&
-                (basis->GetBasisType() != LibUtilities::eGauss_Lagrange))
+            if ((basis->GetBasisType() != LibUtilities::eGauss_Lagrange))
             {
                 // blocked routine
                 Array<OneD, NekDouble> tracevals(m_locTraceToTraceMap->
@@ -3069,8 +3065,7 @@ namespace Nektar
             Array<OneD,       NekDouble> &outarray)
         {
             LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
-            if ((m_expType != e1D)&&
-                (basis->GetBasisType() != LibUtilities::eGauss_Lagrange))
+            if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
             {
                 Vmath::Zero(outarray.size(), outarray, 1);
 

@@ -159,6 +159,9 @@ namespace Nektar
                         Array<OneD,       NekDouble> &outarray,
                         StdRegions::Orientation  orient);
 
+            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysMap(
+                         const int vertex,
+                         Array<OneD, int> &map);
             //-----------------------------
             // Helper functions
             //-----------------------------

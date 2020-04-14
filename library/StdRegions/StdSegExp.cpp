@@ -902,5 +902,50 @@ namespace Nektar
             }
         }
 
+        void StdSegExp::v_GetTraceToElementMap(
+             const int                  tid,
+             Array<OneD, unsigned int>& maparray,
+             Array<OneD, int>&          signarray,
+             Orientation                orient,
+             int P,  int Q)
+        {
+            boost::ignore_unused(P,Q,orient);
+            int order0 = m_base[0]->GetNumModes();
+    
+            ASSERTL0(tid < 2,"eid must be between 0 and 1");
+
+            if (maparray.size() != 2)
+            {
+                maparray = Array<OneD, unsigned int>(2);
+            }
+
+            if(signarray.size() != 2)
+            {
+                signarray = Array<OneD, int>(2, 1);
+            }
+            else
+            {
+                fill(signarray.get(), signarray.get()+2, 1);
+            }
+
+            const LibUtilities::BasisType bType = GetBasisType(0);
+
+            if (bType == LibUtilities::eModified_A)
+            {
+                maparray[0] = 0;
+                maparray[1] = 1;
+            }
+            else if(bType == LibUtilities::eGLL_Lagrange ||
+                    bType == LibUtilities::eGauss_Lagrange)
+            {
+                maparray[0] = 0;
+                maparray[1] = order0-1;
+            }
+            else
+            {
+                ASSERTL0(false,"Unknown Basis");
+            }
+        }
+
     }//end namespace
 }//end namespace

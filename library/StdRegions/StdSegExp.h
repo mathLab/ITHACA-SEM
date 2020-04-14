@@ -241,6 +241,15 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
 
+            STD_REGIONS_EXPORT virtual void v_GetTraceToElementMap(
+                    const int                  tid,
+                    Array<OneD, unsigned int>& maparray,
+                    Array<OneD, int>&          signarray,
+                    Orientation                edgeOrient,
+                    int P,  int Q);
+                                                                              ;
+
+            
         private:
 
         };

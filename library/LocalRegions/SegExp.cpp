@@ -753,6 +753,28 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             outarray[0] = result;
         }
 
+        // Get vertex map from the 1D Phys space.
+        void SegExp::v_GetTracePhysMap(
+            const int vertex,
+            Array<OneD, int> &map)
+        {
+            int     nquad = m_base[0]->GetNumPoints();
+
+            ASSERTL1(vertex == 0 || vertex == 1,
+                     "Vertex value should be 0 or 1");
+
+            map = Array<OneD, int>(1);
+            
+            if(vertex == 0)
+            {
+                map[0] = 0;
+            }
+            else
+            {
+                map[0] = nquad - 1;
+            }
+        }
+
         //-----------------------------
         // Helper functions
         //-----------------------------

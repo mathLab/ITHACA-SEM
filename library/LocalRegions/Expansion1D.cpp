@@ -444,6 +444,23 @@ namespace Nektar
 
             return Integral(Fn);
         }
+
+        void Expansion1D::v_ReOrientTracePhysMap
+                  (const StdRegions::Orientation orient,
+                   Array<OneD, int> &idmap,
+                   const int nq0,  const int nq1)
+        {
+            boost::ignore_unused(orient, nq0, nq1);
+
+            if (idmap.size() != 2)
+            {
+                idmap = Array<OneD, int>(2);
+            }
+
+            idmap[0] = 0;
+            idmap[1] = 1;
+        }
+        
     } //end of namespace
 } //end of namespace
 

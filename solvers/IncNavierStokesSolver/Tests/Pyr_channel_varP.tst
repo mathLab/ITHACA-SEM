@@ -11,13 +11,13 @@
             <value variable="u" tolerance="1e-12">0</value>
             <value variable="v" tolerance="1e-12">0</value>
             <value variable="w" tolerance="1e-12">0</value>
-        <value variable="p" tolerance="1e-12">0</value>
+            <value variable="p" tolerance="1e-12">0</value>
         </metric>
         <metric type="Linf" id="2">
             <value variable="u" tolerance="1e-12">0</value>
             <value variable="v" tolerance="1e-12">0</value>
             <value variable="w" tolerance="1e-12">0</value>
-        <value variable="p" tolerance="1e-12">0</value>
+        <value variable="p" tolerance="7e-12">0</value>
         </metric>
     </metrics>
 </test>

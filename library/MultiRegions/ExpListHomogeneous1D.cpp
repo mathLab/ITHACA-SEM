@@ -166,25 +166,23 @@ namespace Nektar
         ExpListHomogeneous1D::~ExpListHomogeneous1D()
         {
         }
-
-        void ExpListHomogeneous1D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                                         Array<OneD, NekDouble> &outarray,
-                                                         CoeffState coeffstate,
+    
+        void ExpListHomogeneous1D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                                         Array<OneD, NekDouble> &outarray, 
                                                          bool Shuff,
                                                          bool UnShuff)
         {
             // Forwards trans
-            Homogeneous1DTrans(inarray,outarray,true,coeffstate,Shuff,UnShuff);
+            Homogeneous1DTrans(inarray,outarray,true,Shuff,UnShuff);
         }
-
-        void ExpListHomogeneous1D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                                         Array<OneD, NekDouble> &outarray,
-                                                         CoeffState coeffstate,
+    
+        void ExpListHomogeneous1D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                                         Array<OneD, NekDouble> &outarray, 
                                                          bool Shuff,
                                                          bool UnShuff)
         {
             // Backwards trans
-            Homogeneous1DTrans(inarray,outarray,false,coeffstate,Shuff,UnShuff);
+            Homogeneous1DTrans(inarray,outarray,false,Shuff,UnShuff);
         }
 
         /**
@@ -196,8 +194,7 @@ namespace Nektar
          */
         void ExpListHomogeneous1D::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                                    const Array<OneD, NekDouble> &inarray2,
-                                                   Array<OneD, NekDouble> &outarray,
-                                                   CoeffState coeffstate)
+                                                   Array<OneD, NekDouble> &outarray)
         {
             int num_dofs = inarray1.size();
             int N = m_homogeneousBasis->GetNumPoints();
@@ -213,8 +210,8 @@ namespace Nektar
             }
             else
             {
-                HomogeneousFwdTrans(inarray1,V1,coeffstate);
-                HomogeneousFwdTrans(inarray2,V2,coeffstate);
+                HomogeneousFwdTrans(inarray1,V1);
+                HomogeneousFwdTrans(inarray2,V2);
             }
 
             int num_points_per_plane = num_dofs/m_planes.size();
@@ -283,7 +280,7 @@ namespace Nektar
             {
                 m_transposition->Transpose(ShufV1V2, V1V2, false,
                                        LibUtilities::eZtoXY);
-                HomogeneousBwdTrans(V1V2, outarray, coeffstate);
+                HomogeneousBwdTrans(V1V2, outarray);
             }
         }
 
@@ -299,8 +296,7 @@ namespace Nektar
         void ExpListHomogeneous1D::v_DealiasedDotProd(
                         const Array<OneD, Array<OneD, NekDouble> > &inarray1,
                         const Array<OneD, Array<OneD, NekDouble> > &inarray2,
-                        Array<OneD, Array<OneD, NekDouble> > &outarray,
-                        CoeffState coeffstate)
+                        Array<OneD, Array<OneD, NekDouble> > &outarray)
         {
             int ndim = inarray1.size();
             ASSERTL1( inarray2.size() % ndim == 0,
@@ -342,12 +338,12 @@ namespace Nektar
                 for (int i = 0; i < ndim; i++)
                 {
                     V1[i] = Array<OneD, NekDouble> (num_dofs);
-                    HomogeneousFwdTrans(inarray1[i],V1[i],coeffstate);
+                    HomogeneousFwdTrans(inarray1[i],V1[i]);
                 }
                 for (int i = 0; i < ndim*nvec; i++)
                 {
                     V2[i] = Array<OneD, NekDouble> (num_dofs);
-                    HomogeneousFwdTrans(inarray2[i],V2[i],coeffstate);
+                    HomogeneousFwdTrans(inarray2[i],V2[i]);
                 }
             }
 
@@ -453,7 +449,7 @@ namespace Nektar
                 {
                     m_transposition->Transpose(ShufV1V2[j], V1V2, false,
                                        LibUtilities::eZtoXY);
-                    HomogeneousBwdTrans(V1V2, outarray[j], coeffstate);
+                    HomogeneousBwdTrans(V1V2, outarray[j]);
                 }
             }
         }
@@ -461,22 +457,21 @@ namespace Nektar
         /**
          * Forward transform
          */
-        void ExpListHomogeneous1D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, CoeffState coeffstate )
+        void ExpListHomogeneous1D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
 
             for(int n = 0; n < m_planes.size(); ++n)
             {
-                m_planes[n]->FwdTrans(inarray+cnt, tmparray = outarray + cnt1,
-                                      coeffstate);
+                m_planes[n]->FwdTrans(inarray+cnt, tmparray = outarray + cnt1);
                 cnt   += m_planes[n]->GetTotPoints();
 
                 cnt1  += m_planes[n]->GetNcoeffs(); // need to skip ncoeffs
             }
             if(!m_WaveSpace)
             {
-                HomogeneousFwdTrans(outarray,outarray,coeffstate);
+                HomogeneousFwdTrans(outarray,outarray);
             }
         }
 
@@ -529,15 +524,14 @@ namespace Nektar
         /**
          * Backward transform
          */
-        void ExpListHomogeneous1D::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, CoeffState coeffstate)
+        void ExpListHomogeneous1D::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
 
             for(int n = 0; n < m_planes.size(); ++n)
             {
-                m_planes[n]->BwdTrans(inarray+cnt, tmparray = outarray + cnt1,
-                                      coeffstate);
+                m_planes[n]->BwdTrans(inarray+cnt, tmparray = outarray + cnt1);
                 cnt  += m_planes[n]->GetNcoeffs();
                 cnt1 += m_planes[n]->GetTotPoints();
             }
@@ -571,7 +565,7 @@ namespace Nektar
         /**
          * Inner product
          */
-        void ExpListHomogeneous1D::v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, CoeffState coeffstate)
+        void ExpListHomogeneous1D::v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray, tmpIn;
@@ -588,7 +582,7 @@ namespace Nektar
 
             for(int n = 0; n < m_planes.size(); ++n)
             {
-                m_planes[n]->IProductWRTBase(tmpIn+cnt, tmparray = outarray + cnt1,coeffstate);
+                m_planes[n]->IProductWRTBase(tmpIn+cnt, tmparray = outarray + cnt1);
 
                 cnt1    += m_planes[n]->GetNcoeffs();
                 cnt   += m_planes[n]->GetTotPoints();
@@ -625,9 +619,8 @@ namespace Nektar
         /**
          * Homogeneous transform Bwd/Fwd (MVM and FFT)
          */
-        void ExpListHomogeneous1D::Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray,
-                                                      bool IsForwards,
-                                                      CoeffState coeffstate,
+        void ExpListHomogeneous1D::Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, 
+                                                      bool IsForwards, 
                                                       bool Shuff,
                                                       bool UnShuff)
         {
@@ -716,11 +709,11 @@ namespace Nektar
                 {
                     if(IsForwards)
                     {
-                        blkmat = GetHomogeneous1DBlockMatrix(eForwardsCoeffSpace1D,coeffstate);
+                        blkmat = GetHomogeneous1DBlockMatrix(eForwardsCoeffSpace1D);
                     }
                     else
                     {
-                        blkmat = GetHomogeneous1DBlockMatrix(eBackwardsCoeffSpace1D,coeffstate);
+                        blkmat = GetHomogeneous1DBlockMatrix(eBackwardsCoeffSpace1D);
                     }
                 }
 
@@ -758,14 +751,14 @@ namespace Nektar
             }
         }
 
-        DNekBlkMatSharedPtr ExpListHomogeneous1D::GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, CoeffState coeffstate) const
+        DNekBlkMatSharedPtr ExpListHomogeneous1D::GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype) const
         {
             auto matrixIter = m_homogeneous1DBlockMat->find(mattype);
 
             if(matrixIter == m_homogeneous1DBlockMat->end())
             {
                 return ((*m_homogeneous1DBlockMat)[mattype] =
-                        GenHomogeneous1DBlockMatrix(mattype,coeffstate));
+                        GenHomogeneous1DBlockMatrix(mattype));
             }
             else
             {
@@ -774,10 +767,8 @@ namespace Nektar
         }
 
 
-        DNekBlkMatSharedPtr ExpListHomogeneous1D::GenHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, CoeffState coeffstate) const
+        DNekBlkMatSharedPtr ExpListHomogeneous1D::GenHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype) const
         {
-            boost::ignore_unused(coeffstate);
-
             DNekMatSharedPtr    loc_mat;
             DNekBlkMatSharedPtr BlkMatrix;
             int n_exp = 0;

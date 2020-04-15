@@ -152,9 +152,7 @@ namespace Nektar
         m_F = Array<OneD, Array< OneD, NekDouble> > (m_nConvectiveFields);
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
-            m_fields[i]->LocalToGlobal();
             m_fields[i]->ImposeDirichletConditions(m_fields[i]->UpdateCoeffs());
-            m_fields[i]->GlobalToLocal();
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
                                   m_fields[i]->UpdatePhys());
             m_F[i] = Array< OneD, NekDouble> (m_fields[0]->GetTotPoints(), 0.0);
@@ -537,7 +535,7 @@ namespace Nektar
                 // Solve system
                 //
                 m_pressure->HelmSolve(F_corrected, m_pressure->UpdateCoeffs(),
-                                        NullFlagList, factors);
+                                      factors);
                 m_pressure->BwdTrans(m_pressure->GetCoeffs(),
                                     m_pressure->UpdatePhys());
 
@@ -695,8 +693,7 @@ namespace Nektar
                     // Solve System
                     //
                     m_fields[i]->HelmSolve(F_corrected[i],
-                                    m_fields[i]->UpdateCoeffs(),
-                                    NullFlagList, factors);
+                                    m_fields[i]->UpdateCoeffs(),factors);
                     m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
 
                     //

@@ -107,15 +107,14 @@ void RinglebFlowBC::v_Apply(
 
             id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
                 m_fields[0]->GetTraceMap()->
-                GetBndCondCoeffsToGlobalCoeffsMap(
-                    m_offset_plane + e_plane));
+                GetBndCondIDToGlobalTraceID(m_offset_plane + e_plane));
             id2 = id2_plane + planeID*nTracePts_plane;
         }
         else // For general case
         {
             id2 = m_fields[0]->
                 GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                GetBndCondTraceToGlobalTraceMap(m_offset+e));
+                GetBndCondIDToGlobalTraceID(m_offset+e));
         }
 
         Array<OneD,NekDouble> x0(npoints, 0.0);

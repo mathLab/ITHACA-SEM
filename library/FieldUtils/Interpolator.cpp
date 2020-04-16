@@ -194,20 +194,6 @@ void Interpolator::Interpolate(
     int nOutPts  = m_ptsOutField->GetNpoints();
     int lastProg = 0;
 
-    // Array<OneD, NekDouble> xvec(m_expInField[0]->GetPlane(0)->GetTotPoints(), 0.0);
-    // Array<OneD, NekDouble> yvec(m_expInField[0]->GetPlane(0)->GetTotPoints(), 0.0);
-    // Array<OneD, NekDouble> zvec(m_expInField[0]->GetPlane(0)->GetTotPoints(), 0.0);
-    // for (int npl = 0; npl < 4; ++npl)
-    // {
-    //     m_expInField[0]->GetPlane(npl)->GetCoords(xvec, yvec, zvec);
-    //     cout << "Plane " << npl << endl << endl;
-    //     for (int i = 0; i < m_expInField[0]->GetPlane(0)->GetTotPoints(); ++i)
-    //     {
-    //         cout << std::left << std::setw(6) << "x = " << std::setw(8) << xvec[i] << std::setw(6) << "y = " << std::setw(8) << yvec[i] << std::setw(6) << "z = " << std::setw(8) << zvec[i] <<  std::setw(6) << "u = " << std::setw(8) << m_expInField[0]->GetPlane(npl)->GetPhys()[i] << endl;
-    //     }
-    // }
-
-
     for (int i = 0; i < nOutPts; ++i)
     {
         Array<OneD, NekDouble> Lcoords(nInDim, 0.0);

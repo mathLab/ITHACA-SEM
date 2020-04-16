@@ -236,18 +236,18 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             }
             NekDouble targetZ = (fromField->m_exp[0]->GetHomogeneousBasis()->GetZ())[targetPlane];
             targetZ           = (targetZ + 1) * lHom / 2;
+
+            // If point is out of plane, reset z-location to closest plane
             if (fabs(m_f->m_fieldPts->GetPts(2)[pt] - targetZ) > NekConstants::kVertexTheSameDouble)
             {
-                if(m_f->m_comm->GetRank()==0)
-                {
-                    cout << "Resetting point from (x,y,z) = ("
-                         << m_f->m_fieldPts->GetPts(0)[pt] << ", "
-                         << m_f->m_fieldPts->GetPts(1)[pt] << ", "
-                         << m_f->m_fieldPts->GetPts(2)[pt] << ") to (x,y,z) = ("
-                         << m_f->m_fieldPts->GetPts(0)[pt] << ", "
-                         << m_f->m_fieldPts->GetPts(1)[pt] << ", " << targetZ
-                         << ")" << endl;
-                }
+                cout << "Resetting point from (x,y,z) = ("
+                        << m_f->m_fieldPts->GetPts(0)[pt] << ", "
+                        << m_f->m_fieldPts->GetPts(1)[pt] << ", "
+                        << m_f->m_fieldPts->GetPts(2)[pt] << ") to (x,y,z) = ("
+                        << m_f->m_fieldPts->GetPts(0)[pt] << ", "
+                        << m_f->m_fieldPts->GetPts(1)[pt] << ", " << targetZ
+                        << ")" << endl;
+            
                 m_f->m_fieldPts->GetPts(2)[pt] = targetZ;
             }
         }

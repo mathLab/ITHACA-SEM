@@ -225,6 +225,39 @@ protected:
     int m_nElmt;
 };
 
+class IProductWRTDerivBase : virtual public Operator
+{
+public:
+    IProductWRTDerivBase(std::vector<LibUtilities::BasisSharedPtr> basis,
+              int nElmt) :
+        m_basis(basis), m_nElmt(nElmt)
+    {
+    }
+
+    virtual ~IProductWRTDerivBase()
+    {
+    }
+
+    virtual bool NeedsJac() override
+    {
+        return true;
+    }
+
+    virtual bool NeedsDF() override
+    {
+        return true;
+    }
+
+    virtual void operator()(
+        const Array<OneD, const NekDouble> &input0,
+        const Array<OneD, const NekDouble> &input1,
+        Array<OneD, NekDouble> &output) = 0;
+
+protected:
+    std::vector<LibUtilities::BasisSharedPtr> m_basis;
+    int m_nElmt;
+};
+
 class Helmholtz : virtual public Operator
 {
 public:

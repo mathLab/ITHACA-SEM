@@ -34,6 +34,9 @@
 
 #include <boost/core/ignore_unused.hpp>
 
+#include <AVXOperators/Operator.hpp>
+#include <AVXOperators/AVXUtil.hpp>
+
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 #include <Collections/IProduct.h>
@@ -224,6 +227,147 @@ OperatorKey IProductWRTDerivBase_StdMat::m_typeArr[] = {
         IProductWRTDerivBase_StdMat::create, "IProductWRTDerivBase_SumFac_Pyr")
 };
 
+
+/**
+ * @brief Inner product operator using operator using AVX operators.
+ */
+class IProductWRTDerivBase_AVX : public Operator
+{
+    public:
+        OPERATOR_CREATE(IProductWRTDerivBase_AVX)
+
+        virtual ~IProductWRTDerivBase_AVX()
+        {
+        }
+
+        virtual void operator()(
+               const Array<OneD, const NekDouble> &entry0,
+                           Array<OneD, NekDouble> &entry1,
+                           Array<OneD, NekDouble> &entry2,
+                           Array<OneD, NekDouble> &entry3,
+                           Array<OneD, NekDouble> &wsp)
+        {
+            boost::ignore_unused(entry3, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
+            if (m_isPadded)
+            {
+                // copy into padded vector
+                Vmath::Vcopy(entry0.num_elements(), entry0, 1, m_input0, 1);
+                Vmath::Vcopy(entry1.num_elements(), entry1, 1, m_input1, 1);
+                // call op
+                (*m_oper)(m_input0, m_input1, m_output);
+                // copy out of padded vector
+                Vmath::Vcopy(entry2.num_elements(), m_output, 1, entry2, 1);
+            }
+            else
+            {
+                (*m_oper)(entry0, entry1, entry2);
+            }
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            boost::ignore_unused(dir, input, output, wsp);
+        }
+
+    private:
+        std::shared_ptr<AVX::IProductWRTDerivBase> m_oper;
+        /// flag for padding
+        bool m_isPadded{false};
+        /// padded input/output vectors
+        Array<OneD, NekDouble> m_input0, m_input1, m_output;
+
+        IProductWRTDerivBase_AVX(
+                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                CoalescedGeomDataSharedPtr                pGeomData)
+            : Operator(pCollExp, pGeomData)
+        {
+            const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
+            const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
+
+            // Padding if needed
+            const auto nElmtNoPad = pCollExp.size();
+            auto nElmtPad = nElmtNoPad;
+            if (nElmtNoPad % AVX::SIMD_WIDTH_SIZE != 0)
+            {
+                m_isPadded = true;
+                nElmtPad = nElmtNoPad + AVX::SIMD_WIDTH_SIZE -
+                    (nElmtNoPad % AVX::SIMD_WIDTH_SIZE);
+                m_input0 = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                m_input1 = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                m_output = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
+            }
+
+            // Check if deformed
+            bool deformed{pGeomData->IsDeformed(pCollExp)};
+
+            // Size of jacobian
+            int jacSizeNoPad{nElmtNoPad};
+            int jacSizePad{nElmtPad};
+            if (deformed)
+            {
+                jacSizeNoPad = nElmtNoPad * nqElmt;
+                jacSizePad = nElmtPad * nqElmt;
+            }
+
+            // Store Jacobian
+            Array<OneD, NekDouble> jac{jacSizePad, 0.0};
+            Vmath::Vcopy(jacSizeNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
+
+            // Store derivative factors
+            const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
+            Array<TwoD, NekDouble> df(dim * dim, jacSizePad, 0.0);
+            for (int j = 0; j < dim * dim; ++j)
+            {
+                Vmath::Vcopy(jacSizeNoPad,
+                    &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
+                    &df[j][0], 1);
+            }
+
+            // Basis vector.
+            std::vector<LibUtilities::BasisSharedPtr> basis(dim);
+            for (auto i = 0; i < dim; ++i)
+            {
+                basis[i] = pCollExp[0]->GetBasis(i);
+            }
+
+            // Get shape type
+            auto shapeType = pCollExp[0]->GetStdExp()->DetShapeType();
+
+            // Generate operator string and create operator.
+            std::string op_string = "IProductWRTDerivBase";
+            op_string += AVX::GetOpstring(shapeType, deformed);
+            auto oper = AVX::GetOperatorFactory().
+                CreateInstance(op_string, basis, nElmtPad);
+
+            // If the operator needs the Jacobian, provide it here
+            if (oper->NeedsJac())
+            {
+                oper->SetJac(jac);
+            }
+
+            // If the operator needs the derivative factors, provide it here
+            if (oper->NeedsDF())
+            {
+                oper->SetDF(df);
+            }
+
+            m_oper = std::dynamic_pointer_cast<AVX::IProductWRTDerivBase>(oper);
+            ASSERTL0(m_oper, "Failed to cast pointer.");
+
+        }
+};
+
+/// Factory initialisation for the IProductWRTDerivBase_AVX operators
+OperatorKey IProductWRTDerivBase_AVX::m_typeArr[] = {
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eQuadrilateral, eIProductWRTDerivBase, eAVX, false),
+        IProductWRTDerivBase_AVX::create, "IProductWRTDerivBase_AVX_Quad")
+};
 
 /**
  * @brief Inner product WRT deriv base operator using element-wise operation
@@ -613,11 +757,12 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
             {
                 Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1,
                              tmp[i],1);
-                for(int j = 1; j < 2; ++j)
-                {
+                int j = 1;
+                // for(int j = 1; j < 2; ++j)
+                // {
                     Vmath::Vvtvp (ntot,m_derivFac[i +j*2],1,
                                   in[j],1, tmp[i], 1, tmp[i],1);
-                }
+                // }
             }
 
             // Iproduct wrt derivative of base 0
@@ -708,32 +853,32 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
         {
         }
 
-    /** 
+    /**
      * This method calculates:
      *
      * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1])  \f]
      *
      * which can be represented in terms of local cartesian
      * derivaties as:
-     * 
+     *
      * \f[ ((d\phi/d\xi_0\, d\xi_0/dx +
      *       d\phi/d\xi_1\, d\xi_1/dx),in[0]) + \f]
-     * 
+     *
      * \f[ ((d\phi/d\xi_0\, d\xi_0/dy +
      *       d\phi/d\xi_1\, d\xi_1/dy),in[1]) + \f]
-     *  
+     *
      * where we note that
      *
-     * \f[ d\phi/d\xi_0 =  d\phi/d\eta_0\, d\eta_0/d\xi_0 = 
+     * \f[ d\phi/d\xi_0 =  d\phi/d\eta_0\, d\eta_0/d\xi_0 =
      *        d\phi/d\eta_0 2/(1-\eta_1) \f]
      *
-     * \f[ d\phi/d\xi_1  = d\phi/d\eta_1\, d\eta_1/d\xi_1 + 
+     * \f[ d\phi/d\xi_1  = d\phi/d\eta_1\, d\eta_1/d\xi_1 +
      *   d\phi/d\eta_1\, d\eta_1/d\xi_1 = d\phi/d\eta_0 (1+\eta_0)/(1-\eta_1)
      *   + d\phi/d\eta_1 \f]
      *
      *  and so the full inner products are
-     *     
-     * \f[ (d\phi/dx,in[0]) + (dphi/dy,in[1]) = 
+     *
+     * \f[ (d\phi/dx,in[0]) + (dphi/dy,in[1]) =
      *   (d\phi/d\eta_0, ((2/(1-\eta_1) (d\xi_0/dx in[0] + d\xi_0/dy in[1])
      *    + (1-\eta_0)/(1-\eta_1) (d\xi_1/dx in[0]+d\xi_1/dy in[1]))
      *    + (d\phi/d\eta_1, (d\xi_1/dx in[0] + d\xi_1/dy in[1])) \f]
@@ -1049,23 +1194,23 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
          *
          * which can be represented in terms of local cartesian
          * derivaties as:
-         * 
+         *
          * \f[ ((d\phi/d\xi_0\, d\xi_0/dx +
-         *       d\phi/d\xi_1\, d\xi_1/dx + 
+         *       d\phi/d\xi_1\, d\xi_1/dx +
          *       d\phi/d\xi_2\, d\xi_2/dx),in[0]) + \f]
-         * 
+         *
          * \f[ ((d\phi/d\xi_0\, d\xi_0/dy +
-         *       d\phi/d\xi_1\, d\xi_1/dy + 
+         *       d\phi/d\xi_1\, d\xi_1/dy +
          *       d\phi/d\xi_2\, d\xi_2/dy),in[1]) + \f]
-         *  
+         *
          * \f[ ((d\phi/d\xi_0\, d\xi_0/dz +
-         *       d\phi/d\xi_1\, d\xi_1/dz + 
+         *       d\phi/d\xi_1\, d\xi_1/dz +
          *       d\phi/d\xi_2\, d\xi_2/dz),in[2]) \, \f]
          *
          * where we note that
          *
          * \f[ d\phi/d\xi_0 = d\phi/d\eta_0 4/((1-\eta_1)(1-\eta_2)) \f]
-         * 
+         *
          * \f[ d\phi/d\xi_1 =  d\phi/d\eta_0 2(1+\eta_0)/((1-\eta_1)(1-\eta_2))
          *       +  d\phi/d\eta_1 2/(1-\eta_2) \f]
          *
@@ -1073,21 +1218,21 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
          *      +   d\phi/d\eta_1 (1+\eta_1)/(1-\eta_2)  + d\phi/d\eta_2 \f]
          *
          *  and so the full inner products are
-         * 
+         *
          * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) = \f]
-         * 
+         *
          * \f[ (d\phi/d\eta_0, fac0 (tmp0 + fac1(tmp1 + tmp2)))
          *      + (d\phi/d\eta_1, fac2 (tmp1 + fac3 tmp2))
          *      + (d\phi/d\eta_2, tmp2) \f]
          *
-         *  where 
-         * 
-         * \f[ \begin{array}{lcl} 
+         *  where
+         *
+         * \f[ \begin{array}{lcl}
          *    tmp0 &=& (d\xi_0/dx in[0] + d\xi_0/dy in[1] + d\xi_0/dz in[2]) \\
          *    tmp1 &=& (d\xi_1/dx in[0] + d\xi_1/dy in[1] + d\xi_1/dz in[2]) \\
          *    tmp2 &=& (d\xi_2/dx in[0] + d\xi_2/dy in[1] + d\xi_2/dz in[2])
          *   \end{array} \f]
-         * 
+         *
          * \f[  \begin{array}{lcl}
          *    fac0 &= & 4/((1-\eta_1)(1-\eta_2)) \\
          *    fac1 &= & (1+\eta_0)/2 \\
@@ -1307,17 +1452,17 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
      *
      * which can be represented in terms of local cartesian
      * derivaties as:
-     * 
+     *
      * \f[ ((d\phi/d\xi_0\, d\xi_0/dx +
-     *       d\phi/d\xi_1\, d\xi_1/dx + 
+     *       d\phi/d\xi_1\, d\xi_1/dx +
      *       d\phi/d\xi_2\, d\xi_2/dx),in[0]) + \f]
-     * 
+     *
      * \f[ ((d\phi/d\xi_0\, d\xi_0/dy +
-     *       d\phi/d\xi_1\, d\xi_1/dy + 
+     *       d\phi/d\xi_1\, d\xi_1/dy +
      *       d\phi/d\xi_2\, d\xi_2/dy),in[1]) + \f]
-     *  
+     *
      * \f[ ((d\phi/d\xi_0\, d\xi_0/dz +
-     *       d\phi/d\xi_1\, d\xi_1/dz + 
+     *       d\phi/d\xi_1\, d\xi_1/dz +
      *       d\phi/d\xi_2\, d\xi_2/dz),in[2]) \, \f]
      *
      * where we note that
@@ -1331,9 +1476,9 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
      *
      *
      *  and so the full inner products are
-     * 
+     *
      * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) = \f]
-     * 
+     *
      * \f[ (d\phi/d\eta_0, ((2/(1-\eta_2) (d\xi_0/dx in[0] + d\xi_0/dy in[1]
      *              + d\xi_0/dz in[2])
      *              + (1-\eta_0)/(1-\eta_2) (d\xi_2/dx in[0] + d\xi_2/dy in[1]
@@ -1537,50 +1682,50 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
      *
      * which can be represented in terms of local cartesian
      * derivaties as:
-     * 
+     *
      * \f[ ((d\phi/d\xi_0\, d\xi_0/dx +
-     *       d\phi/d\xi_1\, d\xi_1/dx + 
+     *       d\phi/d\xi_1\, d\xi_1/dx +
      *       d\phi/d\xi_2\, d\xi_2/dx),in[0]) + \f]
-     * 
+     *
      * \f[ ((d\phi/d\xi_0\, d\xi_0/dy +
-     *       d\phi/d\xi_1\, d\xi_1/dy + 
+     *       d\phi/d\xi_1\, d\xi_1/dy +
      *       d\phi/d\xi_2\, d\xi_2/dy),in[1]) + \f]
-     *  
+     *
      * \f[ ((d\phi/d\xi_0\, d\xi_0/dz +
-     *       d\phi/d\xi_1\, d\xi_1/dz + 
+     *       d\phi/d\xi_1\, d\xi_1/dz +
      *       d\phi/d\xi_2\, d\xi_2/dz),in[2]) \, \f]
      *
      * where we note that
      *
      * \f[ d\phi/d\xi_0  =
-     *            d\phi/d\eta_0\, d\eta_0/d\xi_0 = 
+     *            d\phi/d\eta_0\, d\eta_0/d\xi_0 =
      *            d\phi/d\eta_0\, 2/(1-\eta_2). \f]
      *
      *  \f[ d\phi/d\xi_1  =
-     *            d\phi/d\eta_1\, d\eta_1/d\xi_1 = 
+     *            d\phi/d\eta_1\, d\eta_1/d\xi_1 =
      *            d\phi/d\eta_1\, 2/(1-\eta_2) \f]
      *
      *  \f[ d\phi/d\xi_2  =
-     *          d\phi/d\eta_0\, d\eta_0/d\xi_2 + 
+     *          d\phi/d\eta_0\, d\eta_0/d\xi_2 +
      *          d\phi/d\eta_1\, d\eta_1/d\xi_2 +
      *          d\phi/d\eta_2\, d\eta_2/d\xi_2 =
      *          d\phi/d\eta_0 (1+\eta_0)/(1-\eta_2) +
      *          d\phi/d\eta_1 (1+\eta_1)/(1-\eta_2) + d\phi/d\eta_2 \f]
      *
      *  and so the full inner products are
-     * 
+     *
      * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) = \f]
-     * 
-     * \f[ (d\phi/d\eta_0, ((2/(1-\eta_2) (d\xi_0/dx in[0] + 
-     *      d\xi_0/dy in[1] + 
+     *
+     * \f[ (d\phi/d\eta_0, ((2/(1-\eta_2) (d\xi_0/dx in[0] +
+     *      d\xi_0/dy in[1] +
      *     (1-\eta_0)/(1-\eta_2) (d\xi_2/dx in[0] + d\xi_2/dy in[1]
      *                               + d\xi_2/dz in[2] )) + \f]
      * \f[ (d\phi/d\eta_1, ((2/(1-\eta_2) (d\xi_1/dx in[0] +
-     *      d\xi_0/dy in[1] + d\xi_0/dz in[2]) + 
-     *      (1-\eta_1)/(1-\eta_2) (d\xi_2/dx in[0] + d\xi_2/dy in[1] + 
+     *      d\xi_0/dy in[1] + d\xi_0/dz in[2]) +
+     *      (1-\eta_1)/(1-\eta_2) (d\xi_2/dx in[0] + d\xi_2/dy in[1] +
      *      d\xi_2/dz in[2] )) \f]
-     * 
-     * \f[ (d\phi/d\eta_2, (d\xi_2/dx in[0] + d\xi_2/dy in[1] + 
+     *
+     * \f[ (d\phi/d\eta_2, (d\xi_2/dx in[0] + d\xi_2/dy in[1] +
      *      d\xi_2/dz in[2])) \f]
      */
      virtual void operator()(
@@ -1607,7 +1752,7 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
             {
                 tmp[i] = wsp + i*nmax;
             }
-            
+
             for(int i = 0; i < 3; ++i)
             {
                 Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1, tmp[i],1);
@@ -1630,11 +1775,11 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
                 Vmath::Vvtvp(nPhys,&m_fac1[0],1,tmp[2].get()+i*nPhys,1,
                              tmp[0].get()+i*nPhys,1,tmp[0].get()+i*nPhys,1);
 
-                // scale tmp[1] by fac0 
+                // scale tmp[1] by fac0
                 Vmath::Vmul(nPhys,&m_fac0[0],1,tmp[1].get()+i*nPhys,1,
                             tmp[1].get()+i*nPhys,1);
 
-                // scale tmp[2] by fac2 and add to tmp1 
+                // scale tmp[2] by fac2 and add to tmp1
                 Vmath::Vvtvp(nPhys,&m_fac2[0],1,tmp[2].get()+i*nPhys,1,
                              tmp[1].get()+i*nPhys,1,tmp[1].get()+i*nPhys,1);
             }

@@ -344,7 +344,7 @@ namespace QuadCollectionTests
         LibUtilities::SessionReaderSharedPtr dummySession;
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-        // So far only BwDTrans is implemented...
+        // Not all AVX OP are implemented...
         impTypes[Collections::eBwdTrans] = Collections::eAVX;
         Collections::Collection     c(CollExp, impTypes);
 
@@ -970,7 +970,7 @@ namespace QuadCollectionTests
     //     LibUtilities::SessionReaderSharedPtr dummySession;
     //     Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
     //     Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-    //     // So far not all ops are implemented...
+    //     // Not all AVX OP are implemented...
     //     impTypes[Collections::eIProductWRTBase] = Collections::eAVX;
     //     Collections::Collection     c(CollExp, impTypes);
 
@@ -1165,7 +1165,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession,
             Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-        // So far only BwDTrans is implemented...
+        // Not all AVX OP are implemented...
         impTypes[Collections::ePhysDeriv] = Collections::eAVX;
         Collections::Collection     c(CollExp, impTypes);
 
@@ -1582,6 +1582,74 @@ namespace QuadCollectionTests
         }
 
         c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1, phys2, coeffs2);
+
+        double epsilon = 1.0e-8;
+        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        {
+            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+        }
+    }
+
+    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTDerivBase_AVX_UniformP)
+    {
+        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  1.0, 1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 1.0, 0.0));
+
+        SpatialDomains::QuadGeomSharedPtr quadGeom = CreateQuad(v0, v1, v2, v3);
+
+        Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+        Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+        unsigned int numQuadPoints = 5;
+        const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+
+        Nektar::LocalRegions::QuadExpSharedPtr Exp =
+            MemoryManager<Nektar::LocalRegions::QuadExp>::AllocateSharedPtr(basisKeyDir1,
+            basisKeyDir1, quadGeom);
+
+        Nektar::StdRegions::StdQuadExpSharedPtr stdExp =
+            MemoryManager<Nektar::StdRegions::StdQuadExp>::AllocateSharedPtr(basisKeyDir1,
+            basisKeyDir1);
+
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        CollExp.push_back(Exp);
+
+        LibUtilities::SessionReaderSharedPtr dummySession;
+        Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+        Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+        // Not all AVX OP are implemented...
+        impTypes[Collections::eIProductWRTDerivBase] = Collections::eAVX;
+        Collections::Collection     c(CollExp, impTypes);
+
+
+        const int nq = Exp->GetTotPoints();
+        const int nm = Exp->GetNcoeffs();
+        Array<OneD, NekDouble> phys1(nq);
+        Array<OneD, NekDouble> phys2(nq);
+        Array<OneD, NekDouble> coeffs1(nm);
+        Array<OneD, NekDouble> coeffs2(nm);
+
+        Array<OneD, NekDouble> xc(nq), yc(nq);
+
+        Exp->GetCoords(xc, yc);
+
+        for (int i = 0; i < nq; ++i)
+        {
+            phys1[i] = sin(xc[i])*cos(yc[i]);
+            phys2[i] = cos(xc[i])*sin(yc[i]);
+        }
+
+        // Standard routines
+        Exp->IProductWRTDerivBase(0, phys1, coeffs1);
+        Exp->IProductWRTDerivBase(1, phys2, coeffs2);
+        Vmath::Vadd(nm,coeffs1,1,coeffs2,1,coeffs1,1);
+
+        c.ApplyOperator(Collections::eIProductWRTDerivBase,
+                        phys1, phys2, coeffs2);
 
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.num_elements(); ++i)

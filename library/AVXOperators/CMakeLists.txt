@@ -1,7 +1,7 @@
 SET(AVXOPERATORS_SOURCES
     AVXBwdTrans.cpp
     AVXIProduct.cpp
-    # AVXIProductDeriv.cpp
+    AVXIProductWRTDerivBase.cpp
     AVXPhysDeriv.cpp
     # AVXHelmholtz.cpp
     # AVXHelmholtzGlobal.cpp
@@ -14,11 +14,7 @@ SET(AVXOPERATORS_HEADERS
     AVXBwdTransKernels.hpp
     AVXIProduct.h
     AVXIProductKernels.hpp
-    # AVXIProductDeriv.h
-    # AVXIProductDerivKernels.hpp
-    AVXPhysDeriv.h
-    AVXPhysDerivKernels.hpp
-    # AVXHelmholtz.h
+    AVXIProductWRTDerivBase.h
     # AVXHelmholtzGlobal.h
     AVXUtil.hpp
     Operator.hpp

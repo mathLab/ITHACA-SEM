@@ -106,7 +106,8 @@ namespace Nektar
                 virtual void v_AddRobinEdgeContribution(
                     const int                            vert,
                     const Array<OneD, const NekDouble > &primCoeffs,
-                          Array<OneD, NekDouble>        &coeffs);
+                    const Array<OneD, NekDouble>        &incoeffs,
+                    Array<OneD, NekDouble>        &coeffs);
 
                 virtual NekDouble v_VectorFlux(
                     const Array<OneD, Array<OneD, NekDouble> > &vec);

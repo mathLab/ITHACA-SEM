@@ -508,10 +508,10 @@
             <P> IO_CheckSteps   = 100                        </P>
             <P> IO_InfoSteps    = 100                        </P>
             <P> wavefreq        = PI                        </P>
-            <P> epsilon         = 1e-15                       </P>
+            <P> epsilon         = 1e-5                       </P>
             <P> a               = 0.01                      </P>
             <P> x0              = 0.2                       </P>
-            <P> SVVCutoffRatio  = 0.0                       </P>
+            <P> SVVCutoffRatio  = 0.2                       </P>
             <P> SVVDiffCoeff    = 1.0                       </P>
         </PARAMETERS>
         
@@ -549,15 +549,14 @@
             </REGION>
         </BOUNDARYCONDITIONS>
         
-        <FUNCTION NAME="ExactSolution">
-            <E VAR="u" VALUE="sin(wavefreq*x)*sin(wavefreq*y)" />
-<!--            <E VAR="u" VALUE="exp(-epsilon*t)*sin(wavefreq*z)" /-->
-        </FUNCTION>
         
         <FUNCTION NAME="InitialConditions">
-            <!--E VAR="u" VALUE="sin(wavefreq*x)*sin(wavefreq*y)*sin(wavefreq*z)" /-->
-            <E VAR="u" VALUE="sin(wavefreq*x)*sin(wavefreq*y)+10*exp(-((z-0.5)*(z-0.5))/(a*a))" />
+            <E VAR="u" VALUE="sin(wavefreq*x)*sin(wavefreq*y)*sin(wavefreq*z)" />
         </FUNCTION>
         
+        <FUNCTION NAME="ExactSolution">
+          <E VAR="u" VALUE="exp(-epsilon*3*wavefreq*wavefreq*FinTime)*sin(wavefreq*x)*sin(wavefreq*y)*sin(wavefreq*z)" />
+        </FUNCTION>
+
     </CONDITIONS>
 </NEKTAR>

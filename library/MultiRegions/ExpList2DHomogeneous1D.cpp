@@ -61,7 +61,7 @@ namespace Nektar
             : ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
             SetExpType(e2DH1D);
-            int i, n, cnt, nel;
+            int i, n, cnt;
 
             if (comm)
             {
@@ -85,11 +85,6 @@ namespace Nektar
                     (*m_exp)[cnt++] = planes[n]->GetExp(i);
                 }
             }
-
-            // Setup Default optimisation information.
-            nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
 
             SetCoeffPhys();
         }
@@ -131,11 +126,6 @@ namespace Nektar
                     (*m_exp).push_back((*m_exp)[j]);
                 }
             }
-
-            // Setup Default optimisation information.
-            nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
 
             SetCoeffPhys();
         }

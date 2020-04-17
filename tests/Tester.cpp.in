@@ -228,19 +228,22 @@ int main(int argc, char *argv[])
                 cerr << "  - " << source << " -> " << dest << endl;
             }
 
-            fs::copy(source, dest);
-
-            // If source is a directory, then only directory name is
-            // created, so call copy again to copy files.
             if (fs::is_directory(source))
             {
+                fs::copy_directory(source, dest);
+                // If source is a directory, then only directory name is
+                // created, so call copy again to copy files.
                 for (const auto& dirEnt :
                          fs::recursive_directory_iterator{source})
                 {
                     fs::path newdest = dest / dirEnt.path().filename();
-                    fs::copy(dirEnt.path(), newdest);
+                    fs::copy_file(dirEnt.path(), newdest);
                 }
             }
+	    else
+            {
+                fs::copy_file(source, dest);
+	    }
         }
 
         // If we're Python, copy script too.

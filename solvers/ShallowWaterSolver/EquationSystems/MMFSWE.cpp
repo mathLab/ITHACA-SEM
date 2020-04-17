@@ -1457,8 +1457,7 @@ void MMFSWE::WallBoundary2D(int bcRegion, int cnt,
                    ->GetTotPoints();
         id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
         id2 = m_fields[0]->GetTrace()->GetPhys_Offset(
-            m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt +
-                                                                          e));
+            m_fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(cnt + e));
 
         switch (m_expdim)
         {

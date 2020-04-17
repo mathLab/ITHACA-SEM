@@ -71,7 +71,6 @@ namespace Nektar
                     LibUtilities::SessionReaderSharedPtr        pSession,
                     Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
     {
-        m_CoeffState = MultiRegions::eLocal;
         m_homogen_dealiasing = pSession->DefinesSolverInfo("dealiasing");
 
         pSession->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);
@@ -220,7 +219,7 @@ namespace Nektar
                     }
                 }
 
-                fields[0]->DealiasedDotProd(AdvVel,gradScaled,Outarray,m_CoeffState);
+                fields[0]->DealiasedDotProd(AdvVel,gradScaled,Outarray);
 
                 for (int n = 0; n < nConvectiveFields; n++)
                 {
@@ -248,7 +247,7 @@ namespace Nektar
                                                     grad[n*ndim+2]);
                 }
 
-                fields[0]->DealiasedDotProd(AdvVel,grad,outarray,m_CoeffState);
+                fields[0]->DealiasedDotProd(AdvVel,grad,outarray);
             }
             else
             {

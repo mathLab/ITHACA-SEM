@@ -79,6 +79,7 @@ stages:
 
 .compiler-warning-template: &compiler-warning-template
   <<: *execution-conditions
+  image: debian:10-slim
   stage: compiler-warnings
   variables:
     WARNING_REGEX: '.*warning[: ].*'

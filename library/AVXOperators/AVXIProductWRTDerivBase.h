@@ -84,8 +84,8 @@ struct AVXIProductWRTDerivBaseQuad : public IProductWRTDerivBase, public AVXHelp
         }
 
         T sums_j[NQ1]; //Sums over eta0 for each value of eta1;
-        AlignedVector<T> tmpIn0(m_nmTot), tmpIn1(m_nmTot), tmpOut(nqTot),
-            tmp0(nqTot), tmp1(nqTot);
+        AlignedVector<T> tmpIn0(nqTot), tmpIn1(nqTot), tmp0(nqTot), tmp1(nqTot),
+            tmpOut(m_nmTot), tmpOut2(m_nmTot);
 
         const T *df_ptr;
         const T *jac_ptr;
@@ -96,7 +96,6 @@ struct AVXIProductWRTDerivBaseQuad : public IProductWRTDerivBase, public AVXHelp
 
             // Derivative factor
             df_ptr = &(this->m_df[e*dfSize]);
-
 
             // Load and transpose data
             T::load_interleave(inptr0, nqTot, tmpIn0);
@@ -124,19 +123,19 @@ struct AVXIProductWRTDerivBaseQuad : public IProductWRTDerivBase, public AVXHelp
                 sums_j, tmpOut);
 
             // IP DB1 B0
-            AVXIProductQuadKernel<NM0, NM1, NQ0, NQ1, VW, false, false, DEFORMED>(
+            AVXIProductQuadKernel<NM0, NM1, NQ0, NQ1, VW, false, true, DEFORMED>(
                 tmp1, this->m_bdata[0], this->m_dbdata[1],
                 this->m_w[0], this->m_w[1], jac_ptr,
-                sums_j, tmp0);
+                sums_j, tmpOut);
 
-            // Add
-            for (int i = 0; i < nqTot; ++i)
-            {
-                tmpOut[i] = tmpOut[i] + tmp0[i];
-            }
+            // // Add
+            // for (int i = 0; i < m_nmTot; ++i)
+            // {
+            //     tmpOut[i] = tmpOut[i] + tmpOut2[i];
+            // }
 
             // de-interleave and store data
-            T::deinterleave_store(tmpOut, nqTot, outptr);
+            T::deinterleave_store(tmpOut, m_nmTot, outptr);
 
             inptr0 += nqBlocks;
             inptr1 += nqBlocks;

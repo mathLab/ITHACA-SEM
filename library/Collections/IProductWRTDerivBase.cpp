@@ -248,7 +248,7 @@ class IProductWRTDerivBase_AVX : public Operator
                            Array<OneD, NekDouble> &wsp)
         {
             boost::ignore_unused(entry3, wsp);
-            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
+            // NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
             if (m_isPadded)
             {
                 // copy into padded vector
@@ -766,7 +766,7 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
             }
 
             // Iproduct wrt derivative of base 0
-            QuadIProduct(false, m_colldir1,m_numElmt,
+            QuadIProduct(false, m_colldir1, m_numElmt,
                          m_nquad0,   m_nquad1,
                          m_nmodes0,  m_nmodes1,
                          m_derbase0, m_base1,

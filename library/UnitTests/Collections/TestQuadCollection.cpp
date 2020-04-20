@@ -951,8 +951,8 @@ namespace QuadCollectionTests
 
         Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
         Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
-        unsigned int numQuadPoints = 3;
-        unsigned int numModes = 2;
+        unsigned int numQuadPoints = 6;
+        unsigned int numModes = 5;
         const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
         const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1, numModes, quadPointsKeyDir1);
 
@@ -1593,22 +1593,15 @@ namespace QuadCollectionTests
     }
 
     BOOST_AUTO_TEST_CASE(TestQuadIProductWRTDerivBase_AVX_UniformP)
-    {   // ok
-        // SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-        // SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
-        // SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  1.0, 1.0, 0.0));
-        // SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 1.0, 0.0));
-        // // not ok
-        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  2.0, -1.0, 0.0));
-        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  2.0, 1.0, 0.0));
-        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 1.0, 0.0));
-        // not ok
-        // SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-        // SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
-        // SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  1.0, 2.0, 0.0));
-        // SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 2.0, 0.0));
-
+    {
+        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
+            0u, -1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u,
+            1u,  2.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u,
+            2u,  1.0, 1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u,
+            3u, -1.0, 1.0, 0.0));
 
         SpatialDomains::QuadGeomSharedPtr quadGeom = CreateQuad(v0, v1, v2, v3);
 
@@ -1616,8 +1609,8 @@ namespace QuadCollectionTests
             Nektar::LibUtilities::eGaussLobattoLegendre;
         Nektar::LibUtilities::BasisType basisTypeDir1 =
             Nektar::LibUtilities::eModified_A;
-        unsigned int numQuadPoints = 3;
-        unsigned int numModes = 2;
+        unsigned int numQuadPoints = 6;
+        unsigned int numModes = 5;
         const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints,
             quadPointsTypeDir1);
         const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,

@@ -85,7 +85,7 @@ struct AVXIProductWRTDerivBaseQuad : public IProductWRTDerivBase, public AVXHelp
 
         T sums_j[NQ1]; //Sums over eta0 for each value of eta1;
         AlignedVector<T> tmpIn0(nqTot), tmpIn1(nqTot), tmp0(nqTot), tmp1(nqTot),
-            tmpOut(m_nmTot), tmpOut2(m_nmTot);
+            tmpOut(m_nmTot);
 
         const T *df_ptr;
         const T *jac_ptr;
@@ -134,12 +134,6 @@ struct AVXIProductWRTDerivBaseQuad : public IProductWRTDerivBase, public AVXHelp
                 tmp1, this->m_bdata[0], this->m_dbdata[1],
                 this->m_w[0], this->m_w[1], jac_ptr,
                 sums_j, tmpOut);
-
-            // // sum
-            // for (int i = 0; i < m_nmTot; ++i)
-            // {
-            //     tmpOut[i] = tmpOut[i] + tmpOut2[i];
-            // }
 
             // de-interleave and store data
             T::deinterleave_store(tmpOut, m_nmTot, outptr);

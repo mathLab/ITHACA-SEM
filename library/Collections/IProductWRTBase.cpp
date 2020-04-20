@@ -154,141 +154,141 @@ OperatorKey IProductWRTBase_StdMat::m_typeArr[] = {
 /**
  * @brief Inner product operator using operator using AVX operators.
  */
-// class IProductWRTBase_AVX : public Operator
-// {
-//     public:
-//         OPERATOR_CREATE(IProductWRTBase_AVX)
+class IProductWRTBase_AVX : public Operator
+{
+    public:
+        OPERATOR_CREATE(IProductWRTBase_AVX)
 
-//         virtual ~IProductWRTBase_AVX()
-//         {
-//         }
+        virtual ~IProductWRTBase_AVX()
+        {
+        }
 
-//         virtual void operator()(
-//                 const Array<OneD, const NekDouble> &input,
-//                       Array<OneD,       NekDouble> &output,
-//                       Array<OneD,       NekDouble> &output1,
-//                       Array<OneD,       NekDouble> &output2,
-//                       Array<OneD,       NekDouble> &wsp)
-//         {
-//             boost::ignore_unused(output1, output2, wsp);
-//             if (m_isPadded)
-//             {
-//                 // copy into padded vector
-//                 Vmath::Vcopy(input.num_elements(), input, 1, m_input, 1);
-//                 // call op
-//                 (*m_oper)(m_input, m_output);
-//                 // copy out of padded vector
-//                 Vmath::Vcopy(output.num_elements(), m_output, 1, output, 1);
-//             }
-//             else
-//             {
-//                 (*m_oper)(input, output);
-//             }
-//         }
+        virtual void operator()(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &output1,
+                      Array<OneD,       NekDouble> &output2,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            boost::ignore_unused(output1, output2, wsp);
+            if (m_isPadded)
+            {
+                // copy into padded vector
+                Vmath::Vcopy(input.num_elements(), input, 1, m_input, 1);
+                // call op
+                (*m_oper)(m_input, m_output);
+                // copy out of padded vector
+                Vmath::Vcopy(output.num_elements(), m_output, 1, output, 1);
+            }
+            else
+            {
+                (*m_oper)(input, output);
+            }
+        }
 
-//         virtual void operator()(
-//                       int                           dir,
-//                 const Array<OneD, const NekDouble> &input,
-//                       Array<OneD,       NekDouble> &output,
-//                       Array<OneD,       NekDouble> &wsp)
-//         {
-//             boost::ignore_unused(dir, input, output, wsp);
-//             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
-//         }
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
+        }
 
-//     private:
-//         std::shared_ptr<AVX::IProductWRTBase> m_oper;
-//         /// flag for padding
-//         bool m_isPadded{false};
-//         /// padded input/output vectors
-//         Array<OneD, NekDouble> m_input, m_output;
+    private:
+        std::shared_ptr<AVX::IProduct> m_oper;
+        /// flag for padding
+        bool m_isPadded{false};
+        /// padded input/output vectors
+        Array<OneD, NekDouble> m_input, m_output;
 
-//         IProductWRTBase_AVX(
-//                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-//                 CoalescedGeomDataSharedPtr                pGeomData)
-//             : Operator(pCollExp, pGeomData)
-//         {
-//             const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
-//             const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
+        IProductWRTBase_AVX(
+                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                CoalescedGeomDataSharedPtr                pGeomData)
+            : Operator(pCollExp, pGeomData)
+        {
+            const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
+            const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
 
-//             // Padding if needed
-//             const auto nElmtNoPad = pCollExp.size();
-//             auto nElmtPad = nElmtNoPad;
-//             if (nElmtNoPad % AVX::SIMD_WIDTH_SIZE != 0)
-//             {
-//                 m_isPadded = true;
-//                 nElmtPad = nElmtNoPad + AVX::SIMD_WIDTH_SIZE -
-//                     (nElmtNoPad % AVX::SIMD_WIDTH_SIZE);
-//                 m_input = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-//                 m_output = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
-//             }
+            // Padding if needed
+            const auto nElmtNoPad = pCollExp.size();
+            auto nElmtPad = nElmtNoPad;
+            if (nElmtNoPad % AVX::SIMD_WIDTH_SIZE != 0)
+            {
+                m_isPadded = true;
+                nElmtPad = nElmtNoPad + AVX::SIMD_WIDTH_SIZE -
+                    (nElmtNoPad % AVX::SIMD_WIDTH_SIZE);
+                m_input = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                m_output = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
+            }
 
-//             // Check if deformed
-//             bool deformed{pGeomData->IsDeformed(pCollExp)};
+            // Check if deformed
+            bool deformed{pGeomData->IsDeformed(pCollExp)};
 
-//             // Size of jacobian
-//             int jacSizeNoPad{nElmtNoPad};
-//             int jacSizePad{nElmtPad};
-//             if (deformed)
-//             {
-//                 jacSizeNoPad = nElmtNoPad * nqElmt;
-//                 jacSizePad = nElmtPad * nqElmt;
-//             }
+            // Size of jacobian
+            int jacSizeNoPad{nElmtNoPad};
+            int jacSizePad{nElmtPad};
+            if (deformed)
+            {
+                jacSizeNoPad = nElmtNoPad * nqElmt;
+                jacSizePad = nElmtPad * nqElmt;
+            }
 
-//             // Store Jacobian
-//             Array<OneD, NekDouble> jac{jacSizePad, 0.0};
-//             Vmath::Vcopy(jacSizeNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
+            // Store Jacobian
+            Array<OneD, NekDouble> jac{jacSizePad, 0.0};
+            Vmath::Vcopy(jacSizeNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
 
-//             // Store derivative factors
-//             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
-//             Array<TwoD, NekDouble> df(dim * dim, jacSizePad, 0.0);
-//             for (int j = 0; j < dim * dim; ++j)
-//             {
-//                 Vmath::Vcopy(jacSizeNoPad,
-//                     &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
-//                     &df[j][0], 1);
-//             }
+            // Store derivative factors
+            const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
+            Array<TwoD, NekDouble> df(dim * dim, jacSizePad, 0.0);
+            for (int j = 0; j < dim * dim; ++j)
+            {
+                Vmath::Vcopy(jacSizeNoPad,
+                    &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
+                    &df[j][0], 1);
+            }
 
-//             // Basis vector.
-//             std::vector<LibUtilities::BasisSharedPtr> basis(dim);
-//             for (auto i = 0; i < dim; ++i)
-//             {
-//                 basis[i] = pCollExp[0]->GetBasis(i);
-//             }
+            // Basis vector.
+            std::vector<LibUtilities::BasisSharedPtr> basis(dim);
+            for (auto i = 0; i < dim; ++i)
+            {
+                basis[i] = pCollExp[0]->GetBasis(i);
+            }
 
-//             // Get shape type
-//             auto shapeType = pCollExp[0]->GetStdExp()->DetShapeType();
+            // Get shape type
+            auto shapeType = pCollExp[0]->GetStdExp()->DetShapeType();
 
-//             // Generate operator string and create operator.
-//             std::string op_string = "IProductWRTBase";
-//             op_string += AVX::GetOpstring(shapeType, deformed);
-//             auto oper = AVX::GetOperatorFactory().
-//                 CreateInstance(op_string, basis, nElmtPad);
+            // Generate operator string and create operator.
+            std::string op_string = "IProduct";
+            op_string += AVX::GetOpstring(shapeType, deformed);
+            auto oper = AVX::GetOperatorFactory().
+                CreateInstance(op_string, basis, nElmtPad);
 
-//             // If the operator needs the Jacobian, provide it here
-//             if (oper->NeedsJac())
-//             {
-//                 oper->SetJac(jac);
-//             }
+            // If the operator needs the Jacobian, provide it here
+            if (oper->NeedsJac())
+            {
+                oper->SetJac(jac);
+            }
 
-//             // If the operator needs the derivative factors, provide it here
-//             if (oper->NeedsDF())
-//             {
-//                 oper->SetDF(df);
-//             }
+            // If the operator needs the derivative factors, provide it here
+            if (oper->NeedsDF())
+            {
+                oper->SetDF(df);
+            }
 
-//             m_oper = std::dynamic_pointer_cast<AVX::IProductWRTBase>(oper);
-//             ASSERTL0(m_oper, "Failed to cast pointer.");
+            m_oper = std::dynamic_pointer_cast<AVX::IProduct>(oper);
+            ASSERTL0(m_oper, "Failed to cast pointer.");
 
-//         }
-// };
+        }
+};
 
-// /// Factory initialisation for the IProductWRTBase_AVX operators
-// OperatorKey IProductWRTBase_AVX::m_typeArr[] = {
-//     GetOperatorFactory().RegisterCreatorFunction(
-//         OperatorKey(eQuadrilateral, eIProductWRTBase, eAVX, false),
-//         IProductWRTBase_AVX::create, "IProductWRTBase_AVX_Quad")
-// };
+/// Factory initialisation for the IProductWRTBase_AVX operators
+OperatorKey IProductWRTBase_AVX::m_typeArr[] = {
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eQuadrilateral, eIProductWRTBase, eAVX, false),
+        IProductWRTBase_AVX::create, "IProductWRTBase_AVX_Quad")
+};
 
 
 /**

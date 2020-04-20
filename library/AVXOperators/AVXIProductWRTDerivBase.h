@@ -112,6 +112,13 @@ struct AVXIProductWRTDerivBaseQuad : public IProductWRTDerivBase, public AVXHelp
             }
             for (int i = 0; i < nqTot; ++i)
             {
+                if(DEFORMED)
+                {
+                    df0 = df_ptr[i * ndf];
+                    df1 = df_ptr[i * ndf + 1];
+                    df2 = df_ptr[i * ndf + 2];
+                    df3 = df_ptr[i * ndf + 3];
+                }
                 tmp0[i] = df0 * tmpIn0[i] + df2 * tmpIn1[i];
                 tmp1[i] = df1 * tmpIn0[i] + df3 * tmpIn1[i];
             }
@@ -128,7 +135,7 @@ struct AVXIProductWRTDerivBaseQuad : public IProductWRTDerivBase, public AVXHelp
                 this->m_w[0], this->m_w[1], jac_ptr,
                 sums_j, tmpOut);
 
-            // // Add
+            // // sum
             // for (int i = 0; i < m_nmTot; ++i)
             // {
             //     tmpOut[i] = tmpOut[i] + tmpOut2[i];

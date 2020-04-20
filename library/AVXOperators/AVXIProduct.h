@@ -76,7 +76,7 @@ struct AVXIProductQuad : public IProduct, public AVXHelper<VW, 2, DEFORMED>
         }
 
         T sums_j[NQ1]; //Sums over eta0 for each value of eta1;
-        AlignedVector<T> tmpIn(m_nmTot), tmpOut(nqTot);
+        AlignedVector<T> tmpIn(nqTot), tmpOut(m_nmTot);
         T* jac_ptr;
         for (int e = 0; e < this->m_nBlocks; ++e)
         {

@@ -578,7 +578,6 @@ namespace QuadCollectionTests
         }
     }
 
-
     BOOST_AUTO_TEST_CASE(TestQuadIProductWRTBase_StdMat_UniformP)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
@@ -941,64 +940,65 @@ namespace QuadCollectionTests
         }
     }
 
-    // BOOST_AUTO_TEST_CASE(TestQuadIProductWRTBase_AVX_UniformP)
-    // {
-    //     SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-    //     SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
-    //     SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  1.0, 1.0, 0.0));
-    //     SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 1.0, 0.0));
+    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTBase_AVX_UniformP)
+    {
+        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  1.0, 1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 1.0, 0.0));
 
-    //     SpatialDomains::QuadGeomSharedPtr quadGeom = CreateQuad(v0, v1, v2, v3);
+        SpatialDomains::QuadGeomSharedPtr quadGeom = CreateQuad(v0, v1, v2, v3);
 
-    //     Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
-    //     Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
-    //     unsigned int numQuadPoints = 6;
-    //     const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
-    //     const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+        Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+        Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+        unsigned int numQuadPoints = 3;
+        unsigned int numModes = 2;
+        const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1, numModes, quadPointsKeyDir1);
 
-    //     Nektar::LocalRegions::QuadExpSharedPtr Exp =
-    //         MemoryManager<Nektar::LocalRegions::QuadExp>::AllocateSharedPtr(basisKeyDir1,
-    //         basisKeyDir1, quadGeom);
+        Nektar::LocalRegions::QuadExpSharedPtr Exp =
+            MemoryManager<Nektar::LocalRegions::QuadExp>::AllocateSharedPtr(basisKeyDir1,
+            basisKeyDir1, quadGeom);
 
-    //     Nektar::StdRegions::StdQuadExpSharedPtr stdExp =
-    //         MemoryManager<Nektar::StdRegions::StdQuadExp>::AllocateSharedPtr(basisKeyDir1,
-    //         basisKeyDir1);
+        Nektar::StdRegions::StdQuadExpSharedPtr stdExp =
+            MemoryManager<Nektar::StdRegions::StdQuadExp>::AllocateSharedPtr(basisKeyDir1,
+            basisKeyDir1);
 
-    //     std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
-    //     CollExp.push_back(Exp);
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        CollExp.push_back(Exp);
 
-    //     LibUtilities::SessionReaderSharedPtr dummySession;
-    //     Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
-    //     Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-    //     // Not all AVX OP are implemented...
-    //     impTypes[Collections::eIProductWRTBase] = Collections::eAVX;
-    //     Collections::Collection     c(CollExp, impTypes);
+        LibUtilities::SessionReaderSharedPtr dummySession;
+        Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+        Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+        // Not all AVX OP are implemented...
+        impTypes[Collections::eIProductWRTBase] = Collections::eAVX;
+        Collections::Collection     c(CollExp, impTypes);
 
-    //     const int nq = Exp->GetTotPoints();
-    //     Array<OneD, NekDouble> phys(nq);
-    //     Array<OneD, NekDouble> coeffs1(Exp->GetNcoeffs());
-    //     Array<OneD, NekDouble> coeffs2(Exp->GetNcoeffs());
+        const int nq = Exp->GetTotPoints();
+        Array<OneD, NekDouble> phys(nq);
+        Array<OneD, NekDouble> coeffsRef(Exp->GetNcoeffs());
+        Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs());
 
-    //     Array<OneD, NekDouble> xc(nq), yc(nq);
+        Array<OneD, NekDouble> xc(nq), yc(nq);
 
-    //     Exp->GetCoords(xc, yc);
+        Exp->GetCoords(xc, yc);
 
-    //     for (int i = 0; i < nq; ++i)
-    //     {
-    //         phys[i] = sin(xc[i])*cos(yc[i]);
-    //     }
+        for (int i = 0; i < nq; ++i)
+        {
+            phys[i] = sin(xc[i])*cos(yc[i]);
+        }
 
-    //     Exp->IProductWRTBase(phys, coeffs1);
-    //     c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+        Exp->IProductWRTBase(phys, coeffsRef);
+        c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs);
 
-    //     double epsilon = 1.0e-8;
-    //     for(int i = 0; i < coeffs1.num_elements(); ++i)
-    //     {
-    //         coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-    //         coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
-    //         BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
-    //     }
-    // }
+        double epsilon = 1.0e-8;
+        for(int i = 0; i < coeffs.num_elements(); ++i)
+        {
+            coeffsRef[i] = (fabs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
+            coeffs[i] = (fabs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
+            BOOST_CHECK_CLOSE(coeffsRef[i],coeffs[i], epsilon);
+        }
+    }
 
 
 
@@ -1593,19 +1593,35 @@ namespace QuadCollectionTests
     }
 
     BOOST_AUTO_TEST_CASE(TestQuadIProductWRTDerivBase_AVX_UniformP)
-    {
+    {   // ok
+        // SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
+        // SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+        // SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  1.0, 1.0, 0.0));
+        // SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 1.0, 0.0));
+        // // not ok
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
-        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  1.0, 1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  2.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  2.0, 1.0, 0.0));
         SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 1.0, 0.0));
+        // not ok
+        // SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
+        // SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+        // SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  1.0, 2.0, 0.0));
+        // SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 2.0, 0.0));
+
 
         SpatialDomains::QuadGeomSharedPtr quadGeom = CreateQuad(v0, v1, v2, v3);
 
-        Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
-        Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
-        unsigned int numQuadPoints = 5;
-        const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
-        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+        Nektar::LibUtilities::PointsType quadPointsTypeDir1 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        Nektar::LibUtilities::BasisType basisTypeDir1 =
+            Nektar::LibUtilities::eModified_A;
+        unsigned int numQuadPoints = 3;
+        unsigned int numModes = 2;
+        const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints,
+            quadPointsTypeDir1);
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
+            numModes, quadPointsKeyDir1);
 
         Nektar::LocalRegions::QuadExpSharedPtr Exp =
             MemoryManager<Nektar::LocalRegions::QuadExp>::AllocateSharedPtr(basisKeyDir1,
@@ -1619,8 +1635,9 @@ namespace QuadCollectionTests
         CollExp.push_back(Exp);
 
         LibUtilities::SessionReaderSharedPtr dummySession;
-        Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+        Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+        Collections::Collection     cref(CollExp, impTypes);
         // Not all AVX OP are implemented...
         impTypes[Collections::eIProductWRTDerivBase] = Collections::eAVX;
         Collections::Collection     c(CollExp, impTypes);
@@ -1630,8 +1647,8 @@ namespace QuadCollectionTests
         const int nm = Exp->GetNcoeffs();
         Array<OneD, NekDouble> phys1(nq);
         Array<OneD, NekDouble> phys2(nq);
-        Array<OneD, NekDouble> coeffs1(nm);
-        Array<OneD, NekDouble> coeffs2(nm);
+        Array<OneD, NekDouble> coeffsRef(nm);
+        Array<OneD, NekDouble> coeffs(nm);
 
         Array<OneD, NekDouble> xc(nq), yc(nq);
 
@@ -1639,24 +1656,29 @@ namespace QuadCollectionTests
 
         for (int i = 0; i < nq; ++i)
         {
-            phys1[i] = sin(xc[i])*cos(yc[i]);
-            phys2[i] = cos(xc[i])*sin(yc[i]);
+            phys1[i] = xc[i];
+            phys2[i] = 0.0;
+            // not ok
+            // phys1[i] = sin(xc[i])*cos(yc[i]);
+            // phys2[i] = cos(xc[i])*sin(yc[i]);
         }
 
         // Standard routines
-        Exp->IProductWRTDerivBase(0, phys1, coeffs1);
-        Exp->IProductWRTDerivBase(1, phys2, coeffs2);
-        Vmath::Vadd(nm,coeffs1,1,coeffs2,1,coeffs1,1);
+        Exp->IProductWRTDerivBase(0, phys1, coeffsRef);
+        Exp->IProductWRTDerivBase(1, phys2, coeffs);
+        Vmath::Vadd(nm,coeffsRef,1,coeffs,1,coeffsRef,1);
 
+        cref.ApplyOperator(Collections::eIProductWRTDerivBase,
+                        phys1, phys2, coeffs);
         c.ApplyOperator(Collections::eIProductWRTDerivBase,
-                        phys1, phys2, coeffs2);
+                        phys1, phys2, coeffs);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        for(int i = 0; i < coeffsRef.num_elements(); ++i)
         {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
-            BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            coeffsRef[i] = (fabs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
+            coeffs[i] = (fabs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
+            BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
         }
     }
 
@@ -1814,7 +1836,7 @@ namespace QuadCollectionTests
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
         SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
         SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u,  1.0, 1.0, 0.0));
-        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u, 3u, -1.0, 2.0, 0.0));
 
         SpatialDomains::QuadGeomSharedPtr quadGeom = CreateQuad(v0, v1, v2, v3);
 

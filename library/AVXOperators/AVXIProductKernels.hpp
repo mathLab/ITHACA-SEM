@@ -29,7 +29,7 @@ inline static void ScaleAppend(
     }
     else
     {
-        pos = store;
+        store = pos;
     }
 }
 

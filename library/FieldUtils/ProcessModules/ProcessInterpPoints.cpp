@@ -222,7 +222,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
     
-   // If 3DH1D must ensure that z-coordinate of all points corresponds to a
+    // If 3DH1D must ensure that z-coordinate of all points corresponds to a
     // Fourier plane. Therefore we reset all points that lie outside
     // of a plane to the nearest plane. This means care must be taken when
     // analysing the points after interpolation. This should works after

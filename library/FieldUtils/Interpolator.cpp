@@ -203,20 +203,21 @@ void Interpolator::Interpolate(
             coords[j] = m_ptsOutField->GetPointVal(j, i);
         }
 
-        // Obtain Element and LocalCoordinate to interpolate
+        // Obtain Element and LocalCoordinate to interpolate.
         int elmtid = m_expInField[0]->GetExpIndex(
             coords, Lcoords,
-            NekConstants::kGeomFactorsTol); // seems to be fine. but we need to
-                                            // shift onto the right plane
+            NekConstants::kGeomFactorsTol);
 
+        // Homogeneous case, need to find the right plane
         int targetPlane = -1;
-        if (m_expInField[0]->GetExpType() == MultiRegions::e3DH1D) // Homogeneous case, need to find the
-                                           // right plane
+        if (m_expInField[0]->GetExpType() == MultiRegions::e3DH1D)
         {
             int nPlanes    = m_expInField[0]->GetHomogeneousBasis()->GetZ().size();
             NekDouble lHom = m_expInField[0]->GetHomoLen();
             targetPlane = std::round((coords[2]*nPlanes)/lHom);
-            if(targetPlane==nPlanes) // Reset to plane 0
+
+            // Reset from last plane to plane 0 (same physical result)
+            if(targetPlane == nPlanes)
             {
                 targetPlane = 0;
             }
@@ -240,14 +241,9 @@ void Interpolator::Interpolate(
                 NekDouble value;
                 if (m_expInField[0]->GetExpType() == MultiRegions::e3DH1D)
                 {
-                    value = m_expInField[f]
-                                ->GetPlane(targetPlane)
-                                ->GetExp(elmtid)
-                                ->StdPhysEvaluate(
-                                    Lcoords, m_expInField[f]
-                                                     ->GetPlane(targetPlane)
-                                                     ->GetPhys() +
-                                                 offset);
+                    auto planeExp = m_expInField[f]->GetPlane(targetPlane);
+                    value         = planeExp->GetExp(elmtid)->StdPhysEvaluate(
+                        Lcoords, planeExp->GetPhys() + offset);
                 }
                 else
                 {

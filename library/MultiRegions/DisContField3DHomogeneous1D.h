@@ -190,7 +190,7 @@ namespace Nektar
 
             Array<OneD, MultiRegions::ExpListSharedPtr>  m_bndCondExpansions;
 
-            Array<OneD, NekDouble >                      m_BndCondBwdWeight;
+            Array<OneD, NekDouble >                      m_bndCondBndWeight;
 
             ExpListSharedPtr m_trace;
 
@@ -333,7 +333,7 @@ namespace Nektar
             const int index, 
             const NekDouble value)
         {
-            m_BndCondBwdWeight[index]   =   value;
+            m_bndCondBndWeight[index]   =   value;
         }
     } //end of namespace
 } //end of namespace

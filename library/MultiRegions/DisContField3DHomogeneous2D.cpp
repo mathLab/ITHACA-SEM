@@ -47,7 +47,7 @@ namespace Nektar
         DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(void):
             ExpList3DHomogeneous2D(),
             m_bndCondExpansions(),
-            m_BndCondBwdWeight(),
+            m_bndCondBndWeight(),
             m_bndConditions()
         {
         }
@@ -63,7 +63,7 @@ namespace Nektar
                     const Collections::ImplementationType ImpType):
             ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing,ImpType),
             m_bndCondExpansions(),
-            m_BndCondBwdWeight(),
+            m_bndCondBndWeight(),
             m_bndConditions()
         {
         }
@@ -71,7 +71,7 @@ namespace Nektar
         DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(const DisContField3DHomogeneous2D &In, const bool DeclareLinesSetCoeffPhys):
             ExpList3DHomogeneous2D (In,false),
             m_bndCondExpansions    (In.m_bndCondExpansions),
-            m_BndCondBwdWeight     (In.m_BndCondBwdWeight),
+            m_bndCondBndWeight     (In.m_bndCondBndWeight),
             m_bndConditions        (In.m_bndConditions)
         {
             if(DeclareLinesSetCoeffPhys)
@@ -100,7 +100,7 @@ namespace Nektar
                          const Collections::ImplementationType ImpType):
             ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing,ImpType),
             m_bndCondExpansions(),
-            m_BndCondBwdWeight(),
+            m_bndCondBndWeight(),
             m_bndConditions()
         {
             int i,n,nel;
@@ -165,7 +165,7 @@ namespace Nektar
 
 
 			m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(nbnd);
-			m_BndCondBwdWeight  = Array<OneD, NekDouble> {nbnd, 0.0};
+			m_bndCondBndWeight  = Array<OneD, NekDouble> {nbnd, 0.0};
 			
 			Array<OneD, MultiRegions::ExpListSharedPtr> LinesBndCondExp(nlines);
 
@@ -208,7 +208,7 @@ namespace Nektar
             {
                 if (time == 0.0 || m_bndConditions[n]->IsTimeDependent())
                 {
-                    m_BndCondBwdWeight[n]   =   1.0;
+                    m_bndCondBndWeight[n]   =   1.0;
                     m_bndCondExpansions[n]->HomogeneousFwdTrans(
                         m_bndCondExpansions[n]->GetCoeffs(),
                         m_bndCondExpansions[n]->UpdateCoeffs());

@@ -69,7 +69,7 @@ using namespace std;
          DisContField3D::DisContField3D() :
              ExpList3D             (),
              m_bndCondExpansions   (),
-             m_BndCondBwdWeight    (),
+             m_bndCondBndWeight    (),
              m_bndConditions       (),
              m_trace(NullExpListSharedPtr)
          {
@@ -87,7 +87,7 @@ using namespace std;
              const Collections::ImplementationType       ImpType):
              ExpList3D          (pSession, graph3D, variable, ImpType),
                m_bndCondExpansions(),
-               m_BndCondBwdWeight(),
+               m_bndCondBndWeight(),
                m_bndConditions    (),
                m_trace(NullExpListSharedPtr)
          {
@@ -107,7 +107,7 @@ using namespace std;
              {
                  SetUpDG();
                  m_locTraceToTraceMap->
-                        TracelocToElmtlocCoeffMap(*this, m_trace);
+                        TraceLocToElmtLocCoeffMap(*this, m_trace);
              }
              else
              {
@@ -165,7 +165,7 @@ using namespace std;
                  {
                      SetUpDG(variable);
                     m_locTraceToTraceMap->
-                            TracelocToElmtlocCoeffMap(*this, m_trace);
+                            TraceLocToElmtLocCoeffMap(*this, m_trace);
                  }
                  else
                  {
@@ -628,7 +628,7 @@ using namespace std;
             m_bndConditions     =
                 Array<OneD,SpatialDomains::BoundaryConditionShPtr>(bregions.size());
 
-            m_BndCondBwdWeight = Array<OneD, NekDouble> {bregions.size(), 0.0};
+            m_bndCondBndWeight = Array<OneD, NekDouble> {bregions.size(), 0.0};
             
             // list Dirichlet boundaries first
             for (auto &it : bregions)
@@ -1948,8 +1948,6 @@ using namespace std;
             DisContField3D::v_PeriodicBwdCopy(Fwd, Bwd);
         }
 
-        /**
-         */
         void DisContField3D::v_AddTraceQuadPhysToField(
             const Array<OneD, const NekDouble> &Fwd,
             const Array<OneD, const NekDouble> &Bwd,
@@ -1971,7 +1969,8 @@ using namespace std;
 
         /**
          * @brief Fill the Bwd based on corresponding boundary conditions.
-         * NOTE: periodic boundary is considered interior traces and is not treated here.
+         * Periodic boundary is considered interior traces and is not 
+         * treated here.
          */
         void DisContField3D::v_FillBwdWithBound(
             const Array<OneD, const NekDouble> &Fwd,
@@ -2038,8 +2037,9 @@ using namespace std;
         }
 
         /**
-         * @brief Fill the Bwd based on corresponding boundary conditions for derivatives.
-         * NOTE: periodic boundary is considered interior traces and is not treated here.
+         * @brief Fill the Bwd based on corresponding boundary conditions for 
+         * derivatives. Periodic boundary is considered interior traces and 
+         * is not treated here.
          */
         void DisContField3D::v_FillBwdWithBoundDeriv(
             const int                          Dir,
@@ -2102,10 +2102,9 @@ using namespace std;
         }
 
         /**
-         * @brief Fill the weight with m_BndCondBwdWeight.
-         * NOTE: periodic boundary is considered interior traces and is not treated here.
+         * @brief Fill the weight with m_bndCondBndWeight.
          */
-        void DisContField3D::v_FillBwdWITHBwdWeight(
+        void DisContField3D::v_FillBwdWithBwdWeight(
                   Array<OneD,       NekDouble> &weightave,
                   Array<OneD,       NekDouble> &weightjmp)
         {
@@ -2126,7 +2125,7 @@ using namespace std;
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                         Vmath::Fill(npts,
-                                    m_BndCondBwdWeight[n], 
+                                    m_bndCondBndWeight[n], 
                                     &weightave[id2], 1);
                         Vmath::Fill(npts, 0.0, &weightjmp[id2], 1);
                     }
@@ -2146,7 +2145,7 @@ using namespace std;
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                         
                         Vmath::Fill(npts,
-                                    m_BndCondBwdWeight[n], 
+                                    m_bndCondBndWeight[n], 
                                     &weightave[id2], 1);
                         Vmath::Fill(npts, 0.0, &weightjmp[id2], 1);
                     }
@@ -2375,7 +2374,7 @@ using namespace std;
             // Reset boundary condition expansions.
             for (int n = 0; n < m_bndCondExpansions.size(); ++n)
             {
-                m_BndCondBwdWeight[n]   =   0.0;
+                m_bndCondBndWeight[n]   =   0.0;
                 m_bndCondExpansions[n]->Reset();
             }
         }
@@ -2840,7 +2839,7 @@ using namespace std;
             {
                 if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
-                    m_BndCondBwdWeight[i]   =   1.0;
+                    m_bndCondBndWeight[i]   =   1.0;
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();
 

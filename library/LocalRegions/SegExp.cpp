@@ -959,10 +959,10 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
             int nqb = nqe;
             int nbnd= vertex;
-            m_ElmtBndNormalDirctnElmtLength[nbnd] = 
+            m_elmtBndNormDirElmtLen[nbnd] = 
                     Array<OneD, NekDouble> {nqb, 0.0};
             Array<OneD, NekDouble>  &length = 
-                    m_ElmtBndNormalDirctnElmtLength[nbnd];
+                    m_elmtBndNormDirElmtLen[nbnd];
 
             // Regular geometry case
             if ((type == SpatialDomains::eRegular) ||

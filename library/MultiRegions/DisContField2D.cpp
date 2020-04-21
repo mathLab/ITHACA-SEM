@@ -66,7 +66,7 @@ namespace Nektar
         DisContField2D::DisContField2D(void)
         : ExpList2D          (),
           m_bndCondExpansions(),
-          m_BndCondBwdWeight(),
+          m_bndCondBndWeight(),
           m_bndConditions    (),
           m_trace            (NullExpListSharedPtr)
         {
@@ -77,7 +77,7 @@ namespace Nektar
             const bool            DeclareCoeffPhysArrays)
             : ExpList2D            (In,DeclareCoeffPhysArrays),
               m_bndCondExpansions  (In.m_bndCondExpansions),
-              m_BndCondBwdWeight   (In.m_BndCondBwdWeight),
+              m_bndCondBndWeight   (In.m_bndCondBndWeight),
               m_bndConditions      (In.m_bndConditions),
               m_globalBndMat       (In.m_globalBndMat),
               m_traceMap           (In.m_traceMap),
@@ -111,7 +111,7 @@ namespace Nektar
             : ExpList2D(pSession, graph2D, DeclareCoeffPhysArrays, variable,
                         ImpType),
               m_bndCondExpansions(),
-              m_BndCondBwdWeight(),
+              m_bndCondBndWeight(),
               m_bndConditions(),
               m_trace(NullExpListSharedPtr),
               m_periodicVerts(),
@@ -138,7 +138,7 @@ namespace Nektar
             if (SetUpJustDG)
             {
                 SetUpDG(variable);
-                m_locTraceToTraceMap->TracelocToElmtlocCoeffMap(*this, m_trace);
+                m_locTraceToTraceMap->TraceLocToElmtLocCoeffMap(*this, m_trace);
             }
             else
             {
@@ -226,7 +226,7 @@ namespace Nektar
                     if(SetUpJustDG)
                     {
                         SetUpDG();
-                        m_locTraceToTraceMap->TracelocToElmtlocCoeffMap(
+                        m_locTraceToTraceMap->TraceLocToElmtLocCoeffMap(
                             *this, m_trace);
                     }
                     else
@@ -656,7 +656,7 @@ namespace Nektar
             m_bndConditions     =
                 Array<OneD, SpatialDomains::BoundaryConditionShPtr>(bregions.size());
 
-            m_BndCondBwdWeight = Array<OneD, NekDouble> {bregions.size(), 0.0};
+            m_bndCondBndWeight = Array<OneD, NekDouble> {bregions.size(), 0.0};
 
             for (auto &it : bregions)
             {
@@ -1401,8 +1401,6 @@ namespace Nektar
             DisContField2D::v_PeriodicBwdCopy(Fwd, Bwd);
         }
 
-        /**
-         */
         void DisContField2D::v_AddTraceQuadPhysToField(
             const Array<OneD, const NekDouble> &Fwd,
             const Array<OneD, const NekDouble> &Bwd,
@@ -1434,7 +1432,8 @@ namespace Nektar
 
         /**
          * @brief Fill the Bwd based on corresponding boundary conditions.
-         * NOTE: periodic boundary is considered interior traces and is not treated here.
+         * Periodic boundary is considered interior traces and 
+         * is not treated here.
          */
         void DisContField2D::v_FillBwdWithBound(
             const Array<OneD, const NekDouble> &Fwd,
@@ -1496,8 +1495,9 @@ namespace Nektar
 
         
         /**
-         * @brief Fill the Bwd based on corresponding boundary conditions for derivatives.
-         * NOTE: periodic boundary is considered interior traces and is not treated here.
+         * @brief Fill the Bwd based on corresponding boundary conditions 
+         * for derivatives. Periodic boundary is considered interior traces and 
+         * is not treated here.
          */
         void DisContField2D::v_FillBwdWithBoundDeriv(
             const int                          Dir,
@@ -1552,10 +1552,9 @@ namespace Nektar
         }
 
         /**
-         * @brief Fill the weight with m_BndCondBwdWeight.
-         * NOTE: periodic boundary is considered interior traces and is not treated here.
+         * @brief Fill the weight with m_bndCondBndWeight.
          */
-        void DisContField2D::v_FillBwdWITHBwdWeight(
+        void DisContField2D::v_FillBwdWithBwdWeight(
                   Array<OneD,       NekDouble> &weightave,
                   Array<OneD,       NekDouble> &weightjmp)
         {
@@ -1578,7 +1577,7 @@ namespace Nektar
                                 GetExp(e)->GetNumPoints(0);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        Vmath::Fill(npts,m_BndCondBwdWeight[n], 
+                        Vmath::Fill(npts,m_bndCondBndWeight[n], 
                                     &weightave[id2], 1);
                         Vmath::Fill(npts, 0.0, &weightjmp[id2], 1);
 
@@ -1598,7 +1597,7 @@ namespace Nektar
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
                         Vmath::Fill(npts,
-                                    m_BndCondBwdWeight[n], 
+                                    m_bndCondBndWeight[n], 
                                     &weightave[id2], 1);
                         Vmath::Fill(npts, 0.0, &weightjmp[id2], 1);
                     }
@@ -1934,7 +1933,7 @@ namespace Nektar
             for (int n = 0; n < m_bndCondExpansions.size(); ++n)
             {
                 m_bndCondExpansions[n]->Reset();
-                m_BndCondBwdWeight[n] = 0.0;
+                m_bndCondBndWeight[n] = 0.0;
             }
         }
 
@@ -2424,7 +2423,7 @@ namespace Nektar
                 if (time == 0.0 ||
                     m_bndConditions[i]->IsTimeDependent())
                 {
-                    m_BndCondBwdWeight[i] = 1.0;
+                    m_bndCondBndWeight[i] = 1.0;
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();
                     Array<OneD, NekDouble> x0(npoints, 0.0);

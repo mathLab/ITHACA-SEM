@@ -721,10 +721,10 @@ namespace Nektar
 
             int nqb = nqe;
             int nbnd= edge;
-            m_ElmtBndNormalDirctnElmtLength[nbnd] = 
+            m_elmtBndNormDirElmtLen[nbnd] = 
                     Array<OneD, NekDouble> {nqb, 0.0};
             Array<OneD, NekDouble>  &length = 
-                    m_ElmtBndNormalDirctnElmtLength[nbnd];
+                    m_elmtBndNormDirElmtLen[nbnd];
 
             // Regular geometry case
             if((type == SpatialDomains::eRegular)||(type == SpatialDomains::eMovingRegular))

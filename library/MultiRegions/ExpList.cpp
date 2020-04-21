@@ -382,7 +382,6 @@ namespace Nektar
 
         /**
          * multiply the metric jacobi and quadrature weights
-         *
          */
         void ExpList::MultiplyByQuadratureMetric(
                 const Array<OneD, const NekDouble>  &inarray,
@@ -400,9 +399,8 @@ namespace Nektar
 
         /**
          * Divided by the metric jacobi and quadrature weights
-         *
          */
-        void ExpList::DividByQuadratureMetric(
+        void ExpList::DivideByQuadratureMetric(
                 const Array<OneD, const NekDouble>  &inarray,
                 Array<OneD, NekDouble>              &outarray)
         {
@@ -410,7 +408,7 @@ namespace Nektar
 
             for (int i = 0; i < (*m_exp).size(); ++i)
             {
-                (*m_exp)[i]->DividByQuadratureMetric(
+                (*m_exp)[i]->DivideByQuadratureMetric(
                                 inarray+m_phys_offset[i],
                                 e_outarray = outarray + m_phys_offset[i]);
             }
@@ -2514,7 +2512,6 @@ namespace Nektar
 
         /**
          * Get the weight value on boundaries
-         *
          */
         void ExpList::GetBwdWeight(
             Array<OneD, NekDouble>  &weightAver,
@@ -2527,7 +2524,7 @@ namespace Nektar
                 weightAver[i] = 0.5;
                 weightJump[i] = 1.0;
             }
-            FillBwdWITHBwdWeight(weightAver, weightJump);
+            FillBwdWithBwdWeight(weightAver, weightJump);
         }
 
         void ExpList::v_GetMovingFrames(
@@ -3381,12 +3378,12 @@ namespace Nektar
             ASSERTL0(false, "v_FillBwdWithBoundDeriv not defined");
         }
 
-        void ExpList::v_FillBwdWITHBwdWeight(
+        void ExpList::v_FillBwdWithBwdWeight(
             Array<OneD,       NekDouble> &weightave,
             Array<OneD,       NekDouble> &weightjmp)
         {
             boost::ignore_unused(weightave, weightjmp);
-            ASSERTL0(false, "v_FillBwdWITHBwdWeight not defined");
+            ASSERTL0(false, "v_FillBwdWithBwdWeight not defined");
         }
 
         void ExpList::v_PeriodicBwdCopy(
@@ -3631,9 +3628,9 @@ namespace Nektar
         }
 
         const LocTraceToTraceMapSharedPtr 
-                &ExpList::v_GetlocTraceToTraceMap() const
+                &ExpList::v_GetLocTraceToTraceMap() const
         {
-            ASSERTL0(false, "v_GetlocTraceToTraceMap not coded");
+            ASSERTL0(false, "v_GetLocTraceToTraceMap not coded");
             return NullLocTraceToTraceMapSharedPtr;
         }
     } //end of namespace

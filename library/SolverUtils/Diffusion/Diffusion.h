@@ -83,7 +83,7 @@ namespace Nektar
          *  5th: normal vectors                     optional 
          *  6th: aritificial diffusion facotres     optional
          * 
-         * a null pointer need to be passed for optional parameters
+         *  a null pointer need to be passed for optional parameters
          */
         typedef std::function<void (
             const int                                                       ,
@@ -104,7 +104,7 @@ namespace Nektar
          *  5th: nonzero flux index array,          optional
          *  6th: normal vectors                     optional 
          * 
-         * a null pointer need to be passed for optional parameters
+         *  a null pointer need to be passed for optional parameters
          */
         typedef std::function<void (
             const int                                                       ,
@@ -174,7 +174,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        
                     &pBwd = NullNekDoubleArrayofArray);
             
-            // Diffusion Calculate the physical derivatives
+            /// Diffusion Calculate the physical derivatives
             SOLVER_UTILS_EXPORT void DiffuseCalculateDerivative(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble>>         &inarray,
@@ -189,7 +189,7 @@ namespace Nektar
                                             pFwd, pBwd);
             }
             
-            // Diffusion Volume FLux
+            /// Diffusion Volume FLux
             SOLVER_UTILS_EXPORT void DiffuseVolumeFlux(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
@@ -203,7 +203,7 @@ namespace Nektar
                                     VolumeFlux, nonZeroIndex);
             }
             
-            // Diffusion term Trace Flux
+            /// Diffusion term Trace Flux
             SOLVER_UTILS_EXPORT void DiffuseTraceFlux(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
@@ -222,7 +222,7 @@ namespace Nektar
                     VolumeFlux, TraceFlux, pFwd, pBwd, nonZeroIndex);
             }
 
-            // Add symmetric flux to field in coeff space
+            /// Add symmetric flux to field in coeff space
             SOLVER_UTILS_EXPORT void AddDiffusionSymmFluxToCoeff(
                 const std::size_t                             nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
@@ -237,7 +237,7 @@ namespace Nektar
                     inarray, qfield, VolumeFlux, outarray, pFwd, pBwd);
             }
 
-            // Add symmetric flux to field in coeff physical space
+            /// Add symmetric flux to field in coeff physical space
             SOLVER_UTILS_EXPORT void AddDiffusionSymmFluxToPhys(
                 const std::size_t                             nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
@@ -344,14 +344,14 @@ namespace Nektar
             {
                 return v_GetFluxTensor();
             }
-            // Get the mu of artifical viscosity(AV)
+            /// Get the mu of artifical viscosity(AV)
             SOLVER_UTILS_EXPORT void GetAVmu(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, NekDouble >                           &muvar,
                 Array<OneD, NekDouble >                           &MuVarTrace);
 
-            // Get the average and jump value of conservative variables on trace
+            /// Get the average and jump value of conservative variables on trace
             SOLVER_UTILS_EXPORT void ConsVarAveJump(
                 const std::size_t                             nConvectiveFields,
                 const int                                           npnts,
@@ -364,7 +364,7 @@ namespace Nektar
                     jump);
             }
 
-            // Get trace normal
+            /// Get trace normal
             SOLVER_UTILS_EXPORT const Array<OneD, const Array<OneD, NekDouble> > 
                 &GetTraceNormal()
             {
@@ -413,7 +413,7 @@ namespace Nektar
                       Array<OneD,       Array<OneD, NekDouble> >    &aver,
                       Array<OneD,       Array<OneD, NekDouble> >    &jump);
 
-            // Diffusion Flux, calculate the physical derivatives
+            /// Diffusion Flux, calculate the physical derivatives
             SOLVER_UTILS_EXPORT virtual void v_DiffuseCalculateDerivative(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
@@ -422,7 +422,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
 
-            // Diffusion Volume Flux
+            /// Diffusion Volume Flux
             SOLVER_UTILS_EXPORT virtual void v_DiffuseVolumeFlux(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
@@ -432,7 +432,7 @@ namespace Nektar
                 Array< OneD, int >                                  
                     &nonZeroIndex) ;
             
-             // Diffusion term Trace Flux
+             /// Diffusion term Trace Flux
             SOLVER_UTILS_EXPORT virtual void v_DiffuseTraceFlux(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,

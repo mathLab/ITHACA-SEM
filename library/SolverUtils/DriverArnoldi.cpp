@@ -283,32 +283,20 @@ void DriverArnoldi::WriteEvs(
         NekDouble resid,
         bool DumpInverse)
 {
-    int ndigits= 6; //determines the number of sigificant digits
-    int nothers = 8; 
-    int nwidthcolm = nothers+ndigits - 1;
     if (m_timeSteppingAlgorithm)
     {
         NekDouble abs_ev = hypot (re_ev, im_ev);
         NekDouble ang_ev = atan2 (im_ev, re_ev);
 
         evlout << "EV: " << setw(2)  << i
-               << std::scientific << std::setw(nwidthcolm)
-               << std::setprecision(ndigits - 1) 
-               << abs_ev
-               << " "
-               << ang_ev
-               << " "
-               << log (abs_ev) / m_period
-               << " "
-               << ang_ev       / m_period;
+               << setw(12) << abs_ev
+               << setw(12) << ang_ev
+               << setw(12) << log (abs_ev) / m_period
+               << setw(12) << ang_ev       / m_period;
 
         if(resid != NekConstants::kNekUnsetDouble)
         {
-            evlout 
-                    << std::scientific << std::setw(nwidthcolm)
-                    << std::setprecision(ndigits - 1) 
-                    << " "
-                    << resid;
+            evlout << setw(12) << resid;
         }
         evlout << endl;
     }
@@ -326,30 +314,18 @@ void DriverArnoldi::WriteEvs(
         }
 
         evlout << "EV: " << setw(2)  <<  i
-               <<std::scientific<<std::setw(nwidthcolm)
-               <<std::setprecision(ndigits-1) 
-               <<  sign*re_ev
-               << " "
-               <<  sign*im_ev;
+               << setw(14) <<  sign*re_ev
+               << setw(14) <<  sign*im_ev;
 
         if(DumpInverse)
         {
-            evlout 
-                    <<std::scientific<<std::setw(nwidthcolm)
-                    <<std::setprecision(ndigits-1) 
-                    << " "
-                    <<  sign*re_ev*invmag + m_realShift
-                    << " "
-                    <<  sign*im_ev*invmag + m_imagShift;
+            evlout << setw(14) <<  sign*re_ev*invmag + m_realShift
+                   << setw(14) <<  sign*im_ev*invmag + m_imagShift;
         }
 
         if(resid != NekConstants::kNekUnsetDouble)
         {
-            evlout 
-                    <<std::scientific<<std::setw(nwidthcolm)
-                    <<std::setprecision(ndigits-1) 
-                    << " "
-                    << resid;
+            evlout << setw(12) << resid;
         }
         evlout << endl;
     }

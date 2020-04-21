@@ -898,7 +898,7 @@ namespace Nektar
                 v_GetVertexPhysVals(vertex, inarray, outarray);
             }
 
-            // Add vertex value of the 1D Phys space to outarray.
+            /// Add vertex value of the 1D Phys space to outarray.
             void AddVertexPhysVals(
                 const int                 vertex,
                 const NekDouble           &inarray,
@@ -959,11 +959,11 @@ namespace Nektar
             }
 
             /// Divided by the metric jacobi and quadrature weights
-            void DividByQuadratureMetric(
+            void DivideByQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD, NekDouble> &outarray)
             {
-                v_DividByQuadratureMetric(inarray, outarray);
+                v_DivideByQuadratureMetric(inarray, outarray);
             }
 
             void MultiplyByStdQuadratureMetric(
@@ -1815,7 +1815,7 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_DividByQuadratureMetric(
+            STD_REGIONS_EXPORT virtual void v_DivideByQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
 

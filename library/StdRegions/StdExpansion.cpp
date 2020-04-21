@@ -1605,7 +1605,7 @@ namespace Nektar
                 v_MultiplyByStdQuadratureMetric(inarray,outarray);
             }
 
-            void StdExpansion::v_DividByQuadratureMetric(
+            void StdExpansion::v_DivideByQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
             {

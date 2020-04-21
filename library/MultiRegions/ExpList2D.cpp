@@ -1107,8 +1107,8 @@ namespace Nektar
         }
 
         /**
-         * For each local element, copy the element length in boundary normal direction stored in the element list
-         * into the array \a normals.
+         * For each local element, copy the element length in boundary normal 
+         * direction stored in the element list into the array \a normals.
          */
         void ExpList2D::v_GetElmtNormalLength(
             Array<OneD, NekDouble>  &lengthsFwd,

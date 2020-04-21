@@ -63,7 +63,7 @@ namespace Nektar
         }
         
         /**
-         * @brief Similar with Diffusion::Diffuse(): calculate the diffusion flux 
+         * @brief Similar with Diffusion::Diffuse(): calculate diffusion flux 
          * The difference is in the outarray:
          *  it is the coefficients of basis for Diffuse_coeff() 
          *  it is the physics on quadrature points for Diffuse() 

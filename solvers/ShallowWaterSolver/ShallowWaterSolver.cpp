@@ -87,20 +87,11 @@ int main(int argc, char *argv[])
     cout << "-------------------------------------------" << endl;
     cout << "Total Computation Time = " << CPUtime << " hr." << endl;
 
-    int ndigits = 6;
-    int nothers = 8;
-    int nwidthcolm = nothers+ndigits - 1; 
     
-    for (int i = 0; i < equ->GetNvariables(); ++i)
+    for(int i = 0; i < equ->GetNvariables(); ++i)
     {
-        cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " 
-             << std::scientific << std::setw(nwidthcolm)
-             << std::setprecision(ndigits - 1) 
-             << equ->L2Error(i,true) << endl;
-        cout << "L inf error (variable " << equ->GetVariable(i)  << "): " 
-             << std::scientific << std::setw(nwidthcolm)
-             << std::setprecision(ndigits - 1) 
-             << equ->LinfError(i) << endl;
+        cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,true) << endl;
+        cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i) << endl;
     }
 
     session->Finalise();

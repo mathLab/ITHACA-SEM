@@ -112,7 +112,7 @@ namespace Nektar
              */
             Array<OneD,MultiRegions::ExpListSharedPtr>      m_bndCondExpansions;
 
-            Array<OneD,NekDouble> m_BndCondBwdWeight;
+            Array<OneD,NekDouble> m_bndCondBndWeight;
             
             /// An array which contains the information about the boundary
             /// condition on the different boundary regions.
@@ -272,7 +272,7 @@ namespace Nektar
                 const int                          Dir,
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
-            virtual void v_FillBwdWITHBwdWeight(
+            virtual void v_FillBwdWithBwdWeight(
                     Array<OneD,       NekDouble> &weightave,
                     Array<OneD,       NekDouble> &weightjmp);
 
@@ -405,14 +405,14 @@ namespace Nektar
         const Array<OneD,const NekDouble>
             &DisContField1D::v_GetBndCondBwdWeight()
         {
-            return m_BndCondBwdWeight;
+            return m_bndCondBndWeight;
         }
 
         void DisContField1D::v_SetBndCondBwdWeight(
             const int index, 
             const NekDouble value)
         {
-            m_BndCondBwdWeight[index]   =   value;
+            m_bndCondBndWeight[index]   =   value;
         }
 
         typedef std::shared_ptr<DisContField1D>   DisContField1DSharedPtr;

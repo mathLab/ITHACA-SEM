@@ -142,17 +142,18 @@ namespace Nektar
             Array<OneD,MultiRegions::ExpListSharedPtr> m_bndCondExpansions;
 
             /**
-             * @brief A Double to determine the weight of Bwd trace value when averaging 
-             *        the Fwd and Bwd in diffusion flux calculation.
+             * @brief A Double to determine the weight of Bwd trace value when 
+             * averaging the Fwd and Bwd in diffusion flux calculation.
              *
-             * It is necessary because for some boundaries the Bwd itself is the target value,
-             * while for other boundaries some average of Fwd and Bwd is the target value.
+             * It is necessary because for some boundaries the Bwd itself is 
+             * the target value, while for other boundaries some average of 
+             * Fwd and Bwd is the target value.
              * Using this parameter they can be treated uniformly.
-             * This array stores a Double value for each variable for each ExpListSharedPtr, which 
-             * assumes that for each ExpListSharedPtr the same kind of boundary treatment is used.
-             *  
+             * This array stores a Double value for each variable for each 
+             * ExpListSharedPtr, which assumes that for each ExpListSharedPtr 
+             * the same kind of boundary treatment is used.
              */
-            Array<OneD,NekDouble> m_BndCondBwdWeight;
+            Array<OneD,NekDouble> m_bndCondBndWeight;
 
             /**
              * @brief An array which contains the information about
@@ -315,7 +316,7 @@ namespace Nektar
                 const int                          Dir,
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
-            virtual void v_FillBwdWITHBwdWeight(
+            virtual void v_FillBwdWithBwdWeight(
                     Array<OneD,       NekDouble> &weightave,
                     Array<OneD,       NekDouble> &weightjmp);
 
@@ -372,7 +373,7 @@ namespace Nektar
                 const NekDouble value);
 
             inline virtual const LocTraceToTraceMapSharedPtr 
-                    &v_GetlocTraceToTraceMap() const;
+                    &v_GetLocTraceToTraceMap() const;
         };
 
         void DisContField2D::v_GetFwdBwdTracePhys(
@@ -446,18 +447,18 @@ namespace Nektar
         const Array<OneD,const NekDouble>
             &DisContField2D::v_GetBndCondBwdWeight()
         {
-            return m_BndCondBwdWeight;
+            return m_bndCondBndWeight;
         }
 
         void DisContField2D::v_SetBndCondBwdWeight(
             const int index, 
             const NekDouble value)
         {
-            m_BndCondBwdWeight[index]   =   value;
+            m_bndCondBndWeight[index]   =   value;
         }
 
         const LocTraceToTraceMapSharedPtr 
-                &DisContField2D::v_GetlocTraceToTraceMap() const
+                &DisContField2D::v_GetLocTraceToTraceMap() const
         {
             return m_locTraceToTraceMap;
         }

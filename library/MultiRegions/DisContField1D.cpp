@@ -59,7 +59,7 @@ namespace Nektar
         DisContField1D::DisContField1D():
             ExpList1D(),
             m_bndCondExpansions(),
-            m_BndCondBwdWeight(),
+            m_bndCondBndWeight(),
             m_bndConditions()
         {
         }
@@ -85,7 +85,7 @@ namespace Nektar
             const Collections::ImplementationType ImpType)
             : ExpList1D(pSession,graph1D,true, ImpType),
               m_bndCondExpansions(),
-              m_BndCondBwdWeight(),
+              m_bndCondBndWeight(),
               m_bndConditions()
         {
             if (variable.compare("DefaultVar") != 0)
@@ -567,7 +567,7 @@ namespace Nektar
             m_bndConditions
                     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
 
-            m_BndCondBwdWeight = Array<OneD, NekDouble> {cnt, 0.0};
+            m_bndCondBndWeight = Array<OneD, NekDouble> {cnt, 0.0};
 
             SetBoundaryConditionExpansion(graph1D,bcs,variable,
                                            m_bndCondExpansions,
@@ -996,7 +996,7 @@ namespace Nektar
             }
         }
 
-        void DisContField1D::v_FillBwdWITHBwdWeight(
+        void DisContField1D::v_FillBwdWithBwdWeight(
                   Array<OneD,       NekDouble> &weightave,
                   Array<OneD,       NekDouble> &weightjmp)
         {
@@ -1011,7 +1011,7 @@ namespace Nektar
                 {
                     id  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
-                    weightave[id] = m_BndCondBwdWeight[n];
+                    weightave[id] = m_bndCondBndWeight[n];
                     weightjmp[id] = 0.0;
                     cnt++;
                 }
@@ -1025,7 +1025,7 @@ namespace Nektar
                              "boundary condition");
                     id  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
-                    weightave[id] = m_BndCondBwdWeight[n];
+                    weightave[id] = m_bndCondBndWeight[n];
                     weightjmp[id] = 0.0;
                     cnt++;
                 }
@@ -1044,8 +1044,6 @@ namespace Nektar
         }
 
 
-        /**
-         */
         void DisContField1D::v_AddTraceQuadPhysToField(
             const Array<OneD, const NekDouble> &Fwd,
             const Array<OneD, const NekDouble> &Bwd,
@@ -1462,7 +1460,7 @@ namespace Nektar
             {
                 if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
-                    m_BndCondBwdWeight[i] = 1.0;
+                    m_bndCondBndWeight[i] = 1.0;
                     m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
 
                     if (x2_in != NekConstants::kNekUnsetDouble && x3_in !=
@@ -1629,9 +1627,9 @@ namespace Nektar
             // Reset boundary condition expansions.
             for (int n = 0; n < m_bndCondExpansions.size(); ++n)
             {
-                m_BndCondBwdWeight[n] = 0.0;
+                m_bndCondBndWeight[n] = 0.0;
                 m_bndCondExpansions[n]->Reset();
-            }
+            }   
         }
 
         /**

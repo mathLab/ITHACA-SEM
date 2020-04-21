@@ -95,7 +95,8 @@ void CFSBndCond::Apply(
 
 /**
  * @ brief Newly added bc should specify this virtual function
- * if the Bwd/value in m_bndCondExpansions is the target value like Direchlet bc weight should be 1.0.
+ * if the Bwd/value in m_bndCondExpansions is the target value like Direchlet 
+ * bc weight should be 1.0.
  * if some average Fwd and Bwd/value in m_bndCondExpansions 
  * is the target value like WallViscousBC weight should be 0.5.
  */

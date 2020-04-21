@@ -53,7 +53,7 @@ namespace Nektar
             
             static std::string type;
 
-            // Calculate the average of conservative variables on traces
+            /// Calculate the average of conservative variables on traces
             void ConsVarAve(
                 const std::size_t                             nConvectiveFields,
                 const int                                        npnts,
@@ -65,7 +65,7 @@ namespace Nektar
             DiffusionIP();
    		
             std::string                          m_shockCaptureType;
-            NekDouble                            m_IPSymmFtluxCoeff;
+            NekDouble                            m_IPSymmFluxCoeff;
             NekDouble                            m_IP2ndDervCoeff;
             NekDouble                            m_IPPenaltyCoeff;
 	         
@@ -80,16 +80,16 @@ namespace Nektar
                 m_traceNormDirctnElmtLengthRecip;
             LibUtilities::SessionReaderSharedPtr m_session;
 
-            // Get IP penalty factor based on order
+            /// Get IP penalty factor based on order
             void GetPenaltyFactor(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 Array<OneD, NekDouble >                             &factor); 
-            // Get a constant IP penalty factor
+            /// Get a constant IP penalty factor
             void GetPenaltyFactor_const(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 Array<OneD, NekDouble >                             &factor); 
                 
-            // Add symmetric flux integration to field (in coefficient space)
+            /// Add symmetric flux integration to field (in coefficient space)
             void AddSymmFluxIntegralToCoeff(
                 const std::size_t                             nConvectiveFields,
                 const int                                         nDim,
@@ -100,7 +100,7 @@ namespace Nektar
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&tracflux,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-            // Add symmetric flux integration to field (in physical space)
+            /// Add symmetric flux integration to field (in physical space)
             void AddSymmFluxIntegralToPhys(
                 const std::size_t                             nConvectiveFields,
                 const int                                         nDim,
@@ -111,7 +111,7 @@ namespace Nektar
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&tracflux,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
-            // Calculate symmetric flux on traces
+            /// Calculate symmetric flux on traces
             void CalTraceSymFlux(
                 const std::size_t                           nConvectiveFields,
                 const int                                   nDim,
@@ -123,7 +123,7 @@ namespace Nektar
                 Array<OneD, Array<OneD, 
                     Array<OneD, NekDouble> > >              &traceSymflux);
             
-            // Calculate symmetric flux on traces interface
+            /// Calculate symmetric flux on traces interface
             void DiffuseTraceSymmFlux(
                 const std::size_t                             nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
@@ -216,7 +216,7 @@ namespace Nektar
                 return m_traceNormals;
             }
 
-            // Calculate numerical flux on traces
+            /// Calculate numerical flux on traces
             void CalTraceNumFlux(
                 const std::size_t                           nConvectiveFields,
                 const int                                   nDim,
@@ -237,7 +237,7 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> >        &solution_Aver,
                 Array<OneD, Array<OneD, NekDouble> >        &solution_jump);
             
-            // Add second derivative term to trace jump (for DDG scheme) 
+            /// Add second derivative term to trace jump (for DDG scheme) 
            void AddSecondDerivToTrace(
                 const std::size_t                       nConvectiveFields,
                 const int                               nDim,

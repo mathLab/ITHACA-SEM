@@ -123,8 +123,8 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                const Array<OneD, Array<OneD, NekDouble> > &pFwd,
-                const Array<OneD, Array<OneD, NekDouble> > &pBwd);
+                const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
 
             virtual void v_NumericalFluxO1(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>      &fields,

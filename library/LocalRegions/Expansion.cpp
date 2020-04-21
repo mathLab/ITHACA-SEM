@@ -204,7 +204,7 @@ namespace Nektar
             Vmath::Vmul(nqtot, m_metrics[eMetricQuadrature], 1, inarray, 1, outarray, 1);
         }
 
-        void Expansion::v_DividByQuadratureMetric(
+        void Expansion::v_DivideByQuadratureMetric(
             const Array<OneD, 
             const NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray)
@@ -572,9 +572,9 @@ namespace Nektar
         const Array<OneD, const NekDouble > &Expansion::
             GetElmtBndNormalDirctnElmtLength(const int nbnd) const
         {
-            auto x = m_ElmtBndNormalDirctnElmtLength.find(nbnd);
-            ASSERTL0 (x != m_ElmtBndNormalDirctnElmtLength.end(),
-                      "m_ElmtBndNormalDirctnElmtLength normal not computed.");
+            auto x = m_elmtBndNormDirElmtLen.find(nbnd);
+            ASSERTL0 (x != m_elmtBndNormDirElmtLen.end(),
+                      "m_elmtBndNormDirElmtLen normal not computed.");
             return x->second;
         }
     } //end of namespace

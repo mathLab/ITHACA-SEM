@@ -391,9 +391,10 @@ namespace Nektar
 
         /**
          * @param   keyTgt      Target point distributions.
-         * FOR 1D: Jac =(partial x/ partial xi); factor = Jac =(partial xi/ partial x)
          * @returns             Derivative factors evaluated at the target
          *                      point distributions.
+         * A 1D example: /f$ Jac =(\partial x/ \partial \xi) /f$ ; 
+         *               /f$ factor = 1/Jac = (\partial \xi/ \partial x) /f$ 
          */
         Array<TwoD, NekDouble> GeomFactors::ComputeDerivFactors(
                 const LibUtilities::PointsKeyVector& keyTgt) const

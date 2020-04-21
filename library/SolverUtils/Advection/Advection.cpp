@@ -101,7 +101,6 @@ void Advection::v_AdvectVolumeFlux(
 
 /**
  * @brief calculate the advection flux in the cell the trace  integration
- * 
  */
 void Advection::v_AdvectTraceFlux(
     const int nConvectiveFields,
@@ -192,14 +191,14 @@ void Advection::v_SetBaseFlow(
 }
 
 void Advection::v_Advect_coeff(
-const int nConvectiveFields,
-const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >        &outarray,
-const NekDouble                                   &time,
-const Array<OneD, Array<OneD, NekDouble> > &pFwd,
-const Array<OneD, Array<OneD, NekDouble> > &pBwd)
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+    const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >        &outarray,
+    const NekDouble                                   &time,
+    const Array<OneD, Array<OneD, NekDouble> > &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> > &pBwd)
 {
     boost::ignore_unused(nConvectiveFields, fields, advVel, inarray, outarray,
                         time, pFwd, pBwd);

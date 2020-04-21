@@ -57,8 +57,8 @@ namespace Nektar
             m_session->LoadSolverInfo("ShockCaptureType",
                                   m_shockCaptureType, "Off");	
 
-            m_session->LoadParameter("IPSymmFtluxCoeff",
-                                  m_IPSymmFtluxCoeff, 0.0);	//0.5
+            m_session->LoadParameter("IPSymmFluxCoeff",
+                                  m_IPSymmFluxCoeff, 0.0);	//0.5
 
             m_session->LoadParameter("IP2ndDervCoeff",
                                   m_IP2ndDervCoeff, 0.0); // 1.0/12.0	
@@ -346,7 +346,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
         {
-            if (abs(m_IPSymmFtluxCoeff) > 1.0E-12)
+            if (abs(m_IPSymmFluxCoeff) > 1.0E-12)
             {
                 int nDim      = fields[0]->GetCoordim(0);
                 int nPts      = fields[0]->GetTotPoints();
@@ -384,7 +384,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
         {
-            if (abs(m_IPSymmFtluxCoeff) > 1.0E-12)
+            if (abs(m_IPSymmFluxCoeff) > 1.0E-12)
             {
                 int nDim      = fields[0]->GetCoordim(0);
                 int nPts      = fields[0]->GetTotPoints();
@@ -443,7 +443,7 @@ namespace Nektar
 
             for (int i = 0; i < nConvectiveFields; ++i)
             {
-                Vmath::Smul(nTracePts, m_IPSymmFtluxCoeff, solution_jump[i], 1,
+                Vmath::Smul(nTracePts, m_IPSymmFluxCoeff, solution_jump[i], 1,
                             solution_jump[i], 1);
             }
             
@@ -492,7 +492,7 @@ namespace Nektar
                     fields[nv]->AddTraceQuadPhysToField(tracflux[nd][nv],
                                                         tracflux[nd][nv],
                                                         tmpfield[nd]);
-                    fields[nv]->DividByQuadratureMetric(tmpfield[nd],
+                    fields[nv]->DivideByQuadratureMetric(tmpfield[nd],
                                                         tmpfield[nd]);
                 }
                 fields[nv]->IProductWRTDerivBase(tmpfield, tmpCoeff);
@@ -531,7 +531,7 @@ namespace Nektar
                     fields[nv]->AddTraceQuadPhysToField(tracflux[nd][nv],
                                                         tracflux[nd][nv],
                                                         tmpfield[nd]);
-                    fields[nv]->DividByQuadratureMetric(tmpfield[nd],
+                    fields[nv]->DivideByQuadratureMetric(tmpfield[nd],
                                                         tmpfield[nd]);
                 }
                 fields[nv]->IProductWRTDerivBase(tmpfield, tmpCoeff);
@@ -552,7 +552,7 @@ namespace Nektar
             int nTracPnt,noffset;
             
             const MultiRegions::LocTraceToTraceMapSharedPtr 
-                locTraceToTraceMap = fields[0]->GetlocTraceToTraceMap();
+                locTraceToTraceMap = fields[0]->GetLocTraceToTraceMap();
             
             const Array<OneD, const Array<OneD, int >> LRAdjExpid  =   
                 locTraceToTraceMap->GetLeftRightAdjacentExpId();
@@ -616,7 +616,8 @@ namespace Nektar
             m_SpecialBndTreat(aver);
 
             // note: here the jump is 2.0*(aver-vFwd) 
-            //       because Viscous wall use a symmetry value as the Bwd, not the target one   
+            //       because Viscous wall use a symmetry value as the Bwd, 
+            //       not the target one   
             Array<OneD, NekDouble> tmpF {npnts, 0.0};
             Array<OneD, NekDouble> tmpB {npnts, 0.0};
 

@@ -218,7 +218,7 @@ namespace Nektar
                 Array<OneD, NekDouble>              &outarray);
 
             /// Divided by the metric jacobi and quadrature weights
-            MULTI_REGIONS_EXPORT void DividByQuadratureMetric(
+            MULTI_REGIONS_EXPORT void DivideByQuadratureMetric(
                 const Array<OneD, const NekDouble>  &inarray,
                 Array<OneD, NekDouble>              &outarray);
 
@@ -877,7 +877,7 @@ namespace Nektar
                       Array<OneD,       NekDouble> &Bwd);
 
             /// Fill Bwd with boundary conditions
-            inline void FillBwdWITHBwdWeight(
+            inline void FillBwdWithBwdWeight(
                     Array<OneD,       NekDouble> &weightave,
                     Array<OneD,       NekDouble> &weightjmp);
 
@@ -1098,7 +1098,7 @@ namespace Nektar
                 &GetCoeffsToElmt() const;
 
             MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr 
-                &GetlocTraceToTraceMap() const;
+                &GetLocTraceToTraceMap() const;
         protected:
             /// Definition of the total number of degrees of freedom and
             /// quadrature points and offsets to access data
@@ -1361,7 +1361,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
             
-            virtual void v_FillBwdWITHBwdWeight(
+            virtual void v_FillBwdWithBwdWeight(
                 Array<OneD,       NekDouble> &weightave,
                 Array<OneD,       NekDouble> &weightjmp);
 
@@ -1659,7 +1659,7 @@ namespace Nektar
         private:
 
             virtual const LocTraceToTraceMapSharedPtr 
-                &v_GetlocTraceToTraceMap() const;
+                &v_GetLocTraceToTraceMap() const;
 
             virtual const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
 
@@ -2408,9 +2408,9 @@ namespace Nektar
         }
 
         MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr 
-            &ExpList::GetlocTraceToTraceMap() const
+            &ExpList::GetLocTraceToTraceMap() const
         {
-            return v_GetlocTraceToTraceMap();
+            return v_GetLocTraceToTraceMap();
         }
 
         inline const Array<OneD, const  NekDouble >
@@ -2572,11 +2572,11 @@ namespace Nektar
             v_FillBwdWithBoundDeriv(Dir, Fwd, Bwd);
         }
 
-        inline void ExpList::FillBwdWITHBwdWeight(
+        inline void ExpList::FillBwdWithBwdWeight(
             Array<OneD,       NekDouble> &weightave,
             Array<OneD,       NekDouble> &weightjmp)
         {
-            v_FillBwdWITHBwdWeight(weightave, weightjmp);
+            v_FillBwdWithBwdWeight(weightave, weightjmp);
         }
 
         inline void ExpList::PeriodicBwdCopy(

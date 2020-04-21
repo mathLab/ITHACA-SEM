@@ -845,7 +845,7 @@ void LocTraceToTraceMap::Setup3D(
  * @param locExp         Expansion list in elements
  * @param trace          Expansion list on traces.
  */
-void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
+void LocTraceToTraceMap::TraceLocToElmtLocCoeffMap(
     const ExpList &locExp,
     const ExpListSharedPtr &trace)
 {
@@ -901,7 +901,7 @@ void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
         }
     }
     m_LeftRightAdjacentExpId                = LRAdjExpid;
-    m_LeftRightAdjacentExpFlag              = LRAdjflag;
+    m_leftRightAdjacentExpFlag              = LRAdjflag;
     m_TraceceffToLeftRightExpcoeffMap       = elmtLRMap;
     m_TraceceffToLeftRightExpcoeffSign      = elmtLRSign;
 }
@@ -1060,7 +1060,6 @@ void LocTraceToTraceMap::InterpLocEdgesToTrace(
 
 /**
  * @brief Right inner product with localedgetoTrace Interpolation Matrix.
- * 
  *
  * @param dir       Selects forwards (0) or backwards (1) direction.
  * @param locedges  Local trace edge storage.
@@ -1394,7 +1393,6 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
 
 /**
  * @brief Right inner product with localedgetoTrace Interpolation Matrix.
- * 
  *
  * @param dir           Selects forwards (0) or backwards (1) direction.
  * @param traces        trace .

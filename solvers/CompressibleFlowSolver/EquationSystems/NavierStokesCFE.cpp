@@ -67,7 +67,7 @@ namespace Nektar
         NekDouble gasConstant;
         m_session->LoadParameter ("GasConstant",   gasConstant,   287.058);
         m_Cp      = m_gamma / (m_gamma - 1.0) * gasConstant;
-        m_Cv      = m_Cp   /  m_gamma;
+        m_Cv      = m_Cp / m_gamma;
 
         m_session->LoadParameter ("Twall", m_Twall, 300.15);
 
@@ -207,7 +207,7 @@ namespace Nektar
             }
 
             // Extract pressure
-            //    (use inarrayDiff[0] as a temporary storage for the pressure)
+            // (use inarrayDiff[0] as a temporary storage for the pressure)
             m_varConv->GetPressure(inarray, inarrayDiff[0]);
 
             // Extract temperature
@@ -824,7 +824,7 @@ namespace Nektar
     }
 
     /**
-     * @brief Calculate diffusion flux using the bilinear form.
+     * @brief Calculate diffusion flux using the Jacobian form.
      */
     void NavierStokesCFE::GetViscousFluxBilinearForm(
         const int                                           nSpaceDim, 

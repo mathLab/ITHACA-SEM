@@ -104,6 +104,8 @@ IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_xxt_sc)
     ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_iter_full_par2)
     ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_iter_sc_par2)
+    # These tests have been disabled on WIN32 because there's no support
+    # for MLSC on Windows builds.
     IF (NOT WIN32)
         ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_iter_ml_par3)
         ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_xxt_ml)

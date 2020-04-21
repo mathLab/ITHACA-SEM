@@ -1793,55 +1793,16 @@ namespace Nektar
             ASSERTL0(false, "Cannot compute edge normal for this expansion.");
         }
 
-        void StdExpansion::v_NegateEdgeNormal(const int edge)
-        {
-            boost::ignore_unused(edge);
-            ASSERTL0(false, "Not implemented.");
-        }
-
-        bool StdExpansion::v_EdgeNormalNegated(const int edge)
-        {
-            boost::ignore_unused(edge);
-            ASSERTL0(false, "Not implemented.");
-            return false;
-        }
-
         void StdExpansion::v_ComputeFaceNormal(const int face)
         {
             boost::ignore_unused(face);
             ASSERTL0(false, "Cannot compute face normal for this expansion.");
         }
 
-        void StdExpansion::v_NegateFaceNormal(const int face)
-        {
-            boost::ignore_unused(face);
-            ASSERTL0(false, "Not implemented.");
-        }
-
-        bool StdExpansion::v_FaceNormalNegated(const int face)
-        {
-            boost::ignore_unused(face);
-            ASSERTL0(false, "Not implemented.");
-            return false;
-        }
-
         void StdExpansion::v_ComputeVertexNormal(const int vertex)
         {
             boost::ignore_unused(vertex);
             ASSERTL0(false, "Cannot compute vertex normal for this expansion.");
-        }
-
-        void StdExpansion::v_NegateVertexNormal(const int vertex)
-        {
-            boost::ignore_unused(vertex);
-            ASSERTL0(false, "Not implemented.");
-        }
-
-        bool StdExpansion::v_VertexNormalNegated(const int vertex)
-        {
-            boost::ignore_unused(vertex);
-            ASSERTL0(false, "Not implemented.");
-            return false;
         }
 
         const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const

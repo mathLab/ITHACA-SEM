@@ -333,21 +333,6 @@ namespace Nektar
         }
 
 
-        void StdExpansion3D::v_NegateFaceNormal(const int face)
-        {
-            m_negatedNormals[face] = true;
-            for (int i = 0; i < GetCoordim(); ++i)
-            {
-                Vmath::Neg(m_faceNormals[face][i].size(),
-                           m_faceNormals[face][i], 1);
-            }
-        }
-
-        bool StdExpansion3D::v_FaceNormalNegated(const int face)
-        {
-            return m_negatedNormals[face];
-        }
-
         LibUtilities::BasisKey EvaluateQuadFaceBasisKey(
             const int                     facedir,
             const LibUtilities::BasisType faceDirBasisType,

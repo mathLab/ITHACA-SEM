@@ -762,10 +762,34 @@ namespace Nektar
             const int mode1 = tmp / (nm2 - mode0);
             const int mode2 = tmp % (nm2 - mode0);
 
-            return
-                StdExpansion::BaryEvaluateBasis<0>(coords[0], mode0) *
-                StdExpansion::BaryEvaluateBasis<1>(coords[1], mode1) *
-                StdExpansion::BaryEvaluateBasis<2>(coords[2], mode2);
+            if (mode0 == 0 && mode1 == 0 && mode2 == 1)
+            {
+                // top vertex: (1-\xi_2) * (1+\xi_3)
+                return
+                    StdExpansion::BaryEvaluateBasis<1>(coords[1], 0) *
+                    StdExpansion::BaryEvaluateBasis<2>(coords[2], 1);
+            }
+            else if (mode0 == 0 && mode1 == 1 && mode2 == 1)
+            {
+                // top vertex: (1+\xi_2) * (1+\xi_3)
+                return
+                    StdExpansion::BaryEvaluateBasis<1>(coords[1], 1) *
+                    StdExpansion::BaryEvaluateBasis<2>(coords[2], 1);
+            }
+            else if (mode0 == 0 && mode2 == 1)
+            {
+                // edge interior points for collapsed edge
+                return
+                    StdExpansion::BaryEvaluateBasis<1>(coords[1], mode1) *
+                    StdExpansion::BaryEvaluateBasis<2>(coords[2], 1);
+            }
+            else
+            {
+                return
+                    StdExpansion::BaryEvaluateBasis<0>(coords[0], mode0) *
+                    StdExpansion::BaryEvaluateBasis<1>(coords[1], mode1) *
+                    StdExpansion::BaryEvaluateBasis<2>(coords[2], mode2);
+            }
         }
 
         void StdPrismExp::v_GetFaceNumModes(

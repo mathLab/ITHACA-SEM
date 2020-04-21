@@ -124,17 +124,17 @@ namespace Nektar
                 const DNekScalBlkMatSharedPtr         pInvD,
                 const std::shared_ptr<AssemblyMap>   &locToGloMap);
 
-            virtual DNekScalBlkMatSharedPtr v_PreSolve(
-                int                     scLevel,
-                NekVector<NekDouble>   &F_GlobBnd);
+            void v_PreSolve(int scLevel,
+                            Array<OneD, NekDouble>  &F_bnd);
             virtual void v_BasisFwdTransform(
-                Array<OneD, NekDouble>& pInOut,
-                int                     offset);
-            virtual void v_BasisBwdTransform(
                 Array<OneD, NekDouble>& pInOut);
+            virtual void v_CoeffsBwdTransform(
+                Array<OneD, NekDouble>& pInOut);
+            virtual void v_CoeffsFwdTransform(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
 
         private:
-            DNekScalBlkMatSharedPtr                  m_S1Blk;
             /// Dense storage for block Schur complement matrix
             std::vector<double>                      m_storage;
             /// Vector of pointers to local matrix data

@@ -163,9 +163,6 @@ namespace Nektar
 
             nel = GetExpSize();
 
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>::
-                                                        AllocateSharedPtr(nel);
-
             SetCoeffPhys();
 
             // Do not set up BCs if default variable
@@ -250,7 +247,6 @@ namespace Nektar
         void ContField3DHomogeneous1D::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const MultiRegions::VarFactorsMap &varfactors,
@@ -275,8 +271,7 @@ namespace Nektar
             }
             else
             {
-                HomogeneousFwdTrans(inarray, fce,
-                                    (flags.isSet(eUseGlobal))?eGlobal:eLocal);
+                HomogeneousFwdTrans(inarray, fce);
             }
 
             bool smode = false;
@@ -303,7 +298,7 @@ namespace Nektar
                     wfce = (PhysSpaceForcing)? fce+cnt:fce+cnt1;
                     m_planes[n]->HelmSolve(wfce,
                                            e_out = outarray + cnt1,
-                                           flags, new_factors, varcoeff,
+                                           new_factors, varcoeff,
                                            varfactors, dirForcing,
                                            PhysSpaceForcing);
                 }

@@ -85,63 +85,58 @@ namespace Nektar
          * Solve the linear system using a full global matrix system.
          */
         void GlobalLinSysXxtFull::v_Solve(
-                    const Array<OneD, const NekDouble>  &pInput,
-                          Array<OneD,       NekDouble>  &pOutput,
+                    const Array<OneD, const NekDouble>  &pLocInput,
+                          Array<OneD,       NekDouble>  &pLocOutput,
                     const AssemblyMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
             bool dirForcCalculated = (bool) pDirForcing.size();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
-
-            Array<OneD, NekDouble> tmp (nGlobDofs);
-            Array<OneD, NekDouble> tmp2(nGlobDofs);
-            Array<OneD, NekDouble> tmp3 = pOutput + nDirDofs;
+            int nLocDofs  = pLocToGloMap->GetNumLocalCoeffs();
+            
+            Array<OneD, NekDouble> tmp (nLocDofs);
+            Array<OneD, NekDouble> tmp1(nLocDofs);
+            Array<OneD, NekDouble> global(nGlobDofs,0.0);
 
             if(nDirDofs)
             {
                 // calculate the dirichlet forcing
                 if(dirForcCalculated)
                 {
-                    Vmath::Vsub(nGlobDofs, pInput.get(), 1,
-                                pDirForcing.get(), 1,
-                                tmp.get(), 1);
+                    // assume pDirForcing is in local space
+                    ASSERTL0(pDirForcing.size() >= nLocDofs,
+                             "DirForcing is not of sufficient size. Is it in local space?");
+                    Vmath::Vsub(nLocDofs, pLocInput, 1,
+                                pDirForcing, 1,tmp1, 1);
                 }
                 else
                 {
                     // Calculate the dirichlet forcing and substract it
                     // from the rhs
-                    //int nLocDofs = pLocToGloMap->GetNumLocalCoeffs();
-
                     m_expList.lock()->GeneralMatrixOp(
-                            m_linSysKey,
-                            pOutput, tmp, eGlobal);
+                                 m_linSysKey, pLocOutput, tmp);
 
-                    Vmath::Vsub( nGlobDofs, pInput.get(),1,
-                                            tmp.get(),   1,
-                                            tmp.get(),   1);
+                    Vmath::Vsub(nLocDofs, pLocInput, 1, tmp, 1, tmp1, 1);
+
                 }
 
-                SolveLinearSystem(pLocToGloMap->GetNumLocalCoeffs(),
-                                    tmp, tmp2, pLocToGloMap);
+                pLocToGloMap->Assemble(tmp1,tmp);
 
-                // Enforce the Dirichlet boundary conditions on the solution
-                // array as XXT discards them.
-                Vmath::Vcopy(nDirDofs, pOutput, 1,
-                                       tmp2,    1);
+                SolveLinearSystem(pLocToGloMap->GetNumLocalCoeffs(),
+                                    tmp, global, pLocToGloMap);
+                pLocToGloMap->GlobalToLocal(global,tmp);
+
+                // Add back initial and boundary condition
+                Vmath::Vadd(nLocDofs, tmp, 1, pLocOutput, 1, pLocOutput, 1);
             }
             else
             {
-                Vmath::Vcopy(nGlobDofs, pInput, 1, tmp, 1);
+                pLocToGloMap->Assemble(pLocInput,tmp);
                 SolveLinearSystem(pLocToGloMap->GetNumLocalCoeffs(),
-                                    tmp,tmp2, pLocToGloMap);
+                                    tmp,global, pLocToGloMap);
+                pLocToGloMap->GlobalToLocal(global,pLocOutput);
             }
-
-            // Perturb the output array (previous solution) by the result of
-            // this solve to get full solution.
-            Vmath::Vadd(nGlobDofs - nDirDofs,
-                        tmp2 + nDirDofs, 1, tmp3, 1, tmp3, 1);
-
         }
 
 

@@ -923,7 +923,10 @@ namespace Nektar
             if(addDiffusionTerm)
             {
                 Array<OneD, NekDouble> lap(m_ncoeffs);
-                StdMatrixKey mkeylap(eLaplacian,DetShapeType(),*this);
+                StdMatrixKey mkeylap(eLaplacian,DetShapeType(),*this,
+                                     mkey.GetConstFactors(),
+                                     mkey.GetVarCoeffs(),
+                                     mkey.GetNodalPointsType());
                 LaplacianMatrixOp(inarray,lap,mkeylap);
 
                 v_IProductWRTBase(tmp_adv, outarray);
@@ -946,7 +949,10 @@ namespace Nektar
             NekDouble lambda = mkey.GetConstFactor(eFactorLambda);
             Array<OneD,NekDouble> tmp(m_ncoeffs);
             StdMatrixKey mkeymass(eMass,DetShapeType(),*this);
-            StdMatrixKey mkeylap(eLaplacian,DetShapeType(),*this);
+            StdMatrixKey mkeylap(eLaplacian,DetShapeType(),*this,
+                                 mkey.GetConstFactors(),
+                                 mkey.GetVarCoeffs(),
+                                 mkey.GetNodalPointsType());
 
             MassMatrixOp(inarray,tmp,mkeymass);
             LaplacianMatrixOp(inarray,outarray,mkeylap);
@@ -1311,9 +1317,12 @@ namespace Nektar
                      "specific element types");
         }
 
-        void StdExpansion::v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD, NekDouble> &coeffs)
+        void StdExpansion::v_AddRobinEdgeContribution(const int edgeid,
+                                        const Array<OneD, const NekDouble > &primCoeffs,
+                                        const Array<OneD, NekDouble> &incoeffs,
+                                        Array<OneD, NekDouble> &coeffs)
         {
-            boost::ignore_unused(edgeid, primCoeffs, coeffs);
+            boost::ignore_unused(edgeid, primCoeffs, incoeffs, coeffs);
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                      "specific element types");
         }

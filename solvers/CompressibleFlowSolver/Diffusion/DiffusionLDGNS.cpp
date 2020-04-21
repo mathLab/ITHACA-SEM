@@ -181,7 +181,7 @@ void DiffusionLDGNS::v_InitObject(
 
             std::size_t id2 = pFields[0]->GetTrace()->
             GetPhys_Offset(pFields[0]->GetTraceMap()->
-                           GetBndCondTraceToGlobalTraceMap(cnt++));
+                           GetBndCondIDToGlobalTraceID(cnt++));
 
             Vmath::Vcopy(nBndEdgePts, &Fwd[id2], 1, &Bwd[id2], 1);
         }
@@ -406,7 +406,7 @@ void DiffusionLDGNS::ApplyBCsO1(
 
                 std::size_t id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
-                    GetBndCondTraceToGlobalTraceMap(cnt++));
+                                   GetBndCondIDToGlobalTraceID(cnt++));
 
                 if (boost::iequals(fields[i]->GetBndConditions()[j]->
                     GetUserDefined(),"WallViscous") ||
@@ -534,7 +534,7 @@ void DiffusionLDGNS::ApplyBCsO1(
 
             std::size_t id2 = fields[0]->GetTrace()->
             GetPhys_Offset(fields[0]->GetTraceMap()->
-                           GetBndCondTraceToGlobalTraceMap(cnt++));
+                           GetBndCondIDToGlobalTraceID(cnt++));
 
             // Imposing Temperature Twall at the wall
             if (boost::iequals(fields[nScalars]->GetBndConditions()[j]->
@@ -695,7 +695,7 @@ void DiffusionLDGNS::ApplyBCsO2(
 
             std::size_t id2 = fields[0]->GetTrace()->
             GetPhys_Offset(fields[0]->GetTraceMap()->
-                           GetBndCondTraceToGlobalTraceMap(cnt++));
+                           GetBndCondIDToGlobalTraceID(cnt++));
 
             // In case of Dirichlet bcs:
             // uflux = gD

@@ -109,13 +109,18 @@ namespace Nektar
 
             for(i = 0; i < bndCondExp.size(); i++)
             {
+
+                m_numLocalBndCondCoeffs += bndCondExp[i]->GetNcoeffs();
+
                 if (bndConditions[0][i]->GetBoundaryConditionType() ==
                        SpatialDomains::ePeriodic)
                 {
                     continue;
                 }
 
-                // Check to see if any value on boundary has Dirichlet value.
+                // Check to see if any value on boundary has Dirichlet
+                // value.  note this is a vector to manage coupled
+                // solver but for scalar will just be a vector of size 11
                 cnt = 0;
                 for(k = 0; k < bndConditions.size(); ++k)
                 {
@@ -143,10 +148,9 @@ namespace Nektar
                             vMaxVertId = bndExp->GetGeom()->GetVid(k);
                         }
                     }
-
                 }
 
-                // If all boundaries are Dirichlet take out of mask
+                // If all boundaries are Dirichlet fill in graph
                 if(cnt == bndConditions.size())
                 {
                     for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
@@ -171,7 +175,7 @@ namespace Nektar
                             }
                         }
 
-                        // Possibly not a face.
+                        // Possibility of a face in 3D or edge in 2D
                         meshFaceId = bndExp->GetGeom()->GetGlobalID();
                         const int bndDim = bndExp->GetNumBases();
                         if (graph[bndDim].count(meshFaceId) == 0)
@@ -181,8 +185,6 @@ namespace Nektar
                         m_numLocalDirBndCoeffs += bndExp->GetNcoeffs();
                     }
                 }
-
-                m_numLocalBndCondCoeffs += bndCondExp[i]->GetNcoeffs();
             }
 
             // Number of dirichlet edges and faces (not considering periodic
@@ -272,7 +274,7 @@ namespace Nektar
             //
             // To do this we look over all elements and vertices in local
             // partition and see if they match the values stored in the vertlist
-            // from othe processors and if so record the meshVertId/meshEdgeId
+            // from other processors and if so record the meshVertId/meshEdgeId
             // and the processor it comes from.
             for (i = 0; i < n; ++i)
             {
@@ -418,11 +420,12 @@ namespace Nektar
             // Find the process rank with the minimum boundary vertex ID
             int maxIdx = Vmath::Imax(n, bcminvertid, 1);
 
-            // If the system is singular, the process with the maximum number of
-            // BCs will set a Dirichlet vertex to make system non-singular.
-            // Note: we find the process with maximum boundary regions to ensure
-            // we do not try to set a Dirichlet vertex on a partition with no
-            // intersection with the boundary.
+            // If the system is singular, the process with the maximum
+            // number of BCs will set a Dirichlet vertex to make
+            // system non-singular.  Note: we find the process with
+            // maximum boundary regions to ensure we do not try to set
+            // a Dirichlet vertex on a partition with no intersection
+            // with the boundary.
             meshVertId = 0;
 
             if (m_systemSingular && checkIfSystemSingular && maxIdx == p)
@@ -1312,10 +1315,9 @@ namespace Nektar
             const PeriodicMap                          &periodicFaces)
             : AssemblyMap(pSession, variable)
         {
-            int i, j, k, l;
+            int i, j, k;
             int p, q, numModes0, numModes1;
             int cnt = 0;
-            int intDofCnt;
             int meshVertId, meshEdgeId, meshEdgeId2, meshFaceId, meshFaceId2;
             int globalId;
             int nEdgeInteriorCoeffs;
@@ -1563,7 +1565,7 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 exp = locExpVector[i];
-
+                
                 for(j = 0; j < exp->GetNverts(); ++j)
                 {
                     meshVertId = exp->GetGeom()->GetVid(j);
@@ -1592,7 +1594,8 @@ namespace Nektar
                 for(j = 0; j < exp->GetNfaces(); ++j)
                 {
                     meshFaceId = exp->GetGeom()->GetFid(j);
-                    graphVertOffset[graph[2][meshFaceId]+1] = dofs[2][meshFaceId];
+                    graphVertOffset[graph[2][meshFaceId]+1] =
+                        dofs[2][meshFaceId];
                 }
             }
 
@@ -1602,17 +1605,25 @@ namespace Nektar
             }
 
             // Allocate the proper amount of space for the class-data
-            m_numLocalCoeffs                 = numLocalCoeffs;
-            m_numGlobalDirBndCoeffs          = graphVertOffset[firstNonDirGraphVertId];
-            m_localToGlobalMap               = Array<OneD, int>(m_numLocalCoeffs,-1);
-            m_localToGlobalBndMap            = Array<OneD, int>(m_numLocalBndCoeffs,-1);
-            m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD, int>(m_numLocalBndCondCoeffs,-1);
+            m_numLocalCoeffs        = numLocalCoeffs;
+            m_numGlobalDirBndCoeffs = graphVertOffset[firstNonDirGraphVertId];
+            m_localToGlobalMap      = Array<OneD, int>(m_numLocalCoeffs,-1);
+            m_localToGlobalBndMap   = Array<OneD, int>(m_numLocalBndCoeffs,-1);
+            m_localToLocalBndMap    = Array<OneD, int>(m_numLocalBndCoeffs,-1);
+            m_localToLocalIntMap    = Array<OneD, int>(m_numLocalCoeffs-
+                                                       m_numLocalBndCoeffs,-1);
+            m_bndCondCoeffsToLocalCoeffsMap  = Array<OneD, int>
+                (m_numLocalBndCondCoeffs,-1);
+            
             // If required, set up the sign-vector
             if(m_signChange)
             {
-                m_localToGlobalSign = Array<OneD, NekDouble>(m_numLocalCoeffs,1.0);
-                m_localToGlobalBndSign = Array<OneD, NekDouble>(m_numLocalBndCoeffs,1.0);
-                m_bndCondCoeffsToGlobalCoeffsSign = Array<OneD,NekDouble>(m_numLocalBndCondCoeffs,1.0);
+                m_localToGlobalSign              = Array<OneD, NekDouble>
+                    (m_numLocalCoeffs,1.0);
+                m_localToGlobalBndSign           = Array<OneD, NekDouble>
+                    (m_numLocalBndCoeffs,1.0);
+                m_bndCondCoeffsToLocalCoeffsSign = Array<OneD, NekDouble>
+                    (m_numLocalBndCondCoeffs,1.0);
             }
 
             m_staticCondLevel = 0;
@@ -1640,10 +1651,32 @@ namespace Nektar
             cnt = 0;
 
             // Loop over all the elements in the domain
+            int cntbdry = 0; 
+            int cntint  = 0; 
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 exp = locExpVector[i];
                 cnt = locExp.GetCoeff_Offset(i);
+
+                int nbdry = exp->NumBndryCoeffs();
+                int nint  = exp->GetNcoeffs() - nbdry;
+
+                Array<OneD,unsigned int> bmap(nbdry);
+                Array<OneD,unsigned int> imap(nint);
+
+                exp->GetBoundaryMap(bmap);
+                exp->GetInteriorMap(imap);
+
+                for(j = 0; j < nbdry; ++j)
+                {
+                    m_localToLocalBndMap[cntbdry++] = cnt + bmap[j];
+                }
+
+                for(j = 0; j < nint; ++j)
+                {
+                    m_localToLocalIntMap[cntint++] = cnt + imap[j];
+                }
+
                 for(j = 0; j < exp->GetNverts(); ++j)
                 {
                     meshVertId = exp->GetGeom()->GetVid(j);
@@ -1793,144 +1826,170 @@ namespace Nektar
             }
 
             // Set up the mapping for the boundary conditions
+            // Set up boundary mapping
+            map<int, pair<int,int> > traceToElmtTraceMap;
+            int id;
+            
+            for(cnt = i = 0; i < locExpVector.size(); ++i)
+            {
+                exp = locExpVector[i];
+
+                for(j = 0; j < exp->GetNtrace(); ++j)
+                {
+                    id = exp->GetGeom()->GetTid(j);
+                    
+                    traceToElmtTraceMap[id] = pair<int,int>(i,j);
+                }
+            }
+
+            Array<OneD, unsigned int> maparray;
+            Array<OneD, int>          signarray;
+            map<int,pair<int,NekDouble>> GloDirBndCoeffToLocalCoeff; 
+            set<int> CoeffOnDirTrace;
+            
             cnt = 0;
             int offset = 0;
             for(i = 0; i < bndCondExp.size(); i++)
             {
-                if (bndConditions[i]->GetBoundaryConditionType() ==
-                    SpatialDomains::ePeriodic)
-                {
-                    continue;
-                }
-
                 set<int> foundExtraVerts, foundExtraEdges;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
                     bndExp  = bndCondExp[i]->GetExp(j);
                     cnt = offset + bndCondExp[i]->GetCoeff_Offset(j);
-                    for(k = 0; k < bndExp->GetNverts(); k++)
+
+                    int id = bndExp->GetGeom()->GetGlobalID();
+
+                    ASSERTL1(traceToElmtTraceMap.count(id) > 0,
+                             "Failed to find trace id");
+
+                    int eid = traceToElmtTraceMap[id].first;
+                    int tid = traceToElmtTraceMap[id].second;
+
+                    exp = locExpVector[eid]; 
+                    int dim = exp->GetShapeDimension();
+                    
+                    if(dim == 1)
                     {
-                        meshVertId = bndExp->GetGeom()->GetVid(k);
-                        m_bndCondCoeffsToGlobalCoeffsMap[cnt+bndExp->GetVertexMap(k)] = graphVertOffset[graph[0][meshVertId]];
-
-                        if (bndConditions[i]->GetBoundaryConditionType() !=
-                            SpatialDomains::eDirichlet)
+                        m_bndCondCoeffsToLocalCoeffsMap [cnt] =
+                            locExp.GetCoeff_Offset(eid) + exp->GetVertexMap(tid);
+                    }
+                    else
+                    {
+                        if(dim == 2)
                         {
-                            continue;
+                            exp->GetEdgeToElementMap(tid,exp->GetEorient(tid),
+                                                     maparray,signarray,
+                                                     bndExp->GetBasisNumModes(0));
+                        }
+                        else if (dim == 3)
+                        {
+                            exp->GetFaceToElementMap(tid,exp->GetForient(tid),
+                                                     maparray,signarray,
+                                                     bndExp->GetBasisNumModes(0),
+                                                     bndExp->GetBasisNumModes(1));
+                        }
+                        
+                        for(k = 0; k < bndExp->GetNcoeffs(); k++)
+                        {
+                            m_bndCondCoeffsToLocalCoeffsMap [cnt+k] =
+                                locExp.GetCoeff_Offset(eid) + maparray[k];
+                            if(m_signChange) 
+                            {
+                                m_bndCondCoeffsToLocalCoeffsSign[cnt+k] = signarray[k];
+                            }
                         }
 
-                        auto iter = extraDirVerts.find(meshVertId);
-                        if (iter != extraDirVerts.end() &&
-                            foundExtraVerts.count(meshVertId) == 0)
-                        {
-                            int loc = bndCondExp[i]->GetCoeff_Offset(j) +
-                                bndExp->GetVertexMap(k);
-                            int gid = graphVertOffset[
-                                graph[0][meshVertId]];
-                            ExtraDirDof t(loc, gid, 1.0);
-                            m_extraDirDofs[i].push_back(t);
-                            foundExtraVerts.insert(meshVertId);
-                        }
                     }
 
-                    for(k = 0; k < bndExp->GetNedges(); k++)
-                    {
-                        nEdgeInteriorCoeffs = bndExp->GetEdgeNcoeffs(k)-2;
-                        edgeOrient          = bndExp->GetGeom()->GetEorient(k);
-                        meshEdgeId          = bndExp->GetGeom()->GetEid(k);
-
-                        auto pIt = periodicEdges.find(meshEdgeId);
-
-                        // See if this edge is periodic. If it is, then we map
-                        // all edges to the one with lowest ID, and align all
-                        // coefficients to this edge orientation.
-                        if (pIt != periodicEdges.end())
-                        {
-                            pair<int, StdRegions::Orientation> idOrient =
-                                DeterminePeriodicEdgeOrientId(
-                                    meshEdgeId, edgeOrient, pIt->second);
-                            edgeOrient = idOrient.second;
-                        }
-
-                        bndExp->GetEdgeInteriorMap(
-                            k,edgeOrient,edgeInteriorMap,edgeInteriorSign);
-
-                        for(l = 0; l < dofs[1][meshEdgeId]; ++l)
-                        {
-                            m_bndCondCoeffsToGlobalCoeffsMap[cnt+edgeInteriorMap[l]] =
-                                graphVertOffset[graph[1][meshEdgeId]]+l;
-                        }
-                        for(l = dofs[1][meshEdgeId]; l < nEdgeInteriorCoeffs; ++l)
-                        {
-                            m_bndCondCoeffsToGlobalCoeffsMap[cnt+edgeInteriorMap[l]] =
-                                graphVertOffset[graph[1][meshEdgeId]];
-                        }
-
-                        // Fill the sign vector if required
-                        if(m_signChange)
-                        {
-                            for(l = 0; l < dofs[1][meshEdgeId]; ++l)
-                            {
-                                m_bndCondCoeffsToGlobalCoeffsSign[cnt+edgeInteriorMap[l]] = (NekDouble) edgeInteriorSign[l];
-                            }
-                            for(l = dofs[1][meshEdgeId]; l < nEdgeInteriorCoeffs; ++l)
-                            {
-                                m_bndCondCoeffsToGlobalCoeffsSign[cnt+edgeInteriorMap[l]] = 0.0;
-                            }
-                        }
-
-                        if (bndConditions[i]->GetBoundaryConditionType() !=
-                                SpatialDomains::eDirichlet)
-                        {
-                            continue;
-                        }
-
-                        auto iter = extraDirEdges.find(meshEdgeId);
-                        if (iter != extraDirEdges.end()            &&
-                            foundExtraEdges.count(meshEdgeId) == 0 &&
-                            nEdgeInteriorCoeffs > 0)
-                        {
-                            for(l = 0; l < dofs[1][meshEdgeId]; ++l)
-                            {
-                                int loc = bndCondExp[i]->GetCoeff_Offset(j) +
-                                    edgeInteriorMap[l];
-                                int gid = graphVertOffset[
-                                    graph[1][meshEdgeId]]+l;
-                                ExtraDirDof t(loc, gid, edgeInteriorSign[l]);
-                                m_extraDirDofs[i].push_back(t);
-                            }
-                            for(l = dofs[1][meshEdgeId]; l < nEdgeInteriorCoeffs; ++l)
-                            {
-                                int loc = bndCondExp[i]->GetCoeff_Offset(j) +
-                                    edgeInteriorMap[l];
-                                int gid = graphVertOffset[
-                                    graph[1][meshEdgeId]];
-                                ExtraDirDof t(loc, gid, 0.0);
-                                m_extraDirDofs[i].push_back(t);
-                            }
-                            foundExtraEdges.insert(meshEdgeId);
-                        }
-                    }
-
-                    meshFaceId = bndExp->GetGeom()->GetGlobalID();
-                    intDofCnt = 0;
+                    // we now need some information to work out how to
+                    // handle vertices and edges that are only just
+                    // touching a dirichlet boundary (and not the
+                    // whole edge/face)
+                        
                     for(k = 0; k < bndExp->GetNcoeffs(); k++)
                     {
-                        if(m_bndCondCoeffsToGlobalCoeffsMap[cnt+k] == -1)
+                        int locid = m_bndCondCoeffsToLocalCoeffsMap [cnt+k];
+                        int gloid = m_localToGlobalMap[locid];
+                        NekDouble sign = 1.0;
+
+                        if(m_signChange)
                         {
-                            m_bndCondCoeffsToGlobalCoeffsMap[cnt+k] =
-                                graphVertOffset[graph[bndExp->GetNumBases()][meshFaceId]]+intDofCnt;
-                            intDofCnt++;
+                            sign = m_bndCondCoeffsToLocalCoeffsSign[cnt+k];
+                        }
+
+                        if (bndConditions[i]->GetBoundaryConditionType() ==
+                            SpatialDomains::eDirichlet)
+                        {
+                            CoeffOnDirTrace.insert(locid);
+                        
+                            // store the local id and sign from global id
+                            // back to local space;
+                            GloDirBndCoeffToLocalCoeff[gloid] =
+                                pair<int,NekDouble> (locid,sign);
                         }
                     }
                 }
                 offset += bndCondExp[i]->GetNcoeffs();
             }
-
+            
             globalId = Vmath::Vmax(m_numLocalCoeffs,&m_localToGlobalMap[0],1)+1;
             m_numGlobalBndCoeffs = globalId;
 
+            // Set up a mapping list of Dirichlet Local Dofs that
+            // arise due to one vertex or edge just touching a
+            // Dirichlet boundary and need the value from another
+            // local coeff that has been filled by the boundary
+            // coeffs.
 
+            Array<OneD, NekDouble> gloParaDirBnd(m_numLocalCoeffs,-1.0);
+
+            Array<OneD, unsigned int> bndmap; 
+            cnt = 0; 
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                int gloid;
+                
+                exp = locExpVector[i];
+
+                exp->GetBoundaryMap(bndmap);
+                
+                for(j = 0; j < bndmap.size(); ++j)
+                {
+                    k = cnt + bndmap[j];
+                    
+                    if(CoeffOnDirTrace.count(k) == 0) 
+                    {
+                        gloid = m_localToGlobalMap[k];
+                
+                        if(gloid < m_numGlobalDirBndCoeffs) // point on Dir BC
+                        {
+                            if(GloDirBndCoeffToLocalCoeff.count(gloid))
+                            {
+                                int locid = GloDirBndCoeffToLocalCoeff[gloid].
+                                    first;
+                                NekDouble sign = 1.0;
+                                
+                                if(m_signChange)
+                                {
+                                    sign = m_localToGlobalSign[locid]*
+                                    m_localToGlobalSign[k];
+                                }
+
+                                ExtraDirDof  DirDofs(k,locid,sign);
+                                // could make same `structure as extraDirDof
+                                m_copyLocalDirDofs.insert(DirDofs);
+                            } 
+                            else // else could be on another parallel partition.
+                            {
+                                gloParaDirBnd[gloid] = gloid;
+                            }
+                        }
+                    }
+                }
+                
+                cnt += exp->GetNcoeffs();
+            }
+                        
             /*
              * The boundary condition mapping is generated from the same vertex
              * renumbering.
@@ -1954,38 +2013,60 @@ namespace Nektar
 
             m_numGlobalCoeffs = globalId;
 
-            SetUpUniversalC0ContMap(locExp, periodicVerts, periodicEdges, periodicFaces);
+            SetUpUniversalC0ContMap(locExp, periodicVerts, periodicEdges,
+                                    periodicFaces);
 
-            // Since we can now have multiple entries to m_extraDirDofs due to
-            // periodic boundary conditions we make a call to work out the
-            // multiplicity of all entries and invert (Need to be after
-            // SetupUniversalC0ContMap)
-            Array<OneD, NekDouble> valence(m_numGlobalBndCoeffs,0.0);
-
-            // Fill in Dirichlet coefficients that are to be sent to other
-            // processors with a value of 1
-
-            // Generate valence for extraDirDofs
-            for (auto &Tit : m_extraDirDofs)
+            // Now that universal map is setup reset gloParaDirBnd to
+            // 0 if no point communicated or universal value of not
+            // equal to -1.0
+            for(i = 0; i < m_numGlobalBndCoeffs; ++i)
             {
-                for (i = 0; i < Tit.second.size(); ++i)
+                int gloid = gloParaDirBnd[i];
+                if(gloid  == -1)
                 {
-                    valence[std::get<1>(Tit.second[i])] = 1.0;
+                    gloParaDirBnd[i] = 0.0;
+                }
+                else
+                {
+                    gloParaDirBnd[i] = m_globalToUniversalMap[gloid]; 
+                }
+            }
+            
+            // Use parallel boundary communication to set parallel
+            // dirichlet values on all processors Needs to be after
+            // SetupUuniversialC0ContMap
+            Gs::Gather(gloParaDirBnd,Gs::gs_max,m_bndGsh);
+ 
+            // copy global ids back to local values in partition to initialise gs communicator. 
+            Array<OneD, long> paraDirBnd(m_numLocalCoeffs);
+            for(i = 0; i < numLocalCoeffs; ++i)
+            {
+                paraDirBnd[i] = 0.0; 
+
+                int id = m_localToGlobalMap[i];
+
+                if(id >= m_numGlobalDirBndCoeffs)
+                {
+                    continue;
+                }
+
+                paraDirBnd[i] = gloParaDirBnd[id];
+
+                if(gloParaDirBnd[id] > 0.0)
+                {
+                    // gather any sign changes due to edge modes
+                    if(m_signChange)
+                    {
+                        if(m_localToGlobalSign[i] < 0) 
+                        {
+                            m_parallelDirBndSign.insert(i);
+                        }
+                    }
                 }
             }
 
-            UniversalAssembleBnd(valence);
-
-            // Set third argument of tuple to inverse of valence.
-            for (auto &Tit : m_extraDirDofs)
-            {
-                for (i = 0; i < Tit.second.size(); ++i)
-                {
-                    std::get<2>(Tit.second.at(i)) /=
-                        valence[std::get<1>(Tit.second.at(i))];
-                }
-            }
-
+            m_dirBndGsh = Gs::Init(paraDirBnd,vComm,verbose);
+            
             // Set up the local to global map for the next level when using
             // multi-level static condensation
             if ((m_solnType == eDirectMultiLevelStaticCond    ||
@@ -1996,13 +2077,13 @@ namespace Nektar
                 if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
                     Array<OneD, int> vwgts_perm(
-                        graph[0].size() + graph[1].size() + graph[2].size()
-                        - firstNonDirGraphVertId);
-
+                         graph[0].size() + graph[1].size() + graph[2].size()
+                         - firstNonDirGraphVertId);
+                    
                     for (i = 0; i < locExpVector.size(); ++i)
                     {
                         exp = locExpVector[i];
-
+                        
                         for (j = 0; j < exp->GetNverts(); ++j)
                         {
                             meshVertId = exp->GetGeom()->GetVid(j);
@@ -2030,7 +2111,7 @@ namespace Nektar
                         for (j = 0; j < exp->GetNfaces(); ++j)
                         {
                             meshFaceId = exp->GetGeom()->GetFid(j);
-
+                            
                             if (graph[2][meshFaceId] >= firstNonDirGraphVertId)
                             {
                                 vwgts_perm[graph[2][meshFaceId] -
@@ -2039,25 +2120,25 @@ namespace Nektar
                             }
                         }
                     }
-
+                    
                     bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
                     m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
                         AllocateSharedPtr(this, bottomUpGraph);
                 }
             }
-
+            
             m_hash = hash_range(m_localToGlobalMap.begin(),
                                 m_localToGlobalMap.end());
-
+            
             // Add up hash values if parallel
             int hash = m_hash;
             vComm->AllReduce(hash, LibUtilities::ReduceSum);
             m_hash = hash;
-
+            
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
         }
-
+        
         /**
          *
          */
@@ -2245,7 +2326,7 @@ namespace Nektar
             vCommRow->AllReduce(nFace, LibUtilities::ReduceSum);
             vCommRow->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
             vCommRow->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
-            vCommRow->AllReduce(maxIntDof, LibUtilities::ReduceMax);
+            vCommRow->AllReduce(maxIntDof,  LibUtilities::ReduceMax);
 
             // Assemble global to universal mapping for this process
             for(i = 0; i < locExpVector.size(); ++i)
@@ -2634,7 +2715,7 @@ namespace Nektar
             Array<OneD, const NekDouble> local;
             if(global.data() == loc.data())
             {
-                local = Array<OneD, NekDouble>(loc.size(),loc.data());
+                local = Array<OneD, NekDouble>(m_numLocalCoeffs,loc.data());
             }
             else
             {
@@ -2658,6 +2739,7 @@ namespace Nektar
             }
         }
 
+
         void AssemblyMapCG::v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                     NekVector<      NekDouble>& global,
@@ -2673,7 +2755,7 @@ namespace Nektar
             Array<OneD, const NekDouble> glo;
             if(global.data() == loc.data())
             {
-                glo = Array<OneD, NekDouble>(global.size(),global.data());
+                glo = Array<OneD, NekDouble>(m_numGlobalCoeffs,global.data());
             }
             else
             {
@@ -2705,13 +2787,12 @@ namespace Nektar
             Array<OneD, const NekDouble> local;
             if(global.data() == loc.data())
             {
-                local = Array<OneD, NekDouble>(loc.size(),loc.data());
+                local = Array<OneD, NekDouble>(m_numLocalCoeffs,loc.data());
             }
             else
             {
                 local = loc; // create reference
             }
-            //ASSERTL1(loc.get() != global.get(),"Local and Global Arrays cannot be the same");
 
             Vmath::Zero(m_numGlobalCoeffs, global.get(), 1);
 

@@ -142,7 +142,6 @@ namespace Nektar
               GlobalLinSysStaticCond(pKey, pExpList, pLocToGloMap)
         {
             m_schurCompl  = pSchurCompl;
-            m_S1Blk       = pSchurCompl;
             m_BinvD       = pBinvD;
             m_C           = pC;
             m_invD        = pInvD;
@@ -162,20 +161,6 @@ namespace Nektar
             // Setup Block Matrix systems
             int n, n_exp = m_expList.lock()->GetNumElmts();
 
-            MatrixStorage blkmatStorage = eDIAGONAL;
-            const Array<OneD,const unsigned int>& nbdry_size
-                    = asmMap->GetNumLocalBndCoeffsPerPatch();
-
-            m_S1Blk = MemoryManager<DNekScalBlkMat>
-                ::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
-
-            // Preserve original matrix in m_S1Blk
-            for (n = 0; n < n_exp; ++n)
-            {
-                DNekScalMatSharedPtr mat = m_schurCompl->GetBlock(n, n);
-                m_S1Blk->SetBlock(n, n, mat);
-            }
-
             // Build preconditioner
             m_precon->BuildPreconditioner();
 
@@ -186,7 +171,7 @@ namespace Nektar
                 if (m_linSysKey.GetMatrixType() !=
                         StdRegions::eHybridDGHelmBndLam)
                 {
-                    DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
+                    DNekScalMatSharedPtr mat = m_schurCompl->GetBlock(n, n);
                     DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
                                                 n, cnt, mat);
                     m_schurCompl->SetBlock(n, n, t);
@@ -210,9 +195,7 @@ namespace Nektar
             v_GetStaticCondBlock(unsigned int n)
         {
             DNekScalBlkMatSharedPtr schurComplBlock;
-            int  scLevel           = m_locToGloMap.lock()->GetStaticCondLevel();
-            DNekScalBlkMatSharedPtr sc = scLevel == 0 ? m_S1Blk : m_schurCompl;
-            DNekScalMatSharedPtr    localMat = sc->GetBlock(n,n);
+            DNekScalMatSharedPtr    localMat = m_schurCompl->GetBlock(n,n);
             unsigned int nbdry    = localMat->GetRows();
             unsigned int nblks    = 1;
             unsigned int esize[1] = {nbdry};
@@ -232,12 +215,7 @@ namespace Nektar
         void GlobalLinSysIterativeStaticCond::v_AssembleSchurComplement(
             const AssemblyMapSharedPtr pLocToGloMap)
         {
-            int i,j,n,cnt,gid1,gid2;
-            NekDouble sign1,sign2;
-
-            bool doGlobalOp = m_expList.lock()->GetGlobalOptParam()->
-                DoGlobalMatOp(m_linSysKey.GetMatrixType());
-
+            boost::ignore_unused(pLocToGloMap);
             // Set up unique map
             v_UniqueMap();
 
@@ -250,71 +228,7 @@ namespace Nektar
                 m_precon->BuildPreconditioner();
             }
 
-            if (!doGlobalOp)
-            {
-                PrepareLocalSchurComplement();
-                return;
-            }
-
-            int nBndDofs  = pLocToGloMap->GetNumGlobalBndCoeffs();
-            int NumDirBCs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-            unsigned int rows = nBndDofs - NumDirBCs;
-            unsigned int cols = nBndDofs - NumDirBCs;
-
-            // COO sparse storage to assist in assembly
-            COOMatType gmat_coo;
-
-            // Get the matrix storage structure
-            // (whether to store only one triangular part, if symmetric)
-            MatrixStorage matStorage = eFULL;
-
-            // assemble globally
-            DNekScalMatSharedPtr loc_mat;
-            int loc_lda;
-            for(n = cnt = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)
-            {
-                loc_mat = m_schurCompl->GetBlock(n,n);
-                loc_lda = loc_mat->GetRows();
-
-                // Set up  Matrix;
-                for(i = 0; i < loc_lda; ++i)
-                {
-                    gid1  = pLocToGloMap->GetLocalToGlobalBndMap (cnt + i)
-                                                                    - NumDirBCs;
-                    sign1 = pLocToGloMap->GetLocalToGlobalBndSign(cnt + i);
-
-                    if(gid1 >= 0)
-                    {
-                        for(j = 0; j < loc_lda; ++j)
-                        {
-                            gid2  = pLocToGloMap->GetLocalToGlobalBndMap(cnt+j)
-                                                                 - NumDirBCs;
-                            sign2 = pLocToGloMap->GetLocalToGlobalBndSign(cnt+j);
-
-                            if (gid2 >= 0)
-                            {
-                                gmat_coo[std::make_pair(gid1,gid2)] +=
-                                    sign1*sign2*(*loc_mat)(i,j);
-                            }
-                        }
-                    }
-                }
-                cnt += loc_lda;
-            }
-
-            DNekSmvBsrDiagBlkMat::SparseStorageSharedPtrVector
-                sparseStorage (1);
-
-            BCOMatType partMat;
-            convertCooToBco(1, gmat_coo, partMat);
-
-            sparseStorage[0] =
-                 MemoryManager<DNekSmvBsrDiagBlkMat::StorageType>::
-                    AllocateSharedPtr(rows, cols, 1, partMat, matStorage );
-
-            // Create block diagonal matrix
-            m_sparseSchurCompl = MemoryManager<DNekSmvBsrDiagBlkMat>::
-                                            AllocateSharedPtr(sparseStorage);
+            PrepareLocalSchurComplement();
         }
 
 
@@ -480,23 +394,10 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            auto asmMap = m_locToGloMap.lock();
+            int nLocal = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
+            AssemblyMapSharedPtr asmMap = m_locToGloMap.lock();
 
-            int nLocal = asmMap->GetNumLocalBndCoeffs();
-            int nDir = asmMap->GetNumGlobalDirBndCoeffs();
-            bool doGlobalOp = m_expList.lock()->GetGlobalOptParam()->
-                    DoGlobalMatOp(m_linSysKey.GetMatrixType());
-
-            if(doGlobalOp)
-            {
-                // Do matrix multiply globally
-                Array<OneD, NekDouble> in  = pInput  + nDir;
-                Array<OneD, NekDouble> out = pOutput + nDir;
-
-                m_sparseSchurCompl->Multiply(in,out);
-                asmMap->UniversalAssembleBnd(pOutput, nDir);
-            }
-            else if (m_sparseSchurCompl)
+            if (m_sparseSchurCompl)
             {
                 // Do matrix multiply locally using block-diagonal sparse matrix
                 Array<OneD, NekDouble> tmp = m_wsp + nLocal;
@@ -528,9 +429,9 @@ namespace Nektar
             m_map = m_locToGloMap.lock()->GetGlobalToUniversalBndMapUnique();
         }
 
-        DNekScalBlkMatSharedPtr GlobalLinSysIterativeStaticCond::v_PreSolve(
-            int                     scLevel,
-            NekVector<NekDouble>   &F_GlobBnd)
+        void GlobalLinSysIterativeStaticCond::v_PreSolve(
+            int                      scLevel,
+            Array<OneD, NekDouble>   &F_bnd)
         {
             if (scLevel == 0)
             {
@@ -542,33 +443,70 @@ namespace Nektar
                     m_precon->BuildPreconditioner();
                 }
                 
-                Set_Rhs_Magnitude(F_GlobBnd);
+#if 1 // to be consistent with original 
 
-                return m_S1Blk;
+                int nGloBndDofs = m_locToGloMap.lock()->GetNumGlobalBndCoeffs();
+                Array<OneD, NekDouble> F_gloBnd(nGloBndDofs);
+                NekVector<NekDouble> F_GloBnd(nGloBndDofs,F_gloBnd,eWrapper);
+                
+                m_locToGloMap.lock()->AssembleBnd(F_bnd,F_gloBnd);
+                Set_Rhs_Magnitude(F_GloBnd);
+                
+#else
+                int nLocBndDofs   = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
+
+                //Set_Rhs_Magnitude - version using local array
+
+                Array<OneD, NekDouble> vExchange(1, 0.0);
+
+                vExchange[0] += Blas::Ddot(nLocBndDofs, F_bnd,1,F_bnd,1);
+                m_expList.lock()->GetComm()->GetRowComm()->AllReduce(
+                vExchange, Nektar::LibUtilities::ReduceSum);
+
+                // To ensure that very different rhs values are not being
+                // used in subsequent solvers such as the velocit solve in
+                // INC NS. If this works we then need to work out a better
+                // way to control this.
+                NekDouble new_rhs_mag = (vExchange[0] > 1e-6)? vExchange[0] : 1.0;
+                
+                if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
+                {
+                    m_rhs_magnitude = new_rhs_mag;
+                }
+                else
+                {
+                    m_rhs_magnitude = (m_rhs_mag_sm*(m_rhs_magnitude) + 
+                                       (1.0-m_rhs_mag_sm)*new_rhs_mag); 
+                }
+#endif
             }
             else
             {
                 // for multilevel iterative solver always use rhs
                 // vector value with no weighting
                 m_rhs_magnitude = NekConstants::kNekUnsetDouble;
-
-                return m_schurCompl;
             }
         }
-
+        
         void GlobalLinSysIterativeStaticCond::v_BasisFwdTransform(
-            Array<OneD, NekDouble>& pInOut,
-            int                     offset)
+                                     Array<OneD, NekDouble>& pInOut)
         {
-            m_precon->DoTransformToLowEnergy(pInOut, offset);            
+            m_precon->DoTransformBasisToLowEnergy(pInOut);            
         }
 
-        void GlobalLinSysIterativeStaticCond::v_BasisBwdTransform(
+        void GlobalLinSysIterativeStaticCond::v_CoeffsBwdTransform(
             Array<OneD, NekDouble>& pInOut)
         {
-	    m_precon->DoTransformFromLowEnergy(pInOut);
+	    m_precon->DoTransformCoeffsFromLowEnergy(pInOut);
         }
 
+        void GlobalLinSysIterativeStaticCond::v_CoeffsFwdTransform(
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
+        {
+	    m_precon->DoTransformCoeffsToLowEnergy(pInput,pOutput);
+        }
+        
         GlobalLinSysStaticCondSharedPtr GlobalLinSysIterativeStaticCond::v_Recurse(
             const GlobalLinSysKey                &mkey,
             const std::weak_ptr<ExpList>         &pExpList,

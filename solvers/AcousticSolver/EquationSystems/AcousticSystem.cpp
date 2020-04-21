@@ -644,7 +644,7 @@ void AcousticSystem::CopyBoundaryTrace(const Array<OneD, NekDouble> &Fwd,
                        ->GetExp(e)
                        ->GetTotPoints();
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(
-                m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(
+                 m_fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(
                     cnt + e));
 
             Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);

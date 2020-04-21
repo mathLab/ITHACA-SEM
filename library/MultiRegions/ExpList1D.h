@@ -189,8 +189,6 @@ namespace Nektar
             void v_GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
         private:
-            virtual void v_ReadGlobalOptimizationParameters();
-            
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals();
             /// const StdRegions::StdExpansionVector &locexp);

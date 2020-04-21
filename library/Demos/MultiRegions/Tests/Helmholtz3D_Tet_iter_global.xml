@@ -356,25 +356,4 @@
             <E VAR="u" VALUE="sin(PI/2*x)*sin(PI/2*y)*sin(PI/2*z)" />
         </FUNCTION>
     </CONDITIONS>
-  <GLOBALOPTIMIZATIONPARAMETERS>
-    <BwdTrans>
-      <DO_GLOBAL_MAT_OP VALUE="1" />
-      <DO_BLOCK_MAT_OP TRI="0" QUAD="0" TET="0" PYR="0" PRISM="0" HEX="0" />
-    </BwdTrans>
-
-    <IProductWRTBase>
-      <DO_GLOBAL_MAT_OP VALUE="1" />
-      <DO_BLOCK_MAT_OP TRI="0" QUAD="0" TET="0" PYR="0" PRISM="0" HEX="0" />
-    </IProductWRTBase>
-
-    <MassMatrixOp>
-      <DO_GLOBAL_MAT_OP VALUE="1" />
-      <DO_BLOCK_MAT_OP TRI="0" QUAD="0" TET="0" PYR="0" PRISM="0" HEX="0" />
-    </MassMatrixOp>
-
-    <HelmholtzMatrixOp>
-      <DO_GLOBAL_MAT_OP VALUE="1" />
-      <DO_BLOCK_MAT_OP TRI="0" QUAD="0" TET="0" PYR="0" PRISM="0" HEX="0" />
-    </HelmholtzMatrixOp>
-  </GLOBALOPTIMIZATIONPARAMETERS>
 </NEKTAR>

@@ -353,7 +353,7 @@ void BidomainRoth::DoImplicitSolve(
     // Solve a system of equations with Helmholtz solver and transform
     // back into physical space.
     m_fields[0]->HelmSolve(m_fields[0]->GetPhys(),
-                           m_fields[0]->UpdateCoeffs(), NullFlagList,
+                           m_fields[0]->UpdateCoeffs(), 
                            factorsHelmholtz, m_vardiffe);
 
     m_fields[0]->BwdTrans( m_fields[0]->GetCoeffs(),
@@ -415,8 +415,7 @@ void BidomainRoth::DoOdeRhs(
     // Solve Poisson problem for Ve
     // ----------------------------
     m_fields[1]->HelmSolve(m_fields[1]->GetPhys(),
-            m_fields[1]->UpdateCoeffs(), NullFlagList, factorsPoisson,
-            m_vardiffie);
+            m_fields[1]->UpdateCoeffs(), factorsPoisson, m_vardiffie);
     m_fields[1]->BwdTrans(m_fields[1]->GetCoeffs(),
             m_fields[1]->UpdatePhys());
     m_fields[1]->SetPhysState(true);

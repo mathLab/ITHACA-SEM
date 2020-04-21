@@ -714,7 +714,7 @@ int main(int argc, char *argv[])
 
                 id2 = pFields[0]->GetTrace()->
                     GetPhys_Offset(pFields[0]->GetTraceMap()->
-                                   GetBndCondTraceToGlobalTraceMap(cnt++));
+                                   GetBndCondIDToGlobalTraceID(cnt++));
 
                 if (pFields[0]->GetBndConditions()[b]->
                         GetUserDefined() == "WallViscous" ||
@@ -756,7 +756,7 @@ int main(int argc, char *argv[])
 
                     id2 = pFields[j]->GetTrace()->
                         GetPhys_Offset(pFields[j]->GetTraceMap()->
-                                       GetBndCondTraceToGlobalTraceMap(cnt++));
+                                       GetBndCondIDToGlobalTraceID(cnt++));
 
                     if (pFields[j]->GetBndConditions()[b]->
                             GetUserDefined() == "WallViscous" ||
@@ -793,7 +793,7 @@ int main(int argc, char *argv[])
 
                     id2 = pFields[0]->GetTrace()->
                         GetPhys_Offset(pFields[0]->GetTraceMap()->
-                                       GetBndCondTraceToGlobalTraceMap(cnt++));
+                                       GetBndCondIDToGlobalTraceID(cnt++));
 
                     if (pFields[0]->GetBndConditions()[b]->
                             GetUserDefined() == "WallViscous" ||

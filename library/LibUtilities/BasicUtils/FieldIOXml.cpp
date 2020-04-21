@@ -730,9 +730,12 @@ void FieldIOXml::SetUpFieldMetaData(
         ElementIDs[0] = idlist;
         for (size_t i = 1; i < nprocs; ++i)
         {
-            std::vector<unsigned int> tmp(elmtnums[i]);
-            m_comm->Recv(i, tmp);
-            ElementIDs[i] = tmp;
+            if (elmtnums[i] > 0)
+            {
+                std::vector<unsigned int> tmp(elmtnums[i]);
+                m_comm->Recv(i, tmp);
+                ElementIDs[i] = tmp;
+            }
         }
 
         // Set up output names
@@ -753,8 +756,12 @@ void FieldIOXml::SetUpFieldMetaData(
     else
     {
         // Send this process's ID list to the root process
-        m_comm->Send(0, idlist);
+        if (elmtnums[rank] > 0)
+        {
+            m_comm->Send(0, idlist);
+        }
     }
+
 }
 
 /**

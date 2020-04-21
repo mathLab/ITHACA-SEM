@@ -3,7 +3,7 @@
     <description>NS, Couette flow with periodic BCs, exact solution, parallel</description>
     <executable>CompressibleFlowSolver</executable>
     <parameters>-I parts=6,7:2,4,5:0,1,3  Couette_WeakDG_LDG_Exact_par.xml</parameters>
-    <processes>3</processes>
+    <processes>4</processes>
     <files>
         <file description="Session File">Couette_WeakDG_LDG_Exact_par.xml</file>
     </files>

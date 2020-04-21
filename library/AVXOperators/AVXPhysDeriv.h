@@ -118,6 +118,18 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
                 AVXPhysDerivQuadImpl<9,9>(in, out_d0, out_d1); break;
             case 10:
                 AVXPhysDerivQuadImpl<10,10>(in, out_d0, out_d1); break;
+            case 11:
+                AVXPhysDerivQuadImpl<11,11>(in, out_d0, out_d1); break;
+            case 12:
+                AVXPhysDerivQuadImpl<12,12>(in, out_d0, out_d1); break;
+            case 13:
+                AVXPhysDerivQuadImpl<13,13>(in, out_d0, out_d1); break;
+            case 14:
+                AVXPhysDerivQuadImpl<14,14>(in, out_d0, out_d1); break;
+            case 15:
+                AVXPhysDerivQuadImpl<15,15>(in, out_d0, out_d1); break;
+            case 16:
+                AVXPhysDerivQuadImpl<16,16>(in, out_d0, out_d1); break;
             default: NEKERROR(ErrorUtil::efatal,
                 "AVXPhysDerivQuad: # of modes / points combo not implemented.");
         }

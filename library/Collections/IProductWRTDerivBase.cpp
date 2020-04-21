@@ -755,14 +755,8 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
             // calculate dx/dxi in[0] + dy/dxi in[1]
             for(int i = 0; i < 2; ++i)
             {
-                Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1,
-                             tmp[i],1);
-                int j = 1;
-                // for(int j = 1; j < 2; ++j)
-                // {
-                    Vmath::Vvtvp (ntot,m_derivFac[i +j*2],1,
-                                  in[j],1, tmp[i], 1, tmp[i],1);
-                // }
+                Vmath::Vmul(ntot, m_derivFac[i], 1, in[0], 1, tmp[i], 1);
+                Vmath::Vvtvp(ntot, m_derivFac[i + 2], 1, in[1], 1, tmp[i], 1, tmp[i], 1);
             }
 
             // Iproduct wrt derivative of base 0

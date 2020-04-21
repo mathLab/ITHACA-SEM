@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
         LIKWID_MARKER_INIT;
         LIKWID_MARKER_THREADINIT;
         LIKWID_MARKER_REGISTER("v_BwdTrans_IterPerExp");
+        LIKWID_MARKER_REGISTER("IProductWRTDerivBase");
 
         // Create MeshGraph
         graph = SpatialDomains::MeshGraph::Read(session);

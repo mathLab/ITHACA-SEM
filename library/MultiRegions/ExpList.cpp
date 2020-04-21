@@ -665,6 +665,11 @@ namespace Nektar
 
             ASSERTL1(inarray.num_elements() >= dim,"inarray is not of sufficient dimension");
 
+            LibUtilities::Timer timer;
+
+            LIKWID_MARKER_START("IProductWRTDerivBase");
+            timer.Start();
+
             switch(dim)
             {
             case 1:
@@ -701,6 +706,13 @@ namespace Nektar
                 ASSERTL0(false,"Dimension of inarray not correct");
                 break;
             }
+
+            timer.Stop();
+            LIKWID_MARKER_STOP("IProductWRTDerivBase");
+
+            // Elapsed time
+            timer.AccumulateRegion("IProductWRTDerivBase");
+
         }
         /**
          * Given a function \f$f(\boldsymbol{x})\f$ evaluated at

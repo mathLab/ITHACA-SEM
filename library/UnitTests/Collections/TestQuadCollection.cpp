@@ -630,8 +630,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.num_elements(); ++i)
         {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
@@ -690,8 +690,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.num_elements(); ++i)
         {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
@@ -760,8 +760,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.num_elements(); ++i)
         {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
@@ -818,8 +818,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.num_elements(); ++i)
         {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
@@ -876,8 +876,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.num_elements(); ++i)
         {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
@@ -934,8 +934,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.num_elements(); ++i)
         {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
@@ -994,8 +994,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs.num_elements(); ++i)
         {
-            coeffsRef[i] = (fabs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
-            coeffs[i] = (fabs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
+            coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
+            coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
             BOOST_CHECK_CLOSE(coeffsRef[i],coeffs[i], epsilon);
         }
     }
@@ -1120,8 +1120,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < diff1.num_elements(); ++i)
         {
-            diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
-            diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
+            diff1[i] = (std::abs(diff1[i]) < 1e-14)? 0.0: diff1[i];
+            diff2[i] = (std::abs(diff2[i]) < 1e-14)? 0.0: diff2[i];
             BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
         }
     }
@@ -1315,8 +1315,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < diff1.num_elements(); ++i)
         {
-            diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
-            diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
+            diff1[i] = (std::abs(diff1[i]) < 1e-14)? 0.0: diff1[i];
+            diff2[i] = (std::abs(diff2[i]) < 1e-14)? 0.0: diff2[i];
             BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
         }
     }
@@ -1438,8 +1438,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < diff1.num_elements(); ++i)
         {
-            diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
-            diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
+            diff1[i] = (std::abs(diff1[i]) < 1e-14)? 0.0: diff1[i];
+            diff2[i] = (std::abs(diff2[i]) < 1e-14)? 0.0: diff2[i];
             BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
         }
     }
@@ -1504,8 +1504,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.num_elements(); ++i)
         {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
@@ -1586,8 +1586,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.num_elements(); ++i)
         {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
@@ -1669,8 +1669,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffsRef.num_elements(); ++i)
         {
-            coeffsRef[i] = (fabs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
-            coeffs[i] = (fabs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
+            coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
+            coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
             BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
         }
     }
@@ -1736,8 +1736,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.num_elements(); ++i)
         {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
@@ -1818,8 +1818,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.num_elements(); ++i)
         {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
@@ -1883,8 +1883,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.num_elements(); ++i)
         {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
@@ -1963,8 +1963,8 @@ namespace QuadCollectionTests
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.num_elements(); ++i)
         {
-            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
-            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }

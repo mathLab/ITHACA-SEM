@@ -38,16 +38,92 @@ struct AVXIProductQuad : public IProduct, public AVXHelper<VW, 2, DEFORMED>
     {
         switch(m_basis[0]->GetNumModes())
         {
-            case 2:  AVXIProductQuadImpl<2 ,2 ,3 ,3 >(in, out); break;
-            case 3:  AVXIProductQuadImpl<3 ,3 ,4 ,4 >(in, out); break;
-            case 4:  AVXIProductQuadImpl<4 ,4 ,5 ,5 >(in, out); break;
-            case 5:  AVXIProductQuadImpl<5 ,5 ,6 ,6 >(in, out); break;
-            case 6:  AVXIProductQuadImpl<6 ,6 ,7 ,7 >(in, out); break;
-            case 7:  AVXIProductQuadImpl<7 ,7 ,8 ,8 >(in, out); break;
-            case 8:  AVXIProductQuadImpl<8 ,8 ,9 ,9 >(in, out); break;
-            case 9:  AVXIProductQuadImpl<9 ,9 ,10,10>(in, out); break;
-            case 10: AVXIProductQuadImpl<10,10,11,11>(in, out); break;
-            case 11: AVXIProductQuadImpl<11,11,12,12>(in, out); break;
+            case 2:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 2: AVXIProductQuadImpl<2 ,2 ,2 ,2 >(in, out); break;
+                    case 3: AVXIProductQuadImpl<2 ,2 ,3 ,3 >(in, out); break;
+                    case 4: AVXIProductQuadImpl<2 ,2 ,4 ,4 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductQuad: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 3: AVXIProductQuadImpl<3 ,3 ,3 ,3 >(in, out); break;
+                    case 4: AVXIProductQuadImpl<3 ,3 ,4 ,4 >(in, out); break;
+                    case 5: AVXIProductQuadImpl<3 ,3 ,5 ,5 >(in, out); break;
+                    case 6: AVXIProductQuadImpl<3 ,3 ,6 ,6 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductQuad: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 4: AVXIProductQuadImpl<4 ,4 ,4 ,4 >(in, out); break;
+                    case 5: AVXIProductQuadImpl<4 ,4 ,5 ,5 >(in, out); break;
+                    case 6: AVXIProductQuadImpl<4 ,4 ,6 ,6 >(in, out); break;
+                    case 7: AVXIProductQuadImpl<4 ,4 ,7 ,7 >(in, out); break;
+                    case 8: AVXIProductQuadImpl<4 ,4 ,8 ,8 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductQuad: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 5: AVXIProductQuadImpl<5 ,5 ,5 ,5 >(in, out); break;
+                    case 6: AVXIProductQuadImpl<5 ,5 ,6 ,6 >(in, out); break;
+                    case 7: AVXIProductQuadImpl<5 ,5 ,7 ,7 >(in, out); break;
+                    case 8: AVXIProductQuadImpl<5 ,5 ,8 ,8 >(in, out); break;
+                    case 9: AVXIProductQuadImpl<5 ,5 ,9 ,9 >(in, out); break;
+                    case 10: AVXIProductQuadImpl<5 ,5 ,10 ,10 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductQuad: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 6: AVXIProductQuadImpl<6 ,6 ,6 ,6 >(in, out); break;
+                    case 7: AVXIProductQuadImpl<6 ,6 ,7 ,7 >(in, out); break;
+                    case 8: AVXIProductQuadImpl<6 ,6 ,8 ,8 >(in, out); break;
+                    case 9: AVXIProductQuadImpl<6 ,6 ,9 ,9 >(in, out); break;
+                    case 10: AVXIProductQuadImpl<6 ,6 ,10 ,10 >(in, out); break;
+                    case 11: AVXIProductQuadImpl<6 ,6 ,11 ,11 >(in, out); break;
+                    case 12: AVXIProductQuadImpl<6 ,6 ,12 ,12 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductQuad: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 7: AVXIProductQuadImpl<7 ,7 ,7 ,7 >(in, out); break;
+                    case 8: AVXIProductQuadImpl<7 ,7 ,8 ,8 >(in, out); break;
+                    case 9: AVXIProductQuadImpl<7 ,7 ,9 ,9 >(in, out); break;
+                    case 10: AVXIProductQuadImpl<7 ,7 ,10 ,10 >(in, out); break;
+                    case 11: AVXIProductQuadImpl<7 ,7 ,11 ,11 >(in, out); break;
+                    case 12: AVXIProductQuadImpl<7 ,7 ,12 ,12 >(in, out); break;
+                    case 13: AVXIProductQuadImpl<7 ,7 ,13 ,13 >(in, out); break;
+                    case 14: AVXIProductQuadImpl<7 ,7 ,14 ,14 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductQuad: # of modes / points combo not implemented.");
+                } break;
+            case 8:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 8: AVXIProductQuadImpl<8 ,8 ,8 ,8 >(in, out); break;
+                    case 9: AVXIProductQuadImpl<8 ,8 ,9 ,9 >(in, out); break;
+                    case 10: AVXIProductQuadImpl<8 ,8 ,10 ,10 >(in, out); break;
+                    case 11: AVXIProductQuadImpl<8 ,8 ,11 ,11 >(in, out); break;
+                    case 12: AVXIProductQuadImpl<8 ,8 ,12 ,12 >(in, out); break;
+                    case 13: AVXIProductQuadImpl<8 ,8 ,13 ,13 >(in, out); break;
+                    case 14: AVXIProductQuadImpl<8 ,8 ,14 ,14 >(in, out); break;
+                    case 15: AVXIProductQuadImpl<8 ,8 ,15 ,15 >(in, out); break;
+                    case 16: AVXIProductQuadImpl<8 ,8 ,16 ,16 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductQuad: # of modes / points combo not implemented.");
+                } break;;
+            default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductQuad: # of modes / points combo not implemented.");
         }
     }
 

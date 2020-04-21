@@ -37,6 +37,7 @@ v5.0.1
 
 **FieldConvert**
 - Fix OutputTecplot skipping final plane in 3DH1D (!1016)
+- Fix Interppoints in 3DH1D (!1140)
 
 **NekMesh**
 - Fix compile errors when using intel cc (!1114)

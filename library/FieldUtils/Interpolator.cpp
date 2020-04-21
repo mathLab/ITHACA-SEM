@@ -203,9 +203,25 @@ void Interpolator::Interpolate(
             coords[j] = m_ptsOutField->GetPointVal(j, i);
         }
 
-        // Obtain Element and LocalCoordinate to interpolate
-        int elmtid = m_expInField[0]->GetExpIndex(coords, Lcoords,
-                                                  NekConstants::kGeomFactorsTol);
+        // Obtain Element and LocalCoordinate to interpolate.
+        int elmtid = m_expInField[0]->GetExpIndex(
+            coords, Lcoords,
+            NekConstants::kGeomFactorsTol);
+
+        // Homogeneous case, need to find the right plane
+        int targetPlane = -1;
+        if (m_expInField[0]->GetExpType() == MultiRegions::e3DH1D)
+        {
+            int nPlanes    = m_expInField[0]->GetHomogeneousBasis()->GetZ().size();
+            NekDouble lHom = m_expInField[0]->GetHomoLen();
+            targetPlane = std::round((coords[2]*nPlanes)/lHom);
+
+            // Reset from last plane to plane 0 (same physical result)
+            if(targetPlane == nPlanes)
+            {
+                targetPlane = 0;
+            }
+        }
 
         // we use kGeomFactorsTol as tolerance, while StdPhysEvaluate has
         // kNekZeroTol hardcoded, so we need to limit Lcoords to not produce
@@ -222,9 +238,18 @@ void Interpolator::Interpolate(
 
             for (int f = 0; f < m_expInField.size(); ++f)
             {
-                NekDouble value =
-                    m_expInField[f]->GetExp(elmtid)->StdPhysEvaluate(
+                NekDouble value;
+                if (m_expInField[0]->GetExpType() == MultiRegions::e3DH1D)
+                {
+                    auto planeExp = m_expInField[f]->GetPlane(targetPlane);
+                    value         = planeExp->GetExp(elmtid)->StdPhysEvaluate(
+                        Lcoords, planeExp->GetPhys() + offset);
+                }
+                else
+                {
+                    value = m_expInField[f]->GetExp(elmtid)->StdPhysEvaluate(
                         Lcoords, m_expInField[f]->GetPhys() + offset);
+                }
 
                 if ((boost::math::isnan)(value))
                 {

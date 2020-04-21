@@ -247,8 +247,11 @@ class IProductWRTDerivBase_AVX : public Operator
                            Array<OneD, NekDouble> &entry3,
                            Array<OneD, NekDouble> &wsp)
         {
-            boost::ignore_unused(entry3, wsp);
-            // NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
+            boost::ignore_unused(wsp);
+
+            Array<OneD, NekDouble> output;
+            output = (m_coordim == 2)? entry2: entry3;
+
             if (m_isPadded)
             {
                 // copy into padded vector
@@ -257,11 +260,11 @@ class IProductWRTDerivBase_AVX : public Operator
                 // call op
                 (*m_oper)(m_input0, m_input1, m_output);
                 // copy out of padded vector
-                Vmath::Vcopy(entry2.num_elements(), m_output, 1, entry2, 1);
+                Vmath::Vcopy(output.num_elements(), m_output, 1, output, 1);
             }
             else
             {
-                (*m_oper)(entry0, entry1, entry2);
+                (*m_oper)(entry0, entry1, output);
             }
         }
 
@@ -272,6 +275,7 @@ class IProductWRTDerivBase_AVX : public Operator
                       Array<OneD,       NekDouble> &wsp)
         {
             boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
 
     private:
@@ -280,12 +284,16 @@ class IProductWRTDerivBase_AVX : public Operator
         bool m_isPadded{false};
         /// padded input/output vectors
         Array<OneD, NekDouble> m_input0, m_input1, m_output;
+        /// coordinates dimension
+        int m_coordim;
 
         IProductWRTDerivBase_AVX(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
             : Operator(pCollExp, pGeomData)
         {
+            m_coordim  = pCollExp[0]->GetCoordim();
+
             const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
             const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
 

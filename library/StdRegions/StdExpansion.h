@@ -1277,44 +1277,14 @@ namespace Nektar
                 v_ComputeEdgeNormal(edge);
             }
 
-            void NegateEdgeNormal(const int edge)
-            {
-                v_NegateEdgeNormal(edge);
-            }
-
-            bool EdgeNormalNegated(const int edge)
-            {
-                return v_EdgeNormalNegated(edge);
-            }
-
             void ComputeFaceNormal(const int face)
             {
                 v_ComputeFaceNormal(face);
             }
 
-            void NegateFaceNormal(const int face)
-            {
-                v_NegateFaceNormal(face);
-            }
-
-            bool FaceNormalNegated(const int face)
-            {
-                return v_FaceNormalNegated(face);
-            }
-
             void ComputeVertexNormal(const int vertex)
             {
                 v_ComputeVertexNormal(vertex);
-            }
-
-            void NegateVertexNormal(const int vertex)
-            {
-                v_NegateVertexNormal(vertex);
-            }
-
-            bool VertexNormalNegated(const int vertex)
-            {
-                return v_VertexNormalNegated(vertex);
             }
 
             const NormalVector & GetFaceNormal(const int face) const
@@ -1899,23 +1869,11 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_ComputeEdgeNormal(const int edge);
 
-            STD_REGIONS_EXPORT virtual void v_NegateEdgeNormal(const int edge);
-
-            STD_REGIONS_EXPORT virtual bool v_EdgeNormalNegated(const int edge);
-
             STD_REGIONS_EXPORT virtual void v_ComputeFaceNormal(const int face);
-
-            STD_REGIONS_EXPORT virtual void v_NegateFaceNormal(const int face);
-
-            STD_REGIONS_EXPORT virtual bool v_FaceNormalNegated(const int face);
 
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetVertexNormal(const int vertex) const;
 
             STD_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
-
-            STD_REGIONS_EXPORT virtual void v_NegateVertexNormal(const int vertex);
-
-            STD_REGIONS_EXPORT virtual bool v_VertexNormalNegated(const int vertex);
 
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector &

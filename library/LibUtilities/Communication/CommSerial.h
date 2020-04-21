@@ -64,105 +64,106 @@ public:
     LIB_UTILITIES_EXPORT static std::string className;
 
     LIB_UTILITIES_EXPORT CommSerial(int argc, char *argv[]);
-    LIB_UTILITIES_EXPORT virtual ~CommSerial();
+    LIB_UTILITIES_EXPORT virtual ~CommSerial() override;
 
 protected:
-    LIB_UTILITIES_EXPORT virtual void v_Finalise();
-    LIB_UTILITIES_EXPORT virtual int v_GetRank();
-    LIB_UTILITIES_EXPORT virtual bool v_TreatAsRankZero(void);
-    LIB_UTILITIES_EXPORT virtual bool v_IsSerial(void);
-    LIB_UTILITIES_EXPORT virtual std::tuple<int, int, int> v_GetVersion(void);
+    LIB_UTILITIES_EXPORT virtual void v_Finalise() final;
+    LIB_UTILITIES_EXPORT virtual int v_GetRank() override;
+    LIB_UTILITIES_EXPORT virtual bool v_TreatAsRankZero() override;
+    LIB_UTILITIES_EXPORT virtual bool v_IsSerial() override;
+    LIB_UTILITIES_EXPORT virtual std::tuple<int, int, int> v_GetVersion() final;
 
-
-    LIB_UTILITIES_EXPORT virtual void v_Block();
-    LIB_UTILITIES_EXPORT virtual NekDouble v_Wtime();
+    LIB_UTILITIES_EXPORT virtual void v_Block() final;
+    LIB_UTILITIES_EXPORT virtual NekDouble v_Wtime() final;
     LIB_UTILITIES_EXPORT virtual void v_Send(void *buf, int count,
-                                             CommDataType dt, int dest);
+                                             CommDataType dt, int dest) final;
     LIB_UTILITIES_EXPORT virtual void v_Recv(void *buf, int count,
-                                             CommDataType dt, int source);
+                                             CommDataType dt, int source) final;
     LIB_UTILITIES_EXPORT virtual void v_SendRecv(
         void *sendbuf, int sendcount, CommDataType sendtype, int dest,
-        void *recvbuf, int recvcount, CommDataType recvtype, int source);
+        void *recvbuf, int recvcount, CommDataType recvtype, int source) final;
     LIB_UTILITIES_EXPORT virtual void v_SendRecvReplace(void *buf, int count,
                                                         CommDataType dt,
                                                         int pSendProc,
-                                                        int pRecvProc);
-    LIB_UTILITIES_EXPORT virtual void v_AllReduce(void *buf, int count,
-                                                  CommDataType dt,
-                                                  enum ReduceOperator pOp);
+                                                        int pRecvProc) final;
+    LIB_UTILITIES_EXPORT virtual void v_AllReduce(
+        void *buf, int count, CommDataType dt, enum ReduceOperator pOp) final;
     LIB_UTILITIES_EXPORT virtual void v_AlltoAll(void *sendbuf, int sendcount,
                                                  CommDataType sendtype,
                                                  void *recvbuf, int recvcount,
-                                                 CommDataType recvtype);
+                                                 CommDataType recvtype) final;
     LIB_UTILITIES_EXPORT virtual void v_AlltoAllv(
         void *sendbuf, int sendcounts[], int sensdispls[],
         CommDataType sendtype, void *recvbuf, int recvcounts[], int rdispls[],
-        CommDataType recvtype);
+        CommDataType recvtype) final;
     LIB_UTILITIES_EXPORT virtual void v_AllGather(void *sendbuf, int sendcount,
                                                   CommDataType sendtype,
                                                   void *recvbuf, int recvcount,
-                                                  CommDataType recvtype);
-    LIB_UTILITIES_EXPORT virtual void v_AllGatherv(void *sendbuf, int sendcount,
-                                                   CommDataType sendtype,
-                                                   void *recvbuf, int recvcounts[],
+                                                  CommDataType recvtype) final;
+    LIB_UTILITIES_EXPORT virtual void v_AllGatherv(
+        void *sendbuf, int sendcount, CommDataType sendtype, void *recvbuf,
+        int recvcounts[], int rdispls[], CommDataType recvtype) final;
+    LIB_UTILITIES_EXPORT virtual void v_AllGatherv(void *recvbuf,
+                                                   int recvcounts[],
                                                    int rdispls[],
-                                                   CommDataType recvtype);
-    LIB_UTILITIES_EXPORT virtual void v_AllGatherv(void *recvbuf, int recvcounts[],
-                                                   int rdispls[],
-                                                   CommDataType recvtype);
+                                                   CommDataType recvtype) final;
     LIB_UTILITIES_EXPORT virtual void v_Bcast(void *buffer, int count,
-                                              CommDataType dt, int root);
+                                              CommDataType dt, int root) final;
     LIB_UTILITIES_EXPORT virtual void v_Exscan(
         Array<OneD, unsigned long long> &pData, const enum ReduceOperator pOp,
-        Array<OneD, unsigned long long> &ans);
+        Array<OneD, unsigned long long> &ans) final;
     LIB_UTILITIES_EXPORT virtual void v_Gather(void *sendbuf, int sendcount,
                                                CommDataType sendtype,
                                                void *recvbuf, int recvcount,
-                                               CommDataType recvtype, int root);
+                                               CommDataType recvtype,
+                                               int root) final;
     LIB_UTILITIES_EXPORT virtual void v_Scatter(void *sendbuf, int sendcount,
                                                 CommDataType sendtype,
                                                 void *recvbuf, int recvcount,
                                                 CommDataType recvtype,
-                                                int root);
+                                                int root) final;
 
-    LIB_UTILITIES_EXPORT virtual void v_DistGraphCreateAdjacent(int indegree,
-                                                                const int sources[],
-                                                                const int sourceweights[],
-                                                                int reorder);
+    LIB_UTILITIES_EXPORT virtual void v_DistGraphCreateAdjacent(
+        int indegree, const int sources[], const int sourceweights[],
+        int reorder) final;
 
-    LIB_UTILITIES_EXPORT virtual void v_NeighborAlltoAllv(void *sendbuf,
-                                                          int sendcounts[],
-                                                          int sdispls[],
-                                                          CommDataType sendtype,
-                                                          void *recvbuf,
-                                                          int recvcounts[],
-                                                          int rdispls[],
-                                                          CommDataType recvtype);
+    LIB_UTILITIES_EXPORT virtual void v_NeighborAlltoAllv(
+        void *sendbuf, int sendcounts[], int sdispls[], CommDataType sendtype,
+        void *recvbuf, int recvcounts[], int rdispls[],
+        CommDataType recvtype) final;
 
     LIB_UTILITIES_EXPORT virtual void v_Irsend(void *buf, int count,
                                                CommDataType dt, int dest,
-                          CommRequestSharedPtr request, int loc);
+                                               CommRequestSharedPtr request,
+                                               int loc) final;
 
     LIB_UTILITIES_EXPORT virtual void v_SendInit(void *buf, int count,
-                                               CommDataType dt, int dest,
-                           CommRequestSharedPtr request, int loc);
+                                                 CommDataType dt, int dest,
+                                                 CommRequestSharedPtr request,
+                                                 int loc) final;
 
     LIB_UTILITIES_EXPORT virtual void v_Irecv(void *buf, int count,
                                               CommDataType dt, int source,
-                         CommRequestSharedPtr request, int loc);
+                                              CommRequestSharedPtr request,
+                                              int loc) final;
 
     LIB_UTILITIES_EXPORT virtual void v_RecvInit(void *buf, int count,
                                                  CommDataType dt, int source,
-                            CommRequestSharedPtr request, int loc);
+                                                 CommRequestSharedPtr request,
+                                                 int loc) final;
 
-    LIB_UTILITIES_EXPORT virtual void v_StartAll(CommRequestSharedPtr request);
-    LIB_UTILITIES_EXPORT virtual void v_WaitAll(CommRequestSharedPtr request);
-    LIB_UTILITIES_EXPORT virtual CommRequestSharedPtr v_CreateRequest(int num);
+    LIB_UTILITIES_EXPORT virtual void v_StartAll(
+        CommRequestSharedPtr request) final;
+    LIB_UTILITIES_EXPORT virtual void v_WaitAll(
+        CommRequestSharedPtr request) final;
+    LIB_UTILITIES_EXPORT virtual CommRequestSharedPtr v_CreateRequest(
+        int num) final;
 
-    LIB_UTILITIES_EXPORT virtual void v_SplitComm(int pRows, int pColumns);
-    LIB_UTILITIES_EXPORT virtual CommSharedPtr v_CommCreateIf(int flag);
+    LIB_UTILITIES_EXPORT virtual void v_SplitComm(int pRows,
+                                                  int pColumns) override;
+    LIB_UTILITIES_EXPORT virtual CommSharedPtr v_CommCreateIf(int flag) final;
 };
-}
-}
+} // namespace LibUtilities
+} // namespace Nektar
 
 #endif

@@ -57,19 +57,19 @@ class CommMpi;
 typedef std::shared_ptr<CommMpi> CommMpiSharedPtr;
 
 /// Class for communicator request type
-class CommRequestMpi : public CommRequest
+class CommRequestMpi final : public CommRequest
 {
 public:
-    /// Default constructor
-    inline CommRequestMpi(int num) : m_num(num)
+    /// Creates an instance of this class
+    inline explicit CommRequestMpi(int num) : m_num(num)
     {
         m_request = Array<OneD, MPI_Request>(num, MPI_REQUEST_NULL);
     }
 
     /// Default destructor
-    inline ~CommRequestMpi() = default;
+    inline ~CommRequestMpi() final = default;
 
-    inline MPI_Request* GetRequest(int i)
+    inline MPI_Request *GetRequest(int i)
     {
         return &m_request[i];
     }
@@ -86,7 +86,6 @@ private:
 
 typedef std::shared_ptr<CommRequestMpi> CommRequestMpiSharedPtr;
 
-
 /// A global linear system.
 class CommMpi : public Comm
 {
@@ -101,87 +100,86 @@ public:
     static std::string className;
 
     CommMpi(int narg, char *arg[]);
-    virtual ~CommMpi();
+    virtual ~CommMpi() override;
 
     MPI_Comm GetComm();
 
 protected:
-
     MPI_Comm m_comm;
-    int m_rank;
+    int m_rank{};
 
-    CommMpi(MPI_Comm pComm);
+    explicit CommMpi(MPI_Comm pComm);
 
-    CommMpi()
-    {};
-
-    virtual void v_Finalise();
-    virtual int v_GetRank();
-    virtual void v_Block();
-    virtual double v_Wtime();
-    virtual bool v_TreatAsRankZero(void);
-    virtual bool v_IsSerial(void);
-    virtual std::tuple<int, int, int> v_GetVersion(void);
-    virtual void v_Send(void *buf, int count, CommDataType dt, int dest);
-    virtual void v_Recv(void *buf, int count, CommDataType dt, int source);
+    virtual void v_Finalise() final;
+    virtual int v_GetRank() final;
+    virtual void v_Block() final;
+    virtual double v_Wtime() final;
+    virtual bool v_TreatAsRankZero() final;
+    virtual bool v_IsSerial() final;
+    virtual std::tuple<int, int, int> v_GetVersion() final;
+    virtual void v_Send(void *buf, int count, CommDataType dt, int dest) final;
+    virtual void v_Recv(void *buf, int count, CommDataType dt,
+                        int source) final;
     virtual void v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype,
                             int dest, void *recvbuf, int recvcount,
-                            CommDataType recvtype, int source);
+                            CommDataType recvtype, int source) final;
     virtual void v_SendRecvReplace(void *buf, int count, CommDataType dt,
-                                   int pSendProc, int pRecvProc);
+                                   int pSendProc, int pRecvProc) final;
     virtual void v_AllReduce(void *buf, int count, CommDataType dt,
-                             enum ReduceOperator pOp);
+                             enum ReduceOperator pOp) final;
     virtual void v_AlltoAll(void *sendbuf, int sendcount, CommDataType sendtype,
-                            void *recvbuf, int recvcount, CommDataType recvtype);
+                            void *recvbuf, int recvcount,
+                            CommDataType recvtype) final;
     virtual void v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[],
                              CommDataType sendtype, void *recvbuf,
                              int recvcounts[], int rdispls[],
-                             CommDataType recvtype);
-    virtual void v_AllGather(void *sendbuf, int sendcount, CommDataType sendtype,
-                             void *recvbuf, int recvcount, CommDataType recvtype);
-    virtual void v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
-                              void *recvbuf, int recvcounts[], int rdispls[],
-                              CommDataType recvtype);
+                             CommDataType recvtype) final;
+    virtual void v_AllGather(void *sendbuf, int sendcount,
+                             CommDataType sendtype, void *recvbuf,
+                             int recvcount, CommDataType recvtype) final;
+    virtual void v_AllGatherv(void *sendbuf, int sendcount,
+                              CommDataType sendtype, void *recvbuf,
+                              int recvcounts[], int rdispls[],
+                              CommDataType recvtype) final;
     virtual void v_AllGatherv(void *recvbuf, int recvcounts[], int rdispls[],
-                              CommDataType recvtype);
-    virtual void v_Bcast(void *buffer, int count, CommDataType dt, int root);
+                              CommDataType recvtype) final;
+    virtual void v_Bcast(void *buffer, int count, CommDataType dt,
+                         int root) final;
     virtual void v_Exscan(Array<OneD, unsigned long long> &pData,
-                          const enum ReduceOperator pOp,
-                          Array<OneD, unsigned long long> &ans);
+                          enum ReduceOperator pOp,
+                          Array<OneD, unsigned long long> &ans) final;
 
     virtual void v_Gather(void *sendbuf, int sendcount, CommDataType sendtype,
                           void *recvbuf, int recvcount, CommDataType recvtype,
-                          int root);
+                          int root) final;
     virtual void v_Scatter(void *sendbuf, int sendcount, CommDataType sendtype,
                            void *recvbuf, int recvcount, CommDataType recvtype,
-                           int root);
+                           int root) final;
 
     virtual void v_DistGraphCreateAdjacent(int indegree, const int sources[],
                                            const int sourceweights[],
-                                           int reorder);
+                                           int reorder) final;
     virtual void v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
                                      int sensdispls[], CommDataType sendtype,
                                      void *recvbuf, int recvcounts[],
-                                     int rdispls[], CommDataType recvtype);
+                                     int rdispls[],
+                                     CommDataType recvtype) final;
     virtual void v_Irsend(void *buf, int count, CommDataType dt, int dest,
-                          CommRequestSharedPtr request, int loc);
+                          CommRequestSharedPtr request, int loc) final;
     virtual void v_SendInit(void *buf, int count, CommDataType dt, int dest,
-                          CommRequestSharedPtr request, int loc);
+                            CommRequestSharedPtr request, int loc) final;
     virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
-                         CommRequestSharedPtr request, int loc);
+                         CommRequestSharedPtr request, int loc) final;
     virtual void v_RecvInit(void *buf, int count, CommDataType dt, int source,
-                         CommRequestSharedPtr request, int loc);
-    virtual void v_StartAll(CommRequestSharedPtr request);
-    virtual void v_WaitAll(CommRequestSharedPtr request);
-    virtual CommRequestSharedPtr v_CreateRequest(int num);
+                            CommRequestSharedPtr request, int loc) final;
+    virtual void v_StartAll(CommRequestSharedPtr request) final;
+    virtual void v_WaitAll(CommRequestSharedPtr request) final;
+    virtual CommRequestSharedPtr v_CreateRequest(int num) final;
 
-
-    virtual void v_SplitComm(int pRows, int pColumns);
-    virtual CommSharedPtr v_CommCreateIf(int flag);
-
+    virtual void v_SplitComm(int pRows, int pColumns) override;
+    virtual CommSharedPtr v_CommCreateIf(int flag) final;
 };
-}
-}
-
+} // namespace LibUtilities
+} // namespace Nektar
 
 #endif

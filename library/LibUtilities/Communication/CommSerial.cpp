@@ -56,9 +56,7 @@ CommSerial::CommSerial(int argc, char *argv[]) : Comm(argc, argv)
     m_type = "Serial";
 }
 
-CommSerial::~CommSerial()
-{
-}
+CommSerial::~CommSerial() = default;
 
 /**
  *
@@ -81,7 +79,7 @@ int CommSerial::v_GetRank()
 /**
  *
  */
-bool CommSerial::v_TreatAsRankZero(void)
+bool CommSerial::v_TreatAsRankZero()
 {
     return true;
 }
@@ -89,12 +87,12 @@ bool CommSerial::v_TreatAsRankZero(void)
 /**
  *
  */
-bool CommSerial::v_IsSerial(void)
+bool CommSerial::v_IsSerial()
 {
     return true;
 }
 
-std::tuple<int, int, int> CommSerial::v_GetVersion(void)
+std::tuple<int, int, int> CommSerial::v_GetVersion()
 {
     return std::make_tuple(0, 0, 0);
 }
@@ -137,8 +135,8 @@ void CommSerial::v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype,
                             int dest, void *recvbuf, int recvcount,
                             CommDataType recvtype, int source)
 {
-    boost::ignore_unused(sendbuf, sendcount, sendtype, dest, recvbuf,
-                         recvcount, recvtype, source);
+    boost::ignore_unused(sendbuf, sendcount, sendtype, dest, recvbuf, recvcount,
+                         recvtype, source);
 }
 
 /**
@@ -184,15 +182,17 @@ void CommSerial::v_AlltoAllv(void *sendbuf, int sendcounts[], int sdispls[],
 /**
  *
  */
-void CommSerial::v_AllGather(void *sendbuf, int sendcount, CommDataType sendtype,
-                             void *recvbuf, int recvcount, CommDataType recvtype)
+void CommSerial::v_AllGather(void *sendbuf, int sendcount,
+                             CommDataType sendtype, void *recvbuf,
+                             int recvcount, CommDataType recvtype)
 {
     boost::ignore_unused(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                          recvtype);
 }
 
-void CommSerial::v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
-                              void *recvbuf, int recvcounts[], int rdispls[],
+void CommSerial::v_AllGatherv(void *sendbuf, int sendcount,
+                              CommDataType sendtype, void *recvbuf,
+                              int recvcounts[], int rdispls[],
                               CommDataType recvtype)
 {
     boost::ignore_unused(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
@@ -241,9 +241,9 @@ void CommSerial::v_DistGraphCreateAdjacent(int indegree, const int sources[],
 }
 
 void CommSerial::v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
-                                    int senddispls[], CommDataType sendtype,
-                                    void *recvbuf, int recvcounts[],
-                                    int rdispls[], CommDataType recvtype)
+                                     int senddispls[], CommDataType sendtype,
+                                     void *recvbuf, int recvcounts[],
+                                     int rdispls[], CommDataType recvtype)
 {
     boost::ignore_unused(sendbuf, sendcounts, senddispls, sendtype, recvbuf,
                          recvcounts, rdispls, recvtype);
@@ -256,7 +256,7 @@ void CommSerial::v_Irsend(void *buf, int count, CommDataType dt, int dest,
 }
 
 void CommSerial::v_SendInit(void *buf, int count, CommDataType dt, int dest,
-                          CommRequestSharedPtr request, int loc)
+                            CommRequestSharedPtr request, int loc)
 {
     boost::ignore_unused(buf, count, dt, dest, request, loc);
 }
@@ -268,7 +268,7 @@ void CommSerial::v_Irecv(void *buf, int count, CommDataType dt, int source,
 }
 
 void CommSerial::v_RecvInit(void *buf, int count, CommDataType dt, int source,
-                         CommRequestSharedPtr request, int loc)
+                            CommRequestSharedPtr request, int loc)
 {
     boost::ignore_unused(buf, count, dt, source, request, loc);
 }
@@ -289,7 +289,6 @@ CommRequestSharedPtr CommSerial::v_CreateRequest(int num)
     return std::shared_ptr<CommRequest>(new CommRequest);
 }
 
-
 /**
  *
  */
@@ -304,7 +303,7 @@ void CommSerial::v_SplitComm(int pRows, int pColumns)
  */
 CommSharedPtr CommSerial::v_CommCreateIf(int flag)
 {
-     if (flag == 0)
+    if (flag == 0)
     {
         // flag == 0 => get back MPI_COMM_NULL, return a null ptr instead.
         return std::shared_ptr<Comm>();
@@ -314,7 +313,6 @@ CommSharedPtr CommSerial::v_CommCreateIf(int flag)
         // Return a real communicator
         return shared_from_this();
     }
-
 }
-}
-}
+} // namespace LibUtilities
+} // namespace Nektar

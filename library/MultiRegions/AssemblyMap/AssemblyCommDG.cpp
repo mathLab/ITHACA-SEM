@@ -36,6 +36,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyCommDG.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
+#include <utility>
+
 namespace Nektar
 {
 namespace MultiRegions
@@ -52,7 +54,7 @@ AllToAll::AllToAll(const LibUtilities::CommSharedPtr &comm, const int &maxQuad,
         if (rankSharedEdges.find(i) != rankSharedEdges.end())
         {
             m_maxCount = (rankSharedEdges.at(i).size() > m_maxCount)
-                             ? rankSharedEdges.at(i).size()
+                             ? static_cast<int>(rankSharedEdges.at(i).size())
                              : m_maxCount;
         }
     }
@@ -221,9 +223,9 @@ Pairwise::Pairwise(const LibUtilities::CommSharedPtr &comm,
         m_comm->RecvInit(m_vecPairPartitionTrace[i].first,
                          m_recvBuff[m_sendDisp[i]], len, m_recvRequest, i);
 
-        //Initialise send requests
+        // Initialise send requests
         m_comm->SendInit(m_vecPairPartitionTrace[i].first,
-                          m_sendBuff[m_sendDisp[i]], len, m_sendRequest, i);
+                         m_sendBuff[m_sendDisp[i]], len, m_sendRequest, i);
     }
 }
 
@@ -378,8 +380,8 @@ AssemblyCommDG::AssemblyCommDG(
         if (std::get<0>(comm->GetVersion()) >= 3)
         {
             MPIFuncs.emplace_back(ExchangeMethodSharedPtr(
-                    MemoryManager<NeighborAllToAllV>::AllocateSharedPtr(
-                            comm, m_rankSharedEdges, m_edgeToTrace)));
+                MemoryManager<NeighborAllToAllV>::AllocateSharedPtr(
+                    comm, m_rankSharedEdges, m_edgeToTrace)));
             MPIFuncsNames.emplace_back("NeighborAllToAllV");
         }
 
@@ -726,7 +728,7 @@ void AssemblyCommDG::InitialiseStructure(
  */
 std::tuple<NekDouble, NekDouble, NekDouble> AssemblyCommDG::Timing(
     const LibUtilities::CommSharedPtr &comm, const int &count, const int &num,
-    ExchangeMethodSharedPtr f)
+    const ExchangeMethodSharedPtr& f)
 {
     Array<OneD, NekDouble> testFwd(num, 1);
     Array<OneD, NekDouble> testBwd(num, -2);

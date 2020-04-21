@@ -78,15 +78,15 @@ typedef std::shared_ptr<ExchangeMethod> ExchangeMethodSharedPtr;
  * If parallel operation is not indicated then use the Serial subclass which
  * does not perform any exchange.
  */
-class Serial : public ExchangeMethod
+class Serial final : public ExchangeMethod
 {
 public:
     /// Default constructor
     MULTI_REGIONS_EXPORT Serial() = default;
 
-    MULTI_REGIONS_EXPORT inline virtual void PerformExchange(
+    MULTI_REGIONS_EXPORT inline void PerformExchange(
         const Array<OneD, NekDouble> &testFwd,
-        Array<OneD, NekDouble> &testBwd) override
+        Array<OneD, NekDouble> &testBwd) final
     {
         boost::ignore_unused(testFwd, testBwd);
     }
@@ -99,7 +99,7 @@ public:
  * All ranks communicate full array sizes to all other ranks. One collective
  * operation is posted on each rank which requires communication.
  */
-class AllToAll : public ExchangeMethod
+class AllToAll final : public ExchangeMethod
 {
 public:
     /// Default constructor.
@@ -109,9 +109,9 @@ public:
         const std::map<int, std::vector<int>> &rankSharedEdges,
         const std::map<int, std::vector<int>> &edgeToTrace);
 
-    MULTI_REGIONS_EXPORT virtual void PerformExchange(
+    MULTI_REGIONS_EXPORT void PerformExchange(
         const Array<OneD, NekDouble> &testFwd,
-        Array<OneD, NekDouble> &testBwd) override;
+        Array<OneD, NekDouble> &testBwd) final;
 
 private:
     /// Communicator
@@ -133,7 +133,7 @@ private:
  * the array size can be 0 to avoid unnecessary data transfer. One collective
  * peration is posted on each rank which requires communication.
  */
-class AllToAllV : public ExchangeMethod
+class AllToAllV final : public ExchangeMethod
 {
 public:
     /// Default constructor.
@@ -142,9 +142,9 @@ public:
         const std::map<int, std::vector<int>> &rankSharedEdges,
         const std::map<int, std::vector<int>> &edgeToTrace, const int &nRanks);
 
-    MULTI_REGIONS_EXPORT virtual void PerformExchange(
+    MULTI_REGIONS_EXPORT void PerformExchange(
         const Array<OneD, NekDouble> &testFwd,
-        Array<OneD, NekDouble> &testBwd) override;
+        Array<OneD, NekDouble> &testBwd) final;
 
 private:
     /// Communicator
@@ -166,7 +166,7 @@ private:
  * over just reducing array sizes to 0 such as in MPI_AllToAllV. One collective
  * operation is posted on each rank which requires communication.
  */
-class NeighborAllToAllV : public ExchangeMethod
+class NeighborAllToAllV final : public ExchangeMethod
 {
 public:
     /// Default constructor.
@@ -175,9 +175,9 @@ public:
         const std::map<int, std::vector<int>> &rankSharedEdges,
         const std::map<int, std::vector<int>> &edgeToTrace);
 
-    MULTI_REGIONS_EXPORT virtual void PerformExchange(
+    MULTI_REGIONS_EXPORT void PerformExchange(
         const Array<OneD, NekDouble> &testFwd,
-        Array<OneD, NekDouble> &testBwd) override;
+        Array<OneD, NekDouble> &testBwd) final;
 
 private:
     /// Communicator
@@ -199,7 +199,7 @@ private:
  * where 'n' is the number of other ranks with which communication is needed.
  * We use persistent communication methods to reduce overhead.
  */
-class Pairwise : public ExchangeMethod
+class Pairwise final : public ExchangeMethod
 {
 public:
     MULTI_REGIONS_EXPORT Pairwise(
@@ -207,9 +207,9 @@ public:
         const std::map<int, std::vector<int>> &rankSharedEdges,
         const std::map<int, std::vector<int>> &edgeToTrace);
 
-    MULTI_REGIONS_EXPORT virtual void PerformExchange(
+    MULTI_REGIONS_EXPORT void PerformExchange(
         const Array<OneD, NekDouble> &testFwd,
-        Array<OneD, NekDouble> &testBwd) override;
+        Array<OneD, NekDouble> &testBwd) final;
 
 private:
     /// Communicator
@@ -298,7 +298,7 @@ private:
     /// Timing of the MPI exchange method.
     static std::tuple<NekDouble, NekDouble, NekDouble> Timing(
         const LibUtilities::CommSharedPtr &comm, const int &count,
-        const int &num, ExchangeMethodSharedPtr f);
+        const int &num, const ExchangeMethodSharedPtr& f);
 };
 
 typedef std::shared_ptr<AssemblyCommDG> AssemblyCommDGSharedPtr;

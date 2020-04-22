@@ -88,25 +88,22 @@ namespace Nektar
             virtual void v_DiffuseCalculateDerivative(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > > 
-                    &inarrayderivative,
+                TensorOfArray3D<NekDouble>                        &qfields,
                 const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
 
             virtual void v_DiffuseVolumeFlux(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   
-                    &inarrayderivative,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                TensorOfArray3D<NekDouble>                          &qfields,
+                TensorOfArray3D<NekDouble>                          &VolumeFlux,
                 Array< OneD, int >                               &nonZeroIndex);
 
             virtual void v_DiffuseTraceFlux(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   
-                    &inarrayderivative,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                TensorOfArray3D<NekDouble>                          &qfields,
+                TensorOfArray3D<NekDouble>                          &VolumeFlux,
                 Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
                 const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
                 const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
@@ -115,9 +112,9 @@ namespace Nektar
             void NumFluxforScalar(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
                 const Array<OneD, Array<OneD, NekDouble> >              &ufield,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&uflux,
-                const Array<OneD, Array<OneD, NekDouble> > &pFwd,
-                const Array<OneD, Array<OneD, NekDouble> > &pBwd);
+                TensorOfArray3D<NekDouble>                              &uflux,
+                const Array<OneD, Array<OneD, NekDouble> >              &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >              &pBwd);
 
             void ApplyScalarBCs(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -130,8 +127,8 @@ namespace Nektar
             void NumFluxforVector(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
                 const Array<OneD, Array<OneD, NekDouble> >              &ufield,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
-                      Array<OneD, Array<OneD, NekDouble> >              &qflux);
+                TensorOfArray3D<NekDouble>                              &qfield,
+                Array<OneD, Array<OneD, NekDouble> >                    &qflux);
 
             void ApplyVectorBCs(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

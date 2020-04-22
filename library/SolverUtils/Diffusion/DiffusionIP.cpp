@@ -167,8 +167,8 @@ namespace Nektar
             Array<OneD, NekDouble>    Fwd{nTracePts, 0.0};
             Array<OneD, NekDouble>    Bwd{nTracePts, 0.0};
 
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > elmtFlux{nDim};
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield{nDim};
+            TensorOfArray3D<NekDouble> elmtFlux{nDim};
+            TensorOfArray3D<NekDouble> qfield{nDim};
             for (int j = 0; j < nDim; ++j)
             {
                 qfield[j]   = Array<OneD, Array<OneD, NekDouble> >
@@ -263,7 +263,7 @@ namespace Nektar
         void DiffusionIP::v_DiffuseCalculateDerivative(
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
             const Array<OneD, Array<OneD, NekDouble> >          &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+            TensorOfArray3D<NekDouble>                          &qfield,
             const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
         {
@@ -290,8 +290,8 @@ namespace Nektar
         void DiffusionIP::v_DiffuseVolumeFlux(
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
             const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+            TensorOfArray3D<NekDouble>                          &qfield,
+            TensorOfArray3D<NekDouble>                          &VolumeFlux,
             Array< OneD, int >                                  &nonZeroIndex) 
         {
             int nDim = fields[0]->GetCoordim(0);
@@ -314,8 +314,8 @@ namespace Nektar
         void DiffusionIP::v_DiffuseTraceFlux(
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
             const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+            TensorOfArray3D<NekDouble>                          &qfield,
+            TensorOfArray3D<NekDouble>                          &VolumeFlux,
             Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
             const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
             const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
@@ -340,8 +340,8 @@ namespace Nektar
             const std::size_t                                 nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
             const Array<OneD, Array<OneD, NekDouble> >          &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+            TensorOfArray3D<NekDouble>                          &qfield,
+            TensorOfArray3D<NekDouble>                          &VolumeFlux,
             Array<OneD, Array<OneD, NekDouble> >                &outarray,
             const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
@@ -351,8 +351,7 @@ namespace Nektar
                 int nDim      = fields[0]->GetCoordim(0);
                 int nPts      = fields[0]->GetTotPoints();
                 int nTracePts = fields[0]->GetTrace()->GetTotPoints();
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                    traceSymflux{nDim};
+                TensorOfArray3D<NekDouble> traceSymflux{nDim};
                 for (int nd = 0; nd < nDim; ++nd)
                 {
                     traceSymflux[nd]    = Array<OneD, Array<OneD, NekDouble> > 
@@ -378,8 +377,8 @@ namespace Nektar
             const std::size_t                                 nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
             const Array<OneD, Array<OneD, NekDouble> >          &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+            TensorOfArray3D<NekDouble>                          &qfield,
+            TensorOfArray3D<NekDouble>                          &VolumeFlux,
             Array<OneD, Array<OneD, NekDouble> >                &outarray,
             const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
@@ -389,8 +388,7 @@ namespace Nektar
                 int nDim      = fields[0]->GetCoordim(0);
                 int nPts      = fields[0]->GetTotPoints();
                 int nTracePts = fields[0]->GetTrace()->GetTotPoints();
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                    traceSymflux{nDim};
+                TensorOfArray3D<NekDouble> traceSymflux{nDim};
                 for (int nd = 0; nd < nDim; ++nd)
                 {
                     traceSymflux[nd]    = 
@@ -416,9 +414,9 @@ namespace Nektar
             const std::size_t                                 nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
             const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &SymmFlux,
+            TensorOfArray3D<NekDouble>                          &qfield,
+            TensorOfArray3D<NekDouble>                          &VolumeFlux,
+            TensorOfArray3D<NekDouble>                          &SymmFlux,
             const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
             const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
             Array< OneD, int >                                  &nonZeroIndex)
@@ -437,7 +435,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &solution_Aver,
             Array<OneD, Array<OneD, NekDouble> >              &solution_jump,
             Array<OneD, int >                                 &nonZeroIndexsymm,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&traceSymflux)
+            TensorOfArray3D<NekDouble>                        &traceSymflux)
         {
             size_t nTracePts = solution_jump[nConvectiveFields-1].size();
 
@@ -469,7 +467,7 @@ namespace Nektar
             const int                                         nTracePts,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, const int >                     &nonZeroIndex,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&tracflux,
+            TensorOfArray3D<NekDouble>                        &tracflux,
             Array<OneD, Array<OneD, NekDouble> >              &outarray)
         {
             boost::ignore_unused(nTracePts);
@@ -508,7 +506,7 @@ namespace Nektar
             const int                                         nTracePts,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, const int >                     &nonZeroIndex,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&tracflux,
+            TensorOfArray3D<NekDouble>                        &tracflux,
             Array<OneD, Array<OneD, NekDouble> >              &outarray)
         {
             boost::ignore_unused(nTracePts);
@@ -702,13 +700,12 @@ namespace Nektar
             const NekDouble                                   PenaltyFactor2,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            const Array<OneD, const Array<OneD, 
-                Array<OneD, NekDouble> > >                    &qfield,
+            const TensorOfArray3D<NekDouble>                  &qfield,
             const Array<OneD, Array<OneD, NekDouble> >        &vFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &vBwd,
             const Array<OneD, NekDouble >                     &MuVarTrace,
             Array<OneD, int >                                 &nonZeroIndexflux,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&traceflux,
+            TensorOfArray3D<NekDouble>                        &traceflux,
             Array<OneD, Array<OneD, NekDouble> >              &solution_Aver,
             Array<OneD, Array<OneD, NekDouble> >              &solution_jump)
         {
@@ -716,11 +713,9 @@ namespace Nektar
             const MultiRegions::AssemblyMapDGSharedPtr TraceMap=
                 fields[0]->GetTraceMap();
 
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  
-                numDerivBwd{nDim};
+            TensorOfArray3D<NekDouble> numDerivBwd{nDim};
             //Fwd is also used for final numerical results
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    
-                numDerivFwd{nDim};
+            TensorOfArray3D<NekDouble> numDerivFwd{nDim};
             for (int nd = 0; nd < nDim; ++nd)
             {
                 numDerivBwd[nd]     =   
@@ -808,10 +803,9 @@ namespace Nektar
             const int                                           nTracePts,
             const NekDouble                                     PenaltyFactor2,
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
-            const Array<OneD, const Array<OneD, 
-                Array<OneD, NekDouble> > >                      &qfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &numDerivFwd,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &numDerivBwd)
+            const TensorOfArray3D<NekDouble>                    &qfield,
+            TensorOfArray3D<NekDouble>                          &numDerivFwd,
+            TensorOfArray3D<NekDouble>                          &numDerivBwd)
         {
             Array<OneD, NekDouble> Fwd{nTracePts, 0.0};
             Array<OneD, NekDouble> Bwd{nTracePts, 0.0};

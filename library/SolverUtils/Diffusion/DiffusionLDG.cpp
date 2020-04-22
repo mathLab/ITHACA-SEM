@@ -113,7 +113,7 @@ void DiffusionLDG::v_Diffuse_coeff(
 
     Array<OneD, NekDouble>  tmp{nCoeffs};
 
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield{nDim};
+    TensorOfArray3D<NekDouble> qfield{nDim};
     for (std::size_t j = 0; j < nDim; ++j)
     {
         qfield[j] = Array<OneD, Array<OneD, NekDouble> > {nConvectiveFields};
@@ -164,7 +164,7 @@ void DiffusionLDG::v_Diffuse_coeff(
 void DiffusionLDG::v_DiffuseCalculateDerivative(
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-    Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &qfield,
+    TensorOfArray3D<NekDouble>                        &qfield,
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
@@ -174,7 +174,7 @@ void DiffusionLDG::v_DiffuseCalculateDerivative(
     std::size_t nTracePts = fields[0]->GetTrace()->GetTotPoints();
 
     Array<OneD, NekDouble>  tmp{nCoeffs};
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux {nDim};
+    TensorOfArray3D<NekDouble> flux {nDim};
     for (std::size_t j = 0; j < nDim; ++j)
     {
         flux[j]   = Array<OneD, Array<OneD, NekDouble> > {nConvectiveFields};
@@ -203,8 +203,8 @@ void DiffusionLDG::v_DiffuseCalculateDerivative(
 void DiffusionLDG::v_DiffuseVolumeFlux(
     const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
     const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-    Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &viscTensor,
+    TensorOfArray3D<NekDouble>                          &qfield,
+    TensorOfArray3D<NekDouble>                          &viscTensor,
     Array< OneD, int >                                  &nonZeroIndex) 
 {
     boost::ignore_unused(fields, nonZeroIndex);
@@ -213,8 +213,8 @@ void DiffusionLDG::v_DiffuseVolumeFlux(
 void DiffusionLDG::v_DiffuseTraceFlux(
     const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
     const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-    Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &viscTensor,
+    TensorOfArray3D<NekDouble>                          &qfield,
+    TensorOfArray3D<NekDouble>                          &viscTensor,
     Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
     const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
     const Array<OneD, Array<OneD, NekDouble>>           &pBwd,

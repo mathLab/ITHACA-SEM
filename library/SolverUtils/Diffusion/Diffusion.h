@@ -53,14 +53,14 @@ namespace Nektar
     {
         typedef std::function<void (
             const Array<OneD, Array<OneD, NekDouble> > &,
-            const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)>
+            const TensorOfArray3D<NekDouble>           &,
+                  TensorOfArray3D<NekDouble>           &)>
                                             DiffusionFluxVecCB;
 
         typedef std::function<void (
             const Array<OneD, Array<OneD, NekDouble> >&,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)>
+                  TensorOfArray3D<NekDouble>          &,
+                  TensorOfArray3D<NekDouble>          &)>
                                             DiffusionFluxVecCBNS;
 
         typedef std::function<void (
@@ -88,8 +88,8 @@ namespace Nektar
         typedef std::function<void (
             const int                                                       ,
             const Array<OneD, Array<OneD, NekDouble> >                      &,
-            const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &,
+            const TensorOfArray3D<NekDouble>                                &,
+                  TensorOfArray3D<NekDouble>                                &,
                   Array< OneD, int >                                        &,    
             const Array<OneD, Array<OneD, NekDouble> >                      &,           
             const Array<OneD, NekDouble>                                    &)> 
@@ -110,7 +110,7 @@ namespace Nektar
             const int                                                       ,
             const Array<OneD, Array<OneD, NekDouble> >                      &,
             const Array<OneD, Array<OneD, NekDouble > >                     &,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &,
+                  TensorOfArray3D<NekDouble>                                &,
                   Array< OneD, int >                                        &,    
             const Array<OneD, Array<OneD, NekDouble> >                      &)> 
                 DiffusionSymmFluxCons;
@@ -178,14 +178,13 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void DiffuseCalculateDerivative(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble>>         &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > > 
-                    &inarrayderivative,
+                TensorOfArray3D<NekDouble>                        &qfields,
                 const Array<OneD, Array<OneD, NekDouble>>         
                     &pFwd =NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble>>         
                     &pBwd =NullNekDoubleArrayofArray)
             {
-                v_DiffuseCalculateDerivative(fields, inarray, inarrayderivative,
+                v_DiffuseCalculateDerivative(fields, inarray, qfields,
                                             pFwd, pBwd);
             }
             
@@ -193,13 +192,12 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void DiffuseVolumeFlux(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   
-                    &inarrayderivative,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                TensorOfArray3D<NekDouble>                          &qfields,
+                TensorOfArray3D<NekDouble>                          &VolumeFlux,
                 Array< OneD, int >                                  
                     &nonZeroIndex       =   NullInt1DArray)    
             {
-                v_DiffuseVolumeFlux(fields, inarray, inarrayderivative,
+                v_DiffuseVolumeFlux(fields, inarray, qfields,
                                     VolumeFlux, nonZeroIndex);
             }
             
@@ -207,9 +205,8 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void DiffuseTraceFlux(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   
-                    &inarrayderivative,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                TensorOfArray3D<NekDouble>                          &qfields,
+                TensorOfArray3D<NekDouble>                          &VolumeFlux,
                 Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
                 const Array<OneD, Array<OneD, NekDouble>>           
                     &pFwd           =   NullNekDoubleArrayofArray,
@@ -218,7 +215,7 @@ namespace Nektar
                 Array< OneD, int >                                  
                     &nonZeroIndex   =   NullInt1DArray)    
             {
-                v_DiffuseTraceFlux(fields, inarray, inarrayderivative, 
+                v_DiffuseTraceFlux(fields, inarray, qfields, 
                     VolumeFlux, TraceFlux, pFwd, pBwd, nonZeroIndex);
             }
 
@@ -227,8 +224,8 @@ namespace Nektar
                 const std::size_t                             nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble> >          &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                TensorOfArray3D<NekDouble>                          &qfield,
+                TensorOfArray3D<NekDouble>                          &VolumeFlux,
                 Array<OneD, Array<OneD, NekDouble> >                &outarray,
                 const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
@@ -242,8 +239,8 @@ namespace Nektar
                 const std::size_t                             nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble> >          &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                TensorOfArray3D<NekDouble>                          &qfield,
+                TensorOfArray3D<NekDouble>                          &VolumeFlux,
                 Array<OneD, Array<OneD, NekDouble> >                &outarray,
                 const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
@@ -253,8 +250,7 @@ namespace Nektar
             }
 
             SOLVER_UTILS_EXPORT void FluxVec(
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                                                &fluxvector);
+                    TensorOfArray3D<NekDouble> &fluxvector);
 
             template<typename FuncPointerT, typename ObjectPointerT>
             void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
@@ -340,7 +336,7 @@ namespace Nektar
                 v_SetHomoDerivs(deriv);
             }
 
-            virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &GetFluxTensor()
+            virtual TensorOfArray3D<NekDouble> &GetFluxTensor()
             {
                 return v_GetFluxTensor();
             }
@@ -394,16 +390,16 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                const Array<OneD, Array<OneD, NekDouble> > &pFwd,
-                const Array<OneD, Array<OneD, NekDouble> > &pBwd);
+                const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
             
             SOLVER_UTILS_EXPORT virtual void v_Diffuse_coeff(
                 const std::size_t                             nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                const Array<OneD, Array<OneD, NekDouble> > &pFwd,
-                const Array<OneD, Array<OneD, NekDouble> > &pBwd);
+                const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
         
             SOLVER_UTILS_EXPORT virtual void v_ConsVarAveJump(
                 const std::size_t                             nConvectiveFields,
@@ -417,8 +413,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual void v_DiffuseCalculateDerivative(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > > 
-                    &inarrayderivative,
+                TensorOfArray3D<NekDouble>                        &qfields,
                 const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
 
@@ -426,9 +421,8 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual void v_DiffuseVolumeFlux(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   
-                    &inarrayderivative,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                TensorOfArray3D<NekDouble>                          &qfields,
+                TensorOfArray3D<NekDouble>                          &VolumeFlux,
                 Array< OneD, int >                                  
                     &nonZeroIndex) ;
             
@@ -436,9 +430,8 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual void v_DiffuseTraceFlux(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   
-                    &inarrayderivative,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                TensorOfArray3D<NekDouble>                          &qfields,
+                TensorOfArray3D<NekDouble>                          &VolumeFlux,
                 Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
                 const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
                 const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
@@ -449,8 +442,8 @@ namespace Nektar
                 const std::size_t                             nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble> >          &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                TensorOfArray3D<NekDouble>                          &qfield,
+                TensorOfArray3D<NekDouble>                          &VolumeFlux,
                 Array<OneD, Array<OneD, NekDouble> >                &outarray,
                 const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
@@ -463,8 +456,8 @@ namespace Nektar
                 const std::size_t                             nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 const Array<OneD, Array<OneD, NekDouble> >          &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                TensorOfArray3D<NekDouble>                          &qfield,
+                TensorOfArray3D<NekDouble>                          &VolumeFlux,
                 Array<OneD, Array<OneD, NekDouble> >                &outarray,
                 const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
@@ -480,9 +473,9 @@ namespace Nektar
                 boost::ignore_unused(deriv);
             }
 
-            virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &v_GetFluxTensor()
+            virtual TensorOfArray3D<NekDouble> &v_GetFluxTensor()
             {
-                static Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmp;
+                static TensorOfArray3D<NekDouble> tmp;
                 return tmp;
             }
 

@@ -430,8 +430,8 @@ namespace Nektar
      * @param flux        Resulting flux.
      */
     void CompressibleFlowSystem::GetFluxVector(
-        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
+        const Array<OneD, Array<OneD, NekDouble> >  &physfield,
+        TensorOfArray3D<NekDouble>                  &flux)
     {
         int i, j;
         int nq = physfield[0].size();
@@ -492,8 +492,8 @@ namespace Nektar
      * @param flux        Resulting flux.
      */
     void CompressibleFlowSystem::GetFluxVectorDeAlias(
-        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
+        const Array<OneD, Array<OneD, NekDouble> >      &physfield,
+        TensorOfArray3D<NekDouble>                      &flux)
     {
         int i, j;
         int nq = physfield[0].size();
@@ -507,8 +507,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
 
         Array<OneD, Array<OneD, NekDouble> > physfield_interp(nVariables);
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux_interp(
-                                                            nVariables);
+        TensorOfArray3D<NekDouble> flux_interp(nVariables);
 
         for (i = 0; i < nVariables; ++ i)
         {

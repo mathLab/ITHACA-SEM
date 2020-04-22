@@ -212,7 +212,7 @@ void DiffusionLDGNS::v_InitObject(
     const std::size_t                                  nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >        &outarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray,
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
@@ -233,7 +233,7 @@ void DiffusionLDGNS::v_Diffuse_coeff(
     const std::size_t                                  nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >        &outarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray,
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
@@ -246,8 +246,7 @@ void DiffusionLDGNS::v_Diffuse_coeff(
     Array<OneD, NekDouble>               tmp1{nCoeffs};
     Array<OneD, Array<OneD, NekDouble> > tmp2{nConvectiveFields};
 
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                                            derivativesO1{m_spaceDim};
+    TensorOfArray3D<NekDouble> derivativesO1{m_spaceDim};
 
     for (std::size_t j = 0; j < m_spaceDim; ++j)
     {
@@ -262,8 +261,7 @@ void DiffusionLDGNS::v_Diffuse_coeff(
     DiffuseCalculateDerivative(fields, inarray, derivativesO1, pFwd, pBwd);
     
     // Initialisation viscous tensor
-    m_viscTensor = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                                            {m_spaceDim};
+    m_viscTensor = TensorOfArray3D<NekDouble> {m_spaceDim};
     Array<OneD, Array<OneD, NekDouble> > viscousFlux{nConvectiveFields};
 
     for (std::size_t j = 0; j < m_spaceDim; ++j)
@@ -308,7 +306,7 @@ void DiffusionLDGNS::v_Diffuse_coeff(
 void DiffusionLDGNS::v_DiffuseCalculateDerivative(
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-    Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
+    TensorOfArray3D<NekDouble>                        &qfields,
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
@@ -320,8 +318,7 @@ void DiffusionLDGNS::v_DiffuseCalculateDerivative(
 
     Array<OneD, NekDouble>               tmp1{nCoeffs};
     Array<OneD, Array<OneD, NekDouble> > tmp2{nConvectiveFields};
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-        numericalFluxO1{m_spaceDim};
+    TensorOfArray3D<NekDouble> numericalFluxO1{m_spaceDim};
                                                 
     for (std::size_t j = 0; j < m_spaceDim; ++j)
     {
@@ -344,7 +341,7 @@ void DiffusionLDGNS::v_DiffuseCalculateDerivative(
             fields[i]->AddTraceIntegral     (numericalFluxO1[j][i], tmp1);
             fields[i]->SetPhysState         (false);
             fields[i]->MultiplyByElmtInvMass(tmp1, tmp1);
-            fields[i]->BwdTrans             (tmp1, inarrayderivative[j][i]);
+            fields[i]->BwdTrans             (tmp1, qfields[j][i]);
         }
     }
     // For 3D Homogeneous 1D only take derivatives in 3rd direction
@@ -352,7 +349,7 @@ void DiffusionLDGNS::v_DiffuseCalculateDerivative(
     {
         for (std::size_t i = 0; i < nScalars; ++i)
         {
-            inarrayderivative[2][i] = m_homoDerivs[i];
+            qfields[2][i] = m_homoDerivs[i];
         }
     }
 }
@@ -360,27 +357,27 @@ void DiffusionLDGNS::v_DiffuseCalculateDerivative(
 void DiffusionLDGNS::v_DiffuseVolumeFlux(
     const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
     const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-    Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+    TensorOfArray3D<NekDouble>                          &qfields,
+    TensorOfArray3D<NekDouble>                          &VolumeFlux,
     Array< OneD, int >                                  &nonZeroIndex) 
 {
 
     boost::ignore_unused(fields, nonZeroIndex);
-    m_fluxVectorNS(inarray, inarrayderivative, VolumeFlux);
+    m_fluxVectorNS(inarray, qfields, VolumeFlux);
 
 }
 
 void DiffusionLDGNS::v_DiffuseTraceFlux(
     const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
     const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-    Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+    TensorOfArray3D<NekDouble>                          &qfields,
+    TensorOfArray3D<NekDouble>                          &VolumeFlux,
     Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
     const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
     const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
     Array< OneD, int >                                  &nonZeroIndex)
 {
-    boost::ignore_unused(inarray, inarrayderivative, nonZeroIndex);
+    boost::ignore_unused(inarray, qfields, nonZeroIndex);
     NumericalFluxO2(fields, VolumeFlux, TraceFlux, pFwd, pBwd);
 }
 
@@ -391,8 +388,7 @@ void DiffusionLDGNS::v_DiffuseTraceFlux(
 void DiffusionLDGNS::NumericalFluxO1(
     const Array<OneD, MultiRegions::ExpListSharedPtr>        &fields,
     const Array<OneD, Array<OneD, NekDouble> >               &inarray,
-          Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                                    &numericalFluxO1,
+    TensorOfArray3D<NekDouble>                               &numericalFluxO1,
     const Array<OneD, Array<OneD, NekDouble> >               &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >               &pBwd)
 {
@@ -671,8 +667,8 @@ void DiffusionLDGNS::ApplyBCsO1(
  */
 void DiffusionLDGNS::NumericalFluxO2(
     const Array<OneD, MultiRegions::ExpListSharedPtr>        &fields,
-          Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
-          Array<OneD, Array<OneD, NekDouble> >               &qflux,
+    TensorOfArray3D<NekDouble>                               &qfield,
+    Array<OneD, Array<OneD, NekDouble> >                     &qflux,
     const Array<OneD, Array<OneD, NekDouble> >               &uFwd,
     const Array<OneD, Array<OneD, NekDouble> >               &uBwd)
 {

@@ -90,7 +90,7 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble>>         &advVel,
                 const Array<OneD, Array<OneD, NekDouble>>         &inarray,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &VolumeFlux,
+                TensorOfArray3D<NekDouble>                        &VolumeFlux,
                 const NekDouble &time)
             {
                 boost::ignore_unused(nConvectiveFields, fields, advVel, inarray,

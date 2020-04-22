@@ -95,7 +95,7 @@ public:
         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
         const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
+        TensorOfArray3D<NekDouble>                        &pVolumeFlux,
         const NekDouble                                   &pTime)
     {
         v_AdvectVolumeFlux(nConvectiveFields, pFields, pAdvVel, pInarray, 
@@ -214,7 +214,7 @@ protected:
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, Array<OneD, NekDouble> >        &advVel,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
+        TensorOfArray3D<NekDouble>                        &pVolumeFlux,
         const NekDouble                                   &time);
     
     /// Advects Trace Flux.

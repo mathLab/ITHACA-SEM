@@ -132,9 +132,9 @@ namespace Nektar
             const std::size_t                             nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                    Array<OneD, Array<OneD, NekDouble> >        &outarray,
-            const Array<OneD, Array<OneD, NekDouble> > &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> > &pBwd)
+                    Array<OneD, Array<OneD, NekDouble> >      &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
             boost::ignore_unused(nConvectiveFields, fields, inarray, outarray,
                                     pFwd, pBwd);
@@ -146,8 +146,8 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray,
-            const Array<OneD, Array<OneD, NekDouble> > &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> > &pBwd)
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
             boost::ignore_unused(nConvectiveFields, fields, inarray,
                                     outarray, pFwd, pBwd);
@@ -177,12 +177,11 @@ namespace Nektar
         void Diffusion::v_DiffuseCalculateDerivative(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble>>         &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > > 
-                &inarrayderivative,
+            TensorOfArray3D<NekDouble>                       &qfields,
             const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
             const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
         {
-            boost::ignore_unused(fields, inarray, inarrayderivative,
+            boost::ignore_unused(fields, inarray, qfields,
                 pFwd, pBwd);
             ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
         }
@@ -190,12 +189,11 @@ namespace Nektar
         void Diffusion::v_DiffuseVolumeFlux(
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
             const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   
-                &inarrayderivative,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+            TensorOfArray3D<NekDouble>                          &qfields,
+            TensorOfArray3D<NekDouble>                          &VolumeFlux,
             Array< OneD, int >                                  &nonZeroIndex)       
         {
-            boost::ignore_unused(fields, inarray, inarrayderivative, VolumeFlux,
+            boost::ignore_unused(fields, inarray, qfields, VolumeFlux,
                                 nonZeroIndex);
             ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
         }
@@ -203,15 +201,14 @@ namespace Nektar
         void Diffusion::v_DiffuseTraceFlux(
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
             const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   
-                &inarrayderivative,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+            TensorOfArray3D<NekDouble>                          &qfields,
+            TensorOfArray3D<NekDouble>                          &VolumeFlux,
             Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
             const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
             const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
             Array< OneD, int >                                  &nonZeroIndex)     
         {
-            boost::ignore_unused(fields, inarray, inarrayderivative, VolumeFlux,
+            boost::ignore_unused(fields, inarray, qfields, VolumeFlux,
                                 TraceFlux, pFwd, pBwd, nonZeroIndex);
             ASSERTL0(false, "Not defined function DiffuseTraceFLux.");
         }

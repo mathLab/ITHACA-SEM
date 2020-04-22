@@ -91,7 +91,7 @@ void Advection::v_AdvectVolumeFlux(
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
     const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
     const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
-    Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
+    TensorOfArray3D<NekDouble>                        &pVolumeFlux,
     const NekDouble                                   &pTime)
 {
     boost::ignore_unused(nConvectiveFields, pFields, pAdvVel, pInarray,
@@ -195,10 +195,10 @@ void Advection::v_Advect_coeff(
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble> >        &advVel,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >        &outarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray,
     const NekDouble                                   &time,
-    const Array<OneD, Array<OneD, NekDouble> > &pFwd,
-    const Array<OneD, Array<OneD, NekDouble> > &pBwd)
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
     boost::ignore_unused(nConvectiveFields, fields, advVel, inarray, outarray,
                         time, pFwd, pBwd);

@@ -251,10 +251,10 @@ namespace Nektar
 
 
     void NavierStokesCFE::v_DoDiffusion_coeff(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-              Array<OneD,       Array<OneD, NekDouble> > &outarray, 
-            const Array<OneD, Array<OneD, NekDouble> >   &pFwd, 
-            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
+        const Array<OneD, const Array<OneD, NekDouble> >    &inarray, 
+        Array<OneD, Array<OneD, NekDouble> >                &outarray, 
+        const Array<OneD, Array<OneD, NekDouble> >          &pFwd, 
+        const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
     {
         size_t nvariables = inarray.size();
         int npoints    = GetNpoints();
@@ -353,9 +353,9 @@ namespace Nektar
      * \todo Complete the viscous flux vector
      */
     void NavierStokesCFE::v_GetViscousFluxVector(
-        const Array<OneD, Array<OneD, NekDouble> >               &physfield, 
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1, 
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
+        const Array<OneD, Array<OneD, NekDouble> >              &physfield, 
+        TensorOfArray3D<NekDouble>                              &derivativesO1, 
+        TensorOfArray3D<NekDouble>                              &viscousTensor)
     {
         // Auxiliary variables
         size_t nScalar    = physfield.size();
@@ -441,8 +441,8 @@ namespace Nektar
      */
     void NavierStokesCFE::v_GetViscousFluxVectorDeAlias(
         const Array<OneD, Array<OneD, NekDouble> >               &physfield, 
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1, 
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
+              TensorOfArray3D<NekDouble>                         &derivativesO1, 
+              TensorOfArray3D<NekDouble>                         &viscousTensor)
     {
         // Factor to rescale 1d points in dealiasing.
         NekDouble OneDptscale = 2;
@@ -463,10 +463,8 @@ namespace Nektar
 
         // Interpolate inputs and initialise interpolated output
         Array<OneD, Array<OneD, NekDouble> > vel_interp(m_spacedim);
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                             deriv_interp(m_spacedim);
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                             out_interp(m_spacedim);
+        TensorOfArray3D<NekDouble>           deriv_interp(m_spacedim);
+        TensorOfArray3D<NekDouble>           out_interp(m_spacedim);
         for (int i = 0; i < m_spacedim; ++i)
         {
             // Interpolate velocity
@@ -576,8 +574,8 @@ namespace Nektar
     void NavierStokesCFE::GetViscousFluxVectorConservVar(
         const int                                              nDim, 
         const Array<OneD, Array<OneD, NekDouble> >             &inarray, 
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfields, 
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >     &outarray, 
+        const TensorOfArray3D<NekDouble>                       &qfields, 
+        TensorOfArray3D<NekDouble>                             &outarray, 
         Array< OneD, int >                                     &nonZeroIndex,    
         const Array<OneD, Array<OneD, NekDouble> >             &normal,         
         const Array<OneD, NekDouble>                           &ArtifDiffFactor)
@@ -585,7 +583,7 @@ namespace Nektar
         size_t nConvectiveFields   = inarray.size();
         size_t nPts=inarray[0].size();
         int n_nonZero   =   nConvectiveFields - 1;
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxVec;
+        TensorOfArray3D<NekDouble> fluxVec;
         Array<OneD, Array<OneD, NekDouble>> outtmp{nConvectiveFields};
 
         for (int i = 0; i < nConvectiveFields; ++i)
@@ -791,7 +789,7 @@ namespace Nektar
         const int                                           nSpaceDim, 
         const Array<OneD, Array<OneD, NekDouble> >          &inaverg, 
         const Array<OneD, Array<OneD, NekDouble > >         &inarray, 
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &outarray, 
+        TensorOfArray3D<NekDouble>                          &outarray, 
         Array< OneD, int >                                  &nonZeroIndex,    
         const Array<OneD, Array<OneD, NekDouble> >          &normals)
     {

@@ -856,8 +856,8 @@ void LocTraceToTraceMap::TraceLocToElmtLocCoeffMap(
     Array<OneD, Array<OneD, int >> LRAdjExpid{2};
     Array<OneD, Array<OneD, bool>> LRAdjflag{2};
 
-    Array<OneD, Array<OneD, Array<OneD, int > > > elmtLRMap{2};
-    Array<OneD, Array<OneD, Array<OneD, int > > > elmtLRSign{2};
+    TensorOfArray3D<int> elmtLRMap{2};
+    TensorOfArray3D<int> elmtLRSign{2};
 
     for (int lr = 0; lr < 2; ++lr)
     {

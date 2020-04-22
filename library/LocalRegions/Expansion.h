@@ -124,7 +124,7 @@ namespace Nektar
                     const Array<OneD, Array<OneD, NekDouble > > &vec);
 
                 LOCAL_REGIONS_EXPORT const Array<OneD, const NekDouble > 
-                        &GetElmtBndNormalDirctnElmtLength(const int nbnd) const;
+                        &GetElmtBndNormDirElmtLen(const int nbnd) const;
 
             protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;

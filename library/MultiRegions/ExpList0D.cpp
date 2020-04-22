@@ -297,7 +297,7 @@ namespace Nektar
                     if (bndNumber >= 0)
                     {
                         locLeng  = loc_elmt->
-                                    GetElmtBndNormalDirctnElmtLength(bndNumber);
+                                    GetElmtBndNormDirElmtLen(bndNumber);
                         lengAdd  =   locLeng;
                     }
                     for (int j = 0; j < e_npoints; ++j)

@@ -570,7 +570,7 @@ namespace Nektar
         }
 
         const Array<OneD, const NekDouble > &Expansion::
-            GetElmtBndNormalDirctnElmtLength(const int nbnd) const
+            GetElmtBndNormDirElmtLen(const int nbnd) const
         {
             auto x = m_elmtBndNormDirElmtLen.find(nbnd);
             ASSERTL0 (x != m_elmtBndNormDirElmtLen.end(),

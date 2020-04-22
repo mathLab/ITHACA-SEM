@@ -1156,7 +1156,7 @@ namespace Nektar
                     loc_elmt = LRelmts[nlr];
                     if (bndNumber >= 0)
                     {
-                        locLeng = loc_elmt->GetElmtBndNormalDirctnElmtLength(
+                        locLeng = loc_elmt->GetElmtBndNormDirElmtLen(
                                                 bndNumber);
                         // Project normals from 3D element onto the same orientation as
                         // the trace expansion.

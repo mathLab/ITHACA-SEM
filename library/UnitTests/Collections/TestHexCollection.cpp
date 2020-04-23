@@ -375,6 +375,74 @@ namespace Nektar
             }
         }
 
+        BOOST_AUTO_TEST_CASE(TestHexBwdTrans_AVX_UniformP)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
+                3u, 0u, -1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(
+                3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(
+                3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(
+                3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(
+                3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(
+                3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(
+                3u, 6u, 1.0, 1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(
+                3u, 7u, -1.0, 1.0, 1.0));
+
+            SpatialDomains::HexGeomSharedPtr hexGeom = CreateHex(v0, v1, v2, v3,
+                v4, v5, v6, v7);
+
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 =
+                Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 =
+                Nektar::LibUtilities::eModified_A;
+            unsigned int numQuadPoints = 6;
+            unsigned int numModes = 4;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(
+                numQuadPoints, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
+                numModes, quadPointsKeyDir1);
+
+            Nektar::LocalRegions::HexExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(
+                basisKeyDir1, basisKeyDir1, basisKeyDir1, hexGeom);
+
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp =
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(
+                basisKeyDir1, basisKeyDir1, basisKeyDir1);
+
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            CollExp.push_back(Exp);
+
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession,
+                Collections::eIterPerExp);
+            Collections::OperatorImpMap impTypes =
+                colOpt.GetOperatorImpMap(stdExp);
+            // Not all AVX OP are implemented...
+            impTypes[Collections::eBwdTrans] = Collections::eAVX;
+            Collections::Collection     c(CollExp, impTypes);
+
+            Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
+            Array<OneD, NekDouble> physRef(Exp->GetTotPoints());
+            Array<OneD, NekDouble> phys(Exp->GetTotPoints());
+
+
+            Exp->BwdTrans(coeffs, physRef);
+            c.ApplyOperator(Collections::eBwdTrans, coeffs, phys);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < physRef.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(physRef[i], phys[i], epsilon);
+            }
+        }
+
         BOOST_AUTO_TEST_CASE(TestHexBwdTrans_NoCollection_VariableP)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.0, -1.0, -1.0));

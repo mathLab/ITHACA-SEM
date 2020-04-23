@@ -322,11 +322,11 @@ class IProductWRTDerivBase_AVX : public Operator
                 jacSizePad = nElmtPad * nqElmt;
             }
 
-            // Store Jacobian
+            // Get Jacobian
             Array<OneD, NekDouble> jac{jacSizePad, 0.0};
             Vmath::Vcopy(jacSizeNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
 
-            // Store derivative factors
+            // Get derivative factors
             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
             Array<TwoD, NekDouble> df(dim * dim, jacSizePad, 0.0);
             for (int j = 0; j < dim * dim; ++j)
@@ -336,7 +336,7 @@ class IProductWRTDerivBase_AVX : public Operator
                     &df[j][0], 1);
             }
 
-            // Basis vector.
+            // Basis vector
             std::vector<LibUtilities::BasisSharedPtr> basis(dim);
             for (auto i = 0; i < dim; ++i)
             {
@@ -352,17 +352,11 @@ class IProductWRTDerivBase_AVX : public Operator
             auto oper = AVX::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmtPad);
 
-            // If the operator needs the Jacobian, provide it here
-            if (oper->NeedsJac())
-            {
-                oper->SetJac(jac);
-            }
+            // Set Jacobian
+            oper->SetJac(jac);
 
-            // If the operator needs the derivative factors, provide it here
-            if (oper->NeedsDF())
-            {
-                oper->SetDF(df);
-            }
+            // Set derivative factors
+            oper->SetDF(df);
 
             m_oper = std::dynamic_pointer_cast<AVX::IProductWRTDerivBase>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");

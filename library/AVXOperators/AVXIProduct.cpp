@@ -30,11 +30,11 @@ std::string __register_IProduct_Quad_Deformed_AVX = GetOperatorFactory().Registe
 // std::string __register_IProduct_Prism_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
 //     std::string("IProduct_Prism_Deformed_AVX"), &AVXIProductPrism<4, true>::Create);
 
-// std::string __register_IProduct_Hex_AVX = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProduct_Hex_Regular_AVX"), &AVXIProductHex<4>::Create);
+std::string __register_IProduct_Hex_AVX = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProduct_Hex_Regular_AVX"), &AVXIProductHex<4>::Create);
 
-// std::string __register_IProduct_Hex_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProduct_Hex_Deformed_AVX"), &AVXIProductHex<4,true>::Create);
+std::string __register_IProduct_Hex_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProduct_Hex_Deformed_AVX"), &AVXIProductHex<4,true>::Create);
 #endif
 
 #if defined(__AVX512F__)
@@ -62,11 +62,11 @@ std::string __register_IProduct_Quad_Deformed_AVX512 = GetOperatorFactory().Regi
 // std::string __register_IProduct_Prism_Deformed_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
 //     std::string("IProduct_Prism_Deformed_AVX512"), &AVXIProductPrism<8, true>::Create);
 
-// std::string __register_IProduct_Hex_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProduct_Hex_Regular_AVX512"), &AVXIProductHex<8>::Create);
+std::string __register_IProduct_Hex_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProduct_Hex_Regular_AVX512"), &AVXIProductHex<8>::Create);
 
-// std::string __register_IProduct_Hex_Deformed_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProduct_Hex_Deformed_AVX512"), &AVXIProductHex<8,true>::Create);
+std::string __register_IProduct_Hex_Deformed_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProduct_Hex_Deformed_AVX512"), &AVXIProductHex<8,true>::Create);
 #endif
 
 } // namespace AVX

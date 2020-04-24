@@ -48,6 +48,7 @@ void export_Mesh()
         .def_readwrite("verbose", &Mesh::m_verbose)
         .def_readwrite("expDim", &Mesh::m_expDim)
         .def_readwrite("spaceDim", &Mesh::m_spaceDim)
+        .def_readwrite("nummode", &Mesh::m_nummode)
         .def_readonly("element", &Mesh::m_element)
         ;
 }

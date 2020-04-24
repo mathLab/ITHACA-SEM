@@ -408,18 +408,103 @@ struct AVXIProductHex : public IProduct, public AVXHelper<VW, 3, DEFORMED>
     virtual void operator()(const Array<OneD, const NekDouble> &in,
                                   Array<OneD,       NekDouble> &out)
     {
-        switch(m_basis[0]->GetNumModes())
+        auto nm0 = m_basis[0]->GetNumModes();
+        auto nm1 = m_basis[1]->GetNumModes();
+        auto nm2 = m_basis[2]->GetNumModes();
+        ASSERTL0( nm0 == nm1 && nm0 == nm2,
+            "AVXIProductHex: anisotropy not implemented.");
+
+        auto np0 = m_basis[0]->GetNumPoints();
+
+
+        switch(nm0)
         {
-            case 2:  AVXIProductHexImpl<2 ,2 ,2 ,3 ,3 ,3 >(in, out); break;
-            case 3:  AVXIProductHexImpl<3 ,3 ,3 ,4 ,4 ,4 >(in, out); break;
-            case 4:  AVXIProductHexImpl<4 ,4 ,4 ,5 ,5 ,5 >(in, out); break;
-            case 5:  AVXIProductHexImpl<5 ,5 ,5 ,6 ,6 ,6 >(in, out); break;
-            case 6:  AVXIProductHexImpl<6 ,6 ,6 ,7 ,7 ,7 >(in, out); break;
-            case 7:  AVXIProductHexImpl<7 ,7 ,7 ,8 ,8 ,8 >(in, out); break;
-            case 8:  AVXIProductHexImpl<8 ,8 ,8 ,9 ,9 ,9 >(in, out); break;
-            case 9:  AVXIProductHexImpl<9 ,9 ,9 ,10,10,10>(in, out); break;
-            case 10: AVXIProductHexImpl<10,10,10,11,11,11>(in, out); break;
-            case 11: AVXIProductHexImpl<11,11,11,12,12,12>(in, out); break;
+            case 2:
+                switch(np0)
+                {
+                    case 2: AVXIProductHexImpl<2, 2, 2, 2, 2, 2>(in, out); break;
+                    case 3: AVXIProductHexImpl<2, 2, 2, 3, 3, 3>(in, out); break;
+                    case 4: AVXIProductHexImpl<2, 2, 2, 4, 4, 4>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductHex: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(np0)
+                {
+                    case 3: AVXIProductHexImpl<3, 3, 3, 3, 3, 3>(in, out); break;
+                    case 4: AVXIProductHexImpl<3, 3, 3, 4, 4, 4>(in, out); break;
+                    case 5: AVXIProductHexImpl<3, 3, 3, 5, 5, 5>(in, out); break;
+                    case 6: AVXIProductHexImpl<3, 3, 3, 6, 6, 6>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductHex: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(np0)
+                {
+                    case 4: AVXIProductHexImpl<4, 4, 4, 4, 4 ,4>(in, out); break;
+                    case 5: AVXIProductHexImpl<4, 4, 4, 5, 5 ,5>(in, out); break;
+                    case 6: AVXIProductHexImpl<4, 4, 4, 6, 6 ,6>(in, out); break;
+                    case 7: AVXIProductHexImpl<4, 4, 4, 7, 7 ,7>(in, out); break;
+                    case 8: AVXIProductHexImpl<4, 4, 4, 8, 8 ,8>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductHex: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(np0)
+                {
+                    case 5: AVXIProductHexImpl<5, 5, 5, 5, 5, 5>(in, out); break;
+                    case 6: AVXIProductHexImpl<5, 5, 5, 6, 6, 6>(in, out); break;
+                    case 7: AVXIProductHexImpl<5, 5, 5, 7, 7, 7>(in, out); break;
+                    case 8: AVXIProductHexImpl<5, 5, 5, 8, 8, 8>(in, out); break;
+                    case 9: AVXIProductHexImpl<5, 5, 5, 9, 9, 9>(in, out); break;
+                    case 10: AVXIProductHexImpl<5, 5, 5, 10, 10, 10>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductHex: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(np0)
+                {
+                    case 6: AVXIProductHexImpl<6, 6, 6, 6, 6, 6>(in, out); break;
+                    case 7: AVXIProductHexImpl<6, 6, 6, 7, 7, 7>(in, out); break;
+                    case 8: AVXIProductHexImpl<6, 6, 6, 8, 8, 8>(in, out); break;
+                    case 9: AVXIProductHexImpl<6, 6, 6, 9, 9, 9>(in, out); break;
+                    case 10: AVXIProductHexImpl<6, 6, 6, 10, 10, 10>(in, out); break;
+                    case 11: AVXIProductHexImpl<6, 6, 6, 11, 11, 11>(in, out); break;
+                    case 12: AVXIProductHexImpl<6, 6, 6, 12, 12, 12>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductHex: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(np0)
+                {
+                    case 7: AVXIProductHexImpl<7, 7, 7, 7, 7, 7>(in, out); break;
+                    case 8: AVXIProductHexImpl<7, 7, 7, 8, 8, 8>(in, out); break;
+                    case 9: AVXIProductHexImpl<7, 7, 7, 9, 9, 9>(in, out); break;
+                    case 10: AVXIProductHexImpl<7, 7, 7, 10, 10, 10>(in, out); break;
+                    case 11: AVXIProductHexImpl<7, 7, 7, 11, 11, 11>(in, out); break;
+                    case 12: AVXIProductHexImpl<7, 7, 7, 12, 12, 12>(in, out); break;
+                    case 13: AVXIProductHexImpl<7, 7, 7, 13, 13, 13>(in, out); break;
+                    case 14: AVXIProductHexImpl<7, 7, 7, 14, 14, 14>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductHex: # of modes / points combo not implemented.");
+                } break;
+            case 8:
+                switch(np0)
+                {
+                    case 8: AVXIProductHexImpl<8, 8, 8, 8, 8, 8>(in, out); break;
+                    case 9: AVXIProductHexImpl<8, 8, 8, 9, 9, 9>(in, out); break;
+                    case 10: AVXIProductHexImpl<8, 8, 8, 10, 10, 10>(in, out); break;
+                    case 11: AVXIProductHexImpl<8, 8, 8, 11, 11, 11>(in, out); break;
+                    case 12: AVXIProductHexImpl<8, 8, 8, 12, 12, 12>(in, out); break;
+                    case 13: AVXIProductHexImpl<8, 8, 8, 13, 13, 13>(in, out); break;
+                    case 14: AVXIProductHexImpl<8, 8, 8, 14, 14, 14>(in, out); break;
+                    case 15: AVXIProductHexImpl<8, 8, 8, 15, 15, 15>(in, out); break;
+                    case 16: AVXIProductHexImpl<8, 8, 8, 16, 16, 16>(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductHex: # of modes / points combo not implemented.");
+                } break;;
+            default: NEKERROR(ErrorUtil::efatal,
+                "AVXIProductHex: # of modes / points combo not implemented.");
         }
     }
 

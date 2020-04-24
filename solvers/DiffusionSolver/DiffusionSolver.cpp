@@ -92,8 +92,7 @@ int main(int argc, char *argv[])
             Vmath::Smul(nq, -1.0/delta_t/epsilon, field->GetPhys(),    1,
                                                   field->UpdatePhys(), 1);
 
-            field->HelmSolve(field->GetPhys(), field->UpdateCoeffs(),
-                             NullFlagList, factors);
+            field->HelmSolve(field->GetPhys(), field->UpdateCoeffs(), factors);
 
             field->BwdTrans(field->GetCoeffs(), field->UpdatePhys());
         }

@@ -8,6 +8,8 @@ ADD_UTILITIES_EXECUTABLE(FieldConvert
 ADD_NEKTAR_TEST(chan3D_tec_n10)
 ADD_NEKTAR_TEST(chan3D_interppointsplane)
 ADD_NEKTAR_TEST(chan3D_interppointsbox)
+ADD_NEKTAR_TEST(chan3DH1D_interppointsplane)
+ADD_NEKTAR_TEST(chan3DH1D_interppointsbox)
 ADD_NEKTAR_TEST(compositeid)
 ADD_NEKTAR_TEST(bfs_probe)
 ADD_NEKTAR_TEST(bfs_tec)
@@ -51,6 +53,8 @@ IF (NEKTAR_USE_MPI)
     #ADD_NEKTAR_TEST(chan3D_vtu_par)a
     ADD_NEKTAR_TEST(chan3D_interppointsplane_par)
     ADD_NEKTAR_TEST(chan3D_interppointsbox_par)
+    ADD_NEKTAR_TEST(chan3DH1D_interppointsplane_par)
+    ADD_NEKTAR_TEST(chan3DH1D_interppointsbox_par)
     ADD_NEKTAR_TEST(chan3D_vort_par)
 ENDIF (NEKTAR_USE_MPI)
 

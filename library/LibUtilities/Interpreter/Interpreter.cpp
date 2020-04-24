@@ -614,11 +614,11 @@ public:
     {
         m_timer.Start();
 
-        const int num_points = points[0].num_elements();
+        const int num_points = points[0].size();
         ASSERTL1(m_executionStack.size() > id,
                  "unknown analytic expression, it must first be defined "
                  "with DefineFunction(...)");
-        ASSERTL1(result.num_elements() >= num_points,
+        ASSERTL1(result.size() >= num_points,
                  "destination array must have enough capacity to store "
                  "expression values at each given point");
 
@@ -639,7 +639,7 @@ public:
         {
             m_variable.resize(nvals * chunk_size, 0.0);
         }
-        if (result.num_elements() < num_points)
+        if (result.size() < num_points)
         {
             result = Array<OneD, NekDouble>(num_points, 0.0);
         }

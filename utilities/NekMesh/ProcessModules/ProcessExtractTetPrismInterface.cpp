@@ -103,7 +103,7 @@ void ProcessExtractTetPrismInterface::Process()
     {
         if (face->m_elLink.size() == 1)
         {
-            ElementSharedPtr el = face->m_elLink[0].first;
+            ElementSharedPtr el = face->m_elLink[0].first.lock();
 
             if (el->GetConf().m_e != LibUtilities::eTetrahedron)
             {
@@ -119,8 +119,8 @@ void ProcessExtractTetPrismInterface::Process()
     {
         if (face->m_elLink.size() != 1)
         {
-            ElementSharedPtr el1 = face->m_elLink[0].first;
-            ElementSharedPtr el2 = face->m_elLink[1].first;
+            ElementSharedPtr el1 = face->m_elLink[0].first.lock();
+            ElementSharedPtr el2 = face->m_elLink[1].first.lock();
 
             if ((el1->GetConf().m_e == LibUtilities::ePrism &&
                  el2->GetConf().m_e == LibUtilities::eTetrahedron) ||

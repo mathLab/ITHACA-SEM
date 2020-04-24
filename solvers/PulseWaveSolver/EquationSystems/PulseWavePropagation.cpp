@@ -185,7 +185,7 @@ void PulseWavePropagation::DoOdeProjection(
     // Just copy over array
     for (int i = 0; i < m_nVariables; ++i)
     {
-        Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1, outarray[i], 1);
+        Vmath::Vcopy(inarray[i].size(), inarray[i], 1, outarray[i], 1);
     }
 }
 

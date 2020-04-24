@@ -101,17 +101,12 @@ CoupledAssemblyMap::CoupledAssemblyMap(
     m_numLocalBndCoeffsPerPatch = cgMap->GetNumLocalBndCoeffsPerPatch();
     m_numLocalIntCoeffsPerPatch = cgMap->GetNumLocalIntCoeffsPerPatch();
 
-    // Set up local to global and boundary condition maps.
-    const int nLocBndCondDofs = cgMap->
-        GetBndCondCoeffsToGlobalCoeffsMap().num_elements() * nVel;
-
     // Allocate storage for local to global maps.
-    m_localToGlobalMap               =
-        Array<OneD, int>(m_numLocalCoeffs,-1);
-    m_localToGlobalBndMap            =
-        Array<OneD, int>(m_numLocalBndCoeffs,-1);
-    m_bndCondCoeffsToGlobalCoeffsMap =
-        Array<OneD, int>(nLocBndCondDofs,-1);
+    m_localToGlobalMap      = Array<OneD, int>(m_numLocalCoeffs,-1);
+    m_localToGlobalBndMap   = Array<OneD, int>(m_numLocalBndCoeffs,-1);
+    m_localToLocalBndMap    = Array<OneD, int>(m_numLocalBndCoeffs,-1);
+    m_localToLocalIntMap    = Array<OneD, int>(m_numLocalCoeffs-
+                                                       m_numLocalBndCoeffs,-1);
 
     // Only require a sign map if we are using modal polynomials in the
     // expansion and the order is >= 3.
@@ -121,14 +116,11 @@ CoupledAssemblyMap::CoupledAssemblyMap(
             Array<OneD, NekDouble>(m_numLocalCoeffs,1.0);
         m_localToGlobalBndSign            =
             Array<OneD, NekDouble>(m_numLocalBndCoeffs,1.0);
-        m_bndCondCoeffsToGlobalCoeffsSign =
-            Array<OneD, NekDouble>(nLocBndCondDofs,1.0);
     }
     else
     {
         m_localToGlobalSign               = NullNekDouble1DArray;
         m_localToGlobalBndSign            = NullNekDouble1DArray;
-        m_bndCondCoeffsToGlobalCoeffsSign = NullNekDouble1DArray;
     }
 
     const LocalRegions::ExpansionVector &locExpVector
@@ -149,6 +141,7 @@ CoupledAssemblyMap::CoupledAssemblyMap(
 
         for (n = 0; n < nVel; ++n)
         {
+            
             for (j = 0; j < nBndCoeffs; ++j, ++cnt1)
             {
                 const int l2g = cgMap->GetLocalToGlobalBndMap()[cnt2+j];
@@ -176,17 +169,19 @@ CoupledAssemblyMap::CoupledAssemblyMap(
         cnt2 += nBndCoeffs;
     }
 
-    // Grab map of extra Dirichlet degrees of freedom for parallel runs
-    // (particularly in 3D).
-    m_extraDirDofs = cgMap->GetExtraDirDofs();
-
     // Counter for remaining interior degrees of freedom.
     int globalId = m_numGlobalBndCoeffs;
 
     // Interior degrees of freedom are a bit more tricky -- global linear system
     // solve relies on them being in the same order as the BinvD, C and invD
     // matrices.
+
+    // Also set up the localToBndMap and localTolocalIntMap which just
+    // take out the boundary blocks and interior blocks from the input
+    // ordering where we have bnd and interior for each elements
     cnt1 = cnt2 = 0;
+    int bnd_cnt = 0;
+    int int_cnt = 0;
     for (i = 0; i < locExpVector.size(); ++i)
     {
         const int nCoeffs    = locExpVector[i]->GetNcoeffs();
@@ -196,6 +191,9 @@ CoupledAssemblyMap::CoupledAssemblyMap(
         {
             for (j = 0; j < nBndCoeffs; ++j, ++cnt1, ++cnt2)
             {
+                m_localToLocalBndMap[bnd_cnt++] = cnt1; 
+
+
                 const int l2g = m_localToGlobalBndMap[cnt2];
                 m_localToGlobalMap[cnt1] = l2g;
 
@@ -210,34 +208,20 @@ CoupledAssemblyMap::CoupledAssemblyMap(
         {
             for (j = 0; j < nCoeffs - nBndCoeffs; ++j, ++cnt1)
             {
+                m_localToLocalIntMap[int_cnt++] = cnt1; 
+
                 m_localToGlobalMap[cnt1] = globalId++;
             }
         }
     }
 
-    for (i = 0; i < m_localToGlobalMap.num_elements(); ++i)
+    for (i = 0; i < m_localToGlobalMap.size(); ++i)
     {
         ASSERTL1(m_localToGlobalMap[i] != -1, "Consistency error");
     }
 
     ASSERTL1(globalId == m_numGlobalCoeffs, "Consistency error");
 
-    cnt1 = 0;
-    for (n = 0; n < nVel; ++n)
-    {
-        for (i = 0; i < nLocBndCondDofs/nVel; ++i, ++cnt1)
-        {
-            const int l2g = cgMap->GetBndCondCoeffsToGlobalCoeffsMap()[i];
-            int newId = newGlobalIds[l2g];
-            m_bndCondCoeffsToGlobalCoeffsMap[cnt1] = newId + n;
-
-            if (m_signChange)
-            {
-                m_bndCondCoeffsToGlobalCoeffsSign[cnt1] =
-                    cgMap->GetBndCondCoeffsToGlobalCoeffsSign(i);
-            }
-        }
-    }
 
     // Finally, set up global to universal maps.
     m_globalToUniversalMap          = Array<OneD, int>(m_numGlobalCoeffs);

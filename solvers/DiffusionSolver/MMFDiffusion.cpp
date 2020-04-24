@@ -68,7 +68,7 @@ namespace Nektar
       UnsteadySystem::v_InitObject();
 
       int nq = m_fields[0]->GetNpoints();
-      int nvar  =  m_fields.num_elements();
+      int nvar  =  m_fields.size();
       int MFdim = 3;
 
       // Diffusivity coefficient for e^j
@@ -209,7 +209,7 @@ namespace Nektar
             const NekDouble time,
             const NekDouble lambda)
     {
-        int nvariables  = inarray.num_elements();
+        int nvariables  = inarray.size();
         int nq          = m_fields[0]->GetNpoints();
 
 
@@ -243,7 +243,8 @@ namespace Nektar
                 cout << "inarray["<<i << "]"<< k<<"=" << inarray[i][k]<<endl;*/
 	  // Solve a system of equations with Helmholtz solver and transform
 	  // back into physical space.
-	  m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(),NullFlagList, factors, m_varcoeff);
+	  m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(),
+                                 factors, m_varcoeff);
 
 	  m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), outarray[i]);
            /* Array<OneD, NekDouble> coefarray = m_fields[i]->GetCoeffs();
@@ -523,7 +524,7 @@ namespace Nektar
         }
 
       // forward transform to fill the modal coeffs
-      for(int i = 0; i < m_fields.num_elements(); ++i)
+      for(int i = 0; i < m_fields.size(); ++i)
 	{
 	  m_fields[i]->SetPhysState(true);
 	  m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());

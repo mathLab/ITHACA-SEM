@@ -101,7 +101,7 @@ namespace Nektar
                 unsigned int vNumForcingFields = pNumForcingFields;
                 if (!pNumForcingFields)
                 {
-                    vNumForcingFields = pFields.num_elements();
+                    vNumForcingFields = pFields.size();
                 }
 
                 TiXmlElement* vForce = vForcing->FirstChildElement("FORCE");
@@ -137,10 +137,10 @@ namespace Nektar
         {
             ASSERTL0(pSession->DefinesFunction(pFunctionName),
                      "Function '" + pFunctionName + "' does not exist.");
-            
+
             LibUtilities::EquationSharedPtr ffunc =
                 pSession->GetFunction(pFunctionName, pFieldName);
-            
+
             EvaluateTimeFunction(pTime,ffunc,pArray);
         }
 
@@ -151,11 +151,11 @@ namespace Nektar
                Array<OneD, NekDouble>&                  pArray)
         {
             // dummy array of zero pts.
-            Array<OneD, NekDouble> x0(pArray.num_elements(),0.0);
+            Array<OneD, NekDouble> x0(pArray.size(),0.0);
 
             pEqn->Evaluate(x0, x0, x0, pTime, pArray);
         }
-        
+
         SessionFunctionSharedPtr Forcing::GetFunction(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>  &pFields,
                 const LibUtilities::SessionReaderSharedPtr         &pSession,

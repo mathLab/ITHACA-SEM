@@ -91,7 +91,7 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
 
     // Look for correct plane (because of parallel case)
     int plane = -1;
-    for (int i = 0; i < m_f->m_exp[0]->GetZIDs().num_elements(); ++i)
+    for (int i = 0; i < m_f->m_exp[0]->GetZIDs().size(); ++i)
     {
         if (m_f->m_exp[0]->GetZIDs()[i] == planeid)
         {

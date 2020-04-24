@@ -103,7 +103,7 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
     ASSERTL0(!(m_f->m_numHomogeneousDir),
             "Homogeneous expansions not supported");
 
-    for (i = cnt = 0; i < BndExp.num_elements(); ++i)
+    for (i = cnt = 0; i < BndExp.size(); ++i)
     {
         if (i != surf)
         {

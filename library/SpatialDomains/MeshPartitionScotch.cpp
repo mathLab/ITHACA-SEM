@@ -82,12 +82,12 @@ namespace SpatialDomains
         int wgtflag = 0;
         int *vwgt = 0;
         int *vsize = 0;
-        if (vertWgt.num_elements() > 0)
+        if (vertWgt.size() > 0)
         {
             wgtflag += 1;
             vwgt = &vertWgt[0];
         }
-        if (vertSize.num_elements() > 0)
+        if (vertSize.size() > 0)
         {
             wgtflag += 2;
             vsize = &vertSize[0];

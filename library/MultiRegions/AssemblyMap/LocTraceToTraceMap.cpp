@@ -237,7 +237,7 @@ void LocTraceToTraceMap::Setup2D(
             int order_f = edge->GetNcoeffs();
             int foffset = trace->GetCoeff_Offset(edge->GetElmtId());
 
-            double fac = (*exp)[n]->EdgeNormalNegated(e) ? -1.0 : 1.0;
+            double fac = 1.0;
 
             LocalRegions::Expansion1DSharedPtr locExp1d =
                 elmtToTrace[n][e]->as<LocalRegions::Expansion1D>();
@@ -577,7 +577,7 @@ void LocTraceToTraceMap::Setup3D(
             int order_f = face->GetNcoeffs();
             int foffset = trace->GetCoeff_Offset(face->GetElmtId());
 
-            int fac = (*exp)[n]->FaceNormalNegated(e) ? -1.0 : 1.0;
+            int fac = 1.0;
 
             if (exp3d->GetFaceExp(e)->GetRightAdjacentElementExp())
             {
@@ -849,7 +849,7 @@ void LocTraceToTraceMap::Setup3D(
 void LocTraceToTraceMap::LocTracesFromField(
     const Array<OneD, const NekDouble> &field, Array<OneD, NekDouble> faces)
 {
-    Vmath::Gathr(m_fieldToLocTraceMap.num_elements(),
+    Vmath::Gathr(m_fieldToLocTraceMap.size(),
                  field,
                  m_fieldToLocTraceMap,
                  faces);
@@ -891,7 +891,7 @@ void LocTraceToTraceMap::InterpLocEdgesToTrace(
     // tmp space assuming forward map is of size of trace
     Array<OneD, NekDouble> tmp(m_nTracePts);
 
-    for (int i = 0; i < m_interpTrace[dir].num_elements(); ++i)
+    for (int i = 0; i < m_interpTrace[dir].size(); ++i)
     {
         // Check if there are edges to interpolate
         if (m_interpNfaces[dir][i])
@@ -964,7 +964,7 @@ void LocTraceToTraceMap::InterpLocEdgesToTrace(
         }
     }
 
-    Vmath::Scatr(m_LocTraceToTraceMap[dir].num_elements(),
+    Vmath::Scatr(m_LocTraceToTraceMap[dir].size(),
                  tmp.get(),
                  m_LocTraceToTraceMap[dir].get(),
                  edges.get());
@@ -993,7 +993,7 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
     // tmp space assuming forward map is of size of trace
     Array<OneD, NekDouble> tmp(m_nTracePts);
 
-    for (int i = 0; i < m_interpTrace[dir].num_elements(); ++i)
+    for (int i = 0; i < m_interpTrace[dir].size(); ++i)
     {
         // Check if there are faces to interpolate
         if (m_interpNfaces[dir][i])
@@ -1196,7 +1196,7 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
         }
     }
 
-    Vmath::Scatr(m_LocTraceToTraceMap[dir].num_elements(),
+    Vmath::Scatr(m_LocTraceToTraceMap[dir].size(),
                  tmp.get(),
                  m_LocTraceToTraceMap[dir].get(),
                  faces.get());

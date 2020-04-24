@@ -109,7 +109,11 @@ private:
         std::vector<ElUtilSharedPtr> elLock);
 
     void RemoveLinearCurvature();
-    
+
+    LibUtilities::Interpolator GetScalingFieldFromFile(std::string file);
+    LibUtilities::Interpolator GetField(
+        Array<OneD, Array<OneD, NekDouble> > inPts);
+
     NodeElMap m_nodeElMap;
     std::vector<ElUtilSharedPtr> m_dataSet;
 

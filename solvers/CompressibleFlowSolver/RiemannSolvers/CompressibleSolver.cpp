@@ -53,7 +53,7 @@ namespace Nektar
         // Check if using ideal gas
         m_idealGas = boost::iequals(eosType,"IdealGas");
     }
-    
+
     void CompressibleSolver::v_Solve(
         const int                                         nDim,
         const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
@@ -63,14 +63,14 @@ namespace Nektar
         if (m_pointSolve)
         {
             int expDim      = nDim;
-            int nvariables  = Fwd.num_elements();
-            
+            int nvariables  = Fwd.size();
+
             NekDouble rhouf, rhovf;
-            
+
             // Check if PDE-based SC is used
             if (expDim == 1)
             {
-                for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                for (int i = 0; i < Fwd[0].size(); ++i)
                 {
                     v_PointSolve(
                         Fwd [0][i], Fwd [1][i], 0.0,   0.0,   Fwd [2][i],
@@ -82,7 +82,7 @@ namespace Nektar
             {
                 if (nvariables == expDim+2)
                 {
-                    for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                    for (int i = 0; i < Fwd[0].size(); ++i)
                     {
                         v_PointSolve(
                             Fwd [0][i], Fwd [1][i], Fwd [2][i], 0.0,   Fwd [3][i],
@@ -90,10 +90,10 @@ namespace Nektar
                             flux[0][i], flux[1][i], flux[2][i], rhovf, flux[3][i]);
                     }
                 }
-                
+
                 if (nvariables > expDim+2)
                 {
-                    for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                    for (int i = 0; i < Fwd[0].size(); ++i)
                     {
                         v_PointSolveVisc(
                             Fwd [0][i], Fwd [1][i], Fwd [2][i], 0.0, Fwd [3][i], Fwd [4][i],
@@ -101,11 +101,11 @@ namespace Nektar
                             flux[0][i], flux[1][i], flux[2][i], rhovf, flux[3][i], flux[4][i]);
                     }
                 }
-                
+
             }
             else if (expDim == 3)
             {
-                for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                for (int i = 0; i < Fwd[0].size(); ++i)
                 {
                     v_PointSolve(
                         Fwd [0][i], Fwd [1][i], Fwd [2][i], Fwd [3][i], Fwd [4][i],
@@ -114,7 +114,7 @@ namespace Nektar
                 }
                 if (nvariables > expDim+2)
                 {
-                    for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                    for (int i = 0; i < Fwd[0].size(); ++i)
                     {
                         v_PointSolveVisc(
                             Fwd [0][i], Fwd [1][i], Fwd [2][i], Fwd [3][i], Fwd [4][i], Fwd [5][i],

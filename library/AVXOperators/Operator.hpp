@@ -249,9 +249,8 @@ public:
     }
 
     virtual void operator()(
-        const Array<OneD, const NekDouble> &input0,
-        const Array<OneD, const NekDouble> &input1,
-        Array<OneD, NekDouble> &output) = 0;
+        const Array<OneD, Array<OneD, NekDouble>> &in,
+        Array<OneD, NekDouble> &out) = 0;
 
 protected:
     std::vector<LibUtilities::BasisSharedPtr> m_basis;

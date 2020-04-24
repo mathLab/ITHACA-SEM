@@ -30,11 +30,11 @@ std::string __register_IProductWRTDerivBase_Quad_Deformed_AVX = GetOperatorFacto
 // std::string __register_IProductWRTDerivBase_Prism_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
 //     std::string("IProductWRTDerivBase_Prism_Deformed_AVX"), &AVXIProductWRTDerivBasePrism<4, true>::Create);
 
-// std::string __register_IProductWRTDerivBase_Hex_AVX = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProductWRTDerivBase_Hex_Regular_AVX"), &AVXIProductWRTDerivBaseHex<4>::Create);
+std::string __register_IProductWRTDerivBase_Hex_AVX = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProductWRTDerivBase_Hex_Regular_AVX"), &AVXIProductWRTDerivBaseHex<4>::Create);
 
-// std::string __register_IProductWRTDerivBase_Hex_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProductWRTDerivBase_Hex_Deformed_AVX"), &AVXIProductWRTDerivBaseHex<4,true>::Create);
+std::string __register_IProductWRTDerivBase_Hex_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProductWRTDerivBase_Hex_Deformed_AVX"), &AVXIProductWRTDerivBaseHex<4,true>::Create);
 #endif
 
 #if defined(__AVX512F__)
@@ -62,11 +62,11 @@ std::string __register_IProductWRTDerivBase_Quad_Deformed_AVX512 = GetOperatorFa
 // std::string __register_IProductWRTDerivBase_Prism_Deformed_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
 //     std::string("IProductWRTDerivBase_Prism_Deformed_AVX512"), &AVXIProductWRTDerivBasePrism<8, true>::Create);
 
-// std::string __register_IProductWRTDerivBase_Hex_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProductWRTDerivBase_Hex_Regular_AVX512"), &AVXIProductWRTDerivBaseHex<8>::Create);
+std::string __register_IProductWRTDerivBase_Hex_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProductWRTDerivBase_Hex_Regular_AVX512"), &AVXIProductWRTDerivBaseHex<8>::Create);
 
-// std::string __register_IProductWRTDerivBase_Hex_Deformed_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProductWRTDerivBase_Hex_Deformed_AVX512"), &AVXIProductWRTDerivBaseHex<8,true>::Create);
+std::string __register_IProductWRTDerivBase_Hex_Deformed_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProductWRTDerivBase_Hex_Deformed_AVX512"), &AVXIProductWRTDerivBaseHex<8,true>::Create);
 #endif
 
 } // namespace AVX

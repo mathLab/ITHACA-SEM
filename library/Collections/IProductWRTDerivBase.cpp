@@ -255,16 +255,28 @@ class IProductWRTDerivBase_AVX : public Operator
             if (m_isPadded)
             {
                 // copy into padded vector
-                Vmath::Vcopy(entry0.num_elements(), entry0, 1, m_input0, 1);
-                Vmath::Vcopy(entry1.num_elements(), entry1, 1, m_input1, 1);
+                Vmath::Vcopy(entry0.num_elements(), entry0, 1, m_input[0], 1);
+                Vmath::Vcopy(entry1.num_elements(), entry1, 1, m_input[1], 1);
+                if (m_coordim == 3)
+                {
+                    Vmath::Vcopy(entry0.num_elements(), entry2, 1, m_input[2], 1);
+                }
+
                 // call op
-                (*m_oper)(m_input0, m_input1, m_output);
+                (*m_oper)(m_input, m_output);
                 // copy out of padded vector
                 Vmath::Vcopy(output.num_elements(), m_output, 1, output, 1);
             }
             else
             {
-                (*m_oper)(entry0, entry1, output);
+                Array<OneD, Array<OneD, NekDouble>> input;
+                input[0] = entry0;
+                input[1] = entry1;
+                if (m_coordim == 3)
+                {
+                    input[2] = entry2;
+                }
+                (*m_oper)(input, output);
             }
         }
 
@@ -283,7 +295,8 @@ class IProductWRTDerivBase_AVX : public Operator
         /// flag for padding
         bool m_isPadded{false};
         /// padded input/output vectors
-        Array<OneD, NekDouble> m_input0, m_input1, m_output;
+        Array<OneD, Array<OneD, NekDouble>> m_input;
+        Array<OneD, NekDouble> m_output;
         /// coordinates dimension
         int m_coordim;
 
@@ -305,8 +318,12 @@ class IProductWRTDerivBase_AVX : public Operator
                 m_isPadded = true;
                 nElmtPad = nElmtNoPad + AVX::SIMD_WIDTH_SIZE -
                     (nElmtNoPad % AVX::SIMD_WIDTH_SIZE);
-                m_input0 = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                m_input1 = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                m_input[0] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                m_input[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                if (m_coordim == 3)
+                {
+                    m_input[2] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                }
                 m_output = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
             }
 
@@ -368,7 +385,10 @@ class IProductWRTDerivBase_AVX : public Operator
 OperatorKey IProductWRTDerivBase_AVX::m_typeArr[] = {
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eQuadrilateral, eIProductWRTDerivBase, eAVX, false),
-        IProductWRTDerivBase_AVX::create, "IProductWRTDerivBase_AVX_Quad")
+        IProductWRTDerivBase_AVX::create, "IProductWRTDerivBase_AVX_Quad"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eHexahedron, eIProductWRTDerivBase, eAVX, false),
+        IProductWRTDerivBase_AVX::create, "IProductWRTDerivBase_AVX_Hex")
 };
 
 /**

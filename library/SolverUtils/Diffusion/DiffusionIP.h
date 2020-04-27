@@ -119,16 +119,18 @@ namespace Nektar
                     Array<OneD, int >                                             &nonZeroIndexsymm,
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceSymflux);
             
-            void DiffuseTraceSymmFlux(
-                const int                                           nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
-                const Array<OneD, Array<OneD, NekDouble>>           &inarray,
-                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &SymmFlux,
-                const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
-                const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
-                Array< OneD, int >                                  &nonZeroIndex);
+            virtual void v_DiffuseTraceSymmFlux(
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
+                const Array<OneD, Array<OneD, NekDouble>>                   &inarray,
+                const Array<OneD,Array<OneD, Array<OneD, NekDouble> > >     &qfield,
+                const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &VolumeFlux,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &SymmFlux,
+                const Array<OneD, Array<OneD, NekDouble>>                   &pFwd,
+                const Array<OneD, Array<OneD, NekDouble>>                   &pBwd,
+                Array< OneD, int >                                          &nonZeroIndex,
+                Array<OneD, Array<OneD, NekDouble> >                        &solution_Aver,
+                Array<OneD, Array<OneD, NekDouble> >                        &solution_jump);
             
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,
@@ -219,8 +221,7 @@ namespace Nektar
                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &qfield,
                 const Array<OneD, Array<OneD, NekDouble> >                  &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >                  &pBwd);
-
-            
+           
             virtual void v_ConsVarAveJump(
                 const int                                           nConvectiveFields,
                 const int                                           npnts,
@@ -277,6 +278,13 @@ namespace Nektar
                     Array<OneD,  Array<OneD,  NekDouble> > > > >            &ElmtJacArray,
                 const int                                                   nDervDir, 
                 Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >              &gmtxarray);
+            virtual void v_MinusVolumDerivJacToMat( 
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &pFields,
+                const Array<OneD, const Array<OneD,  Array<OneD, 
+                    Array<OneD,  Array<OneD,  NekDouble> > > > >            &ElmtJacArray,
+                const int                                                   nDervDir, 
+                Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >              &gmtxarray);
             
 #endif
         }; 

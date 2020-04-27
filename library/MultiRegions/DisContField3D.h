@@ -343,6 +343,11 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fwd,
                 const Array<OneD, const NekDouble> &Bwd,
                     Array<OneD,       NekDouble> &field);
+
+            virtual void v_AddTraceQuadPhysToOffDiag(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &field);
             
             virtual void v_GetLocTraceFromTracePts(
                 const Array<OneD, const NekDouble>  &Fwd,

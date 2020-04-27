@@ -53,17 +53,6 @@ namespace Nektar
 
             static std::string type;
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-            void CalcJacobTraceInteg(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-                const int                                             m,
-                const int                                             n,
-                const Array<OneD, const DNekBlkMatSharedPtr>        & PntJac,
-                const Array<OneD, const Array<OneD, NekDouble> >    & PntJacSign,
-                Array<OneD, DNekMatSharedPtr>                       & TraceJacFwd,
-                Array<OneD, DNekMatSharedPtr>                       & TraceJacBwd);
-#endif
-
         protected:
 #ifdef CFS_DEBUGMODE
             // 1: Con; 2: Deriv; Default: all
@@ -124,15 +113,12 @@ namespace Nektar
                 const Array<OneD, const Array<OneD,  Array<OneD, 
                     Array<OneD,  Array<OneD,  NekDouble> > > > >                        &ElmtJacArray,
                 Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                          &gmtxarray);
-
-            virtual void v_AddTraceJacToMat(
-                const int                                           nConvectiveFields,
-                const int                                           nSpaceDim,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-                const Array<OneD, DNekBlkMatSharedPtr>              &TracePntJacCons,
-                Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >      &gmtxarray,
-                const Array<OneD, DNekBlkMatSharedPtr>              &TracePntJacGrad        ,
-                const Array<OneD, Array<OneD, NekDouble> >          &TracePntJacGradSign    );
+            virtual void v_AddVolumJacToMat( 
+                const Array<OneD, MultiRegions::ExpListSharedPtr>                       &pFields,
+                const int                                                               &nConvectiveFields,
+                const Array<OneD, const Array<OneD,  Array<OneD, 
+                    Array<OneD,  Array<OneD,  NekDouble> > > > >                        &ElmtJacArray,
+                Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >                          &gmtxarray);
 
             virtual void v_NumCalRiemFluxJac(
                 const int                                         nConvectiveFields,

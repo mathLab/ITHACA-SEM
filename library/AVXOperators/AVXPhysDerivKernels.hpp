@@ -304,9 +304,12 @@ static void AVXPhysDerivHexKernel(
     }
 
     int cnt_ijk = 0;
-    for(int k = 0; k < nq2; k++){
-        for(int j = 0; j < nq1; j++){
-            for(int i = 0; i < nq0; i++, cnt_ijk++){
+    for (int k = 0; k < nq2; ++k)
+    {
+        for (int j = 0; j < nq1; ++j)
+        {
+            for (int i = 0; i < nq0; ++i, ++cnt_ijk)
+            {
                 T d0 = outptr_d0[cnt_ijk]; //Load 1x
                 T d1 = outptr_d1[cnt_ijk]; //Load 1x
                 T d2 = outptr_d2[cnt_ijk]; //Load 1x

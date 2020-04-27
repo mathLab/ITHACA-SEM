@@ -1291,7 +1291,7 @@ namespace QuadCollectionTests
         Nektar::LibUtilities::BasisType basisTypeDir1 =
             Nektar::LibUtilities::eModified_A;
         unsigned int numQuadPoints = 5;
-        int numModes = 4;
+        int numModes = 2;
         const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints,
             quadPointsTypeDir1);
         const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
@@ -1356,8 +1356,8 @@ namespace QuadCollectionTests
             Nektar::LibUtilities::eGaussLobattoLegendre;
         Nektar::LibUtilities::BasisType basisTypeDir1 =
             Nektar::LibUtilities::eModified_A;
-        unsigned int numQuadPoints = 5;
-        int numModes = 4;
+        unsigned int numQuadPoints = 4;
+        unsigned int numModes = 2;
         const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints,
             quadPointsTypeDir1);
         const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
@@ -1393,7 +1393,7 @@ namespace QuadCollectionTests
             phys[i] = sin(xc[i])*cos(yc[i]);
         }
 
-        Exp->PhysDeriv(phys, derivRef, tmp = derivRef+nq);
+        Exp->PhysDeriv(phys, derivRef, tmp = derivRef + nq);
         c.ApplyOperator(Collections::ePhysDeriv, phys, deriv, tmp = deriv + nq);
 
         double epsilon = 1.0e-8;

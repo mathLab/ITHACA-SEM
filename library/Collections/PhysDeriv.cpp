@@ -339,10 +339,6 @@ class PhysDeriv_AVX : public Operator
                 jacSizePad = nElmtPad * nqElmt;
             }
 
-            // Store Jacobian
-            Array<OneD, NekDouble> jac{jacSizePad, 0.0};
-            Vmath::Vcopy(jacSizeNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
-
             // Store derivative factors
             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
             Array<TwoD, NekDouble> df(dim * dim, jacSizePad, 0.0);
@@ -369,17 +365,8 @@ class PhysDeriv_AVX : public Operator
             auto oper = AVX::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmtPad);
 
-            // If the operator needs the Jacobian, provide it here
-            if (oper->NeedsJac())
-            {
-                oper->SetJac(jac);
-            }
-
-            // If the operator needs the derivative factors, provide it here
-            if (oper->NeedsDF())
-            {
-                oper->SetDF(df);
-            }
+            // Store derivative factor
+            oper->SetDF(df);
 
             m_oper = std::dynamic_pointer_cast<AVX::PhysDeriv>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");

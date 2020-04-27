@@ -464,53 +464,52 @@ struct AVXPhysDerivHex : public PhysDeriv, public AVXHelper<VW,3,DEFORMED>
                                   Array<OneD,       NekDouble> &out_d1,
                                   Array<OneD,       NekDouble> &out_d2) override
     {
-        switch(m_basis[0]->GetNumModes())
+        switch(m_basis[0]->GetNumPoints())
         {
             case 2:
-                AVXPhysDerivHexImpl<3,3,3>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<2,2,2>(in, out_d0, out_d1, out_d2);
                 break;
             case 3:
-                AVXPhysDerivHexImpl<4,4,4>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<3,3,3>(in, out_d0, out_d1, out_d2);
                 break;
             case 4:
-                AVXPhysDerivHexImpl<5,5,5>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<4,4,4>(in, out_d0, out_d1, out_d2);
                 break;
             case 5:
-                AVXPhysDerivHexImpl<6,6,6>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<5,5,5>(in, out_d0, out_d1, out_d2);
                 break;
             case 6:
-                AVXPhysDerivHexImpl<7,7,7>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<6,6,6>(in, out_d0, out_d1, out_d2);
                 break;
             case 7:
-                AVXPhysDerivHexImpl<8,8,8>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<7,7,7>(in, out_d0, out_d1, out_d2);
                 break;
             case 8:
-                AVXPhysDerivHexImpl<9,9,9>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<8,8,8>(in, out_d0, out_d1, out_d2);
                 break;
             case 9:
-                AVXPhysDerivHexImpl<10,10,10>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<9,9,9>(in, out_d0, out_d1, out_d2);
                 break;
             case 10:
-                AVXPhysDerivHexImpl<11,11,11>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<10,10,10>(in, out_d0, out_d1, out_d2);
                 break;
             case 11:
-                AVXPhysDerivHexImpl<12,12,12>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<11,11,11>(in, out_d0, out_d1, out_d2);
                 break;
             case 12:
-                AVXPhysDerivHexImpl<13,13,13>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<12,12,12>(in, out_d0, out_d1, out_d2);
                 break;
             case 13:
-                AVXPhysDerivHexImpl<14,14,14>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<13,13,13>(in, out_d0, out_d1, out_d2);
                 break;
             case 14:
-                AVXPhysDerivHexImpl<15,15,15>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<14,14,14>(in, out_d0, out_d1, out_d2);
                 break;
             case 15:
-                AVXPhysDerivHexImpl<16,16,16>(in, out_d0, out_d1, out_d2);
+                AVXPhysDerivHexImpl<15,15,15>(in, out_d0, out_d1, out_d2);
                 break;
-            case 16:
-                AVXPhysDerivHexImpl<17,17,17>(in, out_d0, out_d1, out_d2);
-                break;
+            default: NEKERROR(ErrorUtil::efatal,
+                "AVXPhysDerivHex: # of modes / points combo not implemented.");
         }
     }
 

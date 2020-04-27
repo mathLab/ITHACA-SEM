@@ -318,6 +318,7 @@ class IProductWRTDerivBase_AVX : public Operator
                 m_isPadded = true;
                 nElmtPad = nElmtNoPad + AVX::SIMD_WIDTH_SIZE -
                     (nElmtNoPad % AVX::SIMD_WIDTH_SIZE);
+                m_input = Array<OneD, Array<OneD, NekDouble>> (m_coordim);
                 m_input[0] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
                 m_input[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
                 if (m_coordim == 3)

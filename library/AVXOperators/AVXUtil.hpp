@@ -19,7 +19,7 @@ constexpr int SIMD_WIDTH_BITS = 256;
 constexpr int SIMD_WIDTH_BITS = 512;
 #endif
 
-/// Number of bytes in a AVX2 vector
+/// Number of bytes in a AVX vector
 constexpr int SIMD_WIDTH_BYTES = SIMD_WIDTH_BITS / 8;
 /// Number of elements in a AVX vector for NekDoubles
 constexpr int SIMD_WIDTH_SIZE = SIMD_WIDTH_BYTES / sizeof(NekDouble);

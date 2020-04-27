@@ -4080,7 +4080,7 @@ namespace Nektar
             NekDouble tmp;
             NekDouble sign = 1.0;
 
-            bool Debugflag = true;
+            bool Debugflag = false;
             if(locTraceToTraceMap->GetflagTracephysToLeftRightExpphysMap()&&Debugflag)
             {
                 Array<OneD, DNekMatSharedPtr>       TracFBMat(2);

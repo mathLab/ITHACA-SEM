@@ -298,7 +298,7 @@ class IProductWRTDerivBase_AVX : public Operator
         Array<OneD, Array<OneD, NekDouble>> m_input;
         Array<OneD, NekDouble> m_output;
         /// coordinates dimension
-        int m_coordim;
+        unsigned short m_coordim;
 
         IProductWRTDerivBase_AVX(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,

@@ -24,11 +24,11 @@ std::string __register_PhysDeriv_Quad_Deformed_AVX = GetOperatorFactory().Regist
 // std::string __register_PhysDeriv_Tet_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
 //     std::string("PhysDeriv_Tet_Deformed_AVX"), &AVXPhysDerivTet<4, true>::Create);
 
-// std::string __register_PhysDeriv_Hex_AVX = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("PhysDeriv_Hex_Regular_AVX"), &AVXPhysDerivHex<4>::Create);
+std::string __register_PhysDeriv_Hex_AVX = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("PhysDeriv_Hex_Regular_AVX"), &AVXPhysDerivHex<4>::Create);
 
-// std::string __register_PhysDeriv_Hex_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("PhysDeriv_Hex_Deformed_AVX"), &AVXPhysDerivHex<4,true>::Create);
+std::string __register_PhysDeriv_Hex_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("PhysDeriv_Hex_Deformed_AVX"), &AVXPhysDerivHex<4,true>::Create);
 
 // std::string __register_PhysDeriv_Prism_AVX = GetOperatorFactory().RegisterCreatorFunction(
 //     std::string("PhysDeriv_Prism_Regular_AVX"), &AVXPhysDerivPrism<4>::Create);
@@ -56,11 +56,11 @@ std::string __register_PhysDeriv_Quad_Deformed_AVX512 = GetOperatorFactory().Reg
 // std::string __register_PhysDeriv_Tet_Deformed_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
 //     std::string("PhysDeriv_Tet_Deformed_AVX512"), &AVXPhysDerivTet<8, true>::Create);
 
-// std::string __register_PhysDeriv_Hex_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("PhysDeriv_Hex_Regular_AVX512"), &AVXPhysDerivHex<8>::Create);
+std::string __register_PhysDeriv_Hex_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("PhysDeriv_Hex_Regular_AVX512"), &AVXPhysDerivHex<8>::Create);
 
-// std::string __register_PhysDeriv_Hex_Deformed_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("PhysDeriv_Hex_Deformed_AVX512"), &AVXPhysDerivHex<8,true>::Create);
+std::string __register_PhysDeriv_Hex_Deformed_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("PhysDeriv_Hex_Deformed_AVX512"), &AVXPhysDerivHex<8,true>::Create);
 
 // std::string __register_PhysDeriv_Prism_AVX512 = GetOperatorFactory().RegisterCreatorFunction(
 //     std::string("PhysDeriv_Prism_Regular_AVX512"), &AVXPhysDerivPrism<8>::Create);

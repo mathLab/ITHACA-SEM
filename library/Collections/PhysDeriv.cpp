@@ -244,20 +244,38 @@ class PhysDeriv_AVX : public Operator
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp)
         {
-            boost::ignore_unused(output2, wsp);
+            boost::ignore_unused(wsp);
             if (m_isPadded)
             {
                 // copy into padded vector
                 Vmath::Vcopy(input.num_elements(), input, 1, m_input, 1);
                 // call op
-                (*m_oper)(m_input, m_output0, m_output1);
-                // copy out of padded vector
-                Vmath::Vcopy(output0.num_elements(), m_output0, 1, output0, 1);
-                Vmath::Vcopy(output1.num_elements(), m_output1, 1, output1, 1);
+                if (m_coordim == 2)
+                {
+                    (*m_oper)(m_input, m_output[0], m_output[1]);
+                    // copy out of padded vector
+                    Vmath::Vcopy(output0.num_elements(), m_output[0], 1, output0, 1);
+                    Vmath::Vcopy(output1.num_elements(), m_output[1], 1, output1, 1);
+                }
+                else
+                {
+                    (*m_oper)(m_input, m_output[0], m_output[1], m_output[2]);
+                    // copy out of padded vector
+                    Vmath::Vcopy(output0.num_elements(), m_output[0], 1, output0, 1);
+                    Vmath::Vcopy(output1.num_elements(), m_output[1], 1, output1, 1);
+                    Vmath::Vcopy(output2.num_elements(), m_output[2], 1, output2, 1);
+                }
             }
             else
             {
-                (*m_oper)(input, output0, output1);
+                if (m_coordim == 2)
+                {
+                    (*m_oper)(input, output0, output1);
+                }
+                else
+                {
+                    (*m_oper)(input, output0, output1, output2);
+                }
             }
         }
 
@@ -277,16 +295,19 @@ class PhysDeriv_AVX : public Operator
         /// flag for padding
         bool m_isPadded{false};
         /// padded input/output vectors
-        Array<OneD, NekDouble> m_input, m_output0, m_output1;
+        Array<OneD, NekDouble> m_input;
+        Array<OneD, Array<OneD, NekDouble>> m_output;
+        /// coordinate dimensions
+        unsigned short m_coordim;
 
         PhysDeriv_AVX(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
             : Operator(pCollExp, pGeomData)
         {
+            m_coordim  = pCollExp[0]->GetCoordim();
 
             const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
-            // const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
 
             // Padding if needed
             const auto nElmtNoPad = pCollExp.size();
@@ -297,8 +318,13 @@ class PhysDeriv_AVX : public Operator
                 nElmtPad = nElmtNoPad + AVX::SIMD_WIDTH_SIZE -
                     (nElmtNoPad % AVX::SIMD_WIDTH_SIZE);
                 m_input = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                m_output0 = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                m_output1 = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                m_output = Array<OneD, Array<OneD, NekDouble>> {m_coordim};
+                m_output[0] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                if (m_coordim == 3)
+                {
+                    m_output[2] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                }
             }
 
             // Check if deformed
@@ -366,7 +392,11 @@ OperatorKey PhysDeriv_AVX::m_typeArr[] =
 {
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eQuadrilateral, ePhysDeriv, eAVX, false),
-        PhysDeriv_AVX::create, "PhysDeriv_AVX_Quad")
+        PhysDeriv_AVX::create, "PhysDeriv_AVX_Quad"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eHexahedron, ePhysDeriv, eAVX, false),
+        PhysDeriv_AVX::create, "PhysDeriv_AVX_Hex")
+
 };
 
 /**

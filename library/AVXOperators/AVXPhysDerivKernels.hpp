@@ -66,14 +66,14 @@ inline static void AVXPhysDerivTensor2DKernel(
 template<int NUMQUAD0, int NUMQUAD1,
          int VW, bool DEFORMED, class BasisType>
 static void AVXPhysDerivQuadKernel(
-    const AlignedVector<VecData<double, VW>> &inptr,
+    const AlignedVector<VecData<NekDouble, VW>> &inptr,
     const AlignedVector<BasisType> &Z0,
     const AlignedVector<BasisType> &Z1,
     const AlignedVector<BasisType> &D0,
     const AlignedVector<BasisType> &D1,
-    const VecData<double, VW> *df_ptr,
-          AlignedVector<VecData<double, VW>> &outptr_d0,
-          AlignedVector<VecData<double, VW>> &outptr_d1)
+    const VecData<NekDouble, VW> *df_ptr,
+          AlignedVector<VecData<NekDouble, VW>> &outptr_d0,
+          AlignedVector<VecData<NekDouble, VW>> &outptr_d1)
 {
     boost::ignore_unused(Z0, Z1);
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
@@ -189,16 +189,16 @@ static void AVXPhysDerivTriKernel(
 template<int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
          int VW, class BasisType>
 inline static void AVXPhysDerivTensor3DKernel(
-    const NekDouble *inptr,
+    const AlignedVector<VecData<NekDouble, VW>> &in,
     const AlignedVector<BasisType> &D0,
     const AlignedVector<BasisType> &D1,
     const AlignedVector<BasisType> &D2,
-    NekDouble *outptr_d0,
-    NekDouble *outptr_d1,
-    NekDouble *outptr_d2)
+          AlignedVector<VecData<NekDouble, VW>> &out_d0,
+          AlignedVector<VecData<NekDouble, VW>> &out_d1,
+          AlignedVector<VecData<NekDouble, VW>> &out_d2)
 {
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
-    using T = VecData<double, VW>;
+    using T = VecData<NekDouble, VW>;
 
     //Direction 1
     for (int i = 0; i < nq0; ++i)
@@ -206,54 +206,60 @@ inline static void AVXPhysDerivTensor3DKernel(
         for (int j = 0; j < nq1*nq2; ++j)
         {
             T prod_sum = T(0.0);
-
-            for (int k = 0; k < nq0; ++k){
+            for (int k = 0; k < nq0; ++k)
+            {
                 T v1 = D0[k*nq0+i];
-                T v2 = T(inptr + VW*(j*nq0+k));
+                T v2 = in[j*nq0+k];
 
                 prod_sum.fma(v1, v2);
             }
 
-            prod_sum.store(outptr_d0 + (j*nq0+i)*VW);
+            out_d0[j*nq0+i] = prod_sum;
 
         }
     }
 
     // Direction 2
-    for(int block = 0; block < nq2; block++)
+    for (int block = 0; block < nq2; ++block)
     {
-        int start = block * nq0 * nq1 * VW;
+        int start = block * nq0 * nq1;
 
-        for(int i = 0; i < nq0; i++){
-            for(int j = 0; j < nq1; j++){
+        for (int i = 0; i < nq0; ++i)
+        {
+            for (int j = 0; j < nq1; ++j)
+            {
 
                 T prod_sum = T(0.0);
-                for(int k = 0; k < nq1; k++){
-                    T v1 = T(inptr + start + VW*(k*nq0+i));
+                for (int k = 0; k < nq1; ++k)
+                {
+                    T v1 = in[start + k*nq0+i];
                     T v2 = D1[k*nq1 + j];
 
                     prod_sum.fma(v1,v2);
                 }
 
-                prod_sum.store(outptr_d1 + start + (j*nq0+i)*VW);
+                out_d1[ start + j*nq0+i] = prod_sum;
             }
         }
 
     }
 
     //Direction 3
-    for(int i = 0; i < nq0 * nq1; i++){
-        for(int j = 0; j < nq2; j++){
+    for (int i = 0; i < nq0 * nq1; ++i)
+    {
+        for (int j = 0; j < nq2; ++j)
+        {
 
             T prod_sum = T(0.0);
-            for(int k = 0; k < nq2; k++){
-                T v1 = T(inptr + VW*(k*nq0*nq1 + i));
+            for (int k = 0; k < nq2; ++k)
+            {
+                T v1 = in[k*nq0*nq1 + i];
                 T v2 = D2[k*nq2 + j];
 
                 prod_sum.fma(v1,v2);
             }
 
-            prod_sum.store(outptr_d2 + VW*(j*nq0*nq1 + i));
+            out_d2[j*nq0*nq1 + i] = prod_sum;
         }
     }
 
@@ -262,21 +268,22 @@ inline static void AVXPhysDerivTensor3DKernel(
 template<int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
          int VW, bool DEFORMED, class BasisType>
 static void AVXPhysDerivHexKernel(
-    const NekDouble *inptr,
+    const AlignedVector<VecData<NekDouble, VW>> &inptr,
     const AlignedVector<BasisType> &Z0,
     const AlignedVector<BasisType> &Z1,
     const AlignedVector<BasisType> &Z2,
     const AlignedVector<BasisType> &D0,
     const AlignedVector<BasisType> &D1,
     const AlignedVector<BasisType> &D2,
-    const VecData<double, VW> *df_ptr,
-    NekDouble *outptr_d0,
-    NekDouble *outptr_d1,
-    NekDouble *outptr_d2)
+    const VecData<NekDouble, VW> *df_ptr,
+    AlignedVector<VecData<NekDouble, VW>> &outptr_d0,
+    AlignedVector<VecData<NekDouble, VW>> &outptr_d1,
+    AlignedVector<VecData<NekDouble, VW>> &outptr_d2)
 {
+    boost::ignore_unused(Z0, Z1, Z2);
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
     constexpr int ndf = 9;
-    using T = VecData<double, VW>;
+    using T = VecData<NekDouble, VW>;
 
     AVXPhysDerivTensor3DKernel<NUMQUAD0, NUMQUAD1, NUMQUAD2, VW>(
         inptr,
@@ -300,9 +307,9 @@ static void AVXPhysDerivHexKernel(
     for(int k = 0; k < nq2; k++){
         for(int j = 0; j < nq1; j++){
             for(int i = 0; i < nq0; i++, cnt_ijk++){
-                T d0 = T(outptr_d0 + cnt_ijk*VW); //Load 1x
-                T d1 = T(outptr_d1 + cnt_ijk*VW); //Load 1x
-                T d2 = T(outptr_d2 + cnt_ijk*VW); //Load 1x
+                T d0 = outptr_d0[cnt_ijk]; //Load 1x
+                T d1 = outptr_d1[cnt_ijk]; //Load 1x
+                T d2 = outptr_d2[cnt_ijk]; //Load 1x
 
                 if(DEFORMED){
                     df0 = df_ptr[cnt_ijk*ndf + 0];
@@ -319,17 +326,17 @@ static void AVXPhysDerivHexKernel(
                 T out0 = d0 * df0;
                 out0.fma(d1, df1);
                 out0.fma(d2, df2);
-                out0.store(outptr_d0 + cnt_ijk*VW); //Store 1x
+                outptr_d0[cnt_ijk] = out0; //Store 1x
 
                 T out1 = d0 * df3;
                 out1.fma(d1, df4);
                 out1.fma(d2, df5);
-                out1.store(outptr_d1 + cnt_ijk*VW); //Store 1x
+                outptr_d1[cnt_ijk] = out1; //Store 1x
 
                 T out2 = d0 * df6;
                 out2.fma(d1, df7);
                 out2.fma(d2, df8);
-                out2.store(outptr_d2 + cnt_ijk*VW); //Store 1x
+                outptr_d2[cnt_ijk] = out2; //Store 1x
 
             }
         }

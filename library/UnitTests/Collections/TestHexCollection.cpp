@@ -1975,6 +1975,83 @@ namespace Nektar
             }
         }
 
+        BOOST_AUTO_TEST_CASE(TestHexPhysDeriv_AVX_UniformP_Undeformed)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
+                3u, 0u, -1.5, -1.5, -1.5));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(
+                3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(
+                3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(
+                3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(
+                3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(
+                3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(
+                3u, 6u, 1.0, 1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(
+                3u, 7u, -1.0, 1.0, 1.0));
+
+            SpatialDomains::HexGeomSharedPtr hexGeom =
+                CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
+
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 =
+                Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 =
+                Nektar::LibUtilities::eModified_A;
+            unsigned int numQuadPoints = 6;
+            unsigned int numModes = 4;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(
+                numQuadPoints, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
+                numModes, quadPointsKeyDir1);
+
+            Nektar::LocalRegions::HexExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(
+                basisKeyDir1, basisKeyDir1, basisKeyDir1, hexGeom);
+
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp =
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(
+                basisKeyDir1, basisKeyDir1, basisKeyDir1);
+
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            CollExp.push_back(Exp);
+
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession,
+                Collections::eAVX);
+            Collections::OperatorImpMap impTypes =
+                colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(CollExp, impTypes);
+
+
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+            Array<OneD, NekDouble> phys(nq),tmp,tmp1,tmp2;
+            Array<OneD, NekDouble> diffRef(3*nq);
+            Array<OneD, NekDouble> diff(3*nq);
+
+            Exp->GetCoords(xc, yc, zc);
+
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            }
+
+            Exp->PhysDeriv(phys, diffRef, tmp = diffRef+nq,
+                tmp1 = diffRef+2*nq);
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff, tmp = diff+nq,
+                tmp2 = diff+2*nq);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < diffRef.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(diffRef[i],diff[i], epsilon);
+            }
+        }
+
         BOOST_AUTO_TEST_CASE(TestHexPhysDeriv_IterPerExp_VariableP_MultiElmt)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, -1.5, -1.5));

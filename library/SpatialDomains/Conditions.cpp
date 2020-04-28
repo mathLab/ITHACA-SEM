@@ -115,7 +115,7 @@ std::set<int> ShareAllBoundaryIDs(
             Array<OneD, int> idsArray = ToArray(ids);
             // Send my size (to alloc the reciever array)
             Array<OneD, int> sender_size(1);
-            sender_size[0] = idsArray.num_elements();
+            sender_size[0] = idsArray.size();
             comm->Send(receiver, sender_size);
 
             // Send my data

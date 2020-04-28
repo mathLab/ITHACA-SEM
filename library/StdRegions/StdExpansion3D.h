@@ -189,19 +189,12 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual NekDouble v_Integral(
                 const Array<OneD, const NekDouble>& inarray);
 
-            STD_REGIONS_EXPORT virtual void v_NegateFaceNormal(
-                const int face);
-
-            STD_REGIONS_EXPORT virtual bool v_FaceNormalNegated(
-                const int face);
-
             STD_REGIONS_EXPORT virtual int v_GetTraceNcoeffs(const int i) const
             {
                 return GetFaceNcoeffs(i);
             }
 
             std::map<int, NormalVector> m_faceNormals;
-            std::map<int, bool> m_negatedNormals;
 
         private:
 

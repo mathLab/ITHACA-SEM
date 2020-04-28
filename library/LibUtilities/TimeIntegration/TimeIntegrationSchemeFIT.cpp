@@ -53,8 +53,8 @@ InitializeScheme(const NekDouble deltaT,
 {
     boost::ignore_unused(op);
 
-    m_nvars   = y_0.num_elements();
-    m_npoints = y_0[0].num_elements();
+    m_nvars   = y_0.size();
+    m_npoints = y_0[0].size();
 
     m_deltaT = deltaT;
 

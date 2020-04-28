@@ -60,7 +60,7 @@ namespace Nektar
     {
         NavierStokesCFE::v_InitObject();
 
-        int nVariables = m_fields.num_elements();
+        int nVariables = m_fields.size();
         int npoints    = GetNpoints();
         m_viscousForcing = Array<OneD, Array<OneD, NekDouble>> (nVariables);
         for (int i = 0; i < nVariables; ++i)
@@ -76,7 +76,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
     {
         int npoints    = GetNpoints();
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
 
         NavierStokesCFE::v_DoDiffusion(inarray, outarray, pFwd, pBwd);
 
@@ -99,8 +99,8 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
         int i, j;
-        int nVariables = m_fields.num_elements();
-        int nPts       = physfield[0].num_elements();
+        int nVariables = m_fields.size();
+        int nPts       = physfield[0].size();
 
         // 1/r
         Array<OneD, Array<OneD, NekDouble> > coords(3);

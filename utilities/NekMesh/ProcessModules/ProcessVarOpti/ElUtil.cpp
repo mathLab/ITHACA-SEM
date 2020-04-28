@@ -138,7 +138,7 @@ void ElUtil::MappingIdealToRef()
             r[6] = 0.0;
             r[7] = 0.0;
             r[8] = 0.0;
-            mapsStd.push_back(r);
+            m_mapsStd.push_back(r);
         }
 
         for (int i = 0; i < m_derivUtil->pts; ++i)
@@ -175,7 +175,7 @@ void ElUtil::MappingIdealToRef()
             r[6] = 0.0;
             r[7] = 0.0;
             r[8] = 0.0;
-            maps.push_back(r);
+            m_maps.push_back(r);
         }
     }
     else if (m_el->GetConf().m_e == LibUtilities::eTriangle)
@@ -208,8 +208,8 @@ void ElUtil::MappingIdealToRef()
             r[6] = 0.0;
             r[7] = 0.0;
             r[8] = 0.0;
-            maps.push_back(r);
-            mapsStd.push_back(r);
+            m_maps.push_back(r);
+            m_mapsStd.push_back(r);
         }
     }
     else if (m_el->GetConf().m_e == LibUtilities::eTetrahedron)
@@ -251,8 +251,8 @@ void ElUtil::MappingIdealToRef()
             r[6] = J(0, 2);
             r[7] = J(1, 2);
             r[8] = J(2, 2);
-            maps.push_back(r);
-            mapsStd.push_back(r);
+            m_maps.push_back(r);
+            m_mapsStd.push_back(r);
         }
     }
     else if (m_el->GetConf().m_e == LibUtilities::ePrism)
@@ -326,7 +326,7 @@ void ElUtil::MappingIdealToRef()
             r[6] = J(0, 2);
             r[7] = J(1, 2);
             r[8] = J(2, 2);
-            mapsStd.push_back(r);
+            m_mapsStd.push_back(r);
         }
         for (int i = 0; i < m_derivUtil->pts; ++i)
         {
@@ -379,7 +379,7 @@ void ElUtil::MappingIdealToRef()
             r[6] = J(0, 2);
             r[7] = J(1, 2);
             r[8] = J(2, 2);
-            maps.push_back(r);
+            m_maps.push_back(r);
         }
     }
     else if (m_el->GetConf().m_e == LibUtilities::eHexahedron)
@@ -472,7 +472,7 @@ void ElUtil::MappingIdealToRef()
             r[6] = J(0, 2);
             r[7] = J(1, 2);
             r[8] = J(2, 2);
-            mapsStd.push_back(r);
+            m_mapsStd.push_back(r);
         }
 
         for (int i = 0; i < m_derivUtil->pts; ++i)
@@ -542,13 +542,21 @@ void ElUtil::MappingIdealToRef()
             r[6] = J(0, 2);
             r[7] = J(1, 2);
             r[8] = J(2, 2);
-            maps.push_back(r);
+            m_maps.push_back(r);
         }
     }
     else
     {
         ASSERTL0(false, "not coded");
     }
+
+    for (int i = 0; i < m_maps.size(); ++i)
+    {
+        maps.emplace_back(10, 0.0);
+        mapsStd.emplace_back(10, 0.0);
+    }
+
+    UpdateMapping();
 }
 
 void ElUtil::Evaluate()
@@ -741,9 +749,87 @@ void ElUtil::InitialMinJac()
     m_minJac = mn;
 }
 
-ElUtilJob *ElUtil::GetJob()
+void ElUtil::UpdateMapping()
 {
-    return new ElUtilJob(this);
+    if (m_interp.GetInField())
+    {
+        if (!m_interpField)
+        {
+            Array<OneD, Array<OneD, NekDouble> > centre(m_dim + 1);
+            for (int i = 0; i < m_dim + 1; ++i)
+            {
+                centre[i] = Array<OneD, NekDouble>(1, 0.0);
+            }
+
+            vector<string> fieldNames;
+            fieldNames.push_back("");
+
+            map<LibUtilities::PtsInfo, int> ptsInfo =
+                LibUtilities::NullPtsInfoMap;
+
+            m_interpField = MemoryManager<LibUtilities::PtsField>
+                ::AllocateSharedPtr(m_dim, fieldNames, centre, ptsInfo);
+        }
+
+        vector<NodeSharedPtr> nodes = m_el->GetVertexList();
+
+        vector<NekDouble> centre(m_dim, 0.0);
+        for (int i = 0; i < nodes.size(); ++i)
+        {
+            centre[0] += nodes[i]->m_x;
+            centre[1] += nodes[i]->m_y;
+            if (m_dim > 2)
+            {
+                centre[2] += nodes[i]->m_z;
+            }
+        }
+
+        m_interpField->SetPointVal(0, 0, centre[0] / nodes.size());
+        m_interpField->SetPointVal(1, 0, centre[1] / nodes.size());
+        if (m_dim > 2)
+        {
+            m_interpField->SetPointVal(2, 0, centre[2] / nodes.size());
+        }
+
+        m_interp.CalcWeights(m_interp.GetInField(), m_interpField, true);
+        m_interp.Interpolate(m_interp.GetInField(), m_interpField);
+    }
+
+    NekDouble scaling = 1.0;
+
+    if (m_interp.GetInField())
+    {
+        scaling = m_interpField->GetPointVal(m_dim + 0, 0);
+    }
+
+    for (int i = 0; i < m_maps.size(); ++i)
+    {
+        for (int j = 0; j < 9; ++j)
+        {
+            maps[i][j]    = m_maps[i][j] / scaling;
+            mapsStd[i][j] = m_mapsStd[i][j] / scaling;
+        }
+
+        if (m_dim == 2)
+        {
+            maps[i][9]    = m_maps[i][9] * scaling * scaling;
+            mapsStd[i][9] = m_mapsStd[i][9] * scaling * scaling;
+        }
+        else if (m_dim == 3)
+        {
+            maps[i][9]    = m_maps[i][9] * scaling * scaling * scaling;
+            mapsStd[i][9] = m_mapsStd[i][9] * scaling * scaling * scaling;
+        }
+        else
+        {
+            ASSERTL0(false, "not coded");
+        }
+    }
+}
+
+ElUtilJob *ElUtil::GetJob(bool update)
+{
+    return new ElUtilJob(this, update);
 }
 }
 }

@@ -81,8 +81,8 @@ TimeIntegrationSolutionGLMSharedPtr
         if (offsets[GetNmultiStepValues()] == 0)
         {
             int i;
-            int nvar    = y_0.num_elements();
-            int npoints = y_0[0].num_elements();
+            int nvar    = y_0.size();
+            int npoints = y_0[0].size();
             DoubleArray f_y_0(nvar);
             for (i = 0; i < nvar; i++)
             {
@@ -772,7 +772,7 @@ void TimeIntegrationAlgorithmGLM::CheckIfFirstStageEqualsOldSolution()
     // 2. U[0][0] is equal to one and all other first row entries of U are zero
 
     // 1. Check first condition
-    for (int m = 0; m < m_A.num_elements(); m++)
+    for (int m = 0; m < m_A.size(); m++)
     {
         for (int i = 0; i < m_numstages; i++)
         {
@@ -812,7 +812,7 @@ void TimeIntegrationAlgorithmGLM::CheckIfLastStageEqualsNewSolution()
     // matrix V
 
     // 1. Check first condition
-    for (int m = 0; m < m_A.num_elements(); m++)
+    for (int m = 0; m < m_A.size(); m++)
     {
         for (int i = 0; i < m_numstages; i++)
         {
@@ -841,7 +841,7 @@ void TimeIntegrationAlgorithmGLM::CheckIfLastStageEqualsNewSolution()
 void TimeIntegrationAlgorithmGLM::VerifyIntegrationSchemeType()
 {
 #ifdef DEBUG
-    int IMEXdim = m_A.num_elements();
+    int IMEXdim = m_A.size();
     int dim     = m_A[0].GetRows();
 
     Array<OneD, TimeIntegrationSchemeType> vertype(IMEXdim, eExplicit);
@@ -875,7 +875,7 @@ void TimeIntegrationAlgorithmGLM::VerifyIntegrationSchemeType()
 
     if (IMEXdim == 2)
     {
-        ASSERTL1(m_B.num_elements() == 2, "Coefficient Matrix B should have an "
+        ASSERTL1(m_B.size() == 2, "Coefficient Matrix B should have an "
                  "implicit and explicit part for IMEX schemes");
 
         if ((vertype[0] == eDiagonallyImplicit) && (vertype[1] == eExplicit))
@@ -908,19 +908,19 @@ bool TimeIntegrationAlgorithmGLM::CheckTimeIntegrateArguments(
 
     // Check if arrays are all of consistent size
 
-    ASSERTL1(y_old.num_elements() == m_numsteps,
+    ASSERTL1(y_old.size() == m_numsteps,
              "Non-matching number of steps.");
-    ASSERTL1(y_new.num_elements() == m_numsteps,
+    ASSERTL1(y_new.size() == m_numsteps,
              "Non-matching number of steps.");
 
-    ASSERTL1(y_old[0].num_elements() == y_new[0].num_elements(),
+    ASSERTL1(y_old[0].size() == y_new[0].size(),
              "Non-matching number of variables.");
-    ASSERTL1(y_old[0][0].num_elements() == y_new[0][0].num_elements(),
+    ASSERTL1(y_old[0][0].size() == y_new[0][0].size(),
              "Non-matching number of coefficients.");
 
-    ASSERTL1(t_old.num_elements() == m_numsteps,
+    ASSERTL1(t_old.size() == m_numsteps,
              "Non-matching number of steps.");
-    ASSERTL1(t_new.num_elements() == m_numsteps,
+    ASSERTL1(t_new.size() == m_numsteps,
              "Non-matching number of steps.");
 
     return true;

@@ -38,6 +38,8 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 
 namespace Nektar
@@ -105,8 +107,8 @@ map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(
             }
         }
 
-        der->ptsStd = u1[0].num_elements();
-        der->pts    = u2[0].num_elements();
+        der->ptsStd = u1[0].size();
+        der->pts    = u2[0].size();
 
         LibUtilities::NodalUtil *nodalUtil = NULL;
 
@@ -158,7 +160,7 @@ map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(
         der->quadW = quadWi;
 
         ret[it.first] = der;
-        //delete nodalUtil;
+        delete nodalUtil;
     }
 
     return ret;
@@ -197,7 +199,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
         }
     }
 
-    // create set of nodes which are at the boundary and hence not included in the colourset
+    // create set of nodes which are at the boundary and hence not included in
+    // the colourset
     NodeSet boundaryNodes;
 
     switch (m_mesh->m_spaceDim)
@@ -254,7 +257,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
             }
             else
             {
-                //if we have CAD therefore the only fixed nodes exist on vertices only
+                // If we have CAD therefore the only fixed nodes exist on
+                // vertices only
                 for (auto &node : m_mesh->m_vertexSet)
                 {
                     if(node->GetNumCadCurve() > 1)
@@ -269,14 +273,15 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
             ASSERTL0(false,"space dim issue");
     }
 
-
-    //create vector of free nodes which "remain", hence will be included in the coloursets
+    // Create vector of free nodes which "remain", hence will be included in the
+    // coloursets
     vector<NodeSharedPtr> remainEdgeVertex;
     vector<NodeSharedPtr> remainFace;
     vector<NodeSharedPtr> remainVolume;
     m_res->nDoF = 0;
 
-    // check if vertex nodes are in boundary or ignored nodes, otherwise add to EDGE-VERTEX remain nodes
+    // check if vertex nodes are in boundary or ignored nodes, otherwise add to
+    // EDGE-VERTEX remain nodes
     for (auto &node : m_mesh->m_vertexSet)
     {
         if (boundaryNodes.find(node) == boundaryNodes.end() &&
@@ -298,7 +303,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
         }
     }
 
-    // check if edge nodes are in boundary or ignored nodes, otherwise add to EDGE-VERTEX remain nodes
+    // check if edge nodes are in boundary or ignored nodes, otherwise add to
+    // EDGE-VERTEX remain nodes
     for (auto &edge : m_mesh->m_edgeSet)
     {
         vector<NodeSharedPtr> &n = edge->m_edgeNodes;
@@ -324,7 +330,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
         }
     }
 
-    // check if face nodes are in boundary or ignored nodes, otherwise add to FACE remain nodes
+    // check if face nodes are in boundary or ignored nodes, otherwise add to
+    // FACE remain nodes
     for (auto &face : m_mesh->m_faceSet)
     {
         vector<NodeSharedPtr> &n = face->m_faceNodes;
@@ -346,7 +353,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
         }
     }
 
-    // check if volume nodes are in boundary or ignored nodes, otherwise add to VOLUME remain nodes
+    // check if volume nodes are in boundary or ignored nodes, otherwise add to
+    // VOLUME remain nodes
     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         vector<NodeSharedPtr> ns =
@@ -366,7 +374,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
     m_res->n = remainEdgeVertex.size()
                 + remainFace.size() + remainVolume.size();
 
-    // data structure for coloursets, that will ultimately contain all free nodes
+    // data structure for coloursets, that will ultimately contain all free
+    // nodes
     vector<vector<NodeSharedPtr> > ret;
     vector<vector<NodeSharedPtr> > retPart;
 
@@ -525,6 +534,18 @@ void ProcessVarOpti::GetElementMap(
         m_dataSet.push_back(d);
     }
 
+    if (m_config["scalingfile"].beenSet)
+    {
+        LibUtilities::Interpolator interp =
+            GetScalingFieldFromFile(
+                m_config["scalingfile"].as<string>().c_str());
+
+        for (int i = 0; i < m_dataSet.size(); ++i)
+        {
+            m_dataSet[i]->SetScaling(interp);
+        }
+    }
+
     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
@@ -564,17 +585,17 @@ vector<ElUtilSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
         {
             for (int k = 0; k < f[j]->m_elLink.size(); k++)
             {
-                if (f[j]->m_elLink[k].first->GetId() ==
+                if (f[j]->m_elLink[k].first.lock()->GetId() ==
                     elBelowThres[i]->GetId())
                 {
                     continue;
                 }
 
-                t = inmesh.insert(f[j]->m_elLink[k].first->GetId());
+                t = inmesh.insert(f[j]->m_elLink[k].first.lock()->GetId());
                 if (t.second)
                 {
                     totest.push_back(
-                        m_dataSet[f[j]->m_elLink[k].first->GetId()]);
+                        m_dataSet[f[j]->m_elLink[k].first.lock()->GetId()]);
                 }
             }
         }
@@ -591,16 +612,18 @@ vector<ElUtilSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
             {
                 for (int l = 0; l < f[k]->m_elLink.size(); l++)
                 {
-                    if (f[k]->m_elLink[l].first->GetId() == tmp[j]->GetId())
+                    if (f[k]->m_elLink[l].first.lock()->GetId() ==
+                        tmp[j]->GetId())
                     {
                         continue;
                     }
 
-                    auto t = inmesh.insert(f[k]->m_elLink[l].first->GetId());
+                    auto t = inmesh.insert(
+                        f[k]->m_elLink[l].first.lock()->GetId());
                     if (t.second)
                     {
                         totest.push_back(
-                            m_dataSet[f[k]->m_elLink[l].first->GetId()]);
+                            m_dataSet[f[k]->m_elLink[l].first.lock()->GetId()]);
                     }
                 }
             }
@@ -639,7 +662,7 @@ void ProcessVarOpti::RemoveLinearCurvature()
         bool rm = true;
         for(int i = 0; i < face->m_elLink.size(); i++)
         {
-            int id = face->m_elLink[i].first->GetId();
+            int id = face->m_elLink[i].first.lock()->GetId();
             if(m_dataSet[id]->GetScaledJac() <= 0.999)
             {
                 rm = false;
@@ -678,5 +701,91 @@ void ProcessVarOpti::RemoveLinearCurvature()
     }
 }
 
+LibUtilities::Interpolator ProcessVarOpti::GetScalingFieldFromFile(string file)
+{
+    vector<vector<NekDouble> > data;
+
+    ifstream f;
+    f.open(file);
+    ASSERTL0(f.is_open(), "No such scaling file")
+
+    string fline;
+
+    while (!f.eof())
+    {
+        getline(f, fline);
+
+        vector<string> tmp;
+        boost::split(tmp, fline, boost::is_any_of(" "));
+
+        int i = 0;
+        while (i < tmp.size())
+        {
+            if (tmp[i].size() == 0)
+            {
+                tmp.erase(tmp.begin() + i);
+            }
+            else
+            {
+                ++i;
+            }
+        }
+
+        if (tmp.size() < 4)
+        {
+            continue;
+        }
+
+        vector<NekDouble> tmpD;
+        tmpD.push_back(boost::lexical_cast<NekDouble>(tmp[0])); // x
+        tmpD.push_back(boost::lexical_cast<NekDouble>(tmp[1])); // y
+        tmpD.push_back(boost::lexical_cast<NekDouble>(tmp[3])); // scaling
+
+        data.push_back(tmpD);
+    }
+
+    int dim = m_mesh->m_expDim;
+
+    Array<OneD, Array<OneD, NekDouble> > inPts(dim + 1);
+    for (int i = 0; i < dim + 1; ++i)
+    {
+        inPts[i] = Array<OneD, NekDouble>(data.size());
+
+        for (int j = 0; j < data.size(); ++j)
+        {
+            inPts[i][j] = data[j][i];
+        }
+    }
+
+    return GetField(inPts);
+}
+
+LibUtilities::Interpolator ProcessVarOpti::GetField(
+    Array<OneD, Array<OneD, NekDouble> > inPts)
+{
+    int dim = m_mesh->m_expDim;
+
+    vector<string> fieldNames;
+    fieldNames.push_back("");
+
+    map<LibUtilities::PtsInfo, int> ptsInfo = LibUtilities::NullPtsInfoMap;
+
+    PtsFieldSharedPtr inField = MemoryManager<LibUtilities::PtsField>
+        ::AllocateSharedPtr(dim, fieldNames, inPts, ptsInfo);
+
+    Array<OneD, Array<OneD, NekDouble> > dummyPts(dim + 1);
+    for (int i = 0; i < dim + 1; ++i)
+    {
+        dummyPts[i] = Array<OneD, NekDouble>(0);
+    }
+
+    PtsFieldSharedPtr dummyField = MemoryManager<LibUtilities::PtsField>
+        ::AllocateSharedPtr(dim, fieldNames, dummyPts, ptsInfo);
+
+    LibUtilities::Interpolator ret;
+    ret.Interpolate(inField, dummyField);
+
+    return ret;
+}
 }
 }

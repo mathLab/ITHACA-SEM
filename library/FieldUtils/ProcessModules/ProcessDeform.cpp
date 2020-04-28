@@ -72,7 +72,7 @@ void ProcessDeform::Process(po::variables_map &vm)
 
     Array<OneD, MultiRegions::ExpListSharedPtr> exp(m_f->m_exp.size());
 
-    for (int i = 0; i < exp.num_elements(); ++i)
+    for (int i = 0; i < exp.size(); ++i)
     {
         exp[i] = m_f->m_exp[i];
     }

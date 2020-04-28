@@ -95,7 +95,7 @@ Array<OneD, NekDouble> ExpList_MultiplyByInvMassMatrix(
     const Array<OneD, const NekDouble> &in)
 {
     Array<OneD, NekDouble> out(exp->GetNcoeffs(), 0.0);
-    exp->MultiplyByInvMassMatrix(in, out, eLocal);
+    exp->MultiplyByInvMassMatrix(in, out);
     return out;
 }
 
@@ -119,9 +119,7 @@ Array<OneD, NekDouble> ExpList_HelmSolve(
         coeffMap = py::extract<StdRegions::VarCoeffMap>(varCoeffMap);
     }
 
-    FlagList notUsed;
-
-    exp->HelmSolve(in, out, notUsed, facMap, coeffMap);
+    exp->HelmSolve(in, out, facMap, coeffMap);
     return out;
 }
 

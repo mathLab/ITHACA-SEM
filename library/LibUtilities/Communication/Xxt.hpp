@@ -165,7 +165,7 @@ static inline struct crs_data *Init(
     const LibUtilities::CommSharedPtr &pComm)
 {
 #ifdef NEKTAR_USE_MPI
-    unsigned int nz = pAr.num_elements();
+    unsigned int nz = pAr.size();
     LibUtilities::CommMpiSharedPtr vCommMpi =
         std::dynamic_pointer_cast<LibUtilities::CommMpi>(pComm);
     ASSERTL1(vCommMpi, "Failed to cast MPI Comm object.");

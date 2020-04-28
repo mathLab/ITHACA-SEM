@@ -86,7 +86,7 @@ namespace Nektar
                     m_iter.nnzindex++;
                 }
                 m_iter.storageindex++;
-                if (m_iter.storageindex >= m_val.num_elements())
+                if (m_iter.storageindex >= m_val.size())
                 {
                     std::cout << "const_iterator: 'begin' out stored values bounds" << std::endl;
                     throw 1;
@@ -188,12 +188,12 @@ namespace Nektar
     template<typename DataType>
     void StorageSmvBsr<DataType>::const_iterator::forward()
     {
-        while((m_iter.storageindex+1 < m_val.num_elements()) &&
+        while((m_iter.storageindex+1 < m_val.size()) &&
               (m_val[++m_iter.storageindex] <= NekConstants::kNekSparseNonZeroTol));
 
         m_iter.nnzindex++;
 
-        if (m_iter.storageindex >= m_val.num_elements())
+        if (m_iter.storageindex >= m_val.size())
         {
             m_iter.nnzindex = m_end;
             return;
@@ -626,7 +626,7 @@ namespace Nektar
             tmp[rowcoord]++;
         }
         // Based upon this information, fill the array m_pntr
-        // which basically contains the offset of each row's 
+        // which basically contains the offset of each row's
         // first entry in the other arrays m_val and m_indx
         m_pntr[0] = 0;
         for(i = 0; i < blkRows; i++)
@@ -634,7 +634,7 @@ namespace Nektar
             m_pntr[i+1] = m_pntr[i] + tmp[i];
         }
 
-        // Copy the values of m_pntr into tmp as this will be needed 
+        // Copy the values of m_pntr into tmp as this will be needed
         // in the following step
         std::copy(&m_pntr[0],&m_pntr[0]+blkRows+1,&tmp[0]);
 

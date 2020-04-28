@@ -53,9 +53,10 @@ TimeIntegrationSolutionGLM::TimeIntegrationSolutionGLM(
 
     int nsteps = m_schemeAlgorithm->m_numsteps;
 
-    int nvar           = y.num_elements();
-    int npoints        = y[0].num_elements();
+    int nvar           = y.size();
+    int npoints        = y[0].size();
     int nMultiStepVals = m_schemeAlgorithm->GetNmultiStepValues();
+
     const Array<OneD, const unsigned int> &timeLevels =
         m_schemeAlgorithm->GetTimeLevelOffset();
 
@@ -82,7 +83,7 @@ TimeIntegrationSolutionGLM::TimeIntegrationSolutionGLM(
     const Array<OneD, NekDouble> &t)
     : m_schemeAlgorithm(schemeAlgorithm), m_solVector(y), m_t(t)
 {
-    ASSERTL1(y.num_elements() == m_schemeAlgorithm->m_numsteps,
+    ASSERTL1(y.size() == m_schemeAlgorithm->m_numsteps,
              "Amount of Entries does not match number of (multi-) steps");
 }
 

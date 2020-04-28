@@ -92,7 +92,7 @@ namespace Nektar
 
             // Initialising arrays
             int i, j;
-            int nConvectiveFields = pFields.num_elements();
+            int nConvectiveFields = pFields.size();
             int nDim         = pFields[0]->GetCoordim(0);
             int nSolutionPts = pFields[0]->GetTotPoints();
             int nTracePts    = pFields[0]->GetTrace()->GetTotPoints();
@@ -1170,7 +1170,7 @@ namespace Nektar
         {
             int i, j;
             int nTracePts  = fields[0]->GetTrace()->GetTotPoints();
-            int nvariables = fields.num_elements();
+            int nvariables = fields.size();
             int nDim       = fields[0]->GetCoordim(0);
 
             Array<OneD, NekDouble > Fwd     (nTracePts);
@@ -1214,7 +1214,7 @@ namespace Nektar
                     // edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uFwd
                     // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uFwd
 
-                    if(fields[0]->GetBndCondExpansions().num_elements())
+                    if(fields[0]->GetBndCondExpansions().size())
                     {
                         v_WeakPenaltyforScalar(fields, i, ufield[i], fluxtemp);
                     }
@@ -1248,7 +1248,7 @@ namespace Nektar
             int i, e, id1, id2;
             int nBndEdgePts, nBndEdges;
             int cnt         = 0;
-            int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
+            int nBndRegions = fields[var]->GetBndCondExpansions().size();
             int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
 
             // Extract physical values of the fields at the trace space
@@ -1276,7 +1276,7 @@ namespace Nektar
                     // Offset of the trace space related to boundary expansion
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
-                                   GetBndCondTraceToGlobalTraceMap(cnt++));
+                                   GetBndCondIDToGlobalTraceID(cnt++));
 
                     // Dirichlet bcs ==> uflux = gD
                     if (fields[var]->GetBndConditions()[i]->
@@ -1314,7 +1314,7 @@ namespace Nektar
 
             int i, j;
             int nTracePts  = fields[0]->GetTrace()->GetTotPoints();
-            int nvariables = fields.num_elements();
+            int nvariables = fields.size();
             int nDim       = fields[0]->GetCoordim(0);
 
             NekDouble C11 = 0.0;
@@ -1381,7 +1381,7 @@ namespace Nektar
                     */
 
                     // Imposing weak boundary condition with flux
-                    if (fields[0]->GetBndCondExpansions().num_elements())
+                    if (fields[0]->GetBndCondExpansions().size())
                     {
                         v_WeakPenaltyforVector(fields, i, j, qfield[i][j],
                                                qfluxtemp, C11);
@@ -1414,7 +1414,7 @@ namespace Nektar
 
             int i, e, id1, id2;
             int nBndEdges, nBndEdgePts;
-            int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
+            int nBndRegions = fields[var]->GetBndCondExpansions().size();
             int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
 
             Array<OneD, NekDouble > uterm(nTracePts);
@@ -1439,9 +1439,9 @@ namespace Nektar
 
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
-                                   GetBndCondTraceToGlobalTraceMap(cnt++));
-
-                    // For Dirichlet boundary condition:
+                                   GetBndCondIDToGlobalTraceID(cnt++));
+                    
+                    // For Dirichlet boundary condition: 
                     //qflux = q+ - C_11 (u+ -    g_D) (nx, ny)
                     if (fields[var]->GetBndConditions()[i]->
                        GetBoundaryConditionType() == SpatialDomains::eDirichlet)
@@ -1907,13 +1907,10 @@ namespace Nektar
                                        auxArray2 = fluxJumps, 1);
                     }
 
-                    NekDouble fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
-                    -1.0 : 1.0;
-
                     for (i = 0; i < nEdgePts; ++i)
                     {
-                        if (m_traceNormals[0][trace_offset+i] != fac*normals[0][i]
-                        || m_traceNormals[1][trace_offset+i] != fac*normals[1][i])
+                        if (m_traceNormals[0][trace_offset+i] != normals[0][i]
+                        || m_traceNormals[1][trace_offset+i] != normals[1][i])
                         {
                             fluxJumps[i] = -fluxJumps[i];
                         }

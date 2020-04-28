@@ -53,6 +53,7 @@ namespace Nektar
             public:
                 PointTestClass() : m_dataValue(0) {}
                 explicit PointTestClass(int data) : m_dataValue(data) {}
+                PointTestClass(const PointTestClass&) = default;
                 ~PointTestClass(){}
 
                 PointTestClass operator=(const PointTestClass& rhs)

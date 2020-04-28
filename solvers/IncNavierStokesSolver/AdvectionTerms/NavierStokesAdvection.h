@@ -84,7 +84,6 @@ protected:
         static std::string navierStokesAdvectionTypeLookupIds[];
 
 private:
-    MultiRegions::CoeffState m_CoeffState;
     bool m_specHP_dealiasing;
     bool m_homogen_dealiasing;
     bool m_SingleMode;

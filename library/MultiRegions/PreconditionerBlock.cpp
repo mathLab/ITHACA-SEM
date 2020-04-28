@@ -251,7 +251,7 @@ namespace Nektar
                     bmap2 = exp->GetEdgeInverseBoundaryMap(i);
 
                     // Allocate temporary storage for the extracted edge matrix.
-                    const int nEdgeCoeffs = bmap.num_elements();
+                    const int nEdgeCoeffs = bmap.size();
                     vector<NekDouble> tmpStore(nEdgeCoeffs*nEdgeCoeffs);
 
                     gId = asmMap->GetLocalToGlobalMap(cnt + bmap[0]);
@@ -336,7 +336,7 @@ namespace Nektar
                     bmap2 = exp->GetFaceInverseBoundaryMap(i);
 
                     // Allocate temporary storage for the extracted face matrix.
-                    const int nFaceCoeffs = bmap.num_elements();
+                    const int nFaceCoeffs = bmap.size();
                     vector<NekDouble> tmpStore(nFaceCoeffs*nFaceCoeffs);
 
                     gId = asmMap->GetLocalToGlobalMap(cnt + bmap[0]);
@@ -642,7 +642,7 @@ namespace Nektar
             }
 
             // Set up IDs for universal numbering.
-            Array<OneD, long> uniIds(tmpStore.num_elements());
+            Array<OneD, long> uniIds(tmpStore.size());
             for (cnt = 0, n = nDir; n < nTrace; ++n)
             {
                 LocalRegions::ExpansionSharedPtr traceExp = trace->GetExp(n);

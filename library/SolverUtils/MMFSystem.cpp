@@ -676,8 +676,8 @@ void MMFSystem::VectorDotProd(
     const Array<OneD, const Array<OneD, NekDouble>> &v2,
     Array<OneD, NekDouble> &v3)
 {
-    int coordim = v1.num_elements();
-    int nq      = v1[0].num_elements();
+    int coordim = v1.size();
+    int nq      = v1[0].size();
 
     v3 = Array<OneD, NekDouble>(nq, 0.0);
     for (int i = 0; i < coordim; ++i)
@@ -699,12 +699,12 @@ void MMFSystem::VectorCrossProd(
     const Array<OneD, const Array<OneD, NekDouble>> &v2,
     Array<OneD, Array<OneD, NekDouble>> &v3)
 {
-    ASSERTL0(v1.num_elements() == 3, "Input 1 has dimension not equal to 3.");
-    ASSERTL0(v2.num_elements() == 3, "Input 2 has dimension not equal to 3.");
-    ASSERTL0(v3.num_elements() == 3,
+    ASSERTL0(v1.size() == 3, "Input 1 has dimension not equal to 3.");
+    ASSERTL0(v2.size() == 3, "Input 2 has dimension not equal to 3.");
+    ASSERTL0(v3.size() == 3,
              "Output vector has dimension not equal to 3.");
 
-    int nq = v1[0].num_elements();
+    int nq = v1[0].size();
     Array<OneD, NekDouble> temp(nq);
 
     Vmath::Vmul(nq, v1[2], 1, v2[1], 1, temp, 1);
@@ -721,9 +721,9 @@ void MMFSystem::VectorCrossProd(const Array<OneD, NekDouble> &v1,
                                 const Array<OneD, NekDouble> &v2,
                                 Array<OneD, NekDouble> &v3)
 {
-    ASSERTL0(v1.num_elements() == 3, "Input 1 has dimension not equal to 3.");
-    ASSERTL0(v2.num_elements() == 3, "Input 2 has dimension not equal to 3.");
-    ASSERTL0(v3.num_elements() == 3,
+    ASSERTL0(v1.size() == 3, "Input 1 has dimension not equal to 3.");
+    ASSERTL0(v2.size() == 3, "Input 2 has dimension not equal to 3.");
+    ASSERTL0(v3.size() == 3,
              "Output vector has dimension not equal to 3.");
 
     v3[0] = v1[1] * v2[2] - v1[2] * v2[1];
@@ -736,7 +736,7 @@ void MMFSystem::ComputeCurl(
     Array<OneD, Array<OneD, NekDouble>> &outarray)
 
 {
-    int nq = inarray[0].num_elements();
+    int nq = inarray[0].size();
 
     Array<OneD, NekDouble> tmpx, tmpy, tmpz;
     Array<OneD, NekDouble> Dtmpzdx, Dtmpydx, Dtmpxdy, Dtmpzdy, Dtmpxdz, Dtmpydz;
@@ -844,7 +844,7 @@ void MMFSystem::CopyBoundaryTrace(
     Array<OneD, NekDouble> Dirichlet, x0, x1, x2;
 
     // loop over Boundary Regions
-    for (int n = 0; n < m_fields[var]->GetBndConditions().num_elements(); ++n)
+    for (int n = 0; n < m_fields[var]->GetBndConditions().size(); ++n)
     {
         nptselem = m_fields[var]->GetBndCondExpansions()[n]->GetNpoints();
 
@@ -870,7 +870,7 @@ void MMFSystem::CopyBoundaryTrace(
                        ->GetNumPoints(0);
             id1 = m_fields[var]->GetBndCondExpansions()[n]->GetPhys_Offset(e);
             id2 = m_fields[var]->GetTrace()->GetPhys_Offset(
-                m_fields[var]->GetTraceMap()->GetBndCondTraceToGlobalTraceMap(
+                m_fields[var]->GetTraceMap()->GetBndCondIDToGlobalTraceID(
                     cnt + e));
 
             if (m_fields[var]->GetBndConditions()[n]->GetUserDefined() ==
@@ -1816,7 +1816,7 @@ void MMFSystem::NumericalMaxwellFluxTM(
 {
     int nq              = m_fields[0]->GetNpoints();
     int nTraceNumPoints = GetTraceTotPoints();
-    int nvar            = physfield.num_elements();
+    int nvar            = physfield.size();
 
     // get temporary arrays
     Array<OneD, Array<OneD, NekDouble>> Fwd(nvar);
@@ -1927,7 +1927,7 @@ void MMFSystem::NumericalMaxwellFluxTE(
 {
     int nq              = m_fields[0]->GetNpoints();
     int nTraceNumPoints = GetTraceTotPoints();
-    int nvar            = physfield.num_elements();
+    int nvar            = physfield.size();
 
     // Get temporary arrays
     Array<OneD, Array<OneD, NekDouble>> Fwd(nvar);
@@ -2323,7 +2323,7 @@ NekDouble MMFSystem::AvgInt(const Array<OneD, const NekDouble> &inarray)
     int nq = m_fields[0]->GetNpoints();
     Array<OneD, NekDouble> Ones(nq, 1.0);
 
-    if (inarray.num_elements() != nq)
+    if (inarray.size() != nq)
     {
         ASSERTL0(false, "AvgInt Error: Vector size is not correct");
     }
@@ -2339,7 +2339,7 @@ NekDouble MMFSystem::AvgAbsInt(const Array<OneD, const NekDouble> &inarray)
     Array<OneD, NekDouble> Ones(nq, 1.0);
     Array<OneD, NekDouble> tmp(nq);
 
-    if (inarray.num_elements() != nq)
+    if (inarray.size() != nq)
     {
         ASSERTL0(false, "AvgAbsInt Error: Vector size is not correct");
     }
@@ -2355,7 +2355,7 @@ NekDouble MMFSystem::AbsIntegral(const Array<OneD, const NekDouble> &inarray)
     int nq = m_fields[0]->GetNpoints();
     Array<OneD, NekDouble> tmp(nq);
 
-    if (inarray.num_elements() != nq)
+    if (inarray.size() != nq)
     {
         ASSERTL0(false, "AbsIntegral Error: Vector size is not correct");
     }
@@ -2366,7 +2366,7 @@ NekDouble MMFSystem::AbsIntegral(const Array<OneD, const NekDouble> &inarray)
 
 NekDouble MMFSystem::RootMeanSquare(const Array<OneD, const NekDouble> &inarray)
 {
-    int Ntot = inarray.num_elements();
+    int Ntot = inarray.size();
 
     NekDouble reval = 0.0;
     for (int i = 0; i < Ntot; ++i)
@@ -2381,7 +2381,7 @@ NekDouble MMFSystem::RootMeanSquare(const Array<OneD, const NekDouble> &inarray)
 NekDouble MMFSystem::VectorAvgMagnitude(
     const Array<OneD, const Array<OneD, NekDouble>> &inarray)
 {
-    int nq = inarray[0].num_elements();
+    int nq = inarray[0].size();
 
     Array<OneD, NekDouble> tmp(nq, 0.0);
     for (int k = 0; k < m_spacedim; k++)
@@ -2397,7 +2397,7 @@ NekDouble MMFSystem::VectorAvgMagnitude(
 void MMFSystem::BubbleSort(Array<OneD, NekDouble> &refarray,
                            Array<OneD, NekDouble> &sortarray)
 {
-    int nq = refarray.num_elements();
+    int nq = refarray.size();
 
     bool swapped = true;
     int j        = 0;
@@ -2431,7 +2431,7 @@ void MMFSystem::GramSchumitz(
     Array<OneD, Array<OneD, NekDouble>> &outarray, bool KeepTheMagnitude)
 {
 
-    int nq = v1[0].num_elements();
+    int nq = v1[0].size();
     Array<OneD, NekDouble> tmp(nq, 0.0);
     Array<OneD, NekDouble> mag(nq, 0.0);
 

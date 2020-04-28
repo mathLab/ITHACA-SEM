@@ -54,7 +54,7 @@ StagnationInflowBC::StagnationInflowBC(const LibUtilities::SessionReaderSharedPt
            const int cnt)
     : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
-    int nvariables = m_fields.num_elements();
+    int nvariables = m_fields.size();
     int expdim     = pFields[0]->GetGraph()->GetMeshDimension();
     int spacedim   = pFields[0]->GetGraph()->GetSpaceDimension();
     m_swirl        = ((spacedim == 3) && (expdim == 2));
@@ -84,7 +84,7 @@ void StagnationInflowBC::v_Apply(
     int nTracePts  = m_fields[0]->GetTrace()->GetNpoints();
     int numBCPts   = m_fields[0]->
         GetBndCondExpansions()[m_bcRegion]->GetNpoints();
-    int nVariables = physarray.num_elements();
+    int nVariables = physarray.size();
 
     const Array<OneD, const int> &traceBndMap
         = m_fields[0]->GetTraceBndMap();
@@ -139,7 +139,7 @@ void StagnationInflowBC::v_Apply(
                     m_gamma/(gammaMinusOne));
 
             // rho from isentropic relation: rho = rhoStag *(p/pStag)^1/Gamma
-            rho = m_fieldStorage[0][id1+i] * 
+            rho = m_fieldStorage[0][id1+i] *
                     pow(p/pStag[id1+i],gammaInv);
             (m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
                 UpdatePhys())[id1+i] = rho;

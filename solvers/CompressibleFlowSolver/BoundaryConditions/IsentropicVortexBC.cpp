@@ -61,7 +61,7 @@ void IsentropicVortexBC::v_Apply(
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
 {
-    int nvariables = physarray.num_elements();
+    int nvariables = physarray.size();
 
     const Array<OneD, const int> &bndTraceMap = m_fields[0]->GetTraceBndMap();
     // loop over Boundary Regions
@@ -88,7 +88,7 @@ void IsentropicVortexBC::v_Apply(
 
         for (int i = 0; i < nvariables; ++i)
         {
-            Vmath::Vcopy(npoints, &Fwd[i][id2], 1, 
+            Vmath::Vcopy(npoints, &Fwd[i][id2], 1,
                          &(m_fields[i]->GetBndCondExpansions()[m_bcRegion]->
                          UpdatePhys())[id1], 1);
         }
@@ -105,7 +105,7 @@ void IsentropicVortexBC::EvaluateIsentropicVortex(
 {
     boost::ignore_unused(z);
 
-    int nq = x.num_elements();
+    int nq = x.size();
 
     // Flow parameters
     const NekDouble x0    = 5.0;

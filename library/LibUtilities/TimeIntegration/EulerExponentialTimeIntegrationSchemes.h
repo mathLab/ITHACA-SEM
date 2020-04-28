@@ -236,7 +236,7 @@ public:
             if( phase->m_order == 1 )
             {
                 // Nothing to do as the value is set above and the
-                // wieght is just 1.
+                // weight is just 1.
             }
             else if( phase->m_order == 2 )
             {
@@ -341,7 +341,7 @@ public:
             }
             else
             {
-                ASSERTL1(false, "Not set up for more than 3rd Order.");
+                ASSERTL1(false, "Not set up for more than 4th Order.");
             }
 
             // Create the phi based Butcher tableau matrices. Note

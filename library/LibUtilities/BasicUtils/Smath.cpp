@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: NekMatrixFwd.hpp
+// File: Smath.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,50 +29,35 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Matrix Forward Declarations
-//
-// 
+// Description: Collection of templated functions for scalar mathematics
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
-#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
-
-#include <LibUtilities/LinearAlgebra/MatrixType.h>
-#include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
+#include <LibUtilities/BasicUtils/Smath.h>
+#include <math.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
-#include <memory>
-#include <type_traits>
+using namespace std;
 
-namespace Nektar
+namespace Smath
 {
-    template<typename DataType>
-    class ConstMatrix;
-    
-    template<typename DataType>
-    class Matrix;
-    
-    template<typename DataType, typename MatType = StandardMatrixTag>
-    class NekMatrix;
 
-    template<typename DataType, typename InnerMatrixType>
-    class NekMatrix<NekMatrix<DataType, InnerMatrixType>, ScaledMatrixTag>;
-    
-    template<typename DataType, typename InnerMatrixType>
-    class NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>;
-    
-    template<typename DataType>
-    class NekMatrix<DataType, StandardMatrixTag>;
-    
-    typedef std::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > SharedNekMatrixPtr;
-    typedef NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag> DNekScalMat;
-    typedef std::shared_ptr<DNekScalMat> DNekScalMatSharedPtr;
+    /***************** Math routines  ***************/
 
-    typedef std::shared_ptr<NekMatrix<NekSingle, StandardMatrixTag> > SharedSNekMatrixPtr;
-    typedef NekMatrix<NekMatrix<NekSingle, StandardMatrixTag>, ScaledMatrixTag> SNekScalMat;
-    typedef std::shared_ptr<SNekScalMat> SNekScalMatSharedPtr;
-    
-};
-    
-#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
+    /// \brief Return the soft max between two scalars
+    template<class T> T Smax(const T a, const T b, const T k)
+    {
+        T maxi = max(a, b)*k;
+        T mini = min(a, b)*k;
+        T xmax = ( maxi + log( 1.0 + exp( mini - maxi )))/k;
+        return xmax;
+    }
+
+    template LIB_UTILITIES_EXPORT  Nektar::NekDouble Smax(
+        const Nektar::NekDouble a, const Nektar::NekDouble b,
+        const Nektar::NekDouble k);
+    template LIB_UTILITIES_EXPORT  int Smax(const int a, const int b,
+        const int k);
+
+}

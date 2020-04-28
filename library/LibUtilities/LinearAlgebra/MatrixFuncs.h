@@ -96,7 +96,25 @@ namespace Nektar
                 Array<OneD, int> ipivot(n);
                 Array<OneD, DataType> work(n);
 
-                Lapack::Dgetrf(m, n, data.get(), m, ipivot.get(), info);
+                if(std::is_floating_point<DataType>::value)
+                {
+                    switch ( sizeof(DataType) )
+                    {
+                    case sizeof(NekDouble):
+                        break;
+                    case sizeof(NekSingle):
+                        break;
+                    default:
+                        ASSERTL0(false, "FullMatrixFuncs::Invert DataType is neither NekDouble nor NekSingle");
+                        break;
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false, "FullMatrixFuncs::Invert DataType is not floating point");
+                }
+                
+                Lapack::DoSgetrf(m, n, data.get(), m, ipivot.get(), info);
 
                 if( info < 0 )
                 {
@@ -109,7 +127,7 @@ namespace Nektar
                     ASSERTL0(false, message.c_str());
                 }
 
-                Lapack::Dgetri(n, data.get(), n, ipivot.get(),
+                Lapack::DoSgetri(n, data.get(), n, ipivot.get(),
                                work.get(), n, info);
 
                 if( info < 0 )
@@ -124,22 +142,23 @@ namespace Nektar
                 }
         }
 
+        template<typename DataType>
         static void EigenSolve(unsigned int n,
-                               const Array<OneD, const double>& A,
-                               Array<OneD, NekDouble> &EigValReal,
-                               Array<OneD, NekDouble> &EigValImag,
-                               Array<OneD, NekDouble> &EigVecs = NullNekDouble1DArray)
+                               const Array<OneD, const DataType>& A,
+                               Array<OneD, DataType> &EigValReal,
+                               Array<OneD, DataType> &EigValImag,
+                               Array<OneD, DataType> &EigVecs)
         {
             int lda = n,info = 0;
-            NekDouble dum;
+            DataType dum;
             char uplo = 'N';
 
-            if(EigVecs != NullNekDouble1DArray) // calculate Right Eigen Vectors
+            if(EigVecs.num_elements() != 0) // calculate Right Eigen Vectors
             {
                 int lwork = 4*lda;
-                Array<OneD,NekDouble> work(4*lda);
+                Array<OneD,DataType> work(4*lda);
                 char lrev = 'V';
-                Lapack::Dgeev(uplo,lrev,lda, A.get(),lda,
+                Lapack::DoSgeev(uplo,lrev,lda, A.get(),lda,
                               EigValReal.get(),
                               EigValImag.get(),
                               &dum,1,
@@ -149,9 +168,9 @@ namespace Nektar
             else
             {
                 int lwork = 3*lda;
-                Array<OneD,NekDouble> work(3*lda);
+                Array<OneD,DataType> work(3*lda);
                 char lrev = 'N';
-                Lapack::Dgeev(uplo,lrev,lda,
+                Lapack::DoSgeev(uplo,lrev,lda,
                               A.get(),lda,
                               EigValReal.get(),
                               EigValImag.get(),
@@ -207,7 +226,7 @@ namespace Nektar
             Array<OneD, int> ipivot(n);
             Array<OneD, DataType> work(n);
 
-            Lapack::Dsptrf('U', n, data.get(), ipivot.get(), info);
+            Lapack::DoSsptrf('U', n, data.get(), ipivot.get(), info);
 
             if( info < 0 )
             {
@@ -220,7 +239,7 @@ namespace Nektar
                 ASSERTL0(false, message.c_str());
             }
 
-            Lapack::Dsptri('U', n, data.get(), ipivot.get(),
+            Lapack::DoSsptri('U', n, data.get(), ipivot.get(),
                            work.get(), info);
 
             if( info < 0 )

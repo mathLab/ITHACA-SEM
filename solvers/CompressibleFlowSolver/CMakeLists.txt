@@ -7,7 +7,7 @@ IF (NOT NEKTAR_BUILD_SOLVERS)
 ENDIF()
 
 IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
-    SET(CompressibleFlowSolverSource 
+    SET(CompressibleFlowSolverSource
        ./ArtificialDiffusion/ArtificialDiffusion.cpp
        ./ArtificialDiffusion/NonSmoothShockCapture.cpp
        ./ArtificialDiffusion/SmoothShockCapture.cpp
@@ -17,7 +17,6 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./BoundaryConditions/PressureInflowFileBC.cpp
        ./BoundaryConditions/PressureMachTemperatureBC.cpp
        ./BoundaryConditions/PressureOutflowBC.cpp
-       ./BoundaryConditions/PressureOutflowFileBC.cpp
        ./BoundaryConditions/PressureOutflowNonReflectiveBC.cpp
        ./BoundaryConditions/RiemannInvariantBC.cpp
        ./BoundaryConditions/RiemannBoundary.cpp
@@ -62,7 +61,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver SOURCES ${CompressibleFlowSolverSource})
 
     SUBDIRS(Utilities)
-   
+
     ADD_NEKTAR_TEST(CylinderSubsonic_FRDG_SEM)
     ADD_NEKTAR_TEST(CylinderSubsonic_FRDG_GAUSS)
     ADD_NEKTAR_TEST(CylinderSubsonic_FRHU_SEM LENGTHY)

@@ -422,6 +422,7 @@ namespace Nektar
     }
 
     template LIB_UTILITIES_EXPORT class NekVector<NekDouble>;
+    template LIB_UTILITIES_EXPORT class NekVector<NekSingle>;
 
     template<typename DataType>
     void Add(NekVector<DataType>& result,
@@ -460,6 +461,13 @@ namespace Nektar
            const NekVector<NekDouble>& lhs,
            const NekVector<NekDouble>& rhs);
 
+    template LIB_UTILITIES_EXPORT void Add(NekVector<NekSingle>& result,
+           const NekVector<NekSingle>& lhs,
+           const NekVector<NekSingle>& rhs);
+    template LIB_UTILITIES_EXPORT void AddNegatedLhs(NekVector<NekSingle>& result,
+           const NekVector<NekSingle>& lhs,
+           const NekVector<NekSingle>& rhs);
+
     template<typename DataType>
     void AddEqual(NekVector<DataType>& result,
            const NekVector<DataType>& rhs)
@@ -493,6 +501,13 @@ namespace Nektar
     void AddEqualNegatedLhs(NekVector<NekDouble>& result,
            const NekVector<NekDouble>& rhs);
 
+    template LIB_UTILITIES_EXPORT
+    void AddEqual(NekVector<NekSingle>& result,
+           const NekVector<NekSingle>& rhs);
+    template LIB_UTILITIES_EXPORT
+    void AddEqualNegatedLhs(NekVector<NekSingle>& result,
+           const NekVector<NekSingle>& rhs);
+
     template<typename LhsDataType,
              typename RhsDataType>
     NekVector<LhsDataType> Add(const NekVector<LhsDataType>& lhs,
@@ -506,6 +521,10 @@ namespace Nektar
     template LIB_UTILITIES_EXPORT
     NekVector<NekDouble> Add(const NekVector<NekDouble>& lhs,
                              const NekVector<NekDouble>& rhs);
+    
+    template LIB_UTILITIES_EXPORT
+    NekVector<NekSingle> Add(const NekVector<NekSingle>& lhs,
+                             const NekVector<NekSingle>& rhs);
 
     template<typename ResultDataType, typename InputDataType>
     void Subtract(NekVector<ResultDataType>& result,
@@ -547,6 +566,16 @@ namespace Nektar
            const NekVector<NekDouble>& lhs,
            const NekVector<NekDouble>& rhs);
 
+    template LIB_UTILITIES_EXPORT
+    void Subtract(NekVector<NekSingle>& result,
+           const NekVector<NekSingle>& lhs,
+           const NekVector<NekSingle>& rhs);
+
+    template LIB_UTILITIES_EXPORT
+    void SubtractNegatedLhs(NekVector<NekSingle>& result,
+           const NekVector<NekSingle>& lhs,
+           const NekVector<NekSingle>& rhs);
+
     template<typename ResultDataType, typename InputDataType>
     void SubtractEqual(NekVector<ResultDataType>& result,
            const NekVector<InputDataType>& rhs)
@@ -581,6 +610,14 @@ namespace Nektar
     void SubtractEqualNegatedLhs(NekVector<NekDouble>& result,
            const NekVector<NekDouble>& rhs);
 
+    template LIB_UTILITIES_EXPORT
+    void SubtractEqual(NekVector<NekSingle>& result,
+           const NekVector<NekSingle>& rhs);
+
+    template LIB_UTILITIES_EXPORT
+    void SubtractEqualNegatedLhs(NekVector<NekSingle>& result,
+           const NekVector<NekSingle>& rhs);
+
     template<typename DataType>
     NekVector<DataType>
     Subtract(const NekVector<DataType>& lhs,
@@ -595,6 +632,11 @@ namespace Nektar
     NekVector<NekDouble>
     Subtract(const NekVector<NekDouble>& lhs,
                 const NekVector<NekDouble>& rhs);
+
+    template LIB_UTILITIES_EXPORT
+    NekVector<NekSingle>
+    Subtract(const NekVector<NekSingle>& lhs,
+                const NekVector<NekSingle>& rhs);
 
     template<typename ResultDataType, typename InputDataType>
     void Divide(NekVector<ResultDataType>& result,
@@ -611,10 +653,30 @@ namespace Nektar
         }
     }
 
+    template<typename ResultDataType, typename InputDataType>
+    void Divide(NekVector<ResultDataType>& result,
+           const NekVector<InputDataType>& lhs,
+           const NekSingle& rhs)
+    {
+        ResultDataType* r_buf = result.GetRawPtr();
+        typename std::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
+
+        const unsigned int ldim = lhs.GetDimension();
+        for(int i = 0; i < ldim; ++i)
+        {
+            r_buf[i] = lhs_buf[i] / rhs;
+        }
+    }
+
     template LIB_UTILITIES_EXPORT
     void Divide(NekVector<NekDouble>& result,
            const NekVector<NekDouble>& lhs,
            const NekDouble& rhs);
+
+    template LIB_UTILITIES_EXPORT
+    void Divide(NekVector<NekSingle>& result,
+           const NekVector<NekSingle>& lhs,
+           const NekSingle& rhs);
 
     template<typename ResultDataType>
     void DivideEqual(NekVector<ResultDataType>& result,
@@ -629,9 +691,26 @@ namespace Nektar
         }
     }
 
+    template<typename ResultDataType>
+    void DivideEqual(NekVector<ResultDataType>& result,
+           const NekSingle& rhs)
+    {
+        ResultDataType* r_buf = result.GetRawPtr();
+
+        const unsigned int resdim = result.GetDimension();
+        for(int i = 0; i < resdim; ++i)
+        {
+            r_buf[i] /= rhs;
+        }
+    }
+
     template LIB_UTILITIES_EXPORT
     void DivideEqual(NekVector<NekDouble>& result,
                      const NekDouble& rhs);
+
+    template LIB_UTILITIES_EXPORT
+    void DivideEqual(NekVector<NekSingle>& result,
+                     const NekSingle& rhs);
 
     template<typename DataType>
     NekVector<DataType>
@@ -643,11 +722,25 @@ namespace Nektar
         return result;
     }
 
+    template<typename DataType>
+    NekVector<DataType>
+    Divide(const NekVector<DataType>& lhs,
+                const NekSingle& rhs)
+    {
+        NekVector<DataType> result(lhs.GetDimension());
+        Divide(result, lhs, rhs);
+        return result;
+    }
+
     template LIB_UTILITIES_EXPORT
     NekVector<NekDouble>
     Divide(const NekVector<NekDouble>& lhs,
                 const NekDouble& rhs);
 
+    template LIB_UTILITIES_EXPORT
+    NekVector<NekSingle>
+    Divide(const NekVector<NekSingle>& lhs,
+                const NekSingle& rhs);
     
     template<typename ResultDataType, typename InputDataType>
     void Multiply(NekVector<ResultDataType>& result,
@@ -667,6 +760,9 @@ namespace Nektar
     template LIB_UTILITIES_EXPORT
     void Multiply(NekVector<NekDouble>& result, const NekVector<NekDouble>& lhs, const NekVector<NekDouble>& rhs);
 
+    template LIB_UTILITIES_EXPORT
+    void Multiply(NekVector<NekSingle>& result, const NekVector<NekSingle>& lhs, const NekVector<NekSingle>& rhs);
+
     template<typename ResultDataType, typename InputDataType>
     void MultiplyEqual(NekVector<ResultDataType>& result,
            const NekVector<InputDataType>& rhs)
@@ -682,6 +778,9 @@ namespace Nektar
 
     template LIB_UTILITIES_EXPORT
     void MultiplyEqual(NekVector<NekDouble>& result, const NekVector<NekDouble>& rhs);
+
+    template LIB_UTILITIES_EXPORT
+    void MultiplyEqual(NekVector<NekSingle>& result, const NekVector<NekSingle>& rhs);
     
     template<typename DataType, typename InputDataType>
     NekVector<DataType>
@@ -696,6 +795,10 @@ namespace Nektar
     template LIB_UTILITIES_EXPORT
     NekVector<NekDouble>
     Multiply(const NekVector<NekDouble>& lhs, const NekVector<NekDouble>& rhs);
+
+    template LIB_UTILITIES_EXPORT
+    NekVector<NekSingle>
+    Multiply(const NekVector<NekSingle>& lhs, const NekVector<NekSingle>& rhs);
 
 
     template<typename ResultDataType, typename InputDataType>
@@ -713,10 +816,30 @@ namespace Nektar
         }
     }
 
+    template<typename ResultDataType, typename InputDataType>
+    void Multiply(NekVector<ResultDataType>& result,
+           const NekVector<InputDataType>& lhs,
+           const NekSingle& rhs)
+    {
+        ResultDataType* r_buf = result.GetRawPtr();
+        const InputDataType* lhs_buf = lhs.GetRawPtr();
+
+        const unsigned int ldim = lhs.GetDimension();
+        for(int i = 0; i < ldim; ++i)
+        {
+            r_buf[i] = lhs_buf[i] * rhs;
+        }
+    }
+
     template LIB_UTILITIES_EXPORT
     void Multiply(NekVector<NekDouble>& result,
            const NekVector<NekDouble>& lhs,
            const NekDouble& rhs);
+    
+    template LIB_UTILITIES_EXPORT
+    void Multiply(NekVector<NekSingle>& result,
+           const NekVector<NekSingle>& lhs,
+           const NekSingle& rhs);
 
     template<typename ResultDataType>
     void MultiplyEqual(NekVector<ResultDataType>& result,
@@ -729,9 +852,25 @@ namespace Nektar
             r_buf[i] *= rhs;
         }
     }
+
+    template<typename ResultDataType>
+    void MultiplyEqual(NekVector<ResultDataType>& result,
+           const NekSingle& rhs)
+    {
+        ResultDataType* r_buf = result.GetRawPtr();
+        const unsigned int rdim = result.GetDimension();
+        for(unsigned int i = 0; i < rdim; ++i)
+        {
+            r_buf[i] *= rhs;
+        }
+    }
     template LIB_UTILITIES_EXPORT
     void MultiplyEqual(NekVector<NekDouble>& result,
            const NekDouble& rhs);
+    
+    template LIB_UTILITIES_EXPORT
+    void MultiplyEqual(NekVector<NekSingle>& result,
+           const NekSingle& rhs);
 
     template<typename DataType>
     NekVector<DataType>
@@ -743,10 +882,25 @@ namespace Nektar
         return result;
     }
 
+    template<typename DataType>
+    NekVector<DataType>
+    Multiply(const NekVector<DataType>& lhs,
+                const NekSingle& rhs)
+    {
+        NekVector<DataType> result(lhs.GetDimension());
+        Multiply(result, lhs, rhs);
+        return result;
+    }
+
     template LIB_UTILITIES_EXPORT
     NekVector<NekDouble>
     Multiply(const NekVector<NekDouble>& lhs,
                 const NekDouble& rhs);
+    
+    template LIB_UTILITIES_EXPORT
+    NekVector<NekSingle>
+    Multiply(const NekVector<NekSingle>& lhs,
+                const NekSingle& rhs);
 
     template<typename ResultDataType, typename InputDataType>
     void Multiply(NekVector<ResultDataType>& result,
@@ -772,6 +926,30 @@ namespace Nektar
         }
     }
 
+    template<typename ResultDataType, typename InputDataType>
+    void Multiply(NekVector<ResultDataType>& result,
+                        const NekSingle& lhs,
+                        const NekVector<InputDataType>& rhs)
+    {
+                Multiply(result, rhs, lhs);
+    }
+
+    template<typename ResultDataType, typename InputDataType>
+    void MultiplyInvertedLhs(NekVector<ResultDataType>& result,
+                  const NekSingle& lhs,
+                  const NekVector<InputDataType>& rhs)
+    {
+        ResultDataType* r_buf = result.GetRawPtr();
+        const InputDataType* rhs_buf = rhs.GetRawPtr();
+        NekSingle inverse = 1.0/lhs;
+
+        const unsigned int rdim = rhs.GetDimension();
+        for(int i = 0; i < rdim; ++i)
+        {
+            r_buf[i] = inverse * rhs_buf[i];
+        }
+    }
+
     template LIB_UTILITIES_EXPORT
     void MultiplyInvertedLhs(NekVector<NekDouble>& result,
                         const NekDouble& lhs,
@@ -781,6 +959,16 @@ namespace Nektar
     void Multiply(NekVector<NekDouble>& result,
                         const NekDouble& lhs,
                         const NekVector<NekDouble>& rhs);
+    
+    template LIB_UTILITIES_EXPORT
+    void MultiplyInvertedLhs(NekVector<NekSingle>& result,
+                        const NekSingle& lhs,
+                        const NekVector<NekSingle>& rhs);
+
+    template LIB_UTILITIES_EXPORT
+    void Multiply(NekVector<NekSingle>& result,
+                        const NekSingle& lhs,
+                        const NekVector<NekSingle>& rhs);
 
     template<typename DataType>
     NekVector<DataType> Multiply(const DataType& lhs,
@@ -792,7 +980,10 @@ namespace Nektar
     template LIB_UTILITIES_EXPORT
     NekVector<NekDouble> Multiply(const NekDouble& lhs,
                                   const NekVector<NekDouble>& rhs);
-
+    
+    template LIB_UTILITIES_EXPORT
+    NekVector<NekSingle> Multiply(const NekSingle& lhs,
+                                  const NekVector<NekSingle>& rhs);
 
     template<typename DataType>
     std::ostream& operator<<(std::ostream& os, const NekVector<DataType>& rhs)
@@ -803,6 +994,9 @@ namespace Nektar
 
     template LIB_UTILITIES_EXPORT
     std::ostream& operator<<(std::ostream& os, const NekVector<NekDouble>& rhs);
+
+    template LIB_UTILITIES_EXPORT
+    std::ostream& operator<<(std::ostream& os, const NekVector<NekSingle>& rhs);
 
     template<typename DataType>
     NekVector<DataType> createVectorFromPoints(const NekPoint<DataType>& source,
@@ -821,6 +1015,10 @@ namespace Nektar
     NekVector<NekDouble> createVectorFromPoints(const NekPoint<NekDouble>& source,
                                                const NekPoint<NekDouble>& dest);
 
+    template LIB_UTILITIES_EXPORT
+    NekVector<NekSingle> createVectorFromPoints(const NekPoint<NekSingle>& source,
+                                               const NekPoint<NekSingle>& dest);
+
     template<typename DataType>
     NekPoint<DataType> findPointAlongVector(const NekVector<DataType>& lhs,
                                             const DataType& t)
@@ -837,6 +1035,10 @@ namespace Nektar
     template LIB_UTILITIES_EXPORT
     NekPoint<NekDouble> findPointAlongVector(const NekVector<NekDouble>& lhs,
                                             const NekDouble& t);
+    
+    template LIB_UTILITIES_EXPORT
+    NekPoint<NekSingle> findPointAlongVector(const NekVector<NekSingle>& lhs,
+                                            const NekSingle& t);
 
     template<typename DataType>
     bool operator==(const NekVector<DataType>& lhs,
@@ -854,6 +1056,10 @@ namespace Nektar
     bool operator==(const NekVector<NekDouble>& lhs,
                     const NekVector<NekDouble>& rhs);
 
+    template LIB_UTILITIES_EXPORT
+    bool operator==(const NekVector<NekSingle>& lhs,
+                    const NekVector<NekSingle>& rhs);
+
     template<typename DataType>
     bool operator!=(const NekVector<DataType>& lhs,
                     const NekVector<DataType>& rhs)
@@ -864,6 +1070,10 @@ namespace Nektar
     template LIB_UTILITIES_EXPORT
     bool operator!=(const NekVector<NekDouble>& lhs,
                     const NekVector<NekDouble>& rhs);
+    
+    template LIB_UTILITIES_EXPORT
+    bool operator!=(const NekVector<NekSingle>& lhs,
+                    const NekVector<NekSingle>& rhs);
 
     template<typename DataType>
     std::vector<DataType> FromString(const std::string& str)
@@ -890,6 +1100,9 @@ namespace Nektar
     template LIB_UTILITIES_EXPORT
     std::vector<NekDouble> FromString(const std::string& str);
 
+    template LIB_UTILITIES_EXPORT
+    std::vector<NekSingle> FromString(const std::string& str);
+
     template<typename DataType>
     DataType L1Norm(const NekVector<DataType>& v)
     {
@@ -906,6 +1119,9 @@ namespace Nektar
 
     template LIB_UTILITIES_EXPORT
     NekDouble L1Norm(const NekVector<NekDouble>& v);
+
+    template LIB_UTILITIES_EXPORT
+    NekSingle L1Norm(const NekVector<NekSingle>& v);
 
     template<typename DataType>
     DataType L2Norm(const NekVector<DataType>& v)
@@ -924,6 +1140,9 @@ namespace Nektar
     template LIB_UTILITIES_EXPORT
     NekDouble L2Norm(const NekVector<NekDouble>& v);
 
+    template LIB_UTILITIES_EXPORT
+    NekSingle L2Norm(const NekVector<NekSingle>& v);
+
     template<typename DataType>
     DataType InfinityNorm(const NekVector<DataType>& v)
     {
@@ -931,13 +1150,16 @@ namespace Nektar
         const unsigned int vdim = v.GetDimension();
         for(unsigned int i = 0; i < vdim; ++i)
         {
-            result = std::max(fabs(v[i]), result);
+            result = std::max(DataType(fabs(v[i])), result);
         }
         return result;
     }
 
     template LIB_UTILITIES_EXPORT
     NekDouble InfinityNorm(const NekVector<NekDouble>& v);
+
+    template LIB_UTILITIES_EXPORT
+    NekSingle InfinityNorm(const NekVector<NekSingle>& v);
 
     template<typename DataType>
     NekVector<DataType> Negate(const NekVector<DataType>& v)
@@ -954,6 +1176,9 @@ namespace Nektar
     template LIB_UTILITIES_EXPORT
     NekVector<NekDouble> Negate(const NekVector<NekDouble>& v);
 
+    template LIB_UTILITIES_EXPORT
+    NekVector<NekSingle> Negate(const NekVector<NekSingle>& v);
+
     template<typename DataType>
     void NegateInPlace(NekVector<DataType>& v)
     {
@@ -967,6 +1192,9 @@ namespace Nektar
 
     template LIB_UTILITIES_EXPORT
     void NegateInPlace(NekVector<NekDouble>& v);
+
+    template LIB_UTILITIES_EXPORT
+    void NegateInPlace(NekVector<NekSingle>& v);
 
     template<typename DataType>
     DataType Magnitude(const NekVector<DataType>& v)
@@ -983,6 +1211,9 @@ namespace Nektar
 
     template LIB_UTILITIES_EXPORT
     NekDouble Magnitude(const NekVector<NekDouble>& v) ;
+
+    template LIB_UTILITIES_EXPORT
+    NekSingle Magnitude(const NekVector<NekSingle>& v) ;
 
     template<typename DataType>
     DataType Dot(const NekVector<DataType>& lhs,
@@ -1004,6 +1235,10 @@ namespace Nektar
     NekDouble Dot(const NekVector<NekDouble>& lhs,
                  const NekVector<NekDouble>& rhs) ;
 
+    template LIB_UTILITIES_EXPORT
+    NekSingle Dot(const NekVector<NekSingle>& lhs,
+                 const NekVector<NekSingle>& rhs) ;
+
     template<typename DataType>
     void Normalize(NekVector<DataType>& v)
     {
@@ -1019,6 +1254,12 @@ namespace Nektar
 
     void NegateInPlace(NekDouble& v) { v = -v; }
     void InvertInPlace(NekDouble& v) { v = 1.0/v; }
+
+    template LIB_UTILITIES_EXPORT
+    void Normalize(NekVector<NekSingle>& v);
+
+    void NegateInPlace(NekSingle& v) { v = -v; }
+    void InvertInPlace(NekSingle& v) { v = 1.0/v; }
 
     template<typename DataType>
     NekVector<DataType> Cross(const NekVector<DataType>& lhs,
@@ -1036,6 +1277,9 @@ namespace Nektar
 
     template LIB_UTILITIES_EXPORT
     NekVector<NekDouble> Cross(const NekVector<NekDouble>& lhs, const NekVector<NekDouble>& rhs);
+
+    template LIB_UTILITIES_EXPORT
+    NekVector<NekSingle> Cross(const NekVector<NekSingle>& lhs, const NekVector<NekSingle>& rhs);
 
     template<typename DataType>
     std::string AsString(const NekVector<DataType>& v)
@@ -1056,5 +1300,8 @@ namespace Nektar
 
     template LIB_UTILITIES_EXPORT
     std::string AsString(const NekVector<NekDouble>& v);
+
+    template LIB_UTILITIES_EXPORT
+    std::string AsString(const NekVector<NekSingle>& v);
 }
     

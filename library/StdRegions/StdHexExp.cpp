@@ -62,15 +62,6 @@ namespace Nektar
         }
 
 
-        StdHexExp::StdHexExp(const  LibUtilities::BasisKey &Ba,
-                        const  LibUtilities::BasisKey &Bb,
-                        const  LibUtilities::BasisKey &Bc,
-                        NekDouble *coeffs,
-                        NekDouble *phys)
-        {
-        }
-
-
         StdHexExp::StdHexExp(const StdHexExp &T):
             StdExpansion(T),
             StdExpansion3D(T)
@@ -540,7 +531,7 @@ namespace Nektar
             ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
 
             int nq = GetTotPoints();
-            MatrixType mtype;
+            MatrixType mtype = eIProductWRTDerivBase0;
 
             switch (dir)
             {
@@ -697,7 +688,7 @@ namespace Nektar
         LibUtilities::ShapeType StdHexExp::v_DetShapeType() const
         {
             return LibUtilities::eHexahedron;
-        };
+        }
 
 
         int StdHexExp::v_NumBndryCoeffs() const
@@ -970,7 +961,7 @@ namespace Nektar
                 break;
             }
 
-            if ( faceOrient >= 9 )
+            if ( faceOrient >= eDir1FwdDir2_Dir2FwdDir1 )
             {
                 std::swap(numModes0, numModes1);
             }
@@ -1059,7 +1050,7 @@ namespace Nektar
             {
                 for(j = 0; j < P; j++)
                 {
-                    if( faceOrient < 9 )
+                    if( faceOrient < eDir1FwdDir2_Dir2FwdDir1 )
                     {
                         arrayindx[i*P+j] = i*P+j;
                     }
@@ -1088,11 +1079,12 @@ namespace Nektar
                         jump1 = nummodes0;
                     }
                 }
+                /* Falls through. */
                 case 0:
                 {
                     jump1 = nummodes0;
+                    break;
                 }
-                break;
                 case 3:
                 {
                     if (modified)
@@ -1105,11 +1097,12 @@ namespace Nektar
                         jump1 = nummodes0*nummodes1;
                     }
                 }
+                /* Falls through. */
                 case 1:
                 {
                     jump1 = nummodes0*nummodes1;
-                }
                     break;
+                }
                 case 2:
                 {
                     if (modified)
@@ -1124,12 +1117,13 @@ namespace Nektar
 
                     }
                 }
+                /* Falls through. */
                 case 4:
                 {
                     jump1 = nummodes0*nummodes1;
                     jump2 = nummodes0;
-                }
                     break;
+                }
                 default:
                     ASSERTL0(false,"fid must be between 0 and 5");
             }
@@ -1174,10 +1168,12 @@ namespace Nektar
                 }
             }
 
-            if( (faceOrient==6) || (faceOrient==8) ||
-               (faceOrient==11) || (faceOrient==12) )
+            if( (faceOrient==eDir1FwdDir1_Dir2BwdDir2) ||
+                (faceOrient==eDir1BwdDir1_Dir2BwdDir2) ||
+                (faceOrient==eDir1BwdDir2_Dir2FwdDir1) ||
+                (faceOrient==eDir1BwdDir2_Dir2BwdDir1) )
             {
-                if(faceOrient<9)
+                if(faceOrient<eDir1FwdDir2_Dir2FwdDir1)
                 {
                     if (modified)
                     {
@@ -1247,10 +1243,12 @@ namespace Nektar
                 }
             }
 
-            if( (faceOrient==7) || (faceOrient==8) ||
-               (faceOrient==10) || (faceOrient==12) )
+            if( (faceOrient==eDir1BwdDir1_Dir2FwdDir2) ||
+                (faceOrient==eDir1BwdDir1_Dir2BwdDir2) ||
+                (faceOrient==eDir1FwdDir2_Dir2BwdDir1) ||
+                (faceOrient==eDir1BwdDir2_Dir2BwdDir1) )
             {
-                if(faceOrient<9)
+                if(faceOrient<eDir1FwdDir2_Dir2FwdDir1)
                 {
                     if (modified)
                     {
@@ -1845,7 +1843,7 @@ namespace Nektar
             {
                 for(j = 0; j < (nummodesA-2); j++)
                 {
-                    if( faceOrient < 9 )
+                    if( faceOrient < eDir1FwdDir2_Dir2FwdDir1 )
                     {
                         arrayindx[i*(nummodesA-2)+j] = i*(nummodesA-2)+j;
                     }
@@ -1895,7 +1893,7 @@ namespace Nektar
                 {
                     if( bType[2] == LibUtilities::eGLL_Lagrange)
                     {
-                        if( (((int) faceOrient)-5) % 2 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 2 )
                         {
                             IdxRange[2][0] = nummodes[2] - 2;
                             IdxRange[2][1] = 0;
@@ -1915,7 +1913,7 @@ namespace Nektar
                         IdxRange[2][1] = nummodes[2];
                         Incr[2] = 1;
 
-                        if( (((int) faceOrient)-5) % 2 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 2 )
                         {
                             for(i = 3; i < nummodes[2]; i+=2)
                             {
@@ -1958,7 +1956,7 @@ namespace Nektar
                 {
                     if( bType[1] == LibUtilities::eGLL_Lagrange)
                     {
-                        if( (((int) faceOrient)-5) % 2 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 2 )
                         {
                             IdxRange[1][0] = nummodes[1] - 2;
                             IdxRange[1][1] = 0;
@@ -1978,7 +1976,7 @@ namespace Nektar
                         IdxRange[1][1] = nummodes[1];
                         Incr[1] = 1;
 
-                        if( (((int) faceOrient)-5) % 2 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 2 )
                         {
                             for(i = 3; i < nummodes[1]; i+=2)
                             {
@@ -1992,7 +1990,7 @@ namespace Nektar
                 {
                     if( bType[1] == LibUtilities::eGLL_Lagrange)
                     {
-                        if( (((int) faceOrient)-5) % 4 > 1 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 4 > 1 )
                         {
                             IdxRange[1][0] = nummodes[1] - 2;
                             IdxRange[1][1] = 0;
@@ -2012,7 +2010,7 @@ namespace Nektar
                         IdxRange[1][1] = nummodes[1];
                         Incr[1] = 1;
 
-                        if( (((int) faceOrient)-5) % 4 > 1 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 4 > 1 )
                         {
                             for(i = 3; i < nummodes[1]; i+=2)
                             {
@@ -2052,7 +2050,7 @@ namespace Nektar
                 {
                     if( bType[0] == LibUtilities::eGLL_Lagrange)
                     {
-                        if( (((int) faceOrient)-5) % 4 > 1 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 4 > 1 )
                         {
                             IdxRange[0][0] = nummodes[0] - 2;
                             IdxRange[0][1] = 0;
@@ -2072,7 +2070,7 @@ namespace Nektar
                         IdxRange[0][1] = nummodes[0];
                         Incr[0] = 1;
 
-                        if( (((int) faceOrient)-5) % 4 > 1 )
+                        if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 4 > 1 )
                         {
                             for(i = 3; i < nummodes[0]; i+=2)
                             {

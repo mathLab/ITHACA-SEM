@@ -99,13 +99,72 @@ namespace Nektar
                                           m_steadyStateSteps, 1);
 
             // For steady problems, we do not initialise the time integration
-            if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
+            if (m_session->DefinesSolverInfo("TimeIntegrationMethod"))
             {
-                std::string methodName = m_session->GetSolverInfo(
-                                                "TIMEINTEGRATIONMETHOD" );
+                std::string scheme_name = m_session->GetSolverInfo(
+                                                 "TimeIntegrationMethod" );
+
+                // The Fractional-in-time uses a shorted class name.
+                if( scheme_name == "FractionalInTime" )
+                  scheme_name = "FractionalIn";
+
+                std::string scheme_variant;
+                if( m_session->DefinesSolverInfo( "TimeIntegrationVariant" ) ) {
+                  scheme_variant = m_session->GetSolverInfo(
+                                          "TimeIntegrationVariant" );
+                }
+
+                int scheme_order;
+                if( m_session->DefinesSolverInfo( "TimeIntegrationOrder" ) ) {
+                    std::string order_str = m_session->GetSolverInfo(
+                                      "TimeIntegrationOrder" );
+
+                    scheme_order = std::atoi(order_str.c_str());
+                }
+
+                std::vector<NekDouble> scheme_free_parameters;
+                if( m_session->DefinesSolverInfo(
+                           "TimeIntegrationFreeParameters" ) )
+                {
+                    std::string free_params_str = m_session->GetSolverInfo(
+                                        "TimeIntegrationFreeParameters" );
+
+                    // Parse the free parameters.
+                    while(free_params_str.size())
+                    {
+                        size_t found = free_params_str.find(" ");
+
+                        if( found == 0 )
+                        {
+                            free_params_str = free_params_str.substr( found+1 );
+                        }
+                        else if( found == std::string::npos )
+                        {
+                            if( free_params_str.size() )
+                            {
+                                int fp = stoi(free_params_str.c_str() );
+
+                                scheme_free_parameters.push_back( fp );
+                            }
+
+                            break;
+                        }
+                        else if( found != std::string::npos )
+                        {
+                            int fp = stoi( free_params_str.substr(0, found) );
+
+                            scheme_free_parameters.push_back( fp );
+
+                            free_params_str = free_params_str.substr( found+1 );
+                        }
+                    }
+                }
+
                 m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory()
-		    .CreateInstance( methodName, "", 0,
-				     std::vector<NekDouble>());
+                    .CreateInstance( scheme_name,
+                                     scheme_variant,
+                                     scheme_order,
+                                     scheme_free_parameters );
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
@@ -270,7 +329,7 @@ namespace Nektar
                 }
 
                 fields =
-		    m_intScheme->TimeIntegrate( stepCounter, m_timestep, m_ode);
+                    m_intScheme->TimeIntegrate( stepCounter, m_timestep, m_ode);
                 timer.Stop();
 
                 m_time  += m_timestep;

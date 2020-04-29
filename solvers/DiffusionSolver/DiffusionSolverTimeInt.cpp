@@ -72,6 +72,9 @@ class Diffusion
         Array<OneD, Array<OneD, NekDouble> >            fields;
 
         string                                          m_scheme_name;
+        string                                          m_scheme_variant;
+        int                                             m_scheme_order;
+        std::vector<NekDouble>                          m_scheme_free_parameters;
         unsigned int                                    nSteps;
         NekDouble                                       delta_t;
         NekDouble                                       epsilon;
@@ -95,7 +98,65 @@ Diffusion::Diffusion( int argc, char* argv[] )
 
     // Get some information from the session
     sessionName   = session->GetSessionName();
+
+    // Scheme name
     m_scheme_name = session->GetSolverInfo( "TimeIntegrationMethod" );
+
+    // The Fraction-in-time uses a shorted class name.
+    if( m_scheme_name == "FractionalInTime" ) {
+        m_scheme_name = "FractionalIn";
+    }
+
+    // Scheme variant - optional
+    if( session->DefinesSolverInfo( "TimeIntegrationVariant" ) ) {
+        m_scheme_variant = session->GetSolverInfo( "TimeIntegrationVariant" );
+    }
+
+    // Scheme order - optional (old) / mandatory (new)
+    if( session->DefinesSolverInfo( "TimeIntegrationOrder" ) ) {
+        std::string order_str =
+            session->GetSolverInfo( "TimeIntegrationOrder" );
+
+        m_scheme_order = std::atoi(order_str.c_str());
+    }
+
+    // Scheme free parameters - optional
+    if( session->DefinesSolverInfo( "TimeIntegrationFreeParameters" ) ) {
+
+        std::string free_params_str =
+            session->GetSolverInfo( "TimeIntegrationFreeParameters" );
+
+        // Parse the free parameters.
+        while(free_params_str.size())
+        {
+            size_t found = free_params_str.find(" ");
+
+            if( found == 0 )
+            {
+                free_params_str = free_params_str.substr( found+1 );
+            }
+            else if( found == std::string::npos )
+            {
+                if( free_params_str.size() )
+                {
+                    int fp = stoi(free_params_str.c_str() );
+
+                    m_scheme_free_parameters.push_back( fp );
+                }
+
+                break;
+            }
+            else if( found != std::string::npos )
+            {
+                int fp = stoi( free_params_str.substr(0, found) );
+
+                m_scheme_free_parameters.push_back( fp );
+
+                free_params_str = free_params_str.substr( found+1 );
+            }
+        }
+    }
+
     nSteps        = session->GetParameter( "NumSteps" );
     delta_t       = session->GetParameter( "TimeStep" );
     epsilon       = session->GetParameter( "epsilon" );
@@ -129,8 +190,10 @@ void Diffusion::TimeIntegrate()
     LibUtilities::TimeIntegrationSchemeFactory & fac =
         LibUtilities::GetTimeIntegrationSchemeFactory();
 
-    m_IntScheme = fac.CreateInstance( m_scheme_name, "", 0,
-				      std::vector<NekDouble>() );
+    m_IntScheme = fac.CreateInstance( m_scheme_name,
+                                      m_scheme_variant,
+                                      m_scheme_order,
+                                      m_scheme_free_parameters );
 
     ode.DefineImplicitSolve( &Diffusion::DoImplicitSolve, this );
 

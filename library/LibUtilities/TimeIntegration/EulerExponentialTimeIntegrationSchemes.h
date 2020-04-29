@@ -72,7 +72,8 @@ public:
                  "EulerExponential Time integration scheme bad variant: " +
                  variant);
 
-        ASSERTL1(0 < order && order <= 4,
+        ASSERTL1(((variant == "Lawson"  && 0 < order && order <= 1) ||
+		  (variant == "Norsett" && 0 < order && order <= 4)),
                  "EulerExponential Time integration scheme bad order: " +
                  std::to_string(order));
 
@@ -205,7 +206,7 @@ public:
         phase->m_B_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
         phase->m_U_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
         phase->m_V_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
-        
+
 	Array<OneD, NekDouble> phi = Array<OneD, NekDouble>(phase->m_order);
 
         for( unsigned int k=0; k<phase->m_nvars; ++k )

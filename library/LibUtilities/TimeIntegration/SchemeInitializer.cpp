@@ -87,7 +87,7 @@ REGISTER(BDFImplicitOrder2);
 REGISTER(BackwardEuler);
 REGISTER(ForwardEuler);
 
-// EulerExponentialTimeIntegrationSchemes.h
+// FITTimeIntegrationSchemes.h
 REGISTER(EulerExponential);
 
 // TimeIntegrationSchemesFIT.h

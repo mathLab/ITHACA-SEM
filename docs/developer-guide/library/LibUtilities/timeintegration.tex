@@ -183,35 +183,41 @@ numerical method see \cite{Vostime}.
 
 
 \subsection{Types of time Integration Schemes}
-Nektar++ contains various classes and methods which implement the concept of
-GLMs. This toolbox is capable of numerically solving the generalised ODE using a
-broad range of different time-stepping methods. We distinguish the following
-types of general linear methods:
+Nektar++ contains various classes and methods which implement the
+concept of GLMs. This toolbox is capable of numerically solving the
+generalised ODE using a broad range of different time-stepping
+methods. We distinguish the following types of general linear methods:
 \begin{itemize}
 \item \textbf{Formally Explicit Methods}: These types of methods are
-considered explicit from an ODE point of view. They are characterised by a lower
-  triangular coefficient matrix $A$, ''i.e.'' $a_{ij} = 0$
-  for $j\geq i$. To avoid confusion, we make a further distinction:
+  considered explicit from an ODE point of view. They are
+  characterised by a lower triangular coefficient matrix $A$, ''i.e.''
+  $a_{ij} = 0$ for $j\geq i$. To avoid confusion, we make a further
+  distinction:
   \begin{itemize}
-    \item \textbf{direct explicit method}: Only forward operators are required.
-    \item \textbf{indirect explicit method}: The inverse operator is required.
+    \item \textbf{direct explicit method}: Only forward operators are
+      required.
+    \item \textbf{indirect explicit method}: The inverse operator is
+      required.
   \end{itemize}
-  \item \textbf{Diagonally Implicit Methods}: Compared to explicit methods,
-  the coefficient matrix $A$ has now non-zero entries on the diagonal.
-  This means that each stage value depend on the stage derivative at the same
-  stage, requiring an implicit step. However, the calculation of the different
-  stage values is still uncoupled. Best known are the DIRK schemes.
-  \item \textbf{IMEX schemes}: These schemes support the concept of being able
-  to split right hand forcing term into an explicit and implicit component. This is
-  useful in advection diffusion type problems where the advection is handled
-  explicitly and the diffusion is handled implicit.
+  \item \textbf{Diagonally Implicit Methods}: Compared to explicit
+    methods, the coefficient matrix $A$ has now non-zero entries on
+    the diagonal.  This means that each stage value depend on the
+    stage derivative at the same stage, requiring an implicit
+    step. However, the calculation of the different stage values is
+    still uncoupled. Best known are the DIRK schemes.
+  \item \textbf{IMEX schemes}: These schemes support the concept of
+    being able to split right hand forcing term into an explicit and
+    implicit component. This is useful in advection diffusion type
+    problems where the advection is handled explicitly and the
+    diffusion is handled implicit.
   \item \textbf{Fully Implicit Methods}: The coefficient matrix has a
-  non-zero upper triangular part. The calculation of all stages values is fully coupled.
+    non-zero upper triangular part. The calculation of all stages
+    values is fully coupled.
   \item \textbf{Exponential Methods}: A forward Euler method has been
     extended to the exponential setting. These types of methods are
     considered explicit from an ODE point of view. They are
-    characterised by a coefficient matrix of exponentials for each
-    variable. Two schems have been implemented:
+    characterized by a coefficient matrix of exponential values for
+    each variable. Two schemes have been implemented:
   \begin{itemize}
     \item \textbf{Lawson-Euler explicit method}: $y_n =
       \varphi_0(z)N(y_{n-1},t_{n-1}) + \varphi_0(z)y_{n-1}$
@@ -231,27 +237,27 @@ where $\varphi_0(z) = e^{z}$ for $k = 0$, $\varphi_{k}(z) =
 
 The aim in {\nek} is to fully support the first three types of GLMs.
 Fully implicit methods are currently not implemented. {\nek} also
-fully supports Expoential Methods using GLMs. The Fractional-in-time
+fully supports Exponential Methods using GLMs. The Fractional-in-time
 methods do not make use of the GLMs and utilizes it own methodology.
 
 \subsection{Usage}
-The goal of abstracting the concept of general linear methods is to provide
-users with a single interface for time-stepping, independent of the chosen
-method. The classes tree allows the user to numerically integrate ODE's using
-high-order complex schemes, as if it was done using the Forward-Euler method.
-Switching between time-stepping schemes is as easy as changing a parameter in an
-input file.
+The goal of abstracting the concept of general linear methods is to
+provide users with a single interface for time-stepping, independent
+of the chosen method. The classes tree allows the user to numerically
+integrate ODE's using high-order complex schemes, as if it was done
+using the Forward-Euler method.  Switching between time-stepping
+schemes is as easy as changing a parameter in an input file.
 
-In the already implemented solvers the time-integration schemes have been set up
-according to the nature of the equations.
-For example the incompressible Navier-Stokes equations solver allows the use of
-three different Implicit-Explicit time-schemes if solving the equations with a
-splitting-scheme.
-This is because this kind of scheme has an explicit and an implicit operator
-that combined solve the ODE's system.
+In the already implemented solvers the time-integration schemes have
+been set up according to the nature of the equations.  For example the
+incompressible Navier-Stokes equations solver allows the use of three
+different Implicit-Explicit time-schemes if solving the equations with
+a splitting-scheme.  This is because this kind of scheme has an
+explicit and an implicit operator that combined solve the ODE's
+system.
 
-Once aware of the problem's nature and implementation, the user can easily
-switch between some (depending on the problem) of the following
+Once aware of the problem's nature and implementation, the user can
+easily switch between some (depending on the problem) of the following
 time-integration schemes:
 
 \begin{center}
@@ -343,9 +349,9 @@ steps or final time. For example:\\
 </PARAMETERS>
 \end{lstlisting}
 
-Old schema which specifies the method, variant, order, and free
-parameters as a single string is not yet deprecated and can still be
-utilized:
+The old schema which specifies the method, variant, order, and free
+parameters as a single string can still be utilized as it has not been
+deprecated.
 
 \begin{center}
 \footnotesize
@@ -417,8 +423,8 @@ final time. For example:\\
 
 
 \subsection{Implementation of a time-dependent problem}
-In order to implement a new solver which takes advantage of the time-integration
-class in {\nek}, two main ingredients are required:
+In order to implement a new solver which takes advantage of the
+time-integration class in {\nek}, two main ingredients are required:
 \begin{itemize}
 \item A main files in which the time-integration of you ODE's system is
 initialized and performed.

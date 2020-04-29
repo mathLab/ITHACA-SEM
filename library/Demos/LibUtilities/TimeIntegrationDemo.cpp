@@ -555,15 +555,20 @@ int main(int argc, char *argv[])
         {
             size_t found = sParameter.find(" ");
 
-            if( found == std::string::npos )
+            if( found == 0 )
             {
-                int fp = stoi( sParameter );
-
-                freeParams.push_back(fp);
-
-                sParameter = "";
+                sParameter = sParameter.substr( found+1 );
             }
-            else if( found > 0 )
+            else if( found == std::string::npos )
+            {
+                if( sParameter.size() )
+                {
+                    freeParams.push_back( stoi( sParameter ) );
+                }
+
+                break;
+            }
+            else if( found != std::string::npos )
             {
                 int fp = stoi( sParameter.substr(0, found) );
 

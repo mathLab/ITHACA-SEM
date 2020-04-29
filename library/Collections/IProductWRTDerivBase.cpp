@@ -269,7 +269,7 @@ class IProductWRTDerivBase_AVX : public Operator
             }
             else
             {
-                Array<OneD, Array<OneD, NekDouble>> input;
+                Array<OneD, Array<OneD, NekDouble>> input{m_coordim};
                 input[0] = entry0;
                 input[1] = entry1;
                 if (m_coordim == 3)

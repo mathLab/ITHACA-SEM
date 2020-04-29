@@ -704,11 +704,9 @@ namespace Nektar
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession,
-                Collections::eIterPerExp);
+                Collections::eAVX);
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
-            // Not all AVX OP are implemented...
-            impTypes[Collections::eBwdTrans] = Collections::eAVX;
             Collections::Collection     c(CollExp, impTypes);
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
@@ -833,11 +831,9 @@ namespace Nektar
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession,
-                Collections::eStdMat);
+                Collections::eAVX);
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
-            // Not all AVX OP are implemented...
-            impTypes[Collections::eIProductWRTBase] = Collections::eAVX;
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
@@ -913,11 +909,9 @@ namespace Nektar
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession,
-                Collections::eStdMat);
+                Collections::eAVX);
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
-            // Not all AVX OP are implemented...
-            impTypes[Collections::eIProductWRTBase] = Collections::eAVX;
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
@@ -993,11 +987,9 @@ namespace Nektar
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession,
-                Collections::eStdMat);
+                Collections::eAVX);
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
-            // Not all AVX OP are implemented...
-            impTypes[Collections::eIProductWRTBase] = Collections::eAVX;
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
@@ -2674,11 +2666,9 @@ namespace Nektar
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession,
-                Collections::eIterPerExp);
+                Collections::eAVX);
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
-            // not all ops implemented..
-            impTypes[Collections::eIProductWRTDerivBase] = Collections::eAVX;
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();

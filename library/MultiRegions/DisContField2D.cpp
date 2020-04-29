@@ -472,7 +472,7 @@ namespace Nektar
                     for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
                         m_boundaryEdges.insert(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                     }
                     cnt += m_bndCondExpansions[n]->GetExpSize();
                 }
@@ -1398,7 +1398,6 @@ namespace Nektar
                                                    field + phys_offset,
                                                    e_tmp = Bwd + offset);
                         }
-
                     }
                 }
             }
@@ -1416,7 +1415,7 @@ namespace Nektar
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
                         id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
-                                        GetBndCondTraceToGlobalTraceMap(cnt+e));
+                                        GetBndCondIDToGlobalTraceID(cnt+e));
                         Vmath::Vcopy(npts,
                             &(m_bndCondExpansions[n]->GetPhys())[id1], 1,
                             &Bwd[id2],                                 1);
@@ -1437,7 +1436,7 @@ namespace Nektar
                                  "Method not set up for non-zero Neumann "
                                  "boundary condition");
                         id2  = m_trace->GetPhys_Offset(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                         Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
                     }
 
@@ -1811,6 +1810,8 @@ namespace Nektar
             int     cnt;
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs), edge_lambda;
+
+            
             m_traceMap->GlobalToLocalBnd(m_trace->GetCoeffs(),loc_lambda);
 
             edge_lambda = loc_lambda;
@@ -1851,7 +1852,6 @@ namespace Nektar
         void DisContField2D::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const MultiRegions::VarFactorsMap &varfactors,
@@ -1859,7 +1859,7 @@ namespace Nektar
                 const bool  PhysSpaceForcing)
 
         {
-            boost::ignore_unused(flags, varfactors, dirForcing);
+            boost::ignore_unused(varfactors, dirForcing);
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
 
@@ -1885,7 +1885,7 @@ namespace Nektar
             //----------------------------------
             int GloBndDofs   = m_traceMap->GetNumGlobalBndCoeffs();
             int NumDirichlet = m_traceMap->GetNumLocalDirBndCoeffs();
-            int e_ncoeffs,id;
+            int e_ncoeffs;
 
             // Retrieve block matrix of U^e
             GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,
@@ -1893,21 +1893,13 @@ namespace Nektar
             const DNekScalBlkMatSharedPtr &HDGLamToU = GetBlockMatrix(
                 HDGLamToUKey);
 
-            // Retrieve global trace space storage, \Lambda, from trace
-            // expansion
-            Array<OneD,NekDouble> BndSol = m_trace->UpdateCoeffs();
-
-            // Create trace space forcing, F
-            Array<OneD,NekDouble> BndRhs(GloBndDofs,0.0);
-
-            // Zero \Lambda
-            Vmath::Zero(GloBndDofs,BndSol,1);
 
             // Retrieve number of local trace space coefficients N_{\lambda},
             // and set up local elemental trace solution \lambda^e.
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
-            Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);
-            DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);
+            Array<OneD, NekDouble> bndrhs(LocBndCoeffs,0.0);
+            Array<OneD, NekDouble> loclambda(LocBndCoeffs,0.0);
+            DNekVec LocLambda(LocBndCoeffs,loclambda,eWrapper);
 
             //----------------------------------
             // Evaluate Trace Forcing vector F
@@ -1920,7 +1912,7 @@ namespace Nektar
 
                 e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
                 e_f       = f + cnt;
-                e_l       = loc_lambda + cnt1;
+                e_l       = bndrhs + cnt1;
 
                 // Local trace space \lambda^e
                 DNekVec     Floc    (nbndry, e_l, eWrapper);
@@ -1933,21 +1925,27 @@ namespace Nektar
                 cnt1  += nbndry;
             }
 
-            // Assemble local \lambda_e into global \Lambda
-            m_traceMap->AssembleBnd(loc_lambda,BndRhs);
+            Array<OneD, const int> bndCondMap =  
+                m_traceMap->GetBndCondCoeffsToLocalTraceMap();
+            Array<OneD, const NekDouble> Sign = 
+                m_traceMap->GetLocalToGlobalBndSign();
 
-            // Copy Dirichlet boundary conditions and weak forcing into trace
-            // space
+            // Copy Dirichlet boundary conditions and weak forcing
+            // into trace space
+            int locid;
             cnt = 0;
             for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
+                Array<OneD, const NekDouble> bndcoeffs =
+                    m_bndCondExpansions[i]->GetCoeffs();
+                
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                        SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
-                        id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
-                        BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
+                        locid = bndCondMap[cnt + j];
+                        loclambda[locid] = Sign[locid]*bndcoeffs[j]; 
                     }
                 }
                 else if (m_bndConditions[i]->GetBoundaryConditionType() ==
@@ -1958,8 +1956,8 @@ namespace Nektar
                     //Add weak boundary condition to trace forcing
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
-                        id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
-                        BndRhs[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
+                        locid = bndCondMap[cnt + j];
+                        bndrhs[locid] += Sign[locid]*bndcoeffs[j]; 
                     }
                 }
                 else if (m_bndConditions[i]->GetBoundaryConditionType() ==
@@ -1968,6 +1966,7 @@ namespace Nektar
                     ASSERTL0(false, "HDG implementation does not support "
                              "periodic boundary conditions at present.");
                 }
+                cnt += (m_bndCondExpansions[i])->GetNcoeffs();
             }
 
             //----------------------------------
@@ -1979,9 +1978,13 @@ namespace Nektar
                 GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam,
                                           m_traceMap,factors,varcoeff);
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
-                LinSys->Solve(BndRhs,BndSol,m_traceMap);
-            }
+                LinSys->Solve(bndrhs,loclambda,m_traceMap);
 
+                // For consistency with previous version put global
+                // solution into m_trace->m_coeffs
+                m_traceMap->LocalToGlobal(loclambda,m_trace->UpdateCoeffs());
+            }
+                
             //----------------------------------
             // Internal element solves
             //----------------------------------
@@ -1991,9 +1994,6 @@ namespace Nektar
                 invHDGhelmkey);
             DNekVec out(m_ncoeffs,outarray,eWrapper);
             Vmath::Zero(m_ncoeffs,outarray,1);
-
-            // get local trace solution from BndSol
-            m_traceMap->GlobalToLocalBnd(BndSol,loc_lambda);
 
             //  out =  u_f + u_lam = (*InvHDGHelm)*f + (LamtoU)*Lam
             out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;
@@ -2011,11 +2011,8 @@ namespace Nektar
         void DisContField2D::v_GeneralMatrixOp(
                const GlobalMatrixKey             &gkey,
                const Array<OneD,const NekDouble> &inarray,
-               Array<OneD,      NekDouble> &outarray,
-               CoeffState coeffstate)
+               Array<OneD,      NekDouble> &outarray)
         {
-            boost::ignore_unused(coeffstate);
-
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);
             DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);

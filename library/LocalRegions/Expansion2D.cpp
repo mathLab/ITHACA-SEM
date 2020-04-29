@@ -1333,7 +1333,9 @@ namespace Nektar
             eBndToTraceMatrixDG
         };
 
-        void Expansion2D::v_AddRobinMassMatrix(const int edge, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+        void Expansion2D::v_AddRobinMassMatrix(const int edge,
+                                        const Array<OneD, const NekDouble > &primCoeffs,
+                                               DNekMatSharedPtr &inoutmat)
         {
             ASSERTL1(IsBoundaryInteriorExpansion(),
                      "Not set up for non boundary-interior expansions");
@@ -1458,7 +1460,11 @@ namespace Nektar
          * - multiplies the edge vector by the edge mass matrix
          * - maps the edge coefficients back onto the elemental coefficients
          */
-        void Expansion2D::v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs)
+        void Expansion2D::v_AddRobinEdgeContribution(const int edgeid,
+                                                     const Array<OneD,
+                                                     const NekDouble> &primCoeffs,
+                                                     const Array<OneD, NekDouble> &incoeffs,
+                                                     Array<OneD, NekDouble> &coeffs)
         {
             ASSERTL1(IsBoundaryInteriorExpansion(),
                      "Not set up for non boundary-interior expansions");
@@ -1472,7 +1478,9 @@ namespace Nektar
             StdRegions::VarCoeffMap varcoeffs;
             varcoeffs[StdRegions::eVarCoeffMass] = primCoeffs;
 
-            LocalRegions::MatrixKey mkey(StdRegions::eMass,LibUtilities::eSegment, *edgeExp, StdRegions::NullConstFactorMap, varcoeffs);
+            LocalRegions::MatrixKey mkey(StdRegions::eMass,LibUtilities::eSegment,
+                                         *edgeExp, StdRegions::NullConstFactorMap,
+                                         varcoeffs);
             DNekScalMat &edgemat = *edgeExp->GetLocMatrix(mkey);
 
             NekVector<NekDouble> vEdgeCoeffs (order_e);
@@ -1481,15 +1489,14 @@ namespace Nektar
 
             for (i = 0; i < order_e; ++i)
             {
-                vEdgeCoeffs[i] = coeffs[map[i]]*sign[i];
+                vEdgeCoeffs[i] = incoeffs[map[i]]*sign[i];
             }
-            Vmath::Zero(GetNcoeffs(), coeffs, 1);
 
             vEdgeCoeffs = edgemat * vEdgeCoeffs;
 
             for (i = 0; i < order_e; ++i)
             {
-                coeffs[map[i]] = vEdgeCoeffs[i]*sign[i];
+                coeffs[map[i]] += vEdgeCoeffs[i]*sign[i];
             }
         }
 

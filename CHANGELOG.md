@@ -4,6 +4,9 @@ Changelog
 v5.1.0
 ------
 **Library**
+- Restructure library to use local coefficient storage down to the GlobalLinSys level. Removed GlobalCeoffs functionality (!963)
+
+**FieldConvert**
 - Refactored time integration code using factory pattern (!1034)
 - Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
 - Fix type consistency and real comparison in SharedArray.hpp, replaced
@@ -15,6 +18,7 @@ v5.1.0
 **NekMesh**
 - Improved boundary layer splitting and output to CADfix (!938)
 - Improve .geo reader and support 3D geometries with voids (!1031)
+- Added r-adaptation code (!1109)
 
 **BuildSystem**
 - Toggle build type (!1135)
@@ -28,6 +32,9 @@ v5.0.1
 
 **IncNavierStokesSolver**
 - Change the baseflow time in the Adjoint advection (!1133)
+
+**FieldConvert**
+- Fix OutputTecplot skipping final plane in 3DH1D (!1016)
 
 **NekMesh**
 - Fix compile errors when using intel cc (!1114)

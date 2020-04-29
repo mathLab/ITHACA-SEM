@@ -13,8 +13,8 @@
             <value variable="v" tolerance="0.0001">0.00277094</value>
         </metric>
         <metric type="Linf" id="2">
-            <value variable="u" tolerance="0.00001">1.00159</value>
-            <value variable="v" tolerance="0.00001">0.00375125</value>
+		<value variable="u" tolerance="0.00001">1.00142</value>
+            <value variable="v" tolerance="0.00001">0.00367426</value>
         </metric>
     </metrics>
 </test>

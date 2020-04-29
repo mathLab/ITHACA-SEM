@@ -870,7 +870,7 @@ void MMFSystem::CopyBoundaryTrace(
                        ->GetNumPoints(0);
             id1 = m_fields[var]->GetBndCondExpansions()[n]->GetPhys_Offset(e);
             id2 = m_fields[var]->GetTrace()->GetPhys_Offset(
-                m_fields[var]->GetTraceMap()->GetBndCondTraceToGlobalTraceMap(
+                m_fields[var]->GetTraceMap()->GetBndCondIDToGlobalTraceID(
                     cnt + e));
 
             if (m_fields[var]->GetBndConditions()[n]->GetUserDefined() ==

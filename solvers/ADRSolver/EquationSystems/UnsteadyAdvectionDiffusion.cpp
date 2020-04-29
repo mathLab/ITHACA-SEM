@@ -383,8 +383,7 @@ namespace Nektar
         for (int i = 0; i < nvariables; ++i)
         {
             // Solve a system of equations with Helmholtz solver
-            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(),
-                                   NullFlagList, factors);
+            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), factors);
 
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), outarray[i]);
         }

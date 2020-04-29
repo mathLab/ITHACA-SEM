@@ -240,7 +240,7 @@ void DiffusionLDG::ApplyScalarBCs(
                 fields[var]->GetBndCondExpansions()[i]->GetPhys_Offset(e);
 
             std::size_t id2 = fields[0]->GetTrace()->GetPhys_Offset(
-                fields[0]->GetTraceMap()->GetBndCondTraceToGlobalTraceMap(
+                fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(
                     cnt++));
 
             // AV boundary conditions
@@ -377,7 +377,7 @@ void DiffusionLDG::ApplyVectorBCs(
                 fields[var]->GetBndCondExpansions()[i]->GetPhys_Offset(e);
 
             std::size_t id2 = fields[0]->GetTrace()->GetPhys_Offset(
-                fields[0]->GetTraceMap()->GetBndCondTraceToGlobalTraceMap(
+                fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(
                     cnt++));
 
             // AV boundary conditions

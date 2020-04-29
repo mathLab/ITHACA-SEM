@@ -54,12 +54,12 @@ namespace Nektar
             const LibUtilities::BasisKey &Bb,
             LibUtilities::PointsType Ntype):
             StdExpansion  (LibUtilities::StdTriData::getNumberOfCoefficients(
-                               Ba.GetNumModes(),
-                               Bb.GetNumModes()),
+                                                                             Ba.GetNumModes(),
+                                                                             Bb.GetNumModes()),
                            2,Ba,Bb),
             StdExpansion2D(LibUtilities::StdTriData::getNumberOfCoefficients(
-                               Ba.GetNumModes(),
-                               Bb.GetNumModes()),
+                                                                             Ba.GetNumModes(),
+                                                                             Bb.GetNumModes()),
                            Ba,Bb),
             StdTriExp     (Ba,Bb),
             m_nodalPointsKey(Ba.GetNumModes(),Ntype)
@@ -124,8 +124,8 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             StdMatrixKey      Nkey(eNBasisTrans, DetShapeType(), *this,
-                                    NullConstFactorMap, NullVarCoeffMap,
-                                    m_nodalPointsKey.GetPointsType());
+                                   NullConstFactorMap, NullVarCoeffMap,
+                                   m_nodalPointsKey.GetPointsType());
             DNekMatSharedPtr  vdm = GetStdMatrix(Nkey);
 
             // Multiply out matrix
@@ -149,7 +149,7 @@ namespace Nektar
             DNekMatSharedPtr Mat;
 
             Mat = MemoryManager<DNekMat>::AllocateSharedPtr(
-                m_ncoeffs, m_ncoeffs);
+                                                            m_ncoeffs, m_ncoeffs);
             GetNodalPoints(r,s);
 
             //Store the values of m_phys in a temporary array
@@ -179,15 +179,15 @@ namespace Nektar
         //---------------------------------------
 
         void StdNodalTriExp::v_BwdTrans(
-            const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
+                                        const Array<OneD, const NekDouble>& inarray,
+                                        Array<OneD,       NekDouble>& outarray)
         {
             v_BwdTrans_SumFac(inarray,outarray);
         }
 
         void StdNodalTriExp::v_BwdTrans_SumFac(
-            const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
+                                               const Array<OneD, const NekDouble>& inarray,
+                                               Array<OneD,       NekDouble>& outarray)
         {
             Array<OneD, NekDouble> tmp(m_ncoeffs);
             NodalToModal(inarray,tmp);
@@ -195,8 +195,8 @@ namespace Nektar
         }
 
         void StdNodalTriExp::v_FwdTrans(
-            const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
+                                        const Array<OneD, const NekDouble>& inarray,
+                                        Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTBase(inarray,outarray);
 
@@ -282,19 +282,22 @@ namespace Nektar
         //--------------------------
 
         void StdNodalTriExp::v_GetEdgeToElementMap(
-            const int                  eid,
-            const Orientation      edgeOrient,
-            Array<OneD, unsigned int> &maparray,
-            Array<OneD,          int> &signarray,
-            int                        P)
+                                                   const int                  eid,
+                                                   const Orientation      edgeOrient,
+                                                   Array<OneD, unsigned int> &maparray,
+                                                   Array<OneD,          int> &signarray,
+                                                   int                        P)
         {
             ASSERTL0(eid >= 0 && eid <= 2,
                      "Local Edge ID must be between 0 and 2");
 
-            ASSERTL0(P == -1, "Nodal triangle not set up to deal with variable"
-                              "polynomial order.");
+            
             const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
-
+            
+            ASSERTL0(P == -1 || P == nEdgeCoeffs,
+                     "Nodal triangle not set up to deal with variable"
+                     "polynomial order.");
+            
             if (maparray.size() != nEdgeCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
@@ -316,11 +319,11 @@ namespace Nektar
             }
 
             maparray[0] = eid;
-            maparray[1] = eid == 2 ? 0 : eid+1;
-            for (int i = 2; i < nEdgeCoeffs; i++)
+            for (int i = 1; i < nEdgeCoeffs-1; i++)
             {
-                maparray[i] = eid*(nEdgeCoeffs-2)+1+i;
-            }
+                maparray[i] = eid*(nEdgeCoeffs-2)+2+i; 
+            }  
+            maparray[nEdgeCoeffs-1] = eid == 2 ? 0 : eid+1;
 
             if (orient == eBackwards)
             {

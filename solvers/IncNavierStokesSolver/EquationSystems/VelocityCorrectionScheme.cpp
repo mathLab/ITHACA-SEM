@@ -579,11 +579,12 @@ namespace Nektar
         // field below
         SetBoundaryConditions(m_time);
 
-        for(int i = 0; i < m_nConvectiveFields; ++i)
+	// Ensure the initial conditions have correct BCs  
+        for(int i = 0; i < m_fields.size(); ++i)
         {
-            m_fields[i]->LocalToGlobal();
             m_fields[i]->ImposeDirichletConditions(m_fields[i]->UpdateCoeffs());
-            m_fields[i]->GlobalToLocal();
+	    m_fields[i]->LocalToGlobal();
+	    m_fields[i]->GlobalToLocal();
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
                                   m_fields[i]->UpdatePhys());
         }
@@ -710,6 +711,12 @@ namespace Nektar
             {
                 Vmath::Svtvp(physTot, m_alpha, m_flowrateStokes[i], 1,
                              outarray[i], 1, outarray[i], 1);
+                //Enusre coeff space is updated for next time step
+                m_fields[i]->FwdTrans_IterPerExp(outarray[i],
+                                                 m_fields[i]->UpdateCoeffs());
+                // Impsoe symmetry of flow on coeff space (good to enfore periodicity). 
+                m_fields[i]->LocalToGlobal();
+                m_fields[i]->GlobalToLocal();
             }
         }
     }
@@ -794,8 +801,7 @@ namespace Nektar
         factors[StdRegions::eFactorLambda] = 0.0;
 
         // Solver Pressure Poisson Equation
-        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(),
-                              NullFlagList, factors);
+        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(), factors);
 
         // Add presure to outflow bc if using convective like BCs
         m_extrapolation->AddPressureToOutflowBCs(m_kinvis);
@@ -822,7 +828,7 @@ namespace Nektar
             // Setup coefficients for equation
             factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_diffCoeff[i];
             m_fields[i]->HelmSolve(Forcing[i], m_fields[i]->UpdateCoeffs(),
-                                   NullFlagList,  factors, varCoeffMap,
+                                   factors, varCoeffMap,
                                    varFactorsMap);
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
         }

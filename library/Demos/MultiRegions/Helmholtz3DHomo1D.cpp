@@ -50,12 +50,12 @@ int main(int argc, char *argv[])
     const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey Bkey(LibUtilities::eFourier,nplanes,Pkey);
     Exp = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-        ::AllocateSharedPtr(vSession,Bkey,lz,useFFT,deal,graph2D,vSession->GetVariable(0));
+        ::AllocateSharedPtr(vSession,Bkey,lz,useFFT,deal,
+                            graph2D,vSession->GetVariable(0));
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
-    flags.set(eUseGlobal, true);
     factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
     const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
     LibUtilities::BasisKey bkey0 
@@ -96,12 +96,12 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Helmholtz solution taking physical forcing
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors);
      //----------------------------------------------
 
     //----------------------------------------------
     // Backward Transform Solution to get solved values at
-    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(),MultiRegions::eGlobal);
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //----------------------------------------------
     
     //----------------------------------------------
@@ -124,8 +124,10 @@ int main(int argc, char *argv[])
         Fce->SetPhys(fce);
         Fce->SetPhysState(true);
 
-        cout << "L infinity error: " << Exp->Linf(Exp->GetPhys(), Fce->GetPhys()) << endl;
-        cout << "L 2 error:        " << Exp->L2  (Exp->GetPhys(), Fce->GetPhys()) << endl;
+        cout << "L infinity error: " << Exp->Linf(Exp->GetPhys(),
+                                                  Fce->GetPhys()) << endl;
+        cout << "L 2 error:        " << Exp->L2  (Exp->GetPhys(),
+                                                  Fce->GetPhys()) << endl;
         //--------------------------------------------
     }
     //----------------------------------------------

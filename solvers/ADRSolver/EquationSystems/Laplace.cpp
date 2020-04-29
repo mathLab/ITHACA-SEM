@@ -77,7 +77,6 @@ namespace Nektar
                         m_fields[i]->UpdateCoeffs(), 1);
             m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
                                    m_fields[i]->UpdateCoeffs(),
-                                   NullFlagList,
                                    m_factors);
             m_fields[i]->SetPhysState(false);
         }

@@ -145,9 +145,6 @@ namespace Nektar
             // Setup default optimisation information
             nel = GetExpSize();
 
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>::
-                                AllocateSharedPtr(nel);
-
             SetCoeffPhys();
 
             // Do not set up BCs if default variable
@@ -223,7 +220,6 @@ namespace Nektar
         void DisContField3DHomogeneous1D::v_HelmSolve(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,
-            const FlagList &flags,
             const StdRegions::ConstFactorMap &factors,
             const StdRegions::VarCoeffMap &varcoeff,
             const MultiRegions::VarFactorsMap &varfactors,
@@ -264,7 +260,7 @@ namespace Nektar
                     m_planes[n]->HelmSolve(
                         wfce,
                         e_out = outarray + cnt1,
-                        flags, new_factors, varcoeff, varfactors,
+                        new_factors, varcoeff, varfactors,
                         dirForcing,
                         PhysSpaceForcing);
                 }
@@ -715,7 +711,7 @@ namespace Nektar
             // Get trace map from first plane.
             AssemblyMapDGSharedPtr traceMap = m_planes[0]->GetTraceMap();
             const Array<OneD, const int> &traceBndMap
-                = traceMap->GetBndCondTraceToGlobalTraceMap();
+                = traceMap->GetBndCondIDToGlobalTraceID();
             int mapSize = traceBndMap.size();
 
             // Set up trace boundary map

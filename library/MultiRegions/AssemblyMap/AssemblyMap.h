@@ -129,6 +129,9 @@ namespace Nektar
                           Array<OneD,     NekDouble>& pGlobal,
                           int                         offset) const;
 
+            MULTI_REGIONS_EXPORT void UniversalAbsMaxBnd(
+                           Array<OneD, NekDouble> &bndvals);
+
             /// Retrieve the global index of a given local boundary mode.
             MULTI_REGIONS_EXPORT int GetLocalToGlobalBndMap(const int i) const;
             /// Retrieve the global indices of the local boundary modes.
@@ -146,22 +149,25 @@ namespace Nektar
             MULTI_REGIONS_EXPORT NekDouble GetLocalToGlobalBndSign(const int i) const;
             /// Retrieve the sign change for all local boundary modes.
             MULTI_REGIONS_EXPORT Array<OneD, const NekDouble> GetLocalToGlobalBndSign() const;
-            /// Retrieves the global index corresponding to a boundary expansion
-            /// mode.
-            MULTI_REGIONS_EXPORT int GetBndCondCoeffsToGlobalCoeffsMap(const int i);
-            /// Retrieves the global indices corresponding to the boundary
-            /// expansion modes.
-            MULTI_REGIONS_EXPORT const Array<OneD,const int>&
-                    GetBndCondCoeffsToGlobalCoeffsMap();
-            /// Returns the modal sign associated with a given boundary
-            /// expansion mode.
-            MULTI_REGIONS_EXPORT NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i);
+            /// Retrieves the local indices corresponding to the
+            /// boundary expansion modes.
+            MULTI_REGIONS_EXPORT const Array<OneD,const int>
+                                              &GetBndCondCoeffsToLocalCoeffsMap();
+            /// Returns the modal sign associated with a given
+            /// boundary expansion mode.
+            MULTI_REGIONS_EXPORT const Array<OneD, NekDouble>
+                                              &GetBndCondCoeffsToLocalCoeffsSign();
+
+            /// Retrieves the local indices corresponding to the
+            /// boundary expansion modes to global trace
+            MULTI_REGIONS_EXPORT const Array<OneD,const int>
+                                              &GetBndCondCoeffsToLocalTraceMap();
 
             /// Returns the global index of the boundary trace giving the
             /// index on the boundary expansion
-            MULTI_REGIONS_EXPORT int GetBndCondTraceToGlobalTraceMap(const int i);
+            MULTI_REGIONS_EXPORT int GetBndCondIDToGlobalTraceID(const int i);
             MULTI_REGIONS_EXPORT const Array<OneD, const int>
-                &GetBndCondTraceToGlobalTraceMap();
+                &GetBndCondIDToGlobalTraceID();
  
             /// Returns the number of global Dirichlet boundary coefficients.
             MULTI_REGIONS_EXPORT int GetNumGlobalDirBndCoeffs() const;
@@ -198,22 +204,29 @@ namespace Nektar
                     Array<OneD,NekDouble>& loc) const;
 
             MULTI_REGIONS_EXPORT void LocalBndToGlobal(
-                    const NekVector<NekDouble>& loc,
-                    NekVector<NekDouble>& global,
-                    int offset) const;
-
-            MULTI_REGIONS_EXPORT void LocalBndToGlobal(
-                    const NekVector<NekDouble>& loc,
-                    NekVector<NekDouble>& global) const;
-
-            MULTI_REGIONS_EXPORT void LocalBndToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD,NekDouble>& global,
-                    int offset) const;
+                    int offset, bool UseComm = true) const;
 
             MULTI_REGIONS_EXPORT void LocalBndToGlobal(
                     const Array<OneD, const NekDouble>& loc,
-                    Array<OneD,NekDouble>& global)  const;
+                    Array<OneD,NekDouble>& global, bool UseComm = true)  const;
+
+            MULTI_REGIONS_EXPORT void LocalToLocalBnd(
+                    const Array<OneD, const NekDouble>& local,
+                    Array<OneD,NekDouble>& locbnd)  const;
+
+            MULTI_REGIONS_EXPORT void LocalToLocalInt(
+                    const Array<OneD, const NekDouble>& local,
+                    Array<OneD,NekDouble>& locint)  const;
+
+            MULTI_REGIONS_EXPORT void LocalBndToLocal(
+                    const Array<OneD, const NekDouble>& locbnd,
+                    Array<OneD,NekDouble>& local)  const;
+
+            MULTI_REGIONS_EXPORT void LocalIntToLocal(
+                    const Array<OneD, const NekDouble>& locbnd,
+                    Array<OneD,NekDouble>& local)  const;
 
             MULTI_REGIONS_EXPORT void AssembleBnd(const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global, int offset) const;
@@ -299,6 +312,17 @@ namespace Nektar
                 return m_lowestStaticCondLevel;
             }
 
+            MULTI_REGIONS_EXPORT void PatchLocalToGlobal(
+                               const Array<OneD, const NekDouble>& loc,
+                               Array<OneD,       NekDouble>& global) const;
+
+            MULTI_REGIONS_EXPORT void PatchGlobalToLocal(
+                               const Array<OneD, const NekDouble>& global,
+                               Array<OneD,       NekDouble>& loc) const;
+                        
+            MULTI_REGIONS_EXPORT void PatchAssemble(
+                    const Array<OneD, const NekDouble> &loc,
+                    Array<OneD,       NekDouble> &global) const;
         protected:
             /// Session object
             LibUtilities::SessionReaderSharedPtr m_session;
@@ -345,16 +369,22 @@ namespace Nektar
             /// Flag indicating if modes require sign reversal.
             bool m_signChange;
 
-            /// Integer map of local boundary coeffs to global space
-            Array<OneD,int>       m_localToGlobalBndMap;
+            /// Integer map of local coeffs to global Boundary Dofs
+            Array<OneD,int>       m_localToGlobalBndMap; 
             /// Integer sign of local boundary coeffs to global space
             Array<OneD,NekDouble> m_localToGlobalBndSign;
-            /// Integer map of bnd cond coeffs to global coefficients
-            Array<OneD,int>       m_bndCondCoeffsToGlobalCoeffsMap;
-            /// Integer map of bnd cond coeffs to global coefficients
-            Array<OneD,NekDouble> m_bndCondCoeffsToGlobalCoeffsSign;
+            /// Integer map of local boundary coeffs to local boundary system numbering
+            Array<OneD,int>       m_localToLocalBndMap;
+            /// Integer map of local boundary coeffs to local interior system numbering
+            Array<OneD,int>       m_localToLocalIntMap;
+            /// Integer map of bnd cond coeffs to local coefficients
+            Array<OneD,int>       m_bndCondCoeffsToLocalCoeffsMap;
+            /// Integer map of sign of bnd cond coeffs to local coefficients
+            Array<OneD,NekDouble> m_bndCondCoeffsToLocalCoeffsSign;
+            /// Integer map of bnd cond coeff to local trace coeff
+            Array<OneD,int>       m_bndCondCoeffsToLocalTraceMap;
             /// Integer map of bnd cond trace number to global trace number
-            Array<OneD,int>       m_bndCondTraceToGlobalTraceMap;
+            Array<OneD,int>       m_bndCondIDToGlobalTraceID;
             /// Integer map of process coeffs to universal space
             Array<OneD,int>       m_globalToUniversalBndMap;
             /// Integer map of unique process coeffs to universal space (signed)
@@ -379,7 +409,9 @@ namespace Nektar
 
             Gs::gs_data * m_gsh;
             Gs::gs_data * m_bndGsh;
-
+            /// gs gather communication to impose Dirhichlet BCs. 
+            Gs::gs_data * m_dirBndGsh; 
+            
             /// The level of recursion in the case of multi-level static
             /// condensation.
             int m_staticCondLevel;

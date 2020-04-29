@@ -243,7 +243,8 @@ namespace Nektar
                 cout << "inarray["<<i << "]"<< k<<"=" << inarray[i][k]<<endl;*/
 	  // Solve a system of equations with Helmholtz solver and transform
 	  // back into physical space.
-	  m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(),NullFlagList, factors, m_varcoeff);
+	  m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(),
+                                 factors, m_varcoeff);
 
 	  m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), outarray[i]);
            /* Array<OneD, NekDouble> coefarray = m_fields[i]->GetCoeffs();

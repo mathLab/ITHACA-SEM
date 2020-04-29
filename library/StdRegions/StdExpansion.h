@@ -1111,14 +1111,19 @@ namespace Nektar
                 v_StdPhysDeriv(dir,inarray,outarray);
             }
 
-            void AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+            void AddRobinMassMatrix(const int edgeid,
+                                    const Array<OneD, const NekDouble > &primCoeffs,
+                                    DNekMatSharedPtr &inoutmat)
             {
                 v_AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
             }
 
-            void AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs)
+            void AddRobinEdgeContribution(const int edgeid,
+                                          const Array<OneD, const NekDouble> &primCoeffs,
+                                          const Array<OneD, NekDouble> &incoeffs,
+                                          Array<OneD, NekDouble> &coeffs)
             {
-                v_AddRobinEdgeContribution(edgeid, primCoeffs, coeffs);
+                v_AddRobinEdgeContribution(edgeid, primCoeffs, incoeffs, coeffs);
             }
 
             /** \brief This function evaluates the expansion at a single
@@ -1685,7 +1690,8 @@ namespace Nektar
                                                 const Array<OneD, const NekDouble>& direction,
                                                 Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_StdPhysDeriv (const Array<OneD, const NekDouble>& inarray,
+            STD_REGIONS_EXPORT virtual void v_StdPhysDeriv (const Array<OneD,
+                                                            const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &out_d1,
                                          Array<OneD, NekDouble> &out_d2,
                                          Array<OneD, NekDouble> &out_d3);
@@ -1694,20 +1700,31 @@ namespace Nektar
                                            const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
+            STD_REGIONS_EXPORT virtual void v_AddRobinMassMatrix(const int edgeid,
+                                                          const Array<OneD,
+                                                          const NekDouble > &primCoeffs,
+                                                          DNekMatSharedPtr &inoutmat);
 
-            STD_REGIONS_EXPORT virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs);
+            STD_REGIONS_EXPORT virtual void v_AddRobinEdgeContribution(const int edgeid,
+                                            const Array<OneD, const NekDouble> &primCoeffs,
+                                            const Array<OneD, NekDouble> &incoeffs,
+                                            Array<OneD, NekDouble> &coeffs);
 
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD,
+                                             const NekDouble>& coords,
+                                             const Array<OneD, const NekDouble> & physvals);
 
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, DNekMatSharedPtr >& I, const Array<OneD, const NekDouble> & physvals);
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
+                                        const Array<OneD, DNekMatSharedPtr >& I,
+                                        const Array<OneD, const NekDouble> & physvals);
 
             STD_REGIONS_EXPORT virtual void v_LocCoordToLocCollapsed(
                                         const Array<OneD, const NekDouble>& xi,
                                         Array<OneD, NekDouble>& eta);
 
 
-            STD_REGIONS_EXPORT virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_FillMode(const int mode,
+                                                       Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);
 

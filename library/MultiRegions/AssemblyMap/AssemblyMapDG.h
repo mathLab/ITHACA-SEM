@@ -128,12 +128,7 @@ namespace Nektar
             virtual void v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD,       NekDouble>& global,
-                    bool useComm) const;
-
-            virtual void v_LocalToGlobal(
-                    const NekVector<NekDouble>& loc,
-                    NekVector<      NekDouble>& global,
-                    bool useComm) const;
+                    bool useComm = false) const;
 
             virtual void v_GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,

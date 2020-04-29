@@ -205,12 +205,34 @@ considered explicit from an ODE point of view. They are characterised by a lower
   to split right hand forcing term into an explicit and implicit component. This is
   useful in advection diffusion type problems where the advection is handled
   explicitly and the diffusion is handled implicit.
-  \item \textbf{Fully Implicit Methods Methods}: The coefficient matrix has a
+  \item \textbf{Fully Implicit Methods}: The coefficient matrix has a
   non-zero upper triangular part. The calculation of all stages values is fully coupled.
+  \item \textbf{Exponential Methods}: A forward Euler method has been
+    extended to the exponential setting. These types of methods are
+    considered explicit from an ODE point of view. They are
+    characterised by a coefficient matrix of exponentials for each
+    variable. Two schems have been implemented:
+  \begin{itemize}
+    \item \textbf{Lawson-Euler explicit method}: $y_n =
+      \varphi_0(z)N(y_{n-1},t_{n-1}) + \varphi_0(z)y_{n-1}$
+    \item \textbf{N{\o}rsett-Euler explicit method}: $y_n =
+      \varphi_1(z)N(y_{n-1},t_{n-1}) + \varphi_0(z)y_{n-1}$
+  \end{itemize}
+where $\varphi_0(z) = e^{z}$ for $k = 0$, $\varphi_{k}(z) =
+\frac{\varphi_{k-1}(z) - \varphi_{k-1}(0)}{z}$ for $k \geq 1$.
+  \item \textbf{Fractional-in-time Methods}: A fast convolution
+    algorithm for computing solutions to (Caputo) time-fractional
+    differential equations. This is an explicit solver that expresses
+    the solution as an integral over a Talbot curve, which is
+    discretized with quadrature. First-order quadrature is currently
+    implemented (Soon be expanded to forth order).
+
 \end{itemize}
 
 The aim in {\nek} is to fully support the first three types of GLMs.
-Fully implicit methods are currently not implemented.
+Fully implicit methods are currently not implemented. {\nek} also
+fully supports Expoential Methods using GLMs. The Fractional-in-time
+methods do not make use of the GLMs and utilizes it own methodology.
 
 \subsection{Usage}
 The goal of abstracting the concept of general linear methods is to provide
@@ -234,6 +256,99 @@ time-integration schemes:
 
 \begin{center}
 \footnotesize
+\begin{tabular}{p{2.5cm}p{1cm}p{10cm}}
+\toprule
+Method         & Variant & Order / Free Parameters \\
+ForwardEuler   &      & Forward-Euler scheme\\
+BackwardEuler  &      & Backward-Euler scheme\\
+
+AdamsBashforth &      & Adams-Bashforth Forward multi-step scheme of order 1-4\\
+
+AdamsMoulton   &      & Adams-Moulton Forward multi-step scheme of order 1-4\\
+
+BDFImplicit    &      & BDF multi-step implicit scheme of order 1-4\\
+
+RungeKutta     &      & Runge-Kutta multi-stage explicit scheme of
+                        order 1-5, (2 - midpoint, 3 - Ralston's, 4 - Classic)\\
+
+RungeKutta     & SSP  & Strong Stability Preserving (SSP) variant of
+                        the RungeKutta multi-stage explicit scheme of
+                        order 1-3\\
+
+DIRK           &      & Diagonally Implicit Runge-Kutta (DIRK) scheme of
+                        order 2-3\\
+
+CNAB           &      & Crank-Nicolson-Adams-Bashforth (CNAB) of order 2\\
+
+MCNAB          &      & Modified Crank-Nicolson-Adams-Bashforth (MCNAB)
+                        of order 2\\
+
+IMEX           &      & Implicit-Explicit (IMEX) scheme using Backward
+                        Different Formula Extrapolation of order 1-4\\
+
+IMEX           & Gear & IMEX Gear variant of order 2\\
+
+IMEX           & dirk & IMEX DIRK variant with free parameters (s, sigma), 
+                        where s is the number of implicit stage schemes,
+                        sigma is the number of explicit stage scheme and
+                        p is the combined order of the scheme.\\
+
+               & dirk & Forward-Backward Euler, first order, free parameters (1,1)\\
+               & dirk & Forward-Backward Euler, first order, free parameters (1,2)\\
+               & dirk & Implicit-Explicit Midpoint, second order, free parameters (1,2)\\
+               & dirk & L-stable, two stage, second order, free parameters (2,2)\\
+               & dirk & L-stable, two stage, second order, free parameters (2,3)\\
+               & dirk & L-stable, two stage, third order, free parameters (2,3)\\
+               & dirk & L-stable, three stage, third order, free parameters (3,4)\\
+               & dirk & L-stable, four stage, third order, free parameters (4,4)\\
+
+EulerExponiential & Lawson  & Exponential Euler scheme using the
+                              Lawson variant of order 1 \\
+
+                  & Norsett & Exponential Euler scheme using the
+                              Norsett variant of order 1-4
+                              (Higher order not yet properly seeded) \\
+
+FractionalInTime  &         & Fractional-in-time scheme of order 1-4
+                              (Higher order not yet properly seeded) \\
+                    
+\bottomrule
+\end{tabular}
+\end{center}
+
+Note: in many cases the first order schemes reduce to either a forward
+or backward Euler scheme.
+
+{\nek} input file for your problem will ask you for the string
+corresponding the time-stepping scheme you want to use, the order, and
+optionally the variant and free parameters. In addition, parameters
+that define your integration in time, the time-step and number of
+steps or final time. For example:\\
+\begin{lstlisting}[style=XMLStyle]
+<SOLVERINFO>
+   <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+   <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+   <I PROPERTY="AdvectionForm" VALUE="Convective" /> 
+   <I PROPERTY="Projection" VALUE="Galerkin" /> 
+   <I PROPERTY="TimeIntegrationMethod" VALUE="IMEX" />
+   <I PROPERTY="TimeIntegrationVariant" VALUE="dirk" />
+   <I PROPERTY="TimeIntegrationOrder" VALUE="2" />
+   <I PROPERTY="TimeIntegrationFreeParameters" VALUE="2 3" />
+ </SOLVERINFO>
+ 
+ <PARAMETERS>
+   <P> TimeStep = 0.001 </P> 
+   <P> NumSteps = 1000 </P> 
+   <P> Kinvis = 1 </P>
+</PARAMETERS>
+\end{lstlisting}
+
+Old schema which specifies the method, variant, order, and free
+parameters as a single string is not yet deprecated and can still be
+utilized:
+
+\begin{center}
+\footnotesize
 \begin{tabular}{p{4cm}p{10cm}}
 \toprule
 AdamsBashforthOrder1 & Adams-Bashforth Forward multi-step scheme of order 1\\
@@ -246,13 +361,12 @@ AdamsMoultonOrder3   & Adams-Moulton Forward multi-step scheme of order 3\\
 AdamsMoultonOrder4   & Adams-Moulton Forward multi-step scheme of order 4\\
 BDFImplicitOrder1    & BDF multi-step scheme of order 1 (implicit)\\
 BDFImplicitOrder2    & BDF multi-step scheme of order 2 (implicit)\\
+RungeKutta5          & Runge-Kutta multi-stage scheme 5th order explicit\\
 ClassicalRungeKutta4 & Runge-Kutta multi-stage scheme 4th order explicit (old name)\\
-RungeKutta4          & Runge-Kutta multi-stage scheme 4th order explicit (new name for ClassicalRungeKutta4)\\
+RungeKutta2          & Classical RungeKutta2 method (new name for Midpoint)\\
 RungeKutta3\_SSP     & Nonlinear SSP RungeKutta3 explicit\\
 RungeKutta2\_ImprovedEuler & Improved RungeKutta2 explicit (old name meaning Heun's method)\\
 RungeKutta2\_SSP     & Nonlinear SSP RungeKutta2 explicit (surrogate for RungeKutta2\_ImprovedEuler)\\
-RungeKutta2          & Classical RungeKutta2 method (new name for Midpoint)\\
-Midpoint             & Midpoint method (old name)\\
 ForwardEuler         & Forward-Euler scheme\\
 BackwardEuler        & Backward Euler scheme\\
 IMEXOrder1           & IMEX 1st order scheme using Euler Backwards Euler
@@ -280,23 +394,24 @@ IMEXdirk\_4\_4\_3    & L-stable, four stage, third order IMEX DIRK(4,4,3)\\
 \end{tabular}
 \end{center}
 
-{\nek} input file for your problem will ask you just the string corresponding
-the time-stepping scheme you want to use (between quotation marks in the
-previous list), and few parameters to define your integration in time (time-step
-and number of steps or final time). For example:\\
+{\nek} input file for your problem will ask you just the string
+corresponding the time-stepping scheme you want to use (between
+quotation marks in the previous list).  In addition, parameters that
+define your integration in time, the time-step and number of steps or
+final time. For example:\\
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
    <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
    <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
    <I PROPERTY="AdvectionForm" VALUE="Convective" /> 
    <I PROPERTY="Projection" VALUE="Galerkin" /> 
-   <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
+   <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXdirk_2_3_2" />
  </SOLVERINFO>
  
  <PARAMETERS>
-   <P> TimeStep = 0.001     </P> 
-   <P> NumSteps = 1000      </P> 
-   <P> Kinvis = 1           </P>
+   <P> TimeStep = 0.001 </P> 
+   <P> NumSteps = 1000 </P> 
+   <P> Kinvis = 1 </P>
 </PARAMETERS>
 \end{lstlisting}
 

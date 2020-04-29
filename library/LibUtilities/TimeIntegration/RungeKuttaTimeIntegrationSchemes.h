@@ -57,22 +57,18 @@ class RungeKuttaTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     RungeKuttaTimeIntegrationScheme(std::string variant, unsigned int order,
-				    std::vector<NekDouble> freeParams) :
+                                    std::vector<NekDouble> freeParams) :
         TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
-        ASSERTL1((variant == "" || variant == "Classic" ||
-		  variant == "SSP" || variant == "ImprovedEuler"),
-                 "Runge Kutta Time integration scheme bad variant: "
-		 + variant + ". "
-                  "Must blank, 'Classic', 'SSP', or 'ImprovedEuler'");
+        ASSERTL1(variant == "" || variant == "SSP",
+                 "Runge Kutta Time integration scheme unknown variant: "
+                 + variant + ". Must be blank or 'SSP'");
 
         // Std - Currently up to 5th order is implemented.
         // SSP - Currently 1st through 3rd order is implemented.
-        ASSERTL1(((variant == "SSP" || variant == "ImprovedEuler") == 0 &&
-                  1 <= order && order <= 5) ||
-                 ((variant == "SSP" || variant == "ImprovedEuler") == 1 &&
-                  1 <= order && order <= 3),
-                 "Runge Kutta Time integration scheme bad order "
+        ASSERTL1((variant == ""    && 1 <= order && order <= 5) ||
+                 (variant == "SSP" && 1 <= order && order <= 3),
+                 "Runge Kutta Time integration scheme bad order, "
                  "Std (1-5) or SSP (1-3): " + std::to_string(order));
 
         m_integration_phases    = TimeIntegrationAlgorithmGLMVector(1);
@@ -88,10 +84,10 @@ public:
     }
 
     static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
+                                                 std::vector<NekDouble> freeParams)
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-	    RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
+            RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
 
         return p;
     }
@@ -117,7 +113,7 @@ public:
 
     LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase,
                                     std::string variant, unsigned int order,
-				    std::vector<NekDouble> freeParams)
+                                    std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(freeParams);
 
@@ -127,7 +123,7 @@ public:
         // contiguous fashion. For the fourth order, six coefficients
         // from the Butcher tableau would be stored as the following.
         //
-        //                0 0 0 0 
+        //                0 0 0 0
         //    Butcher     a 0 0 0   Stored as   a
         //    Tableau     b c 0 0               b c
         //                d e f 0               d e f 0 ... 0
@@ -281,7 +277,7 @@ class RungeKutta2TimeIntegrationScheme :
 {
 public:
     RungeKutta2TimeIntegrationScheme(std::string variant, unsigned int order,
-				     std::vector<NekDouble> freeParams) :
+                                     std::vector<NekDouble> freeParams) :
         RungeKuttaTimeIntegrationScheme("", 2, freeParams)
     {
         boost::ignore_unused(variant);
@@ -289,7 +285,7 @@ public:
     }
 
     static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
+                                                 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
@@ -308,21 +304,21 @@ class ClassicalRungeKutta4TimeIntegrationScheme :
 {
 public:
     ClassicalRungeKutta4TimeIntegrationScheme(std::string variant, unsigned int order,
-					      std::vector<NekDouble> freeParams) :
-        RungeKuttaTimeIntegrationScheme("Classic", 4, freeParams)
+                                              std::vector<NekDouble> freeParams) :
+        RungeKuttaTimeIntegrationScheme("", 4, freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
     }
 
     static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
+                                                 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr("Classic", 4, freeParams);
+          RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr("", 4, freeParams);
         return p;
     }
 
@@ -335,7 +331,7 @@ class RungeKutta5TimeIntegrationScheme :
 {
 public:
     RungeKutta5TimeIntegrationScheme(std::string variant, unsigned int order,
-				     std::vector<NekDouble> freeParams) :
+                                     std::vector<NekDouble> freeParams) :
       RungeKuttaTimeIntegrationScheme("", 5, freeParams)
     {
         boost::ignore_unused(variant);
@@ -343,7 +339,7 @@ public:
     }
 
     static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
+                                                 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
@@ -362,21 +358,21 @@ class RungeKutta2_ImprovedEulerTimeIntegrationScheme :
 {
 public:
     RungeKutta2_ImprovedEulerTimeIntegrationScheme(std::string variant, unsigned int order,
-						   std::vector<NekDouble> freeParams) :
-        RungeKuttaTimeIntegrationScheme("ImprovedEuler", 2, freeParams)
+                                                   std::vector<NekDouble> freeParams) :
+        RungeKuttaTimeIntegrationScheme("SSP", 2, freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
     }
 
     static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
+                                                 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr("ImprovedEuler", 2, freeParams);
+            RungeKuttaTimeIntegrationScheme>::AllocateSharedPtr("SSP", 2, freeParams);
         return p;
     }
 
@@ -389,7 +385,7 @@ class RungeKutta2_SSPTimeIntegrationScheme :
 {
 public:
     RungeKutta2_SSPTimeIntegrationScheme(std::string variant, unsigned int order,
-					 std::vector<NekDouble> freeParams) :
+                                         std::vector<NekDouble> freeParams) :
       RungeKuttaTimeIntegrationScheme("SSP", 2, freeParams)
     {
         boost::ignore_unused(variant);
@@ -397,7 +393,7 @@ public:
     }
 
     static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
+                                                 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
@@ -416,7 +412,7 @@ class RungeKutta3_SSPTimeIntegrationScheme :
 {
 public:
     RungeKutta3_SSPTimeIntegrationScheme(std::string variant, unsigned int order,
-					 std::vector<NekDouble> freeParams) :
+                                         std::vector<NekDouble> freeParams) :
       RungeKuttaTimeIntegrationScheme("SSP", 3, freeParams)
     {
         boost::ignore_unused(variant);
@@ -424,7 +420,7 @@ public:
     }
 
     static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
+                                                 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);

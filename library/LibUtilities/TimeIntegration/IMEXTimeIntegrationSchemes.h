@@ -105,7 +105,7 @@ public:
         else if( variant == "" )
         {
             // Currently up to 4th order is implemented.
-            ASSERTL1(0 < order && order <= 4,
+            ASSERTL1(1 <= order && order <= 4,
                      "IMEX Time integration scheme bad order (1-4): " +
                      std::to_string(order));
 
@@ -161,7 +161,7 @@ public:
         {
           ASSERTL1(false,
                    "IMEX Time integration scheme bad variant: " +
-                           variant);
+                   variant + ". Must be blank, 'dirk' or 'Gear'");
         }
     }
 

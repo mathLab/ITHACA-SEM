@@ -63,7 +63,7 @@ public:
     TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
         // Currently up to 4th order is implemented.
-        ASSERTL1(0 < order && order <= 4,
+        ASSERTL1(1 <= order && order <= 4,
                  "AdamsBashforth Time integration scheme bad order (1-4): " +
                  std::to_string(order));
 
@@ -205,7 +205,7 @@ public:
         {
             phase->m_V[n][n-1] = 1.0;
         }
-        
+
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = phase->m_order-1;
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);

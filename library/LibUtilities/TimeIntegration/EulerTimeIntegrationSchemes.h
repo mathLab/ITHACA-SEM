@@ -57,7 +57,7 @@ class BackwardEulerTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     BackwardEulerTimeIntegrationScheme(std::string variant, unsigned int order,
-				       std::vector<NekDouble> freeParams) :
+                                       std::vector<NekDouble> freeParams) :
         TimeIntegrationSchemeGLM("", 1, freeParams)
     {
         boost::ignore_unused(variant);
@@ -76,7 +76,7 @@ public:
     }
 
     static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
+                                                 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(order);
         boost::ignore_unused(variant);
@@ -137,7 +137,7 @@ class ForwardEulerTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     ForwardEulerTimeIntegrationScheme(std::string variant, unsigned int order,
-				      std::vector<NekDouble> freeParams) :
+                                      std::vector<NekDouble> freeParams) :
         TimeIntegrationSchemeGLM("", 1, freeParams)
     {
         boost::ignore_unused(variant);
@@ -156,7 +156,7 @@ public:
     }
 
     static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
+                                                 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(order);
         boost::ignore_unused(variant);

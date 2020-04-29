@@ -121,11 +121,10 @@ public:
                                     unsigned int order,
                                     std::vector<NekDouble> freeParams)
     {
-        // This parsing is a hack of stuffing two values into a string.
         ASSERTL1(freeParams.size() == 2,
                  "IMEX DIRK Time integration scheme invalid number "
-                 "of free parameters, expected two, received  " +
-                 std::to_string(freeParams.size()));
+                 "of free parameters, expected two, received " +
+                 std::to_string(freeParams.size()) + ".");
 
         int s     = freeParams[0];
         int sigma = freeParams[1];
@@ -188,7 +187,14 @@ public:
         else
         {
             ASSERTL1(false,
-                     "IMEX DIRK Time integration scheme bad type. ");
+                     "IMEX DIRK Time integration scheme bad type "
+                     "(s, sigma, order) : (" +
+                     std::to_string(s) + "," +
+                     std::to_string(sigma) + "," +
+                     std::to_string(order) + "). " +
+                     "Allowed combinations: (1,1,1), (1,2,1), (1,2,2), "
+                     "(2,2,2), (2,3,2), (2,3,3), (3,4,3), (4,4,3)"
+                     );
         }
 
         phase->m_numMultiStepValues = 1;

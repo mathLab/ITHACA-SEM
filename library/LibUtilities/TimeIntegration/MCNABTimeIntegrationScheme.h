@@ -53,7 +53,7 @@ class MCNABTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     MCNABTimeIntegrationScheme(std::string variant, unsigned int order,
-			       std::vector<NekDouble> freeParams) :
+                               std::vector<NekDouble> freeParams) :
         TimeIntegrationSchemeGLM("", 2, freeParams)
     {
         boost::ignore_unused(variant);
@@ -79,7 +79,7 @@ public:
     }
 
     static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
+                                                 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);

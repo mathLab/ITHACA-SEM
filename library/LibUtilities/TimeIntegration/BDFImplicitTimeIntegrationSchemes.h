@@ -65,7 +65,7 @@ public:
         // Currently up to 4th order is implemented.
 
         // Methods with order > 6 are not zero-stable.
-        ASSERTL1(0 < order && order <= 4,
+        ASSERTL1(1 <= order && order <= 4,
                  "BDFImplicit Time integration scheme bad order (1-4): " +
                  std::to_string(order));
 
@@ -123,7 +123,7 @@ public:
     }
 
     static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
+                                                 std::vector<NekDouble> freeParams)
   {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
           BDFImplicitTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);

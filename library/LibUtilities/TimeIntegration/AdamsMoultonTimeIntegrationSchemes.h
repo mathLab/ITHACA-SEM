@@ -64,7 +64,7 @@ public:
         TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
         // Currently up to 4th order is implemented.
-        ASSERTL1(0 < order && order <= 4,
+        ASSERTL1(1 <= order && order <= 4,
                  "AdamsMoulton Time integration scheme bad order (1-4): " +
                  std::to_string(order));
 
@@ -274,7 +274,7 @@ public:
     }
 
     static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
+                                                 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);

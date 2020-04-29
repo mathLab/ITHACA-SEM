@@ -82,13 +82,13 @@ public:
     }
 
     static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
+                                                 std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
 
         TimeIntegrationSchemeSharedPtr p =
-	  MemoryManager<CNABTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
+          MemoryManager<CNABTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
 
         return p;
     }

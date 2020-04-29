@@ -61,7 +61,7 @@ public:
     {
         // Currently 2nd and 3rd order are implemented.
         ASSERTL1(2 <= order && order <= 3,
-                 "Runge Kutta Time Diagonally Implicit integration scheme bad order (2-3): " +
+                 "Diagonally Implicit Runge Kutta integration scheme bad order (2-3): " +
                  std::to_string(order));
 
         m_integration_phases    = TimeIntegrationAlgorithmGLMVector(1);

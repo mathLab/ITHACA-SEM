@@ -69,13 +69,13 @@ public:
         // of steps is the same as the order.
         // Currently up to 4th order is implemented.
         ASSERTL1(variant == "Lawson" || variant == "Norsett",
-                 "EulerExponential Time integration scheme bad variant: " +
-                 variant);
+                 "EulerExponential Time integration scheme unknown variant: " +
+                 variant + ". Must be 'Lawson' or 'Norsett'");
 
-        ASSERTL1(((variant == "Lawson"  && 0 < order && order <= 1) ||
-		  (variant == "Norsett" && 0 < order && order <= 4)),
-                 "EulerExponential Time integration scheme bad order: " +
-                 std::to_string(order));
+        ASSERTL1(((variant == "Lawson"  && 1 <= order && order <= 1) ||
+                  (variant == "Norsett" && 1 <= order && order <= 4)),
+                 "EulerExponential Time integration scheme bad order, "
+                 "Lawson (1) or Norsett (1-4): " + std::to_string(order));
 
         m_integration_phases = TimeIntegrationAlgorithmGLMVector(order);
 
@@ -192,7 +192,7 @@ public:
     }
 
     virtual void InitializeSecondaryData(TimeIntegrationAlgorithmGLM *phase,
-					 NekDouble deltaT) const
+                                         NekDouble deltaT) const
     {
         // Assumptions the two-dimensional Lambda matrix is a diagonal
         // matrix thus values are non zero if and only i=j. As such,
@@ -207,14 +207,14 @@ public:
         phase->m_U_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
         phase->m_V_phi = Array<OneD, Array<TwoD, NekDouble>>(phase->m_nvars);
 
-	Array<OneD, NekDouble> phi = Array<OneD, NekDouble>(phase->m_order);
+        Array<OneD, NekDouble> phi = Array<OneD, NekDouble>(phase->m_order);
 
         for( unsigned int k=0; k<phase->m_nvars; ++k )
         {
             // B Phi function for first row first column
             if( phase->m_variant == "Lawson" )
             {
-	        phi[0] = phi_function(0, deltaT * phase->m_L[k]).real();
+                phi[0] = phi_function(0, deltaT * phase->m_L[k]).real();
             }
             else if( phase->m_variant == "Norsett" )
             {
@@ -261,7 +261,7 @@ public:
                 for( unsigned int m=1; m<phase->m_order; ++m )
                 {
                     phi_func[m] =
-		      phi_function(m+1, deltaT * phase->m_L[k]).real();
+                      phi_function(m+1, deltaT * phase->m_L[k]).real();
                 }
 
                 NekDouble W[3][3];
@@ -389,22 +389,22 @@ public:
     {
         ASSERTL0(!m_integration_phases.empty(), "No scheme")
 
-	// Assumption: the one-dimensional Lambda matrix is a diagonal
+        // Assumption: the one-dimensional Lambda matrix is a diagonal
         // matrix thus values are non zero if and only i=j. As such,
         // the diagonal Lambda values are stored an array of complex
         // numbers.
 
-	// Assume that each phase is an exponential integrator.
+        // Assume that each phase is an exponential integrator.
         for (int i = 0; i < m_integration_phases.size(); i++)
-	{
-	    m_integration_phases[i]->m_L = Lambda;
+        {
+            m_integration_phases[i]->m_L = Lambda;
 
-	    // Anytime the coefficents are updated reset the nVars to
-	    // be assured that the exponential matrices are
-	    // recalculated (e.g. the number of variables may remain
-	    // the same but the coefficients have changed).
-	    m_integration_phases[i]->m_lastNVars = 0;
-	}
+            // Anytime the coefficents are updated reset the nVars to
+            // be assured that the exponential matrices are
+            // recalculated (e.g. the number of variables may remain
+            // the same but the coefficients have changed).
+            m_integration_phases[i]->m_lastNVars = 0;
+        }
     }
 
     inline NekDouble factorial( unsigned int n ) const
@@ -426,21 +426,21 @@ public:
         // 2: (exp(z) - z - 1.0) / (z * z);
 
         if( z == 0.0 )
-	{
-	    return 1.0 / factorial( order );
-	}
+        {
+            return 1.0 / factorial( order );
+        }
 
-	if( order == 0 )
-	{
-	    return exp( z );
-	}
-	else
-	{
-	    return (phi_function( order-1, z) -
-		    1.0 / factorial( order-1 ) ) / z;
-	}
+        if( order == 0 )
+        {
+            return exp( z );
+        }
+        else
+        {
+            return (phi_function( order-1, z) -
+                    1.0 / factorial( order-1 ) ) / z;
+        }
 
-	return 0;
+        return 0;
     }
 
 }; // end class EulerExponentialTimeIntegrator

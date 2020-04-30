@@ -130,9 +130,9 @@ public:
         int sigma = freeParams[1];
 
         phase->m_schemeType = eIMEX;
-        phase->m_variant = "dirk";
+        phase->m_variant = "DIRK";
         phase->m_order = order;
-        phase->m_name = "IMEXdirk"
+        phase->m_name = "IMEX_DIRK"
             "_" + std::to_string(s) +
             "_" + std::to_string(sigma) +
             "_" + std::to_string(phase->m_order);

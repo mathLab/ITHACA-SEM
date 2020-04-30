@@ -63,7 +63,7 @@ public:
                               std::vector<NekDouble> freeParams) :
         TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
-        if( variant == "dirk" )
+        if( variant == "dirk" || variant == "DIRK" )
         {
             ASSERTL1(freeParams.size() == 2,
                      "IMEX DIRK Time integration scheme invalid number "

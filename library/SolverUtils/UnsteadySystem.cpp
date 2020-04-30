@@ -114,7 +114,7 @@ namespace Nektar
                                           "TimeIntegrationVariant" );
                 }
 
-                int scheme_order;
+                int scheme_order = 0;
                 if( m_session->DefinesSolverInfo( "TimeIntegrationOrder" ) ) {
                     std::string order_str = m_session->GetSolverInfo(
                                       "TimeIntegrationOrder" );

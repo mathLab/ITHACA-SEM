@@ -7,6 +7,9 @@ ADD_NEKTAR_EXECUTABLE(BaryInterpBasis
 ADD_NEKTAR_EXECUTABLE(StdEquiToCoeff2D
     COMPONENT demos DEPENDS StdRegions SOURCES StdEquiToCoeff2D.cpp)
 
+ADD_NEKTAR_TEST(BaryInterpBasis3D_Tet_Mod_P4_Q5)
+ADD_NEKTAR_TEST(BaryInterp3D_Tet_Mod_P6_Q7)
+ADD_NEKTAR_TEST(BaryInterpBasis3D_Prism_Orth_P6_Q7)
 ADD_NEKTAR_TEST(BaryInterp2D_Tri_Mod_P6_Q7)
 ADD_NEKTAR_TEST(BaryInterp2D_Quad_Lagrange_P6_Q7)
 ADD_NEKTAR_TEST(BaryInterpBasis_Quad_Lagrange_P6_Q7)

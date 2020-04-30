@@ -63,15 +63,17 @@ Array<OneD, NekDouble> commoncode(myType*E,
                              	  Array< OneD, Array<OneD, NekDouble> >evalPtsxy)
 {
     int numevalvals = evalPtsxy[0].num_elements();
-
+    int dim = evalPtsxy.num_elements();
     Array<OneD, NekDouble> ret(numevalvals);
     for(int i = 0; i < numevalvals; i++)
     {
 
-        Array<OneD, NekDouble> coords(2);
-        coords[0] = evalPtsxy[0][i];
-        coords[1] = evalPtsxy[1][i];
-        
+        Array<OneD, NekDouble> coords(dim);
+        for( int k = 0; k < dim; k++)
+        {
+            coords[k] = evalPtsxy[k][i];
+        }
+
         NekDouble val1 = E->PhysEvaluate(coords,physvals);
         ret[i] = val1;
 
@@ -519,9 +521,6 @@ int main(int argc, char *argv[])
     bkey1.emplace_back(BasisKey(btype[0], order[0], pkey1[0]));
     bkey1.emplace_back(BasisKey(btype[1], order[1], pkey1[1]));
 
-    Array< OneD, Array<OneD, NekDouble> >evalPtsxy(2);
-    Array<OneD, Array< OneD, NekDouble > > allQuadxy(2);
-    
     //evalPtsxy[0] = Array<OneD, NekDouble>(numpts);
     //evalPtsxy[1] = Array<OneD, NekDouble>(numpts);
    
@@ -531,10 +530,15 @@ int main(int argc, char *argv[])
 
     Array<OneD, NekDouble> ret;
     if(( strcmp(ShapeTypeMap[stype],"Triangle") == 0
-	 || strcmp(ShapeTypeMap[stype],"Quadrilateral") == 0 ) &&( baryinterp == 1))
+	 || strcmp(ShapeTypeMap[stype],"Quadrilateral") == 0
+	 || strcmp(ShapeTypeMap[stype],"Prism") == 0 
+         || strcmp(ShapeTypeMap[stype],"Tetrahedron") == 0) &&( baryinterp == 1))
     {
         if( strcmp(ShapeTypeMap[stype], "Triangle") == 0 )
         {
+            Array< OneD, Array<OneD, NekDouble> >evalPtsxy(2);
+            Array<OneD, Array< OneD, NekDouble > > allQuadxy(2);
+    
 
             StdTriExp exp1(bkey[0],bkey[1]);
             StdTriExp exp2(bkey1[0],bkey1[1]);
@@ -575,6 +579,10 @@ int main(int argc, char *argv[])
         }
         else  if( strcmp(ShapeTypeMap[stype], "Quadrilateral") == 0 )
         {
+            Array< OneD, Array<OneD, NekDouble> >evalPtsxy(2);
+            Array<OneD, Array< OneD, NekDouble > > allQuadxy(2);
+    
+
             StdQuadExp exp1(bkey[0],bkey[1]);
             StdQuadExp exp2(bkey1[0],bkey1[1]);
 
@@ -608,6 +616,133 @@ int main(int argc, char *argv[])
             cout << "L 2 error: \t \t" << exp2.L2(ret, sol) << endl;
 
         }
+        else if( strcmp(ShapeTypeMap[stype], "Tetrahedron") == 0 )
+        {
+
+            Array<OneD, PointsKey> pkey11(3);
+            Array<OneD, PointsType> ptype11(3);
+            vector<BasisKey> bkey11;
+                
+            int numpts = 4;
+            
+            ptype11[0] =  eFourierEvenlySpaced;
+            ptype11[1] =  eFourierEvenlySpaced;
+            ptype11[2] =  eFourierEvenlySpaced;
+            pkey11[0] = PointsKey(numpts, ptype11[0]);
+            pkey11[1] = PointsKey(numpts, ptype11[1]);
+            pkey11[2] = PointsKey(numpts, ptype11[2]);
+            bkey11.emplace_back(BasisKey(btype[0], order[0], pkey11[0]));
+            bkey11.emplace_back(BasisKey(btype[1], order[1], pkey11[1]));
+            bkey11.emplace_back(BasisKey(btype[2], order[2], pkey11[2]));
+            
+            Array< OneD, Array<OneD, NekDouble> >evalPtsxy(3);
+            Array<OneD, Array< OneD, NekDouble > > allQuadxy(3);
+    
+            StdTetExp exp1(bkey[0],bkey[1],bkey[2]);
+            StdTetExp exp2(bkey11[0],bkey11[1],bkey11[2]);
+
+            allQuadxy[0] = x;
+            allQuadxy[1] = y;
+            allQuadxy[2] = z;
+            evalPtsxy[0] = Array<OneD, NekDouble>(exp2.GetTotPoints());
+            evalPtsxy[1] = Array<OneD, NekDouble>(exp2.GetTotPoints());
+            evalPtsxy[2] = Array<OneD, NekDouble>(exp2.GetTotPoints());
+    
+            exp2.GetCoords(evalPtsxy[0], evalPtsxy[1], evalPtsxy[2]);
+
+
+            Array<OneD, NekDouble> temp = EvalPoly(allQuadxy);
+            for(int ii = 0; ii<evalPtsxy[0].num_elements(); ii++)
+            {
+                Array<OneD, NekDouble> xyz(3);
+                xyz[0] = evalPtsxy[0][ii];
+                xyz[1] = evalPtsxy[1][ii];
+                xyz[2] = evalPtsxy[2][ii];
+                Array<OneD, NekDouble> c(3);
+                //exp2.LocCoordToLocCollapsed(xy,c);
+                c = xyz;
+                evalPtsxy[0][ii] = c[0];
+                evalPtsxy[1][ii] = c[1];
+                evalPtsxy[2][ii] = c[2];
+
+            }
+
+            
+            ret = commoncode(&exp1, temp, evalPtsxy);
+            
+            sol  = EvalPoly(evalPtsxy);
+
+            phys = ret;
+            
+            cout << "\nL infinity error: \t" << exp2.Linf(ret, sol) << endl;
+            cout << "L 2 error: \t \t" << exp2.L2(ret, sol) << endl;
+    
+
+
+        }
+        else if( strcmp(ShapeTypeMap[stype], "Prism") == 0 )
+        {
+            Array<OneD, PointsKey> pkey11(3);
+            Array<OneD, PointsType> ptype11(3);
+            vector<BasisKey> bkey11;
+                
+            int numpts = 4;
+            
+            ptype11[0] =  eFourierEvenlySpaced;
+            ptype11[1] =  eFourierEvenlySpaced;
+            ptype11[2] =  eFourierEvenlySpaced;
+            pkey11[0] = PointsKey(numpts, ptype11[0]);
+            pkey11[1] = PointsKey(numpts, ptype11[1]);
+            pkey11[2] = PointsKey(numpts, ptype11[2]);
+            bkey11.emplace_back(BasisKey(btype[0], order[0], pkey11[0]));
+            bkey11.emplace_back(BasisKey(btype[1], order[1], pkey11[1]));
+            bkey11.emplace_back(BasisKey(btype[2], order[2], pkey11[2]));
+            
+            Array< OneD, Array<OneD, NekDouble> >evalPtsxy(3);
+            Array<OneD, Array< OneD, NekDouble > > allQuadxy(3);
+    
+            StdPrismExp exp1(bkey[0],bkey[1],bkey[2]);
+            StdPrismExp exp2(bkey11[0],bkey11[1],bkey11[2]);
+
+            allQuadxy[0] = x;
+            allQuadxy[1] = y;
+            allQuadxy[2] = z;
+            evalPtsxy[0] = Array<OneD, NekDouble>(exp2.GetTotPoints());
+            evalPtsxy[1] = Array<OneD, NekDouble>(exp2.GetTotPoints());
+            evalPtsxy[2] = Array<OneD, NekDouble>(exp2.GetTotPoints());
+    
+            exp2.GetCoords(evalPtsxy[0], evalPtsxy[1], evalPtsxy[2]);
+
+
+            Array<OneD, NekDouble> temp = EvalPoly(allQuadxy);
+            for(int ii = 0; ii<evalPtsxy[0].num_elements(); ii++)
+            {
+                Array<OneD, NekDouble> xyz(3);
+                xyz[0] = evalPtsxy[0][ii];
+                xyz[1] = evalPtsxy[1][ii];
+                xyz[2] = evalPtsxy[2][ii];
+                Array<OneD, NekDouble> c(3);
+                //exp2.LocCoordToLocCollapsed(xy,c);
+                c = xyz;
+                evalPtsxy[0][ii] = c[0];
+                evalPtsxy[1][ii] = c[1];
+                evalPtsxy[2][ii] = c[2];
+
+            }
+
+            
+            ret = commoncode(&exp1, temp, evalPtsxy);
+            
+            sol  = EvalPoly(evalPtsxy);
+
+            phys = ret;
+            
+            cout << "\nL infinity error: \t" << exp2.Linf(ret, sol) << endl;
+            cout << "L 2 error: \t \t" << exp2.L2(ret, sol) << endl;
+    
+            
+        }
+
         else
         {
             cout<<"\n Error! Please enter Triangle or Quads only";

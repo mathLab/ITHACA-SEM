@@ -64,7 +64,7 @@ Array< OneD, Array<OneD, NekDouble> > commoncode(myType*E,
 {
 
     Array<OneD, Array<OneD, NekDouble> > ret(ind_coeffs);
-        
+    int dim = evalPtsxy.num_elements();
     for(int i = 0; i < ind_coeffs; i++)
     {
         ret[i] = Array<OneD, NekDouble>(evalPtsxy[0].num_elements());
@@ -73,9 +73,11 @@ Array< OneD, Array<OneD, NekDouble> > commoncode(myType*E,
             //case (1Ba)
             Timer t1;
             t1.Start();
-            Array<OneD, NekDouble> temp(2);
-            temp[0] = evalPtsxy[0][kk];
-            temp[1] = evalPtsxy[1][kk];
+            Array<OneD, NekDouble> temp(dim);
+            for( int jj = 0; jj < dim; jj++)
+            {
+                temp[jj] = evalPtsxy[jj][kk];
+            }
             
             NekDouble val1 = E->PhysEvaluateBasis(temp, i);
             t1.Stop();
@@ -115,6 +117,13 @@ Array<OneD, NekDouble> EvalBasis(
     int numpts = expobj->GetTotPoints();;
     Array<OneD, NekDouble> vals(numpts);
     expobj->FillMode(m_ncoeffs,vals);
+    /*if(m_ncoeffs == 2)
+    {
+        cout<<"\n*********\n";
+        //print vals
+        for(int uu = 0; uu<vals.num_elements(); uu++)
+            cout<<vals[uu]<<" ";
+            }*/
     return vals;
 }
 
@@ -532,9 +541,10 @@ int main(int argc, char *argv[])
 
     Array< OneD, Array<OneD, NekDouble> >evalPtsxy = allQuadxy;
     Array<OneD, Array<OneD, NekDouble> >ret;
-    if(( strcmp(ShapeTypeMap[stype],"Triangle") == 0
-         || strcmp(ShapeTypeMap[stype],"Quadrilateral") == 0 ) 
-       &&( baryinterp == 1))
+     if(( strcmp(ShapeTypeMap[stype],"Triangle") == 0
+	 || strcmp(ShapeTypeMap[stype],"Prism") == 0
+	 || strcmp(ShapeTypeMap[stype],"Quadrilateral") == 0 
+         || strcmp(ShapeTypeMap[stype],"Tetrahedron") == 0) &&( baryinterp == 1))
     {
         if( strcmp(ShapeTypeMap[stype], "Triangle") == 0 )
         {
@@ -582,6 +592,90 @@ int main(int argc, char *argv[])
                 }
             }
            
+        }
+        else if( strcmp(ShapeTypeMap[stype], "Tetrahedron") == 0 )
+        {
+
+            Array<OneD, Array< OneD, NekDouble > > allQuadxy(3);
+            allQuadxy[0] = x;
+            allQuadxy[1] = y;
+            allQuadxy[2] = z;
+
+            StdTetExp exp1(bkey[0],bkey[1],bkey[2]);
+            int nmodes0 = E->GetBasis(0)->GetNumModes();
+            int nmodes1 = E->GetBasis(1)->GetNumModes();
+            int nmodes2 = E->GetBasis(2)->GetNumModes();
+            n_coeffs = LibUtilities::StdTetData::getNumberOfCoefficients
+                (nmodes0,nmodes1,nmodes2);
+            
+            sol = Array<OneD,Array< OneD, NekDouble > >(n_coeffs);
+            ret = commoncode(E,n_coeffs,allQuadxy);
+            cout<<"\n  tet:\n";
+            for(int k = 0; k < n_coeffs; k++)
+            {            
+                sol[k] = Array<OneD,NekDouble>(numpts);
+                Array<OneD, NekDouble> retvals = EvalBasis(E, k);
+                for(int l = 0; l < numpts; l++)
+                {
+                    sol[k][l] = retvals[l];
+                    cout<<" "<<sol[k][l];
+
+                }
+                cout<<"\n";
+            }
+            cout<<"\n mysol:\n";
+            for(int k = 0; k < n_coeffs; k++)
+            {            
+                for(int l = 0; l < numpts; l++)
+                {
+                   cout<<" "<<ret[k][l];
+
+                }
+                cout<<"\n";
+            }
+
+        }
+
+        else if( strcmp(ShapeTypeMap[stype], "Prism") == 0 )
+        {
+            Array<OneD, Array< OneD, NekDouble > > allQuadxy(3);
+            allQuadxy[0] = x;
+            allQuadxy[1] = y;
+            allQuadxy[2] = z;
+
+            StdPrismExp exp1(bkey[0],bkey[1],bkey[2]);
+            int nmodes0 = E->GetBasis(0)->GetNumModes();
+            int nmodes1 = E->GetBasis(1)->GetNumModes();
+            int nmodes2 = E->GetBasis(2)->GetNumModes();
+            n_coeffs = LibUtilities::StdPrismData::getNumberOfCoefficients
+                (nmodes0,nmodes1,nmodes2);
+            
+            sol = Array<OneD,Array< OneD, NekDouble > >(n_coeffs);
+            ret = commoncode(E,n_coeffs,allQuadxy);
+            cout<<"\n  prism:\n";
+            for(int k = 0; k < n_coeffs; k++)
+            {            
+                sol[k] = Array<OneD,NekDouble>(numpts);
+                Array<OneD, NekDouble> retvals = EvalBasis(E, k);
+                for(int l = 0; l < numpts; l++)
+                {
+                    sol[k][l] = retvals[l];
+                    cout<<" "<<sol[k][l];
+
+                }
+                cout<<"\n";
+            }
+            cout<<"\n mysol:\n";
+            for(int k = 0; k < n_coeffs; k++)
+            {            
+                for(int l = 0; l < numpts; l++)
+                {
+                   cout<<" "<<ret[k][l];
+
+                }
+                cout<<"\n";
+            }
+            
         }
         else
         {

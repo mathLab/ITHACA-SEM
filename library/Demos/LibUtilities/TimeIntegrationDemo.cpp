@@ -464,18 +464,11 @@ int main(int argc, char *argv[])
       ("parameter,p", po::value<std::string>(), "Free parameters for the scheme.")
       ("method,m", po::value<int>(),
         "Number for the time-integration scheme:\n"
-        "- 0: 1st order Forward Euler\n"
-        "- 1: 1st order multi-step IMEX scheme\n"
-        "     (Euler Backwards/Euler Forwards)\n"
-        "- 2: 2nd order multi-step IMEX scheme\n"
-        "- 3: 3rd order multi-step IMEX scheme\n"
-        "- 4: 4th order multi-step IMEX scheme\n"
-        "  \n"
-        "- 5: 2nd order multi-stage DIRK IMEX scheme\n"
-        "- 6: 3nd order multi-stage DIRK IMEX scheme\n"
-        "- 7: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
-        "- 8: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
-        "- 9: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
+        "- 1: 1st order Forward Euler\n"
+        "- 2: 1st order Backward Euler\n"
+        "- 3: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
+        "- 4: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
+        "- 5: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
         "     (MCNAB)\n"
         "  \n"
         "- 10: Nth order multi-stage Runga-Kutta scheme\n"
@@ -486,9 +479,7 @@ int main(int argc, char *argv[])
         "- 14: Nth order multi-step Adams-Moulton scheme\n"
         "- 15: Nth order multi-step BDFImplicit scheme\n"
         "- 16: Nth order multi-step IMEX scheme\n"
-        "      (Euler Backwards/Euler Forwards)\n"
-        "- 17: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
-        "- 18: Nth order multi-stage IMEX DIRK scheme\n"
+        "- 17: Nth order multi-stage IMEX DIRK scheme\n"
         "  \n"
         "- 20: Nth order multi-step Lawson-Euler exponential scheme\n"
         "- 21: Nth order multi-step Norsett-Euler exponential scheme\n"
@@ -546,7 +537,7 @@ int main(int argc, char *argv[])
     }
 
     // IMEX DIRK methods also require free parameters.
-    if((vm["method"].as<int>() == 18) )
+    if((vm["method"].as<int>() == 17) )
     {
         std::string sParameter = vm["parameter"].as<std::string>();
 
@@ -601,34 +592,19 @@ int main(int argc, char *argv[])
 
     switch (nMethod)
     {
-        case 0:
+        case 1:
             tiScheme = factory.CreateInstance("ForwardEuler", "", 1, freeParams);
             break;
-        case 1:
-            tiScheme = factory.CreateInstance("IMEXOrder1", "", 1, freeParams);
-            break;
         case 2:
-            tiScheme = factory.CreateInstance("IMEXOrder2", "", 2, freeParams);
+            tiScheme = factory.CreateInstance("BackwardEuler", "", 1, freeParams);
             break;
         case 3:
-            tiScheme = factory.CreateInstance("IMEXOrder3", "", 3, freeParams);
-            break;
-        case 4:
-            tiScheme = factory.CreateInstance("IMEXOrder4", "", 4, freeParams);
-            break;
-        case 5:
-            tiScheme = factory.CreateInstance("IMEXdirk_2_3_2", "", 2, freeParams);
-            break;
-        case 6:
-            tiScheme = factory.CreateInstance("IMEXdirk_3_4_3", "", 3, freeParams);
-            break;
-        case 7:
             tiScheme = factory.CreateInstance("IMEX", "Gear", 2, freeParams);
             break;
-        case 8:
+        case 4:
             tiScheme = factory.CreateInstance("CNAB", "", 2, freeParams);
             break;
-        case 9:
+        case 5:
             tiScheme = factory.CreateInstance("MCNAB", "", 2, freeParams);
             break;
         case 10:
@@ -653,9 +629,6 @@ int main(int argc, char *argv[])
             tiScheme = factory.CreateInstance("IMEX", "", nOrder, freeParams);
             break;
         case 17:
-            tiScheme = factory.CreateInstance("IMEX", "Gear", 2, freeParams);
-            break;
-        case 18:
             tiScheme = factory.CreateInstance("IMEX", "dirk", nOrder, freeParams);
             break;
 

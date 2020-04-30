@@ -105,8 +105,9 @@ namespace Nektar
                                                  "TimeIntegrationMethod" );
 
                 // The Fractional-in-time uses a shorted class name.
-                if( scheme_name == "FractionalInTime" )
-                  scheme_name = "FractionalIn";
+                if( scheme_name == "FractionalInTime" ) {
+                    scheme_name = "FractionalIn";
+		}
 
                 std::string scheme_variant;
                 if( m_session->DefinesSolverInfo( "TimeIntegrationVariant" ) ) {

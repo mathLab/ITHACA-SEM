@@ -84,6 +84,7 @@ REGISTER(BDFImplicitOrder1);
 REGISTER(BDFImplicitOrder2);
 
 // EulerTimeIntegrationSchemes.h
+REGISTER(Euler);
 REGISTER(BackwardEuler);
 REGISTER(ForwardEuler);
 

@@ -194,10 +194,15 @@ public:
     virtual void InitializeSecondaryData(TimeIntegrationAlgorithmGLM *phase,
                                          NekDouble deltaT) const
     {
-        // Assumptions the two-dimensional Lambda matrix is a diagonal
-        // matrix thus values are non zero if and only i=j. As such,
-        // the diagonal Lambda values are stored as two vectors so to
-        // accomodate complex numbers m_L[0] real, m_L[1] imaginary.
+        /**
+         * \brief Lambda Matrix Assumption, member variable phase->m_L
+         *
+         * The one-dimensional Lambda matrix is a diagonal
+         * matrix thus values are non zero if and only i=j. As such,
+         * the diagonal Lambda values are stored in an array of
+         * complex numbers.
+         */
+
         ASSERTL1(phase->m_nvars == phase->m_L.size(),
                  "The number of variables does not match "
                  "the number of exponential coefficents.");
@@ -389,10 +394,14 @@ public:
     {
         ASSERTL0(!m_integration_phases.empty(), "No scheme")
 
-        // Assumption: the one-dimensional Lambda matrix is a diagonal
-        // matrix thus values are non zero if and only i=j. As such,
-        // the diagonal Lambda values are stored an array of complex
-        // numbers.
+        /**
+         * \brief Lambda Matrix Assumption, parameter Lambda.
+         *
+         * The one-dimensional Lambda matrix is a diagonal
+         * matrix thus values are non zero if and only i=j. As such,
+         * the diagonal Lambda values are stored in an array of
+         * complex numbers.
+         */
 
         // Assume that each phase is an exponential integrator.
         for (int i = 0; i < m_integration_phases.size(); i++)
@@ -407,6 +416,8 @@ public:
         }
     }
 
+private:
+
     inline NekDouble factorial( unsigned int n ) const
     {
         return (n == 1 || n == 0) ? 1 : n * factorial(n - 1);
@@ -415,15 +426,19 @@ public:
     std::complex<NekDouble> phi_function(const unsigned int order,
                                          const std::complex<NekDouble> z) const
     {
-        // Central to the implementation of exponential integrators is
-        // the evaluation of exponential-like functions, commonly
-        // denoted by φ functions. It is convenient to define φ0(z) =
-        // e^z, in which case the functions obey the recurrence
-        // relation.
+        /**
+         * \brief Phi function
+         *
+         * Central to the implementation of exponential integrators is
+         * the evaluation of exponential-like functions, commonly
+         * denoted by phi (φ) functions. It is convenient to define
+         * then as φ0(z) = e^z, in which case the functions obey the
+         * recurrence relation.
 
-        // 0: exp(z);
-        // 1: (exp(z)     - 1.0) / (z);
-        // 2: (exp(z) - z - 1.0) / (z * z);
+         * 0:  exp(z);
+         * 1: (exp(z)     - 1.0) / (z);
+         * 2: (exp(z) - z - 1.0) / (z * z);
+         */
 
         if( z == 0.0 )
         {

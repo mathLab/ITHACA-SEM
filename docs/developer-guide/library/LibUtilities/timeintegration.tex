@@ -6,33 +6,40 @@ This directory consists of the following files:
 
 \begin{center}
 \begin{tabular}{|c | c | } \hline
-TimeIntegrationScheme.h & TimeIntegrationScheme.cpp	\\ \hline 
-TimeIntegrationWrapper.h & TimeIntegrationWrapper.cpp \\ \hline
+TimeIntegrationScheme.h & TimeIntegrationScheme.cpp \\ \hline 
+TimeIntegrationGLM.h & TimeIntegrationGLM.cpp \\ \hline
+*TimeIntegrationSchemes.h & Specific GLM schemes, e.g. AB, RK, IMEX, etc. \\ \hline
+TimeIntegrationFIT.h & TimeIntegrationFIT.cpp \\ \hline
 \end{tabular}
 \end{center}
 
-The original time-stepping classes (found in TimeIntegrationScheme)
-where implemented by Vos et al. \cite{Vostime} and a detailed
-explanation of the mathematics and computer science concepts are
-provided there.  After the original implementation, Cantwell et
-al. extended Vos' original work by adding the time-stepping routines
-into a factory pattern (found in TimeIntegrationWrapper).
+The original time-stepping interface (found in the parent class
+TimeIntegrationScheme) where implemented by Vos et al. \cite{Vostime}
+and a detailed explanation of the mathematics and computer science
+concepts are provided there.  After the original implementation,
+Cantwell et al. extended Vos' original work by adding the
+time-stepping routines into a factory pattern (found in the child
+class TimeIntegrationGLM). The GLM schemes have been further
+compartmentalized into specific schemes covering both traditional and
+exponential schemes. More recently Fractional-in-time schemes have
+been added (found in the child class TimeIntegrationFIT). 
 
 \subsection{General Linear Methods}
-General linear methods (GLMs) can be considered as the generalization of a broad
-range of different numerical methods for ordinary differential equations.  They
-were introduced by Butcher and they provide a unified formulation for
-traditional methods such as the Runge-Kutta methods and the linear multi-step
-methods such as Adams-Bashforth.  
-From an implementation point of view, this means that all these
-numerical methods can be abstracted in a similar way. As this allows a high
-level of generality, it is chosen in {\nek} to cast all time integration
-schemes in the framework of general linear methods.
+General linear methods (GLMs) can be considered as the generalization
+of a broad range of different numerical methods for ordinary
+differential equations.  They were introduced by Butcher and they
+provide a unified formulation for traditional methods such as the
+Runge-Kutta methods and the linear multi-step methods such as
+Adams-Bashforth.  From an implementation point of view, this means
+that all these numerical methods can be abstracted in a similar
+way. As this allows a high level of generality, it is chosen in {\nek}
+to cast all time integration schemes in the framework of general
+linear methods.
 
 For background information about general linear methods, please consult
 \cite{Bu06}.
 
-\subsection{Introduction}
+\subsubsection{Introduction}
 The standard initial value problem can written in the form
 \begin{align*}
 \frac{d\boldsymbol{y}}{dt} = \boldsymbol{f}(t,\boldsymbol{y}),\quad
@@ -48,7 +55,7 @@ the ODE in autonomous form, i.e.
 \boldsymbol{\hat{y}}(t_0)= \boldsymbol{\hat{y}}_0.
 \end{align*}
 
-\subsection{Formulation}
+\subsubsection{Formulation}
 Suppose the governing differential equation is given in autonomous form, the
 $n^{th}$ step of the GLM comprising
 \begin{itemize}
@@ -83,7 +90,7 @@ $(s+r)\times(s+r)$ matrix
 \end{align*}
 
 
-\subsection{Matrix notation}
+\subsubsection{Matrix notation}
 Adopting the notation:
 \begin{align*}
 \boldsymbol{\hat{y}}^{[n-1]}= \left[\begin{array}{c}
@@ -121,7 +128,7 @@ t\boldsymbol{F}\\
 where $I_N$ is the identity matrix of dimension $N\times N$.
 
 
-\subsection{General Linear Methods in Nektar++}
+\subsubsection{General Linear Methods in Nektar++}
 Although the GLM is essentially presented for ODE's in its autonomous form, in
 Nektar++ it will be used to solve ODE's formulated in non-autonomous form.
 Given the ODE,
@@ -182,7 +189,7 @@ For a detailed description of the formulation and a deeper insight of the
 numerical method see \cite{Vostime}.
 
 
-\subsection{Types of time Integration Schemes}
+\subsubsection{Types of time Integration Schemes}
 Nektar++ contains various classes and methods which implement the
 concept of GLMs. This toolbox is capable of numerically solving the
 generalised ODE using a broad range of different time-stepping
@@ -226,27 +233,37 @@ methods. We distinguish the following types of general linear methods:
   \end{itemize}
 where $\varphi_0(z) = e^{z}$ for $k = 0$, $\varphi_{k}(z) =
 \frac{\varphi_{k-1}(z) - \varphi_{k-1}(0)}{z}$ for $k \geq 1$.
+\end{itemize}
+
+The aim in {\nek} is to fully support the first three types of GLMs.
+Fully implicit methods are currently not implemented. {\nek} also
+fully supports Exponential Methods using GLMs.
+
+
+\subsection{Fractional-in-time Integration Schemes}
+
+In addition to the GLMs {\nek} also supports fractional methods:
+\begin{itemize}
   \item \textbf{Fractional-in-time Methods}: A fast convolution
     algorithm for computing solutions to (Caputo) time-fractional
     differential equations. This is an explicit solver that expresses
     the solution as an integral over a Talbot curve, which is
     discretized with quadrature. First-order quadrature is currently
     implemented (Soon be expanded to forth order).
-
 \end{itemize}
 
-The aim in {\nek} is to fully support the first three types of GLMs.
-Fully implicit methods are currently not implemented. {\nek} also
-fully supports Exponential Methods using GLMs. The Fractional-in-time
-methods do not make use of the GLMs and utilizes it own methodology.
+The Fractional methods follow the same paradigm as the GLMs, that is
+both have the same parent class and as such are used in a similar
+manner.
 
 \subsection{Usage}
-The goal of abstracting the concept of general linear methods is to
-provide users with a single interface for time-stepping, independent
-of the chosen method. The classes tree allows the user to numerically
-integrate ODE's using high-order complex schemes, as if it was done
-using the Forward-Euler method.  Switching between time-stepping
-schemes is as easy as changing a parameter in an input file.
+The goal of abstracting the concept of general linear methods and
+fractional methods is to provide users with a single interface for
+time-stepping, independent of the chosen method. The classes tree
+allows the user to numerically integrate ODE's using high-order
+complex schemes, as if it was done using the Forward-Euler method.
+Switching between time-stepping schemes is as easy as changing a
+parameter in an input file.
 
 In the already implemented solvers the time-integration schemes have
 been set up according to the nature of the equations.  For example the

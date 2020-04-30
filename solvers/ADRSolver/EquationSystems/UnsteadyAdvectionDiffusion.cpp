@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////
+>///////////////////////////////////////////////////////////////////////////////
 //
 // File UnsteadyAdvectionDiffusion.cpp
 //
@@ -563,7 +563,7 @@ namespace Nektar
         // Set to 1 for first step and it will then be increased in
         // time advance routines
         if( (IntegrationScheme->GetName() == "Euler" &&
-	     IntegrationScheme->GetVariant() == "Backward") ||
+             IntegrationScheme->GetVariant() == "Backward") ||
 
             (IntegrationScheme->GetName() == "BDFImplicit" &&
              (order == 1 || order == 2)) )

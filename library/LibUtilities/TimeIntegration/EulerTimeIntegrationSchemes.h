@@ -116,7 +116,7 @@ public:
                                     std::string variant)
     {
         double A = 0;
-      
+
         if( variant == "Backward" ) {
             phase->m_schemeType = eDiagonallyImplicit;
 
@@ -127,7 +127,7 @@ public:
 
             A = 0;
         }
-        
+
         phase->m_variant  = variant;
         phase->m_order = 1;
         phase->m_name = variant + std::string("EulerOrder") +
@@ -165,7 +165,7 @@ class BackwardEulerTimeIntegrationScheme :
 {
 public:
     BackwardEulerTimeIntegrationScheme(std::string variant, unsigned int order,
-				       std::vector<NekDouble> freeParams) :
+                                       std::vector<NekDouble> freeParams) :
       EulerTimeIntegrationScheme("Backward", 1, freeParams)
     {
         boost::ignore_unused(variant);
@@ -192,7 +192,7 @@ class ForwardEulerTimeIntegrationScheme :
 {
 public:
     ForwardEulerTimeIntegrationScheme(std::string variant, unsigned int order,
-				       std::vector<NekDouble> freeParams) :
+                                       std::vector<NekDouble> freeParams) :
       EulerTimeIntegrationScheme("Forward", 1, freeParams)
     {
         boost::ignore_unused(variant);

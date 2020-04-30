@@ -232,7 +232,7 @@ class OneDFiniteDiffAdvDiffSolver : public DemoSolver
 public:
     // constructor based upon the discretisation details
     OneDFiniteDiffAdvDiffSolver(int nVars, int nPoints, int nTimeSteps,
-				bool test) :
+                                bool test) :
       DemoSolver(nVars, nPoints, nTimeSteps, test),
         m_wavenumber(1.0), m_V(1.0), m_D(0.05)
     {
@@ -299,10 +299,10 @@ public:
         m_z0 = Array<OneD, NekDouble>(m_nVars, 0.0);
 
         // Initialize a random seed using the time.
-	if( test )
-	  srand( 0 );
-	else
-	  srand( time(NULL) );
+        if( test )
+          srand( 0 );
+        else
+          srand( time(NULL) );
 
         // Randomly generate the jacobian in a way that essentially
         // ensures diagonalizability with real eigenvalues and
@@ -353,20 +353,6 @@ public:
 
             m_z0[k] = (double) rand() / (double) RAND_MAX;
         }
-
-        // Fixed values for testing based on a known solution for 5 values.
-        // static double freqs[]  = { 0.1405, 1.0930, -0.3592, -1.3925, 0.3480 };
-        // static double phases[] = { -0.7197, 1.7775, -0.8679, 0.1710, 2.0424 };
-        // static double lambda[] = { 0.7405, -0.2949, -1.6821, -1.1045, -1.0519 };
-        // static double y0[]     = { 1.0541, -0.0169, 0.4792, 2.4027, 1.4006 };
-
-        // for (int k = 0; k < m_nVars; k++)
-        // {
-        //     m_freqs [k] = freqs[k];
-        //     m_phases[k] = phases[k];
-        //     m_lambda[k] = std::complex<NekDouble>(lambda[k], 0);
-        //     m_z0[k] = y0[k];
-        // }
     }
 
     // -----------------------------------------------------------------
@@ -414,10 +400,10 @@ public:
 
         m_alpha = 0.3;
 
-	if( test )
-	  srand( 0 );
-	else
-	  srand( time(NULL) );
+        if( test )
+          srand( 0 );
+        else
+          srand( time(NULL) );
 
         // Initial values set to zero
         m_u0 = Array<OneD, Array<OneD, NekDouble>>(m_nVars);
@@ -466,35 +452,48 @@ int main(int argc, char *argv[])
     desc.add_options()
       ("help,h", "Produce this help message.")
       ("test,t", "Run in regession test mode.")
-      ("verbose,v", "Print the solution values for each time step.")
+      ("solution,s", "Print the solution values for each time step.")
       ("L2,l", "Print the L2 error for each time step.")
       ("dof,d", po::value<int>(), "Number of degrees of freedom (points or values).")
       ("timesteps,t", po::value<int>(), "Number of timesteps.")
       ("order,o", po::value<int>(), "Order of the scheme.")
       ("parameter,p", po::value<std::string>(), "Free parameters for the scheme.")
-      ("method,m", po::value<int>(),
-        "Number for the time-integration scheme:\n"
-        "- 1: 1st order Forward Euler\n"
-        "- 2: 1st order Backward Euler\n"
-        "- 3: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
-        "- 4: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
-        "- 5: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
+      ("variant,v", po::value<std::string>(),
+       "Method variant."
+        "- Forward:  1st order Forward  Euler\n"
+        "- Backward: 1st order Backward Euler\n"
+        "  \n"
+        "- SSP: Nth order multi-stage Runga-Kutta SSP scheme\n"
+        "  \n"
+        "- Gear: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
+        "- DIRK: Nth order multi-stage IMEX DIRK scheme\n"
+        "  \n"
+        "- Lawson:  Nth order multi-step Lawson-Euler  exponential scheme\n"
+        "- Norsett: Nth order multi-step Norsett-Euler exponential scheme\n"
+       )
+      ("method,m", po::value<std::string>(),
+        "Name of the time-integration scheme:\n"
+        "- Euler -variant Forward:  1st order Forward  Euler\n"
+        "- Euler -variant Backward: 1st order Backward Euler\n"
+        "- CNAB: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
+        "- MCNAB: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
         "     (MCNAB)\n"
         "  \n"
-        "- 10: Nth order multi-stage Runga-Kutta scheme\n"
-        "- 11: Nth order multi-stage Runga-Kutta SSP scheme\n"
-        "- 12: Nth order multi-stage Diagonally Implicit\n"
+        "- RungeKutta: Nth order multi-stage Runga-Kutta scheme\n"
+        "- RungeKutta -variant SSP: Nth order multi-stage Runga-Kutta SSP scheme\n"
+        "- DIRK: Nth order multi-stage Diagonally Implicit\n"
         "      Runga-Kutta scheme (DIRK)\n"
-        "- 13: Nth order multi-step Adams-Bashforth scheme\n"
-        "- 14: Nth order multi-step Adams-Moulton scheme\n"
-        "- 15: Nth order multi-step BDFImplicit scheme\n"
-        "- 16: Nth order multi-step IMEX scheme\n"
-        "- 17: Nth order multi-stage IMEX DIRK scheme\n"
+        "- AdamsBashforth: Nth order multi-step Adams-Bashforth scheme\n"
+        "- AdamsMoulton: Nth order multi-step Adams-Moulton scheme\n"
+        "- BDFImplicit: Nth order multi-step BDFImplicit scheme\n"
+        "- IMEX: Nth order multi-step IMEX scheme\n"
+        "- IMEX -variant Gear: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
+        "- IMEX -variant DIRK: Nth order multi-stage IMEX DIRK scheme\n"
         "  \n"
-        "- 20: Nth order multi-step Lawson-Euler exponential scheme\n"
-        "- 21: Nth order multi-step Norsett-Euler exponential scheme\n"
+        "- EulerExponential -variant Lawson: Nth order multi-step Lawson-Euler exponential scheme\n"
+        "- EulerExponential -variant Norsett: Nth order multi-step Norsett-Euler exponential scheme\n"
         "  \n"
-        "- 25: Nth order multi-step Fractional In Time scheme\n"
+        "- FractionalInTime: Nth order multi-step Fractional In Time scheme\n"
        );
 
     po::variables_map vm;
@@ -512,19 +511,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (!vm.count("dof") || !vm.count("timesteps") || !vm.count("method") ||
-        ((vm["method"].as<int>() >= 10) && !vm.count("order")) ||
-        ((vm["method"].as<int>() == 18) && !vm.count("parameter")) ||
-        vm.count("help"))
+    // These three parameters are manditory.
+    if (!vm.count("dof") || !vm.count("timesteps") || !vm.count("method") )
     {
-      std::cout << std::endl
-                << "Please specify the number of dof and timesteps "
-                << "along with the ";
-
-      if( vm["method"].as<int>() == 18)
-          std::cout << "order, method, and free parameters in quotes.";
-      else
-          std::cout << "order and method.";
+        std::cout << std::endl
+                  << "Please specify the number of dof and timesteps "
+                  << "along with the order and method.";
 
       std::cout << std::endl << std::endl
                 << desc;
@@ -532,54 +524,9 @@ int main(int argc, char *argv[])
       return 1;
     }
 
-    bool L2      = vm.count("L2");
-    bool verbose = vm.count("verbose");
-    bool test    = vm.count("test");
-
-    int nDoF    = vm["dof"].as<int>();
-    int nTimeSteps = vm["timesteps"].as<int>();
-    int nMethod    = vm["method"].as<int>();
-    int nOrder     = 0;
-    std::vector<NekDouble> freeParams;
-
-    if((vm["method"].as<int>() >= 10) )
-    {
-        nOrder = vm["order"].as<int>();
-    }
-
-    // IMEX DIRK methods also require free parameters.
-    if((vm["method"].as<int>() == 17) )
-    {
-        std::string sParameter = vm["parameter"].as<std::string>();
-
-        // Parse the free parameters which are in a string.
-        while( sParameter.size() )
-        {
-            size_t found = sParameter.find(" ");
-
-            if( found == 0 )
-            {
-                sParameter = sParameter.substr( found+1 );
-            }
-            else if( found == std::string::npos )
-            {
-                if( sParameter.size() )
-                {
-                    freeParams.push_back( stoi( sParameter ) );
-                }
-
-                break;
-            }
-            else if( found != std::string::npos )
-            {
-                int fp = stoi( sParameter.substr(0, found) );
-
-                freeParams.push_back(fp);
-
-                sParameter = sParameter.substr(found+1);
-            }
-        }
-    }
+    int nDoF               = vm["dof"].as<int>();
+    int nTimeSteps         = vm["timesteps"].as<int>();
+    std::string sMethod    = vm["method"].as<std::string>();
 
     if( nDoF < 2 )
     {
@@ -588,6 +535,106 @@ int main(int argc, char *argv[])
                   << std::endl << std::endl
                   << desc;
         return 1;
+    }
+
+    // The Fractional-in-time uses a shorted class name.
+    if( sMethod == "FractionalInTime" ) {
+      sMethod = "FractionalIn";
+    }
+
+    // Maybe needed parameters
+    std::string sVariant   =
+      vm.count("variant")   ? vm["variant"].as<std::string>() : "" ;
+    int nOrder             =
+      vm.count("order")     ? vm["order"].as<int>() : 0;
+    std::string sParameter =
+      vm.count("parameter") ? vm["parameter"].as<std::string>() : "" ;
+
+    // Optional parameters
+    bool L2      = vm.count("L2");
+    bool verbose = vm.count("verbose");
+    bool test    = vm.count("test");
+
+    // Bullet proofing.
+
+    // These methods need the order only
+    if( ( (sMethod == "RungeKutta" ||
+           sMethod == "DIRK" ||
+           sMethod == "AdamsBashforth" ||
+           sMethod == "AdamsMoulton" ||
+           sMethod == "BDFImplicit" ||
+           sMethod == "EulerExponential")
+         && nOrder == 0 ) ||
+
+        // No variant but the order
+        ( sMethod == "IMEX" && sVariant == "" && nOrder == 0 ) ||
+
+        // Needs an order and parameters
+        ( sMethod == "IMEX" && sVariant == "DIRK" &&
+          (nOrder == 0 || sParameter.empty()) ) ||
+
+        // Needs a variant
+        ( sMethod == "Euler" && sVariant == "" ) ||
+
+        // Needs a variant and order
+        ( sMethod == "EulerExponential" && sVariant == "" && nOrder == 0 ) ||
+
+        vm.count("help"))
+    {
+      std::cout << std::endl
+                << "Please specify the number of dof and timesteps "
+                << "along with the ";
+
+      if( sMethod == "IMEX" && sVariant == "" && nOrder == 0 )
+          std::cout << "method and order.";
+
+      else if( sMethod == "IMEX" && sVariant == "DIRK" &&
+          (nOrder == 0 || sParameter.empty()) )
+          std::cout << "method, order, and free parameters in quotes.";
+
+      else if( sMethod == "Euler")
+          std::cout << "method and variant.";
+
+      else if( sMethod == "EulerExponential")
+          std::cout << "method, variant, and order.";
+
+      else
+          std::cout << "method and order.";
+
+      std::cout << std::endl << std::endl
+                << desc;
+
+      return 1;
+    }
+
+    // Parse the free parameters which are in a string.
+    std::vector<NekDouble> freeParams;
+
+    while( sParameter.size() )
+    {
+        size_t found = sParameter.find(" ");
+
+        if( found == 0 )
+        {
+            sParameter = sParameter.substr( found+1 );
+        }
+        else if( found == std::string::npos )
+        {
+            if( sParameter.size() )
+            {
+                freeParams.push_back( stoi( sParameter ) );
+            }
+
+            break;
+        }
+        else if( found != std::string::npos )
+        {
+            int fp = stoi( sParameter.substr(0, found) );
+
+            freeParams.push_back(fp);
+
+            sParameter = sParameter.substr(found+1);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -599,68 +646,8 @@ int main(int argc, char *argv[])
     TimeIntegrationSchemeFactory &factory =
         LibUtilities::GetTimeIntegrationSchemeFactory();
 
-    LibUtilities::TimeIntegrationSchemeSharedPtr tiScheme;
-
-    switch (nMethod)
-    {
-        case 1:
-            tiScheme = factory.CreateInstance("ForwardEuler", "", 1, freeParams);
-            break;
-        case 2:
-            tiScheme = factory.CreateInstance("BackwardEuler", "", 1, freeParams);
-            break;
-        case 3:
-            tiScheme = factory.CreateInstance("IMEX", "Gear", 2, freeParams);
-            break;
-        case 4:
-            tiScheme = factory.CreateInstance("CNAB", "", 2, freeParams);
-            break;
-        case 5:
-            tiScheme = factory.CreateInstance("MCNAB", "", 2, freeParams);
-            break;
-        case 10:
-            tiScheme = factory.CreateInstance("RungeKutta", "", nOrder, freeParams);
-            break;
-        case 11:
-            tiScheme = factory.CreateInstance("RungeKutta", "SSP", nOrder, freeParams);
-            break;
-        case 12:
-            tiScheme = factory.CreateInstance("DIRK", "", nOrder, freeParams);
-            break;
-        case 13:
-            tiScheme = factory.CreateInstance("AdamsBashforth", "", nOrder, freeParams);
-            break;
-        case 14:
-            tiScheme = factory.CreateInstance("AdamsMoulton", "", nOrder, freeParams);
-            break;
-        case 15:
-            tiScheme = factory.CreateInstance("BDFImplicit", "", nOrder, freeParams);
-            break;
-        case 16:
-            tiScheme = factory.CreateInstance("IMEX", "", nOrder, freeParams);
-            break;
-        case 17:
-            tiScheme = factory.CreateInstance("IMEX", "dirk", nOrder, freeParams);
-            break;
-
-        case 20:
-            tiScheme = factory.CreateInstance("EulerExponential", "Lawson", nOrder, freeParams );
-            break;
-        case 21:
-            tiScheme = factory.CreateInstance("EulerExponential", "Norsett", nOrder, freeParams);
-            break;
-        case 25:
-            tiScheme = factory.CreateInstance("FractionalIn", "", nOrder, freeParams);
-            break;
-        default:
-        {
-            std::cerr << "The -m argument defines the "
-                      << "time-integration method to be used:"
-                      << std::endl << std::endl;
-            std::cout << desc;
-            exit(1);
-        }
-    }
+    LibUtilities::TimeIntegrationSchemeSharedPtr tiScheme =
+      factory.CreateInstance(sMethod, sVariant, nOrder, freeParams);
 
     int nVariables;
     int nPoints;
@@ -892,6 +879,9 @@ void DemoSolver::GetMinMaxValues(
     {
         for (int i = 0; i < m_nPoints; i++)
         {
+            // Get the min/max values only from the exact solution
+            // becasue the approximate solution can blow up which
+            // casues the axis to be infinite.
             if( m_minValue > exact[k][i] )
                 m_minValue = exact[k][i];
 
@@ -920,13 +910,9 @@ void DemoSolver::GetMinMaxValues(
     {
         for (int i = 0; i < m_nPoints; i++)
         {
-            // Do not get the min/max values becasue the approximate
-            // solution can blow up.
-            // if( m_minValue > approx[k][i] )
-            //     m_minValue = approx[k][i];
-
-            // if( m_maxValue < approx[k][i] )
-            //     m_maxValue = approx[k][i];
+            // Do not get the min/max values from the approximate
+            // solution becasue it can blow up which casues the axis
+            // to be infinite.
 
             if( print )
                 std::cout << approx[k][i] << "  ";
@@ -980,7 +966,7 @@ double DemoSolver::EvaluateL2Error(
     if( print )
     {
         ASSERTL1( b > DBL_EPSILON,
-                  "Exact solution is near zero. L2 Norn is invalid" );
+                  "Exact solution is near zero. L2 Norm is invalid" );
 
         std::cout << "L 2 error :" << norm << std::endl;
     }
@@ -1395,11 +1381,7 @@ void OneDFiniteDiffAdvDiffSolver::EvaluateExactSolution(
             double x = m_x0 + i * m_dx;
             double wn = 2.0 * M_PI * m_wavenumber;
             outarray[k][i] =
-              exp(-m_D * wn * wn * time) * sin(wn * (x - m_V * time));
-
-            // outarray[k][i] = exp(-m_D * 2.0 * 2.0 * M_PI * M_PI * m_wavenumber *
-            //                      m_wavenumber * time) *
-            //   sin(2.0 * m_wavenumber * M_PI * (x - m_V * time));
+                exp(-m_D * wn * wn * time) * sin(wn * (x - m_V * time));
         }
     }
 }

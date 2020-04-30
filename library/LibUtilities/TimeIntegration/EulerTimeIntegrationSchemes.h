@@ -122,7 +122,7 @@ public:
 
             A = 1;
         }
-        else {
+        else if( variant == "Forward" ) {
             phase->m_schemeType = eExplicit;
 
             A = 0;
@@ -179,7 +179,7 @@ public:
         boost::ignore_unused(order);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            EulerTimeIntegrationScheme>::AllocateSharedPtr("", 1, freeParams);
+            EulerTimeIntegrationScheme>::AllocateSharedPtr("Backward", 1, freeParams);
         return p;
     }
 
@@ -206,7 +206,7 @@ public:
         boost::ignore_unused(order);
 
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            EulerTimeIntegrationScheme>::AllocateSharedPtr("", 1, freeParams);
+            EulerTimeIntegrationScheme>::AllocateSharedPtr("Forward", 1, freeParams);
         return p;
     }
 

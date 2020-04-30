@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File TimeIntegrationTypes.cpp
+// File TimeIntegrationTypes.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -28,7 +28,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: implementation of time integration key class
+// Description: implementation of time integration types that are
+// common to all schemes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -72,9 +73,7 @@ typedef std::shared_ptr<TimeIntegrationScheme>
 typedef std::vector<TimeIntegrationSchemeSharedPtr>
     TimeIntegrationSchemeVector;
 
-typedef std::vector<TimeIntegrationSchemeSharedPtr>::iterator
-    TimeIntegrationSchemeVectorIter;
-//
+  //
 class FractionalInTimeIntegrationScheme;
 
 typedef std::shared_ptr<FractionalInTimeIntegrationScheme>
@@ -83,8 +82,6 @@ typedef std::shared_ptr<FractionalInTimeIntegrationScheme>
 typedef std::vector<FractionalInTimeIntegrationSchemeSharedPtr>
     FractionalInTimeIntegrationSchemeVector;
 
-typedef std::vector<FractionalInTimeIntegrationSchemeSharedPtr>::iterator
-    FractionalInTimeIntegrationSchemeVectorIter;
 //
 class TimeIntegrationSchemeGLM;
   
@@ -94,8 +91,6 @@ typedef std::shared_ptr<TimeIntegrationSchemeGLM>
 typedef std::vector<TimeIntegrationSchemeGLMSharedPtr>
     TimeIntegrationSchemeGLMVector;
 
-typedef std::vector<TimeIntegrationSchemeGLMSharedPtr>::iterator
-    TimeIntegrationSchemeGLMVectorIter;
 //
 class TimeIntegrationAlgorithmGLM;
 
@@ -105,8 +100,6 @@ typedef std::shared_ptr<TimeIntegrationAlgorithmGLM>
 typedef std::vector<TimeIntegrationAlgorithmGLMSharedPtr>
     TimeIntegrationAlgorithmGLMVector;
 
-typedef std::vector<TimeIntegrationAlgorithmGLMSharedPtr>::iterator
-    TimeIntegrationAlgorithmGLMVectorIter;  
 //
 class TimeIntegrationSolutionGLM;
 
@@ -115,9 +108,6 @@ typedef std::shared_ptr<TimeIntegrationSolutionGLM>
 
 typedef std::vector<TimeIntegrationSolutionGLMSharedPtr>
     TimeIntegrationSolutionGLMVector;
-
-typedef std::vector<TimeIntegrationSolutionGLMSharedPtr>::iterator
-    TimeIntegrationSolutionGLMVectorIter;
 
 //
 enum TimeIntegrationSchemeType

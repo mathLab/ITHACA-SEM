@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File TimeIntegrationScheme.cpp
+// File TimeIntegrationSchemeGLM.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: implementation of time integration key class
+// Description: implementation of time integration scheme GLM class
 //
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -39,7 +39,7 @@
 #pragma once
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationTypes.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationTypes.hpp>
 
 #define LUE LIB_UTILITIES_EXPORT
 

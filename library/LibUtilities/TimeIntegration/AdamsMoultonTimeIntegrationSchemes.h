@@ -94,14 +94,14 @@ public:
 
             case 2:
                 // Why forward euler and not backward euler???
-                ForwardEulerTimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[0]);
+                EulerTimeIntegrationScheme::SetupSchemeData(
+                    m_integration_phases[0], "Forward");
                 break;
 
             case 3:
                 // The first and second phases needed to be set correctly
-                ForwardEulerTimeIntegrationScheme::SetupSchemeData(
-                    m_integration_phases[0]);
+                EulerTimeIntegrationScheme::SetupSchemeData(
+                    m_integration_phases[0], "Forward");
                 IMEXdirkTimeIntegrationScheme::SetupSchemeData(
                     m_integration_phases[1], 3, std::vector<NekDouble>{3, 4});
                 break;

@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Header file of time integration scheme base class
+// Description: Header file of time integration scheme FIT base class
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -37,12 +37,21 @@
 // FractionalInTimeIntegrationScheme so keep with the factory naming
 // convention.
 
+/**
+ * \brief Fractional-in-time Methods
+ *
+ * A fast convolution algorithm for computing solutions to (Caputo)
+ * time-fractional differential equations. This is an explicit solver
+ * that expresses the solution as an integral over a Talbot curve,
+ * which is discretized with quadrature. First-order quadrature is
+ * currently implemented (Soon be expanded to forth order).
+ */
+
 #pragma once
 
 #include <string>
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationTypes.h>
 
 #define LUE LIB_UTILITIES_EXPORT
 
@@ -154,100 +163,104 @@ public:
 protected:
     struct Instance
     {
-      int base;
+        int base;
 
-      int  index;           // Index of this instance
-      bool active;          // Used to determine if active
-      int  activecounter;   // counter used to flip active bit
-      int  activebase;
+        int  index;           // Index of this instance
+        bool active;          // Used to determine if active
+        int  activecounter;   // counter used to flip active bit
+        int  activebase;
 
-      // Major storage for auxilliary ODE solutions.
-      // Storage for values of y currently used to update u
-      ComplexTripleArray    stage_y;
-      std::pair< int, int > stage_ind;  // Time-step counters indicating to which interval ymain is associated
+        // Major storage for auxilliary ODE solutions.
+        // Storage for values of y currently used to update u
+        ComplexTripleArray    stage_y;
+        std::pair< int, int > stage_ind;  // Time-step counters indicating the
+                                          // interval ymain is associated with
 
-      // Staging allocation
-      bool stage_active;
-      int stage_ccounter;
-      int stage_cbase;    // This base is halved after the first cycle
-      int stage_fcounter;
-      int stage_fbase;    // This base is halved after the first cycle
+        // Staging allocation
+        bool stage_active;
+        int stage_ccounter;
+        int stage_cbase;    // This base is halved after the first cycle
+        int stage_fcounter;
+        int stage_fbase;    // This base is halved after the first cycle
 
-      // Ceiling stash allocation
-      int                   cstash_counter;  // Counter used to determine when to stash
-      int                   cstash_base;     // base for counter
-      ComplexTripleArray    cstash_y;
-      std::pair< int, int > cstash_ind;      // ind(1) is never used: it always matches main.ind(1)
+        // Ceiling stash allocation
+        int                   cstash_counter;  // Counter used to determine
+                                               // when to stash
+        int                   cstash_base;     // base for counter
+        ComplexTripleArray    cstash_y;
+        std::pair< int, int > cstash_ind;      // ind(1) is never used:
+                                               // it always matches main.ind(1)
 
-      // Ceiling sandbox allocation
-      bool                  csandbox_active; // Flag to determine when stash 2 is utilized
-      int                   csandbox_counter;
-      ComplexTripleArray    csandbox_y;
-      std::pair< int, int > csandbox_ind;
+        // Ceiling sandbox allocation
+        bool                  csandbox_active; // Flag to determine when
+                                               // stash 2 is utilized
+        int                   csandbox_counter;
+        ComplexTripleArray    csandbox_y;
+        std::pair< int, int > csandbox_ind;
 
-      // Floor stash
-      int                   fstash_base;
-      ComplexTripleArray    fstash_y;
-      std::pair< int, int > fstash_ind;
+        // Floor stash
+        int                   fstash_base;
+        ComplexTripleArray    fstash_y;
+        std::pair< int, int > fstash_ind;
 
-      // Floor sandbox
-      bool                  fsandbox_active;
-      int                   fsandbox_activebase;
-      int                   fsandbox_stashincrement;
-      ComplexTripleArray    fsandbox_y;
-      std::pair< int, int > fsandbox_ind;
+        // Floor sandbox
+        bool                  fsandbox_active;
+        int                   fsandbox_activebase;
+        int                   fsandbox_stashincrement;
+        ComplexTripleArray    fsandbox_y;
+        std::pair< int, int > fsandbox_ind;
 
-      // Talbot quadrature rule
-      ComplexSingleArray z;
-      ComplexSingleArray w;
+        // Talbot quadrature rule
+        ComplexSingleArray z;
+        ComplexSingleArray w;
 
-      TripleArray As;
+        TripleArray As;
 
-      ComplexSingleArray E;
-      ComplexDoubleArray Eh;
-      ComplexDoubleArray AtEh;
+        ComplexSingleArray E;
+        ComplexDoubleArray Eh;
+        ComplexDoubleArray AtEh;
     };
 
-    inline unsigned int modincrement(const unsigned int counter,
+    inline unsigned int modIncrement(const unsigned int counter,
                                      const unsigned int base) const;
 
-    inline unsigned int compute_L( const unsigned int base,
-                                   const unsigned int m ) const;
+    inline unsigned int computeL( const unsigned int base,
+				  const unsigned int m ) const;
 
-    inline unsigned int  compute_qml( const unsigned int base,
-                                      const unsigned int m );
+    inline unsigned int  computeQML( const unsigned int base,
+				     const unsigned int m );
 
-    inline unsigned int compute_taus( const unsigned int base,
-                                      const unsigned int m );
+    inline unsigned int computeTaus( const unsigned int base,
+				     const unsigned int m );
 
-    void talbot_quadrature(const unsigned int nQuadPts,
-                           const NekDouble mu,
-                           const NekDouble nu,
-                           const NekDouble sigma,
-                                 ComplexSingleArray &lamb,
-                                 ComplexSingleArray &w) const;
+    void talbotQuadrature(const unsigned int nQuadPts,
+			  const NekDouble mu,
+			  const NekDouble nu,
+			  const NekDouble sigma,
+			        ComplexSingleArray &lamb,
+                                ComplexSingleArray &w) const;
 
-    void integral_class_initialize(const unsigned int index,
-                                   Instance &instance) const;
+    void integralClassInitialize(const unsigned int index,
+				 Instance &instance) const;
 
-    void update_stage(const unsigned int timeStep,
-                            Instance &instance);
+    void updateStage(const unsigned int timeStep,
+                           Instance &instance);
 
-    void final_increment(const unsigned int timeStep,
-                         const TimeIntegrationSchemeOperators &op);
+    void finalIncrement(const unsigned int timeStep,
+                        const TimeIntegrationSchemeOperators &op);
 
-    void integral_contribution(const unsigned int timeStep,
-                               const unsigned int tauml,
-                               const Instance &instance);
+    void integralContribution(const unsigned int timeStep,
+                              const unsigned int tauml,
+                              const Instance &instance);
 
-    void time_advance(const unsigned int timeStep,
-                      const TimeIntegrationSchemeOperators &op,
-                            Instance &instance,
-                            ComplexTripleArray &y);
+    void timeAdvance(const unsigned int timeStep,
+                     const TimeIntegrationSchemeOperators &op,
+                           Instance &instance,
+                           ComplexTripleArray &y);
 
-    void advance_sandbox(const unsigned int timeStep,
-                         const TimeIntegrationSchemeOperators &op,
-                               Instance &instance);
+    void advanceSandbox(const unsigned int timeStep,
+                        const TimeIntegrationSchemeOperators &op,
+                              Instance &instance);
 
     // Variables common to all schemes.
     std::string m_name;
@@ -271,7 +284,7 @@ protected:
     int m_nvars{0};            // Number of variables in the integration scheme.
     int m_npoints{0};          // Number of points    in the integration scheme.
 
-    unsigned int m_Lmax;       // Maxium number of integral groups.
+    unsigned int m_Lmax{0};    // Maxium number of integral groups.
     Array<OneD, Instance> m_integral_classes;
 
     // Demarcation integers

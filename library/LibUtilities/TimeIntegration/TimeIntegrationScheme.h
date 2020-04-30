@@ -28,7 +28,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Header file of time integration scheme base class
+// Description: Header file of time integration scheme base class,
+// this class is the parent class for the TimeIntegrationSchemeGLM and
+// TimeIntegrationSchemeFIT classes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -45,7 +47,7 @@
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationTypes.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationTypes.hpp>
 
 #define LUE LIB_UTILITIES_EXPORT
 
@@ -86,10 +88,16 @@ public:
 
     LUE virtual unsigned int GetNumIntegrationPhases() const = 0;
 
-    // Gets the solution Vector
+    /**
+     * \brief Gets the solution vector of the ODE
+     */
     inline virtual const TripleArray &GetSolutionVector() const = 0;
-    // Sets the solution Vector
-    inline virtual void SetSolutionVector(const int Offset, const DoubleArray &y) = 0;
+
+    /**
+     * \brief Sets the solution vector of the ODE
+     */
+    inline virtual void SetSolutionVector(const int Offset,
+					  const DoubleArray &y) = 0;
 
     // The worker methods
     /**

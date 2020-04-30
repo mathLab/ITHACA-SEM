@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: TimeIntegrationScheme.h
+// File: TimeIntegrationSchemeGLM.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Header file of time integration scheme base class
+// Description: Header file of time integration scheme GLM base class
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +36,6 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSolutionGLM.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationTypes.h>
 
 #define LUE LIB_UTILITIES_EXPORT
 

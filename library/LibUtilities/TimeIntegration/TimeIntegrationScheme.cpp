@@ -28,7 +28,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: implementation of time integration key class
+// Description: implementation of time integration scheme class
+// this class is the parent class for the TimeIntegrationSchemeGLM and
+// TimeIntegrationSchemeFIT classes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 

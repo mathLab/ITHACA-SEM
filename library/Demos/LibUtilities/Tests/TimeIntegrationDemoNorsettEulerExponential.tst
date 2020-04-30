@@ -2,10 +2,10 @@
 <test>
     <description>Test for time integration schemes</description>
     <executable>TimeIntegrationDemo</executable>
-    <parameters>--dof 100 --timesteps 100 --method 21 --order 1</parameters>
+    <parameters>--dof 100 --timesteps 100 --method 21 --order 1 --test</parameters>
     <metrics>
         <metric type="L2" id="1">
-            <value tolerance="2e-4">0.00131736</value>
+            <value tolerance="1e-12">0.00146746</value>
         </metric>
     </metrics>
 </test>

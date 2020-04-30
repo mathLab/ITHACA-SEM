@@ -106,7 +106,7 @@ class DemoSolver
 public:
     // -----------------------------------------------------------------
     // Constructor based upon the discretisation details
-    DemoSolver(int nVars, int nPoints, int nTimeSteps, bool test) :
+    DemoSolver(int nVars, int nPoints, int nTimeSteps) :
       m_nVars(nVars),
 
       m_x0(0.0), m_xend(1.0), m_nPoints(nPoints),
@@ -115,8 +115,6 @@ public:
       m_t0(0.0), m_tend(1.0), m_nTimeSteps(nTimeSteps),
       m_dt((m_tend - m_t0) / (double)m_nTimeSteps)
     {
-        boost::ignore_unused(test);
-
         m_minValue = +std::numeric_limits<double>::max();
         m_maxValue = -std::numeric_limits<double>::max();
 
@@ -231,9 +229,8 @@ class OneDFiniteDiffAdvDiffSolver : public DemoSolver
 {
 public:
     // constructor based upon the discretisation details
-    OneDFiniteDiffAdvDiffSolver(int nVars, int nPoints, int nTimeSteps,
-				bool test) :
-      DemoSolver(nVars, nPoints, nTimeSteps, test),
+    OneDFiniteDiffAdvDiffSolver(int nVars, int nPoints, int nTimeSteps) :
+        DemoSolver(nVars, nPoints, nTimeSteps),
         m_wavenumber(1.0), m_V(1.0), m_D(0.05)
     {
         m_fileName = std::string("OneDFiniteDiffAdvDiffSolver");
@@ -272,13 +269,49 @@ private:
 }; // end class OneDFiniteDiffAdvDiffSolver
 
 ///////////////////////////////////////////////////////////////////////////////
+// Class that represents the 1D finite difference solver
+class OneDAdvSolver : public DemoSolver
+{
+public:
+    // constructor based upon the discretisation details
+    OneDAdvSolver(int nVars, int nPoints, int nTimeSteps) :
+        DemoSolver(nVars, nPoints, nTimeSteps),
+        m_Vx(2.0), m_k(2.0*M_PI)
+    {
+        m_x0 = -1.0;
+        m_dx = (m_xend - m_x0) / ((double)m_nPoints - 1.0);
+
+        m_fileName = std::string("OneDAdvSolver");
+        m_title = std::string("Finite Difference Solution to the 1D advection equation");
+    }
+
+    void EvaluateAdvectionTerm(
+        const Array<OneD, const Array<OneD, double>> &inarray,
+              Array<OneD,       Array<OneD, double>> &outarray,
+        const NekDouble time) const;
+
+    // -----------------------------------------------------------------
+    void EvaluateExactSolution(Array<OneD, Array<OneD, double>> &outarray,
+                               const NekDouble time) const;
+
+    // -----------------------------------------------------------------
+
+private:
+    // Value of the coefficients:
+    NekDouble m_Vx;    // advection speed
+    // double m_Vy;    // advection speed
+    NekDouble m_k;     // period
+
+}; // end class OneDAdvSolver
+
+///////////////////////////////////////////////////////////////////////////////
 // Class that represents the 1D sinusoid solver
 class OneDSinusoidSolver : public DemoSolver
 {
 public:
     // constructor based upon the discretisation details
-    OneDSinusoidSolver(int nVars, int nPoints, int nTimeSteps, bool test) :
-        DemoSolver(nVars, nPoints, nTimeSteps, test)
+    OneDSinusoidSolver(int nVars, int nPoints, int nTimeSteps) :
+        DemoSolver(nVars, nPoints, nTimeSteps)
     {
         m_fileName = std::string("OneDSinusoidSolver");
         m_title = std::string("Solution to the 1D Sinusoid equation");
@@ -299,10 +332,7 @@ public:
         m_z0 = Array<OneD, NekDouble>(m_nVars, 0.0);
 
         // Initialize a random seed using the time.
-	if( test )
-	  srand( 0 );
-	else
-	  srand( time(NULL) );
+        srand( time(NULL) );
 
         // Randomly generate the jacobian in a way that essentially
         // ensures diagonalizability with real eigenvalues and
@@ -406,18 +436,15 @@ class OneDFDESolver : public DemoSolver
 {
 public:
     // constructor based upon the discretisation details
-    OneDFDESolver(int nVars, int nPoints, int nTimeSteps, bool test) :
-        DemoSolver(nVars, nPoints, nTimeSteps, test)
+    OneDFDESolver(int nVars, int nPoints, int nTimeSteps) :
+        DemoSolver(nVars, nPoints, nTimeSteps)
     {
         m_fileName = std::string("OneDFDESolver");
         m_title = std::string("Solution to the 1D constant equation");
 
         m_alpha = 0.3;
 
-	if( test )
-	  srand( 0 );
-	else
-	  srand( time(NULL) );
+        srand( time(NULL) );
 
         // Initial values set to zero
         m_u0 = Array<OneD, Array<OneD, NekDouble>>(m_nVars);
@@ -465,7 +492,6 @@ int main(int argc, char *argv[])
 
     desc.add_options()
       ("help,h", "Produce this help message.")
-      ("test,t", "Run in regession test mode.")
       ("verbose,v", "Print the solution values for each time step.")
       ("L2,l", "Print the L2 error for each time step.")
       ("dof,d", po::value<int>(), "Number of degrees of freedom (points or values).")
@@ -474,11 +500,18 @@ int main(int argc, char *argv[])
       ("parameter,p", po::value<std::string>(), "Free parameters for the scheme.")
       ("method,m", po::value<int>(),
         "Number for the time-integration scheme:\n"
-        "- 1: 1st order Forward Euler\n"
-        "- 2: 1st order Backward Euler\n"
-        "- 3: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
-        "- 4: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
-        "- 5: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
+        "- 0: 1st order Forward Euler\n"
+        "- 1: 1st order multi-step IMEX scheme\n"
+        "     (Euler Backwards/Euler Forwards)\n"
+        "- 2: 2nd order multi-step IMEX scheme\n"
+        "- 3: 3rd order multi-step IMEX scheme\n"
+        "- 4: 4th order multi-step IMEX scheme\n"
+        "  \n"
+        "- 5: 2nd order multi-stage DIRK IMEX scheme\n"
+        "- 6: 3nd order multi-stage DIRK IMEX scheme\n"
+        "- 7: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
+        "- 8: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
+        "- 9: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
         "     (MCNAB)\n"
         "  \n"
         "- 10: Nth order multi-stage Runga-Kutta scheme\n"
@@ -489,7 +522,9 @@ int main(int argc, char *argv[])
         "- 14: Nth order multi-step Adams-Moulton scheme\n"
         "- 15: Nth order multi-step BDFImplicit scheme\n"
         "- 16: Nth order multi-step IMEX scheme\n"
-        "- 17: Nth order multi-stage IMEX DIRK scheme\n"
+        "      (Euler Backwards/Euler Forwards)\n"
+        "- 17: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
+        "- 18: Nth order multi-stage IMEX DIRK scheme\n"
         "  \n"
         "- 20: Nth order multi-step Lawson-Euler exponential scheme\n"
         "- 21: Nth order multi-step Norsett-Euler exponential scheme\n"
@@ -534,7 +569,6 @@ int main(int argc, char *argv[])
 
     bool L2      = vm.count("L2");
     bool verbose = vm.count("verbose");
-    bool test    = vm.count("test");
 
     int nDoF    = vm["dof"].as<int>();
     int nTimeSteps = vm["timesteps"].as<int>();
@@ -548,7 +582,7 @@ int main(int argc, char *argv[])
     }
 
     // IMEX DIRK methods also require free parameters.
-    if((vm["method"].as<int>() == 17) )
+    if((vm["method"].as<int>() == 18) )
     {
         std::string sParameter = vm["parameter"].as<std::string>();
 
@@ -557,20 +591,15 @@ int main(int argc, char *argv[])
         {
             size_t found = sParameter.find(" ");
 
-            if( found == 0 )
+            if( found == std::string::npos )
             {
-                sParameter = sParameter.substr( found+1 );
-            }
-            else if( found == std::string::npos )
-            {
-                if( sParameter.size() )
-                {
-                    freeParams.push_back( stoi( sParameter ) );
-                }
+                int fp = stoi( sParameter );
 
-                break;
+                freeParams.push_back(fp);
+
+                sParameter = "";
             }
-            else if( found != std::string::npos )
+            else if( found > 0 )
             {
                 int fp = stoi( sParameter.substr(0, found) );
 
@@ -603,19 +632,34 @@ int main(int argc, char *argv[])
 
     switch (nMethod)
     {
-        case 1:
+        case 0:
             tiScheme = factory.CreateInstance("ForwardEuler", "", 1, freeParams);
             break;
+        case 1:
+            tiScheme = factory.CreateInstance("IMEXOrder1", "", 1, freeParams);
+            break;
         case 2:
-            tiScheme = factory.CreateInstance("BackwardEuler", "", 1, freeParams);
+            tiScheme = factory.CreateInstance("IMEXOrder2", "", 2, freeParams);
             break;
         case 3:
-            tiScheme = factory.CreateInstance("IMEX", "Gear", 2, freeParams);
+            tiScheme = factory.CreateInstance("IMEXOrder3", "", 3, freeParams);
             break;
         case 4:
-            tiScheme = factory.CreateInstance("CNAB", "", 2, freeParams);
+            tiScheme = factory.CreateInstance("IMEXOrder4", "", 4, freeParams);
             break;
         case 5:
+            tiScheme = factory.CreateInstance("IMEXdirk_2_3_2", "", 2, freeParams);
+            break;
+        case 6:
+            tiScheme = factory.CreateInstance("IMEXdirk_3_4_3", "", 3, freeParams);
+            break;
+        case 7:
+            tiScheme = factory.CreateInstance("IMEX", "Gear", 2, freeParams);
+            break;
+        case 8:
+            tiScheme = factory.CreateInstance("CNAB", "", 2, freeParams);
+            break;
+        case 9:
             tiScheme = factory.CreateInstance("MCNAB", "", 2, freeParams);
             break;
         case 10:
@@ -640,6 +684,9 @@ int main(int argc, char *argv[])
             tiScheme = factory.CreateInstance("IMEX", "", nOrder, freeParams);
             break;
         case 17:
+            tiScheme = factory.CreateInstance("IMEX", "Gear", 2, freeParams);
+            break;
+        case 18:
             tiScheme = factory.CreateInstance("IMEX", "dirk", nOrder, freeParams);
             break;
 
@@ -674,12 +721,25 @@ int main(int argc, char *argv[])
     std::shared_ptr<DemoSolver> solverSharedPtr;
 
     if( tiScheme->GetIntegrationSchemeType() == eFractionalInTime )
+    // {
+    //     nVariables = nDoF;
+    //     nPoints    = nDoF;
+
+    //     OneDAdvSolver *tmpSolver =
+    //       new OneDAdvSolver(nVariables, nPoints, nTimeSteps);
+
+    //     ode.DefineOdeRhs(&OneDAdvSolver::EvaluateAdvectionTerm,
+    //                      tmpSolver);
+
+    //     solverSharedPtr = std::shared_ptr<DemoSolver> (tmpSolver);
+    // }
+    // else if( tiScheme->GetIntegrationSchemeType() == eFractionalInTime )
     {
         nVariables = nDoF;
         nPoints    = 1;
 
         OneDFDESolver *tmpSolver =
-          new OneDFDESolver(nVariables, nPoints, nTimeSteps, test);
+          new OneDFDESolver(nVariables, nPoints, nTimeSteps);
 
         ode.DefineOdeRhs(&OneDFDESolver::EvaluateFDETerm, tmpSolver);
 
@@ -691,7 +751,7 @@ int main(int argc, char *argv[])
         nPoints    = 1;
 
         OneDSinusoidSolver *tmpSolver =
-          new OneDSinusoidSolver(nVariables, nPoints, nTimeSteps, test);
+          new OneDSinusoidSolver(nVariables, nPoints, nTimeSteps);
 
         ode.DefineOdeRhs(&OneDSinusoidSolver::EvaluateSinusoidTerm, tmpSolver);
 
@@ -708,7 +768,7 @@ int main(int argc, char *argv[])
         nPoints    = nDoF;
 
         OneDFiniteDiffAdvDiffSolver *tmpSolver =
-          new OneDFiniteDiffAdvDiffSolver(nVariables, nPoints, nTimeSteps, test);
+          new OneDFiniteDiffAdvDiffSolver(nVariables, nPoints, nTimeSteps);
 
         // After this spatial discretisation, the PDE has actually
         // been reduced (through the method-of-lines) to an ODE. In
@@ -1400,6 +1460,66 @@ void OneDFiniteDiffAdvDiffSolver::EvaluateExactSolution(
             // outarray[k][i] = exp(-m_D * 2.0 * 2.0 * M_PI * M_PI * m_wavenumber *
             //                      m_wavenumber * time) *
             //   sin(2.0 * m_wavenumber * M_PI * (x - m_V * time));
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void OneDAdvSolver::EvaluateAdvectionTerm(
+    const Array<OneD, const Array<OneD, double>> &inarray,
+          Array<OneD,       Array<OneD, double>> &outarray,
+    const NekDouble time) const
+{
+    boost::ignore_unused(time);
+
+    for (int k = 0; k < m_nVars; k++)
+    {
+        // The advection term can be evaluated using central or upwind
+        // differences
+        if (true)
+        {
+            // Note: We are using a periodic boundary condition where
+            // the 1st point and last point are actually the same
+            // point.  This is why the 1st (and last) point in the
+            // output array (index 0 and m_nPoints-1 respectively) are
+            // NOT used for the central differences, and instead the
+            // 2nd point (index 1) and 2nd to last point are used.
+
+            // Central differences:
+            outarray[k][0] =
+              -m_Vx * (inarray[k][1] - inarray[k][m_nPoints - 2]) / (2.0 * m_dx);
+            outarray[k][m_nPoints - 1] = outarray[k][0];
+
+            for (int i = 1; i < m_nPoints - 1; i++)
+            {
+                outarray[k][i] =
+                  -m_Vx * (inarray[k][i + 1] - inarray[k][i - 1]) / (2.0 * m_dx);
+            }
+        }
+        else
+        {
+            // upwind differences
+            for (int i = 1; i < m_nPoints; i++)
+            {
+                outarray[k][i] =
+                  -m_Vx * (inarray[k][i] - inarray[k][i - 1]) / (m_dx);
+            }
+
+            outarray[k][0] = outarray[k][m_nPoints - 1];
+        }
+    }
+}
+
+void OneDAdvSolver::EvaluateExactSolution(
+    Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const
+{
+    for (int k = 0; k < m_nVars; k++)
+    {
+        for (int i = 0; i < m_nPoints; i++)
+        {
+            double x = m_x0 + i * m_dx;
+            outarray[k][i] = sin(m_k * (x - m_Vx * time));
+          // * cos(m_k * (y - m_Vy * time)); // Always 1
         }
     }
 }

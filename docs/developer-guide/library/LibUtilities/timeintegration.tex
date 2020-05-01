@@ -25,6 +25,7 @@ exponential schemes. More recently Fractional-in-time schemes have
 been added (found in the child class TimeIntegrationFIT). 
 
 \subsection{General Linear Methods}
+\label{subsectionGeneralLinearMethods}
 General linear methods (GLMs) can be considered as the generalization
 of a broad range of different numerical methods for ordinary
 differential equations.  They were introduced by Butcher and they
@@ -328,8 +329,8 @@ IMEX           & dirk & IMEX DIRK variant with free parameters (s, sigma),
 EulerExponential & Lawson  & Exponential Euler scheme using the
                              Lawson variant of order 1 \\
 
-                  & Norsett & Exponential Euler scheme using the
-                              Norsett variant of order 1-4
+                  & N{\o}rsett & Exponential Euler scheme using the
+                              N{\o}rsett variant of order 1-4
                               (Higher order not yet properly seeded) \\
 
 FractionalInTime  &         & Fractional-in-time scheme of order 1-4
@@ -712,18 +713,33 @@ for the unknown vector $\boldsymbol{y}$. This can be done in three steps:
  \boldsymbol{H}^{\mathcal{HD}}\boldsymbol{y}^{\mathcal{D}}$
 \end{itemize}
 
-\subsection{How to add a new time-stepping method}
+\subsection{How to add a new GLM time-stepping method}
 
 To add a new time integration scheme, follow the steps below:
 \begin{itemize}
-\item Choose a name for the method and add it to the
-\texttt{TimeIntegrationMethod} enum list.
-\item Populate the switch statement in the \texttt{TimeIntegrationScheme}
-constructor with the coefficients of the new method.
-\item Use ( or modify) the function \texttt{InitializeScheme} to select (or
-implement) a proper initialisation strategy for the method.
-\item Add documentation for the method (especially indicating what the auxiliary
- parameters of the input and output vectors of the multi-step method represent)
+\item Choose a name for the method, and create a header starting with
+  the method name followed by \texttt{TimeIntegrationScheme.h}.  Add the
+  header file to the \texttt{SchemeInitializor.cpp} and register the
+  method name with the factory, via REGISTER.
+\item Add the header file of the \texttt{CmakeLists.txt} in the parent
+  directory.
+\item In the header file create a new class starting with the method
+  name followed by \texttt{TimeIntegrationScheme}. The class must be
+  able to handle any variants, orders, and free parameters. A simple
+  example is in \texttt{EulerTimeIntegrationSchemes.h} which has two
+  variants, Forward and Backward. In general the class must have the
+  following methods:
+\begin{itemize}
+  \item Constructor - creates the number of phases required and set
+    the scheme data via a call to \texttt{SetupSchemeData}.
+  \item \texttt{GetName} - returns the method name.
+  \item \texttt{GetTimeStability} - returns time stability.
+  \item \texttt{SetupSchemeData} - sets up the Butcher tableau.
+\end{itemize}
+
+\item Add documentation for the method (especially indicating what the
+  auxiliary parameters of the input and output vectors of the
+  multi-step method represent)
 \end{itemize}
 
 \subsection{Examples of already implemented time stepping schemes}
@@ -773,7 +789,7 @@ A & U \\
 \end{array}\right]
 \end{align*}
 
-\subsubsection{2$^{nd}$ order Adams-Bashforth}
+\subsubsection{2$^{nd}$ order Adams-Bashforth compact form}
 \begin{align*}
 \left[\begin{array}{c|c}
 A & U \\
@@ -793,9 +809,43 @@ B & V
 \end{array}\right]=
 \left[\begin{array}{c}
 \boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)\\
-\Delta t \boldsymbol{l}(t^{n-1},\boldsymbol{y}^{n-1})
+\Delta t \boldsymbol{l}\left(t^{n-1},\boldsymbol{y}^{n-1}\right)
 \end{array}\right]
 \end{align*}
+
+\subsubsection{2$^{nd}$ order Adams-Bashforth classic form}
+\begin{align*}
+\left[\begin{array}{c|c}
+A & U \\
+\hline
+B & V
+\end{array}\right] =
+\left[\begin{array}{c|ccc}
+0 & 1 & \frac{3}{2} & \frac{-1}{2} \\
+\hline
+0 & 1 & \frac{3}{2} & \frac{-1}{2} \\
+1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 \\
+\end{array}\right],\qquad
+\boldsymbol{y}^{[n]}=
+\left[\begin{array}{c}
+\boldsymbol{y}^{[n]}_0\\
+\boldsymbol{y}^{[n]}_1\\
+\boldsymbol{y}^{[n]}_2
+\end{array}\right]=
+\left[\begin{array}{c}
+\boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right) \\
+\Delta t \boldsymbol{l}\left(t^n,\boldsymbol{y}^{n}\right)\\
+\Delta t \boldsymbol{l}\left(t^{n-1},\boldsymbol{y}^{n-1}\right)
+\end{array}\right]
+\end{align*}
+
+\begin{notebox}
+Adams-Bashforth and other explicit methods can be writen using a
+compact Bucther Tableau that reduces the number of steps. Throughout
+{\nek} this compact form is utilized. This classic form is shown for
+educational purposes only.
+\end{notebox}
 
 \subsubsection{1$^{st}$ order IMEX Euler-Backward/ Euler-Forward}
 \begin{align*}
@@ -1071,4 +1121,49 @@ with
   \end{array}\right]
 \end{align*}
 
+\subsubsection{1$^{st}$ order Lawson Euler Exponential}
+\begin{align*}
+\left[\begin{array}{c|c}
+A & U \\
+\hline
+B & V
+\end{array}\right] =
+\left[\begin{array}{c|c}
+0 & 1 \\
+\hline
+\varphi_0(z) & \varphi_0(z)
+\end{array}\right],\qquad
+\boldsymbol{y}^{[n]}=
+\left[\begin{array}{c}
+\boldsymbol{y}^{[n]}_0
+\end{array}\right]=
+\left[\begin{array}{c}
+\boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)
+\end{array}\right]
+\end{align*}
 
+\subsubsection{1$^{st}$ order N{\o}rsett Euler Exponential}
+\begin{align*}
+\left[\begin{array}{c|c}
+A & U \\
+\hline
+B & V
+\end{array}\right] =
+\left[\begin{array}{c|c}
+0 & 1 \\
+\hline
+\varphi_1(z) & \varphi_0(z)
+\end{array}\right],\qquad
+\boldsymbol{y}^{[n]}=
+\left[\begin{array}{c}
+\boldsymbol{y}^{[n]}_0
+\end{array}\right]=
+\left[\begin{array}{c}
+\boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)
+\end{array}\right]
+\end{align*}
+
+\begin{notebox}
+The phi functions, $\varphi_0(z)$ and $\varphi_1(z)$ are defined as
+part of the discussion of GLM in Section \ref{subsectionGeneralLinearMethods}.
+\end{notebox}

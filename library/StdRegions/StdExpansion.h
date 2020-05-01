@@ -1587,7 +1587,7 @@ namespace Nektar
             {
                 NekDouble numer = 0.0, denom = 0.0;
 
-                ASSERTL2(DIR < m_base.num_elements(),
+                ASSERTL2(DIR < m_base.size(),
                          "Direction should be less than shape dimension.");
 
                 const Array<OneD, const NekDouble> &z = m_base[DIR]->GetZ();

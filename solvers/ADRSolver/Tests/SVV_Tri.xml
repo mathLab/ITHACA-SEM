@@ -546,16 +546,16 @@
     <CONDITIONS>
         <PARAMETERS>
             <P> FinTime         = 1.0                       </P>
-            <P> TimeStep        = 0.001                    </P>
+            <P> TimeStep        = 0.01                    </P>
             <P> NumSteps        = FinTime/TimeStep          </P>
             <P> IO_CheckSteps   = 100                        </P>
             <P> IO_InfoSteps    = 100                        </P>
-            <P> epsilon         = 1e-10                   </P>
+            <P> epsilon         = 1e-5                   </P>
             <P> wavefreq        = PI                        </P>
             <P> a               = 0.01                      </P>
             <P> x0              = 0.65                      </P>
             <P> y0              = 0.70                      </P>
-            <P> SVVCutoffRatio  = 0.001                      </P>
+            <P> SVVCutoffRatio  = 0.5                      </P>
             <P> SVVDiffCoeff    = 1.0                       </P>
         </PARAMETERS>
         
@@ -599,12 +599,12 @@
         </SOLVERINFO>
         
         <FUNCTION NAME="InitialConditions">
-            <E VAR="u" VALUE="sin(wavefreq*x)*sin(wavefreq*y)+3*exp(-((x-x0)*(x-x0)+(y-y0)*(y-y0))/(a*a))" />
-            <!--E VAR="u" VALUE="sin(wavefreq*x)*sin(wavefreq*y)" /-->
+          <!--E VAR="u" VALUE="sin(wavefreq*x)*sin(wavefreq*y)+3*exp(-((x-x0)*(x-x0)+(y-y0)*(y-y0))/(a*a))" /!-->
+            <E VAR="u" VALUE="sin(wavefreq*x)*sin(wavefreq*y)" />
         </FUNCTION>
         <FUNCTION NAME="ExactSolution">
             <E VAR="u"
-            VALUE="exp(-epsilon*FinTime)*sin(wavefreq*x)*sin(wavefreq*y)" />
+            VALUE="exp(-epsilon*2*wavefreq*wavefreq*FinTime)*sin(wavefreq*x)*sin(wavefreq*y)" />
         </FUNCTION>
         
     </CONDITIONS>

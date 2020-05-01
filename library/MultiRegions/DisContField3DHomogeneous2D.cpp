@@ -133,9 +133,6 @@ namespace Nektar
             // Setup Default optimisation information.
             nel = GetExpSize();
 
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
             SetCoeffPhys();
 
             SetupBoundaryConditions(HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,bcs);
@@ -162,7 +159,6 @@ namespace Nektar
 			const SpatialDomains::BoundaryRegionCollection  &bregions = bcs.GetBoundaryRegions();
 
 			int nbnd = bregions.size();
-
 
 			m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(nbnd);
 			m_bndCondBndWeight  = Array<OneD, NekDouble> {nbnd, 0.0};
@@ -219,7 +215,6 @@ namespace Nektar
         void DisContField3DHomogeneous2D::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const MultiRegions::VarFactorsMap &varfactors,
@@ -262,7 +257,7 @@ namespace Nektar
                     wfce = (PhysSpaceForcing)? fce+cnt:fce+cnt1;
                     m_lines[n]->HelmSolve(wfce,
                                           e_out = outarray + cnt1,
-                                          flags, new_factors,
+                                          new_factors,
                                           varcoeff, varfactors,dirForcing,
                                           PhysSpaceForcing);
 

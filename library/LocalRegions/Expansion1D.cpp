@@ -43,21 +43,6 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-        void Expansion1D::v_NegateVertexNormal(const int vertex)
-        {
-            m_negatedNormals[vertex] = true;
-            for (int i = 0; i < GetCoordim(); ++i)
-            {
-                Vmath::Neg(m_vertexNormals[vertex][i].size(),
-                           m_vertexNormals[vertex][i], 1);
-            }
-        }
-
-        bool Expansion1D::v_VertexNormalNegated(const int vertex)
-        {
-            return m_negatedNormals[vertex];
-        }
-
         DNekMatSharedPtr Expansion1D::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
@@ -402,20 +387,22 @@ namespace Nektar
 
         /**
          * Given an edge and vector of element coefficients:
-         * - maps those elemental coefficients corresponding to the edge into
-         *   an edge-vector.
-         * - resets the element coefficients
+         * - maps those elemental coefficients corresponding to the trace into
+         *   an vector.
+         * - update the element coefficients
          * - multiplies the edge vector by the edge mass matrix
          * - maps the edge coefficients back onto the elemental coefficients
          */
-        void Expansion1D::v_AddRobinEdgeContribution(const int vert, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD, NekDouble> &coeffs)
+        void Expansion1D::v_AddRobinEdgeContribution(const int vert,
+                                         const Array<OneD, const NekDouble > &primCoeffs,
+                                         const Array<OneD, NekDouble> &incoeffs,
+                                         Array<OneD, NekDouble> &coeffs)
         {
             ASSERTL1(IsBoundaryInteriorExpansion(),
                      "Not set up for non boundary-interior expansions");
 
             int map = GetVertexMap(vert);
-            Vmath::Zero(GetNcoeffs(), coeffs, 1);
-            coeffs[map] = primCoeffs[0];
+            coeffs[map] += primCoeffs[0]*incoeffs[map];
         }
 
         NekDouble Expansion1D::v_VectorFlux(

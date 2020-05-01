@@ -102,156 +102,140 @@ namespace Nektar
          *
          */
         void GlobalLinSysStaticCond::v_Solve(
-            const Array<OneD, const NekDouble> &in,
-                  Array<OneD,       NekDouble> &out,
+            const Array<OneD, const NekDouble> &pLocInput,
+                  Array<OneD,       NekDouble> &pLocOutput,
             const AssemblyMapSharedPtr         &pLocToGloMap,
             const Array<OneD, const NekDouble> &dirForcing)
         {
-            bool dirForcCalculated = (bool) dirForcing.size();
+            boost::ignore_unused(dirForcing);
+            ASSERTL1( dirForcing.size() == 0,
+                      "GlobalLinSysStaticCond: Not setup for dirForcing");
+
             bool atLastLevel       = pLocToGloMap->AtLastLevel();
             int  scLevel           = pLocToGloMap->GetStaticCondLevel();
+            
+            int nGlobDofs    = pLocToGloMap->GetNumGlobalCoeffs();
+            int nLocBndDofs  = pLocToGloMap->GetNumLocalBndCoeffs();
+            int nGlobBndDofs = pLocToGloMap->GetNumGlobalBndCoeffs();
+            int nDirBndDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
+            int nIntDofs     = nGlobDofs - nGlobBndDofs;
 
-            int nGlobDofs          = pLocToGloMap->GetNumGlobalCoeffs();
-            int nGlobBndDofs       = pLocToGloMap->GetNumGlobalBndCoeffs();
-            int nDirBndDofs        = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-            int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
-            int nLocBndDofs        = pLocToGloMap->GetNumLocalBndCoeffs();
-            int nIntDofs           = pLocToGloMap->GetNumGlobalCoeffs()
-                - nGlobBndDofs;
+            if((nGlobDofs-nDirBndDofs) == 0)
+            {
+                return; //nothing to solve; 
+            }
 
-            Array<OneD, NekDouble> F = m_wsp + 2*nLocBndDofs + nGlobHomBndDofs;
+            Array<OneD, NekDouble> F_bnd, F_bnd1, F_int, V_bnd; 
             Array<OneD, NekDouble> tmp;
-            if(nDirBndDofs && dirForcCalculated)
+
+            F_bnd  = m_wsp;
+            F_bnd1 = m_wsp + nLocBndDofs;
+            V_bnd  = m_wsp + 2*nLocBndDofs;
+            F_int  = m_wsp + 3*nLocBndDofs; 
+
+            pLocToGloMap->LocalToLocalBnd(pLocOutput,V_bnd);
+
+            NekVector<NekDouble> F_Int(nIntDofs, F_int,eWrapper);
+            NekVector<NekDouble> V_Bnd(nLocBndDofs,V_bnd,eWrapper);
+
+            if(nIntDofs)
             {
-                Vmath::Vsub(nGlobDofs,in.get(),1,dirForcing.get(),1,F.get(),1);
+                m_locToGloMap.lock()->LocalToLocalInt(pLocInput,F_int);
             }
-            else
+
+            // Boundary system solution
+            if(nGlobBndDofs-nDirBndDofs)
             {
-                Vmath::Vcopy(nGlobDofs,in.get(),1,F.get(),1);
-            }
+                pLocToGloMap->LocalToLocalBnd(pLocInput,F_bnd);
 
-            NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,tmp=F+nDirBndDofs,
-                                          eWrapper);
-            NekVector<NekDouble> F_GlobBnd(nGlobBndDofs,F,eWrapper);
-            NekVector<NekDouble> F_Int(nIntDofs,tmp=F+nGlobBndDofs,eWrapper);
 
-            NekVector<NekDouble> V_GlobBnd(nGlobBndDofs,out,eWrapper);
-            NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,
-                                              tmp=out+nDirBndDofs,
-                                              eWrapper);
-            NekVector<NekDouble> V_Int(nIntDofs,tmp=out+nGlobBndDofs,eWrapper);
-            NekVector<NekDouble> V_LocBnd(nLocBndDofs,m_wsp,eWrapper);
+                // set up normalisation factor for right hand side on first SC level
+                v_PreSolve(scLevel, F_bnd);
 
-            NekVector<NekDouble> V_GlobHomBndTmp(
-                nGlobHomBndDofs,tmp = m_wsp + 2*nLocBndDofs,eWrapper);
-
-            // set up normalisation factor for right hand side on first SC level
-            DNekScalBlkMatSharedPtr sc = v_PreSolve(scLevel, F_GlobBnd);
-
-            if(nGlobHomBndDofs)
-            {
+                // Gather boundary expansison into locbnd 
+                NekVector<NekDouble> F_Bnd(nLocBndDofs,F_bnd1,eWrapper);
+                
                 // construct boundary forcing
-                if( nIntDofs  && ((!dirForcCalculated) && (atLastLevel)) )
+                if(nIntDofs)
                 {
                     DNekScalBlkMat &BinvD      = *m_BinvD;
-                    DNekScalBlkMat &SchurCompl = *sc;
+                    
+                    F_Bnd = BinvD*F_Int; 
 
-                    // include dirichlet boundary forcing
-                    pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
-                    V_LocBnd = BinvD*F_Int + SchurCompl*V_LocBnd;
-                }
-                else if((!dirForcCalculated) && (atLastLevel))
-                {
-                    // include dirichlet boundary forcing
-                    DNekScalBlkMat &SchurCompl = *sc;
-                    pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
-                    V_LocBnd = SchurCompl*V_LocBnd;
-                }
-                else
-                {
-                    DNekScalBlkMat &BinvD      = *m_BinvD;
-                    DiagonalBlockFullScalMatrixMultiply( V_LocBnd, BinvD, F_Int);
-                }
+                    Vmath::Vsub(nLocBndDofs, F_bnd,1, F_bnd1,1, F_bnd,1);
+               }
 
-                pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndTmp,
-                                          nDirBndDofs);
-                Subtract(F_HomBnd, F_HomBnd, V_GlobHomBndTmp);
-
-                // Transform from original basis to low energy
-                v_BasisFwdTransform(F, nDirBndDofs);
-
-                // For parallel multi-level static condensation some
-                // processors may have different levels to others. This
-                // routine receives contributions to partition vertices from
-                // those lower levels, whilst not sending anything to the
-                // other partitions, and includes them in the modified right
-                // hand side vector.
-                int lcLevel = pLocToGloMap->GetLowestStaticCondLevel();
-                if(atLastLevel && scLevel < lcLevel)
-                {
-                    // If this level is not the lowest level across all
-                    // processes, we must do dummy communication for the
-                    // remaining levels
-                    Array<OneD, NekDouble> tmp(nGlobBndDofs);
-                    for (int i = scLevel; i < lcLevel; ++i)
-                    {
-                        Vmath::Fill(nGlobBndDofs, 0.0, tmp, 1);
-                        pLocToGloMap->UniversalAssembleBnd(tmp);
-                        Vmath::Vcopy(nGlobHomBndDofs,
-                                     tmp.get()+nDirBndDofs,          1,
-                                     V_GlobHomBndTmp.GetPtr().get(), 1);
-                        Subtract( F_HomBnd, F_HomBnd, V_GlobHomBndTmp);
-                    }
-                }
-
-                // solve boundary system
                 if(atLastLevel)
                 {
-                    Array<OneD, NekDouble> pert(nGlobBndDofs,0.0);
+                    // Transform to new basis if required 
+                    v_BasisFwdTransform(F_bnd);
 
+                    DNekScalBlkMat &SchurCompl = *m_schurCompl;
+
+                    v_CoeffsFwdTransform(V_bnd,V_bnd);
+                        
+                    // subtract dirichlet boundary forcing
+                    F_Bnd = SchurCompl*V_Bnd;
+
+                    Vmath::Vsub(nLocBndDofs, F_bnd,1, F_bnd1, 1, F_bnd,1);
+
+                    Array<OneD, NekDouble> F_hom, pert(nGlobBndDofs,0.0);
+                    
+                    pLocToGloMap->AssembleBnd(F_bnd, F_bnd1);
+                    
                     // Solve for difference from initial solution given inout;
-                    SolveLinearSystem(
-                        nGlobBndDofs, F, pert, pLocToGloMap, nDirBndDofs);
+                    SolveLinearSystem(nGlobBndDofs, F_bnd1, pert, pLocToGloMap,
+                                      nDirBndDofs);
+                    
+                    Array<OneD, NekDouble> outloc = F_bnd; 
+                    pLocToGloMap->GlobalToLocalBnd(pert,outloc);
+                    
+                    // Add back initial conditions onto difference
+                    Vmath::Vadd(nLocBndDofs, V_bnd, 1, outloc, 1, V_bnd,1);
 
                     // Transform back to original basis
-                    v_BasisBwdTransform(pert);
+                    v_CoeffsBwdTransform(V_bnd);
 
-                    // Add back initial conditions onto difference
-                    Vmath::Vadd(nGlobHomBndDofs,&out[nDirBndDofs],1,
-                                &pert[nDirBndDofs],1,&out[nDirBndDofs],1);
+                    // put final bnd solution back in output array
+                    m_locToGloMap.lock()->LocalBndToLocal(V_bnd,pLocOutput);
                 }
-                else
+                else // Process next level of recursion for multi level SC
                 {
-                    m_recursiveSchurCompl->Solve(F,
-                                V_GlobBnd.GetPtr(),
-                                pLocToGloMap->GetNextLevelLocalToGlobalMap());
+                    AssemblyMapSharedPtr nextLevLocToGloMap = pLocToGloMap->
+                        GetNextLevelLocalToGlobalMap();
+                    
+                    // partially assemble F for next level and
+                    // reshuffle V_bnd
+                    nextLevLocToGloMap->PatchAssemble     (F_bnd,F_bnd);
+                    nextLevLocToGloMap->PatchLocalToGlobal(V_bnd,V_bnd);
+                    
+                    m_recursiveSchurCompl->Solve(F_bnd,V_bnd, nextLevLocToGloMap);
+                    
+                    // unpack V_bnd
+                    nextLevLocToGloMap->PatchGlobalToLocal(V_bnd,V_bnd);
+                    
+                    // place V_bnd in output array
+                    m_locToGloMap.lock()->LocalBndToLocal(V_bnd, pLocOutput);
                 }
             }
 
             // solve interior system
             if(nIntDofs)
             {
+                Array<OneD, NekDouble> V_int(nIntDofs);
+                NekVector<NekDouble>   V_Int(nIntDofs, V_int ,eWrapper);
+
+                // get array of local solutions
                 DNekScalBlkMat &invD  = *m_invD;
-
-                if(nGlobHomBndDofs || nDirBndDofs)
-                {
-                    DNekScalBlkMat &C     = *m_C;
-
-                    if(dirForcCalculated && nDirBndDofs)
-                    {
-                        pLocToGloMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd,
-                                                      nDirBndDofs);
-                    }
-                    else
-                    {
-                        pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
-                    }
-                    F_Int = F_Int - C*V_LocBnd;
-                }
-                Multiply( V_Int, invD, F_Int);
+                DNekScalBlkMat &C     = *m_C;
+                    
+                F_Int = F_Int - C*V_Bnd;
+                
+                Multiply(V_Int, invD, F_Int);
+                
+                m_locToGloMap.lock()->LocalIntToLocal(V_int, pLocOutput);
             }
         }
-
 
         /**
          * If at the last level of recursion (or the only level in the case of
@@ -264,12 +248,10 @@ namespace Nektar
                 const std::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
             int nLocalBnd = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
-            int nGlobal = m_locToGloMap.lock()->GetNumGlobalCoeffs();
-            int nGlobBndDofs       = pLocToGloMap->GetNumGlobalBndCoeffs();
-            int nDirBndDofs        = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-            int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
+            int nIntDofs = m_locToGloMap.lock()->
+                GetNumLocalCoeffs() - nLocalBnd; 
             m_wsp = Array<OneD, NekDouble>
-                    (2*nLocalBnd + nGlobal + nGlobHomBndDofs, 0.0);
+                    (3*nLocalBnd+nIntDofs, 0.0);
 
             if (pLocToGloMap->AtLastLevel())
             {

@@ -167,7 +167,7 @@ void UnsteadyReactionDiffusion::DoImplicitSolve(
 
         // Solve a system of equations with Helmholtz solver
         m_fields[i]->HelmSolve(
-            outarray[i], m_fields[i]->UpdateCoeffs(), NullFlagList, factors);
+            outarray[i], m_fields[i]->UpdateCoeffs(), factors);
         m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), outarray[i]);
         m_fields[i]->SetPhysState(false);
     }

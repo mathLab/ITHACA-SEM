@@ -151,8 +151,6 @@ namespace Nektar
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals();
 
-            virtual void v_ReadGlobalOptimizationParameters();
-
             virtual void v_WriteVtkPieceHeader(
                         std::ostream &outfile, int expansion, int istrip);
 

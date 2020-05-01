@@ -121,7 +121,7 @@ namespace Nektar
                 Expansion3DSharedPtr            &f);
 
             inline SpatialDomains::Geometry2DSharedPtr GetGeom2D() const;
-            
+
             LOCAL_REGIONS_EXPORT void ReOrientEdgePhysMap(
                 const int                        nvert,
                 const StdRegions::Orientation    orient,
@@ -129,10 +129,9 @@ namespace Nektar
                 Array<OneD, int>                &idmap);
 
         protected:
-            std::vector<Expansion1DWeakPtr>           m_edgeExp;
+            std::vector<Expansion1DWeakPtr>         m_edgeExp;
             std::vector<bool>                       m_requireNeg;
             std::map<int, StdRegions::NormalVector> m_edgeNormals;
-            std::map<int, bool>                     m_negatedNormals;
             Expansion3DWeakPtr                      m_elementLeft;
             Expansion3DWeakPtr                      m_elementRight;
             int                                     m_elementFaceLeft;
@@ -183,6 +182,7 @@ namespace Nektar
             virtual void v_AddRobinEdgeContribution(
                 const int edgeid,
                 const Array<OneD, const NekDouble> &primCoeffs,
+                const Array<OneD, NekDouble> &incoeffs,
                 Array<OneD, NekDouble> &coeffs);
 
             virtual DNekMatSharedPtr v_BuildVertexMatrix(
@@ -208,8 +208,6 @@ namespace Nektar
 
             Array<OneD, unsigned int> v_GetEdgeInverseBoundaryMap(int eid);
 
-            virtual void v_NegateEdgeNormal (const int edge);
-            virtual bool v_EdgeNormalNegated(const int edge);
             virtual void v_SetUpPhysNormals (const int edge);
             const StdRegions::NormalVector &v_GetEdgeNormal(
                 const int edge) const;

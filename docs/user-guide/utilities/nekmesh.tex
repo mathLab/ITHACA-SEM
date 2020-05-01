@@ -686,6 +686,35 @@ but the basic usage is:
 where type can be \texttt{hyperelastic}, \texttt{linearelastic},
 \texttt{winslow} or \texttt{roca}.
 
+\subsection{\emph{r}-adaptation}
+
+This module can deform an existing mesh by using the variational optimiser
+presented above. A file must be provided that contains a list of points
+and a scaling value for each of them. This scaling factor is then used to
+target an element size based on the initial size of the element. Scaling
+values are interpolated throughout the domain based on the interpolation
+method of the main library. The file should look like
+\begin{lstlisting}
+0 0 0 2.0
+0 1 0 2.0
+1 0 0 0.5
+1 1 0 0.5
+\end{lstlisting}
+where the first three columns are \texttt{x}, \texttt{y}, \texttt{z} and
+the last column is the scaling factor.
+
+The call is identical to the variational optimisation module above:
+\begin{lstlisting}[style=BashInputStyle]
+  NekMesh -m varopti:type:scalingfile=file.txt:subiter=x inital.xml adapted.xml
+\end{lstlisting}
+where \texttt{subiter} is an additional parameter to the variational
+optimiser that defines the frequency at which individual elements
+update their target scaling based on their latest location in the domain.
+\texttt{subiter} should be a scalar and is the number of steps between updates.
+It is often recommended to run \emph{r}-adaptation on a linear mesh for
+stability and performance reasons. Note also that the mesh must have
+CAD information in order for nodes to slide on curves and surfaces.
+
 \subsection{Mesh projection}
 This module can take any linear mesh, providing that it is a close
 representation of the CAD and project the boundary of the mesh onto the CAD.

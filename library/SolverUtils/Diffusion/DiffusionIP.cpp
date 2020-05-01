@@ -92,8 +92,8 @@ namespace Nektar
             const MultiRegions::AssemblyMapDGSharedPtr TraceMap=pFields[0]->
                     GetTraceMap();
             pFields[0]->PeriodicBwdCopy(lengthFwd, lengthBwd);
-            TraceMap->UniversalTraceAssemble(lengthFwd);
-            TraceMap->UniversalTraceAssemble(lengthBwd);
+            TraceMap->GetAssemblyCommDG()->PerformExchange(lengthFwd, 
+                                                            lengthBwd);
 
             Vmath::Vadd(nTracePts, lengthBwd, 1, lengthFwd, 1, lengthFwd, 1);
             m_traceNormDirctnElmtLength = lengthFwd;
@@ -754,8 +754,9 @@ namespace Nektar
                     Vmath::Svtvp(nTracePts, 0.5, Fwd, 1,
                                 numDerivFwd[nd][i], 1,
                                 numDerivFwd[nd][i], 1);
-                    TraceMap->UniversalTraceAssemble(numDerivBwd[nd][i]);
-                    TraceMap->UniversalTraceAssemble(numDerivFwd[nd][i]);
+                    TraceMap->GetAssemblyCommDG()->PerformExchange(
+                                        numDerivFwd[nd][i], 
+                                        numDerivBwd[nd][i]);
                     Vmath::Vadd(nTracePts, numDerivFwd[nd][i], 1,
                                 numDerivBwd[nd][i], 1, numDerivFwd[nd][i], 1);
                 }

@@ -556,7 +556,7 @@ namespace Nektar
 
         m_localToGlobalMap    = Array<OneD, int>(m_numLocalCoeffs,-1);
         m_localToGlobalBndMap = Array<OneD, int>(m_numLocalBndCoeffs,-1);
-        m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD, int>(nLocBndCondDofs,-1);
+        m_bndCondIDToGlobalTraceID = Array<OneD, int>(nLocBndCondDofs,-1);
 
 
         // Set default sign array.
@@ -565,7 +565,7 @@ namespace Nektar
 
         m_staticCondLevel = staticCondLevel;
         m_numPatches = nel;
-
+        
         m_numLocalBndCoeffsPerPatch = Array<OneD, unsigned int>(nel);
         m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(nel);
 
@@ -573,6 +573,32 @@ namespace Nektar
         {
             m_numLocalBndCoeffsPerPatch[i] = (unsigned int) nz_loc*(nvel*locExpVector[i]->NumBndryCoeffs() + 1);
             m_numLocalIntCoeffsPerPatch[i] = (unsigned int) nz_loc*(pressure->GetExp(i)->GetNcoeffs()-1);
+        }
+
+        // Set up local to local bnd and local int maps
+        m_localToLocalBndMap    = Array<OneD, int>(m_numLocalBndCoeffs,-1);
+        m_localToLocalIntMap    = Array<OneD, int>(m_numLocalCoeffs-
+                                                   m_numLocalBndCoeffs,-1);
+
+        int bndcnt = 0;
+        int intcnt = 0;
+        cnt = 0; 
+        for(i = 0; i < nel; ++i)
+        {
+            for(j = 0; j < nz_loc*(nvel*locExpVector[i]->NumBndryCoeffs()); ++j)
+            {
+                m_localToLocalBndMap[bndcnt++]  = cnt++;
+            }
+
+            for(n = 0; n < nz_loc; ++n)
+            {
+                m_localToLocalBndMap[bndcnt++]  = cnt++;
+                for(j = 1; j < pressure->GetExp(i)->GetNcoeffs(); ++j)
+                {
+                    m_localToLocalIntMap[intcnt++]  = cnt++;
+                }
+            }
+
         }
 
         /**
@@ -597,10 +623,9 @@ namespace Nektar
 
             velnbndry = locExpansion->NumBndryCoeffs();
 
-            // require an inverse ordering of the bmap system to store
-            // local numbering system which takes matrix these
-            // matrices. Therefore get hold of elemental bmap and set
-            // up an inverse map
+            // Require an inverse ordering of the bmap system to store
+            // local numbering system. Therefore get hold of elemental
+            // bmap and set up an inverse map
             map<int,int> inv_bmap;
             locExpansion->GetBoundaryMap(bmap);
             for(j = 0; j < bmap.size(); ++j)
@@ -612,11 +637,11 @@ namespace Nektar
             for(j = 0; j < locExpansion->GetNedges(); ++j)
             {
                 nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j)-2;
-                edgeOrient   = (locExpansion->as<LocalRegions::Expansion2D>()
+                edgeOrient = (locExpansion->as<LocalRegions::Expansion2D>()
                                             ->GetGeom2D())->GetEorient(j);
-                meshEdgeId   = (locExpansion->as<LocalRegions::Expansion2D>()
+                meshEdgeId = (locExpansion->as<LocalRegions::Expansion2D>()
                                             ->GetGeom2D())->GetEid(j);
-                meshVertId   = (locExpansion->as<LocalRegions::Expansion2D>()
+                meshVertId = (locExpansion->as<LocalRegions::Expansion2D>()
                                             ->GetGeom2D())->GetVid(j);
 
                 auto pIt = periodicEdges.find(meshEdgeId);
@@ -632,16 +657,24 @@ namespace Nektar
                     edgeOrient = idOrient.second;
                 }
 
-                locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
-                // Set the global DOF for vertex j of element i
+                locExpansion->GetEdgeInteriorMap(j,edgeOrient,
+                                          edgeInteriorMap,edgeInteriorSign);
 
+                // Set the global DOF for vertex j of element i
                 for(nv = 0; nv < nvel*nz_loc; ++nv)
                 {
-                    m_localToGlobalMap[cnt+nv*velnbndry+inv_bmap[locExpansion->GetVertexMap(j)]] = graphVertOffset[ReorderedGraphVertId[0][meshVertId]*nvel*nz_loc+ nv];
+                    m_localToGlobalMap[cnt+nv*velnbndry+
+                               inv_bmap[locExpansion->GetVertexMap(j)]]
+                        = graphVertOffset[ReorderedGraphVertId[0]
+                                          [meshVertId]*nvel*nz_loc+ nv];
+                    
                     // Set the global DOF's for the interior modes of edge j
                     for(k = 0; k < nEdgeInteriorCoeffs; ++k)
                     {
-                        m_localToGlobalMap[cnt+nv*velnbndry+inv_bmap[edgeInteriorMap[k]]] =  graphVertOffset[ReorderedGraphVertId[1][meshEdgeId]*nvel*nz_loc+nv]+k;
+                        m_localToGlobalMap[cnt+nv*velnbndry+
+                                        inv_bmap[edgeInteriorMap[k]]] =
+                          graphVertOffset[ReorderedGraphVertId[1]
+                                          [meshEdgeId]*nvel*nz_loc+nv]+k;
                     }
                 }
 
@@ -652,19 +685,26 @@ namespace Nektar
                     {
                         for(k = 0; k < nEdgeInteriorCoeffs; ++k)
                         {
-                            m_localToGlobalSign[cnt+nv*velnbndry + inv_bmap[edgeInteriorMap[k]]] = (NekDouble) edgeInteriorSign[k];
+                            m_localToGlobalSign[cnt+nv*velnbndry +
+                                                inv_bmap[edgeInteriorMap[k]]]
+                                = (NekDouble) edgeInteriorSign[k];
                         }
                     }
                 }
             }
 
-            // use difference between two edges of the AddMeanPressureEdgeId to det nEdgeInteriorCoeffs.
+            // use difference between two edges of the
+            // AddMeanPressureEdgeId to det nEdgeInteriorCoeffs.
             nEdgeInteriorCoeffs = graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]])*nvel*nz_loc+1] - graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]])*nvel*nz_loc];
 
             int psize = pressure->GetExp(i)->GetNcoeffs();
             for(n = 0; n < nz_loc; ++n)
             {
-                m_localToGlobalMap[cnt + nz_loc*nvel*velnbndry + n*psize] = graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]]+1)*nvel*nz_loc-1]+nEdgeInteriorCoeffs + pressureEdgeOffset[AddMeanPressureToEdgeId[i]];
+                m_localToGlobalMap[cnt + nz_loc*nvel*velnbndry + n*psize] =
+                    graphVertOffset[(ReorderedGraphVertId[1]
+                             [AddMeanPressureToEdgeId[i]]+1)*nvel*nz_loc-1]+
+                    nEdgeInteriorCoeffs +
+                    pressureEdgeOffset[AddMeanPressureToEdgeId[i]];
 
                 pressureEdgeOffset[AddMeanPressureToEdgeId[i]] += 1;
             }
@@ -678,7 +718,8 @@ namespace Nektar
         {
             for(i = 0; i < bndCondExp.size(); i++)
             {
-                if (bndConditionsVec[nv][i]->GetBoundaryConditionType()==SpatialDomains::ePeriodic)
+                if (bndConditionsVec[nv][i]->GetBoundaryConditionType()==
+                    SpatialDomains::ePeriodic)
                 {
                     continue;
                 }
@@ -695,7 +736,10 @@ namespace Nektar
                         for(k = 0; k < 2; k++)
                         {
                             meshVertId = (bndSegExp->GetGeom1D())->GetVid(k);
-                            m_bndCondCoeffsToGlobalCoeffsMap[cnt+bndSegExp->GetVertexMap(k)] = graphVertOffset[ReorderedGraphVertId[0][meshVertId]*nvel*nz_loc+nv*nz_loc+n];
+                            m_bndCondIDToGlobalTraceID[cnt+
+                                         bndSegExp->GetVertexMap(k)] =
+                               graphVertOffset[ReorderedGraphVertId[0]
+                                      [meshVertId]*nvel*nz_loc+nv*nz_loc+n];
                         }
 
                         meshEdgeId = (bndSegExp->GetGeom1D())->GetGlobalID();
@@ -703,10 +747,11 @@ namespace Nektar
                         nEdgeCoeffs = bndSegExp->GetNcoeffs();
                         for(k = 0; k < nEdgeCoeffs; k++)
                         {
-                            if(m_bndCondCoeffsToGlobalCoeffsMap[cnt+k] == -1)
+                            if(m_bndCondIDToGlobalTraceID[cnt+k] == -1)
                             {
-                                m_bndCondCoeffsToGlobalCoeffsMap[cnt+k] =
-                                    graphVertOffset[ReorderedGraphVertId[1][meshEdgeId]*nvel*nz_loc+nv*nz_loc+n]+bndEdgeCnt;
+                                m_bndCondIDToGlobalTraceID[cnt+k] =
+                                    graphVertOffset[ReorderedGraphVertId[1]
+                                     [meshEdgeId]*nvel*nz_loc+nv*nz_loc+n]+bndEdgeCnt;
                                 bndEdgeCnt++;
                             }
                         }

@@ -258,7 +258,6 @@ namespace Nektar
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
-                    const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
                     const MultiRegions::VarFactorsMap &varfactors,
@@ -348,8 +347,7 @@ namespace Nektar
                 Array<OneD,       NekDouble> &Bwd)
         {
             v_GetFwdBwdTracePhys_serial(field, Fwd, Bwd);
-            m_traceMap->UniversalTraceAssemble(Fwd);
-            m_traceMap->UniversalTraceAssemble(Bwd);
+            m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);
         }
 
         void DisContField1D::v_GetFwdBwdTracePhysNoBndFill(
@@ -358,8 +356,7 @@ namespace Nektar
                 Array<OneD,       NekDouble> &Bwd)
         {
             v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-            m_traceMap->UniversalTraceAssemble(Fwd);
-            m_traceMap->UniversalTraceAssemble(Bwd);
+            m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);
         }
 
         void DisContField1D::v_GetFwdBwdTracePhysDeriv(
@@ -369,8 +366,7 @@ namespace Nektar
                 Array<OneD,       NekDouble> &Bwd)
         {
             v_GetFwdBwdTracePhysDeriv_serial(Dir,field, Fwd, Bwd);
-            m_traceMap->UniversalTraceAssemble(Fwd);
-            m_traceMap->UniversalTraceAssemble(Bwd);
+            m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);
         }
 
         void DisContField1D::v_GetFwdBwdTracePhysDeriv_serial(

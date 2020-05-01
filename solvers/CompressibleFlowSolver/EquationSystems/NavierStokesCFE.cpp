@@ -721,7 +721,7 @@ namespace Nektar
 
                 int id2 = m_fields[0]->GetTrace()->
                 GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                            GetBndCondTraceToGlobalTraceMap(cnt++));
+                            GetBndCondIDToGlobalTraceID(cnt++));
 
                 // Imposing Temperature Twall at the wall 
                 if (boost::iequals(m_fields[nengy]->GetBndConditions()[j]->

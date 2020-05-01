@@ -106,15 +106,9 @@ namespace Nektar
         {
             SetExpType(e2D);
 
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
             // set up offset arrays.
             SetCoeffPhysOffsets();
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
@@ -222,12 +216,6 @@ namespace Nektar
                 (*m_exp)[i]->SetElmtId(i);
             }
 
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
-
             // set up offset arrays.
             SetCoeffPhysOffsets();
 
@@ -238,7 +226,6 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
              }
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
          }
 
@@ -338,12 +325,6 @@ namespace Nektar
 
             }
 
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
-
             // set up offset arrays.
             SetCoeffPhysOffsets();
 
@@ -354,7 +335,6 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
              }
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
@@ -458,17 +438,11 @@ namespace Nektar
 
             }
 
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
             // Set up m_coeffs, m_phys and offset arrays.
             SetCoeffPhysOffsets();
             m_coeffs = Array<OneD, NekDouble> {m_ncoeffs, 0.0};
             m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
@@ -774,12 +748,6 @@ namespace Nektar
                 }
             }
 
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
             // Set up offset information and array sizes
             SetCoeffPhysOffsets();
 
@@ -908,15 +876,12 @@ namespace Nektar
 
              // Setup Default optimisation information.
              nel = GetExpSize();
-             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                 ::AllocateSharedPtr(nel);
 
              // Set up m_coeffs, m_phys and offset arrays.
             SetCoeffPhysOffsets();
             m_coeffs = Array<OneD, NekDouble> {m_ncoeffs, 0.0};
             m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
@@ -1216,26 +1181,6 @@ namespace Nektar
             }
         }
 
-
-        void ExpList2D::v_ReadGlobalOptimizationParameters()
-        {
-            Array<OneD, int> NumShape(2,0);
-
-            for(int i = 0; i < GetExpSize(); ++i)
-            {
-                if((*m_exp)[i]->DetShapeType() == LibUtilities::eTriangle)
-                {
-                    NumShape[0] += 1;
-                }
-                else  // Quadrilateral element
-                {
-                    NumShape[1] += 1;
-                }
-            }
-
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(m_session,2,NumShape);
-        }
 
         void ExpList2D::v_WriteVtkPieceHeader(
             std::ostream &outfile,

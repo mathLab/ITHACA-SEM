@@ -368,31 +368,6 @@ using namespace std;
              // Set up physical normals
              SetUpPhysNormals();
 
-             // Set up information for parallel jobs.
-             for (int i = 0; i < m_trace->GetExpSize(); ++i)
-             {
-                 LocalRegions::Expansion2DSharedPtr traceEl =
-                         m_trace->GetExp(i)->as<LocalRegions::Expansion2D>();
-
-                 int offset      = m_trace->GetPhys_Offset(i);
-                 int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
-                 auto pIt = m_periodicFaces.find(traceGeomId);
-
-                 if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
-                 {
-                     if (traceGeomId != min(pIt->second[0].id, traceGeomId))
-                     {
-                         traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
-                             traceEl->GetLeftAdjacentElementFace());
-                     }
-                 }
-                 else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
-                 {
-                     traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
-                         traceEl->GetLeftAdjacentElementFace());
-                 }
-             }
-
              int cnt, n, e;
 
              // Identify boundary faces
@@ -404,7 +379,7 @@ using namespace std;
                      for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                      {
                          m_boundaryFaces.insert(
-                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                             m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                      }
                      cnt += m_bndCondExpansions[n]->GetExpSize();
                  }
@@ -1860,8 +1835,6 @@ using namespace std;
                     m_traceMap->GetElmtToTrace()[n][e]->
                          as<LocalRegions::Expansion2D>();
 
-            int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
-
             bool fwd = true;
             if (traceEl->GetLeftAdjacentElementFace () == -1 ||
                 traceEl->GetRightAdjacentElementFace() == -1)
@@ -1874,18 +1847,7 @@ using namespace std;
                 // it, then assume it is a partition edge.
                 if (it == m_boundaryFaces.end())
                 {
-                    int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
-                    auto pIt = m_periodicFaces.find(traceGeomId);
-
-                    if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
-                    {
-                        fwd = traceGeomId == min(traceGeomId,pIt->second[0].id);
-                    }
-                    else
-                    {
-                        fwd = m_traceMap->
-                            GetTraceToUniversalMapUnique(offset) >= 0;
-                    }
+                    fwd = true; // Partition edge is always fwd
                 }
             }
             else if (traceEl->GetLeftAdjacentElementFace () != -1 &&
@@ -1992,7 +1954,7 @@ using namespace std;
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
                         id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                         Vmath::Vcopy(npts,
                             &(m_bndCondExpansions[n]->GetPhys())[id1], 1,
                             &Bwd[id2],                                 1);
@@ -2010,7 +1972,7 @@ using namespace std;
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
                         id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
 
                         // Turning this off since we can have non-zero
                         //Neumann in mixed CG-DG method
@@ -2062,7 +2024,7 @@ using namespace std;
                         npts = m_bndCondExpansions[n]->
                                 GetExp(e)->GetTotPoints();
                         id2  = m_trace->GetPhys_Offset(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                         Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
                     }
 
@@ -2078,7 +2040,7 @@ using namespace std;
                         npts = m_bndCondExpansions[n]->
                                 GetExp(e)->GetTotPoints();
                         id2  = m_trace->GetPhys_Offset(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                         
                         // Turning this off since we can have non-zero
                         //Neumann in mixed CG-DG method
@@ -2123,7 +2085,7 @@ using namespace std;
                         npts = m_bndCondExpansions[n]->
                                 GetExp(e)->GetTotPoints();
                         id2  = m_trace->GetPhys_Offset(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                         Vmath::Fill(npts,
                                     m_bndCondBndWeight[n], 
                                     &weightave[id2], 1);
@@ -2142,7 +2104,7 @@ using namespace std;
                         npts = m_bndCondExpansions[n]->
                                 GetExp(e)->GetTotPoints();
                         id2  = m_trace->GetPhys_Offset(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                         
                         Vmath::Fill(npts,
                                     m_bndCondBndWeight[n], 
@@ -2192,8 +2154,7 @@ using namespace std;
 
             // gather entries along parallel partitions which have
             // only filled in Fwd part on their own partition
-            m_traceMap->UniversalTraceAssemble(outarray);
-
+            m_traceMap->GetAssemblyCommDG()->PerformExchange(outarray, outarray);
         }
 
         /**
@@ -2385,14 +2346,13 @@ using namespace std;
         void DisContField3D::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
-            boost::ignore_unused(flags, varfactors, dirForcing);
+            boost::ignore_unused(varfactors, dirForcing);
 
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
@@ -2420,26 +2380,18 @@ using namespace std;
             //----------------------------------
             int GloBndDofs   = m_traceMap->GetNumGlobalBndCoeffs();
             int NumDirichlet = m_traceMap->GetNumLocalDirBndCoeffs();
-            int e_ncoeffs,id;
+            int e_ncoeffs;
 
             // Retrieve block matrix of U^e
             GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,NullAssemblyMapSharedPtr,factors,varcoeff);
             const DNekScalBlkMatSharedPtr &HDGLamToU = GetBlockMatrix(HDGLamToUKey);
 
-            // Retrieve global trace space storage, \Lambda, from trace expansion
-            Array<OneD,NekDouble> BndSol = m_trace->UpdateCoeffs();
-
-            // Create trace space forcing, F
-            Array<OneD,NekDouble> BndRhs(GloBndDofs,0.0);
-
-            // Zero \Lambda
-            Vmath::Zero(GloBndDofs,BndSol,1);
-
             // Retrieve number of local trace space coefficients N_{\lambda},
             // and set up local elemental trace solution \lambda^e.
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
-            Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);
-            DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);
+            Array<OneD, NekDouble> bndrhs(LocBndCoeffs,0.0);
+            Array<OneD, NekDouble> loclambda(LocBndCoeffs,0.0);
+            DNekVec LocLambda(LocBndCoeffs,loclambda,eWrapper);
 
             //----------------------------------
             // Evaluate Trace Forcing vector F
@@ -2452,7 +2404,7 @@ using namespace std;
 
                 e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
                 e_f       = f + cnt;
-                e_l       = loc_lambda + cnt1;
+                e_l       = bndrhs + cnt1;
 
                 // Local trace space \lambda^e
                 DNekVec     Floc    (nbndry, e_l, eWrapper);
@@ -2465,21 +2417,28 @@ using namespace std;
                 cnt1  += nbndry;
             }
 
-            // Assemble local \lambda_e into global \Lambda
-            m_traceMap->AssembleBnd(loc_lambda,BndRhs);
 
-            // Copy Dirichlet boundary conditions and weak forcing into trace
-            // space
+            Array<OneD, const int> bndCondMap =  
+                m_traceMap->GetBndCondCoeffsToLocalTraceMap();
+            Array<OneD, const NekDouble> Sign = 
+                m_traceMap->GetLocalToGlobalBndSign();
+
+            // Copy Dirichlet boundary conditions and weak forcing
+            // into trace space
+            int locid;
             cnt = 0;
             for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
+                Array<OneD, const NekDouble> bndcoeffs =
+                    m_bndCondExpansions[i]->GetCoeffs();
+                
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                        SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
-                        id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
-                        BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
+                        locid = bndCondMap[cnt + j];
+                        loclambda[locid] = Sign[locid]*bndcoeffs[j]; 
                     }
                 }
                 else if (m_bndConditions[i]->GetBoundaryConditionType() ==
@@ -2490,8 +2449,8 @@ using namespace std;
                     //Add weak boundary condition to trace forcing
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
-                        id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
-                        BndRhs[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
+                        locid = bndCondMap[cnt + j];
+                        bndrhs[locid] += Sign[locid]*bndcoeffs[j]; 
                     }
                 }
                 else if (m_bndConditions[i]->GetBoundaryConditionType() ==
@@ -2500,6 +2459,7 @@ using namespace std;
                     ASSERTL0(false, "HDG implementation does not support "
                              "periodic boundary conditions at present.");
                 }
+                cnt += (m_bndCondExpansions[i])->GetNcoeffs();
             }
 
             //----------------------------------
@@ -2511,7 +2471,11 @@ using namespace std;
                 GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam,
                                           m_traceMap,factors,varcoeff);
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
-                LinSys->Solve(BndRhs,BndSol,m_traceMap);
+                LinSys->Solve(bndrhs,loclambda,m_traceMap);
+
+                // For consistency with previous version put global
+                // solution into m_trace->m_coeffs
+                m_traceMap->LocalToGlobal(loclambda,m_trace->UpdateCoeffs());
             }
 
             //----------------------------------
@@ -2521,9 +2485,6 @@ using namespace std;
             const DNekScalBlkMatSharedPtr& InvHDGHelm = GetBlockMatrix(invHDGhelmkey);
             DNekVec out(m_ncoeffs,outarray,eWrapper);
             Vmath::Zero(m_ncoeffs,outarray,1);
-
-            // get local trace solution from BndSol
-            m_traceMap->GlobalToLocalBnd(BndSol,loc_lambda);
 
             //  out =  u_f + u_lam = (*InvHDGHelm)*f + (LamtoU)*Lam
             out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;
@@ -2540,11 +2501,8 @@ using namespace std;
         void DisContField3D::v_GeneralMatrixOp(
                const GlobalMatrixKey             &gkey,
                const Array<OneD,const NekDouble> &inarray,
-                     Array<OneD,      NekDouble> &outarray,
-               CoeffState coeffstate)
+               Array<OneD,      NekDouble> &outarray)
         {
-            boost::ignore_unused(coeffstate);
-
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);
             DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);

@@ -74,6 +74,8 @@ namespace Nektar
         {
             SetExpType(e3DH1D);
 
+            m_graph = graph2D;
+
             GenExpList3DHomogeneous1D(graph2D->GetExpansions(var),ImpType);
         }
 
@@ -120,12 +122,7 @@ namespace Nektar
                     (*m_exp).push_back((*m_exp)[j]);
                 }
             }
-
-            // Setup Default optimisation information.
-            nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
+            
             SetCoeffPhys();
         }
 

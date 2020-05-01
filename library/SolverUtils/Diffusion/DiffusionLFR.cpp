@@ -1276,7 +1276,7 @@ namespace Nektar
                     // Offset of the trace space related to boundary expansion
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
-                                   GetBndCondTraceToGlobalTraceMap(cnt++));
+                                   GetBndCondIDToGlobalTraceID(cnt++));
 
                     // Dirichlet bcs ==> uflux = gD
                     if (fields[var]->GetBndConditions()[i]->
@@ -1439,9 +1439,9 @@ namespace Nektar
 
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
-                                   GetBndCondTraceToGlobalTraceMap(cnt++));
-
-                    // For Dirichlet boundary condition:
+                                   GetBndCondIDToGlobalTraceID(cnt++));
+                    
+                    // For Dirichlet boundary condition: 
                     //qflux = q+ - C_11 (u+ -    g_D) (nx, ny)
                     if (fields[var]->GetBndConditions()[i]->
                        GetBoundaryConditionType() == SpatialDomains::eDirichlet)
@@ -1907,13 +1907,10 @@ namespace Nektar
                                        auxArray2 = fluxJumps, 1);
                     }
 
-                    NekDouble fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
-                    -1.0 : 1.0;
-
                     for (i = 0; i < nEdgePts; ++i)
                     {
-                        if (m_traceNormals[0][trace_offset+i] != fac*normals[0][i]
-                        || m_traceNormals[1][trace_offset+i] != fac*normals[1][i])
+                        if (m_traceNormals[0][trace_offset+i] != normals[0][i]
+                        || m_traceNormals[1][trace_offset+i] != normals[1][i])
                         {
                             fluxJumps[i] = -fluxJumps[i];
                         }

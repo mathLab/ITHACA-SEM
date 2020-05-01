@@ -1138,12 +1138,14 @@ namespace Nektar
             switch(m_base[0]->GetBasisType())
             {
             case LibUtilities::eModified_A:
+            case LibUtilities::eOrtho_A:
                 {
                     int i;
                     int cnt  = 0;
                     int cnt1 = 0;
 
-                    ASSERTL1(m_base[1]->GetBasisType() == LibUtilities::eModified_B,
+                    ASSERTL1(m_base[1]->GetBasisType() == LibUtilities::eModified_B ||
+                             m_base[1]->GetBasisType() == LibUtilities::eOrtho_B,
                              "Extraction routine not set up for this basis");
 
                     Vmath::Zero(m_ncoeffs,coeffs,1);

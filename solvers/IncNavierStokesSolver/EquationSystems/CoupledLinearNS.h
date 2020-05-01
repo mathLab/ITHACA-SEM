@@ -122,7 +122,7 @@ namespace Nektar
          */
         void SolveLinearNS(const Array<OneD, Array<OneD, NekDouble> > &forcing);
         
-        void SolveLinearNS(const Array<OneD, Array<OneD, NekDouble> > &forcing,
+        void SolveLinearNS(Array<OneD, Array<OneD, NekDouble> > &forcing,
                            Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                            MultiRegions::ExpListSharedPtr &pressure,
                            const int HomogeneousMode = 0);

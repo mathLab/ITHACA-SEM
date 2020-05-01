@@ -111,9 +111,6 @@ namespace Nektar
         std::map<FlagType, bool> m_data;
     };
 
-    /// An empty flag list.
-    static FlagList NullFlagList;
-
 } //end of namespace
 
 #endif

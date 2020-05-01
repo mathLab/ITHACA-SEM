@@ -168,7 +168,7 @@ void DiffusionLDG::v_DiffuseCalculateDerivative(
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
-    std::size_t nConvectiveFields      = fields.num_elements();
+    std::size_t nConvectiveFields      = fields.size();
     std::size_t nDim      = fields[0]->GetCoordim(0);
     std::size_t nCoeffs   = fields[0]->GetNcoeffs();
     std::size_t nTracePts = fields[0]->GetTrace()->GetTotPoints();
@@ -309,7 +309,7 @@ void DiffusionLDG::ApplyScalarBCs(
                 fields[var]->GetBndCondExpansions()[i]->GetPhys_Offset(e);
 
             std::size_t id2 = fields[0]->GetTrace()->GetPhys_Offset(
-                fields[0]->GetTraceMap()->GetBndCondTraceToGlobalTraceMap(
+                fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(
                     cnt++));
 
             // AV boundary conditions
@@ -446,7 +446,7 @@ void DiffusionLDG::ApplyVectorBCs(
                 fields[var]->GetBndCondExpansions()[i]->GetPhys_Offset(e);
 
             std::size_t id2 = fields[0]->GetTrace()->GetPhys_Offset(
-                fields[0]->GetTraceMap()->GetBndCondTraceToGlobalTraceMap(
+                fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(
                     cnt++));
 
             // AV boundary conditions

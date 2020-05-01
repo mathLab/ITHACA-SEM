@@ -1128,14 +1128,19 @@ namespace Nektar
                 v_StdPhysDeriv(dir,inarray,outarray);
             }
 
-            void AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+            void AddRobinMassMatrix(const int edgeid,
+                                    const Array<OneD, const NekDouble > &primCoeffs,
+                                    DNekMatSharedPtr &inoutmat)
             {
                 v_AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
             }
 
-            void AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs)
+            void AddRobinEdgeContribution(const int edgeid,
+                                          const Array<OneD, const NekDouble> &primCoeffs,
+                                          const Array<OneD, NekDouble> &incoeffs,
+                                          Array<OneD, NekDouble> &coeffs)
             {
-                v_AddRobinEdgeContribution(edgeid, primCoeffs, coeffs);
+                v_AddRobinEdgeContribution(edgeid, primCoeffs, incoeffs, coeffs);
             }
 
             /** \brief This function evaluates the expansion at a single
@@ -1289,44 +1294,14 @@ namespace Nektar
                 v_ComputeEdgeNormal(edge);
             }
 
-            void NegateEdgeNormal(const int edge)
-            {
-                v_NegateEdgeNormal(edge);
-            }
-
-            bool EdgeNormalNegated(const int edge)
-            {
-                return v_EdgeNormalNegated(edge);
-            }
-
             void ComputeFaceNormal(const int face)
             {
                 v_ComputeFaceNormal(face);
             }
 
-            void NegateFaceNormal(const int face)
-            {
-                v_NegateFaceNormal(face);
-            }
-
-            bool FaceNormalNegated(const int face)
-            {
-                return v_FaceNormalNegated(face);
-            }
-
             void ComputeVertexNormal(const int vertex)
             {
                 v_ComputeVertexNormal(vertex);
-            }
-
-            void NegateVertexNormal(const int vertex)
-            {
-                v_NegateVertexNormal(vertex);
-            }
-
-            bool VertexNormalNegated(const int vertex)
-            {
-                return v_VertexNormalNegated(vertex);
             }
 
             const NormalVector & GetFaceNormal(const int face) const
@@ -1702,7 +1677,8 @@ namespace Nektar
                                                 const Array<OneD, const NekDouble>& direction,
                                                 Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_StdPhysDeriv (const Array<OneD, const NekDouble>& inarray,
+            STD_REGIONS_EXPORT virtual void v_StdPhysDeriv (const Array<OneD,
+                                                            const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &out_d1,
                                          Array<OneD, NekDouble> &out_d2,
                                          Array<OneD, NekDouble> &out_d3);
@@ -1711,20 +1687,31 @@ namespace Nektar
                                            const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
+            STD_REGIONS_EXPORT virtual void v_AddRobinMassMatrix(const int edgeid,
+                                                          const Array<OneD,
+                                                          const NekDouble > &primCoeffs,
+                                                          DNekMatSharedPtr &inoutmat);
 
-            STD_REGIONS_EXPORT virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs);
+            STD_REGIONS_EXPORT virtual void v_AddRobinEdgeContribution(const int edgeid,
+                                            const Array<OneD, const NekDouble> &primCoeffs,
+                                            const Array<OneD, NekDouble> &incoeffs,
+                                            Array<OneD, NekDouble> &coeffs);
 
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD,
+                                             const NekDouble>& coords,
+                                             const Array<OneD, const NekDouble> & physvals);
 
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, DNekMatSharedPtr >& I, const Array<OneD, const NekDouble> & physvals);
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
+                                        const Array<OneD, DNekMatSharedPtr >& I,
+                                        const Array<OneD, const NekDouble> & physvals);
 
             STD_REGIONS_EXPORT virtual void v_LocCoordToLocCollapsed(
                                         const Array<OneD, const NekDouble>& xi,
                                         Array<OneD, NekDouble>& eta);
 
 
-            STD_REGIONS_EXPORT virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_FillMode(const int mode,
+                                                       Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);
 
@@ -1911,23 +1898,11 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_ComputeEdgeNormal(const int edge);
 
-            STD_REGIONS_EXPORT virtual void v_NegateEdgeNormal(const int edge);
-
-            STD_REGIONS_EXPORT virtual bool v_EdgeNormalNegated(const int edge);
-
             STD_REGIONS_EXPORT virtual void v_ComputeFaceNormal(const int face);
-
-            STD_REGIONS_EXPORT virtual void v_NegateFaceNormal(const int face);
-
-            STD_REGIONS_EXPORT virtual bool v_FaceNormalNegated(const int face);
 
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetVertexNormal(const int vertex) const;
 
             STD_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
-
-            STD_REGIONS_EXPORT virtual void v_NegateVertexNormal(const int vertex);
-
-            STD_REGIONS_EXPORT virtual bool v_VertexNormalNegated(const int vertex);
 
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector &

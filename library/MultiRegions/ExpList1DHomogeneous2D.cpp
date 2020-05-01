@@ -60,7 +60,7 @@ namespace Nektar
                                                        const Array<OneD, ExpListSharedPtr> &points):
             ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
-            int n,nel;
+            int n;
 
             ASSERTL1(m_ny*m_nz == points.size(),
                     "Size of basis number of points and number of lines are "
@@ -71,11 +71,6 @@ namespace Nektar
                 m_lines[n] = points[n];
                 (*m_exp).push_back(points[n]->GetExp(0));
             }
-
-            // Setup Default optimisation information.
-            nel = 1;
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
 
             SetCoeffPhys();
         }

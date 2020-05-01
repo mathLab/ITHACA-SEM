@@ -155,8 +155,6 @@ namespace Nektar
                 BOOST_CHECK(a.begin() == a.end());
                 BOOST_CHECK(b.begin() == b.end());
 
-                BOOST_CHECK_EQUAL(a.num_elements(), 0);
-                BOOST_CHECK_EQUAL(b.num_elements(), 0);
                 BOOST_CHECK_EQUAL(a.size(), 0);
                 BOOST_CHECK_EQUAL(b.size(), 0);
 
@@ -174,8 +172,6 @@ namespace Nektar
                 BOOST_CHECK(a.begin() == a.end());
                 BOOST_CHECK(b.begin() == b.end());
 
-                BOOST_CHECK_EQUAL(a.num_elements(), 0);
-                BOOST_CHECK_EQUAL(b.num_elements(), 0);
                 BOOST_CHECK_EQUAL(a.size(), 0);
                 BOOST_CHECK_EQUAL(b.size(), 0);
 
@@ -197,8 +193,6 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
 
-                BOOST_CHECK_EQUAL(a.num_elements(), 5);
-                BOOST_CHECK_EQUAL(b.num_elements(), 10);
                 BOOST_CHECK_EQUAL(a.size(), 5);
                 BOOST_CHECK_EQUAL(b.size(), 10);
 
@@ -217,8 +211,6 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
 
-                BOOST_CHECK_EQUAL(a.num_elements(), 50);
-                BOOST_CHECK_EQUAL(b.num_elements(), 100);
                 BOOST_CHECK_EQUAL(a.size(), 50);
                 BOOST_CHECK_EQUAL(b.size(), 100);
 
@@ -246,8 +238,6 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
 
-                BOOST_CHECK_EQUAL(a.num_elements(), 5);
-                BOOST_CHECK_EQUAL(b.num_elements(), 10);
                 BOOST_CHECK_EQUAL(a.size(), 5);
                 BOOST_CHECK_EQUAL(b.size(), 10);
 
@@ -280,8 +270,6 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
 
-                BOOST_CHECK_EQUAL(a.num_elements(), 50);
-                BOOST_CHECK_EQUAL(b.num_elements(), 100);
                 BOOST_CHECK_EQUAL(a.size(), 50);
                 BOOST_CHECK_EQUAL(b.size(), 100);
 
@@ -335,8 +323,6 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
 
-                BOOST_CHECK_EQUAL(a.num_elements(), 4);
-                BOOST_CHECK_EQUAL(b.num_elements(), 5);
                 BOOST_CHECK_EQUAL(a.size(), 4);
                 BOOST_CHECK_EQUAL(b.size(), 5);
 
@@ -362,8 +348,6 @@ namespace Nektar
                 Array<OneD, double> a(4, a_array);
                 Array<OneD, double> b(5, b_array);
 
-                BOOST_CHECK(a.num_elements() == 4);
-                BOOST_CHECK(b.num_elements() == 5);
                 BOOST_CHECK(a.size() == 4);
                 BOOST_CHECK(b.size() == 5);
 
@@ -403,9 +387,6 @@ namespace Nektar
                     Array<OneD, CountedObject<double> > d(b);
                     Array<OneD, const CountedObject<double> > e(a);
 
-                    BOOST_CHECK_EQUAL(c.num_elements(), a.num_elements());
-                    BOOST_CHECK_EQUAL(e.num_elements(), a.num_elements());
-                    BOOST_CHECK_EQUAL(d.num_elements(), b.num_elements());
                     BOOST_CHECK_EQUAL(c.size(), a.size());
                     BOOST_CHECK_EQUAL(e.size(), a.size());
                     BOOST_CHECK_EQUAL(d.size(), b.size());
@@ -442,20 +423,17 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(a_off[0].value, a[1].value);
                 BOOST_CHECK_EQUAL(a_off[1].value, a[2].value);
                 BOOST_CHECK_EQUAL(a_off[2].value, a[3].value);
-                BOOST_CHECK_EQUAL(a_off.num_elements(), 3);
                 BOOST_CHECK_EQUAL(a_off.size(), 3);
 
                 BOOST_CHECK_EQUAL(b_off[0].value, b[2].value);
                 BOOST_CHECK_EQUAL(b_off[1].value, b[3].value);
                 BOOST_CHECK_EQUAL(b_off[2].value, b[4].value);
-                BOOST_CHECK_EQUAL(b_off.num_elements(), 3);
                 BOOST_CHECK_EQUAL(b_off.size(), 3);
 
 
                 BOOST_CHECK_EQUAL(bb_off[0].value, b[2].value);
                 BOOST_CHECK_EQUAL(bb_off[1].value, b[3].value);
                 BOOST_CHECK_EQUAL(bb_off[2].value, b[4].value);
-                BOOST_CHECK_EQUAL(bb_off.num_elements(), 3);
                 BOOST_CHECK_EQUAL(bb_off.size(), 3);
 
             }
@@ -485,9 +463,9 @@ namespace Nektar
                     Array<OneD, const CountedObject<double> > lhs_b2;
                     CountedObject<double>::Check(0, 0, 0, 9, 0, 0);
 
-                    BOOST_CHECK_EQUAL(lhs_a.num_elements(), 0);
-                    BOOST_CHECK_EQUAL(lhs_b1.num_elements(), 0);
-                    BOOST_CHECK_EQUAL(lhs_b2.num_elements(), 0);
+                    BOOST_CHECK_EQUAL(lhs_a.size(), 0);
+                    BOOST_CHECK_EQUAL(lhs_b1.size(), 0);
+                    BOOST_CHECK_EQUAL(lhs_b2.size(), 0);
 
                     {
                         lhs_a = a;
@@ -495,9 +473,6 @@ namespace Nektar
                         lhs_b2 = b;
                         CountedObject<double>::Check(0, 0, 0, 9, 0, 0);
 
-                        BOOST_CHECK_EQUAL(lhs_a.num_elements(), a.num_elements());
-                        BOOST_CHECK_EQUAL(lhs_b1.num_elements(), b.num_elements());
-                        BOOST_CHECK_EQUAL(lhs_b2.num_elements(), b.num_elements());
                         BOOST_CHECK_EQUAL(lhs_a.size(), a.size());
                         BOOST_CHECK_EQUAL(lhs_b1.size(), b.size());
                         BOOST_CHECK_EQUAL(lhs_b2.size(), b.size());
@@ -538,8 +513,8 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
 
-                BOOST_CHECK_EQUAL(a.num_elements(), 50);
-                BOOST_CHECK_EQUAL(b.num_elements(), 100);
+                BOOST_CHECK_EQUAL(a.size(), 50);
+                BOOST_CHECK_EQUAL(b.size(), 100);
                 BOOST_CHECK_EQUAL(a.shape()[0], 5);
                 BOOST_CHECK_EQUAL(a.shape()[1], 10);
                 BOOST_CHECK_EQUAL(b.shape()[0], 10);
@@ -553,18 +528,15 @@ namespace Nektar
                     Array<TwoD, const CountedObject<double> > lhs_b1;
                     Array<TwoD, CountedObject<double> > lhs_b2;
 
-                    BOOST_CHECK_EQUAL(lhs_a.num_elements(), 0);
-                    BOOST_CHECK_EQUAL(lhs_b1.num_elements(), 0);
-                    BOOST_CHECK_EQUAL(lhs_b2.num_elements(), 0);
+                    BOOST_CHECK_EQUAL(lhs_a.size(), 0);
+                    BOOST_CHECK_EQUAL(lhs_b1.size(), 0);
+                    BOOST_CHECK_EQUAL(lhs_b2.size(), 0);
 
                     lhs_a = a;
                     lhs_b1 = b;
                     lhs_b2 = b;
                     CountedObject<double>::Check(0, 0, 0, 150, 0, 0);
 
-                    BOOST_CHECK_EQUAL(lhs_a.num_elements(), a.num_elements());
-                    BOOST_CHECK_EQUAL(lhs_b1.num_elements(), b.num_elements());
-                    BOOST_CHECK_EQUAL(lhs_b2.num_elements(), b.num_elements());
                     BOOST_CHECK_EQUAL(lhs_a.size(), a.size());
                     BOOST_CHECK_EQUAL(lhs_b1.size(), b.size());
                     BOOST_CHECK_EQUAL(lhs_b2.size(), b.size());
@@ -620,8 +592,6 @@ namespace Nektar
             lhs_a = offset_a;
             lhs_b = offset_b;
 
-            BOOST_CHECK_EQUAL(lhs_a.num_elements(), offset_a.num_elements());
-            BOOST_CHECK_EQUAL(lhs_b.num_elements(), offset_b.num_elements());
             BOOST_CHECK_EQUAL(lhs_a.size(), offset_a.size());
             BOOST_CHECK_EQUAL(lhs_b.size(), offset_b.size());
 

@@ -172,8 +172,7 @@ void Diffusion::DoImplicitSolve(
 
         // Solve a system of equations with Helmholtz solver
         field->HelmSolve(outarray[i],
-                         field->UpdateCoeffs(),
-                         NullFlagList, factors);
+                         field->UpdateCoeffs(), factors);
 
         // Transform to physical space and store in solution vector
         field->BwdTrans (field->GetCoeffs(), outarray[i]);

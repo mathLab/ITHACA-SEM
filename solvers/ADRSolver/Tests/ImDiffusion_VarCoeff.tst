@@ -7,11 +7,11 @@
         <file description="Session File"> ImDiffusion_VarCoeff.xml </file>
     </files>
     <metrics>
-        <metric type="L2" id="1">
-            <value variable="u" tolerance="1e-12"> 1.68029e-08 </value>
+   <metric type="L2" id="1">
+	   <value variable="u" tolerance="1e-10"> 1.39896e-07 </value>
         </metric>
         <metric type="Linf" id="2">
-            <value variable="u" tolerance="1e-12"> 3.25511e-08 </value>
+            <value variable="u" tolerance="1e-10"> 2.30914e-07 </value>
         </metric>
     </metrics>
 </test>

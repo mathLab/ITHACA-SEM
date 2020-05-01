@@ -399,7 +399,7 @@ namespace Nektar
 	{
 
 	  EquationSystem::SetBoundaryConditions(time);
-	  Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
+	  Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs(),0.0);
 
 	  for(i = 0; i < nvariables; ++i)
           {
@@ -489,7 +489,7 @@ namespace Nektar
                 GetPhys_Offset(e);
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                         m_fields[0]->GetTraceMap()->
-                                    GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+                                    GetBndCondIDToGlobalTraceID(cnt+e));
 
             // For 2D/3D, define: v* = v - 2(v.n)n
             Array<OneD, NekDouble> tmp(npts, 0.0);
@@ -542,7 +542,7 @@ namespace Nektar
       {
 	npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExp(e)->GetNumPoints(0);
 	id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e) ;
-	id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+	id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(cnt+e));
 
 	switch(m_expdim)
 	  {

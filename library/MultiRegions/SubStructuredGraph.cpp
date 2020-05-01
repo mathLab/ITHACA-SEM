@@ -99,7 +99,37 @@ namespace Nektar
             m_bndPatch[n] = bndPatch;
             m_sign    [n] = sign;
         }
+        
+        void PatchMap::SetNewLevelMap(Array<OneD, const unsigned int> numLocalBndCondPerPatch,
+                                      Array<OneD, const unsigned int> numLocalIntCondPerPatch)
+        {
+            int npatch = numLocalBndCondPerPatch.size();
+            
+            Array<OneD, int> bndoffset(npatch+1);
+            Array<OneD, int> intoffset(npatch+1);
 
+            bndoffset[0] = intoffset[0] = 0;
+            for(int i = 1; i <= npatch; ++i)
+            {
+                bndoffset[i] = bndoffset[i-1] + numLocalBndCondPerPatch[i-1];
+                intoffset[i] = intoffset[i-1] + numLocalIntCondPerPatch[i-1];
+            }
+            
+            m_newLevelMap = Array<OneD, int>(m_dofId.size());
+
+            for(int i = 0; i < m_dofId.size(); ++i)
+            {
+                if(m_bndPatch[i] == true)
+                {
+                    m_newLevelMap[i] = bndoffset[m_patchId[i]] + m_dofId[i];
+                }
+                else
+                {
+                    m_newLevelMap[i] = bndoffset[npatch] + intoffset[m_patchId[i]] + m_dofId[i];
+                }
+            }
+        }
+        
         MultiLevelBisectedGraph::MultiLevelBisectedGraph(
             MultiLevelBisectedGraphSharedPtr oldLevel,
             const int                        nPartition)

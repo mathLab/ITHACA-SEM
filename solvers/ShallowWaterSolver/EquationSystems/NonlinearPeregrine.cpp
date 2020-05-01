@@ -520,7 +520,7 @@ void NonlinearPeregrine::DoOdeProjection(
         {
 
             EquationSystem::SetBoundaryConditions(time);
-            Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
+            Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs(),0.0);
 
             for (i = 0; i < nvariables; ++i)
             {
@@ -597,8 +597,7 @@ void NonlinearPeregrine::WallBoundary(int bcRegion, int cnt,
         npts = bcexp->GetExp(e)->GetTotPoints();
         id1  = bcexp->GetPhys_Offset(e);
         id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
-               m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(
-                                                                    cnt + e));
+               m_fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(cnt + e));
 
         // For 2D/3D, define: v* = v - 2(v.n)n
         Array<OneD, NekDouble> tmp(npts, 0.0);
@@ -652,8 +651,7 @@ void NonlinearPeregrine::WallBoundary2D(
         npts = bcexp->GetExp(e)->GetNumPoints(0);
         id1  = bcexp->GetPhys_Offset(e);
         id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
-               m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(
-                                                                   cnt + e));
+               m_fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(cnt + e));
 
         switch (m_expdim)
         {
@@ -911,7 +909,6 @@ void NonlinearPeregrine::WCESolve(
 
     m_fields[3]->HelmSolve(m_fields[3]->GetPhys(),
                            m_fields[3]->UpdateCoeffs(),
-                           NullFlagList,
                            m_factors);
 
     m_fields[3]->BwdTrans(m_fields[3]->GetCoeffs(), m_fields[3]->UpdatePhys());
@@ -1016,8 +1013,7 @@ void NonlinearPeregrine::WallBoundaryForcing(
         npts = bcexp->GetExp(e)->GetTotPoints();
         id1  = bcexp->GetPhys_Offset(e);
         id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
-               m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(
-                                                                   cnt + e));
+               m_fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(cnt + e));
 
         switch (m_expdim)
         {
@@ -1121,10 +1117,10 @@ void NonlinearPeregrine::WallBoundaryContVariables(
         npts = bcexp->GetExp(e)->GetTotPoints();
         id1  = bcexp->GetPhys_Offset(e);
         id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
-               m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(
-                                                                   cnt + e));
+               m_fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(cnt + e));
 
-        // copy boundary adjusted values into the boundary expansion field[1] and field[2]
+        // copy boundary adjusted values into the boundary expansion
+        // field[1] and field[2]
         bcexp = m_fields[1]->GetBndCondExpansions()[bcRegion];
         Vmath::Vcopy(npts, &z[id2], 1, &(bcexp->UpdatePhys())[id1], 1);
 

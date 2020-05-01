@@ -40,12 +40,14 @@
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
+#include <SolverUtils/Core/TimeIntegrationUtils.h>
 
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ContField2D.h>
 
 using namespace std;
 using namespace Nektar;
+using namespace Nektar::SolverUtils;
 
 class Diffusion
 {
@@ -99,20 +101,15 @@ Diffusion::Diffusion( int argc, char* argv[] )
     // Get some information from the session
     sessionName   = session->GetSessionName();
 
-    // Scheme name
+    // Scheme name - required
     m_scheme_name = session->GetSolverInfo( "TimeIntegrationMethod" );
-
-    // The Fraction-in-time uses a shorted class name.
-    if( m_scheme_name == "FractionalInTime" ) {
-        m_scheme_name = "FractionalIn";
-    }
 
     // Scheme variant - optional
     if( session->DefinesSolverInfo( "TimeIntegrationVariant" ) ) {
         m_scheme_variant = session->GetSolverInfo( "TimeIntegrationVariant" );
     }
 
-    // Scheme order - optional (old) / mandatory (new)
+    // Scheme order - optional
     if( session->DefinesSolverInfo( "TimeIntegrationOrder" ) ) {
         std::string order_str =
             session->GetSolverInfo( "TimeIntegrationOrder" );
@@ -121,41 +118,18 @@ Diffusion::Diffusion( int argc, char* argv[] )
     }
 
     // Scheme free parameters - optional
+    std::string free_params_str;
+    
     if( session->DefinesSolverInfo( "TimeIntegrationFreeParameters" ) ) {
 
-        std::string free_params_str =
+        free_params_str =
             session->GetSolverInfo( "TimeIntegrationFreeParameters" );
-
-        // Parse the free parameters.
-        while(free_params_str.size())
-        {
-            size_t found = free_params_str.find(" ");
-
-            if( found == 0 )
-            {
-                free_params_str = free_params_str.substr( found+1 );
-            }
-            else if( found == std::string::npos )
-            {
-                if( free_params_str.size() )
-                {
-                    int fp = stoi(free_params_str.c_str() );
-
-                    m_scheme_free_parameters.push_back( fp );
-                }
-
-                break;
-            }
-            else if( found != std::string::npos )
-            {
-                int fp = stoi( free_params_str.substr(0, found) );
-
-                m_scheme_free_parameters.push_back( fp );
-
-                free_params_str = free_params_str.substr( found+1 );
-            }
-        }
     }
+    
+    ParseTimeIntegrationParameters( m_scheme_name,
+                                    m_scheme_variant,
+                                    free_params_str,
+                                    m_scheme_free_parameters );
 
     nSteps        = session->GetParameter( "NumSteps" );
     delta_t       = session->GetParameter( "TimeStep" );

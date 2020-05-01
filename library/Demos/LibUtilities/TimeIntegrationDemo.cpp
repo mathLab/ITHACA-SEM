@@ -87,6 +87,7 @@
 
 #include <StdRegions/StdNodalTriExp.h>
 
+#include <SolverUtils/Core/TimeIntegrationUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/TimeIntegration/EulerExponentialTimeIntegrationSchemes.h>
@@ -97,6 +98,7 @@
 
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
+using namespace Nektar::SolverUtils;
 
 namespace po = boost::program_options;
 
@@ -537,11 +539,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // The Fractional-in-time uses a shorted class name.
-    if( sMethod == "FractionalInTime" ) {
-      sMethod = "FractionalIn";
-    }
-
     // Maybe needed parameters
     std::string sVariant   =
       vm.count("variant")   ? vm["variant"].as<std::string>() : "" ;
@@ -550,6 +547,12 @@ int main(int argc, char *argv[])
     std::string sParameter =
       vm.count("parameter") ? vm["parameter"].as<std::string>() : "" ;
 
+    // Check the varaibles and parse the free parameters which are in
+    // a string.
+    std::vector<NekDouble> freeParams;
+
+    ParseTimeIntegrationParameters( sMethod, sVariant, sParameter, freeParams );
+    
     // Optional parameters
     bool L2      = vm.count("L2");
     bool verbose = vm.count("verbose");
@@ -605,36 +608,6 @@ int main(int argc, char *argv[])
                 << desc;
 
       return 1;
-    }
-
-    // Parse the free parameters which are in a string.
-    std::vector<NekDouble> freeParams;
-
-    while( sParameter.size() )
-    {
-        size_t found = sParameter.find(" ");
-
-        if( found == 0 )
-        {
-            sParameter = sParameter.substr( found+1 );
-        }
-        else if( found == std::string::npos )
-        {
-            if( sParameter.size() )
-            {
-                freeParams.push_back( stoi( sParameter ) );
-            }
-
-            break;
-        }
-        else if( found != std::string::npos )
-        {
-            int fp = stoi( sParameter.substr(0, found) );
-
-            freeParams.push_back(fp);
-
-            sParameter = sParameter.substr(found+1);
-        }
     }
 
     // -------------------------------------------------------------------------

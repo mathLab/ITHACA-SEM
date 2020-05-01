@@ -42,6 +42,7 @@ using namespace std;
 
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <SolverUtils/Core/TimeIntegrationUtils.h>
 #include <SolverUtils/UnsteadySystem.h>
 
 namespace Nektar
@@ -101,65 +102,40 @@ namespace Nektar
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TimeIntegrationMethod"))
             {
-                std::string scheme_name = m_session->GetSolverInfo(
-                                                 "TimeIntegrationMethod" );
+                // Scheme name - required
+                std::string scheme_name =
+                    m_session->GetSolverInfo( "TimeIntegrationMethod" );
 
-                // The Fractional-in-time uses a shorted class name.
-                if( scheme_name == "FractionalInTime" ) {
-                    scheme_name = "FractionalIn";
-		}
-
+                // Scheme variant - optional
                 std::string scheme_variant;
                 if( m_session->DefinesSolverInfo( "TimeIntegrationVariant" ) ) {
-                  scheme_variant = m_session->GetSolverInfo(
-                                          "TimeIntegrationVariant" );
+                    scheme_variant =
+                        m_session->GetSolverInfo( "TimeIntegrationVariant" );
                 }
 
+                // Scheme order - optional
                 int scheme_order = 0;
                 if( m_session->DefinesSolverInfo( "TimeIntegrationOrder" ) ) {
-                    std::string order_str = m_session->GetSolverInfo(
-                                      "TimeIntegrationOrder" );
+                    std::string order_str =
+                        m_session->GetSolverInfo( "TimeIntegrationOrder" );
 
                     scheme_order = std::atoi(order_str.c_str());
                 }
 
+                // Scheme free parameters - optional
+                std::string free_params_str;
                 std::vector<NekDouble> scheme_free_parameters;
-                if( m_session->DefinesSolverInfo(
-                           "TimeIntegrationFreeParameters" ) )
+
+                if( m_session->DefinesSolverInfo( "TimeIntegrationFreeParameters" ) )
                 {
-                    std::string free_params_str = m_session->GetSolverInfo(
-                                        "TimeIntegrationFreeParameters" );
-
-                    // Parse the free parameters.
-                    while(free_params_str.size())
-                    {
-                        size_t found = free_params_str.find(" ");
-
-                        if( found == 0 )
-                        {
-                            free_params_str = free_params_str.substr( found+1 );
-                        }
-                        else if( found == std::string::npos )
-                        {
-                            if( free_params_str.size() )
-                            {
-                                int fp = stoi(free_params_str.c_str() );
-
-                                scheme_free_parameters.push_back( fp );
-                            }
-
-                            break;
-                        }
-                        else if( found != std::string::npos )
-                        {
-                            int fp = stoi( free_params_str.substr(0, found) );
-
-                            scheme_free_parameters.push_back( fp );
-
-                            free_params_str = free_params_str.substr( found+1 );
-                        }
-                    }
+                    free_params_str =
+                        m_session->GetSolverInfo( "TimeIntegrationFreeParameters" );
                 }
+
+                ParseTimeIntegrationParameters( scheme_name,
+                                                scheme_variant,
+                                                free_params_str,
+                                                scheme_free_parameters );
 
                 m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory()
                     .CreateInstance( scheme_name,

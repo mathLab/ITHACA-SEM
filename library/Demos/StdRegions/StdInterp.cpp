@@ -41,12 +41,12 @@
 // tensorp = 0, we need tensorprod else just eval at pts
 Array<OneD, NekDouble> EvalPoly(Array<OneD, Array<OneD, NekDouble>> &pts)
 {
-    Array<OneD, NekDouble> ret(pts[0].num_elements());
-    unsigned dim = pts.num_elements();
+    Array<OneD, NekDouble> ret(pts[0].size());
+    unsigned dim = pts.size();
 
     // check if pts[0] and pts[1] have same size
     // polynomial = x^2 + y^2 - 3x - 4
-    for (int i = 0; i < pts[0].num_elements(); i++)
+    for (int i = 0; i < pts[0].size(); i++)
     {
         ret[i] = pow(pts[0][i],2) - 3*pts[0][i] - 4.0
             + (dim >= 2 ? pow(pts[1][i], 2) : 0.0)

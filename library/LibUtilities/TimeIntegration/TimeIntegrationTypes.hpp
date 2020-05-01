@@ -33,7 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_TYPES
+#define NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_TYPES
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
@@ -41,6 +42,7 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
 // Typedefs double arrays
 typedef const Array<OneD, const Array<OneD, Array<OneD, NekDouble>>> ConstTripleArray;
 typedef       Array<OneD,       Array<OneD, Array<OneD, NekDouble>>>      TripleArray;
@@ -121,5 +123,7 @@ enum TimeIntegrationSchemeType
     eFractionalInTime,   //!< Fractional in Time scheme
 };
 
-}
-}
+} // end namespace LibUtilities
+} // end namespace Nektar
+
+#endif

@@ -32,12 +32,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_SCHEME_GLM
+#define NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_SCHEME_GLM
+
+#define LUE LIB_UTILITIES_EXPORT
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSolutionGLM.h>
-
-#define LUE LIB_UTILITIES_EXPORT
 
 namespace Nektar
 {
@@ -121,3 +122,5 @@ LUE std::ostream &operator<<(std::ostream &os,
 
 } // end of namespace LibUtilities
 } // end of namespace Nektar
+
+#endif

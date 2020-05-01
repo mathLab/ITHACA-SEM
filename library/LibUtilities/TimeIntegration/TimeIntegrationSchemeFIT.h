@@ -37,23 +37,14 @@
 // FractionalInTimeIntegrationScheme so keep with the factory naming
 // convention.
 
-/**
- * \brief Fractional-in-time Methods
- *
- * A fast convolution algorithm for computing solutions to (Caputo)
- * time-fractional differential equations. This is an explicit solver
- * that expresses the solution as an integral over a Talbot curve,
- * which is discretized with quadrature. First-order quadrature is
- * currently implemented (Soon be expanded to forth order).
- */
+#ifndef NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_SCHEME_FIT
+#define NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_SCHEME_FIT
 
-#pragma once
+#define LUE LIB_UTILITIES_EXPORT
 
 #include <string>
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-
-#define LUE LIB_UTILITIES_EXPORT
 
 namespace Nektar
 {
@@ -61,41 +52,36 @@ namespace LibUtilities
 {
 
 ///////////////////////////////////////////////////////////////////////////////
-//  FractionalInTime
+/// Class for fractional-in-time integration.
 class FractionalInTimeIntegrationScheme : public TimeIntegrationScheme
 {
 public:
+    /// Constructor
     FractionalInTimeIntegrationScheme(std::string variant, unsigned int order,
-                                      std::vector<NekDouble> freeParams) :
-        TimeIntegrationScheme(variant, order, freeParams),
-        m_name("FractionalInTime")
-    {
-        m_variant    = variant;
-        m_order      = order;
-        m_freeParams = freeParams;
+                                      std::vector<NekDouble> freeParams);
 
-        // Currently up to 4th order is implemented.
-        ASSERTL1(0 < order && order <= 4,
-                 "FractionalInTime Time integration scheme bad order: " +
-                 std::to_string(order));
-    }
-
+    /// Destructor
     virtual ~FractionalInTimeIntegrationScheme()
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    /// Creator
+    static TimeIntegrationSchemeSharedPtr
+    create(std::string variant,
+           unsigned int order,
+           std::vector<NekDouble> freeParams)
     {
         TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            FractionalInTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
+            FractionalInTimeIntegrationScheme>::AllocateSharedPtr(variant,
+                                                                  order,
+                                                                  freeParams);
 
         return p;
     }
 
     static std::string className;
 
-    // Access methods
+    // Access methods from the base class that are virtual
     LUE virtual std::string GetName() const
     {
         return m_name;
@@ -131,19 +117,23 @@ public:
         return 1;
     }
 
-    // Gets the solution Vector
+    /**
+     * \brief Gets the solution vector of the ODE
+     */
     inline const TripleArray &GetSolutionVector() const
     {
         return m_u;
     }
 
-    // Sets the solution Vector
+    /**
+     * \brief Sets the solution vector of the ODE
+     */
     inline void SetSolutionVector(const int Offset, const DoubleArray &y)
     {
         m_u[Offset] = y;
     }
 
-    // The worker methods
+    // The worker methods from the base class that are virtual
     LUE virtual void InitializeScheme(
         const NekDouble deltaT, ConstDoubleArray &y_0,
         const NekDouble time, const TimeIntegrationSchemeOperators &op);
@@ -225,23 +215,23 @@ protected:
                                      const unsigned int base) const;
 
     inline unsigned int computeL( const unsigned int base,
-				  const unsigned int m ) const;
+                                  const unsigned int m ) const;
 
     inline unsigned int  computeQML( const unsigned int base,
-				     const unsigned int m );
+                                     const unsigned int m );
 
     inline unsigned int computeTaus( const unsigned int base,
-				     const unsigned int m );
+                                     const unsigned int m );
 
     void talbotQuadrature(const unsigned int nQuadPts,
-			  const NekDouble mu,
-			  const NekDouble nu,
-			  const NekDouble sigma,
-			        ComplexSingleArray &lamb,
+                          const NekDouble mu,
+                          const NekDouble nu,
+                          const NekDouble sigma,
+                                ComplexSingleArray &lamb,
                                 ComplexSingleArray &w) const;
 
     void integralClassInitialize(const unsigned int index,
-				 Instance &instance) const;
+                                 Instance &instance) const;
 
     void updateStage(const unsigned int timeStep,
                            Instance &instance);
@@ -326,3 +316,5 @@ LUE std::ostream &operator<<(std::ostream &os,
 
 } // end namespace LibUtilities
 } // end namespace Nektar
+
+#endif

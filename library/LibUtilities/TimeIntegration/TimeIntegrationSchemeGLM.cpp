@@ -77,7 +77,9 @@ unsigned int TimeIntegrationSchemeGLM::GetNumIntegrationPhases() const
     return m_integration_phases.size();
 }
 
-// The worker methods
+/**
+ * @brief Worker method to initialize the integration scheme.
+ */
 void TimeIntegrationSchemeGLM::
     InitializeScheme(const NekDouble deltaT,
                            ConstDoubleArray &y_0,
@@ -88,6 +90,9 @@ void TimeIntegrationSchemeGLM::
         m_integration_phases.back()->InitializeData(deltaT, y_0, time, op);
 }
 
+/**
+ * @brief Worker method that actually does the time integration.
+ */
 ConstDoubleArray &TimeIntegrationSchemeGLM::TimeIntegrate(
     const int timestep,
     const NekDouble delta_t,
@@ -111,6 +116,9 @@ InitializeSecondaryData(TimeIntegrationAlgorithmGLM *phase,
              GetFullName());
 }
 
+/**
+ * @brief Worker method to print details on the integration scheme
+ */
 void TimeIntegrationSchemeGLM::print(std::ostream &os) const
 {
     os << "Time Integration Scheme: " << GetFullName() << std::endl

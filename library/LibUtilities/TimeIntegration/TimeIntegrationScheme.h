@@ -34,7 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_SCHEME
+#define NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_SCHEME
 
 #include <string>
 
@@ -97,7 +98,7 @@ public:
      * \brief Sets the solution vector of the ODE
      */
     inline virtual void SetSolutionVector(const int Offset,
-					  const DoubleArray &y) = 0;
+                                          const DoubleArray &y) = 0;
 
     // The worker methods
     /**
@@ -171,3 +172,5 @@ LUE std::ostream &operator<<(std::ostream &os,
 
 } // end of namespace LibUtilities
 } // end of namespace Nektar
+
+#endif

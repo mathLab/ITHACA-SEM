@@ -38,7 +38,8 @@
 // integrator with the Time Integration Scheme Facatory in
 // SchemeInitializor.cpp.
 
-#pragma once
+#ifndef NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_BDF_TIME_INTEGRATION_SCHEME
+#define NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_BDF_TIME_INTEGRATION_SCHEME
 
 #define LUE LIB_UTILITIES_EXPORT
 
@@ -281,3 +282,6 @@ public:
 
 } // end namespace LibUtilities
 } // end namespace Nektar
+
+#endif
+

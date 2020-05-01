@@ -33,12 +33,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_SOLUTION_GLM
+#define NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_SOLUTION_GLM
+
+#define LUE LIB_UTILITIES_EXPORT
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationTypes.hpp>
-
-#define LUE LIB_UTILITIES_EXPORT
 
 namespace Nektar
 {
@@ -272,3 +273,5 @@ private:
 
 } // end of namespace LibUtilities
 } // end of namespace Nektar
+
+#endif

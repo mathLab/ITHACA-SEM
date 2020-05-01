@@ -32,7 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_SCHEME_OPERATORS
+#define NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_SCHEME_OPERATORS
 
 #include <string>
 
@@ -175,3 +176,5 @@ private:
 
 }
 }
+
+#endif

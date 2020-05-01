@@ -43,7 +43,35 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+/**
+ * @class FractionalInTimeIntegrationScheme
+ *
+ * A fast convolution algorithm for computing solutions to (Caputo)
+ * time-fractional differential equations. This is an explicit solver
+ * that expresses the solution as an integral over a Talbot curve,
+ * which is discretized with quadrature. First-order quadrature is
+ * currently implemented (Soon be expanded to forth order).
+ */
+FractionalInTimeIntegrationScheme::
+FractionalInTimeIntegrationScheme(std::string variant, unsigned int order,
+				  std::vector<NekDouble> freeParams) :
+  TimeIntegrationScheme(variant, order, freeParams),
+  m_name("FractionalInTime")
+{
+    m_variant    = variant;
+    m_order      = order;
+    m_freeParams = freeParams;
+    
+    // Currently up to 4th order is implemented.
+    ASSERTL1(0 < order && order <= 4,
+	     "FractionalInTime Time integration scheme bad order: " +
+	     std::to_string(order));
+}
 
+
+/**
+ * @brief Worker method to initialize the integration scheme.
+ */
 void FractionalInTimeIntegrationScheme::
 InitializeScheme(const NekDouble deltaT,
                        ConstDoubleArray &y_0,
@@ -61,8 +89,8 @@ InitializeScheme(const NekDouble deltaT,
     m_T = time;  // Finial time;
     m_maxTimeSteps = m_T / m_deltaT;
 
-    // The +2 below is a buffer, and keeps +2 extra rectangle groups in case T
-    // needs to be increased later.
+    // The +2 below is a buffer, and keeps +2 extra rectangle groups
+    // in case T needs to be increased later.
     m_Lmax = computeL(m_base, m_maxTimeSteps) + 2;
 
     // Demarcation integers - one array that is re-used
@@ -199,6 +227,9 @@ InitializeScheme(const NekDouble deltaT,
 }
 
 
+/**
+ * @brief Worker method that performs the time integration.
+ */
 ConstDoubleArray &
 FractionalInTimeIntegrationScheme::
 TimeIntegrate(const int timestep,
@@ -292,6 +323,10 @@ TimeIntegrate(const int timestep,
 }
 
 
+/**
+ * @brief Method that increments the counter then performs mod
+ * calculation.
+ */
 unsigned int FractionalInTimeIntegrationScheme::
 modIncrement(const int unsigned counter,
              const int unsigned base) const
@@ -299,7 +334,10 @@ modIncrement(const int unsigned counter,
    return (counter+1) % base;
 }
 
-// Computes the smallest integer L such that base < 2 * base^l.
+/**
+ * @brief Method to compute the smallest integer L such that base < 2
+ * * base^l.
+ */
 unsigned int FractionalInTimeIntegrationScheme::
 computeL( const unsigned int base,
           const unsigned int l ) const
@@ -314,11 +352,13 @@ computeL( const unsigned int base,
     return L;
 }
 
-//  Computes the demarcation integers q_{m, ell}.
-//
-//  Returns a length-(L-1) vector qml such that h*taus are interval
-//  boundaries for a partition of [0, m h]. The value of h is not
-//  needed to compute this vector.
+/**
+ * @brief Method to compute the demarcation integers q_{m, ell}.
+ *  
+ *  Returns a length-(L-1) vector qml such that h*taus are interval
+ *  boundaries for a partition of [0, m h]. The value of h is not
+ *  needed to compute this vector.
+ */
 unsigned int
 FractionalInTimeIntegrationScheme::computeQML( const unsigned int base,
                                                const unsigned int m )
@@ -336,11 +376,13 @@ FractionalInTimeIntegrationScheme::computeQML( const unsigned int base,
     return L;
 }
 
-// Computes the demarcation interval marker tau_{m, ell}.
-//
-// Returns a length-(L+1) vector tauml such that h*taus are interval
-// boundaries for a partition of [0, m h]. The value of h is not
-// needed to compute this vector.
+/**
+ * @brief Method to compute the demarcation interval marker tau_{m, ell}.
+ *
+ * Returns a length-(L+1) vector tauml such that h*taus are interval
+ * boundaries for a partition of [0, m h]. The value of h is not
+ * needed to compute this vector.
+ */
 unsigned int
 FractionalInTimeIntegrationScheme::computeTaus( const unsigned int base,
                                                 const unsigned int m )
@@ -355,8 +397,8 @@ FractionalInTimeIntegrationScheme::computeTaus( const unsigned int base,
     {
         unsigned int L = computeQML(base, m);
 
-        // m_taus is set in InitializeScheme to be the largest length expected.
-        // taus = Array<OneD, int>( L+1, 0 );
+        // m_taus is set in InitializeScheme to be the largest length
+        // expected.
 
         m_taus[0] = m - 1;
 
@@ -372,16 +414,17 @@ FractionalInTimeIntegrationScheme::computeTaus( const unsigned int base,
 }
 
 
-// talbot_quadrature -- returns quadrature rule over Tablot contour
-//
-// Returns a quadrature rule over the Tablot contour defined by the
-// parameterization.
-//
-// gamma(th) = sigma + mu * ( th*cot(th) + i*nu*th ),  -pi < th < pi
-//
-// An N-point rule is returned, equidistant in the parameter theta. The
-// returned quadrature rule approximes an integral over the contour.
-//
+/**
+ * @brief Method to compute the quadrature rule over Tablot contour
+ *
+ * Returns a quadrature rule over the Tablot contour defined by the
+ * parameterization.
+ *
+ * gamma(th) = sigma + mu * ( th*cot(th) + i*nu*th ),  -pi < th < pi
+ *
+ * An N-point rule is returned, equidistant in the parameter theta. The
+ * returned quadrature rule approximes an integral over the contour.
+ */
 void FractionalInTimeIntegrationScheme::
 talbotQuadrature(const unsigned int nQuadPts,
                  const NekDouble mu,
@@ -404,8 +447,8 @@ talbotQuadrature(const unsigned int nQuadPts,
             mu * std::complex<NekDouble>(1./tan(th) - th/(sin(th)*sin(th)), nu);
     }
 
-    // Special case for th = 0 which happens when there is an odd number
-    // of quadrature points.
+    // Special case for th = 0 which happens when there is an odd
+    // number of quadrature points.
     if( nQuadPts % 2 == 1 )
     {
         unsigned int q = (nQuadPts+1) / 2;
@@ -417,36 +460,45 @@ talbotQuadrature(const unsigned int nQuadPts,
 }
 
 
+/**
+ * @brief Method to initialize the integral class
+ */
 void FractionalInTimeIntegrationScheme::
 integralClassInitialize(const unsigned int index,
                               Instance &instance) const
 {
-    // This object stores information for performing integration over an
-    // interval [a, b]. (Defined by taus in the parent calling
-    // function.)
-
-    // The "main" object stores information about [a,b]. In particular,
-    // main.ind identifies [a,b] via multiples of h.
-
-    // Periodically the values of [a,b] need to be incremented. The
-    // necessary background storage to accomplish this increment depends
-    // whether a or b is being incremented.
-
-    // The objects with "f" ("Floor") modifiers are associated with
-    // increments of the interval floor a.
-
-    // The objects with "c" ("Ceiling") modifiers are associated with
-    // increments of the interval ceiling b.
-
-    // Items on the "stage" are stored for use in computing u at the
-    // current time.  Items in the "stash" are stored for use for future
-    // staging. Items in the "sandbox" are being actively updated at the
-    // current time for future stashing. Only items in the sandbox are
-    // time-stepped. the stage and stash locations are for storage only.
-
-    // This is the same for all integral classes, so there's probably a
-    // better way to engineer this. And technically, all that's needed
-    // is the array K(instance.z) anyway.
+    /**
+     * /brief 
+     *
+     * This object stores information for performing integration over
+     * an interval [a, b]. (Defined by taus in the parent calling
+     * function.)
+     *
+     * The "main" object stores information about [a,b]. In
+     * particular, main.ind identifies [a,b] via multiples of h.
+     *
+     * Periodically the values of [a,b] need to be incremented. The
+     * necessary background storage to accomplish this increment
+     * depends whether a or b is being incremented.
+     *
+     * The objects with "f" ("Floor") modifiers are associated with
+     * increments of the interval floor a.
+     *
+     * The objects with "c" ("Ceiling") modifiers are associated with
+     * increments of the interval ceiling b.
+     *
+     * Items on the "stage" are stored for use in computing u at the
+     * current time.  Items in the "stash" are stored for use for
+     * future staging. Items in the "sandbox" are being actively
+     * updated at the current time for future stashing. Only items in
+     * the sandbox are time-stepped. the stage and stash locations are
+     * for storage only.
+     *   
+     * This is the same for all integral classes, so there's probably
+     * a better way to engineer this. And technically, all that's
+     * needed is the array K(instance.z) anyway.
+     */
+  
     instance.base = m_base;
     instance.index = index;           // Index of this instance
     instance.active = false;          // Used to determine if active
@@ -524,18 +576,22 @@ integralClassInitialize(const unsigned int index,
     // Talbot quadrature rule
     talbotQuadrature(m_nQuadPts, mu, m_nu, m_sigma, instance.z, instance.w);
 
-    // With sigma == 0, the dependence of z and w on index is just a
-    // multiplicative scaling factor (mu). So technically we'll only
-    // need one instance of this N-point rule and can scale it
-    // accordingly inside each integral_class instance. Not sure if
-    // this optimization is worth it. Cumulative memory savings would
-    // only be about 4*N*Lmax floats.
-
-    // Below: precomputation for time integration of auxiliary
-    // variables.  Everything below here is independent of the
-    // instance index index. Therefore, we could actually just
-    // generate and store one copy of this stuff and use it
-    // everywhere.
+    /**
+     * /brief 
+     *
+     * With sigma == 0, the dependence of z and w on index is just a
+     * multiplicative scaling factor (mu). So technically we'll only
+     * need one instance of this N-point rule and can scale it
+     * accordingly inside each integral_class instance. Not sure if
+     * this optimization is worth it. Cumulative memory savings would
+     * only be about 4*N*Lmax floats.
+     
+     * Below: precomputation for time integration of auxiliary
+     * variables.  Everything below here is independent of the
+     * instance index index. Therefore, we could actually just
+     * generate and store one copy of this stuff and use it
+     * everywhere.
+     */
 
     // 'As' array - one for each order.
     TripleArray &As = instance.As;
@@ -667,11 +723,13 @@ integralClassInitialize(const unsigned int index,
 }
 
 
-// Performs rearrangement of staging/stashing for current time
-//
-// (1) activates ceiling staging
-// (2) moves ceiling stash ---> stage
-// (3) moves floor stash --> stage (+ updates all ceiling data)
+/**
+ * @brief Method to rearrange of staging/stashing for current time
+ *
+ * (1) activates ceiling staging
+ * (2) moves ceiling stash ---> stage
+ * (3) moves floor stash --> stage (+ updates all ceiling data)
+ */
 void FractionalInTimeIntegrationScheme::
 updateStage(const unsigned int timeStep,
                   Instance &instance)
@@ -729,12 +787,14 @@ updateStage(const unsigned int timeStep,
     }
 }
 
-// Approximates the integral
-//
-//   \int_{(m-1) h}^{m h} k(m*h -s) f(u, s) dx{s}
-//
-// Using a time-stepping scheme of a particular order. Here, k depends
-// on alpha, the derivative order.
+/**
+ * @brief Method to approximate the integral
+ *
+ *   \int_{(m-1) h}^{m h} k(m*h -s) f(u, s) dx{s}
+ *
+ * Using a time-stepping scheme of a particular order. Here, k depends
+ * on alpha, the derivative order.
+ */
 void FractionalInTimeIntegrationScheme::
 finalIncrement(const unsigned int timeStep,
                const TimeIntegrationSchemeOperators &op)
@@ -756,6 +816,10 @@ finalIncrement(const unsigned int timeStep,
 }
 
 
+/**
+ * @brief Method to get the integral contribution over [taus(i+1)
+ * taus(i)]. Stored in m_uInt.
+ */
 void FractionalInTimeIntegrationScheme::
 integralContribution(const unsigned int timeStep,
                      const unsigned int tauml,
@@ -789,25 +853,27 @@ integralContribution(const unsigned int timeStep,
 }
 
 
+/**
+ * @brief Method to get the solution to y' = z*y + f(u), using an
+ * exponential integrator with implicit order (m_order + 1)
+ * interpolation of the f(u) term.
+ */
 void FractionalInTimeIntegrationScheme::
 timeAdvance(const unsigned int timeStep,
             const TimeIntegrationSchemeOperators &op,
                   Instance &instance,
                   ComplexTripleArray &y)
 {
-    // Solution to y' = z*y + f(u), using an exponential integrator with
-    // implicit order (m_order + 1) interpolation of the f(u) term.
-
     int order;
 
     // Try automated high-order method.
     if( timeStep <= m_order )
     {
         // Not enough history. For now, demote to lower-order method.
-        // TODO: use multi-stage method
+        // TODO: use multi-stage method.
         order = timeStep;
 
-        // Prep for the time step
+        // Prep for the time step.
         for( unsigned int m=0; m<=order; ++m )
         {
             for( unsigned int q=0; q<m_nQuadPts; ++q )
@@ -850,13 +916,15 @@ timeAdvance(const unsigned int timeStep,
     }
 }
 
-// Updates sandboxes to current time
-// (1) advances ceiling sandbox
-// (2) moves ceiling sandbox ---> stash
-// (3) activates floor sandboxing
-// (4) advances floor sandbox
-// (5) moves floor sandbox ---> stash
-
+/**
+ * @brief Method to update sandboxes to the current time.
+ *
+ * (1) advances ceiling sandbox
+ * (2) moves ceiling sandbox ---> stash
+ * (3) activates floor sandboxing
+ * (4) advances floor sandbox
+ * (5) moves floor sandbox ---> stash
+ */
 void FractionalInTimeIntegrationScheme::
 advanceSandbox(const unsigned int timeStep,
                const TimeIntegrationSchemeOperators &op,
@@ -934,7 +1002,9 @@ advanceSandbox(const unsigned int timeStep,
     }
 }
 
-//
+/**
+ * @brief Worker method to print details on the integration scheme
+ */
 void FractionalInTimeIntegrationScheme::print(std::ostream &os) const
 {
     os << "Time Integration Scheme: " << GetFullName() << std::endl

@@ -951,7 +951,8 @@ namespace Nektar
         /**
          *
          */
-        const std::string &SessionReader::GetGlobalSysSolnInfo(const std::string &pVariable, const std::string &pProperty) const
+        const std::string &SessionReader::GetGlobalSysSolnInfo(const std::string &pVariable,
+                                                               const std::string &pProperty) const
         {
             auto iter = GetGloSysSolnList().find(pVariable);
             ASSERTL0(iter != GetGloSysSolnList().end(),

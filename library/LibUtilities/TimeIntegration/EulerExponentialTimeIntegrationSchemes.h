@@ -71,7 +71,7 @@ public:
         // Currently up to 4th order is implemented.
         ASSERTL1(variant == "Lawson" || variant == "Norsett",
                  "EulerExponential Time integration scheme unknown variant: " +
-                 variant + ". Must be 'Lawson' or 'Norsett'");
+                 variant + ". Must be 'Lawson' or 'Norsett'.");
 
         ASSERTL1(((variant == "Lawson"  && 1 <= order && order <= 1) ||
                   (variant == "Norsett" && 1 <= order && order <= 4)),
@@ -230,7 +230,7 @@ public:
             {
               ASSERTL1(false,
                        "Cannot call EulerExponential directly "
-                       "use LawsonEuler or NorsettEuler.");
+                       "use the variant 'Lawson' or 'Norsett'.");
             }
 
             // Set up for multiple steps. For multiple steps one needs

@@ -58,7 +58,7 @@ class EulerTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     EulerTimeIntegrationScheme(std::string variant, unsigned int order,
-                                       std::vector<NekDouble> freeParams) :
+                               std::vector<NekDouble> freeParams) :
         TimeIntegrationSchemeGLM(variant, 1, freeParams)
     {
         boost::ignore_unused(order);

@@ -678,6 +678,13 @@ namespace Nektar
         void StdTriExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
                                                  Array<OneD, NekDouble>& eta)
         {
+            // L2 check that coordinates are within the standard hex.
+            ASSERTL2(coords[0] >= -1.0 - NekConstants::kNekZeroTol,
+                     "coord[0] < -1");
+            ASSERTL2(coords[1] >= -1.0 - NekConstants::kNekZeroTol,
+                     "coord[1] < -1");
+            ASSERTL2(coords[0] + coords[1] <= NekConstants::kNekZeroTol,
+                     "coord[0] + coord[1] > 0");
 
             // set up local coordinate system
             if (fabs(xi[1]-1.0) < NekConstants::kNekZeroTol)
@@ -745,37 +752,24 @@ namespace Nektar
             int mode)
         {
             Array<OneD, NekDouble> coll(2);
-
-            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol,
-                     "coord[0] < -1");
-            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol,
-                     "coord[0] >  1");
-            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol,
-                     "coord[1] < -1");
-            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol,
-                     "coord[1] >  1");
-
             LocCoordToLocCollapsed(coords, coll);
+
             // From mode we need to determine mode0 and mode1 in the (p,q)
-            // direction.
+            // direction. mode1 can be directly inferred from mode.
             const int    nm1    = m_base[1]->GetNumModes();
             const double c      = 1 + 2*nm1;
             const int    mode0  = floor(0.5*(c - sqrt(c*c - 8*mode)));
-            //const int    mode1  = mode - mode0 * nm1 + mode0*(mode0-1)/2;
 
             if (mode == 1)
             {
-                return  
-                    (StdExpansion::BaryEvaluateBasis<0>(coll[0], 0) +
-                     StdExpansion::BaryEvaluateBasis<0>(coll[0], 1))*
-                    StdExpansion::BaryEvaluateBasis<1>(coll[1], 1);
+                // Account for collapsed vertex.
+                return StdExpansion::BaryEvaluateBasis<1>(coll[1], 1);
             }
             else
-            {  
+            {
                 return
                     StdExpansion::BaryEvaluateBasis<0>(coll[0], mode0) *
                     StdExpansion::BaryEvaluateBasis<1>(coll[1], mode);
-                //mode0 * nm1 + mode0*(mode0-1)/2 + mode1);
             }
         }
 

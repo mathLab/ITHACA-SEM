@@ -874,6 +874,16 @@ namespace Nektar
                                         const Array<OneD, const NekDouble>& xi,
                                         Array<OneD, NekDouble>& eta)
         {
+            // L2 check that coordinates are within the standard tetrahedron.
+            ASSERTL2(xi[0] >= -1.0 - NekConstants::kNekZeroTol,
+                     "coord[0] < -1");
+            ASSERTL2(xi[1] >= -1.0 - NekConstants::kNekZeroTol,
+                     "coord[1] < -1");
+            ASSERTL2(xi[2] >= -1.0 - NekConstants::kNekZeroTol,
+                     "coord[1] < -1");
+            ASSERTL2(xi[0] + xi[1] + xi[2] <= -1.0 + NekConstants::kNekZeroTol,
+                     "coord greater than upper bound");
+
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
             {
                 // Very top point of the tetrahedron
@@ -915,77 +925,25 @@ namespace Nektar
             const Array<OneD, const NekDouble>& coords,
             int mode)
         {
-            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol,
-                     "coord[0] < -1");
-            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol,
-                     "coord[0] >  1");
-            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol,
-                     "coord[1] < -1");
-            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol,
-                     "coord[1] >  1");
-            ASSERTL2(coords[2] > -1 - NekConstants::kNekZeroTol,
-                     "coord[2] < -1");
-            ASSERTL2(coords[2] <  1 + NekConstants::kNekZeroTol,
-                     "coord[2] >  1");
+            Array<OneD, NekDouble> coll(3);
+            LocCoordToLocCollapsed(coords, coll);
 
-                      Array<OneD, NekDouble> coll(3);
-            //const int nm0 = m_base[0]->GetNumModes();
-            //            const int nm1 = m_base[1]->GetNumModes();
-            //const int nm2 = m_base[2]->GetNumModes();
-            
-                      LocCoordToLocCollapsed(coords, coll);
-                      
             const int nm1 = m_base[1]->GetNumModes();
             const int nm2 = m_base[2]->GetNumModes();
-            const int b = 2 * nm2 + 1;
 
+            const int b = 2 * nm2 + 1;
             const int mode0 = floor(0.5 * (b - sqrt(b * b - 8.0 * mode / nm1)));
             const int tmp   =
                 mode - nm1*(mode0 * (nm2-1) + 1 - (mode0 - 2)*(mode0 - 1) / 2);
             const int mode1 = tmp / (nm2 - mode0);
             const int mode2 = tmp % (nm2 - mode0);
 
-            /*int mode0 = 0, mode1 = 0, mode2 = 0;
-
-            // Very suboptimal lookup for rather more complex tet indices.
-            for (mode0 = 0; mode0 < nm0; ++mode0)
-            {
-                for (mode1 = 0; mode1 < nm1 - mode0; ++mode1)
-                {
-                    for (mode2 = 0; mode2 < nm2 - mode0 - mode1; ++mode2)
-                    {
-                        if (mode == GetMode(mode0, mode1, mode2))
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Lookup for mode2 index in basis
-            int i, j, k, cnt = 0;
-            for (i = 0; i < nm2; ++i)
-            {
-                for (j = 0; j < nm2 - i; ++j)
-                {
-                    for (k = 0; k < nm2 - i - j; ++k, ++cnt)
-                    {
-                        if (i == mode0 && j == mode1 && k == mode2)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-            */
             if(mode == 1)
             {
                 // Collapsed top vertex
-                double ret =  
-                    (StdExpansion::BaryEvaluateBasis<2>(coll[2], 1));
-                return ret;
+                return StdExpansion::BaryEvaluateBasis<2>(coll[2], 1);
             }
-            else if (mode0 == 0 &&  mode2 == 1)
+            else if (mode0 == 0 && mode2 == 1)
             {
                 return
                     StdExpansion::BaryEvaluateBasis<1>(coll[1], 0) *

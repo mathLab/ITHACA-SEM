@@ -607,6 +607,20 @@ namespace Nektar
         void StdHexExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
                                       Array<OneD, NekDouble>& eta)
         {
+            // L2 check that coordinates are within the standard hex.
+            ASSERTL2(coords[0] >= -1.0 - NekConstants::kNekZeroTol,
+                     "coord[0] < -1");
+            ASSERTL2(coords[0] <= 1.0 + NekConstants::kNekZeroTol,
+                     "coord[0] > 1");
+            ASSERTL2(coords[1] >= -1.0 - NekConstants::kNekZeroTol,
+                     "coord[1] < -1");
+            ASSERTL2(coords[1] <= 1.0 + NekConstants::kNekZeroTol,
+                     "coord[1] > 1");
+            ASSERTL2(coords[2] >= -1.0 - NekConstants::kNekZeroTol,
+                     "coord[2] < -1");
+            ASSERTL2(coords[2] <= 1.0 + NekConstants::kNekZeroTol,
+                     "coord[2] > 1");
+
             eta[0] = xi[0];
             eta[1] = xi[1];
             eta[2] = xi[2];

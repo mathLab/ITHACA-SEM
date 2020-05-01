@@ -1630,7 +1630,7 @@ namespace Nektar
                     {
                         return pval;
                     }
-                    //                    std::cout<<"\n bw[i] = "<<bw[i]<<" ";
+
                     NekDouble tmp = bw[i] / xdiff;
                     numer += tmp * pval;
                     denom += tmp;

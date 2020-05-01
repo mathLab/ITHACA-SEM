@@ -143,7 +143,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &coords,
             const Array<OneD, const NekDouble> &physvals)
         {
-            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
+            Array<OneD, NekDouble> eta(3);
 
             WARNINGL2(coords[0] >= -1 - NekConstants::kNekZeroTol,
                       "coord[0] < -1");

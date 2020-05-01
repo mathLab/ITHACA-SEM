@@ -680,12 +680,21 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
 
-
-
         void StdPrismExp::v_LocCoordToLocCollapsed(
                 const Array<OneD, const NekDouble>& xi,
                 Array<OneD, NekDouble>& eta)
         {
+            // L2 check that coordinates are within the standard prism.
+            ASSERTL2(xi[0] >= -1.0 - NekConstants::kNekZeroTol,
+                     "coord[0] < -1");
+            ASSERTL2(xi[1] >= -1.0 - NekConstants::kNekZeroTol,
+                     "coord[1] < -1");
+            ASSERTL2(xi[1] <= -1.0 + NekConstants::kNekZeroTol,
+                     "coord[1] > 1");
+            ASSERTL2(xi[2] >= -1.0 - NekConstants::kNekZeroTol,
+                     "coord[1] < -1");
+            ASSERTL2(xi[0] + xi[2] <= NekConstants::kNekZeroTol,
+                     "coord greater than upper bound");
 
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
             {
@@ -739,18 +748,8 @@ namespace Nektar
             const Array<OneD, const NekDouble>& coords,
             int mode)
         {
-            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol,
-                     "coord[0] < -1");
-            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol,
-                     "coord[0] >  1");
-            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol,
-                     "coord[1] < -1");
-            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol,
-                     "coord[1] >  1");
-            ASSERTL2(coords[2] > -1 - NekConstants::kNekZeroTol,
-                     "coord[2] < -1");
-            ASSERTL2(coords[2] <  1 + NekConstants::kNekZeroTol,
-                     "coord[2] >  1");
+            Array<OneD, NekDouble> coll(3);
+            LocCoordToLocCollapsed(coords, coll);
 
             const int nm1 = m_base[1]->GetNumModes();
             const int nm2 = m_base[2]->GetNumModes();
@@ -766,15 +765,15 @@ namespace Nektar
             {
                 // handle collapsed top edge to remove mode0 terms
                 return
-                    StdExpansion::BaryEvaluateBasis<1>(coords[1], mode1) *
-                    StdExpansion::BaryEvaluateBasis<2>(coords[2], mode2);
+                    StdExpansion::BaryEvaluateBasis<1>(coll[1], mode1) *
+                    StdExpansion::BaryEvaluateBasis<2>(coll[2], mode2);
             }
             else
             {
                 return
-                    StdExpansion::BaryEvaluateBasis<0>(coords[0], mode0) *
-                    StdExpansion::BaryEvaluateBasis<1>(coords[1], mode1) *
-                    StdExpansion::BaryEvaluateBasis<2>(coords[2], mode2);
+                    StdExpansion::BaryEvaluateBasis<0>(coll[0], mode0) *
+                    StdExpansion::BaryEvaluateBasis<1>(coll[1], mode1) *
+                    StdExpansion::BaryEvaluateBasis<2>(coll[2], mode2);
             }
         }
 

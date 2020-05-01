@@ -132,6 +132,22 @@ void TimeIntegrationSchemeGLM::print(std::ostream &os) const
     }
 }
 
+void TimeIntegrationSchemeGLM::printFull(std::ostream &os) const
+{
+    os << "Time Integration Scheme: " << GetFullName() << std::endl
+       << "        Has " << m_integration_phases.size() << " phase(s)"
+       << std::endl;
+
+    for (int i = 0; i < m_integration_phases.size(); i++)
+    {
+        os << "            - "
+           << m_integration_phases[i]->m_name << std::endl;
+
+        os << "            - "
+	   << m_integration_phases[i] << std::endl;
+    }
+}
+
 // Friend Operators
 std::ostream &operator<<(std::ostream &os, const TimeIntegrationSchemeGLM &rhs)
 {

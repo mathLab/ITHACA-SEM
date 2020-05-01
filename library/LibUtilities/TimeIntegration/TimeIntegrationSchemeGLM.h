@@ -89,6 +89,7 @@ public:
                                              NekDouble deltaT) const;
   
     LUE virtual void print(std::ostream &os) const;
+    LUE virtual void printFull(std::ostream &os) const;
 
     // Friend classes
     LUE friend std::ostream &operator<<(std::ostream &os,

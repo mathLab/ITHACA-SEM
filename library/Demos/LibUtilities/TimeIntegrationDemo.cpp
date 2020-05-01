@@ -72,9 +72,17 @@
 //   - OneDFiniteDiffAdvDiffSolver.dat (containing the data)
 //   - OneDFiniteDiffAdvDiffSolver.p   (containing a gnuplot script)
 //
+//   - OneDFiniteDiffAdvDiffSolverError.dat (containing the error data)
+//   - OneDFiniteDiffAdvDiffSolverError.p   (containing a gnuplot script)
+//
+//   - OneDFiniteDiffAdvDiffSolverL2Norm.dat (containing the l2 Norm data)
+//   - OneDFiniteDiffAdvDiffSolverL2Norm.p   (containing a gnuplot script)
+//
 // and can be visualised by gnuplot using the command
 //
 //    gnuplot OneDFiniteDiffAdvDiffSolverOutput.p
+//    gnuplot OneDFiniteDiffAdvDiffSolverOutputError.p
+//    gnuplot OneDFiniteDiffAdvDiffSolverOutputL2Norm.p
 //
 // -----------------------------------------------------------------
 #include <fstream>
@@ -454,6 +462,7 @@ int main(int argc, char *argv[])
     desc.add_options()
       ("help,h", "Produce this help message.")
       ("test,t", "Run in regession test mode.")
+      ("butcher,b", "Print the Butcher Tableau for each phase.")
       ("solution,s", "Print the solution values for each time step.")
       ("L2,l", "Print the L2 error for each time step.")
       ("dof,d", po::value<int>(), "Number of degrees of freedom (points or values).")
@@ -465,13 +474,13 @@ int main(int argc, char *argv[])
         "- Forward:  1st order Forward  Euler\n"
         "- Backward: 1st order Backward Euler\n"
         "  \n"
-        "- SSP: Nth order multi-stage Runga-Kutta SSP scheme\n"
+        "- SSP: 1st-3rd order multi-stage Runga-Kutta SSP scheme\n"
         "  \n"
         "- Gear: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
-        "- DIRK: Nth order multi-stage IMEX DIRK scheme\n"
+        "- DIRK: 1st-4th order multi-stage IMEX DIRK scheme\n"
         "  \n"
-        "- Lawson:  Nth order multi-step Lawson-Euler  exponential scheme\n"
-        "- Norsett: Nth order multi-step Norsett-Euler exponential scheme\n"
+        "- Lawson:  1st order multi-step Lawson-Euler  exponential scheme\n"
+        "- Norsett: 1st-4th order multi-step Norsett-Euler exponential scheme\n"
        )
       ("method,m", po::value<std::string>(),
         "Name of the time-integration scheme:\n"
@@ -481,21 +490,21 @@ int main(int argc, char *argv[])
         "- MCNAB: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
         "     (MCNAB)\n"
         "  \n"
-        "- RungeKutta: Nth order multi-stage Runga-Kutta scheme\n"
-        "- RungeKutta -variant SSP: Nth order multi-stage Runga-Kutta SSP scheme\n"
-        "- DIRK: Nth order multi-stage Diagonally Implicit\n"
+        "- RungeKutta: 1st-5th order multi-stage Runga-Kutta scheme\n"
+        "- RungeKutta -variant SSP: 1st-4th order multi-stage Runga-Kutta SSP scheme\n"
+        "- DIRK:1st-4th order multi-stage Diagonally Implicit\n"
         "      Runga-Kutta scheme (DIRK)\n"
-        "- AdamsBashforth: Nth order multi-step Adams-Bashforth scheme\n"
-        "- AdamsMoulton: Nth order multi-step Adams-Moulton scheme\n"
-        "- BDFImplicit: Nth order multi-step BDFImplicit scheme\n"
-        "- IMEX: Nth order multi-step IMEX scheme\n"
+        "- AdamsBashforth: 1st-4th order multi-step Adams-Bashforth scheme\n"
+        "- AdamsMoulton: 1st-4th order multi-step Adams-Moulton scheme\n"
+        "- BDFImplicit: 1st-4th order multi-step BDFImplicit scheme\n"
+        "- IMEX: 1st-4th order multi-step IMEX scheme\n"
         "- IMEX -variant Gear: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
-        "- IMEX -variant DIRK: Nth order multi-stage IMEX DIRK scheme\n"
+        "- IMEX -variant DIRK: 1st-3rd order multi-stage IMEX DIRK scheme\n"
         "  \n"
-        "- EulerExponential -variant Lawson: Nth order multi-step Lawson-Euler exponential scheme\n"
-        "- EulerExponential -variant Norsett: Nth order multi-step Norsett-Euler exponential scheme\n"
+        "- EulerExponential -variant Lawson: 1st order multi-step Lawson-Euler exponential scheme\n"
+        "- EulerExponential -variant Norsett:1st-4th order multi-step Norsett-Euler exponential scheme\n"
         "  \n"
-        "- FractionalInTime: Nth order multi-step Fractional In Time scheme\n"
+        "- FractionalInTime: 1st-4th order multi-step Fractional In Time scheme\n"
        );
 
     po::variables_map vm;
@@ -555,7 +564,8 @@ int main(int argc, char *argv[])
     
     // Optional parameters
     bool L2      = vm.count("L2");
-    bool verbose = vm.count("verbose");
+    bool printS  = vm.count("solution");
+    bool printBT = vm.count("butcher");
     bool test    = vm.count("test");
 
     // Bullet proofing.
@@ -749,11 +759,11 @@ int main(int argc, char *argv[])
     NekDouble intTime = 0.0;
 
     // Write the time step and time
-    if( verbose || L2 )
+    if( printS || L2 )
         std::cout << "Time step: " << timeStep << "  "
                   << "Time: " << time << std::endl;
 
-    solverSharedPtr->GetMinMaxValues(exactSol, approxSol, verbose);
+    solverSharedPtr->GetMinMaxValues(exactSol, approxSol, printS);
 
     double L2Norm = solverSharedPtr->EvaluateL2Error(exactSol, approxSol, L2);
 
@@ -783,11 +793,11 @@ int main(int argc, char *argv[])
         // true the values will be dumped to screen.
 
         // Write the time step and time
-        if( verbose || L2 )
+        if( printS || L2 )
             std::cout << "Time step: " << timeStep << "  "
                       << "Time: " << time << std::endl;
 
-        solverSharedPtr->GetMinMaxValues(exactSol, approxSol, verbose);
+        solverSharedPtr->GetMinMaxValues(exactSol, approxSol, printS);
 
         L2Norm = solverSharedPtr->EvaluateL2Error(exactSol, approxSol, L2);
 
@@ -797,8 +807,12 @@ int main(int argc, char *argv[])
     }
 
     // Printing preable so the user knows what was done.
-    std::cout << tiScheme << std::endl
-              << "Number of time steps performed: " << timeStep << std::endl
+    if( printBT )
+      tiScheme->printFull(std::cout);
+    else
+      std::cout << tiScheme << std::endl;
+
+    std::cout << "Number of time steps performed: " << timeStep << std::endl
               << "Time increment: " << dt << std::endl
               << "Total time: " << time << std::endl
               << "CPU time : " << std::setw(8) << std::left << intTime

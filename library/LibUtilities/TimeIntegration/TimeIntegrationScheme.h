@@ -134,6 +134,7 @@ public:
         const TimeIntegrationSchemeOperators &op) = 0;
 
     LUE virtual void print(std::ostream &os) const = 0;
+    LUE virtual void printFull(std::ostream &os) const = 0;
 
     // Friend classes
     LUE friend std::ostream &operator<<(std::ostream &os,

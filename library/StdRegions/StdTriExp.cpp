@@ -760,7 +760,8 @@ namespace Nektar
             const double c      = 1 + 2*nm1;
             const int    mode0  = floor(0.5*(c - sqrt(c*c - 8*mode)));
 
-            if (mode == 1)
+            if (mode == 1 &&
+                m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
                 // Account for collapsed vertex.
                 return StdExpansion::BaryEvaluateBasis<1>(coll[1], 1);

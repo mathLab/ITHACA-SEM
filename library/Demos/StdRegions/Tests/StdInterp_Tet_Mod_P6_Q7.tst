@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>BaryInterp3D Tetrahedron Modified basis P=6 Q=7</description>
-    <executable>BaryInterp</executable>
+    <description>StdInterp Tetrahedron Modified basis P=6 Q=7</description>
+    <executable>StdInterp</executable>
     <parameters>-s tetrahedron -b Modified_A Modified_B Modified_C -o 6 6 6 -p 7 7 7</parameters>
     <metrics>
         <metric type="L2" id="1">

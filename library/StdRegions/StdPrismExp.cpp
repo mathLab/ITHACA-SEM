@@ -761,7 +761,8 @@ namespace Nektar
             const int mode1 = tmp / (nm2 - mode0);
             const int mode2 = tmp % (nm2 - mode0);
 
-            if (mode0 == 0 && mode2 == 1)
+            if (mode0 == 0 && mode2 == 1 &&
+                m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
                 // handle collapsed top edge to remove mode0 terms
                 return

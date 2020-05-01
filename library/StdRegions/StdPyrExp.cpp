@@ -872,7 +872,8 @@ namespace Nektar
                 }
             }
 
-            if (mode == 1)
+            if (mode == 1 &&
+                m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
                 return StdExpansion::BaryEvaluateBasis<2>(coll[2], 1);
             }

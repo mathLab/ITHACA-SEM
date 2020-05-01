@@ -938,30 +938,33 @@ namespace Nektar
             const int mode1 = tmp / (nm2 - mode0);
             const int mode2 = tmp % (nm2 - mode0);
 
-            if(mode == 1)
+            if (m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
-                // Collapsed top vertex
-                return StdExpansion::BaryEvaluateBasis<2>(coll[2], 1);
+                // Handle the collapsed vertices and edges in the modified
+                // basis.
+                if (mode == 1)
+                {
+                    // Collapsed top vertex
+                    return StdExpansion::BaryEvaluateBasis<2>(coll[2], 1);
+                }
+                else if (mode0 == 0 && mode2 == 1)
+                {
+                    return
+                        StdExpansion::BaryEvaluateBasis<1>(coll[1], 0) *
+                        StdExpansion::BaryEvaluateBasis<2>(coll[2], 1);
+                }
+                else if (mode0 == 1 && mode1 == 1 && mode2 == 0)
+                {
+                    return
+                        StdExpansion::BaryEvaluateBasis<0>(coll[0], 0) *
+                        StdExpansion::BaryEvaluateBasis<1>(coll[1], 1);
+                }
             }
-            else if (mode0 == 0 && mode2 == 1)
-            {
-                return
-                    StdExpansion::BaryEvaluateBasis<1>(coll[1], 0) *
-                    StdExpansion::BaryEvaluateBasis<2>(coll[2], 1);
-            }
-            else if (mode0 == 1 && mode1 == 1 && mode2 == 0)
-            {
-               return
-                    StdExpansion::BaryEvaluateBasis<0>(coll[0], 0) *
-                    StdExpansion::BaryEvaluateBasis<1>(coll[1], 1);
-            }
-            else
-            {
-                return
-                    StdExpansion::BaryEvaluateBasis<0>(coll[0], mode0) *
-                    StdExpansion::BaryEvaluateBasis<1>(coll[1], mode1) *
-                    StdExpansion::BaryEvaluateBasis<2>(coll[2], mode2);
-            }
+
+            return
+                StdExpansion::BaryEvaluateBasis<0>(coll[0], mode0) *
+                StdExpansion::BaryEvaluateBasis<1>(coll[1], mode1) *
+                StdExpansion::BaryEvaluateBasis<2>(coll[2], mode2);
         }
 
         void StdTetExp::v_GetFaceNumModes(

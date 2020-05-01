@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>BaryInterpBasis3D Prism Orthonormal basis P=6 Q=7</description>
-    <executable>BaryInterp</executable>
+    <description>StdInterpBasis Prism Orthonormal basis P=6 Q=7</description>
+    <executable>StdInterpBasis</executable>
     <parameters>-s prism -b Ortho_A Ortho_A Ortho_B -o 6 6 6 -p 7 7 7</parameters>
     <metrics>
         <metric type="L2" id="1">

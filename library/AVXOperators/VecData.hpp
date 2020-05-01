@@ -2,7 +2,7 @@
 #define VECDATA_HPP
 
 #include "AVXUtil.hpp"
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
+// #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/align/aligned_allocator.hpp>
 #include <immintrin.h>
 
@@ -552,39 +552,39 @@ template<class T>
 using AlignedVector =
     std::vector<T, boost::alignment::aligned_allocator<T, SIMD_WIDTH_BYTES>>;
 
-template<class T, int VW>
-AlignedVector<VecData<T, VW>> ToAlignedVector(Array<OneD, T> &input)
-{
-    size_t nElmt    = input.num_elements();
-    int    pad      = nElmt % VW;
-    size_t nVecElmt = nElmt + (pad == 0 ? 0 : 1);
+// template<class T, int VW>
+// AlignedVector<VecData<T, VW>> ToAlignedVector(Array<OneD, T> &input)
+// {
+//     size_t nElmt    = input.num_elements();
+//     int    pad      = nElmt % VW;
+//     size_t nVecElmt = nElmt + (pad == 0 ? 0 : 1);
 
-    AlignedVector<VecData<T, VW>> ret(nVecElmt);
+//     AlignedVector<VecData<T, VW>> ret(nVecElmt);
 
-    T *tmp = &input[0];
+//     T *tmp = &input[0];
 
-    for (int i = 0; i < nElmt / VW; ++i, tmp += VW)
-    {
-        ret[i] = tmp;
-    }
+//     for (int i = 0; i < nElmt / VW; ++i, tmp += VW)
+//     {
+//         ret[i] = tmp;
+//     }
 
-    // Pad everything else out
-    if (pad > 0)
-    {
-        T tmp2[VW];
-        for (int i = 0; i < pad; ++i)
-        {
-            tmp2[i] = input[nElmt / VW + i];
-        }
-        for (int i = pad; i < VW; ++i)
-        {
-            tmp2[i] = 0;
-        }
-        ret[nElmt] = tmp2;
-    }
+//     // Pad everything else out
+//     if (pad > 0)
+//     {
+//         T tmp2[VW];
+//         for (int i = 0; i < pad; ++i)
+//         {
+//             tmp2[i] = input[nElmt / VW + i];
+//         }
+//         for (int i = pad; i < VW; ++i)
+//         {
+//             tmp2[i] = 0;
+//         }
+//         ret[nElmt] = tmp2;
+//     }
 
-    return ret;
-}
+//     return ret;
+// }
 
 } // namespace AVX
 } // namespace Nektar

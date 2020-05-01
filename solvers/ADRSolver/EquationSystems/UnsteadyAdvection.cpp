@@ -34,6 +34,7 @@
 
 #include <iostream>
 #include <ADRSolver/EquationSystems/UnsteadyAdvection.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 using namespace std;
 
@@ -104,7 +105,7 @@ namespace Nektar
             {
                 // Do not forwards transform initial condition
                 m_homoInitialFwd = false;
-                
+
                 // Define the normal velocity fields
                 if (m_fields[0]->GetTrace())
                 {
@@ -216,9 +217,14 @@ namespace Nektar
         // Number of solution points
         int nSolutionPts = GetNpoints();
 
+LibUtilities::Timer timer;
+timer.Start();
         // RHS computation using the new advection base class
         m_advObject->Advect(nVariables, m_fields, m_velocity, inarray,
                             outarray, time);
+timer.Stop();
+// Elapsed time
+timer.AccumulateRegion("Advect");
 
         // Negate the RHS
         for (i = 0; i < nVariables; ++i)

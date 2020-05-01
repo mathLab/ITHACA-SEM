@@ -262,11 +262,12 @@ SET(TimeIntegrationHeaders
         ./TimeIntegration/AdamsMoultonTimeIntegrationSchemes.h
         ./TimeIntegration/BDFImplicitTimeIntegrationSchemes.h
         ./TimeIntegration/EulerTimeIntegrationSchemes.h
+        ./TimeIntegration/EulerExponentialTimeIntegrationSchemes.h
         ./TimeIntegration/CNABTimeIntegrationScheme.h
         ./TimeIntegration/DIRKTimeIntegrationSchemes.h
-        ./TimeIntegration/IMEXGearTimeIntegrationScheme.h
         ./TimeIntegration/IMEXTimeIntegrationSchemes.h
         ./TimeIntegration/IMEXdirkTimeIntegrationSchemes.h
+        ./TimeIntegration/IMEXGearTimeIntegrationScheme.h
         ./TimeIntegration/MCNABTimeIntegrationScheme.h
         ./TimeIntegration/RungeKuttaTimeIntegrationSchemes.h
         ./TimeIntegration/TimeIntegrationScheme.h

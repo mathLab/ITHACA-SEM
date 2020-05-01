@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Definition of GlobalLinSysKey 
+// Description: Definition of GlobalLinSysKey
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +43,7 @@ namespace Nektar
     {
         /**
          * @class GlobalLinSysKey
-         * 
+         *
          * This class represents a global linear system and is in essence a
          * wrapper around a global matrix key, augmenting it with a specific
          * solution type from GlobalSysSolnType. Each constructor accepts a
@@ -51,7 +51,7 @@ namespace Nektar
          * AssemblyMap, defining the mapping from the local elemental
          * expansions to a global system, and a GlobalSysSolnType, defining the
          * type of solution (e.g. full matrix, static condenstation). Some
-         * constructors include additional parameters for customising the 
+         * constructors include additional parameters for customising the
          * global operator matrix.
          */
 
@@ -71,7 +71,7 @@ namespace Nektar
                  x != varFactors.end(); ++x)
             {
                 m_varFactors_hashes[i] = boost::hash_range(x->second.begin(),
-                              x->second.begin() + x->second.num_elements());
+                              x->second.begin() + x->second.size());
                 boost::hash_combine(m_varFactors_hashes[i], (int)x->first);
                 i++;
             }
@@ -96,8 +96,8 @@ namespace Nektar
         GlobalLinSysKey::~GlobalLinSysKey()
         {
         }
-        
-        
+
+
         /**
          * Compares two GlobalLinSysKeys by comparing their solution types and
          * matrix keys.
@@ -156,7 +156,7 @@ namespace Nektar
             os << "MatrixType: " << StdRegions::MatrixTypeMap[rhs.GetMatrixType()] << ", ShapeType: "
                << LibUtilities::ShapeTypeMap[rhs.GetShapeType()]
                             << std::endl;
-            os << "Solution Type: " 
+            os << "Solution Type: "
                << GlobalSysSolnTypeMap[rhs.GetGlobalSysSolnType()] << endl;
             os << "Number of constants: " << rhs.GetNConstFactors() << endl;
             for (auto &x : rhs.GetConstFactors())
@@ -164,12 +164,12 @@ namespace Nektar
                 os << "  Constant " << StdRegions::ConstFactorTypeMap[x.first]
                    << ": " << x.second << endl;
             }
-            os << "Number of variable coefficients: " 
+            os << "Number of variable coefficients: "
                << rhs.GetNVarCoeffs() << endl;
 
-            os << "Number of variable factors : " 
+            os << "Number of variable factors : "
                << rhs.GetNVarFactors() << endl;
-            
+
             return os;
         }
     }

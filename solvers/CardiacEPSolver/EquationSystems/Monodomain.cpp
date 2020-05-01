@@ -327,7 +327,7 @@ namespace Nektar
             const NekDouble time,
             const NekDouble lambda)
     {
-        int nvariables  = inarray.num_elements();
+        int nvariables  = inarray.size();
         int nq          = m_fields[0]->GetNpoints();
         StdRegions::ConstFactorMap factors;
         // lambda = \Delta t
@@ -346,7 +346,7 @@ namespace Nektar
             // Solve a system of equations with Helmholtz solver and transform
             // back into physical space.
             m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
-                                   m_fields[i]->UpdateCoeffs(), NullFlagList,
+                                   m_fields[i]->UpdateCoeffs(), 
                                    factors, m_vardiff);
 
             m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(),

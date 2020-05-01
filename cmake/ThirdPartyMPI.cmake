@@ -52,8 +52,8 @@ IF( NEKTAR_USE_MPI )
         INCLUDE(ExternalProject)
         EXTERNALPROJECT_ADD(
             gsmpi-1.2.1
-            URL ${TPURL}/gsmpi-1.2.1_1.tar.bz2
-            URL_MD5 c247ed68134a65b8033c639277e46825
+            URL ${TPURL}/gsmpi-1.2.1_2.tar.bz2
+            URL_MD5 3690b4a658324cd5ad17cf8f6115fb5d
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/gsmpi-1.2.1

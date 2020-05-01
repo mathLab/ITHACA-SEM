@@ -264,7 +264,7 @@ namespace Nektar
             else
             {
                 // Check sufficiently large workspace.
-                ASSERTL1(wsp.num_elements()>=nquad0*nmodes2*(nmodes1+nquad1),
+                ASSERTL1(wsp.size()>=nquad0*nmodes2*(nmodes1+nquad1),
                          "Workspace size is not sufficient");
 
                 // Assign second half of workspace for 2nd DGEMM operation.
@@ -406,7 +406,7 @@ namespace Nektar
 
             if(multiplybyweights)
             {
-                Array<OneD, NekDouble> tmp(inarray.num_elements());
+                Array<OneD, NekDouble> tmp(inarray.size());
                 MultiplyByQuadratureMetric(inarray,tmp);
 
                 StdHexExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
@@ -455,7 +455,7 @@ namespace Nektar
             }
             else
             {
-                ASSERTL1(wsp.num_elements() >= nmodes0*nquad2*(nquad1+nmodes1),
+                ASSERTL1(wsp.size() >= nmodes0*nquad2*(nquad1+nmodes1),
                          "Insufficient workspace size");
 
                 Array<OneD, NekDouble> tmp0 = wsp;
@@ -566,9 +566,9 @@ namespace Nektar
 
             // If outarray > inarray then no need for temporary storage.
             Array<OneD, NekDouble> tmp = outarray;
-            if (outarray.num_elements() < inarray.num_elements())
+            if (outarray.size() < inarray.size())
             {
-                tmp = Array<OneD, NekDouble>(inarray.num_elements());
+                tmp = Array<OneD, NekDouble>(inarray.size());
             }
 
             // Need workspace for sumfackernel though
@@ -1071,12 +1071,12 @@ namespace Nektar
             bool modified = (GetEdgeBasisType(0) == LibUtilities::eModified_A);
             int nFaceCoeffs = P*Q;
 
-            if(maparray.num_elements() != nFaceCoeffs)
+            if(maparray.size() != nFaceCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceCoeffs);
             }
 
-            if(signarray.num_elements() != nFaceCoeffs)
+            if(signarray.size() != nFaceCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceCoeffs,1);
             }
@@ -1526,12 +1526,12 @@ namespace Nektar
 
             int nEdgeIntCoeffs = GetEdgeNcoeffs(eid)-2;
 
-            if(maparray.num_elements()!=nEdgeIntCoeffs)
+            if(maparray.size()!=nEdgeIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
             }
 
-            if(signarray.num_elements() != nEdgeIntCoeffs)
+            if(signarray.size() != nEdgeIntCoeffs)
             {
                 signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
             }
@@ -1824,12 +1824,12 @@ namespace Nektar
 
             int nFaceIntCoeffs = GetFaceIntNcoeffs(fid);
 
-            if(maparray.num_elements()!=nFaceIntCoeffs)
+            if(maparray.size()!=nFaceIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceIntCoeffs);
             }
 
-            if(signarray.num_elements() != nFaceIntCoeffs)
+            if(signarray.size() != nFaceIntCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceIntCoeffs,1);
             }
@@ -2163,7 +2163,7 @@ namespace Nektar
 
             int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
 
-            if(outarray.num_elements() != nIntCoeffs)
+            if(outarray.size() != nIntCoeffs)
             {
                 outarray = Array<OneD, unsigned int>(nIntCoeffs);
             }
@@ -2227,7 +2227,7 @@ namespace Nektar
 
             int nBndCoeffs = NumBndryCoeffs();
 
-            if(outarray.num_elements()!=nBndCoeffs)
+            if(outarray.size()!=nBndCoeffs)
             {
                 outarray = Array<OneD, unsigned int>(nBndCoeffs);
             }

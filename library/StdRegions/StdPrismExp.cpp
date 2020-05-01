@@ -114,8 +114,8 @@ namespace Nektar
 
             int i, k;
 
-            bool Do_1 = (out_dxi1.num_elements() > 0)? true:false;
-            bool Do_3 = (out_dxi3.num_elements() > 0)? true:false;
+            bool Do_1 = (out_dxi1.size() > 0)? true:false;
+            bool Do_3 = (out_dxi3.size() > 0)? true:false;
 
             // out_dXi2 is just a tensor derivative so is just passed through
             if(Do_3)
@@ -449,7 +449,7 @@ namespace Nektar
 
             if(multiplybyweights)
             {
-                Array<OneD, NekDouble> tmp(inarray.num_elements());
+                Array<OneD, NekDouble> tmp(inarray.size());
 
                 MultiplyByQuadratureMetric(inarray,tmp);
                 IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
@@ -493,7 +493,7 @@ namespace Nektar
 
             int i, mode;
 
-            ASSERTL1(wsp.num_elements() >= nquad1*nquad2*order0 +
+            ASSERTL1(wsp.size() >= nquad1*nquad2*order0 +
                                            nquad2*order0*order1,
                      "Insufficient workspace size");
 
@@ -1148,12 +1148,12 @@ namespace Nektar
             }
 
             // Allocate the map array and sign array; set sign array to ones (+)
-            if (maparray.num_elements() != nFaceCoeffs)
+            if (maparray.size() != nFaceCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceCoeffs);
             }
 
-            if (signarray.num_elements() != nFaceCoeffs)
+            if (signarray.size() != nFaceCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceCoeffs,1);
             }
@@ -1481,12 +1481,12 @@ namespace Nektar
             const int R              = m_base[2]->GetNumModes() - 1;
             const int nEdgeIntCoeffs = v_GetEdgeNcoeffs(eid)    - 2;
 
-            if (maparray.num_elements() != nEdgeIntCoeffs)
+            if (maparray.size() != nEdgeIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
             }
 
-            if(signarray.num_elements() != nEdgeIntCoeffs)
+            if(signarray.size() != nEdgeIntCoeffs)
             {
                 signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
             }
@@ -1598,12 +1598,12 @@ namespace Nektar
             int       i              = 0;
             int       j              = 0;
 
-            if (maparray.num_elements() != nFaceIntCoeffs)
+            if (maparray.size() != nFaceIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceIntCoeffs);
             }
 
-            if (signarray.num_elements() != nFaceIntCoeffs)
+            if (signarray.size() != nFaceIntCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceIntCoeffs, 1);
             }
@@ -1782,7 +1782,7 @@ namespace Nektar
 
             int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
 
-            if(outarray.num_elements()!=nIntCoeffs)
+            if(outarray.size()!=nIntCoeffs)
             {
                 outarray = Array<OneD, unsigned int>(nIntCoeffs);
             }
@@ -1821,7 +1821,7 @@ namespace Nektar
 
             int nBnd = NumBndryCoeffs();
 
-            if (maparray.num_elements() != nBnd)
+            if (maparray.size() != nBnd)
             {
                 maparray = Array<OneD, unsigned int>(nBnd);
             }
@@ -1834,7 +1834,7 @@ namespace Nektar
                 {
                     for (q = 0; q <= Q; ++q)
                     {
-                        for (r = 0; r <= R-p; ++r) 
+                        for (r = 0; r <= R-p; ++r)
                         {
                             maparray[idx++] = GetMode(p,q,r);
                         }
@@ -2074,14 +2074,14 @@ namespace Nektar
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
 
-            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff)) 
+            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff))
             {
-                // Rodrigo's power kernel                
-                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                // Rodrigo's power kernel
+                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio);
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVPowerKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);
-                
+
                 for(int i = 0; i < nmodes_a; ++i)
                 {
                     for(int j = 0; j < nmodes_b; ++j)
@@ -2094,7 +2094,7 @@ namespace Nektar
                         {
                             NekDouble fac = std::max(fac1,
                                    pow((1.0*k)/(nmodes_c-1),cutoff*nmodes_c));
-                            
+
                             orthocoeffs[cnt] *= SvvDiffCoeff * fac;
                             cnt++;
                         }
@@ -2113,7 +2113,7 @@ namespace Nektar
                 // clamp max_abc
                 max_abc = max(max_abc,0);
                 max_abc = min(max_abc,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
-                
+
                 for(int i = 0; i < nmodes_a; ++i)
                 {
                     for(int j = 0; j < nmodes_b; ++j)
@@ -2124,7 +2124,7 @@ namespace Nektar
                         {
                             int maxijk = max(maxij,k);
                             maxijk = min(maxijk,kSVVDGFiltermodesmax-1);
-                        
+
                             orthocoeffs[cnt] *= SvvDiffCoeff *
                                 kSVVDGFilter[max_abc][maxijk];
                             cnt++;
@@ -2140,17 +2140,17 @@ namespace Nektar
                 //
                 NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
                 NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
-                
+
                 //Defining the cut of mode
                 int cutoff_a = (int) (SVVCutOff*nmodes_a);
                 int cutoff_b = (int) (SVVCutOff*nmodes_b);
                 int cutoff_c = (int) (SVVCutOff*nmodes_c);
                 //To avoid the fac[j] from blowing up
                 NekDouble epsilon = 1;
-                
+
                 int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
                 NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
-                
+
                 //------"New" Version August 22nd '13--------------------
                 for(i = 0; i < nmodes_a; ++i)//P
                 {
@@ -2177,7 +2177,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }

@@ -304,11 +304,11 @@ private:
 
     inline int GetFirstDim(ConstTripleArray &y) const
     {
-        return y[0].num_elements();
+        return y[0].size();
     }
     inline int GetSecondDim(ConstTripleArray &y) const
     {
-        return y[0][0].num_elements();
+        return y[0][0].size();
     }
 
 }; // end class TimeIntegrationSchemeData

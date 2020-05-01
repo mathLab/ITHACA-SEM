@@ -64,18 +64,19 @@ namespace Nektar
             MULTI_REGIONS_EXPORT static std::string className;
 
             /// Constructor for full direct matrix solve.
-            MULTI_REGIONS_EXPORT GlobalLinSysDirectFull(const GlobalLinSysKey &pLinSysKey,
+            MULTI_REGIONS_EXPORT GlobalLinSysDirectFull(
+                         const GlobalLinSysKey &pLinSysKey,
                          const std::weak_ptr<ExpList> &pExpList,
                          const std::shared_ptr<AssemblyMap>
-                                                                &pLocToGloMap);
-
+                         &pLocToGloMap);
+            
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirectFull();
 
         private:
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
-            virtual void v_Solve( const Array<OneD, const NekDouble> &in,
-                              Array<OneD,       NekDouble> &out,
+            virtual void v_Solve( const Array<OneD, const NekDouble> &pLocInput,
+                              Array<OneD,       NekDouble> &pLocalOutput,
                         const AssemblyMapSharedPtr &locToGloMap,
                         const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray);

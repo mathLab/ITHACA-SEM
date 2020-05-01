@@ -50,6 +50,9 @@
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+
 // Including Timer.h includes Windows.h, which causes GetJob to be set as a
 // macro for some reason.
 #if _WIN32
@@ -86,6 +89,8 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "1e-6", "Tolerance criterion");
     m_config["maxiter"] =
         ConfigOption(false, "500", "Maximum number of iterations");
+    m_config["subiter"] =
+        ConfigOption(false, "0", "Number of iterations between updates for r-adaptation");
     m_config["nq"] =
         ConfigOption(false, "-1", "Order of mesh");
     m_config["region"] =
@@ -98,6 +103,8 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "6", "over integration order");
     m_config["analytics"] =
         ConfigOption(false, "", "basic analytics module");
+    m_config["scalingfile"] =
+        ConfigOption(false, "", "Read scaling field from file for r-adaptation");
     // clang-format on
 }
 
@@ -135,6 +142,11 @@ void ProcessVarOpti::Process()
 
     const int maxIter      = m_config["maxiter"].as<int>();
     const NekDouble restol = m_config["restol"].as<NekDouble>();
+    int subIter            = m_config["subiter"].as<int>();
+    if (subIter == 0)
+    {
+        subIter = maxIter;
+    }
 
     // m_mesh->m_nummode = m_config["nq"].as<int>();
 
@@ -290,6 +302,16 @@ void ProcessVarOpti::Process()
 
     int nThreads = m_config["numthreads"].as<int>();
 
+    if (m_mesh->m_cad)
+    {
+        if (boost::equals(m_mesh->m_cad->GetEngine(), "cfi"))
+        {
+            WARNINGL0(false,
+                      "CFI is not thread-safe; forcing to 'numthreads=1'.");
+            nThreads = 1;
+        }
+    }
+
     int ctr = 0;
     Thread::ThreadMaster tms;
     tms.SetThreadingType("ThreadManagerBoost");
@@ -314,7 +336,7 @@ void ProcessVarOpti::Process()
         }
     }
 
-    while (m_res->val > restol)
+    while (m_res->val > restol && ctr < maxIter)
     {
         ctr++;
         m_res->val       = 0.0;
@@ -340,10 +362,13 @@ void ProcessVarOpti::Process()
         m_res->startInv = 0;
         m_res->worstJac = numeric_limits<double>::max();
 
+        bool update =
+            m_config["scalingfile"].beenSet && (ctr % subIter) == 0;
+
         vector<Thread::ThreadJob *> elJobs(m_dataSet.size());
         for (int i = 0; i < m_dataSet.size(); i++)
         {
-            elJobs[i] = m_dataSet[i]->GetJob();
+            elJobs[i] = m_dataSet[i]->GetJob(update);
         }
 
         tm->SetNumWorkers(0);
@@ -371,6 +396,11 @@ void ProcessVarOpti::Process()
         if(ctr >= maxIter)
         {
             break;
+        }
+
+        if (m_mesh->m_verbose && update)
+        {
+            cout << "Mapping updated!" << endl;
         }
     }
 

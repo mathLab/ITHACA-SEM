@@ -100,19 +100,16 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void Homogeneous2DTrans(const Array<OneD, const NekDouble> &inarray, 
                                                          Array<OneD, NekDouble> &outarray, 
                                                          bool IsForwards, 
-                                                         CoeffState coeffstate = eLocal,
                                                          bool Shuff = true,
                                                          bool UnShuff = true);
             
             inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                             Array<OneD, NekDouble> &outarray, 
-                                            CoeffState coeffstate = eLocal,
                                             bool Shuff = true,
                                             bool UnShuff = true);
             
             inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                             Array<OneD, NekDouble> &outarray, 
-                                            CoeffState coeffstate = eLocal,
                                             bool Shuff = true,
                                             bool UnShuff = true);
 
@@ -154,9 +151,9 @@ namespace Nektar
             int                             m_ny;                       ///< Number of modes = number of poitns in y direction
             int                             m_nz;                       ///< Number of modes = number of poitns in z direction
             
-            DNekBlkMatSharedPtr GenHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype, CoeffState coeffstate = eLocal) const;
+            DNekBlkMatSharedPtr GenHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype) const;
 
-            DNekBlkMatSharedPtr GetHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype, CoeffState coeffstate = eLocal) const;
+            DNekBlkMatSharedPtr GetHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype) const;
             
             //  virtual functions
             virtual int v_GetNumElmts(void)
@@ -165,19 +162,17 @@ namespace Nektar
             }
             
             virtual void v_FwdTrans(const Array<OneD,const NekDouble> &inarray,
-                                    Array<OneD,      NekDouble> &outarray,
-                                    CoeffState coeffstate);
+                                    Array<OneD,      NekDouble> &outarray);
             
             virtual void v_FwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray, Array<OneD,      NekDouble> &outarray);
             
             virtual void v_BwdTrans(const Array<OneD,const NekDouble> &inarray,
-                                    Array<OneD,      NekDouble> &outarray,
-                                    CoeffState coeffstate);
+                                    Array<OneD,      NekDouble> &outarray);
             
             
             virtual void v_BwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray, Array<OneD,      NekDouble> &outarray);
             
-            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, CoeffState coeffstate);
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
             
             virtual void v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
             
@@ -196,26 +191,22 @@ namespace Nektar
             
             virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                Array<OneD, NekDouble> &outarray, 
-                                               CoeffState coeffstate = eLocal,
                                                bool Shuff = true,
                                                bool UnShuff = true);
             
             virtual void v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                Array<OneD, NekDouble> &outarray, 
-                                               CoeffState coeffstate = eLocal,
                                                bool Shuff = true,
                                                bool UnShuff = true);
             
             virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                          const Array<OneD, NekDouble> &inarray2,
-                                         Array<OneD, NekDouble> &outarray, 
-                                         CoeffState coeffstate = eLocal);
+                                         Array<OneD, NekDouble> &outarray);
 
             virtual void v_DealiasedDotProd(
                 const Array<OneD, Array<OneD, NekDouble> > &inarray1,
                 const Array<OneD, Array<OneD, NekDouble> > &inarray2,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
-                      CoeffState coeffstate = eLocal);
+                Array<OneD, Array<OneD, NekDouble> > &outarray);
 
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d0,
@@ -238,20 +229,18 @@ namespace Nektar
         
         inline void ExpListHomogeneous2D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                               Array<OneD, NekDouble> &outarray, 
-                                                              CoeffState coeffstate,
                                                               bool Shuff,
                                                               bool UnShuff)
         {
-            v_HomogeneousFwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
+            v_HomogeneousFwdTrans(inarray,outarray,Shuff,UnShuff);
         }
         
         inline void ExpListHomogeneous2D::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                               Array<OneD, NekDouble> &outarray, 
-                                                              CoeffState coeffstate,
                                                               bool Shuff,
                                                               bool UnShuff)
         {
-            v_HomogeneousBwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
+            v_HomogeneousBwdTrans(inarray,outarray,Shuff,UnShuff);
         }
 
     } //end of namespace

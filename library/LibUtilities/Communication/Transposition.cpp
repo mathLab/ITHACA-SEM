@@ -276,7 +276,7 @@ void Transposition::TransposeXYtoZ(const Array<OneD, const NekDouble> &inarray,
         int index    = 0;
         int cnt      = 0;
 
-        int num_dofs             = inarray.num_elements();
+        int num_dofs             = inarray.size();
         int num_points_per_plane = num_dofs / m_num_points_per_proc[0];
         int num_pencil_per_proc =
             (num_points_per_plane / m_num_processes[0]) +
@@ -339,7 +339,7 @@ void Transposition::TransposeXYtoZ(const Array<OneD, const NekDouble> &inarray,
     else
     {
         int i, pts_per_plane;
-        int n = inarray.num_elements();
+        int n = inarray.size();
         int packed_len;
 
         pts_per_plane = n / m_num_points_per_proc[0];
@@ -379,7 +379,7 @@ void Transposition::TransposeZtoXY(const Array<OneD, const NekDouble> &inarray,
         int index    = 0;
         int cnt      = 0;
 
-        int num_dofs             = outarray.num_elements();
+        int num_dofs             = outarray.size();
         int num_points_per_plane = num_dofs / m_num_points_per_proc[0];
         int num_pencil_per_proc =
             (num_points_per_plane / m_num_processes[0]) +
@@ -443,7 +443,7 @@ void Transposition::TransposeZtoXY(const Array<OneD, const NekDouble> &inarray,
     else
     {
         int i, pts_per_plane;
-        int n = inarray.num_elements();
+        int n = inarray.size();
         int packed_len;
 
         // use length of inarray to determine data storage type
@@ -485,7 +485,7 @@ void Transposition::TransposeXtoYZ(const Array<OneD, const NekDouble> &inarray,
     else
     {
         int i, pts_per_line;
-        int n = inarray.num_elements();
+        int n = inarray.size();
         int packed_len;
 
         pts_per_line =
@@ -528,7 +528,7 @@ void Transposition::TransposeYZtoX(const Array<OneD, const NekDouble> &inarray,
     else
     {
         int i, pts_per_line;
-        int n = inarray.num_elements();
+        int n = inarray.size();
         int packed_len;
 
         pts_per_line =
@@ -573,7 +573,7 @@ void Transposition::TransposeYZtoZY(const Array<OneD, const NekDouble> &inarray,
     else
     {
         int n = m_num_homogeneous_points[0] * m_num_homogeneous_points[1];
-        int s = inarray.num_elements();
+        int s = inarray.size();
 
         int pts_per_line = s / n;
 
@@ -604,7 +604,7 @@ void Transposition::TransposeZYtoYZ(const Array<OneD, const NekDouble> &inarray,
     else
     {
         int n = m_num_homogeneous_points[0] * m_num_homogeneous_points[1];
-        int s = inarray.num_elements();
+        int s = inarray.size();
 
         int pts_per_line = s / n;
 

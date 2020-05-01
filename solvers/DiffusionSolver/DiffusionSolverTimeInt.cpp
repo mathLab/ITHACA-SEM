@@ -115,7 +115,7 @@ Diffusion::Diffusion( int argc, char* argv[] )
     field->GetCoords(x0,x1,x2);
 
     // Evaluate initial condition
-    LibUtilities::EquationSharedPtr icond 
+    LibUtilities::EquationSharedPtr icond
         = session->GetFunction("InitialConditions", "u");
     icond->Evaluate(x0,x1,x2,0.0,field->UpdatePhys());
 }
@@ -132,7 +132,7 @@ void Diffusion::TimeIntegrate()
 
     m_IntScheme = fac.CreateInstance( m_scheme_name, "", 0,
 				      std::vector<NekDouble>() );
-  
+
     ode.DefineImplicitSolve( &Diffusion::DoImplicitSolve, this );
 
     // Initialise the scheme for actual time integration scheme
@@ -163,7 +163,7 @@ void Diffusion::DoImplicitSolve(
     StdRegions::ConstFactorMap factors;
     factors[StdRegions::eFactorLambda] = 1.0/lambda/epsilon;
 
-    for (int i = 0; i < inarray.num_elements(); ++i)
+    for (int i = 0; i < inarray.size(); ++i)
     {
         // Multiply RHS by 1.0/timestep/lambda
         Vmath::Smul(field->GetNpoints(), -factors[StdRegions::eFactorLambda],
@@ -172,8 +172,7 @@ void Diffusion::DoImplicitSolve(
 
         // Solve a system of equations with Helmholtz solver
         field->HelmSolve(outarray[i],
-                         field->UpdateCoeffs(),
-                         NullFlagList, factors);
+                         field->UpdateCoeffs(), factors);
 
         // Transform to physical space and store in solution vector
         field->BwdTrans (field->GetCoeffs(), outarray[i]);
@@ -212,11 +211,11 @@ void Diffusion::ExactSolution()
         ex_sol->Evaluate(x0, x1, x2, (nSteps)*delta_t, exact);
 
         // Calculate errors
-        cout << "L inf error:      " 
+        cout << "L inf error:      "
              << field->Linf(field->GetPhys(), exact) << endl;
-        cout << "L 2 error:        " 
+        cout << "L 2 error:        "
              << field->L2(field->GetPhys(), exact) << endl;
-        cout << "H 1 error:        " 
+        cout << "H 1 error:        "
              << field->H1(field->GetPhys(), exact) << endl;
     }
 

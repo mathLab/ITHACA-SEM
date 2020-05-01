@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +36,7 @@
 
 namespace Nektar
 {
-          
+
     template<typename DataType>
     NekVector<DataType>::NekVector() :
         m_size(0),
@@ -44,7 +44,7 @@ namespace Nektar
         m_wrapperType(eCopy)
     {
     }
-    
+
     template<typename DataType>
     NekVector<DataType>::NekVector(unsigned int size) :
         m_size(size),
@@ -95,7 +95,7 @@ namespace Nektar
         m_data[1] = y;
         m_data[2] = z;
     }
-       
+
     template<typename DataType>
     NekVector<DataType>::NekVector(const NekVector<DataType>& rhs) :
         m_size(rhs.GetDimension()),
@@ -108,7 +108,7 @@ namespace Nektar
             std::copy(rhs.begin(), rhs.end(), m_data.get());
         }
     }
-    
+
     template<typename DataType>
     NekVector<DataType>::NekVector(unsigned int size, const DataType* const ptr) :
         m_size(size),
@@ -116,10 +116,10 @@ namespace Nektar
         m_wrapperType(eCopy)
     {
     }
-       
+
     template<typename DataType>
     NekVector<DataType>::NekVector(const Array<OneD, DataType>& ptr, PointerWrapper h) :
-        m_size(ptr.num_elements()),
+        m_size(ptr.size()),
         m_data(ptr),
         m_wrapperType(h)
     {
@@ -138,18 +138,18 @@ namespace Nektar
     {
         if( h == eCopy )
         {
-            ASSERTL0(size <= ptr.num_elements(), "Attempting to populate a vector of size " +
+            ASSERTL0(size <= ptr.size(), "Attempting to populate a vector of size " +
                 std::to_string(size) + " but the incoming array only has " +
-                std::to_string(ptr.num_elements()) + " elements.");
+                std::to_string(ptr.size()) + " elements.");
 
             m_data = Array<OneD, DataType>(size);
             std::copy(ptr.begin(), ptr.begin()+size, m_data.begin());
         }
     }
-        
+
     template<typename DataType>
     NekVector<DataType>::NekVector(const Array<OneD, const DataType>& ptr, PointerWrapper h) :
-        m_size(ptr.num_elements()),
+        m_size(ptr.size()),
         m_data(ptr, eVECTOR_WRAPPER),
         m_wrapperType(h)
     {
@@ -168,16 +168,16 @@ namespace Nektar
     {
         if( h == eCopy )
         {
-            ASSERTL0(size <= ptr.num_elements(), "Attempting to populate a vector of size " +
+            ASSERTL0(size <= ptr.size(), "Attempting to populate a vector of size " +
                 std::to_string(size) + " but the incoming array only has " +
-                std::to_string(ptr.num_elements()) + " elements.");
+                std::to_string(ptr.size()) + " elements.");
 
             m_data = Array<OneD, DataType>(size);
             std::copy(ptr.begin(), ptr.begin()+size, m_data.begin());
         }
     }
 
-    template<typename DataType>     
+    template<typename DataType>
     NekVector<DataType>::~NekVector() {}
 
     template<typename DataType>
@@ -185,7 +185,7 @@ namespace Nektar
     {
         if( m_wrapperType == eCopy  )
         {
-            // If the current vector is a copy, then regardless of the rhs type 
+            // If the current vector is a copy, then regardless of the rhs type
             // we just copy over the values, resizing if needed.
             if( GetDimension() != rhs.GetDimension() )
             {
@@ -203,8 +203,8 @@ namespace Nektar
         std::copy(rhs.begin(), rhs.end(), m_data.get());
         return *this;
     }
-            
-            
+
+
     template<typename DataType>
     unsigned int NekVector<DataType>::GetDimension() const
     {
@@ -222,7 +222,7 @@ namespace Nektar
     {
         return this->GetData().get();
     }
-    
+
     template<typename DataType>
     Array<OneD, DataType>& NekVector<DataType>::GetPtr() { return this->GetData(); }
 
@@ -231,7 +231,7 @@ namespace Nektar
     {
         return m_data.get();
     }
-   
+
     template<typename DataType>
     const Array<OneD, const DataType>& NekVector<DataType>::GetPtr() const { return m_data; }
 
@@ -246,7 +246,7 @@ namespace Nektar
 
     template<typename DataType>
     typename NekVector<DataType>::const_iterator NekVector<DataType>::end() const { return GetRawPtr() + GetDimension(); }
-            
+
     template<typename DataType>
     typename boost::call_traits<DataType>::reference NekVector<DataType>::operator()(unsigned int i)
     {
@@ -323,7 +323,7 @@ namespace Nektar
         MultiplyEqual(*this, rhs);
         return *this;
     }
-    
+
     template<typename DataType>
     NekVector<DataType>& NekVector<DataType>::operator/=(typename boost::call_traits<DataType>::const_reference rhs)
     {
@@ -383,7 +383,7 @@ namespace Nektar
     {
         return Nektar::Cross(*this, rhs);
     }
-    
+
     template<typename DataType>
     std::string NekVector<DataType>::AsString() const { return Nektar::AsString(*this); }
 
@@ -396,10 +396,10 @@ namespace Nektar
 
     template<typename DataType>
     DataType NekVector<DataType>::InfinityNorm() const { return Nektar::InfinityNorm(*this); }
-            
-    template<typename DataType>           
+
+    template<typename DataType>
     PointerWrapper NekVector<DataType>::GetWrapperType() const { return m_wrapperType; }
-      
+
     template<typename DataType>
     Array<OneD, DataType>& NekVector<DataType>::GetData() { return m_data; }
 
@@ -415,7 +415,7 @@ namespace Nektar
     template<typename DataType>
     void NekVector<DataType>::Resize(unsigned int newSize)
     {
-        if(m_data.num_elements() < newSize )
+        if(m_data.size() < newSize )
         {
             m_data = Array<OneD, DataType>(newSize);
         }
@@ -649,7 +649,7 @@ namespace Nektar
     Divide(const NekVector<NekDouble>& lhs,
                 const NekDouble& rhs);
 
-    
+
     template<typename ResultDataType, typename InputDataType>
     void Multiply(NekVector<ResultDataType>& result,
            const NekVector<InputDataType>& lhs,
@@ -664,7 +664,7 @@ namespace Nektar
             result_buf[i] = lhs_buf[i] * rhs_buf[i];
         }
     }
-    
+
     template LIB_UTILITIES_EXPORT
     void Multiply(NekVector<NekDouble>& result, const NekVector<NekDouble>& lhs, const NekVector<NekDouble>& rhs);
 
@@ -683,7 +683,7 @@ namespace Nektar
 
     template LIB_UTILITIES_EXPORT
     void MultiplyEqual(NekVector<NekDouble>& result, const NekVector<NekDouble>& rhs);
-    
+
     template<typename DataType, typename InputDataType>
     NekVector<DataType>
     Multiply(const NekVector<DataType>& lhs,
@@ -1058,4 +1058,4 @@ namespace Nektar
     template LIB_UTILITIES_EXPORT
     std::string AsString(const NekVector<NekDouble>& v);
 }
-    
+

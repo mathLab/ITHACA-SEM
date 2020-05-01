@@ -959,7 +959,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
     std::unordered_set<uint64_t> toread;
     if (ElementIDs != NullInt1DArray)
     {
-        for (uint64_t i = 0; i < ElementIDs.num_elements(); ++i)
+        for (uint64_t i = 0; i < ElementIDs.size(); ++i)
         {
             toread.insert(ElementIDs[i]);
         }

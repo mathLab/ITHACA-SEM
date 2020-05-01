@@ -125,7 +125,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
     {
         int i;
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         int npoints    = GetNpoints();
         int nTracePts  = GetTraceTotPoints();
 
@@ -199,8 +199,8 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
         // Auxiliary variables
-        int nScalar    = physfield.num_elements();
-        int nPts       = physfield[0].num_elements();
+        int nScalar    = physfield.size();
+        int nPts       = physfield[0].size();
         Array<OneD, NekDouble > divVel             (nPts, 0.0);
 
         // Stokes hypothesis
@@ -288,9 +288,9 @@ namespace Nektar
         // Factor to rescale 1d points in dealiasing.
         NekDouble OneDptscale = 2;
         // Get number of points to dealias a cubic non-linearity
-        int nScalar   = physfield.num_elements();
+        int nScalar   = physfield.size();
         int nPts      = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
-        int nPts_orig = physfield[0].num_elements();
+        int nPts_orig = physfield[0].size();
 
         // Auxiliary variables
         Array<OneD, NekDouble > divVel             (nPts, 0.0);
@@ -417,10 +417,10 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >  &uBwd,
               Array<OneD, Array<OneD, NekDouble> >  &penaltyCoeff)
     {
-        unsigned int nTracePts  = uFwd[0].num_elements();
+        unsigned int nTracePts  = uFwd[0].size();
 
         // Compute average temperature
-        unsigned int nVariables = uFwd.num_elements();
+        unsigned int nVariables = uFwd.size();
         Array<OneD, NekDouble> tAve{nTracePts, 0.0};
         Vmath::Svtsvtp(nTracePts, 0.5, uFwd[nVariables-1], 1,
             0.5, uBwd[nVariables-1], 1, tAve, 1);
@@ -460,7 +460,7 @@ namespace Nektar
         Array<OneD, NekDouble> &mu,
         Array<OneD, NekDouble> &thermalCond)
     {
-        int nPts       = temperature.num_elements();
+        int nPts       = temperature.size();
 
         // Variable viscosity through the Sutherland's law
         if (m_ViscosityType == "Variable")

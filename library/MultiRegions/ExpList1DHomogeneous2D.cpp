@@ -60,22 +60,17 @@ namespace Nektar
                                                        const Array<OneD, ExpListSharedPtr> &points):
             ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
-            int n,nel;
+            int n;
 
-            ASSERTL1(m_ny*m_nz == points.num_elements(),
+            ASSERTL1(m_ny*m_nz == points.size(),
                     "Size of basis number of points and number of lines are "
                     "not the same");
 
-            for(n = 0; n < points.num_elements(); ++n)
+            for(n = 0; n < points.size(); ++n)
             {
                 m_lines[n] = points[n];
                 (*m_exp).push_back(points[n]->GetExp(0));
             }
-
-            // Setup Default optimisation information.
-            nel = 1;
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
 
             SetCoeffPhys();
         }
@@ -86,7 +81,7 @@ namespace Nektar
         ExpList1DHomogeneous2D::ExpList1DHomogeneous2D(const ExpList1DHomogeneous2D &In):
             ExpListHomogeneous2D(In)
         {
-            for(int n = 0; n < m_lines.num_elements(); ++n)
+            for(int n = 0; n < m_lines.size(); ++n)
             {
                 m_lines[n] = In.m_lines[n];
             }
@@ -107,7 +102,7 @@ namespace Nektar
             int ncoeffs_per_line = m_lines[0]->GetNcoeffs();
             int npoints_per_line = m_lines[0]->GetTotPoints();
 
-            int nyzlines = m_lines.num_elements();
+            int nyzlines = m_lines.size();
 
             // Set total coefficients and points
             m_ncoeffs = ncoeffs_per_line*nyzlines;
@@ -146,24 +141,24 @@ namespace Nektar
             int nylines = m_homogeneousBasis_y->GetNumPoints();
             int nzlines = m_homogeneousBasis_z->GetNumPoints();
             int npoints = 1;
-            
+
             // Fill x-y-z-direction
             Array<OneD, const NekDouble> pts_y =  m_homogeneousBasis_y->GetZ();
             Array<OneD, const NekDouble> pts_z =  m_homogeneousBasis_z->GetZ();
-            
+
             Array<OneD, NekDouble> x(npoints);
             Array<OneD, NekDouble> y(nylines);
             Array<OneD, NekDouble> z(nzlines);
-            
+
             Vmath::Smul(nylines,m_lhom_y/2.0,pts_y,1,y,1);
             Vmath::Sadd(nylines,m_lhom_y/2.0,y,1,y,1);
-            
+
             Vmath::Smul(nzlines,m_lhom_z/2.0,pts_z,1,z,1);
             Vmath::Sadd(nzlines,m_lhom_z/2.0,z,1,z,1);
-            
+
             m_lines[0]->GetCoords(x);
-            
-            
+
+
             for(m = 0; m < nzlines; ++m)
             {
                 for(j = 0; j < nylines; ++j)
@@ -203,26 +198,26 @@ namespace Nektar
             int n,m,j;
             Array<OneD, NekDouble> tmp_xc;
             int npoints = 1;
-            
+
             int nylines = m_homogeneousBasis_y->GetNumPoints();
             int nzlines = m_homogeneousBasis_z->GetNumPoints();
-            
+
             // Fill z-direction
             Array<OneD, const NekDouble> pts_y =  m_homogeneousBasis_y->GetZ();
             Array<OneD, const NekDouble> pts_z =  m_homogeneousBasis_z->GetZ();
-            
+
             Array<OneD, NekDouble> x(npoints);
             Array<OneD, NekDouble> y(nylines);
             Array<OneD, NekDouble> z(nzlines);
-            
+
             m_lines[0]->GetCoords(x);
-            
+
             Vmath::Smul(nylines,m_lhom_y/2.0,pts_y,1,y,1);
             Vmath::Sadd(nylines,m_lhom_y/2.0,y,1,y,1);
-            
+
             Vmath::Smul(nzlines,m_lhom_z/2.0,pts_z,1,z,1);
             Vmath::Sadd(nzlines,m_lhom_z/2.0,z,1,z,1);
-            
+
             for(m = 0; m < nzlines; ++m)
             {
                 for(j = 0; j < nylines; ++j)
@@ -237,9 +232,9 @@ namespace Nektar
             }
         }
 
-        
+
         /**
-         * Perform the 2D Forward transform of a set of points representing a plane of 
+         * Perform the 2D Forward transform of a set of points representing a plane of
          * boundary conditions which are merely the collection of the boundary conditions
          * coming from each 1D expansion.
          * @param   inarray    The value of the BC on each point of the y-z homogeneous plane.
@@ -247,8 +242,8 @@ namespace Nektar
          */
         //void HomoFwdTrans2D(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         //{
-            
-            
+
+
         //}
 
         /**
@@ -291,11 +286,11 @@ namespace Nektar
             boost::ignore_unused(istrip);
 
             int i,j;
-            
+
             int nquad0 = 1;
             int nquad1 = m_homogeneousBasis_y->GetNumPoints();
             int nquad2 = m_homogeneousBasis_z->GetNumPoints();
-            
+
             int ntot = nquad0*nquad1*nquad2;
             int ntotminus = (nquad0)*(nquad1-1)*(nquad2-1);
 

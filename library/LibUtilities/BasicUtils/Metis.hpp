@@ -57,15 +57,15 @@ namespace Metis
         int *vwgt   = 0;
         int *vsize  = 0;
         int *adjwgt = 0;
-        if (vertWgt.num_elements() > 0)
+        if (vertWgt.size() > 0)
         {
             vwgt = &vertWgt[0];
         }
-        if (vertSize.num_elements() > 0)
+        if (vertSize.size() > 0)
         {
             vsize = &vertSize[0];
         }
-        if (edgeWgt.num_elements() > 0)
+        if (edgeWgt.size() > 0)
         {
             adjwgt = &edgeWgt[0];
         }

@@ -70,7 +70,7 @@ namespace Nektar
             ASSERTL1(Bc.GetBasisType() == LibUtilities::eModifiedPyr_C ||
                      Bc.GetBasisType() == LibUtilities::eOrthoPyr_C,
                      "Expected basis type in 'c' direction to be ModifiedPyr_C or OrthoPyr_C");
-            
+
         }
 
         StdPyrExp::StdPyrExp(const StdPyrExp &T)
@@ -125,8 +125,8 @@ namespace Nektar
             eta_z = m_base[2]->GetZ();
 
             int i, j, k, n;
-            
-            if (out_dxi1.num_elements() > 0)
+
+            if (out_dxi1.size() > 0)
             {
                 for (k = 0, n = 0; k < Qz; ++k)
                 {
@@ -141,7 +141,7 @@ namespace Nektar
                 }
             }
 
-            if (out_dxi2.num_elements() > 0)
+            if (out_dxi2.size() > 0)
             {
                 for (k = 0, n = 0; k < Qz; ++k)
                 {
@@ -156,7 +156,7 @@ namespace Nektar
                 }
             }
 
-            if (out_dxi3.num_elements() > 0)
+            if (out_dxi3.size() > 0)
             {
                 for (k = 0, n = 0; k < Qz; ++k)
                 {
@@ -345,7 +345,7 @@ namespace Nektar
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
 
-                // Not sure why we could not use basis as 1.0 
+                // Not sure why we could not use basis as 1.0
                 // top singular vertex - (1+c)/2 x (1+b)/2 x (1-a)/2 component
                 Blas::Daxpy(nquad2,inarray[1],base2.get()+nquad2,1,
                             &tmp[0]+nquad2,1);
@@ -399,7 +399,7 @@ namespace Nektar
             StdMatrixKey      imasskey(eInvMass,DetShapeType(),*this);
             DNekMatSharedPtr  imatsys = GetStdMatrix(imasskey);
 
-            
+
             // copy inarray in case inarray == outarray
             DNekVec in (m_ncoeffs, outarray);
             DNekVec out(m_ncoeffs, outarray, eWrapper);
@@ -457,7 +457,7 @@ namespace Nektar
 
             if(multiplybyweights)
             {
-                Array<OneD, NekDouble> tmp(inarray.num_elements());
+                Array<OneD, NekDouble> tmp(inarray.size());
 
                 v_MultiplyByStdQuadratureMetric(inarray, tmp);
 
@@ -499,7 +499,7 @@ namespace Nektar
             int  order1 = m_base[1]->GetNumModes();
             int  order2 = m_base[2]->GetNumModes();
 
-            ASSERTL1(wsp.num_elements() >= nquad1*nquad2*order0 +
+            ASSERTL1(wsp.size() >= nquad1*nquad2*order0 +
                                            nquad2*order0*order1,
                      "Insufficient workspace size");
 
@@ -540,7 +540,7 @@ namespace Nektar
                     mode  += order2-ijmax;
                     mode1 += order2-ijmax;
                 }
-                
+
                 //increment mode in case order1!=order2
                 for(j = order1; j < order2; ++j)
                 {
@@ -950,7 +950,7 @@ namespace Nektar
                 + 2*(R+1) + P*(1 + 2*R - P)  // 2 tri. (P,R) faces
                 + 2*(R+1) + Q*(1 + 2*R - Q); // 2 tri. (Q,R) faces
         }
-        
+
         int StdPyrExp::v_GetEdgeNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 7, "edge id is out of range");
@@ -1170,12 +1170,12 @@ namespace Nektar
             }
 
             // Allocate the map array and sign array; set sign array to ones (+)
-            if (maparray.num_elements() != nFaceCoeffs)
+            if (maparray.size() != nFaceCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceCoeffs);
             }
 
-            if (signarray.num_elements() != nFaceCoeffs)
+            if (signarray.size() != nFaceCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceCoeffs,1);
             }
@@ -1220,7 +1220,7 @@ namespace Nektar
                     }
                 }
                 break;
-                
+
             case 1: // Front triangle
                 for (p = 0; p < P; ++p)
                 {
@@ -1234,7 +1234,7 @@ namespace Nektar
                     }
                 }
                 break;
-                
+
             case 2: // Right triangle
                 maparray[idx++] = GetMode(1,0,0);
                 maparray[idx++] = GetMode(0,0,1);
@@ -1276,7 +1276,7 @@ namespace Nektar
                     }
                 }
                 break;
-                
+
             case 4: // Left triangle
                 for (q = 0; q < P; ++q)
                 {
@@ -1495,7 +1495,7 @@ namespace Nektar
                     ASSERTL0(false, "local vertex id must be between 0 and 4");
                 }
             }
-            
+
             return l;
         }
 
@@ -1512,12 +1512,12 @@ namespace Nektar
             const int R              = m_base[2]->GetNumModes() - 1;
             const int nEdgeIntCoeffs = v_GetEdgeNcoeffs(eid) - 2;
 
-            if (maparray.num_elements() != nEdgeIntCoeffs)
+            if (maparray.size() != nEdgeIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
             }
 
-            if(signarray.num_elements() != nEdgeIntCoeffs)
+            if(signarray.size() != nEdgeIntCoeffs)
             {
                 signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
             }
@@ -1538,7 +1538,7 @@ namespace Nektar
                     maparray[i-2] = GetMode(i,0,0);
                 }
                 break;
-                
+
             case 1:
                 for (i = 2; i <= Q; ++i)
                 {
@@ -1551,7 +1551,7 @@ namespace Nektar
                     maparray[i-2] = GetMode(i,1,0);
                 }
                 break;
-                
+
             case 3:
                 for (i = 2; i <= Q; ++i)
                 {
@@ -1564,20 +1564,20 @@ namespace Nektar
                     maparray[i-2] = GetMode(0,0,i);
                 }
                 break;
-                
+
             case 5:
                 for (i = 1; i <= R-1; ++i)
                 {
                     maparray[i-1] = GetMode(1,0,i);
                 }
-                break;                
+                break;
             case 6:
                 for (i = 1; i <= R-1; ++i)
                 {
                     maparray[i-1] = GetMode(1,1,i);
                 }
                 break;
-                
+
             case 7:
                 for (i = 1; i <= R-1; ++i)
                 {
@@ -1588,7 +1588,7 @@ namespace Nektar
                 ASSERTL0(false, "Edge not defined.");
                 break;
             }
-            
+
             if (signChange)
             {
                 for (i = 1; i < nEdgeIntCoeffs; i += 2)
@@ -1613,12 +1613,12 @@ namespace Nektar
             int       nummodesB      = 0;
             int       i, j;
 
-            if (maparray.num_elements() != nFaceIntCoeffs)
+            if (maparray.size() != nFaceIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceIntCoeffs);
             }
 
-            if (signarray.num_elements() != nFaceIntCoeffs)
+            if (signarray.size() != nFaceIntCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceIntCoeffs, 1);
             }
@@ -1688,7 +1688,7 @@ namespace Nektar
                     }
                 }
                     break;
-                    
+
             case 3: // Rear triangle
                 for (p = 2; p <= P; ++p)
                 {
@@ -1702,7 +1702,7 @@ namespace Nektar
                     }
                 }
                 break;
-                
+
             case 4: // Left triangle
                 for (q = 2; q <= Q; ++q)
                 {
@@ -1719,7 +1719,7 @@ namespace Nektar
             default:
                 ASSERTL0(false, "Face interior map not available.");
             }
-            
+
             // Triangular faces are processed in the above switch loop; for
             // remaining quad faces, set up orientation if necessary.
             if (fid > 0)
@@ -1797,7 +1797,7 @@ namespace Nektar
 
             int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
 
-            if(outarray.num_elements()!=nIntCoeffs)
+            if(outarray.size()!=nIntCoeffs)
             {
                 outarray = Array<OneD, unsigned int>(nIntCoeffs);
             }
@@ -1837,7 +1837,7 @@ namespace Nektar
 
             int nBnd = NumBndryCoeffs();
 
-            if (maparray.num_elements() != nBnd)
+            if (maparray.size() != nBnd)
             {
                 maparray = Array<OneD, unsigned int>(nBnd);
             }
@@ -1900,8 +1900,8 @@ namespace Nektar
          *
          * Modes are numbered with the r index travelling fastest,
          * followed by q and then p, and each q-r plane is of size
-         * 
-         * (R+1-p)*(Q+1) - l(l+1)/2 where l = max(0,Q-p) 
+         *
+         * (R+1-p)*(Q+1) - l(l+1)/2 where l = max(0,Q-p)
          *
          * For example, when P=2, Q=3 and R=4 the indexing inside each
          * q-r plane (with r increasing upwards and q to the right)
@@ -1912,8 +1912,8 @@ namespace Nektar
          * 4
          * 3 8         17 21
          * 2 7 11      16 20 24     29 32 35
-         * 1 6 10 13   15 19 23 26  28 31 34 37 
-         * 0 5 9  12   14 18 22 25  27 30 33 36 
+         * 1 6 10 13   15 19 23 26  28 31 34 37
+         * 0 5 9  12   14 18 22 25  27 30 33 36
          *
          * Note that in this element, we must have that \f$ P,Q \leq
          * R\f$.
@@ -1923,7 +1923,7 @@ namespace Nektar
             const int Q = m_base[1]->GetNumModes()-1;
             const int R = m_base[2]->GetNumModes()-1;
 
-            int i,l; 
+            int i,l;
             int cnt = 0;
 
             // Traverse to q-r plane number I
@@ -1931,7 +1931,7 @@ namespace Nektar
             {
                 // Size of triangle part
                 l = max(0,Q-i);
-                
+
                 // Size of rectangle part
                 cnt += (R+1-i)*(Q+1) - l*(l+1)/2;
             }
@@ -1939,7 +1939,7 @@ namespace Nektar
             // Traverse to q column J (Pretend this is a face of width J)
             l = max(0,J-1-I);
             cnt += (R+1-I)*J - l*(l+1)/2;
-            
+
             // Traverse up stacks to K
             cnt += K;
 
@@ -2031,14 +2031,14 @@ namespace Nektar
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
 
-            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff)) 
+            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff))
             {
-                // Rodrigo's power kernel                
-                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                // Rodrigo's power kernel
+                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio);
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVPowerKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);
-                
+
                 for(int i = 0; i < nmodes_a; ++i)
                 {
                     for(int j = 0; j < nmodes_b; ++j)
@@ -2052,7 +2052,7 @@ namespace Nektar
                         {
                             NekDouble fac = std::max(fac1,
                                    pow((1.0*k)/(nmodes_c-1),cutoff*nmodes_c));
-                            
+
                             orthocoeffs[cnt] *= SvvDiffCoeff * fac;
                             cnt++;
                         }
@@ -2071,7 +2071,7 @@ namespace Nektar
                 // clamp max_abc
                 max_abc = max(max_abc,0);
                 max_abc = min(max_abc,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
-                
+
                 for(int i = 0; i < nmodes_a; ++i)
                 {
                     for(int j = 0; j < nmodes_b; ++j)
@@ -2082,7 +2082,7 @@ namespace Nektar
                         {
                             int maxijk = max(maxij,k);
                             maxijk = min(maxijk,kSVVDGFiltermodesmax-1);
-                        
+
                             orthocoeffs[cnt] *= SvvDiffCoeff *
                                 kSVVDGFilter[max_abc][maxijk];
                             cnt++;
@@ -2098,17 +2098,17 @@ namespace Nektar
                 //
                 NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
                 NekDouble  SVVCutOff    = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
-                
+
                 //Defining the cut of mode
                 int cutoff_a = (int) (SVVCutOff*nmodes_a);
                 int cutoff_b = (int) (SVVCutOff*nmodes_b);
                 int cutoff_c = (int) (SVVCutOff*nmodes_c);
                 //To avoid the fac[j] from blowing up
                 NekDouble epsilon = 1;
-                
+
                 int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
                 NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
-                
+
                 for(i = 0; i < nmodes_a; ++i)//P
                 {
                     for(j = 0; j < nmodes_b; ++j) //Q
@@ -2135,7 +2135,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }
@@ -2187,7 +2187,7 @@ namespace Nektar
             {
                  for (i = 0; i < numMin; ++i)
                  {
-                     
+
                      int maxui = max(u,i);
                      Vmath::Vcopy(numMin - maxui, tmp  = coeff      + cnt, 1,
                                   tmp2 = coeff_tmp1 + cnt, 1);
@@ -2204,6 +2204,6 @@ namespace Nektar
             OrthoPyrExp->BwdTrans(coeff_tmp1, phys_tmp);
             StdPyrExp::FwdTrans(phys_tmp, outarray);
         }
-        
+
     }
 }

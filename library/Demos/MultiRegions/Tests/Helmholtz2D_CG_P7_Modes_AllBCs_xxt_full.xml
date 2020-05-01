@@ -298,29 +298,4 @@
         </FUNCTION>
 
     </CONDITIONS>
-
-    <GLOBALOPTIMIZATIONPARAMETERS>
-
-        <BwdTrans>
-            <DO_GLOBAL_MAT_OP VALUE="0" />
-            <DO_BLOCK_MAT_OP TRI="0" QUAD="0" />
-        </BwdTrans>
-
-        <IProductWRTBase>
-            <DO_GLOBAL_MAT_OP VALUE="0" />
-            <DO_BLOCK_MAT_OP TRI="0" QUAD="0" />
-        </IProductWRTBase>
-
-        <MassMatrixOp>
-            <DO_GLOBAL_MAT_OP VALUE="0" />
-            <DO_BLOCK_MAT_OP TRI="1" QUAD="1" />
-        </MassMatrixOp>
-
-        <HelmholtzMatrixOp>
-            <DO_GLOBAL_MAT_OP VALUE="0" />
-            <DO_BLOCK_MAT_OP TRI="1" QUAD="1" />
-        </HelmholtzMatrixOp>
-
-    </GLOBALOPTIMIZATIONPARAMETERS>
-
 </NEKTAR>

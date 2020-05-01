@@ -93,8 +93,6 @@ namespace Nektar
                 inline SpatialDomains::Geometry1DSharedPtr GetGeom1D() const;
 
             protected:
-                std::map<int, bool>                     m_negatedNormals;
-
                 virtual DNekMatSharedPtr v_GenMatrix(
                     const StdRegions::StdMatrixKey      &mkey);
 
@@ -106,14 +104,11 @@ namespace Nektar
                 virtual void v_AddRobinEdgeContribution(
                     const int                            vert,
                     const Array<OneD, const NekDouble > &primCoeffs,
-                          Array<OneD, NekDouble>        &coeffs);
+                    const Array<OneD, NekDouble>        &incoeffs,
+                    Array<OneD, NekDouble>        &coeffs);
 
                 virtual NekDouble v_VectorFlux(
                     const Array<OneD, Array<OneD, NekDouble> > &vec);
-
-                virtual void v_NegateVertexNormal (const int vertex);
-
-                virtual bool v_VertexNormalNegated(const int vertex);
 
             private:
                 Expansion2DWeakPtr m_elementLeft;

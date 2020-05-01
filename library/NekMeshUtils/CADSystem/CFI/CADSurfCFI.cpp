@@ -56,22 +56,22 @@ Array<OneD, NekDouble> CADSurfCFI::GetBounds()
     Array<OneD, NekDouble> b(4);
 
     cfi::UVBox bx = m_cfiSurface->calcUVBox();
-    b[0]          = bx.uLower * m_scal;
-    b[1]          = bx.uUpper * m_scal;
-    b[2]          = bx.vLower * m_scal;
-    b[3]          = bx.vUpper * m_scal;
+    b[0]          = bx.uLower;
+    b[1]          = bx.uUpper;
+    b[2]          = bx.vLower;
+    b[3]          = bx.vUpper;
 
     return b;
 }
 
-virtual void CADSurfCFI::GetBounds(NekDouble &umin, NekDouble &umax,
-                                   NekDouble &vmin, NekDouble &vmax)
+void CADSurfCFI::GetBounds(NekDouble &umin, NekDouble &umax,
+                           NekDouble &vmin, NekDouble &vmax)
 {
     cfi::UVBox bx = m_cfiSurface->calcUVBox();
-    umin          = b[0];
-    umax          = b[1];
-    vmin          = b[2];
-    vmax          = b[3];
+    umin          = bx.uLower;
+    umax          = bx.uUpper;
+    vmin          = bx.vLower;
+    vmax          = bx.vUpper;
 }
 
 Array<OneD, NekDouble> CADSurfCFI::locuv(Array<OneD, NekDouble> p,
@@ -118,7 +118,7 @@ Array<OneD, NekDouble> CADSurfCFI::P(Array<OneD, NekDouble> uv)
     return out;
 }
 
-void P(Array<OneD, NekDouble> uv, NekDouble &x, NekDouble &y, NekDouble &z)
+void CADSurfCFI::P(Array<OneD, NekDouble> uv, NekDouble &x, NekDouble &y, NekDouble &z)
 {
     cfi::UVPosition uvp(uv[0], uv[1]);
     cfi::Position p = m_cfiSurface->calcXYZAtUV(uvp);

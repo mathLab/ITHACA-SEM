@@ -605,7 +605,7 @@ namespace Nektar
                     }
                 }
             }
-            m_comm->AllReduce(maxDof, LibUtilities::ReduceMax);
+            m_comm->GetRowComm()->AllReduce(maxDof, LibUtilities::ReduceMax);
 
             // Now have trace edges Gid position
             cnt = 0;
@@ -732,8 +732,8 @@ namespace Nektar
             {
                 tmp[i] = m_globalToUniversalBndMap[i];
             }
-            m_bndGsh = m_gsh = Gs::Init(tmp, m_comm);
-            Gs::Unique(tmp, m_comm);
+            m_bndGsh = m_gsh = Gs::Init(tmp, m_comm->GetRowComm());
+            Gs::Unique(tmp, m_comm->GetRowComm());
             for (i = 0; i < m_globalToUniversalBndMap.size(); ++i)
             {
                 m_globalToUniversalBndMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
@@ -779,7 +779,7 @@ namespace Nektar
                     }
                 }
             }
-            m_comm->AllReduce(maxQuad, LibUtilities::ReduceMax);
+            m_comm->GetRowComm()->AllReduce(maxQuad, LibUtilities::ReduceMax);
 
             if (nDim == 1)
             {
@@ -857,8 +857,8 @@ namespace Nektar
             {
                 tmp2[i] = m_traceToUniversalMap[i];
             }
-            m_traceGsh = Gs::Init(tmp2, m_comm);
-            Gs::Unique(tmp2, m_comm);
+            m_traceGsh = Gs::Init(tmp2, m_comm->GetRowComm());
+            Gs::Unique(tmp2, m_comm->GetRowComm());
             for (int i = 0; i < nTracePhys; ++i)
             {
                 m_traceToUniversalMapUnique[i] = tmp2[i];

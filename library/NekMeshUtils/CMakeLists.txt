@@ -6,6 +6,7 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Face.cpp
     MeshElements/BooleanOperators.cpp
     MeshElements/Point.cpp
+    MeshElements/Node.cpp
     MeshElements/Line.cpp
     MeshElements/Triangle.cpp
     MeshElements/Quadrilateral.cpp

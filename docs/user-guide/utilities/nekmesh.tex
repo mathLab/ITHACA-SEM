@@ -442,18 +442,28 @@ corresponding edge or face is the same size and shape but translated along the
 appropriate axis.
 
 
-When using periodic boundary conditions that are rotationally aligned the following rotational options should be applied:
+When using periodic boundary conditions that are rotationally aligned the
+following rotational options should be applied:
 %
 \begin{lstlisting}[style=BashInputStyle]
-NekMesh -m peralign:surf1=11:surf2=12:dir=x:rot=PI/6:tol=1e-6 \
+NekMesh -m peralign:surf1=11:surf2=12:dir=x:rot=PI/6 \
               Mesh.xml Mesh_aligned.xml
 \end{lstlisting}
 %
 where \inltt{rot} specifies the rotation angle in radians from
 surf1 to surf2 about the axis specified by \inltt{dir} (i.e. the ``x'' axis in
-this example). An optional tolerance \inltt{tol} can also be specified which is
-the tolerance within which the rotation is assumed to be exact. The
-default tolerance is 1e-8.
+this example).
+
+The rotation/translation is assumed to be exact within a relative tolerance.
+An optional factor, which is used to scale the tolerance, \inltt{tolfact}
+can also be specified. The default tolerance factor is 4, and it needs to be
+$tolfact \ge 1$. For example:
+%
+\begin{lstlisting}[style=BashInputStyle]
+NekMesh -m peralign:surf1=11:surf2=12:dir=x:rot=PI/6:tolfact=100 \
+              Mesh.xml Mesh_aligned.xml
+\end{lstlisting}
+%
 
 In 3D, where prismatic or tetrahedral elements are connected to one or both of
 the surfaces, additional logic is needed to guarantee connectivity in the XML

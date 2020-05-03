@@ -31,6 +31,9 @@ v5.0.1
 - Fix incorrect coordinate dimension used in history point filter (!1118)
 - Fix compile errors with GCC 9.x (!1108)
 - Correct the Energy/Enstropy integral for the 3DH1 flow (!1132)
+- Added IsRealEqual method to compare real numbers with relative tolerance.
+  Started using it in SharedArray and in NekMesh to fix peralign-extrude tool
+  chain (!1134)
 
 **IncNavierStokesSolver**
 - Change the baseflow time in the Adjoint advection (!1133)

@@ -1,24 +1,20 @@
-#include <stdio.h>
-#include <math.h>
 #include "Polylib.h"
-
-#ifdef __cplusplus
-#include <stdlib.h>
+#include <cstdio>
+#include <cmath>
 
 using namespace std;
 using namespace Polylib;
-#endif
 
 /* --------------------------------------------------------------------
    To compile:
    g++ -g -c Polylib.cpp -I ./
    g++ -g -c Polylib_test.cpp -I ./
-   g++ -g -o polytest Polylib_test.o Polylib.o -lm 
+   g++ -g -o polytest Polylib_test.o Polylib.o -lm
  * --------------------------------------------------------------------*/
 
 /* -------------------------------------------------------------------
    This is a routine to test the integration, differentiation and
-   interpolation routines in the polylib.c. 
+   interpolation routines in the polylib.c.
 
    First, it performs the integral
 
@@ -34,17 +30,17 @@ using namespace Polylib;
                 2     <= n  <= 2*np - delta
 
    delta = 1 (gauss), 2(radau), 3(lobatto).
-   The integral is evaluated and if it is larger that EPS then the 
+   The integral is evaluated and if it is larger that EPS then the
    value of alpha,beta,np,n and the integral is printed to the screen.
 
    After every alpha value the statement
        "finished checking all beta values for alpha = #"
    is printed
 
-   The routine then evaluates the derivate of 
+   The routine then evaluates the derivate of
 
           d   n      n-1
-      -- x  = n x 
+      -- x  = n x
       dx
 
    for all   -0.5 <= alpha <= 5   (increments of 0.5)
@@ -54,8 +50,8 @@ using namespace Polylib;
           NPLOWER <= np <= NPUPPER
                 2     <= n  <= np - 1
 
-   The error is check in a pointwise sense and if it is larger than 
-   EPS then the value of alpha,beta,np,n and the error is printed to 
+   The error is check in a pointwise sense and if it is larger than
+   EPS then the value of alpha,beta,np,n and the error is printed to
    the screen. After every alpha value the statement
        "finished checking all beta values for alpha = #"
    is printed
@@ -66,12 +62,12 @@ using namespace Polylib;
         z  to  x
 
    where z are the quadrature zeros and x are the equispaced points
-       
+
                   2*i
         x    =   -----   - 1.0    (0 <= i <= np-1)
      i       (np-1)
-            
-      
+
+
    for all   -0.5 <= alpha <= 5   (increments of 0.5)
              -0.5 <= beta  <= 5   (increments of 0.5)
 
@@ -79,22 +75,22 @@ using namespace Polylib;
           NPLOWER <= np <= NPUPPER
                 2     <= n  <= np - 1
 
-   The error is check in a pointwise sense and if it is larger than 
-   EPS then the value of alpha,beta,np,n and the error is printed to 
+   The error is check in a pointwise sense and if it is larger than
+   EPS then the value of alpha,beta,np,n and the error is printed to
    the screen. After every alpha value the statement
       "finished checking all beta values for alpha = #"
    is printed
 
    The above checks are performed for all the Gauss, Gauss-Radau and
    Gauss-Lobatto points. If you want to disable any routine then set
-      GAUSS_INT, GAUSS_RADAU_INT, GAUSS_LOBATTO_INT = 0 
+      GAUSS_INT, GAUSS_RADAU_INT, GAUSS_LOBATTO_INT = 0
    for the integration rouintes
       GAUSS_DIFF,GAUSS_RADAU_DIFF, GAUSS_LOBATTO_DIFF = 0
-   for the differentiation routines 
+   for the differentiation routines
       GAUSS_INTERP,GAUSS_RADAU_INTERP, GAUSS_LOBATTO_INTERP = 0
    for the interpolation routines.
    ------------------------------------------------------------------*/
-   
+
 #define NPLOWER  5
 #define NPUPPER 15
 #define EPS  1e-12
@@ -123,7 +119,7 @@ main(){
   z  = dvector(0,NPUPPER-1);
   w  = dvector(0,NPUPPER-1);
   p  = dvector(0,NPUPPER-1);
-  
+
   d  = dvector(0,NPUPPER*NPUPPER-1);
   dt = dvector(0,NPUPPER*NPUPPER-1);
 
@@ -134,7 +130,7 @@ main(){
   while(alpha <= 5.0){
     beta = -0.5;
     while(beta <= 5.0){
-      
+
       for(np = NPLOWER; np <= NPUPPER; ++np){
     zwgj(z,w,np,alpha,beta);
     for(n = 2; n < 2*np-1; ++n){
@@ -145,7 +141,7 @@ main(){
            ,alpha,beta,np,n,sum);
     }
       }
-      
+
       beta += 0.5;
     }
     printf("finished checking all beta values for alpha = %lf\n",alpha);
@@ -171,7 +167,7 @@ main(){
            ,alpha,beta,np,n,sum);
     }
       }
-      
+
       beta += 0.5;
     }
     printf("finished checking all beta values for alpha = %lf\n",alpha);
@@ -198,7 +194,7 @@ main(){
            ,alpha,beta,np,n,sum);
     }
       }
-      
+
       beta += 0.5;
     }
     printf("finished checking all beta values for alpha = %lf\n",alpha);
@@ -225,7 +221,7 @@ main(){
            ,alpha,beta,np,n,sum);
     }
       }
-        
+
       beta += 0.5;
     }
     printf("finished checking all beta values for alpha = %lf\n",alpha);
@@ -245,10 +241,10 @@ main(){
     zwgj(z,w,np,alpha,beta);
     for(n = 2; n < np-1; ++n){
       Dgj(d,dt,z,np,alpha,beta);
-      
+
       for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
       sum = 0;
-      for(i = 0; i < np; ++i) 
+      for(i = 0; i < np; ++i)
         sum += fabs(ddot(np,d+i*np,1,p,1) - n*pow(z[i],n-1));
       sum /= np;
       if(fabs(sum)>EPS)
@@ -277,7 +273,7 @@ main(){
       Dgrjm(d,dt,z,np,alpha,beta);
       for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
       sum = 0;
-      for(i = 0; i < np; ++i) 
+      for(i = 0; i < np; ++i)
         sum += fabs(ddot(np,d+i*np,1,p,1) - n*pow(z[i],n-1));
       sum /= np;
       if(fabs(sum)>EPS)
@@ -306,7 +302,7 @@ main(){
       Dgrjp(d,dt,z,np,alpha,beta);
       for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
       sum = 0;
-      for(i = 0; i < np; ++i) 
+      for(i = 0; i < np; ++i)
         sum += fabs(ddot(np,d+i*np,1,p,1) - n*pow(z[i],n-1));
       sum /= np;
       if(fabs(sum)>EPS)
@@ -335,7 +331,7 @@ main(){
       Dglj(d,dt,z,np,alpha,beta);
       for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
       sum = 0;
-      for(i = 0; i < np; ++i) 
+      for(i = 0; i < np; ++i)
         sum += fabs(ddot(np,d+i*np,1,p,1) - n*pow(z[i],n-1));
       sum /= np;
       if(fabs(sum)>EPS)
@@ -368,7 +364,7 @@ main(){
       }
       Imgj(d,z,w,np,np,alpha,beta);
       sum = 0;
-      for(i = 0; i < np; ++i) 
+      for(i = 0; i < np; ++i)
         sum += fabs(ddot(np,d+i*np,1,p,1) - pow(w[i],n));
       sum /= np;
       if(fabs(sum)>EPS)
@@ -400,7 +396,7 @@ main(){
       }
       Imgrjm(d,z,w,np,np,alpha,beta);
       sum = 0;
-      for(i = 0; i < np; ++i) 
+      for(i = 0; i < np; ++i)
         sum += fabs(ddot(np,d+i*np,1,p,1) - pow(w[i],n));
       sum /= np;
       if(fabs(sum)>EPS)
@@ -431,7 +427,7 @@ main(){
       }
       Imgrjp(d,z,w,np,np,alpha,beta);
       sum = 0;
-      for(i = 0; i < np; ++i) 
+      for(i = 0; i < np; ++i)
         sum += fabs(ddot(np,d+i*np,1,p,1) - pow(w[i],n));
       sum /= np;
       if(fabs(sum)>EPS)
@@ -463,7 +459,7 @@ main(){
       }
       Imglj(d,z,w,np,np,alpha,beta);
       sum = 0;
-      for(i = 0; i < np; ++i) 
+      for(i = 0; i < np; ++i)
         sum += fabs(ddot(np,d+i*np,1,p,1) - pow(w[i],n));
       sum /= np;
       if(fabs(sum)>EPS)
@@ -499,7 +495,7 @@ double ddot (int n, double *x, int incx, double *y, int incy)
 double *dvector(int nl,int nh)
 {
   double *v;
-  
+
   v = (double *)malloc((unsigned) (nh-nl+1)*sizeof(double));
   return v-nl;
 }

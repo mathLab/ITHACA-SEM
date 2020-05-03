@@ -45,7 +45,7 @@
 
 #include <functional>
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 
 #include <type_traits>
 #include <boost/call_traits.hpp>
@@ -189,45 +189,45 @@ namespace Nektar
     LIB_UTILITIES_EXPORT void Add(NekVector<DataType>& result,
            const NekVector<DataType>& lhs,
            const NekVector<DataType>& rhs);
-    
+
     template<typename DataType>
     LIB_UTILITIES_EXPORT void AddNegatedLhs(NekVector<DataType>& result,
            const NekVector<DataType>& lhs,
            const NekVector<DataType>& rhs);
-    
+
     template<typename DataType>
     LIB_UTILITIES_EXPORT void AddEqual(NekVector<DataType>& result,
            const NekVector<DataType>& rhs);
-    
+
     template<typename DataType>
     LIB_UTILITIES_EXPORT void AddEqualNegatedLhs(NekVector<DataType>& result,
            const NekVector<DataType>& rhs);
-    
+
     template<typename LhsDataType,
              typename RhsDataType>
     LIB_UTILITIES_EXPORT NekVector<LhsDataType> Add(const NekVector<LhsDataType>& lhs,
                                const NekVector<RhsDataType>& rhs);
-    
+
 
 
     template<typename ResultDataType, typename InputDataType>
     LIB_UTILITIES_EXPORT void Subtract(NekVector<ResultDataType>& result,
            const NekVector<InputDataType>& lhs,
            const NekVector<InputDataType>& rhs);
-    
+
     template<typename ResultDataType, typename InputDataType>
     LIB_UTILITIES_EXPORT void SubtractNegatedLhs(NekVector<ResultDataType>& result,
            const NekVector<InputDataType>& lhs,
            const NekVector<InputDataType>& rhs);
-    
+
     template<typename ResultDataType, typename InputDataType>
     LIB_UTILITIES_EXPORT void SubtractEqual(NekVector<ResultDataType>& result,
            const NekVector<InputDataType>& rhs);
-    
+
     template<typename ResultDataType, typename InputDataType>
     LIB_UTILITIES_EXPORT void SubtractEqualNegatedLhs(NekVector<ResultDataType>& result,
            const NekVector<InputDataType>& rhs);
-    
+
     template<typename DataType>
     NekVector<DataType>
     LIB_UTILITIES_EXPORT Subtract(const NekVector<DataType>& lhs,
@@ -241,11 +241,11 @@ namespace Nektar
     void LIB_UTILITIES_EXPORT Divide(NekVector<ResultDataType>& result,
            const NekVector<InputDataType>& lhs,
            const NekDouble& rhs);
-    
+
     template<typename ResultDataType>
     void LIB_UTILITIES_EXPORT DivideEqual(NekVector<ResultDataType>& result,
            const NekDouble& rhs);
-    
+
     template<typename DataType>
     NekVector<DataType>
     LIB_UTILITIES_EXPORT Divide(const NekVector<DataType>& lhs,
@@ -256,11 +256,11 @@ namespace Nektar
     void LIB_UTILITIES_EXPORT Multiply(NekVector<ResultDataType>& result,
            const NekVector<InputDataType>& lhs,
            const NekVector<InputDataType>& rhs);
-    
+
     template<typename ResultDataType, typename InputDataType>
     void LIB_UTILITIES_EXPORT MultiplyEqual(NekVector<ResultDataType>& result,
            const NekVector<InputDataType>& rhs);
-    
+
     template<typename DataType, typename InputDataType>
     NekVector<DataType>
     LIB_UTILITIES_EXPORT Multiply(const NekVector<DataType>& lhs,
@@ -270,11 +270,11 @@ namespace Nektar
     void LIB_UTILITIES_EXPORT Multiply(NekVector<ResultDataType>& result,
            const NekVector<InputDataType>& lhs,
            const NekDouble& rhs);
-    
+
     template<typename ResultDataType>
     void LIB_UTILITIES_EXPORT MultiplyEqual(NekVector<ResultDataType>& result,
            const NekDouble& rhs);
-    
+
     template<typename DataType>
     NekVector<DataType>
     LIB_UTILITIES_EXPORT Multiply(const NekVector<DataType>& lhs,
@@ -284,12 +284,12 @@ namespace Nektar
     void LIB_UTILITIES_EXPORT Multiply(NekVector<ResultDataType>& result,
                   const NekDouble& lhs,
                   const NekVector<InputDataType>& rhs);
-        
+
     template<typename ResultDataType, typename InputDataType>
     void LIB_UTILITIES_EXPORT MultiplyInvertedLhs(NekVector<ResultDataType>& result,
                   const NekDouble& lhs,
                   const NekVector<InputDataType>& rhs);
-        
+
     template<typename DataType>
     NekVector<DataType>
     LIB_UTILITIES_EXPORT Multiply(const DataType& lhs,

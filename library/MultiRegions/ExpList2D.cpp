@@ -440,8 +440,8 @@ namespace Nektar
 
             // Set up m_coeffs, m_phys and offset arrays.
             SetCoeffPhysOffsets();
-            m_coeffs = Array<OneD, NekDouble> {m_ncoeffs, 0.0};
-            m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
+            m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+            m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
 
             CreateCollections(ImpType);
         }
@@ -1105,7 +1105,7 @@ namespace Nektar
                 e_npoints  =   TraceNq0*TraceNq1;
                 if (e_npoints0 < e_npoints)
                 {
-                    lengintp = Array<OneD, NekDouble>{e_npoints, 0.0};
+                    lengintp = Array<OneD, NekDouble>{size_t(e_npoints), 0.0};
                     e_npoints0 = e_npoints;
                 }
                 

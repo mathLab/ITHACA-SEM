@@ -252,7 +252,7 @@ namespace Nektar
             Array<OneD, NekDouble>  &lengthsFwd,
             Array<OneD, NekDouble>  &lengthsBwd)
         {
-            size_t e_npoints;
+            int e_npoints;
 
             Array<OneD, NekDouble> locLeng;
             Array<OneD, NekDouble> lengintp;
@@ -273,7 +273,7 @@ namespace Nektar
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
                 if (e_npoints0 < e_npoints)
                 {
-                    lengintp = Array<OneD, NekDouble> {e_npoints, 0.0};
+                    lengintp = Array<OneD, NekDouble> {size_t(e_npoints), 0.0};
                     e_npoints0 = e_npoints;
                 }
                 

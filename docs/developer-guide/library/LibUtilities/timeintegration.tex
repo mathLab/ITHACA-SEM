@@ -1,7 +1,7 @@
 %
 \section{Time Integration}
 
-This directory consists of the following files:
+This directory consists of the following primary files:
 
 
 \begin{center}
@@ -16,13 +16,20 @@ TimeIntegrationFIT.h & TimeIntegrationFIT.cpp \\ \hline
 The original time-stepping interface (found in the parent class
 TimeIntegrationScheme) where implemented by Vos et al. \cite{Vostime}
 and a detailed explanation of the mathematics and computer science
-concepts are provided there.  After the original implementation,
-Cantwell et al. extended Vos' original work by adding the
-time-stepping routines into a factory pattern (found in the child
-class TimeIntegrationGLM). The GLM schemes have been further
-compartmentalized into specific schemes covering both traditional and
-exponential schemes. More recently Fractional-in-time schemes have
-been added (found in the child class TimeIntegrationFIT). 
+concepts are provided there.  After the original implementation, the
+time-stepping routines were refactored into a factory pattern (found
+in the child class TimeIntegrationGLM with specific GLM schemes
+covering both traditional and exponential schemes (compartmentalize in
+the *TimeIntegrationSchemes classes). Each GLM scheme sets up one or
+more (linear multistep methods) phases using the
+TimeIntegrationAlgorithmGLM class, which is where the GLM algorithm is
+performed using the helper class TimeIntegrationSolutionGLM.
+
+
+More recently Fractional-in-time schemes have been added as a sibbling
+class to the GLM class (found in the child class
+TimeIntegrationFIT). The Fractional-in-time schemes makes use of its
+own separate algorithm.
 
 \subsection{General Linear Methods}
 \label{subsectionGeneralLinearMethods}
@@ -31,14 +38,10 @@ of a broad range of different numerical methods for ordinary
 differential equations.  They were introduced by Butcher and they
 provide a unified formulation for traditional methods such as the
 Runge-Kutta methods and the linear multi-step methods such as
-Adams-Bashforth.  From an implementation point of view, this means
-that all these numerical methods can be abstracted in a similar
-way. As this allows a high level of generality, it is chosen in {\nek}
-to cast all time integration schemes in the framework of general
-linear methods.
-
-For background information about general linear methods, please consult
-\cite{Bu06}.
+Adams-Bashforth.  From an implementation point of view, all these
+numerical methods can be abstracted similarly and allows a high level
+of generality which is the case in {\nek}. For background information
+about general linear methods, see \cite{Bu06}.
 
 \subsubsection{Introduction}
 The standard initial value problem can written in the form
@@ -189,8 +192,7 @@ $t^{[n]}$ is also updated
 For a detailed description of the formulation and a deeper insight of the
 numerical method see \cite{Vostime}.
 
-
-\subsubsection{Types of time Integration Schemes}
+\subsubsection{Types of GLM time Integration Schemes}
 Nektar++ contains various classes and methods which implement the
 concept of GLMs. This toolbox is capable of numerically solving the
 generalised ODE using a broad range of different time-stepping
@@ -225,7 +227,7 @@ methods. We distinguish the following types of general linear methods:
     extended to the exponential setting. These types of methods are
     considered explicit from an ODE point of view. They are
     characterized by a coefficient matrix of exponential values for
-    each variable. Two schemes have been implemented:
+    each variable. Two first order schemes have been implemented:
   \begin{itemize}
     \item \textbf{Lawson-Euler explicit method}: $y_n =
       \varphi_0(z)N(y_{n-1},t_{n-1}) + \varphi_0(z)y_{n-1}$
@@ -240,7 +242,6 @@ The aim in {\nek} is to fully support the first three types of GLMs.
 Fully implicit methods are currently not implemented. {\nek} also
 fully supports Exponential Methods using GLMs.
 
-
 \subsection{Fractional-in-time Integration Schemes}
 
 In addition to the GLMs {\nek} also supports fractional methods:
@@ -254,8 +255,7 @@ In addition to the GLMs {\nek} also supports fractional methods:
 \end{itemize}
 
 The Fractional methods follow the same paradigm as the GLMs, that is
-both have the same parent class and as such are used in a similar
-manner.
+both have the same parent class and as such have the same interface.
 
 \subsection{Usage}
 The goal of abstracting the concept of general linear methods and
@@ -366,6 +366,8 @@ steps or final time. For example:\\
    <P> Kinvis = 1 </P>
 </PARAMETERS>
 \end{lstlisting}
+
+\textbf{ARS - DO WE WANT TO HAVE THIS SECTION ANY MORE???}
 
 The old schema which specifies the method, variant, order, and free
 parameters as a single string can still be utilized as it has not been
@@ -715,7 +717,7 @@ for the unknown vector $\boldsymbol{y}$. This can be done in three steps:
 
 \subsection{How to add a new GLM time-stepping method}
 
-To add a new time integration scheme, follow the steps below:
+To add a new GLM time integration scheme, follow the steps below:
 \begin{itemize}
 \item Choose a name for the method, and create a header starting with
   the method name followed by \texttt{TimeIntegrationScheme.h}.  Add the
@@ -734,7 +736,8 @@ To add a new time integration scheme, follow the steps below:
     the scheme data via a call to \texttt{SetupSchemeData}.
   \item \texttt{GetName} - returns the method name.
   \item \texttt{GetTimeStability} - returns time stability.
-  \item \texttt{SetupSchemeData} - sets up the Butcher tableau.
+  \item \texttt{SetupSchemeData} - sets up the Butcher tableau for
+    each phase of the sheme (TimeIntegrationAlgorithmGLM).
 \end{itemize}
 
 \item Add documentation for the method (especially indicating what the
@@ -744,8 +747,9 @@ To add a new time integration scheme, follow the steps below:
 
 \subsection{Examples of already implemented time stepping schemes}
 
-Here we show some examples time-stepping schemes implemented in {\nek}, to give an idea of what is required
-to add one of them.
+What follows are some examples time-stepping schemes currently
+implemented in {\nek}, to give an idea of what is required to add one
+of them.
 
 \subsubsection{Forward Euler}
 \begin{align*}

@@ -699,7 +699,11 @@ There is also an additional optional argument \inltt{cp=p0,q} which adds to the
 interpolated fields the value of $c_p=(p-p0)/q$ and $c_{p0}=(p-p0+0.5 u^2)/q$
 where $p0$ is a reference pressure and $q$ is the free stream dynamics pressure.
 If the input does not contain a field ``p'' or a velocity field ``u,v,w'' then $cp$
-and $cp0$ are not evaluated accordingly
+and $cp0$ are not evaluated accordingly.
+
+Interpolation of 3DH1D fields is performed only in the x-y
+spectral/\emph{hp} planes. At every x-y location, if the point lies outside a
+Fourier plane its z-coordinate is reset to the closest plane.
 %
 \begin{notebox}
 This module  runs in parallel for the line, plane and box extraction of points.

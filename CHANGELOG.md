@@ -11,6 +11,9 @@ v5.1.0
 - Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
 - Fix type consistency and real comparison in SharedArray.hpp, replaced
   num_elements with size() (!1127)
+- Use base MPI functions instead of the GS library in the trace exchange
+  for parallel DG simulations (!1112)
+  num_elements with size() (!1127, !1137, !1141)
 
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)
@@ -29,12 +32,16 @@ v5.0.1
 - Fix incorrect coordinate dimension used in history point filter (!1118)
 - Fix compile errors with GCC 9.x (!1108)
 - Correct the Energy/Enstropy integral for the 3DH1 flow (!1132)
+- Added IsRealEqual method to compare real numbers with relative tolerance.
+  Started using it in SharedArray and in NekMesh to fix peralign-extrude tool
+  chain (!1134)
 
 **IncNavierStokesSolver**
 - Change the baseflow time in the Adjoint advection (!1133)
 
 **FieldConvert**
 - Fix OutputTecplot skipping final plane in 3DH1D (!1016)
+- Fix Interppoints in 3DH1D (!1140)
 
 **NekMesh**
 - Fix compile errors when using intel cc (!1114)
@@ -43,9 +50,8 @@ v5.0.1
 - Fix error in compilation of developer guide (!1136)
 
 **CI**
-- Switched to Gitlab CI (!1120, !1120, !1128, !1129)
 - Added checked conversion from double to int in SessionReader (!1113)
-- Switched to Gitlab CI (!1120, !1120, !1128, !1129, !1131)
+- Switched to Gitlab CI (!1120, !1120, !1128, !1129, !1131, !1141)
 
 v5.0.0
 ------

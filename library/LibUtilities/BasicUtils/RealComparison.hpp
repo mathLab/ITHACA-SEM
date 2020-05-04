@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CheckedCast.hpp
+// File RealComparison.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -28,38 +28,57 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: simple routines to check if the casting is narrowing
+// Description: simple routines to compare 2 real
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_CHECKEDCAST_H
-#define NEKTAR_LIB_UTILITIES_CHECKEDCAST_H
+#ifndef NEKTAR_LIB_UTILITIES_REALCOMPARISON_H
+#define NEKTAR_LIB_UTILITIES_REALCOMPARISON_H
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <limits>
 #include <type_traits>
+#include <cmath>
 
 namespace Nektar
 {
 namespace LibUtilities
 {
-/// checked cast from float types only to int types
+/// compare reals of same type with relative tolerance
 template
 <
-    class To, class Ti,
+    class T1, class T2,
     class = typename std::enable_if
     <
-        std::is_floating_point<typename std::remove_reference<Ti>::type>::value
-        && std::is_integral <typename std::remove_reference<To>::type>::value
+        std::is_floating_point
+        <
+            typename std::remove_cv<
+                typename std::remove_reference<T1>::type>::type
+        >::value &&
+        std::is_same
+        <
+            typename std::remove_cv<
+                typename std::remove_reference<T1>::type>::type,
+            typename std::remove_cv<
+                typename std::remove_reference<T2>::type>::type
+        >::value
     >::type
 >
-inline To checked_cast(const Ti param)
+inline bool IsRealEqual(T1&& lhs, T2&& rhs,
+    const unsigned int factor = NekConstants::kNekFloatCompFact)
 {
-    Ti min = std::numeric_limits<To>::min();
-    Ti max = std::numeric_limits<To>::max();
-    ASSERTL0(param >= min, "Casting would narrow (underflow).");
-    ASSERTL0(param <= max, "Casting would narrow (overflow).");
-    return static_cast<To>(param);
+    // Check precondition in debug mode
+    ASSERTL1(factor >= 1, "real comparison factor needs to be >= 1");
+    // Get base type
+    typedef typename std::remove_reference<T1>::type Tbase;
+    // Tolerance
+    Tbase tol = factor * std::numeric_limits<Tbase>::epsilon();
+    // Distance
+    Tbase dist = std::abs(lhs-rhs);
+    // Reference
+    Tbase ref = std::max(std::abs(lhs), std::abs(rhs));
+    return dist < ref * tol || dist == 0;
 }
 
 }

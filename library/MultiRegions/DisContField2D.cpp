@@ -435,32 +435,7 @@ namespace Nektar
 
             // Set up physical normals
             SetUpPhysNormals();
-
-            // Set up information for parallel and periodic problems.
-            for (int i = 0; i < m_trace->GetExpSize(); ++i)
-            {
-                LocalRegions::Expansion1DSharedPtr traceEl =
-                        m_trace->GetExp(i)->as<LocalRegions::Expansion1D>();
-
-                int offset      = m_trace->GetPhys_Offset(i);
-                int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
-                auto pIt = m_periodicEdges.find(traceGeomId);
-
-                if (pIt != m_periodicEdges.end() && !pIt->second[0].isLocal)
-                {
-                    if (traceGeomId != min(pIt->second[0].id, traceGeomId))
-                    {
-                        traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
-                            traceEl->GetLeftAdjacentElementEdge());
-                    }
-                }
-                else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
-                {
-                    traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
-                        traceEl->GetLeftAdjacentElementEdge());
-                }
-            }
-
+                
             int cnt, n, e;
 
             // Identify boundary edges
@@ -1273,20 +1248,7 @@ namespace Nektar
                 // it, then assume it is a partition edge.
                 if (it == m_boundaryEdges.end())
                 {
-                    int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
-                    auto pIt = m_periodicEdges.find(traceGeomId);
-
-                    if (pIt != m_periodicEdges.end() && !pIt->second[0].isLocal)
-                    {
-                        fwd = traceGeomId == min(traceGeomId,pIt->second[0].id);
-                    }
-                    else
-                    {
-                        int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
-
-                        fwd = m_traceMap->
-                            GetTraceToUniversalMapUnique(offset) >= 0;
-                    }
+                    fwd = true; // Partition edge is always fwd
                 }
             }
             else if ( traceEl->GetLeftAdjacentElementEdge () != -1 &&
@@ -1457,8 +1419,7 @@ namespace Nektar
             }
 
             // Do parallel exchange for forwards/backwards spaces.
-            m_traceMap->UniversalTraceAssemble(Fwd);
-            m_traceMap->UniversalTraceAssemble(Bwd);
+            m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);
         }
 
 
@@ -1496,7 +1457,7 @@ namespace Nektar
                 m_locTraceToTraceMap->FwdLocTracesFromField(inarray,tracevals);
                 m_locTraceToTraceMap->
                             InterpLocEdgesToTrace(0,tracevals,outarray);
-                m_traceMap->UniversalTraceAssemble(outarray);
+                m_traceMap->GetAssemblyCommDG()->PerformExchange(outarray, outarray);
             }
             else
             {

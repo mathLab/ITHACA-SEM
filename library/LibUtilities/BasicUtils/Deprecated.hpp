@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CheckedCast.hpp
+// File: Deprecated.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
-// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-// Department of Aeronautics, Imperial College London (UK), and Scientific
-// Computing and Imaging Institute, University of Utah (USA).
+// Copyright (c) 2006 Scientific Computing and Imaging Institute,
+// University of Utah (USA) and Department of Aeronautics, Imperial
+// College London (UK).
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -28,41 +28,30 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: simple routines to check if the casting is narrowing
+// Description: Defines a macro for deprecated functions.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_CHECKEDCAST_H
-#define NEKTAR_LIB_UTILITIES_CHECKEDCAST_H
+#ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_DEPRECATED_HPP
+#define NEKTAR_LIB_UTILITIES_BASIC_UTILS_DEPRECATED_HPP
 
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <limits>
-#include <type_traits>
-
-namespace Nektar
-{
-namespace LibUtilities
-{
-/// checked cast from float types only to int types
-template
-<
-    class To, class Ti,
-    class = typename std::enable_if
-    <
-        std::is_floating_point<typename std::remove_reference<Ti>::type>::value
-        && std::is_integral <typename std::remove_reference<To>::type>::value
-    >::type
->
-inline To checked_cast(const Ti param)
-{
-    Ti min = std::numeric_limits<To>::min();
-    Ti max = std::numeric_limits<To>::max();
-    ASSERTL0(param >= min, "Casting would narrow (underflow).");
-    ASSERTL0(param <= max, "Casting would narrow (overflow).");
-    return static_cast<To>(param);
-}
-
-}
-}
+/*
+ * Defines a deprecated macro. Note that gcc 4.5+ and it seems virtually all
+ * clang versions support supplying a macro, as does MSVC from VS 2015 onwards.
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#  if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR >= 5)) || defined(__clang__)
+#    define DEPRECATED(since, alt) \
+    __attribute__ ((deprecated(\
+                        "since version " #since "; use '" #alt "' instead")))
+#  else
+#    define DEPRECATED(since, alt) __attribute__ ((deprecated))
+#  endif
+#elif defined(_MSC_VER) && _MSC_VER >= 1900
+#  define DEPRECATED(since, alt) \
+    __declspec(deprecated, "since version " #since "; use '" #alt "' instead")
+#else
+#  define DEPRECATED(since, alt)
+#endif
 
 #endif

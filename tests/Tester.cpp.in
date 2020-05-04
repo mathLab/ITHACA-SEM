@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
                     continue;
                 }
 
-                command += "@MPIEXEC@ ";
+                command += "\"@MPIEXEC@\" ";
                 if (std::string("@NEKTAR_TEST_USE_HOSTFILE@") == "ON")
                 {
                     command += "-hostfile hostfile ";

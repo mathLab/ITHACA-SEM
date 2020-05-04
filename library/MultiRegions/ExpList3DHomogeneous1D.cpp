@@ -74,6 +74,8 @@ namespace Nektar
         {
             SetExpType(e3DH1D);
 
+            m_graph = graph2D;
+
             GenExpList3DHomogeneous1D(graph2D->GetExpansions(var),ImpType);
         }
 

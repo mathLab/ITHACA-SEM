@@ -43,21 +43,6 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-        void Expansion1D::v_NegateVertexNormal(const int vertex)
-        {
-            m_negatedNormals[vertex] = true;
-            for (int i = 0; i < GetCoordim(); ++i)
-            {
-                Vmath::Neg(m_vertexNormals[vertex][i].size(),
-                           m_vertexNormals[vertex][i], 1);
-            }
-        }
-
-        bool Expansion1D::v_VertexNormalNegated(const int vertex)
-        {
-            return m_negatedNormals[vertex];
-        }
-
         DNekMatSharedPtr Expansion1D::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;

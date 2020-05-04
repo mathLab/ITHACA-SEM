@@ -237,7 +237,7 @@ void LocTraceToTraceMap::Setup2D(
             int order_f = edge->GetNcoeffs();
             int foffset = trace->GetCoeff_Offset(edge->GetElmtId());
 
-            double fac = (*exp)[n]->EdgeNormalNegated(e) ? -1.0 : 1.0;
+            double fac = 1.0;
 
             LocalRegions::Expansion1DSharedPtr locExp1d =
                 elmtToTrace[n][e]->as<LocalRegions::Expansion1D>();
@@ -577,7 +577,7 @@ void LocTraceToTraceMap::Setup3D(
             int order_f = face->GetNcoeffs();
             int foffset = trace->GetCoeff_Offset(face->GetElmtId());
 
-            int fac = (*exp)[n]->FaceNormalNegated(e) ? -1.0 : 1.0;
+            int fac = 1.0;
 
             if (exp3d->GetFaceExp(e)->GetRightAdjacentElementExp())
             {

@@ -342,7 +342,7 @@ AssemblyCommDG::AssemblyCommDG(
     const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
     const PeriodicMap &perMap)
 {
-    auto comm = locExp.GetSession()->GetComm();
+    auto comm = locExp.GetSession()->GetComm()->GetRowComm();
 
     // If serial then skip initialising graph structure and the MPI timing
     if (comm->IsSerial())

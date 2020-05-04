@@ -112,7 +112,7 @@ namespace Nektar
                 m_session->LoadParameter("IO_FiltersInfoSteps",
                     m_filtersInfosteps, 10.0 * m_infosteps);
                 m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
-                m_session->LoadParameter("CFL_End", m_CFLEnd, 0.0);
+                m_session->LoadParameter("CFLEnd", m_CFLEnd, 0.0);
                 m_session->LoadParameter("CFLGrowth", m_CFLGrowth, 1.0);
 
                 // Time tolerance between filter update time and time integration

@@ -92,7 +92,7 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >        &outarray,
             const Array<OneD, Array<OneD, NekDouble> > &pFwd,
             const Array<OneD, Array<OneD, NekDouble> > &pBwd);
-        virtual void v_Diffuse_coeff(
+        virtual void v_DiffuseCoeffs(
             const std::size_t                                 nConvective,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
@@ -112,9 +112,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble>>        &inarray,
             TensorOfArray3D<NekDouble>                       &qfields,
             TensorOfArray3D<NekDouble>                       &VolumeFlux,
-            Array< OneD, int >                               &nonZeroIndex) ;
-        
-          virtual void v_DiffuseTraceFlux(
+            Array< OneD, int >                               &nonZeroIndex);
+        virtual void v_DiffuseTraceFlux(
             const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
             const Array<OneD, Array<OneD, NekDouble>>        &inarray,
             TensorOfArray3D<NekDouble>                       &qfields,

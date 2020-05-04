@@ -303,13 +303,13 @@ namespace Nektar
                     Array<OneD,       NekDouble> &Fwd,
                     Array<OneD,       NekDouble> &Bwd);
 
-            inline virtual void v_GetFwdBwdTracePhysDeriv_serial(
+            inline virtual void v_GetFwdBwdTracePhysDerivSerial(
                 const int                          Dir,
                 const Array<OneD, const NekDouble> &field,
                     Array<OneD,       NekDouble> &Fwd,
                     Array<OneD,       NekDouble> &Bwd);
 
-            inline virtual void v_GetFwdBwdTracePhys_serial(
+            inline virtual void v_GetFwdBwdTracePhysSerial(
                 const Array<OneD, const NekDouble> &field,
                     Array<OneD,       NekDouble> &Fwd,
                     Array<OneD,       NekDouble> &Bwd);
@@ -341,7 +341,7 @@ namespace Nektar
                 Array<OneD,       NekDouble> &Fwd,
                 Array<OneD,       NekDouble> &Bwd)
         {
-            v_GetFwdBwdTracePhys_serial(field, Fwd, Bwd);
+            v_GetFwdBwdTracePhysSerial(field, Fwd, Bwd);
             m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);
         }
 
@@ -360,12 +360,12 @@ namespace Nektar
                 Array<OneD,       NekDouble> &Fwd,
                 Array<OneD,       NekDouble> &Bwd)
         {
-            v_GetFwdBwdTracePhysDeriv_serial(Dir,field, Fwd, Bwd);
+            v_GetFwdBwdTracePhysDerivSerial(Dir,field, Fwd, Bwd);
             
             m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);
         }
 
-        void DisContField3D::v_GetFwdBwdTracePhysDeriv_serial(
+        void DisContField3D::v_GetFwdBwdTracePhysDerivSerial(
             const int                          Dir,
             const Array<OneD, const NekDouble> &field,
                 Array<OneD,       NekDouble> &Fwd,
@@ -375,7 +375,7 @@ namespace Nektar
             v_FillBwdWithBoundDeriv(Dir, Fwd, Bwd);
         }
 
-        void DisContField3D::v_GetFwdBwdTracePhys_serial(
+        void DisContField3D::v_GetFwdBwdTracePhysSerial(
             const Array<OneD, const NekDouble> &field,
                 Array<OneD,       NekDouble> &Fwd,
                 Array<OneD,       NekDouble> &Bwd)

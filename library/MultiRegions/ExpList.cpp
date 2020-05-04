@@ -2718,7 +2718,7 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        void ExpList::v_GetFwdBwdTracePhysDeriv_serial(
+        void ExpList::v_GetFwdBwdTracePhysDerivSerial(
             const int                           Dir,
             const Array<OneD, const NekDouble>  &field,
             Array<OneD, NekDouble>              &Fwd,
@@ -2739,7 +2739,7 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        void ExpList::v_GetFwdBwdTracePhys_serial(
+        void ExpList::v_GetFwdBwdTracePhysSerial(
             const Array<OneD, const NekDouble>  &field,
             Array<OneD, NekDouble>              &Fwd,
             Array<OneD, NekDouble>              &Bwd)

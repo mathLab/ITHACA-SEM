@@ -131,12 +131,11 @@ namespace Nektar
                 SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
                 MetricMap m_metrics;
 
-                /// the element length in the each element boundary(Vertex, 
-                /// edge or face) normal direction calculated based on the 
-                /// local m_metricinfo times the standard element length
-                /// (which is 2.0)
-                std::map<int, Array<OneD, NekDouble>  > 
-                        m_elmtBndNormDirElmtLen;
+                /// the element length in the each element boundary(Vertex, edge
+                /// or face) normal direction calculated based on the local
+                /// m_metricinfo times the standard element length (which is
+                /// 2.0)
+                std::map<int, Array<OneD, NekDouble>> m_elmtBndNormDirElmtLen;
 
                 void ComputeLaplacianMetric();
                 void ComputeQuadratureMetric();

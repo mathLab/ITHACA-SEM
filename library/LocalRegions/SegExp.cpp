@@ -746,7 +746,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
              Array<OneD, NekDouble>   &outarray)
         {
             size_t nquad = m_base[0]->GetNumPoints();
-            
+
             if (m_base[0]->GetPointsType() != LibUtilities::eGaussGaussLegendre)
             {
                 switch (vertex)
@@ -761,16 +761,15 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             }
             else
             {
-                // ASSERTL0(false, "SegExp::v_AddVertexPhysVals not coded");
                 StdRegions::ConstFactorMap factors;
                 factors[StdRegions::eFactorGaussVertex] = vertex;
-                
+
                 StdRegions::StdMatrixKey key(
                     StdRegions::eInterpGauss,
                     DetShapeType(),*this,factors);
-                
+
                 DNekScalMatSharedPtr mat_gauss = m_matrixManager[key];
-                
+
                 Vmath::Svtvp(nquad,inarray,
                             mat_gauss->GetOwnedMatrix()->GetPtr().get(), 1,
                             &outarray[0], 1, &outarray[0], 1);
@@ -959,10 +958,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
             size_t nqb = nqe;
             size_t nbnd= vertex;
-            m_elmtBndNormDirElmtLen[nbnd] = 
-                    Array<OneD, NekDouble> {nqb, 0.0};
-            Array<OneD, NekDouble>  &length = 
-                    m_elmtBndNormDirElmtLen[nbnd];
+            m_elmtBndNormDirElmtLen[nbnd] = Array<OneD, NekDouble> {nqb, 0.0};
+            Array<OneD, NekDouble> &length = m_elmtBndNormDirElmtLen[nbnd];
 
             // Regular geometry case
             if ((type == SpatialDomains::eRegular) ||

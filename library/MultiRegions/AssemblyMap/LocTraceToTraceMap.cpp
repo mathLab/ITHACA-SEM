@@ -872,10 +872,10 @@ void LocTraceToTraceMap::TraceLocToElmtLocCoeffMap(
             elmtLRSign[lr][i]     =   Array<OneD, int >{ncoeff, 0};
         }
     }
-    
-    const Array<OneD, const pair<int, int> > field_coeffToElmt  =   
+
+    const Array<OneD, const pair<int, int> > field_coeffToElmt  =
             locExp.GetCoeffsToElmt();
-    const Array<OneD, const pair<int, int> > trace_coeffToElmt  =   
+    const Array<OneD, const pair<int, int> > trace_coeffToElmt  =
             trace->GetCoeffsToElmt();
 
     for (int lr = 0; lr < 2; ++lr)
@@ -900,10 +900,10 @@ void LocTraceToTraceMap::TraceLocToElmtLocCoeffMap(
             elmtLRSign[lr][ntraceelmt][ntracelocN]  =   sign;
         }
     }
-    m_LeftRightAdjacentExpId                = LRAdjExpid;
+    m_leftRightAdjacentExpId                = LRAdjExpid;
     m_leftRightAdjacentExpFlag              = LRAdjflag;
-    m_TraceceffToLeftRightExpcoeffMap       = elmtLRMap;
-    m_TraceceffToLeftRightExpcoeffSign      = elmtLRSign;
+    m_traceCoeffToLeftRightExpCoeffMap      = elmtLRMap;
+    m_traceCoeffToLeftRightExpCoeffSign     = elmtLRSign;
 }
 
 /**
@@ -923,7 +923,7 @@ void LocTraceToTraceMap::LocTracesFromField(
 }
 
 /**
- * @brief Reverse process of LocTracesFromField() 
+ * @brief Reverse process of LocTracesFromField()
  * Add the local traces in physical space to field using
  * #m_fieldToLocTraceMap.
  *
@@ -931,7 +931,7 @@ void LocTraceToTraceMap::LocTracesFromField(
  * @param faces  local traces.
  */
 void LocTraceToTraceMap::AddLocTracesToField(
-    const Array<OneD, const NekDouble>  &faces, 
+    const Array<OneD, const NekDouble>  &faces,
     Array<OneD, NekDouble>              &field)
 {
     size_t nfield  =   field.size();
@@ -1396,7 +1396,7 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
  *
  * @param dir           Selects forwards (0) or backwards (1) direction.
  * @param traces        trace .
- * @param loctraces     Local trace 
+ * @param loctraces     Local trace
  */
 void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
     const int                           dir,
@@ -1537,7 +1537,7 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                     DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
                     DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
 
-                    Array<OneD, NekDouble> 
+                    Array<OneD, NekDouble>
                         wsp{size_t(m_interpNfaces[dir][i] * fnp0 * tnp1)};
 
                     Blas::Dgemm('T',
@@ -1591,7 +1591,7 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                                     loctraces.get() + cnt + j * fnp0 * fnp1,
                                     fnp0);
                     }
-                    
+
                     Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
                     for(int k = 0; k< tnp1 * m_interpNfaces[dir][i]; k++)
                     {

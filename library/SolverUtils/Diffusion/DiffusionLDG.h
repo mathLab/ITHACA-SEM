@@ -77,14 +77,14 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
 
-            virtual void v_Diffuse_coeff(
+            virtual void v_DiffuseCoeffs(
                 const std::size_t                                 nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray,
                 const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
-                
+
             virtual void v_DiffuseCalculateDerivative(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,

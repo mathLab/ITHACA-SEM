@@ -1618,26 +1618,26 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
             {
-                v_DividByStdQuadratureMetric(inarray, outarray);
+                v_DivideByStdQuadratureMetric(inarray, outarray);
             }
-        
+
             void StdExpansion::v_MultiplyByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
             {
                 boost::ignore_unused(inarray, outarray);
-                NEKERROR(ErrorUtil::efatal, 
+                NEKERROR(ErrorUtil::efatal,
                     "Method does not exist for this shape or library");
             }
 
-            void StdExpansion::v_DividByStdQuadratureMetric(
+            void StdExpansion::v_DivideByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
             {
                 boost::ignore_unused(inarray,outarray);
-                NEKERROR(ErrorUtil::efatal, 
-                    "v_DividByStdQuadratureMetric does not exist for this" \
-                        " shape or library");
+                NEKERROR(ErrorUtil::efatal,
+                         "v_DivideByStdQuadratureMetric does not exist for this"
+                         " shape or library");
             }
 
             void StdExpansion::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,

@@ -186,7 +186,7 @@ public:
         const Array<OneD, const NekDouble> &field,
         Array<OneD, NekDouble> faces);
     MULTI_REGIONS_EXPORT void AddLocTracesToField(
-        const Array<OneD, const NekDouble>  &faces, 
+        const Array<OneD, const NekDouble>  &faces,
         Array<OneD, NekDouble>              &field);
 
     MULTI_REGIONS_EXPORT void InterpLocEdgesToTrace(
@@ -203,7 +203,7 @@ public:
         const int dir,
         const Array<OneD, const NekDouble> &locfaces,
         Array<OneD, NekDouble> faces);
-        
+
     /// Right inner product with(IPTW) FacesToTrace Interpolation Matrix.
     MULTI_REGIONS_EXPORT void RightIPTWLocFacesToTraceInterpMat(
         const int                           dir,
@@ -235,54 +235,54 @@ public:
         return m_nLocTracePts;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, bool>>  
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, bool>>
         &GetLeftRightAdjacentExpFlag() const
     {
         return m_leftRightAdjacentExpFlag;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int >>   
-        &GetLeftRightAdjacentExpId() const 
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int >>
+        &GetLeftRightAdjacentExpId() const
     {
-        return m_LeftRightAdjacentExpId;
+        return m_leftRightAdjacentExpId;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, 
-        const Array<OneD, Array<OneD, int > > >  
-        &GetTraceceffToLeftRightExpcoeffMap() const
+    MULTI_REGIONS_EXPORT inline const Array<OneD,
+        const Array<OneD, Array<OneD, int > > >
+        &GetTraceCoeffToLeftRightExpCoeffMap() const
     {
-        return m_TraceceffToLeftRightExpcoeffMap;
+        return m_traceCoeffToLeftRightExpCoeffMap;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, 
-        const Array<OneD, Array<OneD, int > > > 
-        &GetTraceceffToLeftRightExpcoeffSign() const
+    MULTI_REGIONS_EXPORT inline const Array<OneD,
+        const Array<OneD, Array<OneD, int > > >
+        &GetTraceCoeffToLeftRightExpCoeffSign() const
     {
-        return m_TraceceffToLeftRightExpcoeffSign;
+        return m_traceCoeffToLeftRightExpCoeffSign;
     }
 
-    MULTI_REGIONS_EXPORT inline void SetTracephysToLeftRightExpphysMap(
+    MULTI_REGIONS_EXPORT inline void SetTracePhysToLeftRightExpPhysMap(
         const Array<OneD, const Array<OneD, Array<OneD, int > > > & inarray)
     {
-        m_TracephysToLeftRightExpphysMap = inarray;
+        m_tracePhysToLeftRightExpPhysMap = inarray;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, 
-        const Array<OneD, Array<OneD, int > > > 
-        &GetTracephysToLeftRightExpphysMap() const
+    MULTI_REGIONS_EXPORT inline const Array<OneD,
+        const Array<OneD, Array<OneD, int > > >
+        &GetTracePhysToLeftRightExpPhysMap() const
     {
-        return m_TracephysToLeftRightExpphysMap;
+        return m_tracePhysToLeftRightExpPhysMap;
     }
 
-    MULTI_REGIONS_EXPORT inline void SetflagTracephysToLeftRightExpphysMap(
+    MULTI_REGIONS_EXPORT inline void SetFlagTracePhysToLeftRightExpPhysMap(
         const bool in)
     {
-        m_flagTracephysToLeftRightExpphysMap = in;
+        m_flagTracePhysToLeftRightExpPhysMap = in;
     }
 
-    MULTI_REGIONS_EXPORT inline bool GetflagTracephysToLeftRightExpphysMap()
+    MULTI_REGIONS_EXPORT inline bool GetFlagTracePhysToLeftRightExpPhysMap()
     {
-        return m_flagTracephysToLeftRightExpphysMap;
+        return m_flagTracePhysToLeftRightExpPhysMap;
     }
 
     MULTI_REGIONS_EXPORT void TraceLocToElmtLocCoeffMap(
@@ -335,35 +335,28 @@ private:
     /// Sign array for mapping from forwards/backwards trace coefficients to
     /// local trace storage.
     Array<OneD, Array<OneD, int> > m_traceCoeffsToElmtSign;
-
-    /// flag indicates whether the Expasion that are the left&right adjacent 
-    /// to current trace exists 
+    /// Flag indicates whether the expansion that are the left & right adjacent
+    /// to current trace exists.
     Array<OneD, Array<OneD, bool> > m_leftRightAdjacentExpFlag;
-    
-    /// the Expasion id that are the left&right adjacent to current trace 
-    Array<OneD, Array<OneD, int> > m_LeftRightAdjacentExpId;
-    
+    /// The expansion ID that are the left & right adjacent to current trace.
+    Array<OneD, Array<OneD, int> > m_leftRightAdjacentExpId;
+    /// The map of every coeff from current trace to the left & right adjacent
+    /// expasion coeffs.
+    Array<OneD, Array<OneD, Array<OneD, int> > >
+        m_traceCoeffToLeftRightExpCoeffMap;
+    /// The sign of every coeff from current trace to the left & right adjacent
+    /// expasion coeffs.
+    Array<OneD, Array<OneD, Array<OneD, int> > >
+        m_traceCoeffToLeftRightExpCoeffSign;
+    /// The map of every phys from current trace to the left & right adjacent
+    /// expasion phys. This map is only used when no interpolation is needed in
+    /// getting GetFwdBwdTracePhys. If interpolation is needed, it should be
+    /// determined as the InnerProduct of m_fieldToLocTraceMap matrix and
+    /// interpolation matrix.
+    Array<OneD, Array<OneD, Array<OneD, int> > >
+        m_tracePhysToLeftRightExpPhysMap;
+    bool m_flagTracePhysToLeftRightExpPhysMap;
 
-    /// the map of every coeff from current trace to the left&right adjacent 
-    /// expasion coeffs 
-    Array<OneD, Array<OneD, Array<OneD, int > > > 
-        m_TraceceffToLeftRightExpcoeffMap;
-    /// the sign of every coeff from current trace to the left&right adjacent 
-    /// expasion coeffs 
-    Array<OneD, Array<OneD, Array<OneD, int  > > > 
-        m_TraceceffToLeftRightExpcoeffSign;
-
-
-    /// the map of every phys from current trace to the left&right adjacent 
-    /// expasion phys 
-    /// This map is only used when no interpolation is needed in getting 
-    /// GetFwdBwdTracePhys   
-    /// If interpolations is needed it should be determined as the InnerProduct 
-    /// of m_fieldToLocTraceMap matrix and interpolation matrix    
-    Array<OneD, Array<OneD, Array<OneD, int > > >   
-        m_TracephysToLeftRightExpphysMap;
-    bool                          m_flagTracephysToLeftRightExpphysMap;
-    
 };
 
 typedef std::shared_ptr<LocTraceToTraceMap> LocTraceToTraceMapSharedPtr;

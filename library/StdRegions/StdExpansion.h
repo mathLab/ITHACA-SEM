@@ -1810,7 +1810,7 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_DividByStdQuadratureMetric(
+            STD_REGIONS_EXPORT virtual void v_DivideByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
 

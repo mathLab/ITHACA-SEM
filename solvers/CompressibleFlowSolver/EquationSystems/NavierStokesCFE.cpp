@@ -164,8 +164,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
     {
         size_t nvariables = inarray.size();
-        int npoints    = GetNpoints();
-        int nTracePts  = GetTraceTotPoints();
+        size_t npoints    = GetNpoints();
+        size_t nTracePts  = GetTraceTotPoints();
 
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
         for (int i = 0; i < nvariables; ++i)
@@ -257,9 +257,9 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
     {
         size_t nvariables = inarray.size();
-        int npoints    = GetNpoints();
-        int ncoeffs    = GetNcoeffs();
-        int nTracePts  = GetTraceTotPoints();
+        size_t npoints    = GetNpoints();
+        size_t ncoeffs    = GetNcoeffs();
+        size_t nTracePts  = GetTraceTotPoints();
 
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff{nvariables};
         for (int i = 0; i < nvariables; ++i)
@@ -670,7 +670,7 @@ namespace Nektar
             }
         }
 
-        nonZeroIndex = Array< OneD, int > {n_nonZero, 0};
+        nonZeroIndex = Array< OneD, int > {size_t(n_nonZero), 0};
         for (int i = 1; i < n_nonZero + 1; ++i)
         {
             nonZeroIndex[n_nonZero - i] =   nConvectiveFields - i;
@@ -712,11 +712,11 @@ namespace Nektar
                 continue;
             }
 
-            int nBndEdges = m_fields[nengy]->
+            size_t nBndEdges = m_fields[nengy]->
             GetBndCondExpansions()[j]->GetExpSize();
             for (int e = 0; e < nBndEdges; ++e)
             {
-                int nBndEdgePts = m_fields[nengy]->
+                size_t nBndEdgePts = m_fields[nengy]->
                 GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
 
                 int id2 = m_fields[0]->GetTrace()->
@@ -834,7 +834,7 @@ namespace Nektar
     {
         size_t nConvectiveFields   = inaverg.size();
         size_t nPts = inaverg[nConvectiveFields - 1].size();
-        int nDim=nSpaceDim;
+        size_t nDim=nSpaceDim;
 
         Array<OneD, NekDouble > temperature        {nPts, 0.0};
         Array<OneD, NekDouble > mu                 {nPts, 0.0};

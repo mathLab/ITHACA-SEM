@@ -65,12 +65,12 @@ int main(int argc, char *argv[])
     }
 
     std::vector<int> order;
-    std::vector<BasisType> btype;
+    std::vector<BasisType> btype(3, eNoBasisType);
     LibUtilities::ShapeType stype = E->DetShapeType();
 
-    for (int i = 0; i < E->GetShapeDimension(); ++i)
+    for (int i = 0; i < dimension; ++i)
     {
-        btype.push_back(E->GetBasisType(i));
+        btype[i] = E->GetBasisType(i);
         order.push_back(E->GetBasisNumModes(i));
     }
 

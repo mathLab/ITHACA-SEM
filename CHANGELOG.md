@@ -5,7 +5,8 @@ v5.1.0
 ------
 **Library**
 - Restructure library to use local coefficient storage down to the GlobalLinSys level. Removed GlobalCeoffs functionality (!963)
-
+- Corrected the use of commincatorin AssemblyMapDG and AssemblyCommDG which was not using GetRowComm() (!1144)
+	
 **FieldConvert**
 - Refactored time integration code using factory pattern (!1034)
 - Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)

@@ -56,7 +56,7 @@ namespace Nektar
             /// Calculate the average of conservative variables on traces
             void ConsVarAve(
                 const std::size_t                             nConvectiveFields,
-                const int                                        npnts,
+                const size_t                                     npnts,
                 const Array<OneD, const Array<OneD, NekDouble> > &vFwd,
                 const Array<OneD, const Array<OneD, NekDouble> > &vBwd,
                 Array<OneD,       Array<OneD, NekDouble> >       &aver); 
@@ -92,9 +92,9 @@ namespace Nektar
             /// Add symmetric flux integration to field (in coefficient space)
             void AddSymmFluxIntegralToCoeff(
                 const std::size_t                             nConvectiveFields,
-                const int                                         nDim,
-                const int                                         nPts,
-                const int                                         nTracePts,
+                const size_t                                      nDim,
+                const size_t                                      nPts,
+                const size_t                                      nTracePts,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const int >                     &nonZeroIndex,
                 TensorOfArray3D<NekDouble>                        &tracflux,
@@ -103,9 +103,9 @@ namespace Nektar
             /// Add symmetric flux integration to field (in physical space)
             void AddSymmFluxIntegralToPhys(
                 const std::size_t                             nConvectiveFields,
-                const int                                         nDim,
-                const int                                         nPts,
-                const int                                         nTracePts,
+                const size_t                                      nDim,
+                const size_t                                      nPts,
+                const size_t                                      nTracePts,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const int >                     &nonZeroIndex,
                 TensorOfArray3D<NekDouble>                        &tracflux,
@@ -114,7 +114,7 @@ namespace Nektar
             /// Calculate symmetric flux on traces
             void CalTraceSymFlux(
                 const std::size_t                           nConvectiveFields,
-                const int                                   nDim,
+                const size_t                                nDim,
                 const Array<OneD, 
                     MultiRegions::ExpListSharedPtr>         &fields,
                 const Array<OneD, Array<OneD, NekDouble> >  &solution_Aver,
@@ -202,7 +202,7 @@ namespace Nektar
             
             virtual void v_ConsVarAveJump(
                 const std::size_t                             nConvectiveFields,
-                const int                                           npnts,
+                const size_t                                        npnts,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
                 Array<OneD,       Array<OneD, NekDouble> >          &aver,
@@ -217,9 +217,9 @@ namespace Nektar
             /// Calculate numerical flux on traces
             void CalTraceNumFlux(
                 const std::size_t                           nConvectiveFields,
-                const int                                   nDim,
-                const int                                   nPts,
-                const int                                   nTracePts,
+                const size_t                                nDim,
+                const size_t                                nPts,
+                const size_t                                nTracePts,
                 const NekDouble                             PenaltyFactor2,
                 const Array<OneD, 
                     MultiRegions::ExpListSharedPtr>         &fields,
@@ -236,9 +236,9 @@ namespace Nektar
             /// Add second derivative term to trace jump (for DDG scheme) 
            void AddSecondDerivToTrace(
                 const std::size_t                       nConvectiveFields,
-                const int                               nDim,
-                const int                               nPts,
-                const int                               nTracePts,
+                const size_t                            nDim,
+                const size_t                            nPts,
+                const size_t                            nTracePts,
                 const NekDouble                         PenaltyFactor2,
                 const Array<OneD, 
                     MultiRegions::ExpListSharedPtr>     &fields,

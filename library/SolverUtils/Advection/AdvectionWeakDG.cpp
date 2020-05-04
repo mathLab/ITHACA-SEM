@@ -85,9 +85,9 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
             boost::ignore_unused(advVel, time);
-            int nCoeffs         = fields[0]->GetNcoeffs();
+            size_t nCoeffs         = fields[0]->GetNcoeffs();
             
-            Array<OneD, Array<OneD, NekDouble> > tmp{nConvectiveFields};
+            Array<OneD, Array<OneD, NekDouble> > tmp{size_t(nConvectiveFields)};
             for (int i = 0; i < nConvectiveFields; ++i)
             {
                 tmp[i] = Array<OneD, NekDouble> {nCoeffs, 0.0};
@@ -112,9 +112,9 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
-            int nPointsTot      = fields[0]->GetTotPoints();
-            int nCoeffs         = fields[0]->GetNcoeffs();
-            int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
+            size_t nPointsTot      = fields[0]->GetTotPoints();
+            size_t nCoeffs         = fields[0]->GetNcoeffs();
+            size_t nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
             
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
                 fluxvector(nConvectiveFields);
@@ -139,7 +139,8 @@ namespace Nektar
                 fields[i]->IProductWRTDerivBase(fluxvector[i], outarray[i]);
             }
 
-            Array<OneD, Array<OneD, NekDouble> > numflux{nConvectiveFields};
+            Array<OneD, Array<OneD, NekDouble> > 
+                numflux{size_t(nConvectiveFields)};
             for (int i = 0; i < nConvectiveFields; ++i)
             {
                 numflux[i] = Array<OneD, NekDouble> {nTracePointsTot, 0.0};

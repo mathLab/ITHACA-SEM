@@ -112,7 +112,7 @@ namespace Nektar
                   Array<OneD, NekDouble >                       &muvar,
                   Array<OneD, NekDouble >                       &MuVarTrace)
         {
-            int nTracePts = fields[0]->GetTrace()->GetTotPoints();
+            size_t nTracePts = fields[0]->GetTrace()->GetTotPoints();
 
             Array<OneD, NekDouble> Fwd{nTracePts, 0.0};
             Array<OneD, NekDouble> Bwd{nTracePts, 0.0};

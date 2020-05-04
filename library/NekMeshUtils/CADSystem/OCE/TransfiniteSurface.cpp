@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputCAD.h
+//  File: TransfiniteSurface.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -28,46 +28,21 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Create mesh from CAD.
+//  Description: OCC subclases that define transfinite surfaces of 4 curves.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTMCF
-#define UTILITIES_NEKMESH_INPUTMCF
+#include "TransfiniteSurface.h"
 
-#include <NekMeshUtils/Module/Module.h>
-
-namespace Nektar
-{
-namespace Utilities
-{
-
-class InputMCF : public NekMeshUtils::InputModule
-{
-public:
-    InputMCF(NekMeshUtils::MeshSharedPtr m);
-    virtual ~InputMCF();
-    virtual void Process();
-
-    /// Creates an instance of this class
-    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
-    {
-        return MemoryManager<InputMCF>::AllocateSharedPtr(m);
-    }
-    /// %ModuleKey for class.
-    static NekMeshUtils::ModuleKey className;
-
-    void ParseFile(std::string nm);
-
-private:
-    std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order, m_blsurfs,
-        m_blthick, m_blprog, m_bllayers, m_refinement, m_nacadomain, m_periodic,
-        m_adjustment, m_spaceoutblthr, m_nospaceoutsurf, m_voidPts;
-
-    bool m_makeBL, m_surfopti, m_varopti, m_refine, m_woct, m_2D, m_splitBL,
-        m_naca, m_adjust, m_adjustall, m_smoothbl, m_manifold, m_spaceoutbl;
-};
-}
-}
-
+/*
+ * This file is here mostly to implement the standard handle class for older OCC
+ * versions. However we also implement the RTTIEXT that is required for memory
+ * reasons.
+ */
+#if OCC_VERSION_HEX < 0x070000
+IMPLEMENT_STANDARD_HANDLE(Geom_TransfiniteCurve, Geom_BoundedCurve)
+IMPLEMENT_STANDARD_HANDLE(Geom_TransfiniteSurface, Geom_BoundedSurface)
 #endif
+
+IMPLEMENT_STANDARD_RTTIEXT(Geom_TransfiniteCurve, Geom_BoundedCurve)
+IMPLEMENT_STANDARD_RTTIEXT(Geom_TransfiniteSurface, Geom_BoundedSurface)

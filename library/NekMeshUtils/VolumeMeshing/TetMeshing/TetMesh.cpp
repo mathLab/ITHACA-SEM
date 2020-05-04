@@ -44,9 +44,12 @@ namespace NekMeshUtils
 void TetMesh::Mesh()
 {
     if (m_mesh->m_verbose)
-        cout << endl << endl << "Tetrahdral mesh generation" << endl;
+    {
+        cout << endl << endl << "Tetrahedral mesh generation" << endl;
+    }
 
-    tetgen = MemoryManager<TetGenInterface>::AllocateSharedPtr();
+    vector<Array<OneD, NekDouble>> voidPts = m_mesh->m_cad->GetVoidPoints();
+    tetgen = MemoryManager<TetGenInterface>::AllocateSharedPtr(voidPts);
 
     map<int, NodeSharedPtr> IdToNode;
     map<NodeSharedPtr, int> IdToNodeRev;
@@ -74,10 +77,6 @@ void TetMesh::Mesh()
 
             if (testIns.second)
             {
-                if(cnt == 2114)
-                {
-                    //cout << n[j]->m_x << " " << n[j]->m_y << " " << n[j]->m_z << endl;
-                }
                 tri[j] = cnt;
                 IdToNode[cnt] = n[j];
                 IdToNodeRev[n[j]] = cnt;
@@ -91,11 +90,6 @@ void TetMesh::Mesh()
         }
         surfacetris.push_back(tri);
     }
-
-    //m_mesh->m_expDim--;
-    //m_mesh->m_element[3].clear();
-    //m_mesh->m_element[2] = m_surface;
-    //return;
 
     if (m_mesh->m_verbose)
     {
@@ -132,8 +126,6 @@ void TetMesh::Mesh()
 
     m_tetconnect = tetgen->Extract();
 
-    // tetgen->freetet();
-
     // create tets
     for (int i = 0; i < m_tetconnect.size(); i++)
     {
@@ -152,7 +144,9 @@ void TetMesh::Mesh()
     }
 
     if (m_mesh->m_verbose)
+    {
         cout << "\tTets :" << m_tetconnect.size() << endl;
+    }
 }
 }
 }

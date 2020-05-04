@@ -41,6 +41,7 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/OCE/CADVertOCE.cpp
         CADSystem/OCE/CADCurveOCE.cpp
         CADSystem/OCE/CADSurfOCE.cpp
+        CADSystem/OCE/TransfiniteSurface.cpp
         2DGenerator/2DGenerator.cpp
     )
 ENDIF()
@@ -93,6 +94,8 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/OCE/CADVertOCE.h
         CADSystem/OCE/CADCurveOCE.h
         CADSystem/OCE/CADSurfOCE.h
+        CADSystem/OCE/GeoParser.hpp
+        CADSystem/OCE/TransfiniteSurface.h
         Optimisation/BGFS-B.h
         Optimisation/OptimiseObj.h
 #        2DGenerator/2DGenerator.h

@@ -62,7 +62,8 @@ ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
     m_config["verbose"] =
         ConfigOption(true, "", "verbose output from cadsystem");
     m_config["voidpoints"] =
-        ConfigOption(false, "", "Void points");
+        ConfigOption(false, "", "A list of points, separated by semicolons,"
+                                "that defines holes within the volume.");
 }
 
 ProcessLoadCAD::~ProcessLoadCAD()

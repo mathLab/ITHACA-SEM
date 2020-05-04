@@ -96,7 +96,15 @@ class Geom_TransfiniteCurve : public Geom_BoundedCurve
 public:
 
     /**
-     * @brief Default constructor.
+     * @brief Construct a isoline of a transfinite surface in either the \f$ u
+     * \f$ or \f$ v \f$ directions.
+     *
+     * @param uvDir    If true, the isoline is for a constant \f$ u \f$
+     * @param val      The value of \f$ u \f$ or \f$ v \f$ for the isoline.
+     * @param edges    Vector of edges that define the transfinite surface.
+     * @param fwd      Orientations of the edges.
+     * @param clims    Lower and upper bounds on the edge parametrisation.
+     * @param verts    Outer vertices of the transfinite patch.
      */
     Geom_TransfiniteCurve(bool                                   uvDir,
                           double                                 val,
@@ -517,7 +525,12 @@ class Geom_TransfiniteSurface : public Geom_BoundedSurface
 
 public:
     /**
-     * @brief Default constructor.
+     * @brief Construct a transfinite surface.
+     *
+     * @param edges    Vector of edges that define the transfinite surface.
+     * @param fwd      Orientations of the edges.
+     * @param clims    Lower and upper bounds on the edge parametrisation.
+     * @param verts    Outer vertices of the transfinite patch.
      */
     Geom_TransfiniteSurface(std::vector<Handle(Geom_Curve)>        edges,
                             std::vector<bool>                      fwd,

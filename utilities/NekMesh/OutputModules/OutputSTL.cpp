@@ -62,7 +62,8 @@ void OutputSTL::Process()
         cout << "Outputstl: Writing file..." << endl;
     }
 
-    //ASSERTL0(m_mesh->m_expDim == 3, "3d meshes only");
+    ASSERTL0(m_mesh->m_expDim == 2 || m_mesh->m_expDim == 3,
+             "Only 2D or 3D meshes are supported.");
 
     OpenStream();
 

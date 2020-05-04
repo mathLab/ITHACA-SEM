@@ -96,7 +96,7 @@ public:
 
 private:
     /// TetGen objects
-    tetgenio surface, output, input, additional;
+    tetgenio surface, output, input;
 
     /// Holes in volume
     std::vector<Array<OneD, NekDouble>> m_holes;

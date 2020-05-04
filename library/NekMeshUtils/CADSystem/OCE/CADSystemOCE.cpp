@@ -233,7 +233,8 @@ bool CADSystemOCE::LoadCAD()
 
     if(!m_2d)
     {
-        BRepBuilderAPI_Sewing sew(0.1);
+        const NekDouble sewTolerance = 0.1;
+        BRepBuilderAPI_Sewing sew(sewTolerance);
 
         for (explr.Init(m_shape, TopAbs_FACE); explr.More(); explr.Next())
         {
@@ -1215,12 +1216,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
             solidMaker.Add(cShells[vol.ids[i]]);
         }
 
-        TopoDS_Solid s = solidMaker.Solid();
-
-        // Perform fix on resulting solid.
-        //ShapeFix_Solid solidFix(s);
-        //solidFix.Perform();
-        cVolumes[vol.id] = s;
+        cVolumes[vol.id] = solidMaker.Solid();
     }
 
     ASSERTL0(cVolumes.size() == 1,

@@ -163,7 +163,7 @@ namespace Nektar
 
         void Diffusion::v_ConsVarAveJump(
                 const std::size_t                             nConvectiveFields,
-                const int                                           npnts,
+                const size_t                                        npnts,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
                       Array<OneD,       Array<OneD, NekDouble> >    &aver,

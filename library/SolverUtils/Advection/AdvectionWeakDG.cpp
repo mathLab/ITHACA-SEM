@@ -122,7 +122,7 @@ namespace Nektar
             for (int i = 0; i < nConvectiveFields; ++i)
             {
                 fluxvector[i] =
-                    Array<OneD, Array<OneD, NekDouble> > {m_spaceDim};
+                    Array<OneD, Array<OneD, NekDouble> > {size_t(m_spaceDim)};
                 for (int j = 0; j < m_spaceDim; ++j)
                 {
                     fluxvector[i][j] = Array<OneD, NekDouble> {nPointsTot};

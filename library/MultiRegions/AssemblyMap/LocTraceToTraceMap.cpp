@@ -851,7 +851,7 @@ void LocTraceToTraceMap::TraceLocToElmtLocCoeffMap(
 {
     const std::shared_ptr<LocalRegions::ExpansionVector> exptrac =
         trace->GetExp();
-    int ntrace = exptrac->size();
+    size_t ntrace = exptrac->size();
 
     Array<OneD, Array<OneD, int >> LRAdjExpid{2};
     Array<OneD, Array<OneD, bool>> LRAdjflag{2};
@@ -867,7 +867,7 @@ void LocTraceToTraceMap::TraceLocToElmtLocCoeffMap(
         elmtLRSign[lr]  =   Array<OneD, Array<OneD, int > > {ntrace};
         for (int i = 0; i < ntrace; ++i)
         {
-            int ncoeff  =   trace->GetNcoeffs(i);
+            size_t ncoeff  =   trace->GetNcoeffs(i);
             elmtLRMap[lr][i]      =   Array<OneD, int >{ncoeff, 0};
             elmtLRSign[lr][i]     =   Array<OneD, int >{ncoeff, 0};
         }
@@ -1078,7 +1078,7 @@ void LocTraceToTraceMap::RightIPTWLocEdgesToTraceInterpMat(
     int cnt1 = 0;
 
     // tmp space assuming forward map is of size of trace
-    Array<OneD, NekDouble> tmp{m_nTracePts};
+    Array<OneD, NekDouble> tmp{size_t(m_nTracePts)};
     Vmath::Gathr(m_LocTraceToTraceMap[dir].size(),
                  edges.get(),
                  m_LocTraceToTraceMap[dir].get(),

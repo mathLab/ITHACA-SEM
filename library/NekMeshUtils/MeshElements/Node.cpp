@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: TetGenInterface.h
+//  File: Node.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -28,81 +28,25 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: class for interacting with tetgen
+//  Description: Mesh node object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_MESHUTILS_EXTLIBINTERFACE_TETGENINTERFACE_H
-#define NEKTAR_MESHUTILS_EXTLIBINTERFACE_TETGENINTERFACE_H
-
-#include <memory>
-
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-
 #include <NekMeshUtils/MeshElements/Node.h>
-#include <NekMeshUtils/MeshElements/Mesh.h>
-
-#define TETLIBRARY
-#include <tetgen.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-/**
- * @brief Class for interacting with the external library TetGen.
- */
-class TetGenInterface
+/// Define node equality based on coordinate with optional custom tolerance factor.
+NEKMESHUTILS_EXPORT bool IsNodeEqual(const Node &n1, const Node &n2,
+    const unsigned int fact)
 {
-public:
-    friend class MemoryManager<TetGenInterface>;
+    return LibUtilities::IsRealEqual(n1.m_x, n2.m_x, fact) &&
+           LibUtilities::IsRealEqual(n1.m_y, n2.m_y, fact) &&
+           LibUtilities::IsRealEqual(n1.m_z, n2.m_z, fact);
+}
 
-    /**
-     * @brief Default constructor
-     */
-    TetGenInterface(std::vector<Array<OneD, NekDouble>> holes)
-    {
-        m_holes = holes;
-    }
-
-    /**
-     * @brief Assign parameters for meshing
-     */
-    void InitialMesh(std::map<int, NodeSharedPtr>   tgidton,
-                     std::vector<Array<OneD, int> > tri);
-
-    /**
-     * @brief Gets the locations of the Stiener points added by TetGen
-     */
-    void GetNewPoints(int num, std::vector<Array<OneD, NekDouble> > &newp);
-
-    /**
-     * @brief Refines a previously made tetmesh with node delta information
-     *        from the Octree
-     */
-    void RefineMesh(std::map<int, NekDouble> delta);
-
-    /**
-     * @brief Get the list of connectivites of the nodes
-     */
-    std::vector<Array<OneD, int> > Extract();
-
-    /**
-     * @brief Clear previous mesh
-     */
-    void freetet();
-
-private:
-    /// TetGen objects
-    tetgenio surface, output, input;
-
-    /// Holes in volume
-    std::vector<Array<OneD, NekDouble>> m_holes;
-};
-
-typedef std::shared_ptr<TetGenInterface> TetGenInterfaceSharedPtr;
 }
 }
-#endif

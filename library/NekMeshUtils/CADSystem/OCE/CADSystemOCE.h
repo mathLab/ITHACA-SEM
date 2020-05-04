@@ -66,7 +66,7 @@ public:
 
     TopoDS_Shape GetShape()
     {
-        return shape;
+        return m_shape;
     }
 
 
@@ -81,8 +81,8 @@ private:
     TopoDS_Shape BuildNACA(std::string naca);
     TopoDS_Shape BuildGeo(std::string geo);
     /// OCC master object
-    TopoDS_Shape shape;
-    TopTools_IndexedMapOfShape mapOfVerts, mapOfEdges, mapOfFaces;
+    TopoDS_Shape m_shape;
+    TopTools_IndexedMapOfShape m_mapOfVerts, m_mapOfEdges, m_mapOfFaces;
 };
 
 typedef std::shared_ptr<CADSystemOCE> CADSystemOCESharedPtr;

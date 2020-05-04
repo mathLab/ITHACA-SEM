@@ -1236,8 +1236,8 @@ namespace Nektar
                 normal[i] = Array<OneD, NekDouble>(nqe);
             }
 
-            int nqb = nqe;
-            int nbnd= edge;
+            size_t nqb = nqe;
+            size_t nbnd= edge;
             m_elmtBndNormDirElmtLen[nbnd] = 
                     Array<OneD, NekDouble> {nqb, 0.0};
             Array<OneD, NekDouble>  &length = 

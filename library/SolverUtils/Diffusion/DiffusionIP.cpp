@@ -346,7 +346,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
         {
-            if (abs(m_IPSymmFluxCoeff) > 1.0E-12)
+            if (fabs(m_IPSymmFluxCoeff) > 1.0E-12)
             {
                 int nDim      = fields[0]->GetCoordim(0);
                 int nPts      = fields[0]->GetTotPoints();
@@ -383,7 +383,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
         {
-            if (abs(m_IPSymmFluxCoeff) > 1.0E-12)
+            if (fabs(m_IPSymmFluxCoeff) > 1.0E-12)
             {
                 int nDim      = fields[0]->GetCoordim(0);
                 int nPts      = fields[0]->GetTotPoints();
@@ -732,7 +732,7 @@ namespace Nektar
             Array<OneD, NekDouble> Fwd{nTracePts, 0.0};
             Array<OneD, NekDouble> Bwd{nTracePts, 0.0};
 
-            if (abs(PenaltyFactor2) > 1.0E-12)
+            if (fabs(PenaltyFactor2) > 1.0E-12)
             {
                 AddSecondDerivToTrace(nConvectiveFields, nDim, nPts,
                                                 nTracePts, PenaltyFactor2,

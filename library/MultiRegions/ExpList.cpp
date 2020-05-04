@@ -261,7 +261,7 @@ namespace Nektar
                 m_npoints += (*m_exp)[i]->GetTotPoints();
             }
 
-            m_coeffsToElmt   =   Array<OneD, pair<int, int> > {m_ncoeffs};
+            m_coeffsToElmt = Array<OneD, pair<int, int> > {size_t(m_ncoeffs)};
 
             for (int i = 0; i < m_exp->size(); ++i)
             {

@@ -530,7 +530,7 @@ namespace Nektar
             m_bndConditions
                     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
 
-            m_bndCondBndWeight = Array<OneD, NekDouble> {cnt, 0.0};
+            m_bndCondBndWeight = Array<OneD, NekDouble> {size_t(cnt), 0.0};
 
             SetBoundaryConditionExpansion(graph1D,bcs,variable,
                                            m_bndCondExpansions,

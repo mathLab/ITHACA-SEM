@@ -161,8 +161,8 @@ namespace Nektar
             // Allocate storage for data and populate element offset lists.
             SetCoeffPhysOffsets();
 
-            m_coeffs = Array<OneD, NekDouble>{m_ncoeffs, 0.0};
-            m_phys   = Array<OneD, NekDouble>{m_npoints, 0.0};
+            m_coeffs = Array<OneD, NekDouble>{size_t(m_ncoeffs), 0.0};
+            m_phys   = Array<OneD, NekDouble>{size_t(m_npoints), 0.0};
 
             CreateCollections(ImpType);
         }
@@ -235,8 +235,8 @@ namespace Nektar
             if(DeclareCoeffPhysArrays)
             {
                 // Set up m_coeffs, m_phys.
-                m_coeffs = Array<OneD, NekDouble> {m_ncoeffs, 0.0};
-                m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
+                m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+                m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
             }
 
             CreateCollections(ImpType);
@@ -337,8 +337,8 @@ namespace Nektar
             if(DeclareCoeffPhysArrays)
             {
                 // Set up m_coeffs, m_phys.
-                m_coeffs = Array<OneD, NekDouble> {m_ncoeffs, 0.0};
-                m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
+                m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+                m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
             }
 
             CreateCollections(ImpType);
@@ -416,8 +416,8 @@ namespace Nektar
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble> {m_ncoeffs, 0.0};
-                m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
+                m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+                m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
             }
 
             CreateCollections(ImpType);
@@ -658,8 +658,8 @@ namespace Nektar
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble> {m_ncoeffs, 0.0};
-                m_phys   = Array<OneD, NekDouble> {m_npoints, 0.0};
+                m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+                m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
             }
 
             CreateCollections(ImpType);
@@ -1120,7 +1120,7 @@ namespace Nektar
             Array<OneD, NekDouble>  &lengthsFwd,
             Array<OneD, NekDouble>  &lengthsBwd)
         {
-            int e_npoints;
+            size_t e_npoints;
 
             Array<OneD, NekDouble> locLeng;
             Array<OneD, NekDouble> lengintp;

@@ -1411,7 +1411,7 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
     int cnt1 = 0;
 
     // tmp space assuming forward map is of size of trace
-    Array<OneD, NekDouble> tmp{m_nTracePts};
+    Array<OneD, NekDouble> tmp{size_t(m_nTracePts)};
     Vmath::Gathr(m_LocTraceToTraceMap[dir].size(),
                  traces.get(),
                  m_LocTraceToTraceMap[dir].get(),
@@ -1538,7 +1538,7 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                     DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
 
                     Array<OneD, NekDouble> 
-                        wsp{m_interpNfaces[dir][i] * fnp0 * tnp1};
+                        wsp{size_t(m_interpNfaces[dir][i] * fnp0 * tnp1)};
 
                     Blas::Dgemm('T',
                                 'N',

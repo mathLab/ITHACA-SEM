@@ -874,16 +874,6 @@ namespace Nektar
                                         const Array<OneD, const NekDouble>& xi,
                                         Array<OneD, NekDouble>& eta)
         {
-            // L2 check that coordinates are within the standard tetrahedron.
-            ASSERTL2(xi[0] >= -1.0 - NekConstants::kNekZeroTol,
-                     "coord[0] < -1");
-            ASSERTL2(xi[1] >= -1.0 - NekConstants::kNekZeroTol,
-                     "coord[1] < -1");
-            ASSERTL2(xi[2] >= -1.0 - NekConstants::kNekZeroTol,
-                     "coord[1] < -1");
-            ASSERTL2(xi[0] + xi[1] + xi[2] <= -1.0 + NekConstants::kNekZeroTol,
-                     "coord greater than upper bound");
-
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
             {
                 // Very top point of the tetrahedron

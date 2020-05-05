@@ -678,12 +678,6 @@ namespace Nektar
         void StdTriExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
                                                  Array<OneD, NekDouble>& eta)
         {
-            // L2 check that coordinates are within the standard hex.
-            ASSERTL2(xi[0] >= -1.0 - NekConstants::kNekZeroTol, "xi[0] < -1");
-            ASSERTL2(xi[1] >= -1.0 - NekConstants::kNekZeroTol, "xi[1] < -1");
-            ASSERTL2(xi[0] + xi[1] <= NekConstants::kNekZeroTol,
-                     "xi[0] + xi[1] > 0");
-
             // set up local coordinate system
             if (fabs(xi[1]-1.0) < NekConstants::kNekZeroTol)
             {

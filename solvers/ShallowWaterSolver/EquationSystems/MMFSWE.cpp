@@ -39,6 +39,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <ShallowWaterSolver/EquationSystems/MMFSWE.h>
 

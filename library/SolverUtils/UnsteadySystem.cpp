@@ -41,6 +41,7 @@ using namespace std;
 #include <boost/format.hpp>
 
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/Core/TimeIntegrationUtils.h>
 #include <SolverUtils/UnsteadySystem.h>

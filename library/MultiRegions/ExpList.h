@@ -45,9 +45,11 @@
 #include <Collections/Collection.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
+#include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysKey.h>
+#include <MultiRegions/GlobalOptimizationParameters.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
 #include <tinyxml.h>
 
@@ -150,7 +152,7 @@ namespace Nektar
             /// basis order over all elements.
             MULTI_REGIONS_EXPORT const Array<OneD,int>
                 EvalBasisNumModesMaxPerExp(void) const;
-
+            
             /// Returns the total number of quadrature points #m_npoints
             /// \f$=Q_{\mathrm{tot}}\f$.
             inline int GetTotPoints(void) const;
@@ -209,6 +211,16 @@ namespace Nektar
             MULTI_REGIONS_EXPORT NekDouble PhysIntegral(
                 const Array<OneD,
                 const NekDouble> &inarray);
+
+            /// multiply the metric jacobi and quadrature weights
+            MULTI_REGIONS_EXPORT void MultiplyByQuadratureMetric(
+                const Array<OneD, const NekDouble>  &inarray,
+                Array<OneD, NekDouble>              &outarray);
+
+            /// Divided by the metric jacobi and quadrature weights
+            MULTI_REGIONS_EXPORT void DivideByQuadratureMetric(
+                const Array<OneD, const NekDouble>  &inarray,
+                Array<OneD, NekDouble>              &outarray);
 
             /// This function calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to all \em local
@@ -740,6 +752,15 @@ namespace Nektar
             inline const Array<OneD, const  std::shared_ptr<ExpList> >
                 &GetBndCondExpansions();
 
+            /// Get the weight value for boundary conditions
+            inline const Array<OneD, const NekDouble>
+                &GetBndCondBwdWeight();
+
+            /// Set the weight value for boundary conditions
+            inline void SetBndCondBwdWeight(
+                const int index, 
+                const NekDouble value);
+      
             inline std::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
 
             inline void Upwind(
@@ -766,6 +787,17 @@ namespace Nektar
 
             inline void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
+            /// Get the length of elements in boundary normal direction
+            inline void GetElmtNormalLength(
+                Array<OneD, NekDouble>  &lengthsFwd,
+                Array<OneD, NekDouble>  &lengthsBwd);
+
+            /// Get the weight value for boundary conditions
+            /// for boundary average and jump calculations
+            MULTI_REGIONS_EXPORT void GetBwdWeight(
+                Array<OneD, NekDouble>  &weightAver,
+                Array<OneD, NekDouble>  &weightJump);
+
             inline void AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fx,
                 const Array<OneD, const NekDouble> &Fy,
@@ -788,6 +820,60 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
+
+            /// GetFwdBwdTracePhys without parallel communication
+            inline void GetFwdBwdTracePhysSerial(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD, NekDouble> &Fwd,
+                      Array<OneD, NekDouble> &Bwd);
+
+            /// GetFwdBwdTracePhys of derivatives
+            inline void GetFwdBwdTracePhysDeriv(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD, NekDouble> &Fwd,
+                      Array<OneD, NekDouble> &Bwd);
+            
+            /// GetFwdBwdTracePhysDeriv without parallel communication
+            inline void GetFwdBwdTracePhysDerivSerial(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD, NekDouble> &Fwd,
+                      Array<OneD, NekDouble> &Bwd);
+            
+            /// GetFwdBwdTracePhys without filling boundary conditions
+            inline void GetFwdBwdTracePhysNoBndFill(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD, NekDouble> &Fwd,
+                      Array<OneD, NekDouble> &Bwd);
+
+            /// Add Fwd and Bwd value to field, 
+            /// a reverse procedure of GetFwdBwdTracePhys
+            inline void AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &field);
+
+            /// Fill Bwd with boundary conditions
+            inline void FillBwdWithBound(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            
+            /// Fill Bwd with boundary conditions for derivatives 
+            inline void FillBwdWithBoundDeriv(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+
+            /// Fill Bwd with boundary conditions
+            inline void FillBwdWithBwdWeight(
+                    Array<OneD,       NekDouble> &weightave,
+                    Array<OneD,       NekDouble> &weightjmp);
+
+            /// Copy and fill the Periodic boundaries
+            inline void PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
 
             inline const std::vector<bool> &GetLeftAdjacentFaces(void) const;
 
@@ -979,7 +1065,7 @@ namespace Nektar
             {
                 return v_GetPlane(n);
             }
-
+             
             //expansion type
             ExpansionType m_expType;
 
@@ -989,6 +1075,13 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
 
+            /// Get m_coeffs to elemental value map
+            MULTI_REGIONS_EXPORT inline const 
+                Array<OneD, const std::pair<int, int> > 
+                &GetCoeffsToElmt() const;
+
+            MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr 
+                &GetLocTraceToTraceMap() const;
         protected:
             /// Definition of the total number of degrees of freedom and
             /// quadrature points and offsets to access data
@@ -1085,6 +1178,11 @@ namespace Nektar
             /// Offset of elemental data into the array #m_phys
             Array<OneD, int>  m_phys_offset;
 
+            /// m_coeffs to elemental value map
+            Array<OneD, std::pair<int, int> >  m_coeffsToElmt;
+
+            NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
+
             BlockMatrixMapShPtr  m_blockMat;
 
             //@todo should this be in ExpList or ExpListHomogeneous1D.cpp
@@ -1101,7 +1199,7 @@ namespace Nektar
                 const GlobalMatrixKey &gkey);
 
             const DNekScalBlkMatSharedPtr& GetBlockMatrix(
-                const GlobalMatrixKey &gkey);
+                const GlobalMatrixKey &gkey);  
 
             void MultiplyByBlockMatrix(
                 const GlobalMatrixKey             &gkey,
@@ -1144,6 +1242,13 @@ namespace Nektar
             virtual const Array<OneD,const std::shared_ptr<ExpList> >
                 &v_GetBndCondExpansions(void);
 
+            virtual const Array<OneD, const NekDouble>
+                &v_GetBndCondBwdWeight();
+
+            virtual void v_SetBndCondBwdWeight(
+                const int index, 
+                const NekDouble value);
+
             virtual std::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
 
             virtual void v_Upwind(
@@ -1167,6 +1272,10 @@ namespace Nektar
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);
 
+            virtual void v_GetElmtNormalLength(
+                Array<OneD, NekDouble>  &lengthsFwd,
+                Array<OneD, NekDouble>  &lengthsBwd);
+
             virtual void v_AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fx,
                 const Array<OneD, const NekDouble> &Fy,
@@ -1189,6 +1298,54 @@ namespace Nektar
                 const Array<OneD,const NekDouble>  &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
+
+            virtual void v_GetFwdBwdTracePhysDeriv(
+                const int                          Dir,
+                const Array<OneD, const NekDouble>  &field,
+                      Array<OneD, NekDouble> &Fwd,
+                      Array<OneD, NekDouble> &Bwd);
+            
+            virtual void v_GetFwdBwdTracePhysDerivSerial(
+                const int                          Dir,
+                const Array<OneD, const NekDouble>  &field,
+                      Array<OneD, NekDouble> &Fwd,
+                      Array<OneD, NekDouble> &Bwd);
+
+            virtual void v_GetFwdBwdTracePhysNoBndFill(
+                const Array<OneD, const NekDouble>  &field,
+                      Array<OneD, NekDouble> &Fwd,
+                      Array<OneD, NekDouble> &Bwd);
+
+            virtual void v_GetFwdBwdTracePhysSerial(
+                const Array<OneD, const NekDouble>  &field,
+                      Array<OneD, NekDouble> &Fwd,
+                      Array<OneD, NekDouble> &Bwd);
+            virtual void v_GetFwdBwdTracePhysInterior(
+                const Array<OneD,const NekDouble>  &field,
+                      Array<OneD,NekDouble> &Fwd,
+                      Array<OneD,NekDouble> &Bwd);
+            
+            virtual void v_AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &field);
+                      
+            virtual void v_FillBwdWithBound(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            
+            virtual void v_FillBwdWithBoundDeriv(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            
+            virtual void v_FillBwdWithBwdWeight(
+                Array<OneD,       NekDouble> &weightave,
+                Array<OneD,       NekDouble> &weightjmp);
+
+            virtual void v_PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
 
             virtual const std::vector<bool> &v_GetLeftAdjacentFaces(void) const;
 
@@ -1464,6 +1621,10 @@ namespace Nektar
 
 
         private:
+
+            virtual const LocTraceToTraceMapSharedPtr 
+                &v_GetLocTraceToTraceMap() const;
+
             virtual const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
 
             virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
@@ -2191,6 +2352,33 @@ namespace Nektar
             return v_GetBndCondExpansions();
         }
 
+        /// Get m_coeffs to elemental value map
+        MULTI_REGIONS_EXPORT inline const 
+            Array<OneD, const std::pair<int, int> > 
+            &ExpList::GetCoeffsToElmt() const
+        {
+            return m_coeffsToElmt;
+        }
+
+        MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr 
+            &ExpList::GetLocTraceToTraceMap() const
+        {
+            return v_GetLocTraceToTraceMap();
+        }
+
+        inline const Array<OneD, const  NekDouble >
+            &ExpList::GetBndCondBwdWeight()
+        {
+            return v_GetBndCondBwdWeight();
+        }
+
+        inline void ExpList::SetBndCondBwdWeight(
+            const int index, 
+            const NekDouble value)
+        {
+            v_SetBndCondBwdWeight(index, value);
+        }
+        
         inline std::shared_ptr<ExpList>  &ExpList::UpdateBndCondExpansion(int i)
         {
             return v_UpdateBndCondExpansion(i);
@@ -2235,6 +2423,13 @@ namespace Nektar
             v_GetNormals(normals);
         }
 
+        inline void ExpList::GetElmtNormalLength(
+            Array<OneD, NekDouble>  &lengthsFwd,
+            Array<OneD, NekDouble>  &lengthsBwd)
+        {
+            v_GetElmtNormalLength(lengthsFwd, lengthsBwd);
+        }
+        
         inline void ExpList::AddTraceIntegral(
             const Array<OneD, const NekDouble> &Fx,
             const Array<OneD, const NekDouble> &Fy,
@@ -2271,6 +2466,77 @@ namespace Nektar
                   Array<OneD,NekDouble> &Bwd)
         {
             v_GetFwdBwdTracePhys(field,Fwd,Bwd);
+        }
+
+        inline void ExpList::GetFwdBwdTracePhysSerial(
+            const Array<OneD, const NekDouble>  &field,
+                  Array<OneD, NekDouble> &Fwd,
+                  Array<OneD, NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhysSerial(field, Fwd, Bwd);
+        }
+
+        inline void ExpList::GetFwdBwdTracePhysNoBndFill(
+            const Array<OneD, const NekDouble>  &field,
+                  Array<OneD, NekDouble> &Fwd,
+                  Array<OneD, NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhysNoBndFill(field, Fwd, Bwd);
+        }
+
+        inline void ExpList::GetFwdBwdTracePhysDeriv(
+            const int                          Dir,
+            const Array<OneD, const NekDouble>  &field,
+                  Array<OneD, NekDouble> &Fwd,
+                  Array<OneD, NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhysDeriv(Dir, field, Fwd, Bwd);
+        }
+
+        inline void ExpList::GetFwdBwdTracePhysDerivSerial(
+            const int                          Dir,
+            const Array<OneD, const NekDouble>  &field,
+                  Array<OneD, NekDouble> &Fwd,
+                  Array<OneD, NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhysDerivSerial(Dir, field, Fwd, Bwd);
+        }
+
+        inline void ExpList::AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &field)
+        {
+            v_AddTraceQuadPhysToField(Fwd, Bwd, field);
+        }
+
+        inline void ExpList::FillBwdWithBound(
+            const Array<OneD, const NekDouble> &Fwd,
+                  Array<OneD,       NekDouble> &Bwd)
+        {
+            v_FillBwdWithBound(Fwd, Bwd);
+        }
+
+        inline void ExpList::FillBwdWithBoundDeriv(
+            const int                          Dir,
+            const Array<OneD, const NekDouble> &Fwd,
+                  Array<OneD,       NekDouble> &Bwd)
+        {
+            v_FillBwdWithBoundDeriv(Dir, Fwd, Bwd);
+        }
+
+        inline void ExpList::FillBwdWithBwdWeight(
+            Array<OneD,       NekDouble> &weightave,
+            Array<OneD,       NekDouble> &weightjmp)
+        {
+            v_FillBwdWithBwdWeight(weightave, weightjmp);
+        }
+
+        inline void ExpList::PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd)
+        {
+            v_PeriodicBwdCopy(Fwd, Bwd);
         }
 
         inline const std::vector<bool> &ExpList::GetLeftAdjacentFaces(void) const

@@ -56,13 +56,16 @@ public:
     ~VariableConverter();
 
     // Variable manipulations valid for all fluids
+    void GetDynamicEnergy(
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+        Array<OneD, NekDouble> &energy);
     void GetInternalEnergy(
         const Array<OneD, const Array<OneD, NekDouble>> &physfield,
         Array<OneD, NekDouble> &energy);
     void GetEnthalpy(const Array<OneD, const Array<OneD, NekDouble>> &physfield,
                      Array<OneD, NekDouble> &enthalpy);
     void GetVelocityVector(const Array<OneD, Array<OneD, NekDouble>> &physfield,
-                           Array<OneD, Array<OneD, NekDouble>> &velocity);
+              Array<OneD, Array<OneD, NekDouble>> &velocity);
     void GetMach(Array<OneD, Array<OneD, NekDouble>> &physfield,
                  Array<OneD, NekDouble> &soundspeed,
                  Array<OneD, NekDouble> &mach);

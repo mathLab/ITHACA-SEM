@@ -772,6 +772,11 @@ namespace Nektar
                 normal[i] = Array<OneD, NekDouble>(nq_face);
             }
 
+            size_t nqb = nq_face;
+            size_t nbnd= face;
+            m_elmtBndNormDirElmtLen[nbnd] = Array<OneD, NekDouble> {nqb, 0.0};
+            Array<OneD, NekDouble> &length = m_elmtBndNormDirElmtLen[nbnd];
+
             // Regular geometry case
             if (type == SpatialDomains::eRegular ||
                 type == SpatialDomains::eMovingRegular)
@@ -828,6 +833,7 @@ namespace Nektar
                     fac += normal[i][0]*normal[i][0];
                 }
                 fac = 1.0/sqrt(fac);
+                Vmath::Fill(nqb, fac, length, 1);
 
                 for (i = 0; i < vCoordDim; ++i)
                 {
@@ -986,6 +992,8 @@ namespace Nektar
 
                 Vmath::Vsqrt(nq_face,work,1,work,1);
                 Vmath::Sdiv (nq_face,1.0,work,1,work,1);
+
+                Vmath::Vcopy(nqb, work, 1, length, 1);
 
                 for(i = 0; i < GetCoordim(); ++i)
                 {

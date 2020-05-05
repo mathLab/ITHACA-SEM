@@ -819,6 +819,15 @@ namespace Nektar
     static Array<OneD, int> NullInt1DArray;
     static Array<OneD, NekDouble> NullNekDouble1DArray;
     static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayofArray;
+    static Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
+            NullNekDoubleArrayofArrayofArray;
+
+    template<class T>
+    using TensorOfArray1D = Array<OneD, T>;
+    template<class T>
+    using TensorOfArray2D = Array<OneD, Array<OneD, T>>;
+    template<class T>
+    using TensorOfArray3D = Array<OneD, Array<OneD, Array<OneD, T>>>;
 
     template<typename T1, typename T2>
     bool operator==(const Array<TwoD, T1>& lhs,

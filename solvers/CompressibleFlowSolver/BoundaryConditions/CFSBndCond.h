@@ -78,6 +78,12 @@ class CFSBndCond
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time = 0);
 
+        /// Apply the Weight of boundary condition
+        void ApplyBwdWeight()
+        {
+            v_ApplyBwdWeight();
+        }
+
     protected:
         /// Session reader
         LibUtilities::SessionReaderSharedPtr m_session;
@@ -89,11 +95,14 @@ class CFSBndCond
         int m_spacedim;
         /// Auxiliary object to convert variables
         VariableConverterSharedPtr           m_varConv;
+        /// Weight for average calculation of diffusion term
+        NekDouble m_diffusionAveWeight;
 
         /// Parameters of the flow
         NekDouble m_gamma;
         NekDouble m_rhoInf;
         NekDouble m_pInf;
+        NekDouble m_pOut;
         Array<OneD, NekDouble> m_velInf;
 
         /// Id of the boundary region
@@ -114,6 +123,7 @@ class CFSBndCond
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time)=0;
 
+        virtual void v_ApplyBwdWeight();
 };
 }
 

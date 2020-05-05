@@ -247,20 +247,33 @@ namespace Nektar
          */
         void ExpList::SetCoeffPhysOffsets()
         {
-            int i;
-
             // Set up offset information and array sizes
-            m_coeff_offset   = Array<OneD,int>(m_exp->size());
-            m_phys_offset    = Array<OneD,int>(m_exp->size());
+            m_coeff_offset   = Array<OneD, int>{m_exp->size()};
+            m_phys_offset    = Array<OneD, int>{m_exp->size()};
 
             m_ncoeffs = m_npoints = 0;
 
-            for(i = 0; i < m_exp->size(); ++i)
+            for (int i = 0; i < m_exp->size(); ++i)
             {
                 m_coeff_offset[i]   = m_ncoeffs;
                 m_phys_offset [i]   = m_npoints;
                 m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
                 m_npoints += (*m_exp)[i]->GetTotPoints();
+            }
+
+            m_coeffsToElmt = Array<OneD, pair<int, int> > {size_t(m_ncoeffs)};
+
+            for (int i = 0; i < m_exp->size(); ++i)
+            {
+                int coeffs_offset   =   m_coeff_offset[i];
+
+                int loccoeffs = (*m_exp)[i]->GetNcoeffs();
+                
+                for(int j = 0; j < loccoeffs; ++j)
+                {
+                    m_coeffsToElmt[coeffs_offset+j].first =   i;
+                    m_coeffsToElmt[coeffs_offset+j].second =   j;
+                }
             }
         }
 
@@ -366,6 +379,39 @@ namespace Nektar
             out = (*blockmat)*in;
         }
 
+        /**
+         * multiply the metric jacobi and quadrature weights
+         */
+        void ExpList::MultiplyByQuadratureMetric(
+                const Array<OneD, const NekDouble>  &inarray,
+                Array<OneD, NekDouble>              &outarray)
+        {
+            Array<OneD,NekDouble> e_outarray;
+
+            for (int i = 0; i < (*m_exp).size(); ++i)
+            {
+                (*m_exp)[i]->MultiplyByQuadratureMetric(
+                                inarray+m_phys_offset[i],
+                                e_outarray = outarray + m_phys_offset[i]);
+            }
+        }
+
+        /**
+         * Divided by the metric jacobi and quadrature weights
+         */
+        void ExpList::DivideByQuadratureMetric(
+                const Array<OneD, const NekDouble>  &inarray,
+                Array<OneD, NekDouble>              &outarray)
+        {
+            Array<OneD,NekDouble> e_outarray;
+
+            for (int i = 0; i < (*m_exp).size(); ++i)
+            {
+                (*m_exp)[i]->DivideByQuadratureMetric(
+                                inarray+m_phys_offset[i],
+                                e_outarray = outarray + m_phys_offset[i]);
+            }
+        }
 
         /**
          * The operation is evaluated locally for every element by the function
@@ -2437,6 +2483,22 @@ namespace Nektar
             }
         }
 
+        /**
+         * Get the weight value on boundaries
+         */
+        void ExpList::GetBwdWeight(
+            Array<OneD, NekDouble>  &weightAver,
+            Array<OneD, NekDouble>  &weightJump)
+        {
+            size_t nTracePts = weightAver.size();
+            // average for interior traces
+            for(int i = 0; i < nTracePts; ++i)
+            {
+                weightAver[i] = 0.5;
+                weightJump[i] = 1.0;
+            }
+            FillBwdWithBwdWeight(weightAver, weightJump);
+        }
 
         void ExpList::v_GetMovingFrames(
             const SpatialDomains::GeomMMF MMFdir,
@@ -2589,6 +2651,15 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+        void ExpList::v_GetElmtNormalLength(
+            Array<OneD, NekDouble>  &lengthsFwd,
+            Array<OneD, NekDouble>  &lengthsBwd)
+        {
+            boost::ignore_unused(lengthsFwd, lengthsBwd);
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
         void ExpList::v_AddTraceIntegral(
                                 const Array<OneD, const NekDouble> &Fx,
                                 const Array<OneD, const NekDouble> &Fy,
@@ -2636,6 +2707,86 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+        void ExpList::v_GetFwdBwdTracePhysDeriv(
+            const int                           Dir,
+            const Array<OneD, const NekDouble>  &field,
+            Array<OneD, NekDouble>              &Fwd,
+            Array<OneD, NekDouble>              &Bwd)
+        {
+            boost::ignore_unused(Dir, field, Fwd, Bwd);
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_GetFwdBwdTracePhysDerivSerial(
+            const int                           Dir,
+            const Array<OneD, const NekDouble>  &field,
+            Array<OneD, NekDouble>              &Fwd,
+            Array<OneD, NekDouble>              &Bwd)
+        {
+            boost::ignore_unused(Dir, field, Fwd, Bwd);
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_GetFwdBwdTracePhysNoBndFill(
+            const Array<OneD, const NekDouble>  &field,
+            Array<OneD, NekDouble>              &Fwd,
+            Array<OneD, NekDouble>              &Bwd)
+        {
+            boost::ignore_unused(field, Fwd, Bwd);
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_GetFwdBwdTracePhysSerial(
+            const Array<OneD, const NekDouble>  &field,
+            Array<OneD, NekDouble>              &Fwd,
+            Array<OneD, NekDouble>              &Bwd)
+        {
+            boost::ignore_unused(field, Fwd, Bwd);
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_GetFwdBwdTracePhysInterior(
+            const Array<OneD, const NekDouble>  &field,
+            Array<OneD, NekDouble>              &Fwd,
+            Array<OneD, NekDouble>              &Bwd)
+        {
+            boost::ignore_unused(field, Fwd, Bwd);
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_AddTraceQuadPhysToField(
+            const Array<OneD, const NekDouble>  &Fwd,
+            const Array<OneD, const NekDouble>  &Bwd,
+            Array<OneD,       NekDouble>        &field)
+        {
+            boost::ignore_unused(field, Fwd, Bwd);
+            ASSERTL0(false, 
+                "v_AddTraceQuadPhysToField is not defined for this class type");
+        }
+
+        const Array<OneD,const NekDouble>
+                &ExpList::v_GetBndCondBwdWeight()
+        {
+            ASSERTL0(false, 
+                "v_GetBndCondBwdWeight is not defined for this class type");
+            static Array<OneD, NekDouble> tmp;
+            return tmp;
+        }
+
+        void ExpList::v_SetBndCondBwdWeight(
+            const int index, 
+            const NekDouble value)
+        {
+            boost::ignore_unused(index, value);
+            ASSERTL0(false,
+                    "v_setBndCondBwdWeight is not defined for this class type");
+        }
+        
         const vector<bool> &ExpList::v_GetLeftAdjacentFaces(void) const
         {
             NEKERROR(ErrorUtil::efatal,
@@ -2765,7 +2916,7 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
         }
-
+        
         void ExpList::v_NormVectorIProductWRTBase(
                                 Array<OneD, Array<OneD, NekDouble> > &V,
                                 Array<OneD, NekDouble> &outarray)
@@ -3157,6 +3308,39 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+        void ExpList::v_FillBwdWithBound(
+            const Array<OneD, const NekDouble> &Fwd,
+                  Array<OneD,       NekDouble> &Bwd)
+        {
+            boost::ignore_unused(Fwd, Bwd);
+            ASSERTL0(false, "v_FillBwdWithBound not defined");
+        }
+
+        void ExpList::v_FillBwdWithBoundDeriv(
+            const int                          Dir,
+            const Array<OneD, const NekDouble> &Fwd,
+                  Array<OneD,       NekDouble> &Bwd)
+        {
+            boost::ignore_unused(Dir, Fwd, Bwd);
+            ASSERTL0(false, "v_FillBwdWithBoundDeriv not defined");
+        }
+
+        void ExpList::v_FillBwdWithBwdWeight(
+            Array<OneD,       NekDouble> &weightave,
+            Array<OneD,       NekDouble> &weightjmp)
+        {
+            boost::ignore_unused(weightave, weightjmp);
+            ASSERTL0(false, "v_FillBwdWithBwdWeight not defined");
+        }
+
+        void ExpList::v_PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd)
+        {
+            boost::ignore_unused(Fwd, Bwd);
+            ASSERTL0(false, "v_PeriodicBwdCopy not defined");
+        }
+
         /**
          */
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
@@ -3390,6 +3574,12 @@ namespace Nektar
             v_ClearGlobalLinSysManager();
         }
 
+        const LocTraceToTraceMapSharedPtr 
+                &ExpList::v_GetLocTraceToTraceMap() const
+        {
+            ASSERTL0(false, "v_GetLocTraceToTraceMap not coded");
+            return NullLocTraceToTraceMapSharedPtr;
+        }
     } //end of namespace
 } //end of namespace
 

@@ -54,6 +54,7 @@ SymmetryBC::SymmetryBC(const LibUtilities::SessionReaderSharedPtr& pSession,
            const int cnt)
     : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
+    m_diffusionAveWeight = 0.5;
 }
 
 void SymmetryBC::v_Apply(

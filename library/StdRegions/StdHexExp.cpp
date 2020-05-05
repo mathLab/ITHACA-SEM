@@ -633,13 +633,10 @@ namespace Nektar
             int   mode1 = (mode-mode2*btmp0*btmp1)/btmp0;
             int   mode0 = (mode-mode2*btmp0*btmp1)%btmp0;
 
-            ASSERTL2(mode2 == (int)floor((1.0*mode)/(btmp0*btmp1)),
-                     "Integer Truncation not Equiv to Floor");
-            ASSERTL2(mode1 == (int)floor((1.0*mode-mode2*btmp0*btmp1)
-                                /(btmp0*btmp1)),
-                     "Integer Truncation not Equiv to Floor");
-            ASSERTL2(m_ncoeffs <= mode,
-                     "calling argument mode is larger than total expansion "
+            ASSERTL2(mode == mode2 * btmp0 * btmp1 + mode1 * btmp1 + mode0,
+                     "Mode lookup failed.");
+            ASSERTL2(mode < m_ncoeffs,
+                     "Calling argument mode is larger than total expansion "
                      "order");
 
             for(i = 0; i < nquad1*nquad2; ++i)

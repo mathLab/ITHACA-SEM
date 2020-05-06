@@ -56,7 +56,7 @@ installed system-wide).
 Package & Req. & Sys. & User & Auto.              & Note \\
 \midrule
 C++ compiler    & \cmark & \cmark & & & gcc, icc, etc, supporting C++11 \\
-CMake $\geq 3.1.3$ & \cmark & \cmark & \cmark &        & Ncurses
+CMake $\geq 3.5.1$ & \cmark & \cmark & \cmark &        & Ncurses
 GUI optional
 \\
 BLAS            & \cmark & \cmark & \cmark & \cmark & Or MKL,
@@ -218,7 +218,7 @@ system-wide).
 Package & Req. & MacPorts & User & Auto.          & Note \\
 \midrule
 Xcode           & \cmark &        & & & Provides developer tools \\
-CMake $\geq 3.1.3$ & \cmark & \texttt{cmake}   & \cmark &        & Ncurses
+CMake $\geq 3.5.1$ & \cmark & \texttt{cmake}   & \cmark &        & Ncurses
 GUI optional \\
 BLAS            & \cmark &                  &        &        & Part of
 Xcode \\
@@ -378,8 +378,8 @@ automatically in the build process.
                   &        & \multicolumn{2}{c}{Installation} & \\ \cmidrule(r){3-4}
 Package           & Req.   & User   & Auto.        & Note \\
 \midrule
-MS Visual Studio  & \cmark & \cmark &              & 2013, 2015, 2017 and 2019 known working\\
-CMake $\geq 3.1.3$  & \cmark & \cmark &              & \\
+MS Visual Studio  & \cmark & \cmark &              & 2015, 2017 and 2019 known working\\
+CMake $\geq 3.5.1$  & \cmark & \cmark &              & \\
 BLAS              & \cmark & \cmark & \cmark       & \\
 LAPACK            & \cmark & \cmark & \cmark       & \\
 Boost $\geq 1.56$ & \cmark & \cmark & \cmark       & Compile with iostreams\\
@@ -390,12 +390,13 @@ Boost $\geq 1.56$ & \cmark & \cmark & \cmark       & Compile with iostreams\\
 \subsubsection{Detailed instructions}
 
 \begin{enumerate}
-  \item Install Microsoft Visual Studio 2015 (preferred), 2013 or 2012 (known to
+  \item Install Microsoft Visual Studio 2019 (preferred), 2017 or 2015 (known to
   work). This can be obtained from Microsoft free of charge by using their
   Community developer tools from
   \url{https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx}.
-  \item Install CMake 3.1.3+ from \url{http://www.cmake.org/download/}. When
-  prompted, select the option to add CMake to the system PATH.
+  \item Install CMake 3.5.1+ from \url{http://www.cmake.org/download/}. For building
+  on Windows you are strongly recommended to use a recent version of CMake, e.g 3.16+.
+  When prompted, select the option to add CMake to the system PATH.
   \item (Optional) Install Git from \url{http://git-scm.com/download/win} to use
   the development versions of \nekpp. When prompted, select the option to add
   Git to the system PATH. You do not need to select the option to add Unix tools

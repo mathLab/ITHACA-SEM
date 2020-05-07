@@ -280,6 +280,37 @@ Filter \inltt{Electrogram} computes virtual unipolar electrograms at a
     are desired. \emph{They must not lie within the domain.}
     \end{itemize}
 
+\subsection{Error}\label{filters:Error}
+
+This filter produces a CSV file containing the time-evolution of the $L_2$ and
+$L_{inf}$ errors. By default this file is called \inltt{session.err} where
+\inltt{session} is the session name.
+
+The following parameters are supported:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} &
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \inltt{session} &
+    Prefix of the output filename to which the errors are written.\\
+    \inltt{OutputFrequency} & \xmark   & 1 &
+    Number of timesteps after which output is written.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+An example syntax is given below:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="Error">
+      <PARAM NAME="OutputFile">ErrorFile</PARAM>
+      <PARAM NAME="OutputFrequency">10</PARAM>
+  </FILTER>
+\end{lstlisting}
+
 \subsection{FieldConvert checkpoints}
 
 This filter applies a sequence of FieldConvert modules to the solution, 

@@ -667,8 +667,8 @@ namespace Nektar
 
             LibUtilities::Timer timer;
 
-            LIKWID_MARKER_START("IProductWRTDerivBase");
-            timer.Start();
+            LIKWID_MARKER_START("IProductWRTDerivBase_coll");
+            // timer.Start();
 
             switch(dim)
             {
@@ -707,11 +707,11 @@ namespace Nektar
                 break;
             }
 
-            timer.Stop();
-            LIKWID_MARKER_STOP("IProductWRTDerivBase");
+            // timer.Stop();
+            LIKWID_MARKER_STOP("IProductWRTDerivBase_coll");
 
             // Elapsed time
-            timer.AccumulateRegion("IProductWRTDerivBase");
+            // timer.AccumulateRegion("IProductWRTDerivBase_coll");
 
         }
         /**
@@ -1602,7 +1602,7 @@ namespace Nektar
             LibUtilities::Timer timer;
 
             LIKWID_MARKER_START("v_BwdTrans_IterPerExp");
-            timer.Start();
+            // timer.Start();
 
             Array<OneD, NekDouble> tmp;
             for (int i = 0; i < m_collections.size(); ++i)
@@ -1612,11 +1612,11 @@ namespace Nektar
                                                tmp = outarray + m_coll_phys_offset[i]);
             }
 
-            timer.Stop();
+            // timer.Stop();
             LIKWID_MARKER_STOP("v_BwdTrans_IterPerExp");
 
             // Elapsed time
-            timer.AccumulateRegion("v_BwdTrans_IterPerExp");
+            // timer.AccumulateRegion("v_BwdTrans_IterPerExp");
         }
 
         LocalRegions::ExpansionSharedPtr& ExpList::GetExp(

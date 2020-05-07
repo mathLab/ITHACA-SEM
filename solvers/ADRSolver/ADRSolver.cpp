@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
         LIKWID_MARKER_INIT;
         LIKWID_MARKER_THREADINIT;
         LIKWID_MARKER_REGISTER("v_BwdTrans_IterPerExp");
-        LIKWID_MARKER_REGISTER("IProductWRTDerivBase");
+        LIKWID_MARKER_REGISTER("IProductWRTDerivBase_coll");
 
         // Create MeshGraph
         graph = SpatialDomains::MeshGraph::Read(session);
@@ -71,7 +71,6 @@ timer.Start();
         // Execute driver
         drv->Execute();
 timer.Stop();
-// Elapsed time
 timer.AccumulateRegion("Execute");
 
         // Print out timings

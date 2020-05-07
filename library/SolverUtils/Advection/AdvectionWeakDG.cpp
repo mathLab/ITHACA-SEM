@@ -38,6 +38,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include <LibUtilities/BasicUtils/Timer.h>
+
 namespace Nektar
 {
     namespace SolverUtils
@@ -90,7 +92,7 @@ namespace Nektar
             int nCoeffs         = fields[0]->GetNcoeffs();
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
             int i, j;
-            
+
             Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxvector(
                 nConvectiveFields);
@@ -109,8 +111,13 @@ namespace Nektar
             ASSERTL1(m_riemann,
                      "Riemann solver must be provided for AdvectionWeakDG.");
 
+LibUtilities::Timer timer;
+timer.Start();
             m_fluxVector(inarray, fluxvector);
+timer.Stop();
+timer.AccumulateRegion("m_fluxVector");
 
+timer.Start();
             // Get the advection part (without numerical flux)
             for(i = 0; i < nConvectiveFields; ++i)
             {
@@ -118,6 +125,8 @@ namespace Nektar
 
                 fields[i]->IProductWRTDerivBase(fluxvector[i],tmp[i]);
             }
+timer.Stop();
+timer.AccumulateRegion("IProductWRTDerivBase");
 
             // Store forwards/backwards space along trace space
             Array<OneD, Array<OneD, NekDouble> > Fwd    (nConvectiveFields);
@@ -144,16 +153,27 @@ namespace Nektar
                     numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
                 }
             }
-
+timer.Start();
             m_riemann->Solve(m_spaceDim, Fwd, Bwd, numflux);
+timer.Stop();
+timer.AccumulateRegion("m_riemann");
 
             // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
             for(i = 0; i < nConvectiveFields; ++i)
             {
                 Vmath::Neg                      (nCoeffs, tmp[i], 1);
+timer.Start();
                 fields[i]->AddTraceIntegral     (numflux[i], tmp[i]);
+timer.Stop();
+timer.AccumulateRegion("AddTraceIntegral");
+timer.Start();
                 fields[i]->MultiplyByElmtInvMass(tmp[i], tmp[i]);
+timer.Stop();
+timer.AccumulateRegion("MultiplyByElmtInvMass");
+timer.Start();
                 fields[i]->BwdTrans             (tmp[i], outarray[i]);
+timer.Stop();
+timer.AccumulateRegion("BwdTrans");
             }
         }
     }//end of namespace SolverUtils

@@ -120,7 +120,11 @@ void FilterError::v_Update(
     }
 
     // Output to file L2 and Linf error for each variable
-    m_outFile << time;
+    if (m_comm->GetRank() == 0)
+    {
+        m_outFile << time;
+    }
+
     for (size_t i = 0; i < m_numVariables; ++i)
     {
         Array<OneD, NekDouble> exactsoln(m_equationShPtr->GetTotPoints(), 0.0);
@@ -137,7 +141,10 @@ void FilterError::v_Update(
         }
     }
 
-    m_outFile << std::endl;
+    if (m_comm->GetRank() == 0)
+    {
+        m_outFile << std::endl;
+    }
 }
 
 void FilterError::v_Finalise(
@@ -145,7 +152,11 @@ void FilterError::v_Finalise(
     const NekDouble &time)
 {
     boost::ignore_unused(pFields, time);
-    m_outFile.close();
+
+    if (m_comm->GetRank() == 0)
+    {
+        m_outFile.close();
+    }
 }
 
 bool FilterError::v_IsTimeDependent()

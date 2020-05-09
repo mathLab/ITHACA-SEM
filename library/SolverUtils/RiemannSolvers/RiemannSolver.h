@@ -103,7 +103,7 @@ namespace Nektar
             {
                 m_params[name] = fp;
             }
-            
+
             template<typename FuncPointerT, typename ObjectPointerT>
             void SetAuxScal(std::string    name,
                               FuncPointerT   func,
@@ -156,6 +156,7 @@ namespace Nektar
             /// Rotation storage
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_rotStorage;
 
+            SOLVER_UTILS_EXPORT RiemannSolver();
             SOLVER_UTILS_EXPORT RiemannSolver(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
 

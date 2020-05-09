@@ -50,9 +50,15 @@ namespace Nektar
         bool m_pointSolve;
         EquationOfStateSharedPtr m_eos;
         bool m_idealGas;
-        
+
+        /// Session ctor
         CompressibleSolver(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
+
+        /// Programmatic ctor
+        CompressibleSolver(const EquationOfStateSharedPtr& eos,
+            const bool& idealGas);
+
 
         virtual void v_Solve(
             const int                                         nDim,
@@ -69,7 +75,7 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,
                      "This function should be defined by subclasses.");
         }
-        
+
         virtual void v_PointSolve(
             NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL,
             NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER,
@@ -81,7 +87,7 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,
                      "This function should be defined by subclasses.");
         }
-        
+
         virtual void v_PointSolveVisc(
             NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL, NekDouble EpsL,
             NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER, NekDouble EpsR,

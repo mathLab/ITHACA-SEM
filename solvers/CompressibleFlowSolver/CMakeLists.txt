@@ -40,20 +40,12 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./Misc/RedlichKwongEoS.cpp
        ./Misc/VanDerWaalsEoS.cpp
        ./Misc/VariableConverter.cpp
-       ./RiemannSolvers/AverageSolver.cpp
-       ./RiemannSolvers/AUSM0Solver.cpp
-       ./RiemannSolvers/AUSM1Solver.cpp
-       ./RiemannSolvers/AUSM2Solver.cpp
-       ./RiemannSolvers/AUSM3Solver.cpp
-       ./RiemannSolvers/CompressibleSolver.cpp
-       ./RiemannSolvers/ExactSolverToro.cpp
-       ./RiemannSolvers/HLLSolver.cpp
-       ./RiemannSolvers/HLLCSolver.cpp
-       ./RiemannSolvers/LaxFriedrichsSolver.cpp
-       ./RiemannSolvers/RoeSolver.cpp
        )
 
-    ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver SOURCES ${CompressibleFlowSolverSource})
+    ADD_SUBDIRECTORY(RiemannSolvers)
+    ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver
+        SOURCES ${CompressibleFlowSolverSource}
+        DEPENDS CompRiemann)
 
     SUBDIRS(Utilities)
 
@@ -129,7 +121,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
 	ADD_NEKTAR_TEST(Couette_WeakDG_LDG_SEM_3DHOMO1D_FFT)
 	ADD_NEKTAR_TEST(CylinderSubsonic_NS_WeakDG_LDG_SEM_3DHomo1D_FFT)
 	ADD_NEKTAR_TEST(IsentropicVortex16_WeakDG_SEM_3DHomo1D_FFT)
-        ADD_NEKTAR_TEST(Couette_FRDG_LFRDG_GLL_LAGRANGE_3DHOMO1D_FFT)
+  ADD_NEKTAR_TEST(Couette_FRDG_LFRDG_GLL_LAGRANGE_3DHOMO1D_FFT)
 	ADD_NEKTAR_TEST(CylinderSubsonic_NS_FRDG_LFRDG_GLL_LAGRANGE_3DHOMO1D_FFT)
 	ADD_NEKTAR_TEST(IsentropicVortex16_FRDG_GLL_LAGRANGE_3DHOMO1D_FFT)
 	ADD_NEKTAR_TEST(Couette_FRHU_LFRHU_SEM_3DHOMO1D_FFT)

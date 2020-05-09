@@ -274,6 +274,23 @@ namespace Nektar
             Vmath::Vmul(nqtot, m_metrics[eMetricQuadrature], 1, inarray, 1, outarray, 1);
         }
 
+        void Expansion::v_DivideByQuadratureMetric(
+            const Array<OneD, 
+            const NekDouble>& inarray,
+            Array<OneD, NekDouble> &outarray)
+        {
+            const int nqtot = GetTotPoints();
+
+            if (m_metrics.count(eMetricQuadrature) == 0)
+            {
+                ComputeQuadratureMetric();
+            }
+
+            Vmath::Vdiv(nqtot, inarray, 
+                        1, m_metrics[eMetricQuadrature], 
+                        1, outarray, 1);
+        }
+
         void Expansion::ComputeLaplacianMetric()
         {
             v_ComputeLaplacianMetric();

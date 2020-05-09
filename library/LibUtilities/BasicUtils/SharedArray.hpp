@@ -39,7 +39,8 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+#include <LibUtilities/BasicUtils/Deprecated.hpp>
+#include <LibUtilities/BasicUtils/RealComparison.hpp>
 
 #include <boost/core/ignore_unused.hpp>
 #include <boost/multi_array.hpp>
@@ -314,10 +315,11 @@ namespace Nektar
 
             /// \brief Returns the array's size.
             /// Deprecated
-            size_type num_elements() const
+            DEPRECATED(5.1.0, size) size_type num_elements() const
             {
-                WARNINGL1(false, "member function num_elements() is deprecated,\
-                 use size() instead.");
+                WARNINGL1(false,
+                          "member function num_elements() is deprecated, "
+                          "use size() instead.");
                 return m_size;
             }
 
@@ -501,10 +503,11 @@ namespace Nektar
             // m_data is a shared_ptr to a boost::multi_array_ref
             size_type size() const { return m_data->num_elements(); }
             // deprecated interface
-            size_type num_elements() const
+            DEPRECATED(5.1.0, size) size_type num_elements() const
             {
-                WARNINGL1(false, "member function num_elements() is deprecated,\
-                 use size() instead.");
+                WARNINGL1(false,
+                          "member function num_elements() is deprecated, "
+                          "use size() instead.");
                 return m_data->num_elements();
             }
 
@@ -734,9 +737,7 @@ namespace Nektar
     template<typename T>
     inline bool IsEqualImpl(const T& lhs, const T& rhs, std::true_type)
     {
-        T tol = NekConstants::kNekFloatCompFact *
-            std::numeric_limits<T>::epsilon();
-        return std::abs(lhs-rhs) < std::max(std::abs(lhs), std::abs(rhs)) * tol;
+        return LibUtilities::IsRealEqual(lhs, rhs);
     }
 
     template<typename T>
@@ -818,6 +819,15 @@ namespace Nektar
     static Array<OneD, int> NullInt1DArray;
     static Array<OneD, NekDouble> NullNekDouble1DArray;
     static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayofArray;
+    static Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
+            NullNekDoubleArrayofArrayofArray;
+
+    template<class T>
+    using TensorOfArray1D = Array<OneD, T>;
+    template<class T>
+    using TensorOfArray2D = Array<OneD, Array<OneD, T>>;
+    template<class T>
+    using TensorOfArray3D = Array<OneD, Array<OneD, Array<OneD, T>>>;
 
     template<typename T1, typename T2>
     bool operator==(const Array<TwoD, T1>& lhs,

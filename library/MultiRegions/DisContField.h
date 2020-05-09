@@ -141,10 +141,10 @@ namespace Nektar
              */
             Array<OneD,MultiRegions::ExpListSharedPtr>         m_bndCondExpansions;
 
-            /**
-             * @brief An array which contains the information about
-             * the boundary condition on the different boundary regions.
-             */
+            Array<OneD,NekDouble> m_bndCondBndWeight;
+            
+            /// An array which contains the information about the boundary
+            /// condition on the different boundary regions.
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
 
             /// Global boundary matrix.
@@ -238,6 +238,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &field,
                       Array<OneD,       NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
+            virtual void v_AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble> &Fwd,
+                const Array<OneD, const NekDouble> &Bwd,
+                    Array<OneD,       NekDouble> &field);
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
@@ -311,6 +315,64 @@ namespace Nektar
                     const MultiRegions::VarFactorsMap &varfactors,
                     const Array<OneD, const NekDouble> &dirForcing,
                     const bool PhysSpaceForcing);
+            
+            virtual void v_FillBwdWithBound(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_FillBwdWithBoundDeriv(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_FillBwdWithBwdWeight(
+                    Array<OneD,       NekDouble> &weightave,
+                    Array<OneD,       NekDouble> &weightjmp);
+
+            virtual void v_GetFwdBwdTracePhysInterior(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD,       NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            
+            inline virtual void v_GetFwdBwdTracePhys(
+                Array<OneD, NekDouble> &Fwd,
+                Array<OneD, NekDouble> &Bwd);
+            
+            inline virtual void v_GetFwdBwdTracePhys(
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd);
+
+            inline virtual void v_GetFwdBwdTracePhysNoBndFill(
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd);
+
+            inline virtual void v_GetFwdBwdTracePhysDeriv(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd);
+
+            inline virtual void v_GetFwdBwdTracePhysDerivSerial(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd);
+
+            inline virtual void v_GetFwdBwdTracePhysSerial(
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd);
+
+            inline virtual void v_PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+
+            inline virtual const Array<OneD,const NekDouble>
+                &v_GetBndCondBwdWeight();
+
+            inline virtual void v_SetBndCondBwdWeight(
+                const int index, 
+                const NekDouble value);
 
             void SetUpDG(const std::string = "DefaultVar");
             bool IsLeftAdjacentTrace(const int n, const int e);

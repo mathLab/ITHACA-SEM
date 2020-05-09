@@ -38,7 +38,7 @@
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <LocalRegions/MatrixKey.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 

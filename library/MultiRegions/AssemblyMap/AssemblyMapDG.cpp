@@ -33,15 +33,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/HashUtils.hpp>
+#include <MultiRegions/AssemblyMap/AssemblyCommDG.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
-#include <LocalRegions/TriExp.h>
-#include <LocalRegions/QuadExp.h>
-#include <LocalRegions/HexExp.h>
-#include <LocalRegions/TetExp.h>
-#include <LocalRegions/PrismExp.h>
-#include <LocalRegions/PyrExp.h>
 #include <LocalRegions/PointExp.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
@@ -49,9 +44,6 @@
 #include <boost/core/ignore_unused.hpp>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/cuthill_mckee_ordering.hpp>
-#include <boost/graph/properties.hpp>
-#include <boost/graph/bandwidth.hpp>
 
 using namespace std;
 
@@ -531,7 +523,10 @@ namespace Nektar
             // Now set up mapping from global coefficients to universal.
             ExpListSharedPtr tr = std::dynamic_pointer_cast<ExpList>(trace);
             SetUpUniversalDGMap   (locExp);
-            SetUpUniversalTraceMap(locExp, tr, periodicTrace);
+
+            m_assemblyComm = AssemblyCommDGSharedPtr(
+                MemoryManager<AssemblyCommDG>::AllocateSharedPtr(
+                    locExp, tr, m_elmtToTrace, bndCondExp, bndCond, periodicTrace));
 
             if ((m_solnType == eDirectMultiLevelStaticCond ||
                  m_solnType == eIterativeMultiLevelStaticCond ||
@@ -740,131 +735,6 @@ namespace Nektar
             }
         }
 
-        void AssemblyMapDG::SetUpUniversalTraceMap(
-            const ExpList         &locExp,
-            const ExpListSharedPtr trace,
-            const PeriodicMap     &perMap)
-        {
-            Array<OneD, int> tmp;
-            LocalRegions::ExpansionSharedPtr locExpansion;
-            int i;
-            int maxQuad = 0, quad = 0, nDim = 0, eid = 0, offset = 0;
-
-            const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
-
-            int nTracePhys = trace->GetTotPoints();
-
-            // Initialise the trace to universal maps.
-            m_traceToUniversalMap       =
-                Nektar::Array<OneD, int>(nTracePhys, -1);
-            m_traceToUniversalMapUnique =
-                Nektar::Array<OneD, int>(nTracePhys, -1);
-
-            // Assume that each element of the expansion is of the same
-            // dimension.
-            nDim = locExpVector[0]->GetShapeDimension();
-
-            if (nDim == 1)
-            {
-                maxQuad = (1 > maxQuad ? 1 : maxQuad);
-            }
-            else
-            {
-                for (i = 0; i < trace->GetExpSize(); ++i)
-                {
-                    quad = trace->GetExp(i)->GetTotPoints();
-                    if (quad > maxQuad)
-                    {
-                        maxQuad = quad;
-                    }
-                }
-            }
-            m_comm->GetRowComm()->AllReduce(maxQuad, LibUtilities::ReduceMax);
-
-            if (nDim == 1)
-            {
-                for (int i = 0; i < trace->GetExpSize(); ++i)
-                {
-                    eid = trace->GetExp(i)->GetGeom()->GetGlobalID();
-                    offset = trace->GetPhys_Offset(i);
-
-                    // Check to see if this vert is periodic. If it is, then we
-                    // need use the unique eid of the two points
-                    auto it = perMap.find(eid);
-                    if (perMap.count(eid) > 0)
-                    {
-                        PeriodicEntity ent = it->second[0];
-                        if (ent.isLocal == false) // Not sure if true in 1D
-                        {
-                            eid = min(eid, ent.id);
-                        }
-                    }
-
-                    m_traceToUniversalMap[offset] = eid*maxQuad+1;
-                }
-            }
-            else
-            {
-                for (int i = 0; i < trace->GetExpSize(); ++i)
-                {
-                    eid    = trace->GetExp(i)->GetGeom()->GetGlobalID();
-                    offset = trace->GetPhys_Offset(i);
-                    quad   = trace->GetExp(i)->GetTotPoints();
-
-                    // Check to see if this edge is periodic. If it is, then we
-                    // need to reverse the trace order of one edge only in the
-                    // universal map so that the data are reversed w.r.t each
-                    // other. We do this by using the minimum of the two IDs.
-                    auto it = perMap.find(eid);
-                    bool realign = false;
-                    if (perMap.count(eid) > 0)
-                    {
-                        PeriodicEntity ent = it->second[0];
-                        if (ent.isLocal == false)
-                        {
-                            realign = eid == min(eid, ent.id);
-                            eid = min(eid, ent.id);
-                        }
-                    }
-
-                    for (int j = 0; j < quad; ++j)
-                    {
-                        m_traceToUniversalMap[j+offset] = eid*maxQuad+j+1;
-                    }
-
-                    if (realign)
-                    {
-                        if (nDim == 2)
-                        {
-                            RealignTraceElement(
-                                tmp = m_traceToUniversalMap+offset,
-                                it->second[0].orient, quad);
-                        }
-                        else
-                        {
-                            RealignTraceElement(
-                                tmp = m_traceToUniversalMap+offset,
-                                it->second[0].orient,
-                                trace->GetExp(i)->GetNumPoints(0),
-                                trace->GetExp(i)->GetNumPoints(1));
-                        }
-                    }
-                }
-            }
-
-            Array<OneD, long> tmp2(nTracePhys);
-            for (int i = 0; i < nTracePhys; ++i)
-            {
-                tmp2[i] = m_traceToUniversalMap[i];
-            }
-            m_traceGsh = Gs::Init(tmp2, m_comm->GetRowComm());
-            Gs::Unique(tmp2, m_comm->GetRowComm());
-            for (int i = 0; i < nTracePhys; ++i)
-            {
-                m_traceToUniversalMapUnique[i] = tmp2[i];
-            }
-        }
-
         void AssemblyMapDG::RealignTraceElement(
             Array<OneD, int>        &toAlign,
             StdRegions::Orientation  orient,
@@ -943,12 +813,6 @@ namespace Nektar
                 }
                 Vmath::Vcopy(nquad1*nquad2, tmp, 1, toAlign, 1);
             }
-        }
-
-        void AssemblyMapDG::UniversalTraceAssemble(
-            Array<OneD, NekDouble> &pGlobal) const
-        {
-            Gs::Gather(pGlobal, Gs::gs_add, m_traceGsh);
         }
 
         int AssemblyMapDG::v_GetLocalToGlobalMap(const int i) const
@@ -1040,16 +904,6 @@ namespace Nektar
             return GetBndSystemBandWidth();
         }
 
-        int AssemblyMapDG::GetTraceToUniversalMap(int i)
-        {
-            return m_traceToUniversalMap[i];
-        }
-
-        int AssemblyMapDG::GetTraceToUniversalMapUnique(int i)
-        {
-            return m_traceToUniversalMapUnique[i];
-        }
-
         int AssemblyMapDG::GetNumDirichletBndPhys()
         {
             return m_numDirichletBndPhys;
@@ -1068,5 +922,11 @@ namespace Nektar
         {
             return m_elmtToTrace;
         }
+
+        AssemblyCommDGSharedPtr AssemblyMapDG::GetAssemblyCommDG()
+        {
+            return m_assemblyComm;
+        }
+
     } //namespace
 } // namespace

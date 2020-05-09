@@ -8,11 +8,18 @@ stages:
   only:
     refs:
       - merge_requests
-      - master
-      - tags
+      - master@nektar/nektar
+      - tags@nektar/nektar
       - web
     changes:
-      - "**/*"
+      - "cmake/**/*"
+      - "docker/**/*"
+      - "docs/**/*"
+      - "library/**/*"
+      - "solvers/**/*"
+      - "tests/**/*"
+      - "utilities/**/*"
+      - ".gitlab-ci/*"
       - .dockerignore
       - .gitmodules
       - .gitlab-ci.yml
@@ -65,12 +72,14 @@ stages:
     - docker rm $CONTAINER_NAME
     - exit $exit_code;
   artifacts:
+    expire_in: 1 month
     paths:
       - log/
   timeout: 3h
 
 .compiler-warning-template: &compiler-warning-template
   <<: *execution-conditions
+  image: debian:10-slim
   stage: compiler-warnings
   variables:
     WARNING_REGEX: '.*warning[: ].*'
@@ -189,6 +198,7 @@ user-guide-build:
     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
     - make -C build -j 4 user-guide-pdf user-guide-html developer-guide-pdf developer-guide-html
   artifacts:
+    expire_in: 1 month
     paths:
       - build/docs/user-guide/user-guide.pdf
       - build/docs/user-guide/html
@@ -201,6 +211,7 @@ doxygen-build:
     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DNEKTAR_BUILD_LIBRARY:BOOL=OFF -DNEKTAR_BUILD_SOLVERS:BOOL=OFF -DNEKTAR_BUILD_UTILITIES:BOOL=OFF -DNEKTAR_BUILD_TESTS:BOOL=OFF -DNEKTAR_BUILD_DOC:BOOL=ON .
     - make -C build doc
   artifacts:
+    expire_in: 1 month
     paths:
       - build/docs/doxygen/html/
 
@@ -212,6 +223,7 @@ tutorials-build:
     - cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release .
     - make -C build -j 2 tutorials-pdf tutorials-html
   artifacts:
+    expire_in: 1 month
     paths:
       - build/docs/tutorial/
 
@@ -411,6 +423,23 @@ win10-default-build-and-test:
     - mkdir build
     - cd build
     - cmake.exe -G "Visual Studio 14 2015 Win64" --config Debug ..
+    - cmake.exe --build . --target ALL_BUILD --config Debug
+    - cmake.exe --build . --target INSTALL --config Debug
+    - ctest --output-on-failure -C Debug -j3
+  after_script:
+    - Remove-Item -Recurse -Force build
+  needs: []
+
+win10-mpi-default-build-and-test:
+  <<: *build-and-test-template
+  tags:
+    - win10
+  script:
+    - $Env:path = "$CI_PROJECT_DIR\build\dist\bin;$CI_PROJECT_DIR\ThirdParty;$CI_PROJECT_DIR\build\ThirdParty\dist\bin;" + $Env:path
+    - echo $Env:path
+    - mkdir build
+    - cd build
+    - cmake.exe -G "Visual Studio 14 2015 Win64" -DNEKTAR_USE_MPI=ON --config Debug ..
     - cmake.exe --build . --target ALL_BUILD --config Debug
     - cmake.exe --build . --target INSTALL --config Debug
     - ctest --output-on-failure -C Debug -j3

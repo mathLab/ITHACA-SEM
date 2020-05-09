@@ -72,7 +72,7 @@ class SymmetryBC : public CFSBndCond
             Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time);
-
+        
     private:
         SymmetryBC(const LibUtilities::SessionReaderSharedPtr& pSession,
                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,

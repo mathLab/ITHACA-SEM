@@ -666,7 +666,7 @@ namespace Nektar
                      (m_checktime == 0.0 && m_checksteps >  0),
                      "Only one of IO_CheckTime and IO_CheckSteps "
                      "should be set!");
-
+                     
             m_nchk = 0;
 
             // Zero all physical fields initially

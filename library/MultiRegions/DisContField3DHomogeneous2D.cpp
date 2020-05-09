@@ -47,6 +47,7 @@ namespace Nektar
         DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(void):
             ExpList3DHomogeneous2D(),
             m_bndCondExpansions(),
+            m_bndCondBndWeight(),
             m_bndConditions()
         {
         }
@@ -62,6 +63,7 @@ namespace Nektar
                     const Collections::ImplementationType ImpType):
             ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing,ImpType),
             m_bndCondExpansions(),
+            m_bndCondBndWeight(),
             m_bndConditions()
         {
         }
@@ -69,6 +71,7 @@ namespace Nektar
         DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(const DisContField3DHomogeneous2D &In, const bool DeclareLinesSetCoeffPhys):
             ExpList3DHomogeneous2D (In,false),
             m_bndCondExpansions    (In.m_bndCondExpansions),
+            m_bndCondBndWeight     (In.m_bndCondBndWeight),
             m_bndConditions        (In.m_bndConditions)
         {
             if(DeclareLinesSetCoeffPhys)
@@ -97,6 +100,7 @@ namespace Nektar
                          const Collections::ImplementationType ImpType):
             ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing,ImpType),
             m_bndCondExpansions(),
+            m_bndCondBndWeight(),
             m_bndConditions()
         {
             int i,n,nel;
@@ -145,26 +149,25 @@ namespace Nektar
 																  const NekDouble lhom_z,
 																  SpatialDomains::BoundaryConditions &bcs)
         {
-            int i,n;
-
 			// Setup an ExpList1DHomogeneous2D expansion for boundary
             // conditions and link to class declared in m_lines.
 
-			int nlines = m_lines.size();
+			size_t nlines = m_lines.size();
 
 			const SpatialDomains::BoundaryRegionCollection  &bregions = bcs.GetBoundaryRegions();
 
-			int nbnd = bregions.size();
+			size_t nbnd = bregions.size();
 
 			m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(nbnd);
-
+			m_bndCondBndWeight  = Array<OneD, NekDouble> {nbnd, 0.0};
+			
 			Array<OneD, MultiRegions::ExpListSharedPtr> LinesBndCondExp(nlines);
 
 			m_bndConditions = m_lines[0]->UpdateBndConditions();
 
-            for(i = 0; i < nbnd; ++i)
+            for(int i = 0; i < nbnd; ++i)
             {
-                for(n = 0; n < nlines; ++n)
+                for(int n = 0; n < nlines; ++n)
                 {
                     LinesBndCondExp[n] = m_lines[n]->UpdateBndCondExpansion(i);
                 }
@@ -199,6 +202,7 @@ namespace Nektar
             {
                 if (time == 0.0 || m_bndConditions[n]->IsTimeDependent())
                 {
+                    m_bndCondBndWeight[n]   =   1.0;
                     m_bndCondExpansions[n]->HomogeneousFwdTrans(
                         m_bndCondExpansions[n]->GetCoeffs(),
                         m_bndCondExpansions[n]->UpdateCoeffs());

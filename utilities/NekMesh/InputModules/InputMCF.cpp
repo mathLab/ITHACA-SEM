@@ -181,6 +181,22 @@ void InputMCF::ParseFile(string nm)
         }
     }
 
+    if (pSession->DefinesElement("NEKTAR/MESHING/VOIDPOINTS"))
+    {
+        TiXmlElement *vpts = mcf->FirstChildElement("VOIDPOINTS");
+        TiXmlElement *v = vpts->FirstChildElement("V");
+        stringstream ss;
+        while (v)
+        {
+            std::string tmp = v->GetText();
+            boost::trim(tmp);
+            ss << tmp << ";";
+            v = v->NextSiblingElement("V");
+        }
+        m_voidPts = ss.str();
+        m_voidPts.pop_back();
+    }
+
     auto it = information.find("CADFile");
     ASSERTL0(it != information.end(), "no cadfile defined");
     m_cadfile = it->second;
@@ -347,6 +363,7 @@ void InputMCF::Process()
     module = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadcad"), m_mesh);
     module->RegisterConfig("filename", m_cadfile);
+    module->RegisterConfig("voidpoints", m_voidPts);
     if (m_mesh->m_verbose)
     {
         module->RegisterConfig("verbose", "");

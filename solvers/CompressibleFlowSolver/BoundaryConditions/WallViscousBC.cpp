@@ -59,6 +59,7 @@ WallViscousBC::WallViscousBC(const LibUtilities::SessionReaderSharedPtr& pSessio
            const int cnt)
     : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
+    m_diffusionAveWeight = 0.5;
 }
 
 void WallViscousBC::v_Apply(

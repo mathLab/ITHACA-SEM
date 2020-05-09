@@ -35,7 +35,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_CHECKEDCAST_H
 #define NEKTAR_LIB_UTILITIES_CHECKEDCAST_H
 
-#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <limits>
 #include <type_traits>
@@ -54,7 +53,7 @@ template
         && std::is_integral <typename std::remove_reference<To>::type>::value
     >::type
 >
-inline LIB_UTILITIES_EXPORT To checked_cast(const Ti param)
+inline To checked_cast(const Ti param)
 {
     Ti min = std::numeric_limits<To>::min();
     Ti max = std::numeric_limits<To>::max();

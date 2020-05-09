@@ -1,16 +1,15 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 #include "Polylib.h"
-#include <float.h>
+#include <cstdio>
+#include <cmath>
+#include <cfloat>
 #include <complex>
 
 #include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 /// Maximum number of iterations in polynomial defalation routine Jacobz
-#define STOP  30 
-/// Precision tolerance for two points to be similar 
+#define STOP  30
+/// Precision tolerance for two points to be similar
 #define EPS   100*DBL_EPSILON
 /// return the sign(b)*a
 #define sign(a,b) ((b)<0 ? -fabs(a) : fabs(a))
@@ -44,7 +43,7 @@ namespace Polylib {
 	{
         	double temp = 1.0;
         	for (int i=0; i<np; i++)
-        	{	
+        	{
                 	if (j != i)
                 	{
                         	temp *=optdiff(z,zj[i])/(zj[j]-zj[i]);
@@ -59,21 +58,21 @@ namespace Polylib {
     /// zero determination using Newton iteration with polynomial deflation
 #define jacobz(n,z,alpha,beta) Jacobz(n,z,alpha,beta)
 #else
-    /// zero determination using eigenvalues of tridiagaonl matrix 
+    /// zero determination using eigenvalues of tridiagaonl matrix
 #define jacobz(n,z,alpha,beta) JacZeros(n,z,alpha,beta)
 #endif
 
 
 
     /* local functions */
-    static void   Jacobz   (const int n, double *z, const double alpha, 
+    static void   Jacobz   (const int n, double *z, const double alpha,
         const double beta);
-   // static void   JacZeros (const int n, double *a, const double alpha, 
+   // static void   JacZeros (const int n, double *a, const double alpha,
     //    const double beta);
     //static void   TriQL    (const int n, double *d, double *e);
 	static void TriQL(const int, double *,double *, double **);
     double gammaF (const double);
-	static void RecCoeff(const int, double *, double *,const double, 
+	static void RecCoeff(const int, double *, double *,const double,
 				  const double);
 	void JKMatrix(int, double *, double *);
 	void chri1(int,double*,double*,double*,double*,double);
@@ -85,10 +84,10 @@ namespace Polylib {
     associated with the Jacobi polynomial \f$ P^{\alpha,\beta}_{np}(z)
     \f$,
 
-    \li Exact for polynomials of order \a 2np-1 or less  
+    \li Exact for polynomials of order \a 2np-1 or less
     */
 
-    void zwgj (double *z, double *w, const int np, const double alpha, 
+    void zwgj (double *z, double *w, const int np, const double alpha,
         const double beta)
     {
         int i;
@@ -106,17 +105,17 @@ namespace Polylib {
     }
 
 
-    /** 
+    /**
     \brief  Gauss-Radau-Jacobi zeros and weights with end point at \a z=-1.
 
     \li Generate \a np Gauss-Radau-Jacobi zeros, \a z, and weights,\a w,
     associated with the  polynomial \f$(1+z) P^{\alpha,\beta+1}_{np-1}(z)
     \f$.
 
-    \li  Exact for polynomials of order \a 2np-2 or less    
+    \li  Exact for polynomials of order \a 2np-2 or less
     */
 
-    void zwgrjm(double *z, double *w, const int np, const double alpha, 
+    void zwgrjm(double *z, double *w, const int np, const double alpha,
         const double beta)
     {
 
@@ -143,7 +142,7 @@ namespace Polylib {
     }
 
 
-    /** 
+    /**
     \brief  Gauss-Radau-Jacobi zeros and weights with end point at \a z=1
 
 
@@ -151,10 +150,10 @@ namespace Polylib {
     associated with the  polynomial \f$(1-z) P^{\alpha+1,\beta}_{np-1}(z)
     \f$.
 
-    \li Exact for polynomials of order \a 2np-2 or less    
+    \li Exact for polynomials of order \a 2np-2 or less
     */
 
-    void zwgrjp(double *z, double *w, const int np, const double alpha, 
+    void zwgrjp(double *z, double *w, const int np, const double alpha,
         const double beta)
     {
 
@@ -181,7 +180,7 @@ namespace Polylib {
     }
 
 
-    /** 
+    /**
     \brief  Gauss-Lobatto-Jacobi zeros and weights with end point at \a z=-1,\a 1
 
 
@@ -190,7 +189,7 @@ namespace Polylib {
     \li Exact for polynomials of order \a 2np-3 or less
     */
 
-    void zwglj(double *z, double *w, const int np, const double alpha, 
+    void zwglj(double *z, double *w, const int np, const double alpha,
         const double beta)
     {
 
@@ -211,7 +210,7 @@ namespace Polylib {
 
             z[0]    = -one;
             z[np-1] =  one;
-            jacobz  (np-2,z + 1,alpha + one,beta + one); 
+            jacobz  (np-2,z + 1,alpha + one,beta + one);
             jacobfd (np,z,w,NULL,np-1,alpha,beta);
 
             fac  = pow(two,apb + 1)*gammaF(alpha + np)*gammaF(beta + np);
@@ -232,16 +231,16 @@ namespace Polylib {
     associated with the Jacobi polynomial \f$ P^{\alpha,\beta}_{np}(z)
     \f$,
 
-    \li Exact for polynomials of order \a 3np+1 or less  
+    \li Exact for polynomials of order \a 3np+1 or less
 	*/
-	void zwgk(double *z, double *w, const int npt , const double alpha, 
+	void zwgk(double *z, double *w, const int npt , const double alpha,
 		const double beta)
 	{
-		
-		int np = (npt-1)/2; 
-		
+
+		int np = (npt-1)/2;
+
 		int  i,j;
-		
+
 		// number of kronrod points associated with the np gauss rule
 		int kpoints = 2*np + 1;
 
@@ -249,7 +248,7 @@ namespace Polylib {
 		int ncoeffs = (int)floor(3.0*(np+1)/2);
 
 		// Define arrays  for the recurrence coefficients
-		// We will use these arrays for the Kronrod results too, hence the 
+		// We will use these arrays for the Kronrod results too, hence the
 		// reason for the size of the arrays
 		double *a = new double[kpoints];
 		double *b = new double[kpoints];
@@ -307,10 +306,10 @@ namespace Polylib {
     associated with the Jacobi polynomial \f$ P^{\alpha,\beta}_{np}(z)
     \f$,
     */
-	void zwrk(double* z, double* w, const int npt ,const double alpha, 
+	void zwrk(double* z, double* w, const int npt ,const double alpha,
 		      const double beta)
 	{
-		
+
 		int np = npt/2;
 
 		if(np < 2)
@@ -384,7 +383,7 @@ namespace Polylib {
 			w1[i] = s*w1[i]/(z1[i]-end0);
 			sumW1 += w1[i];
 		}
-			
+
 		z[0] = end0;
 		w[0] = b[0]- sumW1;
 		for(i = 1; i < kpoints; i++)
@@ -392,7 +391,7 @@ namespace Polylib {
 			z[i] = z1[i-1];
 			w[i] = w1[i-1];
 		}
-		
+
 
 		delete[] a;
 		delete[] b;
@@ -414,18 +413,18 @@ namespace Polylib {
     associated with the Jacobi polynomial \f$ P^{\alpha,\beta}_{np}(z)
     \f$,
     */
-	void zwlk(double* z, double* w, const int npt,  
+	void zwlk(double* z, double* w, const int npt,
 		      const double alpha, const double beta)
 	{
 
 		int np = (npt+1)/2;
-		
+
 		if(np < 4)
 		{
 			fprintf (stderr,"too few points in formula\n");
 			return;
 		}
-		
+
 		double endl = -1;
 		double endr = 1;
 		int i,j;
@@ -503,11 +502,11 @@ namespace Polylib {
 
 		double c0 = b[0]-sumW1;
 		double c1 = a[0]*b[0]-sumW1Z1;
-			
+
 		z[0] = endl;
 		z[2*np-2] = endr;
 		w[0] = (c0*endr-c1)/(endr-endl);
-		w[2*np-2] = (c1-c0*endl)/(endr-endl); 
+		w[2*np-2] = (c1-c0*endl)/(endr-endl);
 
 		for(i = 1; i < kpoints-1; i++)
 		{
@@ -528,8 +527,8 @@ namespace Polylib {
                 }
 		delete[] zmatrix;
 	}
-	
-    /** 
+
+    /**
     \brief Compute the Derivative Matrix and its transpose associated
     with the Gauss-Jacobi zeros.
 
@@ -550,7 +549,7 @@ namespace Polylib {
             D[0] = 0.0;
         }
         else{
-            int i,j; 
+            int i,j;
             double *pd;
 
             pd = (double *)malloc(np*sizeof(double));
@@ -559,9 +558,9 @@ namespace Polylib {
             for (i = 0; i < np; i++){
                 for (j = 0; j < np; j++){
 
-                    if (i != j) 
+                    if (i != j)
                         D[i*np+j] = pd[j]/(pd[i]*(z[j]-z[i]));
-                    else    
+                    else
                         D[i*np+j] = (alpha - beta + (alpha + beta + two)*z[j])/
                         (two*(one - z[j]*z[j]));
                 }
@@ -572,7 +571,7 @@ namespace Polylib {
     }
 
 
-    /** 
+    /**
     \brief Compute the Derivative Matrix and its transpose associated
     with the Gauss-Radau-Jacobi zeros with a zero at \a z=-1.
 
@@ -583,7 +582,7 @@ namespace Polylib {
 
     */
 
-    void Dgrjm(double *D, const double *z, const int np, const double alpha, 
+    void Dgrjm(double *D, const double *z, const int np, const double alpha,
         const double beta)
     {
 
@@ -591,7 +590,7 @@ namespace Polylib {
             D[0] = 0.0;
         }
         else{
-            int i, j; 
+            int i, j;
             double   one = 1.0, two = 2.0;
             double   *pd;
 
@@ -604,9 +603,9 @@ namespace Polylib {
 
             for (i = 0; i < np; i++) {
                 for (j = 0; j < np; j++){
-                    if (i != j) 
+                    if (i != j)
                         D[i*np+j] = pd[j]/(pd[i]*(z[j]-z[i]));
-                    else { 
+                    else {
                         if(j == 0)
                             D[i*np+j] = -(np + alpha + beta + one)*(np - one)/
                             (two*(beta + two));
@@ -623,7 +622,7 @@ namespace Polylib {
     }
 
 
-    /** 
+    /**
     \brief Compute the Derivative Matrix  associated with the
     Gauss-Radau-Jacobi zeros with a zero at \a z=1.
 
@@ -633,7 +632,7 @@ namespace Polylib {
     \sum_{j=0}^{np-1} D[i*np+j] u(z[j]) \f$
     */
 
-    void Dgrjp(double *D, const double *z, const int np, const double alpha, 
+    void Dgrjp(double *D, const double *z, const int np, const double alpha,
         const double beta)
     {
 
@@ -641,7 +640,7 @@ namespace Polylib {
             D[0] = 0.0;
         }
         else{
-            int i, j; 
+            int i, j;
             double   one = 1.0, two = 2.0;
             double   *pd;
 
@@ -655,9 +654,9 @@ namespace Polylib {
 
             for (i = 0; i < np; i++) {
                 for (j = 0; j < np; j++){
-                    if (i != j) 
+                    if (i != j)
                         D[i*np+j] = pd[j]/(pd[i]*(z[j]-z[i]));
-                    else { 
+                    else {
                         if(j == np-1)
                             D[i*np+j] = (np + alpha + beta + one)*(np - one)/
                             (two*(alpha + two));
@@ -673,7 +672,7 @@ namespace Polylib {
         return;
     }
 
-    /** 
+    /**
     \brief Compute the Derivative Matrix associated with the
     Gauss-Lobatto-Jacobi zeros.
 
@@ -691,7 +690,7 @@ namespace Polylib {
             D[0] = 0.0;
         }
         else{
-            int i, j; 
+            int i, j;
             double   one = 1.0, two = 2.0;
             double   *pd;
 
@@ -706,9 +705,9 @@ namespace Polylib {
 
             for (i = 0; i < np; i++) {
                 for (j = 0; j < np; j++){
-                    if (i != j) 
+                    if (i != j)
                         D[i*np+j] = pd[j]/(pd[i]*(z[j]-z[i]));
-                    else { 
+                    else {
                         if (j == 0)
                             D[i*np+j] = (alpha - (np-1)*(np + alpha + beta))/(two*(beta+ two));
                         else if (j == np-1)
@@ -726,9 +725,9 @@ namespace Polylib {
     }
 
 
-    /** 
-    \brief Compute the value of the \a i th Lagrangian interpolant through  
-    the \a np Gauss-Jacobi points \a zgj at the arbitrary location \a z.     
+    /**
+    \brief Compute the value of the \a i th Lagrangian interpolant through
+    the \a np Gauss-Jacobi points \a zgj at the arbitrary location \a z.
 
     \li \f$ -1 \leq z \leq 1 \f$
 
@@ -738,15 +737,15 @@ namespace Polylib {
     h_j(z) =  \left\{ \begin{array}{ll}
     \displaystyle \frac{P_{np}^{\alpha,\beta}(z)}
     {[P_{np}^{\alpha,\beta}(z_j)]^\prime
-    (z-z_j)} & \mbox{if $z \ne z_j$}\\ 
+    (z-z_j)} & \mbox{if $z \ne z_j$}\\
     & \\
     1 & \mbox{if $z=z_j$}
     \end{array}
     \right.
-    \end{array}   \f$ 
+    \end{array}   \f$
     */
 
-    double hgj (const int i, const double z, const double *zgj, 
+    double hgj (const int i, const double z, const double *zgj,
         const int np, const double alpha, const double beta)
     {
         boost::ignore_unused(alpha, beta);
@@ -760,7 +759,7 @@ namespace Polylib {
 
     }
 
-    /** 
+    /**
     \brief Compute the value of the \a i th Lagrangian interpolant through the
     \a np Gauss-Radau-Jacobi points \a zgrj at the arbitrary location
     \a z. This routine assumes \a zgrj includes the point \a -1.
@@ -773,15 +772,15 @@ namespace Polylib {
     h_j(z) = \left\{ \begin{array}{ll}
     \displaystyle \frac{(1+z) P_{np-1}^{\alpha,\beta+1}(z)}
     {((1+z_j) [P_{np-1}^{\alpha,\beta+1}(z_j)]^\prime +
-    P_{np-1}^{\alpha,\beta+1}(z_j) ) (z-z_j)} & \mbox{if $z \ne z_j$}\\ 
+    P_{np-1}^{\alpha,\beta+1}(z_j) ) (z-z_j)} & \mbox{if $z \ne z_j$}\\
     & \\
     1 & \mbox{if $z=z_j$}
     \end{array}
     \right.
-    \end{array}   \f$ 
+    \end{array}   \f$
     */
 
-    double hgrjm (const int i, const double z, const double *zgrj, const int np, 
+    double hgrjm (const int i, const double z, const double *zgrj, const int np,
         const double alpha, const double beta)
     {
         boost::ignore_unused(alpha, beta);
@@ -796,7 +795,7 @@ namespace Polylib {
     }
 
 
-    /** 
+    /**
     \brief Compute the value of the \a i th Lagrangian interpolant through the
     \a np Gauss-Radau-Jacobi points \a zgrj at the arbitrary location
     \a z. This routine assumes \a zgrj includes the point \a +1.
@@ -809,15 +808,15 @@ namespace Polylib {
     h_j(z) = \left\{ \begin{array}{ll}
     \displaystyle \frac{(1-z) P_{np-1}^{\alpha+1,\beta}(z)}
     {((1-z_j) [P_{np-1}^{\alpha+1,\beta}(z_j)]^\prime -
-    P_{np-1}^{\alpha+1,\beta}(z_j) ) (z-z_j)} & \mbox{if $z \ne z_j$}\\ 
+    P_{np-1}^{\alpha+1,\beta}(z_j) ) (z-z_j)} & \mbox{if $z \ne z_j$}\\
     & \\
     1 & \mbox{if $z=z_j$}
     \end{array}
     \right.
-    \end{array}   \f$ 
+    \end{array}   \f$
     */
 
-    double hgrjp (const int i, const double z, const double *zgrj, const int np, 
+    double hgrjp (const int i, const double z, const double *zgrj, const int np,
         const double alpha, const double beta)
     {
         boost::ignore_unused(alpha, beta);
@@ -831,10 +830,10 @@ namespace Polylib {
     }
 
 
-    /** 
+    /**
     \brief Compute the value of the \a i th Lagrangian interpolant through the
     \a np Gauss-Lobatto-Jacobi points \a zgrj at the arbitrary location
-    \a z. 
+    \a z.
 
     \li \f$ -1 \leq z \leq 1 \f$
 
@@ -844,15 +843,15 @@ namespace Polylib {
     h_j(z) = \left\{ \begin{array}{ll}
     \displaystyle \frac{(1-z^2) P_{np-2}^{\alpha+1,\beta+1}(z)}
     {((1-z^2_j) [P_{np-2}^{\alpha+1,\beta+1}(z_j)]^\prime -
-    2 z_j P_{np-2}^{\alpha+1,\beta+1}(z_j) ) (z-z_j)}&\mbox{if $z \ne z_j$}\\ 
+    2 z_j P_{np-2}^{\alpha+1,\beta+1}(z_j) ) (z-z_j)}&\mbox{if $z \ne z_j$}\\
     & \\
     1 & \mbox{if $z=z_j$}
     \end{array}
     \right.
-    \end{array}   \f$ 
+    \end{array}   \f$
     */
 
-    double hglj (const int i, const double z, const double *zglj, const int np, 
+    double hglj (const int i, const double z, const double *zglj, const int np,
         const double alpha, const double beta)
     {
         boost::ignore_unused(alpha, beta);
@@ -862,26 +861,26 @@ namespace Polylib {
         zi  = *(zglj+i);
         dz  = z-zi;
         if (fabs(dz) < EPS) return 1.0;
-	
+
 	return laginterp(z, i, zglj, np);
 
     }
 
 
-    /** 
+    /**
     \brief Interpolation Operator from Gauss-Jacobi points to an
     arbitrary distribution at points \a zm
 
     \li Computes the one-dimensional interpolation matrix, \a im, to
     interpolate a function from at Gauss-Jacobi distribution of \a nz
     zeros \a zgrj to an arbitrary distribution of \a mz points \a zm, i.e.\n
-    \f$ 
-    u(zm[i]) = \sum_{j=0}^{nz-1} im[i*nz+j] \ u(zgj[j]) 
+    \f$
+    u(zm[i]) = \sum_{j=0}^{nz-1} im[i*nz+j] \ u(zgj[j])
     \f$
 
     */
 
-    void Imgj(double *im, const double *zgj, const double *zm, const int nz, 
+    void Imgj(double *im, const double *zgj, const double *zm, const int nz,
         const int mz,const double alpha, const double beta){
             double zp;
             int i, j;
@@ -897,7 +896,7 @@ namespace Polylib {
             return;
     }
 
-    /** 
+    /**
     \brief Interpolation Operator from Gauss-Radau-Jacobi points
     (including \a z=-1) to an arbitrary distrubtion at points \a zm
 
@@ -905,7 +904,7 @@ namespace Polylib {
     interpolate a function from at Gauss-Radau-Jacobi distribution of
     \a nz zeros \a zgrj (where \a zgrj[0]=-1) to an arbitrary
     distribution of \a mz points \a zm, i.e.
-    \n 
+    \n
     \f$ u(zm[i]) =    \sum_{j=0}^{nz-1} im[i*nz+j] \ u(zgj[j]) \f$
 
     */
@@ -927,7 +926,7 @@ namespace Polylib {
         return;
     }
 
-    /** 
+    /**
     \brief Interpolation Operator from Gauss-Radau-Jacobi points
     (including \a z=1) to an arbitrary distrubtion at points \a zm
 
@@ -935,12 +934,12 @@ namespace Polylib {
     interpolate a function from at Gauss-Radau-Jacobi distribution of
     \a nz zeros \a zgrj (where \a zgrj[nz-1]=1) to an arbitrary
     distribution of \a mz points \a zm, i.e.
-    \n 
+    \n
     \f$ u(zm[i]) =    \sum_{j=0}^{nz-1} im[i*nz+j] \ u(zgj[j]) \f$
 
     */
 
-    void Imgrjp(double *im, const double *zgrj, const double *zm, const int nz, 
+    void Imgrjp(double *im, const double *zgrj, const double *zm, const int nz,
         const int mz,const double alpha, const double beta)
     {
             double zp;
@@ -958,7 +957,7 @@ namespace Polylib {
     }
 
 
-    /** 
+    /**
     \brief Interpolation Operator from Gauss-Lobatto-Jacobi points
     to an arbitrary distrubtion at points \a zm
 
@@ -966,12 +965,12 @@ namespace Polylib {
     interpolate a function from at Gauss-Lobatto-Jacobi distribution of
     \a nz zeros \a zgrj (where \a zgrj[0]=-1) to an arbitrary
     distribution of \a mz points \a zm, i.e.
-    \n 
+    \n
     \f$ u(zm[i]) =    \sum_{j=0}^{nz-1} im[i*nz+j] \ u(zgj[j]) \f$
 
     */
 
-    void Imglj(double *im, const double *zglj, const double *zm, const int nz, 
+    void Imglj(double *im, const double *zglj, const double *zm, const int nz,
         const int mz, const double alpha, const double beta)
     {
         double zp;
@@ -988,7 +987,7 @@ namespace Polylib {
         return;
     }
 
-    /** 
+    /**
     \brief Routine to calculate Jacobi polynomials, \f$
     P^{\alpha,\beta}_n(z) \f$, and their first derivative, \f$
     \frac{d}{dz} P^{\alpha,\beta}_n(z) \f$.
@@ -1007,7 +1006,7 @@ namespace Polylib {
     \f$ \begin{array}{rcl}
     P^{\alpha,\beta}_0(z) &=& 1 \\
     P^{\alpha,\beta}_1(z) &=& \frac{1}{2} [ \alpha-\beta+(\alpha+\beta+2)z] \\
-    a^1_n P^{\alpha,\beta}_{n+1}(z) &=& (a^2_n + a^3_n z) 
+    a^1_n P^{\alpha,\beta}_{n+1}(z) &=& (a^2_n + a^3_n z)
     P^{\alpha,\beta}_n(z) - a^4_n P^{\alpha,\beta}_{n-1}(z) \\
     a^1_n &=& 2(n+1)(n+\alpha + \beta + 1)(2n + \alpha + \beta) \\
     a^2_n &=& (2n + \alpha + \beta + 1)(\alpha^2 - \beta^2)  \\
@@ -1023,12 +1022,12 @@ namespace Polylib {
     + b^3_n(z) P^{\alpha,\beta}_{n-1}(z) \hspace{2.2cm} \\
     b^1_n(z) &=& (2n+\alpha + \beta)(1-z^2) \\
     b^2_n(z) &=& n[\alpha - \beta - (2n+\alpha + \beta)z]\\
-    b^3_n(z) &=& 2(n+\alpha)(n+\beta) 
+    b^3_n(z) &=& 2(n+\alpha)(n+\beta)
     \end{array} \f$
 
     - Note the derivative from this routine is only valid for -1 < \a z < 1.
     */
-    void jacobfd(const int np, const double *z, double *poly_in, double *polyd, 
+    void jacobfd(const int np, const double *z, double *poly_in, double *polyd,
         const int n, const double alpha, const double beta){
             int i;
             double  zero = 0.0, one = 1.0, two = 2.0;
@@ -1038,18 +1037,18 @@ namespace Polylib {
 
             if(n == 0){
                 if(poly_in)
-                    for(i = 0; i < np; ++i) 
+                    for(i = 0; i < np; ++i)
                         poly_in[i] = one;
                 if(polyd)
-                    for(i = 0; i < np; ++i) 
-                        polyd[i] = zero; 
+                    for(i = 0; i < np; ++i)
+                        polyd[i] = zero;
             }
             else if (n == 1){
                 if(poly_in)
-                    for(i = 0; i < np; ++i) 
+                    for(i = 0; i < np; ++i)
                         poly_in[i] = 0.5*(alpha - beta + (alpha + beta + two)*z[i]);
                 if(polyd)
-                    for(i = 0; i < np; ++i) 
+                    for(i = 0; i < np; ++i)
                         polyd[i] = 0.5*(alpha + beta + two);
             }
             else{
@@ -1060,13 +1059,13 @@ namespace Polylib {
 
                 if(poly_in){ // switch for case of no poynomial function return
                     polyn1 = (double *)malloc(2*np*sizeof(double));
-                    polyn2 = polyn1+np; 
+                    polyn2 = polyn1+np;
                     poly   = poly_in;
                 }
                 else{
                     polyn1 = (double *)malloc(3*np*sizeof(double));
-                    polyn2 = polyn1+np; 
-                    poly   = polyn2+np;      
+                    polyn2 = polyn1+np;
+                    poly   = polyn2+np;
                 }
 
                 for(i = 0; i < np; ++i){
@@ -1113,22 +1112,22 @@ namespace Polylib {
 
 
     /**
-    \brief Calculate the  derivative of Jacobi polynomials 
+    \brief Calculate the  derivative of Jacobi polynomials
 
     \li Generates a vector \a poly of values of the derivative of the
     \a n th order Jacobi polynomial \f$ P^(\alpha,\beta)_n(z)\f$ at the
     \a np points \a z.
 
-    \li To do this we have used the relation 
+    \li To do this we have used the relation
     \n
-    \f$ \frac{d}{dz} P^{\alpha,\beta}_n(z) 
+    \f$ \frac{d}{dz} P^{\alpha,\beta}_n(z)
     = \frac{1}{2} (\alpha + \beta + n + 1)  P^{\alpha,\beta}_n(z) \f$
 
-    \li This formulation is valid for \f$ -1 \leq z \leq 1 \f$ 
+    \li This formulation is valid for \f$ -1 \leq z \leq 1 \f$
 
     */
 
-    void jacobd(const int np, const double *z, double *polyd, const int n, 
+    void jacobd(const int np, const double *z, double *polyd, const int n,
         const double alpha, const double beta)
     {
         int i;
@@ -1144,7 +1143,7 @@ namespace Polylib {
     }
 
 
-    /** 
+    /**
     \brief Calculate the Gamma function , \f$ \Gamma(n)\f$, for integer
     values and halves.
 
@@ -1160,7 +1159,7 @@ namespace Polylib {
 
         if     (x == -0.5) gamma = -2.0*sqrt(M_PI);
         else if (!x) return gamma;
-        else if ((x-(int)x) == 0.5){ 
+        else if ((x-(int)x) == 0.5){
             int n = (int) x;
             double tmp = x;
 
@@ -1178,21 +1177,21 @@ namespace Polylib {
                 tmp   -= 1.0;
                 gamma *= tmp;
             }
-        }  
+        }
         else
             fprintf(stderr,"%lf is not of integer or half order\n",x);
         return gamma;
     }
 
-    /** 
+    /**
     \brief  Calculate the \a n zeros, \a z, of the Jacobi polynomial, i.e.
     \f$ P_n^{\alpha,\beta}(z) = 0 \f$
 
     This routine is only value for \f$( \alpha > -1, \beta > -1)\f$
-    and uses polynomial deflation in a Newton iteration 
+    and uses polynomial deflation in a Newton iteration
     */
 
-    static void Jacobz(const int n, double *z, const double alpha, 
+    static void Jacobz(const int n, double *z, const double alpha,
         const double beta){
             int i,j,k;
             double   dth = M_PI/(2.0*(double)n);
@@ -1247,12 +1246,12 @@ namespace Polylib {
     matrix are the zeros of the Jacobi polynomial.
     */
 
-    void JacZeros(const int n, double *a, double*b, const double alpha, 
+    void JacZeros(const int n, double *a, double*b, const double alpha,
         const double beta){
-            
+
 			int i,j;
 			RecCoeff(n,a,b,alpha,beta);
-			
+
 			double **z = new double*[n];
 			for(i = 0; i < n; i++)
 			{
@@ -1266,7 +1265,7 @@ namespace Polylib {
 			{
 				z[i][i] = 1.0;
 			}
-         			
+
 			// find eigenvalues and eigenvectors
             TriQL(n, a, b,z);
 
@@ -1278,39 +1277,39 @@ namespace Polylib {
     \brief  The routine finds the recurrence coefficients \a a and
 	\a b of the orthogonal polynomials
 	*/
-	static void RecCoeff(const int n, double *a, double *b,const double alpha, 
+	static void RecCoeff(const int n, double *a, double *b,const double alpha,
               const double beta){
 
         int i;
         double apb, apbi,a2b2;
-        
+
         if(!n)
             return;
 
-        // generate normalised terms 
+        // generate normalised terms
         apb  = alpha + beta;
         apbi = 2.0 + apb;
 
         b[0] = pow(2.0,apb+1.0)*gammaF(alpha+1.0)*gammaF(beta+1.0)/gammaF(apbi); //MuZero
 		a[0]   = (beta-alpha)/apbi;
 		b[1]   = (4.0*(1.0+alpha)*(1.0+beta)/((apbi+1.0)*apbi*apbi));
-		
+
 		a2b2 = beta*beta-alpha*alpha;
-		
+
 		for(i = 1; i < n-1; i++){
             apbi = 2.0*(i+1) + apb;
             a[i] = a2b2/((apbi-2.0)*apbi);
             b[i+1] = (4.0*(i+1)*(i+1+alpha)*(i+1+beta)*(i+1+apb)/
                  ((apbi*apbi-1)*apbi*apbi));
 		}
-		
+
 		apbi   = 2.0*n + apb;
         a[n-1] = a2b2/((apbi-2.0)*apbi);
-		
+
 	}
 
 
-    /** \brief QL algorithm for symmetric tridiagonal matrix 
+    /** \brief QL algorithm for symmetric tridiagonal matrix
 
     This subroutine is a translation of an algol procedure,
     num. math. \b 12, 377-383(1968) by martin and wilkinson, as modified
@@ -1326,12 +1325,12 @@ namespace Polylib {
     - n is the order of the matrix;
     - d contains the diagonal elements of the input matrix;
     - e contains the subdiagonal elements of the input matrix
-    in its first n-2 positions. 
+    in its first n-2 positions.
 	- z is the n by n identity matrix
 
     on output:
 
-    - d contains the eigenvalues in ascending order.  
+    - d contains the eigenvalues in ascending order.
     - e contains the weight values - modifications of the first component
 	  of normalised eigenvectors
     */
@@ -1339,9 +1338,9 @@ namespace Polylib {
     static void TriQL(const int n, double *d,double *e, double **z){
         int m,l,iter,i,k;
         double s,r,p,g,f,dd,c,b;
-		
+
 		double MuZero = e[0];
-		
+
 		// Renumber the elements of e
 		for(i = 0; i < n-1; i++)
 		{
@@ -1394,7 +1393,7 @@ namespace Polylib {
 							z[k][i+1] = s*z[k][i] + c*f;
 							z[k][i] = c*z[k][i] - s*f;
 						}
-					
+
                     }
                     d[l]=d[l]-p;
                     e[l]=g;
@@ -1406,7 +1405,7 @@ namespace Polylib {
         // order eigenvalues
 		// Since we only need the first component of the eigenvectors
 		// to calcualte the weight, we only swap the first components
-        for(i = 0; i < n-1; ++i){ 
+        for(i = 0; i < n-1; ++i){
             k = i;
             p = d[i];
             for(l = i+1; l < n; ++l)
@@ -1414,7 +1413,7 @@ namespace Polylib {
                     k = l;
                     p = d[l];
                 }
-            d[k] = d[i]; 
+            d[k] = d[i];
             d[i] = p;
 
 			double temp = z[0][k];
@@ -1432,12 +1431,12 @@ namespace Polylib {
 	/**
     \brief Calcualtes the Jacobi-kronrod matrix by determining the
 	\a a and \b coefficients.
-	
+
 	The first \a 3n+1 coefficients are already known
 
 	For more information refer to:
 	"Dirk P. Laurie, Calcualtion of Gauss-Kronrod quadrature rules"
-	*/	 
+	*/
 	void JKMatrix(int n, double *a, double *b)
 	{
 		int i,j,k,m;
@@ -1469,8 +1468,8 @@ namespace Polylib {
 			 s = t;
 			 t  = hold;
 		}
-		
-		
+
+
 		for(j = (int)floor(n/2.0); j >= 0; j--)
 		{
 			s[j+1] = s[j];
@@ -1491,14 +1490,14 @@ namespace Polylib {
 			{
 				k = m/2;
 				a[k+n+1] = a[k] + (s[j+1]-b[k+n+1]*s[j+2])/t[j+2];
-				
+
 			}else
 			{
 				k = (m+1)/2;
 				b[k+n+1] = s[j+1]/s[j+2];
 			}
-			
-			
+
+
 			// Swap the contents of s and t
 			double  *hold = s;
 			s = t;
@@ -1506,11 +1505,11 @@ namespace Polylib {
 		}
 
 		a[2*n ] = a[n-1]-b[2*n]*s[1]/t[1];
-		
+
 	}
 
 	/**
-	\brief 
+	\brief
 	Given a weight function \f$w(t)\f$ through the first \a n+1
 	coefficients \a a and \a b of its orthogonal polynomials
 	this routine generates the first \a n recurrence coefficients for the orthogonal
@@ -1518,11 +1517,11 @@ namespace Polylib {
 
 	The result will be placed in the array \a a0 and \a b0.
 	*/
-	
+
 	void chri1(int n, double* a, double* b, double* a0,
 		   double* b0,double z)
 	{
-		
+
 		double q = ceil(3.0*n/2);
 		int size = (int)q+1;
 		if(size < n+1)
@@ -1548,16 +1547,16 @@ namespace Polylib {
 			b0[k] = b[k] * r[k]/r[k-1];
 		}
                 delete[] r;
-    		
+
 	}
 
     /**
 
-	\brief 
+	\brief
 
     Calcualte the bessel function of the first kind with complex double input y.
-    Taken from Numerical Recipies in C 
-    
+    Taken from Numerical Recipies in C
+
     Returns a complex double
     */
 
@@ -1572,7 +1571,7 @@ namespace Polylib {
     	int i = 1;
 
 	    zarg = -0.25*y*y;
-        
+
 	    while (abs(z) > tol && i <= maxit){
 		    z = z*(1.0/i/(i+n)*zarg);
 	    	if  (abs(z) <= tol) break;

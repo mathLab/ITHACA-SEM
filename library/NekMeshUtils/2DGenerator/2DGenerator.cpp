@@ -32,7 +32,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 
 #include <NekMeshUtils/2DGenerator/2DGenerator.h>
 

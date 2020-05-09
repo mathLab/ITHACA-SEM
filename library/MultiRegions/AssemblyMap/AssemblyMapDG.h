@@ -38,6 +38,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
 #include <MultiRegions/ExpList.h>
+#include <MultiRegions/AssemblyMap/AssemblyCommDG.h>
 
 namespace Nektar
 {
@@ -80,34 +81,34 @@ namespace Nektar
                 Array<OneD,Array<OneD,LocalRegions::ExpansionSharedPtr> >
                 &GetElmtToTrace();
 
-            MULTI_REGIONS_EXPORT int GetTraceToUniversalMap(int i);
+            /**
+             * Changes toAlign quadrature point order, where the realignment is
+             * given by orient, which defines the mapping needed to go between
+             * the original ordering and the new desired ordering.
+             *
+             * @param[in,out] toAlign Data to reorder
+             * @param[in] orient The transformation to perform
+             * @param[in] nquad1 Quadrature points in direction 1
+             * @param[in] nquad2 Quadrature points in direction 2
+             */
+            MULTI_REGIONS_EXPORT static void RealignTraceElement(
+                    Array<OneD, int>        &toAlign,
+                    StdRegions::Orientation  orient,
+                    int                      nquad1,
+                    int                      nquad2 = 0);
 
-            MULTI_REGIONS_EXPORT int GetTraceToUniversalMapUnique(int i);
-
-            MULTI_REGIONS_EXPORT void UniversalTraceAssemble(
-                Array<OneD, NekDouble> &pGlobal) const;
+            MULTI_REGIONS_EXPORT AssemblyCommDGSharedPtr GetAssemblyCommDG();
 
         protected:
-            Gs::gs_data * m_traceGsh;
-            
             /// Number of physical dirichlet boundary values in trace
             int m_numDirichletBndPhys;
 
+            AssemblyCommDGSharedPtr m_assemblyComm;
+
             /// list of edge expansions for a given element
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> > m_elmtToTrace;
-            /// Integer map of process trace space quadrature points to
-            /// universal space.
-            Array<OneD,int> m_traceToUniversalMap;
-            /// Integer map of unique process trace space quadrature points to
-            /// universal space (signed).
-            Array<OneD,int> m_traceToUniversalMapUnique;
 
             void SetUpUniversalDGMap(const ExpList &locExp);
-
-            void SetUpUniversalTraceMap(
-                const ExpList         &locExp,
-                const ExpListSharedPtr trace,
-                const PeriodicMap     &perMap = NullPeriodicMap);
 
             virtual int v_GetLocalToGlobalMap(const int i) const;
 
@@ -151,12 +152,6 @@ namespace Nektar
                           NekVector<      NekDouble>& pGlobal) const;
 
             virtual int v_GetFullSystemBandWidth() const;
-
-            void RealignTraceElement(
-                Array<OneD, int>        &toAlign,
-                StdRegions::Orientation  orient,
-                int                      nquad1,
-                int                      nquad2 = 0);
         }; // class
 
 

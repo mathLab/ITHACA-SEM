@@ -49,6 +49,7 @@ namespace Nektar
         DisContField3DHomogeneous1D::DisContField3DHomogeneous1D(void)
         : ExpList3DHomogeneous1D(),
           m_bndCondExpansions(),
+          m_bndCondBndWeight(),
           m_bndConditions()
         {
         }
@@ -61,6 +62,7 @@ namespace Nektar
             const bool                                  dealiasing):
             ExpList3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing),
               m_bndCondExpansions(),
+              m_bndCondBndWeight(),
               m_bndConditions()
         {
         }
@@ -70,6 +72,7 @@ namespace Nektar
             const bool                         DeclarePlanesSetCoeffPhys)
             : ExpList3DHomogeneous1D (In,false),
               m_bndCondExpansions    (In.m_bndCondExpansions),
+              m_bndCondBndWeight     (In.m_bndCondBndWeight),
               m_bndConditions        (In.m_bndConditions)
         {
             if (DeclarePlanesSetCoeffPhys)
@@ -100,6 +103,7 @@ namespace Nektar
             ExpList3DHomogeneous1D(pSession, HomoBasis, lhom, useFFT,
                                    dealiasing),
               m_bndCondExpansions(),
+              m_bndCondBndWeight(),
               m_bndConditions()
         {
             int i, n, nel;
@@ -182,6 +186,8 @@ namespace Nektar
             m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(
                 bregions.size());
             m_bndConditions = m_planes[0]->UpdateBndConditions();
+
+            m_bndCondBndWeight = Array<OneD, NekDouble> {bregions.size(),0.0};
 
             int nplanes = m_planes.size();
             Array<OneD, MultiRegions::ExpListSharedPtr>

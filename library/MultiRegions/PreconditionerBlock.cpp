@@ -40,7 +40,7 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/SegExp.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 

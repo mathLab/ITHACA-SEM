@@ -1909,13 +1909,10 @@ namespace Nektar
                                        auxArray2 = fluxJumps, 1);
                     }
 
-                    NekDouble fac = fields[0]->GetExp(n)->TraceNormalNegated(e) ?
-                    -1.0 : 1.0;
-
                     for (i = 0; i < nEdgePts; ++i)
                     {
-                        if (m_traceNormals[0][trace_offset+i] != fac*normals[0][i]
-                        || m_traceNormals[1][trace_offset+i] != fac*normals[1][i])
+                        if (m_traceNormals[0][trace_offset+i] != normals[0][i]
+                        || m_traceNormals[1][trace_offset+i] != normals[1][i])
                         {
                             fluxJumps[i] = -fluxJumps[i];
                         }

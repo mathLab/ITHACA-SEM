@@ -73,6 +73,8 @@ namespace Nektar
                                  lhom,useFFT,dealiasing)
         {
             GenExpList3DHomogeneous1D(graph2D->GetExpansionInfos(var),ImpType);
+            SetExpType(e3DH1D);
+            m_graph = graph2D;
         }
         
         // Constructor for ExpList3DHomogeneous1D to act as a Explist field

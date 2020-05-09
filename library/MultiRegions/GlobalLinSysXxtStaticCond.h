@@ -77,14 +77,14 @@ namespace Nektar
             static std::string className2;
 
             /// Constructor for full direct matrix solve.
-            GlobalLinSysXxtStaticCond(
+            MULTI_REGIONS_EXPORT GlobalLinSysXxtStaticCond(
                         const GlobalLinSysKey &mkey,
                         const std::weak_ptr<ExpList> &pExpList,
                         const std::shared_ptr<AssemblyMap>
                                                                 &locToGloMap);
 
             /// Constructor for full direct matrix solve.
-            GlobalLinSysXxtStaticCond(
+            MULTI_REGIONS_EXPORT GlobalLinSysXxtStaticCond(
                         const GlobalLinSysKey &mkey,
                         const std::weak_ptr<ExpList> &pExpList,
                         const DNekScalBlkMatSharedPtr pSchurCompl,
@@ -94,7 +94,7 @@ namespace Nektar
                         const std::shared_ptr<AssemblyMap>
                                                                 &locToGloMap);
 
-            virtual ~GlobalLinSysXxtStaticCond();
+            MULTI_REGIONS_EXPORT virtual ~GlobalLinSysXxtStaticCond();
 
         protected:
             void CreateMap(const std::shared_ptr<AssemblyMap> &pLocToGloMap);

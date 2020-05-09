@@ -37,7 +37,7 @@
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <LocalRegions/MatrixKey.h>
-#include <math.h>
+#include <cmath>
 
 namespace Nektar
 {

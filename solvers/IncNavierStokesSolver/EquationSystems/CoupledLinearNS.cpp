@@ -1870,7 +1870,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > force(m_velocity.size());
 
         // Impose Dirichlet conditions on velocity fields
-        for(i = 0; i < m_velocity.num_elements(); ++i)
+        for(i = 0; i < m_velocity.size(); ++i)
         {
             Vmath::Zero(m_fields[i]->GetNcoeffs(), m_fields[i]->UpdateCoeffs(),1);
             m_fields[i]->ImposeDirichletConditions(m_fields[i]->UpdateCoeffs());

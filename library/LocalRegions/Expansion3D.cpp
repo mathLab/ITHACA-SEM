@@ -143,11 +143,6 @@ namespace Nektar
                 NekDouble scale = invMass.Scale();
                 const NekDouble *data = invMass.GetRawPtr();
 
-                if (m_negatedNormals[face])
-                {
-                    Vmath::Neg(nquad_f, inval, 1);
-                }
-
                 // @TODO Multiply by variable coefficients
                 // @TODO: Document this (probably not needed)
                 /*
@@ -305,11 +300,6 @@ namespace Nektar
                                          facePhys,     1);
                 }
 
-                if (m_negatedNormals[f])
-                {
-                    Vmath::Neg(nquad_f, facePhys, 1);
-                }
-
                 AddFaceBoundaryInt(f, FaceExp[f], facePhys, outarray,
                                    varcoeffs);
             }
@@ -341,11 +331,6 @@ namespace Nektar
                 FaceExp[f]->BwdTrans(faceCoeffs[f], facePhys);
 
                 Vmath::Vmul(nquad_f, normals[dir], 1, facePhys, 1, facePhys, 1);
-
-                if (m_negatedNormals[f])
-                {
-                    Vmath::Neg(nquad_f, facePhys, 1);
-                }
 
                 AddFaceBoundaryInt(f, FaceExp[f], facePhys, outarray);
             }
@@ -1035,11 +1020,6 @@ namespace Nektar
                                                       work,       1);
                             }
 
-                            if (m_negatedNormals[f])
-                            {
-                                Vmath::Neg(nquad_f, work, 1);
-                            }
-
                             // - tau (ulam - lam)
                             // Corresponds to the G and BU terms.
                             for(j = 0; j < order_f; ++j)
@@ -1133,12 +1113,7 @@ namespace Nektar
                 for (i = 0; i < GetNtraces(); ++i)
                 {
                     m_requireNeg[i] = false;
-                    if (m_negatedNormals[i])
-                    {
-                        m_requireNeg[i] = true;
-                        continue;
-                    }
-                    
+
                     ExpansionSharedPtr faceExp = m_traceExp[i].lock();
 
                     if (faceExp->GetRightAdjacentElementExp())

@@ -1,4 +1,5 @@
 SET(MULTI_REGIONS_SOURCES
+./AssemblyMap/AssemblyCommDG.cpp
 ./AssemblyMap/AssemblyMap.cpp
 ./AssemblyMap/AssemblyMapCG.cpp
 ./AssemblyMap/AssemblyMapDG.cpp
@@ -70,6 +71,7 @@ SubStructuredGraph.h
 )
 
 SET(ASSEMBLY_MAP_HEADERS
+./AssemblyMap/AssemblyCommDG.h
 ./AssemblyMap/AssemblyMap.h
 ./AssemblyMap/AssemblyMapCG.h
 ./AssemblyMap/AssemblyMapDG.h

@@ -108,11 +108,21 @@ namespace Nektar
                 Array<OneD, NekDouble>             &outarray);
 
             inline SpatialDomains::Geometry2DSharedPtr GetGeom2D() const;
-            
+
+            LOCAL_REGIONS_EXPORT void ReOrientEdgePhysMap(
+                const int                        nvert,
+                const StdRegions::Orientation    orient,
+                const int                        nq0,
+                Array<OneD, int>                &idmap);
+
         protected:
+            std::vector<Expansion1DWeakPtr>         m_edgeExp;
             std::vector<bool>                       m_requireNeg;
-            std::map<int, NormalVector>             m_edgeNormals;
-            std::map<int, bool>                     m_negatedNormals;
+            std::map<int, StdRegions::NormalVector> m_edgeNormals;
+            Expansion3DWeakPtr                      m_elementLeft;
+            Expansion3DWeakPtr                      m_elementRight;
+            int                                     m_elementFaceLeft;
+            int                                     m_elementFaceRight;
 
             LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMF(
                 const int dir,
@@ -183,8 +193,13 @@ namespace Nektar
                                Array<OneD, int> &idmap,
                                const int nq0,  const int nq1);
 
+<<<<<<< HEAD
             virtual void v_NegateTraceNormal (const int edge);
             virtual bool v_TraceNormalNegated(const int edge);
+=======
+            Array<OneD, unsigned int> v_GetEdgeInverseBoundaryMap(int eid);
+
+>>>>>>> master
             virtual void v_SetUpPhysNormals (const int edge);
             virtual const NormalVector &v_GetTraceNormal(const int edge) const;
             virtual NekDouble v_VectorFlux(

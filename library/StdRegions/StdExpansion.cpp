@@ -1318,13 +1318,30 @@ namespace Nektar
             v_MultiplyByStdQuadratureMetric(inarray,outarray);
         }
         
+        void StdExpansion::v_DivideByQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray)
+        {
+            v_DivideByStdQuadratureMetric(inarray, outarray);
+        }
+        
         void StdExpansion::v_MultiplyByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
         {
             boost::ignore_unused(inarray, outarray);
-            NEKERROR(ErrorUtil::efatal, "Method does not exist for this "
-                     "shape or library");
+            NEKERROR(ErrorUtil::efatal,
+                     "Method does not exist for this shape or library");
+        }
+        
+        void StdExpansion::v_DivideByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray)
+        {
+            boost::ignore_unused(inarray,outarray);
+            NEKERROR(ErrorUtil::efatal,
+                     "v_DivideByStdQuadratureMetric does not exist for this"
+                     " shape or library");
         }
 
         void StdExpansion::v_BwdTrans_SumFac
@@ -1507,6 +1524,88 @@ namespace Nektar
             HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
         }
 
+<<<<<<< HEAD
+=======
+        const NormalVector & StdExpansion::v_GetEdgeNormal(const int edge) const
+        {
+            boost::ignore_unused(edge);
+            ASSERTL0(false, "Cannot get edge normals for this expansion.");
+            static NormalVector result;
+            return result;
+        }
+
+        void StdExpansion::v_ComputeEdgeNormal(const int edge)
+        {
+            boost::ignore_unused(edge);
+            ASSERTL0(false, "Cannot compute edge normal for this expansion.");
+        }
+
+        void StdExpansion::v_ComputeFaceNormal(const int face)
+        {
+            boost::ignore_unused(face);
+            ASSERTL0(false, "Cannot compute face normal for this expansion.");
+        }
+
+        void StdExpansion::v_ComputeVertexNormal(const int vertex)
+        {
+            boost::ignore_unused(vertex);
+            ASSERTL0(false, "Cannot compute vertex normal for this expansion.");
+        }
+
+        const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
+        {
+            boost::ignore_unused(face);
+            ASSERTL0(false, "Cannot get face normals for this expansion.");
+            static NormalVector result;
+            return result;
+        }
+
+        const NormalVector & StdExpansion::v_GetVertexNormal(const int vertex) const
+        {
+            boost::ignore_unused(vertex);
+            ASSERTL0(false, "Cannot get vertex normals for this expansion.");
+            static NormalVector result;
+            return result;
+        }
+
+        const NormalVector & StdExpansion::v_GetSurfaceNormal(const int id) const
+        {
+            boost::ignore_unused(id);
+            ASSERTL0(false, "Cannot get face normals for this expansion.");
+            static NormalVector result;
+            return result;
+        }
+
+        Array<OneD, unsigned int>
+        StdExpansion::v_GetEdgeInverseBoundaryMap(int eid)
+        {
+            boost::ignore_unused(eid);
+            ASSERTL0(false, "Not implemented.");
+            Array<OneD, unsigned int> noinversemap(1);
+            return noinversemap;
+        }
+
+        Array<OneD, unsigned int>
+        StdExpansion::v_GetFaceInverseBoundaryMap(int fid,
+                                                  StdRegions::Orientation faceOrient,
+                                                  int P1,
+                                                  int P2)
+        {
+            boost::ignore_unused(fid, faceOrient, P1, P2);
+            ASSERTL0(false, "Not implemented.");
+            Array<OneD, unsigned int> noinversemap(1);
+            return noinversemap;
+        }
+
+        void StdExpansion::v_GetInverseBoundaryMaps(
+                    Array<OneD, unsigned int> &vmap,
+                    Array<OneD, Array<OneD, unsigned int> > &emap,
+                    Array<OneD, Array<OneD, unsigned int> > &fmap)
+        {
+            boost::ignore_unused(vmap, emap, fmap);
+            ASSERTL0(false, "Not implemented.");
+        }
+>>>>>>> master
 
         DNekMatSharedPtr
         StdExpansion::v_BuildInverseTransformationMatrix(
@@ -1583,6 +1682,6 @@ namespace Nektar
             NekVector<NekDouble> out(m_ncoeffs, outarray,eWrapper);
             out = (*intmat) * in;
         }
-
+        
     }//end namespace
 }//end namespace

@@ -84,7 +84,6 @@ private:
     size_t m_numVariables;
     std::ofstream m_outFile;
     LibUtilities::CommSharedPtr m_comm;
-    std::shared_ptr<EquationSystem> m_equationShPtr;
 };
 } // namespace SolverUtils
 } // namespace Nektar

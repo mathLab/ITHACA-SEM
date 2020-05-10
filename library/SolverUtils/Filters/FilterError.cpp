@@ -64,10 +64,10 @@ FilterError::FilterError(const LibUtilities::SessionReaderSharedPtr &pSession,
     outName += ".err";
 
     // Lock equation system pointer
-    m_equationShPtr = pEquation.lock();
-    ASSERTL0(m_equationShPtr, "Weak pointer expired");
+    auto equationSys = m_equ.lock();
+    ASSERTL0(equationSys, "Weak pointer expired");
 
-    m_numVariables = m_equationShPtr->GetNvariables();
+    m_numVariables = equationSys->GetNvariables();
 
     m_comm = pSession->GetComm();
     if (m_comm->GetRank() == 0)
@@ -79,9 +79,9 @@ FilterError::FilterError(const LibUtilities::SessionReaderSharedPtr &pSession,
         m_outFile << "Time";
         for (size_t i = 0; i < m_numVariables; ++i)
         {
-            std::string varName = m_equationShPtr->GetVariable(i);
-            m_outFile << "," + varName + " L2"
-                      << "," + varName + " Linf";
+            std::string varName = equationSys->GetVariable(i);
+            m_outFile << " " + varName + "_L2"
+                      << " " + varName + "_Linf";
         }
 
         m_outFile << std::endl;
@@ -125,19 +125,23 @@ void FilterError::v_Update(
         m_outFile << time;
     }
 
+    // Lock equation system pointer
+    auto equationSys = m_equ.lock();
+    ASSERTL0(equationSys, "Weak pointer expired");
+
     for (size_t i = 0; i < m_numVariables; ++i)
     {
-        Array<OneD, NekDouble> exactsoln(m_equationShPtr->GetTotPoints(), 0.0);
+        Array<OneD, NekDouble> exactsoln(equationSys->GetTotPoints(), 0.0);
 
         // Evaluate "ExactSolution" function, or zero array
-        m_equationShPtr->EvaluateExactSolution(i, exactsoln, time);
+        equationSys->EvaluateExactSolution(i, exactsoln, time);
 
-        NekDouble vL2Error   = m_equationShPtr->L2Error(i, exactsoln);
-        NekDouble vLinfError = m_equationShPtr->LinfError(i, exactsoln);
+        NekDouble vL2Error   = equationSys->L2Error(i, exactsoln);
+        NekDouble vLinfError = equationSys->LinfError(i, exactsoln);
 
         if (m_comm->GetRank() == 0)
         {
-            m_outFile << "," << vL2Error << "," << vLinfError;
+            m_outFile << " " << vL2Error << " " << vLinfError;
         }
     }
 

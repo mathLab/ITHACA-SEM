@@ -272,6 +272,9 @@ OperatorKey IProductWRTBase_AVX::m_typeArr[] = {
         OperatorKey(eQuadrilateral, eIProductWRTBase, eAVX, false),
         IProductWRTBase_AVX::create, "IProductWRTBase_AVX_Quad"),
     GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTriangle, eIProductWRTBase, eAVX, false),
+        IProductWRTBase_AVX::create, "IProductWRTBase_AVX_Tri"),
+    GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eHexahedron, eIProductWRTBase, eAVX, false),
         IProductWRTBase_AVX::create, "IProductWRTBase_AVX_Hex")
 };

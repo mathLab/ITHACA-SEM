@@ -33,9 +33,14 @@ struct AVXIProductQuad : public IProduct, public AVXHelper<VW, 2, DEFORMED>
         return std::make_shared<AVXIProductQuad<VW,DEFORMED>>(basis, nElmt);
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out)
+    void operator()(const Array<OneD, const NekDouble> &in,
+                                  Array<OneD,       NekDouble> &out) final
     {
+        // Check preconditions
+        ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
+            m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints(),
+            "AVX requires homogenous modes/points");
+
         switch(m_basis[0]->GetNumModes())
         {
             case 2:
@@ -146,7 +151,7 @@ struct AVXIProductQuad : public IProduct, public AVXHelper<VW, 2, DEFORMED>
         T* jac_ptr;
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
-            if(DEFORMED)
+            if (DEFORMED)
             {
                 jac_ptr = &(this->m_jac[nqTot*e]);
             }
@@ -181,7 +186,7 @@ public:
         return ( loop_ji + loop_qj);
     }
 
-    virtual NekDouble GFlops() override
+    NekDouble GFlops() final
     {
         const int nm = m_basis[0]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
@@ -191,7 +196,7 @@ public:
         return 1e-9 * flops;
     }
 
-    virtual NekDouble NStores() override
+    NekDouble NStores() final
     {
         const int nm = m_basis[0]->GetNumModes();
         // const int nq0 = m_basis[0]->GetNumPoints();
@@ -204,7 +209,7 @@ public:
         return this->m_nElmt * store_expected;
     }
 
-    virtual NekDouble NLoads() override
+    NekDouble NLoads() final
     {
         const int nm = m_basis[0]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
@@ -217,7 +222,7 @@ public:
         return this->m_nElmt * load_expected;
     }
 
-    virtual NekDouble Ndof() override
+    NekDouble Ndof() final
     {
         return m_nmTot * this->m_nElmt;
     }
@@ -226,165 +231,179 @@ private:
     int m_nmTot;
 };
 
-// template<int VW, bool DEFORMED = false>
-// struct AVXIProductTri : public IProduct, public AVXHelper<VW, 2, DEFORMED>
-// {
-//     AVXIProductTri(std::vector<LibUtilities::BasisSharedPtr> basis,
-//                    int nElmt)
-//         : IProduct(basis, nElmt),
-//           AVXHelper<VW, 2, DEFORMED>(basis, nElmt),
-//           m_nmTot(LibUtilities::StdTriData::getNumberOfCoefficients(
-//                       this->m_nm[0], this->m_nm[1]))
-//     {
-//     }
+template<int VW, bool DEFORMED = false>
+struct AVXIProductTri : public IProduct, public AVXHelper<VW, 2, DEFORMED>
+{
+    AVXIProductTri(std::vector<LibUtilities::BasisSharedPtr> basis,
+                   int nElmt)
+        : IProduct(basis, nElmt),
+          AVXHelper<VW, 2, DEFORMED>(basis, nElmt),
+          m_nmTot(LibUtilities::StdTriData::getNumberOfCoefficients(
+                      this->m_nm[0], this->m_nm[1]))
+    {
+    }
 
-//     static std::shared_ptr<Operator> Create(
-//         std::vector<LibUtilities::BasisSharedPtr> basis,
-//         int nElmt)
-//     {
-//         return std::make_shared<AVXIProductTri<VW, DEFORMED>>(basis, nElmt);
-//     }
+    static std::shared_ptr<Operator> Create(
+        std::vector<LibUtilities::BasisSharedPtr> basis,
+        int nElmt)
+    {
+        return std::make_shared<AVXIProductTri<VW, DEFORMED>>(basis, nElmt);
+    }
 
-//     virtual void operator()(const Array<OneD, const NekDouble> &in,
-//                                   Array<OneD,       NekDouble> &out)
-//     {
-//         if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
-//         {
-//             switch(m_basis[0]->GetNumModes())
-//             {
-//                 case 2:  AVXIProductTriImpl<2 ,2 ,3 ,2 ,true>(in, out); break;
-//                 case 3:  AVXIProductTriImpl<3 ,3 ,4 ,3 ,true>(in, out); break;
-//                 case 4:  AVXIProductTriImpl<4 ,4 ,5 ,4 ,true>(in, out); break;
-//                 case 5:  AVXIProductTriImpl<5 ,5 ,6 ,5 ,true>(in, out); break;
-//                 case 6:  AVXIProductTriImpl<6 ,6 ,7 ,6 ,true>(in, out); break;
-//                 case 7:  AVXIProductTriImpl<7 ,7 ,8 ,7 ,true>(in, out); break;
-//                 case 8:  AVXIProductTriImpl<8 ,8 ,9 ,8 ,true>(in, out); break;
-//                 case 9:  AVXIProductTriImpl<9 ,9 ,10,9 ,true>(in, out); break;
-//                 case 10: AVXIProductTriImpl<10,10,11,10,true>(in, out); break;
-//                 case 11: AVXIProductTriImpl<11,11,12,11,true>(in, out); break;
-//             }
-//         }
-//         else
-//         {
-//             switch(m_basis[0]->GetNumModes())
-//             {
-//                 case 2:  AVXIProductTriImpl<2 ,2 ,3 ,2 ,false>(in, out); break;
-//                 case 3:  AVXIProductTriImpl<3 ,3 ,4 ,3 ,false>(in, out); break;
-//                 case 4:  AVXIProductTriImpl<4 ,4 ,5 ,4 ,false>(in, out); break;
-//                 case 5:  AVXIProductTriImpl<5 ,5 ,6 ,5 ,false>(in, out); break;
-//                 case 6:  AVXIProductTriImpl<6 ,6 ,7 ,6 ,false>(in, out); break;
-//                 case 7:  AVXIProductTriImpl<7 ,7 ,8 ,7 ,false>(in, out); break;
-//                 case 8:  AVXIProductTriImpl<8 ,8 ,9 ,8 ,false>(in, out); break;
-//                 case 9:  AVXIProductTriImpl<9 ,9 ,10,9 ,false>(in, out); break;
-//                 case 10: AVXIProductTriImpl<10,10,11,10,false>(in, out); break;
-//                 case 11: AVXIProductTriImpl<11,11,12,11,false>(in, out); break;
-//             }
-//         }
-//     }
+    void operator()(const Array<OneD, const NekDouble> &in,
+        Array<OneD, NekDouble> &out) final
+    {
+        // Check preconditions
+        ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
+            m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints()+1,
+            "AVX requires homogenous modes/points");
 
-//     template<int NM0, int NM1, int NQ0, int NQ1, bool CORRECT>
-//     void AVXIProductTriImpl(
-//         const Array<OneD, const NekDouble> &input,
-//               Array<OneD,       NekDouble> &output)
-//     {
-//         using T = VecData<double, VW>;
-//         auto *inptr = &input[0];
-//         auto *outptr = &output[0];
+        if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
+        {
+            switch(m_basis[0]->GetNumModes())
+            {
+                case 2:  AVXIProductTriImpl<2 ,2 ,3 ,2 ,true>(in, out); break;
+                case 3:  AVXIProductTriImpl<3 ,3 ,4 ,3 ,true>(in, out); break;
+                case 4:  AVXIProductTriImpl<4 ,4 ,5 ,4 ,true>(in, out); break;
+                case 5:  AVXIProductTriImpl<5 ,5 ,6 ,5 ,true>(in, out); break;
+                case 6:  AVXIProductTriImpl<6 ,6 ,7 ,6 ,true>(in, out); break;
+                case 7:  AVXIProductTriImpl<7 ,7 ,8 ,7 ,true>(in, out); break;
+                case 8:  AVXIProductTriImpl<8 ,8 ,9 ,8 ,true>(in, out); break;
+                case 9:  AVXIProductTriImpl<9 ,9 ,10,9 ,true>(in, out); break;
+                case 10: AVXIProductTriImpl<10,10,11,10,true>(in, out); break;
+                case 11: AVXIProductTriImpl<11,11,12,11,true>(in, out); break;
+            }
+        }
+        else
+        {
+            switch(m_basis[0]->GetNumModes())
+            {
+                case 2:  AVXIProductTriImpl<2 ,2 ,3 ,2 ,false>(in, out); break;
+                case 3:  AVXIProductTriImpl<3 ,3 ,4 ,3 ,false>(in, out); break;
+                case 4:  AVXIProductTriImpl<4 ,4 ,5 ,4 ,false>(in, out); break;
+                case 5:  AVXIProductTriImpl<5 ,5 ,6 ,5 ,false>(in, out); break;
+                case 6:  AVXIProductTriImpl<6 ,6 ,7 ,6 ,false>(in, out); break;
+                case 7:  AVXIProductTriImpl<7 ,7 ,8 ,7 ,false>(in, out); break;
+                case 8:  AVXIProductTriImpl<8 ,8 ,9 ,8 ,false>(in, out); break;
+                case 9:  AVXIProductTriImpl<9 ,9 ,10,9 ,false>(in, out); break;
+                case 10: AVXIProductTriImpl<10,10,11,10,false>(in, out); break;
+                case 11: AVXIProductTriImpl<11,11,12,11,false>(in, out); break;
+            }
+        }
+    }
 
-//         constexpr int nqBlocks = NQ0 * NQ1 * VW;
-//         const int nmBlocks = m_nmTot * VW;
+    template<int NM0, int NM1, int NQ0, int NQ1, bool CORRECT>
+    void AVXIProductTriImpl(
+        const Array<OneD, const NekDouble> &input,
+              Array<OneD,       NekDouble> &output)
+    {
+        using T = VecData<double, VW>;
+        auto *inptr = &input[0];
+        auto *outptr = &output[0];
 
-//         T eta0_sums[NQ1]; //Sums over eta0 for each value of eta1;
+        constexpr int nqTot = NQ0 * NQ1;
+        constexpr int nqBlocks = nqTot * VW;
+        const int nmBlocks = m_nmTot * VW;
 
-//         for(int e =0; e < this->m_nBlocks; e++)
-//         {
+        T eta0_sums[NQ1]; //Sums over eta0 for each value of eta1;
 
-//             VecData<NekDouble, VW> *jac_ptr;
-//             if(DEFORMED){
-//                 jac_ptr = &(this->m_jac[NQ0*NQ1*e]);
-//             }
-//             else{
-//                 jac_ptr = &(this->m_jac[e]);
-//             }
+        AlignedVector<T> tmpIn(nqTot), tmpOut(m_nmTot);
+        T *jac_ptr;
+        for (int e =0; e < this->m_nBlocks; ++e)
+        {
 
-//             AVXIProductTriKernel
-//                 <NM0, NM1, NQ0, NQ1, VW, CORRECT,
-//                  false, false, DEFORMED>(
-//                      inptr, this->m_bdata[0], this->m_bdata[1],
-//                      this->m_w[0], this->m_w[1], jac_ptr,
-//                      eta0_sums, outptr);
+            if (DEFORMED)
+            {
+                jac_ptr = &(this->m_jac[nqTot*e]);
+            }
+            else
+            {
+                jac_ptr = &(this->m_jac[e]);
+            }
 
-//             inptr += nqBlocks;
-//             outptr += nmBlocks;
-//         }
-//     }
-// public:
-//     static NekDouble FlopsPerElement(
-//         const int nm,
-//         const int nq0,
-//         const int nq1)
-//     {
-//         int ploop = nm * 4 * nq0 * nq1;
-//         int pqloop = (nm * (nm+1) / 2) * nq1 * 3;
+            // Load and transpose data
+            T::load_interleave(inptr, nqTot, tmpIn);
 
-//         int corr_loop;
-//         if(DEFORMED){
-//             //We can't premultiply the jacobian in the outer loop.
-//             corr_loop = nq1 * (1 + nq0*5);
-//         }
-//         else{
-//             corr_loop = nq1 * ( 2 + nq0 * 4);
-//         }
+            AVXIProductTriKernel<NM0, NM1, NQ0, NQ1, VW, CORRECT, false,
+                false, DEFORMED>(
+                tmpIn, this->m_bdata[0], this->m_bdata[1],
+                this->m_w[0], this->m_w[1], jac_ptr,
+                eta0_sums, tmpOut);
 
-//         return (ploop + pqloop + corr_loop);
-//     }
+            // de-interleave and store data
+            T::deinterleave_store(tmpOut, m_nmTot, outptr);
 
-//     virtual NekDouble GFlops() override
-//     {
-//         const int nm = m_basis[0]->GetNumModes();
-//         const int nq0 = m_basis[0]->GetNumPoints();
-//         const int nq1 = m_basis[1]->GetNumPoints();
+            inptr += nqBlocks;
+            outptr += nmBlocks;
+        }
+    }
+public:
+    static NekDouble FlopsPerElement(
+        const int nm,
+        const int nq0,
+        const int nq1)
+    {
+        int ploop = nm * 4 * nq0 * nq1;
+        int pqloop = (nm * (nm+1) / 2) * nq1 * 3;
 
-//         int flops = m_nElmt * AVXIProductTri::FlopsPerElement(nm, nq0, nq1);
-//         return flops * 1e-9;
-//     }
+        int corr_loop;
+        if(DEFORMED){
+            //We can't premultiply the jacobian in the outer loop.
+            corr_loop = nq1 * (1 + nq0*5);
+        }
+        else{
+            corr_loop = nq1 * ( 2 + nq0 * 4);
+        }
 
-//     virtual NekDouble NLoads() override
-//     {
-//         const int nm0 = m_basis[0]->GetNumModes();
-//         const int nq0 = m_basis[0]->GetNumPoints();
-//         const int nq1 = m_basis[1]->GetNumPoints();
+        return (ploop + pqloop + corr_loop);
+    }
 
-//         int load_pji = nm0 * nq1 * nq0 * 3;
-//         int load_pqj = nm0*(nm0+1) * nq1 *0.5 * 3;
-//         int load_corr = 1 + nq1*(2 + nq0*3);
-//         int load_expected = load_pji + load_pqj + load_corr;
+    NekDouble GFlops() final
+    {
+        const int nm = m_basis[0]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
 
-//         return this->m_nElmt * load_expected;
-//     }
+        int flops = m_nElmt * AVXIProductTri::FlopsPerElement(nm, nq0, nq1);
+        return flops * 1e-9;
+    }
 
-//     virtual NekDouble NStores() override
-//     {
-//         const int nm0 = m_basis[0]->GetNumModes();
-//         // const int nq0 = m_basis[0]->GetNumPoints();
-//         const int nq1 = m_basis[1]->GetNumPoints();
+    NekDouble NLoads() final
+    {
+        const int nm0 = m_basis[0]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
 
-//         int store_pj = nm0*nq1;
-//         int store_pq = nm0*(nm0+1) / 2.0;
-//         int store_corr = 1;
-//         int store_expected = store_pj + store_pq + store_corr;
+        int load_pji = nm0 * nq1 * nq0 * 3;
+        int load_pqj = nm0*(nm0+1) * nq1 *0.5 * 3;
+        int load_corr = 1 + nq1*(2 + nq0*3);
+        int load_expected = load_pji + load_pqj + load_corr;
 
-//         return this->m_nElmt * store_expected;
-//     }
+        return this->m_nElmt * load_expected;
+    }
 
-//     virtual NekDouble Ndof() override
-//     {
-//         return m_nmTot * this->m_nElmt;
-//     }
+    NekDouble NStores() final
+    {
+        const int nm0 = m_basis[0]->GetNumModes();
+        // const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
 
-// private:
-//     int m_nmTot;
-// };
+        int store_pj = nm0*nq1;
+        int store_pq = nm0*(nm0+1) / 2.0;
+        int store_corr = 1;
+        int store_expected = store_pj + store_pq + store_corr;
+
+        return this->m_nElmt * store_expected;
+    }
+
+    NekDouble Ndof() final
+    {
+        return m_nmTot * this->m_nElmt;
+    }
+
+private:
+    int m_nmTot;
+};
 
 template<int VW, bool DEFORMED = false>
 struct AVXIProductHex : public IProduct, public AVXHelper<VW, 3, DEFORMED>

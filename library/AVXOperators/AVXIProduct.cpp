@@ -12,8 +12,8 @@ std::string __register_IProduct_Quad_AVX = GetOperatorFactory().RegisterCreatorF
 std::string __register_IProduct_Quad_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
     std::string("IProduct_Quad_Deformed_AVX"), &AVXIProductQuad<4,true>::Create);
 
-// std::string __register_IProduct_Tri_AVX = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProduct_Tri_Regular_AVX"), &AVXIProductTri<4>::Create);
+std::string __register_IProduct_Tri_AVX = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProduct_Tri_Regular_AVX"), &AVXIProductTri<4>::Create);
 
 // std::string __register_IProduct_Tri_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
 //     std::string("IProduct_Tri_Deformed_AVX"), &AVXIProductTri<4,true>::Create);

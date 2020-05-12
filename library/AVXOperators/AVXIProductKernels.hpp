@@ -95,99 +95,108 @@ inline static void AVXIProductQuadKernel(
 
 }
 
-// template<int NUMMODE0, int NUMMODE1,
-//          int NUMQUAD0, int NUMQUAD1,
-//          int VW, bool CORRECT, bool SCALE, bool APPEND,
-//          bool DEFORMED, class BasisType>
-// inline static void AVXIProductTriKernel(
-//     const double *inptr,
-//     const AlignedVector<BasisType> &basis0,
-//     const AlignedVector<BasisType> &basis1,
-//     const AlignedVector<BasisType> &w0,
-//     const AlignedVector<BasisType> &w1,
-//     const VecData<double, VW> *jac,
-//     VecData<double, VW> *eta0_sums,
-//     double *outptr,
-//     double scale = 1.0)
-// {
-//     using T = VecData<double, VW>;
+template<int NUMMODE0, int NUMMODE1,
+         int NUMQUAD0, int NUMQUAD1,
+         int VW, bool CORRECT, bool SCALE, bool APPEND,
+         bool DEFORMED, class BasisType>
+inline static void AVXIProductTriKernel(
+    const AlignedVector<VecData<NekDouble, VW>> &in,
+    const AlignedVector<BasisType> &basis0,
+    const AlignedVector<BasisType> &basis1,
+    const AlignedVector<BasisType> &w0,
+    const AlignedVector<BasisType> &w1,
+    const VecData<NekDouble, VW> *jac,
+    VecData<NekDouble, VW> *eta0_sums,
+    AlignedVector<VecData<NekDouble, VW>> &out,
+    NekDouble scale = 1.0)
+{
+    using T = VecData<NekDouble, VW>;
 
-//     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1;
-//     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
+    constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1;
+    constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
 
-//     int mode = 0;
-//     for (int p = 0; p < nm0; p++){
+    int mode = 0;
+    for (int p = 0; p < nm0; ++p)
+    {
 
-//         int eta_idx = 0;
-//         //Our inner loop is phi_p not phi_pq since we want to put as much work
-//         //as we can in the p-only loop instead of the full pq loop.
-//         for(int eta1 = 0; eta1 < nq1; eta1++){
+        int eta_idx = 0;
+        //Our inner loop is phi_p not phi_pq since we want to put as much work
+        //as we can in the p-only loop instead of the full pq loop.
+        for (int eta1 = 0; eta1 < nq1; ++eta1)
+        {
 
-//             T eta0_sum = T(0.0);
+            T eta0_sum = T(0.0);
 
-//             for(int eta0 = 0; eta0 < nq0; eta0++, eta_idx += VW){
-//                 //eta0_sum += phi_p(eta0) * fn(eta0, eta1) * J * w0(eta0)
-//                 T jac_val;
-//                 if(DEFORMED){
-//                     jac_val = jac[eta1*nq0 + eta0];
-//                 }
-//                 else{
-//                     jac_val = jac[0];
-//                 }
+            for (int eta0 = 0; eta0 < nq0; ++eta0, ++eta_idx)
+            {
+                //eta0_sum += phi_p(eta0) * fn(eta0, eta1) * J * w0(eta0)
+                T jac_val;
+                if(DEFORMED)
+                {
+                    jac_val = jac[eta1*nq0 + eta0];
+                }
+                else
+                {
+                    jac_val = jac[0];
+                }
 
-//                 T prod = T(inptr + eta_idx) * basis0[p*nq0 + eta0] * jac_val; //Load 2x
-//                 eta0_sum.fma(prod, w0[eta0]); //Load 1x
-//             }
+                T prod = in[eta_idx] * basis0[p*nq0 + eta0] * jac_val; //Load 2x
+                eta0_sum.fma(prod, w0[eta0]); //Load 1x
+            }
 
-//             eta0_sums[eta1] = eta0_sum;
+            eta0_sums[eta1] = eta0_sum;
 
-//         }
+        }
 
-//         for(int q = 0; q < nm1 - p; q++, mode++)
-//         {
-//             T sum_eta1 = 0.0;
-//             for(int eta1 = 0; eta1 < nq1; eta1++)
-//             {
-//                 T prod = eta0_sums[eta1] * basis1[mode*nq1 + eta1]; //Load 2x
-//                 sum_eta1.fma(prod, w1[eta1]); //Load 1x
-//             }
+        for (int q = 0; q < nm1 - p; ++q, ++mode)
+        {
+            T sum_eta1 = 0.0;
+            for (int eta1 = 0; eta1 < nq1; ++eta1)
+            {
+                T prod = eta0_sums[eta1] * basis1[mode*nq1 + eta1]; //Load 2x
+                sum_eta1.fma(prod, w1[eta1]); //Load 1x
+            }
 
-//             ScaleAppend<VW, SCALE, APPEND>(outptr + mode*VW, sum_eta1, scale); //Store x1
-//         }
-//     }
+            ScaleAppend<VW, SCALE, APPEND>(out[mode], sum_eta1, scale); //Store x1
+        }
+    }
 
-//     //Correction for singular vertex in collpased coordinates.
-//     //Basically we add phi_1 * phi_01 * (weighting, etc) to mode 00
-//     //With contributions from every quadrature point
-//     if (CORRECT)
-//     {
-//         int eta_idx = 0;
-//         T iprod_01 = 0.0;//T(outptr + VW); //Load 1x
-//         for(int eta1 = 0; eta1 < nq1; eta1++){
+    //Correction for singular vertex in collpased coordinates.
+    //Basically we add phi_1 * phi_01 * (weighting, etc) to mode 00
+    //With contributions from every quadrature point
+    if (CORRECT)
+    {
+        int eta_idx = 0;
+        T iprod_01 = 0.0;//T(outptr + VW); //Load 1x
+        for (int eta1 = 0; eta1 < nq1; ++eta1)
+        {
+            T preweight_eta1;
+            if(DEFORMED)
+            {
+                preweight_eta1 = w1[eta1] * basis1[nq1 + eta1];
+            }
+            else
+            {
+                preweight_eta1 = w1[eta1] * jac[0] * basis1[nq1 + eta1];
+            }
 
-//             T preweight_eta1;
-//             if(DEFORMED){
-//                 preweight_eta1 = w1[eta1] * basis1[nq1 + eta1];
-//             }
-//             else{
-//                 preweight_eta1 = w1[eta1] * jac[0] * basis1[nq1 + eta1];
-//             }
+            for (int eta0 = 0; eta0 < nq0; ++eta0, ++eta_idx)
+            {
+                T prod = in[eta_idx] * preweight_eta1 * w0[eta0];
 
-//             for(int eta0 = 0; eta0 < nq0; eta0++, eta_idx += VW){
-//                 T prod = T(inptr + eta_idx) * preweight_eta1 * w0[eta0];
+                if(DEFORMED)
+                {
+                    prod = prod * jac[eta1*nq0 + eta0];
+                }
 
-//                 if(DEFORMED){
-//                     prod = prod * jac[eta1*nq0 + eta0];
-//                 }
+                T basis_val1 = basis0[nq0 + eta0];
+                iprod_01.fma(prod, basis_val1);
+            }
+        }
 
-//                 T basis_val1 = basis0[nq0 + eta0];
-//                 iprod_01.fma(prod, basis_val1);
-//             }
-//         }
-
-//         ScaleAppend<VW, SCALE, true>(outptr + VW, iprod_01, scale);
-//     }
-// }
+        ScaleAppend<VW, SCALE, true>(out[1], iprod_01, scale);
+    }
+}
 
 template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,

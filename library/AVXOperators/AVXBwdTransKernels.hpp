@@ -27,9 +27,8 @@ inline static void AVXBwdTransQuadKernel(
     {
         for (int q = 0, cnt_pq = 0; q < nm1; ++q, ++cnt_iq)
         {
-            T tmp =  in[cnt_pq] * bdata0[i]; //Load 2x
-            ++cnt_pq;
-            for (int p = 1; p < nm0; ++p, ++cnt_pq)
+            T tmp{0.0};
+            for (int p = 0; p < nm0; ++p, ++cnt_pq)
             {
                 tmp.fma(in[cnt_pq], bdata0[p * nq0 + i]); //Load 2x
             }
@@ -41,9 +40,8 @@ inline static void AVXBwdTransQuadKernel(
     {
         for (int i = 0, cnt_iq = 0; i < nq0; ++i, ++cnt_ij)
         {
-            T tmp = wsp[cnt_iq] * bdata1[j]; //Load 2x
-            ++cnt_iq;
-            for (int q = 1; q < nm1; ++q, ++cnt_iq)
+            T tmp{0.0};
+            for (int q = 0; q < nm1; ++q, ++cnt_iq)
             {
                 tmp.fma(wsp[cnt_iq], bdata1[q * nq1 + j]); //Load 2x
             }

@@ -1,6 +1,7 @@
 #ifndef NEKTAR_LIBRARY_AVXBWDTRANS_H
 #define NEKTAR_LIBRARY_AVXBWDTRANS_H
 
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/Foundations/Basis.h>
@@ -43,7 +44,7 @@ struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
         return loop_i + loop_j;
     }
 
-    virtual NekDouble GFlops()
+    NekDouble GFlops() final
     {
 
         const int nm = m_basis[0]->GetNumModes();
@@ -54,7 +55,7 @@ struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
         return flops * 1e-9;
     }
 
-    virtual NekDouble NLoads()
+    NekDouble NLoads() final
     {
         const int nm0 = m_basis[0]->GetNumModes();
         const int nm1 = m_basis[1]->GetNumModes();
@@ -69,7 +70,7 @@ struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
 
     }
 
-    virtual NekDouble NStores()
+    NekDouble NStores() final
     {
         // const int nm0 = m_basis[0]->GetNumModes();
         const int nm1 = m_basis[1]->GetNumModes();
@@ -83,14 +84,19 @@ struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
         return m_nElmt * store_expected;
     }
 
-    virtual NekDouble Ndof()
+    NekDouble Ndof() final
     {
         return m_nmTot * this->m_nElmt;
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &in,
+    void operator()(const Array<OneD, const NekDouble> &in,
                                   Array<OneD,       NekDouble> &out) final
     {
+        // Check preconditions
+        ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
+            m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints(),
+            "AVX requires homogenous modes/points");
+
         switch(m_basis[0]->GetNumModes())
         {
             case 2:
@@ -298,6 +304,11 @@ struct AVXBwdTransTri : public BwdTrans, public AVXHelper<VW, 2>
     virtual void operator()(const Array<OneD, const NekDouble> &in,
                                   Array<OneD,       NekDouble> &out) final
     {
+        // Check preconditions
+        ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
+            m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints()+1,
+            "AVX requires homogenous modes/points");
+
         if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
         {
             switch(m_basis[0]->GetNumModes())

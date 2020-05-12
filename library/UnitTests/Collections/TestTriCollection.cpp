@@ -38,8 +38,6 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <boost/test/auto_unit_test.hpp>
-
 namespace Nektar
 {
     namespace TriCollectionTests
@@ -313,6 +311,68 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
         }
+
+    BOOST_AUTO_TEST_CASE(TestTriBwdTrans_AVX_UniformP)
+    {
+        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
+            2u, 0u, -1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(
+            2u, 1u,  1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(
+            2u, 2u, -1.0,  1.0, 0.0));
+
+        SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
+
+        unsigned int numQuadPoints = 5;
+        unsigned int numModes = 4;
+        Nektar::LibUtilities::PointsType triPointsTypeDir1 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey triPointsKeyDir1(numQuadPoints,
+            triPointsTypeDir1);
+        Nektar::LibUtilities::BasisType basisTypeDir1 =
+            Nektar::LibUtilities::eModified_A;
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
+            numModes, triPointsKeyDir1);
+
+        Nektar::LibUtilities::PointsType triPointsTypeDir2 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey triPointsKeyDir2(numQuadPoints-1,
+            triPointsTypeDir2);
+        Nektar::LibUtilities::BasisType basisTypeDir2 =
+            Nektar::LibUtilities::eModified_B;
+        const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir2,
+            numModes, triPointsKeyDir2);
+
+        Nektar::LocalRegions::TriExpSharedPtr Exp =
+            MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(
+            basisKeyDir1, basisKeyDir2, triGeom);
+
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        CollExp.push_back(Exp);
+
+        LibUtilities::SessionReaderSharedPtr dummySession;
+        Collections::CollectionOptimisation colOpt(dummySession,
+            Collections::eIterPerExp);
+        Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+        // ... only one op at the time ...
+        impTypes[Collections::eBwdTrans] = Collections::eAVX;
+        Collections::Collection     c(CollExp, impTypes);
+
+
+        Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
+        Array<OneD, NekDouble> physRef(Exp->GetTotPoints());
+        Array<OneD, NekDouble> phys(Exp->GetTotPoints());
+
+
+        Exp->BwdTrans(coeffs, physRef);
+        c.ApplyOperator(Collections::eBwdTrans, coeffs, phys);
+
+        double epsilon = 1.0e-8;
+        for(int i = 0; i < physRef.num_elements(); ++i)
+        {
+            BOOST_CHECK_CLOSE(physRef[i], phys[i], epsilon);
+        }
+    }
 
         BOOST_AUTO_TEST_CASE(TestTriBwdTrans_SumFac_UniformP)
         {
@@ -816,6 +876,77 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
             }
         }
+
+
+    BOOST_AUTO_TEST_CASE(TestTriIProductWRTBase_AVX_UniformP_Undeformed)
+    {
+        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
+            0u, -1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u,
+            1u,  1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u,
+            2u, -1.0,  1.0, 0.0));
+
+        SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
+
+
+        unsigned int numQuadPoints = 5;
+        unsigned int numModes = 4;
+        Nektar::LibUtilities::PointsType triPointsTypeDir1 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey triPointsKeyDir1(numQuadPoints,
+            triPointsTypeDir1);
+        Nektar::LibUtilities::BasisType basisTypeDir1 =
+            Nektar::LibUtilities::eModified_A;
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
+            numModes, triPointsKeyDir1);
+
+        Nektar::LibUtilities::PointsType triPointsTypeDir2 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey triPointsKeyDir2(numQuadPoints-1,
+            triPointsTypeDir2);
+        Nektar::LibUtilities::BasisType basisTypeDir2 =
+            Nektar::LibUtilities::eModified_B;
+        const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir2,
+            numModes, triPointsKeyDir2);
+        Nektar::LocalRegions::TriExpSharedPtr Exp =
+            MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
+            basisKeyDir2, triGeom);
+
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        CollExp.push_back(Exp);
+
+        LibUtilities::SessionReaderSharedPtr dummySession;
+        Collections::CollectionOptimisation colOpt(dummySession,
+            Collections::eSumFac);
+        Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+        // not all op implemented ...
+        impTypes[Collections::eIProductWRTBase] = Collections::eAVX;
+        Collections::Collection     c(CollExp, impTypes);
+
+        const int nq = Exp->GetTotPoints();
+        Array<OneD, NekDouble> phys(nq);
+        Array<OneD, NekDouble> coeffsRef(Exp->GetNcoeffs());
+        Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs());
+
+        Array<OneD, NekDouble> xc(nq), yc(nq);
+
+        Exp->GetCoords(xc, yc);
+
+        for (int i = 0; i < nq; ++i)
+        {
+            phys[i] = sin(xc[i])*cos(yc[i]);
+        }
+
+        Exp->IProductWRTBase(phys, coeffsRef);
+        c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs);
+
+        double epsilon = 1.0e-8;
+        for(int i = 0; i < coeffsRef.num_elements(); ++i)
+        {
+            BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
+        }
+    }
 
 
         BOOST_AUTO_TEST_CASE(TestTriIProductWRTBase_SumFac_VariableP_MultiElmt)

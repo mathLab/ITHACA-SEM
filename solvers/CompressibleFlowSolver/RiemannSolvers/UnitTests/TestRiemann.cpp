@@ -35,8 +35,9 @@
 #include <boost/test/unit_test.hpp>
 
 
-// #include <LibUtilities/BasicUtils/SessionReader.h>
-// #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
 namespace Nektar
 {
@@ -44,12 +45,12 @@ namespace RiemannTests
 {
 
 
-    // LibUtilities::SessionReaderSharedPtr dummySession;
+    LibUtilities::SessionReaderSharedPtr dummySession;
 
-    // SolverUtils::RiemannSolverSharedPtr riemannSolver;
-    // std::string riemannName = "Roe";
-    // riemannSolver = SolverUtils::GetRiemannSolverFactory()
-    //                             .CreateInstance(riemannName, dummySession);
+    SolverUtils::RiemannSolverSharedPtr riemannSolver;
+    std::string riemannName = "Roe";
+    riemannSolver = SolverUtils::GetRiemannSolverFactory()
+                                .CreateInstance(riemannName);
 
     // // Setting up parameters for advection operator Riemann solver
     // NekDouble gamma = 1.4;

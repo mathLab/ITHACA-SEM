@@ -3,9 +3,6 @@ SET(RiemannCompUnitTestsSources
     TestRiemann.cpp
 )
 
-ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)
-ADD_NEKTAR_EXECUTABLE(RiemannCompUnitTests
-    COMPONENT unit-test
-    DEPENDS CompRiemann
-    SOURCES ${RiemannCompUnitTestsSources})
+ADD_SOLVER_UTILITY(RiemannCompUnitTests CompressibleFlowSolver
+    SOURCES ${RiemannCompUnitTestsSources} USELIBRARY)
 ADD_TEST(NAME RiemannCompUnitTests COMMAND RiemannCompUnitTests --detect_memory_leaks=0)

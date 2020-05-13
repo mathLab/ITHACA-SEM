@@ -8,44 +8,58 @@ ENDIF()
 
 IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     SET(CompressibleFlowSolverSource
-       ./ArtificialDiffusion/ArtificialDiffusion.cpp
-       ./ArtificialDiffusion/NonSmoothShockCapture.cpp
-       ./BoundaryConditions/CFSBndCond.cpp
-       ./BoundaryConditions/ExtrapOrder0BC.cpp
-       ./BoundaryConditions/IsentropicVortexBC.cpp
-       ./BoundaryConditions/PressureInflowFileBC.cpp
-       ./BoundaryConditions/PressureMachTemperatureBC.cpp
-       ./BoundaryConditions/PressureOutflowBC.cpp
-       ./BoundaryConditions/PressureOutflowNonReflectiveBC.cpp
-       ./BoundaryConditions/RiemannInvariantBC.cpp
-       ./BoundaryConditions/RinglebFlowBC.cpp
-       ./BoundaryConditions/StagnationInflowBC.cpp
-       ./BoundaryConditions/SymmetryBC.cpp
-       ./BoundaryConditions/TimeDependentBC.cpp
-       ./BoundaryConditions/WallBC.cpp
-       ./BoundaryConditions/WallViscousBC.cpp
-       ./CompressibleFlowSolver.cpp
-       ./Diffusion/DiffusionLDGNS.cpp
-       ./EquationSystems/CompressibleFlowSystem.cpp
-       ./EquationSystems/EulerCFE.cpp
-       ./EquationSystems/IsentropicVortex.cpp
-       ./EquationSystems/NavierStokesCFE.cpp
-       ./EquationSystems/NavierStokesCFEAxisym.cpp
-       ./EquationSystems/RinglebFlow.cpp
-       ./Forcing/ForcingAxiSymmetric.cpp
-       ./Forcing/ForcingQuasi1D.cpp
-       ./Misc/EquationOfState.cpp
-       ./Misc/IdealGasEoS.cpp
-       ./Misc/PengRobinsonEoS.cpp
-       ./Misc/RedlichKwongEoS.cpp
-       ./Misc/VanDerWaalsEoS.cpp
-       ./Misc/VariableConverter.cpp
+        ArtificialDiffusion/ArtificialDiffusion.cpp
+        ArtificialDiffusion/NonSmoothShockCapture.cpp
+        BoundaryConditions/CFSBndCond.cpp
+        BoundaryConditions/ExtrapOrder0BC.cpp
+        BoundaryConditions/IsentropicVortexBC.cpp
+        BoundaryConditions/PressureInflowFileBC.cpp
+        BoundaryConditions/PressureMachTemperatureBC.cpp
+        BoundaryConditions/PressureOutflowBC.cpp
+        BoundaryConditions/PressureOutflowNonReflectiveBC.cpp
+        BoundaryConditions/RiemannInvariantBC.cpp
+        BoundaryConditions/RinglebFlowBC.cpp
+        BoundaryConditions/StagnationInflowBC.cpp
+        BoundaryConditions/SymmetryBC.cpp
+        BoundaryConditions/TimeDependentBC.cpp
+        BoundaryConditions/WallBC.cpp
+        BoundaryConditions/WallViscousBC.cpp
+        CompressibleFlowSolver.cpp
+        Diffusion/DiffusionLDGNS.cpp
+        EquationSystems/CompressibleFlowSystem.cpp
+        EquationSystems/EulerCFE.cpp
+        EquationSystems/IsentropicVortex.cpp
+        EquationSystems/NavierStokesCFE.cpp
+        EquationSystems/NavierStokesCFEAxisym.cpp
+        EquationSystems/RinglebFlow.cpp
+        Forcing/ForcingAxiSymmetric.cpp
+        Forcing/ForcingQuasi1D.cpp
        )
 
-    ADD_SUBDIRECTORY(RiemannSolvers)
     ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver
         SOURCES ${CompressibleFlowSolverSource}
-        DEPENDS CompRiemann)
+        LIBRARY_SOURCES
+        Misc/EquationOfState.cpp
+        Misc/IdealGasEoS.cpp
+        Misc/PengRobinsonEoS.cpp
+        Misc/RedlichKwongEoS.cpp
+        Misc/VanDerWaalsEoS.cpp
+        Misc/VariableConverter.cpp
+        RiemannSolvers/AverageSolver.cpp
+        RiemannSolvers/AUSM0Solver.cpp
+        RiemannSolvers/AUSM1Solver.cpp
+        RiemannSolvers/AUSM2Solver.cpp
+        RiemannSolvers/AUSM3Solver.cpp
+        RiemannSolvers/CompressibleSolver.cpp
+        RiemannSolvers/ExactSolverToro.cpp
+        RiemannSolvers/HLLSolver.cpp
+        RiemannSolvers/HLLCSolver.cpp
+        RiemannSolvers/LaxFriedrichsSolver.cpp
+        RiemannSolvers/RoeSolver.cpp
+        )
+    IF(NEKTAR_BUILD_UNIT_TESTS)
+      ADD_SUBDIRECTORY(RiemannSolvers/UnitTests)
+    ENDIF()
 
     SUBDIRS(Utilities)
 

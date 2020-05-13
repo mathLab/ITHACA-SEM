@@ -1,4 +1,4 @@
-ADD_LIBRARY(CompRiemann
+ADD_LIBRARY(CompRiemann STATIC
     AverageSolver.cpp
     AUSM0Solver.cpp
     AUSM1Solver.cpp

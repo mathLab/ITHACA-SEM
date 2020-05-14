@@ -1477,12 +1477,6 @@ namespace Nektar
                                 fluxN_R[i] = (m_Q2D_e1[n][i]) * fluxN[i];
                             }
                             
-<<<<<<< HEAD
-                            fac = fields[0]->GetExp(n)->TraceNormalNegated(e) ?
-                            -1.0 : 1.0;
-                            
-=======
->>>>>>> master
                             for (i = 0; i < nEdgePts; ++i)
                             {
                                 if (m_traceNormals[0][trace_offset+i]
@@ -1548,12 +1542,6 @@ namespace Nektar
                                 fluxN_R[i] = (m_Q2D_e2[n][i]) * fluxN[i];
                             }
                             
-<<<<<<< HEAD
-                            fac = fields[0]->GetExp(n)->TraceNormalNegated(e) ?
-                            -1.0 : 1.0;
-                            
-=======
->>>>>>> master
                             for (i = 0; i < nEdgePts; ++i)
                             {
                                 if (m_traceNormals[0][trace_offset+i]
@@ -1620,12 +1608,6 @@ namespace Nektar
                                 fluxN_R[i] = (m_Q2D_e3[n][i]) * fluxN[i];
                             }
                             
-<<<<<<< HEAD
-                            fac = fields[0]->GetExp(n)->TraceNormalNegated(e) ?
-                            -1.0 : 1.0;
-                            
-=======
->>>>>>> master
                             for (i = 0; i < nEdgePts; ++i)
                             {
                                 if (m_traceNormals[0][trace_offset+i]

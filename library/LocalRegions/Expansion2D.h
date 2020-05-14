@@ -116,94 +116,87 @@ namespace Nektar
                 Array<OneD, int>                &idmap);
 
         protected:
-            std::vector<Expansion1DWeakPtr>         m_edgeExp;
-            std::vector<bool>                       m_requireNeg;
-            std::map<int, StdRegions::NormalVector> m_edgeNormals;
-            Expansion3DWeakPtr                      m_elementLeft;
-            Expansion3DWeakPtr                      m_elementRight;
-            int                                     m_elementFaceLeft;
-            int                                     m_elementFaceRight;
+            std::vector<Expansion1DWeakPtr>    m_edgeExp;
+            std::vector<bool>                  m_requireNeg;
+            std::map<int, NormalVector>        m_edgeNormals;
+            Expansion3DWeakPtr                 m_elementLeft;
+            Expansion3DWeakPtr                 m_elementRight;
+            int                                m_elementFaceLeft;
+            int                                m_elementFaceRight;
 
             LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMF(
-                const int dir,
-                const int shapedim,
-                const StdRegions::VarCoeffMap   &varcoeffs);
+                                                                        const int dir,
+                                                                        const int shapedim,
+                                                                        const StdRegions::VarCoeffMap   &varcoeffs);
 
             LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMFDiv(
-                const int dir,
-                const StdRegions::VarCoeffMap   &varcoeffs);
+                                                                           const int dir,
+                                                                           const StdRegions::VarCoeffMap   &varcoeffs);
 
             LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMFMag(
-                const int dir,
-                const StdRegions::VarCoeffMap   &varcoeffs);
+                                                                           const int dir,
+                                                                           const StdRegions::VarCoeffMap   &varcoeffs);
 
             virtual DNekMatSharedPtr v_GenMatrix(
-                const StdRegions::StdMatrixKey &mkey);
+                                                 const StdRegions::StdMatrixKey &mkey);
 
             // Hybridized DG routines
             virtual void v_DGDeriv(
-                const int                             dir,
-                const Array<OneD, const NekDouble>   &incoeffs,
-                Array<OneD, ExpansionSharedPtr>      &EdgeExp,
-                Array<OneD, Array<OneD, NekDouble> > &edgeCoeffs,
-                Array<OneD, NekDouble>               &out_d);
+                                   const int                             dir,
+                                   const Array<OneD, const NekDouble>   &incoeffs,
+                                   Array<OneD, ExpansionSharedPtr>      &EdgeExp,
+                                   Array<OneD, Array<OneD, NekDouble> > &edgeCoeffs,
+                                   Array<OneD, NekDouble>               &out_d);
 
             virtual void v_AddEdgeNormBoundaryInt(
-                const int                            edge,
-                const ExpansionSharedPtr            &EdgeExp,
-                const Array<OneD, const NekDouble>  &Fx,
-                const Array<OneD, const NekDouble>  &Fy,
-                      Array<OneD,       NekDouble>  &outarray);
+                                                  const int                            edge,
+                                                  const ExpansionSharedPtr            &EdgeExp,
+                                                  const Array<OneD, const NekDouble>  &Fx,
+                                                  const Array<OneD, const NekDouble>  &Fy,
+                                                  Array<OneD,       NekDouble>  &outarray);
 
             virtual void v_AddEdgeNormBoundaryInt(
-                const int                            edge,
-                const ExpansionSharedPtr            &EdgeExp,
-                const Array<OneD, const NekDouble>  &Fn,
-                      Array<OneD,       NekDouble>  &outarray);
+                                                  const int                            edge,
+                                                  const ExpansionSharedPtr            &EdgeExp,
+                                                  const Array<OneD, const NekDouble>  &Fn,
+                                                  Array<OneD,       NekDouble>  &outarray);
 
             virtual void v_AddRobinMassMatrix(
-                const int                            edgeid,
-                const Array<OneD, const NekDouble > &primCoeffs,
-                DNekMatSharedPtr                    &inoutmat);
+                                              const int                            edgeid,
+                                              const Array<OneD, const NekDouble > &primCoeffs,
+                                              DNekMatSharedPtr                    &inoutmat);
 
             virtual void v_AddRobinTraceContribution(
-                const int traceid,
-                const Array<OneD, const NekDouble> &primCoeffs,
-                const Array<OneD, NekDouble> &incoeffs,
-                Array<OneD, NekDouble> &coeffs);
+                                                     const int traceid,
+                                                     const Array<OneD, const NekDouble> &primCoeffs,
+                                                     const Array<OneD, NekDouble> &incoeffs,
+                                                     Array<OneD, NekDouble> &coeffs);
 
             virtual DNekMatSharedPtr v_BuildVertexMatrix(
-                const DNekScalMatSharedPtr &r_bnd); 
+                                                         const DNekScalMatSharedPtr &r_bnd); 
 
             void GetPhysEdgeVarCoeffsFromElement(
-                const int edge,
-                ExpansionSharedPtr &EdgeExp,
-                const Array<OneD, const NekDouble>  &varcoeff,
-                Array<OneD,NekDouble> &outarray);
+                                                 const int edge,
+                                                 ExpansionSharedPtr &EdgeExp,
+                                                 const Array<OneD, const NekDouble>  &varcoeff,
+                                                 Array<OneD,NekDouble> &outarray);
 
             Array<OneD, NekDouble> v_GetnEdgecdotMF(
-                const int dir,
-                const int edge,
-                ExpansionSharedPtr &EdgeExp_e, 
-                const Array<OneD, const Array<OneD, NekDouble> > &normals,
-                const StdRegions::VarCoeffMap   &varcoeffs);
+                                                    const int dir,
+                                                    const int edge,
+                                                    ExpansionSharedPtr &EdgeExp_e, 
+                                                    const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                                                    const StdRegions::VarCoeffMap   &varcoeffs);
 
-             void  v_ReOrientTracePhysMap
-                              (const StdRegions::Orientation orient,
-                               Array<OneD, int> &idmap,
-                               const int nq0,  const int nq1);
+            void  v_ReOrientTracePhysMap
+            (const StdRegions::Orientation orient,
+             Array<OneD, int> &idmap,
+             const int nq0,  const int nq1);
 
-<<<<<<< HEAD
-            virtual void v_NegateTraceNormal (const int edge);
-            virtual bool v_TraceNormalNegated(const int edge);
-=======
-            Array<OneD, unsigned int> v_GetEdgeInverseBoundaryMap(int eid);
-
->>>>>>> master
             virtual void v_SetUpPhysNormals (const int edge);
             virtual const NormalVector &v_GetTraceNormal(const int edge) const;
             virtual NekDouble v_VectorFlux(
-                const Array<OneD, Array<OneD, NekDouble > > &vec);
+                                           const Array<OneD, Array<OneD, NekDouble > > &vec);
         };
 
 

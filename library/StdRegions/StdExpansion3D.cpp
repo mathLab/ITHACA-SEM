@@ -313,7 +313,7 @@ namespace Nektar
         {
             const int nqtot = GetTotPoints();
             Array<OneD, NekDouble> tmp(GetTotPoints());
-            MultiplyByStdQuadratureMetric(inarray, tmp);
+            v_MultiplyByStdQuadratureMetric(inarray, tmp);
             return Vmath::Vsum(nqtot, tmp, 1);
         }
 

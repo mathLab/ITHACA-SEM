@@ -311,7 +311,7 @@ namespace Nektar
                 m_metrics[eMetricQuadrature] = m_metricinfo->GetJac(p);
             }
 
-            MultiplyByStdQuadratureMetric(m_metrics[eMetricQuadrature],
+            v_MultiplyByStdQuadratureMetric(m_metrics[eMetricQuadrature],
                                                    m_metrics[eMetricQuadrature]);
         }
 

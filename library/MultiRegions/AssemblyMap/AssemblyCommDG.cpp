@@ -565,49 +565,17 @@ void AssemblyCommDG::InitialiseStructure(
     for (eid = 0; eid < locExpVector.size(); ++eid)
     {
         LocalRegions::ExpansionSharedPtr locExpansion = locExpVector[eid];
-        nDim = locExpansion->GetShapeDimension();
 
-        if (nDim == 1)
+        for (size_t j = 0; j < locExpansion->GetNtraces(); ++j)
         {
-            int nVerts = locExpansion->GetNverts();
-            for (size_t j = 0; j < nVerts; ++j)
-            {
-                LocalRegions::PointExpSharedPtr locPointExp =
-                    elmtToTrace[eid][j]->as<LocalRegions::PointExp>();
-                int id = locPointExp->GetGeom()->GetGlobalID();
-                localEdgeIds.emplace_back(id);
-            }
-
-            m_maxQuad = (1 > m_maxQuad ? 1 : m_maxQuad);
+            int id = elmtToTrace[eid][j]->GetGeom()->GetGlobalID();
+            localEdgeIds.emplace_back(id);
         }
-        else
+        
+        quad = locExpansion->GetTotPoints();
+        if (quad > m_maxQuad)
         {
-            if (nDim == 2)
-            {
-                for (size_t j = 0; j < locExpansion->GetNedges(); ++j)
-                {
-                    LocalRegions::SegExpSharedPtr locSegExp =
-                        elmtToTrace[eid][j]->as<LocalRegions::SegExp>();
-                    int id = locSegExp->GetGeom()->GetGlobalID();
-                    localEdgeIds.emplace_back(id);
-                }
-            }
-            else if (nDim == 3)
-            {
-                for (size_t j = 0; j < locExpansion->GetNfaces(); ++j)
-                {
-                    LocalRegions::Expansion2DSharedPtr locFaceExp =
-                        elmtToTrace[eid][j]->as<LocalRegions::Expansion2D>();
-                    int id = locFaceExp->GetGeom()->GetGlobalID();
-                    localEdgeIds.emplace_back(id);
-                }
-            }
-
-            quad = locExpansion->GetTotPoints();
-            if (quad > m_maxQuad)
-            {
-                m_maxQuad = quad;
-            }
+            m_maxQuad = quad;
         }
     }
 

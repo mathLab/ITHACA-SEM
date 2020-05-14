@@ -314,82 +314,9 @@ void LocTraceToTraceMap::Setup(
     {
         for (int i = 0; i < 2; ++i)
         {
-            StdRegions::StdExpansionSharedPtr face = elmtToTrace[n][e];
-            StdRegions::Orientation orient         = exp3d->GetForient(e);
-
-            LibUtilities::PointsKey fromPointsKey0, fromPointsKey1;
-            LibUtilities::PointsKey toPointsKey0, toPointsKey1;
-
-            // 3D specific
-            int dir0 = exp3d->GetGeom3D()->GetDir(e, 0);
-            int dir1 = exp3d->GetGeom3D()->GetDir(e, 1);
-
-            fromPointsKey0 = exp3d->GetBasis(dir0)->GetPointsKey();
-            fromPointsKey1 = exp3d->GetBasis(dir1)->GetPointsKey();
-
-            if (orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-            {
-                toPointsKey0 = face->GetBasis(0)->GetPointsKey();
-                toPointsKey1 = face->GetBasis(1)->GetPointsKey();
-            }
-            else // transpose points key evaluation
-            {
-                toPointsKey0 = face->GetBasis(1)->GetPointsKey();
-                toPointsKey1 = face->GetBasis(0)->GetPointsKey();
-            }
-
-            TraceInterpPoints fpoint(
-                fromPointsKey0, fromPointsKey1, toPointsKey0, toPointsKey1);
-
-            pair<int, int> epf(n, e);
-            TraceInterpMap[fpoint].push_back(epf);
-            TraceOrder[n][e] = cnt;
-
-            // Setup for coefficient mapping from trace normal
-            // flux to elements
-            Array<OneD, unsigned int> map;
-            Array<OneD, int> sign;
-            exp3d->GetFaceToElementMap(e,
-                                       orient,
-                                       map,
-                                       sign,
-                                       face->GetBasisNumModes(0),
-                                       face->GetBasisNumModes(1));
-
-            int order_f = face->GetNcoeffs();
-            int foffset = trace->GetCoeff_Offset(face->GetElmtId());
-
-            int fac = 1.0;
-
-            if (exp3d->GetFaceExp(e)->GetRightAdjacentElementExp())
-            {
-                if (exp3d->GetFaceExp(e)
-                        ->GetRightAdjacentElementExp()
-                        ->GetGeom3D()
-                        ->GetGlobalID() == exp3d->GetGeom3D()->GetGlobalID())
-                {
-                    fac = -1.0;
-                }
-            }
-
-            if (LeftAdjacents[cnt])
-            {
-                for (int i = 0; i < order_f; ++i)
-                {
-                    m_traceCoeffsToElmtMap[0][fwdcnt]    = coeffoffset + map[i];
-                    m_traceCoeffsToElmtTrace[0][fwdcnt]  = foffset + i;
-                    m_traceCoeffsToElmtSign[0][fwdcnt++] = fac * sign[i];
-                }
-            }
-            else
-            {
-                for (int i = 0; i < order_f; ++i)
-                {
-                    m_traceCoeffsToElmtMap[1][bwdcnt]    = coeffoffset + map[i];
-                    m_traceCoeffsToElmtTrace[1][bwdcnt]  = foffset + i;
-                    m_traceCoeffsToElmtSign[1][bwdcnt++] = fac * sign[i];
-                }
-            }
+            m_interpTraceI1[i] = Array<OneD, DNekMatSharedPtr>(nInterpType);
+            m_interpEndPtI1[i] = Array<OneD, Array<OneD, NekDouble> >
+                (nInterpType);
         }
     }
 

@@ -198,7 +198,6 @@ public:
         const Array<OneD, const NekDouble>  &edges,
         Array<OneD, NekDouble>              &locedges);
 
-    MULTI_REGIONS_EXPORT inline void InterpLocFacesToTrace(
     MULTI_REGIONS_EXPORT void InterpLocFacesToTrace(
         const int dir,
         const Array<OneD, const NekDouble> &locfaces,

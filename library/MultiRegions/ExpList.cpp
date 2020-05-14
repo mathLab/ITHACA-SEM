@@ -313,8 +313,8 @@ namespace Nektar
                 
                 for(int j = 0; j < loccoeffs; ++j)
                 {
-                    m_coeffsToElmt[coeffs_offset+j].first =   i;
-                    m_coeffsToElmt[coeffs_offset+j].second =   j;
+                    m_coeffsToElmt[coeffs_offset+j].first  = i;
+                    m_coeffsToElmt[coeffs_offset+j].second = j;
                 }
             }
         }
@@ -3359,63 +3359,15 @@ namespace Nektar
 
         void ExpList::v_GetFwdBwdTracePhys(
                                 const Array<OneD,const NekDouble>  &field,
-                                      Array<OneD,NekDouble> &Fwd,
-                                      Array<OneD,NekDouble> &Bwd)
+                                Array<OneD,NekDouble> &Fwd,
+                                Array<OneD,NekDouble> &Bwd,
+                                bool FillBnd,
+                                bool PutFwdInBwdOnBCs, 
+                                bool DoExchange) 
         {
-            boost::ignore_unused(field, Fwd, Bwd);
+            boost::ignore_unused(field, Fwd, Bwd, FillBnd,
+                                 PutFwdInBwdOnBCs, DoExchange);
             NEKERROR(ErrorUtil::efatal,
-                     "This method is not defined or valid for this class type");
-        }
-
-        void ExpList::v_GetFwdBwdTracePhysDeriv(
-            const int                           Dir,
-            const Array<OneD, const NekDouble>  &field,
-            Array<OneD, NekDouble>              &Fwd,
-            Array<OneD, NekDouble>              &Bwd)
-        {
-            boost::ignore_unused(Dir, field, Fwd, Bwd);
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        void ExpList::v_GetFwdBwdTracePhysDerivSerial(
-            const int                           Dir,
-            const Array<OneD, const NekDouble>  &field,
-            Array<OneD, NekDouble>              &Fwd,
-            Array<OneD, NekDouble>              &Bwd)
-        {
-            boost::ignore_unused(Dir, field, Fwd, Bwd);
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        void ExpList::v_GetFwdBwdTracePhysNoBndFill(
-            const Array<OneD, const NekDouble>  &field,
-            Array<OneD, NekDouble>              &Fwd,
-            Array<OneD, NekDouble>              &Bwd)
-        {
-            boost::ignore_unused(field, Fwd, Bwd);
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        void ExpList::v_GetFwdBwdTracePhysSerial(
-            const Array<OneD, const NekDouble>  &field,
-            Array<OneD, NekDouble>              &Fwd,
-            Array<OneD, NekDouble>              &Bwd)
-        {
-            boost::ignore_unused(field, Fwd, Bwd);
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        void ExpList::v_GetFwdBwdTracePhysInterior(
-            const Array<OneD, const NekDouble>  &field,
-            Array<OneD, NekDouble>              &Fwd,
-            Array<OneD, NekDouble>              &Bwd)
-        {
-            boost::ignore_unused(field, Fwd, Bwd);
-            ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
 
@@ -3973,23 +3925,6 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        void ExpList::v_FillBwdWithBound(
-            const Array<OneD, const NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
-        {
-            boost::ignore_unused(Fwd, Bwd);
-            ASSERTL0(false, "v_FillBwdWithBound not defined");
-        }
-
-        void ExpList::v_FillBwdWithBoundDeriv(
-            const int                          Dir,
-            const Array<OneD, const NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
-        {
-            boost::ignore_unused(Dir, Fwd, Bwd);
-            ASSERTL0(false, "v_FillBwdWithBoundDeriv not defined");
-        }
-
         void ExpList::v_FillBwdWithBwdWeight(
             Array<OneD,       NekDouble> &weightave,
             Array<OneD,       NekDouble> &weightjmp)
@@ -4239,187 +4174,6 @@ namespace Nektar
             v_ClearGlobalLinSysManager();
         }
 
-        /**
-         * To perform post-processing on the entire domain use \a elmtId = 0.
-         * @param   kernel      The post-processing kernel.
-         * @param   inarray     The set of evaluation points.
-         * @param   outarray    Contains the resulting post-processed
-         *                      solution for element \a elmId.
-         * @param   h           The mesh spacing.
-         * @param   elmId       Optionally specifies which element to perform
-         *                      the post-processing on (0=whole domain).
-         */
-        void ExpList::PostProcess(LibUtilities::KernelSharedPtr kernel,
-                                    Array<OneD,NekDouble> &inarray,
-                                    Array<OneD,NekDouble> &outarray,
-                                    NekDouble h,
-                                    int elmId)
-
-        {
-
-            ASSERTL0(m_expType == e1D,"Only setup for 1D explist");
-
-            int i,j,r;
-
-            // get the local element expansion of the elmId element
-            LocalRegions::ExpansionSharedPtr elmExp = GetExp( elmId );
-
-            // Get the quadrature points and weights required for integration
-            int quad_npoints = elmExp->GetTotPoints();
-            LibUtilities::PointsKey quadPointsKey(quad_npoints,
-                                                    elmExp->GetPointsType(0));
-            Array<OneD,NekDouble> quad_points
-                        = LibUtilities::PointsManager()[quadPointsKey]->GetZ();
-            Array<OneD,NekDouble> quad_weights
-                        = LibUtilities::PointsManager()[quadPointsKey]->GetW();
-
-            // Declare variable for the local kernel breaks
-            int kernel_width = kernel->GetKernelWidth();
-            Array<OneD,NekDouble> local_kernel_breaks(kernel_width+1);
-
-            // Declare variable for the transformed quadrature points
-            Array<OneD,NekDouble> mapped_quad_points(quad_npoints);
-
-            // For each evaluation point
-            for(i = 0; i < inarray.size(); i++)
-            {
-                // Move the center of the kernel to the current point
-                kernel->MoveKernelCenter(inarray[i],local_kernel_breaks);
-
-                // Find the mesh breaks under the kernel support
-                Array<OneD,NekDouble> mesh_breaks;
-                kernel->FindMeshUnderKernel(local_kernel_breaks,h,mesh_breaks);
-
-                // Sort the total breaks for integration purposes
-                int total_nbreaks = local_kernel_breaks.size() +
-                                    mesh_breaks.size();
-                                    // number of the total breaks
-                Array<OneD,NekDouble> total_breaks(total_nbreaks);
-                kernel->Sort(local_kernel_breaks,mesh_breaks,total_breaks);
-
-                // Integrate the product of kernel and function over the total
-                // breaks
-                NekDouble integral_value = 0.0;
-                for(j = 0; j < total_breaks.size()-1; j++)
-                {
-                    NekDouble a = total_breaks[j];
-                    NekDouble b = total_breaks[j+1];
-
-                    // Map the quadrature points to the appropriate interval
-                    for(r = 0; r < quad_points.size(); r++)
-                    {
-                        mapped_quad_points[r]
-                                = (quad_points[r] + 1.0) * 0.5 * (b - a) + a;
-                    }
-
-                    // Evaluate the function at the transformed quadrature
-                    // points
-                    Array<OneD,NekDouble> u_value(quad_npoints);
-                    Array<OneD,NekDouble> coeffs = GetCoeffs();
-
-                    PeriodicEval(coeffs,mapped_quad_points,h,
-                                 elmExp->GetBasisNumModes(0),u_value);
-
-                    // Evaluate the kernel at the transformed quadrature points
-                    Array<OneD,NekDouble> k_value(quad_npoints);
-                    kernel->EvaluateKernel(mapped_quad_points,h,k_value);
-
-                    // Integrate
-                    for(r = 0; r < quad_npoints; r++)
-                    {
-                        integral_value += (b - a) * 0.5 * k_value[r]
-                                                * u_value[r] * quad_weights[r];
-                    }
-                }
-                outarray[i] = integral_value/h;
-            }
-        }
-        
-
-        /**
-         * Given the elemental coefficients \f$\hat{u}_n^e\f$ of an expansion,
-         * periodically evaluate the spectral/hp expansion
-         * \f$u^{\delta}(\boldsymbol{x})\f$ at arbitrary points.
-         * @param   inarray1    An array of size \f$N_{\mathrm{eof}}\f$
-         *                      containing the local coefficients
-         *                      \f$\hat{u}_n^e\f$.
-         * @param   inarray2    Contains the set of evaluation points.
-         * @param   h           The mesh spacing.
-         * @param   nmodes      The number of polynomial modes for each element
-         *                      (we consider that each element has the same
-         *                      number of polynomial modes).
-         * @param   outarray    Contains the resulting values at the
-         *                      evaluation points
-         */
-        void ExpList::PeriodicEval(Array<OneD,NekDouble> &inarray1,
-                                     Array<OneD,NekDouble> &inarray2,
-                                     NekDouble h, int nmodes,
-                                     Array<OneD,NekDouble> &outarray)
-        {
-
-            ASSERTL0(m_expType == e1D,"Only setup for 1D explist");
-
-            int i,j,r;
-
-            // Get the number of elements in the domain
-            int num_elm = GetExpSize();
-
-            // initializing the outarray
-            for(i = 0; i < outarray.size(); i++)
-            {
-                outarray[i] = 0.0;
-            }
-
-            // Make a copy for further modification
-            int x_size = inarray2.size();
-            Array<OneD,NekDouble> x_values_cp(x_size);
-
-            // Determining the element to which the x belongs
-            Array<OneD,int> x_elm(x_size);
-            for(i = 0; i < x_size; i++ )
-            {
-                x_elm[i] = (int)floor(inarray2[i]/h);
-            }
-
-            // Clamp indices periodically
-            for(i = 0; i < x_size; i++)
-            {
-                while(x_elm[i] < 0)
-                {
-                    x_elm[i] += num_elm;
-                }
-                while(x_elm[i] >= num_elm)
-                {
-                    x_elm[i] -= num_elm ;
-                }
-            }
-
-            // Map the values of x to [-1 1] on its interval
-            for(i = 0; i < x_size; i++)
-            {
-                x_values_cp[i] = (inarray2[i]/h - floor(inarray2[i]/h))*2 - 1.0;
-            }
-
-            // Evaluate the jocobi polynomials
-            // (Evaluating the base at some points other than the quadrature
-            // points). Should it be added to the base class????
-            Array<TwoD,NekDouble> jacobi_poly(nmodes,x_size);
-            for(i = 0; i < nmodes; i++)
-            {
-                Polylib::jacobfd(x_size,x_values_cp.get(),
-                                    jacobi_poly.get()+i*x_size,NULL,i,0.0,0.0);
-            }
-
-            // Evaluate the function values
-            for(r = 0; r < nmodes; r++)
-            {
-                for(j = 0; j < x_size; j++)
-                {
-                    int index = ((x_elm[j])*nmodes)+r;
-                    outarray[j] += inarray1[index]*jacobi_poly[r][j];
-                }
-            }
-        }
 
         void ExpList::v_PhysInterp1DScaled(
             const NekDouble scale, 

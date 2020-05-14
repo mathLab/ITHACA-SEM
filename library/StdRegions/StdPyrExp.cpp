@@ -435,7 +435,7 @@ namespace Nektar
                 m_base[1]->Collocation() &&
                 m_base[2]->Collocation())
             {
-                MultiplyByStdQuadratureMetric(inarray, outarray);
+                v_MultiplyByStdQuadratureMetric(inarray, outarray);
             }
             else
             {
@@ -636,7 +636,7 @@ namespace Nektar
                             &tmp0   [0] + i*nq01, 1);
             }
 
-            MultiplyByStdQuadratureMetric(tmp0, tmp0);
+            v_MultiplyByStdQuadratureMetric(tmp0, tmp0);
 
             switch(dir)
             {
@@ -690,14 +690,14 @@ namespace Nektar
                                             &tmp0[0] + i*nquad0, 1);
                     }
 
-                    MultiplyByStdQuadratureMetric(tmp0, tmp0);
+                    v_MultiplyByStdQuadratureMetric(tmp0, tmp0);
                     IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                                  m_base[1]->GetDbdata(),
                                                  m_base[2]->GetBdata(),
                                                  tmp0, tmp4,  wsp,
                                                  true, false, true);
 
-                    MultiplyByStdQuadratureMetric(inarray,tmp0);
+                    v_MultiplyByStdQuadratureMetric(inarray,tmp0);
                     IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                                  m_base[1]->GetBdata(),
                                                  m_base[2]->GetDbdata(),

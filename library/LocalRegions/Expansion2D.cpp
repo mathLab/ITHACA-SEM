@@ -1549,18 +1549,6 @@ namespace Nektar
                                 (const StdRegions::Orientation orient,
                                  Array<OneD, int> &idmap,
                                  const int nq0,  const int nq1)
-
-        const StdRegions::NormalVector &Expansion2D::v_GetSurfaceNormal(
-                const int id) const
-        {
-            return v_GetEdgeNormal(id);
-        }
-
-        void Expansion2D::ReOrientEdgePhysMap(
-            const int                                   nvert,
-            const StdRegions::Orientation               orient,
-            const int                                   nq0,
-            Array<OneD, int>                            &idmap)
         {
             boost::ignore_unused(nq1);
 

@@ -56,8 +56,7 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr& pSession);
 
         /// Programmatic ctor
-        CompressibleSolver(const EquationOfStateSharedPtr& eos,
-            const bool& idealGas);
+        CompressibleSolver();
 
 
         virtual void v_Solve(

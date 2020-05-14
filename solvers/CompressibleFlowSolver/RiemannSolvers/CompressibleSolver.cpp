@@ -51,15 +51,14 @@ namespace Nektar
         m_eos = GetEquationOfStateFactory()
                                 .CreateInstance(eosType, pSession);
         // Check if using ideal gas
-        m_idealGas = boost::iequals(eosType,"IdealGas");
+        m_idealGas = boost::iequals(eosType, "IdealGas");
     }
 
-    CompressibleSolver::CompressibleSolver(const EquationOfStateSharedPtr& eos,
-        const bool& idealGas)
-        : m_eos(eos), m_idealGas(idealGas)
-    {
-        m_requiresRotation = true;
-    }
+    CompressibleSolver::CompressibleSolver()
+        : RiemannSolver(), m_idealGas(true), m_pointSolve(true)
+        {
+            m_requiresRotation = true;
+        }
 
     void CompressibleSolver::v_Solve(
         const int                                         nDim,

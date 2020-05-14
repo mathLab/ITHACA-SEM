@@ -120,6 +120,11 @@ namespace Nektar
                 m_auxVec[name] = std::bind(func, obj);
             }
 
+            void SetAuxVec(std::string name, RSVecFuncType fp)
+            {
+                m_auxVec[name] = fp;
+            }
+
             std::map<std::string, RSScalarFuncType> &GetScalars()
             {
                 return m_scalars;

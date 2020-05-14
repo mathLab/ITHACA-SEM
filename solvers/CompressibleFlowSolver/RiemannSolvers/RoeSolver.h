@@ -48,16 +48,20 @@ namespace Nektar
             return RiemannSolverSharedPtr(
                 new RoeSolver(pSession));
         }
-        
+
         static std::string solverName;
-        
+
+        /// programmatic ctor
+        RoeSolver();
+
     protected:
         RoeSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
-        
-        virtual void v_PointSolve(
+
+        void v_PointSolve(
             double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
             double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
-            double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef);
+            double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
+        final;
     };
 }
 

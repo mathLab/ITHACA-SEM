@@ -74,11 +74,11 @@ namespace Nektar
          */
 
         RiemannSolver::RiemannSolver()
-            : m_requiresRotation(false), m_rotStorage (3) {}
+            : m_requiresRotation(false), m_rotStorage(3) {}
 
         RiemannSolver::RiemannSolver(
             const LibUtilities::SessionReaderSharedPtr& pSession)
-            : m_requiresRotation(false), m_rotStorage (3)
+            : m_requiresRotation(false), m_rotStorage(3)
         {
             boost::ignore_unused(pSession);
         }

@@ -34,10 +34,9 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 
-
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include "../RoeSolver.h"
+
 
 namespace Nektar
 {
@@ -45,33 +44,51 @@ namespace RiemannTests
 {
 
 
-    LibUtilities::SessionReaderSharedPtr dummySession;
-
-    SolverUtils::RiemannSolverSharedPtr riemannSolver;
-    std::string riemannName = "Roe";
-    riemannSolver = SolverUtils::GetRiemannSolverFactory()
-                                .CreateInstance(riemannName);
-
-    // // Setting up parameters for advection operator Riemann solver
-    // NekDouble gamma = 1.4;
-    // riemannSolver->SetParam ("gamma",   gamma,   this);
-    // riemannSolver->SetAuxVec("vecLocs", &CompressibleFlowSystem::GetVecLocs, this);
-    // riemannSolver->SetVector("N",       &CompressibleFlowSystem::GetNormals, this);
-
     BOOST_AUTO_TEST_CASE(Roe)
     {
-        // size_t spaceDim = 1;
-        // size_t npts = 10;
-        // Array<OneD, Array<OneD, NekDouble> > fwd(spaceDim), bwd(spaceDim),
-        //     flx(spaceDim);
-        // for (size_t i = 0, i < spaceDim, ++i)
-        // {
-        //     fwd[i] = Array<OneD, NekDouble>(npts);
-        //     bwd[i] = Array<OneD, NekDouble>(npts);
-        //     flx[i] = Array<OneD, NekDouble>(npts);
+        // LibUtilities::SessionReaderSharedPtr dummySession;
+        // SolverUtils::RiemannSolverSharedPtr riemannSolver;
+        // std::string riemannName = "Roe";
+        // riemannSolver = SolverUtils::GetRiemannSolverFactory()
+                                    // .CreateInstance(riemName, m_session);
+        auto riemannSolver = RoeSolver();
+        // Setting up parameters for Riemann solver
+        NekDouble gamma = 1.4;
+        riemannSolver.SetParam("gamma", [&gamma]()
+            -> NekDouble& {return gamma;});
 
-        // }
-        // m_riemann->Solve(spaceDim, fwd, bwd, flx);
+        size_t spaceDim = 1;
+        size_t npts = 10;
+
+        Array<OneD, Array<OneD, NekDouble>> vecLocs(npts);
+        for (size_t i = 0; i < npts; ++i)
+        {
+            vecLocs[i] = Array<OneD, NekDouble>(spaceDim);
+        }
+        riemannSolver.SetAuxVec("vecLocs", [&vecLocs]()
+            -> const Array<OneD, const Array<OneD, NekDouble>>&
+            {return vecLocs;});
+
+        Array<OneD, Array<OneD, NekDouble>> normals(spaceDim);
+        for (size_t i = 0; i < spaceDim; ++i)
+        {
+           normals[i] = Array<OneD, NekDouble>(npts);
+        }
+        riemannSolver.SetVector("N", [&normals]()
+            -> const Array<OneD, const Array<OneD, NekDouble>>&
+            {return normals;});
+
+        size_t nFields = spaceDim + 2;
+        Array<OneD, Array<OneD, NekDouble>> fwd(nFields), bwd(nFields),
+            flx(nFields);
+        for (size_t i = 0; i < nFields; ++i)
+        {
+            fwd[i] = Array<OneD, NekDouble>(npts);
+            bwd[i] = Array<OneD, NekDouble>(npts);
+            flx[i] = Array<OneD, NekDouble>(npts);
+        }
+        riemannSolver.Solve(spaceDim, fwd, bwd, flx);
+
 
         BOOST_CHECK_CLOSE(1., 1., 1e-10);
     }

@@ -826,6 +826,8 @@ namespace Nektar
             m_bndConditions     =
                 Array<OneD, SpatialDomains::BoundaryConditionShPtr>(bregions.size());
 
+            m_bndCondBndWeight = Array<OneD, NekDouble> {bregions.size(), 0.0};
+
             // count the number of non-periodic boundary points
             for (auto &it : bregions)
             {

@@ -252,9 +252,12 @@ namespace Nektar
                 v_AddRobinTraceContribution(traceid, primCoeffs, incoeffs, coeffs);
             }
 
+            LOCAL_REGIONS_EXPORT const Array<OneD, const NekDouble > 
+                        &GetElmtBndNormDirElmtLen(const int nbnd) const;
+            
         protected:
 	    LibUtilities::NekManager<IndexMapKey,
-                                     IndexMapValues, IndexMapKey::opLess> m_IndexMapManager;
+                      IndexMapValues, IndexMapKey::opLess> m_IndexMapManager;
 
             std::vector<ExpansionWeakPtr>        m_traceExp;
             SpatialDomains::GeometrySharedPtr    m_geom;

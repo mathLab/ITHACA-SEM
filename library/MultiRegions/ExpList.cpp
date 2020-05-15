@@ -3311,15 +3311,154 @@ namespace Nektar
             }
         }
         
-        void ExpList::v_GetElmtNormalLength(
+        void ExpList::GetElmtNormalLength(
             Array<OneD, NekDouble>  &lengthsFwd,
             Array<OneD, NekDouble>  &lengthsBwd)
         {
-            boost::ignore_unused(lengthsFwd, lengthsBwd);
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
+            int e_npoints;
 
+            Array<OneD, NekDouble> locLeng;
+            Array<OneD, NekDouble> lengintp;
+            Array<OneD, NekDouble> lengAdd;
+            Array<OneD, int      > LRbndnumbs(2);
+            Array<OneD, Array<OneD,NekDouble> > lengLR(2);
+            lengLR[0]   =   lengthsFwd;
+            lengLR[1]   =   lengthsBwd;
+            Array<OneD, LocalRegions::ExpansionSharedPtr> LRelmts(2);
+            LocalRegions::ExpansionSharedPtr loc_elmt;
+            LocalRegions::ExpansionSharedPtr loc_exp;
+            int e_npoints0  =   -1; 
+            if(m_expType == e1D)
+            {
+                for (int i = 0; i < m_exp->size(); ++i)
+                {
+                    loc_exp = (*m_exp)[i];
+                    int offset = m_phys_offset[i];
+                    
+                    int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
+                    e_npoints  = (*m_exp)[i]->GetNumPoints(0);
+                    if ( e_npoints0 < e_npoints)
+                    {
+                        lengintp = Array<OneD, NekDouble>{size_t(e_npoints),0.0};
+                        e_npoints0 = e_npoints;
+                    }
+                    
+                    LRelmts[0] = loc_exp->GetLeftAdjacentElementExp();
+                    LRelmts[1] = loc_exp->GetRightAdjacentElementExp();
+                    
+                    LRbndnumbs[0] = loc_exp->GetLeftAdjacentElementTrace();
+                    LRbndnumbs[1] = loc_exp->GetRightAdjacentElementTrace();
+                    for (int nlr = 0; nlr < 2; ++nlr)
+                    {
+                        Vmath::Zero(e_npoints0, lengintp, 1);
+                        lengAdd     =   lengintp;
+                        int bndNumber = LRbndnumbs[nlr];
+                        loc_elmt = LRelmts[nlr];
+                        if (bndNumber >= 0)
+                        {
+                            locLeng  = loc_elmt->GetElmtBndNormDirElmtLen(
+                                                               bndNumber);
+                            lengAdd  =   locLeng;
+                            
+                            int loc_nmodes  = loc_elmt->GetBasis(0)->
+                                GetNumModes();
+                            if (e_nmodes != loc_nmodes)
+                            {
+                                // Parallel case: need to interpolate.
+                                LibUtilities::PointsKey to_key =
+                                    loc_exp->GetBasis(0)->GetPointsKey();
+                                LibUtilities::PointsKey from_key =
+                                    loc_elmt->GetBasis(0)->GetPointsKey();
+                                LibUtilities::Interp1D(from_key, locLeng,
+                                                       to_key, lengintp);
+                                lengAdd     =   lengintp;
+                            }
+                        }
+                        for (int j = 0; j < e_npoints; ++j)
+                        {
+                            lengLR[nlr][offset + j] = lengAdd[j];
+                        }
+                    }
+                }
+            }
+            else if (m_expType == e2D)
+            {
+                for (int i = 0; i < m_exp->size(); ++i)
+                {
+                    loc_exp = (*m_exp)[i];
+                    int offset = m_phys_offset[i];
+                    
+                    LibUtilities::BasisKey traceBasis0
+                        = loc_exp->GetBasis(0)->GetBasisKey();
+                    LibUtilities::BasisKey traceBasis1
+                        = loc_exp->GetBasis(1)->GetBasisKey();
+                    const int TraceNq0 = traceBasis0.GetNumPoints();
+                    const int TraceNq1 = traceBasis1.GetNumPoints();
+                    e_npoints  =   TraceNq0*TraceNq1;
+                    if (e_npoints0 < e_npoints)
+                    {
+                        lengintp = Array<OneD,NekDouble>{size_t(e_npoints),
+                                                         0.0};
+                        e_npoints0 = e_npoints;
+                    }
+                    
+                    LRelmts[0] = loc_exp->GetLeftAdjacentElementExp();
+                    LRelmts[1] = loc_exp->GetRightAdjacentElementExp();
+                    
+                    LRbndnumbs[0] = loc_exp->GetLeftAdjacentElementTrace();
+                    LRbndnumbs[1] = loc_exp->GetRightAdjacentElementTrace();
+                    for (int nlr = 0; nlr < 2; ++nlr)
+                    {
+                        Vmath::Zero(e_npoints0, lengintp, 1);
+                        int bndNumber = LRbndnumbs[nlr];
+                        loc_elmt = LRelmts[nlr];
+                        if (bndNumber >= 0)
+                        {
+                            locLeng = loc_elmt->GetElmtBndNormDirElmtLen(
+                                                             bndNumber);
+                            // Project normals from 3D element onto the
+                            // same orientation as the trace expansion.
+                            StdRegions::Orientation orient = loc_elmt->
+                                GetTraceOrient(bndNumber);
+                            
+                            int fromid0,fromid1;
+                            if (orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+                            {
+                                fromid0 = 0;
+                                fromid1 = 1;
+                            }
+                            else
+                            {
+                                fromid0 = 1;
+                                fromid1 = 0;
+                            }
+                            
+                            LibUtilities::BasisKey faceBasis0 
+                                = loc_elmt->GetTraceBasisKey(bndNumber, fromid0);
+                            LibUtilities::BasisKey faceBasis1 
+                                = loc_elmt->GetTraceBasisKey(bndNumber, fromid1);
+                            const int faceNq0 = faceBasis0.GetNumPoints();
+                            const int faceNq1 = faceBasis1.GetNumPoints();
+                            Array<OneD, NekDouble> alignedLeng(faceNq0*faceNq1);
+                            
+                            AlignFace(orient, faceNq0, faceNq1,
+                                      locLeng, alignedLeng);
+                            LibUtilities::Interp2D(faceBasis0.GetPointsKey(),
+                                                   faceBasis1.GetPointsKey(),
+                                                   alignedLeng,
+                                                   traceBasis0.GetPointsKey(),
+                                                   traceBasis1.GetPointsKey(),
+                                                   lengintp);
+                            }
+                        for (int j = 0; j < e_npoints; ++j)
+                        {
+                            lengLR[nlr][offset + j] = lengintp[j];
+                        }
+                    }
+                }
+            }
+        }
+        
         void ExpList::v_AddTraceIntegral(
                                 const Array<OneD, const NekDouble> &Fx,
                                 const Array<OneD, const NekDouble> &Fy,

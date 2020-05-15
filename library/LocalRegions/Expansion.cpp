@@ -743,6 +743,14 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
 
+        const Array<OneD, const NekDouble > &Expansion::
+            GetElmtBndNormDirElmtLen(const int nbnd) const
+        {
+            auto x = m_elmtBndNormDirElmtLen.find(nbnd);
+            ASSERTL0 (x != m_elmtBndNormDirElmtLen.end(),
+                      "m_elmtBndNormDirElmtLen normal not computed.");
+            return x->second;
+        }
     } //end of namespace
 } //end of namespace
 

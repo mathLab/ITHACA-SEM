@@ -836,13 +836,12 @@ namespace Nektar
 
             inline const Array<OneD, const int> &GetTraceBndMap(void);
 
-            inline void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
+            inline void GetNormals(Array<OneD, Array<OneD, NekDouble> >&normals);
 
             /// Get the length of elements in boundary normal direction
-            inline void GetElmtNormalLength(
-                Array<OneD, NekDouble>  &lengthsFwd,
-                Array<OneD, NekDouble>  &lengthsBwd);
-
+            void GetElmtNormalLength(Array<OneD, NekDouble>  &lengthsFwd,
+                                     Array<OneD, NekDouble>  &lengthsBwd);
+            
             /// Get the weight value for boundary conditions
             /// for boundary average and jump calculations
             MULTI_REGIONS_EXPORT void GetBwdWeight(
@@ -1287,10 +1286,6 @@ namespace Nektar
             /// Populate \a normals with the normals of all expansions.
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);
-
-            virtual void v_GetElmtNormalLength(
-                Array<OneD, NekDouble>  &lengthsFwd,
-                Array<OneD, NekDouble>  &lengthsBwd);
 
             virtual void v_AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fx,
@@ -2411,13 +2406,6 @@ namespace Nektar
             v_GetNormals(normals);
         }
 
-        inline void ExpList::GetElmtNormalLength(
-            Array<OneD, NekDouble>  &lengthsFwd,
-            Array<OneD, NekDouble>  &lengthsBwd)
-        {
-            v_GetElmtNormalLength(lengthsFwd, lengthsBwd);
-        }
-        
         inline void ExpList::AddTraceIntegral(
             const Array<OneD, const NekDouble> &Fx,
             const Array<OneD, const NekDouble> &Fy,

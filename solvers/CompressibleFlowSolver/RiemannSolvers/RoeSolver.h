@@ -39,30 +39,37 @@
 
 namespace Nektar
 {
-    class RoeSolver : public CompressibleSolver
+class RoeSolver : public CompressibleSolver
+{
+public:
+    static RiemannSolverSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-    public:
-        static RiemannSolverSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            return RiemannSolverSharedPtr(
-                new RoeSolver(pSession));
-        }
+        return RiemannSolverSharedPtr(
+            new RoeSolver(pSession));
+    }
 
-        static std::string solverName;
+    static std::string solverName;
 
-        /// programmatic ctor
-        RoeSolver();
+    /// programmatic ctor
+    RoeSolver();
 
-    protected:
-        RoeSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
+protected:
+    RoeSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
 
-        void v_PointSolve(
-            double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
-            double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
-            double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
-        final;
-    };
+    using ND = NekDouble;
+
+    void v_PointSolve(
+        ND  rhoL, ND  rhouL, ND  rhovL, ND  rhowL, ND  EL,
+        ND  rhoR, ND  rhouR, ND  rhovR, ND  rhowR, ND  ER,
+        ND &rhof, ND &rhouf, ND &rhovf, ND &rhowf, ND &Ef)
+    final;
+
+    void v_ArraySolve(
+        const Array<OneD, const Array<OneD, ND> > &Fwd,
+        const Array<OneD, const Array<OneD, ND> > &Bwd,
+              Array<OneD,       Array<OneD, ND> > &flux) final;
+};
 }
 
 #endif

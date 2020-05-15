@@ -36,53 +36,190 @@
 
 namespace Nektar
 {
-    std::string RoeSolver::solverName =
-        SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
-            "Roe",
-            RoeSolver::create,
-            "Roe Riemann solver");
+std::string RoeSolver::solverName =
+    SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
+        "Roe",
+        RoeSolver::create,
+        "Roe Riemann solver");
 
-    RoeSolver::RoeSolver(const LibUtilities::SessionReaderSharedPtr& pSession)
-        : CompressibleSolver(pSession)
+RoeSolver::RoeSolver(const LibUtilities::SessionReaderSharedPtr& pSession)
+    : CompressibleSolver(pSession)
+{
+    m_pointSolve = false;
+}
+
+/// programmatic ctor
+RoeSolver::RoeSolver(): CompressibleSolver()
+{
+    m_pointSolve = false;
+}
+
+/**
+ * @brief Roe Riemann solver.
+ *
+ * Stated equations numbers are from:
+ *
+ *   "Riemann Solvers and Numerical Methods for Fluid Dynamics: A Practical
+ *   Introduction", E. F. Toro (3rd edition, 2009).
+ *
+ * We follow the algorithm prescribed following equation 11.70.
+ *
+ * @param rhoL      Density left state.
+ * @param rhoR      Density right state.
+ * @param rhouL     x-momentum component left state.
+ * @param rhouR     x-momentum component right state.
+ * @param rhovL     y-momentum component left state.
+ * @param rhovR     y-momentum component right state.
+ * @param rhowL     z-momentum component left state.
+ * @param rhowR     z-momentum component right state.
+ * @param EL        Energy left state.
+ * @param ER        Energy right state.
+ * @param rhof      Computed Riemann flux for density.
+ * @param rhouf     Computed Riemann flux for x-momentum component
+ * @param rhovf     Computed Riemann flux for y-momentum component
+ * @param rhowf     Computed Riemann flux for z-momentum component
+ * @param Ef        Computed Riemann flux for energy.
+ */
+void RoeSolver::v_PointSolve(
+    double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
+    double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
+    double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
+{
+    static NekDouble gamma = m_params["gamma"]();
+
+    // Left and right velocities
+    NekDouble uL = rhouL / rhoL;
+    NekDouble vL = rhovL / rhoL;
+    NekDouble wL = rhowL / rhoL;
+    NekDouble uR = rhouR / rhoR;
+    NekDouble vR = rhovR / rhoR;
+    NekDouble wR = rhowR / rhoR;
+
+    // Left and right pressures
+    NekDouble pL = (gamma - 1.0) *
+        (EL - 0.5 * (rhouL * uL + rhovL * vL + rhowL * wL));
+    NekDouble pR = (gamma - 1.0) *
+        (ER - 0.5 * (rhouR * uR + rhovR * vR + rhowR * wR));
+
+    // Left and right enthalpy
+    NekDouble hL = (EL + pL) / rhoL;
+    NekDouble hR = (ER + pR) / rhoR;
+
+    // Square root of rhoL and rhoR.
+    NekDouble srL  = sqrt(rhoL);
+    NekDouble srR  = sqrt(rhoR);
+    NekDouble srLR = srL + srR;
+
+    // Velocity, enthalpy and sound speed Roe averages (equation 11.60).
+    NekDouble uRoe   = (srL * uL + srR * uR) / srLR;
+    NekDouble vRoe   = (srL * vL + srR * vR) / srLR;
+    NekDouble wRoe   = (srL * wL + srR * wR) / srLR;
+    NekDouble hRoe   = (srL * hL + srR * hR) / srLR;
+    NekDouble URoe   = (uRoe * uRoe + vRoe * vRoe + wRoe * wRoe);
+    NekDouble cRoe   = sqrt((gamma - 1.0)*(hRoe - 0.5 * URoe));
+
+    // Compute eigenvectors (equation 11.59).
+    NekDouble k[5][5] = {
+        {1, uRoe - cRoe, vRoe, wRoe, hRoe - uRoe * cRoe},
+        {1, uRoe,        vRoe, wRoe, 0.5 * URoe},
+        {0, 0,           1,    0,    vRoe},
+        {0, 0,           0,    1,    wRoe},
+        {1, uRoe+cRoe,  vRoe,  wRoe, hRoe + uRoe*cRoe}
+    };
+
+    // Calculate jumps \Delta u_i (defined preceding equation 11.67).
+    NekDouble jump[5] = {
+        rhoR  - rhoL,
+        rhouR - rhouL,
+        rhovR - rhovL,
+        rhowR - rhowL,
+        ER    - EL
+    };
+
+    // Define \Delta u_5 (equation 11.70).
+    NekDouble jumpbar = jump[4] - (jump[2]-vRoe*jump[0])*vRoe -
+        (jump[3]-wRoe*jump[0])*wRoe;
+
+    // Compute wave amplitudes (equations 11.68, 11.69).
+    NekDouble alpha[5];
+    alpha[1] = (gamma-1.0)*(jump[0]*(hRoe - uRoe*uRoe) + uRoe*jump[1] -
+                            jumpbar)/(cRoe*cRoe);
+    alpha[0] = (jump[0]*(uRoe + cRoe) - jump[1] - cRoe*alpha[1])/(2.0*cRoe);
+    alpha[4] = jump[0] - (alpha[0] + alpha[1]);
+    alpha[2] = jump[2] - vRoe * jump[0];
+    alpha[3] = jump[3] - wRoe * jump[0];
+
+    // Compute average of left and right fluxes needed for equation 11.29.
+    rhof  = 0.5*(rhoL*uL + rhoR*uR);
+    rhouf = 0.5*(pL + rhoL*uL*uL + pR + rhoR*uR*uR);
+    rhovf = 0.5*(rhoL*uL*vL + rhoR*uR*vR);
+    rhowf = 0.5*(rhoL*uL*wL + rhoR*uR*wR);
+    Ef    = 0.5*(uL*(EL + pL) + uR*(ER + pR));
+
+    // Compute eigenvalues \lambda_i (equation 11.58).
+    NekDouble uRoeAbs = std::abs(uRoe);
+    NekDouble lambda[5] = {
+        std::abs(uRoe - cRoe),
+        uRoeAbs,
+        uRoeAbs,
+        uRoeAbs,
+        std::abs(uRoe + cRoe)
+    };
+
+    // Finally perform summation (11.29).
+    for (int i = 0; i < 5; ++i)
     {
+        uRoeAbs = 0.5*alpha[i]*lambda[i];
 
+        rhof  -= uRoeAbs*k[i][0];
+        rhouf -= uRoeAbs*k[i][1];
+        rhovf -= uRoeAbs*k[i][2];
+        rhowf -= uRoeAbs*k[i][3];
+        Ef    -= uRoeAbs*k[i][4];
     }
+}
 
-    /// programmatic ctor
-    RoeSolver::RoeSolver(): CompressibleSolver() {}
+void RoeSolver::v_ArraySolve(
+    const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+    const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+          Array<OneD,       Array<OneD, NekDouble> > &flux)
+{
+    static NekDouble gamma = m_params["gamma"]();
+    static auto spaceDim = Fwd.num_elements()-2;
 
-    /**
-     * @brief Roe Riemann solver.
-     *
-     * Stated equations numbers are from:
-     *
-     *   "Riemann Solvers and Numerical Methods for Fluid Dynamics: A Practical
-     *   Introduction", E. F. Toro (3rd edition, 2009).
-     *
-     * We follow the algorithm prescribed following equation 11.70.
-     *
-     * @param rhoL      Density left state.
-     * @param rhoR      Density right state.
-     * @param rhouL     x-momentum component left state.
-     * @param rhouR     x-momentum component right state.
-     * @param rhovL     y-momentum component left state.
-     * @param rhovR     y-momentum component right state.
-     * @param rhowL     z-momentum component left state.
-     * @param rhowR     z-momentum component right state.
-     * @param EL        Energy left state.
-     * @param ER        Energy right state.
-     * @param rhof      Computed Riemann flux for density.
-     * @param rhouf     Computed Riemann flux for x-momentum component
-     * @param rhovf     Computed Riemann flux for y-momentum component
-     * @param rhowf     Computed Riemann flux for z-momentum component
-     * @param Ef        Computed Riemann flux for energy.
-     */
-    void RoeSolver::v_PointSolve(
-        double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
-        double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
-        double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
+    for (size_t i = 0; i < Fwd[0].num_elements(); ++i)
     {
-        static NekDouble gamma = m_params["gamma"]();
+        NekDouble  rhoL{};
+        NekDouble  rhouL{};
+        NekDouble  rhovL{};
+        NekDouble  rhowL{};
+        NekDouble  EL{};
+        NekDouble  rhoR{};
+        NekDouble  rhouR{};
+        NekDouble  rhovR{};
+        NekDouble  rhowR{};
+        NekDouble  ER{};
+
+        rhoL  = Fwd[0][i];
+        rhouL = Fwd[1][i];
+        EL    = Fwd[spaceDim+1][i];
+        rhoR  = Bwd[0][i];
+        rhouR = Bwd[1][i];
+        ER    = Bwd[spaceDim+1][i];
+
+        if (spaceDim == 2)
+        {
+            rhovL = Fwd[2][i];
+            rhovR = Bwd[2][i];
+        }
+        else if (spaceDim == 3)
+        {
+            rhovL = Fwd[2][i];
+            rhowL = Fwd[3][i];
+            rhovR = Bwd[2][i];
+            rhowR = Bwd[3][i];
+        }
+
 
         // Left and right velocities
         NekDouble uL = rhouL / rhoL;
@@ -147,24 +284,24 @@ namespace Nektar
         alpha[3] = jump[3] - wRoe * jump[0];
 
         // Compute average of left and right fluxes needed for equation 11.29.
-        rhof  = 0.5*(rhoL*uL + rhoR*uR);
-        rhouf = 0.5*(pL + rhoL*uL*uL + pR + rhoR*uR*uR);
-        rhovf = 0.5*(rhoL*uL*vL + rhoR*uR*vR);
-        rhowf = 0.5*(rhoL*uL*wL + rhoR*uR*wR);
-        Ef    = 0.5*(uL*(EL + pL) + uR*(ER + pR));
+        NekDouble rhof  = 0.5*(rhoL*uL + rhoR*uR);
+        NekDouble rhouf = 0.5*(pL + rhoL*uL*uL + pR + rhoR*uR*uR);
+        NekDouble rhovf = 0.5*(rhoL*uL*vL + rhoR*uR*vR);
+        NekDouble rhowf = 0.5*(rhoL*uL*wL + rhoR*uR*wR);
+        NekDouble Ef    = 0.5*(uL*(EL + pL) + uR*(ER + pR));
 
         // Compute eigenvalues \lambda_i (equation 11.58).
-        NekDouble uRoeAbs = fabs(uRoe);
+        NekDouble uRoeAbs = std::abs(uRoe);
         NekDouble lambda[5] = {
-            fabs(uRoe - cRoe),
+            std::abs(uRoe - cRoe),
             uRoeAbs,
             uRoeAbs,
             uRoeAbs,
-            fabs(uRoe + cRoe)
+            std::abs(uRoe + cRoe)
         };
 
         // Finally perform summation (11.29).
-        for (int i = 0; i < 5; ++i)
+        for (size_t i = 0; i < 5; ++i)
         {
             uRoeAbs = 0.5*alpha[i]*lambda[i];
 
@@ -174,5 +311,21 @@ namespace Nektar
             rhowf -= uRoeAbs*k[i][3];
             Ef    -= uRoeAbs*k[i][4];
         }
+
+        // store
+        flux[0][i] = rhof;
+        flux[1][i] = rhouf;
+        flux[spaceDim+1][i] = Ef;
+        if (spaceDim == 2)
+        {
+            flux[2][i] = rhovf;
+        }
+        else if (spaceDim == 3)
+        {
+            flux[2][i] = rhovf;
+            flux[3][i] = rhowf;
+        }
+
     }
+}
 }

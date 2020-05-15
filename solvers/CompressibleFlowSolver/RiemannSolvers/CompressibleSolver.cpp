@@ -71,9 +71,8 @@ namespace Nektar
             int expDim      = nDim;
             int nvariables  = Fwd.num_elements();
 
-            NekDouble rhouf, rhovf;
+            NekDouble rhouf{}, rhovf{};
 
-            // Check if PDE-based SC is used
             if (expDim == 1)
             {
                 for (int i = 0; i < Fwd[0].num_elements(); ++i)

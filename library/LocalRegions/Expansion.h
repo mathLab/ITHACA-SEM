@@ -221,16 +221,6 @@ namespace Nektar
                 v_ComputeTraceNormal(id);
             }
             
-            void NegateTraceNormal(const int id)
-            {
-                v_NegateTraceNormal(id);
-            }
-            
-            bool TraceNormalNegated(const int id)
-            {
-                return v_TraceNormalNegated(id);
-            }
-            
             const Array<OneD, const NekDouble>& GetPhysNormals(void)
             {
                 return v_GetPhysNormals();
@@ -387,10 +377,6 @@ namespace Nektar
 
             virtual void v_ComputeTraceNormal(const int id);
 
-            virtual void v_NegateTraceNormal (const int id);
-
-            virtual bool v_TraceNormalNegated(const int id);
-                
             virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void);
 
             virtual void v_SetPhysNormals(Array<OneD, const NekDouble> &normal);

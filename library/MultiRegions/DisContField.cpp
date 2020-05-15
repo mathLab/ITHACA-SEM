@@ -2812,27 +2812,18 @@ namespace Nektar
 
                     for(int v = 0; v < 2; ++v)
                     {
-                        
-                        LocalRegions::ExpansionSharedPtr vertExp =
-                            elmtToTrace[i][v]; 
+                        LocalRegions::Expansion0DSharedPtr vertExp =
+                            elmtToTrace[i][v]->as<LocalRegions::Expansion0D>();
 
-                        if(vertExp->GetLeftAdjacentElementExp()->
-                           GetGeom()->GetGlobalID() !=
-                               (*m_exp)[i]->GetGeom()->GetGlobalID())
+                        if(vertExp->GetLeftAdjacentElementExp()->GetGeom()
+                           ->GetGlobalID() !=
+                           (*m_exp)[i]->GetGeom()->GetGlobalID())
                         {
                             m_negatedFluxNormal[2*i+v] = true;
                         }
                         else
                         {
                             m_negatedFluxNormal[2*i+v] = false;
-                        }
-
-                        if(vertExp->GetLeftAdjacentElementExp()->
-                           TraceNormalNegated
-                              (vertExp->GetLeftAdjacentElementTrace()))
-                        {
-                            m_negatedFluxNormal[2*i+v] =
-                                (!m_negatedFluxNormal[2*i+v]);
                         }
                     }
                 }

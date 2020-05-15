@@ -118,7 +118,6 @@ namespace Nektar
             
         protected:
             std::map<int, NormalVector> m_faceNormals;
-            std::map<int, bool> m_negatedNormals;
 
             virtual void v_DGDeriv(
                 const int                            dir,
@@ -178,12 +177,6 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT const virtual NormalVector &v_GetTraceNormal
                 (const int face) const;
-
-            LOCAL_REGIONS_EXPORT virtual void v_NegateTraceNormal(
-                const int face);
-
-            LOCAL_REGIONS_EXPORT virtual bool v_TraceNormalNegated(
-                const int face);
 
         private:
             // Do not add members here since it may lead to conflicts.

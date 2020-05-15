@@ -705,19 +705,6 @@ namespace Nektar
             ASSERTL0(false, "Cannot compute trace normal for this expansion.");
         }
 
-        void Expansion::v_NegateTraceNormal(const int id)
-        {
-            boost::ignore_unused(id);
-            ASSERTL0(false, "Not implemented.");
-        }
-
-        bool Expansion::v_TraceNormalNegated(const int id)
-        {
-            boost::ignore_unused(id);
-            ASSERTL0(false, "Not implemented.");
-            return false;
-        }
-
         const Array<OneD, const NekDouble>& Expansion::v_GetPhysNormals(void)
         {
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");

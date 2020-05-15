@@ -2497,20 +2497,5 @@ namespace Nektar
             return x->second;
         }
 
-        void Expansion3D::v_NegateTraceNormal(const int face)
-        {
-            m_negatedNormals[face] = true;
-            for (int i = 0; i < GetCoordim(); ++i)
-            {
-                Vmath::Neg(m_faceNormals[face][i].size(), 
-                           m_faceNormals[face][i], 1);
-            }
-        }
-
-        bool Expansion3D::v_TraceNormalNegated(const int face)
-        {
-            return m_negatedNormals[face];
-
-        }
     } //end of namespace
 } //end of namespace

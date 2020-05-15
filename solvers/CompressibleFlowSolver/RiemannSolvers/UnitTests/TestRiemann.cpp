@@ -34,7 +34,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+// #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include "../RoeSolver.h"
 
 
@@ -58,21 +58,28 @@ namespace RiemannTests
             -> NekDouble& {return gamma;});
 
         size_t spaceDim = 1;
-        size_t npts = 10;
+        size_t npts = 1;
 
-        Array<OneD, Array<OneD, NekDouble>> vecLocs(npts);
-        for (size_t i = 0; i < npts; ++i)
+        // Set up locations of velocity vector.
+        Array<OneD, Array<OneD, NekDouble>> vecLocs(1);
+        vecLocs[0] = Array<OneD, NekDouble>(spaceDim);
+        for (int i = 0; i < spaceDim; ++i)
         {
-            vecLocs[i] = Array<OneD, NekDouble>(spaceDim);
+            vecLocs[0][i] = 1 + i;
         }
         riemannSolver.SetAuxVec("vecLocs", [&vecLocs]()
             -> const Array<OneD, const Array<OneD, NekDouble>>&
             {return vecLocs;});
 
+        // setup normals
         Array<OneD, Array<OneD, NekDouble>> normals(spaceDim);
         for (size_t i = 0; i < spaceDim; ++i)
         {
            normals[i] = Array<OneD, NekDouble>(npts);
+        }
+        for (size_t i = 0; i < npts; ++i)
+        {
+            normals[0][i] = 1.0;
         }
         riemannSolver.SetVector("N", [&normals]()
             -> const Array<OneD, const Array<OneD, NekDouble>>&
@@ -80,17 +87,31 @@ namespace RiemannTests
 
         size_t nFields = spaceDim + 2;
         Array<OneD, Array<OneD, NekDouble>> fwd(nFields), bwd(nFields),
-            flx(nFields);
+            flx(nFields), flxRef(nFields);
         for (size_t i = 0; i < nFields; ++i)
         {
             fwd[i] = Array<OneD, NekDouble>(npts);
             bwd[i] = Array<OneD, NekDouble>(npts);
             flx[i] = Array<OneD, NekDouble>(npts);
+            flxRef[i] = Array<OneD, NekDouble>(npts);
         }
+
+        // density
+        fwd[0][0] = 1.0;
+        bwd[0][0] = 1.0;
+        // energy
+        NekDouble p = 1.0;
+        NekDouble e = p / (gamma - 1.0);
+        fwd[nFields-1][0] = e;
+        bwd[nFields-1][0] = e;
+
         riemannSolver.Solve(spaceDim, fwd, bwd, flx);
 
+        // check fluxes
+        BOOST_CHECK_CLOSE(flxRef[0][0], flx[0][0], 1e-10);
+        BOOST_CHECK_CLOSE(flxRef[1][0], flx[1][0], 1e-10);
+        BOOST_CHECK_CLOSE(flxRef[2][0], flx[2][0], 1e-10);
 
-        BOOST_CHECK_CLOSE(1., 1., 1e-10);
     }
 
 

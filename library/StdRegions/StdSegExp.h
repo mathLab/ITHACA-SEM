@@ -247,8 +247,6 @@ namespace Nektar
                     Array<OneD, int>&          signarray,
                     Orientation                edgeOrient,
                     int P,  int Q);
-                                                                              ;
-
             
         private:
 

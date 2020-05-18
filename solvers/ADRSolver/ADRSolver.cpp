@@ -73,8 +73,8 @@ timer.Start();
 timer.Stop();
 timer.AccumulateRegion("Execute");
 
-        // Print out timings
-        LibUtilities::Timer::PrintElapsedRegions(session->GetComm());
+// Print out timings
+LibUtilities::Timer::PrintElapsedRegions(session->GetComm());
 
         LIKWID_MARKER_CLOSE;
 

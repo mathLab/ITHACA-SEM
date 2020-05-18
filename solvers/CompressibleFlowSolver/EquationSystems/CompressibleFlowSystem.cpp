@@ -2662,8 +2662,8 @@ namespace Nektar
         NekDouble ototalGlobal  = 1.0/ntotalGlobal;
         NekDouble ototalDOF     = 1.0/ntotalDOF;
 
-        if(m_inArrayNorm<0.0)
-        {
+        // if(m_inArrayNorm<0.0)
+        // {
             m_inArrayNorm = 0.0;
 
             // estimate the magnitude of each flow variables
@@ -2696,15 +2696,15 @@ namespace Nektar
             {
                 m_magnitdEstimat[i] = sqrt(m_magnitdEstimat[i]*ototalDOF);
             }
-            if(0==m_session->GetComm()->GetRank()&&l_verbose)
-            {
-                for(int i = 0; i < nvariables; i++)
-                {
-                    cout << "m_magnitdEstimat["<<i<<"]    = "<<m_magnitdEstimat[i]<<endl;
-                }
-                cout << "m_inArrayNorm    = "<<m_inArrayNorm<<endl;
-            }
-        }
+        //     if(0==m_session->GetComm()->GetRank()&&l_verbose)
+        //     {
+        //         for(int i = 0; i < nvariables; i++)
+        //         {
+        //             cout << "m_magnitdEstimat["<<i<<"]    = "<<m_magnitdEstimat[i]<<endl;
+        //         }
+        //         cout << "m_inArrayNorm    = "<<m_inArrayNorm<<endl;
+        //     }
+        // }
 
         NekDouble LinSysTol = 0.0;
         NekDouble tolrnc    = m_NewtonAbsoluteIteTol;
@@ -3328,7 +3328,13 @@ namespace Nektar
         {
             magnitdEstimatMax = max(magnitdEstimatMax,m_magnitdEstimat[i]);
         }
-        eps *= magnitdEstimatMax;
+
+        unsigned int ntotalGlobal     = inarray.num_elements();
+        NekDouble magninarray = Vmath::Dot(ntotalGlobal,inarray,inarray);
+        LibUtilities::CommSharedPtr v_Comm  = m_fields[0]->GetComm()->GetRowComm();
+        v_Comm->AllReduce(magninarray, Nektar::LibUtilities::ReduceSum);
+        // eps *= magnitdEstimatMax;
+        eps *= sqrt( (sqrt(m_inArrayNorm) + 1.0)/magninarray);
         NekDouble oeps = 1.0/eps;
         unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
         unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();

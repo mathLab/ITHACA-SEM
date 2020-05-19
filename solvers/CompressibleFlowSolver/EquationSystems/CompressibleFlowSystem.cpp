@@ -3282,12 +3282,12 @@ namespace Nektar
                                                         Array<OneD, NekDouble >&out)
     {
         NekDouble eps = m_JFEps;
-        NekDouble magnitdEstimatMax =0.0;
-        for(int i = 0; i < m_magnitdEstimat.num_elements(); i++)
-        {
-            magnitdEstimatMax = max(magnitdEstimatMax,m_magnitdEstimat[i]);
-        }
-        eps *= magnitdEstimatMax;
+        unsigned int ntotalGlobal     = inarray.num_elements();
+        NekDouble magninarray = Vmath::Dot(ntotalGlobal,inarray,inarray);
+        LibUtilities::CommSharedPtr v_Comm  = m_fields[0]->GetComm()->GetRowComm();
+        v_Comm->AllReduce(magninarray, Nektar::LibUtilities::ReduceSum);
+        // eps *= magnitdEstimatMax;
+        eps *= sqrt( (sqrt(m_inArrayNorm) + 1.0)/magninarray);
         NekDouble oeps = 1.0/eps;
         unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
         unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
@@ -3323,12 +3323,6 @@ namespace Nektar
                                                         Array<OneD, NekDouble >&out)
     {
         NekDouble eps = m_JFEps;
-        NekDouble magnitdEstimatMax =0.0;
-        for(int i = 0; i < m_magnitdEstimat.num_elements(); i++)
-        {
-            magnitdEstimatMax = max(magnitdEstimatMax,m_magnitdEstimat[i]);
-        }
-
         unsigned int ntotalGlobal     = inarray.num_elements();
         NekDouble magninarray = Vmath::Dot(ntotalGlobal,inarray,inarray);
         LibUtilities::CommSharedPtr v_Comm  = m_fields[0]->GetComm()->GetRowComm();

@@ -1,12 +1,27 @@
 #ifndef VECDATA_HPP
 #define VECDATA_HPP
 
-#include "AVXUtil.hpp"
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <boost/align/aligned_allocator.hpp>
 #include <immintrin.h>
 
 namespace Nektar {
 namespace AVX {
+
+#if defined(__AVX2__)
+/// Number of bits in a AVX2 vector
+constexpr int SIMD_WIDTH_BITS = 256;
+#endif
+#if defined(__AVX512F__)
+/// Number of bits in a AVX512 vector
+constexpr int SIMD_WIDTH_BITS = 512;
+#endif
+
+/// Number of bytes in a AVX vector
+constexpr int SIMD_WIDTH_BYTES = SIMD_WIDTH_BITS / 8;
+/// Number of elements in a AVX vector for NekDoubles
+constexpr int SIMD_WIDTH_SIZE = SIMD_WIDTH_BYTES / sizeof(NekDouble);
+
 
 template<typename DataType, int vecWidth>
 struct VecData

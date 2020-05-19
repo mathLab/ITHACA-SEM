@@ -34,6 +34,8 @@
 
 #include <CompressibleFlowSolver/RiemannSolvers/RoeSolver.h>
 
+#include <AVXOperators/VecData.hpp>
+
 namespace Nektar
 {
 std::string RoeSolver::solverName =
@@ -187,7 +189,157 @@ void RoeSolver::v_ArraySolve(
     static NekDouble gamma = m_params["gamma"]();
     static auto spaceDim = Fwd.num_elements()-2;
 
-    for (size_t i = 0; i < Fwd[0].num_elements(); ++i)
+    using vec_t = AVX::VecData<NekDouble, AVX::SIMD_WIDTH_SIZE>;
+
+    size_t nPts = Fwd[0].num_elements();
+    // AVX loop
+    size_t nBlocks = nPts / AVX::SIMD_WIDTH_SIZE;
+    size_t imaxVec = nBlocks*AVX::SIMD_WIDTH_SIZE;
+    for (size_t i = 0; i < imaxVec; i+=AVX::SIMD_WIDTH_SIZE)
+    {
+        vec_t rhoL{};
+        vec_t rhouL{};
+        vec_t rhovL{};
+        vec_t rhowL{};
+        vec_t EL{};
+        vec_t rhoR{};
+        vec_t rhouR{};
+        vec_t rhovR{};
+        vec_t rhowR{};
+        vec_t ER{};
+
+        // load
+        rhoL  = Fwd[0][i];
+        rhouL = Fwd[1][i];
+        EL    = Fwd[spaceDim+1][i];
+        rhoR  = Bwd[0][i];
+        rhouR = Bwd[1][i];
+        ER    = Bwd[spaceDim+1][i];
+
+        if (spaceDim == 2)
+        {
+            rhovL = Fwd[2][i];
+            rhovR = Bwd[2][i];
+        }
+        else if (spaceDim == 3)
+        {
+            rhovL = Fwd[2][i];
+            rhowL = Fwd[3][i];
+            rhovR = Bwd[2][i];
+            rhowR = Bwd[3][i];
+        }
+
+
+        // Left and right velocities
+        vec_t uL = rhouL / rhoL;
+        vec_t vL = rhovL / rhoL;
+        vec_t wL = rhowL / rhoL;
+        vec_t uR = rhouR / rhoR;
+        vec_t vR = rhovR / rhoR;
+        vec_t wR = rhowR / rhoR;
+
+        // Left and right pressures
+        vec_t pL = (gamma - 1.0) *
+            (EL - 0.5 * (rhouL * uL + rhovL * vL + rhowL * wL));
+        vec_t pR = (gamma - 1.0) *
+            (ER - 0.5 * (rhouR * uR + rhovR * vR + rhowR * wR));
+
+        // Left and right enthalpy
+        vec_t hL = (EL + pL) / rhoL;
+        vec_t hR = (ER + pR) / rhoR;
+
+        // Square root of rhoL and rhoR.
+        vec_t srL  = sqrt(rhoL);
+        vec_t srR  = sqrt(rhoR);
+        vec_t srLR = srL + srR;
+
+        // Velocity, enthalpy and sound speed Roe averages (equation 11.60).
+        vec_t uRoe   = (srL * uL + srR * uR) / srLR;
+        vec_t vRoe   = (srL * vL + srR * vR) / srLR;
+        vec_t wRoe   = (srL * wL + srR * wR) / srLR;
+        vec_t hRoe   = (srL * hL + srR * hR) / srLR;
+        vec_t URoe   = (uRoe * uRoe + vRoe * vRoe + wRoe * wRoe);
+        vec_t cRoe   = sqrt((gamma - 1.0)*(hRoe - 0.5 * URoe));
+
+        // Compute eigenvectors (equation 11.59).
+        vec_t k[5][5] = {
+            {1., uRoe - cRoe, vRoe, wRoe, hRoe - uRoe * cRoe},
+            {1., uRoe,        vRoe, wRoe, 0.5 * URoe},
+            {0., 0.,           1.,    0.,    vRoe},
+            {0., 0.,           0.,    1.,    wRoe},
+            {1., uRoe+cRoe,  vRoe,  wRoe, hRoe + uRoe*cRoe}
+        };
+
+        // Calculate jumps \Delta u_i (defined preceding equation 11.67).
+        vec_t jump[5] = {
+            rhoR  - rhoL,
+            rhouR - rhouL,
+            rhovR - rhovL,
+            rhowR - rhowL,
+            ER    - EL
+        };
+
+        // Define \Delta u_5 (equation 11.70).
+        vec_t jumpbar = jump[4] - (jump[2]-vRoe*jump[0])*vRoe -
+            (jump[3]-wRoe*jump[0])*wRoe;
+
+        // Compute wave amplitudes (equations 11.68, 11.69).
+        vec_t alpha[5];
+        alpha[1] = (gamma-1.0)*(jump[0]*(hRoe - uRoe*uRoe) + uRoe*jump[1] -
+                                jumpbar)/(cRoe*cRoe);
+        alpha[0] = (jump[0]*(uRoe + cRoe) - jump[1] - cRoe*alpha[1])/(2.0*cRoe);
+        alpha[4] = jump[0] - (alpha[0] + alpha[1]);
+        alpha[2] = jump[2] - vRoe * jump[0];
+        alpha[3] = jump[3] - wRoe * jump[0];
+
+        // Compute average of left and right fluxes needed for equation 11.29.
+        vec_t rhof  = 0.5*(rhoL*uL + rhoR*uR);
+        vec_t rhouf = 0.5*(pL + rhoL*uL*uL + pR + rhoR*uR*uR);
+        vec_t rhovf = 0.5*(rhoL*uL*vL + rhoR*uR*vR);
+        vec_t rhowf = 0.5*(rhoL*uL*wL + rhoR*uR*wR);
+        vec_t Ef    = 0.5*(uL*(EL + pL) + uR*(ER + pR));
+
+        // Compute eigenvalues \lambda_i (equation 11.58).
+        vec_t uRoeAbs = abs(uRoe);
+        vec_t lambda[5] = {
+            abs(uRoe - cRoe),
+            uRoeAbs,
+            uRoeAbs,
+            uRoeAbs,
+            abs(uRoe + cRoe)
+        };
+
+        // Finally perform summation (11.29).
+        for (size_t i = 0; i < 5; ++i)
+        {
+            uRoeAbs = 0.5*alpha[i]*lambda[i];
+
+            rhof  = rhof  - uRoeAbs*k[i][0];
+            rhouf = rhouf - uRoeAbs*k[i][1];
+            rhovf = rhovf - uRoeAbs*k[i][2];
+            rhowf = rhowf - uRoeAbs*k[i][3];
+            Ef    = Ef    - uRoeAbs*k[i][4];
+        }
+
+        // store
+        rhof.store(&(flux[0][i]));
+        rhouf.store(&(flux[1][i]));
+        Ef.store(&(flux[spaceDim+1][i]));
+        if (spaceDim == 2)
+        {
+            rhovf.store(&(flux[2][i]));
+        }
+        else if (spaceDim == 3)
+        {
+            rhovf.store(&(flux[2][i]));
+            rhowf.store(&(flux[3][i]));
+        }
+
+    }
+
+
+    // spill over loop
+    for (size_t i = imaxVec; i < nPts; ++i)
     {
         NekDouble  rhoL{};
         NekDouble  rhouL{};

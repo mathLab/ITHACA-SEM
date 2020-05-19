@@ -2,7 +2,6 @@
 #define VECDATA_HPP
 
 #include "AVXUtil.hpp"
-// #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/align/aligned_allocator.hpp>
 #include <immintrin.h>
 
@@ -401,6 +400,21 @@ inline VecData<double, 4> gather(const double* data, VecData<int, 4> &indices)
 {
     return VecData<double,4>( _mm256_i32gather_pd(data, indices.m_data, 8) );
 }
+
+// sqrt
+inline VecData<double, 4> sqrt(VecData<double, 4> in)
+{
+    return _mm256_sqrt_pd(in.m_data);
+}
+
+// abs
+inline VecData<double, 4> abs(VecData<double, 4> in)
+{
+    // there is no avx2 _mm256_abs_pd intrinsic
+    static const __m256d sign_mask = _mm256_set1_pd(-0.); // -0. = 1 << 63
+    return _mm256_andnot_pd(sign_mask, in.m_data);        // !sign_mask & x
+}
+
 
 #endif
 

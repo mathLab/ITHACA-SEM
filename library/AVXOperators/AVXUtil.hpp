@@ -1,9 +1,7 @@
 #ifndef AVXUTIL_HPP
 #define AVXUTIL_HPP
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/ShapeType.hpp>
-#include <LibUtilities/Foundations/Basis.h>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 #include <string>
 

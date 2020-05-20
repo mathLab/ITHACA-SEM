@@ -8,6 +8,9 @@ SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release;RelWithDebIn
 PROJECT(Nektar++ C CXX)
 
 CMAKE_POLICY(SET CMP0022 NEW)
+# Resolves issue with checking string equality for string params that are also
+# variable names - this resolves an issue with checking for MSVC on Windows
+CMAKE_POLICY(SET CMP0054 NEW)
 
 # Defer to use _ROOT variables to avoid Zlib warning
 IF (POLICY CMP0074)

@@ -344,7 +344,7 @@ void RoeSolver::v_ArraySolve(
     // AVX loop
     for (; (nPts - cnt) >= AVX::SIMD_WIDTH_SIZE; cnt += AVX::SIMD_WIDTH_SIZE)
     {
-        std::cout << "vector step\n"
+        std::cout << "vector step\t" << cnt << '\t' << nPts << '\n'
             << reinterpret_cast<size_t>(&(Fwd[0][cnt])) % AVX::SIMD_WIDTH_BYTES << '\n'
             << reinterpret_cast<size_t>(&(Fwd[1][cnt])) % AVX::SIMD_WIDTH_BYTES << '\n'
             << reinterpret_cast<size_t>(&(Fwd[2][cnt])) % AVX::SIMD_WIDTH_BYTES << std::endl;
@@ -475,10 +475,9 @@ void RoeSolver::v_ArraySolve(
 
         // store
         std::cout << "before store" << std::endl;
-        std::cout << &(Fwd[0][cnt]) << '\n';
-        std::cout << reinterpret_cast<size_t>(&(Fwd[0][cnt])) % AVX::SIMD_WIDTH_BYTES << '\n';
-        NekDouble* tmp = &(flux[0][cnt]);
-        rhof.store(tmp);
+        std::cout << &(flux[0][cnt]) << '\n';
+        std::cout << reinterpret_cast<size_t>(&(flux[0][cnt])) % AVX::SIMD_WIDTH_BYTES << '\n';
+        rhof.store_nts(&(flux[0][cnt]));
         std::cout << "after rhof store" << std::endl;
         rhouf.store(&(flux[1][cnt]));
         Ef.store(&(flux[spaceDim+1][cnt]));

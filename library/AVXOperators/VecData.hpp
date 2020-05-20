@@ -1,8 +1,9 @@
 #ifndef VECDATA_HPP
 #define VECDATA_HPP
 
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <boost/align/aligned_allocator.hpp>
+#include <vector>
+#include <iostream>
 #include <immintrin.h>
 
 namespace Nektar {
@@ -20,7 +21,7 @@ constexpr int SIMD_WIDTH_BITS = 512;
 /// Number of bytes in a AVX vector
 constexpr int SIMD_WIDTH_BYTES = SIMD_WIDTH_BITS / 8;
 /// Number of elements in a AVX vector for NekDoubles
-constexpr int SIMD_WIDTH_SIZE = SIMD_WIDTH_BYTES / sizeof(NekDouble);
+constexpr int SIMD_WIDTH_SIZE = SIMD_WIDTH_BYTES / sizeof(double);
 
 
 template<typename DataType, int vecWidth>

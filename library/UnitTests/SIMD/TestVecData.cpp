@@ -111,12 +111,6 @@ namespace VecDataTests
         // number of blocks
         size_t nBlock = nEle / AVX::SIMD_WIDTH_SIZE;
 
-        // pad blocks
-        if (nEle % AVX::SIMD_WIDTH_SIZE != 0)
-        {
-            nBlock += AVX::SIMD_WIDTH_SIZE - nBlock % AVX::SIMD_WIDTH_SIZE;
-        }
-
         AlignedVector<vec_t> dofVectorArr(nDof);
 
         double* dataPtr = dofScalarArr.data();

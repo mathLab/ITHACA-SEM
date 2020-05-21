@@ -1,6 +1,7 @@
 SET(VecDataTestSources
     main.cpp
     TestVecData.cpp
+    TestAVXUtil.cpp
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)

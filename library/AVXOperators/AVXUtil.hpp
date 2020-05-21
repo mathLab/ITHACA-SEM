@@ -8,6 +8,70 @@
 namespace Nektar {
 namespace AVX {
 
+
+template<class T, int VW>
+void CopyToAlignedVector(Array<OneD, T> &in, AlignedVector<VecData<T, VW>> &out)
+{
+    size_t nScal = in.num_elements();
+    size_t nVec = out.size();
+
+    // check padding and size
+    unsigned int pad = nScal % VW;
+    ASSERTL1(nVec == nScal + (pad == 0 ? 0 : 1), "incorrect size");
+
+    // copy
+    T* inPtr = &in[0];
+    for (size_t i = 0; i < size / VW; ++i, inPtr += VW)
+    {
+        out = inPtr.data();
+    }
+
+    // fill padded chuck everything else out
+    if (pad > 0)
+    {
+        std::array<T, VW> tmpArray{};
+        for (int i = 0; i < pad; ++i)
+        {
+            tmpArray[i] = *inPtr;
+            ++inPtr;
+        }
+        out[size] = tmpArray;
+    }
+}
+
+template<class T, int VW>
+void CopyFromAlignedVector(AlignedVector<VecData<T, VW>> &in, Array<OneD, T> &out)
+{
+    size_t nScal = in.num_elements();
+    size_t nVec = out.size();
+
+    // check padding and size
+    unsigned int pad = nScal % VW;
+    ASSERTL1(nVec == nScal + (pad == 0 ? 0 : 1), "incorrect size");
+
+    // shifted pointers
+    T *outPtr0 = out.data();
+    T *outPtr1 = out.data() + 1;
+    T *outPtr2 = out.data() + 2;
+    T *outPtr3 = out.data() + 3;
+
+    size_t i = 0;
+    for (; i < nScal/VW; ++i)
+    {
+        outPtr0[i] = in[i].m_data[0];
+        outPtr1[i] = in[i].m_data[1];
+        outPtr2[i] = in[i].m_data[2];
+        outPtr3[i] = in[i].m_data[3];
+    }
+
+    for (size_t j = 0; j < pad; ++j)
+    {
+        outPtr0[i+j] = in[i].m_data[j];
+    }
+
+}
+
+
 template<typename T>
 void TransposeData(const int       nElmt,
                    const int       vecWidth,

@@ -3,6 +3,7 @@
 
 #include <boost/align/aligned_allocator.hpp>
 #include <vector>
+#include <array>
 #include <iostream>
 #include <immintrin.h>
 
@@ -582,39 +583,7 @@ template<class T>
 using AlignedVector =
     std::vector<T, boost::alignment::aligned_allocator<T, SIMD_WIDTH_BYTES>>;
 
-// template<class T, int VW>
-// AlignedVector<VecData<T, VW>> ToAlignedVector(Array<OneD, T> &input)
-// {
-//     size_t nElmt    = input.num_elements();
-//     int    pad      = nElmt % VW;
-//     size_t nVecElmt = nElmt + (pad == 0 ? 0 : 1);
 
-//     AlignedVector<VecData<T, VW>> ret(nVecElmt);
-
-//     T *tmp = &input[0];
-
-//     for (int i = 0; i < nElmt / VW; ++i, tmp += VW)
-//     {
-//         ret[i] = tmp;
-//     }
-
-//     // Pad everything else out
-//     if (pad > 0)
-//     {
-//         T tmp2[VW];
-//         for (int i = 0; i < pad; ++i)
-//         {
-//             tmp2[i] = input[nElmt / VW + i];
-//         }
-//         for (int i = pad; i < VW; ++i)
-//         {
-//             tmp2[i] = 0;
-//         }
-//         ret[nElmt] = tmp2;
-//     }
-
-//     return ret;
-// }
 
 } // namespace AVX
 } // namespace Nektar

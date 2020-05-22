@@ -51,6 +51,7 @@ stages:
     - sed "s %%BASE_IMAGE%% $CI_REGISTRY_IMAGE:$ENV_NAME g" .gitlab-ci/Dockerfile_add_repo > Dockerfile_tmp
     - export ENV_IMAGE=$(docker build -q -f Dockerfile_tmp .)
     - mkdir -p log
+    - if [ ! -d $CCACHE_DIR ]; then mkdir -p $CCACHE_DIR && chown 1000:1000 $CCACHE_DIR; fi
     - docker run --name $CONTAINER_NAME -v ccache:/cache
       -e "BUILD_TYPE=$BUILD_TYPE"
       -e "NUM_CPUS=$NUM_CPUS"

@@ -2232,6 +2232,7 @@ namespace Nektar
                         }
                     }
                 } 
+                break;
             case StdRegions::eDir1BwdDir1_Dir2BwdDir2:
                 {
                     //Direction A negative and B negative
@@ -2243,6 +2244,7 @@ namespace Nektar
                         }
                     }
                 }
+                break;
             case StdRegions::eDir1FwdDir2_Dir2FwdDir1:
                 {
                     //Transposed, Direction A and B positive
@@ -2277,8 +2279,8 @@ namespace Nektar
                             idmap[i*nq1+j] = i+nq0*(nq1-1)-j*nq0;
                         }
                     }
-                    break;
                 } 
+                break;
             case StdRegions::eDir1BwdDir2_Dir2BwdDir1:
                 {
                     //Transposed, Direction A and B negative

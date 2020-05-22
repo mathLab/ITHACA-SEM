@@ -28,6 +28,7 @@ v5.1.0
 
 **BuildSystem**
 - Toggle build type (!1135)
+- Updated minimum required CMake version to 3.5.1 (!1152)
 
 v5.0.1
 ------

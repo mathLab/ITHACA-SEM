@@ -31,7 +31,7 @@ void CopyToAlignedVector(const Array<OneD, T> &in, AlignedVector<VecData<T, VW>>
         }
     }
 
-    // fill padded chuck everything else out
+    // fill padded chunck
     if (pad > 0)
     {
         alignas(VW*sizeof(T)) std::array<T, VW> tmpArray{};

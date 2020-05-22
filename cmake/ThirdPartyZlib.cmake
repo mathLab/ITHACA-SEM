@@ -8,11 +8,19 @@
 
 # Find a system ZLIB library. If not found enable the THIRDPARTY_BUILD_ZLIB
 # option.
-FIND_PACKAGE(ZLIB QUIET)
-IF (ZLIB_FOUND AND NOT ZLIB_VERSION_PATCH LESS 7)
-    SET(BUILD_ZLIB OFF)
-ELSE ()
+# On Windows, we want to force the use of third party zlib
+# since this will be used with the boost build if boost is being
+# built as a third party lib
+IF(WIN32)
+    MESSAGE(STATUS "On a WIN32 platform, zlib will be built as a third party library...")
     SET(BUILD_ZLIB ON)
+ELSE()
+    FIND_PACKAGE(ZLIB QUIET)
+    IF (ZLIB_FOUND AND NOT ZLIB_VERSION_PATCH LESS 7)
+        SET(BUILD_ZLIB OFF)
+    ELSE ()
+        SET(BUILD_ZLIB ON)
+    ENDIF()
 ENDIF()
 
 OPTION(THIRDPARTY_BUILD_ZLIB "Build ZLib library" ${BUILD_ZLIB})

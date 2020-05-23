@@ -1593,7 +1593,7 @@ namespace Nektar
              * where N is equal to the number of boundary modes on this edge.
              */
             Array<OneD, int> graphVertOffset(
-                                             graph[0].size() + graph[1].size() + graph[2].size() + 1);
+                                         graph[0].size() + graph[1].size() + graph[2].size() + 1,0);
 
             graphVertOffset[0] = 0;
 
@@ -2006,7 +2006,7 @@ namespace Nektar
             // local coeff that has been filled by the boundary
             // coeffs.
 
-            Array<OneD, NekDouble> gloParaDirBnd(m_numLocalCoeffs,-1.0);
+            Array<OneD, NekDouble> gloParaDirBnd(m_numGlobalBndCoeffs,-1.0);
 
             Array<OneD, unsigned int> bndmap; 
             cnt = 0; 

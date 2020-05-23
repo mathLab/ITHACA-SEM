@@ -218,7 +218,7 @@ namespace Nektar
             {
                 break;
             }
-
+            
             ASSERTL0(defined,
                      "A 'FlowrateForce' function must defined with components "
                      "[ForceX, ...] to define direction of flowrate forcing");

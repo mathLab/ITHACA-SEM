@@ -719,32 +719,20 @@ namespace Nektar
                 }
                 else
                 {
-                    if (SetUpJustDG)
+                    m_globalBndMat        = In.m_globalBndMat;
+                    m_trace               = In.m_trace;
+                    m_traceMap            = In.m_traceMap;
+                    m_locTraceToTraceMap  = In.m_locTraceToTraceMap;
+                    m_periodicVerts       = In.m_periodicVerts;
+                    m_periodicEdges       = In.m_periodicEdges;
+                    m_periodicFaces       = In.m_periodicFaces;
+                    m_periodicFwdCopy     = In.m_periodicFwdCopy;
+                    m_periodicBwdCopy     = In.m_periodicBwdCopy;
+                    m_boundaryTraces      = In.m_boundaryTraces;
+                    m_leftAdjacentTraces  = In.m_leftAdjacentTraces;
+
+                    if (SetUpJustDG == false)
                     {
-                        m_globalBndMat        = In.m_globalBndMat;
-                        m_trace               = In.m_trace;
-                        m_traceMap            = In.m_traceMap;
-                        m_locTraceToTraceMap  = In.m_locTraceToTraceMap;
-                        m_periodicEdges       = In.m_periodicEdges;
-                        m_periodicVerts       = In.m_periodicVerts;
-                        m_periodicFwdCopy     = In.m_periodicFwdCopy;
-                        m_periodicBwdCopy     = In.m_periodicBwdCopy;
-                        m_boundaryTraces      = In.m_boundaryTraces;
-                        m_leftAdjacentTraces  = In.m_leftAdjacentTraces;
-                    }
-                    else 
-                    {
-                        m_globalBndMat        = In.m_globalBndMat;
-                        m_trace               = In.m_trace;
-                        m_traceMap            = In.m_traceMap;
-                        m_locTraceToTraceMap  = In.m_locTraceToTraceMap;
-                        m_periodicEdges       = In.m_periodicEdges;
-                        m_periodicVerts       = In.m_periodicVerts;
-                        m_periodicFwdCopy     = In.m_periodicFwdCopy;
-                        m_periodicBwdCopy     = In.m_periodicBwdCopy;
-                        m_boundaryTraces      = In.m_boundaryTraces;
-                        m_leftAdjacentTraces  = In.m_leftAdjacentTraces;
-                        
                         // set elmt edges to point to robin bc edges if required
                         int i, cnt = 0;
                         Array<OneD, int> ElmtID, TraceID;
@@ -2046,7 +2034,7 @@ namespace Nektar
                 
                 map<int,int> allCompPairs;
                 
-                // Collect composite ides of each periodic face for use if rotation is required
+                // Collect composite id's of each periodic face for use if rotation is required
                 map<int,int> fIdToCompId;
                 
                 // Finally we have enough information to populate the periodic
@@ -2434,7 +2422,8 @@ namespace Nektar
                     int perFaceId = allCompPairs[faceId];
                     
                     // check to see if periodic boundary is rotated
-                    ASSERTL1(fIdToCompId.count(faceId) > 0,"Face " +
+                    ASSERTL1((rotComp.size() == 0) ||
+                             fIdToCompId.count(faceId) > 0,"Face " +
                              boost::lexical_cast<string>(faceId) +
                              " not found in fIdtoCompId map");
                     if(rotComp.count(fIdToCompId[faceId]))

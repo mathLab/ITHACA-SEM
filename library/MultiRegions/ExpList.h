@@ -2567,8 +2567,8 @@ namespace Nektar
         }
 
         inline void ExpList::ExtractElmtToBndPhys(int i,
-                                                  const Array<OneD, NekDouble> &elmt,
-                                                  Array<OneD, NekDouble> &boundary)
+                               const Array<OneD, NekDouble> &elmt,
+                               Array<OneD, NekDouble> &boundary)
         {
             v_ExtractElmtToBndPhys(i, elmt, boundary);
         }

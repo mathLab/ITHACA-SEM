@@ -193,7 +193,8 @@ namespace Nektar
                                         CheckIfSingularSystem,
                                         variable,
                                         m_periodicVerts,
-                                        m_periodicEdges);
+                                        m_periodicEdges,
+                                        m_periodicFaces);
 
                 if (m_session->DefinesCmdLineArgument("verbose"))
                 {
@@ -886,7 +887,7 @@ namespace Nektar
         {
             int i,j;
 
-            //----------------------------------
+        //----------------------------------
             //  Setup RHS Inner product
             //----------------------------------
             // Inner product of forcing

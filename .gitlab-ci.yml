@@ -247,7 +247,7 @@ tutorials-build:
 focal-default-build-env:
   <<: *build-env-ubuntu-template-default
 
-focal-full-build-env:
+focal-full_py3-build-env:
   <<: *build-env-ubuntu-template-full
   needs: ["focal-default-build-env"]
 
@@ -272,7 +272,7 @@ focal-default-build-and-test:
 
 focal-full-build-and-test:
   <<: *build-and-test-template
-  needs: ["focal-full-build-env"]
+  needs: ["focal-full_py3-build-env"]
 
 bionic-default-build-and-test:
   <<: *build-and-test-template

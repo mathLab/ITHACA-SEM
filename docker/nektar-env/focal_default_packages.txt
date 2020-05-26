@@ -10,4 +10,5 @@ libboost-thread-dev
 liblapack-dev
 libscotch-dev
 libtinyxml-dev
+patch
 zlib1g-dev

@@ -270,7 +270,7 @@ focal-default-build-and-test:
   <<: *build-and-test-template
   needs: ["focal-default-build-env"]
 
-focal-full-build-and-test:
+focal-full_py3-build-and-test:
   <<: *build-and-test-template
   needs: ["focal-full_py3-build-env"]
 
@@ -296,9 +296,9 @@ focal-default-warnings:
   <<: *compiler-warning-template
   needs: ["focal-default-build-and-test"]
 
-focal-full-warnings:
+focal-full_py3-warnings:
   <<: *compiler-warning-template
-  needs: ["focal-full-build-and-test"]
+  needs: ["focal-full_py3-build-and-test"]
 
 bionic-default-warnings:
   <<: *compiler-warning-template

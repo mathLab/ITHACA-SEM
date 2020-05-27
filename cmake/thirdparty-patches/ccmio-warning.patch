@@ -65,7 +65,7 @@
 +	{
  #if kHasSNPrintf
 -	snprintf(name, kCCMIOMaxStringLength, gEntityNames[(int)type]);
-+	ret = snprintf(name, kCCMIOMaxStringLength, gEntityNames[(int)type]);
++	ret = snprintf(name, kCCMIOMaxStringLength,  "%s", gEntityNames[(int)type]);
 +	if (ret < 0)
 +	    abort();
  #else
